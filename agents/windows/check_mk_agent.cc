@@ -44,7 +44,7 @@
 #define WINVER 0x0500
 
 #include <stdio.h>
-#include <stdint.h> 
+#include <stdint.h>
 #include <windows.h>
 #include <winbase.h>
 #include <winreg.h>    // performance counters from registry
@@ -68,7 +68,7 @@
 
 bool do_tcp = false;
 bool should_terminate = false;
-char g_hostname[256]; 
+char g_hostname[256];
 
 #define SECTION_CHECK_MK     0x00000001
 #define SECTION_UPTIME       0x00000002
@@ -149,7 +149,7 @@ void debug(char *text)
     }
 }
 #else
-#define debug(C) 
+#define debug(C)
 #endif
 
 bool verbose_mode = false;
@@ -165,10 +165,10 @@ void verbose(const char *format, ...)
     printf("\n");
     fflush(stdout);
 }
-   
 
 
-void outputCounter(SOCKET &out, BYTE *datablock, int counter, 
+
+void outputCounter(SOCKET &out, BYTE *datablock, int counter,
 		   PERF_OBJECT_TYPE *objectPtr, PERF_COUNTER_DEFINITION *counterPtr);
 void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_COUNTER_BLOCK *counterBlockPtr);
 double current_time();
@@ -197,7 +197,7 @@ char *llu_to_string(unsigned long long value)
     }
 
     buffer[63] = 0;
-    
+
     char *write = buffer + 63;
     while (value > 0) {
     	if (write <= buffer) {
@@ -249,7 +249,7 @@ void output(SOCKET &out, const char *format, ...)
 		debug("send() sent too few bytes");
 	    break;
 	}
-    }    
+    }
     else
 	fwrite(outbuffer, len, 1, stdout);
 }
@@ -295,11 +295,11 @@ void section_df(SOCKET &out)
 		double perc_used = 0;
 		if (total.QuadPart > 0)
 		    perc_used = 100 - (100 * free_avail.QuadPart / total.QuadPart);
-		
+
 		TCHAR fsname[128];
 		if (!GetVolumeInformation(drive, 0, 0, 0, 0, 0, fsname, 128))
 		    fsname[0] = 0;
-		
+
 		output(out, "%-10s %-8s ", drive, fsname);
 		output(out, "%s ", llu_to_string(total.QuadPart / KiloByte));
 		output(out, "%s ", llu_to_string((total.QuadPart - free_avail.QuadPart) / KiloByte));
@@ -318,9 +318,9 @@ void section_ps(SOCKET &out)
     output(out, "<<<ps>>>\n");
     HANDLE hProcessSnap;
     PROCESSENTRY32 pe32;
-  
+
     hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hProcessSnap != INVALID_HANDLE_VALUE) 
+    if (hProcessSnap != INVALID_HANDLE_VALUE)
     {
 	pe32.dwSize = sizeof(PROCESSENTRY32);
 	if (Process32First(hProcessSnap, &pe32)) {
@@ -340,7 +340,7 @@ const char *service_start_type(SC_HANDLE scm, LPCTSTR service_name)
     // Query the start type of the service
     const char *start_type = "invalid1";
     SC_HANDLE schService;
-    LPQUERY_SERVICE_CONFIG lpsc; 
+    LPQUERY_SERVICE_CONFIG lpsc;
     schService = OpenService(scm, service_name, SERVICE_QUERY_CONFIG);
     if (schService) {
         start_type = "invalid2";
@@ -354,10 +354,10 @@ const char *service_start_type(SC_HANDLE scm, LPCTSTR service_name)
                 lpsc = (LPQUERY_SERVICE_CONFIG) LocalAlloc(LMEM_FIXED, cbBufSize);
                 if (QueryServiceConfig(schService, lpsc, cbBufSize, &dwBytesNeeded)) {
                     switch (lpsc->dwStartType) {
-                    case SERVICE_AUTO_START:    start_type = "auto"; break; 
-                    case SERVICE_BOOT_START:    start_type = "boot"; break;   
+                    case SERVICE_AUTO_START:    start_type = "auto"; break;
+                    case SERVICE_BOOT_START:    start_type = "boot"; break;
                     case SERVICE_DEMAND_START:  start_type = "demand"; break;
-                    case SERVICE_DISABLED:      start_type = "disabled"; break;   
+                    case SERVICE_DISABLED:      start_type = "disabled"; break;
                     case SERVICE_SYSTEM_START:  start_type = "system"; break;
                     default:                    start_type = "other";
                     }
@@ -365,7 +365,7 @@ const char *service_start_type(SC_HANDLE scm, LPCTSTR service_name)
                 LocalFree(lpsc);
             }
         }
-        CloseServiceHandle(schService); 
+        CloseServiceHandle(schService);
     }
     return start_type;
 }
@@ -379,13 +379,13 @@ void section_services(SOCKET &out)
 	DWORD bytes_needed = 0;
 	DWORD num_services = 0;
 	// first determine number of bytes needed
-	EnumServicesStatusEx(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, 
+	EnumServicesStatusEx(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
 			     NULL, 0, &bytes_needed, &num_services, 0, 0);
 	if (GetLastError() == ERROR_MORE_DATA && bytes_needed > 0) {
 	    BYTE *buffer = (BYTE *)malloc(bytes_needed);
 	    if (buffer) {
-		if (EnumServicesStatusEx(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, 
-					 buffer, bytes_needed, 
+		if (EnumServicesStatusEx(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
+					 buffer, bytes_needed,
 					 &bytes_needed, &num_services, 0, 0))
 		{
 		    ENUM_SERVICE_STATUS_PROCESS *service = (ENUM_SERVICE_STATUS_PROCESS *)buffer;
@@ -401,7 +401,7 @@ void section_services(SOCKET &out)
 			case SERVICE_STOP_PENDING:     state_name = "stopping"; break;
 			case SERVICE_STOPPED:          state_name = "stopped"; break;
 			}
-                        
+
                         const char *start_type = service_start_type(scm, service->lpServiceName);
 
 			// The service name usually does not contain spaces. But
@@ -411,9 +411,9 @@ void section_services(SOCKET &out)
 			for (char *w=(char *)(service->lpServiceName); *w; w++) {
 			    if (*w == ' ')
 				*w = '_';
-			}			
-			
-			output(out, "%s %s/%s %s\n", 
+			}
+
+			output(out, "%s %s/%s %s\n",
 			       service->lpServiceName, state_name, start_type,
 			       service->lpDisplayName);
 			service ++;
@@ -429,26 +429,26 @@ void section_services(SOCKET &out)
 #define DEFAULT_BUFFER_SIZE 40960L
 
 // Hilfsfunktionen zum Navigieren in den Performance-Counter Binaerdaten
-PERF_OBJECT_TYPE *FirstObject(PERF_DATA_BLOCK *dataBlock) { 
-    return (PERF_OBJECT_TYPE *) ((BYTE *)dataBlock + dataBlock->HeaderLength); 
+PERF_OBJECT_TYPE *FirstObject(PERF_DATA_BLOCK *dataBlock) {
+    return (PERF_OBJECT_TYPE *) ((BYTE *)dataBlock + dataBlock->HeaderLength);
 }
 PERF_OBJECT_TYPE *NextObject(PERF_OBJECT_TYPE *act) {
-    return (PERF_OBJECT_TYPE *) ((BYTE *)act + act->TotalByteLength); 
+    return (PERF_OBJECT_TYPE *) ((BYTE *)act + act->TotalByteLength);
 }
 PERF_COUNTER_DEFINITION *FirstCounter(PERF_OBJECT_TYPE *perfObject) {
-    return (PERF_COUNTER_DEFINITION *) ((BYTE *) perfObject + perfObject->HeaderLength); 
+    return (PERF_COUNTER_DEFINITION *) ((BYTE *) perfObject + perfObject->HeaderLength);
 }
 PERF_COUNTER_DEFINITION *NextCounter(PERF_COUNTER_DEFINITION *perfCounter) {
-    return (PERF_COUNTER_DEFINITION *) ((BYTE *) perfCounter + perfCounter->ByteLength); 
+    return (PERF_COUNTER_DEFINITION *) ((BYTE *) perfCounter + perfCounter->ByteLength);
 }
 PERF_COUNTER_BLOCK *GetCounterBlock(PERF_INSTANCE_DEFINITION *pInstance) {
-    return (PERF_COUNTER_BLOCK *) ((BYTE *)pInstance + pInstance->ByteLength); 
+    return (PERF_COUNTER_BLOCK *) ((BYTE *)pInstance + pInstance->ByteLength);
 }
 PERF_INSTANCE_DEFINITION *FirstInstance (PERF_OBJECT_TYPE *pObject) {
-    return (PERF_INSTANCE_DEFINITION *)  ((BYTE *) pObject + pObject->DefinitionLength); 
+    return (PERF_INSTANCE_DEFINITION *)  ((BYTE *) pObject + pObject->DefinitionLength);
 }
 PERF_INSTANCE_DEFINITION *NextInstance (PERF_INSTANCE_DEFINITION *pInstance) {
-    return (PERF_INSTANCE_DEFINITION *) ((BYTE *)pInstance + pInstance->ByteLength + GetCounterBlock(pInstance)->ByteLength); 
+    return (PERF_INSTANCE_DEFINITION *) ((BYTE *)pInstance + pInstance->ByteLength + GetCounterBlock(pInstance)->ByteLength);
 }
 
 
@@ -471,8 +471,8 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
     // Registry. Da man vorher nicht weiß, wie groß der Puffer sein muss,
     // kann man nur mit irgendeiner Größe anfangen und dann diesen immer
     // wieder größer machen, wenn er noch zu klein ist. >:-P
-    while ((ret = RegQueryValueEx(HKEY_PERFORMANCE_DATA, counter_index_name, 
-				 0, &type, data, &size)) != ERROR_SUCCESS) 
+    while ((ret = RegQueryValueEx(HKEY_PERFORMANCE_DATA, counter_index_name,
+				 0, &type, data, &size)) != ERROR_SUCCESS)
     {
 	if (ret == ERROR_MORE_DATA) // WIN32 API sucks...
 	{
@@ -490,22 +490,22 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
     }
 
     PERF_DATA_BLOCK *dataBlockPtr = (PERF_DATA_BLOCK *)data;
-  
+
     // Determine first object in list of objects
     PERF_OBJECT_TYPE *objectPtr = FirstObject(dataBlockPtr);
-  
+
     // Now walk through the list of objects. The bad news is:
     // even if we expect only one object, windows might send
     // us more than one object. We need to scan a list of objects
     // in order to find the one we have asked for. >:-P
-    for (unsigned int a=0 ; a < dataBlockPtr->NumObjectTypes ; a++) 
+    for (unsigned int a=0 ; a < dataBlockPtr->NumObjectTypes ; a++)
     {
-	// Have we found the object we seek? 
+	// Have we found the object we seek?
 	if (objectPtr->ObjectNameTitleIndex == counter_base_number)
 	{
 	    // Yes. Great. Now: each object consist of a lot of counters.
 	    // We walk through the list of counters in this object:
-	  
+
 	    // get pointer to first counter
 	    PERF_COUNTER_DEFINITION *counterPtr = FirstCounter(objectPtr);
 
@@ -513,24 +513,24 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
 	    // to find the beginning of the data block (which comes after the
 	    // counter definitions)
 	    PERF_COUNTER_DEFINITION *last_counter = FirstCounter(objectPtr);
-	    for (unsigned int b=0 ; b < objectPtr->NumCounters ; b++) 
+	    for (unsigned int b=0 ; b < objectPtr->NumCounters ; b++)
 		last_counter = NextCounter(last_counter);
 	    BYTE *datablock = (BYTE *)last_counter;
-            
+
             // In case of multi-instance objects, output a list of all instance names
             int num_instances = objectPtr->NumInstances;
-            if (num_instances >= 0) 
+            if (num_instances >= 0)
             {
                 output(out, "%d instances:", num_instances);
                 char name[512];
                 PERF_INSTANCE_DEFINITION *instancePtr = FirstInstance(objectPtr);
-                for(int b=0 ; b<objectPtr->NumInstances ; b++) 
+                for(int b=0 ; b<objectPtr->NumInstances ; b++)
                 {
                     WCHAR *name_start = (WCHAR *)((char *)(instancePtr) + instancePtr->NameOffset);
                     memcpy(name, name_start, instancePtr->NameLength);
                     WideCharToMultiByte(CP_UTF8, 0, name_start, instancePtr->NameLength, name, sizeof(name), NULL, NULL);
                     // replace spaces with '_'
-                    for (char *s = name; *s; s++) 
+                    for (char *s = name; *s; s++)
                         if (*s == ' ') *s = '_';
 
                     output(out, " %s", name);
@@ -540,7 +540,7 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
             }
 
 	    // Now walk through the counter list a second time and output all counters
-	    for (unsigned int b=0 ; b < objectPtr->NumCounters ; b++) 
+	    for (unsigned int b=0 ; b < objectPtr->NumCounters ; b++)
 	    {
 		outputCounter(out, datablock, counter_base_number, objectPtr, counterPtr);
 		counterPtr = NextCounter(counterPtr);
@@ -553,7 +553,7 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
 }
 
 
-void outputCounter(SOCKET &out, BYTE *datablock, int counter_base_number, 
+void outputCounter(SOCKET &out, BYTE *datablock, int counter_base_number,
 		   PERF_OBJECT_TYPE *objectPtr, PERF_COUNTER_DEFINITION *counterPtr)
 {
 
@@ -588,18 +588,18 @@ void outputCounter(SOCKET &out, BYTE *datablock, int counter_base_number,
     case PERF_RAW_BASE:                       countertypename = "raw_base"; break;
     case PERF_ELAPSED_TIME:                   countertypename = "elapsed_time"; break;
     }
-	      
+
     // Output index of counter object and counter, and timestamp
     output(out, "%d", counterPtr->CounterNameTitleIndex - counter_base_number);
 
     // If this is a multi-instance-counter, loop over the instances
     int num_instances = objectPtr->NumInstances;
-    if (num_instances >= 0) 
+    if (num_instances >= 0)
     {
 	// get pointer to first instance
 	PERF_INSTANCE_DEFINITION *instancePtr = FirstInstance(objectPtr);
-		  
-	for (int b=0 ; b<objectPtr->NumInstances ; b++) 
+
+	for (int b=0 ; b<objectPtr->NumInstances ; b++)
 	{
 	    // PERF_COUNTER_BLOCK dieser Instanz ermitteln.
 	    PERF_COUNTER_BLOCK *counterBlockPtr = GetCounterBlock(instancePtr);
@@ -625,12 +625,12 @@ void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_C
     int size = counterPtr->CounterSize;
     BYTE *pData = ((BYTE *)counterBlockPtr) + offset;
 
-    if (counterPtr->CounterType | PERF_SIZE_DWORD) 
+    if (counterPtr->CounterType | PERF_SIZE_DWORD)
 	output(out, " %llu", (ULONGLONG)(*(DWORD*)pData));
 
     else if (counterPtr->CounterType | PERF_SIZE_LARGE)
 	output(out, " %llu", *(UNALIGNED ULONGLONG*)pData);
-   
+
     // handle other data generically. This is wrong in some situation.
     // Once upon a time in future we might implement a conversion as
     // described in http://msdn.microsoft.com/en-us/library/aa373178%28v=vs.85%29.aspx
@@ -668,10 +668,10 @@ void grow_eventlog_buffer(int newsize)
 }
 
 
-bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, char type_char, 
+bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, char type_char,
 			   const char *logname, const char *source_name, char **strings)
 {
-    char msgbuffer[2048]; 
+    char msgbuffer[2048];
     char dll_realpath[128];
     HINSTANCE dll;
 
@@ -681,13 +681,13 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
 
     if (dllpath) {
 	// to make it even more difficult, dllpath may contain %SystemRoot%, which
-	// must be replaced with the environment variable %SystemRoot% (most probably - 
+	// must be replaced with the environment variable %SystemRoot% (most probably -
 	// but not entirely for sure - C:\WINDOWS
 	if (strncasecmp(dllpath, "%SystemRoot%", 12) == 0)
 	    snprintf(dll_realpath, sizeof(dll_realpath), "%s%s", system_root(), dllpath + 12);
 	else
 	    snprintf(dll_realpath, sizeof(dll_realpath), "%s", dllpath);
-	
+
 	// I found this path in the official API documentation. I hope
 	// it's correct for all windows versions
 	dll =  LoadLibrary(dll_realpath);
@@ -698,24 +698,24 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
     else
 	dll = NULL;
     DWORD len = FormatMessage(
-	FORMAT_MESSAGE_ARGUMENT_ARRAY | 
-	FORMAT_MESSAGE_FROM_HMODULE | 
+	FORMAT_MESSAGE_ARGUMENT_ARRAY |
+	FORMAT_MESSAGE_FROM_HMODULE |
 	FORMAT_MESSAGE_FROM_SYSTEM,
-	dll,                        
-	event->EventID,                 
+	dll,
+	event->EventID,
 	0, // accept any language
-	(LPTSTR)msgbuffer,         
-	sizeof(msgbuffer),         
+	(LPTSTR)msgbuffer,
+	sizeof(msgbuffer),
 	strings);
 
     if (dll)
 	FreeLibrary(dll);
-   
+
     if (len == 0) // message could not be converted
     {
-        // if conversion was not successfull while trying to load a DLL, we return a 
+        // if conversion was not successfull while trying to load a DLL, we return a
         // failure. Our parent function will then retry later without a DLL path.
-	if (dllpath) 
+	if (dllpath)
 	    return false;
 
 	// if message cannot be converted, then at least output the text strings.
@@ -738,68 +738,77 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
 	    n++;
 	}
     }
-    
+
     // replace newlines with spaces. check_mk expects one message each line.
     char *w = msgbuffer;
     while (*w) {
 	if (*w == '\n' || *w == '\r') *w = ' ';
 	w++;
     }
-    
+
     // convert UNIX timestamp to local time
     time_t time_generated = (time_t)event->TimeGenerated;
     struct tm *t = localtime(&time_generated);
     char timestamp[64];
     strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
-    
-    output(out, "%c %s %lu.%lu %s %s\n", type_char, timestamp, 
-            event->EventID / 65536, // "Qualifiers": no idea what *that* is 
+
+    output(out, "%c %s %lu.%lu %s %s\n", type_char, timestamp,
+            event->EventID / 65536, // "Qualifiers": no idea what *that* is
             event->EventID % 65536, // the actual event id
             source_name, msgbuffer);
     return true;
 }
 
 
-void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer, 
+void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 			      DWORD bytesread, DWORD *record_number, bool just_find_end,
-			      int *worst_state)
+			      int *worst_state, int level)
 {
     char *strings[64];
     char regpath[128];
     BYTE dllpath[128];
     char source_name[128];
-    
+
     EVENTLOGRECORD *event = (EVENTLOGRECORD *)buffer;
-    while (bytesread > 0) 
+    while (bytesread > 0)
     {
 	*record_number = event->RecordNumber;
-	
+
 	char type_char;
 	int this_state;
 	switch (event->EventType) {
 	case EVENTLOG_ERROR_TYPE:
-	    type_char = 'C'; this_state = 2; break;
+	    type_char = 'C';
+            this_state = 2;
+            break;
 	case EVENTLOG_WARNING_TYPE:
-	    type_char = 'W'; this_state = 1; break;
+	    type_char = 'W';
+            this_state = 1;
+            break;
 	case EVENTLOG_INFORMATION_TYPE:
-	    type_char = '.'; this_state = 0; break;
 	case EVENTLOG_AUDIT_SUCCESS:
-	    type_char = '.'; this_state = 0; break;
+	    type_char = level == 0 ? 'I' : '.';
+            this_state = 0;
+            break;
 	case EVENTLOG_AUDIT_FAILURE:
-	    type_char = 'C'; this_state = 2; break;
+	    type_char = 'C';
+            this_state = 2;
+            break;
 	default:
-	    type_char = 'u'; this_state = 1; break;
+	    type_char = 'u';
+            this_state = 1;
+            break;
 	}
 	if (*worst_state < this_state)
 	    *worst_state = this_state;
 
 	// If we are not just scanning for the current end and the worst state,
 	// we output the event message
-	if (!just_find_end) 
+	if (!just_find_end)
 	{
 	    // The source name is the name of the application that produced the event
 	    LPCTSTR lpSourceName = (LPCTSTR) ((LPBYTE) event + sizeof(EVENTLOGRECORD));
-	    
+
 	    // prepare source name without spaces (for check_mk output)
 	    strncpy(source_name, lpSourceName, sizeof(source_name)-1);
 	    source_name[sizeof(source_name)-1] = 0; // strncpy does not zero-terminate, if buffer is too small!
@@ -808,7 +817,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 		if (*w == ' ') *w = '_';
 		*w++;
 	    }
-	    
+
 	    // prepare array of zero terminated strings to be inserted
 	    // into message template.
 	    DWORD num_strings = event->NumStrings;
@@ -820,12 +829,12 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 		s += strlen(s) + 1;
 	    }
 	    strings[ns] = 0; // end marker in array
-	    
+
 	    // Windows eventlog entries refer to texts stored in a DLL >:-P
 	    // We need to load this DLL. First we need to look up which
 	    // DLL to load in the registry. Hard to image how one could
 	    // have contrieved this more complicated...
-	    snprintf(regpath, sizeof(regpath), 
+	    snprintf(regpath, sizeof(regpath),
 		     "SYSTEM\\CurrentControlSet\\Services\\Eventlog\\%s\\%s",
 		     logname, lpSourceName);
 
@@ -858,14 +867,14 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 	       output_eventlog_entry(out, NULL, event, type_char, logname, source_name, strings);
 
 	} // type_char != '.'
-	    
+
 	bytesread -= event->Length;
 	event = (EVENTLOGRECORD *) ((LPBYTE) event + event->Length);
     }
 }
 
 
-void output_eventlog(SOCKET &out, const char *logname, 
+void output_eventlog(SOCKET &out, const char *logname,
 		     DWORD *record_number, bool just_find_end, int level)
 {
     if (eventlog_buffer_size == 0) {
@@ -908,8 +917,8 @@ void output_eventlog(SOCKET &out, const char *logname,
 		    verbose("Previous record number was %d. Doing seek read.", *record_number);
 		    flags = EVENTLOG_SEEK_READ | EVENTLOG_FORWARDS_READ;
 		}
-		    
-		if (ReadEventLog(hEventlog, 
+
+		if (ReadEventLog(hEventlog,
 				 flags,
 				 *record_number + 1,
 				 eventlog_buffer,
@@ -917,8 +926,8 @@ void output_eventlog(SOCKET &out, const char *logname,
 				 &bytesread,
 				 &bytesneeded))
 		{
-		    process_eventlog_entries(out, logname, eventlog_buffer, 
-                             bytesread, record_number, just_find_end || t==0, &worst_state);
+		    process_eventlog_entries(out, logname, eventlog_buffer,
+                             bytesread, record_number, just_find_end || t==0, &worst_state, level);
 		}
 		else {
 		    DWORD error = GetLastError();
@@ -927,7 +936,7 @@ void output_eventlog(SOCKET &out, const char *logname,
 		    }
 		    // found current end of log
 		    else if (error == ERROR_HANDLE_EOF) {
-			verbose("End of logfile reached at entry %u. Worst state is %d", 
+			verbose("End of logfile reached at entry %u. Worst state is %d",
 				*record_number, worst_state);
 			break;
 		    }
@@ -1005,10 +1014,10 @@ void register_eventlog(char *logname)
 	    return;
 	}
     }
-    
+
     // yet unknown. register it.
     known_record_numbers[num_eventlogs] = 0;
-    eventlog_names[num_eventlogs] = strdup(logname); 
+    eventlog_names[num_eventlogs] = strdup(logname);
     newly_found[num_eventlogs] = true;
     num_eventlogs ++;
 }
@@ -1028,18 +1037,18 @@ bool find_eventlogs(SOCKET &out)
 	newly_found[i] = 0;
 
     char regpath[128];
-    snprintf(regpath, sizeof(regpath), 
+    snprintf(regpath, sizeof(regpath),
 	     "SYSTEM\\CurrentControlSet\\Services\\Eventlog");
     HKEY key;
     DWORD ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, regpath, 0, KEY_ENUMERATE_SUB_KEYS, &key);
-    
+
     bool success = true;
-    if (ret == ERROR_SUCCESS) 
+    if (ret == ERROR_SUCCESS)
     {
 	DWORD i = 0;
 	char buffer[128];
 	DWORD len;
-	while (true) 
+	while (true)
 	{
 	    len = sizeof(buffer);
 	    DWORD r = RegEnumKeyEx(key, i, buffer, &len, NULL, NULL, NULL, NULL);
@@ -1074,7 +1083,7 @@ void section_eventlog(SOCKET &out)
     // of the event logs up to which messages have
     // been processed. When started, the eventlog
     // is skipped to the end. Historic messages are
-    // not been processed. 
+    // not been processed.
     static bool first_run = true;
 
     output(out, "<<<logwatch>>>\n");
@@ -1089,17 +1098,17 @@ void section_eventlog(SOCKET &out)
                 for (int j=0; j<num_eventlog_configs; j++) {
                     const char *cname = eventlog_config[j].name;
                     if (!strcmp(cname, "*") ||
-                        !strcasecmp(cname, eventlog_names[i])) 
+                        !strcasecmp(cname, eventlog_names[i]))
                     {
                         level = eventlog_config[j].level;
-                        break; 
+                        break;
                     }
                 }
                 if (level != -1) {
-                    output_eventlog(out, eventlog_names[i], &known_record_numbers[i], 
+                    output_eventlog(out, eventlog_names[i], &known_record_numbers[i],
                                     first_run && !logwatch_send_initial_entries, level);
                 }
-            } 
+            }
 	}
     }
     first_run = false;
@@ -1129,11 +1138,11 @@ char *add_interpreter(char *path, char *newpath)
     }
 }
 
-void run_plugin(SOCKET &out, char *path) 
+void run_plugin(SOCKET &out, char *path)
 {
     char newpath[256];
     char *execpath = add_interpreter(path, newpath);
-    
+
     FILE *f = popen(execpath, "r");
     if (f) {
         char line[4096];
@@ -1178,7 +1187,7 @@ void get_agent_dir(char *buffer, int size)
     buffer[0] = 0;
 
     HKEY key;
-    DWORD ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+    DWORD ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
           "SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", 0, KEY_READ, &key);
     if (ret == ERROR_SUCCESS)
     {
@@ -1186,12 +1195,12 @@ void get_agent_dir(char *buffer, int size)
         if (ERROR_SUCCESS == RegQueryValueEx(key, "ImagePath", NULL, NULL, (BYTE *)buffer, &dsize))
         {
             char *end = buffer + strlen(buffer);
-            // search backwards for backslash 
+            // search backwards for backslash
             while (end > buffer && *end != '\\')
                 end--;
             *end = 0; // replace \ with string end => get directory of executable
 
-            // Handle case where name is quoted with double quotes. 
+            // Handle case where name is quoted with double quotes.
             // This is reported to happen on some 64 Bit systems when spaces
             // are in the directory name.
             if (*buffer == '"') {
@@ -1202,7 +1211,7 @@ void get_agent_dir(char *buffer, int size)
     }
     else {
         // If the agent is not installed as service, simply
-        // assume the current directory to be the agent 
+        // assume the current directory to be the agent
         // directory (for test and adhoc mode)
         strncpy(buffer, g_current_directory, size);
         if (buffer[strlen(buffer)-1] == '\\') // Remove trailing backslash
@@ -1228,7 +1237,7 @@ void section_check_mk(SOCKET &out)
     else {
         for (unsigned i=0; i < g_num_only_from; i++) {
             ipspec *is = &g_only_from[i];
-            output(out, " %d.%d.%d.%d/%d", 
+            output(out, " %d.%d.%d.%d/%d",
                     is->address & 0xff,
                     is->address >> 8 & 0xff,
                     is->address >> 16 & 0xff,
@@ -1267,12 +1276,12 @@ void output_data(SOCKET &out)
     if (enabled_sections & SECTION_SYSTEMTIME)
         section_systemtime(out);
 }
-    
+
 
 char *ipv4_to_text(uint32_t ip)
 {
     static char text[32];
-    snprintf(text, 32, "%u.%u.%u.%u", 
+    snprintf(text, 32, "%u.%u.%u.%u",
             ip & 255,
             ip >> 8 & 255,
             ip >> 16 & 255,
@@ -1315,13 +1324,13 @@ void listen_tcp_loop()
 	fprintf(stderr, "Cannot create socket.\n");
 	exit(1);
     }
-    
+
     SOCKADDR_IN addr;
     memset(&addr, 0, sizeof(SOCKADDR_IN));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(CHECK_MK_AGENT_PORT);
     addr.sin_addr.s_addr = ADDR_ANY;
-    
+
     if (SOCKET_ERROR == bind(s, (SOCKADDR *)&addr, sizeof(SOCKADDR_IN))) {
 	fprintf(stderr, "Cannot bind socket to port %d\n", CHECK_MK_AGENT_PORT);
 	exit(1);
@@ -1335,11 +1344,11 @@ void listen_tcp_loop()
     SOCKET connection;
     // Loop for ever.
     debug("Starting main loop.");
-    while (!should_terminate) 
+    while (!should_terminate)
     {
 	// Das Dreckswindows kann nicht vernuenftig gleichzeitig auf
 	// ein Socket und auf ein Event warten. Weil ich nicht extra
-	// deswegen mit Threads arbeiten will, verwende ich einfach 
+	// deswegen mit Threads arbeiten will, verwende ich einfach
 	// select() mit einem Timeout und polle should_terminate.
 
 	fd_set fds;
@@ -1352,7 +1361,7 @@ void listen_tcp_loop()
         SOCKADDR_IN remote_addr;
         int addr_len = sizeof(SOCKADDR_IN);
 
-	if (1 == select(1, &fds, NULL, NULL, &timeout)) 
+	if (1 == select(1, &fds, NULL, NULL, &timeout))
 	{
 	    connection = accept(s, (SOCKADDR *)&remote_addr, &addr_len);
 	    if (connection != INVALID_SOCKET) {
@@ -1434,7 +1443,7 @@ void WINAPI ServiceMain(DWORD, TCHAR* [] )
     serviceStatus.dwServiceSpecificExitCode = NO_ERROR;
     serviceStatus.dwCheckPoint              = 0;
     serviceStatus.dwWaitHint                = 0;
-    
+
     serviceStatusHandle = RegisterServiceCtrlHandler( gszServiceName,
 						      ServiceControlHandler );
 
@@ -1468,7 +1477,7 @@ void RunService()
 	    { gszServiceName, ServiceMain },
 	    { 0, 0 }
 	};
-    
+
     StartServiceCtrlDispatcher( serviceTable );
 }
 
@@ -1550,7 +1559,7 @@ void do_test()
 {
     do_tcp = false;
     SOCKET dummy;
-    output_data(dummy); 
+    output_data(dummy);
 }
 
 
@@ -1632,7 +1641,7 @@ char *strip(char *s)
 void lowercase(char *s)
 {
     while (*s) {
-        *s = tolower(*s); 
+        *s = tolower(*s);
         s++;
     }
 }
@@ -1647,14 +1656,14 @@ void lowercase(char *s)
 //  '----------------------------------------------------------------------'
 
 
-// Do a simple pattern matching with the jokers * and ?. 
+// Do a simple pattern matching with the jokers * and ?.
 // This is case insensitive (windows-like).
-bool globmatch(const char *pattern, char *astring) 
+bool globmatch(const char *pattern, char *astring)
 {
     const char *p = pattern;
     char *s = astring;
     while (*s) {
-        if (!*p) 
+        if (!*p)
             return false; // pattern too short
 
         // normal character-wise match
@@ -1668,11 +1677,11 @@ bool globmatch(const char *pattern, char *astring)
             return false;
 
         else { // check *
-            // If there is more than one asterisk in the pattern, 
+            // If there is more than one asterisk in the pattern,
             // we need to try out several variants. We do this
             // by backtracking (smart, eh?)
             int maxlength = strlen(s);
-            // replace * by a sequence of ?, at most the rest length of s  
+            // replace * by a sequence of ?, at most the rest length of s
             char *subpattern = (char *)malloc(strlen(p) + maxlength + 1);
             bool match = false;
             for (int i=0; i<=maxlength; i++) {
@@ -1684,7 +1693,7 @@ bool globmatch(const char *pattern, char *astring)
                     break;
                 }
             }
-            free(subpattern); 
+            free(subpattern);
             return match;
         }
     }
@@ -1722,7 +1731,7 @@ void add_only_from(char *value)
 
     uint32_t ip = a + b * 0x100 + c * 0x10000 + d * 0x1000000;
     uint32_t mask_swapped = 0;
-    for (int bit = 0; bit < bits; bit ++) 
+    for (int bit = 0; bit < bits; bit ++)
         mask_swapped |= 0x80000000 >> bit;
     uint32_t mask;
     unsigned char *s = (unsigned char *)&mask_swapped;
@@ -1736,7 +1745,7 @@ void add_only_from(char *value)
     g_only_from[g_num_only_from].bits = bits;
 
     if ((ip & mask) != ip) {
-        fprintf(stderr, "Invalid only_hosts entry: host part not 0: %s/%u", 
+        fprintf(stderr, "Invalid only_hosts entry: host part not 0: %s/%u",
                 ipv4_to_text(ip), bits);
         exit(1);
     }
@@ -1838,15 +1847,26 @@ bool handle_winperf_config_variable(char *var, char *value)
     return false;
 }
 
+int parse_boolean(char *value)
+{
+    if (!strcmp(value, "yes"))
+        return 1;
+    else if (!strcmp(value, "no"))
+        return 0;
+    else
+        fprintf(stderr, "Invalid boolean value. Only yes and no are allowed.\r\n");
+        return -1;
+}
+
 bool handle_logwatch_config_variable(char *var, char *value)
 {
     if (!strncmp(var, "logfile ", 8)) {
         int level;
         char *logfilename = lstrip(var + 8);
         lowercase(logfilename);
-        if (!strcmp(value, "off")) 
+        if (!strcmp(value, "off"))
             level = -1;
-        else if (!strcmp(value, "all")) 
+        else if (!strcmp(value, "all"))
             level = 0;
         else if (!strcmp(value, "warn"))
             level = 1;
@@ -1864,6 +1884,14 @@ bool handle_logwatch_config_variable(char *var, char *value)
         }
         return true;
     }
+    else if (!strcmp(var, "sendall")) {
+        int s = parse_boolean(value);
+        if (s == -1)
+            return false;
+        logwatch_send_initial_entries = s;
+        return true;
+    }
+
     return false;
 }
 
@@ -1939,7 +1967,7 @@ void read_config_file()
                 exit(1);
             }
             // forget host-restrictions if new section begins
-            is_active = true; 
+            is_active = true;
         }
         else if (!variable_handler) {
             fprintf(stderr, "Line %d is outside of any section.\r\n", lineno);
@@ -1948,7 +1976,7 @@ void read_config_file()
         else {
             // split up line at = sign
             char *s = l;
-            while (*s && *s != '=') 
+            while (*s && *s != '=')
                 s++;
             if (*s != '=') {
                 fprintf(stderr, "Invalid line %d in %s.\r\n",
@@ -1963,7 +1991,7 @@ void read_config_file()
             value = strip(value);
 
             // handle host restriction
-            if (!strcmp(variable, "host")) 
+            if (!strcmp(variable, "host"))
                 is_active = check_host_restriction(value);
 
             // skip all other variables for non-relevant hosts

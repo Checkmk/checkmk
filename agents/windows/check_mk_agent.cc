@@ -1244,6 +1244,17 @@ char *add_interpreter(char *path, char *newpath)
     }
 }
 
+bool banned_exec_name(char *name)
+{
+    if (strlen(name) < 5)
+        return false;
+
+    char *extension = name + strlen(name) - 4; 
+    return (
+          strcasecmp(extension, ".dir") 
+       || strcasecmp(extension, ".txt"));
+}
+
 void run_plugin(SOCKET &out, char *path)
 {
     char newpath[256];
@@ -1267,7 +1278,7 @@ void run_external_programs(SOCKET &out, char *dirname)
         struct dirent *de;
         while (0 != (de = readdir(dir))) {
             char *name = de->d_name;
-            if (name[0] != '.') {
+            if (name[0] != '.' && !banned_exec_name(name)) {
                 snprintf(path, sizeof(path), "%s\\%s", dirname, name);
                 run_plugin(out, path);
             }

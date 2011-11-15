@@ -237,8 +237,8 @@ def paint_downtimes(what, row, tags, custom_vars):
     # Currently we are in a downtime + link to list of downtimes
     # for this host / service
     if row[what + "_scheduled_downtime_depth"] > 0:
-        return link_to_view('<img class=icon src="images/icon_downtime.gif">',
-                                                   row, 'downtimes_of_' + what)
+        return link_to_view('<img class=icon title="%s" src="images/icon_downtime.png">' %
+        _("Currently in downtime"), row, 'downtimes_of_' + what)
 
 multisite_icons.append({
     'columns':         [ 'scheduled_downtime_depth' ],

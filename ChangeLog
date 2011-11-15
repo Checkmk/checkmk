@@ -2,6 +2,7 @@
     Core, Setup, etc.:
     * New configuration variable static_checks[] (used by WATO)
     * New configuration variable checkgroup_parameters (mainly for WATO)
+    * check_submission defaults now to "file" (was "pipe")
 
     Checks & Agents:
     * if/if64: new ruleset if_disable_if64_hosts, that force if on

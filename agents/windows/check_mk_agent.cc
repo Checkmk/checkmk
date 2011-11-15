@@ -58,6 +58,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <sys/types.h>
 #include <ctype.h> // isspace()
 
 
@@ -88,11 +89,13 @@
 #define SECTION_SYSTEMTIME   0x00000100
 #define SECTION_PLUGINS      0x00000200
 #define SECTION_LOCAL        0x00000400
+#define SECTION_MRPE         0x00000800 
 
 // Limits for static global arrays
 #define MAX_EVENTLOGS               128
 #define MAX_ONLY_FROM                32
 #define MAX_WINPERF_COUNTERS         64
+#define MAX_MRPE_COMMANDS            64
 
 // Default buffer size for reading performance counters
 #define DEFAULT_BUFFER_SIZE      40960L
@@ -114,6 +117,13 @@ struct winperf_counter {
 struct eventlog_config_entry {
     char name[256];
     int level;
+};
+
+// Command definitions for MRPE
+struct mrpe_entry {
+    char command_line[256];
+    char plugin_name[64];
+    char service_description[256];
 };
 
 // Forward declarations of functions
@@ -177,6 +187,9 @@ unsigned int g_num_only_from = 0;
 // Configuration of winperf counters
 struct winperf_counter g_winperf_counters[MAX_WINPERF_COUNTERS];
 unsigned int g_num_winperf_counters = 0;
+
+struct mrpe_entry g_mrpe_entries[MAX_MRPE_COMMANDS];
+unsigned int g_num_mrpe_entries = 0;
 
 
 //  .----------------------------------------------------------------------.
@@ -1299,7 +1312,35 @@ void run_external_programs(SOCKET &out, char *dirname)
 void section_mrpe(SOCKET &out)
 {
     output(out, "<<<mrpe>>>\n"); 
-    // YET DO BE DONE
+    for (unsigned i=0; i<g_num_mrpe_entries; i++)
+    {
+        mrpe_entry *entry = &g_mrpe_entries[i]; 
+        output(out, "(%s) %s ", entry->plugin_name, entry->service_description);
+        
+        FILE *f = _popen(entry->command_line, "r"); 
+        if (!f) {
+            output(out, "3 Unable to execute - plugin may be missing.\n");
+            continue;
+        }
+
+        if (f) {
+            char buffer[8192];
+            int bytes = fread(buffer, 1, sizeof(buffer) - 1, f);
+            buffer[bytes] = 0; 
+            rstrip(buffer);
+            char *plugin_output = lstrip(buffer);
+            // Replace \n with Ascii 1 and \r with spaces
+            for (char *x = plugin_output; *x; x++) {
+                if (*x == '\n')
+                    *x = (char)1;
+                else if (*x == '\r')
+                    *x = ' ';
+            }
+            int status = _pclose(f);
+            int nagios_code = status;
+            output(out, "%d %s\n", nagios_code, plugin_output);
+        }
+    }
 }
 
 
@@ -1331,6 +1372,8 @@ void section_plugins(SOCKET &out)
 {
     run_external_programs(out, g_plugins_dir);
 }
+
+
 
 
 //  .----------------------------------------------------------------------.
@@ -1667,6 +1710,9 @@ void add_only_from(char *value)
 
 char *next_word(char **line)
 {
+    if (*line == 0) // allow subsequent calls without checking
+        return 0;
+    
     char *end = *line + strlen(*line);
     char *value = *line;
     while (value < end) {
@@ -1725,6 +1771,8 @@ bool handle_global_config_variable(char *var, char *value)
                 enabled_sections |= SECTION_PLUGINS;
             else if (!strcmp(word, "local"))
                 enabled_sections |= SECTION_LOCAL;
+            else if (!strcmp(word, "mrpe"))
+                enabled_sections |= SECTION_MRPE;
             else {
                 fprintf(stderr, "Invalid section '%s'.\r\n", word);
                 return false;
@@ -1819,6 +1867,49 @@ bool check_host_restriction(char *patterns)
     return false;
 }
 
+
+bool handle_mrpe_config_variable(char *var, char *value)
+{
+    if (!strcmp(var, "check")) {
+        if (g_num_mrpe_entries >= MAX_MRPE_COMMANDS) {
+            fprintf(stderr, "Sorry, we are limited to %u MRPE commands\r\n", MAX_MRPE_COMMANDS);
+            return false;
+        }
+
+        // First word: service description
+        // Rest: command line
+        fprintf(stderr, "VALUE: [%s]\r\n", value);
+        char *service_description = next_word(&value);
+        char *command_line = value;
+        if (!command_line || !command_line[0]) {
+            fprintf(stderr, "Invalid command specification for mrpe:\r\n"
+                            "Format: SERVICEDESC COMMANDLINE\r\n");
+            return false;
+        }
+        fprintf(stderr, "CMD: [%s]\r\n", command_line);
+
+        strncpy(g_mrpe_entries[g_num_mrpe_entries].command_line, command_line, 
+                sizeof(g_mrpe_entries[g_num_mrpe_entries].command_line)); 
+        strncpy(g_mrpe_entries[g_num_mrpe_entries].service_description, service_description, 
+                sizeof(g_mrpe_entries[g_num_mrpe_entries].service_description));
+
+        // compute plugin name, drop directory part
+        char *plugin_name = next_word(&value); 
+        char *p = strrchr(plugin_name, '/');
+        if (!p)
+            p = strrchr(plugin_name, '\\');
+        if (p)
+            plugin_name = p + 1;
+        strncpy(g_mrpe_entries[g_num_mrpe_entries].plugin_name, plugin_name, 
+                sizeof(g_mrpe_entries[g_num_mrpe_entries].plugin_name));
+
+        g_num_mrpe_entries++;
+        return true;
+    }
+    return false;
+}
+
+
 /* Example configuration file:
 
 [global]
@@ -1840,6 +1931,10 @@ bool check_host_restriction(char *patterns)
     logfile system      = off
     logfile application = info
     logfile *           = off
+
+[mrpe]
+    check = DISK_C: mrpe/check_disk -w C:
+    check = MEM mrpe/check_mem -w 10 -c 20
 */
 
 void read_config_file()
@@ -1874,6 +1969,8 @@ void read_config_file()
                 variable_handler = handle_winperf_config_variable;
             else if (!strcmp(section, "logwatch"))
                 variable_handler = handle_logwatch_config_variable;
+            else if (!strcmp(section, "mrpe"))
+                variable_handler = handle_mrpe_config_variable;
             else {
                 fprintf(stderr, "Invalid section [%s] in %s in line %d.\r\n",
                         section, g_config_file, lineno);
@@ -2158,6 +2255,8 @@ void output_data(SOCKET &out)
         section_plugins(out);
     if (enabled_sections & SECTION_LOCAL)
         section_local(out);
+    if (enabled_sections & SECTION_MRPE)
+        section_mrpe(out);
     if (enabled_sections & SECTION_SYSTEMTIME)
         section_systemtime(out);
 }

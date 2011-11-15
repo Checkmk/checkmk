@@ -302,6 +302,15 @@ char *strip(char *s)
     return lstrip(s);
 }
 
+void char_replace(char what, char into, char *in)
+{
+    while (*in) {
+        if (*in == what)
+            *in = into;
+        in++;
+    }
+}
+
 //  .----------------------------------------------------------------------.
 //  |  ______              _                 _   _               ______    |
 //  | / / / /___ _   _ ___| |_ ___ _ __ ___ | |_(_)_ __ ___   ___\ \ \ \   |
@@ -348,6 +357,54 @@ void section_uptime(SOCKET &out)
 //  |                                                                      |
 //  '----------------------------------------------------------------------'
 
+void df_output_filesystem(SOCKET &out, char *volid)
+{
+    TCHAR fsname[128];
+    TCHAR volume[512];
+    DWORD dwSysFlags = 0;
+    if (!GetVolumeInformation(volid, volume, sizeof(volume), 0, 0, &dwSysFlags, fsname, sizeof(fsname)))
+        fsname[0] = 0;
+
+    ULARGE_INTEGER free_avail, total, free;
+    free_avail.QuadPart = 0;
+    total.QuadPart = 0;
+    free.QuadPart = 0;
+    int returnvalue = GetDiskFreeSpaceEx(volid, &free_avail, &total, &free);
+    if (returnvalue > 0) {
+        double perc_used = 0;
+        if (total.QuadPart > 0)
+            perc_used = 100 - (100 * free_avail.QuadPart / total.QuadPart);
+
+        if (volume[0]) // have a volume name 
+            char_replace(' ', '_', volume);
+        else
+            strncpy(volume, volid, sizeof(volume));
+
+        output(out, "%s %s ", volume, fsname);
+        output(out, "%s ", llu_to_string(total.QuadPart / KiloByte));
+        output(out, "%s ", llu_to_string((total.QuadPart - free_avail.QuadPart) / KiloByte));
+        output(out, "%s ", llu_to_string(free_avail.QuadPart / KiloByte));
+        output(out, "%3.0f%% ", perc_used);
+        output(out, "%s\n", volid);
+    }
+}
+
+void df_output_mountpoints(SOCKET &out, char *volid)
+{
+    char mountpoint[512];
+    HANDLE hPt = FindFirstVolumeMountPoint(volid, mountpoint, sizeof(mountpoint));
+    if (hPt != INVALID_HANDLE_VALUE) { 
+        while (true) {  
+            TCHAR combined_path[1024];
+            snprintf(combined_path, sizeof(combined_path), "%s%s", volid, mountpoint);
+            df_output_filesystem(out, combined_path);
+            if (!FindNextVolumeMountPoint(hPt, mountpoint, sizeof(mountpoint)))
+                break;
+        }
+        FindVolumeMountPointClose(hPt);
+    }
+}
+
 void section_df(SOCKET &out)
 {
     output(out, "<<<df>>>\n");
@@ -360,30 +417,30 @@ void section_df(SOCKET &out)
 	UINT drvType = GetDriveType(drive);
 	if (drvType == DRIVE_FIXED)  // only process local harddisks
 	{
-	    ULARGE_INTEGER free_avail, total, free;
-	    free_avail.QuadPart = 0;
-	    total.QuadPart = 0;
-	    free.QuadPart = 0;
-	    int returnvalue = GetDiskFreeSpaceEx(drive, &free_avail, &total, &free);
-	    if (returnvalue > 0) {
-		double perc_used = 0;
-		if (total.QuadPart > 0)
-		    perc_used = 100 - (100 * free_avail.QuadPart / total.QuadPart);
-
-		TCHAR fsname[128];
-		if (!GetVolumeInformation(drive, 0, 0, 0, 0, 0, fsname, 128))
-		    fsname[0] = 0;
-
-		output(out, "%-10s %-8s ", drive, fsname);
-		output(out, "%s ", llu_to_string(total.QuadPart / KiloByte));
-		output(out, "%s ", llu_to_string((total.QuadPart - free_avail.QuadPart) / KiloByte));
-		output(out, "%s ", llu_to_string(free_avail.QuadPart / KiloByte));
-		output(out, "%3.0f%% ", perc_used);
-		output(out, "%s\n", drive);
-	    }
+            df_output_filesystem(out, drive);
+            df_output_mountpoints(out, drive);
 	}
 	drive += strlen(drive) + 1;
     }
+
+    // Output volumes, that have no drive letter. The following code
+    // works, but then we have no information about the drive letters.
+    // And if we run both, then volumes are printed twice. So currently
+    // we output only fixed drives and mount points below those fixed
+    // drives.
+
+    // HANDLE hVolume;
+    // char volid[512]; 
+    // hVolume = FindFirstVolume(volid, sizeof(volid));
+    // if (hVolume != INVALID_HANDLE_VALUE) {  
+    //     df_output_filesystem(out, volid);
+    //     while (true) {
+    //         // df_output_mountpoints(out, volid);
+    //         if (!FindNextVolume(hVolume, volid, sizeof(volid)))
+    //             break;
+    //     }
+    //     FindVolumeClose(hVolume);
+    // }
 }
 
 //  .----------------------------------------------------------------------.

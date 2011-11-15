@@ -18,6 +18,8 @@
       <<<local>>>
     * Windows agent: agent now reuses TCP port even when taskkill'ed, so
       a system reboot is (hopefully) not neccessary anymore
+    * Windows agent: section <<<df>>> now also outputs junctions (windows
+      mount points). No external plugin is needed.
     * logwatch: allow to classify messages based on their count (see
       man page of logwatch for details)
 

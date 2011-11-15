@@ -439,11 +439,14 @@ class html:
     # between False and None. The browser does not set the variables for
     # Checkboxes that are not checked :-(
     def get_checkbox(self, varname, form_name = None):
-        if not self.has_var("filled_in") or ( # no form filled in
+        if self.has_var(varname):
+            return not not self.var(varname)
+        elif not self.has_var("filled_in") or ( # no form filled in
             self.form_name != None and self.var("filled_in") != self.form_name): # wrong form filled in
             return None
         else:
-            return not not self.req.vars.get(varname)
+            # Form filled in but variable missing -> Checkbox not checked
+            return False
 
     def datetime_input(self, varname, default_value):
         try:

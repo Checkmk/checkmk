@@ -1263,9 +1263,8 @@ bool banned_exec_name(char *name)
         return false;
 
     char *extension = name + strlen(name) - 4; 
-    return (!(
-              !strcasecmp(extension, ".dir") 
-           || !strcasecmp(extension, ".txt")));
+    return  ( !strcasecmp(extension, ".dir") 
+           || !strcasecmp(extension, ".txt"));
 }
 
 void run_plugin(SOCKET &out, char *path)
@@ -2086,9 +2085,8 @@ void listen_tcp_loop()
     addr.sin_port = htons(CHECK_MK_AGENT_PORT);
     addr.sin_addr.s_addr = ADDR_ANY;
 
-    // int optval = 1;
-    // setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval));
-
+    int optval = 1;
+    setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval));
 
     if (SOCKET_ERROR == bind(s, (SOCKADDR *)&addr, sizeof(SOCKADDR_IN))) {
 	fprintf(stderr, "Cannot bind socket to port %d\n", CHECK_MK_AGENT_PORT);

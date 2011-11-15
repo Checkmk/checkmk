@@ -474,13 +474,13 @@ def dashlet_servicestats():
         "StatsAnd: 4\n"),
 
        ( _("in downtime"), "#0af",
-        "searchsvc&hst0=on&is_in_downtime=0",
+        "searchsvc&is_in_downtime=1",
         "Stats: scheduled_downtime_depth > 0\n" \
         "Stats: host_scheduled_downtime_depth > 0\n" \
         "StatsOr: 2\n"),
 
        ( _("on down host"), "#048",
-        "searchsvc&hst1=on&hst2=on&hstp=on",
+        "searchsvc&hst1=on&hst2=on&hstp=on&is_in_downtime=0",
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
         "Stats: host_state != 0\n" \

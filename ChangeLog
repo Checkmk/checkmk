@@ -14,6 +14,7 @@
     * FIX: Remove WATO Folder filter if WATO is disabled
     * FIX: Snapin 'Performance': fix text align for numbers
     * FIX: Disallow setting downtimes that end in the past
+    * FIX: Fix links to downtime services in dashboard
 
 1.1.12p1:
     Core, Setup, etc.:

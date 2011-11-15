@@ -26,6 +26,9 @@ bin_PROGRAMS = unixcat
 unixcat_SOURCES = unixcat.c
 unixcat_LDADD = -lpthread
 
+pkglib_PROGRAMS = livecheck
+livecheck_SOURCES = livecheck.c strutil.cc check_icmp.c
+
 pkglib_LIBRARIES = livestatus.so
 livestatus_so_SOURCES = \
 	AndingFilter.cc ClientQueue.cc Column.cc ColumnsColumn.cc CustomVarsExplicitColumn.cc \
@@ -47,7 +50,12 @@ livestatus_so_SOURCES = \
 	OffsetStringHostMacroColumn.cc StatsColumn.cc IntAggregator.cc CountAggregator.cc \
 	DoubleAggregator.cc AttributelistColumn.cc AttributelistFilter.cc \
 	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc pnp4nagios.cc \
-	ContactgroupsColumn.cc opids.cc auth.cc
+	ContactgroupsColumn.cc opids.cc auth.cc livechecking.c
+
+if HAVE_DIET
+livecheck: livecheck.c strutil.cc check_icmp.c 
+	diet -v $(CC) $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
+endif
 
 livestatus_so_CXXFLAGS = -I$(top_srcdir)/nagios -fPIC
 livestatus_so_CFLAGS   = $(livestatus_so_CXXFLAGS) 

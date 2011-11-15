@@ -79,6 +79,11 @@ def load_plugins():
             _("Fake check results"),
             _("Manually submit check results for host and service checks"),
             [ "admin" ])
+    config.declare_permission("action.customnotification",
+            _("Send custom notification"),
+            _("Manually let the core send a notification to a host or service in order "
+              "to test if notifications are setup correctly"),
+            [ "user", "admin" ])
     config.declare_permission("action.acknowledge",
             _("Acknowledge"),
             _("Acknowledge host and service problems and remove acknowledgements"),
@@ -600,7 +605,7 @@ function toggle_section(nr, oImg) {
     html.write("<table class=filters>")
     html.write("<tr><th>")
     html.write(_("Filter"))
-    html.write("</th><th>"+_('usage')+"</th><th>"+_('hardcoded settings')+"</th><th>"+_('HTML variables')+"</th></tr>\n")
+    html.write("</th><th>"+_('usage')+"</th><th>"+_('hardcoded settings')+"</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
     # sort filters according to title
     s = [(filt.sort_index, filt.title, fname, filt) 
@@ -623,9 +628,6 @@ function toggle_section(nr, oImg) {
         html.write("</td><td class=widget>")
         filt.display()
         html.write("</td>")
-        html.write("<td><tt>")
-        html.write(" ".join(filt.htmlvars))
-        html.write("</tt></td>")
         html.write("</tr>\n")
     html.write("</table>\n")
     # Set all filters into the proper display state
@@ -1151,6 +1153,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     # add ubiquitary_filters that are possible for this datasource
     for fn in ubiquitary_filters:
+        # Disable 'filename' filter, if WATO is disabled
+        if fn == "filename" and not config.wato_enabled:
+            continue
         filter = multisite_filters[fn]
         if not filter.info or filter.info in datasource["infos"]:
             show_filters.append(filter)
@@ -1558,6 +1563,9 @@ def view_title(view):
     title = view["title"] + " " + ", ".join(extra_titles)
 
     for fn in ubiquitary_filters:
+        # Disable 'filename' filter, if WATO is disabled
+        if fn == "filename" and not config.wato_enabled:
+            continue
         filt = multisite_filters[fn]
         heading = filt.heading_info(tablename)
         if heading:
@@ -1892,14 +1900,14 @@ def show_downtime_actions():
     if config.may("action.downtimes"):
         html.write("<tr><td class=legend>"+_('Downtimes')+"</td>\n"
                 "<td class=content>\n"
-                   "<input type=submit name=_remove_downtimes value=\""+_('Remove')+"\"> &nbsp; "
+                   "<input type=submit name=_remove_downtimes value=\""+_('Remove')+"\">"
                    "</td></tr>\n")
 
 def show_comment_actions():
     if config.may("action.addcomment"):
         html.write("<tr><td class=legend>"+_('Comments')+"</td>\n"
                 "<td class=content>\n"
-                   "<input type=submit name=_remove_comments value=\""+_('Remove')+"\"> &nbsp; "
+                   "<input type=submit name=_remove_comments value=\""+_('Remove')+"\">"
                    "</td></tr>\n")
 
 
@@ -1907,16 +1915,16 @@ def show_host_service_actions(what):
     if config.may("action.notifications"):
         html.write("<tr><td class=legend>"+_('Notifications')+"</td>\n"
                    "<td class=content>\n"
-                   "<input type=submit name=_enable_notifications value=\""+_('Enable')+"\"> &nbsp; "
-                   "<input type=submit name=_disable_notifications value=\""+_('Disable')+"\"> &nbsp; "
+                   "<input type=submit name=_enable_notifications value=\""+_('Enable')+"\"> "
+                   "<input type=submit name=_disable_notifications value=\""+_('Disable')+"\">"
                    "</td></tr>\n")
 
     if config.may("action.enablechecks") or config.may("action.reschedule"):
         html.write("<tr><td class=legend>"+_('Active checks')+"</td>\n"
                    "<td class=content>\n")
         if config.may("action.enablechecks"):
-            html.write("<input type=submit name=_enable_checks value=\""+_('Enable')+"\"> &nbsp; "
-                   "<input type=submit name=_disable_checks value=\""+_('Disable')+"\"> &nbsp; ")
+            html.write("<input type=submit name=_enable_checks value=\""+_('Enable')+"\"> "
+                   "<input type=submit name=_disable_checks value=\""+_('Disable')+"\"> ")
         if config.may("action.reschedule"):
             html.write("<input type=submit name=_resched_checks value=\""+_('Reschedule next check now')+"\">\n"
                    "</td></tr>\n")
@@ -1924,8 +1932,8 @@ def show_host_service_actions(what):
     if config.may("action.enablechecks"):
         html.write("<tr><td class=legend>"+_('Passive checks')+"</td>\n"
                    "<td class=content>\n")
-        html.write("<input type=submit name=_enable_passive_checks value=\""+_('Enable')+"\"> &nbsp; "
-               "<input type=submit name=_disable_passive_checks value=\""+_('Disable')+"\"> &nbsp; "
+        html.write("<input type=submit name=_enable_passive_checks value=\""+_('Enable')+"\"> "
+               "<input type=submit name=_disable_passive_checks value=\""+_('Disable')+"\">"
                "</td></tr>\n")
 
     if config.may("action.clearmodattr"):
@@ -1945,29 +1953,46 @@ def show_host_service_actions(what):
             html.write(" ")
         html.write("</td></tr>\n")
 
+    if config.may("action.customnotification"):
+        html.write("<tr><td class=legend>"+_('Custom notification')+"</td>\n")
+        html.write("<td class=content>")
+        html.write(_('Comment') + ": ")
+        html.text_input("_cusnot_comment", "TEST", size=20)
+        html.write(" &nbsp; ")
+        html.checkbox("_cusnot_forced", False)
+        html.write(_("forced") + " ")
+        html.checkbox("_cusnot_broadcast", False)
+        html.write(_("broadcast") + " ")
+        html.write(" &nbsp; ")
+        html.write("<input type=submit name=_customnotification value=\"" + _('Send') +"\">") 
+        html.write("</td></tr>\n")
+
     if config.may("action.acknowledge"):
         html.write("<tr><td rowspan=3 class=legend>"+_('Acknowledge')+"</td>\n")
-        html.write("<td class=content><input type=submit name=_acknowledge value=\""+_('Acknowledge')+"\"> &nbsp; "
+        html.write("<td class=content><input type=submit name=_acknowledge value=\""+_('Acknowledge')+"\"> "
                    "<input type=submit name=_remove_ack value=\""+_('Remove Acknowledgement')+"\"></td></tr>\n")
 
         html.write("<tr><td class=content>")
         html.checkbox("_ack_sticky", True)
-        html.write(" "+_('sticky')+" &nbsp; ")
+        html.write(_('sticky')+" &nbsp; ")
         html.checkbox("_ack_notify", True)
-        html.write(" "+_('send notification')+" &nbsp; ")
+        html.write(_('send notification')+" &nbsp; ")
         html.checkbox("_ack_persistent", False)
-        html.write(" "+_('persistent comment'))
+        html.write(_('persistent comment'))
         html.write("</td></tr>\n")
 
-        html.write("<tr><td class=content><div class=textinputlegend>"+_('Comment:')+"</div>")
-        html.text_input("_ack_comment", size=65)
+        html.write("<tr><td class=content>")
+        html.write(_("Comment") + ": ")
+        html.text_input("_ack_comment", size=48)
         html.write("</td></tr>\n")
         
     if config.may("action.addcomment"):
-        html.write("<tr><td rowspan=2 class=legend>"+_('Add comment')+"</td>\n")
-        html.write("<td class=content><input type=submit name=_add_comment value=\""+_('Add comment')+"\"></td></tr>\n"
-                "<tr><td class=content><div class=textinputlegend>"+_('Comment')+":</div>")
-        html.text_input("_comment", size=65)
+        html.write("<tr><td class=legend>"+_('Add comment')+"</td>\n")
+        html.write("<td class=content>")
+        html.write(_('Comment')+": ")
+        html.text_input("_comment", size=33)
+        html.write(" &nbsp; ")
+        html.write("<input type=submit name=_add_comment value=\""+_('Add comment')+"\">")
         html.write("</td></tr>\n")
 
     if config.may("action.downtimes"):
@@ -1989,11 +2014,11 @@ def show_host_service_actions(what):
         html.write("</td></tr>")
         html.write("<tr><td class=content>")
         html.checkbox("_down_flexible", False)
-        html.write(" "+_('flexible with max. duration')+" ")
+        html.write(_('flexible with max. duration')+" ")
         html.time_input("_down_duration", 2, 0)
         html.write(" "+_('(HH:MM)')+"</td></tr>\n")
-        html.write("<tr><td class=content><div class=textinputlegend>"+_('Comment')+":</div>\n")
-        html.text_input("_down_comment", size=65)
+        html.write("<tr><td class=content>" + _('Comment')+": ")
+        html.text_input("_down_comment", size=48)
 
 def nagios_action_command(what, row):
     if what in [ "host", "service" ]:
@@ -2084,6 +2109,14 @@ def nagios_host_service_action_command(what, dataset):
                 command = "PROCESS_HOST_CHECK_RESULT;%s;%s;%s" % (spec, hoststate, pluginoutput)
         title = _("<b>manually set check results to %s</b> for") % statename
 
+    elif html.var("_customnotification") and config.may("action.customnotification"):
+        comment = html.var("_cusnot_comment")
+        broadcast = html.get_checkbox("_cusnot_broadcast") and 1 or 0
+        forced = html.get_checkbox("_cusnot_forced") and 2 or 0
+        command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % \
+                ( cmdtag, spec, broadcast + forced, config.user_id, comment)
+        title = _("<b>send a custom notification</b> regarding")
+
     elif html.var("_acknowledge") and config.may("action.acknowledge"):
         comment = html.var_utf8("_ack_comment")
         if not comment:
@@ -2143,6 +2176,10 @@ def nagios_host_service_action_command(what, dataset):
     elif html.var("_down_custom") and config.may("action.downtimes"):
         down_from = html.get_datetime_input("_down_from")
         down_to   = html.get_datetime_input("_down_to")
+        if down_to < time.time():
+            raise MKUserError("_down_to", _("You cannot set a downtime that ends in the past. "
+                         "This incident will be reported."))
+
         title = _("<b>schedule a downtime from %s to %s</b> on ") % (
             time.asctime(time.localtime(down_from)),
             time.asctime(time.localtime(down_to)))

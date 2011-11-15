@@ -213,7 +213,7 @@ def submit_check_mk_aggregation(hostname, status, output):
         return
 
     if not opt_dont_submit:
-        submit_to_nagios(hostname, "Check_MK", status, output)
+        submit_to_nagios(summary_hostname(hostname), "Check_MK", status, output)
 
     if opt_verbose:
         color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[status]
@@ -673,6 +673,7 @@ def save_counters(hostname):
 # This is the main check function - the central entry point to all and
 # everything
 def do_check(hostname, ipaddress):
+
     if opt_verbose:
         sys.stderr.write("Check_mk version %s\n" % check_mk_version)
 
@@ -713,6 +714,9 @@ def do_check(hostname, ipaddress):
         except:
             if opt_debug:
                 raise
+
+    if checkresult_file_fd != None:
+        close_checkresult_file()
 
     run_time = time.time() - start_time
     output += "execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
@@ -808,8 +812,6 @@ def do_all_checks_on_host(hostname, ipaddress):
             error_sections.add(infotype)
 
     submit_aggregated_results(hostname)
-    if checkresult_file_fd != None:
-        close_checkresult_file()
 
     try:
         if is_tcp_host(hostname):
@@ -841,9 +843,11 @@ def open_checkresult_file():
 
 
 def close_checkresult_file():
+    global checkresult_file_fd
     if checkresult_file_fd != None:
         os.close(checkresult_file_fd)
         file(checkresult_file_path + ".ok", "w")
+        checkresult_file_fd = None
 
 
 def nagios_pipe_open_timeout(signum, stackframe):

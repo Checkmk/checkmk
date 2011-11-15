@@ -1,0 +1,15 @@
+Title: sounds/ URL create Popup on Windows 7
+Component: multisite
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-11-15 09:09:22
+Targetversion: 1.1.12
+Class: bug
+
+In Windows 7 when you Multisite plays a sound file (e.g.
+due to a problem shown in the dashboard), a HTTP
+auth window pops up. The reason seems to be that
+the sounds URL is excluded from Auth via the
+apache config of Multisite. IE seems to think that
+it can log out.

@@ -140,8 +140,8 @@ checkgroup_of["mem.used"] = "memory"
 # Special memory and page file check for Windows
 check_default_levels['mem.win'] = "memory_win_default_levels"
 factory_settings["memory_win_default_levels"] = {
-    "memory"   : ( "80.0", "90.0" ),
-    "pagefile" : ( "50.0", "70.0" ),
+    "memory"   : ( 80.0, 90.0 ),
+    "pagefile" : ( 50.0, 70.0 ),
 }
 
 def inventory_mem_win(info):

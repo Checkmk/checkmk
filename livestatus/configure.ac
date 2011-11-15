@@ -37,7 +37,7 @@ AC_CONFIG_HEADER([config.h])
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_RANLIB
-# AC_PROG_LIBTOOL
+AM_CONDITIONAL([HAVE_DIET], [which diet >/dev/null 2>&1])
 
 # Checks for libraries.
 AC_CHECK_LIB(socket, socket)

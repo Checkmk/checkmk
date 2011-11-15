@@ -93,7 +93,7 @@ char *save_next_token(char **c, char delim)
 {
     char *result = next_token(c, delim);
     if (result == 0)
-        return "";
+        return (char *)"";
     else
         return result;
 }

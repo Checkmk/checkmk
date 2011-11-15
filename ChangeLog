@@ -30,6 +30,7 @@
     * New filter for the (new) state in host/service alerts
     * New command for sending custom notifications
     * FIX: Fixed encoding problem when opening dashboard
+    * New icon on a service whos host is in downtime
 
     WATO:
     * Evolved to full featured monitoring configuration tool!

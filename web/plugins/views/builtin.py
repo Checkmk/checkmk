@@ -551,6 +551,7 @@ multisite_builtin_views.update({
                               ('st3', 'on'),
                               ('stp', '')],
           'hidden': True,
+          'hidebutton' : True,
           'hide_filters': ['site', 'host'],
           'layout': 'boxed',
           'mustsearch': False,
@@ -1165,6 +1166,7 @@ multisite_builtin_views.update({
                'hard_filtervars': [
                                     ('is_summary_host', '0'),],
                'hidden': True,
+               'hidebutton': True,
                'hide_filters': ['site'],
                'layout': 'boxed',
                'mustsearch': False,
@@ -1759,6 +1761,7 @@ multisite_builtin_views.update({
                                   ('host_check_command', ''),
                                   ('service_output', '')],
               'hidden': True,
+              'hidebutton': True,
               'hide_filters': ['site'],
               'layout': 'boxed',
               'linktitle': _('Services of Site'),

@@ -1583,21 +1583,6 @@ def view_linktitle(view):
 
 
 def show_context_links(thisview, active_filters):
-    # Show button to WATO, if permissions allow this
-    if config.wato_enabled and config.may("wato.use"):
-        html.begin_context_buttons()
-        execute_hooks('buttons-begin')
-        first = False
-        host = html.var("host")
-        if host:
-            url = wato.api.link_to_host(host)
-        else:
-            url = wato.api.link_to_path(html.var("wato_folder", ""))
-        html.context_button(_("WATO"), url, "wato")
-
-    else:
-        first = True
-
     # compute list of html variables used actively by hidden or shown
     # filters.
     active_filter_vars = set([])
@@ -1605,6 +1590,23 @@ def show_context_links(thisview, active_filters):
         for var in filt.htmlvars:
             if html.has_var(var):
                 active_filter_vars.add(var)
+
+    # html.begin_context_buttons() called automatically by html.context_button()
+    # That way if no button is painted we avoid the empty container
+    execute_hooks('buttons-begin')
+
+    # WATO: If we have a host context, then show button to WATO, if permissions allow this
+    if "host" in active_filter_vars \
+       and config.wato_enabled \
+       and config.may("wato.use") \
+       and (config.may("wato.hosts") or config.may("wato.seeall")):
+        host = html.var("host")
+        if host:
+            url = wato.api.link_to_host(host)
+        else:
+            url = wato.api.link_to_path(html.var("wato_folder", ""))
+        html.context_button(_("WATO"), url, "wato")
+
 
     # sort views after text of possible button (sort buttons after their text)
     sorted_views = []
@@ -1638,17 +1640,12 @@ def show_context_links(thisview, active_filters):
 
         # add context link to this view
         if len(used_contextvars):
-            if first:
-                first = False
-                html.begin_context_buttons()
-                execute_hooks('buttons-begin')
             vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
-            html.context_button(linktitle, html.makeuri_contextless(vars_values + [("view_name", name)]), view.get("icon"))
+            html.context_button(linktitle, 
+              html.makeuri_contextless(vars_values + [("view_name", name)]), view.get("icon"))
 
     execute_hooks('buttons-end')
-
-    if not first:
-        html.end_context_buttons()
+    html.end_context_buttons()
 
 
 # Retrieve data via livestatus, convert into list of dicts,

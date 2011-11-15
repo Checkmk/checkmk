@@ -169,6 +169,7 @@ class html:
         self.link_target = None
         self.form_name = None
         self.form_vars = []
+        self.context_buttons_open = False
 
     def plugin_stylesheets(self): 
         global plugin_stylesheets
@@ -320,11 +321,17 @@ class html:
 
     def begin_context_buttons(self):
         self.write("<table class=contextlinks><tr><td>\n")
+        self.context_buttons_open = True
 
     def end_context_buttons(self):
-        self.write("</td></tr></table>\n")
+        if self.context_buttons_open:
+            self.write("</td></tr></table>\n")
+        self.context_buttons_open = False
 
     def context_button(self, title, url, icon=None, hot=False, id=None):
+        if not self.context_buttons_open:
+            self.begin_context_buttons()
+
         if icon:
             title = '<img src="images/icon_%s.png">%s' % (icon, title)
         if id:

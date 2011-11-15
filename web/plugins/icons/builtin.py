@@ -457,14 +457,14 @@ def paint_reschedule(what, row, tags, custom_vars):
     # Reschedule button
     if row[what + "_active_checks_enabled"] == 1 \
        and config.may('action.reschedule'):
-        name2 = ''
+        servicedesc = ''
         if what == 'service':
-            name2 = row['service_description']
-        return '<a href=\"javascript:void(0);\" onclick="performAction(this, \'reschedule\', ' \
-               '\'%s\', \'%s\', \'%s\', \'%s\');">' \
+            servicedesc = row['service_description']
+        return '<a href=\"javascript:void(0);\" ' \
+               'onclick="performAction(this, \'reschedule\', \'%s\', \'%s\', \'%s\');">' \
                '<img class=icon title="%s" src="images/icon_reload.gif" /></a>' % \
-               (_('Reschedule an immediate check of this %s') % what, \
-                            row["site"], row["host_name"], name2, what)
+                (row["site"], row["host_name"], servicedesc, 
+               (_('Reschedule an immediate check of this %s') % _(what)))
 
 multisite_icons.append({
     'columns':         [ 'active_checks_enabled' ],

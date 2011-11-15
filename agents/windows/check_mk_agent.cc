@@ -61,14 +61,21 @@
 #include <ctype.h> // isspace()
 
 
+//  .----------------------------------------------------------------------.
+//  |       ____            _                 _   _                        |
+//  |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |
+//  |      | | | |/ _ \/ __| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|       |
+//  |      | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \       |
+//  |      |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/       |
+//  |                                                                      |
+//  +----------------------------------------------------------------------+
+//  | Declarations of macrosk, structs and function prototypes             |
+//  '----------------------------------------------------------------------'
+
 #define CHECK_MK_VERSION "1.1.13i1"
 #define CHECK_MK_AGENT_PORT 6556
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024
-
-bool do_tcp = false;
-bool should_terminate = false;
-char g_hostname[256];
 
 #define SECTION_CHECK_MK     0x00000001
 #define SECTION_UPTIME       0x00000002
@@ -82,6 +89,56 @@ char g_hostname[256];
 #define SECTION_PLUGINS      0x00000200
 #define SECTION_LOCAL        0x00000400
 
+// Limits for static global arrays
+#define MAX_EVENTLOGS               128
+#define MAX_ONLY_FROM                32
+#define MAX_WINPERF_COUNTERS         64
+
+// Default buffer size for reading performance counters
+#define DEFAULT_BUFFER_SIZE      40960L
+
+// Needed for only_from
+struct ipspec {
+    uint32_t address;
+    uint32_t netmask;
+    int      bits;
+};
+
+// Configuration for section [winperf]
+struct winperf_counter {
+    int   id;
+    char *name;
+};
+
+// Configuration entries from [logwatch] for individual logfiles
+struct eventlog_config_entry {
+    char name[256];
+    int level;
+};
+
+// Forward declarations of functions
+void listen_tcp_loop();
+void output(SOCKET &out, const char *format, ...);
+char *ipv4_to_text(uint32_t ip);
+void output_data(SOCKET &out);
+
+//  .----------------------------------------------------------------------.
+//  |                    ____ _       _           _                        |
+//  |                   / ___| | ___ | |__   __ _| |___                    |
+//  |                  | |  _| |/ _ \| '_ \ / _` | / __|                   |
+//  |                  | |_| | | (_) | |_) | (_| | \__ \                   |
+//  |                   \____|_|\___/|_.__/ \__,_|_|___/                   |
+//  |                                                                      |
+//  +----------------------------------------------------------------------+
+//  | Global variables                                                     |
+//  '----------------------------------------------------------------------'
+
+bool verbose_mode = false;
+bool do_tcp = false;
+bool should_terminate = false;
+char g_hostname[256];
+
+// sections enabled (configurable in check_mk.ini)
 unsigned long enabled_sections = 0xffffffff;
 
 // Variables for section <<<logwatch>>>
@@ -98,10 +155,11 @@ int eventlog_buffer_size = 0;
 // far. We do not want to make use of C++ features
 // here so sorry for the mess...
 unsigned num_eventlogs = 0;
-#define  MAX_EVENTLOGS 128
 DWORD    known_record_numbers[MAX_EVENTLOGS];
 char    *eventlog_names[MAX_EVENTLOGS];
 bool     newly_found[MAX_EVENTLOGS];
+
+// Directories
 char     g_agent_directory[256];
 char     g_current_directory[256];
 char     g_plugins_dir[256];
@@ -109,34 +167,28 @@ char     g_local_dir[256];
 char     g_config_file[256];
 
 // Configuration of eventlog monitoring (see config parser)
-struct eventlog_config_entry {
-    char name[256];
-    int level;
-};
 int num_eventlog_configs = 0;
 eventlog_config_entry eventlog_config[MAX_EVENTLOGS];
 
-
-struct ipspec {
-    uint32_t address;
-    uint32_t netmask;
-    int      bits;
-};
-
-#define MAX_ONLY_FROM 32
+// Parsing of only_from
 struct ipspec g_only_from[MAX_ONLY_FROM];
 unsigned int g_num_only_from = 0;
 
-
-struct winperf_counter {
-    int   id;
-    char *name;
-};
-
-#define MAX_WINPERF_COUNTERS 64
+// Configuration of winperf counters
 struct winperf_counter g_winperf_counters[MAX_WINPERF_COUNTERS];
 unsigned int g_num_winperf_counters = 0;
 
+
+//  .----------------------------------------------------------------------.
+//  |                  _   _      _                                        |
+//  |                 | | | | ___| |_ __   ___ _ __ ___                    |
+//  |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+//  |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+//  |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+//  |                              |_|                                     |
+//  +----------------------------------------------------------------------+
+//  | Global helper functions                                              |
+//  '----------------------------------------------------------------------'
 
 #ifdef DEBUG
 void debug(char *text)
@@ -152,7 +204,6 @@ void debug(char *text)
 #define debug(C)
 #endif
 
-bool verbose_mode = false;
 void verbose(const char *format, ...)
 {
     if (!verbose_mode)
@@ -164,26 +215,6 @@ void verbose(const char *format, ...)
     vprintf(format, ap);
     printf("\n");
     fflush(stdout);
-}
-
-
-
-void outputCounter(SOCKET &out, BYTE *datablock, int counter,
-		   PERF_OBJECT_TYPE *objectPtr, PERF_COUNTER_DEFINITION *counterPtr);
-void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_COUNTER_BLOCK *counterBlockPtr);
-double current_time();
-
-
-// determine system root by reading the environment variable
-// %SystemRoot%. This variable is used in the registry entries
-// that describe eventlog messages.
-const char *system_root()
-{
-    static char root[128];
-    if (0 < GetWindowsDirectory(root, sizeof(root)))
-	return root;
-    else
-	return "C:\\WINDOWS";
 }
 
 
@@ -212,48 +243,75 @@ char *llu_to_string(unsigned long long value)
 }
 
 
-
-void output(SOCKET &out, const char *format, ...)
+// determine system root by reading the environment variable
+// %SystemRoot%. This variable is used in the registry entries
+// that describe eventlog messages.
+const char *system_root()
 {
-    static char outbuffer[4096];
-
-    va_list ap;
-    va_start(ap, format);
-    int len = vsnprintf(outbuffer, sizeof(outbuffer), format, ap);
-    if (do_tcp) {
-	while (!should_terminate) {
-	    int result = send(out, outbuffer, len, 0);
-	    if (result == SOCKET_ERROR) {
-		debug("send() failed");
-		int error = WSAGetLastError();
-		if (error == WSAEINTR) {
-		    debug("INTR. Nochmal...");
-		    continue;
-		}
-		else if (error == WSAEINPROGRESS) {
-		    debug("INPROGRESS. Nochmal...");
-		    continue;
-		}
-		else if (error == WSAEWOULDBLOCK) {
-		    debug("WOULDBLOCK. Komisch. Breche ab...");
-		    break;
-		}
-		else {
-		    debug("Anderer Fehler. Gebe auf\n");
-		    break;
-		}
-	    }
-	    else if (result == 0)
-		debug("send() returned 0");
-	    else if (result != len)
-		debug("send() sent too few bytes");
-	    break;
-	}
-    }
+    static char root[128];
+    if (0 < GetWindowsDirectory(root, sizeof(root)))
+	return root;
     else
-	fwrite(outbuffer, len, 1, stdout);
+	return "C:\\WINDOWS";
 }
 
+double current_time()
+{
+    SYSTEMTIME systime;
+    FILETIME filetime;
+    GetSystemTime(&systime);
+    SystemTimeToFileTime(&systime, &filetime);
+    unsigned long long ft = (unsigned long long)(filetime.dwLowDateTime)
+	+ (((unsigned long long)filetime.dwHighDateTime) << 32);
+    return ft / 10000000.0;
+}
+
+char *lstrip(char *s)
+{
+    while (isspace(*s))
+        s++;
+    return s;
+}
+
+
+void rstrip(char *s)
+{
+    char *end = s + strlen(s); // point one beyond last character
+    while (end > s && isspace(*(end - 1))) {
+        end--;
+    }
+    *end = 0;
+}
+
+char *strip(char *s)
+{
+    rstrip(s);
+    return lstrip(s);
+}
+
+//  .----------------------------------------------------------------------.
+//  |  ______              _                 _   _               ______    |
+//  | / / / /___ _   _ ___| |_ ___ _ __ ___ | |_(_)_ __ ___   ___\ \ \ \   |
+//  |/ / / // __| | | / __| __/ _ \ '_ ` _ \| __| | '_ ` _ \ / _ \\ \ \ \  |
+//  |\ \ \ \\__ \ |_| \__ \ ||  __/ | | | | | |_| | | | | | |  __// / / /  |
+//  | \_\_\_\___/\__, |___/\__\___|_| |_| |_|\__|_|_| |_| |_|\___/_/_/_/   |
+//  |            |___/                                                     |
+//  '----------------------------------------------------------------------'
+
+void section_systemtime(SOCKET &out)
+{
+    output(out, "<<<systemtime>>>\n");
+    output(out, "%ld\n", time(0));
+}
+
+//  .----------------------------------------------------------------------.
+//  |          ______              _   _                 ______            |
+//  |         / / / /  _   _ _ __ | |_(_)_ __ ___   ___  \ \ \ \           |
+//  |        / / / /  | | | | '_ \| __| | '_ ` _ \ / _ \  \ \ \ \          |
+//  |        \ \ \ \  | |_| | |_) | |_| | | | | | |  __/  / / / /          |
+//  |         \_\_\_\  \__,_| .__/ \__|_|_| |_| |_|\___| /_/_/_/           |
+//  |                       |_|                                            |
+//  '----------------------------------------------------------------------'
 
 void section_uptime(SOCKET &out)
 {
@@ -267,12 +325,15 @@ void section_uptime(SOCKET &out)
 }
 
 
-void section_systemtime(SOCKET &out)
-{
-    output(out, "<<<systemtime>>>\n");
-    output(out, "%ld\n", time(0));
-}
 
+//  .----------------------------------------------------------------------.
+//  |                      ______      _  __  ______                       |
+//  |                     / / / /   __| |/ _| \ \ \ \                      |
+//  |                    / / / /   / _` | |_   \ \ \ \                     |
+//  |                    \ \ \ \  | (_| |  _|  / / / /                     |
+//  |                     \_\_\_\  \__,_|_|   /_/_/_/                      |
+//  |                                                                      |
+//  '----------------------------------------------------------------------'
 
 void section_df(SOCKET &out)
 {
@@ -312,6 +373,14 @@ void section_df(SOCKET &out)
     }
 }
 
+//  .----------------------------------------------------------------------.
+//  |                      ______             ______                       |
+//  |                     / / / /  _ __  ___  \ \ \ \                      |
+//  |                    / / / /  | '_ \/ __|  \ \ \ \                     |
+//  |                    \ \ \ \  | |_) \__ \  / / / /                     |
+//  |                     \_\_\_\ | .__/|___/ /_/_/_/                      |
+//  |                             |_|                                      |
+//  '----------------------------------------------------------------------'
 
 void section_ps(SOCKET &out)
 {
@@ -331,6 +400,15 @@ void section_ps(SOCKET &out)
 	CloseHandle(hProcessSnap);
     }
 }
+
+//  .----------------------------------------------------------------------.
+//  |         ______                      _                ______          |
+//  |        / / / /  ___  ___ _ ____   _(_) ___ ___  ___  \ \ \ \         |
+//  |       / / / /  / __|/ _ \ '__\ \ / / |/ __/ _ \/ __|  \ \ \ \        |
+//  |       \ \ \ \  \__ \  __/ |   \ V /| | (_|  __/\__ \  / / / /        |
+//  |        \_\_\_\ |___/\___|_|    \_/ |_|\___\___||___/ /_/_/_/         |
+//  |                                                                      |
+//  '----------------------------------------------------------------------'
 
 
 // Determine the start type of a service. Unbelievable how much
@@ -426,7 +504,15 @@ void section_services(SOCKET &out)
     }
 }
 
-#define DEFAULT_BUFFER_SIZE 40960L
+
+//  .----------------------------------------------------------------------.
+//  |    ______           _                        __          ______      |
+//  |   / / / / __      _(_)_ __  _ __   ___ _ __ / _|         \ \ \ \     |
+//  |  / / / /  \ \ /\ / / | '_ \| '_ \ / _ \ '__| |_           \ \ \ \    |
+//  |  \ \ \ \   \ V  V /| | | | | |_) |  __/ |  |  _|  _ _ _   / / / /    |
+//  |   \_\_\_\   \_/\_/ |_|_| |_| .__/ \___|_|  |_|___(_|_|_) /_/_/_/     |
+//  |                            |_|              |_____|                  |
+//  '----------------------------------------------------------------------'
 
 // Hilfsfunktionen zum Navigieren in den Performance-Counter Binaerdaten
 PERF_OBJECT_TYPE *FirstObject(PERF_DATA_BLOCK *dataBlock) {
@@ -450,6 +536,10 @@ PERF_INSTANCE_DEFINITION *FirstInstance (PERF_OBJECT_TYPE *pObject) {
 PERF_INSTANCE_DEFINITION *NextInstance (PERF_INSTANCE_DEFINITION *pInstance) {
     return (PERF_INSTANCE_DEFINITION *) ((BYTE *)pInstance + pInstance->ByteLength + GetCounterBlock(pInstance)->ByteLength);
 }
+
+void outputCounter(SOCKET &out, BYTE *datablock, int counter,
+		   PERF_OBJECT_TYPE *objectPtr, PERF_COUNTER_DEFINITION *counterPtr);
+void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_COUNTER_BLOCK *counterBlockPtr);
 
 
 void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const char *countername)
@@ -647,18 +737,25 @@ void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_C
 	output(out, " unknown");
 }
 
-
-double current_time()
+void section_winperf(SOCKET &out)
 {
-    SYSTEMTIME systime;
-    FILETIME filetime;
-    GetSystemTime(&systime);
-    SystemTimeToFileTime(&systime, &filetime);
-    unsigned long long ft = (unsigned long long)(filetime.dwLowDateTime)
-	+ (((unsigned long long)filetime.dwHighDateTime) << 32);
-    return ft / 10000000.0;
+    dump_performance_counters(out, 234, "phydisk");
+    dump_performance_counters(out, 238, "processor");
+
+    // also output additionally configured counters
+    for (unsigned i=0; i<g_num_winperf_counters; i++)
+        dump_performance_counters(out, g_winperf_counters[i].id, g_winperf_counters[i].name);
 }
 
+
+//  .----------------------------------------------------------------------.
+//  |      ______  _                           _       _      ______       |
+//  |     / / / / | | ___   __ ___      ____ _| |_ ___| |__   \ \ \ \      |
+//  |    / / / /  | |/ _ \ / _` \ \ /\ / / _` | __/ __| '_ \   \ \ \ \     |
+//  |    \ \ \ \  | | (_) | (_| |\ V  V / (_| | || (__| | | |  / / / /     |
+//  |     \_\_\_\ |_|\___/ \__, | \_/\_/ \__,_|\__\___|_| |_| /_/_/_/      |
+//  |                      |___/                                           |
+//  '----------------------------------------------------------------------'
 
 void grow_eventlog_buffer(int newsize)
 {
@@ -963,43 +1060,6 @@ void output_eventlog(SOCKET &out, const char *logname,
     }
 }
 
-
-// The output imitates that of the Linux agent. That makes
-// a special check for check_mk unneccessary:
-// <<<mem>>>.
-// MemTotal:       514104 kB
-// MemFree:         19068 kB
-// SwapTotal:     1048568 kB
-// SwapFree:      1043732 kB
-
-void section_mem(SOCKET &out)
-{
-    output(out, "<<<mem>>>\n");
-
-    MEMORYSTATUSEX statex;
-    statex.dwLength = sizeof (statex);
-    GlobalMemoryStatusEx (&statex);
-
-    output(out, "MemTotal:  %11d kB\n", statex.ullTotalPhys     / 1024);
-    output(out, "MemFree:   %11d kB\n", statex.ullAvailPhys     / 1024);
-    output(out, "SwapTotal: %11d kB\n", (statex.ullTotalPageFile - statex.ullTotalPhys) / 1024);
-    output(out, "SwapFree:  %11d kB\n", (statex.ullAvailPageFile - statex.ullAvailPhys) / 1024);
-    output(out, "PageTotal: %11d kB\n", statex.ullTotalPageFile / 1024);
-    output(out, "PageFree:  %11d kB\n", statex.ullAvailPageFile / 1024);
-}
-
-
-void section_winperf(SOCKET &out)
-{
-    dump_performance_counters(out, 234, "phydisk");
-    dump_performance_counters(out, 238, "processor");
-
-    // also output additionally configured counters
-    for (unsigned i=0; i<g_num_winperf_counters; i++)
-        dump_performance_counters(out, g_winperf_counters[i].id, g_winperf_counters[i].name);
-}
-
-
 // Keeps memory of an event log we have found. It
 // might already be known and will not be stored twice.
 void register_eventlog(char *logname)
@@ -1114,6 +1174,52 @@ void section_eventlog(SOCKET &out)
     first_run = false;
 }
 
+
+//  .----------------------------------------------------------------------.
+//  |              ______                            ______                |
+//  |             / / / /  _ __ ___   ___ _ __ ___   \ \ \ \               |
+//  |            / / / /  | '_ ` _ \ / _ \ '_ ` _ \   \ \ \ \              |
+//  |            \ \ \ \  | | | | | |  __/ | | | | |  / / / /              |
+//  |             \_\_\_\ |_| |_| |_|\___|_| |_| |_| /_/_/_/               |
+//  |                                                                      |
+//  '----------------------------------------------------------------------'
+
+// The output imitates that of the Linux agent. That makes
+// a special check for check_mk unneccessary:
+// <<<mem>>>.
+// MemTotal:       514104 kB
+// MemFree:         19068 kB
+// SwapTotal:     1048568 kB
+// SwapFree:      1043732 kB
+
+void section_mem(SOCKET &out)
+{
+    output(out, "<<<mem>>>\n");
+
+    MEMORYSTATUSEX statex;
+    statex.dwLength = sizeof (statex);
+    GlobalMemoryStatusEx (&statex);
+
+    output(out, "MemTotal:  %11d kB\n", statex.ullTotalPhys     / 1024);
+    output(out, "MemFree:   %11d kB\n", statex.ullAvailPhys     / 1024);
+    output(out, "SwapTotal: %11d kB\n", (statex.ullTotalPageFile - statex.ullTotalPhys) / 1024);
+    output(out, "SwapFree:  %11d kB\n", (statex.ullAvailPageFile - statex.ullAvailPhys) / 1024);
+    output(out, "PageTotal: %11d kB\n", statex.ullTotalPageFile / 1024);
+    output(out, "PageFree:  %11d kB\n", statex.ullAvailPageFile / 1024);
+}
+
+
+//   .----------------------------------------------------------------------.
+//   |     ____                    _                                        |
+//   |    |  _ \ _   _ _ __  _ __ (_)_ __   __ _   _ __  _ __ __ _ ___      |
+//   |    | |_) | | | | '_ \| '_ \| | '_ \ / _` | | '_ \| '__/ _` / __|     |
+//   |    |  _ <| |_| | | | | | | | | | | | (_| | | |_) | | | (_| \__ \     |
+//   |    |_| \_\\__,_|_| |_|_| |_|_|_| |_|\__, | | .__/|_|  \__, |___/     |
+//   |                                     |___/  |_|        |___/          |
+//   +----------------------------------------------------------------------+
+//   | Functions for dealing with running external programs.                |
+//   '----------------------------------------------------------------------'
+
 char *add_interpreter(char *path, char *newpath)
 {
     if (!strcmp(path + strlen(path) - 4, ".vbs")) {
@@ -1170,10 +1276,30 @@ void run_external_programs(SOCKET &out, char *dirname)
     }
 }
 
-void section_plugins(SOCKET &out)
+//  .----------------------------------------------------------------------.
+//  |              ______                             ______               |
+//  |             / / / /  _ __ ___  _ __ _ __   ___  \ \ \ \              |
+//  |            / / / /  | '_ ` _ \| '__| '_ \ / _ \  \ \ \ \             |
+//  |            \ \ \ \  | | | | | | |  | |_) |  __/  / / / /             |
+//  |             \_\_\_\ |_| |_| |_|_|  | .__/ \___| /_/_/_/              |
+//  |                                    |_|                               |
+//  '----------------------------------------------------------------------'
+
+void section_mrpe(SOCKET &out)
 {
-    run_external_programs(out, g_plugins_dir);
+    output(out, "<<<mrpe>>>\n"); 
+    // YET DO BE DONE
 }
+
+
+//  .----------------------------------------------------------------------.
+//  |                 ______  _                 _  ______                  |
+//  |                / / / / | | ___   ___ __ _| | \ \ \ \                 |
+//  |               / / / /  | |/ _ \ / __/ _` | |  \ \ \ \                |
+//  |               \ \ \ \  | | (_) | (_| (_| | |  / / / /                |
+//  |                \_\_\_\ |_|\___/ \___\__,_|_| /_/_/_/                 |
+//  |                                                                      |
+//  '----------------------------------------------------------------------'
 
 void section_local(SOCKET &out)
 {
@@ -1181,44 +1307,31 @@ void section_local(SOCKET &out)
     run_external_programs(out, g_local_dir);
 }
 
+//  .----------------------------------------------------------------------.
+//  |                   ____  _             _                              |
+//  |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
+//  |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
+//  |                  |  __/| | |_| | (_| | | | | \__ \                   |
+//  |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
+//  |                                 |___/                                |
+//  '----------------------------------------------------------------------'
 
-void get_agent_dir(char *buffer, int size)
+void section_plugins(SOCKET &out)
 {
-    buffer[0] = 0;
-
-    HKEY key;
-    DWORD ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-          "SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", 0, KEY_READ, &key);
-    if (ret == ERROR_SUCCESS)
-    {
-        DWORD dsize = size;
-        if (ERROR_SUCCESS == RegQueryValueEx(key, "ImagePath", NULL, NULL, (BYTE *)buffer, &dsize))
-        {
-            char *end = buffer + strlen(buffer);
-            // search backwards for backslash
-            while (end > buffer && *end != '\\')
-                end--;
-            *end = 0; // replace \ with string end => get directory of executable
-
-            // Handle case where name is quoted with double quotes.
-            // This is reported to happen on some 64 Bit systems when spaces
-            // are in the directory name.
-            if (*buffer == '"') {
-                memmove(buffer, buffer + 1, strlen(buffer));
-            }
-        }
-        RegCloseKey(key);
-    }
-    else {
-        // If the agent is not installed as service, simply
-        // assume the current directory to be the agent
-        // directory (for test and adhoc mode)
-        strncpy(buffer, g_current_directory, size);
-        if (buffer[strlen(buffer)-1] == '\\') // Remove trailing backslash
-            buffer[strlen(buffer)-1] = 0;
-    }
-
+    run_external_programs(out, g_plugins_dir);
 }
+
+
+//  .----------------------------------------------------------------------.
+//  |     ______   ____ _               _        __  __ _  __ ______       |
+//  |    / / / /  / ___| |__   ___  ___| | __   |  \/  | |/ / \ \ \ \      |
+//  |   / / / /  | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /   \ \ \ \     |
+//  |   \ \ \ \  | |___| | | |  __/ (__|   <    | |  | | . \   / / / /     |
+//  |    \_\_\_\  \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\ /_/_/_/      |
+//  |                                      |_____|                         |
+//  +----------------------------------------------------------------------+
+//  | The section <<<check_mk>>>                                           |
+//  '----------------------------------------------------------------------'
 
 void section_check_mk(SOCKET &out)
 {
@@ -1248,154 +1361,17 @@ void section_check_mk(SOCKET &out)
     }
 }
 
-void output_data(SOCKET &out)
-{
-    // make sure, output of numbers is not localized
-    setlocale(LC_ALL, "C");
+//  .----------------------------------------------------------------------.
+//  |                  ____                  _                             |
+//  |                 / ___|  ___ _ ____   _(_) ___ ___                    |
+//  |                 \___ \ / _ \ '__\ \ / / |/ __/ _ \                   |
+//  |                  ___) |  __/ |   \ V /| | (_|  __/                   |
+//  |                 |____/ \___|_|    \_/ |_|\___\___|                   |
+//  |                                                                      |
+//  +----------------------------------------------------------------------+
+//  | Stuff dealing with the Windows service management.                   |
+//  '----------------------------------------------------------------------'
 
-    if (enabled_sections & SECTION_CHECK_MK)
-        section_check_mk(out);
-    if (enabled_sections & SECTION_UPTIME)
-        section_uptime(out);
-    if (enabled_sections & SECTION_DF)
-        section_df(out);
-    if (enabled_sections & SECTION_PS)
-        section_ps(out);
-    if (enabled_sections & SECTION_MEM)
-        section_mem(out);
-    if (enabled_sections & SECTION_SERVICES)
-        section_services(out);
-    if (enabled_sections & SECTION_WINPERF)
-        section_winperf(out);
-    if (enabled_sections & SECTION_LOGWATCH)
-        section_eventlog(out);
-    if (enabled_sections & SECTION_PLUGINS)
-        section_plugins(out);
-    if (enabled_sections & SECTION_LOCAL)
-        section_local(out);
-    if (enabled_sections & SECTION_SYSTEMTIME)
-        section_systemtime(out);
-}
-
-
-char *ipv4_to_text(uint32_t ip)
-{
-    static char text[32];
-    snprintf(text, 32, "%u.%u.%u.%u",
-            ip & 255,
-            ip >> 8 & 255,
-            ip >> 16 & 255,
-            ip >> 24);
-    return text;
-}
-
-bool check_only_from(uint32_t ip)
-{
-    if (g_num_only_from == 0)
-        return true; // no restriction set
-
-    for (unsigned i=0; i<g_num_only_from; i++)
-    {
-        uint32_t signibits = ip & g_only_from[i].netmask;
-        if (signibits == g_only_from[i].address)
-            return true;
-    }
-    return false;
-}
-
-void wsa_startup()
-{
-    WSADATA wsa;
-    if (0 != WSAStartup(MAKEWORD(2, 0), &wsa)) {
-	fprintf(stderr, "Cannot initialize winsock.\n");
-	exit(1);
-    }
-    if (0 != (gethostname(g_hostname, sizeof(g_hostname)))) {
-        strcpy(g_hostname, "");
-    }
-
-}
-
-
-void listen_tcp_loop()
-{
-    SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
-    if (s == INVALID_SOCKET) {
-	fprintf(stderr, "Cannot create socket.\n");
-	exit(1);
-    }
-
-    SOCKADDR_IN addr;
-    memset(&addr, 0, sizeof(SOCKADDR_IN));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(CHECK_MK_AGENT_PORT);
-    addr.sin_addr.s_addr = ADDR_ANY;
-
-    if (SOCKET_ERROR == bind(s, (SOCKADDR *)&addr, sizeof(SOCKADDR_IN))) {
-	fprintf(stderr, "Cannot bind socket to port %d\n", CHECK_MK_AGENT_PORT);
-	exit(1);
-    }
-
-    if (SOCKET_ERROR == listen(s, 5)) {
-	fprintf(stderr, "Cannot listen to socket\n");
-	exit(1);
-    }
-
-    SOCKET connection;
-    // Loop for ever.
-    debug("Starting main loop.");
-    while (!should_terminate)
-    {
-	// Das Dreckswindows kann nicht vernuenftig gleichzeitig auf
-	// ein Socket und auf ein Event warten. Weil ich nicht extra
-	// deswegen mit Threads arbeiten will, verwende ich einfach
-	// select() mit einem Timeout und polle should_terminate.
-
-	fd_set fds;
-	FD_ZERO(&fds);
-	FD_SET(s, &fds);
-	struct timeval timeout;
-	timeout.tv_sec = 0;
-	timeout.tv_usec = 500000;
-
-        SOCKADDR_IN remote_addr;
-        int addr_len = sizeof(SOCKADDR_IN);
-
-	if (1 == select(1, &fds, NULL, NULL, &timeout))
-	{
-	    connection = accept(s, (SOCKADDR *)&remote_addr, &addr_len);
-	    if (connection != INVALID_SOCKET) {
-                uint32_t ip = 0;
-                if (remote_addr.sin_family == AF_INET)
-                    ip = remote_addr.sin_addr.s_addr;
-                if (check_only_from(ip))
-                    output_data(connection);
-		closesocket(connection);
-	    }
-	}
-	else if (!should_terminate) {
-	    Sleep(1); // should never happen
-	}
-    }
-    closesocket(s);
-    WSACleanup();
-}
-
-void usage()
-{
-    fprintf(stderr, "Usage: \n"
-	    "check_mk_agent version -- show version " CHECK_MK_VERSION " and exit\n"
-	    "check_mk_agent install -- install as Windows NT service Check_Mk_Agent\n"
-	    "check_mk_agent remove  -- remove Windows NT service\n"
-	    "check_mk_agent adhoc   -- open TCP port %d and answer request until killed\n"
-	    "check_mk_agent test    -- test output of plugin, do not open TCP port\n"
-	    "check_mk_agent debug   -- similar to test, but with lots of debug output\n", CHECK_MK_AGENT_PORT);
-    exit(1);
-}
-
-
-
-// Zeugs fuer Windows Service
 TCHAR*                gszServiceName = (TCHAR *)TEXT(SERVICE_NAME);
 SERVICE_STATUS        serviceStatus;
 SERVICE_STATUS_HANDLE serviceStatusHandle = 0;
@@ -1554,36 +1530,6 @@ void UninstallService()
 	CloseServiceHandle( serviceControlManager );
     }
 }
-
-void do_test()
-{
-    do_tcp = false;
-    SOCKET dummy;
-    output_data(dummy);
-}
-
-
-void do_debug()
-{
-    verbose_mode = true;
-    do_tcp = false;
-    // logwatch_send_initial_entries = true;
-    // logwatch_suppress_info = false;
-    SOCKET dummy;
-    output_data(dummy);
-}
-
-void do_adhoc()
-{
-    do_tcp = true;
-    printf("Listening for TCP connections on port %d\n", CHECK_MK_AGENT_PORT);
-    printf("Close window or press Ctrl-C to exit\n");
-    fflush(stdout);
-
-    should_terminate = false;
-    listen_tcp_loop(); // runs for ever or until Ctrl-C
-}
-
 void do_install()
 {
     InstallService();
@@ -1594,57 +1540,7 @@ void do_remove()
     UninstallService();
 }
 
-void cleanup()
-{
-    if (eventlog_buffer_size > 0)
-	delete [] eventlog_buffer;
-    unregister_all_eventlogs(); // frees a few bytes
-}
 
-void show_version()
-{
-    printf("Check_MK_Agent version %s\n", CHECK_MK_VERSION);
-}
-
-void determine_directories()
-{
-    // Determine directories once and forever
-    getcwd(g_current_directory, sizeof(g_current_directory));
-    get_agent_dir(g_agent_directory, sizeof(g_agent_directory));
-    snprintf(g_plugins_dir, sizeof(g_plugins_dir), "%s\\plugins", g_agent_directory);
-    snprintf(g_local_dir, sizeof(g_local_dir), "%s\\local", g_agent_directory);
-}
-
-char *lstrip(char *s)
-{
-    while (isspace(*s))
-        s++;
-    return s;
-}
-
-
-void rstrip(char *s)
-{
-    char *end = s + strlen(s); // point one beyond last character
-    while (end > s && isspace(*(end - 1))) {
-        end--;
-    }
-    *end = 0;
-}
-
-char *strip(char *s)
-{
-    rstrip(s);
-    return lstrip(s);
-}
-
-void lowercase(char *s)
-{
-    while (*s) {
-        *s = tolower(*s);
-        s++;
-    }
-}
 
 //  .----------------------------------------------------------------------.
 //  |    ____             __ _                       _   _                 |
@@ -1655,7 +1551,13 @@ void lowercase(char *s)
 //  |                          |___/                                       |
 //  '----------------------------------------------------------------------'
 
-
+void lowercase(char *s)
+{
+    while (*s) {
+        *s = tolower(*s);
+        s++;
+    }
+}
 // Do a simple pattern matching with the jokers * and ?.
 // This is case insensitive (windows-like).
 bool globmatch(const char *pattern, char *astring)
@@ -2012,6 +1914,163 @@ void read_config_file()
 }
 
 
+//  .----------------------------------------------------------------------.
+//  |          _____ ____ ____    ____             _        _              |
+//  |         |_   _/ ___|  _ \  / ___|  ___   ___| | _____| |_            |
+//  |           | || |   | |_) | \___ \ / _ \ / __| |/ / _ \ __|           |
+//  |           | || |___|  __/   ___) | (_) | (__|   <  __/ |_            |
+//  |           |_| \____|_|     |____/ \___/ \___|_|\_\___|\__|           |
+//  |                                                                      |
+//  +----------------------------------------------------------------------+
+//  | Stuff dealing with the handling of the TCP socket                    |
+//  '----------------------------------------------------------------------'
+
+void wsa_startup()
+{
+    WSADATA wsa;
+    if (0 != WSAStartup(MAKEWORD(2, 0), &wsa)) {
+	fprintf(stderr, "Cannot initialize winsock.\n");
+	exit(1);
+    }
+    if (0 != (gethostname(g_hostname, sizeof(g_hostname)))) {
+        strcpy(g_hostname, "");
+    }
+
+}
+
+char *ipv4_to_text(uint32_t ip)
+{
+    static char text[32];
+    snprintf(text, 32, "%u.%u.%u.%u",
+            ip & 255,
+            ip >> 8 & 255,
+            ip >> 16 & 255,
+            ip >> 24);
+    return text;
+}
+
+bool check_only_from(uint32_t ip)
+{
+    if (g_num_only_from == 0)
+        return true; // no restriction set
+
+    for (unsigned i=0; i<g_num_only_from; i++)
+    {
+        uint32_t signibits = ip & g_only_from[i].netmask;
+        if (signibits == g_only_from[i].address)
+            return true;
+    }
+    return false;
+}
+
+
+void listen_tcp_loop()
+{
+    SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
+    if (s == INVALID_SOCKET) {
+	fprintf(stderr, "Cannot create socket.\n");
+	exit(1);
+    }
+
+    SOCKADDR_IN addr;
+    memset(&addr, 0, sizeof(SOCKADDR_IN));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(CHECK_MK_AGENT_PORT);
+    addr.sin_addr.s_addr = ADDR_ANY;
+
+    if (SOCKET_ERROR == bind(s, (SOCKADDR *)&addr, sizeof(SOCKADDR_IN))) {
+	fprintf(stderr, "Cannot bind socket to port %d\n", CHECK_MK_AGENT_PORT);
+	exit(1);
+    }
+
+    if (SOCKET_ERROR == listen(s, 5)) {
+	fprintf(stderr, "Cannot listen to socket\n");
+	exit(1);
+    }
+
+    SOCKET connection;
+    // Loop for ever.
+    debug("Starting main loop.");
+    while (!should_terminate)
+    {
+	// Das Dreckswindows kann nicht vernuenftig gleichzeitig auf
+	// ein Socket und auf ein Event warten. Weil ich nicht extra
+	// deswegen mit Threads arbeiten will, verwende ich einfach
+	// select() mit einem Timeout und polle should_terminate.
+
+	fd_set fds;
+	FD_ZERO(&fds);
+	FD_SET(s, &fds);
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 500000;
+
+        SOCKADDR_IN remote_addr;
+        int addr_len = sizeof(SOCKADDR_IN);
+
+	if (1 == select(1, &fds, NULL, NULL, &timeout))
+	{
+	    connection = accept(s, (SOCKADDR *)&remote_addr, &addr_len);
+	    if (connection != INVALID_SOCKET) {
+                uint32_t ip = 0;
+                if (remote_addr.sin_family == AF_INET)
+                    ip = remote_addr.sin_addr.s_addr;
+                if (check_only_from(ip))
+                    output_data(connection);
+		closesocket(connection);
+	    }
+	}
+	else if (!should_terminate) {
+	    Sleep(1); // should never happen
+	}
+    }
+    closesocket(s);
+    WSACleanup();
+}
+
+
+void output(SOCKET &out, const char *format, ...)
+{
+    static char outbuffer[4096];
+
+    va_list ap;
+    va_start(ap, format);
+    int len = vsnprintf(outbuffer, sizeof(outbuffer), format, ap);
+    if (do_tcp) {
+	while (!should_terminate) {
+	    int result = send(out, outbuffer, len, 0);
+	    if (result == SOCKET_ERROR) {
+		debug("send() failed");
+		int error = WSAGetLastError();
+		if (error == WSAEINTR) {
+		    debug("INTR. Nochmal...");
+		    continue;
+		}
+		else if (error == WSAEINPROGRESS) {
+		    debug("INPROGRESS. Nochmal...");
+		    continue;
+		}
+		else if (error == WSAEWOULDBLOCK) {
+		    debug("WOULDBLOCK. Komisch. Breche ab...");
+		    break;
+		}
+		else {
+		    debug("Anderer Fehler. Gebe auf\n");
+		    break;
+		}
+	    }
+	    else if (result == 0)
+		debug("send() returned 0");
+	    else if (result != len)
+		debug("send() sent too few bytes");
+	    break;
+	}
+    }
+    else
+	fwrite(outbuffer, len, 1, stdout);
+}
+
+
 //   .----------------------------------------------------------------------.
 //   |                        __  __       _                                |
 //   |                       |  \/  | __ _(_)_ __                           |
@@ -2020,6 +2079,137 @@ void read_config_file()
 //   |                       |_|  |_|\__,_|_|_| |_|                         |
 //   |                                                                      |
 //   '----------------------------------------------------------------------'
+
+void usage()
+{
+    fprintf(stderr, "Usage: \n"
+	    "check_mk_agent version -- show version " CHECK_MK_VERSION " and exit\n"
+	    "check_mk_agent install -- install as Windows NT service Check_Mk_Agent\n"
+	    "check_mk_agent remove  -- remove Windows NT service\n"
+	    "check_mk_agent adhoc   -- open TCP port %d and answer request until killed\n"
+	    "check_mk_agent test    -- test output of plugin, do not open TCP port\n"
+	    "check_mk_agent debug   -- similar to test, but with lots of debug output\n", CHECK_MK_AGENT_PORT);
+    exit(1);
+}
+
+
+void do_debug()
+{
+    verbose_mode = true;
+    do_tcp = false;
+    // logwatch_send_initial_entries = true;
+    // logwatch_suppress_info = false;
+    SOCKET dummy;
+    output_data(dummy);
+}
+
+void do_test()
+{
+    do_tcp = false;
+    SOCKET dummy;
+    output_data(dummy);
+}
+
+void do_adhoc()
+{
+    do_tcp = true;
+    printf("Listening for TCP connections on port %d\n", CHECK_MK_AGENT_PORT);
+    printf("Close window or press Ctrl-C to exit\n");
+    fflush(stdout);
+
+    should_terminate = false;
+    listen_tcp_loop(); // runs for ever or until Ctrl-C
+}
+
+
+void output_data(SOCKET &out)
+{
+    // make sure, output of numbers is not localized
+    setlocale(LC_ALL, "C");
+
+    if (enabled_sections & SECTION_CHECK_MK)
+        section_check_mk(out);
+    if (enabled_sections & SECTION_UPTIME)
+        section_uptime(out);
+    if (enabled_sections & SECTION_DF)
+        section_df(out);
+    if (enabled_sections & SECTION_PS)
+        section_ps(out);
+    if (enabled_sections & SECTION_MEM)
+        section_mem(out);
+    if (enabled_sections & SECTION_SERVICES)
+        section_services(out);
+    if (enabled_sections & SECTION_WINPERF)
+        section_winperf(out);
+    if (enabled_sections & SECTION_LOGWATCH)
+        section_eventlog(out);
+    if (enabled_sections & SECTION_PLUGINS)
+        section_plugins(out);
+    if (enabled_sections & SECTION_LOCAL)
+        section_local(out);
+    if (enabled_sections & SECTION_SYSTEMTIME)
+        section_systemtime(out);
+}
+
+
+void cleanup()
+{
+    if (eventlog_buffer_size > 0)
+	delete [] eventlog_buffer;
+    unregister_all_eventlogs(); // frees a few bytes
+}
+
+void show_version()
+{
+    printf("Check_MK_Agent version %s\n", CHECK_MK_VERSION);
+}
+
+void get_agent_dir(char *buffer, int size)
+{
+    buffer[0] = 0;
+
+    HKEY key;
+    DWORD ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+          "SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", 0, KEY_READ, &key);
+    if (ret == ERROR_SUCCESS)
+    {
+        DWORD dsize = size;
+        if (ERROR_SUCCESS == RegQueryValueEx(key, "ImagePath", NULL, NULL, (BYTE *)buffer, &dsize))
+        {
+            char *end = buffer + strlen(buffer);
+            // search backwards for backslash
+            while (end > buffer && *end != '\\')
+                end--;
+            *end = 0; // replace \ with string end => get directory of executable
+
+            // Handle case where name is quoted with double quotes.
+            // This is reported to happen on some 64 Bit systems when spaces
+            // are in the directory name.
+            if (*buffer == '"') {
+                memmove(buffer, buffer + 1, strlen(buffer));
+            }
+        }
+        RegCloseKey(key);
+    }
+    else {
+        // If the agent is not installed as service, simply
+        // assume the current directory to be the agent
+        // directory (for test and adhoc mode)
+        strncpy(buffer, g_current_directory, size);
+        if (buffer[strlen(buffer)-1] == '\\') // Remove trailing backslash
+            buffer[strlen(buffer)-1] = 0;
+    }
+
+}
+
+void determine_directories() 
+{
+    // Determine directories once and forever
+    getcwd(g_current_directory, sizeof(g_current_directory));
+    get_agent_dir(g_agent_directory, sizeof(g_agent_directory));
+    snprintf(g_plugins_dir, sizeof(g_plugins_dir), "%s\\plugins", g_agent_directory);
+    snprintf(g_local_dir, sizeof(g_local_dir), "%s\\local", g_agent_directory);
+}
 
 int main(int argc, char **argv)
 {
@@ -2033,7 +2223,6 @@ int main(int argc, char **argv)
 	RunService();
     else if (!strcmp(argv[1], "test"))
 	do_test();
-
     else if (!strcmp(argv[1], "adhoc"))
 	do_adhoc();
     else if (!strcmp(argv[1], "install"))
@@ -2049,3 +2238,4 @@ int main(int argc, char **argv)
 
     cleanup();
 }
+

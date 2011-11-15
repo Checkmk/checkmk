@@ -96,6 +96,7 @@
 #define MAX_ONLY_FROM                32
 #define MAX_WINPERF_COUNTERS         64
 #define MAX_MRPE_COMMANDS            64
+#define MAX_EXECUTE_SUFFIXES         64
 
 // Default buffer size for reading performance counters
 #define DEFAULT_BUFFER_SIZE      40960L
@@ -191,6 +192,9 @@ unsigned int g_num_winperf_counters = 0;
 struct mrpe_entry g_mrpe_entries[MAX_MRPE_COMMANDS];
 unsigned int g_num_mrpe_entries = 0;
 
+// Configuration of execution suffixed
+unsigned g_num_execute_suffixes = 0;
+char *g_execute_suffixes[MAX_EXECUTE_SUFFIXES];
 
 //  .----------------------------------------------------------------------.
 //  |                  _   _      _                                        |
@@ -1320,8 +1324,20 @@ bool banned_exec_name(char *name)
         return false;
 
     char *extension = name + strlen(name) - 4; 
-    return  ( !strcasecmp(extension, ".dir") 
-           || !strcasecmp(extension, ".txt"));
+    if (g_num_execute_suffixes) {
+        if (extension[0] != '.')
+            return true; 
+        extension ++;
+        unsigned i;
+        for (i=0; i<g_num_execute_suffixes; i++)
+            if (!strcasecmp(extension, g_execute_suffixes[i]))
+                return false;
+        return true;
+    }
+    else{
+        return  ( !strcasecmp(extension, ".dir") 
+               || !strcasecmp(extension, ".txt"));
+    }
 }
 
 void run_plugin(SOCKET &out, char *path)
@@ -1795,10 +1811,28 @@ void parse_only_from(char *value)
         add_only_from(word);
 }
 
+void parse_execute(char *value)
+{
+    // clean array if this options has been parsed already
+    while (g_num_execute_suffixes)
+        free(g_execute_suffixes[--g_num_execute_suffixes]);
+
+    char *suffix;
+    while (0 != (suffix = next_word(&value))) {
+        if (g_num_execute_suffixes < MAX_EXECUTE_SUFFIXES) {
+            g_execute_suffixes[g_num_execute_suffixes++] = strdup(suffix);
+        }
+    }
+}
+
 bool handle_global_config_variable(char *var, char *value)
 {
     if (!strcmp(var, "only_from")) {
         parse_only_from(value);
+        return true;
+    }
+    else if (!strcmp(var, "execute")) {
+        parse_execute(value);
         return true;
     }
     else if (!strcmp(var, "sections")) {
@@ -2326,6 +2360,8 @@ void cleanup()
     if (eventlog_buffer_size > 0)
 	delete [] eventlog_buffer;
     unregister_all_eventlogs(); // frees a few bytes
+    while (g_num_execute_suffixes)
+        free(g_execute_suffixes[--g_num_execute_suffixes]);
 }
 
 void show_version()

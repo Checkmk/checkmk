@@ -167,6 +167,7 @@ class html:
         self.output_format = "html"
         self.status_icons = {}
         self.link_target = None
+        self.form_name = None
         self.form_vars = []
 
     def plugin_stylesheets(self): 
@@ -410,7 +411,7 @@ class html:
                       (varname, value, checked_text, text))
         self.form_vars.append(varname)
 
-    def checkbox(self, varname, deflt="", cssclass = '', onclick = None):
+    def checkbox(self, varname, deflt=False, cssclass = '', onclick = None):
         error = self.user_errors.get(varname)
         if error:
             html = "<x class=inputerror>"
@@ -419,15 +420,11 @@ class html:
         # wether we should add the default value, we need to detect
         # if the form is printed for the first time. This is the
         # case if "filled_in" is not set.
-        if not self.var("filled_in") == self.form_name: # this form filled in
-            value = self.req.vars.get(varname, deflt)
-        else:
-            value = self.req.vars.get(varname, "")
+        value = self.get_checkbox(varname)
+        if value == None: # form not yet filled in
+             value = deflt
 
-        if value != "" and value != False:
-            checked = " CHECKED"
-        else:
-            checked = ""
+        checked = value and " CHECKED" or ""
         if cssclass:
             cssclass = ' class="%s"' % cssclass
         onclick_code = onclick and " onclick=\"%s\"" % (onclick) or ""
@@ -442,19 +439,11 @@ class html:
     # between False and None. The browser does not set the variables for
     # Checkboxes that are not checked :-(
     def get_checkbox(self, varname, form_name = None):
-        if form_name:
-            try:
-                if not self.var("filled_in") == self.form_name: # this form filled in
-                    return None
-            except:
-                # self.form_name not set, we have no form
-                if not self.var("filled_in"):
-                    return None
-        elif not self.var("filled_in"):
+        if not self.has_var("filled_in") or ( # no form filled in
+            self.form_name != None and self.var("filled_in") != self.form_name): # wrong form filled in
             return None
-
-        value = self.req.vars.get(varname, "")
-        return not not value
+        else:
+            return not not self.req.vars.get(varname)
 
     def datetime_input(self, varname, default_value):
         try:

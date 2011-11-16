@@ -61,6 +61,24 @@ register_configvar(group,
              default_value = True),
     domain = "multisite")
 
+register_configvar(group,
+    "context_buttons_to_show",
+    Optional(
+        Integer(
+            title = _("show"), 
+            label = _("buttons"),
+            minvalue = 1,
+            maxvalue = 100,
+            size = 2),
+        default_value = 5,
+        title = _("Number of context buttons to show"),
+        label = _("Show only most frequently used buttons"),
+        help = _("If this option is enabled, then Multisite only show the most "
+                 "used context buttons and hides the rest. Which buttons are used "
+                 "how often is computed separately per user.")),
+    domain = "multisite")
+
+
 register_configvar(group, 
     "soft_query_limit",
     Integer(title = _("Soft query limit"),

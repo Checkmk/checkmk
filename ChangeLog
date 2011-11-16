@@ -33,6 +33,8 @@
     * New command for sending custom notifications
     * FIX: Fixed encoding problem when opening dashboard
     * New icon on a service whos host is in downtime
+    * Only show most frequently used context buttons (configurable
+      in multisite.mk via context_buttons_to_show)
 
     WATO:
     * Evolved to full featured monitoring configuration tool!

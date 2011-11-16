@@ -320,15 +320,31 @@ class html:
                    "class=button%s value=\"%s\" />" % (varname, varname, onclick, style, text))
 
     def begin_context_buttons(self):
+        self.context_button_hidden = False
         self.write("<table class=contextlinks><tr><td>\n")
         self.context_buttons_open = True
 
     def end_context_buttons(self):
         if self.context_buttons_open:
+            if self.context_button_hidden:
+                self.write('<div title="%s" id=toggle class="contextlink short" ' 
+                      % _("Show all buttons"))
+                self.context_button_hover_code("_short")
+                self.write("><a onclick='unhide_context_buttons(this);' href='#'>...</a></div>")
             self.write("</td></tr></table>\n")
         self.context_buttons_open = False
 
-    def context_button(self, title, url, icon=None, hot=False, id=None):
+    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None):
+        display = ""
+        if bestof:
+            counts = config.load_user_file("buttoncounts", {})
+            weights = counts.items()
+            weights.sort(cmp = lambda a,b: cmp(a[1],  b[1]))
+            best = dict(weights[-bestof:])
+            if id not in best:
+                display="none"
+                self.context_button_hidden = True
+
         if not self.context_buttons_open:
             self.begin_context_buttons()
 
@@ -338,11 +354,17 @@ class html:
             idtext = " id='%s'" % id
         else:
             idtext = ""
-        self.write('<div%s class="contextlink%s" ' % (idtext, hot and " hot" or ""))
-        self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % (hot and "_hot" or ""))
-        self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink%s.png\")";' ''' % (hot and "_hot" or ""))
+        self.write('<div%s style="display: %s" class="contextlink%s" ' % (idtext, display, hot and " hot" or ""))
+        self.context_button_hover_code(hot and "_hot" or "")
         self.write('>')
-        self.write('<a href="%s">%s</a></div>' % (url, title))
+        self.write('<a href="%s"' % url)
+        if bestof:
+            self.write(' onmousedown="count_context_button(this); document.location=this.href; " ')
+        self.write('>%s</a></div>' % title)
+
+    def context_button_hover_code(self, what):
+        self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % what)
+        self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink%s.png\")";' ''' % what)
 
     def number_input(self, varname, deflt = "", size=8):
         self.text_input(varname, str(deflt), "number", size=size)

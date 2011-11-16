@@ -512,9 +512,17 @@ div.contextlink {
 div.contextlink.hot {
     background-image: url("images/contextlink_hot.png");
 }
+div.contextlink.short {
+    background-image: url("images/contextlink_short.png");
+    width: 38px;
+}
+div.contextlink.short a {
+    width: 38px;
+}
+
 
 div.contextlink a {
-    padding-top: 5px;
+    padding-top: 4px;
     color: #fff;
     text-decoration: none;
     font-weight: bold;

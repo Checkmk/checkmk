@@ -43,6 +43,7 @@ pagehandlers.update({
    "edit_views"               : views.page_edit_views,
    "edit_view"                : views.page_edit_view,
    "get_edit_column"          : views.ajax_get_edit_column,
+   "count_context_button"     : views.ajax_count_button,
    "export_views"             : views.ajax_export,
    "view"                     : views.page_view,
    "logwatch"                 : page_logwatch.page,

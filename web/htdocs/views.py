@@ -1605,17 +1605,17 @@ def show_context_links(thisview, active_filters):
             url = wato.api.link_to_host(host)
         else:
             url = wato.api.link_to_path(html.var("wato_folder", ""))
-        html.context_button(_("WATO"), url, "wato")
+        html.context_button(_("WATO"), url, "wato", id="wato", 
+            bestof = config.context_buttons_to_show)
 
 
-    # sort views after text of possible button (sort buttons after their text)
-    sorted_views = []
-    for view in html.available_views.values():
-        sorted_views.append((view_linktitle(view), view))
-    sorted_views.sort()
+    # sort view buttons somehow
+    sorted_views = html.available_views.values()
+    sorted_views.sort(cmp = lambda b,a: cmp(a.get('icon'), b.get('icon')))
 
-    for linktitle, view in sorted_views:
+    for view in sorted_views:
         name = view["name"]
+        linktitle = view.get("linktitle")
         if view == thisview:
             continue
         if view.get("hidebutton", False):
@@ -1642,10 +1642,20 @@ def show_context_links(thisview, active_filters):
         if len(used_contextvars):
             vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
             html.context_button(linktitle, 
-              html.makeuri_contextless(vars_values + [("view_name", name)]), view.get("icon"))
+              html.makeuri_contextless(vars_values + [("view_name", name)]), 
+                  view.get("icon"), id = "cb_" + name, bestof=config.context_buttons_to_show)
 
     execute_hooks('buttons-end')
     html.end_context_buttons()
+
+def ajax_count_button():
+    id = html.var("id")
+    counts = config.load_user_file("buttoncounts", {})
+    for i in counts:
+        counts[i] *= 0.95
+    counts.setdefault(id, 0)
+    counts[id] += 1
+    config.save_user_file("buttoncounts", counts)
 
 
 # Retrieve data via livestatus, convert into list of dicts,

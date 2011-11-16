@@ -1344,3 +1344,26 @@ function has_canvas_support() {
 function rad(g) {
     return (g * 360 / 100 * Math.PI) / 180;
 }
+
+// TEST
+function count_context_button(oA)
+{
+    // Extract view name from id of parent div element
+    var id = oA.parentNode.id;
+    get_url_sync("count_context_button.py?id=" + id);
+}
+
+function unhide_context_buttons(oA)
+{
+    var oNode;
+    var oTd = oA.parentNode.parentNode;
+    for (var i in oTd.childNodes) {
+        oNode = oTd.childNodes[i];
+        if (oNode.nodeName == "DIV" && oNode.id != "toggle")
+            oNode.style.display = "";
+    }
+    oA.parentNode.style.display = "none";
+    oNode = null;
+    oDiv = null;
+}
+

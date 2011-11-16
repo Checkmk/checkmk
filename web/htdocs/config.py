@@ -513,6 +513,9 @@ filter_columns = 2
 # Default language for l10n
 default_language = None
 
+# Show only most used buttons, set to None if you want
+# always all buttons to be shown
+context_buttons_to_show = 5
 
 #    __        ___  _____ ___  
 #    \ \      / / \|_   _/ _ \ 

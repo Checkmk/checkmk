@@ -4949,7 +4949,7 @@ def mode_globalvars(phase):
                 del current_settings[varname]
                 save_configuration_settings(current_settings)
                 msg = _("Resetted configuration variable %s to its default.") % varname
-                log_pending(SYNCRESTART, None, "edit-configvar", msg)
+                log_pending(need_restart and SYNCRESTART or SYNC, None, "edit-configvar", msg)
                 return "globalvars", msg 
             elif c == False:
                 return ""

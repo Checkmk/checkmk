@@ -556,6 +556,8 @@ def load_hosts_file(folder):
                     host[".siteid"] = host["site"]
                 else:
                     host[".siteid"] = folder[".siteid"]
+            else:
+                host[".siteid"] = None
 
             hosts[hostname] = host
 
@@ -9528,6 +9530,21 @@ class API:
             return folder["title"]
         else:
             return path
+
+    # Return a list with all the titles of the paths'
+    # components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]
+    def get_folder_title_path(self, path, withlinks=False):
+        load_all_folders() # TODO: speed up!
+        folder = g_folders.get(path)
+        titles = []
+        while (folder):
+            title = folder["title"]
+            if withlinks:
+                title = "<a href='wato.py?mode=folder&folder=%s'>%s</a>" % (folder[".path"], title)
+            titles.append(title)
+            folder = folder.get(".parent")
+        return titles[::-1]
+
 
     # Returns the number of not activated changes.
     def num_pending_changes(self):

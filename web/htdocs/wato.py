@@ -8919,7 +8919,15 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
         if host_list == []:
             condition = _("This rule does <b>never</b> apply!")
         elif host_list[-1] != ALL_HOSTS[0]:
-            tt_list = [ "<tt><b>%s</b></tt>" % t for t in host_list ]
+            tt_list = []
+            for h in host_list:
+                f = find_host(h)
+                if f:
+                    uri = html.makeuri([("mode", "edithost"), ("folder", f[".path"]), ("host", h)])
+                    host_spec = '<a href="%s">%s</a>' % (uri, h)
+                else:
+                    host_spec = h
+                tt_list.append("<tt><b>%s</b></tt>" % host_spec)
             if len(host_list) == 1:
                 condition = _("Host name is %s") % tt_list[0]
             else:

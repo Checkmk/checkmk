@@ -150,6 +150,7 @@ backup_paths = replication_paths + [
 ALL_HOSTS    = [ '@all' ]
 ALL_SERVICES = [ "" ]
 NEGATE       = '@negate'
+NO_ITEM      = {} # Just an arbitrary unique thing
 
 # Actions for log_pending
 RESTART      = 1
@@ -8465,7 +8466,10 @@ def mode_edit_ruleset(phase):
     varname = html.var("varname")
     rulespec = g_rulespecs[varname]
     hostname = html.var("host", "")
-    item = eval(html.var("item", "None"))
+    if html.has_var("item"):
+        item = eval(html.var("item"))
+    else:
+        item = NO_ITEM
 
     if hostname:
         hosts = load_hosts(g_folder)
@@ -8647,6 +8651,7 @@ def mode_edit_ruleset(phase):
             if hostname:
                 reason = rule_matches_host_and_item(
                     rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, item)
+                
                 # Handle case where dict is constructed from rules
                 if reason == True and rulespec["match"] == "dict": 
                     if len(value) == 0:
@@ -8716,7 +8721,7 @@ def mode_edit_ruleset(phase):
     html.begin_form("new_rule")
     if hostname:
         title = _("Exception rule for host %s" % hostname)
-        if rulespec["itemtype"]:
+        if item != NO_ITEM and rulespec["itemtype"]:
             title += _(" and %s '%s'") % (rulespec["itemname"], item)
         html.button("_new_host_rule", title)
         html.write(" " + _("or") + " ")
@@ -8740,7 +8745,7 @@ def folder_selection(folder, depth=0):
 
 
 
-def create_rule(rulespec, hostname=None, item=None):
+def create_rule(rulespec, hostname=None, item=NO_ITEM):
     new_rule = []
     valuespec = rulespec["valuespec"]
     if valuespec:
@@ -8750,7 +8755,7 @@ def create_rule(rulespec, hostname=None, item=None):
     else:
         new_rule.append(ALL_HOSTS) # bottom: default to catch-all rule
     if rulespec["itemtype"]:
-        if item != None:
+        if item != NO_ITEM:
             new_rule.append(["%s$" % item])
         else:
             new_rule.append([""])
@@ -8843,7 +8848,7 @@ def rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list,
         reasons.append(_("The rule does not apply to the folder of the host."))
 
     # Check items
-    if rulespec["itemtype"]:
+    if item != NO_ITEM and rulespec["itemtype"]:
         item_matches = False
         for i in item_list:
             if re.match(i, str(item)):

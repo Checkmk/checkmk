@@ -488,6 +488,8 @@ custom_links = {}
 #     \_/ \__,_|_|  |_|\___/ \__,_|___/
 #                                      
 
+debug_livestatus_queries = False
+
 # Show livestatus errors in multi site setup if some sites are
 # not reachable.
 show_livestatus_errors = True

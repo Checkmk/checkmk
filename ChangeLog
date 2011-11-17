@@ -36,6 +36,8 @@
     * Only show most frequently used context buttons (configurable
       in multisite.mk via context_buttons_to_show)
     * Show icon if user has modified a view's filter settings
+    * New config option debug_livestatus_queries, normal debug
+      mode does not include this anymore
 
     WATO:
     * Evolved to full featured monitoring configuration tool!

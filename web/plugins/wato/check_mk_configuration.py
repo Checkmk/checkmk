@@ -45,9 +45,18 @@ register_configvar(group,
     "debug",
     Checkbox(title = _("Debug mode"),
              label = _("enable debug mode"),
-             help = _("When Multisite is running in debug mode, all Livestatus queries done in " 
-                      "views are output. Also when errors occur a complete Python stack trace "
-                      "is being output."),
+             help = _("When Multisite is running in debug mode, interal Python error messages "
+                      "are being displayed and various debug information in other places is "
+                      "also available."),
+            default_value = False),
+    domain = "multisite")
+
+register_configvar(group,
+    "debug_livestatus_queries",
+    Checkbox(title = _("Debug Livestatus queries"),
+             label = _("enable debug of Livestatus queries"),
+             help = _("With this option turned on all Livestatus queries made by Multisite "
+                      "in order to render views are being displayed."),
             default_value = False),
     domain = "multisite")
 

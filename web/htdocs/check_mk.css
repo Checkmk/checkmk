@@ -158,6 +158,16 @@ body.main table.header td.right img {
     top: 5px;
 }
 
+body.main div.urldebug {
+    color: white;
+    width: 100%;
+    font-size: 8pt;
+    font-family: monospace;
+    position: relative;
+    top: -14px;
+}
+
+
 /* The content page footer containing optional status icons */
 table.footer { 
     margin-top: 10px;
@@ -1023,6 +1033,15 @@ tr.data td.pnpgraph img {
     border: 1px solid #888;
     margin: 7px 3px 3px 0px; 
 }
+
+div.livestatus.message {
+    position: fixed;
+    bottom: -10px;
+    left: 10px;
+    font-size: 8pt;
+    z-index: 20;
+}
+
 /*
  _                            _       
 | |    __ _ _   _  ___  _   _| |_ ___ 

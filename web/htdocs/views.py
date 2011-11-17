@@ -1289,7 +1289,12 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         # Filter-button
         if 'F' in display_options and len(show_filters) > 0:
             filter_isopen = html.var("search", "") == "" and view["mustsearch"]
-            toggle_button("table_filter", filter_isopen, _("Filter"), ["filter"])
+            # Show warning-icon if some filter is set
+            label = _("Filter")
+            if html.var("filled_in") == "filter":
+                label = '<img class=tabicon src="images/icon_filter_set.png"> %s' % label
+
+            toggle_button("table_filter", filter_isopen, label, ["filter"])
             html.write("<td class=minigap></td>\n")
 
         # Command-button, open command form if checkboxes are currently shown

@@ -989,6 +989,14 @@ img.icon {
    width: 20px;
    height: 20px;
 }
+img.tabicon {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+    left: 0px;
+}
 /* Icon image place inline in some documentation text */
 .wato img.icon.docu {
    width: 14px;

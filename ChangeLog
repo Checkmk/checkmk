@@ -35,6 +35,7 @@
     * New icon on a service whos host is in downtime
     * Only show most frequently used context buttons (configurable
       in multisite.mk via context_buttons_to_show)
+    * Show icon if user has modified a view's filter settings
 
     WATO:
     * Evolved to full featured monitoring configuration tool!

@@ -432,12 +432,13 @@ def load_folder(dir, name="", path="", parent=None):
         folder["attributes"] = {}
 
     # Add information about the effective site of this folder
-    if "site" in folder["attributes"]:
-        folder[".siteid"] = folder["attributes"]["site"]
-    elif parent:
-        folder[".siteid"] = parent[".siteid"]
-    else:
-        folder[".siteid"] = default_site()
+    if is_distributed():
+        if "site" in folder["attributes"]:
+            folder[".siteid"] = folder["attributes"]["site"]
+        elif parent:
+            folder[".siteid"] = parent[".siteid"]
+        else:
+            folder[".siteid"] = default_site()
         
     # Now look subdirectories
     for entry in os.listdir(dir):
@@ -550,10 +551,11 @@ def load_hosts_file(folder):
 
             # Compute site attribute, because it is needed at various
             # places.
-            if "site" in host:
-                host[".siteid"] = host["site"]
-            else:
-                host[".siteid"] = folder[".siteid"]
+            if is_distributed():
+                if "site" in host:
+                    host[".siteid"] = host["site"]
+                else:
+                    host[".siteid"] = folder[".siteid"]
 
             hosts[hostname] = host
 
@@ -5710,7 +5712,7 @@ def find_usage_of_timeperiod(tpname):
 
 
 #.
-#   .-Sites----------------------------------------------------------------.
+#   .-Multisite Connections------------------------------------------------.
 #   |                        ____  _ _                                     |
 #   |                       / ___|(_) |_ ___  ___                          |
 #   |                       \___ \| | __/ _ \/ __|                         |
@@ -5735,13 +5737,19 @@ def mode_sites(phase):
     if phase == "action":
         delid = html.var("_delete")
         if delid and html.transaction_valid():
-            # Make sure that site is not being used by hosts and folders
-            site_ids = set([])
-            find_folder_sites(site_ids, g_root_folder, True)
-            if delid in site_ids:
-                raise MKUserError(None, 
-                    _("You cannot delete this connection. "
-                      "It has folders/hosts assigned to it."))
+            # The last connection can always be deleted. In that case we
+            # fallb back to non-distributed-WATO and the site attribute
+            # will be removed.
+            test_sites = dict(sites.items())
+            del test_sites[delid]
+            if is_distributed(test_sites):
+                # Make sure that site is not being used by hosts and folders
+                site_ids = set([])
+                find_folder_sites(site_ids, g_root_folder, True)
+                if delid in site_ids:
+                    raise MKUserError(None, 
+                        _("You cannot delete this connection. "
+                          "It has folders/hosts assigned to it."))
 
             c = wato_confirm(_("Confirm deletion of site %s" % delid),
                              _("Do you really want to delete the connection to the site %s?" % delid))
@@ -6389,8 +6397,10 @@ def do_remote_automation(site, command, vars):
 
 # Determine, if we have any slaves to distribute
 # configuration to.
-def is_distributed():
-    for site in config.sites.values():
+def is_distributed(sites = None):
+    if sites == None:
+        sites = config.sites
+    for site in sites.values():
         if site.get("replication"):
             return True
     return False

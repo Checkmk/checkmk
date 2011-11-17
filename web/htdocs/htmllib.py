@@ -167,7 +167,9 @@ class html:
         self.output_format = "html"
         self.status_icons = {}
         self.link_target = None
+        self.form_name = None
         self.form_vars = []
+        self.context_buttons_open = False
 
     def plugin_stylesheets(self): 
         global plugin_stylesheets
@@ -318,23 +320,51 @@ class html:
                    "class=button%s value=\"%s\" />" % (varname, varname, onclick, style, text))
 
     def begin_context_buttons(self):
+        self.context_button_hidden = False
         self.write("<table class=contextlinks><tr><td>\n")
+        self.context_buttons_open = True
 
     def end_context_buttons(self):
-        self.write("</td></tr></table>\n")
+        if self.context_buttons_open:
+            if self.context_button_hidden:
+                self.write('<div title="%s" id=toggle class="contextlink short" ' 
+                      % _("Show all buttons"))
+                self.context_button_hover_code("_short")
+                self.write("><a onclick='unhide_context_buttons(this);' href='#'>...</a></div>")
+            self.write("</td></tr></table>\n")
+        self.context_buttons_open = False
 
-    def context_button(self, title, url, icon=None, hot=False, id=None):
+    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None):
+        display = ""
+        if bestof:
+            counts = config.load_user_file("buttoncounts", {})
+            weights = counts.items()
+            weights.sort(cmp = lambda a,b: cmp(a[1],  b[1]))
+            best = dict(weights[-bestof:])
+            if id not in best:
+                display="none"
+                self.context_button_hidden = True
+
+        if not self.context_buttons_open:
+            self.begin_context_buttons()
+
         if icon:
             title = '<img src="images/icon_%s.png">%s' % (icon, title)
         if id:
             idtext = " id='%s'" % id
         else:
             idtext = ""
-        self.write('<div%s class="contextlink%s" ' % (idtext, hot and " hot" or ""))
-        self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % (hot and "_hot" or ""))
-        self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink%s.png\")";' ''' % (hot and "_hot" or ""))
+        self.write('<div%s style="display: %s" class="contextlink%s" ' % (idtext, display, hot and " hot" or ""))
+        self.context_button_hover_code(hot and "_hot" or "")
         self.write('>')
-        self.write('<a href="%s">%s</a></div>' % (url, title))
+        self.write('<a href="%s"' % url)
+        if bestof:
+            self.write(' onmousedown="count_context_button(this); document.location=this.href; " ')
+        self.write('>%s</a></div>' % title)
+
+    def context_button_hover_code(self, what):
+        self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % what)
+        self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink%s.png\")";' ''' % what)
 
     def number_input(self, varname, deflt = "", size=8):
         self.text_input(varname, str(deflt), "number", size=size)
@@ -410,7 +440,7 @@ class html:
                       (varname, value, checked_text, text))
         self.form_vars.append(varname)
 
-    def checkbox(self, varname, deflt="", cssclass = '', onclick = None):
+    def checkbox(self, varname, deflt=False, cssclass = '', onclick = None):
         error = self.user_errors.get(varname)
         if error:
             html = "<x class=inputerror>"
@@ -419,15 +449,11 @@ class html:
         # wether we should add the default value, we need to detect
         # if the form is printed for the first time. This is the
         # case if "filled_in" is not set.
-        if not self.var("filled_in") == self.form_name: # this form filled in
-            value = self.req.vars.get(varname, deflt)
-        else:
-            value = self.req.vars.get(varname, "")
+        value = self.get_checkbox(varname)
+        if value == None: # form not yet filled in
+             value = deflt
 
-        if value != "" and value != False:
-            checked = " CHECKED"
-        else:
-            checked = ""
+        checked = value and " CHECKED" or ""
         if cssclass:
             cssclass = ' class="%s"' % cssclass
         onclick_code = onclick and " onclick=\"%s\"" % (onclick) or ""
@@ -442,19 +468,14 @@ class html:
     # between False and None. The browser does not set the variables for
     # Checkboxes that are not checked :-(
     def get_checkbox(self, varname, form_name = None):
-        if form_name:
-            try:
-                if not self.var("filled_in") == self.form_name: # this form filled in
-                    return None
-            except:
-                # self.form_name not set, we have no form
-                if not self.var("filled_in"):
-                    return None
-        elif not self.var("filled_in"):
+        if self.has_var(varname):
+            return not not self.var(varname)
+        elif not self.has_var("filled_in") or ( # no form filled in
+            self.form_name != None and self.var("filled_in") != self.form_name): # wrong form filled in
             return None
-
-        value = self.req.vars.get(varname, "")
-        return not not value
+        else:
+            # Form filled in but variable missing -> Checkbox not checked
+            return False
 
     def datetime_input(self, varname, default_value):
         try:

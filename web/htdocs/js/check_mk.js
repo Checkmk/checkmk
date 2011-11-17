@@ -423,13 +423,16 @@ function actionResponseHandler(oImg, code) {
     oImg = null;
 }
 
-function performAction(oLink, action, type, site, name1, name2) {
+function performAction(oLink, action, site, host, service) {
     var oImg = oLink.childNodes[0];
     oImg.src = 'images/icon_reloading.gif';
 
     // Chrome and IE are not animating the gif during sync ajax request
     // So better use the async request here
-    get_url('nagios_action.py?action='+action+'&site='+site+'&host='+name1+'&service='+name2,
+    get_url('nagios_action.py?action=' + action + 
+            '&site='    + escape(site) + 
+            '&host='    + escape(host) + 
+            '&service=' + escape(service),
             actionResponseHandler, oImg);
     oImg = null;
 }
@@ -1341,3 +1344,26 @@ function has_canvas_support() {
 function rad(g) {
     return (g * 360 / 100 * Math.PI) / 180;
 }
+
+// TEST
+function count_context_button(oA)
+{
+    // Extract view name from id of parent div element
+    var id = oA.parentNode.id;
+    get_url_sync("count_context_button.py?id=" + id);
+}
+
+function unhide_context_buttons(oA)
+{
+    var oNode;
+    var oTd = oA.parentNode.parentNode;
+    for (var i in oTd.childNodes) {
+        oNode = oTd.childNodes[i];
+        if (oNode.nodeName == "DIV" && oNode.id != "toggle")
+            oNode.style.display = "";
+    }
+    oA.parentNode.style.display = "none";
+    oNode = null;
+    oDiv = null;
+}
+

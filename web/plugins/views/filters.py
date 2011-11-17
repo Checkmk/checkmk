@@ -188,37 +188,29 @@ class FilterServiceState(Filter):
         self.prefix = prefix
 
     def display(self):
-        if html.var("filled_in"):
-            defval = ""
-        else:
-            defval = "on"
         for var, text in [(self.prefix + "st0", "OK"), (self.prefix + "st1", "WARN"), \
-                          (self.prefix + "st2", "CRIT"), (self.prefix + "st3", "UNKNOWN"), (self.prefix + "stp", "PENDING")]:
-            html.checkbox(var, defval)
+                          (self.prefix + "st2", "CRIT"), (self.prefix + "st3", "UNKNOWN"), 
+                          (self.prefix + "stp", "PENDING")]:
+            html.checkbox(var, True)
             html.write(" %s " % text)
 
     def filter(self, infoname):
         headers = []
-        if html.var("filled_in"):
-            defval = ""
-        else:
-            defval = "on"
-
         for i in [0,1,2,3]:
-            if html.var(self.prefix + "st%d" % i, defval) == "on":
+            if html.get_checkbox(self.prefix + "st%d" % i) == False:
                 if self.prefix == "hd":
                     column = "service_last_hard_state"
                 else:
                     column = "service_state"
-                headers.append("Filter: %s = %d\nFilter: service_has_been_checked = 1\nAnd: 2\n" % (column, i))
-        if html.var(self.prefix + "stp", defval) == "on":
-            headers.append("Filter: service_has_been_checked = 0\n")
-        if len(headers) == 0:
-            return "Limit: 0\n" # no allowed state
-        elif len(headers) == 5: # all states allowed
+                headers.append("Filter: %s = %d\n"
+                               "Filter: service_has_been_checked = 1\n"
+                               "And: 2\nNegate:\n" % (column, i))
+        if html.get_checkbox(self.prefix + "stp") == False:
+            headers.append("Filter: service_has_been_checked = 1\n")
+        if len(headers) == 5: # none allowed = all allowed (makes URL building easier)
             return ""
         else:
-            return "".join(headers) + ("Or: %d\n" % len(headers))
+            return "".join(headers)
 
 declare_filter(215, FilterServiceState("svcstate",     _("Service states"),      ""))
 declare_filter(216, FilterServiceState("svchardstate", _("Service hard states"), "hd"))
@@ -229,30 +221,24 @@ class FilterHostState(Filter):
                 "host", [ "hst0", "hst1", "hst2", "hstp" ], [])
 
     def display(self):
-        if html.var("filled_in"):
-            defval = ""
-        else:
-            defval = "on"
-        for var, text in [("hst0", _("UP")), ("hst1", _("DOWN")), ("hst2", _("UNREACH")), ("hstp", _("PENDING"))]:
-            html.checkbox(var, defval)
+        for var, text in [("hst0", _("UP")), ("hst1", _("DOWN")), 
+                          ("hst2", _("UNREACH")), ("hstp", _("PENDING"))]:
+            html.checkbox(var, True)
             html.write(" %s " % text)
 
     def filter(self, infoname):
         headers = []
-        if html.var("filled_in"):
-            defval = ""
-        else:
-            defval = "on"
-
         for i in [0,1,2]:
-            if html.var("hst%d" % i, defval) == "on":
-                headers.append("Filter: host_state = %d\nFilter: host_has_been_checked = 1\nAnd: 2\n" % i)
-        if html.var("stp", defval) == "on":
-            headers.append("Filter: host_has_been_checked = 0\n")
-        if len(headers) == 0:
-            return "Limit: 0\n" # not allowed state
+            if html.get_checkbox("hst%d" % i) == False:
+                headers.append("Filter: host_state = %d\n"
+                               "Filter: host_has_been_checked = 1\n"
+                               "And: 2\nNegate:\n" % i)
+        if html.get_checkbox("hstp") == False:
+            headers.append("Filter: host_has_been_checked = 1\n") 
+        if len(headers) == 4: # none allowed = all allowed (makes URL building easier)
+            return ""
         else:
-            return "".join(headers) + ("Or: %d\n" % len(headers))
+            return "".join(headers)
 
 declare_filter(115, FilterHostState())
 

@@ -96,6 +96,7 @@
 #define MAX_ONLY_FROM                32
 #define MAX_WINPERF_COUNTERS         64
 #define MAX_MRPE_COMMANDS            64
+#define MAX_EXECUTE_SUFFIXES         64
 
 // Default buffer size for reading performance counters
 #define DEFAULT_BUFFER_SIZE      40960L
@@ -191,6 +192,9 @@ unsigned int g_num_winperf_counters = 0;
 struct mrpe_entry g_mrpe_entries[MAX_MRPE_COMMANDS];
 unsigned int g_num_mrpe_entries = 0;
 
+// Configuration of execution suffixed
+unsigned g_num_execute_suffixes = 0;
+char *g_execute_suffixes[MAX_EXECUTE_SUFFIXES];
 
 //  .----------------------------------------------------------------------.
 //  |                  _   _      _                                        |
@@ -302,6 +306,15 @@ char *strip(char *s)
     return lstrip(s);
 }
 
+void char_replace(char what, char into, char *in)
+{
+    while (*in) {
+        if (*in == what)
+            *in = into;
+        in++;
+    }
+}
+
 //  .----------------------------------------------------------------------.
 //  |  ______              _                 _   _               ______    |
 //  | / / / /___ _   _ ___| |_ ___ _ __ ___ | |_(_)_ __ ___   ___\ \ \ \   |
@@ -348,6 +361,54 @@ void section_uptime(SOCKET &out)
 //  |                                                                      |
 //  '----------------------------------------------------------------------'
 
+void df_output_filesystem(SOCKET &out, char *volid)
+{
+    TCHAR fsname[128];
+    TCHAR volume[512];
+    DWORD dwSysFlags = 0;
+    if (!GetVolumeInformation(volid, volume, sizeof(volume), 0, 0, &dwSysFlags, fsname, sizeof(fsname)))
+        fsname[0] = 0;
+
+    ULARGE_INTEGER free_avail, total, free;
+    free_avail.QuadPart = 0;
+    total.QuadPart = 0;
+    free.QuadPart = 0;
+    int returnvalue = GetDiskFreeSpaceEx(volid, &free_avail, &total, &free);
+    if (returnvalue > 0) {
+        double perc_used = 0;
+        if (total.QuadPart > 0)
+            perc_used = 100 - (100 * free_avail.QuadPart / total.QuadPart);
+
+        if (volume[0]) // have a volume name 
+            char_replace(' ', '_', volume);
+        else
+            strncpy(volume, volid, sizeof(volume));
+
+        output(out, "%s %s ", volume, fsname);
+        output(out, "%s ", llu_to_string(total.QuadPart / KiloByte));
+        output(out, "%s ", llu_to_string((total.QuadPart - free_avail.QuadPart) / KiloByte));
+        output(out, "%s ", llu_to_string(free_avail.QuadPart / KiloByte));
+        output(out, "%3.0f%% ", perc_used);
+        output(out, "%s\n", volid);
+    }
+}
+
+void df_output_mountpoints(SOCKET &out, char *volid)
+{
+    char mountpoint[512];
+    HANDLE hPt = FindFirstVolumeMountPoint(volid, mountpoint, sizeof(mountpoint));
+    if (hPt != INVALID_HANDLE_VALUE) { 
+        while (true) {  
+            TCHAR combined_path[1024];
+            snprintf(combined_path, sizeof(combined_path), "%s%s", volid, mountpoint);
+            df_output_filesystem(out, combined_path);
+            if (!FindNextVolumeMountPoint(hPt, mountpoint, sizeof(mountpoint)))
+                break;
+        }
+        FindVolumeMountPointClose(hPt);
+    }
+}
+
 void section_df(SOCKET &out)
 {
     output(out, "<<<df>>>\n");
@@ -360,30 +421,30 @@ void section_df(SOCKET &out)
 	UINT drvType = GetDriveType(drive);
 	if (drvType == DRIVE_FIXED)  // only process local harddisks
 	{
-	    ULARGE_INTEGER free_avail, total, free;
-	    free_avail.QuadPart = 0;
-	    total.QuadPart = 0;
-	    free.QuadPart = 0;
-	    int returnvalue = GetDiskFreeSpaceEx(drive, &free_avail, &total, &free);
-	    if (returnvalue > 0) {
-		double perc_used = 0;
-		if (total.QuadPart > 0)
-		    perc_used = 100 - (100 * free_avail.QuadPart / total.QuadPart);
-
-		TCHAR fsname[128];
-		if (!GetVolumeInformation(drive, 0, 0, 0, 0, 0, fsname, 128))
-		    fsname[0] = 0;
-
-		output(out, "%-10s %-8s ", drive, fsname);
-		output(out, "%s ", llu_to_string(total.QuadPart / KiloByte));
-		output(out, "%s ", llu_to_string((total.QuadPart - free_avail.QuadPart) / KiloByte));
-		output(out, "%s ", llu_to_string(free_avail.QuadPart / KiloByte));
-		output(out, "%3.0f%% ", perc_used);
-		output(out, "%s\n", drive);
-	    }
+            df_output_filesystem(out, drive);
+            df_output_mountpoints(out, drive);
 	}
 	drive += strlen(drive) + 1;
     }
+
+    // Output volumes, that have no drive letter. The following code
+    // works, but then we have no information about the drive letters.
+    // And if we run both, then volumes are printed twice. So currently
+    // we output only fixed drives and mount points below those fixed
+    // drives.
+
+    // HANDLE hVolume;
+    // char volid[512]; 
+    // hVolume = FindFirstVolume(volid, sizeof(volid));
+    // if (hVolume != INVALID_HANDLE_VALUE) {  
+    //     df_output_filesystem(out, volid);
+    //     while (true) {
+    //         // df_output_mountpoints(out, volid);
+    //         if (!FindNextVolume(hVolume, volid, sizeof(volid)))
+    //             break;
+    //     }
+    //     FindVolumeClose(hVolume);
+    // }
 }
 
 //  .----------------------------------------------------------------------.
@@ -1263,8 +1324,20 @@ bool banned_exec_name(char *name)
         return false;
 
     char *extension = name + strlen(name) - 4; 
-    return  ( !strcasecmp(extension, ".dir") 
-           || !strcasecmp(extension, ".txt"));
+    if (g_num_execute_suffixes) {
+        if (extension[0] != '.')
+            return true; 
+        extension ++;
+        unsigned i;
+        for (i=0; i<g_num_execute_suffixes; i++)
+            if (!strcasecmp(extension, g_execute_suffixes[i]))
+                return false;
+        return true;
+    }
+    else{
+        return  ( !strcasecmp(extension, ".dir") 
+               || !strcasecmp(extension, ".txt"));
+    }
 }
 
 void run_plugin(SOCKET &out, char *path)
@@ -1738,10 +1811,28 @@ void parse_only_from(char *value)
         add_only_from(word);
 }
 
+void parse_execute(char *value)
+{
+    // clean array if this options has been parsed already
+    while (g_num_execute_suffixes)
+        free(g_execute_suffixes[--g_num_execute_suffixes]);
+
+    char *suffix;
+    while (0 != (suffix = next_word(&value))) {
+        if (g_num_execute_suffixes < MAX_EXECUTE_SUFFIXES) {
+            g_execute_suffixes[g_num_execute_suffixes++] = strdup(suffix);
+        }
+    }
+}
+
 bool handle_global_config_variable(char *var, char *value)
 {
     if (!strcmp(var, "only_from")) {
         parse_only_from(value);
+        return true;
+    }
+    else if (!strcmp(var, "execute")) {
+        parse_execute(value);
         return true;
     }
     else if (!strcmp(var, "sections")) {
@@ -2269,6 +2360,8 @@ void cleanup()
     if (eventlog_buffer_size > 0)
 	delete [] eventlog_buffer;
     unregister_all_eventlogs(); // frees a few bytes
+    while (g_num_execute_suffixes)
+        free(g_execute_suffixes[--g_num_execute_suffixes]);
 }
 
 void show_version()

@@ -237,10 +237,20 @@ def paint_downtimes(what, row, tags, custom_vars):
     # Currently we are in a downtime + link to list of downtimes
     # for this host / service
     if row[what + "_scheduled_downtime_depth"] > 0:
-        return link_to_view('<img class=icon src="images/icon_downtime.gif">',
-                                                   row, 'downtimes_of_' + what)
+        if what == "host":
+            icon = "hostdowntime"
+        else:
+            icon = "downtime"
+        return link_to_view('<img class=icon title="%s" src="images/icon_%s.png">' %
+        (_("Currently in downtime"), icon), row, 'downtimes_of_' + what)
+    elif what == "service" and row["host_scheduled_downtime_depth"] > 0:
+        return link_to_view('<img class=icon title="%s" src="images/icon_hostdowntime.png">' %
+        _("The host is currently in downtime"), row, 'downtimes_of_host')
+
+
 
 multisite_icons.append({
+    'host_columns':    [ 'scheduled_downtime_depth' ],
     'columns':         [ 'scheduled_downtime_depth' ],
     'paint':           paint_downtimes,
 })
@@ -408,14 +418,14 @@ def paint_reschedule(what, row, tags, custom_vars):
     # Reschedule button
     if row[what + "_active_checks_enabled"] == 1 \
        and config.may('action.reschedule'):
-        name2 = ''
+        servicedesc = ''
         if what == 'service':
-            name2 = row['service_description']
-        return '<a href=\"javascript:void(0);\" onclick="performAction(this, \'reschedule\', ' \
-               '\'%s\', \'%s\', \'%s\', \'%s\');">' \
+            servicedesc = row['service_description']
+        return '<a href=\"javascript:void(0);\" ' \
+               'onclick="performAction(this, \'reschedule\', \'%s\', \'%s\', \'%s\');">' \
                '<img class=icon title="%s" src="images/icon_reload.gif" /></a>' % \
-               (_('Reschedule an immediate check of this %s') % what, \
-                            row["site"], row["host_name"], name2, what)
+                (row["site"], row["host_name"], servicedesc, 
+               (_('Reschedule an immediate check of this %s') % _(what)))
 
 multisite_icons.append({
     'columns':         [ 'active_checks_enabled' ],

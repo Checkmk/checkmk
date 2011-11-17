@@ -2,6 +2,7 @@
     Core, Setup, etc.:
     * New configuration variable static_checks[] (used by WATO)
     * New configuration variable checkgroup_parameters (mainly for WATO)
+    * check_submission defaults now to "file" (was "pipe")
 
     Checks & Agents:
     * if/if64: new ruleset if_disable_if64_hosts, that force if on
@@ -16,8 +17,12 @@
       for examples.
     * Windows agent: do not execute *.txt and *.dir in <<<plugins>>> and
       <<<local>>>
+    * Windows agent: make extensions to execute configurable (see
+      example check_mk.ini)
     * Windows agent: agent now reuses TCP port even when taskkill'ed, so
       a system reboot is (hopefully) not neccessary anymore
+    * Windows agent: section <<<df>>> now also outputs junctions (windows
+      mount points). No external plugin is needed.
     * logwatch: allow to classify messages based on their count (see
       man page of logwatch for details)
 
@@ -27,6 +32,9 @@
     * New filter for the (new) state in host/service alerts
     * New command for sending custom notifications
     * FIX: Fixed encoding problem when opening dashboard
+    * New icon on a service whos host is in downtime
+    * Only show most frequently used context buttons (configurable
+      in multisite.mk via context_buttons_to_show)
 
     WATO:
     * Evolved to full featured monitoring configuration tool!
@@ -69,7 +77,9 @@
     * FIX: Do not show WATO button in views if WATO is disabled
     * FIX: Remove WATO Folder filter if WATO is disabled 
     * FIX: Snapin 'Performance': fix text align for numbers
-    * FIX: Disallow settings downtimes that end in the past
+    * FIX: Disallow setting downtimes that end in the past
+    * FIX: Fix links to downtime services in dashboard
+    * FIX: Fix popup help of reschedule icon
 
 1.1.12p1:
     Core, Setup, etc.:

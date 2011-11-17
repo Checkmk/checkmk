@@ -65,6 +65,10 @@
     * New columns num_hosts and num_services in status table
     * New aggregation functions suminv and avginv (see Documentation)
 
+1.1.12p3:
+    Core, Setup, etc.:
+    * FIX: really suppress precompiling on PING-only hosts now
+
 1.1.12p2:
     Core, Setup, etc.:
     * FIX: fix handling of empty suboids

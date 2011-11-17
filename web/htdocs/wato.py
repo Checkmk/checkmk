@@ -6933,8 +6933,10 @@ def mode_users(phase):
         # Buttons
         edit_url = make_link([("mode", "edit_user"), ("edit", id)])
         delete_url = html.makeactionuri([("_delete", id)])
+        clone_url = make_link([("mode", "edit_user"), ("clone", id)])
         html.write("<td class=buttons>")
         icon_button(edit_url, _("Properties"), "edit")
+        icon_button(clone_url, _("Create a copy of this user"), "clone")
         icon_button(delete_url, _("Delete"), "delete")
         html.write("</td>")
 
@@ -7001,7 +7003,8 @@ def mode_users(phase):
 
 def mode_edit_user(phase):
     users = load_users()
-    userid = html.var("edit", None) # missing -> new user
+    userid = html.var("edit") # missing -> new user
+    cloneid = html.var("clone") # Only needed in 'new' mode
     new = userid == None
     if phase == "title":
         if new:
@@ -7014,7 +7017,10 @@ def mode_edit_user(phase):
         return
 
     if new:
-        user = {}
+        if cloneid:
+            user = users.get(cloneid, {})
+        else:
+            user = {}
     else:
         user = users.get(userid, {})
 
@@ -7111,7 +7117,7 @@ def mode_edit_user(phase):
     html.write(_("User ID"))
     html.write("</td><td class=content>")
     if new:
-        html.text_input("userid", userid) 
+        html.text_input("userid", userid)
         html.set_focus("userid")
     else:
         html.write(userid)
@@ -7144,11 +7150,12 @@ def mode_edit_user(phase):
 
     # Locking
     html.write("<tr><td class=legend>")
-    html.write(_("<i>Locking the password prevents a user from logging in without "
-                 "the need of changing the password.</i>"))
+    html.write(_("<i>Disabling the password prevents a user from logging in without "
+                 "the need of changing the password. Notifications are not affected "
+                 "by this setting.</i>"))
     html.write("</td><td class=content>")
     html.checkbox("locked", user.get("locked", False))
-    html.write(_(" lock the password of this account"))
+    html.write(_(" disable the password of this account"))
     html.write("</td></tr>")
 
     # Email address

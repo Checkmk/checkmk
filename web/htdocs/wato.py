@@ -5282,7 +5282,7 @@ def mode_edit_group(phase, what):
     html.write("</td></tr>")
 
     html.write("<tr><td class=legend>")
-    html.write(_("Alias<br><i>A description of this group.</i>"))  
+    html.write(_("Alias<br><i>An Alias or description of this group.</i>"))  
     html.write("</td><td class=content>")
     html.text_input("alias", name and groups.get(name, "") or "")
     html.write("</td></tr>") 
@@ -5613,7 +5613,7 @@ def mode_edit_timeperiod(phase):
     else:
         alias = ""
     html.write("<tr><td class=legend>")
-    html.write(_("Alias") + "<br><i>" + _("A description of the timeperiod</i>"))
+    html.write(_("Alias") + "<br><i>" + _("An alias or description of the timeperiod</i>"))
     html.write("</td><td class=content>")
     html.text_input("alias", alias, size = 50)
     if not new:
@@ -5861,7 +5861,7 @@ def mode_sites(phase):
     html.write("<table class=data>")
     html.write("<tr><th>" + _("Actions") + "<th>" 
                 + _("Site-ID") 
-                + "</th><th>" + _("Alias / Description")
+                + "</th><th>" + _("Alias")
                 + "</th><th>" + _("Connection")
                 + "</th><th>" + _("Status host")
                 + "</th><th>" + _("Disabled")
@@ -6104,7 +6104,7 @@ def mode_edit_site(phase):
 
     # Alias
     html.write("<tr><td class=legend>")
-    html.write(_("Alias") + "<br><i>" + _("A name or description of the site</i>"))
+    html.write(_("Alias") + "<br><i>" + _("An alias or description of the site</i>"))
     html.write("</td><td class=content>")
     html.text_input("alias", site.get("alias", ""), size = 50)
     if not new:
@@ -7495,7 +7495,7 @@ def mode_roles(phase):
     html.write("<tr>"
              + "<th>" + _("Actions")       + "</th>"  
              + "<th>" + _("ID")            + "</th>"  
-             + "<th>" + _("Description")   + "</th>"  
+             + "<th>" + _("Alias")         + "</th>"  
              + "<th>" + _("Type")          + "</th>"
              + "<th>" + _("Modifications") + "</th>"
              + "<th>" + _("Users")         + "</th>"
@@ -7525,7 +7525,7 @@ def mode_roles(phase):
         # ID
         html.write("<td>%s</td>" % id)
 
-        # Description
+        # Alias
         html.write("<td>%s</td>" % role["alias"])
 
         # Type
@@ -7619,7 +7619,7 @@ def mode_edit_role(phase):
 
     # Alias
     html.write("<tr><td class=legend>")
-    html.write(_("Alias") + "<br><i>" + _("An optional description of the timeperiod</i>"))
+    html.write(_("Alias") + "<br><i>" + _("An alias or description of the role</i>"))
     html.write("</td><td class=content>")
     html.text_input("alias", role.get("alias", ""), size = 50)
     html.write("</td></tr>")
@@ -7906,7 +7906,7 @@ def mode_edit_hosttag(phase):
                     if not re.match("^[-a-z0-9A-Z_]*$", id):
                         raise MKUserError("id_%d" % nr, _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
                     if not descr:
-                        raise MKUserError("descr_%d" % nr, _("Please supply a description for the tag with the ID %s.") % id)
+                        raise MKUserError("descr_%d" % nr, _("Please supply an alias for the tag with the ID %s.") % id)
                     if not id:
                         id = None
                         if have_none_tag:
@@ -8004,7 +8004,7 @@ def mode_edit_hosttag(phase):
 
     # Title
     html.write("<tr><td class=legend>")
-    html.write(_("Title") + "<br><i>" + _("A description of this tag group</i>"))
+    html.write(_("Title") + "<br><i>" + _("An alias or description of this tag group</i>"))
     html.write("</td><td class=content>")
     html.text_input("title", title, size = 30)
     html.write("</td></tr>")
@@ -8027,7 +8027,7 @@ def mode_edit_hosttag(phase):
     html.write("</td><td class=content>")
     html.write("<table>")
     html.write("<tr><th>%s</th><th>%s</th></tr>" % 
-        (_("Tag ID"), _("Description")))
+        (_("Tag ID"), _("Alias")))
     for nr in range(max(num_choices, len(choices))):
         if nr < len(choices):
             tag_id, descr = choices[nr]

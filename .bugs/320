@@ -1,11 +1,12 @@
 Title: Multisite Fehler  'module' object has no attribute 'wato_enabled'
 Component: multisite
-Benefit: 7
-State: open
 Cost: 3
 Date: 2011-11-18 07:46:27
-Targetversion: 1.1.12
+State: done
 Class: bug
+Benefit: 7
+Fun: 0
+Targetversion: 1.1.12
 
 Multisite GUI dashboards has error affecting most views
 Has been reported a few times and I could verify it.
@@ -20,3 +21,6 @@ Traceback (most recent call last):
 AttributeError: 'module' object has no attribute 'wato_enabled'
 
 WATO  still works, but most views are affected.
+
+2011-11-18 10:34:36: changed state open -> done
+Fixed by Mathias in 1.1.12p3

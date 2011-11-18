@@ -2,6 +2,11 @@
     Core, Setup, etc.:
     * FIX: really suppress precompiling on PING-only hosts now
 
+    Multisite:
+    * FIX: fix critical but with missing "wato_enabled". You
+      can now set "wato_enabled = False" in multisite.mk in order
+      to completely disable WATO.
+
 1.1.12p2:
     Core, Setup, etc.:
     * FIX: fix handling of empty suboids

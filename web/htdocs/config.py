@@ -468,6 +468,7 @@ max_snapshots = 50
 
 config_files = []
 host_tags = []
+wato_enabled = True
 wato_hide_filenames = True
 
 

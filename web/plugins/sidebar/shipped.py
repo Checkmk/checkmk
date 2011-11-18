@@ -70,7 +70,7 @@ sidebar_snapins["about"] = {
 # -----------------------------------------------------------------------
 def render_admin():
     html.write('<ul>')
-    if config.may("use_wato"):
+    if config.wato_enabled and config.may("use_wato"):
         bulletlink(_("WATO - Configure Hosts and Services"), "wato.py")
     bulletlink(_("View permissions"), "view_permissions.py")
     if config.may("edit_permissions"):

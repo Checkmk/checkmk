@@ -3268,6 +3268,15 @@ class Attribute:
     def is_mandatory(self):
         return False
 
+    # Return information about the host tags we depend on.
+    # The method is usually not overridden, but the variable
+    # _depends_on_tags is set by declare_host_attribute().
+    def depends_on_tags(self):
+        try:
+            return self._depends_on_tags
+        except:
+            return []
+
     # Render HTML input fields displaying the value and 
     # make it editable. If filter == True, then the field
     # is to be displayed in filter mode (as part of the
@@ -3401,6 +3410,8 @@ class EnumAttribute(Attribute):
 # A selection dropdown for a host tag
 class HostTagAttribute(Attribute):
     def __init__(self, tag_definition):
+        # Definition is either triple or 4-tuple (with
+        # dependency definition)
         tag_id, title, self._taglist = tag_definition
         name = "tag_" + tag_id
         if len(self._taglist) == 1:
@@ -3425,13 +3436,23 @@ class HostTagAttribute(Attribute):
     def render_input(self, value):
         # Tag groups with just one entry are being displayed
         # as checkboxes
-        choices = [e[:2] for e in self._taglist]
+        choices = []
+        for e in self._taglist:
+            tagvalue = e[0]
+            if not tagvalue: # convert "None" to ""
+                tagvalue = ""
+            if len(e) >= 3: # have secondary tags
+                secondary_tags = e[2]
+            else:
+                secondary_tags = []
+            value = "|".join([ tagvalue ] + secondary_tags)
+            choices.append((value, e[1]))
         varname = "attr_" + self.name()
         if len(choices) == 1:
-            html.checkbox(varname, value != None)
+            html.checkbox(varname, value != None, onchange='wato_fix_visibility();')
             html.write(" " + choices[0][1])
         else:
-            html.select(varname, choices, value)
+            html.select(varname, choices, value, onchange='wato_fix_visibility();')
 
     def from_html_vars(self):
         varname = "attr_" + self.name()
@@ -3441,7 +3462,8 @@ class HostTagAttribute(Attribute):
             else:
                 return None
         else:
-            value = html.var(varname)
+            # strip of secondary tags
+            value = html.var(varname).split("|")[0]
             if not value:
                 value = None
             return value
@@ -3549,7 +3571,10 @@ def declare_host_tag_attributes():
 
     if configured_host_tags != config.wato_host_tags:
         # Remove host tag attributes from list, if existing
-        host_attributes = [ (attr, topic) for (attr, topic) in host_attributes if not attr.name().startswith("tag_") ]
+        host_attributes = [ (attr, topic)
+               for (attr, topic) 
+               in host_attributes 
+               if not attr.name().startswith("tag_") ]
 
         # Also remove those attributes from the speed-up dictionary host_attribute
         for attr in host_attribute.values():
@@ -3557,8 +3582,18 @@ def declare_host_tag_attributes():
                 del host_attribute[attr.name()]
 
         for entry in config.wato_host_tags:
-            declare_host_attribute(HostTagAttribute(entry), 
-                show_in_table = False, show_in_folder = True, topic = _("Host tags"))
+            # if the entry has o fourth component, then its
+            # the tag dependency defintion.
+            if len(entry) >= 4:
+                depends_on_tags = entry[3]
+            else:
+                depends_on_tags = []
+            declare_host_attribute(
+                HostTagAttribute(entry[:3]), 
+                    show_in_table = False, 
+                    show_in_folder = True, 
+                    depends_on_tags = depends_on_tags,
+                    topic = _("Host tags"))
 
         configured_host_tags = config.wato_host_tags
 
@@ -3580,12 +3615,14 @@ host_attributes = []
 host_attribute = {}
 
 # Declare attributes with this method
-def declare_host_attribute(a, show_in_table = True, show_in_folder = True, topic = None, show_in_form = True):
+def declare_host_attribute(a, show_in_table = True, show_in_folder = True, 
+       topic = None, show_in_form = True, depends_on_tags = []):
     host_attributes.append((a, topic))
     host_attribute[a.name()] = a
-    a._show_in_table  = show_in_table
-    a._show_in_folder = show_in_folder
-    a._show_in_form   = show_in_form
+    a._show_in_table   = show_in_table
+    a._show_in_folder  = show_in_folder
+    a._show_in_form    = show_in_form
+    a._depends_on_tags = depends_on_tags
 
 def undeclare_host_attribute(attrname):
     if attrname in host_attribute:
@@ -3630,6 +3667,10 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
         if topic not in topics and attr.show_in_form():
             topics.append(topic)
 
+    # Collect dependency mapping for attributes (attributes that are only
+    # visible, if certain host tags are set).
+    dependency_mapping = {}
+
     for topic in topics:
         if len(topics) > 1:
             if topic == None:
@@ -3641,7 +3682,11 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
 
             html.begin_foldable_container("wato_attributes", title, 
                                           topic == None, title, indent = "form")
-            html.write('<table class="form nomargin">')
+            html.write('<table ')
+            # Mark container with host tag attributes with a special ID
+            if topic == _("Host tags"):
+                html.write('id="wato_host_tags" ') 
+            html.write('class="form nomargin">') 
 
         for attr, atopic in host_attributes:
             if atopic != topic:
@@ -3657,6 +3702,13 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             # In folder not all attributes are shown
             if for_what == "folder" and not attr.show_in_folder():
                 continue
+
+            # Add host tag dependencies, but only in host mode. In other
+            # modes we always need to show all attributes.
+            if for_what == "host":
+                depends_on_tags = attr.depends_on_tags()
+                if depends_on_tags:
+                    dependency_mapping[attrname] = depends_on_tags
 
             # "bulk": determine, if this attribute has the same setting for all hosts.
             values = []
@@ -3702,7 +3754,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 inherited_value = attr.default_value()
 
             # Legend and Help
-            html.write("<tr><td class=legend>")
+            html.write('<tr id="attr_%s"><td class=legend>' % attrname)
             if attr.help():
                 html.begin_foldable_container("attribute_help", attrname, True, "<b>%s</b>" % attr.title(), indent=False)
                 html.write("<i>%s</i>" % attr.help())
@@ -3808,6 +3860,10 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             html.end_foldable_container()
             if topic == topics[-1]:
                 html.write('<table class="form nomargin">')
+
+    # Provide Javascript world with the tag dependency information
+    # of all attributes. 
+    html.javascript("var wato_depends_on = %r;\nwato_fix_visibility();\n" % dependency_mapping)
 
 
 # Check if at least one host in a folder (or its subfolders)

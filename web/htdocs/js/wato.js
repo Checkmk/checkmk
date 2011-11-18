@@ -66,6 +66,46 @@ function wato_toggle_attribute(oCheckbox, attrname) {
     oDefault = null;
 }
 
+/* Switch the visibility of all host attributes during the configuration
+   of attributes of a host */
+function wato_fix_visibility() { 
+    /* First collect the current selection of all host attributes.
+       They are in the same table as we are */
+    var currentTags = [];
+    var oTable = document.getElementById("wato_host_tags").childNodes[0]; /* tbody */
+    for (var i in oTable.childNodes) {
+        var oTr = oTable.childNodes[i];
+        if (oTr.nodeName == 'TR') {
+            /* Find the <select> object in this tr */
+            /*    td.content     div          select */
+            var oSelect = oTr.childNodes[2].childNodes[0].childNodes[0];
+            tags = oSelect.value.split("|");
+            currentTags = currentTags.concat(tags);
+        }
+    }
+
+    /* Now loop over all attributes that have conditions. Those are
+       stored in the global variable wato_depends_on, which is filled
+       during the creation of the web page. */
+    for (var attrname in wato_depends_on) {
+        /* Now comes the tricky part: decide whether that attribute should
+           be visible or not: */
+        var display = "";
+        for (var i in wato_depends_on[attrname]) {
+            var tag = wato_depends_on[attrname][i];
+            var negate = tag[0] == '!';
+            var tagname = negate ? tag.substr(1) : tag;
+            var have_tag = currentTags.indexOf(tagname) != -1;
+            if (have_tag == negate) {
+                display = "none";
+                break;
+            }
+        }
+        oTr = document.getElementById("attr_" + attrname);
+        oTr.style.display = display;
+    }
+}
+
 function wato_toggle_option(oCheckbox, divid, negate) {
     var oDiv = document.getElementById(divid);
     if ((oCheckbox.checked && !negate) || (!oCheckbox.checked && negate))
@@ -77,8 +117,7 @@ function wato_toggle_option(oCheckbox, divid, negate) {
 
 function wato_toggle_dropdown(oDropdown, divid) {
     var oDiv = document.getElementById(divid);
-    if (oDropdown.value == "other")
-        oDiv.style.display = ""; 
+    if (oDropdown.value == "other") oDiv.style.display = ""; 
     else
         oDiv.style.display = "none";  
     oDiv = null;

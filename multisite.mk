@@ -101,7 +101,7 @@ custom_links['admin'] = custom_links['user'] + [
 # Host tags to be used in WATO
 # wato_host_tags = [
 #  ( "os_type", "Operating System", [
-#       ( "lnx", "Linux", [ 'tcp' ]),
+#       ( "lnx", "Linux", [ 'tcp' ],),
 #       ( "win", "Windows", [ 'tcp', 'snmp' ]),
 #       ( "net", "Network device", [ 'snmp' ]),
 #       ( "ping", "Other PING-only device", ),
@@ -112,8 +112,8 @@ custom_links['admin'] = custom_links['user'] + [
 #    ]),
 #  ( "bulkwalk", "Bulkwalk (SNMP v2c)", [
 #       ( None,   "simple walk (SNMP v1)"),
-#       ( "bulk", "Bulkwalk (SNMP v2c)" ),
-#    ]),
+#       ( "bulk", "Bulkwalk (SNMP v2c)"),
+#    ], [ 'snmp' ]), 
 # 
 # ]
 

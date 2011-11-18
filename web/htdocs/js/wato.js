@@ -76,11 +76,15 @@ function wato_fix_visibility() {
     for (var i in oTable.childNodes) {
         var oTr = oTable.childNodes[i];
         if (oTr.nodeName == 'TR') {
-            /* Find the <select> object in this tr */
-            /*    td.content     div          select */
-            var oSelect = oTr.childNodes[2].childNodes[0].childNodes[0];
-            tags = oSelect.value.split("|");
-            currentTags = currentTags.concat(tags);
+            /* Find the <select>/<checkbox> object in this tr */
+            /*                td.content    div           select/checkbox */
+            var oElement = oTr.childNodes[2].childNodes[0].childNodes[0];
+            if( oElement.type == 'checkbox' && oElement.checked ){ // <checkbox>
+                currentTags = currentTags.concat(oElement.getAttribute('tags').split("|"));
+            }
+            else{ // <select> 
+                currentTags = currentTags.concat(oElement.value.split("|"));
+            }
         }
     }
 

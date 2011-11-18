@@ -3445,11 +3445,10 @@ class HostTagAttribute(Attribute):
                 secondary_tags = e[2]
             else:
                 secondary_tags = []
-            value = "|".join([ tagvalue ] + secondary_tags)
-            choices.append((value, e[1]))
+            choices.append(("|".join([ tagvalue ] + secondary_tags), e[1]))
         varname = "attr_" + self.name()
         if len(choices) == 1:
-            html.checkbox(varname, value != None, onchange='wato_fix_visibility();')
+            html.checkbox(varname, value != None, cssclass = '', onclick='wato_fix_visibility();', add_attr = ["tags=%s"%choices[0][0]])
             html.write(" " + choices[0][1])
         else:
             html.select(varname, choices, value, onchange='wato_fix_visibility();')
@@ -7947,7 +7946,9 @@ def mode_edit_hosttag(phase):
                     raise MKUserError("tag_id", _("Please specify an ID for your tag group."))
                 if not re.match("^[-a-z0-9A-Z_]*$", tag_id):
                     raise MKUserError("tag_id", _("Invalid tag group ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
-                for tgid, tit, ch in config.wato_host_tags:
+                for entry in config.wato_host_tags:
+                    tgid = entry[0]
+                    tit  = entry[1]
                     if tgid == tag_id:
                         raise MKUserError("tag_id", _("The tag group ID %s is already used by the tag group '%s'.") % (tag_id, tit))
 
@@ -7974,7 +7975,10 @@ def mode_edit_hosttag(phase):
                     new_choices.append((id, descr))
                 if id:
                     # Make sure this ID is not used elsewhere
-                    for tgid, tit, ch in config.wato_host_tags:
+                    for entry in config.wato_host_tags:
+                        tgid = entry[0]
+                        tit  = entry[1]
+                        ch   = entry[2]
                         if tgid != tag_id:
                             for e in ch:
                                 # Check primary and secondary tags

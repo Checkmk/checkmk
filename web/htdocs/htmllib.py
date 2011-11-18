@@ -622,6 +622,8 @@ class html:
                    "%s &nbsp; &nbsp; <b id=headertime>%s</b> <a href=\"http://mathias-kettner.de\"><img src=\"images/mk_logo_small.gif\"/></a></td></tr></table>" %
                    (title, login_text, time.strftime("%H:%M")))
         self.write("<hr class=header>\n")
+        if config.debug:
+            self.write("<div class=urldebug>%s</div>" % self.makeuri([]))
 
 
     def body_start(self, title=''):

@@ -2311,7 +2311,7 @@ def precompile_hostcheck(hostname):
     if len(check_table) == 0:
         if opt_verbose:
             sys.stderr.write("(no Check_MK checks)\n")
-            return
+        return
 
     output = file(source_filename + ".new", "w")
     output.write("#!/usr/bin/python\n")

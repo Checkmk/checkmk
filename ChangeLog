@@ -35,6 +35,9 @@
     * New icon on a service whos host is in downtime
     * Only show most frequently used context buttons (configurable
       in multisite.mk via context_buttons_to_show)
+    * Show icon if user has modified a view's filter settings
+    * New config option debug_livestatus_queries, normal debug
+      mode does not include this anymore
 
     WATO:
     * Evolved to full featured monitoring configuration tool!
@@ -61,6 +64,10 @@
       to set number of processes. Nagios will not fork() anymore for check exection.
     * New columns num_hosts and num_services in status table
     * New aggregation functions suminv and avginv (see Documentation)
+
+1.1.12p3:
+    Core, Setup, etc.:
+    * FIX: really suppress precompiling on PING-only hosts now
 
 1.1.12p2:
     Core, Setup, etc.:

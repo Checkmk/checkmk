@@ -95,3 +95,56 @@ class FilterWatoFile(Filter):
 declare_filter(10, FilterWatoFile())
 if "wato_folder" not in ubiquitary_filters:
     ubiquitary_filters.append("wato_folder") # show in all views
+
+multisite_painters["host_filename"] = {
+    "title"   : _("Check_MK config filename"),
+    "short"   : _("Filename"),
+    "columns" : ["host_filename"],
+    "paint"   : lambda row: ("tt", row["host_filename"]),
+}
+
+def paint_wato_folder(row, how):
+    filename = row["host_filename"] 
+    if not filename.startswith("/wato/") or not filename.endswith("/hosts.mk"):
+        return "", ""
+    wato_path = filename[6:-9]
+    title_path = wato.api.get_folder_title_path(wato_path, True)
+    if how == "plain":
+        return "", title_path[-1]
+    elif how == "abs":
+        return "", " / ".join(title_path)
+    else:
+        # We assume that only hosts are show, that are below the
+        # current WATO path. If not then better output absolute
+        # path then wrong path.
+        current_path = html.var("wato_folder")
+        if not current_path or not wato_path.startswith(current_path):
+            return "", " / ".join(title_path)
+        
+        depth = current_path.count('/') + 1
+        return "", " / ".join(title_path[depth:])
+
+
+
+multisite_painters["wato_folder_abs"] = {
+    "title"   : _("WATO folder - complete path"),
+    "short"   : _("WATO folder"),
+    "columns" : ["host_filename"],
+    "paint"   : lambda row: paint_wato_folder(row, "abs")
+}
+
+multisite_painters["wato_folder_rel"] = {
+    "title"   : _("WATO folder - relative path"),
+    "short"   : _("WATO folder"),
+    "columns" : ["host_filename"],
+    "paint"   : lambda row: paint_wato_folder(row, "rel")
+}
+
+multisite_painters["wato_folder_plain"] = {
+    "title"   : _("WATO folder - just folder name"),
+    "short"   : _("WATO folder"),
+    "columns" : ["host_filename"],
+    "paint"   : lambda row: paint_wato_folder(row, "plain")
+}
+
+

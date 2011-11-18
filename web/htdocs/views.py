@@ -1289,7 +1289,12 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         # Filter-button
         if 'F' in display_options and len(show_filters) > 0:
             filter_isopen = html.var("search", "") == "" and view["mustsearch"]
-            toggle_button("table_filter", filter_isopen, _("Filter"), ["filter"])
+            # Show warning-icon if some filter is set
+            label = _("Filter")
+            if html.var("filled_in") == "filter":
+                label = '<img class=tabicon src="images/icon_filter_set.png"> %s' % label
+
+            toggle_button("table_filter", filter_isopen, label, ["filter"])
             html.write("<td class=minigap></td>\n")
 
         # Command-button, open command form if checkboxes are currently shown
@@ -1698,10 +1703,10 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
     html.live.set_prepend_site(True)
     if limit != None:
         html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
-    if config.debug and html.output_format == "html" and 'W' in html.display_options:
-        html.begin_foldable_container("debug_lq", "x", True, _("Livestatus Query:"), indent=False)  
-        html.write("<div class=message><tt>%s</tt></div>\n" % (query.replace('\n', '<br>\n')))
-        html.end_foldable_container()
+    if config.debug_livestatus_queries \
+            and html.output_format == "html" and 'W' in html.display_options:
+        html.write('<div class="livestatus message" onmouseover="this.style.display=\'none\';">'
+                   '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
 
     if only_sites:
         html.live.set_only_sites(only_sites)

@@ -131,8 +131,9 @@ def automation_inventory(args):
 
 
 def automation_try_inventory(args):
+    global opt_use_cachefile, opt_no_tcp, opt_dont_submit, \
+            inventory_max_cachefile_age, check_max_cachefile_age
     if args[0] == '--cache':
-        global opt_use_cachefile, inventory_max_cachefile_age, check_max_cachefile_age
         opt_use_cachefile = True
         check_max_cachefile_age = 1000000000
         inventory_max_cachefile_age = 1000000000
@@ -188,6 +189,8 @@ def automation_try_inventory(args):
             infotype = ct.split('.')[0]
             opt_use_cachefile = True
             opt_no_tcp = True
+            opt_dont_submit = True
+
             try:
                 info = get_host_info(hostname, ipaddress, infotype)
             # Handle cases where agent does not output data

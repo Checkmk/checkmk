@@ -150,6 +150,7 @@ backup_paths = replication_paths + [
 ALL_HOSTS    = [ '@all' ]
 ALL_SERVICES = [ "" ]
 NEGATE       = '@negate'
+NO_ITEM      = {} # Just an arbitrary unique thing
 
 # Actions for log_pending
 RESTART      = 1
@@ -432,12 +433,13 @@ def load_folder(dir, name="", path="", parent=None):
         folder["attributes"] = {}
 
     # Add information about the effective site of this folder
-    if "site" in folder["attributes"]:
-        folder[".siteid"] = folder["attributes"]["site"]
-    elif parent:
-        folder[".siteid"] = parent[".siteid"]
-    else:
-        folder[".siteid"] = default_site()
+    if is_distributed():
+        if "site" in folder["attributes"]:
+            folder[".siteid"] = folder["attributes"]["site"]
+        elif parent:
+            folder[".siteid"] = parent[".siteid"]
+        else:
+            folder[".siteid"] = default_site()
         
     # Now look subdirectories
     for entry in os.listdir(dir):
@@ -550,10 +552,13 @@ def load_hosts_file(folder):
 
             # Compute site attribute, because it is needed at various
             # places.
-            if "site" in host:
-                host[".siteid"] = host["site"]
+            if is_distributed():
+                if "site" in host:
+                    host[".siteid"] = host["site"]
+                else:
+                    host[".siteid"] = folder[".siteid"]
             else:
-                host[".siteid"] = folder[".siteid"]
+                host[".siteid"] = None
 
             hosts[hostname] = host
 
@@ -719,7 +724,7 @@ def mode_folder(phase):
         global_buttons()
         if config.may("wato.rulesets") or config.may("wato.seeall"):
             html.context_button(_("Rulesets"),        make_link([("mode", "rulesets")]), "rulesets")
-        html.context_button(_("Folder Properties"), make_link_to([("mode", "editfolder")], g_folder), "properties")
+        html.context_button(_("Folder Properties"), make_link_to([("mode", "editfolder")], g_folder), "edit")
         if config.may("wato.manage_folders"):
             html.context_button(_("New folder"),        make_link([("mode", "newfolder")]), "newfolder")
         if config.may("wato.manage_hosts"):
@@ -935,7 +940,7 @@ def show_subfolders(folder):
         enter_url    = make_link_to([("mode", "folder")], entry)
 
         html.write("<td class=buttons>")
-        icon_button(edit_url, _("Edit the properties of this folder"), "folderproperties")
+        icon_button(edit_url, _("Edit the properties of this folder"), "edit")
         if config.may("wato.manage_folders"):
             icon_button(delete_url, _("Delete this folder"), "delete")
         html.write("</td>")
@@ -1085,7 +1090,7 @@ def show_hosts(folder):
         html.write('</td>\n')
 
         html.write("<td class=buttons>")
-        icon_button(edit_url, _("Edit the properties of this host"), "edithost")
+        icon_button(edit_url, _("Edit the properties of this host"), "edit")
         icon_button(services_url, _("Edit the services of this host, do an inventory"), "services")
         if config.may("wato.manage_hosts"):
             icon_button(clone_url, _("Create a clone of this host"), "insert")
@@ -3992,10 +3997,10 @@ def mode_snapshot(phase):
                 html.write('<tr class="data %s0"><td>' % odd)
 
                 # Buttons
-                html.buttonlink(make_action_link(
-                   [("mode","snapshot"),("_restore_snapshot", name)]), _("Restore"))
-                html.buttonlink(make_action_link(
-                   [("mode","snapshot"),("_delete_file", name)]), _("Delete"))
+                icon_button(make_action_link(
+                   [("mode","snapshot"),("_restore_snapshot", name)]), _("Restore"), "restore")
+                icon_button(make_action_link(
+                   [("mode","snapshot"),("_delete_file", name)]), _("Delete"), "delete") 
                 html.write("<td>")
 
                 # Snapshot name
@@ -5206,8 +5211,8 @@ def mode_groups(phase, what):
         edit_url = make_link([("mode", "edit_%s_group" % what), ("edit", name)])
         delete_url = html.makeactionuri([("_delete", name)])
         html.write("<td class=buttons>")
-        html.buttonlink(edit_url, _("Properties"))
-        html.buttonlink(delete_url, _("Delete"))
+        icon_button(edit_url, _("Properties"), "edit")
+        icon_button(delete_url, _("Delete"), "delete")
         html.write("</td><td>%s</td><td>%s</td>" % (name, alias))
         if what == "contact":
             html.write("<td>%s</td>" % ", ".join(
@@ -5280,7 +5285,7 @@ def mode_edit_group(phase, what):
     html.write("</td></tr>")
 
     html.write("<tr><td class=legend>")
-    html.write(_("Alias<br><i>A description of this group.</i>"))  
+    html.write(_("Alias<br><i>An Alias or description of this group.</i>"))  
     html.write("</td><td class=content>")
     html.text_input("alias", name and groups.get(name, "") or "")
     html.write("</td></tr>") 
@@ -5426,8 +5431,8 @@ def mode_timeperiods(phase):
         delete_url   = html.makeactionuri([("_delete", name)])
 
         html.write("<td class=buttons>")
-        html.buttonlink(edit_url, _("Properties"))
-        html.buttonlink(delete_url, _("Delete"))
+        icon_button(edit_url, _("Properties"), "edit")
+        icon_button(delete_url, _("Delete"), "delete")
         html.write("</td>")
 
         html.write("<td>%s</td>" % name)
@@ -5611,7 +5616,7 @@ def mode_edit_timeperiod(phase):
     else:
         alias = ""
     html.write("<tr><td class=legend>")
-    html.write(_("Alias") + "<br><i>" + _("A description of the timeperiod</i>"))
+    html.write(_("Alias") + "<br><i>" + _("An alias or description of the timeperiod</i>"))
     html.write("</td><td class=content>")
     html.text_input("alias", alias, size = 50)
     if not new:
@@ -5710,7 +5715,7 @@ def find_usage_of_timeperiod(tpname):
 
 
 #.
-#   .-Sites----------------------------------------------------------------.
+#   .-Multisite Connections------------------------------------------------.
 #   |                        ____  _ _                                     |
 #   |                       / ___|(_) |_ ___  ___                          |
 #   |                       \___ \| | __/ _ \/ __|                         |
@@ -5735,13 +5740,19 @@ def mode_sites(phase):
     if phase == "action":
         delid = html.var("_delete")
         if delid and html.transaction_valid():
-            # Make sure that site is not being used by hosts and folders
-            site_ids = set([])
-            find_folder_sites(site_ids, g_root_folder, True)
-            if delid in site_ids:
-                raise MKUserError(None, 
-                    _("You cannot delete this connection. "
-                      "It has folders/hosts assigned to it."))
+            # The last connection can always be deleted. In that case we
+            # fallb back to non-distributed-WATO and the site attribute
+            # will be removed.
+            test_sites = dict(sites.items())
+            del test_sites[delid]
+            if is_distributed(test_sites):
+                # Make sure that site is not being used by hosts and folders
+                site_ids = set([])
+                find_folder_sites(site_ids, g_root_folder, True)
+                if delid in site_ids:
+                    raise MKUserError(None, 
+                        _("You cannot delete this connection. "
+                          "It has folders/hosts assigned to it."))
 
             c = wato_confirm(_("Confirm deletion of site %s" % delid),
                              _("Do you really want to delete the connection to the site %s?" % delid))
@@ -5853,7 +5864,7 @@ def mode_sites(phase):
     html.write("<table class=data>")
     html.write("<tr><th>" + _("Actions") + "<th>" 
                 + _("Site-ID") 
-                + "</th><th>" + _("Alias / Description")
+                + "</th><th>" + _("Alias")
                 + "</th><th>" + _("Connection")
                 + "</th><th>" + _("Status host")
                 + "</th><th>" + _("Disabled")
@@ -5873,8 +5884,8 @@ def mode_sites(phase):
         edit_url = make_link([("mode", "edit_site"), ("edit", id)])
         delete_url = html.makeactionuri([("_delete", id)])
         html.write("<td class=buttons>")
-        html.buttonlink(edit_url, _("Properties"))
-        html.buttonlink(delete_url, _("Delete"))
+        icon_button(edit_url, _("Properties"), "edit")
+        icon_button(delete_url, _("Delete"), "delete")
 
         # Alias
         html.write("</td><td>%s</td><td>%s</td>" % (id, site.get("alias", "")))
@@ -6096,7 +6107,7 @@ def mode_edit_site(phase):
 
     # Alias
     html.write("<tr><td class=legend>")
-    html.write(_("Alias") + "<br><i>" + _("A name or description of the site</i>"))
+    html.write(_("Alias") + "<br><i>" + _("An alias or description of the site</i>"))
     html.write("</td><td class=content>")
     html.text_input("alias", site.get("alias", ""), size = 50)
     if not new:
@@ -6389,8 +6400,10 @@ def do_remote_automation(site, command, vars):
 
 # Determine, if we have any slaves to distribute
 # configuration to.
-def is_distributed():
-    for site in config.sites.values():
+def is_distributed(sites = None):
+    if sites == None:
+        sites = config.sites
+    for site in sites.values():
         if site.get("replication"):
             return True
     return False
@@ -6933,9 +6946,11 @@ def mode_users(phase):
         # Buttons
         edit_url = make_link([("mode", "edit_user"), ("edit", id)])
         delete_url = html.makeactionuri([("_delete", id)])
+        clone_url = make_link([("mode", "edit_user"), ("clone", id)])
         html.write("<td class=buttons>")
-        html.buttonlink(edit_url, _("Properties"))
-        html.buttonlink(delete_url, _("Delete"))
+        icon_button(edit_url, _("Properties"), "edit")
+        icon_button(clone_url, _("Create a copy of this user"), "clone")
+        icon_button(delete_url, _("Delete"), "delete")
         html.write("</td>")
 
         # ID
@@ -7001,7 +7016,8 @@ def mode_users(phase):
 
 def mode_edit_user(phase):
     users = load_users()
-    userid = html.var("edit", None) # missing -> new user
+    userid = html.var("edit") # missing -> new user
+    cloneid = html.var("clone") # Only needed in 'new' mode
     new = userid == None
     if phase == "title":
         if new:
@@ -7014,7 +7030,10 @@ def mode_edit_user(phase):
         return
 
     if new:
-        user = {}
+        if cloneid:
+            user = users.get(cloneid, {})
+        else:
+            user = {}
     else:
         user = users.get(userid, {})
 
@@ -7111,7 +7130,7 @@ def mode_edit_user(phase):
     html.write(_("User ID"))
     html.write("</td><td class=content>")
     if new:
-        html.text_input("userid", userid) 
+        html.text_input("userid", userid)
         html.set_focus("userid")
     else:
         html.write(userid)
@@ -7144,11 +7163,12 @@ def mode_edit_user(phase):
 
     # Locking
     html.write("<tr><td class=legend>")
-    html.write(_("<i>Locking the password prevents a user from logging in without "
-                 "the need of changing the password.</i>"))
+    html.write(_("<i>Disabling the password prevents a user from logging in without "
+                 "the need of changing the password. Notifications are not affected "
+                 "by this setting.</i>"))
     html.write("</td><td class=content>")
     html.checkbox("locked", user.get("locked", False))
-    html.write(_(" lock the password of this account"))
+    html.write(_(" disable the password of this account"))
     html.write("</td></tr>")
 
     # Email address
@@ -7478,7 +7498,7 @@ def mode_roles(phase):
     html.write("<tr>"
              + "<th>" + _("Actions")       + "</th>"  
              + "<th>" + _("ID")            + "</th>"  
-             + "<th>" + _("Description")   + "</th>"  
+             + "<th>" + _("Alias")         + "</th>"  
              + "<th>" + _("Type")          + "</th>"
              + "<th>" + _("Modifications") + "</th>"
              + "<th>" + _("Users")         + "</th>"
@@ -7499,8 +7519,8 @@ def mode_roles(phase):
         edit_url = make_link([("mode", "edit_role"), ("edit", id)])
         clone_url = html.makeactionuri([("_clone", id)])
         delete_url = html.makeactionuri([("_delete", id)])
-        html.buttonlink(edit_url, _("Properties"))
-        html.buttonlink(clone_url, _("Clone"))
+        icon_button(edit_url, _("Properties"), "edit") 
+        icon_button(clone_url, _("Clone"), "clone")
         if not role.get("builtin"):
             html.buttonlink(delete_url, _("Delete"))
         html.write("</td>")
@@ -7508,7 +7528,7 @@ def mode_roles(phase):
         # ID
         html.write("<td>%s</td>" % id)
 
-        # Description
+        # Alias
         html.write("<td>%s</td>" % role["alias"])
 
         # Type
@@ -7602,7 +7622,7 @@ def mode_edit_role(phase):
 
     # Alias
     html.write("<tr><td class=legend>")
-    html.write(_("Alias") + "<br><i>" + _("An optional description of the timeperiod</i>"))
+    html.write(_("Alias") + "<br><i>" + _("An alias or description of the role</i>"))
     html.write("</td><td class=content>")
     html.text_input("alias", role.get("alias", ""), size = 50)
     html.write("</td></tr>")
@@ -7889,7 +7909,7 @@ def mode_edit_hosttag(phase):
                     if not re.match("^[-a-z0-9A-Z_]*$", id):
                         raise MKUserError("id_%d" % nr, _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
                     if not descr:
-                        raise MKUserError("descr_%d" % nr, _("Please supply a description for the tag with the ID %s.") % id)
+                        raise MKUserError("descr_%d" % nr, _("Please supply an alias for the tag with the ID %s.") % id)
                     if not id:
                         id = None
                         if have_none_tag:
@@ -7987,7 +8007,7 @@ def mode_edit_hosttag(phase):
 
     # Title
     html.write("<tr><td class=legend>")
-    html.write(_("Title") + "<br><i>" + _("A description of this tag group</i>"))
+    html.write(_("Title") + "<br><i>" + _("An alias or description of this tag group</i>"))
     html.write("</td><td class=content>")
     html.text_input("title", title, size = 30)
     html.write("</td></tr>")
@@ -8010,7 +8030,7 @@ def mode_edit_hosttag(phase):
     html.write("</td><td class=content>")
     html.write("<table>")
     html.write("<tr><th>%s</th><th>%s</th></tr>" % 
-        (_("Tag ID"), _("Description")))
+        (_("Tag ID"), _("Alias")))
     for nr in range(max(num_choices, len(choices))):
         if nr < len(choices):
             tag_id, descr = choices[nr]
@@ -8446,7 +8466,10 @@ def mode_edit_ruleset(phase):
     varname = html.var("varname")
     rulespec = g_rulespecs[varname]
     hostname = html.var("host", "")
-    item = eval(html.var("item", "None"))
+    if html.has_var("item"):
+        item = eval(html.var("item"))
+    else:
+        item = NO_ITEM
 
     if hostname:
         hosts = load_hosts(g_folder)
@@ -8628,6 +8651,7 @@ def mode_edit_ruleset(phase):
             if hostname:
                 reason = rule_matches_host_and_item(
                     rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, item)
+                
                 # Handle case where dict is constructed from rules
                 if reason == True and rulespec["match"] == "dict": 
                     if len(value) == 0:
@@ -8697,7 +8721,7 @@ def mode_edit_ruleset(phase):
     html.begin_form("new_rule")
     if hostname:
         title = _("Exception rule for host %s" % hostname)
-        if rulespec["itemtype"]:
+        if item != NO_ITEM and rulespec["itemtype"]:
             title += _(" and %s '%s'") % (rulespec["itemname"], item)
         html.button("_new_host_rule", title)
         html.write(" " + _("or") + " ")
@@ -8721,7 +8745,7 @@ def folder_selection(folder, depth=0):
 
 
 
-def create_rule(rulespec, hostname=None, item=None):
+def create_rule(rulespec, hostname=None, item=NO_ITEM):
     new_rule = []
     valuespec = rulespec["valuespec"]
     if valuespec:
@@ -8731,7 +8755,7 @@ def create_rule(rulespec, hostname=None, item=None):
     else:
         new_rule.append(ALL_HOSTS) # bottom: default to catch-all rule
     if rulespec["itemtype"]:
-        if item != None:
+        if item != NO_ITEM:
             new_rule.append(["%s$" % item])
         else:
             new_rule.append([""])
@@ -8824,7 +8848,7 @@ def rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list,
         reasons.append(_("The rule does not apply to the folder of the host."))
 
     # Check items
-    if rulespec["itemtype"]:
+    if item != NO_ITEM and rulespec["itemtype"]:
         item_matches = False
         for i in item_list:
             if re.match(i, str(item)):
@@ -8900,7 +8924,15 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
         if host_list == []:
             condition = _("This rule does <b>never</b> apply!")
         elif host_list[-1] != ALL_HOSTS[0]:
-            tt_list = [ "<tt><b>%s</b></tt>" % t for t in host_list ]
+            tt_list = []
+            for h in host_list:
+                f = find_host(h)
+                if f:
+                    uri = html.makeuri([("mode", "edithost"), ("folder", f[".path"]), ("host", h)])
+                    host_spec = '<a href="%s">%s</a>' % (uri, h)
+                else:
+                    host_spec = h
+                tt_list.append("<tt><b>%s</b></tt>" % host_spec)
             if len(host_list) == 1:
                 condition = _("Host name is %s") % tt_list[0]
             else:
@@ -9511,6 +9543,21 @@ class API:
             return folder["title"]
         else:
             return path
+
+    # Return a list with all the titles of the paths'
+    # components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]
+    def get_folder_title_path(self, path, withlinks=False):
+        load_all_folders() # TODO: speed up!
+        folder = g_folders.get(path)
+        titles = []
+        while (folder):
+            title = folder["title"]
+            if withlinks:
+                title = "<a href='wato.py?mode=folder&folder=%s'>%s</a>" % (folder[".path"], title)
+            titles.append(title)
+            folder = folder.get(".parent")
+        return titles[::-1]
+
 
     # Returns the number of not activated changes.
     def num_pending_changes(self):

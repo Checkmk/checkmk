@@ -3948,6 +3948,7 @@ def mode_snapshot(phase):
             # Find the latest snapshot file
             if download_file == 'latest':
                 snapshots = os.listdir(snapshot_dir)
+                snapshots.sort()
                 if not snapshots:
                     return False
                 download_file = snapshots[-1]

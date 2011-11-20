@@ -9524,10 +9524,12 @@ class API:
         g_hooks.setdefault(name, []).append(func)
 
     # Get a (flat) dictionary containing all hosts with their *effective*
-    # attributes (containing all inherited and default values where appropriate).
-    def get_all_hosts(self):
+    # attributes (containing all inherited and default values where appropriate)
+    # of the given folder. If folder is None, returns all hosts from the root folder
+    # Folder must be returned by get_folder()
+    def get_all_hosts(self, folder=None):
         load_all_folders()
-        return collect_hosts(g_root_folder)
+        return collect_hosts(folder or g_root_folder)
 
     # Find a folder by its path. Raise an exception if it does
     # not exist.

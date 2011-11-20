@@ -3669,6 +3669,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
     # Collect dependency mapping for attributes (attributes that are only
     # visible, if certain host tags are set).
     dependency_mapping = {}
+    inherited_tags     = {}
 
     for topic in topics:
         if len(topics) > 1:
@@ -3743,6 +3744,8 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                     inherited_from = _("Inherited from ") + '<a href="%s">%s</a>' % (url, container["title"])
                     inherited_value = container["attributes"][attrname]
                     has_inherited = True
+                    if topic == _("Host tags"):
+                        inherited_tags["attr_%s" % attrname] = inherited_value
                     break
 
                 container = container.get(".parent")
@@ -3809,7 +3812,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 html.hidden_field(checkbox_name, "on")
             else:
                 html.checkbox(checkbox_name, active, 
-                    onclick = "wato_toggle_attribute(this, '%s');" % attrname ) # Only select if value is unique
+                    onclick = "wato_fix_visibility(); wato_toggle_attribute(this, '%s');" % attrname) # Only select if value is unique
             html.write("</td>")
 
             # Now comes the input fields and the inherited / default values
@@ -3862,7 +3865,9 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
 
     # Provide Javascript world with the tag dependency information
     # of all attributes. 
-    html.javascript("var wato_depends_on = %r;\nwato_fix_visibility();\n" % dependency_mapping)
+    html.javascript("var inherited_tags = %r;\n"\
+                    "var wato_depends_on = %r;\n"\
+                    "wato_fix_visibility();\n" % (inherited_tags, dependency_mapping))
 
 
 # Check if at least one host in a folder (or its subfolders)

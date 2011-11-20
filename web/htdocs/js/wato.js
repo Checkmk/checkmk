@@ -76,6 +76,15 @@ function wato_fix_visibility() {
     for (var i in oTable.childNodes) {
         var oTr = oTable.childNodes[i];
         if (oTr.nodeName == 'TR') {
+            /* If the Checkbox is unchecked try to get a value from the inherited_tags */
+            var oCheckbox = oTr.childNodes[1].childNodes[0]
+            if( oCheckbox.checked == false ){
+                attrname = oCheckbox.parentNode.parentNode.id
+                if( attrname in inherited_tags ){
+                    currentTags = currentTags.concat(inherited_tags[oCheckbox.parentNode.parentNode.id].split("|"))
+                }
+                continue
+            }
             /* Find the <select>/<checkbox> object in this tr */
             /*                td.content    div           select/checkbox */
             var oElement = oTr.childNodes[2].childNodes[0].childNodes[0];

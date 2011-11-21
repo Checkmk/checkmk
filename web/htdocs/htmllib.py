@@ -399,12 +399,14 @@ class html:
     def password_input(self, varname, default_value = "", **args):
         self.text_input(varname, default_value, type="password", size=12, **args)
 
-    def text_area(self, varname, deflt="", rows=8):
+    def text_area(self, varname, deflt="", rows=4, cols=30):
         value = self.req.vars.get(varname, deflt)
         error = self.user_errors.get(varname)
         if error:
             self.write("<x class=inputerror>")
-        self.write("<textarea name=\"%s\">%s</textarea>\n" % (varname, attrencode(value)))
+        
+        self.write("<textarea rows=%d cols=%d name=\"%s\">%s</textarea>\n" % (
+            rows, cols, varname, attrencode(value)))
         if error:
             self.write("</x>")
             self.set_focus(varname)

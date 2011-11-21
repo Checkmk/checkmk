@@ -4313,6 +4313,9 @@ class TextUnicode(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
 
+    def render_input(self, varprefix, value):
+        html.text_input(varprefix, value, size = self._size)
+
     def from_html_vars(self, varprefix):
         return html.var_utf8(varprefix, "").strip()
 
@@ -4320,7 +4323,22 @@ class TextUnicode(TextAscii):
         if type(value) not in [ str, unicode ]:
             raise MKUserError(varprefix, _("The value must be of type str or unicode, but it has type %s") % type(value)) 
 
+class TextAreaUnicode(TextUnicode):
+    def __init__(self, **kwargs):
+        TextUnicode.__init__(self, **kwargs)
+        self._cols = kwargs.get("cols", 60)
+        self._rows = kwargs.get("rows", 20)
 
+    def value_to_text(self, value):
+        return "<pre class=ve_textarea>%s</pre>" % value
+
+    def render_input(self, varprefix, value):
+        html.text_area(varprefix, value, rows=self._rows, cols=self._cols)
+
+    # Overridded because we do not want to strip() here and remove '\r'
+    def from_html_vars(self, varprefix):
+        return html.var_utf8(varprefix, "").replace('\r', '')
+    
 # A variant of TextAscii() that validates a path to a filename that 
 # lies in an existing directory.
 class Filename(TextAscii):

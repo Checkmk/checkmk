@@ -1240,11 +1240,6 @@ table.form.nomargin td.title {
     border-top-style: solid;
 }
 
-table.form textarea {
-    width: 30em;
-    height: 4em;
-}
-
 table.form td { 
     padding: 4px 10px;
 }
@@ -2337,6 +2332,17 @@ table.add_snapin i {
 .wato input.timeperioddate {
     width: 7ex;
     font-family: monospace;
+}
+
+/* Value editor */
+.wato table.data.globalvars td {
+    vertical-align: top;
+}
+
+.wato pre.ve_textarea {
+    padding: 0px;
+    margin: 0px;
+    font-size: 8pt;
 }
 
 /* configuration overview */

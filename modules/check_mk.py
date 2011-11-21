@@ -329,7 +329,7 @@ snmp_scan_functions                = {} # SNMP autodetection
 # Now include the other modules. They contain everything that is needed
 # at check time (and many of that is also needed at administration time).
 try:
-    modules =  [ 'check_mk_base', 'snmp' ]
+    modules =  [ 'check_mk_base', 'snmp', 'notify' ]
     for module in modules:
         filename = modules_dir + "/" + module + ".py"
         execfile(filename)
@@ -1851,7 +1851,7 @@ def create_nagios_config_contacts(outfile):
                     no = "n"
                 outfile.write("  %s_notification_options\t%s\n" % (what, ",".join(list(no))))
                 outfile.write("  %s_notification_period\t%s\n" % (what, contact.get("notification_period", "24X7")))
-                outfile.write("  %s_notification_commands\tcheck-mk-dummy\n" % what)
+                outfile.write("  %s_notification_commands\tcheck-mk-notify\n" % what)
 
             # Refer only to those contact groups that actually have objects assigned to
             cgrs = [ cgr for cgr in contact.get("contactgroups", []) if cgr in contactgroups_to_define ]
@@ -4232,14 +4232,14 @@ if __name__ == "__main__":
     long_options = [ "help", "version", "verbose", "compile", "debug",
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "localize", "donate", "snmpwalk", "usewalk",
-                     "scan-parents", "procs=", "automation=", 
+                     "scan-parents", "procs=", "automation=", "notify", 
                      "snmpget=", "profile",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=" ]
 
     non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', 
-                          '--man', '-V', '--version' ,'-h', '--help', '--automation']
+                          '--man', '-V', '--version' ,'-h', '--help', '--automation', ]
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -4388,6 +4388,9 @@ if __name__ == "__main__":
             elif o == '--automation':
                 execfile(modules_dir + "/automation.py")
                 do_automation(a, args)
+                done = True
+            elif o == '--notify':
+                do_notify(args)
                 done = True
 
 

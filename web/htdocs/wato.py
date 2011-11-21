@@ -3445,11 +3445,10 @@ class HostTagAttribute(Attribute):
                 secondary_tags = e[2]
             else:
                 secondary_tags = []
-            value = "|".join([ tagvalue ] + secondary_tags)
-            choices.append((value, e[1]))
+            choices.append(("|".join([ tagvalue ] + secondary_tags), e[1]))
         varname = "attr_" + self.name()
         if len(choices) == 1:
-            html.checkbox(varname, value != None, onchange='wato_fix_visibility();')
+            html.checkbox(varname, value != None, cssclass = '', onclick='wato_fix_visibility();', add_attr = ["tags=%s"%choices[0][0]])
             html.write(" " + choices[0][1])
         else:
             html.select(varname, choices, value, onchange='wato_fix_visibility();')
@@ -3670,6 +3669,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
     # Collect dependency mapping for attributes (attributes that are only
     # visible, if certain host tags are set).
     dependency_mapping = {}
+    inherited_tags     = {}
 
     for topic in topics:
         if len(topics) > 1:
@@ -3744,6 +3744,8 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                     inherited_from = _("Inherited from ") + '<a href="%s">%s</a>' % (url, container["title"])
                     inherited_value = container["attributes"][attrname]
                     has_inherited = True
+                    if topic == _("Host tags"):
+                        inherited_tags["attr_%s" % attrname] = inherited_value
                     break
 
                 container = container.get(".parent")
@@ -3810,7 +3812,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 html.hidden_field(checkbox_name, "on")
             else:
                 html.checkbox(checkbox_name, active, 
-                    onclick = "wato_toggle_attribute(this, '%s');" % attrname ) # Only select if value is unique
+                    onclick = "wato_fix_visibility(); wato_toggle_attribute(this, '%s');" % attrname) # Only select if value is unique
             html.write("</td>")
 
             # Now comes the input fields and the inherited / default values
@@ -3863,7 +3865,9 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
 
     # Provide Javascript world with the tag dependency information
     # of all attributes. 
-    html.javascript("var wato_depends_on = %r;\nwato_fix_visibility();\n" % dependency_mapping)
+    html.javascript("var inherited_tags = %r;\n"\
+                    "var wato_depends_on = %r;\n"\
+                    "wato_fix_visibility();\n" % (inherited_tags, dependency_mapping))
 
 
 # Check if at least one host in a folder (or its subfolders)
@@ -3944,6 +3948,7 @@ def mode_snapshot(phase):
             # Find the latest snapshot file
             if download_file == 'latest':
                 snapshots = os.listdir(snapshot_dir)
+                snapshots.sort()
                 if not snapshots:
                     return False
                 download_file = snapshots[-1]
@@ -7965,7 +7970,9 @@ def mode_edit_hosttag(phase):
                     raise MKUserError("tag_id", _("Please specify an ID for your tag group."))
                 if not re.match("^[-a-z0-9A-Z_]*$", tag_id):
                     raise MKUserError("tag_id", _("Invalid tag group ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
-                for tgid, tit, ch in config.wato_host_tags:
+                for entry in config.wato_host_tags:
+                    tgid = entry[0]
+                    tit  = entry[1]
                     if tgid == tag_id:
                         raise MKUserError("tag_id", _("The tag group ID %s is already used by the tag group '%s'.") % (tag_id, tit))
 
@@ -7992,7 +7999,10 @@ def mode_edit_hosttag(phase):
                     new_choices.append((id, descr))
                 if id:
                     # Make sure this ID is not used elsewhere
-                    for tgid, tit, ch in config.wato_host_tags:
+                    for entry in config.wato_host_tags:
+                        tgid = entry[0]
+                        tit  = entry[1]
+                        ch   = entry[2]
                         if tgid != tag_id:
                             for e in ch:
                                 # Check primary and secondary tags
@@ -9532,10 +9542,12 @@ class API:
         g_hooks.setdefault(name, []).append(func)
 
     # Get a (flat) dictionary containing all hosts with their *effective*
-    # attributes (containing all inherited and default values where appropriate).
-    def get_all_hosts(self):
+    # attributes (containing all inherited and default values where appropriate)
+    # of the given folder. If folder is None, returns all hosts from the root folder
+    # Folder must be returned by get_folder()
+    def get_all_hosts(self, folder=None):
         load_all_folders()
-        return collect_hosts(g_root_folder)
+        return collect_hosts(folder or g_root_folder)
 
     # Find a folder by its path. Raise an exception if it does
     # not exist.

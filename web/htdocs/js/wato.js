@@ -76,11 +76,24 @@ function wato_fix_visibility() {
     for (var i in oTable.childNodes) {
         var oTr = oTable.childNodes[i];
         if (oTr.nodeName == 'TR') {
-            /* Find the <select> object in this tr */
-            /*    td.content     div          select */
-            var oSelect = oTr.childNodes[2].childNodes[0].childNodes[0];
-            tags = oSelect.value.split("|");
-            currentTags = currentTags.concat(tags);
+            /* If the Checkbox is unchecked try to get a value from the inherited_tags */
+            var oCheckbox = oTr.childNodes[1].childNodes[0]
+            if( oCheckbox.checked == false ){
+                attrname = oCheckbox.parentNode.parentNode.id
+                if( attrname in inherited_tags ){
+                    currentTags = currentTags.concat(inherited_tags[oCheckbox.parentNode.parentNode.id].split("|"))
+                }
+                continue
+            }
+            /* Find the <select>/<checkbox> object in this tr */
+            /*                td.content    div           select/checkbox */
+            var oElement = oTr.childNodes[2].childNodes[0].childNodes[0];
+            if( oElement.type == 'checkbox' && oElement.checked ){ // <checkbox>
+                currentTags = currentTags.concat(oElement.getAttribute('tags').split("|"));
+            }
+            else{ // <select> 
+                currentTags = currentTags.concat(oElement.value.split("|"));
+            }
         }
     }
 

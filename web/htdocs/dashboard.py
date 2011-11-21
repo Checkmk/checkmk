@@ -156,7 +156,7 @@ window.onresize = function () { set_dashboard_size(); }
 dashboard_scheduler(1);
     """ % (header_height, screen_margin, title_height, dashlet_padding, refresh_dashlets, name))
 
-    html.footer()
+    html.body_end() # omit regular footer with status icons, etc.
 
 # Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
 # where %d is its index (in board["dashlets"]). Javascript uses that id

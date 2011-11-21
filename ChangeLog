@@ -39,6 +39,7 @@
     * Show icon if user has modified a view's filter settings
     * New config option debug_livestatus_queries, normal debug
       mode does not include this anymore
+    * Icons with link to page URL at bottom of each page
 
     WATO:
     * Evolved to full featured monitoring configuration tool!

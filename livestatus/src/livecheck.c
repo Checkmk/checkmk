@@ -60,6 +60,8 @@ int main(int argc, char **argv)
     char command[1024]; 
     int pid;
     int check_result;
+    int real_uid = getuid(); // non-root user id
+    int real_gid = getgid(); // non-root group id
 
     signal(SIGALRM, alarm_handler); // handler for check timeout
     signal(SIGINT,  term_handler);
@@ -98,7 +100,6 @@ int main(int argc, char **argv)
             pipe(fd);
 
             pid = fork();
-
             if (pid == 0) {
                 // Drop root priviledges: only needed for ICMP socket
                 if (geteuid() == 0)
@@ -107,8 +108,10 @@ int main(int argc, char **argv)
                 close(fd[0]);   // close read end
                 dup2(fd[1], 1); // point stdout into pipe  
                 dup2(fd[1], 2); // also point stderr into pipe
+                close(fd[1]);   // lives forth in 1 and 2
                 int f = open("/dev/null", O_RDONLY);
                 dup2(f, 0);
+                close(f);
 
                 // Allow for larger stack size
                 struct rlimit rl;
@@ -140,14 +143,15 @@ int main(int argc, char **argv)
                 }
                 exit(127);
             }
-
-            else {
+            else { /* parent process */
+                close(fd[1]);
                 g_pid = pid;
                 unsigned timeout = is_host_check ? host_check_timeout : service_check_timeout;
                 if (timeout)
                     alarm(timeout);
 
                 int bytes_read = read(fd[0], output, sizeof(output));
+                close(fd[0]);
                 int ret;
                 waitpid(pid, &ret, 0);
                 g_pid = 0;
@@ -175,12 +179,14 @@ int main(int argc, char **argv)
         ftime(&end);
         char template[256];
         snprintf(template, sizeof(template), "%s/cXXXXXX", check_result_path);
-        char *foo = mktemp(template);
-        FILE *checkfile = fopen(template, "w");
+        int fd = mkstemp(template);
+        fchmod(fd, 0600);
+        FILE *checkfile = fdopen(fd, "w");
         fprintf(checkfile, "host_name=%s", host);
         if (!is_host_check)
             fprintf(checkfile, "service_description=%s", service);
         fprintf(checkfile, 
+            "### Check result created by livecheck(%d)\n"
             "check_type=%d\n"
             "check_options=0\n"
             "scheduled_check=1\n"
@@ -190,6 +196,7 @@ int main(int argc, char **argv)
             "finish_time=%d.%03u\n"
             "return_code=%d\n"                                                   
             "output=%s\n", 
+            getpid(),
             is_host_check ? 0 : 1,
             latency,
             (int)start.time,
@@ -198,9 +205,12 @@ int main(int argc, char **argv)
             end.millitm,
             return_code,
             output);
+        fchown(fd, real_uid, real_gid);
         fclose(checkfile);
         strcat(template, ".ok");
-        close(creat(template, 0644));
+        fd = creat(template, 0600);
+        fchown(fd, real_uid, real_gid);
+        close(fd);
     }
 }
 

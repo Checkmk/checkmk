@@ -43,13 +43,84 @@ extern int service_check_timeout;
 int g_num_livehelpers = 20;
 int g_livecheck_enabled = 0;
 
+#define LH_WAITING 0
+#define LH_READY   1
+#define LH_DEAD    2
+
 struct live_helper {
+    int id;
     pid_t pid; 
     int sock;
     FILE *fsock;
-    int is_free;
+    int status;
 };
 struct live_helper *g_live_helpers;
+
+void start_livecheck_helper(struct live_helper *lh)
+{
+    int fd[2]; // fd[0] used by us, fd[1] by livecheck helper
+    socketpair(AF_UNIX, SOCK_STREAM, 0, fd);
+    pid_t pid = fork();
+    if (pid == 0) {
+        dup2(fd[1], 0);
+        dup2(fd[1], 1);
+        dup2(fd[1], 2);
+        close(fd[0]);
+        char ht[32];
+        snprintf(ht, sizeof(ht), "%u", host_check_timeout);
+        char st[32];
+        snprintf(st, sizeof(st), "%u", service_check_timeout);
+
+        // reduce stack size in order to save memory
+        struct rlimit rl;
+        getrlimit(RLIMIT_STACK, &rl);
+        rl.rlim_cur = 65536;
+        setrlimit(RLIMIT_STACK, &rl);
+        execl(g_livecheck_path, "livecheck", check_result_path, ht, st, (char *)0);
+        logger(LG_INFO, "ERROR: Cannot start livecheck helper: %s", strerror(errno));
+        exit(1);
+    }
+    close(fd[1]);
+    // Make sure our socket is not forked() by Nagios
+    if (0 < fcntl(fd[0], F_SETFD, FD_CLOEXEC)) {
+        logger(LG_INFO, "WARNING: Cannot set FD_CLOEXEC on fd %d: %s",
+           fd[0], strerror(errno));
+    }
+    lh->pid = pid;
+    lh->sock = fd[0];
+    lh->fsock = fdopen(fd[0], "r+");
+    lh->status = LH_WAITING; // wait until helper sends "ready" byte.
+}
+
+void terminate_livecheck_helper(struct live_helper *lh) {
+    fclose(lh->fsock); 
+    kill(lh->pid, SIGTERM); 
+    int status; 
+    if (lh->pid != waitpid(lh->pid, &status, 0))
+    {
+        // Nagios calls waitpid(-1, ...) from time to time and that
+        // wait catches away our exit code. They should better know
+        // which PID they are looking for :-(...
+        if (g_debug_level > 0) 
+            logger(LG_INFO, "Could not wait() Livecheck helper [%d:%d], "
+                            "Nagios was faster.", lh->pid, lh->sock);
+    }
+    else if (WIFSIGNALED(status) && WTERMSIG(status) != SIGTERM) 
+    {
+        logger(LG_INFO, "Livecheck helper [%d:%d:%d] exited with signal %d.",
+            lh->id, lh->pid, lh->sock, WTERMSIG(status));
+    } 
+    else if (g_debug_level > 0) {
+        logger(LG_INFO, "Livecheck helper [%d:%d:%d] exited with status %d.",
+            lh->id, lh->pid, lh->sock, status);
+    }
+}
+
+void restart_livecheck_helper(struct live_helper *lh)
+{
+    terminate_livecheck_helper(lh);
+    start_livecheck_helper(lh);
+}
 
 void execute_livecheck(struct live_helper *lh, const char *host_name, 
        const char *service_description, double latency, const char *command)
@@ -58,7 +129,16 @@ void execute_livecheck(struct live_helper *lh, const char *host_name,
         logger(LG_INFO, "Executing livecheck for %s %s", host_name, service_description);
     char signalbyte;
     if (1 != read(lh->sock, &signalbyte, 1)) {
-        logger(LG_INFO, "ERROR: Livecheck helper [%d] has terminated.", lh->pid);   
+        logger(LG_INFO, "ERROR: Livecheck helper [%d:%d:%d] not responding. "
+                        "Restarting.", lh->id, lh->pid, lh->sock);
+        restart_livecheck_helper(lh);
+        /* trying again to read the ready byte. */
+        if (1 != read(lh->sock, &signalbyte, 1)) {
+            logger(LG_INFO, "FATAL: Restarted helper [%d:%d:%d] doesn't "
+                            "seem to live.", lh->id, lh->pid, lh->sock);
+            lh->status = LH_DEAD;
+            return; // This check will never be executed
+        }
     }
     fprintf(lh->fsock, "%s\n%s\n%.3f\n%s\n", 
         host_name, service_description, latency, command);
@@ -72,8 +152,8 @@ struct live_helper *get_free_live_helper()
     // at the flag
     unsigned i;
     for (i=0; i<g_num_livehelpers; i++) {
-        if (g_live_helpers[i].is_free) {
-            g_live_helpers[i].is_free = 0;
+        if (g_live_helpers[i].status == LH_READY) {
+            g_live_helpers[i].status = LH_WAITING;
             return &g_live_helpers[i];
         }
     }
@@ -85,10 +165,17 @@ struct live_helper *get_free_live_helper()
     FD_ZERO(&fds);
     int max_fd = 0;
     for (i=0; i<g_num_livehelpers; i++) {
-        int fd = g_live_helpers[i].sock;
-        FD_SET(fd, &fds);
-        if (fd >= max_fd)
-            max_fd = fd;
+        if (g_live_helpers[i].status != LH_WAITING) {
+            logger(LG_INFO, "Skipping helper %d: state is %d",
+                g_live_helpers[i].sock, g_live_helpers[i].status);
+            continue;
+        }
+        if (g_live_helpers[i].status != LH_DEAD) {
+            int fd = g_live_helpers[i].sock;
+            FD_SET(fd, &fds);
+            if (fd >= max_fd)
+                max_fd = fd;
+        }
     }
     struct timeval tv;
     tv.tv_sec = 0;
@@ -100,7 +187,11 @@ struct live_helper *get_free_live_helper()
     struct live_helper *free_helper = 0;
     for (i=0; i<g_num_livehelpers; i++) {
         if (FD_ISSET(g_live_helpers[i].sock, &fds))
-            g_live_helpers[i].is_free = 1;
+            if (g_live_helpers[i].status == LH_DEAD) {
+                logger(LG_INFO, "ARGL: dead livehelper found by select()!");
+                return 0;
+            }
+            g_live_helpers[i].status = LH_READY;
             free_helper = &g_live_helpers[i];
     }
     return free_helper;
@@ -116,7 +207,8 @@ int broker_host_livecheck(int event_type __attribute__ ((__unused__)), void *dat
 
     struct live_helper *lh = get_free_live_helper();
     if (!lh) {
-        logger(LG_INFO, "No livecheck helper free.");
+        if (g_debug_level > 0) 
+            logger(LG_INFO, "No livecheck helper free.");
         return NEB_OK;
     }
 
@@ -151,7 +243,8 @@ int broker_service_livecheck(int event_type __attribute__ ((__unused__)), void *
 
     struct live_helper *lh = get_free_live_helper();
     if (!lh) {
-        logger(LG_INFO, "No livecheck helper free.");
+        if (g_debug_level > 0) 
+            logger(LG_INFO, "No livecheck helper free.");
         // Let the core handle this check himself
         g_counters[COUNTER_LIVECHECK_OVERFLOWS]++;
         return NEB_OK;
@@ -186,36 +279,11 @@ void init_livecheck()
 
     logger(LG_INFO, "Starting %d livechecks helpers", g_num_livehelpers);
     g_live_helpers = (struct live_helper *)malloc(sizeof(struct live_helper) * g_num_livehelpers);
+
     unsigned i;
-
-    for (i=0; i<g_num_livehelpers; i++) { 
-        int fd[2]; // fd[0] used by us, fd[1] by livecheck helper
-        socketpair(AF_UNIX, SOCK_STREAM, 0, fd);
-        pid_t pid = fork();
-        if (pid == 0) {
-            dup2(fd[1], 0);
-            dup2(fd[1], 1);
-            dup2(fd[1], 2);
-            close(fd[0]);
-            char ht[32];
-            snprintf(ht, sizeof(ht), "%u", host_check_timeout);
-            char st[32];
-            snprintf(st, sizeof(st), "%u", service_check_timeout);
-
-            // reduce stack size in order to save memory
-            struct rlimit rl;
-            getrlimit(RLIMIT_STACK, &rl);
-            rl.rlim_cur = 65536;
-            setrlimit(RLIMIT_STACK, &rl);
-            execl(g_livecheck_path, "livecheck", check_result_path, ht, st, (char *)0);
-            logger(LG_INFO, "ERROR: Cannot start livecheck helper: %s", strerror(errno));
-            exit(1);
-        }
-        close(fd[1]);
-        g_live_helpers[i].pid = pid;
-        g_live_helpers[i].sock = fd[0];
-        g_live_helpers[i].fsock = fdopen(fd[0], "r+");
-        g_live_helpers[i].is_free = 0; // wait until helper sends "ready" byte.
+    for (i=0; i<g_num_livehelpers; i++) {
+        g_live_helpers[i].id = i;
+        start_livecheck_helper(&g_live_helpers[i]);
     }
 }
 
@@ -226,18 +294,7 @@ void deinit_livecheck()
         return;
 
     unsigned i;
-    for (i=0; i<g_num_livehelpers; i++) { 
-        fclose(g_live_helpers[i].fsock);
-        kill(g_live_helpers[i].pid, SIGTERM);
-        int status;
-        waitpid(g_live_helpers[i].pid, &status, 0); 
-        if (WIFSIGNALED(status) && WTERMSIG(status) != SIGTERM) {
-            logger(LG_INFO, "Livecheck helper %d exited with signal %d.",
-                g_live_helpers[i].pid, WTERMSIG(status));
-        }
-        else if (g_debug_level > 0)
-            logger(LG_INFO, "Livecheck helper %d exited with status %d.", 
-                g_live_helpers[i].pid, status);
-    }
+    for (i=0; i<g_num_livehelpers; i++) 
+        terminate_livecheck_helper(&g_live_helpers[i]);
     free(g_live_helpers);
 }

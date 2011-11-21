@@ -389,6 +389,15 @@ int check_icmp(int argc, char **argv, char *output, int size)
     exit_code = 3;
     if (setjmp(exit_jmp)) {
         close(icmp_sock);
+        struct rta_host *h = list;
+        while (h) {
+            free(h->name);
+            struct rta_host *n = h->next;
+            free(h);
+            h = n;
+        }
+        if (table)
+            free(table);
         return exit_code;
     }
 
@@ -484,8 +493,8 @@ int check_icmp(int argc, char **argv, char *output, int size)
     if(!targets) {
     	errno = 0;
     	do_output(1, "No hosts to check");
-            exit_code = 3;
-            longjmp(exit_jmp, 1);
+        exit_code = 3;
+        longjmp(exit_jmp, 1);
     }
 
     if(!ttl) ttl = 64;
@@ -675,11 +684,14 @@ wait_for_reply(int sock, u_int t)
 static int
 send_icmp_ping(int sock, struct rta_host *host)
 {
+        char buf[icmp_pkt_size]; // avoid malloc
 	static union {
 		void *buf; /* re-use so we prevent leaks */
 		struct icmp *icp;
 		u_short *cksum_in;
 	} packet = { NULL };
+        packet.buf = buf;
+
 	long int len;
 	struct icmp_ping_data data;
 	struct timeval tv;
@@ -692,13 +704,7 @@ send_icmp_ping(int sock, struct rta_host *host)
 	}
 	addr = (struct sockaddr *)&host->saddr_in;
 
-	if(!packet.buf) {
-		if (!(packet.buf = malloc(icmp_pkt_size))) {
-			do_output(1, "send_icmp_ping(): failed to malloc %d bytes for send buffer",
-				  icmp_pkt_size);
-			return -1;	/* might be reached if we're in debug mode */
-		}
-	}
+        // Mathias -> Andreas: how can packet.buf be != 0 here?
 	memset(packet.buf, 0, icmp_pkt_size);
 
 	if((gettimeofday(&tv, &tz)) == -1) return -1;
@@ -716,14 +722,12 @@ send_icmp_ping(int sock, struct rta_host *host)
 
 	len = sendto(sock, packet.buf, icmp_pkt_size, 0, (struct sockaddr *)addr,
 				 sizeof(struct sockaddr));
-
 	if(len < 0 || (unsigned int)len != icmp_pkt_size) {
 		return -1;
 	}
 
 	icmp_sent++;
 	host->icmp_sent++;
-
 	return 0;
 }
 

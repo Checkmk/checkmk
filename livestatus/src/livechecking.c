@@ -166,8 +166,6 @@ struct live_helper *get_free_live_helper()
     int max_fd = 0;
     for (i=0; i<g_num_livehelpers; i++) {
         if (g_live_helpers[i].status != LH_WAITING) {
-            logger(LG_INFO, "Skipping helper %d: state is %d",
-                g_live_helpers[i].sock, g_live_helpers[i].status);
             continue;
         }
         if (g_live_helpers[i].status != LH_DEAD) {

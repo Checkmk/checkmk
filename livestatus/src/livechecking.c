@@ -29,6 +29,7 @@
 
 #include "nagios.h"
 #include "logger.h"
+#include "global_counters.h"
 
 extern int g_debug_level;
 
@@ -62,6 +63,7 @@ void execute_livecheck(struct live_helper *lh, const char *host_name,
     fprintf(lh->fsock, "%s\n%s\n%.3f\n%s\n", 
         host_name, service_description, latency, command);
     fflush(lh->fsock);
+    g_counters[COUNTER_LIVECHECKS]++;
 }
 
 struct live_helper *get_free_live_helper()
@@ -151,6 +153,7 @@ int broker_service_livecheck(int event_type __attribute__ ((__unused__)), void *
     if (!lh) {
         logger(LG_INFO, "No livecheck helper free.");
         // Let the core handle this check himself
+        g_counters[COUNTER_LIVECHECK_OVERFLOWS]++;
         return NEB_OK;
     }
 

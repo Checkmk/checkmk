@@ -56,6 +56,8 @@ extern int num_cached_log_messages;
 extern int interval_length;
 extern int g_num_hosts;
 extern int g_num_services;
+extern int livechecks_performed;
+extern int livecheck_overflows;
 
 extern circular_buffer external_command_buffer;
 extern int external_command_buffer_slots;
@@ -101,6 +103,17 @@ TableStatus::TableStatus()
                 "The number of external commands since program start",        COUNTER_COMMANDS,    false));
     addColumn(new GlobalCountersColumn("external_commands_rate", 
                 "the averaged number of external commands per second",        COUNTER_COMMANDS,    true));
+
+    addColumn(new GlobalCountersColumn("livechecks",
+                "The number of checks executed via livecheck",                COUNTER_LIVECHECKS,    false));
+    addColumn(new GlobalCountersColumn("livechecks_rate", 
+                "The averaged number of livechecks executes per second",      COUNTER_LIVECHECKS,    true));
+
+    addColumn(new GlobalCountersColumn("livecheck_overflows",
+                "The number of times a check could not be executed "
+                "because now livecheck helper was free",                      COUNTER_LIVECHECK_OVERFLOWS,    false));
+    addColumn(new GlobalCountersColumn("livecheck_overflows_rate", 
+                "The number of livecheck overflows per second",               COUNTER_LIVECHECK_OVERFLOWS,    true));
 
     // Nagios program status data
     addColumn(new IntPointerColumn("nagios_pid", 
@@ -164,6 +177,8 @@ TableStatus::TableStatus()
                 "The current number of log messages MK Livestatus keeps in memory", &num_cached_log_messages ));
     addColumn(new StringPointerColumn("livestatus_version",
                 "The version of the MK Livestatus module", (char *)VERSION));
+
+    // Livecheck
 }
 
 void TableStatus::answerQuery(Query *query)

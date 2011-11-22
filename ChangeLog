@@ -40,6 +40,9 @@
     * New config option debug_livestatus_queries, normal debug
       mode does not include this anymore
     * Icons with link to page URL at bottom of each page
+    * Logwatch: Switched strings in logwatch to i18n strings
+    * Logwatch: Fixed styling of context button when acknowleding log messages
+    * Logwatch: Implemented overview page to show all problematic logfiles
 
     WATO:
     * Evolved to full featured monitoring configuration tool!

@@ -5,6 +5,9 @@
     * FIX: Fix host related WATO context button links to point to the hosts site
     * FIX: Fixed view editor redirection to new view after changing the view_name
     * FIX: Made icon painter usable when displaying hostgroup rows
+    * Logwatch: Switched strings in logwatch to i18n strings
+    * Logwatch: Fixed styling of context button when acknowleding log messages
+    * Logwatch: Implemented overview page to show all problematic logfiles
 
     WATO:
     * FIX: add missing icon_csv.png

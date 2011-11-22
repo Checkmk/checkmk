@@ -30,18 +30,18 @@ import views
 
 
 def page():
-
     host = html.var('host')
     filename = html.var('file')
     if not host:
-        raise MKGeneralException("You called this page via an invalid URL: missing host")
+        show_log_list()
+        return
 
     # Check user permissions on the host
     if not may_see(host):
-        raise MKAuthException("You are not allowed to access the logs of the host %s" % htmllib.attrencode(host))
+        raise MKAuthException(_("You are not allowed to access the logs of the host %s") % htmllib.attrencode(host))
 
     if filename:
-        if html.has_var('ack') and not html.var("_do_actions") == "No":
+        if html.has_var('ack') and not html.var("_do_actions") == _("No"):
             html.live.set_auth_domain('action')
             do_log_ack(host, filename)
         else:
@@ -49,24 +49,45 @@ def page():
     else:
         show_host_log_list(host)
 
+# Shows a list of all problematic logfiles grouped by host
+def show_log_list():
+    html.header(_("All problematic Logfiles"))
+
+    html.write("<table class=data>\n")
+    for host, logs in all_logs():
+        html.write('<tr><td colspan=2><h2>%s</h2></td></tr>' % host)
+        list_logs(host, logs)
+    html.write("</table>\n")
+
+    html.footer()
+
+# Shows all problematic logfiles of a host
 def show_host_log_list(host):
-    html.header("Logfiles of host " + host)
+    html.header(_("Logfiles of host %s") % host)
     html.begin_context_buttons()
-    html.context_button("Services", "view.py?view_name=host&site=&host=%s" % htmllib.urlencode(host))
+    html.context_button(_("Services"), "view.py?view_name=host&site=&host=%s" % htmllib.urlencode(host))
+    html.context_button(_("All logfiles"), "logwatch.py")
     html.end_context_buttons()
 
-    logs_shown = False
+    html.write("<table class=data>\n")
+    list_logs(host, host_logs(host))
+    html.write("</table>\n")
+
+    html.footer()
+
+# Displays a table of logfiles
+def list_logs(host, logfiles):
     rowno = 0
-    for file in host_logs(host):
+    for log_file in logfiles:
         rowno += 1
         if rowno == 1:
-            html.write("<table class=data>\n")
             html.write("<tr class=groupheader>\n")
-            html.write("<th>Level</th><th>Logfile</th><th>Last Entry</th><th>Entries</th></tr>\n")
+            html.write("<th>"+_('Level')+"</th><th>"+_('Logfile')+"</th>")
+            html.write("<th>"+_('Last Entry')+"</th><th>"+_('Entries')+"</th></tr>\n")
 
-        file_display = form_file_to_ext(file)
+        file_display = form_file_to_ext(log_file)
 
-        logs = parse_file(host, file)
+        logs = parse_file(host, log_file)
         if logs == [] or type(logs) != list: # corrupted logfile
             if logs == []: logs = "empty"
             html.write("<tr class=%s0>\n" % (rowno % 2 == 0 and "odd" or "even"))
@@ -84,47 +105,44 @@ def show_host_log_list(host):
             html.write("<td>%s</td><td>%s</td></tr>\n" % \
                         (form_datetime(last_log['datetime']), len(logs)))
 
-    if rowno > 0:
-        html.write("</table>")
-    else:
-        html.write('<p>No logs found for this host.</p>\n')
-
-    html.footer()
+    if rowno == 0:
+        html.write('<tr><td colspan=4>'+_('No logs found for this host.')+'</td></tr>\n')
 
 
 def show_file(host, filename):
     file = form_file_to_int(filename)
-    html.header("Logfiles of host %s: %s" % (host, filename))
+    html.header(_("Logfiles of host %s: %s") % (host, filename))
     html.begin_context_buttons()
-    html.context_button("Services", "view.py?view_name=host&site=&host=%s" % htmllib.urlencode(host))
-    html.context_button("All logfiles", "logwatch.py?host=%s" % htmllib.urlencode(host))
+    html.context_button(_("Services"), "view.py?view_name=host&site=&host=%s" % htmllib.urlencode(host))
+    html.context_button(_("All logfiles of Host"), "logwatch.py?host=%s" % htmllib.urlencode(host))
+    html.context_button(_("All logfiles"), "logwatch.py")
 
     if html.var('hidecontext', 'no') == 'yes':
-        hide_context_label = 'Show context'
+        hide_context_label = _('Show context')
         hide_context_param = 'no'
         hide = True
     else:
-        hide_context_label = 'Hide context'
+        hide_context_label = _('Hide context')
         hide_context_param = 'yes'
         hide = False
 
     logs = parse_file(host, file, hide)
     if type(logs) != list:
         html.end_context_buttons()
-        html.show_error("Unable to show logfile: <b>%s</b>" % logs)
+        html.show_error(_("Unable to show logfile: <b>%s</b>") % logs)
         html.footer()
         return
     elif logs == []:
         html.end_context_buttons()
-        html.message("This logfile contains no unacknowledged messages.")
+        html.message(_("This logfile contains no unacknowledged messages."))
         html.footer()
         return
 
     if config.may("act") and may_see(host):
-        html.context_button("Acknowledge", "logwatch.py?host=%s&amp;file=%s&amp;ack=1" % \
+        html.context_button(_("Acknowledge"), "logwatch.py?host=%s&amp;file=%s&amp;ack=1" % \
                    (htmllib.urlencode(host), htmllib.urlencode(html.var('file')) ))
 
-    html.context_button("Context", 'logwatch.py?host=%s&file=%s&hidecontext=%s">%s</a>' % \
+    html.context_button(_("Context"), 'logwatch.py?host=%s&file=%s&hidecontext=%s">%s</a>' % \
                    (htmllib.urlencode(host), \
                     htmllib.urlencode(html.var('file')), \
                     htmllib.urlencode(hide_context_param), \
@@ -152,35 +170,38 @@ def show_file(host, filename):
 def do_log_ack(host, filename):
     file = form_file_to_int(filename)
     file_display = form_file_to_ext(file)
-    html.header("Acknowledge logfile %s" % file_display)
-    html.write("<a class=navi href=\"logwatch.py?host=%s\">All logfiles of %s</a>\n" % tuple([htmllib.urlencode(host)] * 2))
+    html.header(_("Acknowledge logfile %s - %s") % (htmllib.attrencode(host), file_display))
+
+    html.begin_context_buttons()
+    html.context_button(_("All logfiles of Host"), "logwatch.py?host=%s" % htmllib.urlencode(host))
+    html.end_context_buttons()
+
     ack  = html.var('ack')
     if not html.confirm(_("Do you really want to acknowledge the log file <tt>%s</tt> by <b>deleting</b> all stored messages?") % filename):
         html.footer()
         return
 
     if not (config.may("act") and may_see(host)):
-        html.write("<h1 class=error>Permission denied</h1>\n")
-        html.write("<div class=error>You are not allowed to acknowledge the logs of the host %s</div>" % htmllib.attrencode(host))
+        html.write("<h1 class=error>"+_('Permission denied')+"</h1>\n")
+        html.write("<div class=error>" + _('You are not allowed to acknowledge the logs of the host %s</div>') % htmllib.attrencode(host))
         html.footer()
         return
 
     # filter invalid values
     if ack != '1':
-        raise MKUserError('ack', 'Invalid value for ack parameter.')
+        raise MKUserError('ack', _('Invalid value for ack parameter.'))
 
     try:
         os.remove(defaults.logwatch_dir + '/' + host + '/' + file)
 
-        message = '<b>%s: %s Acknowledged</b><br>' % \
-          (htmllib.attrencode(host), htmllib.attrencode(file_display))
-        message += '<p>The log messages from host &quot;%s&quot; in file' \
-                   '&quot;%s&quot; have been acknowledged.</p>' % \
-                     (htmllib.attrencode(host), htmllib.attrencode(file_display))
+        message = '<b>'+_('%s: %s Acknowledged') % (htmllib.attrencode(host), htmllib.attrencode(file_display)) +'</b><br>'
+        message += '<p>'
+        message += _('The log messages from host &quot;%s&quot; in file &quot;%s&quot; have been acknowledged.') % \
+                                                         (htmllib.attrencode(host), htmllib.attrencode(file_display))
+        message += '</p>'
         html.message(message)
     except Exception, e:
-        html.show_error('The log file &quot;%s&quot; from host &quot;%s&quot;'
-                                 ' could not be deleted: %s.' % \
+        html.show_error(_('The log file &quot;%s&quot; from host &quot;%s&quot; could not be deleted: %s.') % \
                                   (htmllib.attrencode(file_display), htmllib.attrencode(host), e))
     html.footer()
 
@@ -276,6 +297,19 @@ def host_logs(host):
         return filter(lambda x: x != '..' and x != '.', os.listdir(defaults.logwatch_dir + '/' + host))
     except:
         return []
+
+# Returns a list of tuples where the first element is the hostname
+# and the second element is a list of logs of this host
+def all_logs():
+    logs = []
+    try:
+        for host in filter(lambda x: x != '..' and x != '.', os.listdir(defaults.logwatch_dir)):
+            logs_of_host = host_logs(host)
+            if may_see(host) and logs_of_host:
+                logs.append((host, logs_of_host))
+    except:
+        pass
+    return logs
 
 def may_see(host):
     if config.may("see_all"):

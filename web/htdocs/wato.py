@@ -7007,6 +7007,7 @@ def mode_users(phase):
     html.write("<table class=data>")
     html.write("<tr><th>" + _("Actions") + "<th>" 
                 + _("ID") 
+                + "</th><th>" + _("Authentication")
                 + "</th><th>" + _("Locked")
                 + "</th><th>" + _("Full Name")
                 + "</th><th>" + _("Email")
@@ -7034,6 +7035,15 @@ def mode_users(phase):
 
         # ID
         html.write("<td>%s</td>" % id)
+
+        # Authentication
+        if "automation_secret" in user:
+            auth_method = _("Automation")
+        elif user.get("password"):
+            auth_method = _("Password")
+        else:
+            auth_method = "<i>%s</i>" % _("none")
+        html.write("<td>%s</td>" % auth_method)
 
         # Locked
         locked = user.get("locked", False)
@@ -7145,22 +7155,37 @@ def mode_edit_user(phase):
             _("Please specify a full name or descriptive alias for the user."))
         new_user["alias"] = alias
 
-        # Password
-        password = html.var("password").strip()
-        password2 = html.var("password2").strip()
-            
         # Locking
         if id == config.user_id and html.get_checkbox("locked"):
             raise MKUserError(_("You cannot lock your own account!"))
         new_user["locked"] = html.get_checkbox("locked")
 
-        # We compare both passwords only, if the user has supplied
-        # the repeation! We are so nice to our power users...
-        if password2 and password != password2:
-            raise MKUserError("password2", _("The both passwords do not match."))
+        # Authentication: Password or Secret
+        auth_method = html.var("authmethod")
+        if auth_method == "secret":
+            secret = html.var("secret", "").strip()
+            if not secret or len(secret) < 10:
+                raise MKUserError(_("Please specify a secret of at least 10 characters length."))
+            new_user["automation_secret"] = secret
+            new_user["password"] = encrypt_password(secret)
 
-        if password:
-            new_user["password"] = encrypt_password(password)
+        else:
+            password = html.var("password").strip()
+            password2 = html.var("password2").strip()
+
+            # Detect switch back from automation to password
+            if "automation_secret" in new_user:
+                del new_user["automation_secret"]
+                if "password" in new_user:
+                    del new_user["password"] # which was the encrypted automation password!
+
+            # We compare both passwords only, if the user has supplied
+            # the repeation! We are so nice to our power users...
+            if password2 and password != password2:
+                raise MKUserError("password2", _("The both passwords do not match."))
+
+            if password:
+                new_user["password"] = encrypt_password(password)
 
         # Email address
         email = html.var("email").strip()
@@ -7172,7 +7197,6 @@ def mode_edit_user(phase):
         # Roles
         new_user["roles"] = filter(lambda role: html.get_checkbox("role_" + role), 
                                    roles.keys())
-
         # Contact groups
         cgs = []
         for c in contact_groups:
@@ -7225,19 +7249,39 @@ def mode_edit_user(phase):
         html.set_focus("alias")
     html.write("</td></tr>")
 
-    # Password
+    # Authentication
     html.write("<tr><td class=legend>")
-    html.write(_("Password<br><i>If you want to user to be able to login "
+    html.write(_("Authentication<br><i>If you want to user to be able to login "
                  "then specify a password here. Users without a login make sense "
                  "if they are monitoring contacts that are just used for "
-                 "notifications.<br><br>The repetition of the password is optional. "
-                 "If you think you can type the password correctly, simply leave out "
-                 "the repetition."))
+                 "notifications. The repetition of the password is optional. "
+                 "<br>For accounts used by automation processes (such as fetching "
+                 "data from views for further procession), set the method to "
+                 "<u>secret</u>. The secret will be stored in a local file. Processes "
+                 "with read access to that file will be able to use Multisite as "
+                 "a webservice without any further configuration.</i>"))
     html.write("</td><td class=content>")
+    is_automation = user.get("automation_secret", None) != None
+    html.radiobutton("authmethod", "password", not is_automation, 
+                     _("Normal user login with password"))
+    html.write("<ul><table><tr><td>%s</td><td>" % _("password:"))
     html.password_input("password", autocomplete="off")
-    html.write(_(" repeat: "))
+    html.write("</td></tr><tr><td>%s</td><td>" % _("repeat:"))
     html.password_input("password2", autocomplete="off")
-    html.write(" (%s)" % _("optional, if you like to be sure"))
+    html.write(" (%s)" % _("optional"))
+    html.write("</td></tr></table></ul>")
+    html.radiobutton("authmethod", "secret", is_automation, 
+                     _("Automation secret for machine accounts"))
+    html.write("<ul>")
+    html.text_input("secret", user.get("automation_secret", ""), size=21, 
+                    id="automation_secret") 
+    html.write(" ")
+    html.write("<b style='position: relative; top: 4px;'> &nbsp;")
+    icon_button("javascript:wato_randomize_secret('automation_secret', 20);",
+                _("Create random secret"), "random")
+    html.write("</b>")
+    html.write("</ul>")
+
     html.write("</td></tr>")
 
     # Locking
@@ -7451,6 +7495,23 @@ def load_users():
             result[id] = new_user
         # Other unknown entries will silently be dropped. Sorry...
 
+    # Now read the automation secrets and add them to existing
+    # users or create new users automatically
+    dir = defaults.var_dir + "/web/"
+    for d in os.listdir(dir):
+        if d[0] != '.':
+            id = d
+            secret_file = dir + d + "/automation.secret"
+            if os.path.exists(secret_file):
+                secret = file(secret_file).read().strip()
+                if id in result:
+                    result[id]["automation_secret"] = secret
+                else:
+                    result[id] = {
+                        "roles" : ["guest"],
+                        "automation_secret" : secret,
+                    }
+
     return result
 
 def split_dict(d, keylist, positive):
@@ -7459,10 +7520,12 @@ def split_dict(d, keylist, positive):
 def save_users(profiles):
     # TODO: delete var/check_mk/web/$USER of non-existing users. Do we
     # need to remove other references as well?
-    non_contact_keys = [ "roles", "password", "locked" ]
+    non_contact_keys = [ "roles", "password", "locked", "automation_secret" ]
 
     # Remove multisite keys in contacts
-    contacts = dict([ (id, split_dict(user, non_contact_keys, False)) for (id, user) in profiles.items() ])
+    contacts = dict([ (id, split_dict(user, non_contact_keys, False)) 
+                      for (id, user) 
+                      in profiles.items() ])
 
     # Remove contact keys and password from users
     users  = dict([ (id, { "roles" : p.get("roles", []) } ) 
@@ -7490,11 +7553,21 @@ def save_users(profiles):
     filename = defaults.htpasswd_file
     out = file(filename, "w")
     for id, user in profiles.items():
-        if user.get("locked", False):
-            locksym = '!'
-        else:
-            locksym = ""
-        out.write("%s:%s%s\n" % (id, locksym, user.get("password", "!")))
+        if user.get("password"):
+            if user.get("locked", False):
+                locksym = '!'
+            else:
+                locksym = ""
+            out.write("%s:%s%s\n" % (id, locksym, user["password"]))
+
+    # Authentication secret for local processes
+    auth_dir = defaults.var_dir + "/web/" + id
+    auth_file = auth_dir + "/automation.secret"
+    make_nagios_directory(auth_dir)
+    if "automation_secret" in user:
+        create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
+    elif os.path.exists(auth_file):
+        os.remove(auth_file)
 
 #.
 #   .-Roles----------------------------------------------------------------.

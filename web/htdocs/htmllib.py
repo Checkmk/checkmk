@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from mod_python import Cookie
 import time, cgi, config, os, defaults, pwd, urllib, weblib
 from lib import *
 # Python 2.3 does not have 'set' in normal namespace.
@@ -220,7 +221,7 @@ class html:
         days = hours / 24
         return "%d days" % days
 
-    def begin_form(self, name, action = None, method = "GET", onsubmit = None):
+    def begin_form(self, name, action = None, method = "GET", onsubmit = None, add_transid = True):
         self.form_vars = []
         if action == None:
             action = self.req.myfile + ".py"
@@ -236,7 +237,8 @@ class html:
         self.write("<form name=%s class=%s action=\"%s\" method=%s%s%s>\n" %
                    (name, name, action, method, enctype, onsubmit))
         self.hidden_field("filled_in", name)
-        self.hidden_field("_transid", str(self.current_transid()))
+        if add_transid:
+            self.hidden_field("_transid", str(self.current_transid()))
         self.hidden_fields(self.global_vars)
         self.form_name = name
 
@@ -396,8 +398,8 @@ class html:
         self.write(html)
         self.form_vars.append(varname)
 
-    def password_input(self, varname, default_value = "", **args):
-        self.text_input(varname, default_value, type="password", size=12, **args)
+    def password_input(self, varname, default_value = "", size=12, **args):
+        self.text_input(varname, default_value, type="password", size = size, **args)
 
     def text_area(self, varname, deflt="", rows=4, cols=30):
         value = self.req.vars.get(varname, deflt)
@@ -555,7 +557,7 @@ class html:
             self.write("</x>")
         self.form_vars.append(varname)
 
-    def html_head(self, title):
+    def html_head(self, title, add_js = True):
         if not self.req.header_sent:
             self.write(
                 u'''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -581,10 +583,11 @@ class html:
             if config.custom_style_sheet:
                self.write('                <link rel="stylesheet" type="text/css" href="%s">' % config.custom_style_sheet)
 
-            self.write('''
+            if add_js:
+                self.write('''
                 <script type='text/javascript' src='js/check_mk.js'></script>
                 <script type='text/javascript' src='js/hover.js'></script>
-            ''')
+                ''')
 
             if self.browser_reload != 0:
                 if self.browser_redirect != '':
@@ -607,10 +610,10 @@ class html:
         self.browser_reload   = secs
         self.browser_redirect = url
 
-    def header(self, title=''):
+    def header(self, title='', **args):
         if self.output_format == "html":
             if not self.header_sent:
-                self.html_head(title)
+                self.html_head(title, **args)
                 self.write('<body class="main %s">' % self.var("_body_class", ""))
                 self.header_sent = True
                 self.top_heading(title)
@@ -871,7 +874,7 @@ class html:
             indent_style += "margin: 0; "
         self.write('<ul class="treeangle" style="%s display: %s" id="tree.%s.%s">' % 
              (indent_style, (not isopen) and "none" or "",  treename, id))
-    
+
     def end_foldable_container(self):
         self.write("</ul>")
 
@@ -886,3 +889,33 @@ class html:
         for name, value in sorted(self.req.vars.items()):
             self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" % (name, value))
         self.write("</ul>")
+
+    # Needs to set both, headers_out and err_headers_out to be sure to send
+    # the header on all responses
+    def set_http_header(self, key, val):
+        self.req.headers_out.add(key, val)
+        self.req.err_headers_out.add(key, val)
+
+    def has_cookie(self, varname):
+        return varname in self.req.cookies
+
+    def cookie(self, varname, deflt):
+        try:
+            return self.req.cookies[varname].value
+        except:
+            return deflt
+
+    def set_cookie(self, varname, value, expires = None):
+        c = Cookie.Cookie(varname, value, path = defaults.url_prefix)
+        if expires is not None:
+            c.expires = expires
+
+        if not self.req.headers_out.has_key("Set-Cookie"):
+            self.req.headers_out.add("Cache-Control", 'no-cache="set-cookie"')
+            self.req.err_headers_out.add("Cache-Control", 'no-cache="set-cookie"')
+
+        self.req.headers_out.add("Set-Cookie", str(c))
+        self.req.err_headers_out.add("Set-Cookie", str(c))
+
+    def del_cookie(self, varname):
+        self.set_cookie(varname, '', time.time() - 60)

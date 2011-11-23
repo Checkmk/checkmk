@@ -89,6 +89,8 @@ def load_config():
     debug = False
     global profile
     profile = False
+    global auth_type
+    auth_type = 'basic'
 
     # Reset values that can be appended to
     global aggregations
@@ -514,6 +516,10 @@ filter_columns = 2
 
 # Default language for l10n
 default_language = None
+
+# Default authentication type. Can be changed to e.g. "cookie" for
+# using the cookie auth
+auth_type = 'basic'
 
 # Show only most used buttons, set to None if you want
 # always all buttons to be shown

@@ -33,12 +33,14 @@ import sidebar
 import actions
 import weblib
 import dashboard
+import login
 
 # map URLs to page rendering functions
 
 pagehandlers.update({
    "index"                    : main.page_index,
    "main"                     : main.page_main,
+   "logout"                   : login.logout,
    "switch_site"              : main.ajax_switch_site,
    "edit_views"               : views.page_edit_views,
    "edit_view"                : views.page_edit_view,

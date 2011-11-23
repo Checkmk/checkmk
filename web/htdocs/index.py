@@ -31,11 +31,11 @@ __builtin__._ = lambda x: x
 __builtin__.current_language = None
 
 # Load modules
-from mod_python import apache, util
+from mod_python import apache, util, Cookie
 import sys, os, pprint
 from lib import *
 import livestatus
-import defaults, config, htmllib
+import defaults, config, htmllib, login
 
 # Load page handlers
 pagehandlers = {}
@@ -63,6 +63,9 @@ def read_get_vars(req):
         varname = field.name
         value = field.value
         req.vars[varname] = value
+
+def read_cookies(req):
+    req.cookies = Cookie.get_cookies(req)
 
 def connect_to_livestatus(html):
     html.site_status = {}
@@ -175,7 +178,8 @@ def handler(req, profiling = True):
         # Do not parse variables again if profiling (and second run is done)
         if profiling:
             read_get_vars(req)
-        
+            read_cookies(req)
+
         # Ajax-Functions want no HTML output in case of an error but
         # just a plain server result code of 500
         fail_silently = html.has_var("_ajaxid")
@@ -190,7 +194,7 @@ def handler(req, profiling = True):
 
         # Make current language globally known to all of our modules
         __builtin__.current_language = lang
-        
+
         if lang:
             locale_base = defaults.locale_dir
             po_path = '/%s/LC_MESSAGES/multisite.po' % lang
@@ -245,9 +249,22 @@ def handler(req, profiling = True):
         output_format = html.var("output_format", "html")
         html.set_output_format(output_format)
 
+        # Is the user set by the webserver? otherwise use the cookie based auth
         if not req.user or type(req.user) != str:
-            raise MKConfigError(_("You are not logged in. This should never happen. Please "
-                    "review your Apache configuration. Check_MK Multisite requires HTTP login."))
+            config.auth_type == 'cookie'
+            # When not authed tell the browser to ask for the password
+            req.user = login.check_auth()
+            if req.user == '':
+                # After auth check the regular page can be shown
+                result = login.page()
+                if type(result) == tuple:
+                    # This is the redirect to the requested page directly after successful login
+                    req.user = result[0]
+                    req.uri  = result[1]
+                    req.myfile = req.uri.split("/")[-1][:-3]
+                    handler = pagehandlers.get(req.myfile, page_not_found)
+                else:
+                    return result
 
         # Set all permissions, read site config, and similar stuff
         config.login(html.req.user)
@@ -309,6 +326,9 @@ def handler(req, profiling = True):
             html.show_error(_("Livestatus problem: %s") % e)
             html.footer()
         response_code = apache.HTTP_INTERNAL_SERVER_ERROR
+
+    except apache.SERVER_RETURN:
+        raise
 
     except Exception, e:
         if not fail_silently:

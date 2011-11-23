@@ -127,8 +127,7 @@ def sidebar_foot():
     html.write('<ul class=buttons>\n')
     if config.may("configure_sidebar"):
         html.write('<li><a target="main" href="sidebar_add_snapin.py">Add snapin</a></li>')
-    if html.omd_mode != (None, None):
-        html.write('<li><a class=logout target="_top" href="../omd/logout.php" title="%s"></a></li>' % _('Logout'))
+    html.write('<li><a class=logout target="_top" href="logout.py" title="%s"></a></li>' % _('Logout'))
     html.write('</ul>')
     html.write("<div class=copyright>&copy; <a target=\"main\" href=\"http://mathias-kettner.de\">Mathias Kettner</a></div>\n")
     html.write('</div>')

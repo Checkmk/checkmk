@@ -394,18 +394,6 @@ Those templates make the history graphs look nice. PNP4Nagios
 expects such templates in the directory pnp/templates in your
 document root for static web pages"
 
-ask_dir pnprraconf /usr/share/$NAME/pnp-rraconf $HOMEBASEDIR/pnp-rraconf $OMD_ROOT/local/share/check_mk/rra-config "RRA config for PNP4Nagios" \
-  "Check_MK ships RRA configuration files for its checks that 
-can be used by PNP when creating the RRDs. Per default, PNP 
-creates RRD such that for each variable the minimum, maximum
-and average value is stored. Most checks need only one or two
-of these aggregations. If you install the Check_MK's RRA config
-files into the configuration directory of PNP, PNP will create
-RRDs with the minimum of required aggregation and thus save
-substantial amount of disk I/O (and space) for RRDs. The default
-is to install the configuration into a separate directory but
-does not enable them"
-
 # -------------------------------------------------------------------
 ask_title "Check_MK Livestatus Module"
 # -------------------------------------------------------------------
@@ -496,7 +484,6 @@ livebackendsdir             = '$livebackendsdir'
 url_prefix                  = '$url_prefix'
 pnp_url                     = '${url_prefix}pnp4nagios/'
 pnp_templates_dir           = '$pnptemplates'
-pnp_rraconf_dir             = '$pnprraconf'
 doc_dir                     = '$docdir'
 EOF
 
@@ -638,8 +625,6 @@ do
 	   cp $DESTDIR$modulesdir/defaults $DESTDIR$web_dir/htdocs/defaults.py &&
 	   mkdir -p $DESTDIR$pnptemplates &&
 	   tar xzf $SRCDIR/pnp-templates.tar.gz -C $DESTDIR$pnptemplates &&
-	   mkdir -p $DESTDIR$pnprraconf &&
-	   tar xzf $SRCDIR/pnp-rraconf.tar.gz -C $DESTDIR$pnprraconf &&
 	   mkdir -p $DESTDIR$modulesdir &&
 	   rm -f $DESTDIR$modulesdir/check_mk{,_admin} &&
 	   tar xzf $SRCDIR/modules.tar.gz -C $DESTDIR$modulesdir &&

@@ -60,7 +60,6 @@ if omd_root:
     local_agents_dir         = local_share + "/agents"
     local_web_dir            = local_share + "/web"
     local_pnp_templates_dir  = local_share + "/pnp-templates"
-    local_pnp_rraconf_dir    = local_share + "/pnp-rraconf"
     local_doc_dir            = omd_root + "/local/share/doc/check_mk"
     local_locale_dir         = local_share + "/locale"
 else:
@@ -69,7 +68,6 @@ else:
     local_agents_dir         = None
     local_web_dir            = None
     local_pnp_templates_dir  = None
-    local_pnp_rraconf_dir    = None
     local_doc_dir            = None
     local_locale_dir         = None
 
@@ -3213,7 +3211,6 @@ def show_paths():
         ( check_manpages_dir,          dir, inst, "Check manpages (for check_mk -M)"),
         ( lib_dir,                     dir, inst, "Binary plugins (architecture specific)"),
         ( pnp_templates_dir,           dir, inst, "Templates for PNP4Nagios"),
-        ( pnp_rraconf_dir,             dir, inst, "RRA configuration for PNP4Nagios"),
         ( nagios_startscript,          fil, inst, "Startscript for Nagios daemon"),
         ( nagios_binary,               fil, inst, "Path to Nagios executable"),
 
@@ -3246,7 +3243,6 @@ def show_paths():
          ( local_agents_dir,           dir, local, "Locally installed agents and plugins"),
          ( local_web_dir,              dir, local, "Locally installed Multisite addons"),
          ( local_pnp_templates_dir,    dir, local, "Locally installed PNP templates"),
-         ( local_pnp_rraconf_dir,      dir, local, "Locally installed PNP RRA configuration"),
          ( local_doc_dir,              dir, local, "Locally installed documentation"),
          ( local_locale_dir,           dir, local, "Locally installed localizations"),
         ]

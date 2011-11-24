@@ -44,6 +44,7 @@
     * Logwatch: Switched strings in logwatch to i18n strings
     * Logwatch: Fixed styling of context button when acknowleding log messages
     * Logwatch: Implemented overview page to show all problematic logfiles
+    * Add Snapin page: show previews of all snapins
 
     WATO:
     * Evolved to full featured monitoring configuration tool!

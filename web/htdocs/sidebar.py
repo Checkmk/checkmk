@@ -319,36 +319,31 @@ def page_add_snapin():
 
     names = sidebar_snapins.keys()
     names.sort()
-    html.write('<table class="add_snapin">\n<tr>\n')
-    n = 0
+    html.write('<div class="add_snapin">\n')
     for name in names:
         if name in used_snapins:
             continue
         if not config.may("sidesnap." + name):
             continue # not allowed for this user
 
-        if n == 3:
-            html.write("</tr><tr>\n")
-            n = 0
-        n += 1
         snapin = sidebar_snapins[name]
         title = snapin["title"]
         description = snapin.get("description", "")
-        author = snapin.get("author")
         transid = html.current_transid()
         url = 'sidebar_add_snapin.py?name=%s&_transid=%d&pos=top' % (name, transid)
-        html.write('<td onmouseover="this.style.background=\'#cde\'; this.style.cursor=\'pointer\';" '
+        html.write('<div class=snapinadder onmouseover="this.style.background=\'#cde\'; this.style.cursor=\'pointer\';" '
                 'onmouseout="this.style.background=\'#9bc\' "'
                 'onclick="window.location.href=\'%s\';">' % url)
 
-        html.write("<b>%s</b><br>\n"
-                "%s" % (title, description))
-        if author:
-            html.write("<br><i>Author: %s</i>" % author)
+        html.write("<div class=snapin_preview>")
+        html.write("<div class=clickshield></div>")
+        render_snapin(name, "open")
+        html.write("</div>")
+        html.write("<div class=description>%s</div>" % (description))
+        
+        html.write("</div>")
 
-    html.write("<td></td>" * (3-n))
-
-    html.write("</tr></table>\n")
+    html.write("</div>\n")
     html.footer()
 
 load_plugins()

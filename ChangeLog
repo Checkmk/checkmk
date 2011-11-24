@@ -71,6 +71,10 @@
     * New columns num_hosts and num_services in status table
     * New aggregation functions suminv and avginv (see Documentation)
 
+1.1.12p4:
+    Multisite:
+    * FIX: sidebar snapin Hostgroups and Servicegroups sometimes
+           failed with non-existing "available_views".
 1.1.12p3:
     Core, Setup, etc.:
     * FIX: really suppress precompiling on PING-only hosts now

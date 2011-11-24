@@ -139,12 +139,11 @@ def render_groups(what):
     name_to_alias = dict(data)
     groups = [(name_to_alias[name].lower(), name_to_alias[name], name) for name in name_to_alias.keys()]
     groups.sort() # sort by Alias in lowercase
-    target = views.get_context_link(config.user_id, "%sgroup" % what)
-    if target:
-        html.write('<ul>')
-        for alias_lower, alias, name in groups:
-            bulletlink(alias, target + "&%sgroup=%s" % (what, htmllib.urlencode(name)))
-        html.write('</ul>')
+    html.write('<ul>')
+    for alias_lower, alias, name in groups:
+        url = "view.py?view_name=%sgroup&%sgroup=%s" % (what, what, htmllib.urlencode(name))
+        bulletlink(alias, url)
+    html.write('</ul>')
 
 sidebar_snapins["hostgroups"] = {
     "title" : _("Hostgroups"),
@@ -173,7 +172,7 @@ sidebar_snapins["servicegroups"] = {
 # --------------------------------------------------------------
 def render_hosts(mode):
     html.live.set_prepend_site(True)
-    query = "GET hosts\nColumns: name state worst_service_state\n"
+    query = "GET hosts\nColumns: name state worst_service_state\nLimit: 100"
     view = "host"
 
     if mode == "summary":
@@ -927,18 +926,18 @@ sidebar_snapins["master_control"] = {
     "render" : render_master_control,
     "allowed" : [ "admin", ],
     "styles" : """
-div#check_mk_sidebar table.master_control {
+div.snapin table.master_control {
     width: %dpx;
     margin: 0px;
     border-spacing: 0px;
 }
 
-div#check_mk_sidebar table.master_control td {
+div.snapin table.master_control td {
     padding: 0px 0px;
     text-align: right;
 }
 
-div#check_mk_sidebar table.master_control td a {
+div.snapin table.master_control td a {
     font-weight: bold;
     -moz-border-radius: 4px;
     margin: 0px;
@@ -949,22 +948,22 @@ div#check_mk_sidebar table.master_control td a {
     display: block;
     border: 1px solid black;
 }
-div#check_mk_sidebar table.master_control td.left a {
+div.snapin table.master_control td.left a {
     text-align: left;
     font-size: 8pt;
     font-weight: normal;
 }
 
-div#check_mk_sidebar table.master_control td.left {
+div.snapin table.master_control td.left {
     text-align: left;
 }
 
-div#check_mk_sidebar table.master_control td.enabled a {
+div.snapin table.master_control td.enabled a {
     background-color: #4f6;
     color: #000;
     border-color: #080;
 }
-div#check_mk_sidebar table.master_control td.disabled a {
+div.snapin table.master_control td.disabled a {
     background-color: #f33;
     border-color: #c00;
     color: #fff;

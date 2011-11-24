@@ -431,3 +431,13 @@ function wato_replication_finish() {
     oDiv = document.getElementById("act_changes_button");
     oDiv.style.display = "none";
 } 
+
+function wato_randomize_secret(id, len) {
+    var secret = "";
+    for (var i=0; i<len; i++) {
+        var c = parseInt((126-33) * Math.random() + 33);
+        secret += String.fromCharCode(c);
+    }
+    var oInput = document.getElementById(id);
+    oInput.value = secret;
+}

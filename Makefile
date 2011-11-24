@@ -64,7 +64,6 @@ dist: mk-livestatus
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web $$(cd web ; ls htdocs/images/icons/*.png htdocs/*/*.{wav,jpg,png,gif,ico,js} htdocs/*.{py,css} plugins/*/*.py)
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
-	tar czf $(DISTNAME)/pnp-rraconf.tar.gz $(TAROPTS) -C pnp-rraconf $$(cd pnp-rraconf ; ls *.rra.cfg README.rra)
 	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc $$(cd doc ; ls)
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc" --exclude ".gitignore" --exclude .f12 

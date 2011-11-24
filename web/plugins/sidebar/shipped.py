@@ -165,12 +165,11 @@ def render_groups(what):
     name_to_alias = dict(data)
     groups = [(name_to_alias[name].lower(), name_to_alias[name], name) for name in name_to_alias.keys()]
     groups.sort() # sort by Alias in lowercase
-    target = views.get_context_link(html.req.user, "%sgroup" % what)
-    if target:
-        html.write('<ul>')
-        for alias_lower, alias, name in groups:
-            bulletlink(alias, target + "&%sgroup=%s" % (what, htmllib.urlencode(name)))
-        html.write('</ul>')
+    html.write('<ul>')
+    for alias_lower, alias, name in groups:
+        url = "view.py?view_name=%sgroup&%sgroup=%s" % (what, what, htmllib.urlencode(name))
+        bulletlink(alias, url)
+    html.write('</ul>')
 
 sidebar_snapins["hostgroups"] = {
     "title" : _("Hostgroups"),

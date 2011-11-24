@@ -926,18 +926,18 @@ sidebar_snapins["master_control"] = {
     "render" : render_master_control,
     "allowed" : [ "admin", ],
     "styles" : """
-div#check_mk_sidebar table.master_control {
+div.snapin table.master_control {
     width: %dpx;
     margin: 0px;
     border-spacing: 0px;
 }
 
-div#check_mk_sidebar table.master_control td {
+div.snapin table.master_control td {
     padding: 0px 0px;
     text-align: right;
 }
 
-div#check_mk_sidebar table.master_control td a {
+div.snapin table.master_control td a {
     font-weight: bold;
     -moz-border-radius: 4px;
     margin: 0px;
@@ -948,22 +948,22 @@ div#check_mk_sidebar table.master_control td a {
     display: block;
     border: 1px solid black;
 }
-div#check_mk_sidebar table.master_control td.left a {
+div.snapin table.master_control td.left a {
     text-align: left;
     font-size: 8pt;
     font-weight: normal;
 }
 
-div#check_mk_sidebar table.master_control td.left {
+div.snapin table.master_control td.left {
     text-align: left;
 }
 
-div#check_mk_sidebar table.master_control td.enabled a {
+div.snapin table.master_control td.enabled a {
     background-color: #4f6;
     color: #000;
     border-color: #080;
 }
-div#check_mk_sidebar table.master_control td.disabled a {
+div.snapin table.master_control td.disabled a {
     background-color: #f33;
     border-color: #c00;
     color: #fff;

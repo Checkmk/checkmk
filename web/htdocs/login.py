@@ -108,7 +108,7 @@ def check_auth_cookie():
     return username
 
 
-def page():
+def login_page():
     # handle the sent login form
     err = None
     if html.var('_login'):
@@ -121,7 +121,9 @@ def page():
             if password == '':
                 raise MKUserError('_password', _('No password given.'))
 
-            origin = html.var('_origin', defaults.url_prefix + 'check_mk/')
+            origin = html.var('_origin')
+            if not origin:
+                origin = defaults.url_prefix + 'check_mk/'
 
             users = load_htpasswd()
             if username in users and password_valid(users[username], password):
@@ -137,10 +139,13 @@ def page():
                 del html.req.vars['_login']
                 del html.req.vars['_origin']
 
-                return (username, origin)
-                # An alternative (and maybe cleaner) would be to use a redirect here:
-                #html.set_http_header('Location', html.var('_origin', defaults.url_prefix + 'check_mk/'))
-                #return apache.HTTP_MOVED_TEMPORARILY
+                # Use redirects for URLs or simply execute other handlers for
+                # mulitsite modules
+                if '/' in origin:
+                    html.set_http_header('Location', origin)
+                    raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
+                else:
+                    return (username, origin)
             else:
                 raise MKUserError(None, _('Invalid credentials.'))
         except MKUserError, e:
@@ -154,6 +159,10 @@ def page():
     if err:
         html.write('<div class=error>%s</div>\n' % e.message)
 
+    origin = html.var('_origin', '')
+    if not origin and not html.req.myfile == 'login':
+        origin = html.req.uri
+
     html.write("<div id=login>")
     html.write("<div id=logo></div>")
     html.write("<h1>Check_MK Multisite</h2>")
@@ -161,7 +170,7 @@ def page():
     html.write("<tr class=form>\n")
     html.write("<td>")
     html.begin_form("login", method = 'POST', add_transid = False)
-    html.hidden_field('_origin', htmllib.attrencode(html.req.uri))
+    html.hidden_field('_origin', htmllib.attrencode(origin))
     html.write("<div class=whiteborder>\n")
     html.write("<table class=\"form\">\n")
 

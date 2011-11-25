@@ -256,7 +256,7 @@ def handler(req, profiling = True):
             req.user = login.check_auth()
             if req.user == '':
                 # After auth check the regular page can be shown
-                result = login.page()
+                result = login.login_page()
                 if type(result) == tuple:
                     # This is the redirect to the requested page directly after successful login
                     req.user = result[0]

@@ -133,18 +133,21 @@ def login_page():
                 # c) Show the real requested page (No redirect needed)
                 set_auth_cookie(username, users[username])
 
-                # Remove login vars to hide them from the next page handler
-                del html.req.vars['_username']
-                del html.req.vars['_password']
-                del html.req.vars['_login']
-                del html.req.vars['_origin']
-
                 # Use redirects for URLs or simply execute other handlers for
                 # mulitsite modules
                 if '/' in origin:
                     html.set_http_header('Location', origin)
                     raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
                 else:
+                    # Remove login vars to hide them from the next page handler
+                    try:
+                        del html.req.vars['_username']
+                        del html.req.vars['_password']
+                        del html.req.vars['_login']
+                        del html.req.vars['_origin']
+                    except:
+                        pass
+
                     return (username, origin)
             else:
                 raise MKUserError(None, _('Invalid credentials.'))

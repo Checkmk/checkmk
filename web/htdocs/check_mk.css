@@ -355,6 +355,12 @@ div.snapin div.closesnapin {
     margin-right: 10px;
     margin-top:   2px;
 }
+/* Reload-Button */
+div.snapin div.reloadsnapin {
+    float: right;
+    margin-right: 4px;
+    margin-top:   2px;
+}
 
 div.snapin div.content {
     background-image: url("images/snapin_background.png");

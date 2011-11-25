@@ -27,14 +27,21 @@
 import defaults, htmllib, config
 from lib import *
 from mod_python import apache
-import md5crypt, time
+import md5, md5crypt, crypt, time
 
+# Validate hashes taken from the htpasswd file. This method handles
+# crypt() and md5 hashes. This should be the common cases in the
+# used htpasswd files.
 def password_valid(pwhash, password):
-    # FIXME: MD5 unterstützen
-    import crypt
-    #html.write(repr(pwhash + ' ' + crypt.crypt(password, pwhash)))
-    return pwhash == crypt.crypt(password, pwhash[:2])
+    if pwhash[:3] == '$1$':
+        salt = pwhash.split('$', 3)[2]
+        return pwhash == md5crypt.md5crypt(password, salt, '$1$')
+    else:
+        #html.write(repr(pwhash + ' ' + crypt.crypt(password, pwhash)))
+        return pwhash == crypt.crypt(password, pwhash[:2])
 
+# Loads the contents of a valid htpasswd file into a dictionary
+# and returns the dictionary
 def load_htpasswd():
     creds = {}
 
@@ -44,12 +51,22 @@ def load_htpasswd():
 
     return creds
 
+# Reads the auth secret from a file. Creates the files if it does
+# not exist. Having access to the secret means that one can issue valid
+# cookies for the cookie auth.
+# FIXME: Secret auch replizieren
+def load_secret():
+    secret_path = '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file)
+    if not os.path.exists(secret_path):
+        secret = md5.md5(str(time.time())).hexdigest()
+        file(secret_path, 'w').write(secret)
+    else:
+        secret = file(secret_path).read().strip()
+    return secret
+
+# Generates the hash to be added into the cookie value
 def generate_hash(username, now, pwhash):
-    # FIXME: Secret aus Datei auslesen
-    # dirname(defaults.htpasswd_file)
-    # FIXME: Datei automatisch erstellen, wenn nicht vorhanden
-    # FIXME: Secret auch replizieren
-    secret = 'asd'
+    secret = load_secret()
     return md5crypt.md5crypt(username + now + pwhash, secret)
 
 def del_auth_cookie():
@@ -63,9 +80,13 @@ def set_auth_cookie(username, pwhash):
                                    + ':' + generate_hash(username, now, pwhash))
 
 def check_auth_cookie():
-    username, time, cookie_hash = html.cookie('auth_secret', '').split(':', 2)
+    username, issue_time, cookie_hash = html.cookie('auth_secret', '').split(':', 2)
 
     # FIXME: Ablauf-Zeit des Cookies testen
+    #max_cookie_age = 10
+    #if float(issue_time) < time.time() - max_cookie_age:
+    #    del_auth_cookie()
+    #    return ''
 
     users = load_htpasswd()
     if not username in users:
@@ -73,7 +94,7 @@ def check_auth_cookie():
     pwhash = users[username]
 
     # Validate the hash
-    if cookie_hash != generate_hash(username, time, pwhash):
+    if cookie_hash != generate_hash(username, issue_time, pwhash):
         raise Exception
 
     # Once reached this the cookie is a good one. Renew it!
@@ -126,12 +147,17 @@ def page():
             err = e
             html.add_user_error(e.varname, e.message)
 
+    html.set_render_headfoot(False)
+
     html.header(_("Check_MK Multisite Login"), add_js = False)
 
     if err:
         html.write('<div class=error>%s</div>\n' % e.message)
 
-    html.write("<table id=table_login>")
+    html.write("<div id=login>")
+    html.write("<div id=logo></div>")
+    html.write("<h1>Check_MK Multisite</h2>")
+    html.write("<table id=table>")
     html.write("<tr class=form>\n")
     html.write("<td>")
     html.begin_form("login", method = 'POST', add_transid = False)
@@ -159,7 +185,10 @@ def page():
     html.write("</td>")
     html.write("</tr>")
 
-    html.write("</table></div>")
+    html.write("</table>")
+    html.write("<div id=foot>Version: %s - &copy; "
+               "<a href=\"http://mathias-kettner.de\">Mathias Kettner</a></div>" % defaults.check_mk_version)
+    html.write("</div>")
     html.set_focus('_username')
     html.end_form()
 
@@ -173,6 +202,8 @@ def check_auth():
 
         return check_auth_cookie()
     except Exception, e:
+        if config.debug:
+            raise
         return ''
 
 def logout():

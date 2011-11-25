@@ -161,6 +161,7 @@ class html:
         self.user_errors = {}
         self.focus_object = None
         self.global_vars = []
+        self.render_headfoot = True
         self.browser_reload = 0
         self.browser_redirect = ''
         self.events = set([]) # currently used only for sounds
@@ -605,6 +606,9 @@ class html:
     def html_foot(self):
         self.write("</html>\n")
 
+    def set_render_headfoot(self, render):
+        self.render_headfoot = render
+
     def set_browser_reload(self, secs):
         self.browser_reload = secs
 
@@ -618,7 +622,8 @@ class html:
                 self.html_head(title, **args)
                 self.write('<body class="main %s">' % self.var("_body_class", ""))
                 self.header_sent = True
-                self.top_heading(title)
+                if self.render_headfoot:
+                    self.top_heading(title)
 
     def top_heading(self, title):
         if type(self.req.user) == str:
@@ -643,10 +648,12 @@ class html:
             obj = formname + "." + varname
             self.write("<script language=\"javascript\" type=\"text/javascript\">\n"
                            "<!--\n"
-                           "document.%s.focus();\n"
-                           "document.%s.select();\n"
+                           "if(document.%s) {"
+                           "    document.%s.focus();\n"
+                           "    document.%s.select();\n"
+                           "}\n"
                            "// -->\n"
-                           "</script>\n" % (obj, obj))
+                           "</script>\n" % (obj, obj, obj))
 
     def bottom_footer(self):
         if self.req.header_sent:
@@ -654,12 +661,13 @@ class html:
             corner_text = ""
             if self.browser_reload:
                 corner_text += _("refresh: %d secs") % self.browser_reload
-            si = self.render_status_icons()
-            self.write("<table class=footer><tr>"
+            if self.render_headfoot:
+                si = self.render_status_icons()
+                self.write("<table class=footer><tr>"
                            "<td class=left>%s</td>"
                            "<td class=middle></td>"
                            "<td class=right>%s</td></tr></table>"
-                           % (si, corner_text))
+                               % (si, corner_text))
 
     def body_end(self):
         self.write("</body></html>\n")

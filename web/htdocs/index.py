@@ -251,7 +251,7 @@ def handler(req, profiling = True):
 
         # Is the user set by the webserver? otherwise use the cookie based auth
         if not req.user or type(req.user) != str:
-            config.auth_type == 'cookie'
+            config.auth_type = 'cookie'
             # When not authed tell the browser to ask for the password
             req.user = login.check_auth()
             if req.user == '':

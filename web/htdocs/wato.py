@@ -3660,8 +3660,15 @@ def have_folder_attributes():
 #         This is needed for handling mandatory attributes.
 def configure_attributes(hosts, for_what, parent, myself=None, without_attributes = []):
     # show attributes grouped by topics, in order of their
-    # appearance. If only one topic exists, do not show topics
-    topics = []
+    # appearance. If only one topic exists, do not show topics 
+    # Make sure, that the topics "Basic settings" and host tags 
+    # are always show first.
+    topics = [None]
+    if len(config.wato_host_tags):
+        topics.append(_("Host tags"))
+
+    # The remaining topics are shown in the order of the 
+    # appearance of the attribute declarations:
     for attr, topic in host_attributes:
         if topic not in topics and attr.show_in_form():
             topics.append(topic)
@@ -3671,7 +3678,9 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
     dependency_mapping = {}
     inherited_tags     = {}
 
+    volatile_topics = []
     for topic in topics:
+        topic_is_volatile = True # assume topic is sometimes hidden due to dependencies
         if len(topics) > 1:
             if topic == None:
                 title = _("Basic settings")
@@ -3709,6 +3718,10 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 depends_on_tags = attr.depends_on_tags()
                 if depends_on_tags:
                     dependency_mapping[attrname] = depends_on_tags
+                else:
+                    # One attribute is always shown -> topic can never
+                    # be made invisible
+                    topic_is_volatile = False
 
             # "bulk": determine, if this attribute has the same setting for all hosts.
             values = []
@@ -3859,7 +3872,9 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
 
         if len(topics) > 1:
             html.write("</table>")
-            html.end_foldable_container()
+            html.end_foldable_container() # end of topic
+            if topic_is_volatile:
+                volatile_topics.append(topic.encode('utf-8'))
             if topic == topics[-1]:
                 html.write('<table class="form nomargin">')
 
@@ -3867,7 +3882,11 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
     # of all attributes. 
     html.javascript("var inherited_tags = %r;\n"\
                     "var wato_depends_on = %r;\n"\
-                    "wato_fix_visibility();\n" % (inherited_tags, dependency_mapping))
+                    "var volatile_topics = %r;\n"\
+                    "wato_fix_visibility();\n" % (
+                       inherited_tags, 
+                       dependency_mapping,
+                       volatile_topics))
 
 
 # Check if at least one host in a folder (or its subfolders)

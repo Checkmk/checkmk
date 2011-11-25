@@ -3660,8 +3660,15 @@ def have_folder_attributes():
 #         This is needed for handling mandatory attributes.
 def configure_attributes(hosts, for_what, parent, myself=None, without_attributes = []):
     # show attributes grouped by topics, in order of their
-    # appearance. If only one topic exists, do not show topics
-    topics = []
+    # appearance. If only one topic exists, do not show topics 
+    # Make sure, that the topics "Basic settings" and host tags 
+    # are always show first.
+    topics = [None]
+    if len(config.wato_host_tags):
+        topics.append(_("Host tags"))
+
+    # The remaining topics are shown in the order of the 
+    # appearance of the attribute declarations:
     for attr, topic in host_attributes:
         if topic not in topics and attr.show_in_form():
             topics.append(topic)

@@ -909,6 +909,9 @@ class html:
     def has_cookie(self, varname):
         return varname in self.req.cookies
 
+    def get_cookie_names(self):
+        return self.req.cookies.keys()
+
     def cookie(self, varname, deflt):
         try:
             return self.req.cookies[varname].value
@@ -916,7 +919,7 @@ class html:
             return deflt
 
     def set_cookie(self, varname, value, expires = None):
-        c = Cookie.Cookie(varname, value, path = defaults.url_prefix)
+        c = Cookie.Cookie(varname, value, path = '/')
         if expires is not None:
             c.expires = expires
 

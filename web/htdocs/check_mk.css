@@ -325,9 +325,10 @@ body.side {
 
 /* General layout of snapins */
 div.snapin {
-    width: 275px;
+    width: 255px;
     margin: 0 0 0 5px;
     padding: 0;
+    overflow: hidden;
 }
 
 /* Header of the snapin */
@@ -1943,7 +1944,7 @@ div.add_snapin div.snapinadder {
     border-bottom: 1px solid #9ab;
     border-right: 1px solid #89a;
     height: 220px;
-    width: 280px;
+    width: 270px;
     margin-right: 10px;
     margin-bottom: 10px;
     float: left;

@@ -367,7 +367,7 @@ def page_edit_views(msg=None):
     html.begin_form("create_view", "edit_view.py")
     html.write("<table class=views>\n")
 
-    html.write("<tr><td class=legend colspan=7>")
+    html.write("<tr><td class=legend colspan=8>")
     html.button("create", _("Create new view"))
     html.write(_(" for datasource: "))
     html.sorted_select("datasource", [ (k, v["title"]) for k, v in multisite_datasources.items() ])
@@ -396,7 +396,8 @@ def page_edit_views(msg=None):
         if owner == config.user_id or (view["public"] and (owner == "" or config.user_may(owner, "publish_views"))):
             if first:
                 html.write("<tr><th>"+_('Name')+"</th><th>"+_('Title / Description')+"</th>"
-                           "<th>"+_('Owner')+"</th><th>"+_('Public')+"</th><th>"+_('linked')+"</th>"
+                           "<th>"+_('Owner')+"</th><th>"+_('Public')+"</th><th>"+_('Hidden')+"</th>"
+                           "<th>"+_('Mobile')+"</th>"
                            "<th>"+_('Datasource')+"</th><th></th></tr>\n")
                 first = False
             html.write("<tr><td class=legend>%s</td>" % viewname)
@@ -416,6 +417,7 @@ def page_edit_views(msg=None):
             html.write("<td class=content>%s</td>" % ownertxt)
             html.write("<td class=content>%s</td>" % (view["public"] and "yes" or "no"))
             html.write("<td class=content>%s</td>" % (view["hidden"] and "yes" or "no"))
+            html.write("<td class=content>%s</td>" % (view.get("mobile") and "yes" or "no"))
             html.write("<td class=content>%s</td><td class=buttons>\n" % view["datasource"])
             if owner == "":
                 buttontext = _("Customize")
@@ -592,6 +594,9 @@ function toggle_section(nr, oImg) {
         html.write("<br />\n")
     html.checkbox("hidden")
     html.write(" " + _('hide this view from the sidebar'))
+    html.write("<br />\n")
+    html.checkbox("mobile")
+    html.write(" " + _('show this view in the Mobile GUI'))
     html.write("<br />\n")
     html.checkbox("mustsearch")
     html.write(" " + _('show data only on search') + "<br>")
@@ -812,6 +817,7 @@ def load_view_into_html_vars(view):
     html.set_var("play_sounds",      view.get("play_sounds", False) and "on" or "")
     html.set_var("public",           view["public"] and "on" or "")
     html.set_var("hidden",           view["hidden"] and "on" or "")
+    html.set_var("mobile",           view.get("mobile") and "on" or "")
     html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
     html.set_var("hidebutton",       view.get("hidebutton",  False) and "on" or "")
     html.set_var("user_sortable",    view.get("user_sortable", True) and "on" or "")
@@ -919,6 +925,7 @@ def create_view():
     play_sounds      = html.var("play_sounds", "") != ""
     public           = html.var("public", "") != "" and config.may("publish_views")
     hidden           = html.var("hidden", "") != ""
+    mobile           = html.var("mobile", "") != ""
     mustsearch       = html.var("mustsearch", "") != ""
     hidebutton       = html.var("hidebutton", "") != ""
     column_headers   = html.var("column_headers")
@@ -1006,6 +1013,7 @@ def create_view():
         "datasource"      : datasourcename,
         "public"          : public,
         "hidden"          : hidden,
+        "mobile"          : mobile,
         "mustsearch"      : mustsearch,
         "hidebutton"      : hidebutton,
         "layout"          : layoutname,

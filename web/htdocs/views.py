@@ -1079,9 +1079,34 @@ def get_needed_columns(painters):
             columns += multisite_painters[tt]["columns"]
     return columns
 
-# Display view with real data. This is *the* function everying
-# is about.
-def show_view(view, show_heading = False, show_buttons = True, show_footer = True):
+
+# Display options are flags that control which elements of a 
+# view should be displayed (buttons, sorting, etc.). They can be
+# specified via the URL variable display_options. The function
+# extracts this variable, applies defaults and generates
+# three versions of the display options:
+# Return value -> display options to actually use
+# html.display_options -> display options to use in for URLs to other views
+# html.title_display_options -> display options for title sorter links
+def prepare_display_options():
+    # Display options (upper-case: show, lower-case: don't show)
+    # H  The HTML header and body-tag (containing the tags <HTML> and <BODY>)
+    # T  The title line showing the header and the logged in user
+    # B  The blue context buttons that link to other views
+    # F  The tab for using filters
+    # C  The tab for using commands and all icons for commands (e.g. the reschedule icon)
+    # O  The view options number of columns and refresh
+    # D  The Display tab, which contains column specific formatting settings
+    # E  The tab for editing the view
+    # Z  The footer line, where refresh: 30s is being displayed
+    # R  The auto-refreshing in general (browser reload)
+    # S  The playing of alarm sounds (on critical and warning services)
+    # I  All hyperlinks pointing to other views
+    # X  All other hyperlinks (pointing to external applications like PNP, WATO or others)
+    # M  If this option is not set, then all hyperlinks are targeted to the HTML frame 
+    #    with the name main. This is useful when using views as elements in the dashboard.
+    # L  The column title links in multisite views
+    # W  The limit and livestatus error message in views
     all_display_options = "HTBFCEOZRSIXDMLW"
 
     # Parse display options and
@@ -1115,14 +1140,6 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         display_options = apply_display_option_defaults(display_options)
         html.display_options = display_options
 
-    # Below we have the following display_options vars:
-    # html.display_options        - Use this when rendering the current view
-    # html.var("display_options") - Use this for linking to other views
-
-    # If display option 'M' is set, then all links are targetet to the 'main'
-    # frame. Also the display options are removed since the view in the main
-    # frame should be displayed in standard mode.
-    #
     # But there is one special case: The sorter links! These links need to know
     # about the provided display_option parameter. The links could use
     # "html.display_options" but this contains the implicit options which should
@@ -1130,15 +1147,42 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # this case. It is stored in the var "html.display_options"
     if html.var('display_options'):
         html.title_display_options = html.var("display_options")
+
+    # If display option 'M' is set, then all links are targetet to the 'main'
+    # frame. Also the display options are removed since the view in the main
+    # frame should be displayed in standard mode.
     if 'M' not in display_options:
         html.set_link_target("main")
         html.del_var("display_options")
 
-    # [1] Datasource
+    # Below we have the following display_options vars:
+    # html.display_options        - Use this when rendering the current view
+    # html.var("display_options") - Use this for linking to other views
+    return display_options
+
+
+# Display view with real data. This is *the* function everying
+# is about.
+def show_view(view, show_heading = False, show_buttons = True, 
+              show_footer = True, render_function = None):
+    display_options = prepare_display_options()
+
+    # User can override the layout settings via HTML variables (buttons)
+    # which are safed persistently. This is known as "view options"
+    vo = view_options(view["name"])
+    num_columns     = vo.get("num_columns",     view.get("num_columns",    1))
+    browser_reload  = vo.get("refresh",         view.get("browser_reload", None))
+    show_checkboxes = vo.get("show_checkboxes", view.get("show_checkboxes", False))
+
+    if browser_reload and 'R' in display_options:
+        html.set_browser_reload(browser_reload)
+
+    # Get the datasource (i.e. the logical table)
     datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
 
-    # [2] Layout
+    # The layout of the view: it can be overridden by several specifying
+    # an output format (like json or python).
     if html.output_format == "html":
         layout = multisite_layouts[view["layout"]]
     else:
@@ -1146,17 +1190,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         if not layout:
             layout = multisite_layouts["json"]
 
-    # User can override the layout settings via HTML variables (buttons)
-    # which are safed persistently. This is known as "view options"
-    vo = view_options(view["name"])
-    num_columns     = vo.get("num_columns",   view.get("num_columns",    1))
-    browser_reload  = vo.get("refresh",       view.get("browser_reload", None))
-    show_checkboxes = vo.get("show_checkboxes", view.get("show_checkboxes", False))
-
-    if browser_reload and 'R' in display_options:
-        html.set_browser_reload(browser_reload)
-
-    # [3] Filters
+    # Filters to show in the view
     show_filters = [ multisite_filters[fn] for fn in view["show_filters"] ]
 
     # add ubiquitary_filters that are possible for this datasource
@@ -1188,17 +1222,17 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     query = filterheaders + view.get("add_headers", "")
 
-    # [4] Sorting - use view sorters or url supplied sorters
+    # Sorting - use view sorters and URL supplied sorters
     sorter_list = html.has_var('sort') and parse_url_sorters(html.var('sort')) or view["sorters"]
     sorters = [ (multisite_sorters[s[0]],) + s[1:] for s in sorter_list ]
 
-    # [5] Grouping
+    # Prepare gropuing information
     group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"] ]
 
-    # [6] Columns
+    # Prepare columns to paint
     painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["painters"] ]
 
-    # Now compute this list of all columns we need to query via Livestatus.
+    # Now compute the list of all columns we need to query via Livestatus.
     # Those are: (1) columns used by the sorters in use, (2) columns use by
     # column- and group-painters in use and - note - (3) columns used to
     # satisfy external references (filters) of views we link to. The last bit
@@ -1217,7 +1251,6 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             columns += s[0]["columns"]
         else:
             join_columns += s[0]["columns"]
-
 
     # Add key columns, needed for executing commands
     columns += datasource["keys"]
@@ -1260,11 +1293,28 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     else:
         rows = []
 
-    # html.write("<pre>%s</pre>" % pprint.pformat(rows))
-
     # Apply non-Livestatus filters
     for filter in all_active_filters:
         rows = filter.filter_table(rows)
+
+    # Until now no single byte of HTML code has been output.
+    # Now let's render the view.
+    if not render_function:
+        render_function = render_view
+
+    render_function(view, rows, datasource, group_painters, painters, 
+                display_options, painter_options, show_heading, show_buttons,
+                show_checkboxes, layout, num_columns, show_filters, show_footer, hide_filters,
+                browser_reload)
+
+
+# Output HTML code of a view. If you add or remove paramters here,
+# then please also do this in htdocs/mobile.py!
+def render_view(view, rows, datasource, group_painters, painters, 
+                display_options, painter_options, show_heading, show_buttons,
+                show_checkboxes, layout, num_columns, show_filters, show_footer, hide_filters,
+                browser_reload):
+
 
     # Show heading (change between "preview" mode and full page mode)
     if show_heading:
@@ -2373,7 +2423,8 @@ def link_to_view(content, row, linkview):
         if do:
             vars.append(("display_options", do))
 
-        uri = "view.py?" + htmllib.urlencode_vars([("view_name", linkview)] + vars)
+        filename = html.mobile and "mobile_view.py" or "view.py"
+        uri = filename + "?" + htmllib.urlencode_vars([("view_name", linkview)] + vars)
         content = "<a href=\"%s\">%s</a>" % (uri, content)
 #        rel = 'view.py?view_name=hoststatus&site=local&host=erdb-lit&display_options=htbfcoezrsix'
 #        content = '<a class=tips rel="%s" href="%s">%s</a>' % (rel, uri, content)
@@ -2392,12 +2443,12 @@ def row_id(view, row):
         key += '~%s' % row[col]
     return str(hash(key))
 
-def paint(p, row):
+def paint(p, row, tdattrs=""):
     tdclass, content = prepare_paint(p, row)
     if tdclass:
-        html.write("<td class=\"%s\">%s</td>\n" % (tdclass, content))
+        html.write("<td %s class=\"%s\">%s</td>\n" % (tdattrs, tdclass, content))
     else:
-        html.write("<td>%s</td>" % content)
+        html.write("<td %s>%s</td>" % (tdattrs, content))
     return content != ""
 
 def substract_sorters(base, remove):

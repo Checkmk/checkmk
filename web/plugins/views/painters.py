@@ -244,16 +244,18 @@ multisite_painters["sitealias"] = {
 #   |____/ \___|_|    \_/ |_|\___\___||___/
 #
 
-def paint_service_state_short(row):
+def paint_service_state_short(row, onechar=False):
     if row["service_has_been_checked"] == 1:
         state = row["service_state"]
         name = nagios_short_state_names[row["service_state"]]
     else:
         state = "p"
         name = "PEND"
+    if onechar:
+        name = name[0]
     return "state svcstate state%s" % state, name
 
-def paint_host_state_short(row):
+def paint_host_state_short(row, onechar=False):
 # return None, str(row)
     if row["host_has_been_checked"] == 1:
         state = row["host_state"]
@@ -261,6 +263,8 @@ def paint_host_state_short(row):
     else:
         state = "p"
         name = "PEND"
+    if onechar:
+        name = name[0]
     return "state hstate hstate%s" % state, name
 
 multisite_painters["service_nagios_link"] = {
@@ -278,6 +282,13 @@ multisite_painters["service_state"] = {
     "sorter"  : 'svcstate',
 }
 
+multisite_painters["service_state_onechar"] = {
+    "title"   : _("Service state (first character)"),
+    "short"   : _("State"),
+    "columns" : ["service_has_been_checked","service_state"],
+    "paint"   : lambda row: paint_service_state_short(row, True),
+    "sorter"  : 'svcstate',
+}
 multisite_painters["site_icon"] = {
     "title"   : _("Icon showing the site"),
     "short"   : "",
@@ -718,6 +729,14 @@ multisite_painters["host_state"] = {
     "short"   : _("state"),
     "columns" : ["host_has_been_checked","host_state"],
     "paint"   : paint_host_state_short,
+    "sorter"  : 'hoststate',
+}
+
+multisite_painters["host_state_onechar"] = {
+    "title"   : _("Host state (first character)"),
+    "short"   : _("state"),
+    "columns" : ["host_has_been_checked","host_state"],
+    "paint"   : lambda row: paint_host_state_short(row, True),
     "sorter"  : 'hoststate',
 }
 

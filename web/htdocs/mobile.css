@@ -1,5 +1,31 @@
 /* Styles for Check_MK mobile interface */
 
-p.green {
-    color: green;
+.ui-content {
+    padding: 5px;
+}
+
+body.mobile table.data {
+    width: 50%;
+    border-collapse: collapse;
+    empty-cells: show;
+}
+
+body.mobile table.data tr {
+}
+
+body.mobile table.data td {
+    padding: 1px;
+    border: 1px solid #ccc;
+    padding: 2px 3px;
+    overflow: hidden;
+}
+
+
+body.mobile table.dataset tr.header {
+    background-color: #ccc;
+}
+
+
+body.mobile table.dataset tr.data td {
+    border: 1px solid #888;
 }

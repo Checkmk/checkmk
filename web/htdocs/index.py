@@ -211,7 +211,7 @@ def handler(req, profiling = True):
 
         # All plugins might have to be reloaded due to a language change
         # FIXME: Hier werden alle Module geladen, obwohl diese gar nicht immer alle benötigt würden
-        for module in [ views, sidebar, dashboard, wato, bi ]:
+        for module in [ views, sidebar, dashboard, wato, bi, mobile ]:
             try:
                 module.load_plugins # just check if this function exists
                 module.load_plugins()
@@ -232,6 +232,15 @@ def handler(req, profiling = True):
             file(profilefile + ".py", "w").write("#!/usr/bin/python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
             os.chmod(profilefile + ".py", 0755)
             return apache.OK
+
+        # Detect mobile devices
+        user_agent = html.req.headers_in['User-Agent']
+        html.mobile = mobile.is_mobile(user_agent)
+
+        # Redirect to mobile GUI if we are a mobile device and
+        # the URL is /
+        if req.myfile == "index" and html.mobile:
+            req.myfile = "mobile"
 
         # Get page handler
         handler = pagehandlers.get(req.myfile, page_not_found)

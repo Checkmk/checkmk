@@ -97,6 +97,8 @@ function wato_fix_visibility() {
         }
     }
 
+    var hide_topics = volatile_topics.slice(0);
+
     /* Now loop over all attributes that have conditions. Those are
        stored in the global variable wato_depends_on, which is filled
        during the creation of the web page. */
@@ -114,8 +116,26 @@ function wato_fix_visibility() {
                 break;
             }
         }
-        oTr = document.getElementById("attr_" + attrname);
+            
+        var oTr = document.getElementById("attr_" + attrname);
         oTr.style.display = display;
+   
+        // There is at least one item in this topic -> show it
+        var topic = oTr.parentNode.parentNode.parentNode.id.substr(21);
+        if( display == "" ){
+            var index = hide_topics.indexOf(topic);
+            if( index != -1 )
+                delete hide_topics[index];
+        }
+    }
+
+    for each (var item in volatile_topics){
+        var oTr = document.getElementById("topic_" + item);
+        if( hide_topics.indexOf(item) > -1 ){
+            oTr.style.display = "none"; 
+        }
+        else
+            oTr.style.display = ""; 
     }
 }
 

@@ -866,7 +866,7 @@ class html:
         onclick += ' onmouseout="this.style.cursor=\'auto\';" '
         
         if indent == "form":
-            self.write('<table class="form nomargin"><tr><td class=title>')
+            self.write('<table id="topic_%s" style="display: ''"  class="form nomargin"><tr ><td class=title>' % id.encode("utf-8"))
         self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
                    'src="images/tree_%s.png" %s>' % 
                 (treename, id, img_num, onclick))

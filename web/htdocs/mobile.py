@@ -105,7 +105,7 @@ def page_index():
     views.load_views()
     items = []
     for view_name, view in html.available_views.items():
-        if view.get("mobile"):
+        if view.get("mobile") and not view.get("hidden"):
             items.append(("mobile_view.py?view_name=%s" % view_name, view["title"]))
     jqm_page_index(_("Check_MK Mobile"), items)
     jqm_page_footer()
@@ -133,11 +133,18 @@ def render_view(view, rows, datasource, group_painters, painters,
                 browser_reload):
 
     title = views.view_title(view)
-
     navbar = [
       ( "#data",     _("Results"), "grid"),
       ( "#commands", _("Commands"), "gear" ),
       ( "#filter",   _("Filter"),   "search" )]
+
+    # Should we show a page with context links?
+    context_links = [
+        e for e in views.collect_context_links(view, hide_filters)
+        if e[0].get("mobile") ]
+
+    if context_links:
+        navbar.append(( "#context", _("Context"), "arrow-r"))
     page_id = "view_" + view["name"]
 
     # Page: data rows of view
@@ -155,13 +162,25 @@ def render_view(view, rows, datasource, group_painters, painters,
     jqm_page_navfooter(navbar, '#data', page_id)
 
     # Page: Commands
-    jqm_page_header("Commands", home="mobile.py", id="commands")
+    jqm_page_header(_("Commands"), home="mobile.py", id="commands")
     jqm_page_content("Hier kommen die Commands")
     jqm_page_navfooter(navbar, '#commands', page_id)
 
     # Page: Filters
-    jqm_page_header("Filter / Search", home="mobile.py", id="filter")
+    jqm_page_header(_("Filter / Search"), home="mobile.py", id="filter")
     jqm_page_content("Hier kommen die Filter")
     jqm_page_navfooter(navbar, '#filter', page_id)
 
+    # Page: Context buttons
+    if context_links:
+        jqm_page_header(_("Context"), home="mobile.py", id="context")
+        show_context_links(context_links)
+        jqm_page_navfooter(navbar, '#filter', page_id)
+    
+
+def show_context_links(context_links):
+    items = []
+    for view, title, uri, icon, buttonid in context_links:
+        items.append((uri, title))
+    jqm_page_index(_("Related Views"), items)
 

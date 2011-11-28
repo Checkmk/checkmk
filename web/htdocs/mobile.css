@@ -2,10 +2,11 @@
 
 .ui-content {
     padding: 5px;
+    background-color: #ccc;
 }
 
 body.mobile table.data {
-    width: 50%;
+    /* width: 10px;*/ /* 100%; */
     border-collapse: collapse;
     empty-cells: show;
 }
@@ -15,17 +16,59 @@ body.mobile table.data tr {
 
 body.mobile table.data td {
     padding: 1px;
-    border: 1px solid #ccc;
+    border: 1px solid #ddd;
     padding: 2px 3px;
     overflow: hidden;
 }
 
 
 body.mobile table.dataset tr.header {
-    background-color: #ccc;
 }
-
+body.mobile table.dataset tr.header th {
+}
 
 body.mobile table.dataset tr.data td {
+    -moz-border-radius: 10px; /* Firefox */
+    -webkit-border-radius: 10px; 
+    border-radius: 3px;
     border: 1px solid #888;
+    padding: 2px 3px;
+    font-size: 10pt;
 }
+
+/* Perfometers */
+
+
+body.mobile td.perfometer {
+    width: 60px;
+    height: 14px;
+}
+body.mobile td.perfometer * {
+    color: #333;
+    font-weight: normal;
+    font-size: 7pt;
+}
+
+body.mobile td.perfometer div.content {
+   width: 59px;
+}
+
+body.mobile td.perfometer div.title {
+   top: 2px; 
+   width: 60px;
+}
+
+body.mobile td.perfometer img.glass {
+   width: 59px;
+   height: 14px;
+}
+
+body.mobile td.perfometer table {
+    width: 60px;
+    height: 14px;
+}
+
+body.mobile table.data td.perfometer td.inner {
+    height: 14px;
+}
+

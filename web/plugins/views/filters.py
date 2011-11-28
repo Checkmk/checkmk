@@ -103,8 +103,7 @@ class FilterGroupCombo(Filter):
         html.select(self.htmlvars[0], choices)
         if not self.enforce:
             html.write(" <nobr>")
-            html.checkbox(self.htmlvars[1])
-            html.write(_("negate"))
+            html.checkbox(self.htmlvars[1], label=_("negate"))
             html.write("</nobr>")
 
     def current_value(self, infoname):

@@ -270,6 +270,54 @@ multisite_builtin_views.update({
         'linktitle': _('Host status'),
         'title': _('Status of Host'),
     }),
+
+    # Search hosts
+    'mobile_searchhost': mobile_view({
+        'datasource': 'hosts',
+        'group_painters': [],
+        'hard_filters': [],
+        'hard_filtervars': [
+            ('is_host_scheduled_downtime_depth', '-1'),
+            ('is_host_in_notification_period', '-1'),
+            ('hst0', 'on'),
+            ('hst1', 'on'),
+            ('hst2', 'on'),
+            ('hstp', 'on'),
+            ('site', ''),
+            ('host', ''),
+            ('is_host_notifications_enabled', '-1'),
+            ('opthostgroup', ''),
+            ('neg_opthostgroup', ''),
+            ('opthost_contactgroup', ''),
+            ('neg_opthost_contactgroup', ''),
+        ],
+        'hide_filters': [],
+        'layout': 'mobilelist',
+        'linktitle': 'Host search',
+        'mustsearch': True,
+        'num_columns': 3,
+        'painters': [
+            ('host_state', None),
+            ('host', 'mobile_host'),
+            ('num_services_ok', None),
+            ('num_services_warn', None),
+            ('num_services_crit', None),
+            ('num_services_unknown', None),
+            ('num_services_pending', None),
+        ],
+        'show_filters': [
+            'host_scheduled_downtime_depth',
+            'host_in_notification_period',
+            'hoststate',
+            'hostregex',
+            'host_notifications_enabled',
+            'opthostgroup',
+            'opthost_contactgroup',
+        ],
+        'sorters': [],
+        'title': _('Host search'),
+    })
+
 })
 
 

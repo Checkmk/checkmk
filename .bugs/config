@@ -11,8 +11,10 @@ components = [
   "checks",
   "multisite", 
   "livestatus",
+  "livecheck",
   "wato",
   "bi",
+  "mobile",
   "docu"
 ]
 
@@ -27,6 +29,7 @@ classes = [
 
 targetversions = [
   "1.1.12",
+  "1.1.13i1",
   "1.2.0",
   "future",
 ]

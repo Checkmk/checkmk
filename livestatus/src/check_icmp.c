@@ -182,7 +182,6 @@ static void crash(const char *, ...);
 /** external **/
 extern int optind, opterr, optopt;
 extern char *optarg;
-extern char **environ;
 
 /** global variables **/
 static struct rta_host **table, *cursor, *list;
@@ -413,7 +412,7 @@ int check_icmp(int argc, char **argv, char *output, int size)
     icmp_sockerrno = 0;
 
     /* POSIXLY_CORRECT might break things, so unset it (the portable way) */
-    environ = NULL;
+    unsetenv("POSIXLY_CORRECT");
 
     /* use the pid to mark packets as ours */
     /* Some systems have 32-bit pid_t so mask off only 16 bits */

@@ -36,6 +36,17 @@ body.mobile table.dataset tr.data td {
     font-size: 10pt;
 }
 
+/* Forms for filters and commands */
+body.mobile table.form {
+    width: 100%;
+}
+body.mobile table.form > tbody > tr > * {
+    width: 100%;
+}
+body.mobile table.form th {
+    border-style: none;
+}
+
 /* Perfometers */
 
 

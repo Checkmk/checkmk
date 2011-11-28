@@ -191,8 +191,8 @@ class FilterServiceState(Filter):
         for var, text in [(self.prefix + "st0", "OK"), (self.prefix + "st1", "WARN"), \
                           (self.prefix + "st2", "CRIT"), (self.prefix + "st3", "UNKNOWN"), 
                           (self.prefix + "stp", "PENDING")]:
-            html.checkbox(var, True)
-            html.write(" %s " % text)
+            html.checkbox(var, True, label=text)
+            # html.write(" %s " % text)
 
     def filter(self, infoname):
         headers = []
@@ -223,8 +223,7 @@ class FilterHostState(Filter):
     def display(self):
         for var, text in [("hst0", _("UP")), ("hst1", _("DOWN")), 
                           ("hst2", _("UNREACH")), ("hstp", _("PENDING"))]:
-            html.checkbox(var, True)
-            html.write(" %s " % text)
+            html.checkbox(var, True, label=text)
 
     def filter(self, infoname):
         headers = []

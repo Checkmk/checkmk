@@ -168,7 +168,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 
     # Page: Filters
     jqm_page_header(_("Filter / Search"), home="mobile.py", id="filter")
-    jqm_page_content("Hier kommen die Filter")
+    show_filter_form(show_filters)
     jqm_page_navfooter(navbar, '#filter', page_id)
 
     # Page: Context buttons
@@ -177,6 +177,25 @@ def render_view(view, rows, datasource, group_painters, painters,
         show_context_links(context_links)
         jqm_page_navfooter(navbar, '#filter', page_id)
     
+
+def show_filter_form(show_filters):
+    # Sort filters
+    s = [(f.sort_index, f.title, f) for f in show_filters if f.available()]
+    s.sort()
+
+    html.begin_form("filter")
+    html.write('<table class="form">\n')
+
+    for sort_index, title, f in s:
+        html.write('<tr><th>%s</th></tr>\n' % title)
+        html.write('<tr><td>\n')
+        f.display()
+        html.write('</td></tr>\n')
+    html.write("</table>\n")
+
+    html.hidden_fields()
+    html.end_form()
+
 
 def show_context_links(context_links):
     items = []

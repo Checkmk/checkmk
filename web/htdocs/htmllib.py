@@ -439,15 +439,24 @@ class html:
         if varname:
             self.form_vars.append(varname)
 
-    def radiobutton(self, varname, value, checked, text):
+    def radiobutton(self, varname, value, checked, label):
         if self.has_var(varname):
             checked = self.var(varname) == value
         checked_text = checked and " checked" or ""
-        self.write("<input type=radio name=%s value=\"%s\"%s> %s\n" %
-                      (varname, value, checked_text, text))
+        if label:
+            id = "rb_%s_%s" % (varname, value)
+            idtxt = ' id="%s"' % id
+        else:
+            idtxt = ""
+        self.write("<input type=radio name=%s value=\"%s\"%s%s>\n" %
+                      (varname, value, checked_text, idtxt))
+        if label:
+            self.write('<label for="%s">%s</label>\n' % (id, label))
         self.form_vars.append(varname)
 
-    def checkbox(self, varname, deflt=False, cssclass = '', onclick = None, add_attr = []):
+    def checkbox(self, varname, deflt=False, cssclass = '', onclick = None, label=None, id=None, add_attr = None):
+        if add_attr == None:
+            add_attr = [] # do not use [] as default element, it will be a global variable!
         error = self.user_errors.get(varname)
         if error:
             html = "<x class=inputerror>"
@@ -460,13 +469,19 @@ class html:
         if value == None: # form not yet filled in
              value = deflt
 
-        checked = value and " CHECKED" or ""
+        checked = value and " CHECKED " or ""
         if cssclass:
             cssclass = ' class="%s"' % cssclass
         onclick_code = onclick and " onclick=\"%s\"" % (onclick) or ""
-        self.write("<input type=checkbox name=\"%s\"%s%s%s%s>" %
+        if label and not id:
+            id = "cb_" + varname
+        if id:
+            add_attr.append('id="%s"' % id)
+        self.write("<input type=checkbox name=\"%s\"%s%s%s%s>\n" %
                         (varname, checked, cssclass, onclick_code, " ".join(add_attr)))
         self.form_vars.append(varname)
+        if label:
+            self.write('<label for="%s">%s</label>\n' % (id, label))
         if error:
             html += "</x>"
 

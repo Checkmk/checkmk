@@ -8283,7 +8283,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         message += _("Hosts where this tag group is explicitely set and that are effected by the change") + ":<ul><li>"
         for nr, host in enumerate(affected_hosts):
             if nr > 20:
-                message += "... (%d more)" % len(affected_hosts - 20)
+                message += "... (%d more)" % (len(affected_hosts) - 20)
                 break
             elif nr > 0:
                 message += ", "

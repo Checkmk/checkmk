@@ -346,7 +346,7 @@ def input_choice(what, choices):
     texts = []
     for choice in choices:
         for c in choice:
-            if c not in ctc:
+            if c not in ".-_/" and c not in ctc:
                 ctc[c] = choice
                 texts.append(choice.replace(c, tty_bold + c + tty_normal, 1))
                 break

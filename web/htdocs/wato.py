@@ -3874,7 +3874,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             html.write("</table>")
             html.end_foldable_container() # end of topic
             if topic_is_volatile:
-                volatile_topics.append(topic.encode('utf-8'))
+                volatile_topics.append((topic or _("Basic settings")) or topic.encode('utf-8'))
             if topic == topics[-1]:
                 html.write('<table class="form nomargin">')
 
@@ -8283,7 +8283,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         message += _("Hosts where this tag group is explicitely set and that are effected by the change") + ":<ul><li>"
         for nr, host in enumerate(affected_hosts):
             if nr > 20:
-                message += "... (%d more)" % len(affected_hosts - 20)
+                message += "... (%d more)" % (len(affected_hosts) - 20)
                 break
             elif nr > 0:
                 message += ", "

@@ -1,0 +1,15 @@
+Title: View editor: Nach Änderung vom view_name geht der Reload auf den alten view_name
+Component: multisite
+Benefit: 2
+State: open
+Cost: 2
+Date: 2011-11-29 10:49:10
+Targetversion: 1.1.12
+Class: bug
+
+Beim Aufrufen des View Editors wird der Parameter "back=" mit einer URL gefüllt, die 
+nach dem Edititieren als neue Ziel-Seite verwendet wird. Wenn man bei View-Editieren
+den view_name anpasst, dann zeigt die back URL nicht auf die soeben editierte View.
+
+Man sollte nach dem Editieren auf die soeben editierte View kommen. Also muss man den
+view_name in dieser URL dynamisch ersetzen/ergänzen.

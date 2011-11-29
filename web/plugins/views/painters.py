@@ -747,7 +747,7 @@ multisite_painters["host_state"] = {
 
 multisite_painters["host_state_onechar"] = {
     "title"   : _("Host state (first character)"),
-    "short"   : _("state"),
+    "short"   : _("S."),
     "columns" : ["host_has_been_checked","host_state"],
     "paint"   : lambda row: paint_host_state_short(row, True),
     "sorter"  : 'hoststate',

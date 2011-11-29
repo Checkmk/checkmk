@@ -575,18 +575,15 @@ class html:
             self.write("</x>")
         self.form_vars.append(varname)
 
-    def html_head(self, title, add_js = True):
+    def html_head(self, title, add_js = True, stylesheets):
         if not self.req.header_sent:
             self.write(
                 u'''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-                <html><head>
-                <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-                <title>''')
-            # Ich versteh mit dem drecks UTF-8 bald garnix mehr...
-            # self.req.write(title.encode("utf-8"))
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\n''')
+            self.write('<title>')
             self.write(title)
-            self.write('''</title>
-                <link rel="stylesheet" type="text/css" href="check_mk.css">''')
+            self.write('</title>\n')
     
             # If the variable _link_target is set, then all links in this page
             # should be targetted to the HTML frame named by _link_target. This
@@ -594,12 +591,15 @@ class html:
             if self.link_target:
                 self.write('<base target="%s">' % self.link_target)
 
-            # Load all style sheets in htdocs/css
+            # Load all specified style sheets and all user style sheets in htdocs/css
+            for css in stylesheets:
+                self.write('<link rel="stylesheet" type="text/css" href="%s.css">\n' % css)
+
             for css in self.plugin_stylesheets():
-               self.write('                <link rel="stylesheet" type="text/css" href="css/%s">' % css)
+               self.write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
 
             if config.custom_style_sheet:
-               self.write('                <link rel="stylesheet" type="text/css" href="%s">' % config.custom_style_sheet)
+               self.write('<link rel="stylesheet" type="text/css" href="%s">\n' % config.custom_style_sheet)
 
             if add_js:
                 self.write('''

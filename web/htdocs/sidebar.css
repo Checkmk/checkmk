@@ -1,0 +1,365 @@
+/*-------------------------------------------------------------------------.
+|                 ____  _     _      _                                     |
+|                / ___|(_) __| | ___| |__   __ _ _ __                      |
+|                \___ \| |/ _` |/ _ \ '_ \ / _` | '__|                     |
+|                 ___) | | (_| |  __/ |_) | (_| | |                        |
+|                |____/|_|\__,_|\___|_.__/ \__,_|_|                        |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styling for the sidebar and its snapins.                                 |
+'-------------------------------------------------------------------------*/
+
+body.side {
+    background-image: url("images/sidebar_background.jpg");
+    padding: 0;
+    width: 280px;
+    height: 100%;
+    overflow:hidden;
+}
+
+/* Top logo part */
+#side_header {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 55px;
+    z-index: 10;
+    background-repeat: no-repeat;
+    background-image: url("images/sidebar_top.png");
+}
+
+#side_header a {
+    display: block;
+    width: 100%;
+    height: 55px;
+    text-decoration: none;
+}
+
+#side_version {
+    position: absolute;
+    top: 24px;
+    left: 54px;
+    z-index: 54;
+    color: #fff;
+    text-align: right;
+    width: 200px;
+}
+
+/* Scrolling part with snapins */
+#side_content {
+    z-index: 5;
+    width: 100%;
+    height: 500px;
+    overflow: hidden;
+    color: #000000;
+    padding-top: 60px;
+    padding-bottom: 5px;
+}
+
+/* The footer of the sidebar */
+#side_footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 35px;
+    width: 100%;
+    z-index: 10;
+    background-repeat: no-repeat;
+    background-image: url("images/sidebar_bottom.png");
+}
+
+#side_footer ul.buttons {
+    height: 20px;
+    z-index: 20;
+    position: absolute;
+    top: 10px;
+    left: 15px;
+    margin: 0;
+    padding: 0;
+}
+
+#side_footer ul.buttons li {
+    list-style-type: none;
+    float: left;
+    display: inline;
+    margin-left: none;
+}
+
+#side_footer ul.buttons a {
+    width: 75px;
+    height: 17px;
+    display: block;
+    color: #fff;
+    text-align: center;
+    vertical-align: middle;
+    padding-top: 3px;
+    text-decoration: none;
+    background-repeat: repeat;
+    background-image: url("images/sidebar_button_lo.png");
+    margin: 0;
+}
+
+#side_footer ul.buttons a:hover {
+    background-image: url("images/sidebar_button_hi.png");
+}
+
+#side_footer ul.buttons a.logout {
+    width: 20px;
+    margin-left: 15px;
+    background-image: url("images/sidebar_logout_lo.png");
+}
+
+#side_footer ul.buttons a.logout:hover {
+    background-image: url("images/sidebar_logout_hi.png");
+}
+
+#side_footer div.buttons a {
+    float: left;
+}
+
+#side_footer div.copyright {
+    color: #fff;
+    position: relative;
+    left: 130px;
+    top: 12px;
+    width: 122px;
+    text-align: right;
+}
+
+#side_footer a {
+    color: #eee;
+}
+
+#side_footer a:hover {
+    color: #fff;
+}
+
+/* General layout of snapins */
+div.snapin {
+    width: 255px;
+    margin: 0 0 0 5px;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Header of the snapin */
+div.snapin div.head {
+    width: 260px;
+    text-align: center;
+    color: #fff;
+    padding-top: 9px;
+}
+
+div.snapin div.head.open {
+    background-image: url("images/snapin_header.png");
+    height: 17px;
+}
+
+div.snapin div.head.closed {
+    background-image: url("images/snapin_closed.png");
+    height: 22px;
+}
+
+/* close button on header */
+div.snapin div.closesnapin {
+    float: right;
+    margin-right: 10px;
+    margin-top:   2px;
+}
+/* Reload-Button */
+div.snapin div.reloadsnapin {
+    float: right;
+    margin-right: 4px;
+    margin-top:   2px;
+}
+
+div.snapin div.content {
+    background-image: url("images/snapin_background.png");
+    background-repeat: repeat-y;
+    background-position: left;
+
+    /* It's important for the left/right padding to be substracted
+     * from the width defined below. The regular width would be 260px. */
+    padding: 10px 15px 5px;
+    width: 230px;
+}
+
+div.snapin div.foot {
+    background-image: url("images/snapin_footer.png");
+    background-repeat: no-repeat;
+    width: 260px;
+    height: 10px;
+    line-height: 10px;
+}
+
+/*
+ * General styles for snapin contents
+ */
+
+div.snapin .content_center {
+    margin-left:  auto;
+    margin-right: auto;
+}
+
+div.snapin td {
+    color: #fff;
+}
+
+div.snapin h3 {
+    margin: 2px 0px;
+    color: #fff;
+    font-size: 100%;
+}
+
+div.snapin li {
+    padding-left: 1px;
+    color: #274750;
+    color: #478;
+}
+
+/* Normal link in snapins */
+div.snapin a {
+    text-decoration: none;
+    font-weight: normal;
+    color: #fff;
+}
+
+div.snapin a:hover {
+    text-decoration: underline;
+    color: #fff;
+}
+
+div.snapin ul {
+    margin: 0;
+    padding: 0;
+    padding-left: 16px;
+    /* width: 220px; Bei mehrstufigen Einrueckungen stimmt der rechte Rand nicht */
+}
+
+div.snapin li.sidebar {
+    margin-left: 0px;
+    margin-left: 0px;
+}
+
+div.snapin img.iconlink {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+div.snapin div.footnote {
+    width: 100%;
+    text-align: right;
+}
+
+/* Style for exceptions displayed in snapins */
+div.snapin div.snapinexception {
+    background-color: #f88;
+    -moz-border-radius: 4px;
+    padding: 3px;
+    border: 1px solid #f00;
+    width: 220px;
+}
+
+div.snapin div.snapinexception h2 {
+    font-size: 9pt;
+    color: #f00;
+    margin-top: 0px;
+}
+
+div.snapin div.snapinexception p {
+    color: #800;
+}
+
+/* The right-aligned link at the bottom of some snapins like the "views" snapin. */
+div.snapin div.footnotelink {
+    margin-top: 5px;
+    text-align: right;
+}
+
+div.snapin div.footnotelink a {
+    border: 1px solid #ddd;
+    font-size: 7pt;
+    -moz-border-radius: 4px;
+    padding: 1px 4px;
+    margin-left: 5px;
+}
+
+div.snapin div.footnotelink a:hover {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    text-decoration: none;
+    border: 1px solid #fff;
+}
+
+/* Small iconbutton (e.g. at bookmarks) */
+div.snapin img.iconbutton {
+    margin: 0px 2px 0px 0px;
+    border: none;
+}
+
+div.snapin img.iconbutton.bookmark {
+    width:  16px;
+    height: 16px;
+}
+
+/* state bullets at problem host or all hosts snapin */
+div.statebullet { 
+    margin-left: 0px; 
+    margin-right: 6px; 
+    width: 10px; 
+    height: 10px; 
+    border: 1px solid #eee; 
+    float: left; 
+}
+
+
+/*-------------------------------------------------------------------------.
+|          _       _     _                         _                       |
+|         / \   __| | __| |  ___ _ __   __ _ _ __ (_)_ __  ___             |
+|        / _ \ / _` |/ _` | / __| '_ \ / _` | '_ \| | '_ \/ __|            |
+|       / ___ \ (_| | (_| | \__ \ | | | (_| | |_) | | | | \__ \            |
+|      /_/   \_\__,_|\__,_| |___/_| |_|\__,_| .__/|_|_| |_|___/            |
+|                                           |_|                            |
++--------------------------------------------------------------------------+
+| Style for the page where you can add new snapins to the sidebar.         |
+'-------------------------------------------------------------------------*/
+
+
+div.add_snapin div.snapinadder {
+    padding: 8px 2px;
+    background-color: #9bc;
+    -moz-border-radius: 8px;
+    border-bottom: 1px solid #9ab;
+    border-right: 1px solid #89a;
+    height: 220px;
+    width: 270px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    float: left;
+}
+div.add_snapin div.snapinadder div.description {
+    color: #369;
+    padding: 10px;
+}
+div.add_snapin div.snapin_preview div.clickshield {  
+    z-index: 100;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 270px;
+    height: 120px;
+}
+
+div.add_snapin div.snapin_preview {
+    width: 270px;
+    height: 120px;
+    overflow: hidden;
+    position: relative;
+    top: 0px;
+    left: 0px;
+}
+
+

@@ -1,0 +1,610 @@
+/*-------------------------------------------------------------------------.
+|                     __        ___  _____ ___                             |
+|                     \ \      / / \|_   _/ _ \                            |
+|                      \ \ /\ / / _ \ | || | | |                           |
+|                       \ V  V / ___ \| || |_| |                           |
+|                        \_/\_/_/   \_\_| \___/                            |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styles used in WATO.                                                     |
+'-------------------------------------------------------------------------*/
+
+/* Icon image place inline in some documentation text */
+.wato img.icon.docu {
+   width: 14px;
+   height: 14px;
+   vertical-align: middle;
+}
+
+/* Tables in WATO are not size to 100% per default */
+.wato table.data {
+    width: auto;
+}
+
+.wato th.left {
+    border-left-style: none;
+    -moz-border-radius: 4px 0px 0px 0px;
+}
+.wato table.data td.select {
+    text-align: center;
+    width: 1px;
+}
+
+.wato th.right {
+    border-right-style: none;
+    -moz-border-radius: 0px 4px 0px 0px;
+}
+.wato table.form {
+    width: 850px;
+    margin-left: 0px;
+}
+
+.wato table.form td.legend { 
+    border-right-style: none;
+    padding-bottom: 8px;
+    width: 350px;
+}
+
+.wato table.form td.legend h3 { 
+    padding: 0px;
+    margin: 0px 0px 5px 0px;
+    font-size: 9pt;
+    font-weight: normal;
+}
+.wato table.form td.title i {  
+    font-weight: normal;
+    padding-bottom: 8px;
+}
+
+
+.wato table.form td.legend i, .wato table.form td.title i { 
+    margin-top: 13px;
+    font-size: 9pt;
+    color: #eee;
+}
+
+.wato table.form td.content { 
+    border-left-style: solid;
+    width: 494px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.wato table.form td.checkbox {
+    width: 40px;
+    height: 40px;
+    padding-top: 7px;
+    vertical-align: top;
+    text-align: right;
+    border: 1px solid #fff;
+    border-left-style: none;
+}
+
+.wato div.sitestatus {
+    border-style: solid;
+    border-width: 1px;
+    -moz-border-radius: 3px;
+    vertical-align: middle;
+    text-align: center;
+    padding: 0px 10px;
+    font-size: 7pt;
+    font-weight: bold;
+}
+
+.wato table.auditlog {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    border-collapse: collapse;
+    margin-top: 3px;
+    margin-bottom: 1em;
+    width: 100%;
+}
+
+.wato table.pending {
+    background-color: #fff;
+}
+
+.wato table.auditlog td { 
+    border: 1px solid #fff;
+    padding: 2px 6px;
+}
+
+.wato table.auditlog td.nobreak {
+    white-space: nowrap;
+}
+
+.wato .pending td { 
+    border: 1px solid #444;
+    padding: 2px 6px;
+}
+
+.wato table.auditlog.pending td {
+    border-color: #f80;
+}
+.wato table.auditlog.pending tr.even0 {
+    background-color: #fda;
+}
+
+.wato table.auditlog.pending tr.odd0 {
+    background-color: #fc8;
+}
+
+.wato td.dns {
+    color: #666;
+}
+
+.wato td.dnserror {
+    color: #f00;
+}
+
+.wato td.takeall {
+    /* width: 100%; */
+}
+
+.wato div.inherited {
+    color: #000;
+    font-weight: bold;
+}
+.wato td.inherited {
+    color: #666;
+}
+.wato div.inherited h3 { 
+    margin: 0px;
+    padding: 0px;
+    font-size: 8pt;
+    color: #468;
+}
+.wato div.inherited h3 a { 
+    color: #468;
+}
+.wato h3 {
+    margin-bottom: 2px;
+}
+
+/* Path to current folder at top of screen */
+.wato div.folderpath {
+    margin-bottom: 10px;
+}
+
+.wato div.folderpath a, .wato div.folderpath b, .wato div.folderpath i {
+    float: left;
+}
+
+.wato div.folderpath i {
+    margin: 0px 3px;
+    font-weight: bold;
+    font-style: normal;
+}
+
+.wato div.folderpath a, 
+.wato div.folderpath b {
+    -moz-border-radius: 3px;
+    background-color: #8ab;
+    padding: 2px 9px;
+    color: #fff;
+    font-weight: normal;
+}
+.wato div.folderpath a {
+/*    color: #46c;  */
+    text-decoration: none;
+}
+.wato div.folderpath a:hover {
+    color: #fff;
+    background-color: #9bc;
+    /* text-decoration: underline; */
+}
+
+.wato select.folderpath {
+    background-color: #8ab;
+    -moz-border-radius: 3px;
+    padding: 2px 4px;
+    margin: 0;
+    color: #fff;
+    font-weight: normal;
+    font-size: 8pt;
+    border-style: none;
+}
+
+/* Information boxes displayed directly in the data area */
+.wato div.info {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 5px 8px;
+    width: 800px;
+    -moz-border-radius: 3px;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+}
+
+/* Controls for the audit log paged mechanism */
+.wato div.paged_controls {
+    float: right;
+}
+
+/* Special styles for configuration and rule editor */
+.wato div.rule {
+    width: 500px;
+    height: 140px;
+    border: 1px solid white;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    margin-top: 10px;
+    -moz-border-radius: 4px;
+    position: relative;
+    top: 0px;
+    left: 0px;
+}
+
+.wato div.rule div.nr {
+    -moz-border-radius: 10px;
+    border: 1px solid white;
+    background-color: #fcd340;
+    color: black;
+    text-align: center;
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    left: 9px;
+    top: 9px;
+}
+.wato div.rule div.nr b {
+    position: relative;
+    top: 3px;
+}
+
+.wato img.iconbutton {
+    width: 20px;
+    height: 20px;
+}
+
+.wato img.trans {
+    width: 24px;
+}
+.wato td.value img {
+    width: 20px;
+    height: 20px;
+}
+.wato table.ruleeditor img {
+    width: 22px;
+    height: 22px;
+    position: relative;
+    top: -3px;
+}
+.wato table.ruleeditor td.content ul.help {
+    color: white;
+    font-style: italic;
+    font-size: 8pt;
+    padding: 0;
+    margin: 0 0 5px 0;
+    width: 300px;
+}
+
+.wato div.dictelement * {
+    font-size: 8pt;
+}
+.wato div.dictelement {
+    font-size: 8pt;
+    padding-left: 10px;
+    border-left: 2px solid #ccc;
+    margin-left: 8px;
+    margin-bottom: 10px;
+    margin-top: 3px;
+    float: none;
+}
+
+.wato table.form.ruleeditor td.content table.valuespec_tuple td.left {
+    padding-right: 10px;
+}
+
+.wato table.form.ruleeditor td.content table.valuespec_tuple td.right,
+.wato table.form.ruleeditor td.content table.valuespec_tuple td.left {
+    vertical-align: top;
+    padding-bottom: 10px;
+}
+
+.wato div.rule div.title {
+    position: absolute;
+    top: 12px;
+    color: white;
+    font-size: 10pt;
+    font-weight: bold;
+}
+
+.wato div.rule div.conditions.title {
+    left: 40px;
+}
+.wato div.rule div.value.title {
+    left: 390px;
+}
+
+
+.wato div.rule div.box {
+    position: absolute;
+    top: 30px;
+    border: 1px solid white;
+    background-color: #a7bec3;
+    padding: 5px;
+    -moz-border-radius: 4px;
+    height: 90px;
+}
+
+.wato div.rule div.conditions.box {
+    left: 40px;
+    width: 330px;
+}
+
+.wato ul.conditions {
+    padding: 0;
+    margin-left: 15px;
+    margin-top: 0;
+    margin-bottom: 0;
+    list-style-type: square;
+}
+.wato ul.conditions li {
+    padding: 0;
+    margin: 0;
+}
+
+
+.wato div.rule div.condition {
+    float: none;
+}
+
+.wato div.rule div.value.box {
+    left: 390px;
+    width: 90px;
+}
+
+.wato table.itemlist td {
+    margin: 0;
+    padding: 0;
+}
+
+.wato table.form td.content td {
+    padding: 0;
+    vertical-align: middle;
+}
+
+.wato table.data.ruleset td {
+/*    vertical-align: top; */
+}
+
+.wato table.timeperiod td.name { 
+    width: 200px;
+}
+.wato table.timeperiod td { 
+    white-space: nowrap;
+}
+.wato input.timeperioddate {
+    width: 7ex;
+    font-family: monospace;
+}
+
+/* Value editor */
+.wato table.data.globalvars td {
+    vertical-align: top;
+}
+
+.wato pre.ve_textarea {
+    padding: 0px;
+    margin: 0px;
+    font-size: 8pt;
+}
+
+/* configuration overview */
+.wato table.configmodules {
+    empty-cells: show;
+    border-spacing: 8px;
+}
+.wato table.configmodules td {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    padding: 6px;
+    -moz-border-radius: 5px;
+}
+.wato table.configmodules td.text a {
+    color: #246;
+    font-weight: bold;
+}
+.wato table.configmodules td.text a:hover {
+    color: #579;
+}
+
+.wato table.configmodules td.text i {
+    color: black;
+    font-size: 8pt;
+}
+
+/* Special styles for roles editor (permissions) */
+.wato table.form table.permissions {
+    border-collapse: collapse;
+    border-spacing: 0px; 
+    width: 100%;
+}
+.wato table.form table.permissions td {
+    border-top: 1px dotted white;
+    padding-top: 2px;
+    padding-bottom: 8px;
+}
+.wato table.form table.permissions td.left {
+}
+.wato table.form table.permissions td.right {
+    text-align: right;
+    vertical-align: top;
+}
+.wato table.form table.permissions td.right select {
+    width: 120px;
+}
+
+/* Table in page "Rulesets" */
+.wato table.data.rulesets {
+    width: 800px;
+}
+.wato table.data.rulesets td.title {
+    width: 430px;
+}
+.wato table.data.rulesets td.varname {
+    width: 300px;
+}
+
+/* Table in page "Global variables" */
+.wato table.data.globalvars {
+    width: 100%;
+}
+.wato table.data.globalvars td.title {
+    width: 430px;
+}
+.wato table.data.globalvars td.varname {
+    width: 300px;
+}
+
+/* Replication */
+.wato table.data td.repprogress {
+    width: 160px;
+}
+.wato div.repprogress {
+    height: 16px;
+    background-image: url("images/repprogress.png");
+    background-repeat: repeat;
+    float: left;
+    color: white;
+    text-align: center;
+    padding-top: 0px;
+    font-size: 8pt;
+}
+
+/*-------------------------------------------------------------------------.
+|               ____                                                       |
+|              |  _ \ _ __ ___   __ _ _ __ ___  ___ ___                    |
+|              | |_) | '__/ _ \ / _` | '__/ _ \/ __/ __|                   |
+|              |  __/| | | (_) | (_| | | |  __/\__ \__ \                   |
+|              |_|   |_|  \___/ \__, |_|  \___||___/___/                   |
+|                               |___/                                      |
++--------------------------------------------------------------------------+
+| Interactive progress bar, e.g. used in bulk inventory.                   |
+'-------------------------------------------------------------------------*/
+  
+.wato table.progress {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    width: 50%;
+    border: 1px solid #000;
+}
+
+.wato table.progress th {
+    background-color: #fff;
+    padding: 3px 0px;
+}
+
+/* Log window */
+.wato table.progress td.log div { 
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    border: 1px solid #fff;
+    padding: 5px;
+    height: 250px;
+    overflow: auto;
+    text-align: left;
+}
+
+.wato table.progress td.log { 
+    font-family: monospace, sans-serif;
+    padding: 12px 12px 0px 12px;
+}
+
+/* progress bar */
+.wato table.progress td.bar { 
+    padding: 0 12px 0 12px;
+    height: 46px;
+}
+
+.wato table.progress td.bar table { 
+    position: relative;
+    top: 12px;
+    width: 100%;
+    height: 22px;
+    background-color: #fff;
+    border-spacing: 1px 2px;
+}
+
+.wato table.progress td.bar #progress_title {
+    position: relative; 
+    top: -6px; 
+    left: 0px;
+    width: 100%;
+    height: 0px; 
+    text-align: center;
+    white-space: nowrap;
+    float: left;
+    z-index: 40;
+    font-weight: bold;
+}
+
+.wato table.progress td.bar img.glass {
+    position: relative;
+    top: -10px; 
+    width: 100%;
+    height: 22px; 
+    z-index: 30;
+}
+
+.wato table.progress td.bar td.left { 
+    background-color: #4080ff;
+    width: 0%;
+}
+.wato table.progress td.bar td.right { 
+    width: 100%;
+}
+
+.wato #progress_bar.finished td.left {
+    background-color: #80ff00;
+    padding: 0px;
+}
+.wato #progress_bar.finished td.right {
+    width: 0px;
+}
+
+/* Statistics table */
+.wato table.progress td.stats { 
+    padding: 0px 12px 12px 12px;
+}
+.wato table.progress td.stats table { 
+    border-collapse: collapse;
+    border-spacing: 0px;
+    border: 1px solid #fff;
+}
+.wato table.progress td.stats th { 
+    text-align: left;
+    background-color: transparent;
+    padding-right: 3em;
+    padding-left: 6px;
+}
+.wato table.progress td.stats th, .wato table.progress td.stats td { 
+    border-bottom: 1px solid #fff;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+.wato table.progress td.stats td { 
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    text-align: right;
+    width: 4em;
+    padding-right: 6px;
+}
+
+/* Buttons */
+.wato table.progress td.buttons { 
+    padding: 0px 12px 12px 12px;
+    text-align: right;
+    vertical-align: bottom;
+}
+
+.wato div.error pre div.err {
+    background-color: yellow;
+    font-weight: bold;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    float: left;
+}

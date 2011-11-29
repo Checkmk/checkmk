@@ -1,0 +1,301 @@
+/* Styles used for marking up Monitoring data, such as host and
+   service states, Perf-O-Meters und the like */
+
+/* States */
+
+/* Colors of the five possible host and service states 
+  CRIT:    #e2001a
+  UNKNOWN: #f79802
+  WARN:    #e6c908
+  OK:      #41a62a
+*/
+
+td.state {  
+    text-align: center;
+    font-weight: bold;
+    font-family: sans-serif;
+    width: 32px;
+}
+
+/* OK/UP */
+.state0, .hstate0, .state0 a, .hstate0 a { 
+    background-color: #0b3; color: #fff;
+}
+
+.hstate {
+    white-space: nowrap;
+}
+/* WARN */
+.state1, .state1 a { 
+    background-color: #ff0; color: #000;
+}
+
+/* CRIT/DOWN */
+.state2, .hstate1, .state2 a, .hstate2 a { 
+    background-color: #f00; color: #fff;
+}
+
+/* UNKNOWN / UNREACH */
+.state3, .hstate2, .state3 a, .hstate2 a { 
+    background-color: #f80; color: #fff;
+}
+
+/* PENDING */
+.statep, .hstatep, .statep a, .hstatep a { 
+    background-color: #888; color: #fff;
+}
+
+/* in DOWNTIME */
+.stated, .hstated, .stated a, .hstated a { 
+    background-color: #0af; color: #fff;
+}
+
+/* inline state markers in check output */
+b.stmark {
+    margin-left: 4px;
+    padding: 1px 3px;
+    -moz-border-radius: 4px;
+    font-size: 7pt;
+    border: 1px solid #666;
+}
+
+/* *some* problem */
+.states, .hstates { 
+    background-image: url("images/someproblem.png");
+    background-position: center center;
+    background-repeat: repeat;
+    color: #000;
+}
+.states a, .hstates a {
+    color: #000;
+}
+
+/* Status of sites in sidebar and in WATO */
+
+.sitestatus.online   { 
+    background-color: #3c0; 
+    color: #fff; 
+    border-color: #0f0; 
+}
+.sitestatus.disabled { 
+    background-color: #666; 
+    color: #ccc; 
+    border-color: #888; 
+}
+.sitestatus.dead     { 
+    background-color: #c00; 
+    color: #f88; 
+    border-color: #f44; 
+}
+.sitestatus.waiting  { 
+    background-color: #666; 
+    color: #fff; 
+    border-color: #ccc; 
+}
+.sitestatus.down     { 
+    background-color: #f00; 
+    color: #fff; 
+    border-color: #800; 
+}
+.sitestatus.unreach  { 
+    background-color: #f80; 
+    color: #fff; 
+    border-color: #840; 
+}
+.sitestatus.unknown  { 
+    background-color: #26c; 
+    color: #fff; 
+    border-color: #44f; 
+}
+/* Performeter styling */
+
+td.perfometer {
+    padding: 1px 1px 1px 0px;
+    width: 120px;
+    height: 22px;
+    vertical-align: middle;
+}
+
+td.perfometer div.content {
+   position: relative;
+   top: 0px; 
+   left: 1px;
+   width: 119px;
+   height: 0px; 
+   float: left;
+   z-index: 20;
+}
+
+td.perfometer div.title {
+   position: relative; 
+   top: 5px; 
+   left: 0px;
+   width: 120px;
+   height: 0px; 
+   text-align: center;
+   white-space: nowrap;
+   float: left;
+   z-index: 40;
+}
+
+td.perfometer img.glass {
+   position: relative;
+   top: 1px; 
+   left: 2px;
+   width: 118px;
+   height: 22px; 
+   margin-bottom: 1px;
+   z-index: 30;
+}
+
+
+td.perfometer table {
+    width: 120px;
+    height: 22px;
+    border-spacing: 0px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #aaa;
+    height: 100%;
+}
+
+table.data td.perfometer td.inner {
+    padding: 0;
+    margin: 0;
+    border: none;
+    height: 22px;
+    padding: 0px 0px 0px 1px;
+}
+
+td.perfometer a {
+    color: #000;
+    text-decoration: none;
+}
+
+td.statex {  /* zero count */
+  color: #ccc;
+}
+
+/* Row coloring in case of the different states */
+tr.odd0  { background-color: #eee; } 
+tr.even0 { background-color: #ddd; }
+
+tr.odd1  { background-color: #ffc; } 
+tr.even1 { background-color: #ffa; }
+
+tr.odd2  { background-color: #fcc; } 
+tr.even2 { background-color: #faa; }
+
+tr.odd3  { background-color: #fda; } 
+tr.even3 { background-color: #fea; }
+
+/*-------------------------------------------------------------------------.
+|                 ____       _       _                                     |
+|                |  _ \ __ _(_)_ __ | |_ ___ _ __ ___                      |
+|                | |_) / _` | | '_ \| __/ _ \ '__/ __|                     |
+|                |  __/ (_| | | | | | ||  __/ |  \__ \                     |
+|                |_|   \__,_|_|_| |_|\__\___|_|  |___/                     |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styles used in painters (see plugins/views/painters.py)                  |
+'-------------------------------------------------------------------------*/
+
+
+/* Styles the background of host columns which have a red colored background when critical */
+.data div.hostdown { 
+    background-color: #f22;
+    -moz-border-radius: 4px;
+    border: 2px solid #000;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+table.data td.age { 
+    text-align: right;
+    color: #666;
+    white-space: nowrap;
+}
+
+table.data td.age.recent { 
+    font-weight: bold;
+    color: #000;
+}
+
+table.data td.nowrap {
+    white-space: nowrap;
+}  
+
+td.badflag {
+    font-weight: bold;
+    background-color: #f64;
+}
+
+td.goodflag {
+    color: #080;
+}
+
+table.data td.buttons { 
+    white-space: nowrap;
+    width: 1px;
+}
+
+table.data td.count {
+    text-align: right;
+    font-weight: bold;
+    font-family: sans-serif;
+}
+
+table.data td.number {
+    text-align: right;
+}
+
+td.narrow {
+    width: 10px;
+}
+
+td.icons {
+    white-space: nowrap;
+}
+td.icons img {
+    height: 20px;
+    margin-right: 3px;
+}
+
+img.tabicon {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+    left: 0px;
+}
+
+/* Styles used by specific painters. These should be modularized later ... */
+table.data div.objectlist div {
+    float: left;
+    padding: 1px 3px;
+    border-style: solid;
+    border-width: 1px;
+    margin: 1px;
+}
+
+table.data tr.data td.pnpgraph {
+   padding: 0;
+   border-bottom: 1px solid #666;
+   border-right: 1px solid #666;
+}
+
+tr.data td.pnpgraph img {
+    border: 1px solid #888;
+    margin: 7px 3px 3px 0px; 
+}
+
+/*
+ Sites can be represented by small icons with a size of 24x24 px.
+ This is the styling for these icons.
+ */
+img.siteicon {
+    width: 24px;
+    height: 24px;
+    border: 1px solid #666;
+}

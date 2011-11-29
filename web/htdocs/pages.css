@@ -1,0 +1,502 @@
+/* Styles used in all Multisite pages, for example in the 
+   status GUI, in WATO pages and in "Add snapin". These
+   styles are not used in the sidebar and in Mobile. */
+
+/*-------------------------------------------------------------------------.
+|                                       _                                  |
+|                       _ __ ___   __ _(_)_ __                             |
+|                      | '_ ` _ \ / _` | | '_ \                            |
+|                      | | | | | | (_| | | | | |                           |
+|                      |_| |_| |_|\__,_|_|_| |_|                           |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styles for the main frame (its body, header, footer, etc.)               |
+'-------------------------------------------------------------------------*/
+
+body.main {
+    background-image: url("images/contentframe_background.jpg");
+    padding: 10px 10px 0 10px;
+    background-attachment: fixed;
+    background-repeat: repeat;
+    font-family: verdana, arial, helvetica, sans-serif;
+    font-size: 9pt;
+    margin: 0;
+}
+
+body.main div.main {
+    padding-left: 10px;
+    border-left: 1px solid red;
+}
+
+/* The content page header containing the title, user, date */
+body.main table.header {
+    width: 100%;
+    margin: 0 0 10px 0;
+    padding: 0px 0px 10px 0px;
+    border-spacing: 0px;
+    color: #fff;
+} 
+
+body.main hr.header {
+    background-color: #fff;
+    height: 1px;
+    position: absolute;
+    width: 100%;
+    left: 0px;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    top: 42px;
+    /* Needed for older IE versions */
+    color: #fff;
+}
+
+body.main table.header td.left {
+    font-size: 15pt;
+    font-weight: bold;
+    vertical-align: bottom;
+    padding-left: 0px;
+    height: 31px;
+}
+
+body.main table.header td.right {
+    text-align: right;
+    vertical-align: bottom;
+    color: #fff;
+    font-size: 10pt;
+}
+
+body.main table.header td.right img {
+    position: relative;
+    top: 5px;
+}
+
+body.main div.urldebug {
+    color: white;
+    width: 100%;
+    font-size: 8pt;
+    font-family: monospace;
+    position: relative;
+    top: -14px;
+}
+
+
+/* The content page footer containing optional status icons */
+body.main table.footer { 
+    margin-top: 10px;
+    width: 100%;
+    color: #fff;
+}
+
+body.main table.footer td.left   { text-align: left; }
+body.main table.footer td.middle { text-align: center; }
+body.main table.footer td.right  { text-align: right; }
+body.main table.footer a { color: #246; }
+
+body.main table.footer img.statusicon {
+    width: 16px;
+    top: 16px;
+    position: relative;
+    top: -3px;
+}
+
+/*-------------------------------------------------------------------------.
+|         ____            _            _   _ _       _                     |
+|        / ___|___  _ __ | |_ _____  _| |_| (_)_ __ | | _____              |
+|       | |   / _ \| '_ \| __/ _ \ \/ / __| | | '_ \| |/ / __|             |
+|       | |__| (_) | | | | ||  __/>  <| |_| | | | | |   <\__ \             |
+|        \____\___/|_| |_|\__\___/_/\_\\__|_|_|_| |_|_|\_\___/             |
+|                                                                          |
++--------------------------------------------------------------------------+
+| The blue buttons at the top of the screen used for navigation.           |
+'-------------------------------------------------------------------------*/
+
+table.contextlinks {
+    margin-bottom: 10px;
+}
+
+div.contextlink {
+    float: left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+    width: 158px;
+    height: 25px;
+    background-image: url("images/contextlink.png");
+    background-repeat: no-repeat;
+    background-position: center center;
+    position: relative;
+    left: -4px;
+}
+
+div.contextlink.hot {
+    background-image: url("images/contextlink_hot.png");
+}
+div.contextlink.short {
+    background-image: url("images/contextlink_short.png");
+    width: 38px;
+}
+div.contextlink.short a {
+    width: 38px;
+}
+
+
+div.contextlink a {
+    padding-top: 4px;
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+    width: 158px;
+    height: 25px;
+}
+
+/* Icon image in a context button */
+div.contextlink img {
+   width: 18px;
+   height: 18px;
+   vertical-align: middle;
+   position: relative;
+   top: -2px;
+   margin-right: 5px;
+}
+
+/*-------------------------------------------------------------------------.
+|            ____        _          _____     _     _                      |
+|           |  _ \  __ _| |_ __ _  |_   _|_ _| |__ | | ___                 |
+|           | | | |/ _` | __/ _` |   | |/ _` | '_ \| |/ _ \                |
+|           | |_| | (_| | || (_| |   | | (_| | |_) | |  __/                |
+|           |____/ \__,_|\__\__,_|   |_|\__,_|_.__/|_|\___|                |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styles for table that should rows of data. Such tables are used in the   |
+| Status-GUI, in WATO and in custom modules that use similar tables.       |
+'-------------------------------------------------------------------------*/
+
+table.data { 
+    border-spacing: 0px;
+    margin: 0;
+    padding: 0;
+    border-collapse: collapse;
+    empty-cells: show;
+    width: 100%;
+}
+
+table.data th {
+    font-weight: normal;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    background-color: #899;
+    padding: 0 4px;
+    text-align: center;
+    color: #fff;
+    vertical-align: middle;
+}
+
+/* Two-lined header, for example in WATO: ChangeLog->Site Status */
+table.data tr.dualheader th {
+    border-bottom: 1px solid #ccc;
+}
+
+
+/* Table header links (For sorting) */
+table.data th.sort {
+    text-decoration: underline;
+}
+
+table.data th.sort:hover {
+    background-color: #A4B2B2;
+    cursor: pointer;
+}
+
+table.data th.sort:hover {
+    color: #000;
+}
+
+table.data th.asc {
+    color: #CBDCF2;
+}
+
+table.data th.desc {
+    color: #CBDCF2;
+}
+
+table.data th.tablegap {
+    background-color: transparent; /* none; */
+}
+
+table.data tr.data td { 
+    border: 1px solid #bbb;
+    padding: 2px 4px;
+    height: 22px;
+    vertical-align: middle;
+}
+
+table.data tr.data td.checkbox { 
+    width: 20px;
+    text-align: center;
+}
+table.data th input.checkgroup {  
+    height: 12px; 
+    width: 16px; 
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 5pt;
+}
+
+table.data td.host { 
+    border-style: none;
+    font-weight: bold;
+    padding-top: 1ex;
+    padding-left: 0px;
+    font-size: 120%;
+}
+
+/* Link to object in the classic nagios GUI */
+table.data td.singleicon img {
+    margin: 0;
+    padding: 0;
+}
+table.data td.singleicon {
+    width: 16px;
+    text-align: center;
+}
+
+/* Group header used in table, box and tiled layout */
+table.groupheader {
+    margin: 0px;
+    border: 0px;
+    padding: 0px;
+}
+
+tr.groupheader td {
+    border-style: none; 
+    margin: 0px;
+    padding-top: 2px;
+    font-weight: bold;
+}
+tr.groupheader a {
+    color: #000;
+    text-decoration: none;
+}
+
+tr.groupheader a:hover {
+    text-decoration: underline;
+}
+
+/* state in group header must have fixed width */
+.groupheader td.state {
+    width: 50px;
+    padding: 2px 5px;
+    border: 1px solid #fff;
+} 
+
+/*-------------------------------------------------------------------------.
+|                    _____                                                 |
+|                   |  ___|__  _ __ _ __ ___  ___                          |
+|                   | |_ / _ \| '__| '_ ` _ \/ __|                         |
+|                   |  _| (_) | |  | | | | | \__ \                         |
+|                   |_|  \___/|_|  |_| |_| |_|___/                         |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Input forms (e.g. Filters, Commands, WATO)                               |
+'-------------------------------------------------------------------------*/
+
+h2.formcaption { 
+  font-size: 100%;
+  margin-bottom: 0px;
+}
+
+table.form {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    border-collapse: collapse;
+    empty-cells: show;
+    border-spacing: 0px;
+    margin: 10px;
+}
+/* Sorry for the mess here. It is due to using foldable_containter
+   within a form table (currently only in WATO in the host and
+   folder properties) */
+
+table.form.nomargin {
+    margin: 0;
+}
+table.form.nomargin td.legend,
+.wato table.form.nomargin td.checkbox,
+table.form.nomargin td.content,
+table.form.nomargin td.buttons {
+    border-top-style: none;
+}
+table.form.nomargin td.title {
+    border-top-style: none;
+    padding-bottom: 10px;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+}
+.wato table.form tr.top td,
+.wato table.form tr.top td.checkbox {
+    border-top-style: solid;
+}
+
+table.form td { 
+    padding: 4px 10px;
+}
+table.form th {
+    border-width: 1px;
+    border-color: #fff;
+    border-style: solid solid none solid;
+    padding: 4px 4px;
+}
+
+table.form img.toggleheader {
+    width: 20px;
+    height: 20px;
+    cursor: auto;
+    padding-right: 5px;
+    vertical-align:middle;
+}
+table.form img.toggleheader.hover {
+    cursor: pointer;
+}
+
+/* Left side where title and help is printed */
+table.form td.legend, table.form td.title { 
+    color: #274750;
+    border: 1px solid #fff;
+    padding-top: 10px;
+}
+
+/* Bottom row with action buttons, right justified */
+table.form td.buttons { 
+    color: #274750;
+    border: 1px solid #fff;
+    padding-top: 10px;
+    text-align: right;
+}
+
+/* Inter-heading row over complete width */
+table.form td.title {
+    border-right-style: solid;
+    font-weight: bold;
+}
+
+table.form td.legend.border { 
+    border-right-style: solid;
+}
+table.form td.hilite {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    margin: 10px;
+}
+
+table.form td.lgend.button { 
+    text-align: right;
+    border-right: 1px solid #fff;
+}
+
+table.form td.content { 
+    padding-right: 2ex;
+    border: 1px solid #fff;
+    border-left-style: none;
+}
+
+td.legend, td.content {
+    border: 1px solid #884;
+    padding: 2px 0.5ex;
+}
+
+td.legend {
+    padding-top: 3px;
+    color: #884;
+    width: 150px;
+}
+
+td.content i {
+    font-size: 8pt;
+    color: #fff;
+}
+
+input.tab#results, input.tabactive#results { background-color: #fe6; }
+
+/* input elements in forms */
+
+table.form input.text { 
+}
+
+table.form input.number { 
+    text-align: right;
+}
+
+div.textinputlegend { 
+    font-size: 80%;
+}
+
+input.date, input.time { 
+    padding: 0ex 0.5ex;
+    font-family: monospace;
+}
+
+.inputerror input, .inputerror textarea {
+    background-color: #f84;
+}
+
+/*-------------------------------------------------------------------------.
+|                     _        _   _                                       |
+|                    / \   ___| |_(_) ___  _ __  ___                       |
+|                   / _ \ / __| __| |/ _ \| '_ \/ __|                      |
+|                  / ___ \ (__| |_| | (_) | | | \__ \                      |
+|                 /_/   \_\___|\__|_|\___/|_| |_|___/                      |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Confirmation dialogs, success and error messages when performing actions |
+'-------------------------------------------------------------------------*/
+div.really, div.success, div.error, div.message, div.warning { 
+    margin: 2em 2em 2em 2em;
+    -moz-border-radius: 1ex;
+    padding: 1em 2em;
+    border-width: 2px;
+    border-style: solid;
+}
+
+div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 { 
+     font-size: 12pt;
+     font-weight: bold;
+     margin-bottom: 5px;
+     color: #000;
+     margin-left: 0px;
+}
+
+div.really { 
+    background-color: #f88;
+    border-color: #800;
+}
+
+div.really input { 
+    font-weight: bold;
+    margin-top: 1em;
+    padding: 0.5ex 2em;
+}
+
+div.success { 
+    background-color: #8f8;
+    border-color: #080;
+}
+div.message {
+    background-color: #8cf;
+    border-color: #048;
+}
+
+div.error { 
+    background-color: #f84;
+    border-color: #e40;
+}
+
+div.warning { 
+    background-color: #ff4;
+    border-color: #fc0;
+}
+

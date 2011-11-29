@@ -1,9 +1,14 @@
 /* Styles for Check_MK mobile interface */
+/*
+body.mobile {
+    padding: 0px;
+    margin: 0px;
+}
 
 .ui-content {
-    padding: 5px;
-    background-color: #ccc;
-}
+    padding: 0px;
+    background-color: #green;
+}*/
 
 body.mobile table.data {
     /* width: 10px;*/ /* 100%; */
@@ -51,31 +56,34 @@ body.mobile table.form th {
 
 
 body.mobile td.perfometer {
-    width: 60px;
     height: 14px;
+    width: 70px;
 }
+
 body.mobile td.perfometer * {
     color: #333;
     font-weight: normal;
     font-size: 7pt;
+    padding: 0px;
 }
 
 body.mobile td.perfometer div.content {
-   width: 59px;
+   width: 69px;
+   background-color: yellow;
 }
 
 body.mobile td.perfometer div.title {
    top: 2px; 
-   width: 60px;
+   width: 70px;
 }
 
 body.mobile td.perfometer img.glass {
-   width: 59px;
+   width: 69px;
    height: 14px;
 }
 
 body.mobile td.perfometer table {
-    width: 60px;
+    width: 70px;
     height: 14px;
 }
 

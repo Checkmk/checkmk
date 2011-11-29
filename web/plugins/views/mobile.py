@@ -39,7 +39,7 @@ def mobile_view(d):
     x = {
         'mobile'          : True,
         'browser_reload'  : 0,
-        'column_headers'  : 'off',
+        'column_headers'  : 'perpage',
         'description'     : 'This view is used by the mobile GUI',
         'hidden'          : False,
         'hidebutton'      : False,
@@ -214,7 +214,7 @@ multisite_builtin_views.update({
         'num_columns': 4,
         'painters': [
             ('service_state_onechar', None),
-            ('service_description', 'service'),
+            ('service_description', 'mobile_service'),
             ('svc_state_age', None),
             ('perfometer', None),
         ],
@@ -295,9 +295,9 @@ multisite_builtin_views.update({
         'layout': 'mobilelist',
         'linktitle': 'Host search',
         'mustsearch': True,
-        'num_columns': 3,
+        'num_columns': 10,
         'painters': [
-            ('host_state', None),
+            ('host_state_onechar', None),
             ('host', 'mobile_host'),
             ('num_services_ok', None),
             ('num_services_warn', None),
@@ -344,6 +344,16 @@ def render_mobile_list(rows, view, group_painters, painters, num_columns, show_c
 
     odd = "odd"
     html.write('<table class="mobile data">')
+
+    # Paint header
+    if view.get("column_headers") != "off":
+        html.write("<tr>")
+        n = 0
+        for p in painters:
+            paint_header(view, p)
+        html.write("</tr>\n")
+
+    # Paint data rows
     for row in rows:
         odd = odd == "odd" and "even" or "odd"
         html.write('<tr class="%s0">' % odd)

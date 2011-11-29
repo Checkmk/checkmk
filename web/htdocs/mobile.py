@@ -25,7 +25,8 @@ def mobile_html_head(title, read_code=""):
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>%s</title>
   <link rel="stylesheet" type="text/css" href="jquery/jquery.mobile-1.0.css">
-  <link rel="stylesheet" type="text/css" href="check_mk.css">
+  <link rel="stylesheet" type="text/css" href="Xcheck_mk.css">
+  <link rel="stylesheet" type="text/css" href="status.css">
   <link rel="stylesheet" type="text/css" href="mobile.css">
   <script type='text/javascript' src='jquery/jquery-1.6.4.min.js'></script>
   <script type='text/javascript' src='jquery/jquery.mobile-1.0.min.js'></script>
@@ -106,7 +107,10 @@ def page_index():
     items = []
     for view_name, view in html.available_views.items():
         if view.get("mobile") and not view.get("hidden"):
-            items.append(("mobile_view.py?view_name=%s" % view_name, view["title"]))
+            url = "mobile_view.py?view_name=%s" % view_name
+            if view.get("mustsearch"):
+                url += "#filter"
+            items.append((url, view["title"]))
     jqm_page_index(_("Check_MK Mobile"), items)
     jqm_page_footer()
     mobile_html_foot()
@@ -192,6 +196,7 @@ def show_filter_form(show_filters):
         f.display()
         html.write('</td></tr>\n')
     html.write("</table>\n")
+    html.button("search", _("Search"))
 
     html.hidden_fields()
     html.end_form()

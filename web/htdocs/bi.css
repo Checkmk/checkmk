@@ -1,0 +1,96 @@
+/*-------------------------------------------------------------------------.
+|                               ____ ___                                   |
+|                              | __ )_ _|                                  |
+|                              |  _ \| |                                   |
+|                              | |_) | |                                   |
+|                              |____/___|                                  |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styles used by the Business-Intelligence module.                         |
+'-------------------------------------------------------------------------*/
+
+.aggrtree ul.subtree {
+    margin-left: 34px;
+    padding-bottom: 3px;
+    padding-left: 3px;
+    padding-top: 0px;
+    margin-top: 4px;
+    list-style-type: none;
+    border-top: 1px solid #aaa;
+    border-bottom: 1px solid #aaa;
+    border-left: 1px solid #aaa;
+    -moz-border-radius: 3px;
+}
+
+tr.odd0 .aggrtree ul.subtree {
+    border-color: #ccc;
+}
+tr.even0 .aggrtree ul.subtree {
+    border-color: #aaa;
+}
+.aggrtree ul.subtree li {
+    margin: 0;
+    padding: 0;
+    margin-top: 2px;
+    /*padding-top: 1px;*/
+    padding-bottom: 1px;
+}
+
+.aggrtree span.state {
+    margin-right: 3px;
+    width: 34px;
+    padding: 0;
+    text-align: center;
+    -moz-border-radius: 3px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #eee #888 #999 #ccc;
+    font-weight: bold;
+
+    display:-moz-inline-stack;
+    display:inline-block;
+    zoom:1;
+    *display:inline;
+}
+
+.aggrtree img.assumption {
+    width: 13px;
+    height: 13px;
+    margin: 0;
+    margin-right: 0px;
+    vertical-align: middle;
+}
+
+.aggrtree b.bullet {
+    color: #aaa;
+    margin: 0px 5px;
+}
+
+.state.assumed {
+    background-image: url("images/assume_bg.png");
+    background-repeat: repeat;
+}
+
+.aggrtree img.opentree {
+    width: 15px;
+    height: 15px;
+    margin-right: 2px;
+    margin-left: 0px;
+    vertical-align:middle;
+}
+
+table.aggrtree {
+    border-collapse: collapse;
+    width: 100%;
+}
+table.aggrtree td.leaf.odd {
+    background-color: #e0e0e0;
+}
+table.aggrtree td.leaf.even {
+    background-color: #f0f0f0;
+}
+table.aggrtree td.node {
+    background-color: #e8e8e8;
+}
+
+

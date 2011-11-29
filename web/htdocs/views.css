@@ -1,0 +1,447 @@
+/* Styles used only in the views-pages */
+
+/*-------------------------------------------------------------------------.
+|  _____     _            ___      ___        _   _                        |
+| |_   _|_ _| |__  ___   ( _ )    / _ \ _ __ | |_(_) ___  _ __  ___        |
+|   | |/ _` | '_ \/ __|  / _ \/\ | | | | '_ \| __| |/ _ \| '_ \/ __|       |
+|   | | (_| | |_) \__ \ | (_>  < | |_| | |_) | |_| | (_) | | | \__ \       |
+|   |_|\__,_|_.__/|___/  \___/\/  \___/| .__/ \__|_|\___/|_| |_|___/       |
+|                                      |_|                                 |
++--------------------------------------------------------------------------+
+| The navi table contains the tab navigation above the content tables      |
+| containing the buttons "filter", "commands", "display" and so on.        |
+'-------------------------------------------------------------------------*/
+
+table.navi {
+    margin: 0px 0px 0px 5px;
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0px;
+    position: relative;
+    left: -5px;
+}
+
+table.naviform {
+    margin-bottom: 10px;
+}
+
+table.navi td {
+    padding: 0;
+    margin: 0;
+}
+
+table.navi td.gap, table.navi td.minigap {
+    border-bottom: 1px solid #fff;
+}
+
+table.navi td.left, table.navi td.right {
+    vertical-align: middle;
+    text-align: center;
+    width: 155px;
+    height: 21px;
+    background-image: url("images/metanav_button.png");
+    background-repeat: no-repeat;
+    background-position: left;
+    color: #fff;
+    padding: 0;
+    margin: 0;
+    border: 1px dotted transparent;
+}
+
+table.navi td.left.open {
+    border-bottom: none;
+}
+
+table.navi td.left.closed, table.navi td.right, table.navi td.w30, table.navi td.w40 {
+    border-bottom: 1px solid #fff;
+}
+
+table.navi td.left.w30 {
+    width: 30px;
+    background-image: url("images/metanav_30.png");
+}
+table.navi td.left.w30.selected {
+    background-image: url("images/metanav_30_hi.png");
+}
+
+table.navi td.left.w40 {
+    width: 40px;
+    background-image: url("images/metanav_40.png");
+}
+
+table.navi td.left.w40.selected {
+    background-image: url("images/metanav_40_hi.png"); 
+}
+
+table.navi td.minigap {
+     width: 3px;
+}
+
+table.navi td.left a, table.navi td.right a {
+    vertical-align: middle;
+    text-align: center;
+    font-weight: normal;
+    text-decoration: none;
+    color: #fff;
+    display: block;
+}
+
+table.navi tr.form td.form {
+    margin: 0;
+    padding: 0;
+}
+
+table.navi tr.form td.whiteborder {
+    border-left: 1px solid #fff;
+    border-right: 1px solid #fff;
+    border-bottom: 1px solid #fff;
+}
+
+table.navi tr.form div.whiteborder, table.navi tr.form table.whiteborder {
+    border-left: 1px solid #fff;
+    border-right: 1px solid #fff;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid #fff;
+    width: 100%;
+}
+
+/*-------------------------------------------------------------------------.
+|                _                            _                            |
+|               | |    __ _ _   _  ___  _   _| |_ ___                      |
+|               | |   / _` | | | |/ _ \| | | | __/ __|                     |
+|               | |__| (_| | |_| | (_) | |_| | |_\__ \                     |
+|               |_____\__,_|\__, |\___/ \__,_|\__|___/                     |
+|                           |___/                                          |
++--------------------------------------------------------------------------+
+| Styles used by layouts of the views (plugins/views/layouts.py)           |
+'-------------------------------------------------------------------------*/
+
+div.tableshadow {
+    background-image: url("images/tableshadow.png");
+    background-repeat: repeat;
+    padding: 1px 1px 1px 1px;
+    border-style: none;
+}
+
+td.shadowtop, td.shadowbottom {
+    background-image: url("images/tableshadow.png");
+    background-repeat: repeat;
+    height: 1px;
+    border-style: none;
+    border-width: 0px;
+    padding: 0;
+}
+td.shadowleft, td.shadowright {
+    background-image: url("images/tableshadow.png");
+    background-repeat: repeat;
+    width: 1px;
+    border-style: none;
+    border-width: 0px;
+    padding: 0;
+}
+td.shadowright {
+  width: 1px;
+}
+
+td.fillup {
+    background-color: #eee;
+}
+td.groupheader {
+    margin: 0;
+    padding: 0;
+}
+
+/* boxed layout */
+table.boxlayout {
+    border-spacing: 0px;
+}
+table.boxlayout td.boxcolumn {
+    padding-right: 20px;
+}
+
+
+/* tiled layout */
+table.tiled td {
+    border-style: none;
+}
+
+.tile {
+    width: 160px;
+    border: 1px solid #000;
+    float: left;
+    -moz-border-radius: 4px;
+    margin-right: 3px;
+    margin-bottom: 3px;
+    border-right: 2px solid #000;
+    border-bottom: 2px solid #000;
+}
+
+.tile table {
+    height: 70px;
+}
+.tile td {
+    border-style: none;
+    font-size: 7pt;
+}
+.tile.sstate0, .tile.hhstate0 {
+    background-color: #afa;
+}
+.tile.sstate1 {
+    background-color: #ff0;
+}
+.tile.sstate2, .tile.hhstate1 {
+    background-color: #f42;
+}
+.tile.sstate3, .tile.hhstate2 {
+    background-color: #f80;
+}
+
+.tile table {
+    width: 100%;
+}
+.tile td.tl, .tile td.bl {
+    text-align: left;
+}
+.tile td.tr, .tile td.br {
+    text-align: right;
+}
+.tile td.center {
+    vertical-align: middle;
+}
+.tile td.center, .tile td.cont {
+    text-align: center;
+}
+.tile td.bl, .tile td.br {
+    vertical-align: bottom;
+}
+
+.tile td.bl, .tile td.br, .tile td.tl, .tile td.tr {
+    height: 20px;
+}
+
+/*
+ LAYOUT: dataset
+ The dataset layout is used to display detailed information
+ about a single host/service on a page. e.g. the "host defails"
+ page uses thislayout
+*/
+table.dataset {
+    border-spacing: 1px;
+    padding: 0;
+    border-collapse: collapse;
+    empty-cells: show;
+    width: 100%;
+}
+
+table.dataset tr.data {
+    background-color: #eee;
+}
+
+table.dataset tr.gap {
+    background-color: transparent;
+}
+
+table.dataset td {
+    padding-bottom: 4px;
+    padding: 1px 10px 5px 10px;
+    text-align: left;
+    vertical-align: middle;
+    border: 1px solid #bbb;
+}
+table.dataset td.left {
+    padding-right: 10px;
+    color: #fff;
+    background-color: #888;
+    width: 10%;
+    white-space: nowrap;
+    vertical-align: top;
+}
+table.dataset td.gap {
+    background-color: transparent;
+    border-left-style: none;
+    border-right-style: none;
+}
+
+/*-------------------------------------------------------------------------.
+|              _____    _ _ _           _                                  |
+|             | ____|__| (_) |_  __   _(_) _____      __                   |
+|             |  _| / _` | | __| \ \ / / |/ _ \ \ /\ / /                   |
+|             | |__| (_| | | |_   \ V /| |  __/\ V  V /                    |
+|             |_____\__,_|_|\__|   \_/ |_|\___| \_/\_/                     |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styles used while editing a view in the view editor                      |
+'-------------------------------------------------------------------------*/
+
+table.view {
+    width: 100%;
+    border-collapse: collapse;
+    empty-cells: show;
+}
+div.viewdescription {
+    color: #274750;
+    font-size: 7pt;
+}
+/* Table of filters in edit view page */
+table.filters {
+    border-collapse: collapse;
+    empty-cells: show;
+    margin-bottom: 6px;
+    margin-left: 3px;
+    width: 100%;
+}
+div.filtercomment {
+    margin-left: 0px;
+    font-size: 8pt;
+    width: 300px;
+    font-style: italic;
+    color: #478;
+    padding-bottom: 6px;
+}
+
+table.filters td {
+    border-style: none;
+    border-bottom: 1px dotted #fff;
+    vertical-align: middle;
+    height: 36px;
+    padding: 4px 8px;
+}
+
+table.filters th {
+    text-align: left;
+    padding-bottom: 3px;
+    padding-left: 8px;
+    font-weight: normal;
+    color: #fff;
+    border-bottom: 1px solid #fff;
+}
+
+table.filters td.usageshow { background-color: #ff0; }
+table.filters td.usagehide { background-color: #f0f; }
+table.filters td.usagehard { background-color: #89f; }
+
+table.filters td.usageoff {
+    background-image: url("images/tableshadow.png");
+    background-repeat: repeat;
+}
+
+table.filters td.usageshow select { background-color: #cc0; }
+table.filters td.usagehide select { background-color: #f6f; }
+table.filters td.usagehard select { background-color: #67c; }
+
+table.filters td.widgetshow {
+    background-color: #FAF995;
+}
+table.filters td.widgetoff {
+    background-image: none;
+    color: #aa6;
+}
+table.filters td.widgethard {
+    background-image: none;
+    background-color: #abf;
+    color: #000;
+}
+table.filters td.widgethide {
+    background-image: none;
+    background-color: #e8e;
+    color: #000;
+}
+
+table.filters td.title {
+    padding-right: 1em;
+}
+
+/* The column editor is part of the view editor */
+div.columneditor {
+    margin-bottom: 6px;
+}
+
+div.columneditor table {
+    padding: 0;
+    margin: 0;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    border: 1px solid #fff;
+    -moz-border-radius: 5px;
+    width: 100%;
+}
+
+div.columneditor td.cebuttons {
+    width: 33px;
+}
+div.columneditor td.celeft {
+    width: 60px;
+}
+
+div.columneditor td {
+    padding: 0 4px;
+}
+
+div.columneditor select {
+    width: 100%;
+}
+
+div.columneditor td, div.columneditor select {
+    font-size: 0.9em;
+}
+
+input#try{
+    float:left;
+}
+
+
+/*-------------------------------------------------------------------------.
+|       _     _     _            __         _                              |
+|      | |   (_)___| |_    ___  / _| __   _(_) _____      _____            |
+|      | |   | / __| __|  / _ \| |_  \ \ / / |/ _ \ \ /\ / / __|           |
+|      | |___| \__ \ |_  | (_) |  _|  \ V /| |  __/\ V  V /\__ \           |
+|      |_____|_|___/\__|  \___/|_|     \_/ |_|\___| \_/\_/ |___/           |
+|                                                                          |
++--------------------------------------------------------------------------+
+| The table with the list of all views                                     |
+'-------------------------------------------------------------------------*/
+
+table.views {
+    border-collapse: collapse;
+    empty-cells: show;
+    margin-bottom: 1ex;
+}
+
+table.views td, table.views th{
+    border: 1px solid #444;
+    padding: 2px 1ex;
+}
+
+table.views td {
+    height: 25px;
+    padding-top: 3px;
+    color: #fff;
+}
+
+table.views th {
+    background-color: #709aa5;
+    color: #fff;
+}
+
+table.views td.legend {
+    background-color: #8eaeb8;
+    color: #fff;
+}
+
+table.views td.content {
+    background-color: #9ebec8;
+    color: #fff;
+}
+
+table.views td.edit {
+    background-color: #6ab;
+    text-align: center;
+}
+
+table.views td.buttons {
+    padding: 3px;
+    vertical-align: middle;
+    background-color: #8EAEB8;
+}
+

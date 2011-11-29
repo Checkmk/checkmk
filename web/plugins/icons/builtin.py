@@ -67,7 +67,7 @@
 #   +----------------------------------------------------------------------+
 
 def paint_icon_image(what, row, tags, custom_vars):
-    if row[what + '_icon_image']:
+    if row.get(what + '_icon_image'):
         return '<img class=icon src="images/icons/%s">' % row[what + '_icon_image']
 
 multisite_icons.append({
@@ -85,7 +85,7 @@ multisite_icons.append({
 #   +----------------------------------------------------------------------+
 
 def paint_ack_image(what, row, tags, custom_vars):
-    if row[what + "_acknowledged"]:
+    if row.get(what + "_acknowledged"):
         return '<img class=icon title="' + _('This problem has been acknowledged') \
              + '" src="images/icon_ack.gif">'
 
@@ -105,7 +105,7 @@ multisite_icons.append({
 
 def paint_realhost_link_image(what, row, tags, custom_vars):
     # Link to detail host if this is a summary host
-    if "_REALNAME" in custom_vars:
+    if custom_vars and "_REALNAME" in custom_vars:
         newrow = row.copy()
         newrow["host_name"] = custom_vars["_REALNAME"]
         return link_to_view("<img class=icon title='" + _("Detailed host infos")
@@ -153,7 +153,7 @@ def pnp_icon(row, what):
                                                         (url, pnp_popup_url(row, what))
 
 def paint_pnp_graph(what, row, tags, custom_vars):
-    pnpgraph_present = row[what + "_pnpgraph_present"]
+    pnpgraph_present = row.get(what + "_pnpgraph_present")
     if pnpgraph_present == 1:
         return pnp_icon(row, what)
 
@@ -174,8 +174,8 @@ multisite_icons.append({
 def paint_action(what, row, tags, custom_vars):
     if 'X' in html.display_options:
         # action_url (only, if not a PNP-URL and pnp_graph is working!)
-        action_url       = row[what + "_action_url_expanded"]
-        pnpgraph_present = row[what + "_pnpgraph_present"]
+        action_url       = row.get(what + "_action_url_expanded")
+        pnpgraph_present = row.get(what + "_pnpgraph_present")
         if action_url \
            and not ('/pnp4nagios/' in action_url and pnpgraph_present >= 0):
             return '<a href="%s"><img class=icon ' \
@@ -205,8 +205,8 @@ def paint_notes(what, row, tags, custom_vars):
     if 'X' in html.display_options:
         # notes_url (only, if not a Check_MK logwatch check pointing to
         # logwatch.py. These is done by a special icon)
-        notes_url = row[what + "_notes_url_expanded"]
-        check_command = row[what + "_check_command"]
+        notes_url = row.get(what + "_notes_url_expanded")
+        check_command = row.get(what + "_check_command")
         if notes_url:
             # unmodified original logwatch link
             # -> translate into more intelligent icon
@@ -236,7 +236,7 @@ multisite_icons.append({
 def paint_downtimes(what, row, tags, custom_vars):
     # Currently we are in a downtime + link to list of downtimes
     # for this host / service
-    if row[what + "_scheduled_downtime_depth"] > 0:
+    if row.get(what + "_scheduled_downtime_depth", 0) > 0:
         return link_to_view('<img class=icon src="images/icon_downtime.gif">',
                                                    row, 'downtimes_of_' + what)
 
@@ -255,7 +255,7 @@ multisite_icons.append({
 #   +----------------------------------------------------------------------+
 
 def paint_comments(what, row, tags, custom_vars):
-    comments = row[what+ "_comments_with_info"]
+    comments = row.get(what+ "_comments_with_info", [])
     if len(comments) > 0:
         text = ""
         for id, author, comment in comments:
@@ -280,7 +280,7 @@ multisite_icons.append({
 
 def paint_notifications(what, row, tags, custom_vars):
     # Notifications disabled
-    if not row[what + "_notifications_enabled"]:
+    if not row.get(what + "_notifications_enabled", True):
         return '<img class=icon title="%s" src="images/icon_ndisabled.gif">' % \
                          _('Notifications are disabled for this %s') % what
 
@@ -299,7 +299,7 @@ multisite_icons.append({
 #   +----------------------------------------------------------------------+
 
 def paint_flapping(what, row, tags, custom_vars):
-    if row[what + "_is_flapping"]:
+    if row.get(what + "_is_flapping"):
         return '<img class=icon title="%s" src="images/icon_flapping.gif">' % \
                                           _('This %s is flapping') % what
 
@@ -319,7 +319,7 @@ multisite_icons.append({
 
 def paint_active_checks(what, row, tags, custom_vars):
     # Setting of active checks modified by user
-    if "active_checks_enabled" in row[what + "_modified_attributes_list"]:
+    if "active_checks_enabled" in row.get(what + "_modified_attributes_list", []):
         if row[what + "_active_checks_enabled"] == 0:
             return '<img class=icon title="%s" src="images/icon_disabled.gif">' % \
                     _('Active checks have been manually disabled for this %s!') % what
@@ -344,7 +344,7 @@ multisite_icons.append({
 
 def paint_passive_checks(what, row, tags, custom_vars):
     # Passive checks disabled manually?
-    if "passive_checks_enabled" in row[what + "_modified_attributes_list"]:
+    if "passive_checks_enabled" in row.get(what + "_modified_attributes_list", []):
         if row[what + "_accept_passive_checks"] == 0:
             return '<img class=icon title="%s" src="images/icon_npassive.gif">' % \
                     _('Passive checks have been manually disabled for this %s!') % what
@@ -365,7 +365,7 @@ multisite_icons.append({
 #   +----------------------------------------------------------------------+
 
 def paint_notification_periods(what, row, tags, custom_vars):
-    if not row[what + "_in_notification_period"]:
+    if not row.get(what + "_in_notification_period", True):
         return '<img class=icon title="%s" src="images/icon_outofnot.gif">' % \
                                            _('Out of notification period')
 
@@ -421,9 +421,9 @@ def wato_link(filename, site, hostname, where):
         return ""
 
 def paint_wato(what, row, tags, custom_vars):
-    if not config.may("use_wato"):
+    if not config.may("use_wato") or not tags:
         return
-             
+
     # Link to WATO for hosts
     if "wato" in tags and what == "host":
         for tag in tags:
@@ -455,7 +455,7 @@ multisite_icons.append({
 
 def paint_reschedule(what, row, tags, custom_vars):
     # Reschedule button
-    if row[what + "_active_checks_enabled"] == 1 \
+    if row.get(what + "_active_checks_enabled") == 1 \
        and config.may('action.reschedule'):
         servicedesc = ''
         if what == 'service':

@@ -3873,7 +3873,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
         if len(topics) > 1:
             html.write("</table>")
             html.end_foldable_container() # end of topic
-            if topic_is_volatile:
+            if topic:
                 volatile_topics.append(topic.encode('utf-8'))
             if topic == topics[-1]:
                 html.write('<table class="form nomargin">')

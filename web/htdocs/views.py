@@ -347,7 +347,7 @@ def page_edit_views(msg=None):
     if not config.may("edit_views"):
         raise MKAuthException(_("You are not allowed to edit views."))
 
-    html.header(_("Edit views"))
+    html.header(_("Edit views"), stylesheets=["pages","views"])
     html.write(_("<p>Here you can create and edit customizable <b>views</b>. A view "
             "displays monitoring status or log data by combining filters, sortings, "
             "groupings and other aspects.</p>"))
@@ -516,7 +516,7 @@ def page_edit_view():
             html.write("<div class=error>%s</div>\n" % e.message)
             html.add_user_error(e.varname, e.message)
 
-    html.header(_("Edit view"))
+    html.header(_("Edit view"), stylesheets=["pages","views"])
     html.write("<table class=navi><tr>\n")
     html.write('<td class="left open">%s</td>\n' % _('Edit'))
     html.write("<td class=gap></td>\n")
@@ -1320,7 +1320,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     if show_heading:
         # Show/Hide the header with page title, MK logo, etc.
         if 'H' in display_options:
-            html.body_start(view_title(view))
+            html.body_start(view_title(view), stylesheets=["pages","views","status","bi"])
         if 'T' in display_options:
             html.top_heading(view_title(view))
 

@@ -57,13 +57,6 @@ div.dashlet iframe {
     border-style: none;
 }
 
-/* special background for embedded views */
-body.main.dashlet {
-     background-image: none;
-    /* background-color: #709aa5; */
-    padding: 0px;
-}
-
 div.dashlet div.title {
     position: absolute;
     left: 0px;

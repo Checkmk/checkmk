@@ -157,7 +157,7 @@ def login_page():
 
     html.set_render_headfoot(False)
 
-    html.header(_("Check_MK Multisite Login"), add_js = False)
+    html.header(_("Check_MK Multisite Login"), javascripts=[], stylesheets=["pages","login"])
 
     if err:
         html.write('<div class=error>%s</div>\n' % e.message)

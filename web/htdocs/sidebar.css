@@ -42,6 +42,8 @@ body.side {
     width: 280px;
     height: 100%;
     overflow:hidden;
+    font-family: verdana, arial, helvetica, sans-serif;
+    font-size: 9pt;
 }
 
 /* Top logo part */

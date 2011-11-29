@@ -25,7 +25,12 @@ Boston, MA 02110-1301 USA.
 
 */
 
-/* Styles used only in the views-pages */
+/* special background for embedded views */
+body.main.dashlet {
+     background-image: none;
+    /* background-color: #709aa5; */
+    padding: 0px;
+}
 
 /*-------------------------------------------------------------------------.
 |  _____     _            ___      ___        _   _                        |
@@ -50,11 +55,6 @@ table.navi {
 
 table.naviform {
     margin-bottom: 10px;
-}
-
-table.navi td {
-    padding: 0;
-    margin: 0;
 }
 
 table.navi td.gap, table.navi td.minigap {
@@ -471,4 +471,5 @@ table.views td.buttons {
     vertical-align: middle;
     background-color: #8EAEB8;
 }
+
 

@@ -188,6 +188,8 @@ g_html_head_open = False
 #   | ausgeführt, welche aber keinen HTML-Code ausgeben darf.              |
 #   `----------------------------------------------------------------------'
 
+wato_styles = [ "pages", "wato", "status" ]
+
 def page_handler():
 
     # Distributed WATO: redirect to better peer, if possible. Only the
@@ -211,7 +213,7 @@ def page_handler():
     current_mode = html.var("mode") or "main"
     modeperms, modefunc = modes.get(current_mode, ([], None))
     if modefunc == None:
-        html.header(_("Sorry"))
+        html.header(_("Sorry"), stylesheets=wato_styles)
         html.begin_context_buttons()
         html.context_button(_("Home"), make_link([("mode", "main")]), "home")
         html.end_context_buttons()
@@ -276,7 +278,7 @@ def page_handler():
             html.add_user_error(None, e.reason)
 
     # Title
-    html.header(modefunc("title"))
+    html.header(modefunc("title"), stylesheets = wato_styles)
     html.write("<script type='text/javascript' src='js/wato.js'></script>")
     html.write("<div class=wato>\n")
 
@@ -5916,7 +5918,7 @@ def mode_sites(phase):
                     error = str(e)
 
 
-            wato_html_head(_("Login into site '%s'") % site["alias"])
+            wato_html_head(_("Login into site '%s'") % site["alias"], stylesheets = wato_styles)
             if error:
                 html.show_error(error)
             html.write("<div class=message>")
@@ -6808,7 +6810,7 @@ def do_peer_redirect(peer):
             frameset_url = "index.py?" + htmllib.urlencode_vars([("start_url", rel_url)])
             url = peer["multisiteurl"] + frameset_url
 
-            html.header(_("Access to standby system"))
+            html.header(_("Access to standby system"), stylesheets = wato_styles)
             if global_replication_state() != "clean":
                 html.show_error(_("You are currently accessing a standby "
                   "system while the primary system is available. "
@@ -9941,7 +9943,7 @@ def wato_html_head(title):
     global g_html_head_open
     if not g_html_head_open:
         g_html_head_open = True
-        html.header(title)
+        html.header(title, stylesheets = wato_styles)
         html.write("<div class=wato>\n")
 
 def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mode"]):

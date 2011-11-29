@@ -136,21 +136,9 @@ def sidebar_foot():
 def page_side():
     if not config.may("see_sidebar"):
         return
-    html.write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-
-<html>
-<head>
-<title>Check_MK Sidebar</title>
-<link href="check_mk.css" type="text/css" rel="stylesheet">""")
-    if config.custom_style_sheet:
-        html.write('<link rel="stylesheet" type="text/css" href="%s">' % config.custom_style_sheet)
-
-    html.write("""
-<script type="text/javascript" src="js/check_mk.js"></script>
-<script type="text/javascript" src="js/sidebar.js"></script>
-</head>
-<body class="side" onload="initScrollPos()" onunload="storeScrollPos()">
-<div id="check_mk_sidebar">""")
+    html.html_head(_("Check_MK Sidebar"), javascripts=["sidebar"], stylesheets=["sidebar", "status"])
+    html.write('<body class="side" onload="initScrollPos()" onunload="storeScrollPos()">\n')
+    html.write('<div id="check_mk_sidebar">\n')
 
     views.load_views()
     sidebar_head()
@@ -312,7 +300,7 @@ def page_add_snapin():
     if not config.may("configure_sidebar"):
         raise MKGeneralException("You are not allowed to change the sidebar.")
 
-    html.header("Available snapins")
+    html.header("Available snapins", stylesheets=["pages", "sidebar"])
     used_snapins = [name for (name, state) in load_user_config()]
 
     addname = html.var("name")

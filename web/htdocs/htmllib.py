@@ -575,7 +575,7 @@ class html:
             self.write("</x>")
         self.form_vars.append(varname)
 
-    def html_head(self, title, add_js = True, stylesheets):
+    def html_head(self, title, javascripts = [], stylesheets = ["pages"]):
         if not self.req.header_sent:
             self.write(
                 u'''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -589,10 +589,10 @@ class html:
             # should be targetted to the HTML frame named by _link_target. This
             # is e.g. useful in the dash-board
             if self.link_target:
-                self.write('<base target="%s">' % self.link_target)
+                self.write('<base target="%s">\n' % self.link_target)
 
             # Load all specified style sheets and all user style sheets in htdocs/css
-            for css in stylesheets:
+            for css in [ "check_mk" ] + stylesheets:
                 self.write('<link rel="stylesheet" type="text/css" href="%s.css">\n' % css)
 
             for css in self.plugin_stylesheets():
@@ -601,11 +601,9 @@ class html:
             if config.custom_style_sheet:
                self.write('<link rel="stylesheet" type="text/css" href="%s">\n' % config.custom_style_sheet)
 
-            if add_js:
-                self.write('''
-                <script type='text/javascript' src='js/check_mk.js'></script>
-                <script type='text/javascript' src='js/hover.js'></script>
-                ''')
+            # Load specified Javascript files
+            for js in [ "check_mk", "hover" ] + javascripts:
+                self.write('<script type="text/javascript" src="js/%s.js"></script>\n' % js)
 
             if self.browser_reload != 0:
                 if self.browser_redirect != '':
@@ -653,8 +651,8 @@ class html:
             self.write("<div class=urldebug>%s</div>" % self.makeuri([]))
 
 
-    def body_start(self, title=''):
-        self.html_head(title)
+    def body_start(self, title='', **args):
+        self.html_head(title, **args)
         self.write('<body class="main %s">' % self.var("_body_class", ""))
 
     def bottom_focuscode(self):

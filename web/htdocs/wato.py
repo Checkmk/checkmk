@@ -2218,6 +2218,7 @@ def write_configuration_file(folder, thefile, hosts):
     # Add custom macros for attributes that are to be present in Nagios
     custom_macros = {}
     for hostname, host in hosts.items():
+        effective = effective_attributes(host, thefile)
         for attr, topic in host_attributes:
             attrname = attr.name()
             if attrname in effective:

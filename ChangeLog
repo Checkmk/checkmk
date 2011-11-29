@@ -7,6 +7,7 @@
 
     WATO:
     * FIX: add missing icon_csv.png
+    * FIX: WATO did not write values of custom macros to extra_host_conf definitions
 
 1.1.12p3:
     Core, Setup, etc.:

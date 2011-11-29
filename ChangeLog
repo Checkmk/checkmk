@@ -2,6 +2,7 @@
     Multisite:
     * FIX: sidebar snapin Hostgroups and Servicegroups sometimes
            failed with non-existing "available_views".
+    * FIX: Fix host related WATO context button links  to point to the hosts site
 
     WATO:
     * FIX: add missing icon_csv.png

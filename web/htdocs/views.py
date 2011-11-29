@@ -1581,8 +1581,9 @@ def show_context_links(thisview, active_filters):
         execute_hooks('buttons-begin')
         first = False
         host = html.var("host")
+        site = html.var("site")
         if host:
-            url = wato.api.link_to_host(host)
+            url = wato.api.link_to_host(site, host)
         else:
             url = wato.api.link_to_path(html.var("filename", "/"))
         html.context_button(_("WATO") ,url, "wato")

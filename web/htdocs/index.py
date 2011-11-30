@@ -234,8 +234,11 @@ def handler(req, profiling = True):
             return apache.OK
 
         # Detect mobile devices
-        user_agent = html.req.headers_in['User-Agent']
-        html.mobile = True or mobile.is_mobile(user_agent)
+        if html.has_var("mobile"):
+            html.mobile = not not html.var("mobile")
+        else:
+            user_agent = html.req.headers_in['User-Agent']
+            html.mobile = mobile.is_mobile(user_agent)
 
         # Redirect to mobile GUI if we are a mobile device and
         # the URL is /

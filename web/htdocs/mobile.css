@@ -32,10 +32,12 @@ body.mobile {
     margin: 0px;
 }
 
-.ui-content {
+div.ui-content {
     padding: 0px;
     background-color: #green;
-}*/
+}
+*/
+
 
 body.mobile table.data {
     /* width: 10px;*/ /* 100%; */
@@ -54,18 +56,26 @@ body.mobile table.data td {
 }
 
 
+body.mobile table.dataset { 
+    width: 100%;
+}
+
 body.mobile table.dataset tr.header {
 }
 body.mobile table.dataset tr.header th {
 }
 
 body.mobile table.dataset tr.data td {
-    -moz-border-radius: 10px; /* Firefox */
-    -webkit-border-radius: 10px; 
-    border-radius: 3px;
-    border: 1px solid #888;
-    padding: 2px 3px;
+    /* -moz-border-radius: 10px; */
+    /* -webkit-border-radius: 10px; */
+    border-radius: 5px;
+    border: 1px solid #aaa;
+    padding: 4px 6px;
     font-size: 10pt;
+}
+
+td.nonstatus {
+    background-color: #fff;
 }
 
 /* Forms for filters and commands */
@@ -117,6 +127,23 @@ body.mobile td.perfometer table {
 body.mobile table.data td.perfometer td.inner {
     height: 14px;
 }
+
+
+/*-------------------------------------------------------------------------.
+|                    ____  _        _                                      |
+|                   / ___|| |_ __ _| |_ _   _ ___                          |
+|                   \___ \| __/ _` | __| | | / __|                         |
+|                    ___) | || (_| | |_| |_| \__ \                         |
+|                   |____/ \__\__,_|\__|\__,_|___/                         |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styles for hiliting data cells in status displays                        |
+'-------------------------------------------------------------------------*/
+.ui-li-aside.state {
+    width: 3em;
+    text-align: center;
+}
+
 
 /*-------------------------------------------------------------------------.
 |                      _                _                                  |

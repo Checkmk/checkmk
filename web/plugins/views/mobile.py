@@ -83,7 +83,7 @@ multisite_builtin_views.update({
             ('is_in_downtime', '0'),
         ],
         'hide_filters': [],
-        'layout': 'mobilelist',
+        'layout': 'mobiletable',
         'name': 'mobile_svcproblems',
         'num_columns': 4,
         'painters': [('service_state_onechar', None, ''),
@@ -131,13 +131,14 @@ multisite_builtin_views.update({
         'hide_filters': [],
         'layout': 'mobilelist',
         'name': 'mobile_svcproblems',
-        'num_columns': 4,
-        'painters': [('service_state_onechar', None, ''),
-                     ('svc_state_age', None, ''),
-                     ('host', 'mobile_hoststatus', ''),
-                     ('service_description',
-                      'mobile_service',
-                      '')],
+        'num_columns': 2,
+        'painters': [
+            ('service_state', None, ''),
+            ('host',                'mobile_hoststatus', ''),
+            ('service_description', 'mobile_service', ''),
+            ('svc_plugin_output',   '' ),
+            ('svc_state_age', None, ''),
+        ],
         'show_filters': ['service_in_notification_period',
                          'hoststate',
                          'service_acknowledged',
@@ -149,7 +150,7 @@ multisite_builtin_views.update({
         'title': _('Service problems (unhandled)'),
     }),
 
-    # View showing the details of one service
+    # Service details
     'mobile_service': mobile_view({
         'datasource': 'services',
         'group_painters': [],
@@ -164,20 +165,20 @@ multisite_builtin_views.update({
         'painters': [
             ('sitealias', None, ''),
             ('host', 'hoststatus', ''),
-            ('service_description', 'servicedesc', ''),
+            ('service_description', ''),
+            ('svc_plugin_output', None, ''),
             ('service_icons', None, ''),
             ('service_state', None, ''),
+            ('svc_state_age', None, ''),
+            ('svc_check_age', None, ''),
             ('svc_group_memberlist', None, ''),
             ('svc_contact_groups', None, ''),
             ('svc_contacts', None, ''),
-            ('svc_plugin_output', None, ''),
             ('svc_long_plugin_output', None, ''),
             ('svc_perf_data', None, ''),
             ('svc_check_command', None, ''),
             ('svc_attempt', None, ''),
             ('svc_check_type', None, ''),
-            ('svc_state_age', None, ''),
-            ('svc_check_age', None, ''),
             ('svc_next_check', None, ''),
             ('svc_next_notification', None, ''),
             ('svc_last_notification', None, ''),
@@ -211,10 +212,11 @@ multisite_builtin_views.update({
         'hide_filters': ['site', 'host'],
         'layout': 'mobilelist',
         'name': 'mobile_svcproblems',
-        'num_columns': 4,
+        'num_columns': 1,
         'painters': [
-            ('service_state_onechar', None),
+            ('service_state', None),
             ('service_description', 'mobile_service'),
+            ('svc_plugin_output', None),
             ('svc_state_age', None),
             ('perfometer', None),
         ],
@@ -226,7 +228,7 @@ multisite_builtin_views.update({
         'title': _('Services of host'),
     }),
 
-    # View showing the details of one host
+    # Host details
     'mobile_hoststatus': mobile_view({
         'datasource': 'hosts',
         'group_painters': [],
@@ -295,9 +297,9 @@ multisite_builtin_views.update({
         'layout': 'mobilelist',
         'linktitle': 'Host search',
         'mustsearch': True,
-        'num_columns': 10,
+        'num_columns': 1,
         'painters': [
-            ('host_state_onechar', None),
+            ('host_state', None),
             ('host', 'mobile_host'),
             ('num_services_ok', None),
             ('num_services_warn', None),
@@ -334,7 +336,7 @@ multisite_builtin_views.update({
 #   | one for a list of items, one for a single dataset.                   |
 #   '----------------------------------------------------------------------'
 
-def render_mobile_list(rows, view, group_painters, painters, num_columns, show_checkboxes):
+def render_mobile_table(rows, view, group_painters, painters, num_columns, show_checkboxes):
     if not html.mobile:
         html.show_error(_("This view can only be used in mobile mode."))
         return
@@ -368,6 +370,41 @@ def render_mobile_list(rows, view, group_painters, painters, num_columns, show_c
         html.write('</row>')
     html.write('</table>')
     html.javascript('$("table.mobile a").attr("data-ajax", "false");')
+
+multisite_layouts["mobiletable"] = {
+    "title"      : _("Mobile: Table"),
+    "render"     : render_mobile_table,
+    "group"      : False,
+    "checkboxes" : False,
+}
+
+def render_mobile_list(rows, view, group_painters, painters, num_columns, show_checkboxes):
+    if not html.mobile:
+        html.show_error(_("This view can only be used in mobile mode."))
+        return
+
+    # Force relative timestamp always. This saves space.
+    multisite_painter_options["ts_format"]["value"] = "rel"
+
+    odd = "odd"
+    html.write('<ul class="mobilelist" data-role="listview">\n')
+
+    # Paint data rows
+    for row in rows: 
+        html.write('<li>')
+        cells = [ prepare_paint(p, row) for p in painters ]
+        if len(cells) > 0: # First cell (assumedly state) is left
+            html.write('<p class="ui-li-aside ui-li-desc %s">%s</p>' % cells[0])
+            if len(cells) > 1:
+                content = " &middot; ".join([ cell[1] for cell in cells[1:num_columns+1]]) 
+                html.write('<h3>%s</h3>' % content)
+                for cell, p in zip(cells[num_columns+1:], painters[num_columns+1:]):
+                    html.write('<p class="ui-li-desc">')  
+                    paint_header(view, p)
+                    html.write(': <span class="%s">%s</span></p>\n' % cell)  
+        html.write('</li>\n')
+    html.write('</ul>')
+    html.javascript('$("ul.mobilelist a").attr("data-ajax", "false");')
 
 multisite_layouts["mobilelist"] = {
     "title"      : _("Mobile: List"),
@@ -403,6 +440,8 @@ def render_mobile_dataset(rows, view, group_painters, painters, num_columns, sho
                 html.write('</tr>\n')
         html.write('</table>')
         # html.write('</p></div>')
+    html.javascript('$("table.dataset tr.data td").addClass("ui-shadow").not(".state").addClass("nonstatus");\n'
+                    '$("table.dataset tr.data a").attr("data-ajax", "false");\n')
 
 
 multisite_layouts["mobiledataset"] = {

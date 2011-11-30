@@ -16,7 +16,7 @@ reg_v = re.compile(r"1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er
 def is_mobile(user_agent):
     return reg_b.search(user_agent) or reg_v.search(user_agent[0:4])
 
-def mobile_html_head(title, read_code=""):
+def mobile_html_head(title, ready_code=""):
     html.mobile = True
     html.write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -36,20 +36,26 @@ def mobile_html_head(title, read_code=""):
   
 </head>
 <body class=mobile>
-""" % (title, read_code))
+""" % (title, ready_code))
 
 def mobile_html_foot():
     html.write("</body></html>\n")
 
-def jqm_page_header(title, id=None, home=None):
+def jqm_header_button(url, title, icon=""):
+    html.write('<a href="%s" data-icon="%s" data-iconpos="left" '
+               'data-transition="flip" data-direction="reverse">%s</a>\n' % (url, icon, title))
+
+def jqm_page_header(title, id=None, left_button=None, right_button=None):
     idtxt = id and (' id="%s"' % id) or ''
     html.write(
         '<div data-role="page"%s>\n'
         '<div data-role="header">\n' % idtxt)
-    if home:
-        html.write('<a href="%s" data-icon="home" data-iconpos="left" '
-                   'data-transition="flip" data-direction="reverse">%s</a>\n' % (home, _("Home")))
-    html.write('<h1>%s</h1></div>\n' % title)
+    if left_button:
+        jqm_header_button(*left_button)
+    html.write('<h1>%s</h1>\n' % title)
+    if right_button:
+        jqm_header_button(*right_button)
+    html.write('</div>')
     html.write('<div data-role="content">\n')
 
 def jqm_page_footer(content=""):
@@ -89,7 +95,14 @@ def jqm_page_index(title, items):
     for href, title in items:
         html.write('<li><a data-ajax="false" data-transition="flip" href="%s">%s</a></li>\n' %
                 (href, title))
-    html.write("</ul>Hier kommt noch Text\n")
+    html.write("</ul>\n")
+
+    # Link to non-mobile GUI
+    html.write(
+        '<ul data-role="listview" data-inset="true">\n')
+    html.write('<li><a data-ajax="false" data-transition="fade" href="%s">%s</a></li>\n' %
+                ("index.py?mobile=", _("Classical web GUI")))
+    html.write('</ul>\n')
 
 def jqm_page(title, content, foot, id=None):
     jqm_page_header(title, id)
@@ -128,7 +141,7 @@ def page_login():
 def page_index():
     title = "Check_MK Mobile"
     mobile_html_head(title)
-    jqm_page_header(title, home="logout.py")
+    jqm_page_header(title, left_button=("logout.py", "Logout", "delete"))
     views.load_views()
     items = []
     for view_name, view in html.available_views.items():
@@ -163,6 +176,8 @@ def render_view(view, rows, datasource, group_painters, painters,
                 show_checkboxes, layout, num_columns, show_filters, show_footer, hide_filters,
                 browser_reload):
 
+    home=("mobile.py", "Home", "home")
+
     title = views.view_title(view)
     navbar = [
       ( "#data",     _("Results"), "grid"),
@@ -179,7 +194,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     page_id = "view_" + view["name"]
 
     # Page: data rows of view
-    jqm_page_header(title, home="mobile.py", id="data")
+    jqm_page_header(title, left_button=home, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"), id="data")
     if len(rows) == 0:
         html.write(_("No hosts/services found."))
     else:
@@ -193,18 +208,18 @@ def render_view(view, rows, datasource, group_painters, painters,
     jqm_page_navfooter(navbar, '#data', page_id)
 
     # Page: Commands
-    jqm_page_header(_("Commands"), home="mobile.py", id="commands")
+    jqm_page_header(_("Commands"), left_button=home, id="commands")
     html.write("Hier kommen die Commands")
     jqm_page_navfooter(navbar, '#commands', page_id)
 
     # Page: Filters
-    jqm_page_header(_("Filter / Search"), home="mobile.py", id="filter")
+    jqm_page_header(_("Filter / Search"), left_button=home, id="filter")
     show_filter_form(show_filters)
     jqm_page_navfooter(navbar, '#filter', page_id)
 
     # Page: Context buttons
     if context_links:
-        jqm_page_header(_("Context"), home="mobile.py", id="context")
+        jqm_page_header(_("Context"), left_button=home, id="context")
         show_context_links(context_links)
         jqm_page_navfooter(navbar, '#filter', page_id)
     
@@ -215,14 +230,15 @@ def show_filter_form(show_filters):
     s.sort()
 
     html.begin_form("filter")
-    html.write('<table class="form">\n')
-
+    html.write('<ul data-inset="false" data-role="listview">\n')
     for sort_index, title, f in s:
-        html.write('<tr><th>%s</th></tr>\n' % title)
-        html.write('<tr><td>\n')
+        html.write('<li data-role="fieldcontain">\n')
+        html.write('<fieldset data-role="controlgroup">\n')
+        html.write('<div role="heading" class="ui-controlgroup-label">%s</div>' % title)
+        html.write('<div class="ui-controlgroup-controls">')
         f.display()
-        html.write('</td></tr>\n')
-    html.write("</table>\n")
+        html.write('</div></fieldset></li>\n')
+    html.write("</ul>\n")
     html.button("search", _("Search"))
 
     html.hidden_fields()

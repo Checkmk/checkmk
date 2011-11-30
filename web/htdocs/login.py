@@ -29,6 +29,13 @@ from lib import *
 from mod_python import apache
 import md5, md5crypt, crypt, time
 
+class MKAuthException(MKGeneralException):
+    pass
+
+def site_cookie_name():
+    name = os.path.dirname(defaults.url_prefix).replace('/', '_')
+    return 'auth%s' % name
+
 # Validate hashes taken from the htpasswd file. This method handles
 # crypt() and md5 hashes. This should be the common cases in the
 # used htpasswd files.
@@ -67,20 +74,21 @@ def load_secret():
 # Generates the hash to be added into the cookie value
 def generate_hash(username, now, pwhash):
     secret = load_secret()
-    return md5crypt.md5crypt(username + now + pwhash, secret)
+    return md5.md5(username + now + pwhash + secret).hexdigest()
 
 def del_auth_cookie():
-    if html.has_cookie('auth_secret'):
-        html.del_cookie('auth_secret')
+    name = site_cookie_name()
+    if html.has_cookie(name):
+        html.del_cookie(name)
 
 def set_auth_cookie(username, pwhash):
     now = str(time.time())
-    html.set_cookie('auth_secret', username
-                                   + ':' + now
-                                   + ':' + generate_hash(username, now, pwhash))
+    html.set_cookie(site_cookie_name(), username
+                                        + ':' + now
+                                        + ':' + generate_hash(username, now, pwhash))
 
-def check_auth_cookie():
-    username, issue_time, cookie_hash = html.cookie('auth_secret', '').split(':', 2)
+def check_auth_cookie(cookie_name):
+    username, issue_time, cookie_hash = html.cookie(cookie_name, '::').split(':', 2)
 
     # FIXME: Ablauf-Zeit des Cookies testen
     #max_cookie_age = 10
@@ -90,22 +98,35 @@ def check_auth_cookie():
 
     users = load_htpasswd()
     if not username in users:
-        raise Exception
+        raise MKAuthException(_('Username is unknown'))
     pwhash = users[username]
 
     # Validate the hash
     if cookie_hash != generate_hash(username, issue_time, pwhash):
-        raise Exception
+        raise MKAuthException(_('Invalid credentials'))
 
     # Once reached this the cookie is a good one. Renew it!
     # Do not renew if:
     # a) The _ajaxid var is set
     # b) A logout is requested
-    if html.req.myfile != 'logout' or html.has_var('_ajaxid'):
+    if (html.req.myfile != 'logout' or html.has_var('_ajaxid')) \
+       and cookie_name == site_cookie_name():
         set_auth_cookie(username, pwhash)
 
     # Return the authenticated username
     return username
+
+def check_auth():
+    for cookie_name in html.get_cookie_names():
+        if cookie_name.startswith('auth_'):
+            try:
+                return check_auth_cookie(cookie_name)
+            except Exception, e:
+                #html.write('Exception occured while checking cookie %s' % cookie_name)
+                #raise
+                pass
+
+    return ''
 
 
 def login_page():
@@ -206,17 +227,6 @@ def login_page():
 
     html.footer()
     return apache.OK
-
-def check_auth():
-    try:
-        if not html.has_cookie('auth_secret'):
-            return ''
-
-        return check_auth_cookie()
-    except Exception, e:
-        if config.debug:
-            raise
-        return ''
 
 def logout():
     # Remove eventual existing cookie

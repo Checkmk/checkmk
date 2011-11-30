@@ -879,7 +879,7 @@ class html:
         onclick += ' onmouseout="this.style.cursor=\'auto\';" '
         
         if indent == "form":
-            self.write('<table class="form nomargin"><tr><td class=title>')
+            self.write('<table id="topic_%s" style="display: ''"  class="form nomargin"><tr ><td class=title>' % id.encode("utf-8"))
         self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
                    'src="images/tree_%s.png" %s>' % 
                 (treename, id, img_num, onclick))
@@ -922,6 +922,9 @@ class html:
     def has_cookie(self, varname):
         return varname in self.req.cookies
 
+    def get_cookie_names(self):
+        return self.req.cookies.keys()
+
     def cookie(self, varname, deflt):
         try:
             return self.req.cookies[varname].value
@@ -929,7 +932,7 @@ class html:
             return deflt
 
     def set_cookie(self, varname, value, expires = None):
-        c = Cookie.Cookie(varname, value, path = defaults.url_prefix)
+        c = Cookie.Cookie(varname, value, path = '/')
         if expires is not None:
             c.expires = expires
 

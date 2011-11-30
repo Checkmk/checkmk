@@ -1164,7 +1164,7 @@ def prepare_display_options():
 # Display view with real data. This is *the* function everying
 # is about.
 def show_view(view, show_heading = False, show_buttons = True, 
-              show_footer = True, render_function = None):
+              show_footer = True, render_function = None, only_count=False):
     display_options = prepare_display_options()
 
     # User can override the layout settings via HTML variables (buttons)
@@ -1274,16 +1274,21 @@ def show_view(view, show_heading = False, show_buttons = True,
     painter_options.sort()
 
     # Fetch data. Some views show data only after pressing [Search]
-    if (not view["mustsearch"]) or html.var("search"):
+    if (only_count or (not view["mustsearch"]) or html.var("search")): 
         # names for additional columns (through Stats: headers)
         add_columns = datasource.get("add_columns", [])
 
         # tablename may be a function instead of a livestatus tablename
         # In that case that function is used to compute the result.
+
         if type(tablename) == type(lambda x:None):
             rows = tablename(columns, query, only_sites, get_limit(), all_active_filters)
         else:
             rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
+
+        # TODO: Use livestatus Stats: instead of fetching rows!
+        if only_count:
+            return len(rows)
 
         # Now add join information, if there are join columns
         if len(join_painters) > 0:

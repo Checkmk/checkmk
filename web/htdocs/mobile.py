@@ -134,9 +134,10 @@ def page_index():
     for view_name, view in html.available_views.items():
         if view.get("mobile") and not view.get("hidden"):
             url = "mobile_view.py?view_name=%s" % view_name
+            count = views.show_view(view, only_count = True)
             if view.get("mustsearch"):
                 url += "#filter"
-            items.append((url, view["title"]))
+            items.append((url, '%s <span class="ui-li-count">%d</span>' % (view["title"], count)))
     jqm_page_index(_("Check_MK Mobile"), items)
     jqm_page_footer()
     mobile_html_foot()

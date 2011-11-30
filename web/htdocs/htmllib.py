@@ -256,8 +256,13 @@ class html:
         else:
             self.user_errors[varname] = message
 
-    def has_users_errors(self):
+    def has_user_errors(self):
         return len(self.user_errors) > 0
+
+    def show_user_errors(self):
+        self.write('<div class=error>\n')
+        self.write('<br>'.join(self.user_errors.values()))
+        self.write('</div>\n')
 
     def hidden_field(self, var, value):
         if value != None:
@@ -372,14 +377,12 @@ class html:
     def number_input(self, varname, deflt = "", size=8):
         self.text_input(varname, str(deflt), "number", size=size)
 
-    def text_input(self, varname, default_value = "", cssclass = "text", **args):
+    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None, **args):
         if default_value == None:
             default_value = ""
         addprops = ""
         if "size" in args:
             addprops += " size=%d" % (args["size"] + 1)
-        if "id" in args:
-            addprops += " id='%s'" % args["id"]
         if "type" in args:
             mytype = args["type"]
         else:
@@ -393,6 +396,14 @@ class html:
         html = ""
         if error:
             html = "<x class=inputerror>"
+        if label:
+            if not id:
+                id = "ti_%s" % varname
+            html += '<label for="%s">%s</label>' % (id, label)
+
+        if id:
+            addprops += " id='%s'" % id
+
         html += "<input type=%s class=%s value=\"%s\" name=\"%s\"%s>" % \
                      (mytype, cssclass, attrencode(value), varname, addprops)
         if error:

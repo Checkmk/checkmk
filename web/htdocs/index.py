@@ -235,7 +235,7 @@ def handler(req, profiling = True):
 
         # Detect mobile devices
         user_agent = html.req.headers_in['User-Agent']
-        html.mobile = mobile.is_mobile(user_agent)
+        html.mobile = True or mobile.is_mobile(user_agent)
 
         # Redirect to mobile GUI if we are a mobile device and
         # the URL is /
@@ -265,7 +265,7 @@ def handler(req, profiling = True):
             req.user = login.check_auth()
             if req.user == '':
                 # After auth check the regular page can be shown
-                result = login.login_page()
+                result = login.page_login()
                 if type(result) == tuple:
                     # This is the redirect to the requested page directly after successful login
                     req.user = result[0]

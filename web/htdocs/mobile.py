@@ -5,7 +5,7 @@
 #import weblib, traceback
 import re
 from lib import *
-import views, config
+import views, config, htmllib
 #from pagefunctions import *
 
 # These regexes are taken from the public domain code of Matt Sullivan
@@ -93,16 +93,42 @@ def jqm_page_index(title, items):
 
 def jqm_page(title, content, foot, id=None):
     jqm_page_header(title, id)
-    jqm_page_content(content)
+    html.write(content)
     jqm_page_footer(foot)
 
-def jqm_page_content(content):
-    html.write('<div data-role="content">%s</div>\n' % content)
-
-def page_index():
-    title = "Check_MK Mobile Interface"
+def page_login():
+    title = "Check_MK Mobile"
     mobile_html_head(title)
-    jqm_page_header(title)
+    jqm_page_header(title, id="login")
+    html.write('<div id="loginhead">%s</div>' % 
+      _("Welcome to Check_MK Multisite Mobile. Please Login."))
+
+    html.begin_form("login", method = 'POST', add_transid = False)
+    # Keep information about original target URL
+    origtarget = html.var('_origtarget', '')
+    if not origtarget and not html.req.myfile == 'login':
+        origtarget = html.req.uri
+    html.hidden_field('_origtarget', htmllib.attrencode(origtarget)) 
+
+    html.text_input("_username", size = 50, label = _("Username:"))
+    html.password_input("_password", size = 50, label = _("Password:"))
+    html.write("<br>")
+    html.button("_login", _('Login'))
+    html.set_focus("_username")
+    html.end_form()
+    html.write('<div id="loginfoot">')
+    html.write('<img class="logomk" src="images/logo_mk.png">')
+    html.write('<div class="copyright">%s</div>' % _("Copyright Mathias Kettner 2012"))
+    html.write('</div>')  
+    jqm_page_footer()
+    mobile_html_foot()
+    return 0 # apache.OK
+
+    
+def page_index():
+    title = "Check_MK Mobile"
+    mobile_html_head(title)
+    jqm_page_header(title, home="logout.py")
     views.load_views()
     items = []
     for view_name, view in html.available_views.items():
@@ -167,7 +193,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 
     # Page: Commands
     jqm_page_header(_("Commands"), home="mobile.py", id="commands")
-    jqm_page_content("Hier kommen die Commands")
+    html.write("Hier kommen die Commands")
     jqm_page_navfooter(navbar, '#commands', page_id)
 
     # Page: Filters
@@ -207,4 +233,5 @@ def show_context_links(context_links):
     for view, title, uri, icon, buttonid in context_links:
         items.append((uri, title))
     jqm_page_index(_("Related Views"), items)
+
 

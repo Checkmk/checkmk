@@ -307,7 +307,7 @@ def page_handler():
         html.write("<br>")
 
         # Show outcome of action
-        if html.has_users_errors():
+        if html.has_user_errors():
             html.show_error(action_message)
         elif action_message:
             html.message(action_message)

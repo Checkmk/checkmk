@@ -118,3 +118,30 @@ body.mobile table.data td.perfometer td.inner {
     height: 14px;
 }
 
+/*-------------------------------------------------------------------------.
+|                      _                _                                  |
+|                     | |    ___   __ _(_)_ __                             |
+|                     | |   / _ \ / _` | | '_ \                            |
+|                     | |__| (_) | (_| | | | | |                           |
+|                     |_____\___/ \__, |_|_| |_|                           |
+|                                 |___/                                    |
++--------------------------------------------------------------------------+
+| Styles for the mobile version of the login dialog.                       |
+'-------------------------------------------------------------------------*/
+
+#loginhead, #loginfoot {
+    text-align: center;
+    font-color: #444;
+}
+#loginhead {
+    margin: 1em;
+}
+#loginfoot {
+    margin-top: 1em;
+}
+#loginfoot.copyright {
+    margin-top: 1em;
+}
+img.logomk {
+    width: 20%;
+}

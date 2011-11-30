@@ -129,7 +129,7 @@ def check_auth():
     return ''
 
 
-def login_page():
+def do_login():
     # handle the sent login form
     err = None
     if html.var('_login'):
@@ -142,9 +142,9 @@ def login_page():
             if password == '':
                 raise MKUserError('_password', _('No password given.'))
 
-            origin = html.var('_origin')
-            if not origin:
-                origin = defaults.url_prefix + 'check_mk/'
+            origtarget = html.var('_origtarget')
+            if not origtarget or origtarget.endswith("/logout.py"):
+                origtarget = defaults.url_prefix + 'check_mk/'
 
             users = load_htpasswd()
             if username in users and password_valid(users[username], password):
@@ -156,8 +156,8 @@ def login_page():
 
                 # Use redirects for URLs or simply execute other handlers for
                 # mulitsite modules
-                if '/' in origin:
-                    html.set_http_header('Location', origin)
+                if '/' in origtarget:
+                    html.set_http_header('Location', origtarget)
                     raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
                 else:
                     # Remove login vars to hide them from the next page handler
@@ -165,27 +165,39 @@ def login_page():
                         del html.req.vars['_username']
                         del html.req.vars['_password']
                         del html.req.vars['_login']
-                        del html.req.vars['_origin']
+                        del html.req.vars['_origtarget']
                     except:
                         pass
 
-                    return (username, origin)
+                    return (username, origtarget)
             else:
                 raise MKUserError(None, _('Invalid credentials.'))
         except MKUserError, e:
-            err = e
             html.add_user_error(e.varname, e.message)
+            return e.message
 
+def page_login():
+    result = do_login()
+    if type(result) == tuple:
+        return result # Successfull login
+
+    if html.mobile:
+        import mobile
+        return mobile.page_login()
+
+    else:
+        return normal_login_page()
+
+def normal_login_page():
     html.set_render_headfoot(False)
+    html.header(_("Check_MK Multisite Login"), javascripts=[], stylesheets=["pages", "login"])
 
-    html.header(_("Check_MK Multisite Login"), javascripts=[], stylesheets=["pages","login"])
+    if html.has_user_errors():
+        html.show_user_errors()
 
-    if err:
-        html.write('<div class=error>%s</div>\n' % e.message)
-
-    origin = html.var('_origin', '')
-    if not origin and not html.req.myfile == 'login':
-        origin = html.req.uri
+    origtarget = html.var('_origtarget', '')
+    if not origtarget and not html.req.myfile == 'login':
+        origtarget = html.req.uri
 
     html.write("<div id=login>")
     html.write("<div id=logo></div>")
@@ -194,7 +206,7 @@ def login_page():
     html.write("<tr class=form>\n")
     html.write("<td>")
     html.begin_form("login", method = 'POST', add_transid = False)
-    html.hidden_field('_origin', htmllib.attrencode(origin))
+    html.hidden_field('_origtarget', htmllib.attrencode(origtarget))
     html.write("<div class=whiteborder>\n")
     html.write("<table class=\"form\">\n")
 
@@ -228,7 +240,7 @@ def login_page():
     html.footer()
     return apache.OK
 
-def logout():
+def page_logout():
     # Remove eventual existing cookie
     del_auth_cookie()
 
@@ -245,3 +257,4 @@ def logout():
             html.del_cookie('logout')
             html.set_http_header('Location', defaults.url_prefix + 'check_mk/')
             raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
+

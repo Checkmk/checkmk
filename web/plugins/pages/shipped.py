@@ -40,8 +40,8 @@ import login
 pagehandlers.update({
    "index"                    : main.page_index,
    "main"                     : main.page_main,
-   "login"                    : login.login_page,
-   "logout"                   : login.logout,
+   "login"                    : login.page_login,
+   "logout"                   : login.page_logout,
    "switch_site"              : main.ajax_switch_site,
    "edit_views"               : views.page_edit_views,
    "edit_view"                : views.page_edit_view,

@@ -60,18 +60,10 @@ def load_plugins():
     loaded_with_language = current_language
 
     config.declare_permission_section("action", _("Commands on host and services"))
-    config.declare_permission("action.enablechecks",
-            _("Enable/disable checks"),
-            _("Enable and disable active or passive checks on hosts and services"),
-            [ "admin" ])
     config.declare_permission("action.clearmodattr",
             _("Clear modified attributes"),
             _("Remove the information that an attribute (like check enabling) has been changed"),
             [ "admin" ])
-    config.declare_permission("action.reschedule",
-            _("Reschedule checks"),
-            _("Reschedule host and service checks"),
-            [ "user", "admin" ])
     config.declare_permission("action.fakechecks",
             _("Fake check results"),
             _("Manually submit check results for host and service checks"),
@@ -2002,29 +1994,6 @@ def show_comment_actions():
 
 
 def show_host_service_actions(what):
-    # if config.may("action.notifications"):
-    #     html.write("<tr><td class=legend>"+_('Notifications')+"</td>\n"
-    #                "<td class=content>\n"
-    #                "<input type=submit name=_enable_notifications value=\""+_('Enable')+"\"> "
-    #                "<input type=submit name=_disable_notifications value=\""+_('Disable')+"\">"
-    #                "</td></tr>\n")
-
-    if config.may("action.enablechecks") or config.may("action.reschedule"):
-        html.write("<tr><td class=legend>"+_('Active checks')+"</td>\n"
-                   "<td class=content>\n")
-        if config.may("action.enablechecks"):
-            html.write("<input type=submit name=_enable_checks value=\""+_('Enable')+"\"> "
-                   "<input type=submit name=_disable_checks value=\""+_('Disable')+"\"> ")
-        if config.may("action.reschedule"):
-            html.write("<input type=submit name=_resched_checks value=\""+_('Reschedule next check now')+"\">\n"
-                   "</td></tr>\n")
-
-    if config.may("action.enablechecks"):
-        html.write("<tr><td class=legend>"+_('Passive checks')+"</td>\n"
-                   "<td class=content>\n")
-        html.write("<input type=submit name=_enable_passive_checks value=\""+_('Enable')+"\"> "
-               "<input type=submit name=_disable_passive_checks value=\""+_('Disable')+"\">"
-               "</td></tr>\n")
 
     if config.may("action.clearmodattr"):
         html.write("<tr><td class=legend>"+_('Modified attributes')+"</td>\n"
@@ -2155,37 +2124,17 @@ def nagios_host_service_action_command(what, dataset):
     else:
         raise MKInternalError(_("Sorry, no actions possible on table %s") % tablename)
 
-    if html.var("_enable_notifications") and config.may("action.notifications"):
-        command = "ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec
-        title = _("<b>enable notifications</b> for")
+    command = None
+    for cmd in multisite_commands:
+        if config.may(cmd["permission"]):
+            result = cmd["action"](cmdtag, spec)
+            if result:
+                command, title = result
+                break
 
-    elif html.var("_disable_notifications") and config.may("action.notifications"):
-        command = "DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec
-        title = _("<b>disable notifications</b> for")
-
-    elif html.var("_enable_checks") and config.may("action.enablechecks"):
-        command = "ENABLE_" + cmdtag + "_CHECK;%s" % spec
-        title = _("<b>enable active checks</b> of")
-
-    elif html.var("_disable_checks") and config.may("action.enablechecks"):
-        command = "DISABLE_" + cmdtag + "_CHECK;%s" % spec
-        title = _("<b>disable active checks</b> of")
-
-    elif html.var("_enable_passive_checks") and config.may("action.enablechecks"):
-        command = "ENABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec
-        title = _("<b>enable passive checks</b> of")
-
-    elif html.var("_disable_passive_checks") and config.may("action.enablechecks"):
-        command = "DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec
-        title = _("<b>disable passive checks</b> of")
-
-    elif html.var("_clear_modattr") and config.may("action.clearmodattr"):
+    if html.var("_clear_modattr") and config.may("action.clearmodattr"):
         command = "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec
         title = _("<b>clear the information about modified attributes</b> of")
-
-    elif html.var("_resched_checks") and config.may("action.reschedule"):
-        command = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(time.time()))
-        title = _("<b>reschedule an immediate check</b> of")
 
     elif html.var("_fake") and config.may("action.fakechecks"):
         statename = html.var("_fake")
@@ -2285,7 +2234,7 @@ def nagios_host_service_action_command(what, dataset):
         title = _("<b>remove all scheduled downtimes</b> of ")
         return title, commands
 
-    else:
+    if not command:
         raise MKUserError(None, _("Sorry. This command is not implemented."))
 
     if down_to:

@@ -36,19 +36,90 @@
 # - function that outputs the HTML input fields
 # - function that creates the nagios command and title
 
-# config.declare_permission("action.notifications",
-#         _("Enable/disable notifications"),
-#         _("Enable and disable notifications on hosts and services"),
-#         [ "admin" ])
-# 
-# multisite_commands.append({  
-#     "tables"      : [ "host", "service" ],
-#     "permission"  : "action.notifications",
-#     "title"       : _("Notifications"),
-#     "render"      : lambda: \
-#        html.button("_enable_notifications", _("Enable")) == \
-#        html.button("_disable_notifications", _("Disable")),
-#     "action"      : lambda cmdtag, spec: \
-#        "ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
-#        _("<b>enable notifications</b> for")
-# })
+config.declare_permission("action.reschedule",
+        _("Reschedule checks"),
+        _("Reschedule host and service checks"),
+        [ "user", "admin" ])
+
+multisite_commands.append({  
+    "tables"      : [ "host", "service" ],
+    "permission"  : "action.reschedule",
+    "title"       : _("Reschedule"),
+    "render"      : lambda: \
+        html.button("_resched_checks", _("Reschedule active checks")),
+    "action"      : lambda cmdtag, spec:
+        html.var("_resched_checks") and (
+            "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(time.time())),
+            _("<b>reschedule an immediate check</b> of"))
+})
+
+
+
+config.declare_permission("action.notifications",
+        _("Enable/disable notifications"),
+        _("Enable and disable notifications on hosts and services"),
+        [ "admin" ])
+
+def command_notifications(cmdtag, spec):
+    if html.var("_enable_notifications"):
+        return ("ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
+                _("<b>enable notifications</b> for"))
+    elif html.var("_disable_notifications"):
+        return ("DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
+                _("<b>disable notifications</b> for"))
+
+multisite_commands.append({  
+    "tables"      : [ "host", "service" ],
+    "permission"  : "action.notifications",
+    "title"       : _("Notifications"),
+    "render"      : lambda: \
+       html.button("_enable_notifications", _("Enable")) == \
+       html.button("_disable_notifications", _("Disable")),
+    "action"      : command_notifications,
+})
+
+
+
+config.declare_permission("action.enablechecks",
+        _("Enable/disable checks"),
+        _("Enable and disable active or passive checks on hosts and services"),
+        [ "admin" ])
+
+def command_enable_active(cmdtag, spec):
+    if html.var("_enable_checks"):
+        return ("ENABLE_" + cmdtag + "_CHECKS;%s" % spec,
+                _("<b>enable active checks</b> for"))
+    elif html.var("_disable_checks"):
+        return ("DISABLE_" + cmdtag + "_CHECKS;%s" % spec,
+                _("<b>disable active checks</b> for"))
+
+multisite_commands.append({  
+    "tables"      : [ "host", "service" ],
+    "permission"  : "action.enablechecks",
+    "title"       : _("Active checks"),
+    "render"      : lambda: \
+       html.button("_enable_checks", _("Enable")) == \
+       html.button("_disable_checks", _("Disable")),
+    "action"      : command_enable_active,
+})
+
+def command_enable_passive(cmdtag, spec):
+    if html.var("_enable_passive_checks"):
+        return ("ENABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
+                _("<b>enable passive checks</b> for"))
+    elif html.var("_disable_passive_checks"):
+        return ("DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
+                _("<b>disable passive checks</b> for"))
+
+multisite_commands.append({  
+    "tables"      : [ "host", "service" ],
+    "permission"  : "action.enablechecks",
+    "title"       : _("Passive checks"),
+    "render"      : lambda: \
+       html.button("_enable_passive_checks", _("Enable")) == \
+       html.button("_disable_passive_checks", _("Disable")),
+    "action"      : command_enable_passive,
+})
+
+
+

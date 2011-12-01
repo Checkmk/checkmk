@@ -2717,16 +2717,16 @@ table.debug_vars td {
     width: 100%;
     text-align:center;
 }
-/*#login #logo {
-    width: 320px;
-    margin: 7em auto;
-    height: 55px;
+#login #logo {
+    width: 126px;
+    margin: 5em auto 0 auto;
+    height: 72px;
     background-repeat: no-repeat;
-    background-image: url("images/sidebar_top.png");
-}*/
+    background-image: url("images/mk_logo_126x72.gif");
+}
 #login h1 {
     width: 300px;
-    margin: 3em auto 2em auto;
+    margin: 0.2em auto 1em auto;
 }
 #login a {
     color: #ffffff;
@@ -2734,9 +2734,36 @@ table.debug_vars td {
 #login a:hover {
     text-decoration: none;
 }
-#login #table {
-    width: 320px; margin: 0 auto;
+#login #form {
+    width: 320px;
+    margin: 0 auto 10px auto;
+    padding: 8px 20px 8px 20px;
+    background-image: url("images/form_background.png");
+    border-radius: 15px;
 }
+#login p {
+    text-align: left;
+}
+#login label {
+    font-size: 1.4em;
+    padding-top: 0;
+    margin: 0;
+}
+#login p input {
+    width: 312px;
+    font-size: 1.5em;
+    margin-top: 2px;
+}
+#login #table td.submit {
+    padding-top: 5px;
+}
+#login p.submit {
+    text-align: right;
+}
+#login p.submit input {
+    width: auto;
+}
+
 #login #foot {
     font-size: 0.8em;
     font-style: italic;

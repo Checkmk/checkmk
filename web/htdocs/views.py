@@ -48,6 +48,7 @@ multisite_painters         = {}
 multisite_sorters          = {}
 multisite_builtin_views    = {}
 multisite_painter_options  = {}
+multisite_commands         = []
 ubiquitary_filters         = [] # Always show this filters
 view_hooks                 = {}
 
@@ -58,11 +59,7 @@ def load_plugins():
         return
     loaded_with_language = current_language
 
-    config.declare_permission_section("action", _("Commands on Objects"))
-    config.declare_permission("action.notifications",
-            _("Enable/disable notifications"),
-            _("Enable and disable notifications on hosts and services"),
-            [ "admin" ])
+    config.declare_permission_section("action", _("Commands on host and services"))
     config.declare_permission("action.enablechecks",
             _("Enable/disable checks"),
             _("Enable and disable active or passive checks on hosts and services"),
@@ -1969,6 +1966,13 @@ def show_action_form(is_open, datasource):
     html.write("<div class=whiteborder>\n")
     html.write("<table class=\"form\">\n")
 
+    for command in multisite_commands:
+        if what in command["tables"] and config.may(command["permission"]):
+            html.write('<tr><td class=legend>%s</td>\n' % command["title"])
+            html.write('<td class=content>\n')
+            command["render"]()
+            html.write('</td></tr>\n')
+
     if what in [ "host", "service" ]:
         show_host_service_actions(what)
     elif what == "downtime":
@@ -1998,12 +2002,12 @@ def show_comment_actions():
 
 
 def show_host_service_actions(what):
-    if config.may("action.notifications"):
-        html.write("<tr><td class=legend>"+_('Notifications')+"</td>\n"
-                   "<td class=content>\n"
-                   "<input type=submit name=_enable_notifications value=\""+_('Enable')+"\"> "
-                   "<input type=submit name=_disable_notifications value=\""+_('Disable')+"\">"
-                   "</td></tr>\n")
+    # if config.may("action.notifications"):
+    #     html.write("<tr><td class=legend>"+_('Notifications')+"</td>\n"
+    #                "<td class=content>\n"
+    #                "<input type=submit name=_enable_notifications value=\""+_('Enable')+"\"> "
+    #                "<input type=submit name=_disable_notifications value=\""+_('Disable')+"\">"
+    #                "</td></tr>\n")
 
     if config.may("action.enablechecks") or config.may("action.reschedule"):
         html.write("<tr><td class=legend>"+_('Active checks')+"</td>\n"

@@ -221,7 +221,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     if context_links:
         jqm_page_header(_("Context"), left_button=home, id="context")
         show_context_links(context_links)
-        jqm_page_navfooter(navbar, '#filter', page_id)
+        jqm_page_navfooter(navbar, '#context', page_id)
     
 
 def show_filter_form(show_filters):
@@ -239,10 +239,17 @@ def show_filter_form(show_filters):
         f.display()
         html.write('</div></fieldset></li>\n')
     html.write("</ul>\n")
-    html.button("search", _("Search"))
-
     html.hidden_fields()
     html.end_form()
+    # Make the tab 'Results' not simply switch to the results page
+    # but submit the form and fetch new data. This is done by overriding
+    # that buttons click function to submit the form. Note: We need to
+    # remove the ancor in href. Otherwise jQuery will do some magic
+    # itself and first switch to that page...
+    html.javascript(
+      "$('div#filter a[href=\"#data\"]')"
+      ".attr('href', '').live('click', function(e) "
+      "{ e.preventDefault(); $('div#filter form[name=\"filter\"]').submit();});")
 
 
 def show_context_links(context_links):

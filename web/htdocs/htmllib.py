@@ -235,7 +235,7 @@ class html:
             onsubmit = ' onsubmit="%s"' % onsubmit
         else:
             onsubmit = ''
-        self.write("<form name=%s class=%s action=\"%s\" method=%s%s%s>\n" %
+        self.write('<form name=%s class=%s action="%s" method="%s"%s%s>\n' %
                    (name, name, action, method, enctype, onsubmit))
         self.hidden_field("filled_in", name)
         if add_transid:

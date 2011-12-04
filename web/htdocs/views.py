@@ -469,9 +469,15 @@ def page_edit_view():
                     load_views()
                     html.multisite_views[(config.user_id, view["name"])] = view
                     oldname = html.var("old_name")
-                    # Handle renaming of views -> delete old entry
-                    if oldname and oldname != view["name"] and (config.user_id, oldname) in html.multisite_views:
-                        del html.multisite_views[(config.user_id, oldname)]
+                    # Handle renaming of views
+                    if oldname and oldname != view["name"]:
+                        # -> delete old entry
+                        if (config.user_id, oldname) in html.multisite_views:
+                            del html.multisite_views[(config.user_id, oldname)]
+                        # -> change view_name in back parameter
+                        if html.has_var('back'):
+                            html.set_var('back', html.var('back', '').replace('view_name=' + oldname,
+                                                                              'view_name=' + view["name"]))
                     save_views(config.user_id)
                 return page_message_and_forward(_("Your view has been saved."), "edit_views.py",
                         "<script type='text/javascript'>if(top.frames[0]) top.frames[0].location.reload();</script>\n")

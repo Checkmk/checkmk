@@ -30,6 +30,7 @@ def mobile_html_head(title, ready_code=""):
   <link rel="stylesheet" type="text/css" href="mobile.css">
   <script type='text/javascript' src='jquery/jquery-1.6.4.min.js'></script>
   <script type='text/javascript' src='jquery/jquery.mobile-1.0.min.js'></script>
+  <script type='text/javascript' src='js/mobile.js'></script>
   <script type='text/javascript'>
       $(document).ready(function() { %s });
   </script>
@@ -158,6 +159,9 @@ def page_index():
 def page_view():
     views.load_views()
     view_name = html.var("view_name")
+    if not view_name:
+        return page_index()
+
     view = html.available_views.get(view_name)
     title = views.view_title(view)
     mobile_html_head(title)
@@ -179,10 +183,10 @@ def render_view(view, rows, datasource, group_painters, painters,
     home=("mobile.py", "Home", "home")
 
     title = views.view_title(view)
-    navbar = [
-      ( "#data",     _("Results"), "grid"),
-      ( "#commands", _("Commands"), "gear" ),
-      ( "#filter",   _("Filter"),   "search" )]
+    navbar = [ ( "#data",     _("Results"), "grid"),
+               ( "#filter",   _("Filter"),   "search" )]
+    if config.may("act"):
+        navbar.append(( "#commands", _("Commands"), "gear" ))
 
     # Should we show a page with context links?
     context_links = [
@@ -208,9 +212,18 @@ def render_view(view, rows, datasource, group_painters, painters,
     jqm_page_navfooter(navbar, '#data', page_id)
 
     # Page: Commands
-    jqm_page_header(_("Commands"), left_button=home, id="commands")
-    html.write("Hier kommen die Commands")
-    jqm_page_navfooter(navbar, '#commands', page_id)
+    if len(rows) > 0 and config.may("act"):
+        jqm_page_header(_("Commands"), left_button=home, id="commands")
+        show_commands = True
+        if html.has_var("_do_actions"):
+            try:
+                show_commands = do_commands(view, datasource["infos"][0], rows)
+            except MKUserError, e:
+                html.show_error(e.message)
+                show_commands = True
+        if show_commands:
+            show_command_form(view, datasource, rows)
+        jqm_page_navfooter(navbar, '#commands', page_id)
 
     # Page: Filters
     jqm_page_header(_("Filter / Search"), left_button=home, id="filter")
@@ -251,11 +264,53 @@ def show_filter_form(show_filters):
       ".attr('href', '').live('click', function(e) "
       "{ e.preventDefault(); $('div#filter form[name=\"filter\"]').submit();});")
 
+def show_command_form(view, datasource, rows):
+    what = datasource["infos"][0]
+
+    html.begin_form("commands", html.req.myfile + ".py#commands")
+    html.hidden_field("_do_actions", "yes")
+    html.hidden_field("actions", "yes")
+    html.hidden_fields() # set all current variables, exception action vars
+
+    one_shown = False
+    html.write('<ul data-inset="false" data-role="listview">\n')
+    for command in views.multisite_commands:
+       if what in command["tables"] and config.may(command["permission"]):
+            html.write('<li data-role="fieldcontain">\n')
+            html.write('<fieldset data-role="controlgroup">\n')
+            html.write('<div role="heading" class="ui-controlgroup-label">%s</div>' % command["title"])
+            html.write('<div class="ui-controlgroup-controls">')
+            command["render"]()
+            html.write('</div></fieldset></li>\n')
+            one_shown = True
+    html.write("</ul>")
+    if not one_shown:
+        html.write(_('No commands are possible in this view'))
+
+def do_commands(view, what, rows):
+    command = None
+    title = views.core_command(what, rows[0])[1] # just get the title
+    r = html.confirm(_("Do you really want to %s the %d %ss?") %
+                     (title, len(rows), what), action=html.req.myfile + ".py#commands")
+    if r != True:
+        return r == None # Show commands on negative answer
+
+    count = 0
+    for row in rows:
+        nagios_commands, title = views.core_command(what, row)
+        for command in nagios_commands:
+            if type(command) == unicode:
+                command = command.encode("utf-8")
+            html.live.command(command, row["site"])
+            count += 1
+
+    if command:
+        html.message(_("Successfully sent %d commands to Nagios.") % count)
+    return True # Show commands again
 
 def show_context_links(context_links):
     items = []
     for view, title, uri, icon, buttonid in context_links:
         items.append((uri, title))
     jqm_page_index(_("Related Views"), items)
-
 

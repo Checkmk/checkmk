@@ -497,33 +497,9 @@ div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 {
      margin-left: 0px;
 }
 
-div.really { 
-    background-color: #f88;
-    border-color: #800;
-}
-
 div.really input { 
     font-weight: bold;
     margin-top: 1em;
     padding: 0.5ex 2em;
-}
-
-div.success { 
-    background-color: #8f8;
-    border-color: #080;
-}
-div.message {
-    background-color: #8cf;
-    border-color: #048;
-}
-
-div.error { 
-    background-color: #f84;
-    border-color: #e40;
-}
-
-div.warning { 
-    background-color: #ff4;
-    border-color: #fc0;
 }
 

@@ -1982,7 +1982,7 @@ def core_command(what, row):
     else:
         raise MKInternalError(_("Sorry, no actions possible on table %s") % tablename)
 
-    command = None
+    commands = None
     for cmd in multisite_commands:
         if config.may(cmd["permission"]):
             result = cmd["action"](cmdtag, spec, row)
@@ -2007,8 +2007,9 @@ def core_command(what, row):
 # [...] new rows -> Rows actions (shall/have) be performed on
 def do_actions(view, what, action_rows, backurl):
     if not config.may("act"):
-        html.show_error(_("You are not allowed to perform actions. If you think this is an error, "
-              "please ask your administrator grant you the permission to do so."))
+        html.show_error(_("You are not allowed to perform actions. "
+                          "If you think this is an error, please ask "
+                          "your administrator grant you the permission to do so."))
         return False # no actions done
 
     if not action_rows:
@@ -2038,7 +2039,7 @@ def do_actions(view, what, action_rows, backurl):
             message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
         html.message(message)
     elif count == 0:
-        html.message(_("No matching service. No command sent."))
+        html.message(_("No matching data row. No command sent."))
     return True
 
 def get_selected_rows(view, rows, sel_var):

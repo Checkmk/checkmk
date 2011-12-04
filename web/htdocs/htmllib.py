@@ -716,28 +716,40 @@ class html:
         return h
 
     def show_error(self, msg):
+        if self.mobile:
+            self.write('<center>')
         if self.output_format == "html":
             self.write("<div class=error>%s</div>\n" % msg)
         else:
             self.write(_("ERROR: "))
             self.write(strip_tags(msg))
             self.write("\n")
+        if self.mobile:
+            self.write('</center>')
 
     def show_warning(self, msg):
+        if self.mobile:
+            self.write('<center>')
         if self.output_format == "html":
             self.write("<div class=warning>%s</div>\n" % msg)
         else:
             self.write(_("WARNING: "))
             self.write(strip_tags(msg))
             self.write("\n")
+        if self.mobile:
+            self.write('</center>')
 
     def message(self, msg):
+        if self.mobile:
+            self.write('<center>')
         if self.output_format == "html":
             self.write("<div class=success>%s</div>\n" % msg)
         else:
             self.write(_("MESSAGE: "))
             self.write(strip_tags(msg))
             self.write("\n")
+        if self.mobile:
+            self.write('</center>')
 
     def check_limit(self, rows, limit):
         count = len(rows)
@@ -822,7 +834,11 @@ class html:
 
     # called by page functions in order to check, if this was
     # a reload or the original form submission. Increases the
-    # transid of the user, if the latter was the case
+    # transid of the user, if the latter was the case.
+    # There are three return codes:
+    # True:  -> positive confirmation by the user
+    # False: -> not yet confirmed, question is being shown
+    # None:  -> a browser reload or a negative confirmation
     def check_transaction(self):
         if self.transaction_valid():
             self.increase_transid()
@@ -830,17 +846,21 @@ class html:
         else:
             return False
 
-    def confirm(self, msg):
+    def confirm(self, msg, method="POST", action=None):
         if self.var("_do_actions") == "No":
             return # user has pressed "No"               # None --> "No"
         if not self.has_var("_do_confirm"):
+            if self.mobile:
+                self.write('<center>')
             self.write("<div class=really>%s" % msg)
-            self.begin_form("confirm", None, "POST")
+            self.begin_form("confirm", method=method, action=action)
             self.hidden_fields(add_action_vars = True)
             self.button("_do_confirm", _("Yes!"), "really")
             self.button("_do_actions", _("No"), "")
             self.end_form()
             self.write("</div>")
+            if self.mobile:
+                self.write('</center>')
             return False                                # False --> "Dialog shown, no answer yet"
         else:
             return self.check_transaction() and True or None # True: "Yes", None --> Browser reload

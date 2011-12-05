@@ -857,11 +857,17 @@ def check_host_permissions(hostname, exception=True):
     return reason
 
 
-def check_folder_permissions(folder, how, exception=True):
-    if config.may("wato.all_folders"):
-        return True
-    if how == "read" and config.may("wato.see_all_folders"):
-        return True
+def check_folder_permissions(folder, how, exception=True, user = None):
+    if not user:
+        if config.may("wato.all_folders"):
+            return True
+        if how == "read" and config.may("wato.see_all_folders"):
+            return True
+    else:
+        if config.user_may(user, "wato.all_folders"):
+            return True
+        if how == "read" and config.user_may(user, "wato.see_all_folders"):
+            return True
 
     # Get contact groups of that folder
     effective = effective_attributes(None, folder)
@@ -7610,7 +7616,7 @@ def save_users(profiles):
 
     # Call the users_saved hook
     try:
-        call_hook_users_saved()
+        call_hook_users_saved(users)
     except Exception, e:
         if config.debug:
             raise
@@ -9862,9 +9868,9 @@ def call_hook_activate_changes():
         call_hooks("activate-changes", collect_hosts(g_root_folder))
 
 # This hook is executed when the save_users() function is called
-def call_hook_users_saved():
+def call_hook_users_saved(users):
     if hook_registered('users-saved'):
-        call_hooks("users-saved")
+        call_hooks("users-saved", users)
 
 
 #.

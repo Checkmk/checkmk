@@ -172,6 +172,7 @@ class html:
         self.form_name = None
         self.form_vars = []
         self.context_buttons_open = False
+        self.mobile = False
 
     def plugin_stylesheets(self): 
         global plugin_stylesheets

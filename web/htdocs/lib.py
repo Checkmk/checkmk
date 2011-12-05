@@ -117,6 +117,21 @@ def load_web_plugins(forwhat, globalvars):
                     if fn.endswith(".py"):
                         execfile(local_plugins_path + "/" + fn, globalvars)
 
+def get_languages():
+    languages = []
+    dirs = [ defaults.locale_dir ]
+    if defaults.omd_root:
+        dirs.append(defaults.omd_root + "/local/share/check_mk/locale")
+
+    for lang_dir in dirs:
+        try:
+            languages += [ (val, val) for val in os.listdir(lang_dir) if not '.' in val ]
+        except OSError:
+            # Catch "OSError: [Errno 2] No such file or directory:" when directory not exists
+            pass
+
+    return languages
+
 def pnp_cleanup(s):
     return s \
         .replace(' ', '_') \

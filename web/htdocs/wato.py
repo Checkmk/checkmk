@@ -7223,6 +7223,14 @@ def mode_edit_user(phase):
         # Roles
         new_user["roles"] = filter(lambda role: html.get_checkbox("role_" + role), 
                                    roles.keys())
+
+        # Language configuration
+        language = html.var('language')
+        if language and language != config.default_language:
+            new_user['language'] = language
+        elif not language and 'language' in new_user:
+            del new_user['language']
+
         # Contact groups
         cgs = []
         for c in contact_groups:
@@ -7427,6 +7435,18 @@ def mode_edit_user(phase):
         html.write("</ul>")
     html.write("</td></tr>")
 
+    languages = get_languages()
+    if languages:
+        html.write("<tr><td class=legend>")
+        html.write(_("Language") + _('<br><i>Configure the default language '
+                   'to be used in the multisite GUI.</i>'))
+        html.write("</td><td class=content>")
+        default_label = _('Default (%s)') % config.default_language
+        languages = [ ('', default_label) ] + languages
+        html.select("language", languages, config.get_language(default_label))
+        html.write("</td></tr>")
+
+
     # TODO: Later we could add custom macros here, which
     # then could be used for notifications. On the other hand,
     # if we implement some check_mk --notify, we could directly
@@ -7587,6 +7607,15 @@ def save_users(profiles):
         create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
     elif os.path.exists(auth_file):
         os.remove(auth_file)
+
+    # Call the users_saved hook
+    try:
+        call_hook_users_saved()
+    except Exception, e:
+        if config.debug:
+            raise
+        else:
+            raise MKUserError(None, "Error executing hooks: %s" % str(e))
 
 #.
 #   .-Roles----------------------------------------------------------------.
@@ -9831,6 +9860,12 @@ def call_hook_activate_changes():
     """
     if hook_registered('activate-changes'):
         call_hooks("activate-changes", collect_hosts(g_root_folder))
+
+# This hook is executed when the save_users() function is called
+def call_hook_users_saved():
+    if hook_registered('users-saved'):
+        call_hooks("users-saved")
+
 
 #.
 #   .-Helpers--------------------------------------------------------------.

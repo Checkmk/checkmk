@@ -248,21 +248,6 @@ def page_logout():
             html.set_http_header('Location', defaults.url_prefix + 'check_mk/')
             raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
 
-def get_languages():
-    languages = []
-    dirs = [ defaults.locale_dir ]
-    if defaults.omd_root:
-        dirs.append(defaults.omd_root + "/local/share/check_mk/locale")
-
-    for lang_dir in dirs:
-        try:
-            languages += [ (val, val) for val in os.listdir(lang_dir) if not '.' in val ]
-        except OSError:
-            # Catch "OSError: [Errno 2] No such file or directory:" when directory not exists
-            pass
-
-    return languages
-
 def page_edit_profile():
     html.header(_("Edit user profile"))
 
@@ -282,7 +267,7 @@ def page_edit_profile():
             #
             if config.may('edit_profile'):
                 # Set the users language if requested
-                language = html.var('lang')
+                language = html.var('language')
                 if language and language != config.get_language():
                     # Set custom language
                     users[config.user_id]['language'] = language
@@ -332,7 +317,7 @@ def page_edit_profile():
             html.write("</td><td class=content>")
             default_label = _('Default (%s)') % config.default_language
             languages = [ ('', default_label) ] + languages
-            html.select("lang", languages, config.get_language(default_label))
+            html.select("language", languages, config.get_language(default_label))
             html.set_focus("lang")
             html.write("</td></tr>")
 

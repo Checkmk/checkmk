@@ -127,8 +127,10 @@ def sidebar_foot():
     html.write('<ul class=buttons>\n')
     if config.may("configure_sidebar"):
         html.write('<li><a target="main" href="sidebar_add_snapin.py">Add snapin</a></li>')
-    html.write('<li><a class=profile target="main" href="edit_profile.py" title="%s"></a></li>' % _('Edit user profile'))
-    html.write('<li><a class=logout target="_top" href="logout.py" title="%s"></a></li>' % _('Logout'))
+    if config.may("edit_profile") or config.may("change_password"):
+        html.write('<li><a class=profile target="main" href="edit_profile.py" title="%s"></a></li>' % _('Edit user profile'))
+    if config.may("logout"):
+        html.write('<li><a class=logout target="_top" href="logout.py" title="%s"></a></li>' % _('Logout'))
     html.write('</ul>')
     html.write("<div class=copyright>&copy; <a target=\"main\" href=\"http://mathias-kettner.de\">Mathias Kettner</a></div>\n")
     html.write('</div>')

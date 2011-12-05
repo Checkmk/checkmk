@@ -219,6 +219,24 @@ declare_permission("configure_sidebar",
      [ "admin", "user" ])
 
 
+declare_permission('edit_profile',
+    'Edit the user profile',
+    'Permits the user to change the user profile settings.',
+    [ 'admin', 'user' ]
+)
+
+declare_permission('change_password',
+    'Edit the user password',
+    'Permits the user to change the password.',
+    [ 'admin', 'user' ]
+)
+
+declare_permission('logout',
+    'Logout',
+    'Permits the user to logout.',
+    [ 'admin', 'user', 'guest' ]
+)
+
 
 # Compute permissions for HTTP user and set in
 # global variables. Also store user.
@@ -271,36 +289,13 @@ def login(u):
     user_confdir = config_dir + "/" + user_id
     make_nagios_directory(user_confdir)
 
-    # load the users configuration
-    load_profile()
-
     # load current on/off-switching states of sites
     read_site_config()
 
-def get_profile(var, default = None):
-    return user_profile.get(var, default)
-
-def set_profile(var, val):
-    user_profile[var] = val
-
-def has_profile(var):
-    var in user_profile
-
-def del_profile(var):
-    try:
-        del user_profile[var]
-    except:
-        pass
-
-def load_profile():
-    global user_profile
-    try:
-        user_profile = eval(file(user_confdir + "/profile.mk").read())
-    except:
-        user_profile = {}
-
-def save_profile():
-    save_user_file("profile", user_profile)
+def get_language(default = None):
+    if default == None:
+        default = default_language
+    return user.get('language', default)
 
 def roles_of_user(user):
     # Make sure, builtin roles are present, even if not modified 

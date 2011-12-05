@@ -107,7 +107,7 @@
 import sys, pprint, socket, re, subprocess, time, datetime,  \
        shutil, tarfile, StringIO, math, fcntl
 import urllib, urllib2
-import config, htmllib, multitar, login
+import config, htmllib, multitar
 from lib import *
 
 
@@ -6876,6 +6876,11 @@ def get_login_secret(create_on_demand = False):
         write_settings_file(path, secret)
         return secret
 
+def encrypt_password(password, salt = None):
+    if not salt:
+        salt = "%06d" % (1000000 * (time.time() % 1.0))
+    return md5crypt.md5crypt(password, salt, '$1$')
+
 def site_is_local(siteid):
     site = config.sites[siteid]
     return "socket" not in site \
@@ -7188,7 +7193,7 @@ def mode_edit_user(phase):
             if not secret or len(secret) < 10:
                 raise MKUserError(_("Please specify a secret of at least 10 characters length."))
             new_user["automation_secret"] = secret
-            new_user["password"] = login.encrypt_password(secret)
+            new_user["password"] = encrypt_password(secret)
 
         else:
             password = html.var("password").strip()
@@ -7206,7 +7211,7 @@ def mode_edit_user(phase):
                 raise MKUserError("password2", _("The both passwords do not match."))
 
             if password:
-                new_user["password"] = login.encrypt_password(password)
+                new_user["password"] = encrypt_password(password)
 
         # Email address
         email = html.var("email").strip()
@@ -7533,17 +7538,18 @@ def split_dict(d, keylist, positive):
 def save_users(profiles):
     # TODO: delete var/check_mk/web/$USER of non-existing users. Do we
     # need to remove other references as well?
-    non_contact_keys = [ "roles", "password", "locked", "automation_secret" ]
+    non_contact_keys = [ "roles", "password", "locked", "automation_secret", "language" ]
+    multisite_keys   = [ "roles", "language" ]
 
     # Remove multisite keys in contacts
     contacts = dict([ (id, split_dict(user, non_contact_keys, False)) 
                       for (id, user) 
                       in profiles.items() ])
 
-    # Remove contact keys and password from users
-    users  = dict([ (id, { "roles" : p.get("roles", []) } ) 
-                  for (id, p) 
-                  in profiles.items() ] )
+    # Only allow explicit defined attributes to be written to multisite config
+    users = {}
+    for uid, profile in profiles.items():
+        users[uid] = dict([ (p, val) for p, val in profile.items() if p in multisite_keys ])
 
     # Check_MK's monitoring contacts
     filename = root_dir + "contacts.mk"

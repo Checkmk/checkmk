@@ -171,8 +171,6 @@ def load_language(lang):
             i18n.install(unicode = True)
         except IOError, e:
             raise MKUserError('lang', 'No translation file found for the given language.')
-    else:
-        __builtin__._ = lambda x: x
 
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)
@@ -206,23 +204,6 @@ def handler(req, profiling = True):
         config.load_config() # load multisite.mk
         if html.var("debug"): # Debug flag may be set via URL
             config.debug = True
-
-        # Initialize the multiste i18n. This will be replaced by
-        # language settings stored in the user profile after the user
-        # has been initialized
-        lang = html.var("lang", config.default_language)
-        load_language(lang)
-
-        # All plugins might have to be reloaded due to a language change
-        # FIXME: Hier werden alle Module geladen, obwohl diese gar nicht immer alle benötigt würden
-        for module in [ views, sidebar, dashboard, wato, bi, mobile ]:
-            try:
-                module.load_plugins # just check if this function exists
-                module.load_plugins()
-            except AttributeError:
-                pass
-            except Exception:
-                raise
 
         # profiling can be enabled in multisite.mk
         if profiling and config.profile:
@@ -285,9 +266,21 @@ def handler(req, profiling = True):
         # Set all permissions, read site config, and similar stuff
         config.login(html.req.user)
 
-        # Load the users language
-        if config.user_id and config.get_profile('language', lang) != lang:
-            load_language(config.get_profile('language'))
+        # Initialize the multiste i18n. This will be replaced by
+        # language settings stored in the user profile after the user
+        # has been initialized
+        load_language(html.var("lang", config.get_language()))
+
+        # All plugins might have to be reloaded due to a language change
+        # FIXME: Hier werden alle Module geladen, obwohl diese gar nicht immer alle benötigt würden
+        for module in [ views, sidebar, dashboard, wato, bi, mobile ]:
+            try:
+                module.load_plugins # just check if this function exists
+                module.load_plugins()
+            except AttributeError:
+                pass
+            except Exception:
+                raise
 
         # User allowed to login at all?
         if not config.may("use"):

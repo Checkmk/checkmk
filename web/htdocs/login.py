@@ -36,18 +36,13 @@ def site_cookie_name():
     name = os.path.dirname(defaults.url_prefix).replace('/', '_')
     return 'auth%s' % name
 
-def encrypt_password(password, salt = None):
-    if not salt:
-        salt = "%06d" % (1000000 * (time.time() % 1.0))
-    return md5crypt.md5crypt(password, salt, '$1$')
-
 # Validate hashes taken from the htpasswd file. This method handles
 # crypt() and md5 hashes. This should be the common cases in the
 # used htpasswd files.
 def password_valid(pwhash, password):
     if pwhash[:3] == '$1$':
         salt = pwhash.split('$', 3)[2]
-        return pwhash == encrypt_password(password, salt)
+        return pwhash == wato.encrypt_password(password, salt)
     else:
         #html.write(repr(pwhash + ' ' + crypt.crypt(password, pwhash)))
         return pwhash == crypt.crypt(password, pwhash[:2])
@@ -274,36 +269,41 @@ def page_edit_profile():
     if not config.user_id:
         raise MKUserError(None, _('Not logged in.'))
 
+    if not config.may('edit_profile') and not config.may('change_password'):
+        raise MKAuthException(_("You are not allowed to edit your user profile."))
+
     if html.has_var('_save') and html.check_transaction():
         try:
             import wato
-            users   = wato.load_users()
+            users = wato.load_users()
 
             #
-            # FIXME: Set the users language if requested
+            # Profile edit (user options like language etc.)
             #
-            language = html.var('lang')
-            if language and language != config.default_language:
-                # Set custom language
-                config.set_profile('language', language)
-                config.save_profile()
-            elif not language and config.has_profile('language'):
-                # Remove the customized language
-                config.del_profile('language')
-                config.save_profile()
+            if config.may('edit_profile'):
+                # Set the users language if requested
+                language = html.var('lang')
+                if language and language != config.get_language():
+                    # Set custom language
+                    users[config.user_id]['language'] = language
+
+                elif not language and config.get_language('') != '':
+                    # Remove the customized language
+                    del users[config.user_id]['language']
 
             #
             # Change the password if requested
             #
-            password  = html.var('password')
-            password2 = html.var('password2', '')
-            if password:
-                if password2 and password != password2:
-                    raise MKUserError("password2", _("The both passwords do not match."))
+            if config.may('change_password'):
+                password  = html.var('password')
+                password2 = html.var('password2', '')
+                if password:
+                    if password2 and password != password2:
+                        raise MKUserError("password2", _("The both passwords do not match."))
 
-                users[config.user_id]['password'] = encrypt_password(password)
-                wato.save_users(users)
+                    users[config.user_id]['password'] = wato.encrypt_password(password)
 
+            wato.save_users(users)
             html.message(_("Successfully updated user profile."))
 
             if password:
@@ -323,29 +323,31 @@ def page_edit_profile():
     html.write(config.user_id)
     html.write("</td></tr>")
 
-    languages = get_languages()
+    if config.may('edit_profile'):
+        languages = get_languages()
 
-    if languages:
+        if languages:
+            html.write("<tr><td class=legend>")
+            html.write(_("Language"))
+            html.write("</td><td class=content>")
+            default_label = _('Default (%s)') % config.default_language
+            languages = [ ('', default_label) ] + languages
+            html.select("lang", languages, config.get_language(default_label))
+            html.set_focus("lang")
+            html.write("</td></tr>")
+
+    if config.may('change_password'):
         html.write("<tr><td class=legend>")
-        html.write(_("Language"))
+        html.write(_("Password"))
         html.write("</td><td class=content>")
-        default_label = _('Default (%s)') % config.default_language
-        languages = [ ('', default_label) ] + languages
-        html.select("lang", languages, config.get_profile('language', default_label))
-        html.set_focus("lang")
+        html.password_input('password')
         html.write("</td></tr>")
 
-    html.write("<tr><td class=legend>")
-    html.write(_("Password"))
-    html.write("</td><td class=content>")
-    html.password_input('password')
-    html.write("</td></tr>")
-
-    html.write("<tr><td class=legend>")
-    html.write(_("Password confirmation"))
-    html.write("</td><td class=content>")
-    html.password_input('password2')
-    html.write("</td></tr>")
+        html.write("<tr><td class=legend>")
+        html.write(_("Password confirmation"))
+        html.write("</td><td class=content>")
+        html.password_input('password2')
+        html.write("</td></tr>")
 
     # Save button
     html.write("<tr><td colspan=2 class=buttons>")

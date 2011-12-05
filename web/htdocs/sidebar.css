@@ -135,12 +135,22 @@ body.side {
 
 #side_footer ul.buttons a.logout {
     width: 20px;
-    margin-left: 15px;
+    margin-left: 5px;
     background-image: url("images/sidebar_logout_lo.png");
 }
 
 #side_footer ul.buttons a.logout:hover {
     background-image: url("images/sidebar_logout_hi.png");
+}
+
+#side_footer ul.buttons a.profile {
+    width: 20px;
+    margin-left: 2px;
+    background-image: url("images/sidebar_profile_lo.png");
+}
+
+#side_footer ul.buttons a.profile:hover {
+    background-image: url("images/sidebar_profile_hi.png");
 }
 
 #side_footer div.buttons a {

@@ -156,6 +156,25 @@ def connect_to_livestatus(html):
     # Default auth domain is read. Please set to None to switch off authorization
     html.live.set_auth_domain('read')
 
+def load_language(lang):
+    # Make current language globally known to all of our modules
+    __builtin__.current_language = lang
+
+    if lang:
+        locale_base = defaults.locale_dir
+        po_path = '/%s/LC_MESSAGES/multisite.po' % lang
+        # Use file in OMD local strucuture when existing
+        if os.path.exists(local_locale_path + po_path):
+            locale_base = local_locale_path
+        try:
+            i18n = gettext.translation('multisite', locale_base, languages = [ lang ], codeset = 'UTF-8')
+            i18n.install(unicode = True)
+        except IOError, e:
+            raise MKUserError('lang', 'No translation file found for the given language.')
+    else:
+        __builtin__._ = lambda x: x
+
+
 # Main entry point for all HTTP-requests (called directly by mod_apache)
 def handler(req, profiling = True):
     req.content_type = "text/html; charset=UTF-8"
@@ -189,25 +208,10 @@ def handler(req, profiling = True):
             config.debug = True
 
         # Initialize the multiste i18n. This will be replaced by
-        # language settings stored in the user profile
+        # language settings stored in the user profile after the user
+        # has been initialized
         lang = html.var("lang", config.default_language)
-
-        # Make current language globally known to all of our modules
-        __builtin__.current_language = lang
-
-        if lang:
-            locale_base = defaults.locale_dir
-            po_path = '/%s/LC_MESSAGES/multisite.po' % lang
-            # Use file in OMD local strucuture when existing
-            if os.path.exists(local_locale_path + po_path):
-                locale_base = local_locale_path
-            try:
-                i18n = gettext.translation('multisite', locale_base, languages = [ lang ], codeset = 'UTF-8')
-                i18n.install(unicode = True)
-            except IOError, e:
-                raise MKUserError('lang', 'No translation file found for the given language.')
-        else:
-            __builtin__._ = lambda x: x
+        load_language(lang)
 
         # All plugins might have to be reloaded due to a language change
         # FIXME: Hier werden alle Module geladen, obwohl diese gar nicht immer alle benötigt würden
@@ -280,6 +284,10 @@ def handler(req, profiling = True):
 
         # Set all permissions, read site config, and similar stuff
         config.login(html.req.user)
+
+        # Load the users language
+        if config.user_id and config.get_profile('language', lang) != lang:
+            load_language(config.get_profile('language'))
 
         # User allowed to login at all?
         if not config.may("use"):

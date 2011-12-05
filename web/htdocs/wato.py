@@ -107,7 +107,7 @@
 import sys, pprint, socket, re, subprocess, time, datetime,  \
        shutil, tarfile, StringIO, math, fcntl
 import urllib, urllib2
-import config, htmllib, multitar
+import config, htmllib, multitar, login
 from lib import *
 
 
@@ -7188,7 +7188,7 @@ def mode_edit_user(phase):
             if not secret or len(secret) < 10:
                 raise MKUserError(_("Please specify a secret of at least 10 characters length."))
             new_user["automation_secret"] = secret
-            new_user["password"] = encrypt_password(secret)
+            new_user["password"] = login.encrypt_password(secret)
 
         else:
             password = html.var("password").strip()
@@ -7206,7 +7206,7 @@ def mode_edit_user(phase):
                 raise MKUserError("password2", _("The both passwords do not match."))
 
             if password:
-                new_user["password"] = encrypt_password(password)
+                new_user["password"] = login.encrypt_password(password)
 
         # Email address
         email = html.var("email").strip()
@@ -7434,14 +7434,6 @@ def mode_edit_user(phase):
     html.write("</table>")
     html.hidden_fields()
     html.end_form()
-
-
-
-
-def encrypt_password(password):
-    import md5crypt, time
-    salt = "%06d" % (1000000 * (time.time() % 1.0))
-    return md5crypt.md5crypt(password, salt, '$1$')
 
 def load_users(): 
     # First load monitoring contacts from Check_MK's world

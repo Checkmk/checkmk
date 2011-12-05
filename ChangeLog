@@ -32,6 +32,8 @@
     * New nifty sidebar snapin "Speed-O-Meter"
     * Implemented new cookie based login mechanism including a fancy login GUI
     * Implemented logout functionality for basic auth and the new cookie based auth
+    * Implemented user profile management page for changing the user password and
+      the default language (if available)
     * New filter for the (new) state in host/service alerts
     * New command for sending custom notifications
     * FIX: Fixed encoding problem when opening dashboard

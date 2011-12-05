@@ -27,7 +27,7 @@
 import defaults, htmllib, config
 from lib import *
 from mod_python import apache
-import md5, md5crypt, crypt, time
+import os, md5, md5crypt, crypt, time
 
 class MKAuthException(MKGeneralException):
     pass
@@ -36,13 +36,18 @@ def site_cookie_name():
     name = os.path.dirname(defaults.url_prefix).replace('/', '_')
     return 'auth%s' % name
 
+def encrypt_password(password, salt = None):
+    if not salt:
+        salt = "%06d" % (1000000 * (time.time() % 1.0))
+    return md5crypt.md5crypt(password, salt, '$1$')
+
 # Validate hashes taken from the htpasswd file. This method handles
 # crypt() and md5 hashes. This should be the common cases in the
 # used htpasswd files.
 def password_valid(pwhash, password):
     if pwhash[:3] == '$1$':
         salt = pwhash.split('$', 3)[2]
-        return pwhash == md5crypt.md5crypt(password, salt, '$1$')
+        return pwhash == encrypt_password(password, salt)
     else:
         #html.write(repr(pwhash + ' ' + crypt.crypt(password, pwhash)))
         return pwhash == crypt.crypt(password, pwhash[:2])
@@ -248,3 +253,108 @@ def page_logout():
             html.set_http_header('Location', defaults.url_prefix + 'check_mk/')
             raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
 
+def get_languages():
+    languages = []
+    dirs = [ defaults.locale_dir ]
+    if defaults.omd_root:
+        dirs.append(defaults.omd_root + "/local/share/check_mk/locale")
+
+    for lang_dir in dirs:
+        try:
+            languages += [ (val, val) for val in os.listdir(lang_dir) if not '.' in val ]
+        except OSError:
+            # Catch "OSError: [Errno 2] No such file or directory:" when directory not exists
+            pass
+
+    return languages
+
+def page_edit_profile():
+    html.header(_("Edit user profile"))
+
+    if not config.user_id:
+        raise MKUserError(None, _('Not logged in.'))
+
+    if html.has_var('_save') and html.check_transaction():
+        try:
+            import wato
+            users   = wato.load_users()
+
+            #
+            # FIXME: Set the users language if requested
+            #
+            language = html.var('lang')
+            if language and language != config.default_language:
+                # Set custom language
+                config.set_profile('language', language)
+                config.save_profile()
+            elif not language and config.has_profile('language'):
+                # Remove the customized language
+                config.del_profile('language')
+                config.save_profile()
+
+            #
+            # Change the password if requested
+            #
+            password  = html.var('password')
+            password2 = html.var('password2', '')
+            if password:
+                if password2 and password != password2:
+                    raise MKUserError("password2", _("The both passwords do not match."))
+
+                users[config.user_id]['password'] = encrypt_password(password)
+                wato.save_users(users)
+
+            html.message(_("Successfully updated user profile."))
+
+            if password:
+                html.write("<script type='text/javascript'>if(top) top.location.reload(); else document.location.reload();</script>")
+        except MKUserError, e:
+            html.add_user_error(e.varname, e.message)
+
+    if html.has_user_errors():
+        html.show_user_errors()
+
+    html.begin_form("profile", method="POST")
+    html.write("<table class=form>")
+
+    html.write("<tr><td class=legend>")
+    html.write(_("Username"))
+    html.write("</td><td class=content>")
+    html.write(config.user_id)
+    html.write("</td></tr>")
+
+    languages = get_languages()
+
+    if languages:
+        html.write("<tr><td class=legend>")
+        html.write(_("Language"))
+        html.write("</td><td class=content>")
+        default_label = _('Default (%s)') % config.default_language
+        languages = [ ('', default_label) ] + languages
+        html.select("lang", languages, config.get_profile('language', default_label))
+        html.set_focus("lang")
+        html.write("</td></tr>")
+
+    html.write("<tr><td class=legend>")
+    html.write(_("Password"))
+    html.write("</td><td class=content>")
+    html.password_input('password')
+    html.write("</td></tr>")
+
+    html.write("<tr><td class=legend>")
+    html.write(_("Password confirmation"))
+    html.write("</td><td class=content>")
+    html.password_input('password2')
+    html.write("</td></tr>")
+
+    # Save button
+    html.write("<tr><td colspan=2 class=buttons>")
+    html.button("_save", _("Save"))
+    html.write("</td></tr>")
+
+    html.write("</table>")
+    html.hidden_fields()
+    html.end_form()
+    html.footer()
+
+    return apache.OK

@@ -252,6 +252,10 @@ def handler(req, profiling = True):
             # When not authed tell the browser to ask for the password
             req.user = login.check_auth()
             if req.user == '':
+                if fail_silently:
+                    # While api call don't show the login dialog
+                    raise MKUnauthenticatedException(_('You are not authenticated.'))
+
                 # After auth check the regular page can be shown
                 result = login.page_login()
                 if type(result) == tuple:
@@ -310,6 +314,13 @@ def handler(req, profiling = True):
             html.header(_("Permission denied"))
             html.show_error(str(e))
             html.footer()
+
+    except MKUnauthenticatedException, e:
+        if not fail_silently:
+            html.header(_("Not authenticated"))
+            html.show_error(str(e))
+            html.footer()
+        response_code = apache.HTTP_UNAUTHORIZED
 
     except MKConfigError, e:
         if not fail_silently:

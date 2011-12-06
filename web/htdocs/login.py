@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import defaults, htmllib, config
+import defaults, htmllib, config, wato
 from lib import *
 from mod_python import apache
 import os, md5, md5crypt, crypt, time
@@ -192,9 +192,6 @@ def normal_login_page():
     html.set_render_headfoot(False)
     html.header(_("Check_MK Multisite Login"), javascripts=[], stylesheets=["pages", "login"])
 
-    if html.has_user_errors():
-        html.show_user_errors()
-
     origtarget = html.var('_origtarget', '')
     if not origtarget and not html.req.myfile == 'login':
         origtarget = html.req.uri
@@ -204,6 +201,10 @@ def normal_login_page():
     html.write("<h1>Check_MK Multisite</h2>")
 
     html.write('<div id=form>')
+
+    if html.has_user_errors():
+        html.show_user_errors()
+
     html.begin_form("login", method = 'POST', add_transid = False)
     html.hidden_field('_origtarget', htmllib.attrencode(origtarget))
     html.write('<p>')

@@ -6883,6 +6883,7 @@ def get_login_secret(create_on_demand = False):
         return secret
 
 def encrypt_password(password, salt = None):
+    import md5crypt
     if not salt:
         salt = "%06d" % (1000000 * (time.time() % 1.0))
     return md5crypt.md5crypt(password, salt, '$1$')
@@ -7615,13 +7616,7 @@ def save_users(profiles):
         os.remove(auth_file)
 
     # Call the users_saved hook
-    try:
-        call_hook_users_saved(users)
-    except Exception, e:
-        if config.debug:
-            raise
-        else:
-            raise MKUserError(None, "Error executing hooks: %s" % str(e))
+    call_hook(call_hook_users_saved, users)
 
 #.
 #   .-Roles----------------------------------------------------------------.
@@ -7935,6 +7930,8 @@ def save_roles(roles):
     out = file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("roles.update(\n%s)\n" % pprint.pformat(roles))
+
+    call_hook(call_hook_roles_saved, roles)
 
 
 # Adapt references in users. Builtin rules cannot
@@ -9834,6 +9831,17 @@ def call_hooks(name, *args):
             traceback.print_exception(t, v, tb, None, txt)
             html.show_error("<h3>" + _("Error executing hook") + " %s #%d: %s</h3><pre>%s</pre>" % (name, n, e, txt.getvalue()))
 
+# Call the hooks. This is executed at the places where to run the hooks
+# This includes exception handling with raising user errors on exceptions
+def call_hook(handler, *args):
+    try:
+        handler(*args)
+    except Exception, e:
+        if config.debug:
+            raise
+        else:
+            raise MKUserError(None, "Error executing hooks: %s" % str(e))
+
 def call_hook_hosts_changed(folder):
     if "hosts-changed" in g_hooks:
         hosts = collect_hosts(folder)
@@ -9871,6 +9879,11 @@ def call_hook_activate_changes():
 def call_hook_users_saved(users):
     if hook_registered('users-saved'):
         call_hooks("users-saved", users)
+
+# This hook is executed when the save_roles() function is called
+def call_hook_roles_saved(roles):
+    if hook_registered('roles-saved'):
+        call_hooks("roles-saved", roles)
 
 
 #.

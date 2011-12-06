@@ -73,7 +73,8 @@ register_rule(group,
                             "of how many packets have been received yet."),
                    minvalue = 1,
                )),
-        ]))
+        ]),
+        match="dict")
 
 checkgroups = []
 checkgroups.append(( 

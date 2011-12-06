@@ -9093,7 +9093,8 @@ def construct_rule(ruleset, value, tag_specs, host_list, item_list):
 
 
 def tag_alias(tag):
-    for id, title, tags in config.wato_host_tags:
+    for entry in config.wato_host_tags:
+        id, title, tags = entry[:3]
         for t in tags:
             if t[0] == tag:
                 return t[1]
@@ -9187,7 +9188,8 @@ def ruleeditor_hover_code(varname, rulenr, mode, boolval, folder=None):
 def get_rule_conditions(ruleset):
     # Tag list
     tag_list = []
-    for id, title, tags in config.wato_host_tags:
+    for entry in config.wato_host_tags:
+        id, title, tags = entry[:3]
         mode = html.var("tag_" + id)
         tagvalue = html.var("tagvalue_" + id)
         if mode == "is":
@@ -9345,7 +9347,8 @@ def mode_edit_rule(phase):
                      "to your <tt>multisite.mk</tt>. You will find an example there."))
     else:
         html.write("<table>")
-        for id, title, tags in config.wato_host_tags:
+        for entry in config.wato_host_tags:
+            id, title, tags = entry[:3]
             html.write("<tr><td>%s: &nbsp;</td>" % title)
             default_tag = None
             ignore = True

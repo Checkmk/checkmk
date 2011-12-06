@@ -1,0 +1,11 @@
+Title: Host tags reorder works only partially
+Component: wato
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-12-06 12:11:21
+Targetversion: 1.2.0
+Class: bug
+
+Changing the order of host tags in WATO does not
+work with the down arrow on the first tag group.

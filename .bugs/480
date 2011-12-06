@@ -1,0 +1,11 @@
+Title: Check for duplicate host tags values
+Component: wato
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-12-06 12:18:18
+Targetversion: 1.2.0
+Class: bug
+
+When editing host tags make sure that within one tag group
+each tag is unique.

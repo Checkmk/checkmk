@@ -1,0 +1,11 @@
+Title: Tag group with empty tag does not show default
+Component: wato
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-12-06 12:26:37
+Targetversion: 1.2.0
+Class: bug
+
+If a tag group has an empty tag then that choice is not
+being shown in the combo box.

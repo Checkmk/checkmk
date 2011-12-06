@@ -172,6 +172,7 @@ class html:
         self.form_name = None
         self.form_vars = []
         self.context_buttons_open = False
+        self.mobile = False
 
     def plugin_stylesheets(self): 
         global plugin_stylesheets
@@ -235,7 +236,7 @@ class html:
             onsubmit = ' onsubmit="%s"' % onsubmit
         else:
             onsubmit = ''
-        self.write("<form name=%s class=%s action=\"%s\" method=%s%s%s>\n" %
+        self.write('<form name=%s class=%s action="%s" method="%s"%s%s>\n' %
                    (name, name, action, method, enctype, onsubmit))
         self.hidden_field("filled_in", name)
         if add_transid:
@@ -256,8 +257,13 @@ class html:
         else:
             self.user_errors[varname] = message
 
-    def has_users_errors(self):
+    def has_user_errors(self):
         return len(self.user_errors) > 0
+
+    def show_user_errors(self):
+        self.write('<div class=error>\n')
+        self.write('<br>'.join(self.user_errors.values()))
+        self.write('</div>\n')
 
     def hidden_field(self, var, value):
         if value != None:
@@ -372,14 +378,12 @@ class html:
     def number_input(self, varname, deflt = "", size=8):
         self.text_input(varname, str(deflt), "number", size=size)
 
-    def text_input(self, varname, default_value = "", cssclass = "text", **args):
+    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None, **args):
         if default_value == None:
             default_value = ""
         addprops = ""
         if "size" in args:
             addprops += " size=%d" % (args["size"] + 1)
-        if "id" in args:
-            addprops += " id='%s'" % args["id"]
         if "type" in args:
             mytype = args["type"]
         else:
@@ -393,6 +397,14 @@ class html:
         html = ""
         if error:
             html = "<x class=inputerror>"
+        if label:
+            if not id:
+                id = "ti_%s" % varname
+            html += '<label for="%s">%s</label>' % (id, label)
+
+        if id:
+            addprops += " id='%s'" % id
+
         html += "<input type=%s class=%s value=\"%s\" name=\"%s\"%s>" % \
                      (mytype, cssclass, attrencode(value), varname, addprops)
         if error:
@@ -439,15 +451,24 @@ class html:
         if varname:
             self.form_vars.append(varname)
 
-    def radiobutton(self, varname, value, checked, text):
+    def radiobutton(self, varname, value, checked, label):
         if self.has_var(varname):
             checked = self.var(varname) == value
         checked_text = checked and " checked" or ""
-        self.write("<input type=radio name=%s value=\"%s\"%s> %s\n" %
-                      (varname, value, checked_text, text))
+        if label:
+            id = "rb_%s_%s" % (varname, value)
+            idtxt = ' id="%s"' % id
+        else:
+            idtxt = ""
+        self.write("<input type=radio name=%s value=\"%s\"%s%s>\n" %
+                      (varname, value, checked_text, idtxt))
+        if label:
+            self.write('<label for="%s">%s</label>\n' % (id, label))
         self.form_vars.append(varname)
 
-    def checkbox(self, varname, deflt=False, cssclass = '', onclick = None, add_attr = []):
+    def checkbox(self, varname, deflt=False, cssclass = '', onclick = None, label=None, id=None, add_attr = None):
+        if add_attr == None:
+            add_attr = [] # do not use [] as default element, it will be a global variable!
         error = self.user_errors.get(varname)
         if error:
             html = "<x class=inputerror>"
@@ -460,13 +481,19 @@ class html:
         if value == None: # form not yet filled in
              value = deflt
 
-        checked = value and " CHECKED" or ""
+        checked = value and " CHECKED " or ""
         if cssclass:
             cssclass = ' class="%s"' % cssclass
         onclick_code = onclick and " onclick=\"%s\"" % (onclick) or ""
-        self.write("<input type=checkbox name=\"%s\"%s%s%s%s>" %
+        if label and not id:
+            id = "cb_" + varname
+        if id:
+            add_attr.append('id="%s"' % id)
+        self.write("<input type=checkbox name=\"%s\"%s%s%s%s>\n" %
                         (varname, checked, cssclass, onclick_code, " ".join(add_attr)))
         self.form_vars.append(varname)
+        if label:
+            self.write('<label for="%s">%s</label>\n' % (id, label))
         if error:
             html += "</x>"
 
@@ -560,37 +587,35 @@ class html:
             self.write("</x>")
         self.form_vars.append(varname)
 
-    def html_head(self, title, add_js = True):
+    def html_head(self, title, javascripts = [], stylesheets = ["pages"]):
         if not self.req.header_sent:
             self.write(
                 u'''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-                <html><head>
-                <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-                <title>''')
-            # Ich versteh mit dem drecks UTF-8 bald garnix mehr...
-            # self.req.write(title.encode("utf-8"))
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\n''')
+            self.write('<title>')
             self.write(title)
-            self.write('''</title>
-                <link rel="stylesheet" type="text/css" href="check_mk.css">''')
+            self.write('</title>\n')
     
             # If the variable _link_target is set, then all links in this page
             # should be targetted to the HTML frame named by _link_target. This
             # is e.g. useful in the dash-board
             if self.link_target:
-                self.write('<base target="%s">' % self.link_target)
+                self.write('<base target="%s">\n' % self.link_target)
 
-            # Load all style sheets in htdocs/css
+            # Load all specified style sheets and all user style sheets in htdocs/css
+            for css in [ "check_mk" ] + stylesheets:
+                self.write('<link rel="stylesheet" type="text/css" href="%s.css">\n' % css)
+
             for css in self.plugin_stylesheets():
-               self.write('                <link rel="stylesheet" type="text/css" href="css/%s">' % css)
+               self.write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
 
             if config.custom_style_sheet:
-               self.write('                <link rel="stylesheet" type="text/css" href="%s">' % config.custom_style_sheet)
+               self.write('<link rel="stylesheet" type="text/css" href="%s">\n' % config.custom_style_sheet)
 
-            if add_js:
-                self.write('''
-                <script type='text/javascript' src='js/check_mk.js'></script>
-                <script type='text/javascript' src='js/hover.js'></script>
-                ''')
+            # Load specified Javascript files
+            for js in [ "check_mk", "hover" ] + javascripts:
+                self.write('<script type="text/javascript" src="js/%s.js"></script>\n' % js)
 
             if self.browser_reload != 0:
                 if self.browser_redirect != '':
@@ -638,8 +663,8 @@ class html:
             self.write("<div class=urldebug>%s</div>" % self.makeuri([]))
 
 
-    def body_start(self, title=''):
-        self.html_head(title)
+    def body_start(self, title='', **args):
+        self.html_head(title, **args)
         self.write('<body class="main %s">' % self.var("_body_class", ""))
 
     def bottom_focuscode(self):
@@ -692,28 +717,40 @@ class html:
         return h
 
     def show_error(self, msg):
+        if self.mobile:
+            self.write('<center>')
         if self.output_format == "html":
             self.write("<div class=error>%s</div>\n" % msg)
         else:
             self.write(_("ERROR: "))
             self.write(strip_tags(msg))
             self.write("\n")
+        if self.mobile:
+            self.write('</center>')
 
     def show_warning(self, msg):
+        if self.mobile:
+            self.write('<center>')
         if self.output_format == "html":
             self.write("<div class=warning>%s</div>\n" % msg)
         else:
             self.write(_("WARNING: "))
             self.write(strip_tags(msg))
             self.write("\n")
+        if self.mobile:
+            self.write('</center>')
 
     def message(self, msg):
+        if self.mobile:
+            self.write('<center>')
         if self.output_format == "html":
             self.write("<div class=success>%s</div>\n" % msg)
         else:
             self.write(_("MESSAGE: "))
             self.write(strip_tags(msg))
             self.write("\n")
+        if self.mobile:
+            self.write('</center>')
 
     def check_limit(self, rows, limit):
         count = len(rows)
@@ -798,7 +835,11 @@ class html:
 
     # called by page functions in order to check, if this was
     # a reload or the original form submission. Increases the
-    # transid of the user, if the latter was the case
+    # transid of the user, if the latter was the case.
+    # There are three return codes:
+    # True:  -> positive confirmation by the user
+    # False: -> not yet confirmed, question is being shown
+    # None:  -> a browser reload or a negative confirmation
     def check_transaction(self):
         if self.transaction_valid():
             self.increase_transid()
@@ -806,17 +847,21 @@ class html:
         else:
             return False
 
-    def confirm(self, msg):
+    def confirm(self, msg, method="POST", action=None):
         if self.var("_do_actions") == "No":
             return # user has pressed "No"               # None --> "No"
         if not self.has_var("_do_confirm"):
+            if self.mobile:
+                self.write('<center>')
             self.write("<div class=really>%s" % msg)
-            self.begin_form("confirm", None, "POST")
+            self.begin_form("confirm", method=method, action=action)
             self.hidden_fields(add_action_vars = True)
             self.button("_do_confirm", _("Yes!"), "really")
             self.button("_do_actions", _("No"), "")
             self.end_form()
             self.write("</div>")
+            if self.mobile:
+                self.write('</center>')
             return False                                # False --> "Dialog shown, no answer yet"
         else:
             return self.check_transaction() and True or None # True: "Yes", None --> Browser reload
@@ -909,6 +954,9 @@ class html:
     def has_cookie(self, varname):
         return varname in self.req.cookies
 
+    def get_cookie_names(self):
+        return self.req.cookies.keys()
+
     def cookie(self, varname, deflt):
         try:
             return self.req.cookies[varname].value
@@ -916,7 +964,7 @@ class html:
             return deflt
 
     def set_cookie(self, varname, value, expires = None):
-        c = Cookie.Cookie(varname, value, path = defaults.url_prefix)
+        c = Cookie.Cookie(varname, value, path = '/')
         if expires is not None:
             c.expires = expires
 

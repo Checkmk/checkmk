@@ -1,0 +1,96 @@
+/*
++------------------------------------------------------------------+
+|             ____ _               _        __  __ _  __           |
+|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+|           | |___| | | |  __/ (__|   <    | |  | | . \            |
+|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+|                                                                  |
+| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
++------------------------------------------------------------------+
+
+This file is part of Check_MK.
+The official homepage is at http://mathias-kettner.de/check_mk.
+
+check_mk is free software;  you can redistribute it and/or modify it
+under the  terms of the  GNU General Public License  as published by
+the Free Software Foundation in version 2.  check_mk is  distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+ails.  You should have  received  a copy of the  GNU  General Public
+License along with GNU Make; see the file  COPYING.  If  not,  write
+to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+Boston, MA 02110-1301 USA.
+
+*/
+
+/*-------------------------------------------------------------------------.
+|                      _                _                                  |
+|                     | |    ___   __ _(_)_ __                             |
+|                     | |   / _ \ / _` | | '_ \                            |
+|                     | |__| (_) | (_| | | | | |                           |
+|                     |_____\___/ \__, |_|_| |_|                           |
+|                                 |___/                                    |
++--------------------------------------------------------------------------+
+| Styling of the login page (when not HTTP Basic Auth is used)             |
+'-------------------------------------------------------------------------*/
+
+#login {
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    text-align:center;
+}
+#login #logo {
+    width: 126px;
+    margin: 5em auto 0 auto;
+    height: 72px;
+    background-repeat: no-repeat;
+    background-image: url("images/mk_logo_126x72.gif");
+}
+#login h1 {
+    width: 300px;
+    margin: 0.2em auto 1em auto;
+}
+#login a {
+    color: #ffffff;
+}
+#login a:hover {
+    text-decoration: none;
+}
+#login #form {
+    width: 320px;
+    margin: 0 auto 10px auto;
+    padding: 8px 20px 8px 20px;
+    background-image: url("images/form_background.png");
+    border-radius: 15px;
+}
+#login p {
+    text-align: left;
+}
+#login label {
+    font-size: 1.4em;
+    padding-top: 0;
+    margin: 0;
+}
+#login p input {
+    width: 312px;
+    font-size: 1.5em;
+    margin-top: 2px;
+}
+#login #table td.submit {
+    padding-top: 5px;
+}
+#login p.submit {
+    text-align: right;
+}
+#login p.submit input {
+    width: auto;
+}
+
+#login #foot {
+    font-size: 0.8em;
+    font-style: italic;
+    color: #ffffff;
+}

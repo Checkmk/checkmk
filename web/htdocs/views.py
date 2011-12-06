@@ -48,6 +48,7 @@ multisite_painters         = {}
 multisite_sorters          = {}
 multisite_builtin_views    = {}
 multisite_painter_options  = {}
+multisite_commands         = []
 ubiquitary_filters         = [] # Always show this filters
 view_hooks                 = {}
 
@@ -58,44 +59,7 @@ def load_plugins():
         return
     loaded_with_language = current_language
 
-    config.declare_permission_section("action", _("Commands on Objects"))
-    config.declare_permission("action.notifications",
-            _("Enable/disable notifications"),
-            _("Enable and disable notifications on hosts and services"),
-            [ "admin" ])
-    config.declare_permission("action.enablechecks",
-            _("Enable/disable checks"),
-            _("Enable and disable active or passive checks on hosts and services"),
-            [ "admin" ])
-    config.declare_permission("action.clearmodattr",
-            _("Clear modified attributes"),
-            _("Remove the information that an attribute (like check enabling) has been changed"),
-            [ "admin" ])
-    config.declare_permission("action.reschedule",
-            _("Reschedule checks"),
-            _("Reschedule host and service checks"),
-            [ "user", "admin" ])
-    config.declare_permission("action.fakechecks",
-            _("Fake check results"),
-            _("Manually submit check results for host and service checks"),
-            [ "admin" ])
-    config.declare_permission("action.customnotification",
-            _("Send custom notification"),
-            _("Manually let the core send a notification to a host or service in order "
-              "to test if notifications are setup correctly"),
-            [ "user", "admin" ])
-    config.declare_permission("action.acknowledge",
-            _("Acknowledge"),
-            _("Acknowledge host and service problems and remove acknowledgements"),
-            [ "user", "admin" ])
-    config.declare_permission("action.addcomment",
-            _("Add comments"),
-            _("Add comments to hosts or services, and remove comments"),
-            [ "user", "admin" ])
-    config.declare_permission("action.downtimes",
-            _("Set/Remove Downtimes"),
-            _("Schedule and remove downtimes on hosts and services"),
-            [ "user", "admin" ])
+    config.declare_permission_section("action", _("Commands on host and services"))
 
     load_web_plugins("views", globals())
 
@@ -347,7 +311,7 @@ def page_edit_views(msg=None):
     if not config.may("edit_views"):
         raise MKAuthException(_("You are not allowed to edit views."))
 
-    html.header(_("Edit views"))
+    html.header(_("Edit views"), stylesheets=["pages","views"])
     html.write(_("<p>Here you can create and edit customizable <b>views</b>. A view "
             "displays monitoring status or log data by combining filters, sortings, "
             "groupings and other aspects.</p>"))
@@ -367,7 +331,7 @@ def page_edit_views(msg=None):
     html.begin_form("create_view", "edit_view.py")
     html.write("<table class=views>\n")
 
-    html.write("<tr><td class=legend colspan=7>")
+    html.write("<tr><td class=legend colspan=8>")
     html.button("create", _("Create new view"))
     html.write(_(" for datasource: "))
     html.sorted_select("datasource", [ (k, v["title"]) for k, v in multisite_datasources.items() ])
@@ -396,7 +360,8 @@ def page_edit_views(msg=None):
         if owner == config.user_id or (view["public"] and (owner == "" or config.user_may(owner, "publish_views"))):
             if first:
                 html.write("<tr><th>"+_('Name')+"</th><th>"+_('Title / Description')+"</th>"
-                           "<th>"+_('Owner')+"</th><th>"+_('Public')+"</th><th>"+_('linked')+"</th>"
+                           "<th>"+_('Owner')+"</th><th>"+_('Public')+"</th><th>"+_('Hidden')+"</th>"
+                           "<th>"+_('Mobile')+"</th>"
                            "<th>"+_('Datasource')+"</th><th></th></tr>\n")
                 first = False
             html.write("<tr><td class=legend>%s</td>" % viewname)
@@ -416,6 +381,7 @@ def page_edit_views(msg=None):
             html.write("<td class=content>%s</td>" % ownertxt)
             html.write("<td class=content>%s</td>" % (view["public"] and "yes" or "no"))
             html.write("<td class=content>%s</td>" % (view["hidden"] and "yes" or "no"))
+            html.write("<td class=content>%s</td>" % (view.get("mobile") and "yes" or "no"))
             html.write("<td class=content>%s</td><td class=buttons>\n" % view["datasource"])
             if owner == "":
                 buttontext = _("Customize")
@@ -503,9 +469,15 @@ def page_edit_view():
                     load_views()
                     html.multisite_views[(config.user_id, view["name"])] = view
                     oldname = html.var("old_name")
-                    # Handle renaming of views -> delete old entry
-                    if oldname and oldname != view["name"] and (config.user_id, oldname) in html.multisite_views:
-                        del html.multisite_views[(config.user_id, oldname)]
+                    # Handle renaming of views
+                    if oldname and oldname != view["name"]:
+                        # -> delete old entry
+                        if (config.user_id, oldname) in html.multisite_views:
+                            del html.multisite_views[(config.user_id, oldname)]
+                        # -> change view_name in back parameter
+                        if html.has_var('back'):
+                            html.set_var('back', html.var('back', '').replace('view_name=' + oldname,
+                                                                              'view_name=' + view["name"]))
                     save_views(config.user_id)
                 return page_message_and_forward(_("Your view has been saved."), "edit_views.py",
                         "<script type='text/javascript'>if(top.frames[0]) top.frames[0].location.reload();</script>\n")
@@ -514,7 +486,7 @@ def page_edit_view():
             html.write("<div class=error>%s</div>\n" % e.message)
             html.add_user_error(e.varname, e.message)
 
-    html.header(_("Edit view"))
+    html.header(_("Edit view"), stylesheets=["pages","views"])
     html.write("<table class=navi><tr>\n")
     html.write('<td class="left open">%s</td>\n' % _('Edit'))
     html.write("<td class=gap></td>\n")
@@ -592,6 +564,9 @@ function toggle_section(nr, oImg) {
         html.write("<br />\n")
     html.checkbox("hidden")
     html.write(" " + _('hide this view from the sidebar'))
+    html.write("<br />\n")
+    html.checkbox("mobile")
+    html.write(" " + _('show this view in the Mobile GUI'))
     html.write("<br />\n")
     html.checkbox("mustsearch")
     html.write(" " + _('show data only on search') + "<br>")
@@ -812,6 +787,7 @@ def load_view_into_html_vars(view):
     html.set_var("play_sounds",      view.get("play_sounds", False) and "on" or "")
     html.set_var("public",           view["public"] and "on" or "")
     html.set_var("hidden",           view["hidden"] and "on" or "")
+    html.set_var("mobile",           view.get("mobile") and "on" or "")
     html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
     html.set_var("hidebutton",       view.get("hidebutton",  False) and "on" or "")
     html.set_var("user_sortable",    view.get("user_sortable", True) and "on" or "")
@@ -919,6 +895,7 @@ def create_view():
     play_sounds      = html.var("play_sounds", "") != ""
     public           = html.var("public", "") != "" and config.may("publish_views")
     hidden           = html.var("hidden", "") != ""
+    mobile           = html.var("mobile", "") != ""
     mustsearch       = html.var("mustsearch", "") != ""
     hidebutton       = html.var("hidebutton", "") != ""
     column_headers   = html.var("column_headers")
@@ -1006,6 +983,7 @@ def create_view():
         "datasource"      : datasourcename,
         "public"          : public,
         "hidden"          : hidden,
+        "mobile"          : mobile,
         "mustsearch"      : mustsearch,
         "hidebutton"      : hidebutton,
         "layout"          : layoutname,
@@ -1071,9 +1049,34 @@ def get_needed_columns(painters):
             columns += multisite_painters[tt]["columns"]
     return columns
 
-# Display view with real data. This is *the* function everying
-# is about.
-def show_view(view, show_heading = False, show_buttons = True, show_footer = True):
+
+# Display options are flags that control which elements of a 
+# view should be displayed (buttons, sorting, etc.). They can be
+# specified via the URL variable display_options. The function
+# extracts this variable, applies defaults and generates
+# three versions of the display options:
+# Return value -> display options to actually use
+# html.display_options -> display options to use in for URLs to other views
+# html.title_display_options -> display options for title sorter links
+def prepare_display_options():
+    # Display options (upper-case: show, lower-case: don't show)
+    # H  The HTML header and body-tag (containing the tags <HTML> and <BODY>)
+    # T  The title line showing the header and the logged in user
+    # B  The blue context buttons that link to other views
+    # F  The tab for using filters
+    # C  The tab for using commands and all icons for commands (e.g. the reschedule icon)
+    # O  The view options number of columns and refresh
+    # D  The Display tab, which contains column specific formatting settings
+    # E  The tab for editing the view
+    # Z  The footer line, where refresh: 30s is being displayed
+    # R  The auto-refreshing in general (browser reload)
+    # S  The playing of alarm sounds (on critical and warning services)
+    # I  All hyperlinks pointing to other views
+    # X  All other hyperlinks (pointing to external applications like PNP, WATO or others)
+    # M  If this option is not set, then all hyperlinks are targeted to the HTML frame 
+    #    with the name main. This is useful when using views as elements in the dashboard.
+    # L  The column title links in multisite views
+    # W  The limit and livestatus error message in views
     all_display_options = "HTBFCEOZRSIXDMLW"
 
     # Parse display options and
@@ -1107,14 +1110,6 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         display_options = apply_display_option_defaults(display_options)
         html.display_options = display_options
 
-    # Below we have the following display_options vars:
-    # html.display_options        - Use this when rendering the current view
-    # html.var("display_options") - Use this for linking to other views
-
-    # If display option 'M' is set, then all links are targetet to the 'main'
-    # frame. Also the display options are removed since the view in the main
-    # frame should be displayed in standard mode.
-    #
     # But there is one special case: The sorter links! These links need to know
     # about the provided display_option parameter. The links could use
     # "html.display_options" but this contains the implicit options which should
@@ -1122,15 +1117,42 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # this case. It is stored in the var "html.display_options"
     if html.var('display_options'):
         html.title_display_options = html.var("display_options")
+
+    # If display option 'M' is set, then all links are targetet to the 'main'
+    # frame. Also the display options are removed since the view in the main
+    # frame should be displayed in standard mode.
     if 'M' not in display_options:
         html.set_link_target("main")
         html.del_var("display_options")
 
-    # [1] Datasource
+    # Below we have the following display_options vars:
+    # html.display_options        - Use this when rendering the current view
+    # html.var("display_options") - Use this for linking to other views
+    return display_options
+
+
+# Display view with real data. This is *the* function everying
+# is about.
+def show_view(view, show_heading = False, show_buttons = True, 
+              show_footer = True, render_function = None, only_count=False):
+    display_options = prepare_display_options()
+
+    # User can override the layout settings via HTML variables (buttons)
+    # which are safed persistently. This is known as "view options"
+    vo = view_options(view["name"])
+    num_columns     = vo.get("num_columns",     view.get("num_columns",    1))
+    browser_reload  = vo.get("refresh",         view.get("browser_reload", None))
+    show_checkboxes = vo.get("show_checkboxes", view.get("show_checkboxes", False))
+
+    if browser_reload and 'R' in display_options:
+        html.set_browser_reload(browser_reload)
+
+    # Get the datasource (i.e. the logical table)
     datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
 
-    # [2] Layout
+    # The layout of the view: it can be overridden by several specifying
+    # an output format (like json or python).
     if html.output_format == "html":
         layout = multisite_layouts[view["layout"]]
     else:
@@ -1138,17 +1160,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         if not layout:
             layout = multisite_layouts["json"]
 
-    # User can override the layout settings via HTML variables (buttons)
-    # which are safed persistently. This is known as "view options"
-    vo = view_options(view["name"])
-    num_columns     = vo.get("num_columns",   view.get("num_columns",    1))
-    browser_reload  = vo.get("refresh",       view.get("browser_reload", None))
-    show_checkboxes = vo.get("show_checkboxes", view.get("show_checkboxes", False))
-
-    if browser_reload and 'R' in display_options:
-        html.set_browser_reload(browser_reload)
-
-    # [3] Filters
+    # Filters to show in the view
     show_filters = [ multisite_filters[fn] for fn in view["show_filters"] ]
 
     # add ubiquitary_filters that are possible for this datasource
@@ -1180,17 +1192,17 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     query = filterheaders + view.get("add_headers", "")
 
-    # [4] Sorting - use view sorters or url supplied sorters
+    # Sorting - use view sorters and URL supplied sorters
     sorter_list = html.has_var('sort') and parse_url_sorters(html.var('sort')) or view["sorters"]
     sorters = [ (multisite_sorters[s[0]],) + s[1:] for s in sorter_list ]
 
-    # [5] Grouping
+    # Prepare gropuing information
     group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"] ]
 
-    # [6] Columns
+    # Prepare columns to paint
     painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["painters"] ]
 
-    # Now compute this list of all columns we need to query via Livestatus.
+    # Now compute the list of all columns we need to query via Livestatus.
     # Those are: (1) columns used by the sorters in use, (2) columns use by
     # column- and group-painters in use and - note - (3) columns used to
     # satisfy external references (filters) of views we link to. The last bit
@@ -1209,7 +1221,6 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             columns += s[0]["columns"]
         else:
             join_columns += s[0]["columns"]
-
 
     # Add key columns, needed for executing commands
     columns += datasource["keys"]
@@ -1233,16 +1244,21 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     painter_options.sort()
 
     # Fetch data. Some views show data only after pressing [Search]
-    if (not view["mustsearch"]) or html.var("search"):
+    if (only_count or (not view["mustsearch"]) or html.var("search")): 
         # names for additional columns (through Stats: headers)
         add_columns = datasource.get("add_columns", [])
 
         # tablename may be a function instead of a livestatus tablename
         # In that case that function is used to compute the result.
+
         if type(tablename) == type(lambda x:None):
             rows = tablename(columns, query, only_sites, get_limit(), all_active_filters)
         else:
             rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
+
+        # TODO: Use livestatus Stats: instead of fetching rows!
+        if only_count:
+            return len(rows)
 
         # Now add join information, if there are join columns
         if len(join_painters) > 0:
@@ -1252,17 +1268,35 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     else:
         rows = []
 
-    # html.write("<pre>%s</pre>" % pprint.pformat(rows))
-
     # Apply non-Livestatus filters
     for filter in all_active_filters:
         rows = filter.filter_table(rows)
+
+    # Until now no single byte of HTML code has been output.
+    # Now let's render the view.
+    if not render_function:
+        render_function = render_view
+
+    render_function(view, rows, datasource, group_painters, painters, 
+                display_options, painter_options, show_heading, show_buttons,
+                show_checkboxes, layout, num_columns, show_filters, show_footer, hide_filters,
+                browser_reload)
+
+
+# Output HTML code of a view. If you add or remove paramters here,
+# then please also do this in htdocs/mobile.py!
+def render_view(view, rows, datasource, group_painters, painters, 
+                display_options, painter_options, show_heading, show_buttons,
+                show_checkboxes, layout, num_columns, show_filters, show_footer, hide_filters,
+                browser_reload):
+
 
     # Show heading (change between "preview" mode and full page mode)
     if show_heading:
         # Show/Hide the header with page title, MK logo, etc.
         if 'H' in display_options:
-            html.body_start(view_title(view))
+            # FIXME: view/layout/module related stylesheets/javascripts e.g. in case of BI?
+            html.body_start(view_title(view), stylesheets=["pages","views","status","bi"], javascripts=['bi'])
         if 'T' in display_options:
             html.top_heading(view_title(view))
 
@@ -1389,11 +1423,11 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                     html.write("</td></tr>")
                 html.add_user_error(e.varname, e.message)
                 if 'C' in display_options:
-                    show_action_form(True, datasource)
+                    show_command_form(True, datasource)
 
         elif 'C' in display_options: # (*not* display open, if checkboxes are currently shown)
-            # show_action_form(show_checkboxes, datasource)
-            show_action_form(False, datasource)
+            # show_command_form(show_checkboxes, datasource)
+            show_command_form(False, datasource)
 
     if need_navi:
         if 'O' in display_options and len(painter_options) > 0 and config.may("painter_options"):
@@ -1588,20 +1622,12 @@ def view_linktitle(view):
 
 
 def show_context_links(thisview, active_filters):
-    # compute list of html variables used actively by hidden or shown
-    # filters.
-    active_filter_vars = set([])
-    for filt in active_filters:
-        for var in filt.htmlvars:
-            if html.has_var(var):
-                active_filter_vars.add(var)
-
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
     execute_hooks('buttons-begin')
 
     # WATO: If we have a host context, then show button to WATO, if permissions allow this
-    if "host" in active_filter_vars \
+    if html.has_var("host") \
        and config.wato_enabled \
        and config.may("wato.use") \
        and (config.may("wato.hosts") or config.may("wato.seeall")):
@@ -1613,7 +1639,26 @@ def show_context_links(thisview, active_filters):
         html.context_button(_("WATO"), url, "wato", id="wato", 
             bestof = config.context_buttons_to_show)
 
+    links = collect_context_links(thisview, active_filters)
+    for view, linktitle, uri, icon, buttonid in links:
+        html.context_button(linktitle, uri, icon, buttonid, bestof=config.context_buttons_to_show)
 
+    execute_hooks('buttons-end')
+    html.end_context_buttons()
+
+# Collect all views that share a context with thisview. For example
+# if a view has an active filter variable specifying a host, then
+# all host-related views are relevant.
+def collect_context_links(thisview, active_filters):
+    # compute list of html variables used actively by hidden or shown
+    # filters.
+    active_filter_vars = set([])
+    for filt in active_filters:
+        for var in filt.htmlvars:
+            if html.has_var(var):
+                active_filter_vars.add(var)
+
+    context_links = []
     # sort view buttons somehow
     sorted_views = html.available_views.values()
     sorted_views.sort(cmp = lambda b,a: cmp(a.get('icon'), b.get('icon')))
@@ -1646,12 +1691,12 @@ def show_context_links(thisview, active_filters):
         # add context link to this view
         if len(used_contextvars):
             vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
-            html.context_button(linktitle, 
-              html.makeuri_contextless(vars_values + [("view_name", name)]), 
-                  view.get("icon"), id = "cb_" + name, bestof=config.context_buttons_to_show)
+            uri = html.makeuri_contextless(vars_values + [("view_name", name)])
+            icon = view.get("icon")
+            buttonid = "cb_" + name
+            context_links.append((view, linktitle, uri, icon, buttonid)) 
+    return context_links
 
-    execute_hooks('buttons-end')
-    html.end_context_buttons()
 
 def ajax_count_button():
     id = html.var("id")
@@ -1864,208 +1909,69 @@ def collist_of_collection(collection, join_target = []):
     else:
         return sort_list([ (name, 'SERVICE: ' + p["title"]) for name, p in collection.items() if (name, p["title"]) not in join_target ])
 
-# -----------------------------------------------------------------------------
-#         _        _   _
-#        / \   ___| |_(_) ___  _ __  ___
-#       / _ \ / __| __| |/ _ \| '_ \/ __|
-#      / ___ \ (__| |_| | (_) | | | \__ \
-#     /_/   \_\___|\__|_|\___/|_| |_|___/
-#
-# -----------------------------------------------------------------------------
+#   .----------------------------------------------------------------------.
+#   |         ____                                          _              |
+#   |        / ___|___  _ __ ___  _ __ ___   __ _ _ __   __| |___          |
+#   |       | |   / _ \| '_ ` _ \| '_ ` _ \ / _` | '_ \ / _` / __|         |
+#   |       | |__| (_) | | | | | | | | | | | (_| | | | | (_| \__ \         |
+#   |        \____\___/|_| |_| |_|_| |_| |_|\__,_|_| |_|\__,_|___/         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Functions dealing with external commands send to the monitoring      |
+#   | core. The commands themselves are defined as a plugin. Shipped       |
+#   | command definitions are in plugins/views/commands.py.                |
+#   | We apologize for the fact that we one time speak of "commands" and   |
+#   | the other time of "action". Both is the same here...                 |
+#   '----------------------------------------------------------------------'
 
-def show_action_form(is_open, datasource):
+def show_command_form(is_open, datasource):
     if not config.may("act"):
         return
     if html.has_var("try"):
         return
 
-    # We take the first info to be the native data type of this table
-    # and show actions useful for that
+    # What commands are available depends on the Livestatus table we
+    # deal with. If a data source provides information about more
+    # than one table, (like services datasource also provide host
+    # information) then the first info is the primary table. So 'what'
+    # will be one of "host", "service", "command" or "downtime".
     what = datasource["infos"][0]
-    # if what not in [ "host", "service", "comment", "downtime" ]:
-    #   return # no actions on others
 
-    # Table muss einen anderen Namen, als das Formular
-
-    html.write("<tr class=form id=table_actions %s><td>" % (not is_open and 'style="display: none"' or '') )
+    html.write("<tr class=form id=table_actions %s><td>" % 
+                (not is_open and 'style="display: none"' or '') )
     html.begin_form("actions", onsubmit = 'add_row_selections(this);')
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
     html.write("<div class=whiteborder>\n")
-    html.write("<table class=\"form\">\n")
+    html.write('<table class="form">\n')
 
-    if what in [ "host", "service" ]:
-        show_host_service_actions(what)
-    elif what == "downtime":
-        show_downtime_actions()
-    elif what == "comment":
-        show_comment_actions()
-    else:
+    # Commands are defined in plugins/views/commands.py. Iterate
+    # over all command definitions and render HTML input fields.
+    one_shown = False
+    for command in multisite_commands:
+        if what in command["tables"] and config.may(command["permission"]):
+            html.write('<tr><td class=legend>%s</td>\n' % command["title"])
+            html.write('<td class=content>\n')
+            command["render"]()
+            html.write('</td></tr>\n')
+            one_shown = True
+    if not one_shown:
         html.write("<tr><td>"+ _('No commands possible for %ss') % what +"</td></tr>")
 
     html.write("</table></div>\n")
     html.end_form()
     html.write("</td></tr>\n")
 
-def show_downtime_actions():
-    if config.may("action.downtimes"):
-        html.write("<tr><td class=legend>"+_('Downtimes')+"</td>\n"
-                "<td class=content>\n"
-                   "<input type=submit name=_remove_downtimes value=\""+_('Remove')+"\">"
-                   "</td></tr>\n")
+# Examine the current HTML variables in order determine, which
+# command the user has selected. The fetch ids from a data row 
+# (host name, service description, downtime/commands id) and
+# construct one or several core command lines and a descriptive
+# title.
+def core_command(what, row):
+    host = row.get("host_name")
+    descr = row.get("service_description")
 
-def show_comment_actions():
-    if config.may("action.addcomment"):
-        html.write("<tr><td class=legend>"+_('Comments')+"</td>\n"
-                "<td class=content>\n"
-                   "<input type=submit name=_remove_comments value=\""+_('Remove')+"\">"
-                   "</td></tr>\n")
-
-
-def show_host_service_actions(what):
-    if config.may("action.notifications"):
-        html.write("<tr><td class=legend>"+_('Notifications')+"</td>\n"
-                   "<td class=content>\n"
-                   "<input type=submit name=_enable_notifications value=\""+_('Enable')+"\"> "
-                   "<input type=submit name=_disable_notifications value=\""+_('Disable')+"\">"
-                   "</td></tr>\n")
-
-    if config.may("action.enablechecks") or config.may("action.reschedule"):
-        html.write("<tr><td class=legend>"+_('Active checks')+"</td>\n"
-                   "<td class=content>\n")
-        if config.may("action.enablechecks"):
-            html.write("<input type=submit name=_enable_checks value=\""+_('Enable')+"\"> "
-                   "<input type=submit name=_disable_checks value=\""+_('Disable')+"\"> ")
-        if config.may("action.reschedule"):
-            html.write("<input type=submit name=_resched_checks value=\""+_('Reschedule next check now')+"\">\n"
-                   "</td></tr>\n")
-
-    if config.may("action.enablechecks"):
-        html.write("<tr><td class=legend>"+_('Passive checks')+"</td>\n"
-                   "<td class=content>\n")
-        html.write("<input type=submit name=_enable_passive_checks value=\""+_('Enable')+"\"> "
-               "<input type=submit name=_disable_passive_checks value=\""+_('Disable')+"\">"
-               "</td></tr>\n")
-
-    if config.may("action.clearmodattr"):
-        html.write("<tr><td class=legend>"+_('Modified attributes')+"</td>\n"
-                   "<td class=content>\n"
-                   "<input type=submit name=_clear_modattr value=\""+_('Clear information about modified attributes')+"\">"
-                   "</td></tr>\n")
-
-    if config.may("action.fakechecks"):
-        if what == "service":
-            states = ["Ok", "Warning", "Critical", "Unknown"]
-        else:
-            states = ["Up", "Down", "Unreachable"]
-        html.write("<tr><td class=legend>"+_('Fake check results')+"</td><td class=content>\n")
-        for state in states:
-            html.button("_fake", state)
-            html.write(" ")
-        html.write("</td></tr>\n")
-
-    if config.may("action.customnotification"):
-        html.write("<tr><td class=legend>"+_('Custom notification')+"</td>\n")
-        html.write("<td class=content>")
-        html.write(_('Comment') + ": ")
-        html.text_input("_cusnot_comment", "TEST", size=20)
-        html.write(" &nbsp; ")
-        html.checkbox("_cusnot_forced", False)
-        html.write(_("forced") + " ")
-        html.checkbox("_cusnot_broadcast", False)
-        html.write(_("broadcast") + " ")
-        html.write(" &nbsp; ")
-        html.write("<input type=submit name=_customnotification value=\"" + _('Send') +"\">") 
-        html.write("</td></tr>\n")
-
-    if config.may("action.acknowledge"):
-        html.write("<tr><td rowspan=3 class=legend>"+_('Acknowledge')+"</td>\n")
-        html.write("<td class=content><input type=submit name=_acknowledge value=\""+_('Acknowledge')+"\"> "
-                   "<input type=submit name=_remove_ack value=\""+_('Remove Acknowledgement')+"\"></td></tr>\n")
-
-        html.write("<tr><td class=content>")
-        html.checkbox("_ack_sticky", True)
-        html.write(_('sticky')+" &nbsp; ")
-        html.checkbox("_ack_notify", True)
-        html.write(_('send notification')+" &nbsp; ")
-        html.checkbox("_ack_persistent", False)
-        html.write(_('persistent comment'))
-        html.write("</td></tr>\n")
-
-        html.write("<tr><td class=content>")
-        html.write(_("Comment") + ": ")
-        html.text_input("_ack_comment", size=48)
-        html.write("</td></tr>\n")
-        
-    if config.may("action.addcomment"):
-        html.write("<tr><td class=legend>"+_('Add comment')+"</td>\n")
-        html.write("<td class=content>")
-        html.write(_('Comment')+": ")
-        html.text_input("_comment", size=33)
-        html.write(" &nbsp; ")
-        html.write("<input type=submit name=_add_comment value=\""+_('Add comment')+"\">")
-        html.write("</td></tr>\n")
-
-    if config.may("action.downtimes"):
-        html.write("<tr><td class=legend rowspan=4>"+_('Schedule Downtimes')+"</td>\n"
-                   "<td class=content>\n"
-                   "<input type=submit name=_down_2h value=\""+_('2 hours')+"\"> "
-                   "<input type=submit name=_down_today value=\""+_('Today')+"\"> "
-                   "<input type=submit name=_down_week value=\""+_('This week')+"\"> "
-                   "<input type=submit name=_down_month value=\""+_('This month')+"\"> "
-                   "<input type=submit name=_down_year value=\""+_('This year')+"\"> "
-                   " &nbsp; - &nbsp;"
-                   "<input type=submit name=_down_remove value=\""+_('Remove all')+"\"> "
-                   "</tr><tr>"
-                   "<td class=content>"
-                   "<input type=submit name=_down_custom value=\""+_('Custom time range')+"\"> &nbsp; ")
-        html.datetime_input("_down_from", time.time())
-        html.write("&nbsp; "+_('to')+" &nbsp;")
-        html.datetime_input("_down_to", time.time() + 7200)
-        html.write("</td></tr>")
-        html.write("<tr><td class=content>")
-        html.checkbox("_down_flexible", False)
-        html.write(_('flexible with max. duration')+" ")
-        html.time_input("_down_duration", 2, 0)
-        html.write(" "+_('(HH:MM)')+"</td></tr>\n")
-        html.write("<tr><td class=content>" + _('Comment')+": ")
-        html.text_input("_down_comment", size=48)
-
-def nagios_action_command(what, row):
-    if what in [ "host", "service" ]:
-        return nagios_host_service_action_command(what, row)
-    elif what == "downtime":
-        return nagios_downtime_command(row)
-    elif what == "comment":
-        return nagios_comment_command(row)
-
-def nagios_downtime_command(row):
-    id = row.get("downtime_id")
-    prefix = "[%d] " % time.time()
-    if html.var("_remove_downtimes"):
-        if row.get("service_description"):
-            command = prefix + "DEL_SVC_DOWNTIME;%d" % id
-        else:
-            command = prefix + "DEL_HOST_DOWNTIME;%d" % id
-        return _("remove the following"), [command]
-
-def nagios_comment_command(row):
-    id = row.get("comment_id")
-    prefix = "[%d] " % time.time()
-    if html.var("_remove_comments"):
-        if row.get("comment_type") == 1:
-            command = prefix + "DEL_HOST_COMMENT;%d" % id
-        else:
-            command = prefix + "DEL_SVC_COMMENT;%d" % id
-        return _("remove the following"), [command]
-
-def nagios_host_service_action_command(what, dataset):
-    host = dataset.get("host_name")
-    descr = dataset.get("service_description")
-
-    down_from = int(time.time())
-    down_to = None
     if what == "host":
         spec = host
         cmdtag = "HOST"
@@ -2074,167 +1980,33 @@ def nagios_host_service_action_command(what, dataset):
         spec = "%s;%s" % (host, descr)
         cmdtag = "SVC"
         prefix = "service_"
+    elif what in [ "comment", "downtime" ]:
+        spec = row.get(what + "_id")
+        if descr:
+            cmdtag = "SVC"
+        else:
+            cmdtag = "HOST"
     else:
         raise MKInternalError(_("Sorry, no actions possible on table %s") % tablename)
 
-    if html.var("_enable_notifications") and config.may("action.notifications"):
-        command = "ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec
-        title = _("<b>enable notifications</b> for")
+    commands = None
+    for cmd in multisite_commands:
+        if config.may(cmd["permission"]):
+            result = cmd["action"](cmdtag, spec, row)
+            if result:
+                commands, title = result
+                break
 
-    elif html.var("_disable_notifications") and config.may("action.notifications"):
-        command = "DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec
-        title = _("<b>disable notifications</b> for")
-
-    elif html.var("_enable_checks") and config.may("action.enablechecks"):
-        command = "ENABLE_" + cmdtag + "_CHECK;%s" % spec
-        title = _("<b>enable active checks</b> of")
-
-    elif html.var("_disable_checks") and config.may("action.enablechecks"):
-        command = "DISABLE_" + cmdtag + "_CHECK;%s" % spec
-        title = _("<b>disable active checks</b> of")
-
-    elif html.var("_enable_passive_checks") and config.may("action.enablechecks"):
-        command = "ENABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec
-        title = _("<b>enable passive checks</b> of")
-
-    elif html.var("_disable_passive_checks") and config.may("action.enablechecks"):
-        command = "DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec
-        title = _("<b>disable passive checks</b> of")
-
-    elif html.var("_clear_modattr") and config.may("action.clearmodattr"):
-        command = "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec
-        title = _("<b>clear the information about modified attributes</b> of")
-
-    elif html.var("_resched_checks") and config.may("action.reschedule"):
-        command = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(time.time()))
-        title = _("<b>reschedule an immediate check</b> of")
-
-    elif html.var("_fake") and config.may("action.fakechecks"):
-        statename = html.var("_fake")
-        pluginoutput = _("Manually set to %s by %s") % (statename, config.user_id)
-        svcstate = {"Ok":0, "Warning":1, "Critical":2, "Unknown":3}.get(statename)
-        if svcstate != None:
-            command = "PROCESS_SERVICE_CHECK_RESULT;%s;%s;%s" % (spec, svcstate, pluginoutput)
-        else:
-            hoststate = {"Up":0, "Down":1, "Unreachable":2}.get(statename)
-            if hoststate != None:
-                command = "PROCESS_HOST_CHECK_RESULT;%s;%s;%s" % (spec, hoststate, pluginoutput)
-        title = _("<b>manually set check results to %s</b> for") % statename
-
-    elif html.var("_customnotification") and config.may("action.customnotification"):
-        comment = html.var("_cusnot_comment")
-        broadcast = html.get_checkbox("_cusnot_broadcast") and 1 or 0
-        forced = html.get_checkbox("_cusnot_forced") and 2 or 0
-        command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % \
-                ( cmdtag, spec, broadcast + forced, config.user_id, comment)
-        title = _("<b>send a custom notification</b> regarding")
-
-    elif html.var("_acknowledge") and config.may("action.acknowledge"):
-        comment = html.var_utf8("_ack_comment")
-        if not comment:
-            raise MKUserError("_ack_comment", _("You need to supply a comment."))
-        sticky = html.var("_ack_sticky") and 2 or 0
-        sendnot = html.var("_ack_notify") and 1 or 0
-        perscomm = html.var("_ack_persistent") and 1 or 0
-        command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;%d;%d;%d;%s" % \
-                      (spec, sticky, sendnot, perscomm, config.user_id) + (";%s" % comment)
-        title = _("<b>acknowledge the problems</b> of")
-
-    elif html.var("_add_comment") and config.may("action.addcomment"):
-        comment = html.var_utf8("_comment")
-        if not comment:
-            raise MKUserError("_comment", _("You need to supply a comment."))
-        command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
-                  (spec, config.user_id) + (";%s" % comment)
-        title = _("<b>add a comment to</b>")
-
-    elif html.var("_remove_ack") and config.may("action.acknowledge"):
-        command = "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
-        title = _("<b>remove acknowledgements</b> from")
-
-    elif html.var("_down_2h") and config.may("action.downtimes"):
-        down_to = down_from + 7200
-        title = _("<b>schedule an immediate 2-hour downtime</b> on")
-
-    elif html.var("_down_today") and config.may("action.downtimes"):
-        br = time.localtime(down_from)
-        down_to = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
-        title = _("<b>schedule an immediate downtime until 24:00:00</b> on")
-
-    elif html.var("_down_week") and config.may("action.downtimes"):
-        br = time.localtime(down_from)
-        wday = br.tm_wday
-        days_plus = 6 - wday
-        down_to = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
-        down_to += days_plus * 24 * 3600
-        title = _("<b>schedule an immediate downtime until sunday night</b> on")
-
-    elif html.var("_down_month") and config.may("action.downtimes"):
-        br = time.localtime(down_from)
-        new_month = br.tm_mon + 1
-        if new_month == 13:
-            new_year = br.tm_year + 1
-            new_month = 1
-        else:
-            new_year = br.tm_year
-        down_to = time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, br.tm_isdst))
-        title = _("<b>schedule an immediate downtime until end of month</b> on")
-
-    elif html.var("_down_year") and config.may("action.downtimes"):
-        br = time.localtime(down_from)
-        down_to = time.mktime((br.tm_year, 12, 31, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
-        title = _("<b>schedule an immediate downtime until end of %d</b> on") % br.tm_year
-
-    elif html.var("_down_custom") and config.may("action.downtimes"):
-        down_from = html.get_datetime_input("_down_from")
-        down_to   = html.get_datetime_input("_down_to")
-        if down_to < time.time():
-            raise MKUserError("_down_to", _("You cannot set a downtime that ends in the past. "
-                         "This incident will be reported."))
-
-        title = _("<b>schedule a downtime from %s to %s</b> on ") % (
-            time.asctime(time.localtime(down_from)),
-            time.asctime(time.localtime(down_to)))
-
-    elif html.var("_down_remove") and config.may("action.downtimes"):
-        downtime_ids = []
-        for id in dataset[prefix + "downtimes"]:
-            if id != "":
-                downtime_ids.append(int(id))
-        commands = []
-        for dtid in downtime_ids:
-            commands.append("[%d] DEL_%s_DOWNTIME;%d\n" % (int(time.time()), cmdtag, dtid))
-        title = _("<b>remove all scheduled downtimes</b> of ")
-        return title, commands
-
-    else:
+    if not commands:
         raise MKUserError(None, _("Sorry. This command is not implemented."))
 
-    if down_to:
-        comment = html.var_utf8("_down_comment")
-        if not comment:
-            raise MKUserError("_down_comment", _("You need to supply a comment for your downtime."))
-        if html.var("_down_flexible"):
-            fixed = 0
-            duration = html.get_time_input("_down_duration", _("the duration"))
-        else:
-            fixed = 1
-            duration = 0
-        command = (("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec) \
-                   + ("%d;%d;%d;0;%d;%s;" % (down_from, down_to, fixed, duration, config.user_id)) \
-                   + comment)
+    # Some commands return lists of complete command lines, others
+    # just return one basic command without timestamp. Convert those
+    if type(commands) != list:
+        commands = ["[%d] %s\n" % (int(time.time()), commands)]
 
-    nagios_command = ("[%d] " % int(time.time())) + command + "\n"
-    return title, [nagios_command]
+    return commands, title
 
-
-def get_selected_rows(view, rows, sel_var):
-    action_rows = []
-    selected_rows = sel_var.split(',')
-    for row in rows:
-        if row_id(view, row) in selected_rows:
-            action_rows.append(row)
-    return action_rows
 
 # Returns:
 # True -> Actions have been done
@@ -2242,8 +2014,9 @@ def get_selected_rows(view, rows, sel_var):
 # [...] new rows -> Rows actions (shall/have) be performed on
 def do_actions(view, what, action_rows, backurl):
     if not config.may("act"):
-        html.show_error(_("You are not allowed to perform actions. If you think this is an error, "
-              "please ask your administrator grant you the permission to do so."))
+        html.show_error(_("You are not allowed to perform actions. "
+                          "If you think this is an error, please ask "
+                          "your administrator grant you the permission to do so."))
         return False # no actions done
 
     if not action_rows:
@@ -2251,14 +2024,14 @@ def do_actions(view, what, action_rows, backurl):
         return False # no actions done
 
     command = None
-    title = nagios_action_command(what, action_rows[0])[0] # just get the title
+    title = core_command(what, action_rows[0])[1] # just get the title
     if not html.confirm(_("Do you really want to %s the following %d %ss?") %
                                                (title, len(action_rows), what)):
         return False
 
     count = 0
     for row in action_rows:
-        title, nagios_commands = nagios_action_command(what, row)
+        nagios_commands, title = core_command(what, row)
         for command in nagios_commands:
             if type(command) == unicode:
                 command = command.encode("utf-8")
@@ -2273,8 +2046,17 @@ def do_actions(view, what, action_rows, backurl):
             message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
         html.message(message)
     elif count == 0:
-        html.message(_("No matching service. No command sent."))
+        html.message(_("No matching data row. No command sent."))
     return True
+
+def get_selected_rows(view, rows, sel_var):
+    action_rows = []
+    selected_rows = sel_var.split(',')
+    for row in rows:
+        if row_id(view, row) in selected_rows:
+            action_rows.append(row)
+    return action_rows
+
 
 def get_context_link(user, viewname):
     if viewname in html.available_views:
@@ -2365,7 +2147,8 @@ def link_to_view(content, row, linkview):
         if do:
             vars.append(("display_options", do))
 
-        uri = "view.py?" + htmllib.urlencode_vars([("view_name", linkview)] + vars)
+        filename = html.mobile and "mobile_view.py" or "view.py"
+        uri = filename + "?" + htmllib.urlencode_vars([("view_name", linkview)] + vars)
         content = "<a href=\"%s\">%s</a>" % (uri, content)
 #        rel = 'view.py?view_name=hoststatus&site=local&host=erdb-lit&display_options=htbfcoezrsix'
 #        content = '<a class=tips rel="%s" href="%s">%s</a>' % (rel, uri, content)
@@ -2384,12 +2167,12 @@ def row_id(view, row):
         key += '~%s' % row[col]
     return str(hash(key))
 
-def paint(p, row):
+def paint(p, row, tdattrs=""):
     tdclass, content = prepare_paint(p, row)
     if tdclass:
-        html.write("<td class=\"%s\">%s</td>\n" % (tdclass, content))
+        html.write("<td %s class=\"%s\">%s</td>\n" % (tdattrs, tdclass, content))
     else:
-        html.write("<td>%s</td>" % content)
+        html.write("<td %s>%s</td>" % (tdattrs, content))
     return content != ""
 
 def substract_sorters(base, remove):

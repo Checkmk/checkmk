@@ -42,6 +42,9 @@ class MKAuthException(Exception):
     def __str__(self):
         return str(self.reason)
 
+class MKUnauthenticatedException(MKGeneralException):
+    pass
+
 class MKConfigError(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)
@@ -116,6 +119,21 @@ def load_web_plugins(forwhat, globalvars):
                 for fn in fns:
                     if fn.endswith(".py"):
                         execfile(local_plugins_path + "/" + fn, globalvars)
+
+def get_languages():
+    languages = []
+    dirs = [ defaults.locale_dir ]
+    if defaults.omd_root:
+        dirs.append(defaults.omd_root + "/local/share/check_mk/locale")
+
+    for lang_dir in dirs:
+        try:
+            languages += [ (val, val) for val in os.listdir(lang_dir) if not '.' in val ]
+        except OSError:
+            # Catch "OSError: [Errno 2] No such file or directory:" when directory not exists
+            pass
+
+    return languages
 
 def pnp_cleanup(s):
     return s \

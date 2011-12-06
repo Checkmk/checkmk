@@ -81,15 +81,15 @@ def render_views():
             if t == topic:
                 if first:
                     html.begin_foldable_container("views", topic, False, topic, indent=True)
-                    # html.write("<h3>%s</h3>\n" % topic)
                     first = False
-                    # html.write("<ul>")
                 bulletlink(title, "view.py?view_name=%s" % name)
         if not first: # at least one item rendered
             html.end_foldable_container()
-            # html.write("</ul>")
 
-    s = [ (view.get("topic", _("Other")), view["title"], name) for name, view in html.available_views.items() if not view["hidden"] ]
+    s = [ (view.get("topic", _("Other")), view["title"], name) 
+          for name, view 
+          in html.available_views.items() 
+          if not view["hidden"] and not view.get("mobile")]
     s.sort()
 
     # Enforce a certain order on the topics
@@ -274,10 +274,16 @@ sidebar_snapins["problem_hosts"] = {
 # --------------------------------------------------------------
 def render_hostmatrix():
     html.live.set_prepend_site(True)
-    query = "GET hosts\nColumns: name state has_been_checked worst_service_state scheduled_downtime_depth\nFilter: custom_variable_names < _REALNAME\n"
+    query = "GET hosts\n" \
+            "Columns: name state has_been_checked worst_service_state scheduled_downtime_depth\n" \
+            "Filter: custom_variable_names < _REALNAME\n" \
+            "Limit: 901\n"
     hosts = html.live.query(query)
     html.live.set_prepend_site(False)
     hosts.sort()
+    if len(hosts) > 900:
+        html.write(_("Sorry, I will not display more than 900 hosts."))
+        return
 
     # Choose smallest square number large enough
     # to show all hosts

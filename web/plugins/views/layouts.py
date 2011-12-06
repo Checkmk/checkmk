@@ -457,3 +457,4 @@ multisite_layouts["table"] = {
     "group"  : True,
     "checkboxes" : True,
 }
+

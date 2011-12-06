@@ -127,7 +127,10 @@ def sidebar_foot():
     html.write('<ul class=buttons>\n')
     if config.may("configure_sidebar"):
         html.write('<li><a target="main" href="sidebar_add_snapin.py">Add snapin</a></li>')
-    html.write('<li><a class=logout target="_top" href="logout.py" title="%s"></a></li>' % _('Logout'))
+    if config.may("edit_profile") or config.may("change_password"):
+        html.write('<li><a class=profile target="main" href="edit_profile.py" title="%s"></a></li>' % _('Edit user profile'))
+    if config.may("logout"):
+        html.write('<li><a class=logout target="_top" href="logout.py" title="%s"></a></li>' % _('Logout'))
     html.write('</ul>')
     html.write("<div class=copyright>&copy; <a target=\"main\" href=\"http://mathias-kettner.de\">Mathias Kettner</a></div>\n")
     html.write('</div>')
@@ -136,21 +139,9 @@ def sidebar_foot():
 def page_side():
     if not config.may("see_sidebar"):
         return
-    html.write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-
-<html>
-<head>
-<title>Check_MK Sidebar</title>
-<link href="check_mk.css" type="text/css" rel="stylesheet">""")
-    if config.custom_style_sheet:
-        html.write('<link rel="stylesheet" type="text/css" href="%s">' % config.custom_style_sheet)
-
-    html.write("""
-<script type="text/javascript" src="js/check_mk.js"></script>
-<script type="text/javascript" src="js/sidebar.js"></script>
-</head>
-<body class="side" onload="initScrollPos()" onunload="storeScrollPos()">
-<div id="check_mk_sidebar">""")
+    html.html_head(_("Check_MK Sidebar"), javascripts=["sidebar"], stylesheets=["sidebar", "status"])
+    html.write('<body class="side" onload="initScrollPos()" onunload="storeScrollPos()">\n')
+    html.write('<div id="check_mk_sidebar">\n')
 
     views.load_views()
     sidebar_head()
@@ -312,7 +303,7 @@ def page_add_snapin():
     if not config.may("configure_sidebar"):
         raise MKGeneralException("You are not allowed to change the sidebar.")
 
-    html.header("Available snapins")
+    html.header("Available snapins", stylesheets=["pages", "sidebar"])
     used_snapins = [name for (name, state) in load_user_config()]
 
     addname = html.var("name")
@@ -345,7 +336,7 @@ def page_add_snapin():
         render_snapin(name, "open")
         html.write("</div>")
         html.write("<div class=description>%s</div>" % (description))
-        
+
         html.write("</div>")
 
     html.write("</div>\n")

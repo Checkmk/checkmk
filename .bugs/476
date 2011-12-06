@@ -1,0 +1,13 @@
+Title: mounts Checks should only check ro flag
+Component: checks
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-12-06 08:52:27
+Targetversion: 1.2.0
+Class: bug
+
+Currently on my laptop the mounts check is flapping around because
+the kernel seems to add a mount option with "commit" and change
+it all the time. Basically we'd need to just monitor the ro
+status.

@@ -116,9 +116,8 @@ def render_dashboard(name):
     title = board["title"]
     if wato_folder:
         title = wato.api.get_folder_title(wato_folder) + " - " + title
-    html.header(title)
+    html.header(title, javascripts=["dashboard"], stylesheets=["pages", "dashboard", "status", "views"])
 
-    html.javascript_file("dashboard")
     html.write("<div id=dashboard>\n") # Container of all dashlets
 
     refresh_dashlets = [] # Dashlets with automatic refresh, for Javascript

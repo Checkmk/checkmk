@@ -1187,7 +1187,7 @@ def check_icmp_arguments(hostname):
         elif key == "packets":
             args.append("-n %d" % value)
         elif key == "rta":
-            rtas = value
+            rta = value
         elif key == "loss":
             loss = value
     args.append("-w %.2f,%.2f%%" % (rta[0], loss[0]))

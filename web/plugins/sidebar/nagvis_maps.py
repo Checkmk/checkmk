@@ -33,10 +33,7 @@
 import views, defaults
 
 def render_nagvis_maps():
-    nagvis_base_url = '/nagvis'
-    if hasattr(config, 'nagvis_base_url'):
-        nagvis_base_url = config.nagvis_base_url
-    refresh_url = "%s/server/core/ajax_handler.php?mod=Multisite&act=getMaps" % nagvis_base_url
+    refresh_url = "%snagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps" % (defaults.url_prefix)
     return refresh_url
 
 sidebar_snapins["nagvis_maps"] = {

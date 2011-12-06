@@ -12,7 +12,7 @@ header ()
       printf "|%-66s|\n" "${line//@/ }"
     done
     echo '|                                                                  |'
-    echo '| Copyright Mathias Kettner 2010             mk@mathias-kettner.de |'
+    echo '| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |'
     echo '+------------------------------------------------------------------+'
 
     cat <<EOF
@@ -31,6 +31,10 @@ License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
 EOF
+  if [ -n "$lastline" ] ; then
+      echo
+      echo "$lastline"
+  fi
 }
 
 headrify ()
@@ -51,6 +55,7 @@ headrify ()
       bangpath=""
       case "${file##*/}" in
           *.php)    comment="# " ; bangpath="<?php"; ;;
+          *.css)    comment="" ;  bangpath="/*"; lastline="*/" ;;
           *.h|*.c|*.cc|*.h.in|*.js) comment="// " ;;
           *.conf|*.cfg)   comment="# " ;;
           *.spec|Makefile*) comment="# " ;;
@@ -67,10 +72,13 @@ headrify ()
   secondline="$(sed -n 2p < $file)"
   thirdline="$(sed -n 3p < $file)"
   shouldbe="$comment+---------------------------------------------------"
+  endline='.*Boston, MA 02110-1301 USA.'
+  
+  if [ -n "$lastline" ] ; then endline="${lastline//\//\/}" ; fi
   if [ "${firstline:0:20}" = "${shouldbe:0:20}"  \
        -o "${secondline:0:20}" = "${shouldbe:0:20}" \
        -o "${thirdline:0:20}" = "${shouldbe:0:20}" ] ; then
-      sed '0,/^.*Boston, MA 02110-1301 USA.$/d' $file | sed 1d >> $TMP
+      sed '0,/^'"${endline//\*/\*}"'$/d' $file | sed 1d >> $TMP
   else
       cat $file >> $TMP
   fi

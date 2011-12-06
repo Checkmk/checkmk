@@ -188,6 +188,8 @@ g_html_head_open = False
 #   | ausgeführt, welche aber keinen HTML-Code ausgeben darf.              |
 #   `----------------------------------------------------------------------'
 
+wato_styles = [ "pages", "wato", "status" ]
+
 def page_handler():
 
     # Distributed WATO: redirect to better peer, if possible. Only the
@@ -211,7 +213,7 @@ def page_handler():
     current_mode = html.var("mode") or "main"
     modeperms, modefunc = modes.get(current_mode, ([], None))
     if modefunc == None:
-        html.header(_("Sorry"))
+        html.header(_("Sorry"), stylesheets=wato_styles)
         html.begin_context_buttons()
         html.context_button(_("Home"), make_link([("mode", "main")]), "home")
         html.end_context_buttons()
@@ -276,7 +278,7 @@ def page_handler():
             html.add_user_error(None, e.reason)
 
     # Title
-    html.header(modefunc("title"))
+    html.header(modefunc("title"), stylesheets = wato_styles)
     html.write("<script type='text/javascript' src='js/wato.js'></script>")
     html.write("<div class=wato>\n")
 
@@ -305,7 +307,7 @@ def page_handler():
         html.write("<br>")
 
         # Show outcome of action
-        if html.has_users_errors():
+        if html.has_user_errors():
             html.show_error(action_message)
         elif action_message:
             html.message(action_message)
@@ -855,11 +857,17 @@ def check_host_permissions(hostname, exception=True):
     return reason
 
 
-def check_folder_permissions(folder, how, exception=True):
-    if config.may("wato.all_folders"):
-        return True
-    if how == "read" and config.may("wato.see_all_folders"):
-        return True
+def check_folder_permissions(folder, how, exception=True, user = None):
+    if not user:
+        if config.may("wato.all_folders"):
+            return True
+        if how == "read" and config.may("wato.see_all_folders"):
+            return True
+    else:
+        if config.user_may(user, "wato.all_folders"):
+            return True
+        if how == "read" and config.user_may(user, "wato.see_all_folders"):
+            return True
 
     # Get contact groups of that folder
     effective = effective_attributes(None, folder)
@@ -3874,7 +3882,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             html.write("</table>")
             html.end_foldable_container() # end of topic
             if topic_is_volatile:
-                volatile_topics.append((topic or _("Basic settings")) or topic.encode('utf-8'))
+                volatile_topics.append((topic or _("Basic settings")).encode('utf-8'))
             if topic == topics[-1]:
                 html.write('<table class="form nomargin">')
 
@@ -5916,7 +5924,7 @@ def mode_sites(phase):
                     error = str(e)
 
 
-            wato_html_head(_("Login into site '%s'") % site["alias"])
+            wato_html_head(_("Login into site '%s'") % site["alias"], stylesheets = wato_styles)
             if error:
                 html.show_error(error)
             html.write("<div class=message>")
@@ -6808,7 +6816,7 @@ def do_peer_redirect(peer):
             frameset_url = "index.py?" + htmllib.urlencode_vars([("start_url", rel_url)])
             url = peer["multisiteurl"] + frameset_url
 
-            html.header(_("Access to standby system"))
+            html.header(_("Access to standby system"), stylesheets = wato_styles)
             if global_replication_state() != "clean":
                 html.show_error(_("You are currently accessing a standby "
                   "system while the primary system is available. "
@@ -6873,6 +6881,12 @@ def get_login_secret(create_on_demand = False):
                 secret += c
         write_settings_file(path, secret)
         return secret
+
+def encrypt_password(password, salt = None):
+    import md5crypt
+    if not salt:
+        salt = "%06d" % (1000000 * (time.time() % 1.0))
+    return md5crypt.md5crypt(password, salt, '$1$')
 
 def site_is_local(siteid):
     site = config.sites[siteid]
@@ -7216,6 +7230,14 @@ def mode_edit_user(phase):
         # Roles
         new_user["roles"] = filter(lambda role: html.get_checkbox("role_" + role), 
                                    roles.keys())
+
+        # Language configuration
+        language = html.var('language')
+        if language and language != config.default_language:
+            new_user['language'] = language
+        elif not language and 'language' in new_user:
+            del new_user['language']
+
         # Contact groups
         cgs = []
         for c in contact_groups:
@@ -7420,6 +7442,18 @@ def mode_edit_user(phase):
         html.write("</ul>")
     html.write("</td></tr>")
 
+    languages = get_languages()
+    if languages:
+        html.write("<tr><td class=legend>")
+        html.write(_("Language") + _('<br><i>Configure the default language '
+                   'to be used in the multisite GUI.</i>'))
+        html.write("</td><td class=content>")
+        default_label = _('Default (%s)') % config.default_language
+        languages = [ ('', default_label) ] + languages
+        html.select("language", languages, config.get_language(default_label))
+        html.write("</td></tr>")
+
+
     # TODO: Later we could add custom macros here, which
     # then could be used for notifications. On the other hand,
     # if we implement some check_mk --notify, we could directly
@@ -7432,14 +7466,6 @@ def mode_edit_user(phase):
     html.write("</table>")
     html.hidden_fields()
     html.end_form()
-
-
-
-
-def encrypt_password(password):
-    import md5crypt, time
-    salt = "%06d" % (1000000 * (time.time() % 1.0))
-    return md5crypt.md5crypt(password, salt, '$1$')
 
 def load_users(): 
     # First load monitoring contacts from Check_MK's world
@@ -7539,17 +7565,18 @@ def split_dict(d, keylist, positive):
 def save_users(profiles):
     # TODO: delete var/check_mk/web/$USER of non-existing users. Do we
     # need to remove other references as well?
-    non_contact_keys = [ "roles", "password", "locked", "automation_secret" ]
+    non_contact_keys = [ "roles", "password", "locked", "automation_secret", "language" ]
+    multisite_keys   = [ "roles", "language" ]
 
     # Remove multisite keys in contacts
     contacts = dict([ (id, split_dict(user, non_contact_keys, False)) 
                       for (id, user) 
                       in profiles.items() ])
 
-    # Remove contact keys and password from users
-    users  = dict([ (id, { "roles" : p.get("roles", []) } ) 
-                  for (id, p) 
-                  in profiles.items() ] )
+    # Only allow explicit defined attributes to be written to multisite config
+    users = {}
+    for uid, profile in profiles.items():
+        users[uid] = dict([ (p, val) for p, val in profile.items() if p in multisite_keys ])
 
     # Check_MK's monitoring contacts
     filename = root_dir + "contacts.mk"
@@ -7587,6 +7614,9 @@ def save_users(profiles):
         create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
     elif os.path.exists(auth_file):
         os.remove(auth_file)
+
+    # Call the users_saved hook
+    call_hook(call_hook_users_saved, users)
 
 #.
 #   .-Roles----------------------------------------------------------------.
@@ -7900,6 +7930,8 @@ def save_roles(roles):
     out = file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("roles.update(\n%s)\n" % pprint.pformat(roles))
+
+    call_hook(call_hook_roles_saved, roles)
 
 
 # Adapt references in users. Builtin rules cannot
@@ -9061,7 +9093,8 @@ def construct_rule(ruleset, value, tag_specs, host_list, item_list):
 
 
 def tag_alias(tag):
-    for id, title, tags in config.wato_host_tags:
+    for entry in config.wato_host_tags:
+        id, title, tags = entry[:3]
         for t in tags:
             if t[0] == tag:
                 return t[1]
@@ -9155,7 +9188,8 @@ def ruleeditor_hover_code(varname, rulenr, mode, boolval, folder=None):
 def get_rule_conditions(ruleset):
     # Tag list
     tag_list = []
-    for id, title, tags in config.wato_host_tags:
+    for entry in config.wato_host_tags:
+        id, title, tags = entry[:3]
         mode = html.var("tag_" + id)
         tagvalue = html.var("tagvalue_" + id)
         if mode == "is":
@@ -9313,7 +9347,8 @@ def mode_edit_rule(phase):
                      "to your <tt>multisite.mk</tt>. You will find an example there."))
     else:
         html.write("<table>")
-        for id, title, tags in config.wato_host_tags:
+        for entry in config.wato_host_tags:
+            id, title, tags = entry[:3]
             html.write("<tr><td>%s: &nbsp;</td>" % title)
             default_tag = None
             ignore = True
@@ -9799,6 +9834,17 @@ def call_hooks(name, *args):
             traceback.print_exception(t, v, tb, None, txt)
             html.show_error("<h3>" + _("Error executing hook") + " %s #%d: %s</h3><pre>%s</pre>" % (name, n, e, txt.getvalue()))
 
+# Call the hooks. This is executed at the places where to run the hooks
+# This includes exception handling with raising user errors on exceptions
+def call_hook(handler, *args):
+    try:
+        handler(*args)
+    except Exception, e:
+        if config.debug:
+            raise
+        else:
+            raise MKUserError(None, "Error executing hooks: %s" % str(e))
+
 def call_hook_hosts_changed(folder):
     if "hosts-changed" in g_hooks:
         hosts = collect_hosts(folder)
@@ -9831,6 +9877,17 @@ def call_hook_activate_changes():
     """
     if hook_registered('activate-changes'):
         call_hooks("activate-changes", collect_hosts(g_root_folder))
+
+# This hook is executed when the save_users() function is called
+def call_hook_users_saved(users):
+    if hook_registered('users-saved'):
+        call_hooks("users-saved", users)
+
+# This hook is executed when the save_roles() function is called
+def call_hook_roles_saved(roles):
+    if hook_registered('roles-saved'):
+        call_hooks("roles-saved", roles)
+
 
 #.
 #   .-Helpers--------------------------------------------------------------.
@@ -9941,7 +9998,7 @@ def wato_html_head(title):
     global g_html_head_open
     if not g_html_head_open:
         g_html_head_open = True
-        html.header(title)
+        html.header(title, stylesheets = wato_styles)
         html.write("<div class=wato>\n")
 
 def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mode"]):

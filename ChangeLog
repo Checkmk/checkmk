@@ -32,6 +32,8 @@
     * New nifty sidebar snapin "Speed-O-Meter"
     * Implemented new cookie based login mechanism including a fancy login GUI
     * Implemented logout functionality for basic auth and the new cookie based auth
+    * Implemented user profile management page for changing the user password and
+      the default language (if available)
     * New filter for the (new) state in host/service alerts
     * New command for sending custom notifications
     * FIX: Fixed encoding problem when opening dashboard
@@ -47,6 +49,9 @@
     * Logwatch: Implemented overview page to show all problematic logfiles
     * Add Snapin page: show previews of all snapins
     * New (hidden) button for reloading a snapin (left to the close button)
+
+    BI:
+    * FIX: Assuming host states is possible again (exception: list index "3")
 
     WATO:
     * Evolved to full featured monitoring configuration tool!
@@ -65,6 +70,7 @@
       below the given folder
     * Added option to download "latest" snapshot
     * extra_buttons can now register a function to gather the URL to link to
+    * Implemented NagVis Authorisation management using WATO users/permissions
 
     Livestatus:
     * Experimental feature: livecheck -> super fast active check execution
@@ -78,6 +84,9 @@
     Multisite:
     * FIX: sidebar snapin Hostgroups and Servicegroups sometimes
            failed with non-existing "available_views".
+    * FIX: Fix host related WATO context button links to point to the hosts site
+    * FIX: Fixed view editor redirection to new view after changing the view_name 
+
 1.1.12p3:
     Core, Setup, etc.:
     * FIX: really suppress precompiling on PING-only hosts now

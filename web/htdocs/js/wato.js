@@ -72,7 +72,14 @@ function wato_fix_visibility() {
     /* First collect the current selection of all host attributes.
        They are in the same table as we are */
     var currentTags = [];
-    var oTable = document.getElementById("wato_host_tags").childNodes[0]; /* tbody */
+
+    var oHostTags = document.getElementById("wato_host_tags");
+    // Skip this function when no tags defined
+    if(!oHostTags)
+        return;
+
+    var oTable = oHostTags.childNodes[0]; /* tbody */
+    oHostTags = null;
     for (var i in oTable.childNodes) {
         var oTr = oTable.childNodes[i];
         if (oTr.nodeName == 'TR') {
@@ -129,7 +136,7 @@ function wato_fix_visibility() {
         }
     }
 
-    for each (var item in volatile_topics){
+    for (var item in volatile_topics){
         var oTr = document.getElementById("topic_" + item);
         if( hide_topics.indexOf(item) > -1 ){
             oTr.style.display = "none"; 

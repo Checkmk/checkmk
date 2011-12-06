@@ -73,8 +73,8 @@ def include(filename):
     except Exception, e:
         global user_id
         global roles
-        user = "nobody"
-        roles = []
+        user_id = "nobody"
+        roles = {}
         raise MKConfigError("Cannot read configuration file %s: %s:" % (filename, e))
 
 modification_timestamps = []
@@ -219,6 +219,24 @@ declare_permission("configure_sidebar",
      [ "admin", "user" ])
 
 
+declare_permission('edit_profile',
+    'Edit the user profile',
+    'Permits the user to change the user profile settings.',
+    [ 'admin', 'user' ]
+)
+
+declare_permission('change_password',
+    'Edit the user password',
+    'Permits the user to change the password.',
+    [ 'admin', 'user' ]
+)
+
+declare_permission('logout',
+    'Logout',
+    'Permits the user to logout.',
+    [ 'admin', 'user', 'guest' ]
+)
+
 
 # Compute permissions for HTTP user and set in
 # global variables. Also store user.
@@ -253,7 +271,7 @@ def login(u):
     if u in multisite_users:
         user = multisite_users[u]
     else:
-        user = { "roles" : user_role_ids } 
+        user = { "roles" : user_role_ids }
 
     # Prepare cache of already computed permissions
     global user_permissions
@@ -274,6 +292,10 @@ def login(u):
     # load current on/off-switching states of sites
     read_site_config()
 
+def get_language(default = None):
+    if default == None:
+        default = default_language
+    return user.get('language', default)
 
 def roles_of_user(user):
     # Make sure, builtin roles are present, even if not modified 
@@ -540,6 +562,8 @@ wato_hide_filenames = True
 wato_max_snapshots = 50
 wato_num_hostspecs = 12
 wato_num_itemspecs = 15
+
+wato_write_nagvis_auth = False
 
 
 #     ____ ___ 

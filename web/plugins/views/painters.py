@@ -85,7 +85,12 @@ multisite_painter_options["pnpview"] = {
 multisite_painter_options["ts_format"] = {
  "title"   : _("Time stamp format"),
  "default" : "mixed",
- "values"  : [ ("mixed", _("Mixed")), ("abs", _("Absolute")), ("rel", _("Relative")) ]
+ "values"  : [ 
+     ("mixed", _("Mixed")), 
+     ("abs", _("Absolute")), 
+     ("rel", _("Relative")),
+     ("both", _("Both")),
+  ]
 }
 
 multisite_painter_options["ts_date"] = {
@@ -185,11 +190,18 @@ def paint_nagios_link(row):
         what = "host"
     return "singleicon", "<a href=\"%s\"><img title=\"%s\" src=\"images/icon_nagios.gif\"></a>" % (url, _('Show this %s in Nagios') % what)
 
-def paint_age(timestamp, has_been_checked, bold_if_younger_than):
+def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None):
     if not has_been_checked:
         return "age", "-"
 
-    mode = get_painter_option("ts_format")
+    if mode == None:
+        mode = get_painter_option("ts_format")
+
+    if mode == "both":
+        css, h1 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "abs")
+        css, h2 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "rel")
+        return css, "%s - %s" % (h1, h2)
+
     dateformat = get_painter_option("ts_date")
     age = time.time() - timestamp
     if mode == "abs" or \
@@ -207,6 +219,7 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than):
     else:
         age_class = "age"
     return age_class, prefix + html.age_text(age)
+
 
 def paint_future_time(timestamp):
     if timestamp <= 0:
@@ -244,16 +257,18 @@ multisite_painters["sitealias"] = {
 #   |____/ \___|_|    \_/ |_|\___\___||___/
 #
 
-def paint_service_state_short(row):
+def paint_service_state_short(row, onechar=False):
     if row["service_has_been_checked"] == 1:
         state = row["service_state"]
         name = nagios_short_state_names[row["service_state"]]
     else:
         state = "p"
         name = "PEND"
+    if onechar:
+        name = name[0]
     return "state svcstate state%s" % state, name
 
-def paint_host_state_short(row):
+def paint_host_state_short(row, onechar=False):
 # return None, str(row)
     if row["host_has_been_checked"] == 1:
         state = row["host_state"]
@@ -261,6 +276,8 @@ def paint_host_state_short(row):
     else:
         state = "p"
         name = "PEND"
+    if onechar:
+        name = name[0]
     return "state hstate hstate%s" % state, name
 
 multisite_painters["service_nagios_link"] = {
@@ -278,6 +295,13 @@ multisite_painters["service_state"] = {
     "sorter"  : 'svcstate',
 }
 
+multisite_painters["service_state_onechar"] = {
+    "title"   : _("Service state (first character)"),
+    "short"   : _("State"),
+    "columns" : ["service_has_been_checked","service_state"],
+    "paint"   : lambda row: paint_service_state_short(row, True),
+    "sorter"  : 'svcstate',
+}
 multisite_painters["site_icon"] = {
     "title"   : _("Icon showing the site"),
     "short"   : "",
@@ -718,6 +742,14 @@ multisite_painters["host_state"] = {
     "short"   : _("state"),
     "columns" : ["host_has_been_checked","host_state"],
     "paint"   : paint_host_state_short,
+    "sorter"  : 'hoststate',
+}
+
+multisite_painters["host_state_onechar"] = {
+    "title"   : _("Host state (first character)"),
+    "short"   : _("S."),
+    "columns" : ["host_has_been_checked","host_state"],
+    "paint"   : lambda row: paint_host_state_short(row, True),
     "sorter"  : 'hoststate',
 }
 

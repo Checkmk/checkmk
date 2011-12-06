@@ -1,0 +1,11 @@
+Title: main.mk Variables in Man-Page
+Component: docu
+Benefit: 2
+State: open
+Cost: 2
+Date: 2011-12-06 09:41:11
+Targetversion: future
+Class: feature
+
+We could generate a man-Page from the nowiki-page about
+the configuration variables for main.mk and for multisite.mk

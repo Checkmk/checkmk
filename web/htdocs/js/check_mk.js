@@ -110,6 +110,16 @@ function get_url(url, handler, data, errorHandler) {
                     if (AJAX.status == 200) {
                         handler(data, AJAX.responseText);
                     }
+                    else if (AJAX.status == 401) {
+                        // This is reached when someone is not authenticated anymore
+                        // but has some webservices running which are still fetching
+                        // infos via AJAX. Reload the whole frameset or only the
+                        // single page in that case.
+                        if(top)
+                            top.location.reload();
+                        else
+                            document.location.reload();
+                    }
                     else {
                         if (typeof errorHandler !== 'undefined')
                             errorHandler(data, AJAX.status);
@@ -749,7 +759,7 @@ function handleReload(url) {
 }
 
 // --------------------------------------------------------------------------
-// BI
+// Folding
 // --------------------------------------------------------------------------
 //
 var fold_steps = [ 0, 10, 10, 15, 20, 30, 40, 55, 80 ];
@@ -801,24 +811,6 @@ function toggle_tree_state(tree, name, oContainer) {
     oContainer = null;
 }
 
-function toggle_subtree(oImg) 
-{
-    var oSubtree = oImg.parentNode.childNodes[6];
-    var url = "bi_save_treestate.py?path=" + escape(oSubtree.id);
-
-    if (oSubtree.style.display == "none") {
-        oSubtree.style.display = "";
-        url += "&state=open";
-        toggle_folding(oImg, 1);
-    }
-    else {
-        oSubtree.style.display = "none";
-        url += "&state=closed";
-        toggle_folding(oImg, 0);
-    }
-    oSubtree = null;
-    get_url(url);
-}
 
 function toggle_foldable_container(treename, id) {
     var oImg = document.getElementById('treeimg.' + treename + '.' + id);
@@ -827,34 +819,6 @@ function toggle_foldable_container(treename, id) {
     toggle_folding(oImg, oBox.style.display != "none");
     oImg = null;
     oBox = null;
-}
-
-// TODO: Why is this not in a bi.js?
-function toggle_assumption(oImg, site, host, service)
-{
-    // get current state
-    var current = oImg.src;
-    while (current.indexOf('/') > -1)
-        current = current.substr(current.indexOf('/') + 1);
-    current = current.substr(7);
-    current = current.substr(0, current.length - 4);
-    if (current == 'none')
-        current = '1';
-    else if (current == '3')
-        current = '0'
-    else if (current == '0')
-        current = 'none'
-    else
-        current = parseInt(current) + 1; 
-
-    var url = "bi_set_assumption.py?site=" + encodeURIComponent(site)
-            + '&host=' + encodeURIComponent(host);
-    if (service) {
-        url += '&service=' + encodeURIComponent(service);
-    }
-    url += '&state=' + current; 
-    oImg.src = "images/assume_" + current + ".png";
-    get_url(url);
 }
 
 /*

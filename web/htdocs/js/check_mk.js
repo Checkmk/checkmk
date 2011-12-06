@@ -110,6 +110,16 @@ function get_url(url, handler, data, errorHandler) {
                     if (AJAX.status == 200) {
                         handler(data, AJAX.responseText);
                     }
+                    else if (AJAX.status == 401) {
+                        // This is reached when someone is not authenticated anymore
+                        // but has some webservices running which are still fetching
+                        // infos via AJAX. Reload the whole frameset or only the
+                        // single page in that case.
+                        if(top)
+                            top.location.reload();
+                        else
+                            document.location.reload();
+                    }
                     else {
                         if (typeof errorHandler !== 'undefined')
                             errorHandler(data, AJAX.status);

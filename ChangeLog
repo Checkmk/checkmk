@@ -67,6 +67,7 @@
       below the given folder
     * Added option to download "latest" snapshot
     * extra_buttons can now register a function to gather the URL to link to
+    * Implemented NagVis Authorisation management using WATO users/permissions
 
     Livestatus:
     * Experimental feature: livecheck -> super fast active check execution

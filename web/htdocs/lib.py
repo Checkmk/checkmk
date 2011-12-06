@@ -42,6 +42,9 @@ class MKAuthException(Exception):
     def __str__(self):
         return str(self.reason)
 
+class MKUnauthenticatedException(MKGeneralException):
+    pass
+
 class MKConfigError(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)

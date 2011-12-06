@@ -73,8 +73,8 @@ def include(filename):
     except Exception, e:
         global user_id
         global roles
-        user = "nobody"
-        roles = []
+        user_id = "nobody"
+        roles = {}
         raise MKConfigError("Cannot read configuration file %s: %s:" % (filename, e))
 
 modification_timestamps = []

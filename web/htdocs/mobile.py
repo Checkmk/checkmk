@@ -42,9 +42,8 @@ def mobile_html_head(title, ready_code=""):
 def mobile_html_foot():
     html.write("</body></html>\n")
 
-def jqm_header_button(url, title, icon=""):
-    html.write('<a href="%s" data-icon="%s" data-iconpos="left" '
-               'data-transition="flip" data-direction="reverse">%s</a>\n' % (url, icon, title))
+def jqm_header_button(url, title, icon=""):             
+    html.write('<a href="%s" data-direction="reverse" data-iconpos="notext" data-icon="%s" title="%s" data-theme="f"></a>' % (url, icon, title))
 
 def jqm_page_header(title, id=None, left_button=None, right_button=None):
     idtxt = id and (' id="%s"' % id) or ''
@@ -72,17 +71,21 @@ def jqm_page_navfooter(items, current, page_id):
         '<div data-role="footer" data-id="%s" data-position="fixed">\n'
         '<div data-role="navbar">\n'
         '<ul>\n' % page_id)
-    data_direction = "reverse"
-    for href, title, icon in items:
+    for href, title, icon, obj_id in items:
+        #Is there an html id attribute
+        if obj_id != False:
+	    obj_id = ' id="%s"' % obj_id
+	else:
+	    obj_id = ''
+	    
         if current == href:
             active = ' class="ui-state-persist ui-btn-active"'
-            data_direction = ""
         else:
             active = ''
-        html.write('<li><a data-transition="slide" data-direction="%s" '
+        html.write('<li><a data-transition="slide" %s '
                    'data-icon="%s" data-iconpos="bottom" '
                    'href="%s"%s>%s</a></li>\n' % 
-                   (data_direction, icon, href, active, title))
+                   (obj_id, icon, href, active, title))
     html.write(
         '</ul>\n'
         '</div>\n'
@@ -183,10 +186,10 @@ def render_view(view, rows, datasource, group_painters, painters,
     home=("mobile.py", "Home", "home")
 
     title = views.view_title(view)
-    navbar = [ ( "#data",     _("Results"), "grid"),
-               ( "#filter",   _("Filter"),   "search" )]
+    navbar = [ ( "#data",     _("Results"), "grid", 'results_button'),
+               ( "#filter",   _("Filter"),   "search", False )]
     if config.may("act"):
-        navbar.append(( "#commands", _("Commands"), "gear" ))
+        navbar.append(( "#commands", _("Commands"), "gear", False ))
 
     # Should we show a page with context links?
     context_links = [
@@ -194,7 +197,7 @@ def render_view(view, rows, datasource, group_painters, painters,
         if e[0].get("mobile") ]
 
     if context_links:
-        navbar.append(( "#context", _("Context"), "arrow-r"))
+        navbar.append(( "#context", _("Context"), "arrow-r", False))
     page_id = "view_" + view["name"]
 
     # Page: data rows of view
@@ -253,16 +256,19 @@ def show_filter_form(show_filters):
         html.write('</div></fieldset></li>\n')
     html.write("</ul>\n")
     html.hidden_fields()
+    html.write('<input type="hidden" name="search" value="Search">')
     html.end_form()
-    # Make the tab 'Results' not simply switch to the results page
+    # Make the tab 'b' not simply switch to the results page
     # but submit the form and fetch new data. This is done by overriding
     # that buttons click function to submit the form. Note: We need to
     # remove the ancor in href. Otherwise jQuery will do some magic
     # itself and first switch to that page...
-    html.javascript(
-      "$('div#filter a[href=\"#data\"]')"
-      ".attr('href', '').live('click', function(e) "
-      "{ e.preventDefault(); $('div#filter form[name=\"filter\"]').submit();});")
+    html.javascript("""
+     $('#results_button').live('click',function(e){
+        e.preventDefault();
+        $('form[name="filter"]').submit();
+      });
+    """)
 
 def show_command_form(view, datasource, rows):
     what = datasource["infos"][0]

@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import defaults, htmllib, config
+import defaults, htmllib, config, wato
 from lib import *
 from mod_python import apache
 import os, md5, md5crypt, crypt, time

@@ -6883,6 +6883,7 @@ def get_login_secret(create_on_demand = False):
         return secret
 
 def encrypt_password(password, salt = None):
+    import md5crypt
     if not salt:
         salt = "%06d" % (1000000 * (time.time() % 1.0))
     return md5crypt.md5crypt(password, salt, '$1$')

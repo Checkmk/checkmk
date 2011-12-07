@@ -28,6 +28,7 @@ import htmllib, livestatus, time, re, os, datetime, config, defaults
 from lib import *
 import views
 
+stylesheets = [ 'pages', 'status', 'logwatch' ]
 
 def page():
     host = html.var('host')
@@ -51,7 +52,7 @@ def page():
 
 # Shows a list of all problematic logfiles grouped by host
 def show_log_list():
-    html.header(_("All problematic Logfiles"))
+    html.header(_("All problematic Logfiles"), stylesheets = stylesheets)
 
     html.write("<table class=data>\n")
     for host, logs in all_logs():
@@ -63,7 +64,7 @@ def show_log_list():
 
 # Shows all problematic logfiles of a host
 def show_host_log_list(host):
-    html.header(_("Logfiles of host %s") % host)
+    html.header(_("Logfiles of host %s") % host, stylesheets = stylesheets)
     html.begin_context_buttons()
     html.context_button(_("Services"), "view.py?view_name=host&site=&host=%s" % htmllib.urlencode(host))
     html.context_button(_("All logfiles"), "logwatch.py")
@@ -111,7 +112,7 @@ def list_logs(host, logfiles):
 
 def show_file(host, filename):
     file = form_file_to_int(filename)
-    html.header(_("Logfiles of host %s: %s") % (host, filename))
+    html.header(_("Logfiles of host %s: %s") % (host, filename), stylesheets = stylesheets)
     html.begin_context_buttons()
     html.context_button(_("Services"), "view.py?view_name=host&site=&host=%s" % htmllib.urlencode(host))
     html.context_button(_("All logfiles of Host"), "logwatch.py?host=%s" % htmllib.urlencode(host))
@@ -170,7 +171,7 @@ def show_file(host, filename):
 def do_log_ack(host, filename):
     file = form_file_to_int(filename)
     file_display = form_file_to_ext(file)
-    html.header(_("Acknowledge logfile %s - %s") % (htmllib.attrencode(host), file_display))
+    html.header(_("Acknowledge logfile %s - %s") % (htmllib.attrencode(host), file_display), stylesheets = stylesheets)
 
     html.begin_context_buttons()
     html.context_button(_("All logfiles of Host"), "logwatch.py?host=%s" % htmllib.urlencode(host))

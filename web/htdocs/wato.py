@@ -5924,7 +5924,7 @@ def mode_sites(phase):
                     error = str(e)
 
 
-            wato_html_head(_("Login into site '%s'") % site["alias"], stylesheets = wato_styles)
+            wato_html_head(_("Login into site '%s'") % site["alias"])
             if error:
                 html.show_error(error)
             html.write("<div class=message>")

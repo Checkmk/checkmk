@@ -7985,6 +7985,16 @@ def mode_hosttags(phase):
                     operations = [ x[0] for x in e[2] ]
 
             message = rename_host_tags_after_confirmation(del_id, operations)
+            if message == True: # no confirmation yet
+                c = wato_confirm(_("Confirm deletion of the host "
+                                   "tag group '%s'") % del_id,
+                                _("Do you really want to delete the "
+                                  "host tag group '%s'?") % del_id)
+                if c == False:
+                    return ""
+                elif c == None:
+                    return None
+
             if message:
                 hosttags = [ e for e in hosttags if e[0] != del_id ]
                 save_hosttags(hosttags)
@@ -8295,7 +8305,8 @@ def save_hosttags(hosttags):
 def rename_host_tags_after_confirmation(tag_id, operations):
     mode = html.var("_repair")
     if mode == "abort":
-        raise MKUserError("id_0", "Please refine your changes or go back to the list of tag groups.")
+        raise MKUserError("id_0", _("Aborting change."))
+
     elif mode:
         if type(operations) == list: # make attribute unknown to system, important for save() operations
             undeclare_host_tag_attribute(tag_id)
@@ -8309,7 +8320,8 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         change_host_tags_in_folders(tag_id, operations, "check", g_root_folder)
 
     if affected_folders:
-        message += _("Affected folders with an explicit reference to this tag group and that are affected by the change") + ":<ul>"
+        message += _("Affected folders with an explicit reference to this tag "
+                     "group and that are affected by the change") + ":<ul>"
         for folder in affected_folders:
             message += '<li><a href="%s">%s</a></li>' % (
                 make_link_to([("mode", "editfolder")], folder),
@@ -8317,7 +8329,8 @@ def rename_host_tags_after_confirmation(tag_id, operations):
             message += "</ul>"
 
     if affected_hosts:
-        message += _("Hosts where this tag group is explicitely set and that are effected by the change") + ":<ul><li>"
+        message += _("Hosts where this tag group is explicitely set "
+                     "and that are effected by the change") + ":<ul><li>"
         for nr, host in enumerate(affected_hosts):
             if nr > 20:
                 message += "... (%d more)" % (len(affected_hosts) - 20)

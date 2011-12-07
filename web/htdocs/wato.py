@@ -6546,7 +6546,7 @@ class SiteAttribute(Attribute):
                     default_value = default_site())
 
     def paint(self, value, hostname):
-        return "", self._choices_dict.get(value, value)
+        return "", self._choices_dict.get(value, _("(do not monitor)"))
 
     def render_input(self, value):
         html.select("site", self._choices, value)
@@ -6630,15 +6630,15 @@ def global_replication_state():
 
 def find_host_sites(site_ids, folder, hostname):
     host = folder[".hosts"][hostname]
-    if "site" in host:
+    if "site" in host and host["site"]:
         site_ids.add(host["site"])
-    else:
+    elif folder[".siteid"]:
         site_ids.add(folder[".siteid"])
 
 # Scan recursively for references to sites
 # in folders and hosts
 def find_folder_sites(site_ids, folder, include_folder = False):
-    if include_folder:
+    if include_folder and folder[".siteid"]:
         site_ids.add(folder[".siteid"])
     load_hosts(folder)
     for hostname in folder[".hosts"]:

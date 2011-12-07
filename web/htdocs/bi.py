@@ -231,7 +231,7 @@ def compile_forest(user):
 # Execute an aggregation rule, but prepare arguments 
 # and iterate FOREACH first
 def compile_rule_node(calllist, lvl):
-    # Lookup rule source code        
+    # Lookup rule source code
     rulename, arglist = calllist[-2:]
     if rulename not in config.aggregation_rules:
         raise MKConfigError("<h1>Invalid configuration in variable <tt>aggregations</tt></h1>"
@@ -468,9 +468,26 @@ def compile_aggregation_rule(rule, args, lvl = 0):
             new_elements = new_new_elements
 
         elif type(node[-1]) != list:
-            new_elements = compile_leaf_node(subst_vars(node[0], arginfo), subst_vars(node[1], arginfo))
+            if node[0] == config.FOREACH_HOST:
+                # Handle case that leaf elements also need to be iterable via FOREACH_HOST
+                # 1: config.FOREACH_HOST
+                # 2: (['waage'], '(.*)')
+                matches = find_matching_services(config.FOREACH_HOST, node[1:-2])
+                new_elements = []
+                for match in matches:
+                    arginfo = {'HOST': match[0]}
+                    new_elements += compile_leaf_node(subst_vars(node[-2], arginfo), subst_vars(node[-1], arginfo))
+
+                host_name, service_description = node[-2:]
+            else:
+                # This is a final leaf node
+                new_elements = compile_leaf_node(subst_vars(node[0], arginfo), subst_vars(node[1], arginfo))
         else:
             # substitute our arguments in rule arguments
+            # rule_args:
+            # ['$1$']
+            # rule_parts:
+            # (<class _mp_84b7bd024cff73bf04ba9045f980becb.FOREACH_HOST at 0x7f03600dc8d8>, ['waage'], '(.*)', 'host')
             rule_args = [ subst_vars(a, arginfo) for a in node[-1] ]
             rule_parts = tuple([ subst_vars(part, arginfo) for part in node[:-1] ])
             new_elements = compile_rule_node(rule_parts + (rule_args,), lvl + 1)
@@ -1092,5 +1109,4 @@ def get_state_name(node):
         else:
             return host_state_names[node[0]['state']]
     else:
-        # FIXME: Und wenn ein Hoststatus zum Summary-Status wird?
         return service_state_names[node[0]['state']]

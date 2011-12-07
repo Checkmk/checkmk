@@ -51,6 +51,8 @@
     * New (hidden) button for reloading a snapin (left to the close button)
 
     BI:
+    * Host/Service elements are now iterable via FOREACH_HOST, e.g.
+      (FOREACH_HOST, ['server'], ALL_HOSTS, "$HOST$", "Kernel" ),
     * FIX: Assuming host states is possible again (exception: list index "3")
 
     WATO:

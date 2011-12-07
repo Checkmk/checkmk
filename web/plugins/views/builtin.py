@@ -2434,7 +2434,7 @@ multisite_builtin_views.update({
                  'sorters': [],
                  'title': u'Single Aggregation',
                  'topic': u'Business Intelligence',
-                 'user_sortable': None}
+                 'user_sortable': None},
 
 #   +----------------------------------------------------------------------+
 #   |       _   _       _   _  __ _           _   _                        |

@@ -2406,6 +2406,36 @@ multisite_builtin_views.update({
                'title': 'Single-Host Problems',
                'topic': _('Business Intelligence')},
 
+# Shows a single aggregation which has to be set via aggr_name=<Name>
+'aggr_single': {'browser_reload': 0,
+                 'column_headers': 'pergroup',
+                 'datasource': 'bi_aggregations',
+                 'description': u'',
+                 'group_painters': [],
+                 'hard_filters': [],
+                 'hard_filtervars': [],
+                 'hidden': True,
+                 'hide_filters': ['aggr_name'],
+                 'hidebutton': False,
+                 'icon': 'aggr',
+                 'layout': 'table',
+                 'linktitle': 'All Aggregations',
+                 'mobile': False,
+                 'mustsearch': False,
+                 'name': 'aggr_single',
+                 'num_columns': 1,
+                 'owner': 'omdadmin',
+                 'painters': [('aggr_state', None, ''),
+                              ('aggr_treestate', None, '')],
+                 'play_sounds': False,
+                 'public': True,
+                 'show_checkboxes': None,
+                 'show_filters': [],
+                 'sorters': [],
+                 'title': u'Single Aggregation',
+                 'topic': u'Business Intelligence',
+                 'user_sortable': None}
+
 #   +----------------------------------------------------------------------+
 #   |       _   _       _   _  __ _           _   _                        |
 #   |      | \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __  ___        |

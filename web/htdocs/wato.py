@@ -5924,7 +5924,7 @@ def mode_sites(phase):
                     error = str(e)
 
 
-            wato_html_head(_("Login into site '%s'") % site["alias"], stylesheets = wato_styles)
+            wato_html_head(_("Login into site '%s'") % site["alias"])
             if error:
                 html.show_error(error)
             html.write("<div class=message>")
@@ -6414,7 +6414,7 @@ def update_only_hosts_file(sites):
             distributed = True
         if "socket" not in site \
             or site["socket"] == "unix:" + defaults.livestatus_unix_socket:
-            create_only_hosts_file(siteid)
+            create_only_hosts_file(siteid, site.get("replication"))
     if not distributed:
         delete_only_hosts_file()
 
@@ -6546,7 +6546,7 @@ class SiteAttribute(Attribute):
                     default_value = default_site())
 
     def paint(self, value, hostname):
-        return "", self._choices_dict.get(value, value)
+        return "", self._choices_dict.get(value, _("(do not monitor)"))
 
     def render_input(self, value):
         html.select("site", self._choices, value)
@@ -6630,15 +6630,15 @@ def global_replication_state():
 
 def find_host_sites(site_ids, folder, hostname):
     host = folder[".hosts"][hostname]
-    if "site" in host:
+    if "site" in host and host["site"]:
         site_ids.add(host["site"])
-    else:
+    elif folder[".siteid"]:
         site_ids.add(folder[".siteid"])
 
 # Scan recursively for references to sites
 # in folders and hosts
 def find_folder_sites(site_ids, folder, include_folder = False):
-    if include_folder:
+    if include_folder and folder[".siteid"]:
         site_ids.add(folder[".siteid"])
     load_hosts(folder)
     for hostname in folder[".hosts"]:
@@ -6965,7 +6965,7 @@ def automation_push_snapshot():
         log_commit_pending() # pending changes are lost
 
         # Create rule making this site only monitor our hosts
-        create_only_hosts_file(site_id)
+        create_only_hosts_file(site_id, mode)
         log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
         if html.var("restart", "no") == "yes":
             check_mk_local_automation("restart")
@@ -6977,14 +6977,17 @@ def automation_push_snapshot():
         else:
             return _("Internal automation error: %s") % e
 
-def create_only_hosts_file(siteid):
+def create_only_hosts_file(siteid, mode):
     out = file(defaults.check_mk_configdir + "/only_hosts.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("# This file has been created by the master site\n"
               "# push the configuration to us. It makes sure that\n"
               "# we only monitor hosts that are assigned to our site.\n\n")
     out.write("if only_hosts == None:\n    only_hosts = []\n\n")
-    out.write("only_hosts += [(NEGATE, ['!site:%s'], ALL_HOSTS )]\n" % siteid)
+    #if mode == 'master':
+    #    out.write("only_hosts += [(NEGATE, ['!site:%s'], ALL_HOSTS )]\n" % siteid)
+    #else:
+    out.write("only_hosts += [(['site:%s'], ALL_HOSTS )]\n" % siteid)
 
 def delete_only_hosts_file():
     p = defaults.check_mk_configdir + "/only_hosts.mk"
@@ -7198,7 +7201,7 @@ def mode_edit_user(phase):
         if auth_method == "secret":
             secret = html.var("secret", "").strip()
             if not secret or len(secret) < 10:
-                raise MKUserError(_("Please specify a secret of at least 10 characters length."))
+                raise MKUserError('secret', _("Please specify a secret of at least 10 characters length."))
             new_user["automation_secret"] = secret
             new_user["password"] = encrypt_password(secret)
 
@@ -7606,14 +7609,14 @@ def save_users(profiles):
                 locksym = ""
             out.write("%s:%s%s\n" % (id, locksym, user["password"]))
 
-    # Authentication secret for local processes
-    auth_dir = defaults.var_dir + "/web/" + id
-    auth_file = auth_dir + "/automation.secret"
-    make_nagios_directory(auth_dir)
-    if "automation_secret" in user:
-        create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
-    elif os.path.exists(auth_file):
-        os.remove(auth_file)
+        # Authentication secret for local processes
+        auth_dir = defaults.var_dir + "/web/" + id
+        auth_file = auth_dir + "/automation.secret"
+        make_nagios_directory(auth_dir)
+        if "automation_secret" in user:
+            create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
+        elif os.path.exists(auth_file):
+            os.remove(auth_file)
 
     # Call the users_saved hook
     call_hook(call_hook_users_saved, users)

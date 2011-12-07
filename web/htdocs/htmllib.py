@@ -445,7 +445,7 @@ class html:
                              (onchange_code, varname, varname, attributes))
         for value, text in options:
             if value == None: value = ""
-            sel = value == current and " selected" or ""
+            sel = value.split('|')[0] == current and " selected" or ""
             self.write("<option value=\"%s\"%s>%s</option>\n" % (value, sel, text))
         self.write("</select>\n")
         if varname:

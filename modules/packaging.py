@@ -50,7 +50,6 @@ package_parts = [ (part, title, ldir and ldir or dir) for part, title, dir, ldir
   ( "agents",        "Agents",                    agents_dir,          local_agents_dir ),
   ( "web",           "Multisite extensions",      web_dir,             local_web_dir ),
   ( "pnp-templates", "PNP4Nagios templates",      pnp_templates_dir,   local_pnp_templates_dir ),
-  ( "pnp-rraconf",   "RRA configuration for PNP", pnp_rraconf_dir,     local_pnp_rraconf_dir ),
   ( "doc",           "Documentation files",       doc_dir,             local_doc_dir ),
 ]]
 

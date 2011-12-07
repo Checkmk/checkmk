@@ -7996,7 +7996,7 @@ def mode_hosttags(phase):
         if move_nr != None:
             if html.check_transaction():
                 move_nr = int(move_nr)
-                if move_nr > 0:
+                if move_nr >= 0:
                     dir = 1
                 else:
                     move_nr = -move_nr

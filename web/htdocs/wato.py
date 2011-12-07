@@ -3442,6 +3442,8 @@ class HostTagAttribute(Attribute):
                       # But case could occur if tags definitions have been changed.
 
     def render_input(self, value):
+        if value == None:
+            value = "" # Important for tag groups with an empty tag entry
         # Tag groups with just one entry are being displayed
         # as checkboxes
         choices = []

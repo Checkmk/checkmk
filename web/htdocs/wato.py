@@ -7201,7 +7201,7 @@ def mode_edit_user(phase):
         if auth_method == "secret":
             secret = html.var("secret", "").strip()
             if not secret or len(secret) < 10:
-                raise MKUserError(_("Please specify a secret of at least 10 characters length."))
+                raise MKUserError('secret', _("Please specify a secret of at least 10 characters length."))
             new_user["automation_secret"] = secret
             new_user["password"] = encrypt_password(secret)
 

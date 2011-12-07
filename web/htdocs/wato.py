@@ -7609,14 +7609,14 @@ def save_users(profiles):
                 locksym = ""
             out.write("%s:%s%s\n" % (id, locksym, user["password"]))
 
-    # Authentication secret for local processes
-    auth_dir = defaults.var_dir + "/web/" + id
-    auth_file = auth_dir + "/automation.secret"
-    make_nagios_directory(auth_dir)
-    if "automation_secret" in user:
-        create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
-    elif os.path.exists(auth_file):
-        os.remove(auth_file)
+        # Authentication secret for local processes
+        auth_dir = defaults.var_dir + "/web/" + id
+        auth_file = auth_dir + "/automation.secret"
+        make_nagios_directory(auth_dir)
+        if "automation_secret" in user:
+            create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
+        elif os.path.exists(auth_file):
+            os.remove(auth_file)
 
     # Call the users_saved hook
     call_hook(call_hook_users_saved, users)

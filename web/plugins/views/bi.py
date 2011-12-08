@@ -74,6 +74,13 @@ multisite_painters["aggr_state"] = {
     "paint"   : lambda row: paint_aggr_state_short(row["aggr_effective_state"], row["aggr_effective_state"] != row["aggr_state"])
 }
 
+multisite_painters["aggr_state_num"] = {
+    "title"   : _("Aggregated state (number)"),
+    "short"   : _("State"),
+    "columns" : [ "aggr_effective_state" ],
+    "paint"   : lambda row: ("", str(row["aggr_effective_state"]['state']))
+}
+
 multisite_painters["aggr_real_state"] = {
     "title"   : _("Aggregated real state (never assumed)"),
     "short"   : _("R.State"),

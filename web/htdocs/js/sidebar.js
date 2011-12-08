@@ -165,7 +165,6 @@ function snapinDrag(event) {
       newTop += document.getElementById('side_content').scrollTop;*/
   snapinDragging.style.top      = newTop + 'px';
   snapinDragging.style.left     = (event.clientX - snapinOffset[1]) + 'px';
-  snapinDragging.style.width    = '175px';
   snapinDragging.style.zIndex   = 200;
 
   // Refresh the drop marker

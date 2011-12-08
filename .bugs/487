@@ -1,0 +1,12 @@
+Title: Add optional comment when restarting Nagios via WATO
+Component: wato
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-12-08 17:03:28
+Targetversion: 1.2.0
+Class: feature
+
+We add a text input in the "Activate Changes" pages. The user
+can enter a comment here. The comment will be added to the
+audit-Log and will be used to name or tag the snapshot.

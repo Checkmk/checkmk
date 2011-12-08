@@ -1,0 +1,12 @@
+Title: Enable login without password
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-12-08 16:05:54
+Targetversion: future
+Class: feature
+
+We could make logins without password possible, while the login name
+can be specified via an URL variable. That way the admin could
+create links to pages for usage in wikis, etc.

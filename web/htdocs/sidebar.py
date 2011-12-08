@@ -301,9 +301,9 @@ def move_snapin():
 
 def page_add_snapin():
     if not config.may("configure_sidebar"):
-        raise MKGeneralException("You are not allowed to change the sidebar.")
+        raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
-    html.header("Available snapins", stylesheets=["pages", "sidebar"])
+    html.header(_("Available snapins"), stylesheets=["pages", "sidebar", "status"])
     used_snapins = [name for (name, state) in load_user_config()]
 
     addname = html.var("name")

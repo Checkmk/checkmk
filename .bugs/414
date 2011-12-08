@@ -1,11 +1,15 @@
 Title: BI: FOREACH_* auch in untergeordneten Ebenen nutzbar machen
 Component: bi
-Benefit: 2
-State: open
 Cost: 4
 Date: 2011-11-24 12:26:52
-Targetversion: future
+State: done
 Class: feature
+Benefit: 2
+Fun: 0
+Targetversion: future
 
 Um im BI flexibler zu sein, sollte man z.B. FOREACH_SERVICE nicht nur
 in der obersten Regel-Ebene nutzne können.
+
+2011-12-08 08:34:39: changed state open -> done
+Has been implemented in 1.1.13 code for aggregation rules and services.

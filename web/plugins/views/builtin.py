@@ -2436,6 +2436,37 @@ multisite_builtin_views.update({
                  'topic': u'Business Intelligence',
                  'user_sortable': None},
 
+# Shows minimal information about a single aggregation which has to be set via aggr_name=<Name>.
+# Use together with output_format=python for API calls
+'aggr_single_api': {'browser_reload': 0,
+                     'column_headers': 'pergroup',
+                     'datasource': 'bi_aggregations',
+                     'description': u'Single Aggregation for simple API calls. Contains the state and state output.',
+                     'group_painters': [],
+                     'hard_filters': [],
+                     'hard_filtervars': [],
+                     'hidden': True,
+                     'hide_filters': ['aggr_name'],
+                     'hidebutton': True,
+                     'icon': 'aggr',
+                     'layout': 'table',
+                     'linktitle': 'Single Aggregation',
+                     'mobile': False,
+                     'mustsearch': False,
+                     'name': 'aggr_single_api',
+                     'num_columns': 1,
+                     'owner': 'omdadmin',
+                     'painters': [('aggr_state_num', None, ''),
+                                  ('aggr_output', None, '')],
+                     'play_sounds': False,
+                     'public': True,
+                     'show_checkboxes': None,
+                     'show_filters': [],
+                     'sorters': [],
+                     'title': u'Single Aggregation for simple API calls',
+                     'topic': u'Business Intelligence',
+                     'user_sortable': None},
+
 #   +----------------------------------------------------------------------+
 #   |       _   _       _   _  __ _           _   _                        |
 #   |      | \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __  ___        |

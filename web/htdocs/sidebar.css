@@ -369,7 +369,7 @@ div.statebullet {
 
 
 div.add_snapin div.snapinadder {
-    padding: 8px 2px;
+    padding: 8px 2px 14px 2px;
     background-color: #9bc;
     -moz-border-radius: 8px;
     border-bottom: 1px solid #9ab;

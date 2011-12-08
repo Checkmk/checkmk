@@ -121,8 +121,8 @@ def paint_icons(what, row):
     what: "host" or "service"
     row:  The livestatus row of the current object
     """
-    custom_vars = dict(zip(row[what + "_custom_variable_names"],
-                           row[what + "_custom_variable_values"]))
+    custom_vars = dict(zip(row["host_custom_variable_names"],
+                           row["host_custom_variable_values"]))
 
     # Extract host tags
     if "TAGS" in custom_vars:
@@ -145,11 +145,15 @@ def paint_icons(what, row):
 def iconpainter_columns(what):
     cols = set(['site',
                 'host_name',
-                what + '_custom_variable_names',
-                what + '_custom_variable_values' ])
+                'host_custom_variable_names',
+                'host_custom_variable_values' ])
 
     if what == 'service':
-        cols.add('service_description')
+        cols.update([
+            'service_description',
+            'service_custom_variable_names',
+            'service_custom_variable_values',
+        ])
 
     for icon in multisite_icons:
         if 'columns' in icon:

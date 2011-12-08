@@ -329,7 +329,7 @@ def page_add_snapin():
         url = 'sidebar_add_snapin.py?name=%s&_transid=%d&pos=top' % (name, transid)
         html.write('<div class=snapinadder onmouseover="this.style.background=\'#cde\'; this.style.cursor=\'pointer\';" '
                 'onmouseout="this.style.background=\'#9bc\' "'
-                'onclick="window.location.href=\'%s\';">' % url)
+                'onmousedown="window.location.href=\'%s\';return false;">' % url)
 
         html.write("<div class=snapin_preview>")
         html.write("<div class=clickshield></div>")

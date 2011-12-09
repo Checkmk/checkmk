@@ -8707,8 +8707,8 @@ def mode_edit_ruleset(phase):
         title = rulespec["title"]
         if hostname:
             title += _(" for host %s") % hostname
-        if html.has_var("item") and rulespec["itemtype"]:
-            title += _(" and %s '%s'") % (rulespec["itemname"], item)
+            if html.has_var("item") and rulespec["itemtype"]:
+                title += _(" and %s '%s'") % (rulespec["itemname"], item)
         return title
 
     elif phase == "buttons":

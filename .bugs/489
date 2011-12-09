@@ -1,0 +1,15 @@
+Title: Doku example for dual tcp/snmp monitoring
+Component: docu
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-12-09 11:40:51
+Targetversion: future
+Class: todo
+
+The following example rule could be proposed for solving
+the duplicate check problem:
+
+ignored_checks += [
+  ( [ "hr_fs", "hr_mem", "hr_cpu" ], [ "snmp", "tcp" ], ALL_HOSTS )
+]

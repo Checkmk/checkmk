@@ -1308,7 +1308,7 @@ void output_fileinfo(SOCKET &out, const char *basename, WIN32_FIND_DATA *data);
 
 void section_fileinfo(SOCKET &out)
 {
-    output(out, "<<<fileinfo(sep:124)>>>\n");
+    output(out, "<<<fileinfo:sep(124)>>>\n");
     output(out, "%.0f\n", current_time());
     for (unsigned i=0; i<g_num_fileinfo_paths; i++) {
         output_fileinfos(out, g_fileinfo_path[i]);
@@ -1330,10 +1330,13 @@ void output_fileinfos(SOCKET &out, const char *path)
         output_fileinfo(out, basename, &data);
         while (FindNextFile(h, &data)) 
             output_fileinfo(out, basename, &data);
+        if (end) 
+            *end = '\\'; // repair string
         FindClose(h);
     }
     else {
-        output(out, "%s|missing\n", path);
+        DWORD e = GetLastError();
+        output(out, "%s|missing|%d\n", path, e);
     }
 }
 

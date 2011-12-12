@@ -2218,6 +2218,7 @@ def write_configuration_file(folder, thefile, hosts):
     # Add custom macros for attributes that are to be present in Nagios
     custom_macros = {}
     for hostname, host in hosts.items():
+        effective = effective_attributes(host, thefile)
         for attr, topic in host_attributes:
             attrname = attr.name()
             if attrname in effective:
@@ -3404,13 +3405,15 @@ class API:
         return "wato.py?filename=" + htmllib.urlencode(filename)
 
     # Create an URL to the edit-properties of a host.
-    def link_to_host(self, hostname):
-        return "wato.py?" + htmllib.urlencode_vars(
+    def link_to_host(self, site, hostname):
+        prefix = config.site(site)["url_prefix"] + "check_mk/"
+        return prefix + "wato.py?" + htmllib.urlencode_vars(
         [("mode", "edithost"), ("host", hostname)])
 
     # Same, but links to services of that host
-    def link_to_host_inventory(self, hostname):
-        return "wato.py?" + htmllib.urlencode_vars(
+    def link_to_host_inventory(self, site, hostname):
+        prefix = config.site(site)["url_prefix"] + "check_mk/"
+        return prefix + "wato.py?" + htmllib.urlencode_vars(
         [("mode", "inventory"), ("host", hostname)])
 
     # Return the title of a folder - which is given as a string path

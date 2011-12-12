@@ -116,14 +116,18 @@ def paint_icons(what, row):
     what: "host" or "service"
     row:  The livestatus row of the current object
     """
-    custom_vars = dict(zip(row[what + "_custom_variable_names"],
-                           row[what + "_custom_variable_values"]))
+    if what + "_custom_variable_names" in row:
+        custom_vars = dict(zip(row[what + "_custom_variable_names"],
+                               row[what + "_custom_variable_values"]))
 
-    # Extract host tags
-    if "TAGS" in custom_vars:
-        tags = custom_vars["TAGS"].split()
+        # Extract host tags
+        if "TAGS" in custom_vars:
+            tags = custom_vars["TAGS"].split()
+        else:
+            tags = []
     else:
-        tags = []
+        tags        = None
+        custom_vars = None
 
     output = ""
     for icon in multisite_icons:
@@ -138,16 +142,20 @@ def paint_icons(what, row):
 
 
 def iconpainter_columns(what):
-    cols = set(['site',
+    if what == 'hostgroup':
+        cols = set([ "site", "hostgroup_name" ])
+    else:
+        cols = set(['site',
                 'host_name',
                 what + '_custom_variable_names',
                 what + '_custom_variable_values' ])
 
-    if what == 'service':
-        cols.add('service_description')
+        if what == 'service':
+            cols.add('service_description')
 
     for icon in multisite_icons:
-        if 'columns' in icon:
+        # HACK: Don't use general columns requests for hostgroup iconpainters
+        if what != 'hostgroup' and 'columns' in icon:
             cols.update([ what + '_' + i for i in icon['columns'] ])
         if what + '_columns' in icon:
             cols.update(icon[what + '_columns'])
@@ -166,6 +174,13 @@ multisite_painters["host_icons"] = {
     "short":   _("Icons"),
     "columns": iconpainter_columns("host"),
     "paint":   lambda row: paint_icons("host", row)
+}
+
+multisite_painters["hg_icons"] = {
+    "title":   _("Hostgroup icons"),
+    "short":   _("Icons"),
+    "columns": iconpainter_columns("hostgroup"),
+    "paint":   lambda row: paint_icons("hostgroup", row)
 }
 
 # -----------------------------------------------------------------------

@@ -71,21 +71,16 @@ def jqm_page_navfooter(items, current, page_id):
         '<div data-role="footer" data-id="%s" data-position="fixed">\n'
         '<div data-role="navbar">\n'
         '<ul>\n' % page_id)
-    for href, title, icon, obj_id in items:
-        #Is there an html id attribute
-        if obj_id != False:
-	    obj_id = ' id="%s"' % obj_id
-	else:
-	    obj_id = ''
-	    
+    for href, title, icon, custom_css in items:
+        if custom_css == False:
+	    custom_css = ""
         if current == href:
-            active = ' class="ui-state-persist ui-btn-active"'
+            custom_css += ' ui-state-persist ui-btn-active'
         else:
-            active = ''
-        html.write('<li><a data-transition="slide" %s '
+            html.write('<li><a class="%s" data-transition="slide"'
                    'data-icon="%s" data-iconpos="bottom" '
-                   'href="%s"%s>%s</a></li>\n' % 
-                   (obj_id, icon, href, active, title))
+                   'href="%s">%s</a></li>\n' % 
+                   (custom_css, icon, href, title))
     html.write(
         '</ul>\n'
         '</div>\n'
@@ -267,7 +262,7 @@ def show_filter_form(show_filters):
     # itself and first switch to that page...
     html.javascript("""
     $(document).ready(function() {
-      $('#results_button').live('click', function(e) {
+      $('.results_button').live('click', function(e) {
         e.preventDefault();
         var view_div = $("#view_results");
         view_div.empty();

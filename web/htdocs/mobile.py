@@ -202,6 +202,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 
     # Page: data rows of view
     jqm_page_header(title, left_button=home, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"), id="data")
+    html.write('<div id="view_results">')
     if len(rows) == 0:
         html.write(_("No hosts/services found."))
     else:
@@ -212,6 +213,7 @@ def render_view(view, rows, datasource, group_painters, painters,
                             show_checkboxes and not html.do_actions())
         except Exception, e:
             html.write(_("Error showing view: %s" % e))
+    html.write("</div>")
     jqm_page_navfooter(navbar, '#data', page_id)
 
     # Page: Commands
@@ -264,10 +266,18 @@ def show_filter_form(show_filters):
     # remove the ancor in href. Otherwise jQuery will do some magic
     # itself and first switch to that page...
     html.javascript("""
-     $('#results_button').live('click',function(e){
+    $(document).ready(function() {
+      $('#results_button').live('click', function(e) {
         e.preventDefault();
-        $('form[name="filter"]').submit();
+        var view_div = $("#view_results");
+        view_div.empty();
+        $.get('view.py',$('#form_filter').serialize()+"&mobile=1&display_options=htbfcodezr",function(antwort){
+          view_div.html(antwort);
+          $.mobile.changePage( "#data" );
+          $('#data').trigger('create');
+        });
       });
+    });
     """)
 
 def show_command_form(view, datasource, rows):

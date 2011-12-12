@@ -24,11 +24,12 @@
 
 /* Disable data-ajax per default, as it makes problems in most
    of our cases */
-$( function () {
+
+$(document).ready(function() {
     $("a").attr("data-ajax", "false");
     $("form").attr("data-ajax", "false");
     $("div.error").addClass("ui-shadow");
     $("div.success").addClass("ui-shadow");
     $("div.really").addClass("ui-shadow");
     $("div.warning").addClass("ui-shadow");
-})
+});

@@ -25,6 +25,8 @@
       a system reboot is (hopefully) not neccessary anymore
     * Windows agent: section <<<df>>> now also outputs junctions (windows
       mount points). No external plugin is needed.
+    * Windows agent: new section <<<fileinfo>>> for monitoring file sizes
+      (and later possible ages)
     * logwatch: allow to classify messages based on their count (see
       man page of logwatch for details)
 

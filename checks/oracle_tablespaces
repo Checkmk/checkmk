@@ -139,16 +139,16 @@ def check_oracle_tablespaces(item, params, info):
     # Check increment size, should not be set to default (1)
     if oracle_tablespaces_check_default_increment:
         if uses_default_increment:
-            infotext += ", DEFAULT INCREMENT!"
+            infotext += ", DEFAULT INCREMENT(!)"
             status = 1
 
     # Check autoextend status if parameter not set to None
     if autoext != None:
         if autoext and num_extensible == 0:
-            infotext += ", AUTOEXTEND!!"
+            infotext += ", AUTOEXTEND(!!)"
             status = 2
         elif not autoext and num_extensible > 0:
-            infotext += ", NO AUTOTEXTEND!!"
+            infotext += ", NO AUTOTEXTEND(!!)"
             status = 2
     elif num_extensible > 0:
         infotext += ", autoextend"

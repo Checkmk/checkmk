@@ -1037,7 +1037,7 @@ def savefloat(f):
 
 # Takes bytes as integer and returns a string which represents the bytes in a
 # more human readable form scaled to GB/MB/KB
-def get_bytes_human_readable(b, base=1024.0):
+def get_bytes_human_readable(b, base=1024.0, bytefrac=True):
     # Handle negative bytes correctly
     prefix = ''
     if b < 0:
@@ -1050,8 +1050,21 @@ def get_bytes_human_readable(b, base=1024.0):
         return '%s%.2fMB' % (prefix, b / base / base)
     elif b >= base:
         return '%s%.2fKB' % (prefix, b / base)
-    else:
+    elif bytefrac:
         return '%s%.2fB' % (prefix, b)
+    else: # Omit byte fractions
+        return '%s%.0fB' % (prefix, b)
+
+# Similar to get_bytes_human_readable, but optimized for file
+# sizes
+def get_filesize_human_readable(size):
+    if size < 4 * 1024 * 1024:
+        return str(size)
+    elif size < 4 * 1024 * 1024 * 1024:
+        return "%.2fMB" % (float(s) / (1024 * 1024))
+    else:
+        return "%.2fGB" % (float(s) / (1024 * 1024 * 1024))
+
 
 def get_nic_speed_human_readable(speed):
     try: 
@@ -1078,4 +1091,22 @@ def get_nic_speed_human_readable(speed):
 def to_celsius(f):
     return round(float(f) - 32.0) * 5.0 / 9.0
 
+# Format time difference seconds into approximated
+# human readable value
+def get_age_human_readable(secs):
+    if secs < 240:
+        return "%d sec" % secs
+    mins = secs / 60
+    if mins < 120:
+        return "%d min" % mins
+    hours, mins = divmod(mins, 60)
+    if hours < 12:
+        return "%d hours, %d min" % (hours, mins)
+    if hours < 48:
+        return "%d hours" % hours
+    days, hours = divmod(hours, 24)
+    if days < 7:
+        return "%d days, %d hours" % (days, hours)
+    return "%d days" % days
 
+    

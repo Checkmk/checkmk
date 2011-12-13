@@ -29,6 +29,7 @@
       (and later possible ages)
     * logwatch: allow to classify messages based on their count (see
       man page of logwatch for details)
+    * fileinfo: new check for monitoring age and size of files
 
     Multisite:
     * New nifty sidebar snapin "Speed-O-Meter"

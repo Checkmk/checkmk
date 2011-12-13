@@ -90,6 +90,7 @@
 #define SECTION_PLUGINS      0x00000200
 #define SECTION_LOCAL        0x00000400
 #define SECTION_MRPE         0x00000800 
+#define SECTION_FILEINFO     0x00001000  
 
 // Limits for static global arrays
 #define MAX_EVENTLOGS               128
@@ -97,6 +98,7 @@
 #define MAX_WINPERF_COUNTERS         64
 #define MAX_MRPE_COMMANDS            64
 #define MAX_EXECUTE_SUFFIXES         64
+#define MAX_FILEINFO_ENTRIES        128
 
 // Default buffer size for reading performance counters
 #define DEFAULT_BUFFER_SIZE      40960L
@@ -132,6 +134,7 @@ void listen_tcp_loop();
 void output(SOCKET &out, const char *format, ...);
 char *ipv4_to_text(uint32_t ip);
 void output_data(SOCKET &out);
+double file_time(const FILETIME *filetime);
 
 //  .----------------------------------------------------------------------.
 //  |                    ____ _       _           _                        |
@@ -195,6 +198,10 @@ unsigned int g_num_mrpe_entries = 0;
 // Configuration of execution suffixed
 unsigned g_num_execute_suffixes = 0;
 char *g_execute_suffixes[MAX_EXECUTE_SUFFIXES];
+
+// Array of file patterns for fileinfo
+unsigned g_num_fileinfo_paths = 0;
+char *g_fileinfo_path[MAX_FILEINFO_ENTRIES];
 
 //  .----------------------------------------------------------------------.
 //  |                  _   _      _                                        |
@@ -278,8 +285,13 @@ double current_time()
     FILETIME filetime;
     GetSystemTime(&systime);
     SystemTimeToFileTime(&systime, &filetime);
-    unsigned long long ft = (unsigned long long)(filetime.dwLowDateTime)
-	+ (((unsigned long long)filetime.dwHighDateTime) << 32);
+    return file_time(&filetime);
+}
+
+double file_time(const FILETIME *filetime)
+{
+    unsigned long long ft = (unsigned long long)(filetime->dwLowDateTime)
+	+ (((unsigned long long)filetime->dwHighDateTime) << 32);
     return ft / 10000000.0;
 }
 
@@ -1282,6 +1294,79 @@ void section_mem(SOCKET &out)
     output(out, "PageFree:  %11d kB\n", statex.ullAvailPageFile / 1024);
 }
 
+// .-----------------------------------------------------------------------.
+// |              ______ __ _ _      _        __     ______                |
+// |             / / / // _(_) | ___(_)_ __  / _| ___\ \ \ \               |
+// |            / / / /| |_| | |/ _ \ | '_ \| |_ / _ \\ \ \ \              |
+// |            \ \ \ \|  _| | |  __/ | | | |  _| (_) / / / /              |
+// |             \_\_\_\_| |_|_|\___|_|_| |_|_|  \___/_/_/_/               |
+// |                                                                       |
+// '-----------------------------------------------------------------------'
+
+void output_fileinfos(SOCKET &out, const char *path);
+void output_fileinfo(SOCKET &out, const char *basename, WIN32_FIND_DATA *data);
+
+void section_fileinfo(SOCKET &out)
+{
+    output(out, "<<<fileinfo:sep(124)>>>\n");
+    output(out, "%.0f\n", current_time());
+    for (unsigned i=0; i<g_num_fileinfo_paths; i++) {
+        output_fileinfos(out, g_fileinfo_path[i]);
+    }
+}
+
+void output_fileinfos(SOCKET &out, const char *path)
+{
+    WIN32_FIND_DATA data;
+    HANDLE h = FindFirstFileEx(path, FindExInfoStandard, &data, FindExSearchNameMatch, NULL, 0); 
+    if (h != INVALID_HANDLE_VALUE) {
+        // compute basename of path: search backwards for '\'
+        const char *basename = "";
+        char *end = strrchr(path, '\\');
+        if (end) {
+            *end = 0; 
+            basename = path;
+        }
+        output_fileinfo(out, basename, &data);
+        while (FindNextFile(h, &data)) 
+            output_fileinfo(out, basename, &data);
+        if (end) 
+            *end = '\\'; // repair string
+        FindClose(h);
+    }
+    else {
+        DWORD e = GetLastError();
+        output(out, "%s|missing|%d\n", path, e);
+    }
+}
+
+
+void output_fileinfo(SOCKET &out, const char *basename, WIN32_FIND_DATA *data)
+{
+    unsigned long long size = (unsigned long long)data->nFileSizeLow
+	+ (((unsigned long long)data->nFileSizeHigh) << 32); 
+
+    if (0 == (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+        output(out, "%s\\%s|%llu|%.0f\n", basename, 
+            data->cFileName, size, file_time(&data->ftLastWriteTime));
+    }
+}
+
+
+bool handle_fileinfo_config_variable(char *var, char *value)
+{
+    if (!strcmp(var, "path")) {
+        if (g_num_fileinfo_paths >= MAX_FILEINFO_ENTRIES) {
+            fprintf(stderr, "Sorry, only %d entries in [fileinfo] are allowed.\r\n", 
+                    MAX_FILEINFO_ENTRIES);
+            return false;
+        }
+        g_fileinfo_path[g_num_fileinfo_paths++] = strdup(value);
+        return true;
+    }
+    return false;
+}
+
 
 //   .----------------------------------------------------------------------.
 //   |     ____                    _                                        |
@@ -1863,6 +1948,8 @@ bool handle_global_config_variable(char *var, char *value)
                 enabled_sections |= SECTION_LOCAL;
             else if (!strcmp(word, "mrpe"))
                 enabled_sections |= SECTION_MRPE;
+            else if (!strcmp(word, "fileinfo"))
+                enabled_sections |= SECTION_FILEINFO;
             else {
                 fprintf(stderr, "Invalid section '%s'.\r\n", word);
                 return false;
@@ -2061,6 +2148,8 @@ void read_config_file()
                 variable_handler = handle_logwatch_config_variable;
             else if (!strcmp(section, "mrpe"))
                 variable_handler = handle_mrpe_config_variable;
+            else if (!strcmp(section, "fileinfo"))
+                variable_handler = handle_fileinfo_config_variable;
             else {
                 fprintf(stderr, "Invalid section [%s] in %s in line %d.\r\n",
                         section, g_config_file, lineno);
@@ -2338,6 +2427,8 @@ void output_data(SOCKET &out)
         section_ps(out);
     if (enabled_sections & SECTION_MEM)
         section_mem(out);
+    if (enabled_sections & SECTION_FILEINFO)
+        section_fileinfo(out);
     if (enabled_sections & SECTION_SERVICES)
         section_services(out);
     if (enabled_sections & SECTION_WINPERF)
@@ -2359,9 +2450,14 @@ void cleanup()
 {
     if (eventlog_buffer_size > 0)
 	delete [] eventlog_buffer;
+
     unregister_all_eventlogs(); // frees a few bytes
+
     while (g_num_execute_suffixes)
         free(g_execute_suffixes[--g_num_execute_suffixes]);
+
+    while (g_num_fileinfo_paths) 
+        free(g_fileinfo_path[--g_num_fileinfo_paths]);
 }
 
 void show_version()

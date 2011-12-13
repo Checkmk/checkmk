@@ -236,8 +236,8 @@ class html:
             onsubmit = ' onsubmit="%s"' % onsubmit
         else:
             onsubmit = ''
-        self.write('<form name=%s class=%s action="%s" method="%s"%s%s>\n' %
-                   (name, name, action, method, enctype, onsubmit))
+        self.write('<form id="form_%s" name="%s" class="%s" action="%s" method="%s"%s%s>\n' %
+                   (name, name, name, action, method, enctype, onsubmit))
         self.hidden_field("filled_in", name)
         if add_transid:
             self.hidden_field("_transid", str(self.current_transid()))
@@ -450,6 +450,14 @@ class html:
         self.write("</select>\n")
         if varname:
             self.form_vars.append(varname)
+
+    def begin_radio_group(self):
+        if self.mobile:
+            self.write('<div>')
+
+    def end_radio_group(self):
+        if self.mobile:
+            self.write('</div>')
 
     def radiobutton(self, varname, value, checked, label):
         if self.has_var(varname):

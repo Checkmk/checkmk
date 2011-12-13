@@ -31,7 +31,8 @@ perfometers = {}
 
 # Helper functions for perfometers
 def perfometer_td(perc, color):
-    return '<td class="inner" style="background-color: %s; width: %d%%;"></td>' % (color, int(float(perc)))
+    return '<td class="inner" style="background-color: %s; ' \
+           'width: %d%%;"></td>' % (color, int(float(perc)))
 
 # Paint linear performeter with one value
 def perfometer_linear(perc, color):
@@ -89,16 +90,29 @@ def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right
     return result + '</tr></table>'
 
 
-def number_human_readable(n):
+def number_human_readable(n, precision=1):
     n = float(n)
+    f = "%." + str(precision) + "f"
     if abs(n) > 1024 * 1024 * 1024:
-        return "%.1fG" % (n / (1024.0 * 1024 * 1024))
+        return (f + "G") % (n / (1024.0 * 1024 * 1024))
     elif abs(n) > 1024 * 1024:
-        return "%.1fM" % (n / (1024.0 * 1024))
+        return (f + "M") % (n / (1024.0 * 1024))
     elif abs(n) > 1024:
-        return "%.fK" % (n / 1024.0)
+        return (f + "K") % (n / 1024.0)
     else:
-        return "%.1fB" % n
+        return (f + "B") % n
+
+def age_human_redable(secs):
+    if secs < 240:
+        return "%d sec" % secs
+    mins = secs / 60
+    if mins < 240:
+        return "%d min" % mins
+    hours = mins / 60
+    if hours < 48:
+        return "%d hours" % hours
+    days = hours / 24
+    return "%d days" % days
 
 
 def paint_perfometer(row):

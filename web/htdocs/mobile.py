@@ -71,21 +71,18 @@ def jqm_page_navfooter(items, current, page_id):
         '<div data-role="footer" data-id="%s" data-position="fixed">\n'
         '<div data-role="navbar">\n'
         '<ul>\n' % page_id)
-    for href, title, icon, obj_id in items:
-        #Is there an html id attribute
-        if obj_id != False:
-	    obj_id = ' id="%s"' % obj_id
-	else:
-	    obj_id = ''
-	    
+    
+    for href, title, icon, custom_css in items:
+        href = html.makeuri([("page", href),("search", "Search")])
+        if custom_css == False:
+	    custom_css = ""
         if current == href:
-            active = ' class="ui-state-persist ui-btn-active"'
+            custom_css += ' ui-state-persist ui-btn-active'
         else:
-            active = ''
-        html.write('<li><a data-transition="slide" %s '
+            html.write('<li><a class="%s" data-transition="slide"'
                    'data-icon="%s" data-iconpos="bottom" '
-                   'href="%s"%s>%s</a></li>\n' % 
-                   (obj_id, icon, href, active, title))
+                   'href="%s">%s</a></li>\n' % 
+                   (custom_css, icon, href, title))
     html.write(
         '</ul>\n'
         '</div>\n'
@@ -151,31 +148,37 @@ def page_index():
     for view_name, view in html.available_views.items():
         if view.get("mobile") and not view.get("hidden"):
             url = "mobile_view.py?view_name=%s" % view_name
-            count = views.show_view(view, only_count = True)
             if view.get("mustsearch"):
-                url += "#filter"
-            items.append((url, '%s <span class="ui-li-count">%d</span>' % (view["title"], count)))
+                count = ""
+            else:
+	        count = views.show_view(view, only_count = True)
+	        count = '<span class="ui-li-count">%d</span>' % count
+            items.append((url, '%s %s' % (view["title"], count)))
     jqm_page_index(_("Check_MK Mobile"), items)
     jqm_page_footer()
     mobile_html_foot()
+    
 
 def page_view():
     views.load_views()
     view_name = html.var("view_name")
     if not view_name:
         return page_index()
-
+         
     view = html.available_views.get(view_name)
     title = views.view_title(view)
     mobile_html_head(title)
+    
     try:
-        views.show_view(view, show_heading = False, show_buttons = False, 
-                        show_footer = False, render_function = render_view)
-        pass
+	views.show_view(view, show_heading = False, show_buttons = False, 
+			show_footer = False, render_function = render_view)
+	pass
     except Exception, e:
-        if config.debug:
-            raise
-        html.write("ERROR showing view: %s" % e)
+	if config.debug:
+	    raise
+	html.write("ERROR showing view: %s" % e)
+
+        
     mobile_html_foot()
 
 def render_view(view, rows, datasource, group_painters, painters, 
@@ -184,12 +187,19 @@ def render_view(view, rows, datasource, group_painters, painters,
                 browser_reload):
 
     home=("mobile.py", "Home", "home")
+    
+    page = html.var("page")
+    if not page:
+       if view.get("mustsearch"):
+           page = "filter"
+       else:
+	   page = "data"
 
     title = views.view_title(view)
-    navbar = [ ( "#data",     _("Results"), "grid", 'results_button'),
-               ( "#filter",   _("Filter"),   "search", False )]
+    navbar = [ ( "data",     _("Results"), "grid", 'results_button'),
+               ( "filter",   _("Filter"),   "search", False )]
     if config.may("act"):
-        navbar.append(( "#commands", _("Commands"), "gear", False ))
+        navbar.append(( "commands", _("Commands"), "gear", False ))
 
     # Should we show a page with context links?
     context_links = [
@@ -197,47 +207,52 @@ def render_view(view, rows, datasource, group_painters, painters,
         if e[0].get("mobile") ]
 
     if context_links:
-        navbar.append(( "#context", _("Context"), "arrow-r", False))
+        navbar.append(( "context", _("Context"), "arrow-r", False))
     page_id = "view_" + view["name"]
 
-    # Page: data rows of view
-    jqm_page_header(title, left_button=home, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"), id="data")
-    if len(rows) == 0:
-        html.write(_("No hosts/services found."))
-    else:
-        try:
-            # TODO: special limit for mobile UI
-            html.check_limit(rows, views.get_limit())
-            layout["render"](rows, view, group_painters, painters, num_columns,
-                            show_checkboxes and not html.do_actions())
-        except Exception, e:
-            html.write(_("Error showing view: %s" % e))
-    jqm_page_navfooter(navbar, '#data', page_id)
 
-    # Page: Commands
-    if len(rows) > 0 and config.may("act"):
-        jqm_page_header(_("Commands"), left_button=home, id="commands")
-        show_commands = True
-        if html.has_var("_do_actions"):
-            try:
-                show_commands = do_commands(view, datasource["infos"][0], rows)
-            except MKUserError, e:
-                html.show_error(e.message)
-                show_commands = True
-        if show_commands:
-            show_command_form(view, datasource, rows)
-        jqm_page_navfooter(navbar, '#commands', page_id)
-
-    # Page: Filters
-    jqm_page_header(_("Filter / Search"), left_button=home, id="filter")
-    show_filter_form(show_filters)
-    jqm_page_navfooter(navbar, '#filter', page_id)
-
+    if page == "filter":
+        jqm_page_header(_("Filter / Search"), left_button=home, id="filter")
+        show_filter_form(show_filters)
+        jqm_page_navfooter(navbar, 'filter', page_id)
+        
+    elif page == "commands":
+            # Page: Commands
+	    if config.may("act"):
+		jqm_page_header(_("Commands"), left_button=home, id="commands")
+		show_commands = True
+		if html.has_var("_do_actions"):
+		    try:
+			show_commands = do_commands(view, datasource["infos"][0], rows)
+		    except MKUserError, e:
+			html.show_error(e.message)
+			show_commands = True
+		if show_commands:
+		    show_command_form(view, datasource, rows)
+		jqm_page_navfooter(navbar, 'commands', page_id)
+      
+    elif page == "data":
+          # Page: data rows of view
+	  jqm_page_header(title, left_button=home, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"), id="data")
+	  html.write('<div id="view_results">')
+	  if len(rows) == 0:
+	      html.write(_("No hosts/services found."))
+	  else:
+	      try:
+		  # TODO: special limit for mobile UI
+		  html.check_limit(rows, views.get_limit())
+		  layout["render"](rows, view, group_painters, painters, num_columns,
+				  show_checkboxes and not html.do_actions())
+	      except Exception, e:
+		  html.write(_("Error showing view: %s" % e))
+	  html.write("</div>")
+	  jqm_page_navfooter(navbar, 'data', page_id)
+	    
     # Page: Context buttons
     if context_links:
         jqm_page_header(_("Context"), left_button=home, id="context")
         show_context_links(context_links)
-        jqm_page_navfooter(navbar, '#context', page_id)
+        jqm_page_navfooter(navbar, 'context', page_id)
     
 
 def show_filter_form(show_filters):
@@ -257,16 +272,12 @@ def show_filter_form(show_filters):
     html.write("</ul>\n")
     html.hidden_fields()
     html.write('<input type="hidden" name="search" value="Search">')
+    html.write('<input type="hidden" name="page" value="data">')
     html.end_form()
-    # Make the tab 'b' not simply switch to the results page
-    # but submit the form and fetch new data. This is done by overriding
-    # that buttons click function to submit the form. Note: We need to
-    # remove the ancor in href. Otherwise jQuery will do some magic
-    # itself and first switch to that page...
     html.javascript("""
-     $('#results_button').live('click',function(e){
+      $('.results_button').live('click',function(e) {
         e.preventDefault();
-        $('form[name="filter"]').submit();
+        $('#form_filter').submit();
       });
     """)
 
@@ -283,7 +294,7 @@ def show_command_form(view, datasource, rows):
     for command in views.multisite_commands:
        if what in command["tables"] and config.may(command["permission"]):
             html.write('<li data-role="fieldcontain">\n')
-            html.write('<fieldset data-role="controlgroup">\n')
+            html.write('<fieldset data-role="controlgroup" data-type="horizontal">\n')
             html.write('<div role="heading" class="ui-controlgroup-label">%s</div>' % command["title"])
             html.write('<div class="ui-controlgroup-controls">')
             command["render"]()

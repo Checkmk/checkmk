@@ -1,0 +1,11 @@
+Title: cmk -I on cluster should work
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-12-09 14:27:05
+Targetversion: future
+Class: feature
+
+When doing inventory on a cluster we could simply 
+replace the cluster name by the node names.

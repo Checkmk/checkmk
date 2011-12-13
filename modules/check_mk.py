@@ -4124,14 +4124,18 @@ def compute_check_parameters(host, checktype, item, params):
         if type(fs) == dict:
             params = {}
 
-    # Honor factory settings for dict-type checks
-    if def_levels_varname and type(params) == dict:
+    # Honor factory settings for dict-type checks. Merge
+    # dict type checks with multiple matching rules
+    if type(params) == dict:
 
         # Start with factory settings
-        new_params = factory_settings.get(def_levels_varname, {}).copy()
+        if def_levels_varname:
+            new_params = factory_settings.get(def_levels_varname, {}).copy()
+        else:
+            new_params = {}
 
         # Merge user's default settings onto it
-        if def_levels_varname in globals():
+        if def_levels_varname and (def_levels_varname in globals()): 
             def_levels = eval(def_levels_varname)
             if type(def_levels) == dict:
                 new_params.update(eval(def_levels_varname))
@@ -4151,7 +4155,7 @@ def compute_check_parameters(host, checktype, item, params):
     if len(entries) > 0:
         # loop from last to first (first must have precedence)
         for entry in entries[::-1]:
-            if def_levels_varname and type(entry) == dict:
+            if type(params) == dict and type(entry) == dict:
                 params.update(entry)
             else:
                 params = entry

@@ -249,9 +249,11 @@ class FilterTristate(Filter):
 
     def display(self):
         current = html.var(self.varname)
+        html.begin_radio_group()
         for value, text in [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]:
             checked = current == value or (current in [ None, ""] and int(value) == self.deflt)
             html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
+        html.end_radio_group()
 
     def tristate_value(self):
         current = html.var(self.varname)

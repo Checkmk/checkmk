@@ -451,6 +451,14 @@ class html:
         if varname:
             self.form_vars.append(varname)
 
+    def begin_radio_group(self):
+        if self.mobile:
+            self.write('<div>')
+
+    def end_radio_group(self):
+        if self.mobile:
+            self.write('</div>')
+
     def radiobutton(self, varname, value, checked, label):
         if self.has_var(varname):
             checked = self.var(varname) == value

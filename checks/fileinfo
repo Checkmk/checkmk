@@ -1,0 +1,82 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+# <<<fileinfo(sep:124)>>>
+# 12968175080
+# M:\check_mk.ini|missing
+# M:\check_mk.ini|1390|12968174867
+# M:\check_mk_agent.cc|86277|12968174554
+# M:\Makefile|1820|12964010975
+# M:\check_mk_agent.exe|102912|12968174364
+# M:\crash.cc|1672|12964010975
+# M:\crash.exe|20024|12968154426
+
+# Parameters
+# "minsize" : ( 5000, 4000 ),  in bytes
+# "maxsize" : ( 8000, 9000 ),  in bytes
+# "minage"  : (   10,   20 ),  in minutes
+# "maxage"  : (   50,   80 ),  in minutes 
+
+def inventory_fileinfo(info):
+    return [(line[0], {}) for line in info[1:] if len(line) >= 3]
+
+def check_fileinfo(item, params, info):
+    reftime = int(info[0][0])
+    for line in info[1:]:
+        if item == line[0]:
+            if line[1] == "missing":
+                return (3, "File is missing")
+            state = 0
+            size = int(line[1])
+            age = reftime - int(line[2])
+            infos = []
+            perfdata = []
+            for what, val, verbfunc in [ 
+                ("size", size, get_filesize_human_readable),
+                ("age",  age,  get_age_human_readable) ]:   
+                infos.append("%s is %s" % (what, verbfunc(val)))
+                warn, crit = "", ""
+                for how, comp in [ ("min", "<" ),
+                                   ("max", ">" ) ]:
+                    p = params.get(how + what)
+                    if p:
+                        warn, crit = p
+                        cfunc = eval("lambda a,b: a %s b" % comp)
+                        if cfunc(val, crit): 
+                            state = 2
+                            infos[-1] += " (%s %s)(!!)" % (comp, verbfunc(crit))
+                        elif cfunc(val, warn): 
+                            state = max(state, 1)
+                            infos[-1] += " (%s %s)(!)" % (comp, verbfunc(warn))
+                perfdata.append((what, val, warn, crit))
+
+            infotext = nagios_state_names[state] + " - " + ", ".join(infos)
+            return (state, infotext, perfdata)
+    return (3, "UNKNOWN - File missing in agent output")
+
+
+check_info["fileinfo"] = (check_fileinfo, "File %s", 1, inventory_fileinfo)

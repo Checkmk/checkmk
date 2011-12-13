@@ -371,3 +371,17 @@ def perfometer_msx_queues(row, check_command, perf_data):
     return "%d" % length, perfometer_logarithmic(length, 100, 2, color)
 
 perfometers["check_mk-winperf_msx_queues"] = perfometer_msx_queues
+
+def perfometer_fileinfo(row, check_command, perf_data):
+    h = '<div class="stacked">'
+    texts = []
+    for i, color, base, scale, verbfunc in [
+        ( 0, "#ffcc50", 1000000, 10, lambda v: number_human_readable(v, precision=0) ), # size
+        ( 1, "#ccff50", 3600, 10,    age_human_redable )]:   # age
+        val = float(perf_data[i][1])
+        h += perfometer_logarithmic(val, base, scale, color) 
+        texts.append(verbfunc(val))
+    h += '</div>'
+    return " / ".join(texts), h #  perfometer_logarithmic(100, 200, 2, "#883875")
+
+perfometers["check_mk-fileinfo"] = perfometer_fileinfo

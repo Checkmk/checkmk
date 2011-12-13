@@ -9720,6 +9720,11 @@ class API:
     # Update the attributes of the given host and returns the resulting host attributes
     # which have been persisted
     def update_host_attributes(self, host, attr):
+        # Initialize attributes and load all folders
+        declare_host_tag_attributes() 
+        declare_site_attribute()      
+        load_all_folders()            
+        
         folder = g_folders.get(host["path"])
         load_hosts(folder)
         folder[".hosts"][host["name"]].update(attr)

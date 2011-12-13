@@ -1,0 +1,11 @@
+Title: Single dataset layout does not honor column-headers-off
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-12-13 16:47:59
+Targetversion: 1.1.13i1
+Class: bug
+
+If you switch off column headers in a single dataset view,
+the headers do not vanish.

@@ -40,7 +40,7 @@ factory_settings["if_default_levels"] = {
 # Obsolete variable, but needed as contained in autochecks of
 # older checks. We need to keep this up for a few years...
 if_default_error_levels = factory_settings["if_default_levels"]["errors"]
-if_default_traffic_levels = None
+if_default_traffic_levels = None, None
 if_default_average = None
 
 if_disable_if64_hosts = [] # Binary host list for disabling if64 on some broken devices

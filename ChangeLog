@@ -1,4 +1,4 @@
-1.1.12p4:
+1.1.12p5:
     Checks & Agents:
     * FIX: lnx_if: assume interfaces as up if ethtool is missing or
       not working but interface has been used since last reboot. This

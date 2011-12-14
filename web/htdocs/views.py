@@ -1262,6 +1262,8 @@ def show_view(view, show_heading = False, show_buttons = True,
 
     # TODO: Use livestatus Stats: instead of fetching rows!
     if only_count:
+        for varname, value in view["hard_filtervars"]:
+            html.del_var(varname, value)
         return len(rows)
 
     # Set browser reload

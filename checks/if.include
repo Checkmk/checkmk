@@ -37,6 +37,10 @@ factory_settings["if_default_levels"] = {
     "errors" : (0.01, 0.1),
 }
 
+# Obsolete variable, but needed as contained in autochecks of
+# older checks. We need to keep this up for a few years...
+if_default_error_levels = if_default_levels["errors"]
+
 if_disable_if64_hosts = [] # Binary host list for disabling if64 on some broken devices
 
 def if64_disabled(hostname):

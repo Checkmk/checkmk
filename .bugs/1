@@ -1,10 +1,12 @@
 Title: Describe StatsGroupBy
 Component: docu
+State: done
+Class: todo
 Benefit: 1
-State: open
 Cost: 1
 Date: 2010-12-21 10:45:58
-Class: todo
 Targetversion: 1.2.0
 
 multiple columns are allowed now. Columns: used.
+
+2011-12-14 10:06:11: changed state open -> done

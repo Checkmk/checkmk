@@ -1144,21 +1144,9 @@ def show_view(view, show_heading = False, show_buttons = True,
     browser_reload  = vo.get("refresh",         view.get("browser_reload", None))
     show_checkboxes = vo.get("show_checkboxes", view.get("show_checkboxes", False))
 
-    if browser_reload and 'R' in display_options:
-        html.set_browser_reload(browser_reload)
-
     # Get the datasource (i.e. the logical table)
     datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
-
-    # The layout of the view: it can be overridden by several specifying
-    # an output format (like json or python).
-    if html.output_format == "html":
-        layout = multisite_layouts[view["layout"]]
-    else:
-        layout = multisite_layouts.get(html.output_format)
-        if not layout:
-            layout = multisite_layouts["json"]
 
     # Filters to show in the view
     show_filters = [ multisite_filters[fn] for fn in view["show_filters"] ]
@@ -1174,9 +1162,10 @@ def show_view(view, show_heading = False, show_buttons = True,
 
     hide_filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
     hard_filters = [ multisite_filters[fn] for fn in view["hard_filters"] ]
+
     for varname, value in view["hard_filtervars"]:
         # shown filters are set, if form is fresh and variable not supplied in URL
-        if not html.var("filled_in") and not html.has_var(varname):
+        if only_count or (html.var("filled_in") != "filter" and not html.has_var(varname)): 
             html.set_var(varname, value)
 
     # Prepare Filter headers for Livestatus
@@ -1193,8 +1182,11 @@ def show_view(view, show_heading = False, show_buttons = True,
     query = filterheaders + view.get("add_headers", "")
 
     # Sorting - use view sorters and URL supplied sorters
-    sorter_list = html.has_var('sort') and parse_url_sorters(html.var('sort')) or view["sorters"]
-    sorters = [ (multisite_sorters[s[0]],) + s[1:] for s in sorter_list ]
+    if not only_count:
+        sorter_list = html.has_var('sort') and parse_url_sorters(html.var('sort')) or view["sorters"]
+        sorters = [ (multisite_sorters[s[0]],) + s[1:] for s in sorter_list ]
+    else:
+        sorter_list = []
 
     # Prepare gropuing information
     group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"] ]
@@ -1256,10 +1248,6 @@ def show_view(view, show_heading = False, show_buttons = True,
         else:
             rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
 
-        # TODO: Use livestatus Stats: instead of fetching rows!
-        if only_count:
-            return len(rows)
-
         # Now add join information, if there are join columns
         if len(join_painters) > 0:
             do_table_join(datasource, rows, filterheaders, join_painters, join_columns, only_sites)
@@ -1271,6 +1259,23 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Apply non-Livestatus filters
     for filter in all_active_filters:
         rows = filter.filter_table(rows)
+
+    # TODO: Use livestatus Stats: instead of fetching rows!
+    if only_count:
+        return len(rows)
+
+    # Set browser reload
+    if browser_reload and 'R' in display_options and not only_count:
+        html.set_browser_reload(browser_reload)
+
+    # The layout of the view: it can be overridden by several specifying
+    # an output format (like json or python).
+    if html.output_format == "html":
+        layout = multisite_layouts[view["layout"]]
+    else:
+        layout = multisite_layouts.get(html.output_format)
+        if not layout:
+            layout = multisite_layouts["json"]
 
     # Until now no single byte of HTML code has been output.
     # Now let's render the view.

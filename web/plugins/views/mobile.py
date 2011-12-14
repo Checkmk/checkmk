@@ -594,7 +594,7 @@ multisite_builtin_views.update({
                                          ('log_plugin_output', None),
                                              ],
                             'show_filters': ['logtime'],
-                            'sorters': [('log_time', False), ('log_lineno', False],
+                            'sorters': [('log_time', False), ('log_lineno', False)],
                             'title': _('Events of service')}),
                    
                         #All Notfications of a contact

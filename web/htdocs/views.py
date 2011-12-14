@@ -1648,7 +1648,8 @@ def show_context_links(thisview, active_filters):
 
     links = collect_context_links(thisview, active_filters)
     for view, linktitle, uri, icon, buttonid in links:
-        html.context_button(linktitle, uri, icon, buttonid, bestof=config.context_buttons_to_show)
+        if not view.get("mobile"):
+            html.context_button(linktitle, url=uri, icon=icon, id=buttonid, bestof=config.context_buttons_to_show)
 
     execute_hooks('buttons-end')
     html.end_context_buttons()

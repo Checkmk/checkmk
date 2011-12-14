@@ -369,7 +369,7 @@ class html:
         self.write('<a href="%s"' % url)
         if bestof:
             self.write(' onmousedown="count_context_button(this); document.location=this.href; " ')
-        self.write('>%s</a></div>' % title)
+        self.write('>%s</a></div>\n' % title)
 
     def context_button_hover_code(self, what):
         self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % what)

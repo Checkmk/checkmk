@@ -1,48 +1,4 @@
 1.1.13i1:
-    Core, Setup, etc.:
-    * New configuration variable static_checks[] (used by WATO)
-    * New configuration variable checkgroup_parameters (mainly for WATO)
-    * check_submission defaults now to "file" (was "pipe")
-    * Added pre-configured notification via cmk --notify
-    * Drop RRA-configuration files for PNP4Nagios completely
-
-    Checks & Agents:
-    * if/if64: new ruleset if_disable_if64_hosts, that force if on
-      hosts the seem to support if64
-    * Windows agent: new config variable "sections" in [global], that
-      allows to configure which sections are being output.
-    * Windows agent: in [logwatch] you can now configure which logfiles
-      to process and which levels of messages to send.
-    * Windows agent: new config variable "host" in all sections that
-      restricts the folling entries to certain hosts.
-    * Windows agent: finally implemented <<<mrpe>>. See check_mk.ini
-      for examples.
-    * Windows agent: do not execute *.txt and *.dir in <<<plugins>>> and
-      <<<local>>>
-    * Windows agent: make extensions to execute configurable (see
-      example check_mk.ini)
-    * Windows agent: agent now reuses TCP port even when taskkill'ed, so
-      a system reboot is (hopefully) not neccessary anymore
-    * Windows agent: section <<<df>>> now also outputs junctions (windows
-      mount points). No external plugin is needed.
-    * Windows agent: new section <<<fileinfo>>> for monitoring file sizes
-      (and later possible ages)
-    * logwatch: allow to classify messages based on their count (see
-      man page of logwatch for details)
-    * fileinfo: new check for monitoring age and size of files
-
-1.1.12p5:
-    Multisite:
-    * FIX: fix hitting enter in Quicksearch on IE 8
-    * FIX: event/log views: reverse sorting, so that newest entries
-      are shown first
-
-    Checks & Agents:
-    * FIX: lnx_if: assume interfaces as up if ethtool is missing or
-      not working but interface has been used since last reboot. This
-      fixes the problem where interface are not found by inventory.
-
-1.1.12p4:
     Multisite:
     * New nifty sidebar snapin "Speed-O-Meter"
     * Implemented new cookie based login mechanism including a fancy login GUI
@@ -97,13 +53,63 @@
       to set number of processes. Nagios will not fork() anymore for check exection.
     * New columns num_hosts and num_services in status table
     * New aggregation functions suminv and avginv (see Documentation)
+    Core, Setup, etc.:
+    * New configuration variable static_checks[] (used by WATO)
+    * New configuration variable checkgroup_parameters (mainly for WATO)
+    * check_submission defaults now to "file" (was "pipe")
+    * Added pre-configured notification via cmk --notify
+    * Drop RRA-configuration files for PNP4Nagios completely
+
+    Checks & Agents:
+    * if/if64: new ruleset if_disable_if64_hosts, that force if on
+      hosts the seem to support if64
+    * Windows agent: new config variable "sections" in [global], that
+      allows to configure which sections are being output.
+    * Windows agent: in [logwatch] you can now configure which logfiles
+      to process and which levels of messages to send.
+    * Windows agent: new config variable "host" in all sections that
+      restricts the folling entries to certain hosts.
+    * Windows agent: finally implemented <<<mrpe>>. See check_mk.ini
+      for examples.
+    * Windows agent: do not execute *.txt and *.dir in <<<plugins>>> and
+      <<<local>>>
+    * Windows agent: make extensions to execute configurable (see
+      example check_mk.ini)
+    * Windows agent: agent now reuses TCP port even when taskkill'ed, so
+      a system reboot is (hopefully) not neccessary anymore
+    * Windows agent: section <<<df>>> now also outputs junctions (windows
+      mount points). No external plugin is needed.
+    * Windows agent: new section <<<fileinfo>>> for monitoring file sizes
+      (and later possible ages)
+    * logwatch: allow to classify messages based on their count (see
+      man page of logwatch for details)
+    * fileinfo: new check for monitoring age and size of files
+
+1.1.12p5:
+    Multisite:
+    * FIX: fix hitting enter in Quicksearch on IE 8
+    * FIX: event/log views: reverse sorting, so that newest entries
+      are shown first
+
+    Checks & Agents:
+    * FIX: lnx_if: assume interfaces as up if ethtool is missing or
+      not working but interface has been used since last reboot. This
+      fixes the problem where interface are not found by inventory.
 
 1.1.12p4:
     Multisite:
     * FIX: sidebar snapin Hostgroups and Servicegroups sometimes
            failed with non-existing "available_views".
     * FIX: Fix host related WATO context button links to point to the hosts site
-    * FIX: Fixed view editor redirection to new view after changing the view_name 
+    * FIX: Fixed view editor redirection to new view after changing the view_name
+    * FIX: Made icon painter usable when displaying hostgroup rows
+    * Logwatch: Switched strings in logwatch to i18n strings
+    * Logwatch: Fixed styling of context button when acknowleding log messages
+    * Logwatch: Implemented overview page to show all problematic logfiles
+
+    WATO:
+    * FIX: add missing icon_csv.png
+    * FIX: WATO did not write values of custom macros to extra_host_conf definitions
 
 1.1.12p3:
     Core, Setup, etc.:

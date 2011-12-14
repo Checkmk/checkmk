@@ -76,11 +76,12 @@ def generate_auth_file(users):
         # Add implicit permissions. These are basic permissions
         # which are needed for most users.
         perms += [
-            ('Overview', 'view',               '*'),
-            ('General',  'getContextTemplate', '*'),
-            ('General',  'getHoverTemplate',   '*'),
-            ('General',  'getCfgFileAges',     '*'),
-            ('User',     'setOption',          '*'),
+            ('Overview',  'view',               '*'),
+            ('General',   'getContextTemplate', '*'),
+            ('General',   'getHoverTemplate',   '*'),
+            ('General',   'getCfgFileAges',     '*'),
+            ('User',      'setOption',          '*'),
+            ('Multisite', 'getMaps',            '*'),
         ]
 
         # Loop the declared NagVis permissions to check if the user is allowed.

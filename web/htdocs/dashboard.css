@@ -54,7 +54,7 @@ div.dashlet div.dashlet_inner.background {
 }
 
 div.dashlet iframe {
-    border-style: none;
+    border-style: none; 
 }
 
 div.dashlet div.title {

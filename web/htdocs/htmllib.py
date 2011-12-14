@@ -369,7 +369,7 @@ class html:
         self.write('<a href="%s"' % url)
         if bestof:
             self.write(' onmousedown="count_context_button(this); document.location=this.href; " ')
-        self.write('>%s</a></div>' % title)
+        self.write('>%s</a></div>\n' % title)
 
     def context_button_hover_code(self, what):
         self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % what)
@@ -451,13 +451,17 @@ class html:
         if varname:
             self.form_vars.append(varname)
 
-    def begin_radio_group(self):
+    def begin_radio_group(self, horizontal=False):
         if self.mobile:
-            self.write('<div>')
+            if horizontal:
+	        add = 'data-type="horizontal" '
+	    else:
+	        add = ''
+            self.write('<fieldset %s data-role="controlgroup">' % add)
 
     def end_radio_group(self):
         if self.mobile:
-            self.write('</div>')
+            self.write('</fieldset>')
 
     def radiobutton(self, varname, value, checked, label):
         if self.has_var(varname):
@@ -473,7 +477,13 @@ class html:
         if label:
             self.write('<label for="%s">%s</label>\n' % (id, label))
         self.form_vars.append(varname)
-
+    
+    def begin_checkbox_group(self, horizonal=False):
+	self.begin_radio_group(horizonal)
+	
+    def end_checkbox_group(self):
+        self.end_radio_group()
+    
     def checkbox(self, varname, deflt=False, cssclass = '', onclick = None, label=None, id=None, add_attr = None):
         if add_attr == None:
             add_attr = [] # do not use [] as default element, it will be a global variable!

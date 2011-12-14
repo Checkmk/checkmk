@@ -109,9 +109,6 @@ def bug_is_modified(bugid):
 def load_bug(bugid):
     bug = { 
         "id"             : bugid,
-        "cost"           : 1,
-        "benefit"        : 1,
-        "fun"            : 0,
         "state"          : "unknown",
         "title"          : "unknown",
         "component"      : "general",
@@ -169,7 +166,7 @@ where COMMAND is one of:
 
   ids [#]                - Shows the number of reserved bug IDS. With a number
                            given as parameter the command will reserve new bug IDS.
-  list [-g] [-r] [STATE] - list bugs (-g: sort after gain, -r: reverse)
+  list [-r] [STATE]      - list bugs (-r: reverse)
   new                    - create a new bug
   show [# #..]           - show several bugs, or 'all' for all, of leave out for last
   resolve ID             - change a bugs state
@@ -194,33 +191,14 @@ def num_color(n, colors, inverse):
     c = colors[n-1]
     return tty_colors([b + c, 1])
 
-def bug_gain(bug):
-    cost    = int(bug["cost"])
-    benefit = int(bug["benefit"])
-    gain = benefit - cost
-    if gain >= 2:
-        color = 2
-    elif gain > 0:
-        color = 6
-    elif gain <= -3:
-        color = 1
-    elif gain <= -2:
-        color = 5
-    elif gain < 0:
-        color = 3
-    else:
-        color = 4
-    return "%s%d%s%d%s" % (
-            tty_colors([40 + color, 1]), cost, tty_colors([0, 30 + color, 1]), benefit, tty_normal)
-
 def list_bug(bug):
     if bug_is_modified(bug["id"]):
         bold = tty_bold + tty_cyan + "(*) "
     else:
         bold = ""
-    sys.stdout.write("#%04d %s %-6s %-9s %-10s %s%-6s%s %s%-60s%s\n" %
+    sys.stdout.write("#%04d %-6s %-9s %-10s %s%-6s%s %s%-60s%s\n" %
             (int(bug["id"]),
-             bug_gain(bug), bug_state(bug), 
+             bug_state(bug), 
              bug["class"], bug["component"], tty_bold, 
              bug["targetversion"], tty_normal, bold, bug["title"], tty_normal))
 
@@ -234,17 +212,10 @@ def main_list(args):
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
     filters = {}
-    def cmp_gain(a, b):
-        ga = int(a["benefit"]) - int(a["cost"])
-        gb = int(b["benefit"]) - int(b["cost"])
-        return ga - gb
 
     sort = None
     reverse = False
     for a in args:
-        if a == '-g':
-            sort = cmp_gain
-            continue
 
         if a == '-r':
             reverse = True
@@ -374,8 +345,6 @@ def main_new(args):
     bug["class"]         = input_choice("Class",     classes)
     bug["component"]     = input_choice("Component", components)
     bug["targetversion"] = input_choice("Target Version", targetversions)
-    bug["cost"]          = input_choice("Cost",      "123456789")
-    bug["benefit"]       = input_choice("Benefit",   "123456789")
     
     bug["description"] = get_long_input("description")
     g_bugs[bug["id"]] = bug

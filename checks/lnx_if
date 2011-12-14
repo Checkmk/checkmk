@@ -97,16 +97,6 @@ def if_lnx_convert_to_if64(info):
             else:
                 ifSpeed = ''
 
-        # Link state from ethtool. If ethtool has no information about
-        # this NIC, we set the state to unknown.
-        ld = attr.get("Link detected")
-        if ld == "yes":
-            ifOperStatus = 1
-        elif ld == "no":
-            ifOperStatus = 2
-        else:
-            ifOperStatus = 4 # unknown
-
         # Performance counters
         ifInOctets = counters[0]
         inucast = counters[1] + counters[7]
@@ -121,6 +111,22 @@ def if_lnx_convert_to_if64(info):
         ifOutDiscards = counters[11]
         ifOutErrors = counters[10]
         ifOutQLen = counters[12]
+
+        # Link state from ethtool. If ethtool has no information about
+        # this NIC, we set the state to unknown.
+        ld = attr.get("Link detected")
+        if ld == "yes":
+            ifOperStatus = 1
+        elif ld == "no":
+            ifOperStatus = 2
+        else:
+            # No information from ethtool. We consider interfaces up
+            # if they have been used at least some time since the
+            # system boot.
+            if ifInOctets > 0:
+                ifOperStatus = 1 # assume up
+            else:
+                ifOperStatus = 4 # unknown (NIC has never been used)
 
         if_table.append(map(str, [
           ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus,

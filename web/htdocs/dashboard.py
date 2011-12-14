@@ -193,7 +193,7 @@ def render_dashlet(nr, dashlet, wato_folder):
     if "content" in dashlet: # fixed content
         html.write(dashlet["content"])
     elif "iframe" in dashlet: # fixed content containing iframe
-        html.write('<iframe width="100%%" height="100%%" src="%s"></iframe>' % 
+        html.write('<iframe allowTransparency="true" frameborder="0" width="100%%" height="100%%" src="%s"></iframe>' % 
            add_wato_folder_to_url(dashlet["iframe"], wato_folder))
     html.write("</div></div>\n")
 

@@ -288,11 +288,14 @@ double current_time()
     return file_time(&filetime);
 }
 
+#define WINDOWS_TICK 10000000
+#define SEC_TO_UNIX_EPOCH 11644473600LL
 double file_time(const FILETIME *filetime)
 {
-    unsigned long long ft = (unsigned long long)(filetime->dwLowDateTime)
-	+ (((unsigned long long)filetime->dwHighDateTime) << 32);
-    return ft / 10000000.0;
+    _ULARGE_INTEGER uli;
+    uli.LowPart = filetime->dwLowDateTime;
+    uli.HighPart = filetime->dwHighDateTime;
+    return double(uli.QuadPart / (double)WINDOWS_TICK - SEC_TO_UNIX_EPOCH);
 }
 
 char *lstrip(char *s)
@@ -339,7 +342,7 @@ void char_replace(char what, char into, char *in)
 void section_systemtime(SOCKET &out)
 {
     output(out, "<<<systemtime>>>\n");
-    output(out, "%ld\n", time(0));
+    output(out, "%.0f\n", current_time());
 }
 
 //  .----------------------------------------------------------------------.

@@ -1,4 +1,10 @@
 1.1.12p4:
+    Checks & Agents:
+    * FIX: lnx_if: assume interfaces as up if ethtool is missing or
+      not working but interface has been used since last reboot. This
+      fixes the problem where interface are not found by inventory.
+
+1.1.12p4:
     Multisite:
     * FIX: sidebar snapin Hostgroups and Servicegroups sometimes
            failed with non-existing "available_views".

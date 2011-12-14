@@ -69,6 +69,7 @@ def if_lnx_convert_to_if64(info):
 
     if_table = []
     for nic, attr in nic_info.items():
+        import pprint ; pprint.pprint(attr)
         counters = attr.get("counters", [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
 
         ifIndex = attr["index"]
@@ -97,16 +98,6 @@ def if_lnx_convert_to_if64(info):
             else:
                 ifSpeed = ''
 
-        # Link state from ethtool. If ethtool has no information about
-        # this NIC, we set the state to unknown.
-        ld = attr.get("Link detected")
-        if ld == "yes":
-            ifOperStatus = 1
-        elif ld == "no":
-            ifOperStatus = 2
-        else:
-            ifOperStatus = 4 # unknown
-
         # Performance counters
         ifInOctets = counters[0]
         inucast = counters[1] + counters[7]
@@ -122,6 +113,22 @@ def if_lnx_convert_to_if64(info):
         ifOutErrors = counters[10]
         ifOutQLen = counters[12]
 
+        # Link state from ethtool. If ethtool has no information about
+        # this NIC, we set the state to unknown.
+        ld = attr.get("Link detected")
+        if ld == "yes":
+            ifOperStatus = 1
+        elif ld == "no":
+            ifOperStatus = 2
+        else:
+            # No information from ethtool. We consider interfaces up
+            # if they have been used at least some time since the
+            # system boot.
+            if ifInOctets > 0:
+                ifOperStatus = 1 # assume up
+            else:
+                ifOperStatus = 4 # unknown (NIC has never been used)
+
         if_table.append(map(str, [
           ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus,
           ifInOctets, inucast, inmcast, inbcast, ifInDiscards,
@@ -131,6 +138,7 @@ def if_lnx_convert_to_if64(info):
     return if_table
 
 def inventory_lnx_if(info):
+    import pprint ; pprint.pprint(info)
     if linux_nic_check == "legacy":
         return []
     return inventory_if_common(if_lnx_convert_to_if64(info))

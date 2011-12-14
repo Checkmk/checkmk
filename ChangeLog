@@ -84,6 +84,8 @@
     * logwatch: allow to classify messages based on their count (see
       man page of logwatch for details)
     * fileinfo: new check for monitoring age and size of files
+    * heartbeat_crm: apply patches from Václav Ovsík, so that the check
+      should work on Debian now.
 
 1.1.12p5:
     Multisite:

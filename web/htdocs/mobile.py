@@ -254,13 +254,14 @@ def render_view(view, rows, datasource, group_painters, painters,
 		  html.write(_("Error showing view: %s" % e))
 	  html.write("</div>")
 	  html.javascript("""
-	  $('.pnpgraph').children('div').css('max-width', '100px');
+	  $('.pnpgraph').children('div').css('max-width', '100%');
 	  $('.pnpgraph').children('div').css('overflow', 'scroll');
 	  """)
 	  jqm_page_navfooter(navbar, 'data', page_id)
 	    
     # Page: Context buttons
-    if context_links:
+    #if context_links:
+    elif page == "context":
         jqm_page_header(_("Context"), left_button=home, id="context")
         show_context_links(context_links)
         jqm_page_navfooter(navbar, 'context', page_id)
@@ -341,6 +342,6 @@ def do_commands(view, what, rows):
 def show_context_links(context_links):
     items = []
     for view, title, uri, icon, buttonid in context_links:
-        items.append((uri, title))
+        items.append(('Context', uri, title))
     jqm_page_index(_("Related Views"), items)
 

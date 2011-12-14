@@ -163,6 +163,9 @@ body.mobile table.data td.perfometer td.inner {
     text-align: center;
 }
 
+td.pnpgraph img {
+     max-width: 100%;  
+}
 
 /*-------------------------------------------------------------------------.
 |                      _                _                                  |
@@ -191,3 +194,5 @@ body.mobile table.data td.perfometer td.inner {
 img.logomk {
     width: 20%;
 }
+
+

@@ -94,6 +94,7 @@ def jqm_page_navfooter(items, current, page_id):
 def jqm_page_index(title, items):
     last_topic = ''
     first_run = True
+    items.sort(cmp = lambda a,b: cmp((a[0],a[2]),(b[0],b[2])))
     for topic, href, title in items:
         if last_topic != topic:
 	    if first_run != True:
@@ -103,13 +104,6 @@ def jqm_page_index(title, items):
 	    first_run = False;
 	html.write('<li><a data-ajax="false" data-transition="flip" href="%s">%s</a></li>\n' % (href, title))
     html.write("</ul>\n")
-
-    # Link to non-mobile GUI
-    html.write(
-        '<ul data-role="listview" data-inset="true">\n')
-    html.write('<li><a data-ajax="false" data-transition="fade" href="%s">%s</a></li>\n' %
-                ("index.py?mobile=", _("Classical web GUI")))
-    html.write('</ul>\n')
 
 def jqm_page(title, content, foot, id=None):
     jqm_page_header(title, id)
@@ -159,12 +153,14 @@ def page_index():
 	        count = views.show_view(view, only_count = True)
 	        count = '<span class="ui-li-count">%d</span>' % count
             items.append((view.get("topic"), url, '%s %s' % (view["title"], count)))
-            items.sort()
     jqm_page_index(_("Check_MK Mobile"), items)
+    # Link to non-mobile GUI
+    html.write('<ul data-role="listview" data-inset="true">\n')
+    html.write('<li><a data-ajax="false" data-transition="fade" href="%s">%s</a></li>\n' %                 ("index.py?mobile=", _("Classical web GUI")))
+    html.write('</ul>\n')
     jqm_page_footer()
     mobile_html_foot()
-    
-
+   
 def page_view():
     views.load_views()
     view_name = html.var("view_name")
@@ -253,10 +249,6 @@ def render_view(view, rows, datasource, group_painters, painters,
 	      except Exception, e:
 		  html.write(_("Error showing view: %s" % e))
 	  html.write("</div>")
-	  html.javascript("""
-	  $('.pnpgraph').children('div').css('max-width', '100%');
-	  $('.pnpgraph').children('div').css('overflow', 'scroll');
-	  """)
 	  jqm_page_navfooter(navbar, 'data', page_id)
 	    
     # Page: Context buttons

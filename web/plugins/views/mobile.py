@@ -489,7 +489,7 @@ multisite_builtin_views.update({
                          ('log_plugin_output', None)],
             'public': True,
             'show_filters': [],
-            'sorters': [('log_time', False), ('log_lineno', False],
+            'sorters': [('log_time', False), ('log_lineno', False)],
             'title': 'Events',
             'topic': _('Events')}),
             

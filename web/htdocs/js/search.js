@@ -330,7 +330,9 @@ function mkSearchGetUrl(objType, objName, objSite, numMatches) {
 // This performs a case insensitive search of a substring in a string
 // Returns true if found and false if not
 function mkSearchMatch(base, search) {
-	return base.toLowerCase().indexOf(search.toLowerCase()) > -1;
+    if (!base)
+        return false;
+    return base.toLowerCase().indexOf(search.toLowerCase()) > -1;
 }
 
 function mkSearchAddSearchResults(aSearchObjects, objType, val) {

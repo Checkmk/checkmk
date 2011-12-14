@@ -66,7 +66,7 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.12p4
+echo Version: 1.1.12p5
 echo AgentOS: freebsd
 
 

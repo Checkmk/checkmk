@@ -187,11 +187,15 @@ class FilterServiceState(Filter):
         self.prefix = prefix
 
     def display(self):
+        html.begin_checkbox_group()
         for var, text in [(self.prefix + "st0", "OK"), (self.prefix + "st1", "WARN"), \
                           (self.prefix + "st2", "CRIT"), (self.prefix + "st3", "UNKNOWN"), 
                           (self.prefix + "stp", "PENDING")]:
+	    #if html.mobile:
+	        #text = text[:1]
             html.checkbox(var, True, label=text)
             # html.write(" %s " % text)
+        html.end_checkbox_group()
 
     def filter(self, infoname):
         headers = []
@@ -220,9 +224,11 @@ class FilterHostState(Filter):
                 "host", [ "hst0", "hst1", "hst2", "hstp" ], [])
 
     def display(self):
+        html.begin_checkbox_group()
         for var, text in [("hst0", _("UP")), ("hst1", _("DOWN")), 
                           ("hst2", _("UNREACH")), ("hstp", _("PENDING"))]:
             html.checkbox(var, True, label=text)
+        html.end_checkbox_group()
 
     def filter(self, infoname):
         headers = []
@@ -249,7 +255,7 @@ class FilterTristate(Filter):
 
     def display(self):
         current = html.var(self.varname)
-        html.begin_radio_group()
+        html.begin_radio_group(horizontal = True)
         for value, text in [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]:
             checked = current == value or (current in [ None, ""] and int(value) == self.deflt)
             html.radiobutton(self.varname, value, checked, text + " &nbsp; ")

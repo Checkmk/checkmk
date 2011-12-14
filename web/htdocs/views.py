@@ -1255,7 +1255,7 @@ def show_view(view, show_heading = False, show_buttons = True,
             rows = tablename(columns, query, only_sites, get_limit(), all_active_filters)
         else:
             rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
-
+	  
         # TODO: Use livestatus Stats: instead of fetching rows!
         if only_count:
             return len(rows)

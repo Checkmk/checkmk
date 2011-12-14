@@ -31,6 +31,7 @@ def mobile_html_head(title, ready_code=""):
   <script type='text/javascript' src='jquery/jquery-1.6.4.min.js'></script>
   <script type='text/javascript' src='jquery/jquery.mobile-1.0.min.js'></script>
   <script type='text/javascript' src='js/mobile.js'></script>
+  <script type='text/javascript' src='js/check_mk.js'></script>
   <script type='text/javascript'>
       $(document).ready(function() { %s });
   </script>
@@ -68,9 +69,9 @@ def jqm_page_footer(content=""):
 def jqm_page_navfooter(items, current, page_id):
     html.write("</div>\n") # close content
     html.write(
-        '<div data-role="footer" data-id="%s" data-position="fixed">\n'
+        '<div data-role="footer" data-position="fixed">\n'
         '<div data-role="navbar">\n'
-        '<ul>\n' % page_id)
+        '<ul>\n')
     
     for href, title, icon, custom_css in items:
         href = html.makeuri([("page", href),("search", "Search")])
@@ -88,14 +89,19 @@ def jqm_page_navfooter(items, current, page_id):
         '</div>\n'
         '</div>\n')
     html.write('</div>') # close page-div
-
+    
 
 def jqm_page_index(title, items):
-    html.write(
-        '<ul data-role="listview" data-inset="true">\n')
-    for href, title in items:
-        html.write('<li><a data-ajax="false" data-transition="flip" href="%s">%s</a></li>\n' %
-                (href, title))
+    last_topic = ''
+    first_run = True
+    for topic, href, title in items:
+        if last_topic != topic:
+	    if first_run != True:
+	        html.write("</ul>")
+	    last_topic = topic
+	    html.write('<p>%s</p><ul data-role="listview" data-inset="true">\n' % topic)
+	    first_run = False;
+	html.write('<li><a data-ajax="false" data-transition="flip" href="%s">%s</a></li>\n' % (href, title))
     html.write("</ul>\n")
 
     # Link to non-mobile GUI
@@ -142,18 +148,18 @@ def page_login():
 def page_index():
     title = "Check_MK Mobile"
     mobile_html_head(title)
-    jqm_page_header(title, left_button=("logout.py", "Logout", "delete"))
+    jqm_page_header(title, left_button=("logout.py", "Logout", "delete"),right_button=("javascript:document.location.reload();", _("Reload"), "refresh"))
     views.load_views()
     items = []
     for view_name, view in html.available_views.items():
         if view.get("mobile") and not view.get("hidden"):
             url = "mobile_view.py?view_name=%s" % view_name
-            if view.get("mustsearch"):
-                count = ""
-            else:
+            count = ""
+            if not view.get("mustsearch"):
 	        count = views.show_view(view, only_count = True)
 	        count = '<span class="ui-li-count">%d</span>' % count
-            items.append((url, '%s %s' % (view["title"], count)))
+            items.append((view.get("topic"), url, '%s %s' % (view["title"], count)))
+            items.sort()
     jqm_page_index(_("Check_MK Mobile"), items)
     jqm_page_footer()
     mobile_html_foot()
@@ -226,6 +232,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 			show_commands = do_commands(view, datasource["infos"][0], rows)
 		    except MKUserError, e:
 			html.show_error(e.message)
+			html.add_user_error(e.varname, e.message)
 			show_commands = True
 		if show_commands:
 		    show_command_form(view, datasource, rows)
@@ -246,6 +253,10 @@ def render_view(view, rows, datasource, group_painters, painters,
 	      except Exception, e:
 		  html.write(_("Error showing view: %s" % e))
 	  html.write("</div>")
+	  html.javascript("""
+	  $('.pnpgraph').children('div').css('max-width', '100px');
+	  $('.pnpgraph').children('div').css('overflow', 'scroll');
+	  """)
 	  jqm_page_navfooter(navbar, 'data', page_id)
 	    
     # Page: Context buttons
@@ -264,11 +275,9 @@ def show_filter_form(show_filters):
     html.write('<ul data-inset="false" data-role="listview">\n')
     for sort_index, title, f in s:
         html.write('<li data-role="fieldcontain">\n')
-        html.write('<fieldset data-role="controlgroup">\n')
-        html.write('<div role="heading" class="ui-controlgroup-label">%s</div>' % title)
-        html.write('<div class="ui-controlgroup-controls">')
+        html.write('<legend>%s</legend>' % title)
         f.display()
-        html.write('</div></fieldset></li>\n')
+        html.write('</li>')
     html.write("</ul>\n")
     html.hidden_fields()
     html.write('<input type="hidden" name="search" value="Search">')
@@ -283,24 +292,28 @@ def show_filter_form(show_filters):
 
 def show_command_form(view, datasource, rows):
     what = datasource["infos"][0]
-
+    html.javascript("""
+    $(document).ready(function() {
+      $('.command_group').has('x').trigger('expand');
+      $('x').children().css('background-color', '#f84');
+    });
+    """)
     html.begin_form("commands", html.req.myfile + ".py#commands")
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
 
     one_shown = False
-    html.write('<ul data-inset="false" data-role="listview">\n')
+    html.write('<div data-role="collapsible-set">\n')
     for command in views.multisite_commands:
        if what in command["tables"] and config.may(command["permission"]):
-            html.write('<li data-role="fieldcontain">\n')
-            html.write('<fieldset data-role="controlgroup" data-type="horizontal">\n')
-            html.write('<div role="heading" class="ui-controlgroup-label">%s</div>' % command["title"])
-            html.write('<div class="ui-controlgroup-controls">')
+            html.write('<div class="command_group" data-role="collapsible">\n')
+            html.write("<h3>%s</h3>" % command["title"])
+            html.write('<p>\n')
             command["render"]()
-            html.write('</div></fieldset></li>\n')
+            html.write('</p></div>\n')
             one_shown = True
-    html.write("</ul>")
+    html.write("</div>")
     if not one_shown:
         html.write(_('No commands are possible in this view'))
 

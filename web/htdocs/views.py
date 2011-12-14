@@ -1186,7 +1186,7 @@ def show_view(view, show_heading = False, show_buttons = True,
         sorter_list = html.has_var('sort') and parse_url_sorters(html.var('sort')) or view["sorters"]
         sorters = [ (multisite_sorters[s[0]],) + s[1:] for s in sorter_list ]
     else:
-        sorter_list = []
+        sorters = []
 
     # Prepare gropuing information
     group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"] ]

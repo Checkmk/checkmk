@@ -3,6 +3,7 @@
     * FIX: fix hitting enter in Quicksearch on IE 8
     * FIX: event/log views: reverse sorting, so that newest entries
       are shown first
+    * FIX: fix dashboard dashlet background on IE
 
     Checks & Agents:
     * FIX: lnx_if: assume interfaces as up if ethtool is missing or

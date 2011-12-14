@@ -1667,6 +1667,7 @@ div.dashlet iframe {
 /* special background for embedded views */
 body.main.dashlet {
      background-image: none;
+     background: transparent;
     /* background-color: #709aa5; */
     padding: 0px;
 }

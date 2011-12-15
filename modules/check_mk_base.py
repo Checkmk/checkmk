@@ -729,7 +729,6 @@ def check_unimplemented(checkname, params, info):
 # Loops over all checks for a host, gets the data, calls the check
 # function that examines that data and sends the result to Nagios
 def do_all_checks_on_host(hostname, ipaddress):
-    import time ; time.sleep(5)
     global g_aggregated_service_results
     g_aggregated_service_results = {}
     global g_hostname

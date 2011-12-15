@@ -3,6 +3,7 @@ states = {
     "done"       : tty_green,
     "closed"     : tty_normal,
     "wontfix"    : tty_magenta,
+    "works4me"   : tty_white,
     "discuss"    : tty_red,
 }
 

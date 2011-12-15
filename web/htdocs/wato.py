@@ -2268,6 +2268,7 @@ def mode_bulk_cleanup(phase):
                     num_cleaned, hostname))
                     mark_affected_sites_dirty(g_folder, hostname)
             save_hosts(g_folder)
+            reload_hosts() # indirect host tag changes
             return "folder"
         return
 

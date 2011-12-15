@@ -135,7 +135,7 @@ function wato_fix_visibility() {
                 delete hide_topics[index];
         }
     }
-    for each (var item in volatile_topics){
+    for (var item in volatile_topics){
         var oTr = document.getElementById("topic_" + item);
         if(oTr) {
             if(hide_topics.indexOf(item) > -1 )

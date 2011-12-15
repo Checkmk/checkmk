@@ -77,6 +77,25 @@ register_rule(group,
         match="dict")
 
 checkgroups = []
+
+checkgroups.append((
+    "ad_replication",
+    _("Active Directory Replication"),
+    Tuple(
+        help = _("The number of replication failures"),
+        elements = [
+           Integer(title = _("Warning at"), unit = _("failures")),
+           Integer(title = _("Critical at"), unit = _("failures")),
+        ]
+      ),
+    TextAscii(
+        title = _("Replication Partner"), 
+        help = _("The name of the replication partner (Destination DC Site/Destination DC)."), 
+    ),
+    "first"
+))
+
+
 checkgroups.append(( 
     "filesystem", 
     _("Filesystems (used space and growth)"),

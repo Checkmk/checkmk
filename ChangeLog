@@ -88,6 +88,7 @@
     * fileinfo: new check for monitoring age and size of files
     * heartbeat_crm: apply patches from Václav Ovsík, so that the check
       should work on Debian now.
+    * fsc_*: added missing scan functions
 
 1.1.12p5:
     Multisite:

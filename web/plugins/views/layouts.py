@@ -26,7 +26,9 @@
 
 def init_rowselect():
     # Don't make rows selectable when no commands can be fired
-    if not 'C' in html.display_options or not config.may("act"):
+    # Ignore "C" display option here. Otherwise the rows will not be selectable
+    # after view reload.
+    if not config.may("act"):
         return
 
     selected = []

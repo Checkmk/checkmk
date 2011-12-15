@@ -5,6 +5,7 @@
       are shown first
     * FIX: fix dashboard dashlet background on IE
     * FIX: fix row highlight in status GUI on IE 8
+    * FIX: fix row highlight after status page reload
 
     Checks & Agents:
     * FIX: lnx_if: assume interfaces as up if ethtool is missing or

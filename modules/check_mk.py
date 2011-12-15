@@ -1085,9 +1085,8 @@ def filter_active_hosts(hostlist):
     if only_hosts == None and distributed_wato_site == None:
         return strip_tags(hostlist)
     elif only_hosts == None:
-        site_tag = "site:" + distributed_wato_site
         return [ hostname for hostname in strip_tags(hostlist)
-                 if site_tag in tags_of_host(hostname) ]
+                 if host_is_member_of_site(hostname, distributed_wato_site) ]
     elif distributed_wato_site == None:
         return [ hostname for hostname in strip_tags(hostlist)
                  if in_binary_hostlist(hostname, only_hosts) ]
@@ -1095,8 +1094,14 @@ def filter_active_hosts(hostlist):
         site_tag = "site:" + distributed_wato_site
         return [ hostname for hostname in strip_tags(hostlist)
                  if in_binary_hostlist(hostname, only_hosts) 
-                 and site_tag in tags_of_host(hostname) ]
+                 and host_is_member_of_site(hostname, distributed_wato_site) ]
 
+def host_is_member_of_site(hostname, site):
+    for tag in tags_of_host(hostname):
+        if tag.startswith("site:"):
+            return site == tag[5:]
+    # hosts without a site: tag belong to all sites
+    return True
 
 
 

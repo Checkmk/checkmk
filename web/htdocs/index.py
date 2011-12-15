@@ -170,7 +170,8 @@ def load_language(lang):
             i18n = gettext.translation('multisite', locale_base, languages = [ lang ], codeset = 'UTF-8')
             i18n.install(unicode = True)
         except IOError, e:
-            raise MKUserError('lang', 'No translation file found for the given language.')
+            # Fallback to hardcoded default if the given language does not exist
+            __builtin__.current_language = config.default_language
 
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)

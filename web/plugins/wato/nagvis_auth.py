@@ -46,6 +46,43 @@
 #
 # This feature is available since NagVis release 1.6.1.
 
+#
+# The 3 following functions must be removed here when splitting
+# up the auth file generation in "global" and map folder specific
+# permissions
+#
+g_target_maps = {}
+def get_mapname_by_stringpath(filename):
+    return get_mapname(api.get_folder(filename))
+
+def get_mapname(thing):
+    """
+    folder can be a file/folder dictionary as provided by wato
+    or a tuple path to a file/folder. e.g. the parent folder.
+
+    In NagVis Mapnamen sind nur [0-9A-Za-z_-] erlaubt.
+    """
+    if thing is None:
+        return 'main'
+    elif isinstance(thing, tuple):
+        name = '_'.join(thing)
+    elif thing.get('.path', ()) != '':
+        name = thing['.path'].replace('/', '_')
+    else:
+        name = 'main'
+
+    if '.mk' in name:
+        name = name.replace('.mk', '')
+
+    return name
+
+def nagvis_auth_process_tree(thing):
+    global g_target_maps
+    g_target_maps[get_mapname(thing)] = thing
+
+    for child in thing.get('.folders', {}).itervalues():
+        process_tree(child)
+
 # Generate the permissions file for the multisite authorization module
 def generate_auth_file(users):
     import json
@@ -57,7 +94,7 @@ def generate_auth_file(users):
     #
     # 0. Data gathering - populate g_target_maps list
     #
-    process_tree(api.get_folder_tree())
+    nagvis_auth_process_tree(api.get_folder_tree())
 
     #
     # 1. Write out the user permissions file

@@ -21,6 +21,8 @@
     * Add Snapin page: show previews of all snapins
     * Add Snapin page: Trying to prevent dragging confusions by using other click event
     * New (hidden) button for reloading a snapin (left to the close button)
+    * Automatically falling back to hardcoded default language if configured
+    language is not available
 
     BI:
     * Host/Service elements are now iterable via FOREACH_HOST, e.g.

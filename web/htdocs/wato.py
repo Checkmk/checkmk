@@ -6401,13 +6401,13 @@ def save_sites(sites):
     out = file(sites_mk, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("sites = \\\n%s\n" % pprint.pformat(sites))
-    update_only_hosts_file(sites)
+    update_distributed_wato_file(sites)
     need_sidebar_reload()
 
 # Makes sure, that in distributed mode we monitor only 
 # the hosts that are directly assigned to our (the local)
 # site.
-def update_only_hosts_file(sites):
+def update_distributed_wato_file(sites):
     # Note: we cannot access config.sites here, since we
     # are currently in the process of saving the new
     # site configuration.
@@ -6415,11 +6415,9 @@ def update_only_hosts_file(sites):
     for siteid, site in sites.items():
         if site.get("replication"):
             distributed = True
-        if "socket" not in site \
-            or site["socket"] == "unix:" + defaults.livestatus_unix_socket:
-            create_only_hosts_file(siteid, site.get("replication"))
+        create_distributed_wato_file(siteid, site.get("replication"))
     if not distributed:
-        delete_only_hosts_file()
+        delete_distributed_wato_file()
 
 #.
 #   .-Replication----------------------------------------------------------.
@@ -6968,7 +6966,7 @@ def automation_push_snapshot():
         log_commit_pending() # pending changes are lost
 
         # Create rule making this site only monitor our hosts
-        create_only_hosts_file(site_id, mode)
+        create_distributed_wato_file(site_id, mode)
         log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
         if html.var("restart", "no") == "yes":
             check_mk_local_automation("restart")
@@ -6980,20 +6978,16 @@ def automation_push_snapshot():
         else:
             return _("Internal automation error: %s") % e
 
-def create_only_hosts_file(siteid, mode):
-    out = file(defaults.check_mk_configdir + "/only_hosts.mk", "w")
+def create_distributed_wato_file(siteid, mode):
+    out = file(defaults.check_mk_configdir + "/distributed_wato.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("# This file has been created by the master site\n"
               "# push the configuration to us. It makes sure that\n"
               "# we only monitor hosts that are assigned to our site.\n\n")
-    out.write("if only_hosts == None:\n    only_hosts = []\n\n")
-    #if mode == 'master':
-    #    out.write("only_hosts += [(NEGATE, ['!site:%s'], ALL_HOSTS )]\n" % siteid)
-    #else:
-    out.write("only_hosts += [(['site:%s'], ALL_HOSTS )]\n" % siteid)
+    out.write("distributed_wato_site = '%s'\n" % siteid)
 
-def delete_only_hosts_file():
-    p = defaults.check_mk_configdir + "/only_hosts.mk"
+def delete_distributed_wato_file():
+    p = defaults.check_mk_configdir + "/distributed_wato.mk"
     if os.path.exists(p):
         os.remove(p)
 

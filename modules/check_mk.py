@@ -296,6 +296,7 @@ summary_host_notification_periods    = []
 summary_service_notification_periods = []
 ipaddresses                          = {} # mapping from hostname to ipaddress
 only_hosts                           = None
+distributed_wato_site                = None # used by distributed WATO
 extra_host_conf                      = {}
 extra_summary_host_conf              = {}
 extra_service_conf                   = {}
@@ -1075,18 +1076,29 @@ def output_conf_header(outfile):
 """)
 
 def all_active_hosts():
-    if only_hosts == None:
-        return strip_tags(all_hosts)
-    else:
-        return [ hostname for hostname in strip_tags(all_hosts) \
-                 if in_binary_hostlist(hostname, only_hosts) ]
+    return filter_active_hosts(all_hosts)
 
 def all_active_clusters():
-    if only_hosts == None:
-        return strip_tags(clusters.keys())
-    else:
-        return [ hostname for hostname in strip_tags(clusters.keys()) \
+    return filter_active_hosts(clusters.keys())
+
+def filter_active_hosts(hostlist):
+    if only_hosts == None and distributed_wato_site == None:
+        return strip_tags(hostlist)
+    elif only_hosts == None:
+        site_tag = "site:" + distributed_wato_site
+        return [ hostname for hostname in strip_tags(hostlist)
+                 if site_tag in tags_of_host(hostname) ]
+    elif distributed_wato_site == None:
+        return [ hostname for hostname in strip_tags(hostlist)
                  if in_binary_hostlist(hostname, only_hosts) ]
+    else:
+        site_tag = "site:" + distributed_wato_site
+        return [ hostname for hostname in strip_tags(hostlist)
+                 if in_binary_hostlist(hostname, only_hosts) 
+                 and site_tag in tags_of_host(hostname) ]
+
+
+
 
 def hostgroups_of(hostname):
     return host_extra_conf(hostname, host_groups)

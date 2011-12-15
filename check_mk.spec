@@ -158,7 +158,7 @@ rm -rf $RPM_BUILD_ROOT
 # Spaeter Subpaket draus machen
 /usr/bin/unixcat
 /usr/lib/check_mk/livestatus.o
-
+/usr/lib/check_mk/livecheck
 
 %files agent
 %config(noreplace) /etc/xinetd.d/check_mk

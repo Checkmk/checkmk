@@ -51,6 +51,14 @@ if (!Array.prototype.indexOf)
   };
 }
 
+var classRegexes = {};
+
+function hasClass(obj, cls) {
+    if(!classRegexes[cls])
+        classRegexes[cls] = new RegExp('(\\s|^)'+cls+'(\\s|$)');
+    return obj.className.match(classRegexes[cls]);
+}
+
 // This implements getElementsByClassName() for IE<9
 if (!document.getElementsByClassName) {
   document.getElementsByClassName = function(className, root, tagName) {
@@ -66,7 +74,7 @@ if (!document.getElementsByClassName) {
     // and for others... IE7-, IE8 (quirks mode), Firefox 2-, Safari 3.1-, Opera 9-
     var tagName = tagName || '*', _tags = root.getElementsByTagName(tagName), _nodeList = [];
     for (var i = 0, _tag; _tag = _tags[i++];) {
-        if (this.hasClass(_tag, className)) {
+        if (hasClass(_tag, className)) {
             _nodeList.push(_tag);
         }
     }

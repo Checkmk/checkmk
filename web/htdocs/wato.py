@@ -6415,9 +6415,7 @@ def update_distributed_wato_file(sites):
     for siteid, site in sites.items():
         if site.get("replication"):
             distributed = True
-        if "socket" not in site \
-            or site["socket"] == "unix:" + defaults.livestatus_unix_socket:
-            create_distributed_wato_file(siteid, site.get("replication"))
+        create_distributed_wato_file(siteid, site.get("replication"))
     if not distributed:
         delete_distributed_wato_file()
 

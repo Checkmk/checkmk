@@ -4,6 +4,7 @@
     * FIX: event/log views: reverse sorting, so that newest entries
       are shown first
     * FIX: fix dashboard dashlet background on IE
+    * FIX: fix row highlight in status GUI on IE 8
 
     Checks & Agents:
     * FIX: lnx_if: assume interfaces as up if ethtool is missing or

@@ -967,12 +967,13 @@ function lightenColor(color, val) {
     return "#" + code.toUpperCase();
 }
 
-function real_style(obj, attr) {
+function real_style(obj, attr, ieAttr) {
     var st;
-    if(document.defaultView && document.defaultView.getComputedStyle)
+    if(document.defaultView && document.defaultView.getComputedStyle) {
         st = document.defaultView.getComputedStyle(obj, null).getPropertyValue(attr);
-    else
-        st = obj.currentStyle[attr];
+    } else {
+        st = obj.currentStyle[ieAttr];
+    }
 
     if(typeof(st) == 'undefined') { 
         st = 'transparent';
@@ -984,7 +985,7 @@ function real_style(obj, attr) {
     if(obj.tagName == 'TD'
        && obj.parentNode.row_num === undefined
        && (st == 'transparent' || st == 'rgba(0, 0, 0, 0)'))
-        st = real_style(obj.parentNode, attr);
+        st = real_style(obj.parentNode, attr, ieAttr);
 
     return st;
 }
@@ -1033,7 +1034,7 @@ function highlight_row(elem, on) {
 
 function highlight_elem(elem, on) {
     // Find all elements below "elem" with a defined background-color and change it
-    var bg_color = real_style(elem, 'background-color');
+    var bg_color = real_style(elem, 'background-color', 'backgroundColor');
     if(on) {
         elem['hover_orig_bg'] = bg_color;
         elem.style.backgroundColor = lightenColor(elem['hover_orig_bg'], -20);

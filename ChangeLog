@@ -95,7 +95,7 @@
     * FIX: event/log views: reverse sorting, so that newest entries
       are shown first
     * FIX: fix dashboard dashlet background on IE
-    * FIX: fix row highlight in status GUI on IE 8
+    * FIX: fix row highlight in status GUI on IE 7/8
     * FIX: fix row highlight after status page reload
 
     Checks & Agents:

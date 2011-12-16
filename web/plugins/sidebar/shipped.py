@@ -142,7 +142,7 @@ def render_groups(what):
     html.write('<ul>')
     for alias_lower, alias, name in groups:
         url = "view.py?view_name=%sgroup&%sgroup=%s" % (what, what, htmllib.urlencode(name))
-        bulletlink(alias, url)
+        bulletlink(alias or name, url)
     html.write('</ul>')
 
 sidebar_snapins["hostgroups"] = {

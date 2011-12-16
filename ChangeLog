@@ -26,6 +26,7 @@
     * Repair layout of Perf-O-Meter in single dataset layout
     * FIX: Fixed duplicate view plugin loading when using localized multisite
     * FIX: Host-/Servicegroup snapin: Showing group names when no alias is available
+    * FIX: Removed double "/" from pnp graph image urls in views
 
     BI:
     * Host/Service elements are now iterable via FOREACH_HOST, e.g.
@@ -105,6 +106,8 @@
     * FIX: fix row highlight in status GUI on IE 7/8
     * FIX: fix row highlight after status page reload
     * FIX: single dataset layout honors column header settings
+    * FIX: quote '#' in PNP links (when # is contained in services)
+    * FIX: quote '#' in PNP image links also
 
     Checks & Agents:
     * FIX: lnx_if: assume interfaces as up if ethtool is missing or

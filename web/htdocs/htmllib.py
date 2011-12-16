@@ -116,7 +116,7 @@ def urlencode(value):
     for c in value:
         if c == " ":
             c = "+"
-        elif ord(c) <= 32 or ord(c) > 127 or c in [ '+', '"', "'", "=", "&", ":", "%" ]:
+        elif ord(c) <= 32 or ord(c) > 127 or c in [ '#', '+', '"', "'", "=", "&", ":", "%" ]:
             c = "%%%02x" % ord(c)
         ret += c
     return ret
@@ -726,9 +726,9 @@ class html:
     def render_status_icons(self):
         h = ""
         if True: # self.req.method == "GET":
-            h += '<a target="_blank" href="%s"><img class=statusicon src="images/status_frameurl.png" title="URL to this frame"></a>\n' % \
+            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="URL to this frame"></a>\n' % \
                  self.makeuri([])
-            h += '<a target="_blank" href="%s"><img class=statusicon src="images/status_pageurl.png" title="URL to this page including sidebar"></a>\n' % \
+            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="URL to this page including sidebar"></a>\n' % \
                  ("index.py?" + urlencode_vars([("start_url", self.makeuri([]))]))
         for img, tooltip in self.status_icons.items():
             h += '<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip)

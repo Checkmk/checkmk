@@ -1048,6 +1048,7 @@ multisite_builtin_views.update({
                           ('svc_plugin_output', None),
                           ('svc_long_plugin_output', None),
                           ('svc_perf_data', None),
+                          ('perfometer', None),
                           ('svc_check_command', None),
                           ('svc_attempt', None),
                           ('svc_check_type', None),

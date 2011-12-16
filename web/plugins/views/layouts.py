@@ -67,8 +67,10 @@ def render_single_dataset(rows, view, group_painters, painters, num_columns, _ig
     for row in rows:
         register_events(row) # needed for playing sounds
 
-    html.write('<div class="tableshadow left"><table class=dataset>\n')
+    # html.write('<div class="tableshadow left">\n')
+    html.write('<table class="data single">\n')
     rownum = 0
+    odd = "odd"
     while rownum < len(rows):
         if rownum > 0:
             html.write("<tr class=gap><td class=gap colspan=%d></td></tr>\n" % (1 + num_columns))
@@ -80,7 +82,8 @@ def render_single_dataset(rows, view, group_painters, painters, num_columns, _ig
             else:
                 title = painter["title"]
 
-            html.write("<tr class=data>")
+            odd = odd == "odd" and "even" or "odd"
+            html.write('<tr class="data %s0">' % odd)
             if view.get("column_headers") != "off":
                 html.write("<td class=left>%s</td>" % title)
             for row in thispart:
@@ -89,7 +92,8 @@ def render_single_dataset(rows, view, group_painters, painters, num_columns, _ig
                 html.write("<td class=gap style=\"border-style: none;\" colspan=%d></td>" % (1 + num_columns - len(thispart)))
             html.write("</tr>\n")
         rownum += num_columns
-    html.write("</table></div>\n")
+    html.write("</table>\n")
+    html.write("</div>\n")
 
 multisite_layouts["dataset"] = {
     "title"  : _("Single dataset"),

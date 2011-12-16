@@ -325,7 +325,8 @@ table.data tr.data td.pnpgraph {
 
 tr.data td.pnpgraph img {
     border: 1px solid #888;
-    margin: 7px 3px 3px 0px; 
+    margin: 4px 4px 4px 4px; 
+    box-shadow: 1px 1px 3px #000000;
 }
 
 /*

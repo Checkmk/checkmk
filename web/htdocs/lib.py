@@ -149,4 +149,8 @@ def format_exception():
     traceback.print_exception(t, v, tb, None, txt)
     return txt.getvalue()
 
-
+def saveint(x):
+    try:
+        return int(x)
+    except:
+        return 0

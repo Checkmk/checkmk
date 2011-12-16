@@ -187,6 +187,9 @@ if which ipmitool >/dev/null
 then
     echo '<<<ipmi>>>'
     IPMI_FILE=$MK_CONFDIR/ipmitool_sensors.cache
+    if [ ! -d $MK_CONFDIR ]; then
+        mkdir -p $MK_CONFDIR
+    fi
 
     # Do not use cache file after 20 minutes
     IPMI_MAXAGE=1200

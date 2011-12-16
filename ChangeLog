@@ -1,3 +1,7 @@
+1.1.13i2
+    Checks & Agents:
+    * linux agent - ipmi: Creating directory of cache file if not exists
+
 1.1.13i1:
     Multisite:
     * New nifty sidebar snapin "Speed-O-Meter"

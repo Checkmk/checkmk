@@ -1,11 +1,11 @@
 Title: mem.vmalloc falsche Default Limits
 Component: checks
+State: done
+Class: cleanup
 Benefit: 2
-State: open
 Cost: 1
 Date: 2011-12-13 14:50:04
 Targetversion: 1.1.13i1
-Class: cleanup
 
   kann es sein, dass die Default-LImits von mem.vmalloc bzgl.
 largest free(!) chunk unsinnig sind:
@@ -19,3 +19,6 @@ Da es sich um free mem handelt, sollte die Warning kommen, wenn es
 weniger als 64MB sind, und Crit bei < 32MB, also:
 
 (80.0, 90.0, 64, 32)
+
+2011-12-16 11:28:12: changed state open -> done
+Swapped

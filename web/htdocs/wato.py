@@ -8711,7 +8711,7 @@ def mode_edit_ruleset(phase):
         return title
 
     elif phase == "buttons":
-        home_button()
+        global_buttons()
         html.context_button(_("All rulesets"), 
               make_link([("mode", "rulesets"), ("host", hostname)]), "back")
         if hostname:
@@ -9272,12 +9272,11 @@ def mode_edit_rule(phase):
         return _("Edit rule %s") % rulespec["title"]
 
     elif phase == "buttons":
-        home_button()
-        html.context_button(_("All rules"), 
+        html.context_button(_("Abort"), 
              make_link([("mode", "edit_ruleset"), 
                         ("varname", varname), 
                         ("host", html.var("host", "")),
-                        ("item", html.var("item", "None"))]), "back")
+                        ("item", html.var("item", "None"))]), "abort")
         return
 
     folder = g_folders[html.var("rule_folder")]

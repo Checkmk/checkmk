@@ -141,6 +141,15 @@ register_configvar(group,
              default_value = True),
     domain = "multisite")
                        
+register_configvar(group,
+    "wato_max_snapshots",
+    Integer(title = _("Number of configuration snapshots to keep"),
+            help = _("Whenever you successfully activate changes a snapshot of the configuration "
+                     "will be created. You can also create snapshots manually. WATO will delete old "
+                     "snapshots when the maximum number of snapshots is reached."),
+             minvalue = 1,
+             default_value = 50),
+    domain = "multisite")
 
 group = _("Operation mode of Check_MK") 
 

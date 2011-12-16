@@ -123,6 +123,7 @@
     * FIX: bluecoat_diskcpu: repair scan function
     * FIX: mem.vmalloc: fix default levels (32 and 64 was swapped)
     * FIX: smart: make levels work (thanks to Bernhard Schmidt)
+    * FIX: PNP template if if/if64: reset LC_ALL, avoids syntax error
 
 1.1.12p4:
     Multisite:

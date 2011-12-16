@@ -23,6 +23,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+setlocale(LC_ALL, 'C');
+
 # Performance data from check:
 # in=6864.39071505;0.01;0.1;0;125000000.0
 # inucast=48.496962273;0.01;0.1;;

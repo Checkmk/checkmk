@@ -208,7 +208,7 @@ check_info['mem.win'] = (check_mem_windows, "Memory and pagefile", 1, inventory_
 #   +----------------------------------------------------------------------+
 
 # warn, crit, warn_chunk, crit_chunk. Integers are in MB, floats are in percent
-mem_vmalloc_default_levels = ( 80.0, 90.0, 32, 64 )
+mem_vmalloc_default_levels = ( 80.0, 90.0, 64, 32 )
 
 def inventory_mem_vmalloc(info):
     meminfo = parse_proc_meminfo(info)

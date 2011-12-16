@@ -8564,9 +8564,9 @@ def mode_rulesets(phase):
 
     if phase == "title":
         if only_host:
-            return _("Rule sets for for hosts %s") % only_host
+            return _("Rulesets for for hosts %s") % only_host
         else:
-            return _("Rule sets for hosts and services")
+            return _("Rulesets for hosts and services")
 
     elif phase == "buttons":
         if only_host:

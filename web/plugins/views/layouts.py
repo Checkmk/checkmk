@@ -80,7 +80,9 @@ def render_single_dataset(rows, view, group_painters, painters, num_columns, _ig
             else:
                 title = painter["title"]
 
-            html.write("<tr class=data><td class=left>%s</td>" % title)
+            html.write("<tr class=data>")
+            if view.get("column_headers") != "off":
+                html.write("<td class=left>%s</td>" % title)
             for row in thispart:
                 paint(p, row)
             if len(thispart) < num_columns:

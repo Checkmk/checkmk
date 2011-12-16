@@ -239,6 +239,137 @@ checkgroups.append((
     "first"
 ))
 
+checkgroups.append((
+    "systemtime",
+    _("System time offset"),
+    Tuple( 
+        title = _("Time offset"),
+        elements = [ 
+           Integer(title = _("Warning at"), unit = _("Seconds")),
+           Integer(title = _("Critical at"), unit = _("Seconds")),
+        ]
+    ),
+    None,
+    "first"
+))
+
+checkgroups.append((
+    "tcp_conn_stats",
+    ("TCP connection stats"),
+    Dictionary(
+        elements = [ 
+            ( "ESTABLISHED", 
+              Tuple(
+                  title = _("ESTABLISHED"),
+                  help = _("connection up and passing data"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
+            ( "SYN_SENT", 
+              Tuple(
+                  title = _("SYN_SENT"),
+                  help = _("session has been requested by us; waiting for reply from remote endpoint"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
+            ( "SYN_RECV", 
+              Tuple(
+                  title = _("SYN_RECV"),
+                  help = _("session has been requested by a remote endpoint "
+                           "for a socket on which we were listening"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
+            ( "LAST_ACK", 
+              Tuple(
+                  title = _("LAST_ACK"),
+                  help = _("our socket is closed; remote endpoint has also shut down; "
+                           " we are waiting for a final acknowledgement"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
+            ( "CLOSE_WAIT", 
+              Tuple(
+                  title = _("CLOSE_WAIT"),
+                  help = _("remote endpoint has shut down; the kernel is waiting "
+                           "for the application to close the socket"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
+            ( "TIME_WAIT", 
+              Tuple(
+                  title = _("TIME_WAIT"),
+                  help = _("socket is waiting after closing for any packets left on the network"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
+            ( "CLOSED", 
+              Tuple(
+                  title = _("CLOSED"),
+                  help = _("socket is not being used"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
+            ( "CLOSING", 
+              Tuple(
+                  title = _("CLOSING"),
+                  help = _("our socket is shut down; remote endpoint is shut down; "
+                           "not all data has been sent"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
+            ( "FIN_WAIT1", 
+              Tuple(
+                  title = _("FIN_WAIT1"),
+                  help = _("our socket has closed; we are in the process of "
+                           "tearing down the connection"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
+            ( "FIN_WAIT2", 
+              Tuple(
+                  title = _("FIN_WAIT2"),
+                  help = _("the connection has been closed; our socket is waiting "
+                           "for the remote endpoint to shutdown"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
+        ]
+    ),
+    None,
+    "first"
+))
+
 checkgroups.append(( 
     "filesystem", 
     _("Filesystems (used space and growth)"),

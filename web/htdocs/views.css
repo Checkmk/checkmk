@@ -253,30 +253,32 @@ table.tiled td {
  about a single host/service on a page. e.g. the "host defails"
  page uses thislayout
 */
-table.dataset {
+table.data.single {
+    margin-top: 5px;
     border-spacing: 1px;
     padding: 0;
     border-collapse: collapse;
     empty-cells: show;
-    width: 100%;
+    width: 200px;
+    box-shadow: 1px 1px 3px #000000;
 }
 
-table.dataset tr.data {
+table.data.single tr.data {
     background-color: #eee;
 }
 
-table.dataset tr.gap {
+table.data.single tr.gap {
     background-color: transparent;
 }
 
-table.dataset td {
+table.data.single td {
     padding-bottom: 4px;
     padding: 1px 10px 5px 10px;
     text-align: left;
     vertical-align: middle;
     border: 1px solid #bbb;
 }
-table.dataset td.left {
+table.data.single td.left {
     padding-right: 10px;
     color: #fff;
     background-color: #888;
@@ -284,10 +286,25 @@ table.dataset td.left {
     white-space: nowrap;
     vertical-align: top;
 }
-table.dataset td.gap {
+table.data.single td.gap {
     background-color: transparent;
     border-left-style: none;
     border-right-style: none;
+}
+table.data.single td.age,
+table.data.single td.number,
+table.data.single td.count {
+    text-align: left;
+}
+
+table.data.single td.perfometer div.content {
+    width: 100%;
+}
+table.data.single td.perfometer img.glass {
+    width: 100%;
+}
+table.data.single td.perfometer div.title {
+    width: 100%;
 }
 
 /*-------------------------------------------------------------------------.

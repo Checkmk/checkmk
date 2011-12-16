@@ -23,6 +23,7 @@
     * New (hidden) button for reloading a snapin (left to the close button)
     * Automatically falling back to hardcoded default language if configured
     language is not available
+    * Repair layout of Perf-O-Meter in single dataset layout
     * FIX: Fixed duplicate view plugin loading when using localized multisite
 
     BI:
@@ -91,6 +92,7 @@
       should work on Debian now.
     * fsc_*: added missing scan functions
     * printer_alerts: added further state codes (thanks to Matthew Stew)
+    * Solaris agent: changed shell to /usr/bin/bash (fixes problems with LC_ALL=C)
 
 1.1.12p5:
     Multisite:
@@ -100,6 +102,7 @@
     * FIX: fix dashboard dashlet background on IE
     * FIX: fix row highlight in status GUI on IE 7/8
     * FIX: fix row highlight after status page reload
+    * FIX: single dataset layout honors column header settings
 
     Checks & Agents:
     * FIX: lnx_if: assume interfaces as up if ethtool is missing or

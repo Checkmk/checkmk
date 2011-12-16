@@ -13,6 +13,7 @@
       not working but interface has been used since last reboot. This
       fixes the problem where interface are not found by inventory.
     * FIX: snmp_uptime: handels alternative timeformat
+    * FIX: netapp_*: scan functions now detect IBM versions of firmware
 
 1.1.12p4:
     Multisite:

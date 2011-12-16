@@ -102,10 +102,10 @@ def check_smart_stats(item, params, info):
 
             if line[4] == lab:
                 warn, crit, cur_status, thresh_out = None, None, 0, ''
-                if thresh and thresh + '_crit' in params and value >= params[thresh][1]:
+                if thresh in params and value >= params[thresh][1]:
                     cur_status = 2
                     thresh_out = '(!!)'
-                elif thresh and thresh + '_warn' in params and value >= params[thresh][0]:
+                elif thresh in params and value >= params[thresh][0]:
                     cur_status = 1
                     thresh_out = '(!)'
 

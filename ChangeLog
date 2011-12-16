@@ -23,6 +23,7 @@
     * New (hidden) button for reloading a snapin (left to the close button)
     * Automatically falling back to hardcoded default language if configured
     language is not available
+    * FIX: Fixed duplicate view plugin loading when using localized multisite
 
     BI:
     * Host/Service elements are now iterable via FOREACH_HOST, e.g.

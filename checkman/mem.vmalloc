@@ -52,5 +52,5 @@ crit_chunk (int or float): critical level for the size of the
 [configuration]
 mem_vmalloc_default_levels (int/float, int/float, int/float, int/float):
  Levels used by checks created by inventory. The default value is set
- to {(80.0, 90.0, 32, 64)}.
+ to {(80.0, 90.0, 64, 32)}.
 

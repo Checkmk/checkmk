@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -41,16 +41,6 @@ except NameError:
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
-multisite_datasources      = {}
-multisite_filters          = {}
-multisite_layouts          = {}
-multisite_painters         = {}
-multisite_sorters          = {}
-multisite_builtin_views    = {}
-multisite_painter_options  = {}
-multisite_commands         = []
-ubiquitary_filters         = [] # Always show this filters
-view_hooks                 = {}
 
 # Load all view plugins
 def load_plugins():
@@ -58,6 +48,17 @@ def load_plugins():
     if loaded_with_language == current_language:
         return
     loaded_with_language = current_language
+
+    global multisite_datasources     ; multisite_datasources      = {}
+    global multisite_filters         ; multisite_filters          = {}
+    global multisite_layouts         ; multisite_layouts          = {}
+    global multisite_painters        ; multisite_painters         = {}
+    global multisite_sorters         ; multisite_sorters          = {}
+    global multisite_builtin_views   ; multisite_builtin_views    = {}
+    global multisite_painter_options ; multisite_painter_options  = {}
+    global multisite_commands        ; multisite_commands         = []
+    global ubiquitary_filters        ; ubiquitary_filters         = [] # Always show this filters
+    global view_hooks                ; view_hooks                 = {}
 
     config.declare_permission_section("action", _("Commands on host and services"))
 

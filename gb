@@ -180,7 +180,7 @@ where COMMAND is one of:
 
 def bug_state(bug):
     state = bug["state"]
-    return "%s%-7s%s" % (tty_bold + states.get(state, ""), state, tty_normal)
+    return "%s%-8s%s" % (tty_bold + states.get(state, ""), state, tty_normal)
 
 def num_color(n, colors, inverse):
     if inverse:
@@ -196,9 +196,9 @@ def list_bug(bug):
         bold = tty_bold + tty_cyan + "(*) "
     else:
         bold = ""
-    sys.stdout.write("#%04d %-6s %-9s %-10s %s%-6s%s %s%-60s%s\n" %
+    sys.stdout.write("#%04d %-8s %-9s %-10s %s%-6s%s %s%-60s%s\n" %
             (int(bug["id"]),
-             bug_state(bug), 
+             bug_state(bug),
              bug["class"], bug["component"], tty_bold, 
              bug["targetversion"], tty_normal, bold, bug["title"], tty_normal))
 

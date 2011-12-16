@@ -6,7 +6,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -543,7 +543,7 @@ EOF
    make -j 8  2>&1 &&
    strip src/livestatus.o &&
    mkdir -p $DESTDIR$libdir &&
-   install -m 755 src/livecheck src/livestatus.o $DESTDIR$libdir/livestatus.o &&
+   install -m 755 src/livecheck src/livestatus.o $DESTDIR$libdir &&
    mkdir -p $DESTDIR$bindir &&
    install -m 755 src/unixcat $DESTDIR$bindir &&
    popd 

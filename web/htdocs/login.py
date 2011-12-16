@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2011             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -32,8 +32,17 @@ import os, md5, md5crypt, crypt, time
 class MKAuthException(MKGeneralException):
     pass
 
-def site_cookie_name():
-    name = os.path.dirname(defaults.url_prefix).replace('/', '_')
+def site_cookie_name(site_id = None):
+    if not site_id:
+        url_prefix = defaults.url_prefix
+    else:
+        url_prefix = config.site(site_id)['url_prefix']
+
+    # Strip of eventual present "http://<host>". DIRTY!
+    if url_prefix.startswith('http:'):
+        url_prefix = url_prefix[url_prefix[7:].find('/') + 7:]
+
+    name = os.path.dirname(url_prefix).replace('/', '_')
     return 'auth%s' % name
 
 # Validate hashes taken from the htpasswd file. This method handles
@@ -81,11 +90,15 @@ def del_auth_cookie():
     if html.has_cookie(name):
         html.del_cookie(name)
 
-def set_auth_cookie(username, pwhash):
+def auth_cookie_value(username, pwhash):
     now = str(time.time())
-    html.set_cookie(site_cookie_name(), username
-                                        + ':' + now
-                                        + ':' + generate_hash(username, now, pwhash))
+    return username + ':' + now + ':' + generate_hash(username, now, pwhash)
+
+def set_auth_cookie(username, pwhash):
+    html.set_cookie(site_cookie_name(), auth_cookie_value(username, pwhash))
+
+def get_cookie_value():
+    return auth_cookie_value(config.user_id, load_htpasswd()[config.user_id])
 
 def check_auth_cookie(cookie_name):
     username, issue_time, cookie_hash = html.cookie(cookie_name, '::').split(':', 2)

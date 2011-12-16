@@ -23,6 +23,9 @@
     * New (hidden) button for reloading a snapin (left to the close button)
     * Automatically falling back to hardcoded default language if configured
     language is not available
+    * Repair layout of Perf-O-Meter in single dataset layout
+    * FIX: Fixed duplicate view plugin loading when using localized multisite
+    * FIX: Host-/Servicegroup snapin: Showing group names when no alias is available
 
     BI:
     * Host/Service elements are now iterable via FOREACH_HOST, e.g.
@@ -89,6 +92,9 @@
     * heartbeat_crm: apply patches from Václav Ovsík, so that the check
       should work on Debian now.
     * ad_replication: added warninglevel 
+    * fsc_*: added missing scan functions
+    * printer_alerts: added further state codes (thanks to Matthew Stew)
+    * Solaris agent: changed shell to /usr/bin/bash (fixes problems with LC_ALL=C)
 
 1.1.12p5:
     Multisite:
@@ -96,12 +102,18 @@
     * FIX: event/log views: reverse sorting, so that newest entries
       are shown first
     * FIX: fix dashboard dashlet background on IE
+    * FIX: fix row highlight in status GUI on IE 7/8
+    * FIX: fix row highlight after status page reload
+    * FIX: single dataset layout honors column header settings
 
     Checks & Agents:
     * FIX: lnx_if: assume interfaces as up if ethtool is missing or
       not working but interface has been used since last reboot. This
       fixes the problem where interface are not found by inventory.
-    * FIX: snmp_uptime: handels alternative timeformat    * FIX: snmp_uptime: handels alternative timeformat
+    * FIX: snmp_uptime: handels alternative timeformat
+    * FIX: netapp_*: scan functions now detect IBM versions of firmware
+    * FIX: bluecoat_diskcpu: repair scan function
+    * FIX: mem.vmalloc: fix default levels (32 and 64 was swapped)
 
 1.1.12p4:
     Multisite:

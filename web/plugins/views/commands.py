@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -35,6 +35,9 @@
 # - table ("hostservices", "downtime", "comment")
 # - function that outputs the HTML input fields
 # - function that creates the nagios command and title
+
+#import datetime, traceback
+#file('/tmp/1', 'a').write('%s %s\n%s' % (datetime.datetime.now(), current_language, ''.join(traceback.format_stack())))
 
 # RESCHEDULE ACTIVE CHECKS
 config.declare_permission("action.reschedule",
@@ -418,7 +421,7 @@ multisite_commands.append({
 multisite_commands.append({  
     "tables"      : [ "comment" ],
     "permission"  : "action.addcomment",
-    "title"       : _("commentss"),
+    "title"       : _("Comments"),
     "render"      : lambda: \
         html.button("_remove_comments", _("Remove")),
     "action"      : lambda cmdtag, spec, row: \

@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -48,7 +48,7 @@ def render_wato():
 
 
 sidebar_snapins["admin"] = {
-    "title" : _("WATO: Check_MK Administration"),
+    "title" : _("WATO &middot; Configuration"),
     "description" : _("Direct access to WATO - the web administration GUI of Check_MK"),
     "author" : "Mathias Kettner",
     "render" : render_wato,

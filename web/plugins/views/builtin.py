@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -1048,6 +1048,7 @@ multisite_builtin_views.update({
                           ('svc_plugin_output', None),
                           ('svc_long_plugin_output', None),
                           ('svc_perf_data', None),
+                          ('perfometer', None),
                           ('svc_check_command', None),
                           ('svc_attempt', None),
                           ('svc_check_type', None),

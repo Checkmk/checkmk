@@ -24,24 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
+# Example output from asmcmd lsdg:
+# State    Type    Rebal  Sector  Block       AU  Total_MB  Free_MB  Req_mir_free_MB  Usable_file_MB  Offline_disks  Voting_files  Name
+# MOUNTED  NORMAL  N         512   4096  1048576    512000    92888                0           46444              0             N  DATA/
+# MOUNTED  NORMAL  N         512   4096  1048576      3072     2146              309             918              0             Y  OCR_VOTE/
+# The agent section <<<oracle_asm_diskgroup>>> does not output the header line
 
-# Status can be "local", "foreign", "all" or "none"
-#
-# Example outputs from agent:
-# <<<heartbeat_rscstatus>>>
-# all
+check_includes['oracle_asm_diskgroup'] = [ "df.include" ]
 
-def inventory_heartbeat_rscstatus(info):
-    return [ (None, '"%s"' % line[0]) for line in info if line[0] != '' ]
+def inventory_oracle_asm_diskgroup(info):
+    return [ (line[-1].rstrip("/"), {}) for line in info ]
 
-def check_heartbeat_rscstatus(item, expected_state, info):
-    if len(info) > 0 and len(info[0]) > 0:
-        if (type(expected_state) == list and info[0][0] in expected_state) or info[0][0] == expected_state:
-            return (0, "OK - Current state: %s" % (info[0][0]))
-        else:
-            return (2, "CRIT - Current state: %s (Expected: %s)" % (info[0][0], expected_state))
-    else:
-        return (3, "UNKNOWN - Got no information from agent")
+def check_oracle_asm_diskgroup(item, params, info):
 
-check_info['heartbeat_rscstatus'] = (check_heartbeat_rscstatus, "Heartbeat Ressource Status",  0, inventory_heartbeat_rscstatus)
+    for state, typ, rebal, sector, block, au, total_mb,  \
+        free_mb, req_mir_free_mb, usable_file_mb, offline_disks, \
+        voting_files, name in info:
+        if name.rstrip('/') == item:
+            return df_check_filesystem(g_hostname, item, int(total_mb), 
+                                       int(free_mb), params)
+    return (3, "UNKNOWN - Disk group not found")
+
+check_info["oracle_asm_diskgroup"] = (check_oracle_asm_diskgroup, "ASM Diskgroup %s", 1, inventory_oracle_asm_diskgroup)
+checkgroup_of['oracle_asm_diskgroup']        = "fs"
+check_default_levels["oracle_asm_diskgroup"] = "filesystem_default_levels"

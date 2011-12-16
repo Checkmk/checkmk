@@ -78,7 +78,7 @@ headrify ()
   if [ "${firstline:0:20}" = "${shouldbe:0:20}"  \
        -o "${secondline:0:20}" = "${shouldbe:0:20}" \
        -o "${thirdline:0:20}" = "${shouldbe:0:20}" ] ; then
-      sed '0,/^'"${endline//\*/\*}"'$/d' $file | sed 1d >> $TMP
+      sed '0,/^'"$endline"'$/d' $file | sed 1d >> $TMP
   else
       cat $file >> $TMP
   fi

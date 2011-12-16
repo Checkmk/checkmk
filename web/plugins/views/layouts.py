@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -26,7 +26,9 @@
 
 def init_rowselect():
     # Don't make rows selectable when no commands can be fired
-    if not 'C' in html.display_options or not config.may("act"):
+    # Ignore "C" display option here. Otherwise the rows will not be selectable
+    # after view reload.
+    if not config.may("act"):
         return
 
     selected = []
@@ -65,8 +67,10 @@ def render_single_dataset(rows, view, group_painters, painters, num_columns, _ig
     for row in rows:
         register_events(row) # needed for playing sounds
 
-    html.write('<div class="tableshadow left"><table class=dataset>\n')
+    # html.write('<div class="tableshadow left">\n')
+    html.write('<table class="data single">\n')
     rownum = 0
+    odd = "odd"
     while rownum < len(rows):
         if rownum > 0:
             html.write("<tr class=gap><td class=gap colspan=%d></td></tr>\n" % (1 + num_columns))
@@ -78,14 +82,18 @@ def render_single_dataset(rows, view, group_painters, painters, num_columns, _ig
             else:
                 title = painter["title"]
 
-            html.write("<tr class=data><td class=left>%s</td>" % title)
+            odd = odd == "odd" and "even" or "odd"
+            html.write('<tr class="data %s0">' % odd)
+            if view.get("column_headers") != "off":
+                html.write("<td class=left>%s</td>" % title)
             for row in thispart:
                 paint(p, row)
             if len(thispart) < num_columns:
                 html.write("<td class=gap style=\"border-style: none;\" colspan=%d></td>" % (1 + num_columns - len(thispart)))
             html.write("</tr>\n")
         rownum += num_columns
-    html.write("</table></div>\n")
+    html.write("</table>\n")
+    html.write("</div>\n")
 
 multisite_layouts["dataset"] = {
     "title"  : _("Single dataset"),

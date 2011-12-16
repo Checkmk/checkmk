@@ -38,7 +38,7 @@
 
 import datetime, time
 
-ad_replication_default_params = (20,)
+ad_replication_default_params = (15,20) 
 
 def parse_ad_replication_dates(s):
     if s == '0' or s == '(never)':
@@ -55,9 +55,9 @@ def parse_ad_replication_info(info):
 def inventory_ad_replication(info):
     inv = []
     for line in parse_ad_replication_info(info):
-        item = ('%s/%s' % (line[4], line[5]), 'ad_replication_default_params')
-        if line[0] == 'showrepl_INFO' and item not in inv:
-            inv.append(item)
+        entry = ('%s/%s' % (line[4], line[5]), 'ad_replication_default_params')
+        if line[0] == 'showrepl_INFO' and entry not in inv:
+            inv.append(entry)
     return inv
 
 def check_ad_replication(item, params, info):
@@ -75,13 +75,24 @@ def check_ad_replication(item, params, info):
             foundLine = True
             timeLastFailure = parse_ad_replication_dates(timeLastFailure)
             timeLastSuccess = parse_ad_replication_dates(timeLastSuccess)
+            
+            maxFailuresWarn = params[0]
+            maxFailuresCrit = params[1]
 
-            if int(numFailures) > params[0]:
+            if int(numFailures) > maxFailuresWarn:
+                status = 1
+                output += 'WARNING: %s/%s replication of context %s reached ' \
+                          ' the threshold of maxmimum failures (%s) (Last Success: %s, ' \
+                          'LastFailure: %s NumFailures: %s Status: %s), ' % \
+                         (sourceSite, sourceDC, namingContext, maxFailuresWarn, timeLastFailure,
+                          timeLastSuccess, numFailures, statusLastFailure)
+            
+            if int(numFailures) > maxFailuresCrit:
                 status = 2
                 output += 'CRITICAL: %s/%s replication of context %s reached ' \
                           ' the threshold of maxmimum failures (%s) (Last Success: %s, ' \
                           'LastFailure: %s NumFailures: %s Status: %s), ' % \
-                         (sourceSite, sourceDC, namingContext, params[0], timeLastFailure,
+                         (sourceSite, sourceDC, namingContext, maxFailuresCrit, timeLastFailure,
                           timeLastSuccess, numFailures, statusLastFailure)
 
             if timeLastFailure is not None and timeLastSuccess is not None \
@@ -100,3 +111,4 @@ def check_ad_replication(item, params, info):
         return (status, 'OK - All replications are OK.')
 
 check_info['ad_replication'] = (check_ad_replication, "AD Replication %s",  0, inventory_ad_replication)
+checkgroup_of['ad_replication']        = "ad_replication"

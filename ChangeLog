@@ -91,6 +91,7 @@
     * fileinfo: new check for monitoring age and size of files
     * heartbeat_crm: apply patches from Václav Ovsík, so that the check
       should work on Debian now.
+    * ad_replication: added warninglevel 
     * fsc_*: added missing scan functions
     * printer_alerts: added further state codes (thanks to Matthew Stew)
     * Solaris agent: changed shell to /usr/bin/bash (fixes problems with LC_ALL=C)

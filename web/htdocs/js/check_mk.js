@@ -347,7 +347,7 @@ function pnp_response_handler(data, code) {
         response = eval(code);
         for(var i = 0; i < response.length; i++) {
             var view = data['view'] == '' ? '0' : data['view'];
-            create_graph(data, '&' + response[i]['image_url'].replace('&view='+view, ''));
+            create_graph(data, '&' + response[i]['image_url'].replace('#', '%23').replace('&view='+view, ''));
         }
         view = null;
         i = null;
@@ -395,8 +395,8 @@ function render_pnp_graphs(container, site, host, service, pnpview, base_url, pn
                  'pnp_url':   pnp_url,   'site':     site,
                  'host':      host,      'service':  service,
                  'with_link': with_link, 'view':     pnpview};
-    get_url(pnp_url + 'index.php/json?&host=' + host + '&srv=' + service + '&source=0&view=' + pnpview,
-                                                 pnp_response_handler, data, pnp_error_response_handler);
+    get_url(pnp_url + 'index.php/json?&host=' + encodeURIComponent(host) + '&srv=' + encodeURIComponent(service) + '&source=0&view=' + pnpview,
+        pnp_response_handler, data, pnp_error_response_handler);
 }
 
 // ----------------------------------------------------------------------------

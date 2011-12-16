@@ -106,6 +106,7 @@
     * FIX: fix row highlight after status page reload
     * FIX: single dataset layout honors column header settings
     * FIX: quote '#' in PNP links (when # is contained in services)
+    * FIX: quote '#' in PNP image links also
 
     Checks & Agents:
     * FIX: lnx_if: assume interfaces as up if ethtool is missing or

@@ -24,6 +24,7 @@
     * Automatically falling back to hardcoded default language if configured
     language is not available
     * Repair layout of Perf-O-Meter in single dataset layout
+    * FIX: Fixed duplicate view plugin loading when using localized multisite
 
     BI:
     * Host/Service elements are now iterable via FOREACH_HOST, e.g.

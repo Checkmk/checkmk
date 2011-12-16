@@ -36,6 +36,9 @@
 # - function that outputs the HTML input fields
 # - function that creates the nagios command and title
 
+#import datetime, traceback
+#file('/tmp/1', 'a').write('%s %s\n%s' % (datetime.datetime.now(), current_language, ''.join(traceback.format_stack())))
+
 # RESCHEDULE ACTIVE CHECKS
 config.declare_permission("action.reschedule",
         _("Reschedule checks"),

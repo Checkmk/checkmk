@@ -110,8 +110,8 @@ checkgroups.append((
                       Tuple(   
                         title = _("Maximum bandwidth in relation to the total traffic"),  
                         elements = [
-                            Float(title = _("Warning at"), unit = _("percent")),
-                            Float(title = _("Critical at"), unit = _("percent")),
+                            Percentage(title = _("Warning at"), unit = _("percent")),
+                            Percentage(title = _("Critical at"), unit = _("percent")),
                         ]
                     ),
                     Tuple( 
@@ -136,8 +136,8 @@ checkgroups.append((
                 Tuple (
                     title = _("CRC errors rate"),
                     elements = [
-                        Float( title = _("Warning at"), unit = _("percent")),
-                        Float( title = _("Critical at"), unit = _("percent")),  
+                        Percentage( title = _("Warning at"), unit = _("percent")),
+                        Percentage( title = _("Critical at"), unit = _("percent")),  
                     ]
                )
             ),
@@ -145,8 +145,8 @@ checkgroups.append((
                 Tuple (
                     title = _("Enc-Out frames rate"),
                     elements = [ 
-                        Float( title = _("Warning at"), unit = _("percent")),
-                        Float( title = _("Critical at"), unit = _("percent")),
+                        Percentage( title = _("Warning at"), unit = _("percent")),
+                        Percentage( title = _("Critical at"), unit = _("percent")),
                     ]
                 )
             ),
@@ -154,8 +154,8 @@ checkgroups.append((
                 Tuple (
                     title = _("No-TxCredits errors"),
                     elements = [ 
-                        Float( title = _("Warning at"), unit = _("percent")),
-                        Float( title = _("Critical at"), unit = _("percent")),
+                        Percentage( title = _("Warning at"), unit = _("percent")),
+                        Percentage( title = _("Critical at"), unit = _("percent")),
                     ]
                 )
             ),
@@ -163,8 +163,8 @@ checkgroups.append((
                 Tuple (
                     title = _("C3 discards"),
                     elements = [ 
-                        Float( title = _("Warning at"), unit = _("percent")),
-                        Float( title = _("Critical at"), unit = _("percent")),
+                        Percentage( title = _("Warning at"), unit = _("percent")),
+                        Percentage( title = _("Critical at"), unit = _("percent")),
                     ]
                 )
             ),

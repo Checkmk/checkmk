@@ -1,6 +1,8 @@
 1.1.13i2
     Checks & Agents:
     * linux agent - ipmi: Creating directory of cache file if not exists
+    * dell_powerconnect_cpu: renamed service from CPU to "CPU utilization", in
+      order to be consistent with other checks
 
 1.1.13i1:
     Multisite:
@@ -124,6 +126,8 @@
     * FIX: mem.vmalloc: fix default levels (32 and 64 was swapped)
     * FIX: smart: make levels work (thanks to Bernhard Schmidt)
     * FIX: PNP template if if/if64: reset LC_ALL, avoids syntax error
+    * FIX: dell_powerconnect_cpu: handle sporadic incomplete output
+      from SNMP agent
 
 1.1.12p4:
     Multisite:

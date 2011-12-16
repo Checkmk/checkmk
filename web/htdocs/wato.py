@@ -4263,8 +4263,45 @@ class FixedValue(ValueSpec):
 
     def validate_value(self, value, varprefix):
         self.validate_datatype(value, varprefix)
-        
 
+# Time in seconds        
+class Age(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._label    = kwargs.get("label")
+
+    def canonical_value(self):
+        return 0
+
+    def render_input(self, varprefix, value):
+        days,    rest    = divmod(value, 60*60*24)
+        hours,   rest    = divmod(rest,   60*60)
+        minutes, seconds = divmod(rest,      60) 
+        
+        html.write("<div>")
+        html.number_input(varprefix+'_days', days, 2)
+        html.write(_("days"))   
+        html.number_input(varprefix+'_hour', hours, 2)
+        html.write(_("hours"))   
+        html.number_input(varprefix+'_minutes', minutes, 2)
+        html.write(_("min"))   
+        html.number_input(varprefix+'_seconds', seconds, 2)
+        html.write(_("sec"))
+        html.write("</div>")
+
+    def from_html_vars(self, varprefix):
+            return (saveint(html.var(varprefix+'_hour'))*3600) + (saveint(html.var(varprefix+'_minutes'))*60) + saveint(html.var(varprefix+'_seconds'))
+
+    def value_to_text(self, value):
+        days,    rest    = divmod(value, 60*60*24)
+        hours,   rest    = divmod(rest,   60*60)
+        minutes, seconds = divmod(rest,      60) 
+        return "%sd %sh %sm %ss" % (days, hours, minutes, seconds)
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) != int:
+            raise MKUserError(varprefix, _("The value has type %s, but must be of type int") % (type(value)))
+        
 # Editor for a single integer
 class Integer(ValueSpec):
     def __init__(self, **kwargs):

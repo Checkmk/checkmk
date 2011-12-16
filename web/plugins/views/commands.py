@@ -418,7 +418,7 @@ multisite_commands.append({
 multisite_commands.append({  
     "tables"      : [ "comment" ],
     "permission"  : "action.addcomment",
-    "title"       : _("commentss"),
+    "title"       : _("Comments"),
     "render"      : lambda: \
         html.button("_remove_comments", _("Remove")),
     "action"      : lambda cmdtag, spec, row: \

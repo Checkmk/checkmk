@@ -46,12 +46,20 @@ then
     echo "-----------------------------------------"
 fi
 
+echo
 find * -name "*.mk.wato" | while read line
 do
-    thedir=${line%/*}
-    thefile=${line##*/}
-    echo "Moving $thefile in $thedir..."
-    newdir="wato/${thefile%.mk.wato}"
+    tmpline=/$line
+    thedir=${tmpline%/*}
+    thedir=${thedir:1}
+    thefile=${tmpline##*/}
+    if [ -z "$thedir" ]; then
+        newdir=wato/${thefile//.mk.wato}
+    else
+        newdir=wato/$thedir/${thefile//.mk.wato}
+    fi
+
+    echo "Migrating hostlist $thefile to folder $newdir..."
     mkdir -vp "$newdir"
     mv -v "$line" "$newdir/.wato"
     mv -v "${line%.wato}" "$newdir/hosts.mk"
@@ -60,10 +68,11 @@ done
 # No move also the empty WATO directories
 find * -name ".wato" | while read line
 do
-    if [ ${line:0:7} = ./wato/ ] ; then continue ; fi
+    # Skip files in wato/ directory (already migrated)
+    if [ ${line:0:5} = wato/ ] ; then continue ; fi
     thedir=${line%/*}
     thefile=${line##*/}
-    echo "Moving empty directory $thedir..."
+    echo "Moving empty directory $thedir to wato/$thedir..."
     mkdir -p "wato/$thedir"
     mv -v $line "wato/$thedir"
     rmdir -v "$thedir" 2>/dev/null || true

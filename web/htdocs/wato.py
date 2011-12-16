@@ -8130,6 +8130,10 @@ def mode_edit_hosttag(phase):
                         if have_none_tag:
                             raise MKUserError("id_%d" % nr, _("Only on tag may be empty."))
                         have_none_tag = True
+                    # Make sure tag ID is unique within this group
+                    if id in [ x[0] for x in new_choices ]:
+                        raise MKUserError("id_%d" % nr, _("Tags IDs must be unique. You've used <b>%s</b> twice.") % id)
+
                     new_choices.append((id, descr))
                 if id:
                     # Make sure this ID is not used elsewhere

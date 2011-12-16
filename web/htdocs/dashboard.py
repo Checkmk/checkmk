@@ -580,7 +580,7 @@ def render_pnpgraph(site, host, service=None, source=0):
         base_url = defaults.url_prefix 
     else:
         base_url = html.site_status[site]["site"]["url_prefix"]
-    base_url += "/pnp4nagios/index.php/"
+    base_url += "pnp4nagios/index.php/"
     var_part = "?host=%s&srv=%s&view=0&source=%d&theme=multisite&_t=%d" % \
             (pnp_cleanup(host), pnp_cleanup(service), source, int(time.time()))
 

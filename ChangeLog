@@ -26,6 +26,7 @@
     * Repair layout of Perf-O-Meter in single dataset layout
     * FIX: Fixed duplicate view plugin loading when using localized multisite
     * FIX: Host-/Servicegroup snapin: Showing group names when no alias is available
+    * FIX: Removed double "/" from pnp graph image urls in views
 
     BI:
     * Host/Service elements are now iterable via FOREACH_HOST, e.g.

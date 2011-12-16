@@ -96,6 +96,149 @@ checkgroups.append((
 ))
 
 
+checkgroups.append((
+    "brocade_fcport",
+    _("Brocade FC FibreChannel ports"),
+    Dictionary(
+        elements = [
+            ("bw",
+              Alternative(
+                  title = _("Throughput levels"),
+                  help = _("In few cases you have to set the link speed manually it you want "
+                           "to use relative levels"),
+                  elements = [
+                      Tuple(   
+                        title = _("Maximum bandwidth in relation to the total traffic"),  
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("percent")),
+                            Float(title = _("Critical at"), unit = _("percent")),
+                        ]
+                    ),
+                    Tuple( 
+                        title = _("Megabyte bandwidth of the port"),
+                        elements = [ 
+                            Integer(title = _("Warning at"), unit = _("MByte/s")),
+                            Integer(title = _("Critical at"), unit = _("MByte/s")),
+                        ]
+                    )
+                  ])
+            ),
+            ("assumed_speed",
+                Float(
+                    title = _("Assumed link speed"),
+                    help = _("If the automatic detection of the link "
+                             "speed does not work and you want monitors the relative levels of the "
+                             "throughtput you have to set the link speed here."),
+                    unit = _("GByte/s")
+                ) 
+            ),
+            ("rxcrcs",
+                Tuple (
+                    title = _("CRC errors rate"),
+                    elements = [
+                        Float( title = _("Warning at"), unit = _("percent")),
+                        Float( title = _("Critical at"), unit = _("percent")),  
+                    ]
+               )
+            ),
+            ("rxencoutframes",
+                Tuple (
+                    title = _("Enc-Out frames rate"),
+                    elements = [ 
+                        Float( title = _("Warning at"), unit = _("percent")),
+                        Float( title = _("Critical at"), unit = _("percent")),
+                    ]
+                )
+            ),
+            ("notcredits",
+                Tuple (
+                    title = _("No-TxCredits errors"),
+                    elements = [ 
+                        Float( title = _("Warning at"), unit = _("percent")),
+                        Float( title = _("Critical at"), unit = _("percent")),
+                    ]
+                )
+            ),
+            ("c3discards",
+                Tuple (
+                    title = _("C3 discards"),
+                    elements = [ 
+                        Float( title = _("Warning at"), unit = _("percent")),
+                        Float( title = _("Critical at"), unit = _("percent")),
+                    ]
+                )
+            ),
+            ("average",
+                Integer (
+                    title = _("Average"),
+                    help = _("A number in minutes. If this parameter is set, then "
+                           "averaging is turned on and all levels will be applied "
+                           "to the averaged values, not the the current ones. Per "
+                           "default, averaging is turned off. "), 
+                   unit = _("minutes"),
+                   minvalue = 1,
+                )
+            ),
+            ("phystate",
+                Optional(
+                    ListChoice(
+                        title = _("Allowed states (otherwise check will be critical)"),
+                        choices = [ ("1", _("noCard") ),
+                                    ("2", _("noTransceiver") ),   
+                                    ("3", _("laserFault") ),   
+                                    ("4", _("noLight") ),   
+                                    ("5", _("noSync") ),   
+                                    ("6", _("inSync") ),   
+                                    ("7", _("portFault") ),   
+                                    ("8", _("daigFault") ),   
+                                    ("9", _("lockRef") ),   
+                                  ]
+                    ),
+                    title = _("Physical state of port") ,
+                    negate = True,
+                    label = _("ignore physical state"),
+                )
+            ),
+            ("opstate",
+                Optional(
+                    ListChoice(
+                        title = _("Allowed states (otherwise check will be critical)"),
+                        choices = [ ("0", _("unknown") ),
+                                    ("1", _("online") ),   
+                                    ("2", _("offline") ),   
+                                    ("3", _("testing") ),   
+                                    ("4", _("faulty") ),   
+                                  ]
+                    ),
+                    title = _("Operational state") ,
+                    negate = True,
+                    label = _("ignore operational state"),
+                )
+            ),
+            ("admstate",
+                Optional(
+                    ListChoice(
+                        title = _("Allowed states (otherwise check will be critical)"),
+                        choices = [ ("1", _("online") ),   
+                                    ("2", _("offline") ),   
+                                    ("3", _("testing") ),   
+                                    ("4", _("faulty") ),   
+                                  ]
+                    ),
+                    title = _("Administrative state") ,
+                    negate = True,
+                    label = _("ignore administrative state"),
+                )
+            )
+        ]
+      ),
+    TextAscii(
+        title = _("Portname"), 
+        help = _("The name of the switch port"), 
+    ),
+    "first"
+))
+
 checkgroups.append(( 
     "filesystem", 
     _("Filesystems (used space and growth)"),
@@ -241,6 +384,7 @@ checkgroups.append((
                      minvalue = 1,
                  )
                ),
+
 
            ]),
     TextAscii(

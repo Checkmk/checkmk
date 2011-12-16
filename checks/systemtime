@@ -49,3 +49,4 @@ def check_systemtime(item, params, info):
         return (0, "OK - " + infotext, perfdata)
 
 check_info["systemtime"] = ( check_systemtime, "System Time", 1, inventory_systemtime )
+checkgroup_of['systemtime']        = "systemtime"

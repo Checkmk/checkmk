@@ -108,6 +108,7 @@
     * FIX: single dataset layout honors column header settings
     * FIX: quote '#' in PNP links (when # is contained in services)
     * FIX: quote '#' in PNP image links also
+    * FIX: add notifications to host/service event view
 
     Checks & Agents:
     * FIX: lnx_if: assume interfaces as up if ethtool is missing or
@@ -117,6 +118,7 @@
     * FIX: netapp_*: scan functions now detect IBM versions of firmware
     * FIX: bluecoat_diskcpu: repair scan function
     * FIX: mem.vmalloc: fix default levels (32 and 64 was swapped)
+    * FIX: smart: make levels work (thanks to Bernhard Schmidt)
 
 1.1.12p4:
     Multisite:

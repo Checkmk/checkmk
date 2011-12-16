@@ -4449,9 +4449,7 @@ class Checkbox(ValueSpec):
         return False
 
     def render_input(self, varprefix, value):
-        html.checkbox(varprefix, value)
-        if self._label:
-            html.write(" %s" % self._label)
+        html.checkbox(varprefix, value, label = self._label)
 
     def value_to_text(self, value):
         return value and _("on") or _("off")

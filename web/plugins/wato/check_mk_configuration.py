@@ -141,6 +141,15 @@ register_configvar(group,
              default_value = True),
     domain = "multisite")
                        
+register_configvar(group,
+    "wato_max_snapshots",
+    Integer(title = _("Number of configuration snapshots to keep"),
+            help = _("Whenever you successfully activate changes a snapshot of the configuration "
+                     "will be created. You can also create snapshots manually. WATO will delete old "
+                     "snapshots when the maximum number of snapshots is reached."),
+             minvalue = 1,
+             default_value = 50),
+    domain = "multisite")
 
 group = _("Operation mode of Check_MK") 
 
@@ -573,7 +582,7 @@ class MonitoringIcon(ValueSpec):
     def render_input(self, varprefix, value):
         num_columns = 12
         html.write("<table>")
-        for nr, filename in enumerate([None] + self.available_icons()):
+        for nr, filename in enumerate([""] + self.available_icons()):
             if nr % num_columns == 0: 
                 html.write("<tr>")
             html.write("<td>")
@@ -596,13 +605,13 @@ class MonitoringIcon(ValueSpec):
     def from_html_vars(self, varprefix):
         nr = int(html.var(varprefix))
         if nr == 0:
-            return None
+            return ""
         else:
             return self.available_icons()[nr-1]
 
     def validate_datatype(self, value, varprefix):
-        if value != None and type(value) != str:
-            raise MKUserError(varprefix, _("The type is %s, but should be None or str") % 
+        if type(value) != str:
+            raise MKUserError(varprefix, _("The type is %s, but should be str") % 
                 type(value))
     
     def validate_value(self, value, varprefix):

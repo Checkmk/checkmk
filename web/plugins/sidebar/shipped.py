@@ -142,7 +142,7 @@ def render_groups(what):
     html.write('<ul>')
     for alias_lower, alias, name in groups:
         url = "view.py?view_name=%sgroup&%sgroup=%s" % (what, what, htmllib.urlencode(name))
-        bulletlink(alias, url)
+        bulletlink(alias or name, url)
     html.write('</ul>')
 
 sidebar_snapins["hostgroups"] = {
@@ -667,30 +667,33 @@ function show_speed(percentage) {
 
 function speedometer_show_speed(last_perc, program_start, scheduled_rate) 
 {
-    text = get_url_sync("sidebar_ajax_speedometer.py" + 
-                        "?last_perc=" + last_perc + 
-                        "&scheduled_rate=" + scheduled_rate +
-                        "&program_start=" + program_start);
-    code = eval(text);
-    scheduled_rate = code[0];
-    program_start    = code[1];
-    percentage       = code[2];
-    last_perc        = code[3];
-    title            = code[4];
+    try {
+        text = get_url_sync("sidebar_ajax_speedometer.py" + 
+                            "?last_perc=" + last_perc + 
+                            "&scheduled_rate=" + scheduled_rate +
+                            "&program_start=" + program_start);
+        code = eval(text);
+        scheduled_rate = code[0];
+        program_start    = code[1];
+        percentage       = code[2];
+        last_perc        = code[3];
+        title            = code[4];
 
-    oDiv = document.getElementById('speedometer');
-    oDiv.title = title
-    oDiv = document.getElementById('speedometerbg');
-    oDiv.title = title
-    oDiv = null;
-    
+        oDiv = document.getElementById('speedometer');
+        oDiv.title = title
+        oDiv = document.getElementById('speedometerbg');
+        oDiv.title = title
+        oDiv = null;
 
-    move_needle(last_perc, percentage); // 50 * 100ms = 5s = refresh time
+        move_needle(last_perc, percentage); // 50 * 100ms = 5s = refresh time
+    } catch(ie) {
+        // Ignore errors during re-rendering. Proceed with reschedule...
+    }
 
     // large timeout for fetching new data via Livestatus
-    setTimeout("speedometer_show_speed(" 
-        + percentage       + "," 
-        + program_start    + "," 
+    setTimeout("speedometer_show_speed("
+        + percentage       + ","
+        + program_start    + ","
         + scheduled_rate + ");", 5000);
 }
 
@@ -719,7 +722,7 @@ def ajax_speedometer():
         last_perc          = float(html.var("last_perc"))
         scheduled_rate     = float(html.var("scheduled_rate"))
         last_program_start = int(html.var("program_start"))
-            
+
         # Get the current rates and the program start time. If there
         # are more than one site, we simply add the start times.
         data = html.live.query_summed_stats("GET status\n"
@@ -751,7 +754,7 @@ def ajax_speedometer():
         last_perc = 0
         title = _("No performance data: ") + str(e) 
 
-    html.write(repr([scheduled_rate, program_start, percentage, last_perc, title]))
+    html.write(repr([scheduled_rate, program_start, percentage, last_perc, str(title)]))
 
 
 sidebar_snapins["speedometer"] = {

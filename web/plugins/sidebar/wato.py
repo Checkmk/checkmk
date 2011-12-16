@@ -48,7 +48,7 @@ def render_wato():
 
 
 sidebar_snapins["admin"] = {
-    "title" : _("WATO: Check_MK Administration"),
+    "title" : _("WATO &middot; Configuration"),
     "description" : _("Direct access to WATO - the web administration GUI of Check_MK"),
     "author" : "Mathias Kettner",
     "render" : render_wato,

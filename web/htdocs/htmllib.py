@@ -115,7 +115,7 @@ def urlencode(value):
     for c in value:
         if c == " ":
             c = "+"
-        elif ord(c) <= 32 or ord(c) > 127 or c in [ '+', '"', "'", "=", "&", ":", "%" ]:
+        elif ord(c) <= 32 or ord(c) > 127 or c in [ '#', '+', '"', "'", "=", "&", ":", "%" ]:
             c = "%%%02x" % ord(c)
         ret += c
     return ret

@@ -7,6 +7,7 @@
     * FIX: fix row highlight in status GUI on IE 7/8
     * FIX: fix row highlight after status page reload
     * FIX: single dataset layout honors column header settings
+    * FIX: quote '#' in PNP links (when # is contained in services)
 
     Checks & Agents:
     * FIX: lnx_if: assume interfaces as up if ethtool is missing or

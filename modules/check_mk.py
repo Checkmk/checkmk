@@ -1840,7 +1840,7 @@ def create_nagios_config_timeperiods(outfile):
                 outfile.write("  alias\t\t\t\t%s\n" % tp["alias"].encode("utf-8"))
             for key, value in tp.items():
                 if key != "alias":
-                    times = ", ".join([ ("%s-%s" % (fr, to)) for (fr, to) in value ])
+                    times = ",".join([ ("%s-%s" % (fr, to)) for (fr, to) in value ])
                     if times:
                         outfile.write("  %-20s\t\t%s\n" % (key, times))
             outfile.write("}\n\n")

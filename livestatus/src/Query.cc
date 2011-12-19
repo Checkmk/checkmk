@@ -489,7 +489,8 @@ void Query::parseAuthUserHeader(char *line)
 void Query::parseStatsGroupLine(char *line)
 {
     // Can be re-enabled from 1.2i1
-    //logger(LOG_WARNING, "Warning: StatsGroupBy is deprecated. Please use Columns instead.");
+    logger(LOG_WARNING, "Warning: StatsGroupBy is deprecated. "
+                        "Please use Columns instead.");
     parseColumnsLine(line);
 }
 
@@ -504,7 +505,8 @@ void Query::parseColumnsLine(char *line)
         if (column) 
             _columns.push_back(column);
         else {
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "Table '%s' has no column '%s'", _table->name(), column_name);
+            _output->setError(RESPONSE_CODE_INVALID_HEADER, 
+                   "Table '%s' has no column '%s'", _table->name(), column_name);
             Column *col = createDummyColumn(column_name);
             _columns.push_back(col);
         }
@@ -550,7 +552,8 @@ void Query::parseOutputFormatLine(char *line)
     else if (!strcmp(format, "python"))
         _output_format = OUTPUT_FORMAT_PYTHON;
     else
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid output format. Only 'csv' and 'json' are available.");
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, 
+               "Invalid output format. Only 'csv' and 'json' are available.");
 }
 
 void Query::parseColumnHeadersLine(char *line)
@@ -561,7 +564,8 @@ void Query::parseColumnHeadersLine(char *line)
     else if (!strcmp(value, "off"))
         _show_column_headers = false;
     else
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for ColumnHeaders: must be 'on' or 'off'");
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, 
+              "Invalid value for ColumnHeaders: must be 'on' or 'off'");
 }
 
 void Query::parseKeepAliveLine(char *line)
@@ -572,7 +576,8 @@ void Query::parseKeepAliveLine(char *line)
     else if (!strcmp(value, "off"))
         _output->setDoKeepalive(false);
     else
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for KeepAlive: must be 'on' or 'off'");
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, 
+                "Invalid value for KeepAlive: must be 'on' or 'off'");
 }
 
 void Query::parseResponseHeaderLine(char *line)
@@ -583,7 +588,8 @@ void Query::parseResponseHeaderLine(char *line)
     else if (!strcmp(value, "fixed16"))
         _output->setResponseHeader(RESPONSE_HEADER_FIXED16);
     else
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value '%s' for ResponseHeader: must be 'off' or 'fixed16'", value);
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, 
+                "Invalid value '%s' for ResponseHeader: must be 'off' or 'fixed16'", value);
 }
 
 void Query::parseLimitLine(char *line)
@@ -595,7 +601,8 @@ void Query::parseLimitLine(char *line)
     else {
         int limit = atoi(value);
         if (!isdigit(value[0]) || limit < 0)
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for Limit: must be non-negative integer");
+            _output->setError(RESPONSE_CODE_INVALID_HEADER, 
+                    "Invalid value for Limit: must be non-negative integer");
         else
             _limit = limit;
     }
@@ -610,7 +617,8 @@ void Query::parseWaitTimeoutLine(char *line)
     else {
         int timeout = atoi(value);
         if (!isdigit(value[0]) || timeout < 0)
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for WaitTimeout: must be non-negative integer");
+            _output->setError(RESPONSE_CODE_INVALID_HEADER, 
+                    "Invalid value for WaitTimeout: must be non-negative integer");
         else
             _wait_timeout = timeout;
     }
@@ -631,7 +639,8 @@ void Query::parseWaitTriggerLine(char *line)
             return;
         }
     }
-    _output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitTrigger: invalid trigger '%s'. Allowed are %s.", value, WT_ALLNAMES);
+    _output->setError(RESPONSE_CODE_INVALID_HEADER, 
+            "WaitTrigger: invalid trigger '%s'. Allowed are %s.", value, WT_ALLNAMES);
 }
 
 void Query::parseWaitObjectLine(char *line)
@@ -642,7 +651,8 @@ void Query::parseWaitObjectLine(char *line)
     char *objectspec = lstrip(line);
     _wait_object = _table->findObject(objectspec);
     if (!_wait_object) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitObject: object '%s' not found or not supported by this table", objectspec);
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, 
+                "WaitObject: object '%s' not found or not supported by this table", objectspec);
     }
 }
 
@@ -670,7 +680,8 @@ void Query::parseLocaltimeLine(char *line)
     else if (rem >= 900)
         full ++;
     if (full >= 48 || full <= -48) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid Localtime header: timezone difference greater then 24 hours");
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, 
+                "Invalid Localtime header: timezone difference greater then 24 hours");
         return;
     }
     _timezone_offset = full * 1800;

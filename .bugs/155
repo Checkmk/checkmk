@@ -1,11 +1,15 @@
 Title: check_mk -I should accept tags
 Component: core
+State: done
+Class: feature
 Benefit: 2
-State: open
 Cost: 1
 Date: 2011-02-21 17:42:12
-Class: feature
+Targetversion: future
 
 When doing a cmk -I(I), one should be possible to
 specify tags instead of specific hosts. The same feature
 could be usefull for -N, -C, -D and maybe other commands as well.
+
+2011-12-19 19:58:09: changed state open -> done
+Implemented for -I and -II.

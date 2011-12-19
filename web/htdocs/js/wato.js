@@ -136,9 +136,10 @@ function wato_fix_visibility() {
         }
     }
     for (var item in volatile_topics){
-        var oTr = document.getElementById("topic_" + item);
+        var name = volatile_topics[item]
+        var oTr = document.getElementById("topic_" + name);
         if(oTr) {
-            if(hide_topics.indexOf(item) > -1 )
+            if(hide_topics.indexOf(name) > -1 )
                 oTr.style.display = "none"; 
             else
                 oTr.style.display = ""; 

@@ -253,6 +253,37 @@ checkgroups.append((
     "first"
 ))
 
+checkgroups.append(( 
+    "fileinfo",
+    _("Fileinfo"), 
+    Dictionary( 
+        elements = [
+            ( "minage",
+                Tuple( 
+                    title = _("Minimal age"),
+                    elements = [
+                      Age(title = _("Warning younger then")),
+                      Age(title = _("Critical younger then")),
+                    ]
+                )
+            ),
+            ( "maxage",
+                Tuple( 
+                    title = _("Maximal age"),
+                    elements = [
+                      Age(title = _("Warning older then")),
+                      Age(title = _("Critical older then")),
+                    ]
+                )
+            ),
+
+
+        ]
+    ),
+    None,
+    "first"
+))
+
 checkgroups.append((
     "tcp_conn_stats",
     ("TCP connection stats"),

@@ -1112,14 +1112,16 @@ def parse_hostname_list(args):
         else:
             if arg[0] == '@':
                 arg = arg[1:]
+            tagspec = arg.split(',')
+
             num_found = 0
-            for host in valid_hosts:
-                if arg in hosttags[host]:
-                    hostlist.append(host)
+            for hostname in valid_hosts:
+                if hosttags_match_taglist(tags_of_host(hostname), tagspec):
+                    hostlist.append(hostname)
                     num_found += 1
             if num_found == 0:
-                sys.stderr.write("No host or tag with the name '%s' is defined in "
-                                 "all_hosts or clusters.\n" % (arg))
+                sys.stderr.write("Hostname or tag specification '%s' does "
+                                 "not match any host.\n" % arg)
                 sys.exit(1)
     return hostlist
 
@@ -1934,8 +1936,6 @@ def do_snmp_scan(hostnamelist, check_only=False, include_state=False):
     result = []
     for hostname in hostnamelist:
         if not is_snmp_host(hostname):
-            if opt_verbose:
-                sys.stdout.write("Skipping %s, not an snmp host\n" % hostname)
             continue
         try:
             ipaddress = lookup_ipaddress(hostname)
@@ -4449,6 +4449,12 @@ if __name__ == "__main__":
         # Then remove clusters and make list unique
         hostnames = list(set([ h for h in hostnames if not is_cluster(h) ]))
         hostnames.sort()
+
+        if opt_verbose:
+            if len(hostnames) > 0:
+                sys.stdout.write("Inventorizing %s.\n" % ", ".join(hostnames))
+            else:
+                sys.stdout.write("Inventorizing all hosts.\n")
 
         if inventory_checks:
             checknames = inventory_checks.split(",")

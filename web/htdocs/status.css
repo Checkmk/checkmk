@@ -30,14 +30,14 @@ Boston, MA 02110-1301 USA.
 
 /* States */
 
-/* Colors of the five possible host and service states 
+/* Colors of the five possible host and service states
   CRIT:    #e2001a
   UNKNOWN: #f79802
   WARN:    #e6c908
   OK:      #41a62a
 */
 
-td.state {  
+td.state {
     text-align: center;
     font-weight: bold;
     font-family: sans-serif;
@@ -45,7 +45,7 @@ td.state {
 }
 
 /* OK/UP */
-.state0, .hstate0, .state0 a, .hstate0 a { 
+.state0, .hstate0, .state0 a, .hstate0 a {
     background-color: #0b3; color: #fff;
 }
 
@@ -53,27 +53,27 @@ td.state {
     white-space: nowrap;
 }
 /* WARN */
-.state1, .state1 a { 
+.state1, .state1 a {
     background-color: #ff0; color: #000;
 }
 
 /* CRIT/DOWN */
-.state2, .hstate1, .state2 a, .hstate2 a { 
+.state2, .hstate1, .state2 a, .hstate2 a {
     background-color: #f00; color: #fff;
 }
 
 /* UNKNOWN / UNREACH */
-.state3, .hstate2, .state3 a, .hstate2 a { 
+.state3, .hstate2, .state3 a, .hstate2 a {
     background-color: #f80; color: #fff;
 }
 
 /* PENDING */
-.statep, .hstatep, .statep a, .hstatep a { 
+.statep, .hstatep, .statep a, .hstatep a {
     background-color: #888; color: #fff;
 }
 
 /* in DOWNTIME */
-.stated, .hstated, .stated a, .hstated a { 
+.stated, .hstated, .stated a, .hstated a {
     background-color: #0af; color: #fff;
 }
 
@@ -87,7 +87,7 @@ b.stmark {
 }
 
 /* *some* problem */
-.states, .hstates { 
+.states, .hstates {
     background-image: url("images/someproblem.png");
     background-position: center center;
     background-repeat: repeat;
@@ -99,40 +99,40 @@ b.stmark {
 
 /* Status of sites in sidebar and in WATO */
 
-.sitestatus.online   { 
-    background-color: #3c0; 
-    color: #fff; 
-    border-color: #0f0; 
+.sitestatus.online   {
+    background-color: #3c0;
+    color: #fff;
+    border-color: #0f0;
 }
-.sitestatus.disabled { 
-    background-color: #666; 
-    color: #ccc; 
-    border-color: #888; 
+.sitestatus.disabled {
+    background-color: #666;
+    color: #ccc;
+    border-color: #888;
 }
-.sitestatus.dead     { 
-    background-color: #c00; 
-    color: #f88; 
-    border-color: #f44; 
+.sitestatus.dead     {
+    background-color: #c00;
+    color: #f88;
+    border-color: #f44;
 }
-.sitestatus.waiting  { 
-    background-color: #666; 
-    color: #fff; 
-    border-color: #ccc; 
+.sitestatus.waiting  {
+    background-color: #666;
+    color: #fff;
+    border-color: #ccc;
 }
-.sitestatus.down     { 
-    background-color: #f00; 
-    color: #fff; 
-    border-color: #800; 
+.sitestatus.down     {
+    background-color: #f00;
+    color: #fff;
+    border-color: #800;
 }
-.sitestatus.unreach  { 
-    background-color: #f80; 
-    color: #fff; 
-    border-color: #840; 
+.sitestatus.unreach  {
+    background-color: #f80;
+    color: #fff;
+    border-color: #840;
 }
-.sitestatus.unknown  { 
-    background-color: #26c; 
-    color: #fff; 
-    border-color: #44f; 
+.sitestatus.unknown  {
+    background-color: #26c;
+    color: #fff;
+    border-color: #44f;
 }
 /* Performeter styling */
 
@@ -145,20 +145,20 @@ table.data tr.data td.perfometer {
 
 td.perfometer div.content {
    position: relative;
-   top: 0px; 
+   top: 0px;
    left: 1px;
    width: 120px;
-   height: 0px; 
+   height: 0px;
    float: left;
    z-index: 20;
 }
 
 td.perfometer div.title {
-   position: relative; 
-   top: 5px; 
+   position: relative;
+   top: 5px;
    left: 0px;
    width: 120px;
-   height: 0px; 
+   height: 0px;
    text-align: center;
    white-space: nowrap;
    float: left;
@@ -167,10 +167,10 @@ td.perfometer div.title {
 
 td.perfometer img.glass {
    position: relative;
-   top: 1px; 
+   top: 1px;
    left: 2px;
    width: 120px;
-   height: 22px; 
+   height: 22px;
    margin-bottom: 1px;
    z-index: 30;
 }
@@ -193,7 +193,7 @@ table.data td.perfometer td.inner {
     height: 22px;
     padding: 0px 0px 0px 1px;
 }
-table.data td.perfometer div.stacked table:first-child { 
+table.data td.perfometer div.stacked table:first-child {
     border-bottom-style: none;
 }
 
@@ -212,16 +212,16 @@ td.statex {  /* zero count */
 }
 
 /* Row coloring in case of the different states */
-tr.odd0  { background-color: #eee; } 
+tr.odd0  { background-color: #eee; }
 tr.even0 { background-color: #ddd; }
 
-tr.odd1  { background-color: #ffc; } 
+tr.odd1  { background-color: #ffc; }
 tr.even1 { background-color: #ffa; }
 
-tr.odd2  { background-color: #fcc; } 
+tr.odd2  { background-color: #fcc; }
 tr.even2 { background-color: #faa; }
 
-tr.odd3  { background-color: #fda; } 
+tr.odd3  { background-color: #fda; }
 tr.even3 { background-color: #fea; }
 
 /* Row headers in single dataset layout */
@@ -240,7 +240,7 @@ tr.even3 { background-color: #fea; }
 
 
 /* Styles the background of host columns which have a red colored background when critical */
-.data div.hostdown { 
+.data div.hostdown {
     background-color: #f22;
     -moz-border-radius: 4px;
     border: 2px solid #000;
@@ -248,20 +248,20 @@ tr.even3 { background-color: #fea; }
     padding-right: 3px;
 }
 
-table.data td.age { 
+table.data td.age {
     text-align: right;
     color: #666;
     white-space: nowrap;
 }
 
-table.data td.age.recent { 
+table.data td.age.recent {
     font-weight: bold;
     color: #000;
 }
 
 table.data td.nowrap {
     white-space: nowrap;
-}  
+}
 
 td.badflag {
     font-weight: bold;
@@ -272,7 +272,7 @@ td.goodflag {
     color: #080;
 }
 
-table.data td.buttons { 
+table.data td.buttons {
     white-space: nowrap;
     width: 1px;
 }
@@ -325,7 +325,7 @@ table.data tr.data td.pnpgraph {
 
 tr.data td.pnpgraph img {
     border: 1px solid #888;
-    margin: 4px 4px 4px 4px; 
+    margin: 4px 4px 4px 4px;
     box-shadow: 1px 1px 3px #000000;
 }
 

@@ -75,7 +75,7 @@ body.mobile table.data td {
 }
 
 
-body.mobile table.dataset { 
+body.mobile table.dataset {
     width: 100%;
 }
 
@@ -129,7 +129,7 @@ body.mobile td.perfometer div.content {
 }
 
 body.mobile td.perfometer div.title {
-   top: 2px; 
+   top: 2px;
    width: 70px;
 }
 
@@ -164,7 +164,7 @@ body.mobile table.data td.perfometer td.inner {
 }
 
 td.pnpgraph img {
-     max-width: 100%;  
+     max-width: 100%;
 }
 
 /*-------------------------------------------------------------------------.

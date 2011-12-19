@@ -195,7 +195,7 @@ check:
 healspaces:
 	@echo "Removing trailing spaces from code lines..."
 	@sed -ri 's/[ 	]+$$//g' checkman/* modules/* checks/* $$(find -name Makefile) \
-          livestatus/src/*{cc,c,h} web/htdocs/*.py web/plugins/*/*.py
+          livestatus/src/*{cc,c,h} web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py
 
 setup:
 	$(MAKE) dist

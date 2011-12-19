@@ -54,7 +54,7 @@ div.dashlet div.dashlet_inner.background {
 }
 
 div.dashlet iframe {
-    border-style: none; 
+    border-style: none;
 }
 
 div.dashlet div.title {
@@ -74,7 +74,7 @@ div.dashlet div.title a {
     border-bottom: 1px dotted white;
     color: white;
 }
-div.dashlet div.title a:hover { 
+div.dashlet div.title a:hover {
     color: #00f;
 }
 
@@ -141,7 +141,7 @@ canvas.pie {
     margin-left: 10px;
 }
 
-div.dashlet table.hoststats { 
+div.dashlet table.hoststats {
     margin-top: 10px;
     margin-left: 5px;
     width: 143px;
@@ -149,20 +149,20 @@ div.dashlet table.hoststats {
     border-collapse: collapse;
     border-spacing: 0px;
 }
-div.dashlet table.hoststats.narrow { 
+div.dashlet table.hoststats.narrow {
     margin-top: 4px;
 }
 
-div.dashlet table.hoststats a { 
+div.dashlet table.hoststats a {
     color: black;
     text-decoration: none;
 }
-div.dashlet table.hoststats a:hover { 
+div.dashlet table.hoststats a:hover {
     text-decoration: underline;
 }
 
 
-div.dashlet table.hoststats td { 
+div.dashlet table.hoststats td {
     text-align: right;
     padding-right: 4px;
     padding-left: 4px;
@@ -170,7 +170,7 @@ div.dashlet table.hoststats td {
     background-repeat: repeat;
 }
 
-div.dashlet table.hoststats th { 
+div.dashlet table.hoststats th {
     text-align: left;
     background-color: transparent;
     padding-left: 4px;
@@ -178,7 +178,7 @@ div.dashlet table.hoststats th {
 div.dashlet table.hoststats td.color {
     padding: 2px;
 }
-div.dashlet table.hoststats th, table.hoststats td { 
+div.dashlet table.hoststats th, table.hoststats td {
     padding-top: 3px;
     padding-bottom: 3px;
     border-color: #fff;
@@ -186,7 +186,7 @@ div.dashlet table.hoststats th, table.hoststats td {
     border-width: 1px;
     vertical-align: middle;
 }
-div.dashlet table.hoststats.narrow th, table.hoststats.narrow td { 
+div.dashlet table.hoststats.narrow th, table.hoststats.narrow td {
     font-size: 8pt;
 }
 

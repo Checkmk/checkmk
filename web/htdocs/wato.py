@@ -9724,13 +9724,15 @@ class API:
     # of the given folder. If folder is None, returns all hosts from the root folder
     # Folder must be returned by get_folder()
     def get_all_hosts(self, folder=None):
-        load_all_folders()
+        if not folder:
+            self.prepare_folder_info()
         return collect_hosts(folder or g_root_folder)
 
     # Find a folder by its path. Raise an exception if it does
     # not exist.
     def get_folder(self, path):
-        load_all_folders()
+        self.prepare_folder_info()
+        
         folder = g_folders.get(path)
         if folder:
             load_hosts(folder)
@@ -9738,35 +9740,42 @@ class API:
         else:
             raise MKGeneralException("No WATO folder %s." % path)
 
-    # Get the number of hosts recursive from the given folder
+    # Get the number of hosts recursive from the given folder. Folder must be returned by get_folder()
     def num_hosts_in_folder(self, folder):
         return num_hosts_in(folder, True)
 
     # Get all effective data of a host. Folder must be returned by get_folder()
     def get_host(self, folder, hostname):
-        declare_host_tag_attributes()
         host = folder[".hosts"][hostname]
         eff = effective_attributes(host, folder)
         eff["name"] = hostname
         return eff
 
+    # Clean the attributes of the given host and returns the resulting host attributes
+    # host must be returned by get_host() / get_all_hosts()
+    def clean_host_attributes(self, host, attr):
+        folder = g_folders.get(host["path"])
+        load_hosts(folder)
+        for entry in attr:
+            try:
+                del folder[".hosts"][host["name"]][entry]
+            except:
+                continue
+
+        save_folder_and_hosts(folder)
+        return folder[".hosts"][host["name"]]
+
     # Update the attributes of the given host and returns the resulting host attributes
-    # which have been persisted
+    # host must be returned by get_host() / get_all_hosts()
     def update_host_attributes(self, host, attr):
-        # Initialize attributes and load all folders
-        declare_host_tag_attributes() 
-        declare_site_attribute()      
-        load_all_folders()            
-        
         folder = g_folders.get(host["path"])
         load_hosts(folder)
         folder[".hosts"][host["name"]].update(attr)
         save_folder_and_hosts(folder)
         return folder[".hosts"][host["name"]]
 
-    # Return displayable information about host (call with with result vom get_host())
+    # Return displayable information about host (call with result of get_host())
     def get_host_painted(self, host): 
-        declare_host_tag_attributes()
         result = []
         for attr, topic in host_attributes:   
             attrname = attr.name()
@@ -9833,6 +9842,12 @@ class API:
         return len(parse_audit_log("pending"))
 
     # BELOW ARE PRIVATE HELPER FUNCTIONS
+    def prepare_folder_info(self):
+        # Initialize attributes and load all folders
+        declare_host_tag_attributes() 
+        declare_site_attribute()      
+        load_all_folders()            
+
 
     def _cleanup_directory(self, thing):
         # drop 'parent' entry, recursively

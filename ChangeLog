@@ -103,6 +103,10 @@
     * printer_alerts: added further state codes (thanks to Matthew Stew)
     * Solaris agent: changed shell to /usr/bin/bash (fixes problems with LC_ALL=C)
 
+1.1.12p6:
+    Checks & Agents:
+    * FIX: lnx_if: remove debug output (left over from 1.1.12p5)
+    
 1.1.12p5:
     Multisite:
     * FIX: fix hitting enter in Quicksearch on IE 8

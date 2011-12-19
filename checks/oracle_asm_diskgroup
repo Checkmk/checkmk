@@ -41,7 +41,7 @@ def check_oracle_asm_diskgroup(item, params, info):
         free_mb, req_mir_free_mb, usable_file_mb, offline_disks, \
         voting_files, name in info:
         if name.rstrip('/') == item:
-            return df_check_filesystem(g_hostname, item, int(total_mb), 
+            return df_check_filesystem(g_hostname, item, int(total_mb),
                                        int(free_mb), params)
     return (3, "UNKNOWN - Disk group not found")
 

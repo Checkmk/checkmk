@@ -18,10 +18,10 @@ examples:
  aironet_default_strength_levels = (-85, -65)
 
  # Set levels for quality to 20 and 10 percent
- aironet_default_quality_levels = (20, 10) 
-    
+ aironet_default_quality_levels = (20, 10)
+
 perfdata:
- The number of clients, the average signal strength (this is a 
+ The number of clients, the average signal strength (this is a
  negative value) or the average quality - depending on the check
  item used.
 
@@ -33,7 +33,7 @@ inventory:
 warning (int): Warning level for signal strength or quality. Note that
  the signal strength levels are always negative. Levels are ignored
  for the check item {"clients"} and should be set to {None} in that case.
-critical (int): Critical levels, {None} in case of {"clients"}. 
+critical (int): Critical levels, {None} in case of {"clients"}.
 
 [configuration]
 aironet_default_strength_levels (int, int): Default levels for signal

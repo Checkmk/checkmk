@@ -38,7 +38,7 @@
 class OffsetTimeColumn : public OffsetIntColumn
 {
 public:
-    OffsetTimeColumn(string name, string description, int offset, int indirect_offset = -1) 
+    OffsetTimeColumn(string name, string description, int offset, int indirect_offset = -1)
         : OffsetIntColumn(name, description, offset, indirect_offset) {}
     int type() { return COLTYPE_TIME; }
     void output(void *data, Query *query);

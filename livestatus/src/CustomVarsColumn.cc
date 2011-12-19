@@ -40,7 +40,7 @@ void CustomVarsColumn::output(void *data, Query *query)
 
     bool first = true;
     while (cvm) {
-        if (first) 
+        if (first)
             first = false;
         else if (_what == CVT_DICT)
             query->outputDictSeparator();

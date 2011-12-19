@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check monitors the current length of various MS Exchange
  mail queues. You need a Windows agent of version {1.1.11i1} or
- later and have the counter object {msx_queues} activated. 
+ later and have the counter object {msx_queues} activated.
  This counter is activated per default with the number {10332}.
 
  If the counter number is different in your installation or
@@ -25,9 +25,9 @@ item:
 examples:
  # Define queues to be monitored
  winperf_msx_queues = {
-        "Active Remote Delivery"          : "10334", 
-        "Retry Remote Delivery"           : "10336", 
-        "Active Mailbox Delivery"         : "10338", 
+        "Active Remote Delivery"          : "10334",
+        "Retry Remote Delivery"           : "10336",
+        "Active Mailbox Delivery"         : "10338",
         "Retry Non-Smtp Delivery"         : "10344",
         "Items Queued For Delivery Total" : "10350",
  }
@@ -35,7 +35,7 @@ examples:
  # Default levels for all queues
  msx_queues_default_levels = (100, 200)
 
-perfdata: 
+perfdata:
  One value: the current length of the queue in question.
 
 inventory:

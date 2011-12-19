@@ -74,7 +74,7 @@ register_configvar(group,
     "context_buttons_to_show",
     Optional(
         Integer(
-            title = _("show"), 
+            title = _("show"),
             label = _("buttons"),
             minvalue = 1,
             maxvalue = 100,
@@ -88,7 +88,7 @@ register_configvar(group,
     domain = "multisite")
 
 
-register_configvar(group, 
+register_configvar(group,
     "soft_query_limit",
     Integer(title = _("Soft query limit"),
             help = _("Whenever the number of returned datasets of a view would exceed this "
@@ -98,7 +98,7 @@ register_configvar(group,
             default_value = 1000),
     domain = "multisite")
 
-register_configvar(group, 
+register_configvar(group,
     "hard_query_limit",
     Integer(title = _("Hard query limit"),
             help = _("Whenever the number of returned datasets of a view would exceed this "
@@ -109,11 +109,11 @@ register_configvar(group,
             default_value = 5000),
     domain = "multisite")
 
-register_configvar(group, 
+register_configvar(group,
     "quicksearch_dropdown_limit",
     Integer(title = _("Number of elements to show in Quicksearch"),
             help = _("When typing a texts in the Quicksearch snapin, a dropdown will "
-                     "appear listing all matching host names containing that text. "  
+                     "appear listing all matching host names containing that text. "
                      "That list is limited in size so that the dropdown will not get "
                      "too large when you have a huge number of lists. "),
             minvalue = 1,
@@ -140,7 +140,7 @@ register_configvar(group,
                       "set the filenames manually."),
              default_value = True),
     domain = "multisite")
-                       
+
 register_configvar(group,
     "wato_max_snapshots",
     Integer(title = _("Number of configuration snapshots to keep"),
@@ -151,10 +151,10 @@ register_configvar(group,
              default_value = 50),
     domain = "multisite")
 
-group = _("Operation mode of Check_MK") 
+group = _("Operation mode of Check_MK")
 
 register_configvar(group,
-    "tcp_connect_timeout", 
+    "tcp_connect_timeout",
     Float(title = _("Agent TCP connect timeout (sec)"),
           help = _("Timeout for TCP connect to agent in seconds. If the agent does "
                    "not respond within this time, it is considered to be unreachable. "
@@ -192,8 +192,8 @@ register_configvar(group,
     Optional(Filename(label = _("Absolute path to log file")),
           title = _("Logfile for debugging errors in checks"),
           label = _("Activate logging errors into a logfile"),
-          help = _("If this option is used and set to a filename, Check_MK will create a debug logfile " 
-                   "containing details about failed checks (those which have state UNKNOWN " 
+          help = _("If this option is used and set to a filename, Check_MK will create a debug logfile "
+                   "containing details about failed checks (those which have state UNKNOWN "
                    "and the output UNKNOWN - invalid output from plugin.... Per default no "
                    "logfile is written.")),
     need_restart = True)
@@ -202,9 +202,9 @@ register_configvar(group,
     "cluster_max_cachefile_age",
     Integer(title = _("Maximum cache file age for clusters"),
             label = _("seconds"),
-            help = _("The number of seconds a cache file may be old if check_mk should " 
-                     "use it instead of getting information from the target hosts while " 
-                     "checking a cluster. Per default this is enabled and set to 90 seconds. " 
+            help = _("The number of seconds a cache file may be old if check_mk should "
+                     "use it instead of getting information from the target hosts while "
+                     "checking a cluster. Per default this is enabled and set to 90 seconds. "
                      "If your check cycle is not set to a larger value than one minute then "
                      "you should increase this accordingly.")),
     need_restart = True)
@@ -249,7 +249,7 @@ register_configvar(group,
             (2, _("Critical") ),
             (3, _("Unknown") ),
             ]))
-        
+
 
 register_configvar(group,
     "always_cleanup_autochecks",
@@ -265,7 +265,7 @@ group = _("Check configuration")
 # if_inventory_porttypes = [ '6', '32', '117' ]
 # if_inventory_portstates = [ '1' ]
 
-_if_portstate_choices = [ 
+_if_portstate_choices = [
                         ( '1', 'up(1)'),
                         ( '2', 'down(2)'),
                         ( '3', 'testing(3)'),
@@ -380,7 +380,7 @@ register_configvar(group,
     Checkbox(title = _("Use alias as service name for network interface checks"),
              label = _("use alias"),
              help = _("This option lets Check_MK use the alias of the port (ifAlias) as item instead "
-                      "of the port number. If no alias is available then the port number is used " 
+                      "of the port number. If no alias is available then the port number is used "
                       "anyway.")))
 
 register_configvar(group,
@@ -419,14 +419,14 @@ register_configvar(group,
 
 group = _("Grouping")
 
-register_rule(group, 
+register_rule(group,
     "host_groups",
     GroupSelection(
         "host",
         title = _("Assignment of hosts to host groups")),
     match = "all")
 
-register_rule(group, 
+register_rule(group,
     "service_groups",
     GroupSelection(
         "service",
@@ -434,14 +434,14 @@ register_rule(group,
     match = "all",
     itemtype = "service")
 
-register_rule(group, 
+register_rule(group,
     "host_contactgroups",
     GroupSelection(
         "contact",
         title = _("Assignment of hosts to contact groups")),
     match = "all")
 
-register_rule(group, 
+register_rule(group,
     "service_contactgroups",
     GroupSelection(
         "contact",
@@ -450,24 +450,24 @@ register_rule(group,
     itemtype = "service")
 
 
-group = _("Monitoring Configuration") 
+group = _("Monitoring Configuration")
 
-register_rule(group, 
+register_rule(group,
     "extra_host_conf:max_check_attempts",
-    Integer(title = _("Maximum number of check attempts for host"), 
+    Integer(title = _("Maximum number of check attempts for host"),
             help = _("The maximum number of failed host checks until the host will be considered "
                      "in a hard down state"),
             minvalue = 1))
 
-register_rule(group, 
+register_rule(group,
     "extra_service_conf:max_check_attempts",
-    Integer(title = _("Maximum number of check attempts for service"), 
+    Integer(title = _("Maximum number of check attempts for service"),
             help = _("The maximum number of failed checks until a service problem state will "
                      "be considered as <u>hard</u>. Only hard state trigger notifications. "),
             minvalue = 1),
     itemtype = "service")
 
-register_rule(group, 
+register_rule(group,
     "extra_service_conf:check_interval",
     Integer(title = _("Normal check interval for service checks"),
             help = _("Check_MK usually uses an interval of one minute for the active Check_MK "
@@ -480,7 +480,7 @@ register_rule(group,
             label = _("minutes")),
     itemtype = "service")
 
-register_rule(group, 
+register_rule(group,
     "extra_service_conf:retry_interval",
     Integer(title = _("Retry check interval for service checks"),
             help = _("This setting is relevant if you have set the maximum number of check "
@@ -574,7 +574,7 @@ class MonitoringIcon(ValueSpec):
         icons = []
         for dir in dirs:
             if os.path.exists(dir):
-                icons += [ i for i in os.listdir(dir) 
+                icons += [ i for i in os.listdir(dir)
                            if '.' in i and os.path.isfile(dir + "/" + i) ]
         icons.sort()
         return icons
@@ -583,10 +583,10 @@ class MonitoringIcon(ValueSpec):
         num_columns = 12
         html.write("<table>")
         for nr, filename in enumerate([""] + self.available_icons()):
-            if nr % num_columns == 0: 
+            if nr % num_columns == 0:
                 html.write("<tr>")
             html.write("<td>")
-            html.radiobutton(varprefix, str(nr), value == filename, 
+            html.radiobutton(varprefix, str(nr), value == filename,
                             self.value_to_text(filename))
             html.write("&nbsp; </td>")
             if nr % num_columns == num_columns - 1:
@@ -611,9 +611,9 @@ class MonitoringIcon(ValueSpec):
 
     def validate_datatype(self, value, varprefix):
         if type(value) != str:
-            raise MKUserError(varprefix, _("The type is %s, but should be str") % 
+            raise MKUserError(varprefix, _("The type is %s, but should be str") %
                 type(value))
-    
+
     def validate_value(self, value, varprefix):
         if value and value not in self.available_icons():
             raise MKUserError(varprefix, _("The selected icon image does not exist."))
@@ -626,7 +626,7 @@ register_rule(group,
         title = _("Icon image for hosts in status GUI"),
         help = _("You can assign icons to hosts for the status GUI. "
                  "Put your images into <tt>%s</tt>. ") %
-                ( defaults.omd_root 
+                ( defaults.omd_root
                    and defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons"
                    or defaults.web_dir + "/htdocs/images/icons" ),
         ))
@@ -637,7 +637,7 @@ register_rule(group,
         title = _("Icon image for services in status GUI"),
         help = _("You can assign icons to services for the status GUI. "
                  "Put your images into <tt>%s</tt>. ") %
-                ( defaults.omd_root 
+                ( defaults.omd_root
                    and defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons"
                    or defaults.web_dir + "/htdocs/images/icons" ),
         ),
@@ -677,10 +677,10 @@ group = _("SNMP")
 
 _snmpv3_basic_elements = [
      DropdownChoice(
-         choices = [ 
-             ( "authPriv",     _("authPriv")),   
-             ( "authNoPriv",   _("authNoPriv")), 
-             ( "noAuthNoPriv", _("noAuthNoPriv")), 
+         choices = [
+             ( "authPriv",     _("authPriv")),
+             ( "authNoPriv",   _("authNoPriv")),
+             ( "noAuthNoPriv", _("noAuthNoPriv")),
              ],
          title = _("Security level")),
       DropdownChoice(
@@ -726,12 +726,12 @@ register_rule(group,
              "Please be aware, however, that there are some broken devices out there, that support "
              "v2c but behave very bad when it is used. "))
 
-group = _("Operation mode of Check_MK") 
+group = _("Operation mode of Check_MK")
 
 register_rule(group,
     "agent_ports",
     Integer(title = _("TCP port for connection to Check_MK agent"),
-            help = _("This variable allows to specify the TCP port to " 
+            help = _("This variable allows to specify the TCP port to "
                      "be used to connect to the agent on a per-host-basis. "),
             minvalue = 1,
             maxvalue = 65535))

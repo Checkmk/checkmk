@@ -356,7 +356,7 @@ def get_stored_snmpwalk(hostname, oid):
             else:
                 result = cmp(aa, bb)
             return result
-            
+
         if hostname in g_walk_cache:
             lines = g_walk_cache[hostname]
         else:
@@ -381,7 +381,7 @@ def get_stored_snmpwalk(hostname, oid):
         if hit != 0:
             return [] # not found
 
-        
+
         def collect_until(index, direction):
             rows = []
             # Handle case, where we run after the end of the lines list
@@ -390,7 +390,7 @@ def get_stored_snmpwalk(hostname, oid):
                     return []
                 else:
                     index -= 1
-            while True: 
+            while True:
                 line = lines[index]
                 parts = line.split(None, 1)
                 o = parts[0]

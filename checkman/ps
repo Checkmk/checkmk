@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This check looks into the list of then current running processes for
- those matching a certain name or regular expression and optionally 
+ those matching a certain name or regular expression and optionally
  being owned by a certain user. The number of
  matching processes is matched against warning and critical levels.
 
@@ -21,18 +21,18 @@ inventory:
  needed. The configuration is done via {inventory_processes}. The structure
  of that variable is a list of seven-tuples. It is similar but not
  completely the same as the configuration of manual checks. The seven
- components of each entry are: {(1)} a service description, {(2)} a pattern 
+ components of each entry are: {(1)} a service description, {(2)} a pattern
  (just as the first parameter of the check), {(3)} a
  user specification and {(4)} - {(7)} the warning and critical levels
  for the number of processes.
 
  During inventory Check_MK tries to match all entries on each
  process found on the target host. If an entry matches, a new check will
- be created according to the entry (if it's not already existing). 
+ be created according to the entry (if it's not already existing).
 
  The {service description} may contain one or more occurances of {%s}.
  If you do this, then the pattern must be a regular expression and
- be prefixed with {~}. For each {%s} in the description, the expression has to contain 
+ be prefixed with {~}. For each {%s} in the description, the expression has to contain
  one "group". A group is a subexpression enclosed in brackets, for example
  {(.*)} or {([a-zA-Z]+)} or {(...)}. When the inventory finds a process
  matching the pattern, it will substitute all such groups with the
@@ -67,7 +67,7 @@ inventory:
  You can prepend a list of host names or a list of tag names and {ALL_HOSTS}
  to some of all rules of the inventory specification. That way you can
  make the inventory apply some rules only to certain hosts.
- 
+
 examples:
  # Examples for manually configured checks
  checks += [
@@ -126,9 +126,9 @@ examples:
 inventory_processes (list): A list of 7-tuples. See {INVENTORY} for details.
 
 [parameters]
-procname (string): Process specification. This can either be the name of a process as ouput by the agent. 
-   It must exactly match the first column of the agents output. Or - if the string is 
-   beginning with a tilde - it is interpreted as a regular expression that must match 
+procname (string): Process specification. This can either be the name of a process as ouput by the agent.
+   It must exactly match the first column of the agents output. Or - if the string is
+   beginning with a tilde - it is interpreted as a regular expression that must match
    the beginning of the process line as output by the agent. For the Linux/UNIX agents
    this allows you to match specific command line arguments of the process. A third possibility is to
    set the process name to {None}. In that case {all} processes will match. This is probably only useful

@@ -130,10 +130,10 @@ def parse_multipath_output(info, only_uuid = None):
     # 0: matching regex
     # 1: matched regex-group id of UUID
     # 2: matched regex-group id of alias (optional)
-    reg_headers = [ 
+    reg_headers = [
         (get_regex(r"^[0-9a-z]{33}$"),                       0, None), # 1. (should be included in 3.)
         (get_regex(r"^([^\s]+)\s\(([0-9A-Za-z_-]+)\)"),      2, 1), # 2.
-        (get_regex(r"^[a-zA-Z0-9_]+$"),                      0, None), # 3. 
+        (get_regex(r"^[a-zA-Z0-9_]+$"),                      0, None), # 3.
         (get_regex(r"^([0-9a-z]{33}|[0-9a-z]{49})\s?dm.+$"), 1, None), # 4.
         (get_regex(r"^[a-zA-Z0-9_]+dm-.+$"),                 0, None), # 5. Remove this line in 1.2.0
         (get_regex(r"^([a-zA-Z0-9_]+)\s?dm-.+$"),            1, None), # 6.

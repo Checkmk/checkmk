@@ -120,7 +120,7 @@ void OutputBuffer::flush(int fd, int *termination_flag)
 void OutputBuffer::writeData(int fd, int *termination_flag, const char *write_from, int to_write)
 {
     struct timeval tv;
-    while (!*termination_flag && to_write > 0) 
+    while (!*termination_flag && to_write > 0)
     {
         tv.tv_sec  = WRITE_TIMEOUT_USEC / 1000000;
         tv.tv_usec = WRITE_TIMEOUT_USEC % 1000000;
@@ -136,7 +136,7 @@ void OutputBuffer::writeData(int fd, int *termination_flag, const char *write_fr
                 logger(LG_INFO, "Couldn't write %d bytes to client socket: %s", to_write, strerror(errno));
                 break;
             }
-            else if (w == 0) 
+            else if (w == 0)
                 logger(LG_INFO, "Strange: wrote 0 bytes inspite of positive select()");
             else {
                 to_write -= w;

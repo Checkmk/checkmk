@@ -7,7 +7,7 @@ description:
  This check uses the output of {ntpq -p} as sent by the agent. It is
  a list of all NTP peers with their state, stratum, offset and jitter.
  The check gets critical if the time offset exceeds a configurable level,
- if the stratum is too high or on othe error conditions. It gets UNKNOWN 
+ if the stratum is too high or on othe error conditions. It gets UNKNOWN
  if the peer is unreachable or has not answered for a long time.
 
  Note: This check creates one individual service for each peer. It is useful

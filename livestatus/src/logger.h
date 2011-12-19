@@ -37,7 +37,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 void logger(int priority, const char *loginfo, ...);
 void open_logfile();

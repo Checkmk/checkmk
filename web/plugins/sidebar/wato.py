@@ -88,10 +88,10 @@ def render_wato_folders():
 def ajax_wato_folders():
     render_linktree_folder(wato.api.get_folder_tree())
 
-    
+
 def render_linktree_folder(f):
     subfolders = f.get(".folders", {})
-    is_leaf = len(subfolders) == 0 
+    is_leaf = len(subfolders) == 0
 
     # Suppress indentation for non-emtpy root folder
     if ".parent" not in f and is_leaf:
@@ -100,7 +100,7 @@ def render_linktree_folder(f):
         html.write("<ul style='padding-left: 0px;'>")
 
     title = '<a href="#" onclick="wato_tree_click(%r);">%s (%d)</a>' % (
-            f[".path"], f["title"], f[".total_hosts"]) 
+            f[".path"], f["title"], f[".total_hosts"])
 
     if not is_leaf:
         html.begin_foldable_container('wato-hosts', "/" + f[".path"], False, title)

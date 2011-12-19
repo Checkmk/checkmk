@@ -89,7 +89,7 @@ def check_printer_alerts(_not_used, _not_used1, info):
                 state = s
                 break
 	# Code not found -> take into account severity
-	if state == 3 and sev == '1': 
+	if state == 3 and sev == '1':
 	    state = 0
 
         group_txt = printer_alerts_group_map.get(group, 'UNKNOWN')

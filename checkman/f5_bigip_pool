@@ -3,7 +3,7 @@ agents: snmp
 author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk
-description: 
+description:
  The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers) for the
  status of any load balancing pools. It gathers the number of loadbalancers backing the pool
  and how many of those are working. It doesn't currently honor the 'MinUpMembers' parameter
@@ -32,5 +32,5 @@ f5_bigip_pool_default_levels = (int, int): The default levels for all F5 BIG-IP 
 
 
 
-perfdata: 
+perfdata:
  the check does not (yet) generate performance data.

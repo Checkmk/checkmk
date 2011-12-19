@@ -387,7 +387,7 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
                 # paint group header
                 group_open = True
                 html.write("<tr class=groupheader>")
-                html.write("<td class=groupheader colspan=%d><table class=groupheader><tr>" % 
+                html.write("<td class=groupheader colspan=%d><table class=groupheader><tr>" %
                      (num_painters * (num_columns + 2) + (num_columns - 1)))
                 painted = False
                 for p in group_painters:

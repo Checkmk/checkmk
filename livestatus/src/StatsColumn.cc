@@ -40,7 +40,7 @@ StatsColumn::~StatsColumn()
 
 Aggregator *StatsColumn::createAggregator()
 {
-    if (_operation == STATS_OP_COUNT) 
+    if (_operation == STATS_OP_COUNT)
         return new CountAggregator(_filter);
     else if (_column->type() == COLTYPE_INT || _column->type() == COLTYPE_TIME)
         return new IntAggregator((IntColumn *)_column, _operation);

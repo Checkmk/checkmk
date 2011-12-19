@@ -16,7 +16,7 @@ description:
 
  This check share the same code and features as the check {diskstat},
  so the rest of this manual page is identical with that of diskstat.
- 
+
  You can either have a single check for every single disk
  (which is the default) or a summary check summing up the throughput
  of all disks.
@@ -30,7 +30,7 @@ description:
 
 item:
  Either {"SUMMARY"} for a summarized check of alls disks or the
- name of the disk device, e.g. {"C:"}. 
+ name of the disk device, e.g. {"C:"}.
 
 examples:
  # alternative: create one check for all disks
@@ -60,7 +60,7 @@ perfdata:
   write throughput.
 
   In the legacy mode only one variable: the throughput since the last check
-  in in bytes(!) per second, either for read or for write. 
+  in in bytes(!) per second, either for read or for write.
 
 inventory:
   The inventory is configured via {diskstat_inventory_mode}. If this is set
@@ -81,13 +81,13 @@ inventory:
 
 "average": If this is not {None}, it will be interpreted as a time range
  in minutes to do averaging over. Set this to {15} in order to have
- the levels applied to a 15-minute average instead of the current 
+ the levels applied to a 15-minute average instead of the current
  values (approx.). Turning the average on will also create two additional
- performance values. Make sure that your graphing tool is setup to 
+ performance values. Make sure that your graphing tool is setup to
  a changing number of variables.
 
 [configuration]
-diskstat_defaul_levels(dict): The default parameter used for inventorized 
+diskstat_defaul_levels(dict): The default parameter used for inventorized
                              checks. This is preset to the empty dictionary.
                               That means that no averaging is done and no
                               levels are applied.

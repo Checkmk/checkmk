@@ -86,7 +86,7 @@ Column *Table::column(const char *colname)
 
 bool Table::hasColumn(Column *col)
 {
-    // this is not very efficient but seldomly used 
+    // this is not very efficient but seldomly used
     for (_columns_t::iterator it = _columns.begin();
             it != _columns.end();
             ++it)

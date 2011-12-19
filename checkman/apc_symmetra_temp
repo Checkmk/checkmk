@@ -10,7 +10,7 @@ description:
 item:
  The name of the sensor as configured in your management card.
 
-perfdata: 
+perfdata:
  One variable: the current temperature in degrees celsius.
 
 inventory:

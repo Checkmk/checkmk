@@ -25,7 +25,7 @@
 #include "DowntimeOrComment.h"
 #include "logger.h"
 
-DowntimeOrComment::DowntimeOrComment(nebstruct_downtime_struct *dt, 
+DowntimeOrComment::DowntimeOrComment(nebstruct_downtime_struct *dt,
         unsigned long id)
     : _type(dt->downtime_type)
     , _entry_time(dt->entry_time)
@@ -35,7 +35,7 @@ DowntimeOrComment::DowntimeOrComment(nebstruct_downtime_struct *dt,
 {
     _host = find_host(dt->host_name);
     if (dt->service_description) {
-        _service = find_service(dt->host_name, dt->service_description); 
+        _service = find_service(dt->host_name, dt->service_description);
         _is_service = 1;
     }
     else {

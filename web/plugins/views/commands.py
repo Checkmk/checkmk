@@ -45,7 +45,7 @@ config.declare_permission("action.reschedule",
         _("Reschedule host and service checks"),
         [ "user", "admin" ])
 
-multisite_commands.append({  
+multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.reschedule",
     "title"       : _("Reschedule"),
@@ -72,7 +72,7 @@ def command_notifications(cmdtag, spec, row):
         return ("DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
                 _("<b>disable notifications</b> for"))
 
-multisite_commands.append({  
+multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.notifications",
     "title"       : _("Notifications"),
@@ -97,7 +97,7 @@ def command_enable_active(cmdtag, spec, row):
         return ("DISABLE_" + cmdtag + "_CHECK;%s" % spec,
                 _("<b>disable active checks</b> for"))
 
-multisite_commands.append({  
+multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.enablechecks",
     "title"       : _("Active checks"),
@@ -117,7 +117,7 @@ def command_enable_passive(cmdtag, spec, row):
         return ("DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
                 _("<b>disable passive checks</b> for"))
 
-multisite_commands.append({  
+multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.enablechecks",
     "title"       : _("Passive checks"),
@@ -135,14 +135,14 @@ config.declare_permission("action.clearmodattr",
         _("Remove the information that an attribute (like check enabling) has been changed"),
         [ "admin" ])
 
-multisite_commands.append({  
+multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.clearmodattr",
     "title"       : _("Modified attributes"),
     "render"      : lambda: \
        html.button("_clear_modattr", _('Clear information about modified attributes')),
     "action"      : lambda cmdtag, spec, row: (
-        html.var("_clear_modattr") and ( 
+        html.var("_clear_modattr") and (
         "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec,
          _("<b>clear the information about modified attributes</b> of"))),
 })
@@ -156,7 +156,7 @@ config.declare_permission("action.fakechecks",
 def command_fake_checks(cmdtag, spec, row):
     for s in [0,1,2,3]:
         statename = html.var("_fake_%d" % s)
-        if statename: 
+        if statename:
             pluginoutput = _("Manually set to %s by %s") % (statename, config.user_id)
             if cmdtag == "SVC":
                 cmdtag = "SERVICE"
@@ -165,7 +165,7 @@ def command_fake_checks(cmdtag, spec, row):
             return command, title
 
 
-multisite_commands.append({  
+multisite_commands.append({
     "tables"      : [ "host" ],
     "permission"  : "action.fakechecks",
     "title"       : _("Fake check results"),
@@ -176,7 +176,7 @@ multisite_commands.append({
     "action"      : command_fake_checks,
 })
 
-multisite_commands.append({  
+multisite_commands.append({
     "tables"      : [ "service" ],
     "permission"  : "action.fakechecks",
     "title"       : _("Fake check results"),
@@ -206,7 +206,7 @@ def command_custom_notification(cmdtag, spec, row):
         return command, title
 
 
-multisite_commands.append({  
+multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.customnotification",
     "title"       : _("Custom notification"),
@@ -246,7 +246,7 @@ def command_acknowledgement(cmdtag, spec, row):
         return command, title
 
 
-multisite_commands.append({  
+multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.acknowledge",
     "title"       : _("Acknowledge"),
@@ -280,7 +280,7 @@ def command_comment(cmdtag, spec, row):
         title = _("<b>add a comment to</b>")
         return command, title
 
-multisite_commands.append({  
+multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.addcomment",
     "title"       : _("Add comment"),
@@ -377,7 +377,7 @@ def command_downtime(cmdtag, spec, row):
         return command, title
 
 
-multisite_commands.append({  
+multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.downtimes",
     "title"       : _("Schedule downtimes"),
@@ -405,7 +405,7 @@ multisite_commands.append({
 })
 
 # REMOVE DOWNTIMES (table downtimes)
-multisite_commands.append({  
+multisite_commands.append({
     "tables"      : [ "downtime" ],
     "permission"  : "action.downtimes",
     "title"       : _("Downtimes"),
@@ -413,12 +413,12 @@ multisite_commands.append({
         html.button("_remove_downtimes", _("Remove")),
     "action"      : lambda cmdtag, spec, row: \
       html.has_var("_remove_downtimes") and \
-      ( "DEL_%s_DOWNTIME;%d" % (cmdtag, spec), 
+      ( "DEL_%s_DOWNTIME;%d" % (cmdtag, spec),
         _("remove the following"))
 })
 
 # REMOVE COMMENTS (table comments)
-multisite_commands.append({  
+multisite_commands.append({
     "tables"      : [ "comment" ],
     "permission"  : "action.addcomment",
     "title"       : _("Comments"),
@@ -426,6 +426,6 @@ multisite_commands.append({
         html.button("_remove_comments", _("Remove")),
     "action"      : lambda cmdtag, spec, row: \
       html.has_var("_remove_comments") and \
-      ( "DEL_%s_COMMENT;%d" % (cmdtag, spec), 
+      ( "DEL_%s_COMMENT;%d" % (cmdtag, spec),
         _("remove the following"))
 })

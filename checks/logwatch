@@ -63,7 +63,7 @@ def inventory_logwatch(info):
 # All [ PATTERNS ] of matching rules will be concatenated in order of
 # appearance.
 #
-# PATTERN is a list like: 
+# PATTERN is a list like:
 # [ ( 'I',      ".*ssh.*" ),          # Ignore these messages
 #   ( (10, 20), "login"   ),          # Warning at 10 messages, Critical at 20
 #   ( 'C',      "bad"     ),          # Always critical

@@ -31,10 +31,10 @@ int is_authorized_for(contact *ctc, host *hst, service *svc) {
     if (svc) {
         if (g_service_authorization == AUTH_STRICT) {
             return is_contact_for_service(svc, ctc)
-                || is_escalated_contact_for_service(svc, ctc); 
+                || is_escalated_contact_for_service(svc, ctc);
         }
         else { // AUTH_LOOSE
-            return  is_contact_for_host(hst, ctc) 
+            return  is_contact_for_host(hst, ctc)
                 || is_escalated_contact_for_host(hst, ctc)
                 || is_contact_for_service(svc, ctc)
                 || is_escalated_contact_for_service(svc, ctc);

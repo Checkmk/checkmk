@@ -76,7 +76,7 @@ void DoubleAggregator::output(Query *q)
         case STATS_OP_MIN:
         case STATS_OP_MAX:
         case STATS_OP_SUMINV:
-            q->outputDouble(_aggr); 
+            q->outputDouble(_aggr);
             break;
 
         case STATS_OP_AVG:

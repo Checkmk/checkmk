@@ -38,7 +38,7 @@
 
 import datetime, time
 
-ad_replication_default_params = (15,20) 
+ad_replication_default_params = (15,20)
 
 def parse_ad_replication_dates(s):
     if s == '0' or s == '(never)':
@@ -75,7 +75,7 @@ def check_ad_replication(item, params, info):
             foundLine = True
             timeLastFailure = parse_ad_replication_dates(timeLastFailure)
             timeLastSuccess = parse_ad_replication_dates(timeLastSuccess)
-            
+
             maxFailuresWarn = params[0]
             maxFailuresCrit = params[1]
 
@@ -86,7 +86,7 @@ def check_ad_replication(item, params, info):
                           'LastFailure: %s NumFailures: %s Status: %s), ' % \
                          (sourceSite, sourceDC, namingContext, maxFailuresWarn, timeLastFailure,
                           timeLastSuccess, numFailures, statusLastFailure)
-            
+
             if int(numFailures) > maxFailuresCrit:
                 status = 2
                 output += 'CRITICAL: %s/%s replication of context %s reached ' \

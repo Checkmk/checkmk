@@ -110,7 +110,7 @@ def render_dashboard(name):
     if not wato_folder: # ignore wato folder in case of root folder
         wato_folder = None
 
-    # The title of the dashboard needs to be prefixed with the WATO path, 
+    # The title of the dashboard needs to be prefixed with the WATO path,
     # in order to make it clear to the user, that he is seeing only partial
     # data.
     title = board["title"]
@@ -123,7 +123,7 @@ def render_dashboard(name):
     refresh_dashlets = [] # Dashlets with automatic refresh, for Javascript
     for nr, dashlet in enumerate(board["dashlets"]):
         # dashlets using the 'urlfunc' method will dynamically compute
-        # an url (using HTML context variables at their wish). 
+        # an url (using HTML context variables at their wish).
         if "urlfunc" in dashlet:
             dashlet["url"] = dashlet["urlfunc"]()
 
@@ -131,7 +131,7 @@ def render_dashboard(name):
         # dashlets using static content (such as an iframe) will not be
         # refreshed by us but need to do that themselves.
         if "url" in dashlet:
-            refresh_dashlets.append([nr, dashlet.get("refresh", 0), 
+            refresh_dashlets.append([nr, dashlet.get("refresh", 0),
               str(add_wato_folder_to_url(dashlet["url"], wato_folder))])
 
         # Paint the dashlet's HTML code
@@ -168,7 +168,7 @@ def render_dashlet(nr, dashlet, wato_folder):
     # render shadow
     if dashlet.get("shadow", True):
         for p in [ "nw", "ne", "sw", "se", "n", "s", "w", "e" ]:
-            html.write('<img id="dashadow_%s_%d" class="shadow %s" src="images/dashadow-%s.png">' % 
+            html.write('<img id="dashadow_%s_%d" class="shadow %s" src="images/dashadow-%s.png">' %
                 (p, nr, p, p))
 
     if dashlet.get("title"):
@@ -193,7 +193,7 @@ def render_dashlet(nr, dashlet, wato_folder):
     if "content" in dashlet: # fixed content
         html.write(dashlet["content"])
     elif "iframe" in dashlet: # fixed content containing iframe
-        html.write('<iframe allowTransparency="true" frameborder="0" width="100%%" height="100%%" src="%s"></iframe>' % 
+        html.write('<iframe allowTransparency="true" frameborder="0" width="100%%" height="100%%" src="%s"></iframe>' %
            add_wato_folder_to_url(dashlet["iframe"], wato_folder))
     html.write("</div></div>\n")
 
@@ -302,7 +302,7 @@ def ajax_resize():
                         raise Exception()
                     used_matrix[(x,y)] = True
             # Helper variable for how to grow, both x and y in [-1, 0, 1]
-            grow_by = rel_position.compute_grow_by(size) 
+            grow_by = rel_position.compute_grow_by(size)
 
             positions.append((nr, True, left, top, right, bottom, grow_by))
         except:
@@ -500,7 +500,7 @@ def render_statistics(pie_id, what, table, filter):
     if wato_folder:
         # filter += "Filter: host_state = 0"
         filter += "Filter: host_filename ~ ^/wato/%s/\n" % wato_folder.replace("\n", "")
-    
+
     query = "GET %s\n" % what
     for entry in table:
         query += entry[3]
@@ -511,10 +511,10 @@ def render_statistics(pie_id, what, table, filter):
     total = sum([x[1] for x in pies])
     pie_diameter = 136
 
-    html.write('<canvas class=pie width=%d height=%d id=%s_stats style="float: left"></canvas>' % 
+    html.write('<canvas class=pie width=%d height=%d id=%s_stats style="float: left"></canvas>' %
             (pie_diameter, pie_diameter, pie_id))
-    
-    html.write('<table class="hoststats%s" style="float:left">' % ( 
+
+    html.write('<table class="hoststats%s" style="float:left">' % (
         len(pies) > 5 and " narrow" or ""))
     for (name, color, viewurl, query), count in pies + [ ((_("Total"), "", "all%s" % what, ""), total) ]:
         url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder=" \
@@ -564,7 +564,7 @@ if (has_canvas_support()) {
 def dashlet_pnpgraph():
     render_pnpgraph(html.var("site"), html.var("host"), html.var("service"), int(html.var("source", 0)))
 
-def dashlet_nodata(): 
+def dashlet_nodata():
     html.write("<div class=nograph><div class=msg>")
     html.write(html.var("message", _("No data available.")))
     html.write("</div></div>")
@@ -577,7 +577,7 @@ def render_pnpgraph(site, host, service=None, source=0):
         service = "_HOST_"
 
     if not site:
-        base_url = defaults.url_prefix 
+        base_url = defaults.url_prefix
     else:
         base_url = html.site_status[site]["site"]["url_prefix"]
     base_url += "pnp4nagios/index.php/"

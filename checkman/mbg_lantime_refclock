@@ -11,7 +11,7 @@ description:
  The check handles the reported state of the refclock, the GPS signal and the number of
  satellites connected to.
 
- The check raises a {CRITICAL} when the refclock is in a bad state ({notavailable}, 
+ The check raises a {CRITICAL} when the refclock is in a bad state ({notavailable},
  {antennaFaulty} or {antennaShortcircuit}) and a {WARNING} state when the refclock is
  in one of the states {trackingSearching}, {warmBoot} or {coldBoot}.
  The GPS state raises a {CRITICAL} state when {not available} or {not synchronized} is

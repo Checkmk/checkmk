@@ -34,7 +34,7 @@ class DoubleAggregator : public Aggregator
     double _aggr;
     double _sumq;
 public:
-    DoubleAggregator(DoubleColumn *c, int o) : 
+    DoubleAggregator(DoubleColumn *c, int o) :
         Aggregator(o), _column(c), _aggr(0), _sumq(0) {}
     void consume(void *data, Query *);
     void output(Query *);

@@ -24,9 +24,9 @@
 
 /* --------------------------------------------------------------------
    This version of check_icmp has been derived from Andreas Ericsson's
-   check_icmp plugin from the Nagios Plugins, which has again been 
+   check_icmp plugin from the Nagios Plugins, which has again been
    derived from another "check_icmp" program, that again was a hack of
-   fping. 
+   fping.
 
    We which to thank all of those authors for their work, which saved
    me a lot of time. Long live open source!
@@ -217,11 +217,11 @@ void init_global_variables()
     crit.pl = 80;
     crit.rta = 500000;
     warn.pl = 40;
-    warn.rta = 200000; 
+    warn.rta = 200000;
     timeout = 10;
     icmp_data_size = DEFAULT_PING_DATA_SIZE;
     icmp_pkt_size = DEFAULT_PING_DATA_SIZE + ICMP_MINLEN;
-   
+
     icmp_sent = 0;
     icmp_recv = 0;
     icmp_lost = 0;
@@ -376,7 +376,7 @@ handle_random_icmp(unsigned char *packet, struct sockaddr_in *addr)
 
 /* This was the main() function of the original check_icmp. */
 int check_icmp(int argc, char **argv, char *output, int size)
-{       
+{
     init_global_variables();
 
     g_output_buffer = output;
@@ -440,7 +440,7 @@ int check_icmp(int argc, char **argv, char *output, int size)
     			    size < MAX_PING_DATA) {
     				icmp_data_size = size;
     				icmp_pkt_size = size + ICMP_MINLEN;
-    			} 
+    			}
                             break;
     		case 'i':
     			pkt_interval = get_timevar(optarg);

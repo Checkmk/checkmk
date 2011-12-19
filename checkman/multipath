@@ -27,6 +27,6 @@ inventory:
  One check for each multipath device is created.
 
 [parameters]
-numpaths(int): The only parameter is the number of expected paths. This is not 
+numpaths(int): The only parameter is the number of expected paths. This is not
   a tuple but a simple integer value.
 

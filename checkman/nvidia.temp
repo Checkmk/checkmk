@@ -13,7 +13,7 @@ description:
 item:
  The name of the sensor as reported by {nvidia-settings -q all}
 
-perfdata: 
+perfdata:
  One variable: the current temperature in degrees celsius.
 
 inventory:

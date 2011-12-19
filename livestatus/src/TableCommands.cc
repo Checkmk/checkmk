@@ -44,9 +44,9 @@ void TableCommands::addColumns(Table *table, string prefix, int indirect_offset)
 {
     command cmd;
     char *ref = (char *)&cmd;
-    table->addColumn(new OffsetStringColumn(prefix + "name", 
+    table->addColumn(new OffsetStringColumn(prefix + "name",
                 "The name of the command", (char *)(&cmd.name) - ref, indirect_offset));
-    table->addColumn(new OffsetStringColumn(prefix + "line", 
+    table->addColumn(new OffsetStringColumn(prefix + "line",
                 "The shell command line", (char *)(&cmd.command_line) - ref, indirect_offset));
 }
 

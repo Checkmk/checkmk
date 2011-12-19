@@ -18,7 +18,7 @@ description:
  up to 90% cpu load while queried.  To accomodate for this you should lower
  the frequency of SNMP based checks with them.
 
- Some devices have a high usage even in normal conditions (i.e. running full 
+ Some devices have a high usage even in normal conditions (i.e. running full
  BGP tables). In that case you might have to fine tune the check parameters
  or even have to disable the check.
 
@@ -26,7 +26,7 @@ inventory:
  The check will create one separate service per CPU.
 
 item:
- A string describing the switch and unit number, for example {"Switch 2 CPU 0"} 
+ A string describing the switch and unit number, for example {"Switch 2 CPU 0"}
  or {"Switch 1 Slot 11"}.
 
 perfdata:
@@ -36,7 +36,7 @@ perfdata:
 warning (int): the percentage of 5-minute average usage at which the check returns WARN.
 critical (int): the percentage of 5-minute average usage at which the check goes critical.
 
-[configuration] 
-switch_cpu_default_levels (int, int): the default warn and critical levels. 
+[configuration]
+switch_cpu_default_levels (int, int): the default warn and critical levels.
  They are preset to {(50,75)} (meaning 50% for WARN and 75% for CRIT).
 

@@ -46,7 +46,7 @@
 /* Evaluate to actual length of the `sockaddr_un' structure.  */
 #ifndef SUN_LEN
 # define SUN_LEN(ptr) ((size_t) (((struct sockaddr_un *) 0)->sun_path) + strlen ((ptr)->sun_path))
-#endif 
+#endif
 
 int copy_data(int from, int to);
 void *voidp;
@@ -71,7 +71,7 @@ int read_with_timeout(int from, char *buffer, int size, int us)
     int retval = select(from + 1, &fds, 0, 0, &tv);
     if (retval > 0)
         return read(from, buffer, size);
-    else 
+    else
         return -2;
 }
 
@@ -85,7 +85,7 @@ void *copy_thread(void *info)
     int to = ti->to;
 
     char buffer[65536];
-    while (1) 
+    while (1)
     {
         ssize_t r = read_with_timeout(from, buffer, sizeof(buffer), 1000000);
         if (r == -1) {
@@ -159,7 +159,7 @@ int main(int argc, char **argv)
     pthread_create(&toright_thread, 0, copy_thread, (void *)&toright_info);
     pthread_create(&toleft_thread, 0, copy_thread, (void *)&toleft_info);
     pthread_join(toleft_thread, NULL);
-    pthread_join(toright_thread, NULL); 
+    pthread_join(toright_thread, NULL);
 
     close(sock);
     return 0;

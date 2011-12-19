@@ -23,7 +23,7 @@ description:
  using a check_mk_agent plugin named {fsc-celsius-m470-sel.sh}. This
  agent plugin can be found in the {fsc-celsius-m470-sel-1.1.tar.gz}
  archive in the {doc} directory of check_mk.
- 
+
  To enable this plugin simply copy it to the plugins directory of
  check_mk_agent on your target machines. By default the directory
  is located here: /usr/lib/check_mk_agent/plugins.

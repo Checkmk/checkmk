@@ -33,7 +33,7 @@ multisite_builtin_views.update({
                   'datasource': 'hosts',
                   'description': 'A complete list of all host problems, optimized for usage in the dashboard',
                   'group_painters': [],
-                  'hard_filters': ['host_scheduled_downtime_depth', 
+                  'hard_filters': ['host_scheduled_downtime_depth',
                                    'summary_host',
                                    'hoststate',
                                    'host_acknowledged',
@@ -84,7 +84,7 @@ multisite_builtin_views.update({
                  'hard_filters': ['service_acknowledged',
                                   'svcstate',
                                   'hoststate',
-                                  'summary_host', 
+                                  'summary_host',
                                   'in_downtime'],
                  'hard_filtervars': [('is_in_downtime', '0'),
                                      ('is_service_acknowledged', '0'),
@@ -124,7 +124,7 @@ multisite_builtin_views.update({
                   'topic': None
                 },
 # Similar view, but for dashboard
-'events_dash': { 
+'events_dash': {
             'browser_reload': 90,
             'column_headers': 'pergroup',
             'datasource': 'log_events',

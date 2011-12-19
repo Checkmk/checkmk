@@ -166,11 +166,11 @@ def declare_filter(sort_index, f, comment = None):
 #                persisted view configuration
 # title:         The title of the filter visible to the user. This text
 #                may be localized
-# info:          The datasource info this filter needs to work. If this 
+# info:          The datasource info this filter needs to work. If this
 #                is "service", the filter will also be available in tables
 #                showing service information. "host" is available in all
 #                service and host views. The log datasource provides both
-#                "host" and "service". Look into datasource.py for which 
+#                "host" and "service". Look into datasource.py for which
 #                datasource provides which information
 # htmlvars:      HTML variables this filter uses
 # link_columns:  If this filter is used for linking (state "hidden"), then
@@ -584,7 +584,7 @@ function toggle_section(nr, oImg) {
     html.write("</th><th>"+_('usage')+"</th><th>"+_('hardcoded settings')+"</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
     # sort filters according to title
-    s = [(filt.sort_index, filt.title, fname, filt) 
+    s = [(filt.sort_index, filt.title, fname, filt)
           for fname, filt in allowed_filters.items()
           if fname not in ubiquitary_filters ]
     s.sort()
@@ -870,7 +870,7 @@ def create_view():
     if not linktitle:
         linktitle = title
     icon = html.var("view_icon")
-    if not icon: 
+    if not icon:
         icon = None
 
     topic = html.var_utf8("view_topic")
@@ -1051,7 +1051,7 @@ def get_needed_columns(painters):
     return columns
 
 
-# Display options are flags that control which elements of a 
+# Display options are flags that control which elements of a
 # view should be displayed (buttons, sorting, etc.). They can be
 # specified via the URL variable display_options. The function
 # extracts this variable, applies defaults and generates
@@ -1074,7 +1074,7 @@ def prepare_display_options():
     # S  The playing of alarm sounds (on critical and warning services)
     # I  All hyperlinks pointing to other views
     # X  All other hyperlinks (pointing to external applications like PNP, WATO or others)
-    # M  If this option is not set, then all hyperlinks are targeted to the HTML frame 
+    # M  If this option is not set, then all hyperlinks are targeted to the HTML frame
     #    with the name main. This is useful when using views as elements in the dashboard.
     # L  The column title links in multisite views
     # W  The limit and livestatus error message in views
@@ -1134,7 +1134,7 @@ def prepare_display_options():
 
 # Display view with real data. This is *the* function everying
 # is about.
-def show_view(view, show_heading = False, show_buttons = True, 
+def show_view(view, show_heading = False, show_buttons = True,
               show_footer = True, render_function = None, only_count=False):
     display_options = prepare_display_options()
 
@@ -1166,14 +1166,14 @@ def show_view(view, show_heading = False, show_buttons = True,
 
     for varname, value in view["hard_filtervars"]:
         # shown filters are set, if form is fresh and variable not supplied in URL
-        if only_count or (html.var("filled_in") != "filter" and not html.has_var(varname)): 
+        if only_count or (html.var("filled_in") != "filter" and not html.has_var(varname)):
             html.set_var(varname, value)
 
     # Prepare Filter headers for Livestatus
     filterheaders = ""
     only_sites = None
     all_active_filters = [ f for f in show_filters + hide_filters + hard_filters if f.available() ]
-    for filt in all_active_filters: 
+    for filt in all_active_filters:
         header = filt.filter(tablename)
         if header.startswith("Sites:"):
             only_sites = header.strip().split(" ")[1:]
@@ -1199,7 +1199,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Those are: (1) columns used by the sorters in use, (2) columns use by
     # column- and group-painters in use and - note - (3) columns used to
     # satisfy external references (filters) of views we link to. The last bit
-    # is the trickiest. Also compute this list of view options use by the 
+    # is the trickiest. Also compute this list of view options use by the
     # painters
 
     all_painters = group_painters + painters
@@ -1237,7 +1237,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     painter_options.sort()
 
     # Fetch data. Some views show data only after pressing [Search]
-    if (only_count or (not view["mustsearch"]) or html.var("search")): 
+    if (only_count or (not view["mustsearch"]) or html.var("search")):
         # names for additional columns (through Stats: headers)
         add_columns = datasource.get("add_columns", [])
 
@@ -1285,7 +1285,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     if not render_function:
         render_function = render_view
 
-    render_function(view, rows, datasource, group_painters, painters, 
+    render_function(view, rows, datasource, group_painters, painters,
                 display_options, painter_options, show_heading, show_buttons,
                 show_checkboxes, layout, num_columns, show_filters, show_footer, hide_filters,
                 browser_reload)
@@ -1293,7 +1293,7 @@ def show_view(view, show_heading = False, show_buttons = True,
 
 # Output HTML code of a view. If you add or remove paramters here,
 # then please also do this in htdocs/mobile.py!
-def render_view(view, rows, datasource, group_painters, painters, 
+def render_view(view, rows, datasource, group_painters, painters,
                 display_options, painter_options, show_heading, show_buttons,
                 show_checkboxes, layout, num_columns, show_filters, show_footer, hide_filters,
                 browser_reload):
@@ -1350,7 +1350,7 @@ def render_view(view, rows, datasource, group_painters, painters,
             # Link for selecting/deselecting all rows
             if 'C' in display_options and config.may("act") and layout["checkboxes"]:
                 if show_checkboxes:
-                    addclass = " selected" 
+                    addclass = " selected"
                     title = _("Hide check boxes")
                     uri = html.makeuri([("show_checkboxes", "")])
                 else:
@@ -1488,9 +1488,9 @@ def render_view(view, rows, datasource, group_painters, painters,
 
 def view_options(viewname):
     # Options are stored per view. Get all options for all views
-    vo = config.load_user_file("viewoptions", {}) 
+    vo = config.load_user_file("viewoptions", {})
     # Now get options for the view in question
-    v = vo.get(viewname, {}) 
+    v = vo.get(viewname, {})
     must_save = False
 
     # Refresh rate
@@ -1545,7 +1545,7 @@ def view_options(viewname):
         vo[viewname] = v
         config.save_user_file("viewoptions", vo)
     return v
-            
+
 def do_table_join(master_ds, master_rows, master_filters, join_painters, join_columns, only_sites):
     join_table, join_master_column = master_ds["join"]
     slave_ds = multisite_datasources[join_table]
@@ -1557,8 +1557,8 @@ def do_table_join(master_ds, master_rows, master_filters, join_painters, join_co
         paintfunc, linkview, title, join_key = entry[:4]
         join_filter += "Filter: %s = %s\n" % (join_slave_column, join_key )
     join_filter += "Or: %d\n" % len(join_painters)
-    query = master_filters + join_filter 
-    rows = query_data(slave_ds, [join_master_column, join_slave_column] + join_columns, [], query, only_sites, None) 
+    query = master_filters + join_filter
+    rows = query_data(slave_ds, [join_master_column, join_slave_column] + join_columns, [], query, only_sites, None)
     per_master_entry = {}
     current_key = None
     current_entry = None
@@ -1644,7 +1644,7 @@ def show_context_links(thisview, active_filters):
             url = wato.api.link_to_host(host)
         else:
             url = wato.api.link_to_path(html.var("wato_folder", ""))
-        html.context_button(_("WATO"), url, "wato", id="wato", 
+        html.context_button(_("WATO"), url, "wato", id="wato",
             bestof = config.context_buttons_to_show)
 
     links = collect_context_links(thisview, active_filters)
@@ -1703,7 +1703,7 @@ def collect_context_links(thisview, active_filters):
             uri = html.makeuri_contextless(vars_values + [("view_name", name)])
             icon = view.get("icon")
             buttonid = "cb_" + name
-            context_links.append((view, linktitle, uri, icon, buttonid)) 
+            context_links.append((view, linktitle, uri, icon, buttonid))
     return context_links
 
 
@@ -1946,7 +1946,7 @@ def show_command_form(is_open, datasource):
     # will be one of "host", "service", "command" or "downtime".
     what = datasource["infos"][0]
 
-    html.write("<tr class=form id=table_actions %s><td>" % 
+    html.write("<tr class=form id=table_actions %s><td>" %
                 (not is_open and 'style="display: none"' or '') )
     html.begin_form("actions", onsubmit = 'add_row_selections(this);')
     html.hidden_field("_do_actions", "yes")
@@ -1973,7 +1973,7 @@ def show_command_form(is_open, datasource):
     html.write("</td></tr>\n")
 
 # Examine the current HTML variables in order determine, which
-# command the user has selected. The fetch ids from a data row 
+# command the user has selected. The fetch ids from a data row
 # (host name, service description, downtime/commands id) and
 # construct one or several core command lines and a descriptive
 # title.

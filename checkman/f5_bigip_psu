@@ -3,7 +3,7 @@ agents: snmp
 author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk
-description: 
+description:
  The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers) for the
  status of the power supplies. These may be redundant or not.
 
@@ -17,5 +17,5 @@ inventory:
  One service is created per power supply (PSU)
 
 
-perfdata: 
+perfdata:
  the check does not generate performance data.

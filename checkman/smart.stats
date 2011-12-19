@@ -10,7 +10,7 @@ description:
 
  The check uses information provided by the Check_MK linux agent which are
  available when the agent has been extended with the {smart} agent plugin.
- 
+
 perfdata:
  One variable for each of the known state counters.
 
@@ -23,7 +23,7 @@ examples:
  smart_stats_default_levels = {
    'realloc_events':  (1,  1),
    'realloc_sectors': (1,  1),
-   'spin_retries':    (1,  1), 
+   'spin_retries':    (1,  1),
    'pending_retries': (1,  1),
    'cmd_timeouts':    (5, 10),
    'end_to_end':      (1,  1),

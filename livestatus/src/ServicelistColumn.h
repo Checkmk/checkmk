@@ -34,7 +34,7 @@ class ServicelistColumn : public Column
 {
     int _offset;
     bool _show_host;
-    int _info_depth; 
+    int _info_depth;
 public:
     ServicelistColumn(string name, string description, int offset, int indirect_offset, bool show_host, int info_depth)
         : Column(name, description, indirect_offset), _offset(offset), _show_host(show_host), _info_depth(info_depth) {}

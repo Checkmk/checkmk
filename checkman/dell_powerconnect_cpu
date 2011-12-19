@@ -12,12 +12,12 @@ description:
   - 5 minutes (the "average" over the last 5 minutes, at the time the check occurred).
 
  A single service will be created showing the percentage of CPU use at the time
- the check occurred (using the 1 second load average).  However, charts are created 
- for each of the load averages, using values obtained during each execution of the 
+ the check occurred (using the 1 second load average).  However, charts are created
+ for each of the load averages, using values obtained during each execution of the
  service check.
 
  The state of the check will return a WARNING value when the percentage of the 1 second
- load value exceeds the warning threshold, and is less then the critical threshold. If the 
+ load value exceeds the warning threshold, and is less then the critical threshold. If the
  load values exceeds the critical threshold, then it will return a CRITICAL state.
 
  Currently, testing has been completed with the Dell PowerConnect 5448 and 5424 models,
@@ -31,8 +31,8 @@ examples:
  # Indicate warning at 50% CPU load, and indicate critical for 60%
  dell_powerconnect_cpu_default_levels = (50, 60)
 
-perfdata: 
- Each chart uses a single variable, the CPU percentage (0..100) representing 
+perfdata:
+ Each chart uses a single variable, the CPU percentage (0..100) representing
  the state of the load average at the time the check occurred.
 
 inventory:

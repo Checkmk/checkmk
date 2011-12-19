@@ -34,9 +34,9 @@ def check_snmp_uptime(checktype, _no_params, info):
     if len(info[0]) >= 1:
         ticks            = info[0][0]
         try:
-            uptime = int(ticks[:-2]) 
+            uptime = int(ticks[:-2])
         except:
-            days, h, m, s = ticks.split(":") 
+            days, h, m, s = ticks.split(":")
             uptime = (int(days) * 86400 ) + (int(h) * 3600) + (int(m) * 60) + int(float(s))
 
         days,    rest    = divmod(uptime, 60*60*24)

@@ -38,9 +38,9 @@
 
 def inventory_nfsexports(checkname, info):
     # reminder to self: inventorize the exported fs, and maybe even the fs id.
-    # but do not inventorize the allowed clients unless i'm really sure that 
-    # it's not bugged for "features" like multiple different option exports of 
-    # same FS. 
+    # but do not inventorize the allowed clients unless i'm really sure that
+    # it's not bugged for "features" like multiple different option exports of
+    # same FS.
     inventory = []
     for line in info:
         # will not inventorize unless there is SOME export at inventory time.
@@ -62,7 +62,7 @@ def check_nfsexports(item, _no_params, info):
         if exported_path == item:
             return (0, "OK - export is active")
     return (2, "CRITICAL - export not found in export list")
-        
+
 #    return (3, "UNKNOWN - invalid data returned from Agent")
 
 

@@ -53,7 +53,7 @@ void HostlistColumn::output(void *data, Query *query)
                 query->outputListSeparator();
             else
                 first = false;
-            if (!_show_state) 
+            if (!_show_state)
                 query->outputString(hst->name);
             else {
                 query->outputBeginSublist();

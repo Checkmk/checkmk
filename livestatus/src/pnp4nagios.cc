@@ -32,7 +32,7 @@ extern char g_pnp_path[];
 void cleanup_pnpname(char *p)
 {
     while (*p) {
-        if (*p == ' ' || *p == '/' || *p == '\\' || *p == ':') 
+        if (*p == ' ' || *p == '/' || *p == '\\' || *p == ':')
             *p = '_';
         p++;
     }
@@ -61,7 +61,7 @@ int pnpgraph_present(char *host, char *service)
         cleanup_pnpname(end);
         strcat(end, ".xml");
     }
-    else 
+    else
         strcat(end, "_HOST_.xml");
 
     if (0 == access(path, R_OK))

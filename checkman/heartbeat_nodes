@@ -7,10 +7,10 @@ description:
  This check uses the output of several cl_status calls as sent by the Check_MK
  linux agent to monitor the status of the linked nodes in a heartbeat cluster.
  Additionally all links of each node are checked.
- 
+
  Each configured linked node will result in one service during inventory.
 
- The check will result in a CRITICAL state when the nodestatus is not "up", 
+ The check will result in a CRITICAL state when the nodestatus is not "up",
  "ping" or "active". A link status different than "up" will also result in a
  CRITICAL state.
 

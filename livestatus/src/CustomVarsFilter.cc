@@ -33,12 +33,12 @@
     , _opid(abs(opid))
     , _negate(opid < 0)
     , _ref_text(value)
-      , _regex(0) 
+      , _regex(0)
 {
     // Prepare part in case of DICT filter
     if (_column->type() == COLTYPE_DICT) {
         /* Filter for custom_variables:
-Filter: custom_variables = PATH /hirni.mk 
+Filter: custom_variables = PATH /hirni.mk
 
 The variable name is part of the value and separated
 with spaces

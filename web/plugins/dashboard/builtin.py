@@ -27,8 +27,8 @@
 builtin_dashboards["main"] = {
     "title" : _("Main Overview"),
     "dashlets" : [
-#         { 
-#             "url"        : "dashlet_mk_logo.py", 
+#         {
+#             "url"        : "dashlet_mk_logo.py",
 #             "position"   : (1, 1),
 #             "size"       : (4, 5),
 #             "shadow"     : False,
@@ -52,28 +52,28 @@ builtin_dashboards["main"] = {
             "background" : True,
             "refresh"    : 60,
         },
-        { 
+        {
             "title"      : _("Host Problems"),
             "title_url"  : "view.py?view_name=hostproblems",
             "view"       : "hostproblems_dash", # "view.py?view_name=hostproblems_dash&display_options=SIXHR&_body_class=dashlet",
             "position"   : (-1, 1),
             "size"       : (GROW, 6),
         },
-        { 
+        {
             "title"      : _("Service Problems"),
             "title_url"  : "view.py?view_name=svcproblems",
             "view"       : "svcproblems_dash", # "view.py?view_name=svcproblems_dash&display_options=SIXHR&_body_class=dashlet",
             "position"   : (1, 7),
             "size"       : (GROW, MAX),
         },
-        { 
+        {
             "title"      : _("Events of recent 4 hours"),
             "title_url"  : "view.py?view_name=events_dash",
             "view"       : "events_dash", # "view.py?view_name=events_dash&display_options=SIXHR&_body_class=dashlet",
             "position"   : (-1, -1),
             "size"       : (GROW, GROW),
         },
-        # { 
+        # {
         #     "title"    : "CPU load of Nagios",
         #     # "url"      : "http://localhost/dk/pnp4nagios/index.php/image?host=DerNagiosSelbst&srv=fs__var&view=0",
         #     "url"      : "http://localhost/dk/pnp4nagios/index.php/popup?host=localhost&srv=CPU_load&view=0&source=2",
@@ -87,6 +87,6 @@ builtin_dashboards["main"] = {
         #     "position" : (12, -1),
         #     "size"     : (11, 5),
         # },
-        # { 
+        # {
     ]
 }

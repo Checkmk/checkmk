@@ -25,7 +25,7 @@ examples:
 
  # Disable memory levels for all hosts with the tag "test"
  check_parameters += [
-    ( { "memory" : ("101.0", "101.0") }, 
+    ( { "memory" : ("101.0", "101.0") },
       [ "test" ], ALL_HOSTS, [ "Memory and pagefile" ] ),
  ]
 
@@ -38,8 +38,8 @@ parameters (dict): This check uses a dictionary as parameter. The following
  keys are defined:
 
  {"memory"}: Warning and critical levels of memory usage. Floating point values
- (e.g. {80.0}) are interpreted as percentages of {used} space. Integer values 
- (e.g. {2048}) are interpreted as MB of {free} space. 
+ (e.g. {80.0}) are interpreted as percentages of {used} space. Integer values
+ (e.g. {2048}) are interpreted as MB of {free} space.
 
  {"pagefile"} Warning and critical levels for page file usage. The same
  rules apply as for {memory}.

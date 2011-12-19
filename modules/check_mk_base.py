@@ -462,7 +462,7 @@ def get_agent_info_tcp(hostname, ipaddress):
                 break
         s.close()
         if len(output) == 0: # may be caused by xinetd not allowing our address
-            raise MKAgentError("Empty output from agent at TCP port %d" % 
+            raise MKAgentError("Empty output from agent at TCP port %d" %
                   agent_port_of(hostname))
         return output
     except MKAgentError, e:
@@ -627,13 +627,13 @@ def get_average(itemname, this_time, this_val, backlog, initialize_zero = True):
     # we get one sample per minute. And that backlog is the number
     # of minutes we should average over. Then we want that the weight
     # of the values of the last average minutes have a fraction of W%
-    # in the result and the rest until infinity the rest (1-W%). 
+    # in the result and the rest until infinity the rest (1-W%).
     # Then the weight can be computed as backlog'th root of 1-W
     percentile = 0.50
 
     weight_per_minute = (1 - percentile) ** (1.0 / backlog)
 
-    # now let's compute the weight per second. This is done 
+    # now let's compute the weight per second. This is done
     weight = weight_per_minute ** (timedif / 60.0)
 
     new_val = last_val * weight + this_val * (1 - weight)
@@ -838,7 +838,7 @@ def open_checkresult_file():
             checkresult_file_fd, checkresult_file_path = \
                 tempfile.mkstemp('', 'c', check_result_path)
         except Exception, e:
-            raise MKGeneralException("Cannot create check result file in %s: %s" % 
+            raise MKGeneralException("Cannot create check result file in %s: %s" %
                     (check_result_path, e))
 
 
@@ -945,7 +945,7 @@ def submit_to_nagios(host, service, state, output):
         open_checkresult_file()
         if checkresult_file_fd:
             now = time.time()
-            os.write(checkresult_file_fd, 
+            os.write(checkresult_file_fd,
                 """host_name=%s
 service_description=%s
 check_type=1
@@ -1067,7 +1067,7 @@ def get_filesize_human_readable(size):
 
 
 def get_nic_speed_human_readable(speed):
-    try: 
+    try:
         speedi = int(speed)
         if speedi == 10000000:
             speed = "10MBit/s"
@@ -1109,4 +1109,4 @@ def get_age_human_readable(secs):
         return "%d days, %d hours" % (days, hours)
     return "%d days" % days
 
-    
+

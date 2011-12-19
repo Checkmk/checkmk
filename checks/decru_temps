@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_decru_temps(info):
-    return [ (l[0], (int(to_celsius(int(l[1]))) + 4.0, 
+    return [ (l[0], (int(to_celsius(int(l[1]))) + 4.0,
     int(to_celsius(int(l[1]))) + 8.0 ) ) for l in info ]
 
 def check_decru_temps(item, params, info):

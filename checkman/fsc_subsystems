@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  The check can be used to monitor the physical state of hardware parts like PSUs and
- the system board in Fujitsu Siemens (FSC) Systems. 
+ the system board in Fujitsu Siemens (FSC) Systems.
 
  This check uses the data provided by the SNMP agents supporting the
  {SNI-SERVER-CONTROL-MIB} MIB. The check has been created using Fujitsu

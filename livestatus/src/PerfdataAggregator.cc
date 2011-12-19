@@ -76,12 +76,12 @@ void PerfdataAggregator::consumeVariable(const char *varname, double value)
         switch (_operation) {
             case STATS_OP_SUM:
             case STATS_OP_AVG:
-                it->second._aggr += value; 
+                it->second._aggr += value;
                 break;
 
             case STATS_OP_SUMINV:
             case STATS_OP_AVGINV:
-                it->second._aggr += 1.0 / value; 
+                it->second._aggr += 1.0 / value;
                 break;
 
             case STATS_OP_MIN:

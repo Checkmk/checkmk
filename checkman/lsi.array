@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  Monitors the status of an array of an LSI RAID controller. The Linux
  agent sends information about its state, if the tool {cfggen} is
- available. The check returns OK only if the array is present and 
+ available. The check returns OK only if the array is present and
  in {Okay(OKY)} state. An array that has another state or is missing
  results in a critical state.
 

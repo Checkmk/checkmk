@@ -34,7 +34,7 @@ void DownCommColumn::output(void *data, Query *query)
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
     query->outputBeginList();
     data = shiftPointer(data); // points to host or service
-    if (data) 
+    if (data)
     {
         bool first = true;
 
@@ -82,7 +82,7 @@ bool DownCommColumn::isNagiosMember(void *data, void *member)
     // member is not a pointer, but an unsigned int (hack)
     int64_t id = (int64_t)member; // Hack. Convert it back.
     DowntimeOrComment *dt = table->findEntry(id);
-    return dt != 0 && 
+    return dt != 0 &&
         ( dt->_service == (service *)data
           || (dt->_service == 0 && dt->_host == (host *)data));
 }

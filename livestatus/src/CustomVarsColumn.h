@@ -43,7 +43,7 @@ class CustomVarsColumn : public Column
     int _what;
 
 public:
-    CustomVarsColumn(string name, string description, int offset, int indirect_offset, int what) 
+    CustomVarsColumn(string name, string description, int offset, int indirect_offset, int what)
         : Column(name, description, indirect_offset),  _offset(offset), _what(what) {}
     int type() { return _what == CVT_DICT ? COLTYPE_DICT : COLTYPE_LIST; }
     void output(void *, Query *);

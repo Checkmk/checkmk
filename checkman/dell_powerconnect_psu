@@ -13,8 +13,8 @@ description:
  there is an empty PSU bay, they will not be ignored by this check.
 
  A PSU that is running normally will return an OK nagios state. Any PSU that
- are in a warning or is not present (if it was previously present) will return a WARNING 
- nagios state. If a PSU is in a critical or is non-functional according to the sensor will 
+ are in a warning or is not present (if it was previously present) will return a WARNING
+ nagios state. If a PSU is in a critical or is non-functional according to the sensor will
  return a CRITICAL nagios state. Lastly, if a PSU is in a "shutdown" state, it will return
  an UNKNOWN nagios state.
 
@@ -30,10 +30,10 @@ description:
  Currently, testing has been completed with the Dell PowerConnect 5448 and 5424 models,
  however the service check may work with other models.
 
-perfdata: 
- Each PSU sensor uses a single variable value (0..1) representing 
+perfdata:
+ Each PSU sensor uses a single variable value (0..1) representing
  the state of the PSU itself. A 1 represents a normal "ON" state, where as
- a 0 represents any "OFF", which can mean warning, critical, shutdown, 
+ a 0 represents any "OFF", which can mean warning, critical, shutdown,
  not present (only if previously present), or not functioning. This is simply
  to chart the state of the PSU itself.
 
@@ -46,6 +46,6 @@ example:
  service that indicates the PSU devices are connected internally, in a redundant state. The
  result is strictly determined in what the SNMP service provides to the check.
 
- The psX value represents the selected PSU, where as the unitX values represents the sensor 
+ The psX value represents the selected PSU, where as the unitX values represents the sensor
  assigned to the PSU. It is possible to have multiple sensors on a single PSU, though I have
  yet to see one.

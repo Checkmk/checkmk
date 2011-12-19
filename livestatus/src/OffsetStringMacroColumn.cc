@@ -138,4 +138,4 @@ const char *OffsetStringMacroColumn::expandCustomVariables(const char *varname, 
         custvars = custvars->next;
     }
     return 0;
-} 
+}

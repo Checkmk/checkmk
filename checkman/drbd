@@ -19,7 +19,7 @@ examples:
  # Set expected "cs" to "Connected", first node to primary and second to secondary
  # and both nodes to up-to-date.
  checks += [
-   ( 'srvnd01', 'drbd', 'drbd0', 
+   ( 'srvnd01', 'drbd', 'drbd0',
      ( [ 'Primary', 'Secondary' ], [ 'UpToDate', 'UpToDate' ] ) )
  ]
 

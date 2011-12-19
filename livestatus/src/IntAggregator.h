@@ -34,7 +34,7 @@ class IntAggregator : public Aggregator
     int64_t _aggr;
     double _sumq;
 public:
-    IntAggregator(IntColumn *c, int o) : 
+    IntAggregator(IntColumn *c, int o) :
         Aggregator(o), _column(c), _aggr(0), _sumq(0) {}
     void consume(void *data, Query *);
     void output(Query *);

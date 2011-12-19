@@ -15,5 +15,5 @@ item:
  (e.g. {Midplane}).
 
 inventory:
- All bays with the state 1 (present and OK) are automatically 
+ All bays with the state 1 (present and OK) are automatically
  inventorized.

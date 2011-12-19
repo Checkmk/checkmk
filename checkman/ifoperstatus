@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check polls the SNMP OID .1.3.6.1.2.1.2.2.1.2 (IF-MIB::ifOperStatus)
  which is part of the standard SNMP interfaces MIB. It checks network interfaces
- for their operational status (the link). The link can either be 'up' or 'down'. 
+ for their operational status (the link). The link can either be 'up' or 'down'.
  The check status is OK if the actual link status is equal to the target status.
  If the target status is 'up' and the link status is 'down', the check gets
  CRITICAL. If the link status is 'up' and the target status is 'down', the check
@@ -23,7 +23,7 @@ inventory:
 [parameters]
 targetstatus (string): The target status of the interface, for example {"up"} or {"down"}. This
  can also be given as list of string to set multiple expected states.
- There are other possible values for the target status: {"unknown"}, {"dormant"}, 
+ There are other possible values for the target status: {"unknown"}, {"dormant"},
  {"notPresent"} or {"lowerLayerDown"}.
 
 [configuration]

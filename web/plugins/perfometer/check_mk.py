@@ -96,10 +96,10 @@ def perfometer_check_mk_mem_used(row, check_command, perf_data):
 
     state = row["service_state"]
     # paint used ram and swap
-    ram_color, swap_color = { 
+    ram_color, swap_color = {
         0:("#80ff40", "#008030"),
-        1:("#ff2", "#dd0"), 
-        2:("#f44", "#d00"), 
+        1:("#ff2", "#dd0"),
+        2:("#f44", "#d00"),
         3:("#fa2", "#d80") }[state]
     h += perfometer_td(100 * ram_used / virt_total, ram_color)
     h += perfometer_td(100 * swap_used / virt_total, swap_color)
@@ -275,7 +275,7 @@ def perfometer_oracle_sessions(row, check_command, perf_data):
         unit = "/h";
     value = int(perf_data[0][1]);
     return "%d%s" % (value, unit), perfometer_logarithmic(value, 50, 2, color);
- 
+
 perfometers["check_mk-oracle_sessions"] = perfometer_oracle_sessions
 perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
 
@@ -317,7 +317,7 @@ def perfometer_check_mk_diskstat(row, check_command, perf_data):
 
     text = "%-.2fM/s  %-.2fM/s" % \
             (read_bytes / (1024*1024.0), write_bytes / (1024*1024.0))
-    
+
     return text, perfometer_logarithmic_dual(
             read_bytes, "#60e0a0", write_bytes, "#60a0e0", 5000000, 10)
 
@@ -380,7 +380,7 @@ def perfometer_fileinfo(row, check_command, perf_data):
         ( 0, "#ffcc50", 1000000, 10, lambda v: number_human_readable(v, precision=0) ), # size
         ( 1, "#ccff50", 3600, 10,    age_human_redable )]:   # age
         val = float(perf_data[i][1])
-        h += perfometer_logarithmic(val, base, scale, color) 
+        h += perfometer_logarithmic(val, base, scale, color)
         texts.append(verbfunc(val))
     h += '</div>'
     return " / ".join(texts), h #  perfometer_logarithmic(100, 200, 2, "#883875")

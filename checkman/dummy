@@ -12,7 +12,7 @@ description:
 item:
  Describe the syntax and meaning of the check's item here. Provide all
  information one needs if coding a manual check with {checks +=} in {main.mk}.
- Give an example.  If the check uses {None} as sole item, 
+ Give an example.  If the check uses {None} as sole item,
  then leave out this section.
 
 examples:
@@ -25,14 +25,14 @@ examples:
  # another configuration variable here:
  inventory_foo_filter = [ "superfoo", "superfoo2" ]
 
-perfdata: 
+perfdata:
  Describe precisely the number and meaning of performance variables
  the check sends. If it outputs no performance data, then leave out this
  section.
 
 inventory:
  Describe how the inventory for the check works. Which items
- will it find? Describe the influence of check specific 
+ will it find? Describe the influence of check specific
  configuration parameters to the inventory.
 
 [parameters]
@@ -41,5 +41,5 @@ foofirst(int): describe the first parameter here (if parameters are grouped
 fooother(string): describe another parameter here.
 
 [configuration]
-foo_default_levels(int, int): Describe global configuration variable of 
+foo_default_levels(int, int): Describe global configuration variable of
     foo here. Important: also tell the user how they are preset.

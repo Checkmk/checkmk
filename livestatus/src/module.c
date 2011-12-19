@@ -61,7 +61,7 @@
 // usually - but not always - in sys/un.h
 #ifndef SUN_LEN
 # define SUN_LEN(ptr) ((size_t) (((struct sockaddr_un *) 0)->sun_path) + strlen ((ptr)->sun_path))
-#endif 
+#endif
 
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 extern int event_broker_options;
@@ -165,7 +165,7 @@ void livestatus_cleanup_after_fork()
 void *main_thread(void *data __attribute__ ((__unused__)))
 {
     g_thread_pid = getpid();
-    while (!g_should_terminate) 
+    while (!g_should_terminate)
     {
         do_statistics();
         if (g_thread_pid != getpid()) {
@@ -243,13 +243,13 @@ void start_threads()
         size_t defsize;
         if (g_debug_level >= 2 && 0 == pthread_attr_getstacksize(&attr, &defsize))
             logger(LG_INFO, "Default stack size is %lu", defsize);
-        if (0 != pthread_attr_setstacksize(&attr, g_thread_stack_size)) 
+        if (0 != pthread_attr_setstacksize(&attr, g_thread_stack_size))
             logger(LG_INFO, "Error: Cannot set thread stack size to %lu", g_thread_stack_size);
         else {
             if (g_debug_level >= 2)
                 logger(LG_INFO, "Setting thread stack size to %lu", g_thread_stack_size);
         }
-        for (t=0; t < g_num_clientthreads; t++) 
+        for (t=0; t < g_num_clientthreads; t++)
             pthread_create(&g_clientthread_id[t], &attr, client_thread, (void *)0);
 
         g_thread_running = 1;
@@ -410,7 +410,7 @@ int broker_log(int event_type __attribute__ ((__unused__)), void *data __attribu
 int broker_command(int event_type __attribute__ ((__unused__)), void *data)
 {
     nebstruct_external_command_data *sc = (nebstruct_external_command_data *)data;
-    if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) 
+    if (sc->type == NEBTYPE_EXTERNALCOMMAND_START)
         g_counters[COUNTER_COMMANDS]++;
     g_counters[COUNTER_NEB_CALLBACKS]++;
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
@@ -561,11 +561,11 @@ void livestatus_parse_arguments(const char *args_orig)
     strncpy(g_socket_path, DEFAULT_SOCKET_PATH, sizeof(g_socket_path));
 
     /* set default path to our logfile to be in the same path as nagios.log */
-    strncpy(g_logfile_path, log_file, sizeof(g_logfile_path) - 16 /* len of "livestatus.log" */); 
+    strncpy(g_logfile_path, log_file, sizeof(g_logfile_path) - 16 /* len of "livestatus.log" */);
     char *slash = strrchr(g_logfile_path, '/');
     if (!slash)
         strcpy(g_logfile_path, "/tmp/livestatus.log");
-    else 
+    else
         strcpy(slash + 1, "livestatus.log");
 
     /* there is no default PNP path */
@@ -574,7 +574,7 @@ void livestatus_parse_arguments(const char *args_orig)
     /* also livecheck is disabled per default */
     g_livecheck_path[0] = 0;
 
-    if (!args_orig) 
+    if (!args_orig)
         return; // no arguments, use default options
 
     char *args = strdup(args_orig);
@@ -606,12 +606,12 @@ void livestatus_parse_arguments(const char *args_orig)
             }
             else if (!strcmp(left, "max_response_size")) {
                 g_max_response_size = strtoul(right, 0, 10);
-                logger(LG_INFO, "Setting maximum response size to %lu bytes (%.1f MB)", 
+                logger(LG_INFO, "Setting maximum response size to %lu bytes (%.1f MB)",
                         g_max_response_size, g_max_response_size / (1024.0*1024.0));
             }
             else if (!strcmp(left, "num_client_threads")) {
                 int c = atoi(right);
-                if (c <= 0 || c > 1000) 
+                if (c <= 0 || c > 1000)
                     logger(LG_INFO, "Error: Cannot set num_client_threads to %d. Must be > 0 and <= 1000", c);
                 else {
                     logger(LG_INFO, "Setting number of client threads to %d", c);
@@ -638,7 +638,7 @@ void livestatus_parse_arguments(const char *args_orig)
                     g_idle_timeout_msec = c;
                     if (c == 0)
                         logger(LG_INFO, "Disabled idle timeout!");
-                    else 
+                    else
                         logger(LG_INFO, "Setting idle timeout to %d ms", c);
                 }
             }
@@ -692,7 +692,7 @@ void livestatus_parse_arguments(const char *args_orig)
                 logger(LG_INFO, "Ignoring invalid option %s=%s", left, right);
             }
         }
-    } 
+    }
     // free(args); won't free, since we use pointers?
 }
 
@@ -711,7 +711,7 @@ void omd_advertize()
 
 
 /* this function gets called when the module is loaded by the event broker */
-int nebmodule_init(int flags __attribute__ ((__unused__)), char *args, void *handle) 
+int nebmodule_init(int flags __attribute__ ((__unused__)), char *args, void *handle)
 {
     g_nagios_handle = handle;
     livestatus_parse_arguments(args);

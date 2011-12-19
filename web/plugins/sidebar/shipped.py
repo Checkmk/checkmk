@@ -86,14 +86,14 @@ def render_views():
         if not first: # at least one item rendered
             html.end_foldable_container()
 
-    s = [ (view.get("topic", _("Other")), view["title"], name) 
-          for name, view 
-          in html.available_views.items() 
+    s = [ (view.get("topic", _("Other")), view["title"], name)
+          for name, view
+          in html.available_views.items()
           if not view["hidden"] and not view.get("mobile")]
     s.sort()
 
     # Enforce a certain order on the topics
-    known_topics = [ "Hosts", "Hostgroups", "Services", "Servicegroups", 
+    known_topics = [ "Hosts", "Hostgroups", "Services", "Servicegroups",
                      _("Business Intelligence"), _("Problems"), _("Addons") ]
     for topic in known_topics:
         render_topic(topic, s)
@@ -404,7 +404,7 @@ def render_sitestatus():
             html.write("<tr><td class=left>%s</td>" % text)
             onclick = "switch_site('_site_switch=%s:%s')" % (sitename, switch)
             html.write("<td class=state>")
-            html.write('<a title="%s" href="#" onclick="%s" class="sitestatus %s">%s</a></td>' % 
+            html.write('<a title="%s" href="#" onclick="%s" class="sitestatus %s">%s</a></td>' %
                        (title, onclick, state, state))
             html.write("</tr>\n")
         html.write("</table>\n")
@@ -608,10 +608,10 @@ table.performance {
     border-width: 1px;
 }
 table.performance td { padding: 0px; }
-table.performance td.right { 
-    text-align: right; 
-    padding: 0px; 
-    padding-right: 1px; 
+table.performance td.right {
+    text-align: right;
+    padding: 0px;
+    padding-right: 1px;
     white-space: nowrap;
 }
 
@@ -665,11 +665,11 @@ function show_speed(percentage) {
     context = null;
 }
 
-function speedometer_show_speed(last_perc, program_start, scheduled_rate) 
+function speedometer_show_speed(last_perc, program_start, scheduled_rate)
 {
     try {
-        text = get_url_sync("sidebar_ajax_speedometer.py" + 
-                            "?last_perc=" + last_perc + 
+        text = get_url_sync("sidebar_ajax_speedometer.py" +
+                            "?last_perc=" + last_perc +
                             "&scheduled_rate=" + scheduled_rate +
                             "&program_start=" + program_start);
         code = eval(text);
@@ -727,13 +727,13 @@ def ajax_speedometer():
         # are more than one site, we simply add the start times.
         data = html.live.query_summed_stats("GET status\n"
                "Columns: service_checks_rate host_checks_rate program_start")
-        current_rate = data[0] + data[1] 
+        current_rate = data[0] + data[1]
         program_start = data[2]
 
         # Recompute the scheduled_rate only if it is not known (first call)
         # or if one of the sites has been restarted. The computed value cannot
         # change during the monitoring since it just reflects the configuration.
-        # That way we save CPU ressources since the computation of the 
+        # That way we save CPU ressources since the computation of the
         # scheduled checks rate needs to loop over all hosts and services.
         if last_program_start != program_start:
             scheduled_rate = 0.0
@@ -744,7 +744,7 @@ def ajax_speedometer():
 
         percentage = 100.0 * current_rate / scheduled_rate;
         title = _("Scheduled check rate: %.1f/s, current rate: %.1f/s, that is "
-                  "%.0f%% of the scheduled rate" % 
+                  "%.0f%% of the scheduled rate" %
                   (scheduled_rate, current_rate, percentage))
 
     except Exception, e:
@@ -752,7 +752,7 @@ def ajax_speedometer():
         program_start = 0
         percentage = 0
         last_perc = 0
-        title = _("No performance data: ") + str(e) 
+        title = _("No performance data: ") + str(e)
 
     html.write(repr([scheduled_rate, program_start, percentage, last_perc, str(title)]))
 

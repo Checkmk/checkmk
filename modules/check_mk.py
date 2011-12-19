@@ -1103,6 +1103,25 @@ def host_is_member_of_site(hostname, site):
     # hosts without a site: tag belong to all sites
     return True
 
+def parse_hostname_list(args):
+    valid_hosts = all_active_hosts() + all_active_clusters()
+    hostlist = []
+    for arg in args:
+        if arg[0] != '@' and arg in valid_hosts:
+            hostlist.append(arg)
+        else:
+            if arg[0] == '@':
+                arg = arg[1:]
+            num_found = 0
+            for host in valid_hosts:
+                if arg in hosttags[host]:
+                    hostlist.append(host)
+                    num_found += 1
+            if num_found == 0:
+                sys.stderr.write("No host or tag with the name '%s' is defined in "
+                                 "all_hosts or clusters.\n" % (arg))
+                sys.exit(1)
+    return hostlist
 
 
 def hostgroups_of(hostname):
@@ -4419,7 +4438,18 @@ if __name__ == "__main__":
 
     if not done and seen_I > 0:
 
-        hostnames = args
+        hostnames = parse_hostname_list(args)
+        # For clusters add their nodes to the list
+        nodes = []
+        for h in hostnames:
+            nodes = nodes_of(h)
+            if nodes:
+                hostnames += nodes
+
+        # Then remove clusters and make list unique
+        hostnames = list(set([ h for h in hostnames if not is_cluster(h) ]))
+        hostnames.sort()
+
         if inventory_checks:
             checknames = inventory_checks.split(",")
 
@@ -4428,6 +4458,8 @@ if __name__ == "__main__":
             if inventory_checks == None:
                 checknames = inventorable_checktypes("all")
             if len(hostnames) > 0:
+                # Entries in hostnames that are either prefixed with @
+                # or are no valid hostnames are considered to be tags.
                 for host in hostnames:
                     remove_autochecks_of(host, checknames)
                     clust = cluster_of(host)

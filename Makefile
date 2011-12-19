@@ -195,7 +195,8 @@ check:
 healspaces:
 	@echo "Removing trailing spaces from code lines..."
 	@sed -ri 's/[ 	]+$$//g' checkman/* modules/* checks/* $$(find -name Makefile) \
-          livestatus/src/*{cc,c,h} web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py
+          livestatus/src/*{cc,c,h} web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
+          doc/helpers/* $(find -type f pnp-templates/*.php)
 
 setup:
 	$(MAKE) dist

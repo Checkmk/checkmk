@@ -2,7 +2,7 @@ title: Checks temperature,humidity,wetness on sensatronic em1 devices
 agents: snmp
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
-distribution: 
+distribution:
 description:
  This check monitors the data gathered by the sensors sensors attached
  to a Sensatronic EM1 device. The device needs to support the {SENSATRONICS-EM1} MIB.

@@ -32,7 +32,7 @@
 class DoubleColumn : public Column
 {
 public:
-    DoubleColumn(string name, string description, int indirect_offset) 
+    DoubleColumn(string name, string description, int indirect_offset)
         : Column(name, description, indirect_offset) {}
     virtual double getValue(void *data) = 0;
     void output(void *, Query *);

@@ -31,7 +31,7 @@
 # fn = "/tmp/config.load.%d" % os.getpid()
 # if os.path.exists(fn):
 #     raise Exception("Mist: config zweimal geladen!!")
-# 
+#
 # file(fn, "a").write("[%d] Geladen: %s\n" % (os.getpid(), time.time()))
 
 import os, pprint, glob
@@ -46,7 +46,7 @@ except NameError:
     from sets import Set as set
 
 user = None
-user_id = None 
+user_id = None
 user_role_ids = []
 
 # Base directory of dynamic configuration
@@ -244,7 +244,7 @@ def login(u):
     global user_id
     user_id = u
 
-    # Determine the roles of the user. If the user is listed in 
+    # Determine the roles of the user. If the user is listed in
     # users, admin_users or guest_users in multisite.mk then we
     # give him the according roles. If the user has an explicit
     # profile in multisite_users (e.g. due to WATO), we rather
@@ -255,7 +255,7 @@ def login(u):
 
     # Get base roles (admin/user/guest)
     global user_baserole_ids
-    user_baserole_ids = base_roles_of(user_role_ids) 
+    user_baserole_ids = base_roles_of(user_role_ids)
 
     # Get best base roles and use as "the" role of the user
     global user_baserole_id
@@ -298,7 +298,7 @@ def get_language(default = None):
     return user.get('language', default)
 
 def roles_of_user(user):
-    # Make sure, builtin roles are present, even if not modified 
+    # Make sure, builtin roles are present, even if not modified
     # and saved with WATO.
     for br in builtin_role_ids:
         if br not in roles:
@@ -319,7 +319,7 @@ def roles_of_user(user):
     else:
         return []
 
-def base_roles_of(some_roles): 
+def base_roles_of(some_roles):
     base_roles = set([])
     for r in some_roles:
         if r in builtin_role_ids:
@@ -335,7 +335,7 @@ def may_with_roles(some_role_ids, pname):
         role = roles[role_id]
 
         he_may = role.get("permissions", {}).get(pname)
-        if he_may == None: # not explicitely listed -> take defaults 
+        if he_may == None: # not explicitely listed -> take defaults
             if "basedon" in role:
                 base_role_id = role["basedon"]
             else:
@@ -345,7 +345,7 @@ def may_with_roles(some_role_ids, pname):
         if he_may:
             return True
     return False
-    
+
 
 def may(pname):
     global user_permissions
@@ -383,8 +383,8 @@ def sitenames():
     return sites.keys()
 
 def allsites():
-    return dict( [(name, site(name)) 
-                  for name in sitenames() 
+    return dict( [(name, site(name))
+                  for name in sitenames()
                   if not site(name).get("disabled", False)] )
 
 def site(name):
@@ -507,12 +507,12 @@ def save_user_file(name, content):
 
 custom_links = {}
 
-#  __     __         _                 
-#  \ \   / /_ _ _ __(_) ___  _   _ ___ 
+#  __     __         _
+#  \ \   / /_ _ _ __(_) ___  _   _ ___
 #   \ \ / / _` | '__| |/ _ \| | | / __|
 #    \ V / (_| | |  | | (_) | |_| \__ \
 #     \_/ \__,_|_|  |_|\___/ \__,_|___/
-#                                      
+#
 
 debug_livestatus_queries = False
 
@@ -549,12 +549,12 @@ auth_type = 'basic'
 # always all buttons to be shown
 context_buttons_to_show = 5
 
-#    __        ___  _____ ___  
-#    \ \      / / \|_   _/ _ \ 
+#    __        ___  _____ ___
+#    \ \      / / \|_   _/ _ \
 #     \ \ /\ / / _ \ | || | | |
 #      \ V  V / ___ \| || |_| |
-#       \_/\_/_/   \_\_| \___/ 
-#                              
+#       \_/\_/_/   \_\_| \___/
+#
 
 wato_enabled = True
 wato_host_tags = []
@@ -566,12 +566,12 @@ wato_num_itemspecs = 15
 wato_write_nagvis_auth = False
 
 
-#     ____ ___ 
+#     ____ ___
 #    | __ )_ _|
-#    |  _ \| | 
-#    | |_) | | 
+#    |  _ \| |
+#    | |_) | |
 #    |____/___|
-#              
+#
 
 ALL_HOSTS = '(.*)'
 HOST_STATE = ('__HOST_STATE__',)

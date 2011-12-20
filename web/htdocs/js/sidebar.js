@@ -131,15 +131,15 @@ function snapinStartDrag(event) {
   if (event.stopPropagation)
     event.stopPropagation();
   event.cancelBubble = true;
-  
+
   snapinDragging = target.parentNode;
 
   // Save relative offset of the mouse to the snapin title to prevent flipping on drag start
-  snapinOffset   = [ event.clientY - target.parentNode.offsetTop, 
+  snapinOffset   = [ event.clientY - target.parentNode.offsetTop,
                      event.clientX - target.parentNode.offsetLeft ];
   snapinStartPos = [ event.clientY, event.clientX ];
   snapinScrollTop = document.getElementById('side_content').scrollTop;
-  
+
   // Disable the default events for all the different browsers
   if (event.preventDefault)
     event.preventDefault();
@@ -161,7 +161,7 @@ function snapinDrag(event) {
   // Drag the snapin
   snapinDragging.style.position = 'absolute';
   var newTop = event.clientY  - snapinOffset[0] - snapinScrollTop;
-  /*if (weAreIEF__k) 
+  /*if (weAreIEF__k)
       newTop += document.getElementById('side_content').scrollTop;*/
   snapinDragging.style.top      = newTop + 'px';
   snapinDragging.style.left     = (event.clientX - snapinOffset[1]) + 'px';
@@ -169,7 +169,7 @@ function snapinDrag(event) {
 
   // Refresh the drop marker
   removeSnapinDragIndicator();
-  
+
   var line = document.createElement('div');
   line.setAttribute('id', 'snapinDragIndicator');
   line.style.height          = '3px';
@@ -226,7 +226,7 @@ function snapinDrop(event, targetpos) {
     event.returnValue = false;
     return false;
   }
-  
+
   var par = snapinDragging.parentNode;
   par.removeChild(snapinDragging);
   snapinAddBefore(par, targetpos, snapinDragging);
@@ -256,7 +256,7 @@ function snapinTerminateDrag() {
 function snapinStopDrag(event) {
   if (!event)
     event = window.event;
-  
+
   removeSnapinDragIndicator();
   snapinDrop(event, getSnapinTargetPos());
   snapinDragging = false;
@@ -275,10 +275,10 @@ function getDivChildNodes(node) {
 function getSnapinList() {
   if (snapinDragging === false)
     return true;
-  
+
   var l = [];
   var childs = getDivChildNodes(snapinDragging.parentNode);
-  for(var i = 0; i < childs.length; i++) { 
+  for(var i = 0; i < childs.length; i++) {
     var child = childs[i];
     // Skip
     // - non snapin objects
@@ -292,15 +292,15 @@ function getSnapinList() {
 
 function getSnapinCoords(obj) {
   var snapinTop = snapinDragging.offsetTop + document.getElementById('side_content').scrollTop;
-  
+
   var bottomOffset = obj.offsetTop + obj.clientHeight - snapinTop;
   if (bottomOffset < 0)
     bottomOffset = -bottomOffset;
-      
+
   var topOffset = obj.offsetTop - snapinTop;
   if (topOffset < 0)
     topOffset = -topOffset;
-      
+
   var offset = topOffset;
   var corner = 0;
   if (bottomOffset < topOffset) {
@@ -319,7 +319,7 @@ function getSnapinTargetPos() {
 
   // Find the nearest snapin to current left/top corner of
   // the currently dragged snapin
-  for(var i = 0; i < childs.length; i++) { 
+  for(var i = 0; i < childs.length; i++) {
     var child = childs[i];
 
     if (!child.id || child.id.substr(0, 7) != 'snapin_' || child.id == snapinDragging.id)
@@ -329,7 +329,7 @@ function getSnapinTargetPos() {
     if (objId === -1) {
       objId = i;
       var coords = getSnapinCoords(child)
-      objCorner = coords[3]; 
+      objCorner = coords[3];
       continue;
     }
 
@@ -409,12 +409,12 @@ var scrolling = true;
 
 function scrollwindow(speed){
   var c = document.getElementById('side_content');
-  
+
   if (scrolling) {
     c.scrollTop += speed;
     setTimeout("scrollwindow("+speed+")", 10);
   }
-  
+
   c = null;
 }
 
@@ -432,7 +432,7 @@ function startDragScroll(event) {
 
   var target = getTarget(event);
   var button = getButton(event);
-  
+
   // Evtl. auch nur mit Shift Taste: (e.button == 0 && (e["shiftKey"])
   if (dragging === false && button == 'LEFT'
       && target.tagName != 'A'
@@ -443,7 +443,7 @@ function startDragScroll(event) {
     if (event.stopPropagation)
       event.stopPropagation();
     event.returnValue = false;
-    
+
     dragging = event;
     startY = event.clientY;
     startScroll = document.getElementById('side_content').scrollTop;
@@ -453,37 +453,37 @@ function startDragScroll(event) {
   return true;
 }
 
-function stopDragScroll(event){ 
+function stopDragScroll(event){
   dragging = false;
 }
 
 function dragScroll(event) {
   if (!event)
     event = window.event;
-  
+
   if (dragging === false)
     return true;
-  
+
   if (event.preventDefault)
     event.preventDefault();
   event.returnValue = false;
-  
+
   if (event.stopPropagation)
     event.stopPropagation();
   event.cancelBubble = true;
-  
+
   var inhalt = document.getElementById('side_content');
   var diff = startY - event.clientY;
-  
+
   inhalt.scrollTop += diff;
 
 	// Opera does not fire onunload event which is used to store the scroll
 	// position. So call the store function manually here.
   if(weAreOpera)
     storeScrollPos();
-  
+
   startY = event.clientY;
-  
+
   dragging = event;
   inhalt = null;
 
@@ -589,7 +589,7 @@ function toggle_sidebar_snapin(oH2, url) {
         oHead.className = "head closed";
     }
     /* make this persistent -> save */
-    get_url(url + (closed ? "open" : "closed")); 
+    get_url(url + (closed ? "open" : "closed"));
     oContent = null;
     oHead = null;
     oFoot = null;
@@ -635,7 +635,7 @@ function sidebar_scheduler() {
         get_url('nagios_restarted.py?since=' + escape(sidebar_restart_time),
                                                        handle_nagios_restarted);
 
-    for (var i in refresh_snapins) { 
+    for (var i in refresh_snapins) {
         var name    = refresh_snapins[i][0];
         var refresh = refresh_snapins[i][1];
         var url = "sidebar_snapin.py?name=" + name;
@@ -673,7 +673,7 @@ function toggle_folder(o, folderId) {
             next = child;
             break;
         }
-        if (child == o) 
+        if (child == o)
             one_more = true;
     }
 
@@ -712,7 +712,7 @@ function getCookie(cookieName) {
     var cookieStart = document.cookie.indexOf(cookieName + "=");
     if(cookieStart == -1)
         return null;
-    
+
     cookieStart = cookieStart + cookieName.length + 1;
     var cookieEnd = document.cookie.indexOf(";", cookieStart);
     if(cookieEnd == -1)
@@ -738,9 +738,9 @@ function wato_tree_click(folderpath) {
     // a wato.py page, navigate to the according wato page. In all other
     // cases, select the view "allhosts" with the according path.
     var href = parent.frames[1].location + ""; // adding "" converts url from something magic to string
-    if (href.indexOf("/view.py") >= 0) 
+    if (href.indexOf("/view.py") >= 0)
         href = add_html_var(href, "wato_folder", folderpath);
-    else if (href.indexOf("/dashboard.py") >= 0) 
+    else if (href.indexOf("/dashboard.py") >= 0)
         href = add_html_var(href, "wato_folder", folderpath);
     else if (href.indexOf("/wato.py") >= 0)
         href = "wato.py?mode=folder&folder=" + escape(folderpath);

@@ -48,7 +48,7 @@ void TimeperiodsCache::update(time_t now)
     pthread_mutex_lock(&_cache_lock);
 
     // update cache only once a minute. The timeperiod
-    // definitions have 1 minute as granularity, so a 
+    // definitions have 1 minute as granularity, so a
     // 1sec resultion is not needed.
     int minutes = now / 60;
     if (minutes == _cache_time) {
@@ -100,7 +100,7 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
         logger(LG_INFO, "No timeperiod information available for %s. Assuming out of period.", tp->name);
         is_in = false;
         // Problem: The method check_time_against_period is to a high
-        // degree not thread safe. In the current situation Icinga is 
+        // degree not thread safe. In the current situation Icinga is
         // very probable to hang up forever.
         // time_t now = time(0);
         // is_in = 0 == check_time_against_period(now, tp);

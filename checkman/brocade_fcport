@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This checks monitors a FibreChannel port of a Brocade FC switch
- to very great detail. It obsoletes the older checks {fc_brocade_port} and 
+ to very great detail. It obsoletes the older checks {fc_brocade_port} and
  {fc_brocade_port_detailed}. The check goes critical under the following conditions:
 
  {[1]} The physical state, operational state or adminstrative state of the port is not
@@ -17,7 +17,7 @@ description:
  {[3]} An error counter exceeds its  configured levels (CRC errors, Enc-OUT
  frames, no Tx credits, C3 discards)
 
- {Averaging}: This check supports averaging on all counters. Averaging is 
+ {Averaging}: This check supports averaging on all counters. Averaging is
  turned on but setting the check parameter {"average"} to a number of minutes.
  In that case the check produces additional performance data for each parameter
  and all warning/error levels are only applied on the averaged value, not on
@@ -35,7 +35,7 @@ item:
 
 examples:
  # Generally turn on averaging with 15 Minutes on all ports:
- brocade_fcport_default_levels["average"] = 15 
+ brocade_fcport_default_levels["average"] = 15
 
  # Alternative: set all default parameters at once:
  brocade_fcport_default_levels = {
@@ -51,20 +51,20 @@ examples:
  # Set traffic levels to 80/90% on ISL ports
  check_parameters += [
    ( { "bw" : (80.0, 90.0) }, ALL_HOSTS, [ "Port .* ISL" ]),
- ]  
+ ]
 
  # Ignore port states on non-ISL ports
  check_parameters += [
    ( { "phystate" : None, "opstate" : None }, ALL_HOSTS, [ "!Port .* ISL", "Port" ]),
- ]  
+ ]
 
 
 perfdata:
-  For each port there are sent {in}, {out}, {rxframes}, {txframes}, {rxcrcs}, 
+  For each port there are sent {in}, {out}, {rxframes}, {txframes}, {rxcrcs},
   {rxencoutframes}, {c3discards} and {notxcredits}. If averaging is turned on, then
   each value comes twices: once normal and once with {_avg} appended as averaged
   value. All rates are in Bytes/s or Frames/s. If you are using PNP4Nagios, then
-  you are strongly encouraged to set {RRD_STORAGE_TYPE = MULTIPLE} in 
+  you are strongly encouraged to set {RRD_STORAGE_TYPE = MULTIPLE} in
   {process_perfdata.cfg}. Please note, that you need to re-create or convert existing
   RRD database if you change this setting.
 
@@ -76,8 +76,8 @@ inventory:
 parameters (dict): This check works with dictionary based parameters. The
  following keys are allowed:
 
-  {"bw"}: A pair of warn / crit levels on the throughput. Floating point 
-  numbers are interpreted as percentages of the maximum bandwidth of 
+  {"bw"}: A pair of warn / crit levels on the throughput. Floating point
+  numbers are interpreted as percentages of the maximum bandwidth of
   the port, e.g. {(80.0, 90.0)}. Integer numbers are interpreted as megabytes,
   e.g. {(100, 150)}.
 
@@ -115,11 +115,11 @@ parameters (dict): This check works with dictionary based parameters. The
 [configuration]
 brocade_fcport_inventory_phystates(list): If list of physical states that ports
  must have in order to be inventorized. The default value is {[ 3, 4, 5, 6, 7, 8, 9, ]}.
- Possible are: {1}: noCard, {2}: noTransceiver, {3}: laserFault, {4}: noLight, 
+ Possible are: {1}: noCard, {2}: noTransceiver, {3}: laserFault, {4}: noLight,
  {5}: noSync, {6}: inSync, {7}: portFault, {8}: diagFault and {9}: lockRef.
 
 brocade_fcport_inventory_opstates(list): The list of operational states inventorized
- ports must have to be inventorized. The default is {[ 1, 2, 3, 4, ]}. Possible are: 
+ ports must have to be inventorized. The default is {[ 1, 2, 3, 4, ]}. Possible are:
  {0}: unknown, {1}: online, {2}: offline, {3}: testing, {4}: faulty.
 
 brocade_fcport_inventory_admstates(list): The list of adminstrative states inventorized

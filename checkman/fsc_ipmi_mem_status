@@ -15,7 +15,7 @@ description:
  Addinionally you need to extend your agent on the monitored system
  using a check_mk_agent_plugin named {fsc_ipmi_mem_status.sh}. This
  agent plugin can be found in the {doc} directory of check_mk.
- 
+
  To enable this plugin simply copy it to the plugins directory of
  check_mk_agent on your target machines. By default the directory
  is located here: /usr/lib/check_mk_agent/plugins

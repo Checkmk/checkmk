@@ -3,7 +3,7 @@ agents: snmp
 author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk
-description: 
+description:
  The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers) for the
  status of the builtin fans. It will alert if the temperature levels rise above a "normal" level that is set according to the average of the systems we had data on.
 
@@ -17,5 +17,5 @@ inventory:
  It labels them as either chassis or CPU sensors.
 
 
-perfdata: 
+perfdata:
  It generates performance data for the current, warning and critical temperaturs and graphs those.

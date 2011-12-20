@@ -92,7 +92,7 @@ void Logfile::load(TableLog *tablelog, time_t since, time_t until, unsigned logc
 
     FILE *file = 0;
     // The current logfile has the _watch flag set to true.
-    // In that case, if the logfile has grown, we need to 
+    // In that case, if the logfile has grown, we need to
     // load the rest of the file, even if no logclasses
     // are missing.
     if (_watch) {
@@ -122,7 +122,7 @@ void Logfile::load(TableLog *tablelog, time_t since, time_t until, unsigned logc
         }
         fclose(file);
     }
-    else 
+    else
     {
         if (missing_types == 0)
             return;
@@ -139,7 +139,7 @@ void Logfile::load(TableLog *tablelog, time_t since, time_t until, unsigned logc
     }
 }
 
-void Logfile::load(FILE *file, unsigned missing_types, 
+void Logfile::load(FILE *file, unsigned missing_types,
         TableLog *tablelog, time_t since, time_t until, unsigned logclasses)
 {
     while (fgets(_linebuffer, MAX_LOGLINE, file))
@@ -149,7 +149,7 @@ void Logfile::load(FILE *file, unsigned missing_types,
             num_cached_log_messages ++;
             tablelog->handleNewMessage(this, since, until, logclasses); // memory management
         }
-    }	
+    }
 }
 
 

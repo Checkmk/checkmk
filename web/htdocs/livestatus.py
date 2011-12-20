@@ -185,7 +185,7 @@ class BaseConnection:
             self.socket = persistent_connections[self.socketurl]
             self.successful_persistence = True
             return
-        
+
         self.successful_persistence = False
 
         # Create new socket

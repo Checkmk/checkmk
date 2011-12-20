@@ -21,7 +21,7 @@ inventory:
 item:
  The device name. Example: {/dev/sda}
 
-perfdata: 
+perfdata:
  One variable: the current temperature in degrees celsius.
 
 examples:

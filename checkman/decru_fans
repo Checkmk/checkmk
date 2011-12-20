@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the rotations of fans in a DECRU NAS
- appliance. 
+ appliance.
 
 item:
  The name of the FAN as defines in the SNMP data.

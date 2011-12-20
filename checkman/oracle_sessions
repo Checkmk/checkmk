@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the number of active sessions in an
- ORACLE database. You can set warn/crit levels. 
+ ORACLE database. You can set warn/crit levels.
 
  This check needs the Check_MK {mk_oracle}-plugin installed in
  the agent. Please refer to the online documentation
@@ -16,7 +16,7 @@ item:
  name of the pmon_... process).
 
 examples:
- # Set global default values to 20 sessions for 
+ # Set global default values to 20 sessions for
  # warning and 100 sessions for critical
  oracle_sessions_default_levels = (20, 100)
 
@@ -35,7 +35,7 @@ inventory:
 
 [parameters]
 warning(int): The number of active sessions triggering a warning
-critical(int): The number of active sessions making the check critical 
+critical(int): The number of active sessions making the check critical
 
 [configuration]
 oracle_sessions_default_levels(int, int): Global default levels used for all checks which have no specific configuration. This is preset to {(50, 100)}.

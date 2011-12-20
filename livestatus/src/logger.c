@@ -30,13 +30,13 @@
 #include <time.h>
 #include <pthread.h>
 
-extern char g_logfile_path[]; 
+extern char g_logfile_path[];
 pthread_t g_mainthread_id;
 FILE *g_logfile = 0;
 
 void open_logfile()
 {
-    g_logfile = fopen(g_logfile_path, "a"); 
+    g_logfile = fopen(g_logfile_path, "a");
     g_mainthread_id = pthread_self(); /* needed to determine main thread later */
     if (!g_logfile)
         logger(LG_WARN, "Cannot open logfile %s: %s", g_logfile_path, strerror(errno));
@@ -55,18 +55,18 @@ void logger(int priority, const char *loginfo, ...)
 
     /* Only the main process may use the Nagios log methods */
     if (g_mainthread_id == pthread_self()) {
-        char buffer[8192]; 
-        snprintf(buffer, 20, "livestatus: "); 
+        char buffer[8192];
+        snprintf(buffer, 20, "livestatus: ");
         vsnprintf(buffer + strlen(buffer),
-        sizeof(buffer) - strlen(buffer), loginfo, ap); 
-        va_end(ap); 
+        sizeof(buffer) - strlen(buffer), loginfo, ap);
+        va_end(ap);
         write_to_all_logs(buffer, priority);
     } else {
         if (g_logfile) {
-            /* write date/time */ 
+            /* write date/time */
             char timestring[64];
-            time_t now_t = time(0); 
-            struct tm now; localtime_r(&now_t, &now); 
+            time_t now_t = time(0);
+            struct tm now; localtime_r(&now_t, &now);
             strftime(timestring, 64, "%F %T ", &now); fputs(timestring, g_logfile);
 
             /* write log message */

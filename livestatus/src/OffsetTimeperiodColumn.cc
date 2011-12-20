@@ -32,7 +32,7 @@
 extern TimeperiodsCache *g_timeperiods_cache;
 
 
-    OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description, int offset, int indirect_offset) 
+    OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description, int offset, int indirect_offset)
 : OffsetIntColumn(name, description, offset, indirect_offset)
 {
 }
@@ -45,7 +45,7 @@ int32_t OffsetTimeperiodColumn::getValue(void *data, Query *)
         return 0;
 
     timeperiod *tp;
-    if (offset() == -1) 
+    if (offset() == -1)
         tp = (timeperiod *)data;
     else
         tp = *(timeperiod **)((char *)data + offset());

@@ -45,7 +45,7 @@ int icmp_sock = -1;
 // 2. timeout for host checks
 // 3. timeout for service checks
 int main(int argc, char **argv)
-{ 
+{
     if (argc != 4) {
         fprintf(stderr, "Usage: %s CHECKRESULTPATH HOST_CHECK_TIMEOUT SERVICE_CHECK_TIMEOUT\n", argv[0]);
         exit(1);
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     char host[256];
     char service[512];
     char latency[16];
-    char command[1024]; 
+    char command[1024];
     int pid;
     int check_result;
     int real_uid = getuid(); // non-root user id
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
         int is_host_check = service[0] == '\n';
         struct timeb start;
         ftime(&start);
-        char output[8192]; 
+        char output[8192];
         int return_code;
 
         // Optimization(1):
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
                     setuid(getuid());
 
                 close(fd[0]);   // close read end
-                dup2(fd[1], 1); // point stdout into pipe  
+                dup2(fd[1], 1); // point stdout into pipe
                 dup2(fd[1], 2); // also point stderr into pipe
                 close(fd[1]);   // lives forth in 1 and 2
                 int f = open("/dev/null", O_RDONLY);
@@ -126,11 +126,11 @@ int main(int argc, char **argv)
                 // directly call exec.
                 // This save two fork()s and one shell.
                 if (command[0] == '/'
-                    && NULL == strchr(command, '"') 
-                    && NULL == strchr(command, '\'') 
-                    && NULL == strchr(command, '>') 
-                    && NULL == strchr(command, '<') 
-                    && NULL == strchr(command, ';') 
+                    && NULL == strchr(command, '"')
+                    && NULL == strchr(command, '\'')
+                    && NULL == strchr(command, '>')
+                    && NULL == strchr(command, '<')
+                    && NULL == strchr(command, ';')
                     && NULL == strchr(command, '|'))
                 {
                     char **arguments = parse_into_arguments(command);
@@ -165,7 +165,7 @@ int main(int argc, char **argv)
                     }
                     else {
                         snprintf(output, sizeof(output), "(Check Plugin Died With Signal %d)\n", signum);
-                        return_code = 3; 
+                        return_code = 3;
                     }
                 }
                 else {
@@ -185,17 +185,17 @@ int main(int argc, char **argv)
         fprintf(checkfile, "host_name=%s", host);
         if (!is_host_check)
             fprintf(checkfile, "service_description=%s", service);
-        fprintf(checkfile, 
+        fprintf(checkfile,
             "### Check result created by livecheck(%d)\n"
             "check_type=%d\n"
             "check_options=0\n"
             "scheduled_check=1\n"
             "reschedule_check=1\n"
             "latency=%s"
-            "start_time=%d.%03u\n" 
+            "start_time=%d.%03u\n"
             "finish_time=%d.%03u\n"
-            "return_code=%d\n"                                                   
-            "output=%s\n", 
+            "return_code=%d\n"
+            "output=%s\n",
             getpid(),
             is_host_check ? 0 : 1,
             latency,
@@ -230,7 +230,7 @@ char **parse_into_arguments(char *command)
 }
 
 // Propagate signal to child, if we are killed
-void term_handler(int signum) 
+void term_handler(int signum)
 {
     if (g_pid) {
         kill(g_pid, signum);

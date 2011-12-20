@@ -27,18 +27,18 @@ inventory:
  For each fixed disk one service is generated - if the description
  of the filesystem in not listed in {inventory_df_exclude_mountpoints}.
 
-perfdata: 
- One or three values: The first value is the used space of the filesystem 
+perfdata:
+ One or three values: The first value is the used space of the filesystem
  in MB. Also the minimum (0 MB), maximum (size of the filesystem) and the warning and critical
  levels in MB are provided. If {trend_range} is set (the default), then
- two additional values are output: the change of the usage in MB per range 
+ two additional values are output: the change of the usage in MB per range
  since the last check (e.g. in MB per 24 hours) and the averaged change (so called trend),
  also in MB per range.
 
 [parameters]
 parameters (dict): This check supports two types of parameters. The
  new version supports trends and is a dictionary with the following
- keys: 
+ keys:
 
  {"levels"}: Warning and critical level of filesystem usage in percentages
  of the filesystem size. The default is {(80, 90)}.
@@ -52,8 +52,8 @@ parameters (dict): This check supports two types of parameters. The
  {"magic_norm"}: Norm size of a filesystem for the magic computation.
  The default for this is {20}. It is measured in {GB}.
 
- {"levels_low"}: When applying the magic factor the warn/crit levels 
- will never drop below these numbers. The is preset to {(50,60)}.  
+ {"levels_low"}: When applying the magic factor the warn/crit levels
+ will never drop below these numbers. The is preset to {(50,60)}.
 
  {"trend_range"}: The time range over that trends are computed. This
  is in hours and preset to {24} (i.e. one day). If you set this to
@@ -67,7 +67,7 @@ parameters (dict): This check supports two types of parameters. The
  hours and critical if it grows more than 20 MB. Per default no levels
  are applied.
 
- {"trend_perc"}: This is similar to trend_mb but here you specify 
+ {"trend_perc"}: This is similar to trend_mb but here you specify
  the allowed growth in percentages of the filesystem size. Fractional
  values are allowed. This may be used in parallel with trend_mb.
 

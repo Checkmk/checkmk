@@ -346,13 +346,13 @@ div.snapin img.iconbutton.bookmark {
 }
 
 /* state bullets at problem host or all hosts snapin */
-div.statebullet { 
-    margin-left: 0px; 
-    margin-right: 6px; 
-    width: 10px; 
-    height: 10px; 
-    border: 1px solid #eee; 
-    float: left; 
+div.statebullet {
+    margin-left: 0px;
+    margin-right: 6px;
+    width: 10px;
+    height: 10px;
+    border: 1px solid #eee;
+    float: left;
 }
 
 
@@ -384,7 +384,7 @@ div.add_snapin div.snapinadder div.description {
     color: #369;
     padding: 10px;
 }
-div.add_snapin div.snapin_preview div.clickshield {  
+div.add_snapin div.snapin_preview div.clickshield {
     z-index: 100;
     position: absolute;
     top: 0px;

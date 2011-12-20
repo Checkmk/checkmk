@@ -28,7 +28,7 @@
 #include <map>
 #include "nagios.h"
 
-class TimeperiodsCache 
+class TimeperiodsCache
 {
     time_t _cache_time;
     typedef std::map<timeperiod *, bool> _cache_t;

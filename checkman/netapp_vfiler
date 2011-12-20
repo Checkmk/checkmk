@@ -4,10 +4,10 @@ author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check monitors the status of any vFiler instances on a NetAPP filer. 
+ This check monitors the status of any vFiler instances on a NetAPP filer.
  It alerts the user if one of them is not in status "running" (will be in critical state)
 
-inventory: 
+inventory:
  The check creates one service per vFiler found.
 
 item:

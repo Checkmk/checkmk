@@ -40,7 +40,7 @@ description:
  spaces as well as the space currently free in the
  data files. If auto extension is off, only the currently
  free space will be honored. Table spaces in state {READONLY}
- will {not} be checked for the size. 
+ will {not} be checked for the size.
 
  This check needs the Check_MK {mk_oracle}-plugin installed in
  the agent. Please refer to the online documentation
@@ -66,25 +66,25 @@ inventory:
 [parameters]
 autoextend(bool): Either {True} or {False} - depending on
  wether auto extension is expected to be on or off.
-warn(int / float): Warning level for free space. If this is a float, 
- it is considered as percentage of the maximum size of the tablespace. 
- If it is an integer, it is considered to be MB of free space. If the 
+warn(int / float): Warning level for free space. If this is a float,
+ it is considered as percentage of the maximum size of the tablespace.
+ If it is an integer, it is considered to be MB of free space. If the
  space drops to this level or below, the check will get into warning state.
 crit(int / float): The critical level for free space.
 
 [configuration]
-oracle_tablespaces_default_levels(int/float, int/float): The default warning and critical levels 
+oracle_tablespaces_default_levels(int/float, int/float): The default warning and critical levels
  used for inventorized checks. This is preset to {(10.0, 5.0)}.
 
-oracle_tablespaces_check_autoext(bool): This boolean setting determines, whether 
+oracle_tablespaces_check_autoext(bool): This boolean setting determines, whether
  inventory should activate monitoring of the auto extension setting. Per default
- this is set to {True}, so the current state of the auto extension will be 
+ this is set to {True}, so the current state of the auto extension will be
  put into the check parameters as either {True} or {False}. If you set the
- configuration variable to {False}, then inventory will enter {None} as 
+ configuration variable to {False}, then inventory will enter {None} as
  check parameter und thus disable the checking of the auto extensible flag
  for newly inventorized table spaces.
 
-oracle_tablespaces_check_default_increment(bool): This setting does not 
+oracle_tablespaces_check_default_increment(bool): This setting does not
  control inventory but is used live during the checking und thus affects
  all checks, not only newly inventorized ones. Per default it is set to
  {True}. That way the check will warn if the table space has its increment

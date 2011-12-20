@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This Check queries the CPU utilization for various switches made by 3Com and H3C, either standalone or that of the CPUs of all units in the stack. By default it will handle 3com Superstack 4 switches, but it should work with all devices defined in the "Lsw" lanswitch Mibs.
 Note some of these switches don't handle snmp well and might generate up to 90% cpu load while queried.
-To accomodate for this you should lower the frequency of SNMP based checks with them. 
+To accomodate for this you should lower the frequency of SNMP based checks with them.
 The CPU usage ratio returned by the check is the average load of the last 60 seconds.
 
 
@@ -19,7 +19,7 @@ warning (int): the percentage of 1-minute average load at which the switch is co
 critical (int): the percentage of 1-minute average load at which the switch is considered overloaded.
 
 
-[configuration] 
+[configuration]
 superstack4_cpu_default_levels (int, int): the warn and critical levels for the checkl.
  They are set to default to 50% for "WARN" and 75% for "CRIT".
 

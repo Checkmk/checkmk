@@ -51,7 +51,7 @@ LogEntry::LogEntry(unsigned lineno, char *line)
     {
         _options ++; // skip ':'
         while (*_options == ' ')
-            _options ++; // skip space after ':' 
+            _options ++; // skip space after ':'
     }
 
     // [1260722267] xxx - extract timestamp, validate message
@@ -184,7 +184,7 @@ bool LogEntry::handleNotificationEntry()
             _svc_desc = next_token(&scan, ';');
             _state_type = save_next_token(&scan, ';');
             _state = serviceStateToInt(_state_type);
-        } 
+        }
         else {
             _state_type = save_next_token(&scan, ';');
             _state = hostStateToInt(_state_type);
@@ -209,7 +209,7 @@ bool LogEntry::handlePassiveCheckEntry()
         scan++;
 
         _host_name    = next_token(&scan, ';');
-        if (svc) 
+        if (svc)
             _svc_desc     = next_token(&scan, ';');
         _state        = atoi(save_next_token(&scan, ';'));
         _check_output = next_token(&scan, ';');
@@ -221,7 +221,7 @@ bool LogEntry::handlePassiveCheckEntry()
 
 bool LogEntry::handleExternalCommandEntry()
 {
-    if (!strncmp(_text, "EXTERNAL COMMAND:", 17)) 
+    if (!strncmp(_text, "EXTERNAL COMMAND:", 17))
     {
         _logclass = LOGCLASS_COMMAND;
         char *scan = _text;

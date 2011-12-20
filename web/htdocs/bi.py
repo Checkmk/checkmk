@@ -46,12 +46,12 @@ config.declare_permission("bi.see_all",
         "trees with status based only on those items.",
         [ "admin", "guest" ])
 
-#      ____                _              _       
-#     / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___ 
+#      ____                _              _
+#     / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___
 #    | |   / _ \| '_ \/ __| __/ _` | '_ \| __/ __|
 #    | |__| (_) | | | \__ \ || (_| | | | | |_\__ \
 #     \____\___/|_| |_|___/\__\__,_|_| |_|\__|___/
-#                                                 
+#
 
 # type of rule parameters
 SINGLE = 'single'
@@ -74,15 +74,15 @@ host_state_names = { 0:"UP", 1:"DOWN", 2:"UNREACHABLE" }
 SITE_SEP = '#'
 
 
-#      ____                      _ _       _   _             
-#     / ___|___  _ __ ___  _ __ (_) | __ _| |_(_) ___  _ __  
-#    | |   / _ \| '_ ` _ \| '_ \| | |/ _` | __| |/ _ \| '_ \ 
+#      ____                      _ _       _   _
+#     / ___|___  _ __ ___  _ __ (_) | __ _| |_(_) ___  _ __
+#    | |   / _ \| '_ ` _ \| '_ \| | |/ _` | __| |/ _ \| '_ \
 #    | |__| (_) | | | | | | |_) | | | (_| | |_| | (_) | | | |
 #     \____\___/|_| |_| |_| .__/|_|_|\__,_|\__|_|\___/|_| |_|
-#                         |_|                                
+#                         |_|
 
 # format of a node
-# { 
+# {
 #     "type" : NT_LEAF, NT_RULE, NT_REMAINING,
 #     "reqhosts" : [ list of required hosts ],
 #     "host" : host spec for leaf node,
@@ -119,7 +119,7 @@ def load_services():
         services[(site, host)] = (tags, svcs)
 
     return services
-        
+
 # Keep complete list of time stamps of configuration
 # and start of each site. Unreachable sites are registered
 # with 0.
@@ -136,7 +136,7 @@ def cache_needs_update():
 def reset_cache_status():
     global did_compilation
     did_compilation = False
-    global used_cache 
+    global used_cache
     used_cache = False
 
 def reused_compilation():
@@ -185,7 +185,7 @@ def compile_forest(user):
         if len(entry) < 3:
             raise MKConfigError("<h1>Invalid aggregation <tt>%s</tt></h1>"
              "must have at least 3 entries (has %d)" % (entry, len(entry)))
-        
+
         group = entry[0]
         new_entries = compile_rule_node(entry[1:], 0)
 
@@ -193,7 +193,7 @@ def compile_forest(user):
             remove_empty_nodes(entry)
 
         new_entries = [ e for e in new_entries if len(e["nodes"]) > 0 ]
-        
+
         # enter new aggregations into dictionary for that group
         entries = cache["forest"].get(group, [])
         entries += new_entries
@@ -219,7 +219,7 @@ def compile_forest(user):
             # All aggregations containing a specific service
             services = find_all_leaves(aggr)
             for s in services: # triples of site, host, service
-                entries = cache["affected_services"].get(s, []) 
+                entries = cache["affected_services"].get(s, [])
                 entries.append((group, aggr))
                 cache["affected_services"][s] = entries
 
@@ -228,18 +228,18 @@ def compile_forest(user):
 
 
 
-# Execute an aggregation rule, but prepare arguments 
+# Execute an aggregation rule, but prepare arguments
 # and iterate FOREACH first
 def compile_rule_node(calllist, lvl):
     # Lookup rule source code
     rulename, arglist = calllist[-2:]
     if rulename not in config.aggregation_rules:
         raise MKConfigError("<h1>Invalid configuration in variable <tt>aggregations</tt></h1>"
-                "There is no rule named <tt>%s</tt>. Available are: <tt>%s</tt>" % 
+                "There is no rule named <tt>%s</tt>. Available are: <tt>%s</tt>" %
                 (rulename, "</tt>, </tt>".join(config.aggregation_rules.keys())))
     rule = config.aggregation_rules[rulename]
 
-    # Execute FOREACH: iterate over matching hosts/services and 
+    # Execute FOREACH: iterate over matching hosts/services and
     # for each hit create an argument list where $1$, $2$, ... are
     # substituted with matched strings.
     if calllist[0] in [ config.FOREACH_HOST, config.FOREACH_SERVICE ]:
@@ -399,13 +399,13 @@ def node_is_empty(node):
     if node["type"] != NT_RULE: # leaf node
         return False
     else:
-        return len(node["nodes"]) == 0 
+        return len(node["nodes"]) == 0
 
-    
+
 # Precompile one aggregation rule. This outputs a list of trees.
 # The length of this list is current either 0 or 1
 def compile_aggregation_rule(rule, args, lvl = 0):
-    # When compiling root nodes we essentially create 
+    # When compiling root nodes we essentially create
     # complete top-level aggregations. In that case we
     # need to deal with REMAINING-entries
     if lvl == 0:
@@ -449,7 +449,7 @@ def compile_aggregation_rule(rule, args, lvl = 0):
         else:
             hidden = False
 
-        # Each node can return more than one incarnation (due to regexes in 
+        # Each node can return more than one incarnation (due to regexes in
         # leaf nodes and FOREACH in rule nodes)
 
         if node[1] in [ config.HOST_STATE, config.REMAINING ]:
@@ -503,9 +503,9 @@ def compile_aggregation_rule(rule, args, lvl = 0):
         needed_hosts.update(element.get("reqhosts", []))
 
     aggregation = { "type"     : NT_RULE,
-                    "reqhosts" : list(needed_hosts), 
-                    "title"    : inst_description, 
-                    "func"     : funcname, 
+                    "reqhosts" : list(needed_hosts),
+                    "title"    : inst_description,
+                    "func"     : funcname,
                     "nodes"    : elements}
 
     # Handle REMAINING references, if we are a root node
@@ -514,7 +514,7 @@ def compile_aggregation_rule(rule, args, lvl = 0):
             new_entries = find_remaining_services(hostspec, aggregation)
             where_to_put = ref.index(placeholder)
             ref[where_to_put:where_to_put+1] = new_entries
-    
+
     return [ aggregation ]
 
 
@@ -529,9 +529,9 @@ def find_remaining_services(hostspec, aggregation):
     return [ {
         "type"     : NT_LEAF,
         "host"     : hostspec,
-        "reqhosts" : [hostspec], 
+        "reqhosts" : [hostspec],
         "service"  : service,
-        "title"    : "%s - %s" % (hostspec[1], service)} 
+        "title"    : "%s - %s" % (hostspec[1], service)}
         for service in remaining ]
 
 
@@ -600,20 +600,20 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
 
             if service_re == config.HOST_STATE:
                 found.append({"type"     : NT_LEAF,
-                              "reqhosts" : [(site, hostname)], 
+                              "reqhosts" : [(site, hostname)],
                               "host"     : (site, hostname),
                               "title"    : hostname})
 
             elif service_re == config.REMAINING:
-                found.append({"type"  : NT_REMAINING, 
+                found.append({"type"  : NT_REMAINING,
                               "host"  : (site, hostname)})
 
             else:
                 for service in services:
                     if regex(service_re).match(service):
-                        found.append({"type"     : NT_LEAF, 
-                                      "reqhosts" : [(site, hostname)], 
-                                      "host"     : (site, hostname), 
+                        found.append({"type"     : NT_LEAF,
+                                      "reqhosts" : [(site, hostname)],
+                                      "host"     : (site, hostname),
                                       "service"  : service,
                                       "title"    : "%s - %s" % (hostname, service)} )
 
@@ -635,12 +635,12 @@ def regex(r):
 
 
 
-#     _____                     _   _             
-#    | ____|_  _____  ___ _   _| |_(_) ___  _ __  
-#    |  _| \ \/ / _ \/ __| | | | __| |/ _ \| '_ \ 
+#     _____                     _   _
+#    | ____|_  _____  ___ _   _| |_(_) ___  _ __
+#    |  _| \ \/ / _ \/ __| | | | __| |/ _ \| '_ \
 #    | |___ >  <  __/ (__| |_| | |_| | (_) | | | |
 #    |_____/_/\_\___|\___|\__,_|\__|_|\___/|_| |_|
-#                                                 
+#
 
 #                  + services               + states
 # multisite.d/*.mk =========> compiled tree ========> executed tree
@@ -698,7 +698,7 @@ def execute_leaf_node(node, status_info):
                     state = PENDING
                 state = {"state":state, "output":output}
                 if state_assumption != None:
-                    assumed_state = {"state":state_assumption, 
+                    assumed_state = {"state":state_assumption,
                                      "output" : "Assumed to be %s" % service_state_names[state_assumption]}
                 else:
                     assumed_state = None
@@ -725,7 +725,7 @@ def execute_rule_node(node, status_info):
     funcargs = parts[1:]
     func = config.aggregation_functions.get(funcname)
     if not func:
-        raise MKConfigError("Undefined aggregation function '%s'. Available are: %s" % 
+        raise MKConfigError("Undefined aggregation function '%s'. Available are: %s" %
                 (funcname, ", ".join(config.aggregation_functions.keys())))
 
     # prepare information for aggregation function
@@ -741,7 +741,7 @@ def execute_rule_node(node, status_info):
         if result[1] != None:
             assumed_states.append((result[1], result[2]))
             one_assumption = True
-        else: 
+        else:
             # no assumption, take real state into assumption array
             assumed_states.append(node_states[-1])
 
@@ -751,7 +751,7 @@ def execute_rule_node(node, status_info):
     else:
         assumed_state = None
     return (state, assumed_state, node, subtrees)
-    
+
 
 # Get all status information we need for the aggregation from
 # a known lists of lists (list of site/host pairs)
@@ -800,12 +800,12 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns):
     rows = [ dict(zip(headers, row)) for row in data]
     return rows
 
-#       _                      _____                 _   _                 
-#      / \   __ _  __ _ _ __  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
+#       _                      _____                 _   _
+#      / \   __ _  __ _ _ __  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___
 #     / _ \ / _` |/ _` | '__| | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
 #    / ___ \ (_| | (_| | | _  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 #   /_/   \_\__, |\__, |_|(_) |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-#           |___/ |___/                                                    
+#           |___/ |___/
 
 # API for aggregation functions
 # it is called with at least one argument: a list of node infos.
@@ -815,7 +815,7 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns):
 # information to the array, e.g. downtime & acknowledgement information.
 # The compiled node information is a dictionary as created by the rule
 # compiler. It contains "type" (NT_LEAF, NT_RULE), "reqhosts" and "title". For rule
-# node it contains also "func". For leaf nodes it contains 
+# node it contains also "func". For leaf nodes it contains
 # host" and (if not a host leaf) "service".
 #
 # The aggregation function must return one state dictionary containing
@@ -840,7 +840,7 @@ def x_best_state(l, x):
     n = abs(x)
     if len(ll) < n:
         n = len(ll)
-        
+
     return ll[n-1][1]
 
 def aggr_nth_state(nodelist, n, worst_state):
@@ -859,7 +859,7 @@ def aggr_worst(nodes, n = 1, worst_state = CRIT):
 def aggr_best(nodes, n = 1, worst_state = CRIT):
     return aggr_nth_state(nodes, int(n), int(worst_state))
 
-config.aggregation_functions["worst"] = aggr_worst 
+config.aggregation_functions["worst"] = aggr_worst
 config.aggregation_functions["best"]  = aggr_best
 
 import re
@@ -889,17 +889,17 @@ def aggr_running_on(nodes, regex):
 config.aggregation_functions['running_on'] = aggr_running_on
 
 
-#      ____                       
-#     |  _ \ __ _  __ _  ___  ___ 
+#      ____
+#     |  _ \ __ _  __ _  ___  ___
 #     | |_) / _` |/ _` |/ _ \/ __|
 #     |  __/ (_| | (_| |  __/\__ \
 #     |_|   \__,_|\__, |\___||___/
-#                 |___/           
+#                 |___/
 
 # Just for debugging
 def page_debug():
     compile_forest(config.user_id)
-    
+
     html.header("BI Debug")
     render_forest()
     html.footer()
@@ -949,12 +949,12 @@ def ajax_save_treestate():
     save_ex_level(current_ex_level)
 
 
-#    ____        _                                          
-#   |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___ 
+#    ____        _
+#   |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___
 #   | | | |/ _` | __/ _` / __|/ _ \| | | | '__/ __/ _ \/ __|
 #   | |_| | (_| | || (_| \__ \ (_) | |_| | | | (_|  __/\__ \
 #   |____/ \__,_|\__\__,_|___/\___/ \__,_|_|  \___\___||___/
-#                                                           
+#
 
 def create_aggregation_row(tree, status_info = None):
     tree_state = execute_tree(tree, status_info)
@@ -982,12 +982,12 @@ def table(columns, add_headers, only_sites, limit, filters):
     # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
     # alle Aggregationen berechnet.
     rows = []
-    # Apply group filter. This is important for performance. We 
-    # must not compute any aggregations from other groups and filter 
+    # Apply group filter. This is important for performance. We
+    # must not compute any aggregations from other groups and filter
     # later out again.
     only_group = None
     only_service = None
-    
+
     for filter in filters:
         if filter.name == "aggr_group":
             only_group = filter.selected_group()
@@ -1022,7 +1022,7 @@ def table(columns, add_headers, only_sites, limit, filters):
             if not html.check_limit(rows, limit):
                 return rows
     return rows
-        
+
 
 # Table of all host aggregations, i.e. aggregations using data from exactly one host
 def host_table(columns, add_headers, only_sites, limit, filters):
@@ -1033,7 +1033,7 @@ def host_table(columns, add_headers, only_sites, limit, filters):
     # simply use all those filters since we have a 1:n mapping between
     # hosts and host aggregations
     filter_code = ""
-    for filt in filters: 
+    for filt in filters:
         header = filt.filter("bi_host_aggregations")
         if not header.startswith("Sites:"):
             filter_code += header
@@ -1060,12 +1060,12 @@ def host_table(columns, add_headers, only_sites, limit, filters):
     return rows
 
 
-#     _   _      _                     
-#    | | | | ___| |_ __   ___ _ __ ___ 
+#     _   _      _
+#    | | | | ___| |_ __   ___ _ __ ___
 #    | |_| |/ _ \ | '_ \ / _ \ '__/ __|
 #    |  _  |  __/ | |_) |  __/ |  \__ \
 #    |_| |_|\___|_| .__/ \___|_|  |___/
-#                 |_|                  
+#                 |_|
 
 def debug(x):
     import pprint

@@ -24,8 +24,8 @@
 
 #include "opids.h"
 
-const char *op_names_plus_8[] = { 
+const char *op_names_plus_8[] = {
     "", "", ">=", "<=", "!~~", "!=~", "!~", "!=",
-    "(invalid)", "=", "~", "=~", "~~", ">", "<" 
+    "(invalid)", "=", "~", "=~", "~~", ">", "<"
 };
 

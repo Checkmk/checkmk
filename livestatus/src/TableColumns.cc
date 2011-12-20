@@ -28,13 +28,13 @@
 
 TableColumns::TableColumns()
 {
-    addColumn(new ColumnsColumn("table", 
+    addColumn(new ColumnsColumn("table",
                 "The name of the table",       COLCOL_TABLE, this));
-    addColumn(new ColumnsColumn("name", 
+    addColumn(new ColumnsColumn("name",
                 "The name of the column within the table",        COLCOL_NAME,  this));
-    addColumn(new ColumnsColumn("description", 
+    addColumn(new ColumnsColumn("description",
                 "A description of the column", COLCOL_DESCR, this));
-    addColumn(new ColumnsColumn("type", 
+    addColumn(new ColumnsColumn("type",
                 "The data type of the column (int, float, string, list)",        COLCOL_TYPE,  this));
 }
 
@@ -48,7 +48,7 @@ void TableColumns::answerQuery(Query *query)
     for (_tables_t::iterator it = _tables.begin();
             it != _tables.end();
             ++it)
-    { 
+    {
         Table *table = *it;
         Table::_columns_t *columns = table->columns();
         for (Table::_columns_t::iterator it = columns->begin();

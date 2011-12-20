@@ -52,6 +52,7 @@ help:
 	@echo "make DESTDIR=/tmp/hirn install --> install directly"
 	@echo "make version                   --> switch to new version"
 	@echo "make headers                   --> create/update fileheades"
+	@echo "make healspaces                --> remove trailing spaces in code"
 
 dist: mk-livestatus
 	@echo "--------------------------------------------------------------------------"
@@ -66,7 +67,7 @@ dist: mk-livestatus
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
 	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc $$(cd doc ; ls)
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
-	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc" --exclude ".gitignore" --exclude .f12 
+	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc" --exclude ".gitignore" --exclude .f12
 	gzip $(DISTNAME)/doc.tar
 	tar czf $(DISTNAME)/modules.tar.gz $(TAROPTS) -C modules $$(cd modules ; ls *.py)
 
@@ -152,7 +153,7 @@ deb-base:
 	mv -v deb.bauen/*.deb .
 	rm -rf deb.bauen
 
-deb-agent: $(NAME)-agent-$(VERSION)-1.noarch.rpm $(NAME)-agent-logwatch-$(VERSION)-1.noarch.rpm $(NAME)-agent-oracle-$(VERSION)-1.noarch.rpm 
+deb-agent: $(NAME)-agent-$(VERSION)-1.noarch.rpm $(NAME)-agent-logwatch-$(VERSION)-1.noarch.rpm $(NAME)-agent-oracle-$(VERSION)-1.noarch.rpm
 	@echo "Sorry. Debian packages currently via alien"
 	@for pac in $^ ; do \
 	  fakeroot alien --scripts -d $$pac ; \
@@ -189,7 +190,13 @@ check:
 	    echo "ERROR. Update reference with:" ; \
 	    echo "./check_mk -c $${checkfile%.HS} -HS > $$checkfile" ; \
             exit 1 ; } ; \
-	done 
+	done
+
+healspaces:
+	@echo "Removing trailing spaces from code lines..."
+	@sed -ri 's/[ 	]+$$//g' checkman/* modules/* checks/* $$(find -name Makefile) \
+          livestatus/src/*{cc,c,h} web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
+          doc/helpers/* $(find -type f pnp-templates/*.php)
 
 setup:
 	$(MAKE) dist

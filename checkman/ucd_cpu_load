@@ -17,11 +17,11 @@ description:
 
 examples:
  # Set CPU load levels for all SNMP devices to 10.0 and 20.0
- check_parameters += [ 
+ check_parameters += [
     ( (10.0, 20.0), [ "snmp" ], ALL_HOSTS, [ "CPU load" ] ),
  ]
 
-perfdata: 
+perfdata:
  Three values: the load average of the last 1, 5 and 15 minutes.
 
 inventory:

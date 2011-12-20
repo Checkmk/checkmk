@@ -22,13 +22,13 @@ inventory:
  A check is created if {VmallocTotal} is available in
  {/proc/meminfo} and only if the total size of the vmalloc
  area is less then 4 GB. This is generally only possible
- for 32 bit architectures. 
- 
- Please add {mem.vmalloc} to {ignored_checktypes} 
+ for 32 bit architectures.
+
+ Please add {mem.vmalloc} to {ignored_checktypes}
  if you do not need this check.
 
 perfdata:
- Two variables: the current usage in MB and the size of 
+ Two variables: the current usage in MB and the size of
  the largest chunk in MB.
 
 examples:

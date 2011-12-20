@@ -10,7 +10,7 @@ description:
  as "system peer". This check only measures the time difference to
  that system peer.
 
- The check is CRIT or WARN, if the time supplied by the 
+ The check is CRIT or WARN, if the time supplied by the
  system peer is not good enough (see below for parameters). It
  is UNKNOWN if no system peer is present or the system peer is
  unreachable.

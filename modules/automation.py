@@ -116,7 +116,7 @@ def automation_inventory(args):
             # keep currently existing valid services in any case
             new_items.append((ct, item, paramstring))
             count_kept += 1
-        
+
         elif state_type in [ "obsolete", "vanished" ]:
             # keep item, if we are currently only looking for new services
             # otherwise fix it: remove ignored and non-longer existing services
@@ -164,7 +164,7 @@ def automation_try_inventory(args):
 
     found = {}
     for hn, ct, item, paramstring, state_type in f:
-       found[(ct, item)] = ( state_type, paramstring ) 
+       found[(ct, item)] = ( state_type, paramstring )
 
     # Check if already in autochecks (but not found anymore)
     for hn, ct, item, params in autochecks:
@@ -176,7 +176,7 @@ def automation_try_inventory(args):
     for (ct, item), (params, descr, deps) in existing.items():
         if (ct, item) not in found:
             found[(ct, item)] = ('manual', repr(params) )
-        
+
     # Add legacy checks with artificial type 'legacy'
     legchecks = host_extra_conf(hostname, legacy_checks)
     for cmd, descr, perf in legchecks:
@@ -204,7 +204,7 @@ def automation_try_inventory(args):
                     continue
                 else:
                     raise
-            
+
             check_function = check_info[ct][0]
             # apply check_parameters
             try:
@@ -236,7 +236,7 @@ def automation_try_inventory(args):
 
     return table
 
-# Set the new list of autochecks. This list is specified by a 
+# Set the new list of autochecks. This list is specified by a
 # table of (checktype, item). No parameters are specified. Those
 # are either (1) kept from existing autochecks or (2) computed
 # from a new inventory. Note: we must never convert check parameters
@@ -317,7 +317,7 @@ def automation_parse_autochecks_file(hostname):
         lineno += 1
         try:
             line = line.strip()
-            if not line.startswith("("): 
+            if not line.startswith("("):
                 continue
 
             # drop everything after potential '#' (from older versions)
@@ -410,7 +410,7 @@ def automation_restart():
 
     sys.stdout = old_stdout
 
-def automation_get_configuration(): 
+def automation_get_configuration():
     # We read the list of variable names from stdin since
     # that could be too much for the command line
     variable_names = eval(sys.stdin.read())

@@ -31,7 +31,7 @@ inventory:
 
 examples:
   logwatch_patterns = {
-     "System":             [ ('W', "crash"), 
+     "System":             [ ('W', "crash"),
                              ('I', "svchost") ],
                              ((10,30), "login.*failed") ],
      "/var/log/messages":  [ ( ['test'], ALL_HOSTS, 'I', "sshd") ]
@@ -83,6 +83,6 @@ logwatch_max_filesize (int): This is preset to 500000
 
 logwatch_dir (string): Directory where log messages are
  stored. The default value is {/var/lib/check_mk/logwatch}.
- For each host a subdirectory is created. The name of the 
+ For each host a subdirectory is created. The name of the
  files therein are the names of the logfiles with slashes
  replaced by backslashes.

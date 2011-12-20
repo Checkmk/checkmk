@@ -87,7 +87,7 @@ function hoverShow(x, y, code) {
         document.body.appendChild(_hoverMenu);
     }
     _hoverMenu.innerHTML = code;
-    
+
     // Change cursor to "hand" when displaying hover menu
     document.body.style.cursor = 'pointer';
 

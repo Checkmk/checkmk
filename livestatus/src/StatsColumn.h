@@ -45,7 +45,7 @@ class StatsColumn
     int _operation;
 
 public:
-    StatsColumn(Column *c, Filter *f, int o) : 
+    StatsColumn(Column *c, Filter *f, int o) :
         _column(c), _filter(f), _operation(o) {}
     ~StatsColumn();
     int operation() { return _operation; }

@@ -57,7 +57,7 @@ class Aggregator;
 
 
 class Query
-{ 
+{
     OutputBuffer *_output;
     Table        *_table;
     AndingFilter  _filter;
@@ -89,10 +89,10 @@ class Query
 
     typedef vector<string> _stats_group_spec_t;
     typedef map<_stats_group_spec_t, Aggregator **> _stats_groups_t;
-    _stats_groups_t _stats_groups; 
+    _stats_groups_t _stats_groups;
 
 public:
-    Query(InputBuffer *, OutputBuffer *out, Table *); 
+    Query(InputBuffer *, OutputBuffer *out, Table *);
     ~Query();
     bool processDataset(void *);
     void start();

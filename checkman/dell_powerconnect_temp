@@ -5,11 +5,11 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the temperature inside Dell PowerConnect Switches which support the
- RADLAN-MIB/NetDiscover MIB. It will retreive the temperature (Celcius), and the state 
+ RADLAN-MIB/NetDiscover MIB. It will retreive the temperature (Celcius), and the state
  of the temperature sensor.
 
- A single service will be created showing the internal temperature at the time the check 
- occurred However, two charts are created that plot the state of the sensor, and the 
+ A single service will be created showing the internal temperature at the time the check
+ occurred However, two charts are created that plot the state of the sensor, and the
  value returned for the temperature.
 
  The state of the check will return an OK value if the sensor is working properly, otherwise
@@ -35,8 +35,8 @@ examples:
  # Indicate warning at 30 degrees C, and indicate critical for 35 degrees C
  dell_powerconnect_temp_default_values = (30, 35)
 
-perfdata: 
- The temperature chart uses a single variable, the temperature (0..200) representing 
+perfdata:
+ The temperature chart uses a single variable, the temperature (0..200) representing
  the switchs internal temperature in degrees Celcius.
 
  The sensor chart uses a single variable to indicate the state (0..1), where a 1

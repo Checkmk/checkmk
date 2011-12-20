@@ -47,9 +47,9 @@ bool timeout_reached(const struct timeval *, int);
 }
 
 void InputBuffer::setFd(int fd)
-{ 
-    _fd = fd; 
-    _read_pointer = _write_pointer = _readahead_buffer; 
+{
+    _fd = fd;
+    _read_pointer = _write_pointer = _readahead_buffer;
     _requestlines.clear();
 }
 
@@ -87,11 +87,11 @@ int InputBuffer::readRequest()
         // If we cannot find the end of line in the data
         // already read, then we need to read new data from
         // the client.
-        if (r == _write_pointer) 
+        if (r == _write_pointer)
         {
             // Is there still space left in the buffer => read in
             // further data into the buffer.
-            if (_write_pointer < _end_pointer) 
+            if (_write_pointer < _end_pointer)
             {
                 int rd = readData(); // tries to read in further data into buffer
                 if (rd == IB_TIMEOUT) {
@@ -110,7 +110,7 @@ int InputBuffer::readRequest()
                 // read an incomplete line. If the last thing we read was
                 // a linefeed, then we consider the current request to
                 // be valid, if it is not empty.
-                else if (rd == IB_END_OF_FILE && r == _read_pointer /* currently at beginning of a line */) 
+                else if (rd == IB_END_OF_FILE && r == _read_pointer /* currently at beginning of a line */)
                 {
                     if (_requestlines.empty()) {
                         return IB_END_OF_FILE; // empty request -> no request
@@ -183,7 +183,7 @@ int InputBuffer::readData()
     gettimeofday(&start, NULL);
 
     struct timeval tv;
-    while (!*_termination_flag) 
+    while (!*_termination_flag)
     {
         if (timeout_reached(&start, g_query_timeout_msec))
             return IB_TIMEOUT;
@@ -233,7 +233,7 @@ string InputBuffer::nextLine()
 
 bool timeout_reached(const struct timeval *start, int timeout_ms)
 {
-    if (timeout_ms == 0) 
+    if (timeout_ms == 0)
         return false; // timeout disabled
 
     struct timeval now;

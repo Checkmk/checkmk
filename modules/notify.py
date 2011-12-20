@@ -40,7 +40,7 @@ notification_logging = 0
 notification_log_template = \
     u"$CONTACTNAME$ - $NOTIFICATIONTYPE$ - " \
     u"$HOSTNAME$ $HOSTSTATE$ - " \
-    u"$SERVICEDESC$ $SERVICESTATE$ " 
+    u"$SERVICEDESC$ $SERVICESTATE$ "
 
 notification_mail_command = u"mail -s '$SUBJECT$' '$CONTACTEMAIL$'"
 notification_host_subject = u"Check_MK: $HOSTNAME$ - $NOTIFICATIONTYPE$"
@@ -92,7 +92,7 @@ def do_notify(args):
         # Information about notification is excpected in the
         # environment in variables with the prefix NOTIFY_
         context = dict([
-            (var[7:], value.decode("utf-8")) 
+            (var[7:], value.decode("utf-8"))
             for (var, value)
             in os.environ.items()
             if var.startswith("NOTIFY_")

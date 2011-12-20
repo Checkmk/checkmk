@@ -15,12 +15,12 @@ description:
 item:
  The instance name as configured in {j4p.conf} with the variable
  {instance}.
- 
+
 examples:
  # Set default levels for number of threads to (WARN 50, CRIT 80)
  j4p_performance_threads_default_levels = (50, 80)
 
-perfdata: 
+perfdata:
  Several variables:
  ThreadRate: Number of threads created per interval.
  ThreadCount: Number of threads.

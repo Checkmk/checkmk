@@ -32,4 +32,4 @@ target_networks (list(string)): A python list of the allowed networks and IP add
 [configuration]
 check_mk_only_from_default (list(string)): Default IP access configuration expected from agents.
  This variable must be set in order for the inventory to create checks, even if you configure more
- more specific parameters via {check_parameters}.                                           
+ more specific parameters via {check_parameters}.

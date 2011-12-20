@@ -126,7 +126,7 @@ def check_if_common(item, params, info):
     targetspeed        = params.get("speed")
     targetstate        = params.get("state")
     average            = params.get("average")
-    
+
     # error checking might be turned off
     if params["errors"]:
         err_warn, err_crit = params["errors"]

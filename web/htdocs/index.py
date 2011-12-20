@@ -116,10 +116,10 @@ def connect_to_livestatus(html):
         for sitename, v1, v2, ps, num_hosts, num_services in html.live.query(
               "GET status\n"
               "Columns: livestatus_version program_version program_start num_hosts num_services"):
-            html.site_status[sitename].update({ 
-                "state" : "online", 
+            html.site_status[sitename].update({
+                "state" : "online",
                 "livestatus_version": v1,
-                "program_version" : v2, 
+                "program_version" : v2,
                 "program_start" : ps,
                 "num_hosts" : num_hosts,
                 "num_services" : num_services,
@@ -149,7 +149,7 @@ def connect_to_livestatus(html):
         html.live.set_auth_user('read',   config.user_id)
         html.live.set_auth_user('action', config.user_id)
 
-    # May the user see all objects in BI aggregations or only some? 
+    # May the user see all objects in BI aggregations or only some?
     if not config.may("bi.see_all"):
         html.live.set_auth_user('bi', config.user_id)
 
@@ -294,9 +294,9 @@ def handler(req, profiling = True):
             if len(config.user_role_ids):
                 reason += _("Your roles are <b>%s</b>. " % ", ".join(config.user_role_ids))
             else:
-                reason += _("<b>You do not have any roles.</b> ") 
+                reason += _("<b>You do not have any roles.</b> ")
             reason += _("If you think this is an error, "
-                        "please ask your administrator to check the permissions configuration.") 
+                        "please ask your administrator to check the permissions configuration.")
             raise MKAuthException(reason)
 
         # General access allowed. Now connect to livestatus
@@ -359,7 +359,7 @@ def handler(req, profiling = True):
         if not fail_silently:
             html.header(_("Internal error"))
             if config.debug:
-                html.show_error("%s: %s<pre>%s</pre>" % 
+                html.show_error("%s: %s<pre>%s</pre>" %
                     (_('Internal error') + ':', e, format_exception()))
             else:
                 url = html.makeuri([("debug", "1")])

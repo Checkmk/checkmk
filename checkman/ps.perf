@@ -7,12 +7,12 @@ description:
  This check does exactly the same as {ps}, but in addition
  outputs performance data. Please refer to the manpage of {ps} for more details.
 
-perfdata: 
- In all cases the number of matching running processes found on the target 
+perfdata:
+ In all cases the number of matching running processes found on the target
  system is sent. If the agent supports it, also the virtual prozess size (VSZ)
  and the resident size (RSS) in kB is send as well as the percentage of CPU
- used by the matching processes. 
- 
+ used by the matching processes.
+
  If more than one process is matching, the values are added. The actual memory
  usage of all processes together might be significantly smaller than the computed
  size since they might (and most propably do) share memory.

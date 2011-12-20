@@ -45,7 +45,7 @@ void AndingFilter::addSubfilter(Filter *f)
 
 Filter *AndingFilter::stealLastSubfiler()
 {
-    if (_subfilters.size() == 0) 
+    if (_subfilters.size() == 0)
         return 0;
     else {
         Filter *l = _subfilters.back();
@@ -110,7 +110,7 @@ bool AndingFilter::optimizeBitmask(const char *columnname, uint32_t *mask)
 void AndingFilter::combineFilters(int count, int andor)
 {
     if (count > (int)_subfilters.size()) {
-        logger(LG_INFO, "Cannot combine %d filters with '%s': only %d are on stack", 
+        logger(LG_INFO, "Cannot combine %d filters with '%s': only %d are on stack",
                 count, andor == ANDOR_AND ? "AND" : "OR", _subfilters.size());
         return;
     }

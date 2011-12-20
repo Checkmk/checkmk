@@ -40,7 +40,7 @@ bool OringFilter::accepts(void *data)
 
 bool OringFilter::optimizeBitmask(const char *columnname, uint32_t *mask)
 {
-    // We can only optimize, if *all* subfilters are filters for the 
+    // We can only optimize, if *all* subfilters are filters for the
     // same column.
     uint32_t m = 0;
 

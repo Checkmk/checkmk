@@ -189,7 +189,7 @@ class FilterServiceState(Filter):
     def display(self):
         html.begin_checkbox_group()
         for var, text in [(self.prefix + "st0", "OK"), (self.prefix + "st1", "WARN"), \
-                          (self.prefix + "st2", "CRIT"), (self.prefix + "st3", "UNKNOWN"), 
+                          (self.prefix + "st2", "CRIT"), (self.prefix + "st3", "UNKNOWN"),
                           (self.prefix + "stp", "PENDING")]:
 	    #if html.mobile:
 	        #text = text[:1]
@@ -225,7 +225,7 @@ class FilterHostState(Filter):
 
     def display(self):
         html.begin_checkbox_group()
-        for var, text in [("hst0", _("UP")), ("hst1", _("DOWN")), 
+        for var, text in [("hst0", _("UP")), ("hst1", _("DOWN")),
                           ("hst2", _("UNREACH")), ("hstp", _("PENDING"))]:
             html.checkbox(var, True, label=text)
         html.end_checkbox_group()
@@ -238,7 +238,7 @@ class FilterHostState(Filter):
                                "Filter: host_has_been_checked = 1\n"
                                "And: 2\nNegate:\n" % i)
         if html.get_checkbox("hstp") == False:
-            headers.append("Filter: host_has_been_checked = 1\n") 
+            headers.append("Filter: host_has_been_checked = 1\n")
         if len(headers) == 4: # none allowed = all allowed (makes URL building easier)
             return ""
         else:
@@ -505,8 +505,8 @@ declare_filter(260, FilterText("log_contact_name",   _("Log: contact name"),  "l
 
 class FilterLogState(Filter):
     def __init__(self):
-        self._items = [ ("h0", "host", 0, _("Up")),("h1", "host", 1, _("Down")),("h2", "host", 2, _("Unreachable")), 
-                        ("s0", "service", 0, _("OK")), ("s1", "service", 1, _("Warning")), 
+        self._items = [ ("h0", "host", 0, _("Up")),("h1", "host", 1, _("Down")),("h2", "host", 2, _("Unreachable")),
+                        ("s0", "service", 0, _("OK")), ("s1", "service", 1, _("Warning")),
                         ("s2", "service", 2, _("Critical")),("s3", "service", 3, _("Unknown")) ]
 
         Filter.__init__(self, "log_state", _("Type of alerts of hosts and services"),
@@ -528,7 +528,7 @@ class FilterLogState(Filter):
         headers = []
         for varsuffix, what, state, text in self._items:
             if html.get_checkbox("logst_" + varsuffix) != False: # None = form not filled in = allow
-                headers.append("Filter: log_type = %s ALERT\nFilter: log_state = %d\nAnd: 2\n" %  
+                headers.append("Filter: log_type = %s ALERT\nFilter: log_state = %d\nAnd: 2\n" %
                             (what.upper(), state))
         if len(headers) == 0:
             return "Limit: 0\n" # no allowed state

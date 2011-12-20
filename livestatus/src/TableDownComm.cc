@@ -45,19 +45,19 @@ TableDownComm::TableDownComm(bool is_downtime)
         _name = "comments";
 
     DowntimeOrComment *ref = 0;
-    addColumn(new OffsetStringColumn("author", 
-                is_downtime ? "The contact that scheduled the downtime" : "The contact that entered the comment", 
+    addColumn(new OffsetStringColumn("author",
+                is_downtime ? "The contact that scheduled the downtime" : "The contact that entered the comment",
                 (char *)&(ref->_author_name) - (char *)ref));
-    addColumn(new OffsetStringColumn("comment", 
+    addColumn(new OffsetStringColumn("comment",
                 "A comment text", (char *)&(ref->_comment) - (char *)ref));
-    addColumn(new OffsetIntColumn("id", 
+    addColumn(new OffsetIntColumn("id",
                 is_downtime ? "The id of the downtime" : "The id of the comment", (char *)&(ref->_id) - (char *)ref));
     addColumn(new OffsetTimeColumn("entry_time",
                 "The time the entry was made as UNIX timestamp", (char *)&(ref->_entry_time) - (char *)ref));
     addColumn(new OffsetIntColumn("type",
                 is_downtime ?  "The type of the downtime: 0 if it is active, 1 if it is pending" :
                 "The type of the comment: 1 is host, 2 is service", (char *)&(ref->_type) - (char *)ref));
-    addColumn(new OffsetIntColumn("is_service", 
+    addColumn(new OffsetIntColumn("is_service",
                 "0, if this entry is for a host, 1 if it is for a service", (char *)&(ref->_is_service) - (char *)ref));
 
     if (is_downtime)
@@ -72,7 +72,7 @@ TableDownComm::TableDownComm(bool is_downtime)
         addColumn(new OffsetIntColumn("duration",
                     "The duration of the downtime in seconds", (char *)&(ref->_duration) - (char *)ref));
         addColumn(new OffsetIntColumn("triggered_by",
-                    "The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime", 
+                    "The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime",
                     (char *)&(ref->_triggered_by) - (char *)ref));
     }
     else {
@@ -161,7 +161,7 @@ void TableDownComm::answerQuery(Query *query)
 
 bool TableDownComm::isAuthorized(contact *ctc, void *data)
 {
-    DowntimeOrComment *dtc = (DowntimeOrComment *)data; 
+    DowntimeOrComment *dtc = (DowntimeOrComment *)data;
     return is_authorized_for(ctc, dtc->_host, dtc->_service);
 }
 

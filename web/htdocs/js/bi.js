@@ -22,7 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-function toggle_subtree(oImg) 
+function toggle_subtree(oImg)
 {
     var oSubtree = oImg.parentNode.childNodes[6];
     var url = "bi_save_treestate.py?path=" + escape(oSubtree.id);
@@ -58,14 +58,14 @@ function toggle_assumption(oImg, site, host, service)
     else if (current == '2' && service == '')
         current = 'none'
     else
-        current = parseInt(current) + 1; 
+        current = parseInt(current) + 1;
 
     var url = "bi_set_assumption.py?site=" + encodeURIComponent(site)
             + '&host=' + encodeURIComponent(host);
     if (service) {
         url += '&service=' + encodeURIComponent(service);
     }
-    url += '&state=' + current; 
+    url += '&state=' + current;
     oImg.src = "images/assume_" + current + ".png";
     get_url(url);
 }

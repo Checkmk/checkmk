@@ -9,8 +9,8 @@ description:
  (such as General Electric (GE) SitePro UPS). The check is always
  OK, there are currently neither levels nor other parameters.
 
-perfdata: 
+perfdata:
  The remaining capacity in minutes
 
 inventory:
- Supported. 
+ Supported.

@@ -9,7 +9,7 @@ description:
  If you do not want to install a new Windows agent, you can still
  use this check.
 
- This check monitors the summarized disk IO on a Windows system 
+ This check monitors the summarized disk IO on a Windows system
  using the windows performance counters (agent section {<<<winperf>>>}).
  The current implementation does not allow to set levels, and the check
  is thus always OK. The reason is, that currently only data of the

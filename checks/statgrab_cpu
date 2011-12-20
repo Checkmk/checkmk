@@ -28,7 +28,7 @@
 
 def inventory_statgrab_cpu(info):
    if len(info) > 1:
-       return [(None, None)] 
+       return [(None, None)]
 
 
 def check_statgrab_cpu(item, params, info):

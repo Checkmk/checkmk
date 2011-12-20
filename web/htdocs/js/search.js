@@ -69,7 +69,7 @@ function mkSearchKeyUp(e, oField) {
             e.returnValue = false;
             e.cancelBubble = true;
         break;
-        
+
         // Up/Down
         case 38:
         case 40:
@@ -82,7 +82,7 @@ function mkSearchKeyUp(e, oField) {
                 e.returnValue = false;
                 e.cancelBubble = true;
                 mkSearchClose();
-            } 
+            }
             else {
                 mkSearch(e, oField);
             }
@@ -131,17 +131,17 @@ function mkSearchKeyRepeat(e, oField) {
                 if(!mkSearchResultShown()) {
                     mkSearch(e, oField);
                 }
-                
+
                 mkSearchMoveElement(-1);
                 return false;
             break;
-            
+
             // Down arrow
             case 40:
                 if(!mkSearchResultShown()) {
                     mkSearch(e, oField);
                 }
-                
+
                 mkSearchMoveElement(1);
                 return false;
             break;
@@ -173,18 +173,18 @@ function mkSearchKeyDown(e, oField) {
                     top.frames[mkSearchTargetFrame].location.href = url;
                     mkSearchClose();
                 }
-                
+
                 e.returnValue = false;
                 e.cancelBubble = true;
             break;
-            
+
             // Escape
             case 27:
                 mkSearchClose();
                 e.returnValue = false;
                 e.cancelBubble = true;
             break;
-            
+
             // Tab
             case 9:
                 if(mkSearchResultShown()) {
@@ -212,7 +212,7 @@ function mkSearchMoveElement(step) {
 
     if(iCurrent < 0)
         iCurrent = aSearchResults.length-1;
-    
+
     if(iCurrent > aSearchResults.length-1)
         iCurrent = 0;
 
@@ -263,7 +263,7 @@ function mkSearchClose() {
         oContainer.parentNode.removeChild(oContainer);
         oContainer = null;
     }
-    
+
     aSearchResults = [];
     iCurrent = null;
 }
@@ -362,7 +362,7 @@ function mkSearchAddSearchResults(aSearchObjects, objType, val) {
                 'type': objType,
                 'url': url
             };
-            
+
             // limit the number of search hits
             numHits ++;
             if (numHits > aSearchLimit)
@@ -370,9 +370,9 @@ function mkSearchAddSearchResults(aSearchObjects, objType, val) {
 
             // Add id to search result array
             aSearchResults.push(oResult);
-            aSearchContents += '<a id="' + oResult.id + '" class="' + oResult.type 
-                + '" href="' + oResult.url 
-                + '" onclick="mkSearchClose()" target="' + mkSearchTargetFrame 
+            aSearchContents += '<a id="' + oResult.id + '" class="' + oResult.type
+                + '" href="' + oResult.url
+                + '" onclick="mkSearchClose()" target="' + mkSearchTargetFrame
                 + '">'+ objName + "</a>\n";
         }
     }
@@ -383,7 +383,7 @@ function mkSearch(e, oField) {
     if(oField == null) {
         return;
     }
-    
+
     var val = oField.value;
     if (val == oldValue)
         return;
@@ -400,7 +400,7 @@ function mkSearch(e, oField) {
         // alert("No objects to search for");
         return;
     }
-    
+
     mkSearchAddSearchResults(aSearchObjects, objType, val);
 
     if(aSearchContents != '') {
@@ -415,6 +415,6 @@ function mkSearch(e, oField) {
     } else {
         mkSearchClose();
     }
-    
+
     oField = null;
 }

@@ -63,14 +63,14 @@ function hasClass(obj, cls) {
 if (!document.getElementsByClassName) {
   document.getElementsByClassName = function(className, root, tagName) {
     root = root || document.body;
- 
+
     // at least try with querySelector (IE8 standards mode)
     // about 5x quicker than below
     if (root.querySelectorAll) {
         tagName = tagName || '';
         return root.querySelectorAll(tagName + '.' + className);
     }
- 
+
     // and for others... IE7-, IE8 (quirks mode), Firefox 2-, Safari 3.1-, Opera 9-
     var tagName = tagName || '*', _tags = root.getElementsByTagName(tagName), _nodeList = [];
     for (var i = 0, _tag; _tag = _tags[i++];) {
@@ -101,7 +101,7 @@ function get_url(url, handler, data, errorHandler) {
     } else {
         var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
     }
-    
+
     // Dynamic part to prevent caching
     var dyn = "_ajaxid="+Date.parse(new Date());
     if (url.indexOf('\?') !== -1) {
@@ -109,7 +109,7 @@ function get_url(url, handler, data, errorHandler) {
     } else {
         dyn = "?"+dyn;
     }
-    
+
     if (AJAX) {
         AJAX.open("GET", url + dyn, true);
         if (typeof handler === 'function')
@@ -146,10 +146,10 @@ function get_url_sync(url) {
     } else {
         var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
     }
-    
-    AJAX.open("GET", url, false);                             
+
+    AJAX.open("GET", url, false);
     AJAX.send(null);
-    return AJAX.responseText;                                         
+    return AJAX.responseText;
 }
 
 
@@ -198,7 +198,7 @@ function isWebkit() {
 
 function pageHeight() {
   var h;
-  
+
   if (window.innerHeight !== null && typeof window.innerHeight !== 'undefined' && window.innerHeight !== 0)
     h = window.innerHeight;
   else if (document.documentElement && document.documentElement.clientHeight)
@@ -207,13 +207,13 @@ function pageHeight() {
     h = document.body.clientHeight;
   else
     h = null;
-  
+
   return h;
 }
 
 function pageWidth() {
   var w;
-  
+
   if (window.innerWidth !== null && typeof window.innerWidth !== 'undefined' && window.innerWidth !== 0)
     w = window.innerWidth;
   else if (document.documentElement && document.documentElement.clientWidth)
@@ -222,7 +222,7 @@ function pageWidth() {
     w = document.body.clientWidth;
   else
     w = null;
-  
+
   return w;
 }
 
@@ -265,7 +265,7 @@ function makeuri(addvars) {
     for (var key in addvars) {
         params.push(key + '=' + addvars[key]);
     }
-    
+
     return base + '?' + params.join('&')
 }
 
@@ -284,7 +284,7 @@ function filter_activation(oid)
     var oTd = selectobject.parentNode.parentNode.childNodes[2];
     var pTd = selectobject.parentNode;
     pTd.setAttribute("className", "usage" + usage);
-    pTd.setAttribute("class",     "usage" + usage); 
+    pTd.setAttribute("class",     "usage" + usage);
     oTd.setAttribute("class",     "widget" + usage);
     oTd.setAttribute("className", "widget" + usage);
 
@@ -336,7 +336,7 @@ function pnp_error_response_handler(data, statusCode) {
     // 404. Current version with the webservice answer 500 if the service
     // in question does not have any PNP graphs. So we paint the fallback
     // graphs only if the respone code is 404 (not found).
-    if (parseInt(statusCode) == 404) 
+    if (parseInt(statusCode) == 404)
         fallback_graphs(data);
 }
 
@@ -447,9 +447,9 @@ function performAction(oLink, action, site, host, service) {
 
     // Chrome and IE are not animating the gif during sync ajax request
     // So better use the async request here
-    get_url('nagios_action.py?action=' + action + 
-            '&site='    + escape(site) + 
-            '&host='    + escape(host) + 
+    get_url('nagios_action.py?action=' + action +
+            '&site='    + escape(site) +
+            '&host='    + escape(host) +
             '&service=' + escape(service),
             actionResponseHandler, oImg);
     oImg = null;
@@ -570,7 +570,7 @@ function fix_buttons(oContainer, oNode) {
 function move_column_up(oImg) {
     var oNode = get_column_container(oImg);
     var oContainer = oNode.parentNode;
-    
+
     // The column is the first one - skip moving
     if (oNode.previousSibling === null)
         return;
@@ -590,7 +590,7 @@ function move_column_up(oImg) {
 function move_column_down(oImg) {
     var oNode = get_column_container(oImg);
     var oContainer = oNode.parentNode;
-    
+
     // The column is the last one - skip moving
     if (oNode.nextSibling === null)
         return;
@@ -657,7 +657,7 @@ function toggleRefreshButton(s, enable) {
 function setReload(secs, url) {
     if(typeof url === 'undefined')
         url = '';
-    
+
     if (gReloadTimer) {
         toggleRefreshButton(0, false);
         toggleRefreshButton(gReloadTime, false);
@@ -786,7 +786,7 @@ function folding_step(oImg, state, step) {
             step = 1;
         else
             step = 8;
-    
+
     oImg.src = "images/tree_" + step + "0.png";
 
     if(state == 1) {
@@ -843,8 +843,8 @@ function toggle_foldable_container(treename, id) {
 // Holds the row numbers of all selected rows
 var g_selected_rows = [];
 
-// 
-function rgbToHsv(r, g, b) {  
+//
+function rgbToHsv(r, g, b) {
     var r = (r / 255),
         g = (g / 255),
         b = (b / 255);
@@ -857,7 +857,7 @@ function rgbToHsv(r, g, b) {
 
     // Hue
     if (max == min) {
-        hue = 0;  
+        hue = 0;
     } else if (max == r) {
         hue = (60 * ((g-b) / (max-min))) % 360;
     } else if (max == g) {
@@ -904,7 +904,7 @@ function hsvToRgb(h,s,v) {
         g = Math.min(255, Math.round(rgb[1]*256)),
         b = Math.min(255, Math.round(rgb[2]*256));
 
-    return [r,g,b];  
+    return [r,g,b];
 }
 
 function lightenColor(color, val) {
@@ -952,7 +952,7 @@ function real_style(obj, attr, ieAttr) {
         st = obj.currentStyle[ieAttr];
     }
 
-    if(typeof(st) == 'undefined') { 
+    if(typeof(st) == 'undefined') {
         st = 'transparent';
     }
 
@@ -968,7 +968,7 @@ function real_style(obj, attr, ieAttr) {
 }
 
 function find_checkbox(elem) {
-    // Find the checkbox of this element to gather the number of cells 
+    // Find the checkbox of this element to gather the number of cells
     // to highlight after the checkbox
     // 1. Go up to the row
     // 2. search backwards for the next checkbox
@@ -983,7 +983,7 @@ function find_checkbox(elem) {
             }
             continue;
         }
-        
+
         // Found the clicked column, now walking the cells backward from the
         // current cell searching for the next checkbox
         var elems = childs[a].childNodes;
@@ -1207,7 +1207,7 @@ function iter_cells(checkbox, func) {
                 continue;
             }
         }
-        
+
         if(row_childs[c].tagName == 'TD') {
             func(row_childs[c]);
             num_columns--;

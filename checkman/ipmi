@@ -28,8 +28,8 @@ item:
 inventory:
  In summary mode, one check is created if at least one
  sensor is found by the agent. In detailed mode one
- item is created for each sensor found. 
- 
+ item is created for each sensor found.
+
  Note: Some obscure hardware lists sensors in the state
  {nr} which do not produce usable output. If you set
  {impi_ignore_nr} to {True} then these sensors will

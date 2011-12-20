@@ -15,7 +15,7 @@ inventory:
  explicitely in {checks}.
 
 perfdata:
- On variable: the current number of threads and processes found on 
+ On variable: the current number of threads and processes found on
  the system.
 
 examples:

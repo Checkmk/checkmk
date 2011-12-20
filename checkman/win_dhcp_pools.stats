@@ -7,7 +7,7 @@ description:
  This check uses the output of "netsh dhcp server show mibinfo" as sent by the
  Check_MK windows agent when using the appropriate agent plugin.
 
- The check records the general counter values and calculates the rates from them. 
+ The check records the general counter values and calculates the rates from them.
 
  Per DHCP Server one service will be created.
 

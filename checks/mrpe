@@ -41,7 +41,7 @@ def check_mrpe(item, params, info):
     # This check is cluster-aware. An item might be found
     # more than once. In that case we use the best of the
     # multiple statuses.
- 
+
     best_state = None
 
     for line in info:

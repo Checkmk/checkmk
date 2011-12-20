@@ -203,9 +203,9 @@ msgstr ""
 def localize_edit(lang):
     localize_update(lang)
 
-    editor = os.getenv("VISUAL", os.getenv("EDITOR", "/usr/bin/vi")) 
-    if not os.path.exists(editor): 
-        editor = 'vi' 
+    editor = os.getenv("VISUAL", os.getenv("EDITOR", "/usr/bin/vi"))
+    if not os.path.exists(editor):
+        editor = 'vi'
 
     if 0 == verbose_system("%s '%s'" % (editor, po_file)):
         localize_compile(lang)

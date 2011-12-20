@@ -12,7 +12,7 @@ description:
 
 item:
  The service description of the check. It must be unique
- within all checks of the host. It is the second word in 
+ within all checks of the host. It is the second word in
  the line output by the agent.
 
 perfdata:

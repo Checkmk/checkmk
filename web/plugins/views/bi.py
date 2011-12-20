@@ -26,17 +26,17 @@
 
 import bi
 
-#     ____        _                                          
-#    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___ 
+#     ____        _
+#    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___
 #    | | | |/ _` | __/ _` / __|/ _ \| | | | '__/ __/ _ \/ __|
 #    | |_| | (_| | || (_| \__ \ (_) | |_| | | | (_|  __/\__ \
 #    |____/ \__,_|\__\__,_|___/\___/ \__,_|_|  \___\___||___/
-#                                                            
+#
 
 
 multisite_datasources["bi_aggregations"] = {
     "title"       : _("BI Aggregations"),
-    "table"       : bi.table, 
+    "table"       : bi.table,
     "infos"       : [ "aggr" ],
     "keys"        : [],
     "idkeys"      : [ 'aggr_name' ],
@@ -44,18 +44,18 @@ multisite_datasources["bi_aggregations"] = {
 
 multisite_datasources["bi_host_aggregations"] = {
     "title"       : _("BI Host Aggregations"),
-    "table"       : bi.host_table, 
+    "table"       : bi.host_table,
     "infos"       : [ "host", "aggr" ],
     "keys"        : [],
     "idkeys"      : [ 'aggr_name' ],
 }
 
-#     ____       _       _                
-#    |  _ \ __ _(_)_ __ | |_ ___ _ __ ___ 
+#     ____       _       _
+#    |  _ \ __ _(_)_ __ | |_ ___ _ __ ___
 #    | |_) / _` | | '_ \| __/ _ \ '__/ __|
 #    |  __/ (_| | | | | | ||  __/ |  \__ \
 #    |_|   \__,_|_|_| |_|\__\___|_|  |___/
-#                                         
+#
 
 def paint_aggr_state_short(state, assumed = False):
     if state == None:
@@ -189,7 +189,7 @@ def render_assume_icon(site, host, service):
 def aggr_render_leaf(tree, show_host):
     site, host = tree[2]["host"]
     service = tree[2].get("service")
-    content = u"" + render_assume_icon(site, host, service) 
+    content = u"" + render_assume_icon(site, host, service)
 
     # Four cases:
     # (1) zbghora17 . Host status   (show_host == True, service == None)
@@ -217,7 +217,7 @@ def aggr_render_node(tree, title, mousecode, show_host):
     state = tree[0]
     assumed_state = tree[1]
     if assumed_state != None:
-        effective_state = assumed_state 
+        effective_state = assumed_state
     else:
         effective_state = state
 
@@ -328,7 +328,7 @@ def paint_aggr_tree_ltr(row, mirror):
         td = '<td style="white-space: nowrap;"'
 
     def gen_table(tree, height, show_host):
-        if len(tree) == 3: 
+        if len(tree) == 3:
             return gen_leaf(tree, height, show_host)
         else:
             return gen_node(tree, height, show_host)
@@ -390,12 +390,12 @@ multisite_painters["aggr_treestate"] = {
 }
 
 
-#     _____ _ _ _                
-#    |  ___(_) | |_ ___ _ __ ___ 
+#     _____ _ _ _
+#    |  ___(_) | |_ ___ _ __ ___
 #    | |_  | | | __/ _ \ '__/ __|
 #    |  _| | | | ||  __/ |  \__ \
 #    |_|   |_|_|\__\___|_|  |___/
-#                                
+#
 
 class BIGroupFilter(Filter):
     def __init__(self):

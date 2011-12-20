@@ -66,31 +66,31 @@ Boston, MA 02110-1301 USA.
     margin-left: 0px;
 }
 
-.wato table.form td.legend { 
+.wato table.form td.legend {
     border-right-style: none;
     padding-bottom: 8px;
     width: 350px;
 }
 
-.wato table.form td.legend h3 { 
+.wato table.form td.legend h3 {
     padding: 0px;
     margin: 0px 0px 5px 0px;
     font-size: 9pt;
     font-weight: normal;
 }
-.wato table.form td.title i {  
+.wato table.form td.title i {
     font-weight: normal;
     padding-bottom: 8px;
 }
 
 
-.wato table.form td.legend i, .wato table.form td.title i { 
+.wato table.form td.legend i, .wato table.form td.title i {
     margin-top: 13px;
     font-size: 9pt;
     color: #eee;
 }
 
-.wato table.form td.content { 
+.wato table.form td.content {
     border-left-style: solid;
     width: 494px;
     padding-top: 7px;
@@ -131,7 +131,7 @@ Boston, MA 02110-1301 USA.
     background-color: #fff;
 }
 
-.wato table.auditlog td { 
+.wato table.auditlog td {
     border: 1px solid #fff;
     padding: 2px 6px;
 }
@@ -140,7 +140,7 @@ Boston, MA 02110-1301 USA.
     white-space: nowrap;
 }
 
-.wato .pending td { 
+.wato .pending td {
     border: 1px solid #444;
     padding: 2px 6px;
 }
@@ -175,13 +175,13 @@ Boston, MA 02110-1301 USA.
 .wato td.inherited {
     color: #666;
 }
-.wato div.inherited h3 { 
+.wato div.inherited h3 {
     margin: 0px;
     padding: 0px;
     font-size: 8pt;
     color: #468;
 }
-.wato div.inherited h3 a { 
+.wato div.inherited h3 a {
     color: #468;
 }
 .wato h3 {
@@ -203,7 +203,7 @@ Boston, MA 02110-1301 USA.
     font-style: normal;
 }
 
-.wato div.folderpath a, 
+.wato div.folderpath a,
 .wato div.folderpath b {
     -moz-border-radius: 3px;
     background-color: #8ab;
@@ -396,10 +396,10 @@ Boston, MA 02110-1301 USA.
 /*    vertical-align: top; */
 }
 
-.wato table.timeperiod td.name { 
+.wato table.timeperiod td.name {
     width: 200px;
 }
-.wato table.timeperiod td { 
+.wato table.timeperiod td {
     white-space: nowrap;
 }
 .wato input.timeperioddate {
@@ -445,7 +445,7 @@ Boston, MA 02110-1301 USA.
 /* Special styles for roles editor (permissions) */
 .wato table.form table.permissions {
     border-collapse: collapse;
-    border-spacing: 0px; 
+    border-spacing: 0px;
     width: 100%;
 }
 .wato table.form table.permissions td {
@@ -510,7 +510,7 @@ Boston, MA 02110-1301 USA.
 +--------------------------------------------------------------------------+
 | Interactive progress bar, e.g. used in bulk inventory.                   |
 '-------------------------------------------------------------------------*/
-  
+
 .wato table.progress {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
@@ -524,7 +524,7 @@ Boston, MA 02110-1301 USA.
 }
 
 /* Log window */
-.wato table.progress td.log div { 
+.wato table.progress td.log div {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
     border: 1px solid #fff;
@@ -534,18 +534,18 @@ Boston, MA 02110-1301 USA.
     text-align: left;
 }
 
-.wato table.progress td.log { 
+.wato table.progress td.log {
     font-family: monospace, sans-serif;
     padding: 12px 12px 0px 12px;
 }
 
 /* progress bar */
-.wato table.progress td.bar { 
+.wato table.progress td.bar {
     padding: 0 12px 0 12px;
     height: 46px;
 }
 
-.wato table.progress td.bar table { 
+.wato table.progress td.bar table {
     position: relative;
     top: 12px;
     width: 100%;
@@ -555,11 +555,11 @@ Boston, MA 02110-1301 USA.
 }
 
 .wato table.progress td.bar #progress_title {
-    position: relative; 
-    top: -6px; 
+    position: relative;
+    top: -6px;
     left: 0px;
     width: 100%;
-    height: 0px; 
+    height: 0px;
     text-align: center;
     white-space: nowrap;
     float: left;
@@ -569,17 +569,17 @@ Boston, MA 02110-1301 USA.
 
 .wato table.progress td.bar img.glass {
     position: relative;
-    top: -10px; 
+    top: -10px;
     width: 100%;
-    height: 22px; 
+    height: 22px;
     z-index: 30;
 }
 
-.wato table.progress td.bar td.left { 
+.wato table.progress td.bar td.left {
     background-color: #4080ff;
     width: 0%;
 }
-.wato table.progress td.bar td.right { 
+.wato table.progress td.bar td.right {
     width: 100%;
 }
 
@@ -592,27 +592,27 @@ Boston, MA 02110-1301 USA.
 }
 
 /* Statistics table */
-.wato table.progress td.stats { 
+.wato table.progress td.stats {
     padding: 0px 12px 12px 12px;
 }
-.wato table.progress td.stats table { 
+.wato table.progress td.stats table {
     border-collapse: collapse;
     border-spacing: 0px;
     border: 1px solid #fff;
 }
-.wato table.progress td.stats th { 
+.wato table.progress td.stats th {
     text-align: left;
     background-color: transparent;
     padding-right: 3em;
     padding-left: 6px;
 }
-.wato table.progress td.stats th, .wato table.progress td.stats td { 
+.wato table.progress td.stats th, .wato table.progress td.stats td {
     border-bottom: 1px solid #fff;
     padding-top: 3px;
     padding-bottom: 3px;
 }
 
-.wato table.progress td.stats td { 
+.wato table.progress td.stats td {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
     text-align: right;
@@ -621,7 +621,7 @@ Boston, MA 02110-1301 USA.
 }
 
 /* Buttons */
-.wato table.progress td.buttons { 
+.wato table.progress td.buttons {
     padding: 0px 12px 12px 12px;
     text-align: right;
     vertical-align: bottom;

@@ -75,7 +75,7 @@ bool HostgroupsColumn::isNagiosMember(void *data, void *nagobject)
         list = list->next;
     }
     return false;
-} 
+}
 
 bool HostgroupsColumn::isEmpty(void *data)
 {

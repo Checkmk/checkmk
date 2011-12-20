@@ -52,7 +52,7 @@ extern int g_data_encoding;
 
 Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
     _output(output),
-    _table(table), 
+    _table(table),
     _auth_user(0),
     _wait_timeout(0),
     _wait_trigger(WT_NONE),
@@ -243,7 +243,7 @@ Filter *Query::createFilter(Column *column, int operator_id, char *value)
         delete filter;
         filter = 0;
     }
-    else 
+    else
         filter->setQuery(this);
     return filter;
 }
@@ -254,7 +254,7 @@ void Query::parseAndOrLine(char *line, int andor, bool filter)
     char *value = next_field(&line);
     int number = atoi(value);
     if (!isdigit(value[0]) || number <= 0) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for %s%s: need non-zero integer number", 
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for %s%s: need non-zero integer number",
                 filter ? "" : "WaitCondition",
                 andor == ANDOR_OR ? "Or" : "And");
         return;
@@ -268,7 +268,7 @@ void Query::parseAndOrLine(char *line, int andor, bool filter)
 void Query::parseNegateLine(char *line, bool filter)
 {
     if (next_field(&line)) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, 
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
                 filter ? "Negate: does not take any arguments"
                 : "WaitConditionNegate: does not take any arguments");
         return;
@@ -290,7 +290,7 @@ void Query::parseNegateLine(char *line, bool filter)
         }
     }
     Filter *negated = new NegatingFilter(to_negate);
-    if (filter) 
+    if (filter)
         _filter.addSubfilter(negated);
     else
         _wait_condition.addSubfilter(negated);
@@ -302,7 +302,7 @@ void Query::parseStatsAndOrLine(char *line, int andor)
     char *value = next_field(&line);
     int number = atoi(value);
     if (!isdigit(value[0]) || number <= 0) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for Stats%s: need non-zero integer number", 
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for Stats%s: need non-zero integer number",
                 andor == ANDOR_OR ? "Or" : "And");
         return;
     }
@@ -383,7 +383,7 @@ void Query::parseStatsLine(char *line)
         operation = STATS_OP_AVGINV;
 
     char *column_name;
-    if (operation == STATS_OP_COUNT)  
+    if (operation == STATS_OP_COUNT)
         column_name = col_or_op;
     else {
         // aggregation operator is followed by column name
@@ -406,7 +406,7 @@ void Query::parseStatsLine(char *line)
         char *operator_name = next_field(&line);
         if (!operator_name) {
             _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid stats header: missing operator after table '%s'", column_name);
-            return; 
+            return;
         }
         int operator_id = lookupOperator(operator_name);
         if (operator_id == OP_INVALID) {
@@ -424,7 +424,7 @@ void Query::parseStatsLine(char *line)
             return;
         stats_col = new StatsColumn(column, filter, operation);
     }
-    else 
+    else
         stats_col = new StatsColumn(column, 0, operation);
     _stats_columns.push_back(stats_col);
 }
@@ -450,7 +450,7 @@ void Query::parseFilterLine(char *line, bool is_filter)
     char *operator_name = next_field(&line);
     if (!operator_name) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid filter header: missing operator after table '%s'", column_name);
-        return; 
+        return;
     }
     int operator_id = lookupOperator(operator_name);
     if (operator_id == OP_INVALID) {
@@ -489,7 +489,8 @@ void Query::parseAuthUserHeader(char *line)
 void Query::parseStatsGroupLine(char *line)
 {
     // Can be re-enabled from 1.2i1
-    //logger(LOG_WARNING, "Warning: StatsGroupBy is deprecated. Please use Columns instead.");
+    logger(LOG_WARNING, "Warning: StatsGroupBy is deprecated. "
+                        "Please use Columns instead.");
     parseColumnsLine(line);
 }
 
@@ -501,10 +502,11 @@ void Query::parseColumnsLine(char *line)
     char *column_name;
     while (0 != (column_name = next_field(&line))) {
         Column *column = _table->column(column_name);
-        if (column) 
+        if (column)
             _columns.push_back(column);
         else {
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "Table '%s' has no column '%s'", _table->name(), column_name);
+            _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                   "Table '%s' has no column '%s'", _table->name(), column_name);
             Column *col = createDummyColumn(column_name);
             _columns.push_back(col);
         }
@@ -524,8 +526,8 @@ void Query::parseSeparatorsLine(char *line)
     token = next_field(&line);
     if (token) hssep = atoi(token);
 
-    // if (dssep == fieldsep 
-    //       || dssep == listsep 
+    // if (dssep == fieldsep
+    //       || dssep == listsep
     //       || fieldsep == listsep
     //       || dssep == hssep
     //       || fieldsep == hssep
@@ -550,7 +552,8 @@ void Query::parseOutputFormatLine(char *line)
     else if (!strcmp(format, "python"))
         _output_format = OUTPUT_FORMAT_PYTHON;
     else
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid output format. Only 'csv' and 'json' are available.");
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+               "Invalid output format. Only 'csv' and 'json' are available.");
 }
 
 void Query::parseColumnHeadersLine(char *line)
@@ -561,7 +564,8 @@ void Query::parseColumnHeadersLine(char *line)
     else if (!strcmp(value, "off"))
         _show_column_headers = false;
     else
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for ColumnHeaders: must be 'on' or 'off'");
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+              "Invalid value for ColumnHeaders: must be 'on' or 'off'");
 }
 
 void Query::parseKeepAliveLine(char *line)
@@ -572,7 +576,8 @@ void Query::parseKeepAliveLine(char *line)
     else if (!strcmp(value, "off"))
         _output->setDoKeepalive(false);
     else
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for KeepAlive: must be 'on' or 'off'");
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                "Invalid value for KeepAlive: must be 'on' or 'off'");
 }
 
 void Query::parseResponseHeaderLine(char *line)
@@ -583,7 +588,8 @@ void Query::parseResponseHeaderLine(char *line)
     else if (!strcmp(value, "fixed16"))
         _output->setResponseHeader(RESPONSE_HEADER_FIXED16);
     else
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value '%s' for ResponseHeader: must be 'off' or 'fixed16'", value);
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                "Invalid value '%s' for ResponseHeader: must be 'off' or 'fixed16'", value);
 }
 
 void Query::parseLimitLine(char *line)
@@ -595,7 +601,8 @@ void Query::parseLimitLine(char *line)
     else {
         int limit = atoi(value);
         if (!isdigit(value[0]) || limit < 0)
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for Limit: must be non-negative integer");
+            _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                    "Invalid value for Limit: must be non-negative integer");
         else
             _limit = limit;
     }
@@ -610,7 +617,8 @@ void Query::parseWaitTimeoutLine(char *line)
     else {
         int timeout = atoi(value);
         if (!isdigit(value[0]) || timeout < 0)
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for WaitTimeout: must be non-negative integer");
+            _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                    "Invalid value for WaitTimeout: must be non-negative integer");
         else
             _wait_timeout = timeout;
     }
@@ -631,7 +639,8 @@ void Query::parseWaitTriggerLine(char *line)
             return;
         }
     }
-    _output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitTrigger: invalid trigger '%s'. Allowed are %s.", value, WT_ALLNAMES);
+    _output->setError(RESPONSE_CODE_INVALID_HEADER,
+            "WaitTrigger: invalid trigger '%s'. Allowed are %s.", value, WT_ALLNAMES);
 }
 
 void Query::parseWaitObjectLine(char *line)
@@ -642,7 +651,8 @@ void Query::parseWaitObjectLine(char *line)
     char *objectspec = lstrip(line);
     _wait_object = _table->findObject(objectspec);
     if (!_wait_object) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitObject: object '%s' not found or not supported by this table", objectspec);
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                "WaitObject: object '%s' not found or not supported by this table", objectspec);
     }
 }
 
@@ -662,7 +672,7 @@ void Query::parseLocaltimeLine(char *line)
 
     // Round difference to half hour. We assume, that both clocks are more
     // or less synchronized and that the time offset is only due to being
-    // in different time zones. 
+    // in different time zones.
     int full = dif / 1800;
     int rem  = dif % 1800;
     if (rem <= -900)
@@ -670,7 +680,8 @@ void Query::parseLocaltimeLine(char *line)
     else if (rem >= 900)
         full ++;
     if (full >= 48 || full <= -48) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid Localtime header: timezone difference greater then 24 hours");
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                "Invalid Localtime header: timezone difference greater then 24 hours");
         return;
     }
     _timezone_offset = full * 1800;
@@ -700,7 +711,7 @@ void Query::start()
         // if we have no StatsGroupBy: column, we allocate one only row of Aggregators,
         // directly in _stats_aggregators. When grouping the rows of aggregators
         // will be created each time a new group is found.
-        if (_columns.size() == 0) 
+        if (_columns.size() == 0)
         {
             _stats_aggregators = new Aggregator *[_stats_columns.size()];
             for (unsigned i=0; i<_stats_columns.size(); i++)
@@ -754,7 +765,7 @@ bool Query::processDataset(void *data)
             else
                 aggr = _stats_aggregators;
 
-            for (unsigned i=0; i<_stats_columns.size(); i++) 
+            for (unsigned i=0; i<_stats_columns.size(); i++)
                 aggr[i]->consume(data, this);
 
             // No output is done while processing the data, we only
@@ -787,7 +798,7 @@ bool Query::processDataset(void *data)
 void Query::finish()
 {
     // grouped stats
-    if (doStats() && _columns.size() > 0) 
+    if (doStats() && _columns.size() > 0)
     {
         // output values of all stats groups (output has been post poned until now)
         for (_stats_groups_t::iterator it = _stats_groups.begin();
@@ -821,14 +832,14 @@ void Query::finish()
                 delete aggr[i]; // not needed any more
             }
             outputDatasetEnd();
-            delete aggr; 
+            delete aggr;
         }
     }
 
     // stats without group column
     else if (doStats()) {
         outputDatasetBegin();
-        for (unsigned i=0; i<_stats_columns.size(); i++) 
+        for (unsigned i=0; i<_stats_columns.size(); i++)
         {
             if (i > 0)
                 outputFieldSeparator();
@@ -929,7 +940,7 @@ void Query::outputUnicodeEscape(unsigned value)
 {
     char buf[8];
     snprintf(buf, sizeof(buf), "\\u%04x", value);
-    _output->addBuffer(buf, 6); 
+    _output->addBuffer(buf, 6);
 }
 
 void Query::outputHostService(const char *host_name, const char *service_description)
@@ -967,8 +978,8 @@ void Query::outputString(const char *value)
         const char *r = value;
         int chars_left = strlen(r);
         while (*r) {
-            // Always escape control characters (1..31) 
-            if (*r < 32 && *r >= 0) 
+            // Always escape control characters (1..31)
+            if (*r < 32 && *r >= 0)
                 outputUnicodeEscape((unsigned)*r);
 
             // Output ASCII characters unencoded
@@ -1138,7 +1149,7 @@ void Query::doWait()
     // If a condition is set, we check the condition. If it
     // is already true, we do not need to way
     if (_wait_condition.numFilters() > 0 &&
-            _wait_condition.accepts(_wait_object)) 
+            _wait_condition.accepts(_wait_object))
     {
         if (g_debug_level >= 2)
             logger(LG_INFO, "Wait condition true, no waiting neccessary");
@@ -1154,7 +1165,7 @@ void Query::doWait()
     gettimeofday(&now, NULL);
     struct timespec timeout;
     timeout.tv_sec = now.tv_sec + (_wait_timeout / 1000);
-    timeout.tv_nsec = now.tv_usec * 1000 + 1000 * 1000 * (_wait_timeout % 1000);	
+    timeout.tv_nsec = now.tv_usec * 1000 + 1000 * 1000 * (_wait_timeout % 1000);
     if (timeout.tv_nsec > 1000000000) {
         timeout.tv_sec ++;
         timeout.tv_nsec -= 1000000000;
@@ -1175,7 +1186,7 @@ void Query::doWait()
             int ret = pthread_cond_timedwait(&g_wait_cond[_wait_trigger], &g_wait_mutex, &timeout);
             pthread_mutex_unlock(&g_wait_mutex);
             if (ret == ETIMEDOUT) {
-                if (g_debug_level >= 2) 
+                if (g_debug_level >= 2)
                     logger(LG_INFO, "WaitTimeout after %d ms", _wait_timeout);
                 return; // timeout occurred. do not wait any longer
             }

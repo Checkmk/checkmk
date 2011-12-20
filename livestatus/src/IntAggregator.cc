@@ -70,11 +70,11 @@ void IntAggregator::output(Query *q)
         case STATS_OP_SUM:
         case STATS_OP_MIN:
         case STATS_OP_MAX:
-            q->outputInteger64(_aggr); 
+            q->outputInteger64(_aggr);
             break;
 
         case STATS_OP_SUMINV:
-            q->outputInteger64(_sumq); 
+            q->outputInteger64(_sumq);
             break;
 
         case STATS_OP_AVG:
@@ -82,7 +82,7 @@ void IntAggregator::output(Query *q)
             break;
 
         case STATS_OP_AVGINV:
-            q->outputInteger64(_sumq / _count); 
+            q->outputInteger64(_sumq / _count);
             break;
 
         case STATS_OP_STD:
@@ -94,7 +94,7 @@ void IntAggregator::output(Query *q)
     }
 }
 
-/* Algorithmus fuer die Standardabweichung, 
+/* Algorithmus fuer die Standardabweichung,
    bei der man zuvor den Mittelwert nicht
    wissen muss:
 

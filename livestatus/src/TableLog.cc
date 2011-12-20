@@ -76,40 +76,40 @@ void debug(const char *loginfo, ...)
     pthread_mutex_init(&_lock, 0);
 
     LogEntry *ref = 0;
-    addColumn(new OffsetTimeColumn("time", 
+    addColumn(new OffsetTimeColumn("time",
                 "Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));
-    addColumn(new OffsetIntColumn("lineno", 
+    addColumn(new OffsetIntColumn("lineno",
                 "The number of the line in the log file", (char *)&(ref->_lineno) - (char *)ref, -1));
-    addColumn(new OffsetIntColumn("class", 
+    addColumn(new OffsetIntColumn("class",
                 "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)", (char *)&(ref->_logclass) - (char *)ref, -1));
 
-    addColumn(new OffsetStringColumn("message", 
+    addColumn(new OffsetStringColumn("message",
                 "The complete message line including the timestamp", (char *)&(ref->_complete) - (char *)ref, -1));
-    addColumn(new OffsetStringColumn("type", 
+    addColumn(new OffsetStringColumn("type",
                 "The type of the message (text before the colon), the message itself for info messages", (char *)&(ref->_text) - (char *)ref, -1));
-    addColumn(new OffsetStringColumn("options", 
+    addColumn(new OffsetStringColumn("options",
                 "The part of the message after the ':'", (char *)&(ref->_options) - (char *)ref, -1));
-    addColumn(new OffsetStringColumn("comment", 
+    addColumn(new OffsetStringColumn("comment",
                 "A comment field used in various message types", (char *)&(ref->_comment) - (char *)ref, -1));
-    addColumn(new OffsetStringColumn("plugin_output", 
+    addColumn(new OffsetStringColumn("plugin_output",
                 "The output of the check, if any is associated with the message", (char *)&(ref->_check_output) - (char *)ref, -1));
-    addColumn(new OffsetIntColumn("state", 
+    addColumn(new OffsetIntColumn("state",
                 "The state of the host or service in question", (char *)&(ref->_state) - (char *)ref, -1));
-    addColumn(new OffsetStringColumn("state_type", 
+    addColumn(new OffsetStringColumn("state_type",
                 "The type of the state (varies on different log classes)", (char *)&(ref->_state_type) - (char *)ref, -1));
-    addColumn(new OffsetIntColumn("attempt", 
+    addColumn(new OffsetIntColumn("attempt",
                 "The number of the check attempt", (char *)&(ref->_attempt) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("service_description",
-                "The description of the service log entry is about (might be empty)", 
+                "The description of the service log entry is about (might be empty)",
                 (char *)&(ref->_svc_desc) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("host_name",
-                "The name of the host the log entry is about (might be empty)", 
+                "The name of the host the log entry is about (might be empty)",
                 (char *)&(ref->_host_name) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("contact_name",
-                "The name of the contact the log entry is about (might be empty)", 
+                "The name of the contact the log entry is about (might be empty)",
                 (char *)&(ref->_contact_name) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("command_name",
-                "The name of the command of the log entry (e.g. for notifications)", 
+                "The name of the command of the log entry (e.g. for notifications)",
                 (char *)&(ref->_command_name) - (char *)ref, -1));
 
     // join host and service tables
@@ -156,7 +156,7 @@ void TableLog::answerQuery(Query *query)
         return;
     }
 
-    // Has Nagios rotated logfiles? => Update 
+    // Has Nagios rotated logfiles? => Update
     // our file index. And delete all memorized
     // log messages.
     if (last_log_rotation > _last_index_update) {
@@ -188,7 +188,7 @@ void TableLog::answerQuery(Query *query)
        to change this and start with the newest. That way,
        the Limit: header produces more reasonable results. */
 
-    /* OLD CODE - OLDEST FIRST 
+    /* OLD CODE - OLDEST FIRST
        _logfiles_t::iterator it;
        if (since == 0)
        it = _logfiles.begin();
@@ -212,10 +212,10 @@ void TableLog::answerQuery(Query *query)
 
     // Now find newest log where 'until' is contained. The problem
     // here: For each logfile we only know the time of the *first* entry,
-    // not that of the last. 
+    // not that of the last.
     while (it != _logfiles.begin() && it->first > until) // while logfiles are too new...
         --it; // go back in history
-    if (it->first > until)  { // all logfiles are too new 
+    if (it->first > until)  { // all logfiles are too new
         pthread_mutex_unlock(&_lock);
         return;
     }
@@ -250,7 +250,7 @@ void TableLog::updateLogfileIndex()
     if (dir) {
         char abspath[4096];
         struct dirent *ent, *result;
-        int len = offsetof(struct dirent, d_name) 
+        int len = offsetof(struct dirent, d_name)
             + pathconf(log_archive_path, _PC_NAME_MAX) + 1;
         ent = (struct dirent *)malloc(len);
         while (0 == readdir_r(dir, ent, &result) && result != 0)
@@ -301,7 +301,7 @@ void TableLog::dumpLogfiles()
 /* This method is called each time a log message is loaded
    into memory. If the number of messages loaded in memory
    is to large, memory will be freed by flushing logfiles
-   and message not needed by the current query. 
+   and message not needed by the current query.
 
    The parameters to this method reflect the current query,
    not the messages that just has been loaded.
@@ -311,7 +311,7 @@ void TableLog::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
     if (++_num_cached_messages <= _max_cached_messages)
         return; // current message count still allowed, everything ok
 
-    /* Memory checking an freeing consumes CPU ressources. We save 
+    /* Memory checking an freeing consumes CPU ressources. We save
        ressources, by avoiding to make the memory check each time
        a new message is loaded when being in a sitation where no
        memory can be freed. We do this by suppressing the check when
@@ -330,7 +330,7 @@ void TableLog::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
         //    debug("Logfile %s (%s, %d entries)", log->path(), log == logfile ? "current" : "other", log->numEntries());
         if (log == logfile) {
             // Do not touch the logfile the Query is currently accessing
-            // and 
+            // and
             break;
         }
         if (log->numEntries() > 0) {
@@ -390,7 +390,7 @@ void TableLog::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
     // despite the fact that there are still too many messages
     // loaded.
     if (g_debug_level > 2)
-        debug("Cannot unload more messages. Still %d loaded (max is %d)", 
+        debug("Cannot unload more messages. Still %d loaded (max is %d)",
                 _num_cached_messages, _max_cached_messages);
 }
 
@@ -402,7 +402,7 @@ bool TableLog::isAuthorized(contact *ctc, void *data)
 
     if (hst || svc)
         return is_authorized_for(ctc, hst, svc);
-    // suppress entries for messages that belong to 
+    // suppress entries for messages that belong to
     // hosts that do not exist anymore.
     else if (entry->_logclass == LOGCLASS_ALERT
         || entry->_logclass == LOGCLASS_NOTIFICATION
@@ -422,7 +422,7 @@ Column *TableLog::column(const char *colname)
     // Now try with prefix "current_", since our joined
     // tables have this prefix in order to make clear that
     // we access current and not historic data and in order
-    // to prevent mixing up historic and current fields with 
+    // to prevent mixing up historic and current fields with
     // the same name.
     string with_current = string("current_") + colname;
     return Table::column(with_current.c_str());

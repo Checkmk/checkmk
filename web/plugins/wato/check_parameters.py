@@ -89,8 +89,8 @@ checkgroups.append((
         ]
       ),
     TextAscii(
-        title = _("Replication Partner"), 
-        help = _("The name of the replication partner (Destination DC Site/Destination DC)."), 
+        title = _("Replication Partner"),
+        help = _("The name of the replication partner (Destination DC Site/Destination DC)."),
     ),
     "first"
 ))
@@ -107,16 +107,16 @@ checkgroups.append((
                   help = _("In few cases you have to set the link speed manually it you want "
                            "to use relative levels"),
                   elements = [
-                      Tuple(   
-                        title = _("Maximum bandwidth in relation to the total traffic"),  
+                      Tuple(
+                        title = _("Maximum bandwidth in relation to the total traffic"),
                         elements = [
                             Percentage(title = _("Warning at"), unit = _("percent")),
                             Percentage(title = _("Critical at"), unit = _("percent")),
                         ]
                     ),
-                    Tuple( 
+                    Tuple(
                         title = _("Megabyte bandwidth of the port"),
-                        elements = [ 
+                        elements = [
                             Integer(title = _("Warning at"), unit = _("MByte/s")),
                             Integer(title = _("Critical at"), unit = _("MByte/s")),
                         ]
@@ -130,21 +130,21 @@ checkgroups.append((
                              "speed does not work and you want monitors the relative levels of the "
                              "throughtput you have to set the link speed here."),
                     unit = _("GByte/s")
-                ) 
+                )
             ),
             ("rxcrcs",
                 Tuple (
                     title = _("CRC errors rate"),
                     elements = [
                         Percentage( title = _("Warning at"), unit = _("percent")),
-                        Percentage( title = _("Critical at"), unit = _("percent")),  
+                        Percentage( title = _("Critical at"), unit = _("percent")),
                     ]
                )
             ),
             ("rxencoutframes",
                 Tuple (
                     title = _("Enc-Out frames rate"),
-                    elements = [ 
+                    elements = [
                         Percentage( title = _("Warning at"), unit = _("percent")),
                         Percentage( title = _("Critical at"), unit = _("percent")),
                     ]
@@ -153,7 +153,7 @@ checkgroups.append((
             ("notcredits",
                 Tuple (
                     title = _("No-TxCredits errors"),
-                    elements = [ 
+                    elements = [
                         Percentage( title = _("Warning at"), unit = _("percent")),
                         Percentage( title = _("Critical at"), unit = _("percent")),
                     ]
@@ -162,7 +162,7 @@ checkgroups.append((
             ("c3discards",
                 Tuple (
                     title = _("C3 discards"),
-                    elements = [ 
+                    elements = [
                         Percentage( title = _("Warning at"), unit = _("percent")),
                         Percentage( title = _("Critical at"), unit = _("percent")),
                     ]
@@ -174,7 +174,7 @@ checkgroups.append((
                     help = _("A number in minutes. If this parameter is set, then "
                            "averaging is turned on and all levels will be applied "
                            "to the averaged values, not the the current ones. Per "
-                           "default, averaging is turned off. "), 
+                           "default, averaging is turned off. "),
                    unit = _("minutes"),
                    minvalue = 1,
                 )
@@ -184,14 +184,14 @@ checkgroups.append((
                     ListChoice(
                         title = _("Allowed states (otherwise check will be critical)"),
                         choices = [ ("1", _("noCard") ),
-                                    ("2", _("noTransceiver") ),   
-                                    ("3", _("laserFault") ),   
-                                    ("4", _("noLight") ),   
-                                    ("5", _("noSync") ),   
-                                    ("6", _("inSync") ),   
-                                    ("7", _("portFault") ),   
-                                    ("8", _("daigFault") ),   
-                                    ("9", _("lockRef") ),   
+                                    ("2", _("noTransceiver") ),
+                                    ("3", _("laserFault") ),
+                                    ("4", _("noLight") ),
+                                    ("5", _("noSync") ),
+                                    ("6", _("inSync") ),
+                                    ("7", _("portFault") ),
+                                    ("8", _("daigFault") ),
+                                    ("9", _("lockRef") ),
                                   ]
                     ),
                     title = _("Physical state of port") ,
@@ -204,10 +204,10 @@ checkgroups.append((
                     ListChoice(
                         title = _("Allowed states (otherwise check will be critical)"),
                         choices = [ ("0", _("unknown") ),
-                                    ("1", _("online") ),   
-                                    ("2", _("offline") ),   
-                                    ("3", _("testing") ),   
-                                    ("4", _("faulty") ),   
+                                    ("1", _("online") ),
+                                    ("2", _("offline") ),
+                                    ("3", _("testing") ),
+                                    ("4", _("faulty") ),
                                   ]
                     ),
                     title = _("Operational state") ,
@@ -219,10 +219,10 @@ checkgroups.append((
                 Optional(
                     ListChoice(
                         title = _("Allowed states (otherwise check will be critical)"),
-                        choices = [ ("1", _("online") ),   
-                                    ("2", _("offline") ),   
-                                    ("3", _("testing") ),   
-                                    ("4", _("faulty") ),   
+                        choices = [ ("1", _("online") ),
+                                    ("2", _("offline") ),
+                                    ("3", _("testing") ),
+                                    ("4", _("faulty") ),
                                   ]
                     ),
                     title = _("Administrative state") ,
@@ -233,8 +233,8 @@ checkgroups.append((
         ]
       ),
     TextAscii(
-        title = _("Portname"), 
-        help = _("The name of the switch port"), 
+        title = _("Portname"),
+        help = _("The name of the switch port"),
     ),
     "first"
 ))
@@ -242,11 +242,42 @@ checkgroups.append((
 checkgroups.append((
     "systemtime",
     _("System time offset"),
-    Tuple( 
+    Tuple(
         title = _("Time offset"),
-        elements = [ 
+        elements = [
            Integer(title = _("Warning at"), unit = _("Seconds")),
            Integer(title = _("Critical at"), unit = _("Seconds")),
+        ]
+    ),
+    None,
+    "first"
+))
+
+checkgroups.append((
+    "fileinfo",
+    _("Fileinfo"),
+    Dictionary(
+        elements = [
+            ( "minage",
+                Tuple(
+                    title = _("Minimal age"),
+                    elements = [
+                      Age(title = _("Warning younger then")),
+                      Age(title = _("Critical younger then")),
+                    ]
+                )
+            ),
+            ( "maxage",
+                Tuple(
+                    title = _("Maximal age"),
+                    elements = [
+                      Age(title = _("Warning older then")),
+                      Age(title = _("Critical older then")),
+                    ]
+                )
+            ),
+
+
         ]
     ),
     None,
@@ -257,109 +288,109 @@ checkgroups.append((
     "tcp_conn_stats",
     ("TCP connection stats"),
     Dictionary(
-        elements = [ 
-            ( "ESTABLISHED", 
+        elements = [
+            ( "ESTABLISHED",
               Tuple(
                   title = _("ESTABLISHED"),
                   help = _("connection up and passing data"),
                   elements = [
-                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Warning at"),  label = _("connections")),
                       Integer(title = _("Critical at"), label = _("connections"))
                   ]
               )
             ),
-            ( "SYN_SENT", 
+            ( "SYN_SENT",
               Tuple(
                   title = _("SYN_SENT"),
                   help = _("session has been requested by us; waiting for reply from remote endpoint"),
                   elements = [
-                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Warning at"),  label = _("connections")),
                       Integer(title = _("Critical at"), label = _("connections"))
                   ]
               )
             ),
-            ( "SYN_RECV", 
+            ( "SYN_RECV",
               Tuple(
                   title = _("SYN_RECV"),
                   help = _("session has been requested by a remote endpoint "
                            "for a socket on which we were listening"),
                   elements = [
-                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Warning at"),  label = _("connections")),
                       Integer(title = _("Critical at"), label = _("connections"))
                   ]
               )
             ),
-            ( "LAST_ACK", 
+            ( "LAST_ACK",
               Tuple(
                   title = _("LAST_ACK"),
                   help = _("our socket is closed; remote endpoint has also shut down; "
                            " we are waiting for a final acknowledgement"),
                   elements = [
-                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Warning at"),  label = _("connections")),
                       Integer(title = _("Critical at"), label = _("connections"))
                   ]
               )
             ),
-            ( "CLOSE_WAIT", 
+            ( "CLOSE_WAIT",
               Tuple(
                   title = _("CLOSE_WAIT"),
                   help = _("remote endpoint has shut down; the kernel is waiting "
                            "for the application to close the socket"),
                   elements = [
-                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Warning at"),  label = _("connections")),
                       Integer(title = _("Critical at"), label = _("connections"))
                   ]
               )
             ),
-            ( "TIME_WAIT", 
+            ( "TIME_WAIT",
               Tuple(
                   title = _("TIME_WAIT"),
                   help = _("socket is waiting after closing for any packets left on the network"),
                   elements = [
-                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Warning at"),  label = _("connections")),
                       Integer(title = _("Critical at"), label = _("connections"))
                   ]
               )
             ),
-            ( "CLOSED", 
+            ( "CLOSED",
               Tuple(
                   title = _("CLOSED"),
                   help = _("socket is not being used"),
                   elements = [
-                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Warning at"),  label = _("connections")),
                       Integer(title = _("Critical at"), label = _("connections"))
                   ]
               )
             ),
-            ( "CLOSING", 
+            ( "CLOSING",
               Tuple(
                   title = _("CLOSING"),
                   help = _("our socket is shut down; remote endpoint is shut down; "
                            "not all data has been sent"),
                   elements = [
-                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Warning at"),  label = _("connections")),
                       Integer(title = _("Critical at"), label = _("connections"))
                   ]
               )
             ),
-            ( "FIN_WAIT1", 
+            ( "FIN_WAIT1",
               Tuple(
                   title = _("FIN_WAIT1"),
                   help = _("our socket has closed; we are in the process of "
                            "tearing down the connection"),
                   elements = [
-                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Warning at"),  label = _("connections")),
                       Integer(title = _("Critical at"), label = _("connections"))
                   ]
               )
             ),
-            ( "FIN_WAIT2", 
+            ( "FIN_WAIT2",
               Tuple(
                   title = _("FIN_WAIT2"),
                   help = _("the connection has been closed; our socket is waiting "
                            "for the remote endpoint to shutdown"),
                   elements = [
-                      Integer(title = _("Warning at"),  label = _("connections")),  
+                      Integer(title = _("Warning at"),  label = _("connections")),
                       Integer(title = _("Critical at"), label = _("connections"))
                   ]
               )
@@ -370,18 +401,18 @@ checkgroups.append((
     "first"
 ))
 
-checkgroups.append(( 
-    "filesystem", 
+checkgroups.append((
+    "filesystem",
     _("Filesystems (used space and growth)"),
     Dictionary(
         elements = [
-            ( "levels", 
+            ( "levels",
               Tuple(
                   title = _("Levels for the used space"),
                   elements = [
-                      Percentage(title = _("Warning at"),  label = _("% usage")),  
+                      Percentage(title = _("Warning at"),  label = _("% usage")),
                       Percentage(title = _("Critical at"), label = _("% usage"))])),
-            (  "magic", 
+            (  "magic",
                Float(
                   title = _("Magic factor (automatic level adaptation for large filesystems)"),
                   minvalue = 0.1,
@@ -422,7 +453,7 @@ checkgroups.append((
                   title = _("Trend performance data"),
                   label = _("Enable performance data from trends"))),
 
-            
+
         ]),
     TextAscii(
         title = _("Mount point"),
@@ -432,12 +463,12 @@ checkgroups.append((
     "dict")
 )
 
-checkgroups.append(( 
+checkgroups.append((
     "if",
     _("Network interfaces and switch ports"),
     Dictionary(
         elements = [
-            ( "errors", 
+            ( "errors",
               Tuple(
                   title = _("Levels for error rates"),
                   help = _("This levels make the check go warning or critical whenever the "
@@ -447,7 +478,7 @@ checkgroups.append((
                   elements = [
                       Percentage(title = _("Warning at"), label = _("% errors")),
                       Percentage(title = _("Critical at"), label = _("% errors"))
-                  ])), 
+                  ])),
 
              ( "speed",
                OptionalDropdownChoice(
@@ -458,7 +489,7 @@ checkgroups.append((
                             "some interfaces do not provide speed information. In such cases "
                             "this setting is used as the assumed speed when it comes to "
                             "traffic monitoring (see below)."),
-                  choices = [ 
+                  choices = [
                      ( None,       "ignore speed" ),
                      ( 10000000,   "10 MBit/s" ),
                      ( 100000000,  "100 MBit/s" ),
@@ -472,14 +503,14 @@ checkgroups.append((
                 Optional(
                     ListChoice(
                         title = _("Allowed states:"),
-                        choices = _if_portstate_choices),  
+                        choices = _if_portstate_choices),
                     title = _("Operational State"),
                     help = _("Activating the monitoring of the operational state (opstate), "
                              "the check will get warning or critical of the current state "
-                             "of the interface does not match the expected state or states."), 
+                             "of the interface does not match the expected state or states."),
                     label = _("Ignore the operational state"),
                     none_label = _("ignore"),
-                    negate = True)  
+                    negate = True)
              ),
              ( "traffic",
                Alternative(
@@ -524,7 +555,7 @@ checkgroups.append((
     "dict",
     ))
 
-            
+
 checkgroups.append((
     "memory",
     _("Main memory usage (Linux / UNIX)"),
@@ -534,7 +565,7 @@ checkgroups.append((
                "to the total RAM of the system. This means that the memory usage can exceed 100%. "
                "A usage of 200% means that the total size of all processes is twice as large as "
                "the main memory, so <b>at least</b> the half of it is currently swapped out."),
-        elements = [ 
+        elements = [
             Tuple(
                 title = _("Specify levels in percentage of total RAM"),
                 elements = [
@@ -551,7 +582,7 @@ checkgroups.append((
 
 checkgroups.append((
     "cpu_load",
-    _("CPU load (not utilization!)"), 
+    _("CPU load (not utilization!)"),
     Tuple(
           help = _("The CPU load of a system is the number of processes currently being "
                    "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
@@ -572,7 +603,7 @@ checkgroups.append((
               elements = [
                   Percentage(title = _("Warning at a disk wait of"), label = "%"),
                   Percentage(title = _("Critical at a disk wait of"), label = "%")]),
-        label = _("Alert on too high disk wait (IO wait)"), 
+        label = _("Alert on too high disk wait (IO wait)"),
         help = _("The CPU utilization sums up the percentages of CPU time that is used "
                  "for user processes, kernel routines (system), disk wait (sometimes also "
                  "called IO wait) or nothing (idle). "
@@ -585,7 +616,7 @@ checkgroups.append((
 
 checkgroups.append((
     "threads",
-    _("Number of threads"), 
+    _("Number of threads"),
     Tuple(
           help = _("This levels check the number of currently existing threads on the system. Each process has at "
                    "least one thread."),
@@ -614,7 +645,7 @@ checkgroups.append((
                  sameline = True)]),
     DropdownChoice(
         title = _("kernel counter"),
-        choices = [ (x,x) for x in [ 
+        choices = [ (x,x) for x in [
            "Context Switches",
            "Process Creations",
            "Major Page Faults" ]]),
@@ -665,7 +696,7 @@ checkgroups.append((
 
 checkgroups.append((
     "mailqueue_length",
-    _("Number of mails in outgoing mail queue"), 
+    _("Number of mails in outgoing mail queue"),
     Tuple(
           help = _("This levels is applied to the number of Email that are currently in the outgoing mail queue."),
           elements = [
@@ -693,7 +724,7 @@ for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
         itemhelp = None
 
     register_rule(
-        group, 
+        group,
         varname = "checkgroup_parameters:%s" % checkgroup,
         title = title,
         valuespec = valuespec,
@@ -725,7 +756,7 @@ for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
         elements.append(itemspec)
     if not valuespec:
         valuespec =\
-            FixedValue(None, 
+            FixedValue(None,
                 help = _("This check has no parameters."),
                 totext = "")
     valuespec._title = _("Parameters")

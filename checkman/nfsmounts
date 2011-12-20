@@ -33,6 +33,6 @@ perfdata:
 
 inventory:
   All NFS mounts are found automatically. This is done
-  by scanning {/proc/mounts}. The file {/etc/fstab} 
+  by scanning {/proc/mounts}. The file {/etc/fstab}
   is irrelevant.
 

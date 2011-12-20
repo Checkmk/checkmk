@@ -11,8 +11,8 @@ description:
 
 perfdata:
  Three variables: The percentage of time spent in {user}, {system} and {wait}
- (disk wait). The idle time can be computed by substracting those three values 
- from 100%. The user value contains also {nice}. 
+ (disk wait). The idle time can be computed by substracting those three values
+ from 100%. The user value contains also {nice}.
 
 inventory:
  One check per host is created if the agent contains a {kernel}

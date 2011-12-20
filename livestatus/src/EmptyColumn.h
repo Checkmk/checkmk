@@ -38,4 +38,4 @@ public:
     void output(void *data, Query *);
 };
 
-#endif // EmptyColumn_h 
+#endif // EmptyColumn_h

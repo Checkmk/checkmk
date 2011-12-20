@@ -72,7 +72,7 @@ class FilterWatoFile(Filter):
         return sel
 
     def sublist(self, elements, my_path, depth):
-        vs = elements.values() 
+        vs = elements.values()
         vs.sort(lambda a, b: cmp(a["title"].lower(), b["title"].lower()))
         sel = []
         for e in vs:
@@ -90,7 +90,7 @@ class FilterWatoFile(Filter):
         self.check_wato_data_update()
         current = html.var(self.name)
         if current and current != "/":
-            return self.path_to_tree.get(current) 
+            return self.path_to_tree.get(current)
 
 declare_filter(10, FilterWatoFile())
 if "wato_folder" not in ubiquitary_filters:
@@ -104,7 +104,7 @@ multisite_painters["host_filename"] = {
 }
 
 def paint_wato_folder(row, how):
-    filename = row["host_filename"] 
+    filename = row["host_filename"]
     if not filename.startswith("/wato/") or not filename.endswith("/hosts.mk"):
         return "", ""
     wato_path = filename[6:-9]
@@ -120,7 +120,7 @@ def paint_wato_folder(row, how):
         current_path = html.var("wato_folder")
         if not current_path or not wato_path.startswith(current_path):
             return "", " / ".join(title_path)
-        
+
         depth = current_path.count('/') + 1
         return "", " / ".join(title_path[depth:])
 

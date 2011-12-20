@@ -2,15 +2,15 @@ title: Check AKCP Sensor Humidity
 agents: snmp
 author: Michael Nieporte <michael.nieporte@uk-essen.de>
 license: GPL
-distribution: 
+distribution:
 description:
  This check monitors the humidity of sensors attached
- to AKCP SensorProbe. 
+ to AKCP SensorProbe.
 
 item:
  The item is the sensor description of the sensor as string.
 
-perfdata: 
+perfdata:
  the current humidity in percent, lower crit, lower warn, upper warn, upper crit
 
 inventory:

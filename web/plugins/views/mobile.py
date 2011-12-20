@@ -57,7 +57,7 @@ def mobile_view(d):
 
 
 multisite_builtin_views.update({
-  
+
    #Service search
    'mobile_searchsvc': mobile_view({
                'datasource': 'services',
@@ -123,8 +123,8 @@ multisite_builtin_views.update({
                'title': _('Search'),
                'topic': _('Services')
              }),
-  
-  
+
+
     # View of all current service problems
     'mobile_svcproblems': mobile_view({
         'datasource': 'services',
@@ -386,7 +386,7 @@ multisite_builtin_views.update({
         'title': _('Search'),
         'topic': _('Hosts'),
     }),
-    
+
      #List all host problems
      'mobile_hostproblems': mobile_view({
                   'datasource': 'hosts',
@@ -425,8 +425,8 @@ multisite_builtin_views.update({
                   'sorters': [],
                   'title': _('Problems (all)'),
                   'topic': _('Hosts')}),
-                  
-                  
+
+
      #List unhandled host problems
      'mobile_hostproblems_unack': mobile_view({
                   'datasource': 'hosts',
@@ -462,9 +462,9 @@ multisite_builtin_views.update({
                   'sorters': [],
                   'title': _('Problems (unhandled)'),
                   'topic': _('Hosts')}),
-            
+
             #All Nagios Events
-            'mobile_events': mobile_view({ 
+            'mobile_events': mobile_view({
             'datasource': 'log_events',
             'group_painters': [],
             'hard_filters': ['logtime'],
@@ -492,7 +492,7 @@ multisite_builtin_views.update({
             'sorters': [('log_time', False), ('log_lineno', False)],
             'title': 'Events',
             'topic': _('Events')}),
-            
+
             #All Notifications
             'mobile_notifications': mobile_view({
                    'datasource': 'log',
@@ -537,7 +537,7 @@ multisite_builtin_views.update({
                    'sorters': [('log_time', False), ('log_lineno', False)],
                    'title': _('Notifications'),
                    'topic': _('Events')}),
-                    
+
                    #All events of a Host
                    'mobile_hostsvcevents': mobile_view({'browser_reload': 0,
                         'datasource': 'log_events',
@@ -569,7 +569,7 @@ multisite_builtin_views.update({
                         'show_filters': ['logtime', 'log_state'],
                         'sorters': [('log_time', False), ('log_lineno', False)],
                         'title': _('Events of host & services')}),
-                        
+
                         #All Service events
                         'mobile_svcevents': mobile_view({'browser_reload': 0,
                             'datasource': 'log_events',
@@ -596,7 +596,7 @@ multisite_builtin_views.update({
                             'show_filters': ['logtime'],
                             'sorters': [('log_time', False), ('log_lineno', False)],
                             'title': _('Events of service')}),
-                   
+
                         #All Notfications of a contact
                         'mobile_contactnotifications': mobile_view({
                              'datasource': 'log',
@@ -643,7 +643,7 @@ multisite_builtin_views.update({
                              'sorters': [('log_time', False), ('log_lineno', False)],
                              'title': _('Notifications of contact'),
                              'topic': _('Other')}),
-                               
+
                                #All Notfications of a Hosts
                                'mobile_hostsvcnotifications': mobile_view({
                                    'datasource': 'log',
@@ -689,8 +689,8 @@ multisite_builtin_views.update({
                                    'sorters': [('log_time', False), ('log_lineno', False)],
                                    'title': _('Notifications of host & services'),
                                    'topic': _('Other')}),
-                           
-                           
+
+
                            #All Notfications of a service
                            'mobile_svcnotifications': mobile_view({
                                'datasource': 'log',
@@ -730,8 +730,8 @@ multisite_builtin_views.update({
                                'sorters': [('log_time', False), ('log_lineno', False)],
                                'title': _('Service Notifications'),
                                'topic': _('Other')}),
-                  
-               
+
+
 })
 
 
@@ -802,18 +802,18 @@ def render_mobile_list(rows, view, group_painters, painters, num_columns, show_c
     html.write('<ul class="mobilelist" data-role="listview">\n')
 
     # Paint data rows
-    for row in rows: 
+    for row in rows:
         html.write('<li>')
         cells = [ prepare_paint(p, row) for p in painters ]
         if len(cells) > 0: # First cell (assumedly state) is left
             html.write('<p class="ui-li-aside ui-li-desc %s">%s</p>' % cells[0])
             if len(cells) > 1:
-                content = " &middot; ".join([ cell[1] for cell in cells[1:num_columns+1]]) 
+                content = " &middot; ".join([ cell[1] for cell in cells[1:num_columns+1]])
                 html.write('<h3>%s</h3>' % content)
                 for cell, p in zip(cells[num_columns+1:], painters[num_columns+1:]):
-                    html.write('<p class="ui-li-desc">')  
+                    html.write('<p class="ui-li-desc">')
                     paint_header(view, p)
-                    html.write(': <span class="%s">%s</span></p>\n' % cell)  
+                    html.write(': <span class="%s">%s</span></p>\n' % cell)
         html.write('</li>\n')
     html.write('</ul>')
     html.javascript('$("ul.mobilelist a").attr("data-ajax", "false");')

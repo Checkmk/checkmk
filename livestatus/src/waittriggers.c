@@ -24,13 +24,13 @@
 
 #include "waittriggers.h"
 
-const char *wt_names[WT_NUM_TRIGGERS] = 
+const char *wt_names[WT_NUM_TRIGGERS] =
 {
-    "all", 
-    "check", 
-    "state", 
-    "log", 
-    "downtime", 
+    "all",
+    "check",
+    "state",
+    "log",
+    "downtime",
     "comment",
     "command",
     "program",

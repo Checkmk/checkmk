@@ -12,7 +12,7 @@ description:
  Currently there is no way to apply levels and the check is always {OK}.
 
 
-perfdata: 
+perfdata:
  Five values: {active}: the number of currently active connections (optimized),
  {established}: the number of established connections (optimized), {halfOpened}:
  the number of half opened connections (optimized), {halfClosed}: the number

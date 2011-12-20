@@ -424,7 +424,7 @@ def paint_reschedule(what, row, tags, custom_vars):
         return '<a href=\"javascript:void(0);\" ' \
                'onclick="performAction(this, \'reschedule\', \'%s\', \'%s\', \'%s\');">' \
                '<img class=icon title="%s" src="images/icon_reload.gif" /></a>' % \
-                (row["site"], row["host_name"], servicedesc, 
+                (row["site"], row["host_name"], servicedesc,
                (_('Reschedule an immediate check of this %s') % _(what)))
 
 multisite_icons.append({

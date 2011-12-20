@@ -16,22 +16,22 @@ description:
  be checked.
 
 item:
- {"Context Switches"}, {"Process Creations"}, {"Major Page Faults"} or the name 
+ {"Context Switches"}, {"Process Creations"}, {"Major Page Faults"} or the name
  of the kernel counter in question as found in {/proc/stat} or
  {/proc/vmstat}.
 
 examples:
  # Monitor major page faults, set levels to 200 and 400 per second
  # Do this on all hosts with the tag "lnx"
- checks += [ 
+ checks += [
    ( ["lnx"], ALL_HOSTS, "kernel", "Major Page Faults", (200, 400) )
  ]
 
 perfdata:
- One variable: the current value of the counter. 
+ One variable: the current value of the counter.
 
 inventory:
- Per default one check for {"Major Page Faults"}, 
+ Per default one check for {"Major Page Faults"},
  {"Context Switches"} and {"Process Creations"}
  will be created on each host providing that data. You can
  override this list globally by setting {inventory_kernel_counters}

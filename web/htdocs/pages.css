@@ -25,7 +25,7 @@ Boston, MA 02110-1301 USA.
 
 */
 
-/* Styles used in all Multisite pages, for example in the 
+/* Styles used in all Multisite pages, for example in the
    status GUI, in WATO pages and in "Add snapin". These
    styles are not used in the sidebar and in Mobile. */
 
@@ -62,7 +62,7 @@ body.main table.header {
     padding: 0px 0px 10px 0px;
     border-spacing: 0px;
     color: #fff;
-} 
+}
 
 body.main hr.header {
     background-color: #fff;
@@ -109,7 +109,7 @@ body.main div.urldebug {
 
 
 /* The content page footer containing optional status icons */
-body.main table.footer { 
+body.main table.footer {
     margin-top: 10px;
     width: 100%;
     color: #fff;
@@ -201,7 +201,7 @@ div.contextlink img {
 | Status-GUI, in WATO and in custom modules that use similar tables.       |
 '-------------------------------------------------------------------------*/
 
-table.data { 
+table.data {
     border-spacing: 0px;
     margin: 0;
     padding: 0;
@@ -253,20 +253,20 @@ table.data th.tablegap {
     background-color: transparent; /* none; */
 }
 
-table.data tr.data td { 
+table.data tr.data td {
     border: 1px solid #bbb;
     padding: 2px 4px;
     height: 22px;
     vertical-align: middle;
 }
 
-table.data tr.data td.checkbox { 
+table.data tr.data td.checkbox {
     width: 20px;
     text-align: center;
 }
-table.data th input.checkgroup {  
-    height: 12px; 
-    width: 16px; 
+table.data th input.checkgroup {
+    height: 12px;
+    width: 16px;
     padding: 0;
     margin: 0;
     text-align: center;
@@ -274,7 +274,7 @@ table.data th input.checkgroup {
     font-size: 5pt;
 }
 
-table.data td.host { 
+table.data td.host {
     border-style: none;
     font-weight: bold;
     padding-top: 1ex;
@@ -300,7 +300,7 @@ table.groupheader {
 }
 
 tr.groupheader td {
-    border-style: none; 
+    border-style: none;
     margin: 0px;
     padding-top: 2px;
     font-weight: bold;
@@ -319,7 +319,7 @@ tr.groupheader a:hover {
     width: 50px;
     padding: 2px 5px;
     border: 1px solid #fff;
-} 
+}
 
 /*-------------------------------------------------------------------------.
 |                    _____                                                 |
@@ -332,7 +332,7 @@ tr.groupheader a:hover {
 | Input forms (e.g. Filters, Commands, WATO)                               |
 '-------------------------------------------------------------------------*/
 
-h2.formcaption { 
+h2.formcaption {
   font-size: 100%;
   margin-bottom: 0px;
 }
@@ -369,7 +369,7 @@ table.form.nomargin td.title {
     border-top-style: solid;
 }
 
-table.form td { 
+table.form td {
     padding: 4px 10px;
 }
 table.form th {
@@ -391,14 +391,14 @@ table.form img.toggleheader.hover {
 }
 
 /* Left side where title and help is printed */
-table.form td.legend, table.form td.title { 
+table.form td.legend, table.form td.title {
     color: #274750;
     border: 1px solid #fff;
     padding-top: 10px;
 }
 
 /* Bottom row with action buttons, right justified */
-table.form td.buttons { 
+table.form td.buttons {
     color: #274750;
     border: 1px solid #fff;
     padding-top: 10px;
@@ -411,7 +411,7 @@ table.form td.title {
     font-weight: bold;
 }
 
-table.form td.legend.border { 
+table.form td.legend.border {
     border-right-style: solid;
 }
 table.form td.hilite {
@@ -420,12 +420,12 @@ table.form td.hilite {
     margin: 10px;
 }
 
-table.form td.lgend.button { 
+table.form td.lgend.button {
     text-align: right;
     border-right: 1px solid #fff;
 }
 
-table.form td.content { 
+table.form td.content {
     padding-right: 2ex;
     border: 1px solid #fff;
     border-left-style: none;
@@ -451,18 +451,18 @@ input.tab#results, input.tabactive#results { background-color: #fe6; }
 
 /* input elements in forms */
 
-table.form input.text { 
+table.form input.text {
 }
 
-table.form input.number { 
+table.form input.number {
     text-align: right;
 }
 
-div.textinputlegend { 
+div.textinputlegend {
     font-size: 80%;
 }
 
-input.date, input.time { 
+input.date, input.time {
     padding: 0ex 0.5ex;
     font-family: monospace;
 }
@@ -481,7 +481,7 @@ input.date, input.time {
 +--------------------------------------------------------------------------+
 | Confirmation dialogs, success and error messages when performing actions |
 '-------------------------------------------------------------------------*/
-div.really, div.success, div.error, div.message, div.warning { 
+div.really, div.success, div.error, div.message, div.warning {
     margin: 2em 2em 2em 2em;
     -moz-border-radius: 1ex;
     padding: 1em 2em;
@@ -489,7 +489,7 @@ div.really, div.success, div.error, div.message, div.warning {
     border-style: solid;
 }
 
-div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 { 
+div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 {
      font-size: 12pt;
      font-weight: bold;
      margin-bottom: 5px;
@@ -497,7 +497,7 @@ div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 {
      margin-left: 0px;
 }
 
-div.really input { 
+div.really input {
     font-weight: bold;
     margin-top: 1em;
     padding: 0.5ex 2em;

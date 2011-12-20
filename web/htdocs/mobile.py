@@ -61,7 +61,7 @@ def mobile_html_head(title, ready_code=""):
   <script type='text/javascript'>
       $(document).ready(function() { %s });
   </script>
-  
+
 </head>
 <body class=mobile>
 """ % (title, ready_code))
@@ -69,7 +69,7 @@ def mobile_html_head(title, ready_code=""):
 def mobile_html_foot():
     html.write("</body></html>\n")
 
-def jqm_header_button(url, title, icon=""):             
+def jqm_header_button(url, title, icon=""):
     html.write('<a href="%s" data-direction="reverse" data-iconpos="notext" data-icon="%s" title="%s" data-theme="f"></a>' % (url, icon, title))
 
 def jqm_page_header(title, id=None, left_button=None, right_button=None):
@@ -98,7 +98,7 @@ def jqm_page_navfooter(items, current, page_id):
         '<div data-role="footer" data-position="fixed">\n'
         '<div data-role="navbar">\n'
         '<ul>\n')
-    
+
     for href, title, icon, custom_css in items:
         href = html.makeuri([("page", href),("search", "Search")])
         if custom_css == False:
@@ -108,14 +108,14 @@ def jqm_page_navfooter(items, current, page_id):
         else:
             html.write('<li><a class="%s" data-transition="slide"'
                    'data-icon="%s" data-iconpos="bottom" '
-                   'href="%s">%s</a></li>\n' % 
+                   'href="%s">%s</a></li>\n' %
                    (custom_css, icon, href, title))
     html.write(
         '</ul>\n'
         '</div>\n'
         '</div>\n')
     html.write('</div>') # close page-div
-    
+
 
 def jqm_page_index(title, items):
     last_topic = ''
@@ -140,7 +140,7 @@ def page_login():
     title = "Check_MK Mobile"
     mobile_html_head(title)
     jqm_page_header(title, id="login")
-    html.write('<div id="loginhead">%s</div>' % 
+    html.write('<div id="loginhead">%s</div>' %
       _("Welcome to Check_MK Multisite Mobile. Please Login."))
 
     html.begin_form("login", method = 'POST', add_transid = False)
@@ -148,7 +148,7 @@ def page_login():
     origtarget = html.var('_origtarget', '')
     if not origtarget and not html.req.myfile == 'login':
         origtarget = html.req.uri
-    html.hidden_field('_origtarget', htmllib.attrencode(origtarget)) 
+    html.hidden_field('_origtarget', htmllib.attrencode(origtarget))
 
     html.text_input("_username", size = 50, label = _("Username:"))
     html.password_input("_password", size = 50, label = _("Password:"))
@@ -159,12 +159,12 @@ def page_login():
     html.write('<div id="loginfoot">')
     html.write('<img class="logomk" src="images/logo_mk.png">')
     html.write('<div class="copyright">%s</div>' % _("Copyright Mathias Kettner 2012"))
-    html.write('</div>')  
+    html.write('</div>')
     jqm_page_footer()
     mobile_html_foot()
     return 0 # apache.OK
 
-    
+
 def page_index():
     title = "Check_MK Mobile"
     mobile_html_head(title)
@@ -186,19 +186,19 @@ def page_index():
     html.write('</ul>\n')
     jqm_page_footer()
     mobile_html_foot()
-   
+
 def page_view():
     views.load_views()
     view_name = html.var("view_name")
     if not view_name:
         return page_index()
-         
+
     view = html.available_views.get(view_name)
     title = views.view_title(view)
     mobile_html_head(title)
-    
+
     try:
-	views.show_view(view, show_heading = False, show_buttons = False, 
+	views.show_view(view, show_heading = False, show_buttons = False,
 			show_footer = False, render_function = render_view)
 	pass
     except Exception, e:
@@ -206,16 +206,16 @@ def page_view():
 	    raise
 	html.write("ERROR showing view: %s" % e)
 
-        
+
     mobile_html_foot()
 
-def render_view(view, rows, datasource, group_painters, painters, 
+def render_view(view, rows, datasource, group_painters, painters,
                 display_options, painter_options, show_heading, show_buttons,
                 show_checkboxes, layout, num_columns, show_filters, show_footer, hide_filters,
                 browser_reload):
 
     home=("mobile.py", "Home", "home")
-    
+
     page = html.var("page")
     if not page:
        if view.get("mustsearch"):
@@ -243,7 +243,7 @@ def render_view(view, rows, datasource, group_painters, painters,
         jqm_page_header(_("Filter / Search"), left_button=home, id="filter")
         show_filter_form(show_filters)
         jqm_page_navfooter(navbar, 'filter', page_id)
-        
+
     elif page == "commands":
             # Page: Commands
 	    if config.may("act"):
@@ -259,7 +259,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 		if show_commands:
 		    show_command_form(view, datasource, rows)
 		jqm_page_navfooter(navbar, 'commands', page_id)
-      
+
     elif page == "data":
           # Page: data rows of view
 	  jqm_page_header(title, left_button=home, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"), id="data")
@@ -276,14 +276,14 @@ def render_view(view, rows, datasource, group_painters, painters,
 		  html.write(_("Error showing view: %s" % e))
 	  html.write("</div>")
 	  jqm_page_navfooter(navbar, 'data', page_id)
-	    
+
     # Page: Context buttons
     #if context_links:
     elif page == "context":
         jqm_page_header(_("Context"), left_button=home, id="context")
         show_context_links(context_links)
         jqm_page_navfooter(navbar, 'context', page_id)
-    
+
 
 def show_filter_form(show_filters):
     # Sort filters

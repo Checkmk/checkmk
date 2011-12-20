@@ -168,7 +168,7 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
                 perfdata.append(("growth", rate * range_sec))
 
             # average trend, initialize with zero, rate_avg is in MB/s
-            timedif, rate_avg = get_average("df.%s.trend" % mountpoint, 
+            timedif, rate_avg = get_average("df.%s.trend" % mountpoint,
                                             this_time, rate, range_sec / 60.0, True)
 
             # rate_avg is growth in MB/s, trend is in MB per trend range hours

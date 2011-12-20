@@ -53,7 +53,7 @@ function wato_check_all(css_class) {
 /* Make attributes visible or not when clicked on a checkbox */
 function wato_toggle_attribute(oCheckbox, attrname) {
     var oEntry =   document.getElementById("attr_entry_" + attrname);
-    var oDefault = document.getElementById("attr_default_" + attrname); 
+    var oDefault = document.getElementById("attr_default_" + attrname);
     if (oCheckbox.checked) {
         oEntry.style.display = "";
         oDefault.style.display = "none";
@@ -68,7 +68,7 @@ function wato_toggle_attribute(oCheckbox, attrname) {
 
 /* Switch the visibility of all host attributes during the configuration
    of attributes of a host */
-function wato_fix_visibility() { 
+function wato_fix_visibility() {
     /* First collect the current selection of all host attributes.
        They are in the same table as we are */
     var currentTags = [];
@@ -98,7 +98,7 @@ function wato_fix_visibility() {
             if( oElement.type == 'checkbox' && oElement.checked ){ // <checkbox>
                 currentTags = currentTags.concat(oElement.getAttribute('tags').split("|"));
             }
-            else{ // <select> 
+            else{ // <select>
                 currentTags = currentTags.concat(oElement.value.split("|"));
             }
         }
@@ -123,10 +123,10 @@ function wato_fix_visibility() {
                 break;
             }
         }
-            
+
         var oTr = document.getElementById("attr_" + attrname);
         oTr.style.display = display;
-   
+
         // There is at least one item in this topic -> show it
         var topic = oTr.parentNode.parentNode.parentNode.id.substr(21);
         if( display == "" ){
@@ -136,12 +136,13 @@ function wato_fix_visibility() {
         }
     }
     for (var item in volatile_topics){
-        var oTr = document.getElementById("topic_" + item);
+        var name = volatile_topics[item]
+        var oTr = document.getElementById("topic_" + name);
         if(oTr) {
-            if(hide_topics.indexOf(item) > -1 )
-                oTr.style.display = "none"; 
+            if(hide_topics.indexOf(name) > -1 )
+                oTr.style.display = "none";
             else
-                oTr.style.display = ""; 
+                oTr.style.display = "";
         }
     }
 }
@@ -149,31 +150,31 @@ function wato_fix_visibility() {
 function wato_toggle_option(oCheckbox, divid, negate) {
     var oDiv = document.getElementById(divid);
     if ((oCheckbox.checked && !negate) || (!oCheckbox.checked && negate))
-        oDiv.style.display = ""; 
+        oDiv.style.display = "";
     else
-        oDiv.style.display = "none";  
+        oDiv.style.display = "none";
     oDiv = null;
 }
 
 function wato_toggle_dropdown(oDropdown, divid) {
     var oDiv = document.getElementById(divid);
-    if (oDropdown.value == "other") oDiv.style.display = ""; 
+    if (oDropdown.value == "other") oDiv.style.display = "";
     else
-        oDiv.style.display = "none";  
+        oDiv.style.display = "none";
     oDiv = null;
 }
 
 function wato_toggle_dropdownn(oDropdown, divid) {
     var oDiv = document.getElementById(divid);
     if (oDropdown.value == "ignore")
-        oDiv.style.display = "none"; 
+        oDiv.style.display = "none";
     else
-        oDiv.style.display = "";  
+        oDiv.style.display = "";
     oDiv = null;
 }
 
 
-    
+
 // ----------------------------------------------------------------------------
 // Interactive progress code
 // ----------------------------------------------------------------------------
@@ -221,7 +222,7 @@ function progress_handle_response(data, code) {
         if (header === null)
 	    alert('Header is null!');
     } catch(err) {
-        alert('Invalid response: ' + code);    
+        alert('Invalid response: ' + code);
     }
 
     // Extract the body from the response
@@ -274,7 +275,7 @@ function progress_retry() {
     clear_progress_stats();
     progress_items = failed_items;
     failed_items = Array();
-    progress_scheduler(progress_mode, progress_url, progress_timeout, [], "", ""); 
+    progress_scheduler(progress_mode, progress_url, progress_timeout, [], "", "");
 }
 
 
@@ -311,7 +312,7 @@ function clear_progress_stats() {
             o.innerHTML = "0";
             o = null;
         }
-        else 
+        else
             break;
     }
 }
@@ -387,7 +388,7 @@ function progress_scheduler(mode, url_prefix, timeout, items, end_url, success_s
             // Progressing
             progress_running = true;
             update_progress_title(progress_items[0]);
-            get_url(url_prefix + '&_transid=-1&_item=' + 
+            get_url(url_prefix + '&_transid=-1&_item=' +
                    escape(progress_items[0]), progress_handle_response, [ mode, progress_items[0] ]);
         } else {
             progress_finished();
@@ -418,7 +419,7 @@ function update_bulk_moveto(val) {
 var replication_progress = new Array();
 
 function wato_do_replication(siteid, est) {
-    get_url("wato_ajax_replication.py?site=" + siteid, 
+    get_url("wato_ajax_replication.py?site=" + siteid,
             wato_replication_result, siteid);
     replication_progress[siteid] = 20; // 10 of 10 10ths
     setTimeout("replication_step('"+siteid+"',"+est+");", est/10);
@@ -429,7 +430,7 @@ function replication_step(siteid, est) {
         replication_progress[siteid]--;
         var oDiv = document.getElementById("repstate_" + siteid);
         p = replication_progress[siteid];
-        oDiv.innerHTML = "<div class=repprogress style='width: " + ((20-p)*8) + "px;'></div>" 
+        oDiv.innerHTML = "<div class=repprogress style='width: " + ((20-p)*8) + "px;'></div>"
         setTimeout("replication_step('"+siteid+"',"+est+");", est/20);
     }
 }
@@ -441,23 +442,23 @@ function wato_replication_result(siteid, code) {
     replication_progress[siteid] = 0;
     var oDiv = document.getElementById("repstate_" + siteid);
     if (code.substr(0, 3) == "OK:") {
-        oDiv.innerHTML = "<div class='repprogress ok' style='width: 160px;'>" + 
+        oDiv.innerHTML = "<div class='repprogress ok' style='width: 160px;'>" +
               code.substr(3) + "</div>";
         num_replsites--;
     }
-    else 
+    else
         oDiv.innerHTML = code;
 
     if (0 == num_replsites) {
         setTimeout(wato_replication_finish, 2000);
     }
 }
-    
+
 function wato_replication_finish() {
     parent.frames[1].location.reload(); // reload sidebar
     oDiv = document.getElementById("act_changes_button");
     oDiv.style.display = "none";
-} 
+}
 
 function wato_randomize_secret(id, len) {
     var secret = "";

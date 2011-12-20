@@ -49,7 +49,7 @@ int g_livecheck_enabled = 0;
 
 struct live_helper {
     int id;
-    pid_t pid; 
+    pid_t pid;
     int sock;
     FILE *fsock;
     int status;
@@ -93,23 +93,23 @@ void start_livecheck_helper(struct live_helper *lh)
 }
 
 void terminate_livecheck_helper(struct live_helper *lh) {
-    fclose(lh->fsock); 
-    kill(lh->pid, SIGTERM); 
-    int status; 
+    fclose(lh->fsock);
+    kill(lh->pid, SIGTERM);
+    int status;
     if (lh->pid != waitpid(lh->pid, &status, 0))
     {
         // Nagios calls waitpid(-1, ...) from time to time and that
         // wait catches away our exit code. They should better know
         // which PID they are looking for :-(...
-        if (g_debug_level > 0) 
+        if (g_debug_level > 0)
             logger(LG_INFO, "Could not wait() Livecheck helper [%d:%d], "
                             "Nagios was faster.", lh->pid, lh->sock);
     }
-    else if (WIFSIGNALED(status) && WTERMSIG(status) != SIGTERM) 
+    else if (WIFSIGNALED(status) && WTERMSIG(status) != SIGTERM)
     {
         logger(LG_INFO, "Livecheck helper [%d:%d:%d] exited with signal %d.",
             lh->id, lh->pid, lh->sock, WTERMSIG(status));
-    } 
+    }
     else if (g_debug_level > 0) {
         logger(LG_INFO, "Livecheck helper [%d:%d:%d] exited with status %d.",
             lh->id, lh->pid, lh->sock, status);
@@ -122,7 +122,7 @@ void restart_livecheck_helper(struct live_helper *lh)
     start_livecheck_helper(lh);
 }
 
-void execute_livecheck(struct live_helper *lh, const char *host_name, 
+void execute_livecheck(struct live_helper *lh, const char *host_name,
        const char *service_description, double latency, const char *command)
 {
     if (g_debug_level > 0)
@@ -140,7 +140,7 @@ void execute_livecheck(struct live_helper *lh, const char *host_name,
             return; // This check will never be executed
         }
     }
-    fprintf(lh->fsock, "%s\n%s\n%.3f\n%s\n", 
+    fprintf(lh->fsock, "%s\n%s\n%.3f\n%s\n",
         host_name, service_description, latency, command);
     fflush(lh->fsock);
     g_counters[COUNTER_LIVECHECKS]++;
@@ -197,7 +197,7 @@ struct live_helper *get_free_live_helper()
 
 int broker_host_livecheck(int event_type __attribute__ ((__unused__)), void *data)
 {
-    nebstruct_host_check_data *hstdata = (nebstruct_host_check_data *)data; 
+    nebstruct_host_check_data *hstdata = (nebstruct_host_check_data *)data;
     if (event_type != NEBCALLBACK_HOST_CHECK_DATA
         || hstdata->type != NEBTYPE_HOSTCHECK_ASYNC_PRECHECK)
         return NEB_OK; // ignore other events
@@ -205,12 +205,12 @@ int broker_host_livecheck(int event_type __attribute__ ((__unused__)), void *dat
 
     struct live_helper *lh = get_free_live_helper();
     if (!lh) {
-        if (g_debug_level > 0) 
+        if (g_debug_level > 0)
             logger(LG_INFO, "No livecheck helper free.");
         return NEB_OK;
     }
 
-    // Make core statstics work correctly 
+    // Make core statstics work correctly
     hst->check_options=CHECK_OPTION_NONE;
     currently_running_host_checks++;
     hst->is_executing=TRUE;
@@ -233,7 +233,7 @@ int broker_host_livecheck(int event_type __attribute__ ((__unused__)), void *dat
 
 int broker_service_livecheck(int event_type __attribute__ ((__unused__)), void *data)
 {
-    nebstruct_service_check_data *svcdata = (nebstruct_service_check_data *)data; 
+    nebstruct_service_check_data *svcdata = (nebstruct_service_check_data *)data;
     if (event_type != NEBCALLBACK_SERVICE_CHECK_DATA
         || svcdata->type != NEBTYPE_SERVICECHECK_ASYNC_PRECHECK)
         return NEB_OK; // ignore other events
@@ -241,14 +241,14 @@ int broker_service_livecheck(int event_type __attribute__ ((__unused__)), void *
 
     struct live_helper *lh = get_free_live_helper();
     if (!lh) {
-        if (g_debug_level > 0) 
+        if (g_debug_level > 0)
             logger(LG_INFO, "No livecheck helper free.");
         // Let the core handle this check himself
         g_counters[COUNTER_LIVECHECK_OVERFLOWS]++;
         return NEB_OK;
     }
 
-    // Make core statstics work correctly 
+    // Make core statstics work correctly
     svc->check_options=CHECK_OPTION_NONE;
     currently_running_service_checks++;
     svc->is_executing=TRUE;
@@ -292,7 +292,7 @@ void deinit_livecheck()
         return;
 
     unsigned i;
-    for (i=0; i<g_num_livehelpers; i++) 
+    for (i=0; i<g_num_livehelpers; i++)
         terminate_livecheck_helper(&g_live_helpers[i]);
     free(g_live_helpers);
 }

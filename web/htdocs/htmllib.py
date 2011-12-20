@@ -65,7 +65,7 @@ class uriinfo:
 
 
 # Encode HTML attributes: replace " with &quot;, also replace
-# < and >. This code is slow. 
+# < and >. This code is slow.
 def attrencode(value):
     if type(value) == int:
         return str(value)
@@ -96,7 +96,7 @@ def urlencode_vars(vars):
 	    value = str(value)
         elif type(value) == unicode:
             value = value.encode("utf-8")
-        
+
         output += varname
         output += "="
         try:
@@ -174,20 +174,20 @@ class html:
         self.context_buttons_open = False
         self.mobile = False
 
-    def plugin_stylesheets(self): 
+    def plugin_stylesheets(self):
         global plugin_stylesheets
         try:
             return plugin_stylesheets
         except:
             plugins_paths = [ defaults.web_dir + "/htdocs/css" ]
             if defaults.omd_root:
-                plugins_paths.append(defaults.omd_root + "/local/share/check_mk/web/htdocs/css") 
+                plugins_paths.append(defaults.omd_root + "/local/share/check_mk/web/htdocs/css")
             plugin_stylesheets = set([])
             for dir in plugins_paths:
                 if os.path.exists(dir):
                     for fn in os.listdir(dir):
                         if fn.endswith(".css"):
-                            plugin_stylesheets.add(fn) 
+                            plugin_stylesheets.add(fn)
             return plugin_stylesheets
 
     def set_output_format(self, f):
@@ -336,7 +336,7 @@ class html:
     def end_context_buttons(self):
         if self.context_buttons_open:
             if self.context_button_hidden:
-                self.write('<div title="%s" id=toggle class="contextlink short" ' 
+                self.write('<div title="%s" id=toggle class="contextlink short" '
                       % _("Show all buttons"))
                 self.context_button_hover_code("_short")
                 self.write("><a onclick='unhide_context_buttons(this);' href='#'>...</a></div>")
@@ -421,7 +421,7 @@ class html:
         error = self.user_errors.get(varname)
         if error:
             self.write("<x class=inputerror>")
-        
+
         self.write("<textarea rows=%d cols=%d name=\"%s\">%s</textarea>\n" % (
             rows, cols, varname, attrencode(value)))
         if error:
@@ -477,13 +477,13 @@ class html:
         if label:
             self.write('<label for="%s">%s</label>\n' % (id, label))
         self.form_vars.append(varname)
-    
+
     def begin_checkbox_group(self, horizonal=False):
 	self.begin_radio_group(horizonal)
-	
+
     def end_checkbox_group(self):
         self.end_radio_group()
-    
+
     def checkbox(self, varname, deflt=False, cssclass = '', onclick = None, label=None, id=None, add_attr = None):
         if add_attr == None:
             add_attr = [] # do not use [] as default element, it will be a global variable!
@@ -614,7 +614,7 @@ class html:
             self.write('<title>')
             self.write(title)
             self.write('</title>\n')
-    
+
             # If the variable _link_target is set, then all links in this page
             # should be targetted to the HTML frame named by _link_target. This
             # is e.g. useful in the dash-board
@@ -916,7 +916,7 @@ class html:
                 omd_mode = 'own'
         return (omd_mode, omd_site)
 
-    def begin_foldable_container(self, treename, id, isopen, title, indent = True): 
+    def begin_foldable_container(self, treename, id, isopen, title, indent = True):
         # try to get persistet state of tree
         tree_state = weblib.get_tree_states(treename)
 
@@ -927,25 +927,25 @@ class html:
         onclick = ' onclick="toggle_foldable_container(\'%s\', \'%s\')"' % (treename, id)
         onclick += ' onmouseover="this.style.cursor=\'pointer\';" '
         onclick += ' onmouseout="this.style.cursor=\'auto\';" '
-        
+
         if indent == "form":
             self.write('<table id="topic_%s" style="display: ''"  class="form nomargin"><tr ><td class=title>' % id.encode("utf-8"))
         self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
-                   'src="images/tree_%s.png" %s>' % 
+                   'src="images/tree_%s.png" %s>' %
                 (treename, id, img_num, onclick))
         if title.startswith('<'): # custom HTML code
             self.write(title)
             if indent != "form":
                 self.write("<br>")
         else:
-            self.write('<b class="treeangle title" class=treeangle %s>%s</b><br>' % 
+            self.write('<b class="treeangle title" class=treeangle %s>%s</b><br>' %
                      (onclick, title))
 
         indent_style = "padding-left: %dpx; " % (indent == True and 15 or 0)
         if indent == "form":
             self.write("</td></tr></table>")
             indent_style += "margin: 0; "
-        self.write('<ul class="treeangle" style="%s display: %s" id="tree.%s.%s">' % 
+        self.write('<ul class="treeangle" style="%s display: %s" id="tree.%s.%s">' %
              (indent_style, (not isopen) and "none" or "",  treename, id))
 
     def end_foldable_container(self):

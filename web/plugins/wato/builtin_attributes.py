@@ -30,8 +30,8 @@ declare_host_attribute(ContactGroupsAttribute(),
 
 declare_host_attribute(NagiosTextAttribute("alias", "alias", _("Alias"),
                        _("A comment or description of this host"),
-                       "", mandatory=False), 
-                       show_in_table = True, 
+                       "", mandatory=False),
+                       show_in_table = True,
                        show_in_folder = False)
 
 declare_host_attribute(TextAttribute("ipaddress", _("IP address"),
@@ -42,6 +42,6 @@ declare_host_attribute(TextAttribute("ipaddress", _("IP address"),
                          "the configuration. When you enter a DNS name here, the DNS resolution will "
                          "be done each time the host is checked. Use this only for hosts with "
                          "dynamic IP addresses."),
-                         allow_empty = False), 
-                         show_in_table = True, 
+                         allow_empty = False),
+                         show_in_table = True,
                          show_in_folder = True)

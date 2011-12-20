@@ -10,7 +10,7 @@ description:
  (in the subdirectory {plugins} below the directory where {check_mk_agent.exe}
  is located).
 
- The monitored parameters are CPU usage ({KernelModeTime} + {UserModeTime}), 
+ The monitored parameters are CPU usage ({KernelModeTime} + {UserModeTime}),
  RAM usage ({WorkingSetSize}) and page file usage ({PageFileUsage}).
  If more than one process matches the name, then all matching processes ressources
  are added.
@@ -23,12 +23,12 @@ item:
  If you choose {"APACHE"} as item, for example, then the check will be
  named {proc_APACHE}.
 
-perfdata: 
+perfdata:
  Four value are sent: (1) The memory usage in MB, (2) The page file usage in MB,
  (3) The CPU usage in user mode in %, (4) The CPU usage in kernel mode in %.
 
 examples:
- # Monitor ressources used by SSHD processes. 
+ # Monitor ressources used by SSHD processes.
  # Warn at 20MB RAM or 10MB page file or 80% CPU usage
  # Critical at 30MB RAM or 15MB page file or 90% CPU usage
  checks += [

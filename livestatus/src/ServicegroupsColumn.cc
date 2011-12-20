@@ -70,7 +70,7 @@ bool ServicegroupsColumn::isNagiosMember(void *data, void *nagobject)
         list = list->next;
     }
     return false;
-} 
+}
 
 bool ServicegroupsColumn::isEmpty(void *data)
 {

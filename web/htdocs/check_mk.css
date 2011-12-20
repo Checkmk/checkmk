@@ -66,8 +66,8 @@ input, select, textarea {
     padding: 3px;
     border: 1px #73767A solid;
     outline: invert none medium;
-    -webkit-border-radius: 3px; 
-    -moz-border-radius: 3px; 
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
     border-radius: 3px;
     background-color: #fff;
 }
@@ -99,7 +99,7 @@ a.button {
 }
 
 /* Images have a native size of 48x48 and are scaled down by the
-   browser. That way if you select a zoom level in the browser, 
+   browser. That way if you select a zoom level in the browser,
    the quality of the images are better */
 
 img.icon {
@@ -206,12 +206,12 @@ table.debug_vars td {
 | Styles for messages-boxes in various situations (called by htmllib.py)   |
 '-------------------------------------------------------------------------*/
 
-div.really { 
+div.really {
     background-color: #f88;
     border-color: #800;
 }
 
-div.success { 
+div.success {
     background-color: #8f8;
     border-color: #080;
 }
@@ -221,12 +221,12 @@ div.message {
     border-color: #048;
 }
 
-div.error { 
+div.error {
     background-color: #f84;
     border-color: #e40;
 }
 
-div.warning { 
+div.warning {
     background-color: #ff4;
     border-color: #fc0;
 }

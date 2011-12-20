@@ -78,7 +78,7 @@ do
     rmdir -v "$thedir" 2>/dev/null || true
 done
 
-    
+
 if which tree > /dev/null
 then
     echo "-----------------------------------------"

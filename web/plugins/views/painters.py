@@ -62,13 +62,13 @@
 # change in future.
 # =================================================================== #
 
-#     ____       _       _                          _   _                 
-#    |  _ \ __ _(_)_ __ | |_ ___ _ __    ___  _ __ | |_(_) ___  _ __  ___ 
+#     ____       _       _                          _   _
+#    |  _ \ __ _(_)_ __ | |_ ___ _ __    ___  _ __ | |_(_) ___  _ __  ___
 #    | |_) / _` | | '_ \| __/ _ \ '__|  / _ \| '_ \| __| |/ _ \| '_ \/ __|
 #    |  __/ (_| | | | | | ||  __/ |    | (_) | |_) | |_| | (_) | | | \__ \
 #    |_|   \__,_|_|_| |_|\__\___|_|     \___/| .__/ \__|_|\___/|_| |_|___/
-#                                            |_|                          
-# 
+#                                            |_|
+#
 # Painter options influence how painters render their data. Painter options
 # are stored together with "refresh" and "columns" as "View options".
 
@@ -85,9 +85,9 @@ multisite_painter_options["pnpview"] = {
 multisite_painter_options["ts_format"] = {
  "title"   : _("Time stamp format"),
  "default" : "mixed",
- "values"  : [ 
-     ("mixed", _("Mixed")), 
-     ("abs", _("Absolute")), 
+ "values"  : [
+     ("mixed", _("Mixed")),
+     ("abs", _("Absolute")),
      ("rel", _("Relative")),
      ("both", _("Both")),
   ]
@@ -96,10 +96,10 @@ multisite_painter_options["ts_format"] = {
 multisite_painter_options["ts_date"] = {
  "title" : _("Date format"),
  "default" : "%Y-%m-%d",
- "values" : [ ("%Y-%m-%d", "1970-12-18"), 
-              ("%d.%m.%Y", "18.12.1970"), 
-              ("%m/%d/%Y", "12/18/1970"), 
-              ("%d.%m.",   "18.12."), 
+ "values" : [ ("%Y-%m-%d", "1970-12-18"),
+              ("%d.%m.%Y", "18.12.1970"),
+              ("%m/%d/%Y", "12/18/1970"),
+              ("%d.%m.",   "18.12."),
               ("%m/%d",    "12/18") ]
 }
 
@@ -368,70 +368,70 @@ def paint_perfdata_nth_value(row, n):
 
 multisite_painters["svc_perf_val01"] = {
     "title" : _("Service performance data - value number  1"),
-    "short" : _("Val. 1"), 
+    "short" : _("Val. 1"),
     "columns" : ["service_perf_data"],
     "paint" : lambda row: paint_perfdata_nth_value(row, 0)
 }
 
 multisite_painters["svc_perf_val02"] = {
     "title" : _("Service performance data - value number  2"),
-    "short" : _("Val. 2"), 
+    "short" : _("Val. 2"),
     "columns" : ["service_perf_data"],
     "paint" : lambda row: paint_perfdata_nth_value(row, 1)
 }
 
 multisite_painters["svc_perf_val03"] = {
     "title" : _("Service performance data - value number  3"),
-    "short" : _("Val. 3"), 
+    "short" : _("Val. 3"),
     "columns" : ["service_perf_data"],
     "paint" : lambda row: paint_perfdata_nth_value(row, 2)
 }
 
 multisite_painters["svc_perf_val04"] = {
     "title" : _("Service performance data - value number  4"),
-    "short" : _("Val. 4"), 
+    "short" : _("Val. 4"),
     "columns" : ["service_perf_data"],
     "paint" : lambda row: paint_perfdata_nth_value(row, 3)
 }
 
 multisite_painters["svc_perf_val05"] = {
     "title" : _("Service performance data - value number  5"),
-    "short" : _("Val. 5"), 
+    "short" : _("Val. 5"),
     "columns" : ["service_perf_data"],
     "paint" : lambda row: paint_perfdata_nth_value(row, 4)
 }
 
 multisite_painters["svc_perf_val06"] = {
     "title" : _("Service performance data - value number  6"),
-    "short" : _("Val. 6"), 
+    "short" : _("Val. 6"),
     "columns" : ["service_perf_data"],
     "paint" : lambda row: paint_perfdata_nth_value(row, 5)
 }
 
 multisite_painters["svc_perf_val07"] = {
     "title" : _("Service performance data - value number  7"),
-    "short" : _("Val. 7"), 
+    "short" : _("Val. 7"),
     "columns" : ["service_perf_data"],
     "paint" : lambda row: paint_perfdata_nth_value(row, 6)
 }
 
 multisite_painters["svc_perf_val08"] = {
     "title" : _("Service performance data - value number  8"),
-    "short" : _("Val. 8"), 
+    "short" : _("Val. 8"),
     "columns" : ["service_perf_data"],
     "paint" : lambda row: paint_perfdata_nth_value(row, 7)
 }
 
 multisite_painters["svc_perf_val09"] = {
     "title" : _("Service performance data - value number  9"),
-    "short" : _("Val. 9"), 
+    "short" : _("Val. 9"),
     "columns" : ["service_perf_data"],
     "paint" : lambda row: paint_perfdata_nth_value(row, 8)
 }
 
 multisite_painters["svc_perf_val10"] = {
     "title" : _("Service performance data - value number 10"),
-    "short" : _("Val. 10"), 
+    "short" : _("Val. 10"),
     "columns" : ["service_perf_data"],
     "paint" : lambda row: paint_perfdata_nth_value(row, 9)
 }
@@ -1122,7 +1122,7 @@ multisite_painters["host_contact_groups"] = {
 }
 
 multisite_painters["host_custom_notes"] = {
-    "title"   : _("Custom host notes"), 
+    "title"   : _("Custom host notes"),
     "short"   : _("Notes"),
     "columns" : [ "host_name", "host_address" ],
     "paint"   : paint_custom_notes,

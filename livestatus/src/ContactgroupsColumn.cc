@@ -75,7 +75,7 @@ bool ContactgroupsColumn::isNagiosMember(void *data, void *nagobject)
         cgm = cgm->next;
     }
     return false;
-} 
+}
 
 bool ContactgroupsColumn::isEmpty(void *data)
 {

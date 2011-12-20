@@ -65,8 +65,8 @@ def perfometer_logarithmic(value, half_value, base, color):
 # Dual logarithmic Perf-O-Meter
 def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right, half_value, base):
     result = '<table><tr>'
-    for where, value, color in [ 
-        ("left", value_left, color_left), 
+    for where, value, color in [
+        ("left", value_left, color_left),
         ("right", value_right, color_right) ]:
         value = float(value)
         if value == 0.0:
@@ -185,7 +185,7 @@ def paint_perfometer(row):
 multisite_painters["perfometer"] = {
     "title" : _("Service Perf-O-Meter"),
     "short" : _("Perf-O-Meter"),
-    "columns" : [ "service_perf_data", "service_state", 
+    "columns" : [ "service_perf_data", "service_state",
                   "service_check_command", "service_pnpgraph_present" ],
     "paint" : paint_perfometer
 }

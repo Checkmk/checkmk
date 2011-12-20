@@ -93,7 +93,7 @@ function resize_dashlets(id, code)
                 oDash.style.height = (d_height - 2*dashlet_padding) + "px";
         }
     }
-    oDash = null; 
+    oDash = null;
 }
 
 function set_dashboard_size()
@@ -111,7 +111,7 @@ function set_dashboard_size()
   oDash.style.width    = width + "px";
   oDash.style.height   = height + "px";
 
-  ajax_url = 'dashboard_resize.py?name=' + dashboard_name 
+  ajax_url = 'dashboard_resize.py?name=' + dashboard_name
            + '&width=' + width
            + '&height=' + height;
   get_url(ajax_url, resize_dashlets);
@@ -120,7 +120,7 @@ function set_dashboard_size()
 function dashboard_scheduler(force) {
     var timestamp = Date.parse(new Date()) / 1000;
     var newcontent = "";
-    for(var i = 0; i < refresh_dashlets.length; i++) { 
+    for(var i = 0; i < refresh_dashlets.length; i++) {
         var nr      = refresh_dashlets[i][0];
         var refresh = refresh_dashlets[i][1];
         var url     = refresh_dashlets[i][2];

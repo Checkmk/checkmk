@@ -6,9 +6,9 @@ distribution: check_mk
 description:
  This check uses the output of several cl_status calls as sent by the Check_MK
  linux agent to monitor the resource status of the local node. This check is
- usable when the heartbeat cluster is configured not to use the crm 
+ usable when the heartbeat cluster is configured not to use the crm
  (Cluster Resource Manager).
- 
+
  Each node will get one service from this check.
 
  The check will result in a CRITICAL state when resource status during a check

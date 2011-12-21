@@ -520,8 +520,11 @@ def render_statistics(pie_id, what, table, filter):
         url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder=" \
               + htmllib.urlencode(html.var("wato_folder", ""))
         html.write('<tr><th><a href="%s">%s</a></th>' % (url, name))
-        html.write('<td class=color style="background-color: %s">'
-                   '</td><td><a href="%s">%d</a></td></tr>' % (color, url, count))
+        style = ''
+        if color:
+            style = ' style="background-color: %s"' % color
+        html.write('<td class=color%s>'
+                   '</td><td><a href="%s">%d</a></td></tr>' % (style, url, count))
 
     html.write("</table>")
 

@@ -223,7 +223,7 @@ function mkSearchMoveElement(step) {
 
     var a = 0;
     for(var i = 0; i < oResults.length; i++) {
-        if(oResults[i].nodeName == 'A') {
+        if(oResults[i].tagName == 'A') {
             if(a == iCurrent) {
                 oResults[i].setAttribute('class', 'active');
                 oResults[i].setAttribute('className', 'active');

@@ -82,7 +82,7 @@ function wato_fix_visibility() {
     oHostTags = null;
     for (var i in oTable.childNodes) {
         var oTr = oTable.childNodes[i];
-        if (oTr.nodeName == 'TR') {
+        if (oTr.tagName == 'TR') {
             /* If the Checkbox is unchecked try to get a value from the inherited_tags */
             var oCheckbox = oTr.childNodes[1].childNodes[0]
             if( oCheckbox.checked == false ){

@@ -7,6 +7,9 @@
     * dell_powerconnect_cpu: renamed service from CPU to "CPU utilization", in
       order to be consistent with other checks
 
+    Multisite:
+    * Several cleanups to prevent css/js warning messages in e.g. Firefox
+
     WATO:
     * Optimized wraps in host lists tag column
     * Bulk inventory: Remove leading pipe signs in progress bar on main

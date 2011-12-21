@@ -579,8 +579,8 @@ function toggle_sidebar_snapin(oH2, url) {
     // FIXME: Does oContent really exist?
     var closed = oContent.style.display == "none";
     if (closed) {
-        oContent.style.display = "";
-        oFoot.style.display = "";
+        oContent.style.display = "block";
+        oFoot.style.display = "block";
         oHead.className = "head open";
     }
     else {
@@ -669,7 +669,7 @@ function toggle_folder(o, folderId) {
 
     for (var i in par.childNodes) {
         var child = par.childNodes[i];
-        if (one_more && child.nodeName == "DIV") {
+        if (one_more && child.tagName == "DIV") {
             next = child;
             break;
         }
@@ -679,7 +679,7 @@ function toggle_folder(o, folderId) {
 
     for (var i in o.childNodes) {
         var child = o.childNodes[i];
-        if (child.nodeName == "IMG") {
+        if (child.tagName == "IMG") {
             img = child;
             break;
         }

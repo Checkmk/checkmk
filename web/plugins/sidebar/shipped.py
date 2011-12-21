@@ -1139,7 +1139,7 @@ def render_custom_links():
                 if type(entry[1]) == type(True):
                     idss = ids + [str(n)]
                     if states.get(''.join(idss), entry[1] and 'on' or 'off') == 'on': # open
-                        display = ""
+                        display = "display: block; "
                         img = "link_folder_open.gif"
                     else:
                         display = "display: none; "

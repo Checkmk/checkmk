@@ -291,7 +291,7 @@ function filter_activation(oid)
     var disabled = usage != "hard" && usage != "show";
     for (var i in oTd.childNodes) {
         oNode = oTd.childNodes[i];
-        if (oNode.nodeName == "INPUT" || oNode.nodeName == "SELECT") {
+        if (oNode.tagName == "INPUT" || oNode.tagName == "SELECT") {
             oNode.disabled = disabled;
         }
     }
@@ -461,7 +461,7 @@ function performAction(oLink, action, site, host, service) {
 
 function get_column_container(oImg) {
     var oNode = oImg;
-    while (oNode.nodeName != "DIV")
+    while (oNode.tagName != "DIV")
         oNode = oNode.parentNode;
     return oNode;
 }
@@ -1022,7 +1022,7 @@ function highlight_elem(elem, on) {
 
     var childs = elem.childNodes;
     for(var i = 0; i < childs.length; i++)
-        if(childs[i].nodeName !== '#text' && childs[i].nodeName !== 'OPTION')
+        if(childs[i].tagName !== undefined && childs[i].tagName !== 'OPTION')
             highlight_elem(childs[i], on);
 }
 
@@ -1332,7 +1332,7 @@ function unhide_context_buttons(oA)
     var oTd = oA.parentNode.parentNode;
     for (var i in oTd.childNodes) {
         oNode = oTd.childNodes[i];
-        if (oNode.nodeName == "DIV" && oNode.id != "toggle")
+        if (oNode.tagName == "DIV" && oNode.id != "toggle")
             oNode.style.display = "";
     }
     oA.parentNode.style.display = "none";

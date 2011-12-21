@@ -6,6 +6,9 @@
     * linux agent - ipmi: Creating directory of cache file if not exists
     * dell_powerconnect_cpu: renamed service from CPU to "CPU utilization", in
       order to be consistent with other checks
+    
+    Multisite:
+    * FIX: ship missing CSS files for mobile GUI
 
     WATO:
     * Optimized wraps in host lists tag column

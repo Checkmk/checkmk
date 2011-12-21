@@ -456,7 +456,8 @@ function wato_replication_result(siteid, code) {
 }
 
 function wato_replication_finish() {
-    parent.frames[1].location.reload(); // reload sidebar
+    if(parent && parent.frames[1])
+        parent.frames[1].location.reload(); // reload sidebar
     oDiv = document.getElementById("act_changes_button");
     oDiv.style.display = "none";
 }

@@ -1,3 +1,7 @@
+1.1.12p7:
+    Checks & Agents:
+    * FIX: fixed man pages of h3c_lanswitch_sensors and statgrab_cpu
+
 1.1.12p6:
     Checks & Agents:
     * FIX: lnx_if: remove debug output (left over from 1.1.12p5)

@@ -14,10 +14,4 @@ perfdata:
 
 inventory:
  One check per host is created if the agent contains a {statgrab_cpu}
- section containing cpu information. 
-
-[parameters]
- The check has no parameters.
-
-[configuration]
- The check is not configurable.
+ section containing cpu information.

@@ -1119,7 +1119,12 @@ def show_hosts(folder):
         html.write('<td><img class=icon src="images/icon_%s.png" title="%s"></td>' % (icon, title))
 
         # Raw tags
-        html.write("<td>%s</td>" % "<b style='color: #888;'>|</b>".join(host[".tags"]))
+        #
+        # Optimize wraps:
+        # 1. add <nobr> round the single tags to prevent wrap within tags
+        # 2. add "zero width space" (&#8203;)
+        html.write("<td>%s</td>" % "<b style='color: #888;'>|</b>&#8203;".join(
+                                                [ '<nobr>%s</nobr>' % t for t in host[".tags"] ]))
 
         # Show attributes
         for attr, topic in host_attributes:

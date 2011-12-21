@@ -12,6 +12,7 @@
     * Bulk inventory: Remove leading pipe signs in progress bar on main
       folder inventory
     * Bugfix: Calling activate_changes hook also in distributed WATO setups
+    * NagVis auhtorization file generation is also executed on activate_changes
 
 1.1.13i1:
     Multisite:

@@ -1,4 +1,4 @@
-1.1.13i2
+1.1.13i2:
     Core, Setup, etc.:
     * cmk -I: accept host tags and cluster names
 
@@ -118,6 +118,10 @@
     * fsc_*: added missing scan functions
     * printer_alerts: added further state codes (thanks to Matthew Stew)
     * Solaris agent: changed shell to /usr/bin/bash (fixes problems with LC_ALL=C)
+
+1.1.12p7:
+    Checks & Agents:
+    * FIX: fixed man pages of h3c_lanswitch_sensors and statgrab_cpu
 
 1.1.12p6:
     Checks & Agents:

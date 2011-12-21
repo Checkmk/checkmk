@@ -1099,22 +1099,23 @@ function toggle_row(e, elem) {
     return false;
 }
 
-function disable_selection(e) {
-    if(!e)
-        e = window.event;
-
-    // Skip handling clicks on links/images/...
-    var target = getTarget(e);
-    if(target.tagName != 'TD')
-        return true;
-
-    // Firefox handling
-    if(typeof target.style.MozUserSelect != 'undefined')
-        target.style.MozUserSelect = 'none';
-
-    // All others
-    return false;
-}
+// FIXME: If current "row text selection" behavior is ok - remove this
+//function disable_selection(e) {
+//    if(!e)
+//        e = window.event;
+//
+//    // Skip handling clicks on links/images/...
+//    var target = getTarget(e);
+//    if(target.tagName != 'TD')
+//        return true;
+//
+//    // Firefox handling
+//    if(typeof target.style.MozUserSelect != 'undefined')
+//        target.style.MozUserSelect = 'none';
+//
+//    // All others
+//    return false;
+//}
 
 // Toggles the datarows of the group which the given checkbox is part of.
 function toggle_group_rows(checkbox) {
@@ -1272,12 +1273,12 @@ function table_init_rowselect(oTable) {
                 return toggle_row(e, this);
             };
             // Disable selections in IE and then in mozilla
-            elem.onselectstart = function(e) {
-                return disable_selection(e);
-            };
-            elem.onmousedown = function(e) {
-                return disable_selection(e);
-            };
+            //elem.onselectstart = function(e) {
+            //    return disable_selection(e);
+            //};
+            //elem.onmousedown = function(e) {
+            //    return disable_selection(e);
+            //};
             elem = null;
         });
     }

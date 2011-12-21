@@ -13,7 +13,7 @@
       folder inventory
     * NagVis auhtorization file generation is also executed on activate_changes
     * Bugfix: Calling activate_changes hook also in distributed WATO setups
-    * Bugfix: Fixed javascript error when doing replication in distributed
+    * Bugfix: Fixed javascript errors when doing replication in distributed
       wato environments when not having the sidebar open
 
 1.1.13i1:

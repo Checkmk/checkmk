@@ -4,11 +4,16 @@ author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This Check queries the CPU utilization for various switches made by 3Com and H3C, either standalone or that of the CPUs of all units in the stack. By default it will handle 3com Superstack 4 switches, but it should work with all devices defined in the "Lsw" lanswitch Mibs.
-Note some of these switches don't handle snmp well and might generate up to 90% cpu load while queried.
-To accomodate for this you should lower the frequency of SNMP based checks with them.
-The CPU usage ratio returned by the check is the average load of the last 60 seconds.
 
+ This Check queries the CPU utilization for various switches made by 3Com
+ and H3C, either standalone or that of the CPUs of all units in the stack. By
+ default it will handle 3com Superstack 4 switches, but it should work with
+ all devices defined in the "Lsw" lanswitch Mibs.
+
+ Please note: some of these switches don't handle SNMP well and might generate
+ up to 90% CPU load while queried.  To accomodate for this you should lower
+ the frequency of SNMP based checks with them.  The CPU usage ratio returned
+ by the check is the average load of the last 60 seconds.
 
 inventory:
  The check will add one service per Unit/CPU in a stack.

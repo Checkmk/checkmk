@@ -2580,7 +2580,6 @@ def mode_changelog(phase):
             else:
                 try:
                     check_mk_local_automation("restart")
-                    call_hook_activate_changes()
                 except Exception, e:
                     if config.debug:
                         raise
@@ -3141,6 +3140,11 @@ def check_mk_local_automation(command, args=[], indata=""):
             log_audit(None, "automation", "Automation command %s failed with exit code %d: %s" % (" ".join(cmd), exitcode, outdata))
         raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
               (" ".join(cmd), exitcode, hilite_errors(outdata), sudo_msg))
+
+    # On successful "restart" command execute the activate changes hook
+    if command == 'restart':
+        call_hook_activate_changes()
+
     try:
         if config.debug:
             log_audit(None, "automation", "Result from automation: %s" % outdata)
@@ -7010,7 +7014,6 @@ def automation_push_snapshot():
         log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
         if html.var("restart", "no") == "yes":
             check_mk_local_automation("restart")
-            call_hook_activate_changes()
         return True
     except Exception, e:
         if config.debug:

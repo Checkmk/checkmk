@@ -11,6 +11,7 @@
     * Optimized wraps in host lists tag column
     * Bulk inventory: Remove leading pipe signs in progress bar on main
       folder inventory
+    * Bugfix: Calling activate_changes hook also in distributed WATO setups
 
 1.1.13i1:
     Multisite:

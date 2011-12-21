@@ -82,7 +82,7 @@ function wato_fix_visibility() {
     oHostTags = null;
     for (var i in oTable.childNodes) {
         var oTr = oTable.childNodes[i];
-        if (oTr.nodeName == 'TR') {
+        if (oTr.tagName == 'TR') {
             /* If the Checkbox is unchecked try to get a value from the inherited_tags */
             var oCheckbox = oTr.childNodes[1].childNodes[0]
             if( oCheckbox.checked == false ){
@@ -387,7 +387,8 @@ function progress_scheduler(mode, url_prefix, timeout, items, end_url, success_s
         if (progress_items.length > 0) {
             // Progressing
             progress_running = true;
-            update_progress_title(progress_items[0]);
+            // Remove leading pipe signs (when having no folder set)
+            update_progress_title(progress_items[0].replace(/^\|*/g, ''));
             get_url(url_prefix + '&_transid=-1&_item=' +
                    escape(progress_items[0]), progress_handle_response, [ mode, progress_items[0] ]);
         } else {
@@ -455,7 +456,8 @@ function wato_replication_result(siteid, code) {
 }
 
 function wato_replication_finish() {
-    parent.frames[1].location.reload(); // reload sidebar
+    if(parent && parent.frames[1])
+        parent.frames[1].location.reload(); // reload sidebar
     oDiv = document.getElementById("act_changes_button");
     oDiv.style.display = "none";
 }

@@ -191,7 +191,7 @@ div.dashlet table.hoststats.narrow th, table.hoststats.narrow td {
 }
 
 div.dashlet div.nograph {
-    background-color: white;
+    background-color: #fff;
     width: 100%;
     height: 100%;
 }

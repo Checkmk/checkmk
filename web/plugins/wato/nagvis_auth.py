@@ -178,5 +178,6 @@ if config.wato_write_nagvis_auth and defaults.omd_root:
         []
     )
 
-    api.register_hook('users-saved', generate_auth_file)
-    api.register_hook('roles-saved', lambda x: generate_auth_file(load_users()))
+    api.register_hook('users-saved',      generate_auth_file)
+    api.register_hook('roles-saved',      lambda x: generate_auth_file(load_users()))
+    api.register_hook('activate-changes', lambda x: generate_auth_file(load_users()))

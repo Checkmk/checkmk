@@ -1,4 +1,4 @@
-1.1.13i2
+1.1.13i2:
     Core, Setup, etc.:
     * cmk -I: accept host tags and cluster names
 
@@ -10,8 +10,17 @@
     Multisite:
     * FIX: ship missing CSS files for mobile GUI
 
+    Multisite:
+    * Several cleanups to prevent css/js warning messages in e.g. Firefox
+
     WATO:
     * Optimized wraps in host lists tag column
+    * Bulk inventory: Remove leading pipe signs in progress bar on main
+      folder inventory
+    * NagVis auhtorization file generation is also executed on activate_changes
+    * Bugfix: Calling activate_changes hook also in distributed WATO setups
+    * Bugfix: Fixed javascript errors when doing replication in distributed
+      wato environments when not having the sidebar open
 
 1.1.13i1:
     Multisite:

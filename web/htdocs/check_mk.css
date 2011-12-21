@@ -65,7 +65,8 @@ button, input, td, th, select {
 input, select, textarea {
     padding: 3px;
     border: 1px #73767A solid;
-    outline: invert none medium;
+    outline-style: none;
+    outline-width: medium;
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;
     border-radius: 3px;

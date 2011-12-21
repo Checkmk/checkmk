@@ -344,7 +344,7 @@ class html:
         self.context_buttons_open = False
 
     def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None):
-        display = ""
+        display = "block"
         if bestof:
             counts = config.load_user_file("buttoncounts", {})
             weights = counts.items()
@@ -363,7 +363,7 @@ class html:
             idtext = " id='%s'" % id
         else:
             idtext = ""
-        self.write('<div%s style="display: %s" class="contextlink%s" ' % (idtext, display, hot and " hot" or ""))
+        self.write('<div%s style="display:%s" class="contextlink%s" ' % (idtext, display, hot and " hot" or ""))
         self.context_button_hover_code(hot and "_hot" or "")
         self.write('>')
         self.write('<a href="%s"' % url)
@@ -624,6 +624,9 @@ class html:
             # Load all specified style sheets and all user style sheets in htdocs/css
             for css in [ "check_mk" ] + stylesheets:
                 self.write('<link rel="stylesheet" type="text/css" href="%s.css">\n' % css)
+            self.write('<!--[if IE]>\n'
+                       '<link rel="stylesheet" href="ie.css" type="text/css" />\n'
+                       '<![endif]-->\n')
 
             for css in self.plugin_stylesheets():
                self.write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
@@ -822,7 +825,7 @@ class html:
 
     def reload_sidebar(self):
         if not self.has_var("_ajaxid"):
-            self.javascript("parent.frames[0].location.reload();");
+            self.javascript("if(parent && parent.frames[0]) parent.frames[0].location.reload();");
 
     # Get next transaction id for that user
     def current_transid(self):
@@ -929,7 +932,7 @@ class html:
         onclick += ' onmouseout="this.style.cursor=\'auto\';" '
 
         if indent == "form":
-            self.write('<table id="topic_%s" style="display: ''"  class="form nomargin"><tr ><td class=title>' % id.encode("utf-8"))
+            self.write('<table id="topic_%s" style="display:table"  class="form nomargin"><tr ><td class=title>' % id.encode("utf-8"))
         self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
                    'src="images/tree_%s.png" %s>' %
                 (treename, id, img_num, onclick))
@@ -946,7 +949,7 @@ class html:
             self.write("</td></tr></table>")
             indent_style += "margin: 0; "
         self.write('<ul class="treeangle" style="%s display: %s" id="tree.%s.%s">' %
-             (indent_style, (not isopen) and "none" or "",  treename, id))
+             (indent_style, (not isopen) and "none" or "block",  treename, id))
 
     def end_foldable_container(self):
         self.write("</ul>")

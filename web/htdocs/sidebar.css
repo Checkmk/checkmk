@@ -113,7 +113,7 @@ body.side {
     list-style-type: none;
     float: left;
     display: inline;
-    margin-left: none;
+    margin-left: 0;
 }
 
 #side_footer ul.buttons a {
@@ -278,8 +278,8 @@ div.snapin ul {
 }
 
 div.snapin li.sidebar {
-    margin-left: 0px;
-    margin-left: 0px;
+    margin-left: 0;
+    margin-left: 0;
 }
 
 div.snapin img.iconlink {
@@ -347,7 +347,7 @@ div.snapin img.iconbutton.bookmark {
 
 /* state bullets at problem host or all hosts snapin */
 div.statebullet {
-    margin-left: 0px;
+    margin-left: 0;
     margin-right: 6px;
     width: 10px;
     height: 10px;

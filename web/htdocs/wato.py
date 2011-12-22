@@ -673,7 +673,6 @@ def save_hosts(folder = None):
     # values stored for check_mk as well.
     out.write("\n# Host attributes (needed for WATO)\n")
     out.write("host_attributes.update(\n%s)\n" % pprint.pformat(cleaned_hosts))
-    out.close()
 
 
 def delete_configuration_file(folder, thefile):
@@ -5268,7 +5267,6 @@ def save_configuration_vars(vars, filename):
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     for varname, value in vars.items():
         out.write("%s = %r\n" % (varname, value))
-    out.close()
 
 #.
 #   .-Groups---------------------------------------------------------------.
@@ -5484,7 +5482,6 @@ def save_group_information(groups):
         if what in groups and len(groups[what]) > 0:
             out.write("if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (what, what))
             out.write("define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(groups[what])))
-    out.close()
 
 
 class GroupSelection(ElementSelection):
@@ -5619,7 +5616,6 @@ def save_timeperiods(timeperiods):
     out = file(root_dir + "timeperiods.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("timeperiods.update(%s)\n" % pprint.pformat(timeperiods))
-    out.close()
 
 
 def mode_edit_timeperiod(phase):
@@ -6449,7 +6445,6 @@ def save_sites(sites):
     out = file(sites_mk, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("sites = \\\n%s\n" % pprint.pformat(sites))
-    out.close()
     update_distributed_wato_file(sites)
     need_sidebar_reload()
 
@@ -7033,7 +7028,6 @@ def create_distributed_wato_file(siteid, mode):
               "# push the configuration to us. It makes sure that\n"
               "# we only monitor hosts that are assigned to our site.\n\n")
     out.write("distributed_wato_site = '%s'\n" % siteid)
-    out.close()
 
 def delete_distributed_wato_file():
     p = defaults.check_mk_configdir + "/distributed_wato.mk"
@@ -7632,7 +7626,6 @@ def save_users(profiles):
     out = file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("contacts.update(\n%s\n)\n" % pprint.pformat(contacts))
-    out.close()
 
     # Users with passwords for Multisite
     make_nagios_directory(multisite_dir)
@@ -7640,7 +7633,6 @@ def save_users(profiles):
     out = file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("multisite_users = \\\n%s\n" % pprint.pformat(users))
-    out.close()
 
     # Apache htpasswd. We only store passwords here. During
     # loading we created entries for all admin users we know. Other
@@ -7665,7 +7657,6 @@ def save_users(profiles):
             create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
         elif os.path.exists(auth_file):
             os.remove(auth_file)
-    out.close()
 
     # Call the users_saved hook
     call_hook(call_hook_users_saved, users)
@@ -7982,7 +7973,6 @@ def save_roles(roles):
     out = file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("roles.update(\n%s)\n" % pprint.pformat(roles))
-    out.close()
 
     call_hook(call_hook_roles_saved, roles)
 
@@ -8353,7 +8343,6 @@ def save_hosttags(hosttags):
     out = file(multisite_dir + "hosttags.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("wato_host_tags += \\\n%s\n" % pprint.pformat(hosttags))
-    out.close()
 
 def rename_host_tags_after_confirmation(tag_id, operations):
     mode = html.var("_repair")
@@ -9591,7 +9580,6 @@ def save_rulesets(folder, rulesets):
         for rule in ruleset:
             save_rule(out, folder, rulespec, rule)
         out.write("]\n\n")
-    out.close()
 
 def save_rule(out, folder, rulespec, rule):
     out.write("  ( ")

@@ -19,9 +19,10 @@
     * Bulk inventory: Remove leading pipe signs in progress bar on main
       folder inventory
     * NagVis auhtorization file generation is also executed on activate_changes
-    * Bugfix: Calling activate_changes hook also in distributed WATO setups
-    * Bugfix: Fixed javascript errors when doing replication in distributed
+    * FIX: Calling activate_changes hook also in distributed WATO setups
+    * FIX: Fixed javascript errors when doing replication in distributed
       wato environments when not having the sidebar open
+    * You can now move folders to other folders
 
 1.1.13i1:
     Multisite:

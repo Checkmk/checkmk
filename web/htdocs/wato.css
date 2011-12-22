@@ -46,7 +46,19 @@ Boston, MA 02110-1301 USA.
 /* Tables in WATO are not size to 100% per default */
 .wato table.data {
     width: auto;
+    box-shadow: 0px 0px 2px #000000;
 }
+.wato table.data th {
+    -moz-border-radius: 0px;
+}
+.wato input[type=submit], .wato input[type=button], .wato select {
+    box-shadow: 0px 0px 1px #888888;
+}
+.wato input[type=submit]:hover, .wato input[type=button]:hover, .wato select:hover {
+    box-shadow: 0px 0px 1px white;
+}
+
+
 
 .wato th.left {
     border-left-style: none;

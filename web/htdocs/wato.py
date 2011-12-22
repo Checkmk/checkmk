@@ -831,7 +831,6 @@ def mode_folder(phase):
             return "bulkcleanup"
 
     else:
-        html.debug_vars()
         render_folder_path()
         have_something = show_subfolders(g_folder)
         have_something = show_hosts(g_folder) or have_something

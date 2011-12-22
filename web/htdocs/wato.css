@@ -441,6 +441,12 @@ Boston, MA 02110-1301 USA.
     padding: 6px;
     -moz-border-radius: 5px;
 }
+.wato table.configmodules td.text {
+    width: 45%;
+}
+.wato table.configmodules td.icon {
+    width: 5%; 
+}
 .wato table.configmodules td.text a {
     color: #246;
     font-weight: bold;

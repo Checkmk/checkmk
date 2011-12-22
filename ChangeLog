@@ -19,10 +19,11 @@
     * Bulk inventory: Remove leading pipe signs in progress bar on main
       folder inventory
     * NagVis auhtorization file generation is also executed on activate_changes
+    * Implemented a new inclusion based API for using multisite permissions
+      in other addons
     * FIX: Calling activate_changes hook also in distributed WATO setups
     * FIX: Fixed javascript errors when doing replication in distributed
       wato environments when not having the sidebar open
-    * FIX: Broken WATO hooks lead to empty htpasswd file
 
 1.1.13i1:
     Multisite:

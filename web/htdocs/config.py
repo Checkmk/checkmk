@@ -366,6 +366,16 @@ def need_permission(pname):
                               "then please ask you administrator to provide you with "
                               "the following permission: '<b>%s</b>'.") % perm["title"])
 
+def get_role_permissions():
+    role_permissions = {}
+    for perm in permissions_by_order:
+        for role in perm['defaults']:
+            if not role in role_permissions:
+                role_permissions[role] = [ perm['name'] ]
+            else:
+                role_permissions[role].append(perm['name'])
+    return role_permissions
+
 
 # -------------------------------------------------------------------
 #    ____  _ _

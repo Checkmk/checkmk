@@ -46,7 +46,6 @@ Boston, MA 02110-1301 USA.
 /* Tables in WATO are not size to 100% per default */
 .wato table.data {
     width: auto;
-    box-shadow: 0px 0px 2px #000000;
 }
 .wato table.data th {
     -moz-border-radius: 0px;
@@ -442,10 +441,10 @@ Boston, MA 02110-1301 USA.
     -moz-border-radius: 5px;
 }
 .wato table.configmodules td.text {
-    width: 45%;
+    width: 49%;
 }
 .wato table.configmodules td.icon {
-    width: 5%; 
+    width: 1%; 
 }
 .wato table.configmodules td.text a {
     color: #246;

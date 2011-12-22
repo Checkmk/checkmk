@@ -39,6 +39,12 @@
 # user_permissions(<USER_NAME>)
 # Returns an array of all permissions of the user
 #
+# roles_with_permission(<PERMISSION>)
+# Returns an array of rolenames with the given permission
+#
+# users_with_permission(<PERMISSION>)
+# Returns an array of usernames with the given permission
+#
 # may(<USER_NAME>, <PERMISSION>)
 # Returns true/false wether or not the user is permitted
 
@@ -67,8 +73,8 @@ def parse_php(data, lvl = 1):
 
 
 def create_php_file(users, role_permissions):
-    file(g_auth_base_dir + '/auth.php', 'w').write('''
-<?php
+    file(g_auth_base_dir + '/auth.php', 'w').write('''<?php
+global $mk_users, $mk_roles;
 $mk_users = %s;
 $mk_roles = %s;
 
@@ -103,6 +109,29 @@ function users_with_role($want_role) {
                 $result[] = $username;
             }
         }
+    }
+    return $result;
+}
+
+function roles_with_permission($want_permission) {
+    global $mk_roles;
+    $result = array();
+    foreach($mk_roles AS $rolename => $role) {
+        foreach($role AS $permission) {
+            if($permission == $want_permission) {
+                $result[] = $rolename;
+                break;
+            }
+        }
+    }
+    return $result;
+}
+
+function users_with_permission($need_permission) {
+    global $mk_users;
+    $result = array();
+    foreach(roles_with_permission($need_permission) AS $rolename) {
+        $result = array_merge($result, users_with_role($rolename));
     }
     return $result;
 }

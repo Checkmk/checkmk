@@ -6868,7 +6868,8 @@ def push_snapshot_to_site(site, do_restart):
     # urllib2 does not seem to support file uploads. Please tell me, if
     # you know a better method for uploading, without the use of external
     # programs...
-    response_text = os.popen("curl -F snapshot=@%s '%s'" % (sync_snapshot_file, url)).read()
+    # -s -S: Disable progress meter but enable error messages
+    response_text = os.popen("curl -s -S -F snapshot=@%s '%s'" % (sync_snapshot_file, url)).read()
     try:
         response = eval(response_text)
         return response

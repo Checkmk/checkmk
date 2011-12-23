@@ -10,7 +10,11 @@
     Multisite:
     * Several cleanups to prevent css/js warning messages in e.g. Firefox
     * Made texts in selectable rows selectable again
+    * Adding reschedule icon to all Check_MK based services. Clicks on these
+      icons will simply trigger a reschedule of the Check_MK service
     * FIX: ship missing CSS files for mobile GUI
+    * FIX: rename check_mk.js into checkmk.js in order to avoid browser
+      caching problems during version update
 
     WATO:
     * Optimized wraps in host lists tag column
@@ -19,6 +23,8 @@
     * NagVis auhtorization file generation is also executed on activate_changes
     * Implemented a new inclusion based API for using multisite permissions
       in other addons
+    * Inventory of SNMP devices: force implicit full scan if no services
+      are configured yet
     * FIX: Calling activate_changes hook also in distributed WATO setups
     * FIX: Fixed javascript errors when doing replication in distributed
       wato environments when not having the sidebar open
@@ -129,6 +135,9 @@
     * Solaris agent: changed shell to /usr/bin/bash (fixes problems with LC_ALL=C)
 
 1.1.12p7:
+    Multisite:
+    * FIX: detail view of host was missing column headers
+
     Checks & Agents:
     * FIX: fixed man pages of h3c_lanswitch_sensors and statgrab_cpu
 

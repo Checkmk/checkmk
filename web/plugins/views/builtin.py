@@ -821,7 +821,7 @@ multisite_builtin_views.update({
                   'title': _('Hostgroups'),
                   'topic': _('Hostgroups')},
  'hoststatus': {'browser_reload': 30,
-               'column_headers': 'off',
+               'column_headers': 'pergroup',
                 'datasource': 'hosts',
                 'description': '',
                 'group_painters': [],

@@ -441,16 +441,21 @@ function actionResponseHandler(oImg, code) {
     oImg = null;
 }
 
-function performAction(oLink, action, site, host, service) {
+function performAction(oLink, action, site, host, service, wait_svc) {
     var oImg = oLink.childNodes[0];
-    oImg.src = 'images/icon_reloading.gif';
+
+    if(wait_svc != service)
+        oImg.src = 'images/icon_reloading_cmk.gif';
+    else
+        oImg.src = 'images/icon_reloading.gif';
 
     // Chrome and IE are not animating the gif during sync ajax request
     // So better use the async request here
     get_url('nagios_action.py?action=' + action +
-            '&site='    + escape(site) +
-            '&host='    + escape(host) +
-            '&service=' + escape(service),
+            '&site='     + escape(site) +
+            '&host='     + escape(host) +
+            '&service='  + escape(service) +
+            '&wait_svc=' + escape(wait_svc),
             actionResponseHandler, oImg);
     oImg = null;
 }

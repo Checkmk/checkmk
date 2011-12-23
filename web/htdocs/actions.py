@@ -46,16 +46,26 @@ def action_reschedule():
     host = html.var("host", "")
     if not host:
         raise MKGeneralException("Action reschedule: missing host name")
-    service = html.var("service", "")
+
+    service  = html.var("service",  "")
+    wait_svc = html.var("wait_svc", "")
+
     if service:
+        cmd = "SVC"
         what = "service"
         spec = "%s;%s" % (host, service)
-        cmd = "SVC"
-        add_filter = "Filter: service_description = %s\n" % service
+
+        if wait_svc:
+            wait_spec = '%s;%s' % (host, wait_svc)
+            add_filter = "Filter: service_description = %s\n" % wait_svc
+        else:
+            wait_spec = spec
+            add_filter = "Filter: service_description = %s\n" % service
     else:
+        cmd = "HOST"
         what = "host"
         spec = host
-        cmd = "HOST"
+        wait_spec = spec
         add_filter = ""
 
     try:
@@ -70,7 +80,7 @@ def action_reschedule():
                 "WaitTrigger: check\n"
                 "Columns: last_check state plugin_output\n"
                 "Filter: host_name = %s\n%s"
-                % (what, spec, now, config.reschedule_timeout * 1000, host, add_filter))
+                % (what, wait_spec, now, config.reschedule_timeout * 1000, host, add_filter))
         html.live.set_only_sites()
         last_check = row[0]
         if last_check < now:

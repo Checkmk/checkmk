@@ -635,7 +635,7 @@ class html:
                self.write('<link rel="stylesheet" type="text/css" href="%s">\n' % config.custom_style_sheet)
 
             # Load specified Javascript files
-            for js in [ "check_mk", "hover" ] + javascripts:
+            for js in [ "checkmk", "hover" ] + javascripts:
                 self.write('<script type="text/javascript" src="js/%s.js"></script>\n' % js)
 
             if self.browser_reload != 0:

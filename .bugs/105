@@ -1,20 +1,16 @@
-Title: SNMP scan: implement missing scan functions for all checks
+Title: SNMP scan: implement missing scan functions
 Component: core
 Benefit: 3
 State: open
 Cost: 5
 Date: 2011-01-24 16:22:26
 Class: cleanup
-Targetversion: 1.1.12
+Targetversion: 1.2.0
 
 All SNMP checks must define scan functions. Otherwise the scan
 can take a long time on some slow devices.
 
-Currently these are:
+There is just one scan function missing:
 
 $ doc/helpers/validate_checks  -a | grep scan
-bluecoat_diskcpu         snmp_scan manpage pnp_rra pnp_tmpl perfometer 
-fsc_fans                 snmp_scan pnp_rra pnp_tmpl perfometer 
-fsc_temp                 snmp_scan pnp_rra pnp_tmpl perfometer 
 ibm_imm_health           snmp_scan manpage 
-fsc_subsystems           snmp_scan 

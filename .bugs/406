@@ -4,7 +4,7 @@ Benefit: 2
 State: open
 Cost: 2
 Date: 2011-10-28 09:22:31
-Targetversion: 1.1.12p1
+Targetversion: 1.2.0
 Class: cleanup
 
 In all Multisite views showing problems (also dashboard_...) the

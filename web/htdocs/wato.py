@@ -9347,16 +9347,21 @@ def get_rule_conditions(ruleset):
         if not explicit:
             item_list = [ "" ]
         else:
-            nr = 0
-            item_list = []
-            while True:
-                var = "item_%d" % nr
-                item = html.var(var, "").strip()
-                if nr > config.wato_num_itemspecs and not item:
-                    break
-                if item:
-                    item_list.append(item)
-                nr += 1
+            itemenum = ruleset["itemenum"]
+            if itemenum:
+                itemspec = ListChoice(choices = itemenum, columns = 3)
+                item_list = [ x+"$" for x in itemspec.from_html_vars("item") ]
+            else:
+                nr = 0
+                item_list = []
+                while True:
+                    var = "item_%d" % nr
+                    item = html.var(var, "").strip()
+                    if nr > config.wato_num_itemspecs and not item:
+                        break
+                    if item:
+                        item_list.append(item)
+                    nr += 1
             if len(item_list) == 0:
                 raise MKUserError("item_0", _("Please specify at least one %s or "
                     "this rule will never match.") % ruleset["itemname"])
@@ -9585,30 +9590,37 @@ def mode_edit_rule(phase):
             div_id = "itemlist"
             html.checkbox("explicit_services", checked, onclick="wato_toggle_option(this, %r)" % div_id)
             html.write(" " + _("Specify explicit values"))
-            html.write('<div id="%s" style="display: %s">' % (
+            html.write('<div id="%s" style="display: %s; padding: 0px;">' % (
                 div_id, not checked and "none" or ""))
-            html.write("<table class=itemlist>")
-            num_cols = 3
-            for nr in range(config.wato_num_itemspecs):
-                x = nr % num_cols
-                if x == 0:
-                    html.write("<tr>")
-                html.write("<td>")
-                item = nr < len(item_list) and item_list[nr] or ""
-                html.text_input("item_%d" % nr, item)
-                html.write("</td>")
-                if x == num_cols - 1:
-                    html.write("</tr>")
-            while x < num_cols - 1:
-                html.write("<td></td>")
-                if x == num_cols - 1:
-                    html.write("</tr>")
-                x += 1
-            html.write("</table>")
-            html.write(_("The entries here are regular expressions to match the beginning. "
-                         "Add a <tt>$</tt> for an exact match. An arbitrary substring is matched "
-                         "with <tt>.*</tt>"))
-            html.write("</div>")
+            itemenum = rulespec["itemenum"]
+            if itemenum:
+                value = [ x.rstrip("$") for x in item_list ]
+                itemspec = ListChoice(choices = itemenum, columns = 3)
+                itemspec.render_input("item", value)
+            else:
+                html.write("<table class=itemlist>")
+                num_cols = 3
+                for nr in range(config.wato_num_itemspecs):
+                    x = nr % num_cols
+                    if x == 0:
+                        html.write("<tr>")
+                    html.write("<td>")
+                    html.write("HIRN")
+                    item = nr < len(item_list) and item_list[nr] or ""
+                    html.text_input("item_%d" % nr, item)
+                    html.write("</td>")
+                    if x == num_cols - 1:
+                        html.write("</tr>")
+                while x < num_cols - 1:
+                    html.write("<td></td>")
+                    if x == num_cols - 1:
+                        html.write("</tr>")
+                    x += 1
+                html.write("</table>")
+                html.write(_("The entries here are regular expressions to match the beginning. "
+                             "Add a <tt>$</tt> for an exact match. An arbitrary substring is matched "
+                             "with <tt>.*</tt>"))
+                html.write("</div>")
 
     html.write("<tr><td class=buttons colspan=2>")
     html.button("save", _("Save"))
@@ -9744,7 +9756,7 @@ g_rulespecs = {}
 g_rulespec_groups = {}
 def register_rule(group, varname, valuespec = None, title = None,
                   help = None, itemtype = None, itemname = None,
-                  itemhelp = None,
+                  itemhelp = None, itemenum = None,
                   match = "first", optional = False):
     ruleset = {
         "group"     : group,
@@ -9753,6 +9765,7 @@ def register_rule(group, varname, valuespec = None, title = None,
         "itemtype"  : itemtype, # None, "service", "checktype" or "checkitem"
         "itemname"  : itemname, # e.g. "mount point"
         "itemhelp"  : itemhelp, # a description of the item, only rarely used
+        "itemenum"  : itemenum, # possible fixed values for items
         "match"     : match,
         "title"     : title or valuespec.title(),
         "help"      : help or valuespec.help(),

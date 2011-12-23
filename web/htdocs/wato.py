@@ -9605,7 +9605,6 @@ def mode_edit_rule(phase):
                     if x == 0:
                         html.write("<tr>")
                     html.write("<td>")
-                    html.write("HIRN")
                     item = nr < len(item_list) and item_list[nr] or ""
                     html.text_input("item_%d" % nr, item)
                     html.write("</td>")

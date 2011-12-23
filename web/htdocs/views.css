@@ -259,7 +259,7 @@ table.data.single {
     padding: 0;
     border-collapse: collapse;
     empty-cells: show;
-    width: 200px;
+    width: auto;
     box-shadow: 1px 1px 3px #000000;
 }
 

@@ -1,0 +1,8 @@
+Title: WATO replication over HTTPS does not work
+Component: wato
+State: open
+Date: 2011-12-23 12:17:16
+Targetversion: 1.2.0
+Class: bug
+
+Reason probable self signed certificates.

@@ -719,6 +719,7 @@ def get_folder_aliaspath(folder, show_main = True):
 #   '----------------------------------------------------------------------'
 
 def mode_folder(phase):
+    global g_folder
     if phase == "title":
         return g_folder["title"]
 
@@ -763,7 +764,6 @@ def mode_folder(phase):
                     mark_affected_sites_dirty(what_folder)
                     move_folder(what_folder, target_folder)
                     load_all_folders()
-                    global g_folder
                     g_folder = g_folders[html.var("folder")]
                     # Folder hav been reloaded, so our object is invalid
                     target_folder = g_folders[path]
@@ -879,6 +879,26 @@ def check_host_permissions(hostname, exception=True):
         raise MKAuthException(reason)
     return reason
 
+def get_folder_permissions_of_users(users):
+    folders = {}
+
+    def get_flat_folders(folder):
+        folders[folder['.path']] = folder
+        for child in folder.get('.folders', {}).itervalues():
+            get_flat_folders(child)
+
+    get_flat_folders(api.get_folder_tree())
+
+    permissions = {}
+
+    for username in users.iterkeys():
+        permissions[username] = {}
+        for folder_path, folder in folders.iteritems():
+            permissions[username][folder_path] = {
+                'read':  check_folder_permissions(folder, 'read', False, username) == True,
+                'write': check_folder_permissions(folder, 'write', False, username) == True,
+            }
+    return permissions
 
 def check_folder_permissions(folder, how, exception=True, user = None):
     if not user:
@@ -1934,14 +1954,13 @@ def mode_search(phase):
 
     else:
         render_folder_path()
-        html.write("<table><tr><td>\n")
 
         ## # Show search form
         html.begin_form("search")
-        html.write("<table class=form>")
+        html.write("<table class=\"form nomargin\">")
 
         # host name
-        html.write("<tr><td class=legend colspan=2>" + _("Hostname") + "</td><td class=content>")
+        html.write("<tr class=top><td class=legend colspan=2>" + _("Hostname") + "</td><td class=content>")
         html.text_input("host")
         html.set_focus("host")
         html.write("</td></tr>\n")
@@ -1976,8 +1995,6 @@ def mode_search(phase):
             # html.write("<pre>%s</pre>" % pprint.pformat(crit))
             if not search_hosts_in_folders(folder, crit):
                 html.message(_("No matching hosts found."))
-
-        html.write("</td></tr></table>")
 
 
 
@@ -3770,7 +3787,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 html.write("</table>")
 
             html.begin_foldable_container("wato_attributes", title,
-                                          topic == None, title, indent = "form")
+                                          topic == None, title, indent = "form", first = topic == topics[0])
             html.write('<table ')
             # Mark container with host tag attributes with a special ID
             if topic == _("Host tags"):
@@ -6851,7 +6868,8 @@ def push_snapshot_to_site(site, do_restart):
     # urllib2 does not seem to support file uploads. Please tell me, if
     # you know a better method for uploading, without the use of external
     # programs...
-    response_text = os.popen("curl -F snapshot=@%s '%s'" % (sync_snapshot_file, url)).read()
+    # -s -S: Disable progress meter but enable error messages
+    response_text = os.popen("curl -s -S -F snapshot=@%s '%s'" % (sync_snapshot_file, url)).read()
     try:
         response = eval(response_text)
         return response

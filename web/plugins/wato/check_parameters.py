@@ -643,6 +643,7 @@ checkgroups.append((
                  Float(label = _("events per second")),
                  title = _("Set critical level:"),
                  sameline = True)]),
+
     DropdownChoice(
         title = _("kernel counter"),
         choices = [ (x,x) for x in [
@@ -714,10 +715,13 @@ checkgroups.append((
 for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
     if not valuespec:
         continue # would be useles rule if check has no parameters
+    itemenum = None
     if itemspec:
         itemtype = "item"
         itemname = itemspec.title()
         itemhelp = itemspec.help()
+        if isinstance(itemspec, DropdownChoice):
+            itemenum = itemspec._choices
     else:
         itemtype = None
         itemname = None
@@ -730,6 +734,7 @@ for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
         valuespec = valuespec,
         itemtype = itemtype, itemname = itemname,
         itemhelp = itemhelp,
+        itemenum = itemenum,
         match = matchtype)
 
 

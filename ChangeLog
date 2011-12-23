@@ -24,6 +24,7 @@
     * FIX: Calling activate_changes hook also in distributed WATO setups
     * FIX: Fixed javascript errors when doing replication in distributed
       wato environments when not having the sidebar open
+    * You can now move folders to other folders
 
 1.1.13i1:
     Multisite:

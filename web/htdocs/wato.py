@@ -742,14 +742,37 @@ def mode_folder(phase):
 
         ### Operations on SUBFOLDERS
 
-        if html.var("_delete_folder") and html.transaction_valid():
-            delname = html.var("_delete_folder")
-            del_folder = g_folder[".folders"][delname]
-            config.need_permission("wato.manage_folders")
-            if True != check_folder_permissions(g_folder, "write", False):
-                raise MKAuthException(_("Sorry. In order to delete a folder you need write permissions to its "
-                                        "parent folder."))
-            return delete_folder_after_confirm(del_folder)
+        if html.var("_delete_folder"):
+            if html.transaction_valid(): 
+                delname = html.var("_delete_folder")
+                del_folder = g_folder[".folders"][delname]
+                config.need_permission("wato.manage_folders")
+                if True != check_folder_permissions(g_folder, "write", False):
+                    raise MKAuthException(_("Sorry. In order to delete a folder you need write permissions to its "
+                                            "parent folder."))
+                return delete_folder_after_confirm(del_folder)
+            return
+
+        elif html.has_var("_move_folder_to"):
+            if html.check_transaction():
+                if config.may("wato.manage_folders") and \
+                    check_folder_permissions(g_folder, "write", False):
+                    what_folder = g_folders[html.var("what_folder")]
+                    path = html.var("_move_folder_to")
+                    target_folder = g_folders[path]
+                    mark_affected_sites_dirty(what_folder)
+                    move_folder(what_folder, target_folder)
+                    load_all_folders()
+                    global g_folder
+                    g_folder = g_folders[html.var("folder")]
+                    # Folder hav been reloaded, so our object is invalid
+                    target_folder = g_folders[path]
+                    what_folder = target_folder[".folders"][what_folder[".name"]]
+                    mark_affected_sites_dirty(what_folder)
+                    log_pending(AFFECTED, what_folder, "move-folder",
+                        _("Moved folder %s to %s") % (html.var("what_folder"), target_folder[".path"]))
+            return
+
 
         ### Operations on HOSTS
 
@@ -931,7 +954,14 @@ def show_subfolders(folder):
     if not config.wato_hide_filenames:
         html.write("<th>%s</th>" % _("Directory"))
     html.write("<th class=right>" + _("Hosts") + "</th>")
-    html.write("<th class=right>" + _("Subfolders") + "</th></tr>\n")
+    html.write("<th class=right>" + _("Subfolders") + "</th>")
+
+    may_move_folders = config.may("wato.manage_folders") and \
+            check_folder_permissions(g_folder, "write", False)
+    if may_move_folders:
+        html.write("<th>" + _("Move To") + "</th>")
+
+    html.write("</tr>\n")
 
     odd = "even"
 
@@ -991,6 +1021,12 @@ def show_subfolders(folder):
         # Number of subfolders
         html.write("<td class=number>%d</td>" % len(entry[".folders"]))
 
+        # Move To
+        if may_move_folders:
+            html.write("<td>")
+            move_to_folder_combo("folder", entry, False)
+            html.write("</td>")
+
         html.write("</tr>")
     html.write("</table>")
     return True
@@ -1044,7 +1080,7 @@ def show_hosts(folder):
         if config.may("wato.services"):
             html.button("_bulk_inventory", _("Inventory"))
         if config.may("wato.edit_hosts"):
-            host_move_combo(None, top)
+            move_to_folder_combo("host", None, top)
             if at_least_one_imported:
                 html.button("_bulk_movetotarget", _("Move to Target Folders"))
         html.write("</td></tr>\n")
@@ -1142,7 +1178,7 @@ def show_hosts(folder):
         # Move to
         html.write("<td>")
         if config.may("wato.edit_hosts"):
-            host_move_combo(hostname)
+            move_to_folder_combo("host", hostname)
         html.write("</td>\n")
         html.write("</tr>\n")
 
@@ -1150,37 +1186,43 @@ def show_hosts(folder):
         bulk_actions(at_least_one_imported)
     html.write("</table>\n")
 
-    html.hidden_fields()
+    html.hidden_fields() 
     html.end_form()
 
     html.javascript('g_selected_rows = %s;\n'
                     'init_rowselect();' % repr(["_c_%s" % h for h in hostnames]))
     return True
 
-host_move_combo_cache_id = None
-def host_move_combo(host = None, top = False):
-    global host_move_combo_cache, host_move_combo_cache_id
-    if host_move_combo_cache_id != id(html):
-        host_move_combo_cache = {}
-        host_move_combo_cache_id = id(html)
+move_to_folder_combo_cache_id = None
+def move_to_folder_combo(what, thing = None, top = False):
+    global move_to_folder_combo_cache, move_to_folder_combo_cache_id
+    if move_to_folder_combo_cache_id != id(html):
+        move_to_folder_combo_cache = {}
+        move_to_folder_combo_cache_id = id(html)
 
-    if id(g_folder) not in host_move_combo_cache:
+    # In case of a folder move combo, thing is the folder object
+    # we want to move
+    if what == "folder" or id(g_folder) not in move_to_folder_combo_cache:
         selections = [("@", _("(select folder)"))]
         for path, afolder in g_folders.items():
             # TODO: Check permisssions
-            if afolder != g_folder:
+            if afolder != g_folder and \
+                 (what != "folder" or not (
+                    folder_is_parent_of(thing, afolder)
+                    # avoid naming conflict!
+                    or thing[".name"] in afolder[".folders"])):
                 os_path = afolder[".path"]
                 msg = afolder["title"]
                 if os_path:
                     msg += " (%s)" % os_path
                 selections.append((os_path, msg))
         selections.sort(cmp=lambda a,b: cmp(a[1].lower(), b[1].lower()))
-        host_move_combo_cache[id(g_folder)] = selections
+        move_to_folder_combo_cache[id(g_folder)] = selections
     else:
-        selections = host_move_combo_cache[id(g_folder)]
+        selections = move_to_folder_combo_cache[id(g_folder)]
 
     if len(selections) > 1:
-        if host == None:
+        if thing == None:
             html.button("_bulk_move", _("Move To:"))
             field_name = 'bulk_moveto'
             if top:
@@ -1190,11 +1232,18 @@ def host_move_combo(host = None, top = False):
             html.select(field_name, selections, "@",
                         onchange = "update_bulk_moveto(this.value)",
                         attrs = {'class': 'bulk_moveto'})
-        else:
-            html.hidden_field("host", host)
-            uri = html.makeuri([("host", host), ("_transid", html.current_transid() )])
-            html.select("_host_move_%s" % host, selections, "@",
+        elif what == "host":
+            html.hidden_field("host", thing)
+            uri = html.makeuri([("host", thing), ("_transid", html.current_transid() )])
+            html.select("_host_move_%s" % thing, selections, "@",
                 "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
+        else: # what == "folder"
+            # html.hidden_field("what_folder", thing)
+            uri = html.makeuri([("what_folder", thing[".path"]), ("_transid", html.current_transid() )])
+            html.select("_folder_move_%s" % thing[".path"], selections, "@",
+                "location.href='%s' + '&_move_folder_to=' + this.value;" % uri);
+
+
 
 
 def move_hosts_to(hostnames, path):
@@ -1258,6 +1307,15 @@ def delete_hosts_after_confirm(hosts):
         return ""
     else:
         return None # browser reload
+
+def move_folder(what_folder, target_folder):
+    old_parent = what_folder[".parent"]
+    old_dir = folder_dir(what_folder)
+    del old_parent[".folders"][what_folder[".name"]]
+    target_folder[".folders"][what_folder[".name"]] = what_folder
+    what_folder[".parent"] = target_folder
+    new_dir = folder_dir(target_folder)
+    shutil.move(old_dir, new_dir)
 
 def delete_folder_after_confirm(del_folder):
     msg = _("Do you really want to delete the folder %s?") % del_folder["title"]
@@ -1580,6 +1638,8 @@ def mode_edithost(phase, new):
 
         # handle clone & new
         if new:
+            if not html.transaction_valid():
+                return "folder"
             config.need_permission("wato.manage_hosts")
             check_folder_permissions(g_folder, "write")
             check_user_contactgroups(host.get("contactgroups", (False, [])))
@@ -10045,6 +10105,14 @@ def num_hosts_in(folder, recurse=True):
     num += folder["num_hosts"]
     folder[".total_hosts"] = num # store for later usage
     return num
+
+def folder_is_parent_of(folder, child):
+    if folder == child:
+        return True
+    elif ".parent" in child:
+        return folder_is_parent_of(folder, child[".parent"])
+    else:
+        return False
 
 # This is a dummy implementation which works without tags
 # and implements only a special case of Check_MK's real logic.

@@ -1,0 +1,10 @@
+Title: Update docu about styles for Multisite
+Component: docu
+State: open
+Date: 2011-12-22 11:20:25
+Targetversion: 1.2.0
+Class: todo
+
+The Stylesheets have been splitted into parts. Update the
+documentation and make a table of all stylesheets and when
+they are loaded.

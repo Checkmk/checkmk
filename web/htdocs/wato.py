@@ -4953,11 +4953,14 @@ class Dictionary(ValueSpec):
             html.write("<tr><td>")
             vp = varprefix + "_" + param
             div_id = vp
+            visible = html.get_checkbox(vp + "_USE")
+            if visible == None:
+                visible = param in value
             html.checkbox(vp + "_USE", param in value,
                           onclick="wato_toggle_option(this, %r)" % div_id)
             html.write(" %s<br>" % vs.title())
             html.write('<div class=dictelement id="%s" style="display: %s">' % (
-                div_id, param not in value and "none" or ""))
+                div_id, not visible and "none" or ""))
             if vs.help():
                 html.write("<ul class=help>%s</ul>" % vs.help())
             vs.render_input(vp, value.get(param, vs.canonical_value()))

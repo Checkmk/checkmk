@@ -127,6 +127,9 @@
     * Solaris agent: changed shell to /usr/bin/bash (fixes problems with LC_ALL=C)
 
 1.1.12p7:
+    Multisite:
+    * FIX: detail view of host was missing column headers
+
     Checks & Agents:
     * FIX: fixed man pages of h3c_lanswitch_sensors and statgrab_cpu
 

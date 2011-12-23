@@ -51,19 +51,21 @@ def action_reschedule():
     wait_svc = html.var("wait_svc", "")
 
     if service:
+        cmd = "SVC"
         what = "service"
         spec = "%s;%s" % (host, service)
+
         if wait_svc:
             wait_spec = '%s;%s' % (host, wait_svc)
+            add_filter = "Filter: service_description = %s\n" % wait_svc
         else:
             wait_spec = spec
-        cmd = "SVC"
-        add_filter = "Filter: service_description = %s\n" % service
+            add_filter = "Filter: service_description = %s\n" % service
     else:
+        cmd = "HOST"
         what = "host"
         spec = host
         wait_spec = spec
-        cmd = "HOST"
         add_filter = ""
 
     try:

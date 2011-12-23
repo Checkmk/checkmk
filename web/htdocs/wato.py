@@ -921,7 +921,7 @@ def check_folder_permissions(folder, how, exception=True, user = None):
     if config.user_id not in users:
         user_cgs = []
     else:
-        user_cgs = users[config.user_id]["contactgroups"]
+        user_cgs = users[config.user_id].get("contactgroups", [])
 
     for c in user_cgs:
         if c in cgs:

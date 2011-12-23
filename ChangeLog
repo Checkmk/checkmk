@@ -22,6 +22,8 @@
     * FIX: Calling activate_changes hook also in distributed WATO setups
     * FIX: Fixed javascript errors when doing replication in distributed
       wato environments when not having the sidebar open
+    * FIX: Fixed search form dependant attribute handling
+    * FIX: Fixed search form styling issues
     * You can now move folders to other folders
     * FIX: Distributed WATO: Supressing site sync progress output written in
       the apache error log

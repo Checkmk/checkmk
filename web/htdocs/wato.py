@@ -719,6 +719,7 @@ def get_folder_aliaspath(folder, show_main = True):
 #   '----------------------------------------------------------------------'
 
 def mode_folder(phase):
+    global g_folder
     if phase == "title":
         return g_folder["title"]
 
@@ -763,7 +764,6 @@ def mode_folder(phase):
                     mark_affected_sites_dirty(what_folder)
                     move_folder(what_folder, target_folder)
                     load_all_folders()
-                    global g_folder
                     g_folder = g_folders[html.var("folder")]
                     # Folder hav been reloaded, so our object is invalid
                     target_folder = g_folders[path]
@@ -1954,14 +1954,13 @@ def mode_search(phase):
 
     else:
         render_folder_path()
-        html.write("<table><tr><td>\n")
 
         ## # Show search form
         html.begin_form("search")
-        html.write("<table class=form>")
+        html.write("<table class=\"form nomargin\">")
 
         # host name
-        html.write("<tr><td class=legend colspan=2>" + _("Hostname") + "</td><td class=content>")
+        html.write("<tr class=top><td class=legend colspan=2>" + _("Hostname") + "</td><td class=content>")
         html.text_input("host")
         html.set_focus("host")
         html.write("</td></tr>\n")
@@ -1996,8 +1995,6 @@ def mode_search(phase):
             # html.write("<pre>%s</pre>" % pprint.pformat(crit))
             if not search_hosts_in_folders(folder, crit):
                 html.message(_("No matching hosts found."))
-
-        html.write("</td></tr></table>")
 
 
 
@@ -3790,7 +3787,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 html.write("</table>")
 
             html.begin_foldable_container("wato_attributes", title,
-                                          topic == None, title, indent = "form")
+                                          topic == None, title, indent = "form", first = topic == topics[0])
             html.write('<table ')
             # Mark container with host tag attributes with a special ID
             if topic == _("Host tags"):
@@ -4973,11 +4970,14 @@ class Dictionary(ValueSpec):
             html.write("<tr><td>")
             vp = varprefix + "_" + param
             div_id = vp
+            visible = html.get_checkbox(vp + "_USE")
+            if visible == None:
+                visible = param in value
             html.checkbox(vp + "_USE", param in value,
                           onclick="wato_toggle_option(this, %r)" % div_id)
             html.write(" %s<br>" % vs.title())
             html.write('<div class=dictelement id="%s" style="display: %s">' % (
-                div_id, param not in value and "none" or ""))
+                div_id, not visible and "none" or ""))
             if vs.help():
                 html.write("<ul class=help>%s</ul>" % vs.help())
             vs.render_input(vp, value.get(param, vs.canonical_value()))

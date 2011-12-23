@@ -30,6 +30,10 @@
 #
 # This declares the following API:
 #
+# all_users()
+# Returns an assoziative array with the usernames as keys and user
+# objects as value.
+#
 # users_with_role(<ROLE_NAME>)
 # Returns an array of usernames
 #
@@ -44,6 +48,11 @@
 #
 # users_with_permission(<PERMISSION>)
 # Returns an array of usernames with the given permission
+#
+# get_folder_permissions(<USERNAME>)
+# Returns an array of all wato folder related permissions of the
+# given user. The keys are the folder paths and the values are an
+# array of "read" and "write" elements with boolean values.
 #
 # may(<USER_NAME>, <PERMISSION>)
 # Returns true/false wether or not the user is permitted
@@ -63,20 +72,41 @@ def parse_php(data, lvl = 1):
             s += '    ' * lvl + parse_php(key, lvl + 1) + ' => ' + parse_php(val, lvl + 1) + ',\n'
         s += '    ' * (lvl - 1) + ')'
     elif isinstance(data, str) or isinstance(data, unicode):
-        s += '"%s"' % data
+        s += '\'%s\'' % data
     elif isinstance(data, bool):
         s += data and 'true' or 'false'
+    elif data is None:
+        s += 'null'
     else:
         s += data
 
     return s
 
 
-def create_php_file(users, role_permissions):
+def create_php_file(users, role_permissions, folder_permissions):
+    # Set a language for all users
+    for username in users:
+        users[username].setdefault('language', config.default_language)
+
     file(g_auth_base_dir + '/auth.php', 'w').write('''<?php
 global $mk_users, $mk_roles;
-$mk_users = %s;
-$mk_roles = %s;
+$mk_users   = %s;
+$mk_roles   = %s;
+$mk_folders = %s;
+
+function get_folder_permissions($username) {
+    global $mk_folders;
+    if(!isset($mk_folders[$username])) {
+        return array();
+    } else {
+        return $mk_folders[$username];
+    }
+}
+
+function all_users() {
+    global $mk_users;
+    return $mk_users;
+}
 
 function user_roles($username) {
     global $mk_users;
@@ -149,13 +179,13 @@ function may($username, $need_permission) {
 }
 
 ?>
-''' % (parse_php(users), parse_php(role_permissions)))
+''' % (parse_php(users), parse_php(role_permissions), parse_php(folder_permissions)))
 
 def create_auth_file(users):
     if not os.path.exists(g_auth_base_dir):
         os.mkdir(g_auth_base_dir)
 
-    create_php_file(users, config.get_role_permissions())
+    create_php_file(users, config.get_role_permissions(), get_folder_permissions_of_users(users))
 
 api.register_hook('users-saved',      create_auth_file)
 api.register_hook('roles-saved',      lambda x: create_auth_file(load_users()))

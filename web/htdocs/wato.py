@@ -879,6 +879,26 @@ def check_host_permissions(hostname, exception=True):
         raise MKAuthException(reason)
     return reason
 
+def get_folder_permissions_of_users(users):
+    folders = {}
+
+    def get_flat_folders(folder):
+        folders[folder['.path']] = folder
+        for child in folder.get('.folders', {}).itervalues():
+            get_flat_folders(child)
+
+    get_flat_folders(api.get_folder_tree())
+
+    permissions = {}
+
+    for username in users.iterkeys():
+        permissions[username] = {}
+        for folder_path, folder in folders.iteritems():
+            permissions[username][folder_path] = {
+                'read':  check_folder_permissions(folder, 'read', False, username) == True,
+                'write': check_folder_permissions(folder, 'write', False, username) == True,
+            }
+    return permissions
 
 def check_folder_permissions(folder, how, exception=True, user = None):
     if not user:

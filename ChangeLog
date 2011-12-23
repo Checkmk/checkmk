@@ -26,6 +26,7 @@
     * Inventory of SNMP devices: force implicit full scan if no services
       are configured yet
     * FIX: Calling activate_changes hook also in distributed WATO setups
+    * FIX: Fixed display bug in host tags drop down menu after POST of form
     * FIX: Fixed javascript errors when doing replication in distributed
       wato environments when not having the sidebar open
     * FIX: Fixed search form dependant attribute handling

@@ -3535,8 +3535,10 @@ class HostTagAttribute(Attribute):
                       # But case could occur if tags definitions have been changed.
 
     def render_input(self, value):
+        varname = "attr_" + self.name()
         if value == None:
-            value = "" # Important for tag groups with an empty tag entry
+            value = html.var(varname,"") # "" is important for tag groups with an empty tag entry
+
         # Tag groups with just one entry are being displayed
         # as checkboxes
         choices = []
@@ -3549,9 +3551,11 @@ class HostTagAttribute(Attribute):
             else:
                 secondary_tags = []
             choices.append(("|".join([ tagvalue ] + secondary_tags), e[1]))
-        varname = "attr_" + self.name()
+            if value != "" and value == tagvalue:
+                value = value + "|" + "|".join(secondary_tags)           
+
         if len(choices) == 1:
-            html.checkbox(varname, value != None, cssclass = '', onclick='wato_fix_visibility();', add_attr = ["tags=%s"%choices[0][0]])
+            html.checkbox(varname, value != "", cssclass = '', onclick='wato_fix_visibility();', add_attr = ["tags=%s"%choices[0][0]])
             html.write(" " + choices[0][1])
         else:
             html.select(varname, choices, value, onchange='wato_fix_visibility();')

@@ -11,6 +11,8 @@
     * Several cleanups to prevent css/js warning messages in e.g. Firefox
     * Made texts in selectable rows selectable again
     * FIX: ship missing CSS files for mobile GUI
+    * FIX: rename check_mk.js into checkmk.js in order to avoid browser
+      caching problems during version update
 
     WATO:
     * Optimized wraps in host lists tag column

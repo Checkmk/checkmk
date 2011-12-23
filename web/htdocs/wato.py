@@ -719,6 +719,7 @@ def get_folder_aliaspath(folder, show_main = True):
 #   '----------------------------------------------------------------------'
 
 def mode_folder(phase):
+    global g_folder
     if phase == "title":
         return g_folder["title"]
 
@@ -763,7 +764,6 @@ def mode_folder(phase):
                     mark_affected_sites_dirty(what_folder)
                     move_folder(what_folder, target_folder)
                     load_all_folders()
-                    global g_folder
                     g_folder = g_folders[html.var("folder")]
                     # Folder hav been reloaded, so our object is invalid
                     target_folder = g_folders[path]

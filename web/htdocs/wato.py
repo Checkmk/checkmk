@@ -879,6 +879,26 @@ def check_host_permissions(hostname, exception=True):
         raise MKAuthException(reason)
     return reason
 
+def get_folder_permissions_of_users(users):
+    folders = {}
+
+    def get_flat_folders(folder):
+        folders[folder['.path']] = folder
+        for child in folder.get('.folders', {}).itervalues():
+            get_flat_folders(child)
+
+    get_flat_folders(api.get_folder_tree())
+
+    permissions = {}
+
+    for username in users.iterkeys():
+        permissions[username] = {}
+        for folder_path, folder in folders.iteritems():
+            permissions[username][folder_path] = {
+                'read':  check_folder_permissions(folder, 'read', False, username) == True,
+                'write': check_folder_permissions(folder, 'write', False, username) == True,
+            }
+    return permissions
 
 def check_folder_permissions(folder, how, exception=True, user = None):
     if not user:
@@ -3802,6 +3822,8 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                     # One attribute is always shown -> topic can never
                     # be made invisible
                     topic_is_volatile = False
+            else:
+                topic_is_volatile = False
 
             # "bulk": determine, if this attribute has the same setting for all hosts.
             values = []
@@ -6846,7 +6868,8 @@ def push_snapshot_to_site(site, do_restart):
     # urllib2 does not seem to support file uploads. Please tell me, if
     # you know a better method for uploading, without the use of external
     # programs...
-    response_text = os.popen("curl -F snapshot=@%s '%s'" % (sync_snapshot_file, url)).read()
+    # -s -S: Disable progress meter but enable error messages
+    response_text = os.popen("curl -s -S -F snapshot=@%s '%s'" % (sync_snapshot_file, url)).read()
     try:
         response = eval(response_text)
         return response

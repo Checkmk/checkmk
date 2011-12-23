@@ -213,7 +213,7 @@ def main_list(args):
     # in one class are orred. Multiple types are anded.
     filters = {}
 
-    sort = None
+    sort = lambda a,b: cmp(a['id'], b['id'])
     reverse = False
     for a in args:
 

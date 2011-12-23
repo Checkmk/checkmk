@@ -3822,6 +3822,8 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                     # One attribute is always shown -> topic can never
                     # be made invisible
                     topic_is_volatile = False
+            else:
+                topic_is_volatile = False
 
             # "bulk": determine, if this attribute has the same setting for all hosts.
             values = []
@@ -9625,7 +9627,6 @@ def mode_edit_rule(phase):
                     if x == 0:
                         html.write("<tr>")
                     html.write("<td>")
-                    html.write("HIRN")
                     item = nr < len(item_list) and item_list[nr] or ""
                     html.text_input("item_%d" % nr, item)
                     html.write("</td>")

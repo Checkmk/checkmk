@@ -13,6 +13,8 @@
     * Adding reschedule icon to all Check_MK based services. Clicks on these
       icons will simply trigger a reschedule of the Check_MK service
     * FIX: ship missing CSS files for mobile GUI
+    * FIX: rename check_mk.js into checkmk.js in order to avoid browser
+      caching problems during version update
 
     WATO:
     * Optimized wraps in host lists tag column
@@ -21,6 +23,8 @@
     * NagVis auhtorization file generation is also executed on activate_changes
     * Implemented a new inclusion based API for using multisite permissions
       in other addons
+    * Inventory of SNMP devices: force implicit full scan if no services
+      are configured yet
     * FIX: Calling activate_changes hook also in distributed WATO setups
     * FIX: Fixed javascript errors when doing replication in distributed
       wato environments when not having the sidebar open

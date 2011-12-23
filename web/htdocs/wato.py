@@ -1833,8 +1833,14 @@ def show_service_table(host, firsttime):
 
     # Read current check configuration
     cache_options = not html.var("_scan") and [ '--cache' ] or []
+
+    # We first try using the Cache (if the user has not pressed Full Scan). 
+    # If we do not find any data, we omit the cache and immediately try
+    # again without using the cache.
     try:
         table = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
+        if len(table) == 0 and cache_options != []:
+            table = check_mk_automation(host[".siteid"], "try-inventory", [hostname])
     except Exception, e:
         if config.debug:
             raise

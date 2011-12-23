@@ -1954,14 +1954,13 @@ def mode_search(phase):
 
     else:
         render_folder_path()
-        html.write("<table><tr><td>\n")
 
         ## # Show search form
         html.begin_form("search")
-        html.write("<table class=form>")
+        html.write("<table class=\"form nomargin\">")
 
         # host name
-        html.write("<tr><td class=legend colspan=2>" + _("Hostname") + "</td><td class=content>")
+        html.write("<tr class=top><td class=legend colspan=2>" + _("Hostname") + "</td><td class=content>")
         html.text_input("host")
         html.set_focus("host")
         html.write("</td></tr>\n")
@@ -1996,8 +1995,6 @@ def mode_search(phase):
             # html.write("<pre>%s</pre>" % pprint.pformat(crit))
             if not search_hosts_in_folders(folder, crit):
                 html.message(_("No matching hosts found."))
-
-        html.write("</td></tr></table>")
 
 
 

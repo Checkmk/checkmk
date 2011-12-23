@@ -919,7 +919,7 @@ class html:
                 omd_mode = 'own'
         return (omd_mode, omd_site)
 
-    def begin_foldable_container(self, treename, id, isopen, title, indent = True):
+    def begin_foldable_container(self, treename, id, isopen, title, indent = True, first = False):
         # try to get persistet state of tree
         tree_state = weblib.get_tree_states(treename)
 
@@ -932,7 +932,8 @@ class html:
         onclick += ' onmouseout="this.style.cursor=\'auto\';" '
 
         if indent == "form":
-            self.write('<table id="topic_%s" style="display:table"  class="form nomargin"><tr ><td class=title>' % id.encode("utf-8"))
+            self.write('<table id="topic_%s" style="display:table"  class="form nomargin"><tr%s><td class=title>' % \
+                                  (id.encode("utf-8"), first and ' class="top"' or ''))
         self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
                    'src="images/tree_%s.png" %s>' %
                 (treename, id, img_num, onclick))

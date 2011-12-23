@@ -3787,7 +3787,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 html.write("</table>")
 
             html.begin_foldable_container("wato_attributes", title,
-                                          topic == None, title, indent = "form")
+                                          topic == None, title, indent = "form", first = topic == topics[0])
             html.write('<table ')
             # Mark container with host tag attributes with a special ID
             if topic == _("Host tags"):

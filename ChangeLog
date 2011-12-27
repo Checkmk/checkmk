@@ -7,6 +7,10 @@
       should fix problems with german umlauts in message texts.
     * Disabled obsolete checks fc_brocade_port and fc_brocade_port_detailed.
       Please use brocade_fcport instead.
+    * aironet_errors, statgrab_disk, statgrab_net: Performance data has
+      been converted from counters to rates. You might need to delete your
+      existing RRDs of these checks. Sorry, but these have been that last
+      checks still using counters...
 
 
 1.1.13i2:

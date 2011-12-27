@@ -27,7 +27,7 @@
 def inventory_statgrab_disk(info):
     for line in info:
         if line[0].endswith('read_bytes') or line[0].endswith('write_bytes'):
-            return [ ('read', None, None), ('write', None, None) ]
+            return [ ('read', None), ('write', None) ]
     return []
 
 def check_statgrab_disk(item, params, info):
@@ -42,7 +42,7 @@ def check_statgrab_disk(item, params, info):
 
     this_time = int(time.time())
     timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
-    perfdata = [ (item, "%dc" % this_val ) ]
+    perfdata = [ (item, per_sec) ]
     return (0, "OK - %s/s (in last %d secs)" % (get_bytes_human_readable(per_sec), timedif), perfdata)
 
 

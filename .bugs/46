@@ -1,10 +1,10 @@
 Title: Keine Counter mehr in den Perfdaten senden
 Component: checks
+State: done
+Class: cleanup
 Benefit: 2
-State: open
 Cost: 5
 Date: 2010-12-21 21:28:27
-Class: cleanup
 Targetversion: 1.2.0
 
 Performance counter: Generell sollten *alle* Counter von Check_MK
@@ -35,3 +35,5 @@ statgrab_disk
 statgrab_net
 
 -> Diese wurden am 27.12.2011 von Countern auf 1/sec umgestellt.
+
+2011-12-27 20:00:03: changed state open -> done

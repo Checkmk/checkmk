@@ -5,6 +5,8 @@
     Checks & Agents:
     * Windows agent: output eventlog texts in UTF-8 encoding. This
       should fix problems with german umlauts in message texts.
+    * Disabled obsolete checks fc_brocade_port and fc_brocade_port_detailed.
+      Please use brocade_fcport instead.
 
 
 1.1.13i2:

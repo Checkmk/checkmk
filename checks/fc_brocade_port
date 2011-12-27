@@ -24,71 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-# targetstate is 1 (used) or 0 (unused)
-# info columns: INDEX PHYSTATE OPSTATE TXWORDS RXWORDS
-brocade_pystate_names = ['', 'noCard', 'noTransceiver', 'laserFault', 'noLight',
-                         'noSync', 'inSync', 'portFault', 'diagFault', 'lockRef']
-brocade_opstate_names = [ 'unknown', 'online', 'offline', 'testing', 'faulty']
-brocade_perfdata_errors = False
-brocade_default_params = (0.1, 0.01)
-
-def inventory_brocade_port(info):
-    inventory = []
-    for index, phystate, opstate, txwords, rxwords, crcerrors, c3discards in info:
-        state = (int(phystate), int(opstate))
-        if state == (4,2):
-            used = 0
-            used_txt = "unused"
-        elif phystate == "1" or phystate == "2":
-            used = 0
-            used_txt = "no card or no transceiver"
-        else:
-            used = 1
-            used_txt = "used"
-        # index  is e.g. '3'. But port number printed on switch
-        # and in management software of switch counts from 0, so subtract
-        # one. Also make it 2-digits => '03'
-        if used:
-            index = "%02d" % (int(index) - 1)
-            inventory.append( (index, used_txt, "brocade_default_params") )
-    return inventory
-
-
 def check_brocade_port(portno, params, info):
-    try:
-        warning, critical = params
-    except:
-        warning, critical = (0.1, 0.01) # percent error rate
+    return (3, "UKNOWN - This check has been removed. Please use brocade_fcport instead.")
 
-    # SNMP counts ports from 1, but management console and hardware from 0
-    portinfo = [ line[1:] for line in info if int(line[0]) == int(portno) + 1 ]
-    if len(portinfo) < 1:
-        return (3, "UNKNOWN - No port number %d present" % int(portno))
-    phystate, opstate, txwords, rxwords, crcerrors, c3discards = map(int, portinfo[0])
-    perfdata = [
-        ( "txwords", "%dc" % txwords ),
-        ( "rxwords", "%dc" % rxwords ) ]
-    if brocade_perfdata_errors:
-        perfdata += [
-            ( "crcerrors", "%dc" % crcerrors ),
-            ( "c3discards", "%dc" % c3discards ) ]
-
-
-    state = phystate,opstate
-    if state == (6,1):
-        return (0, "OK - physical and logical link UP", perfdata)
-    else:
-        return (2, "CRIT - physical state %s, opstate %s" %
-                (brocade_pystate_names[phystate],
-                 brocade_opstate_names[opstate]), perfdata)
-
-
-check_info['fc_brocade_port'] = (check_brocade_port, "PORT %s", 1,  inventory_brocade_port)
-snmp_info['fc_brocade_port'] = ( ".1.3.6.1.4.1.1588.2.1.1.1.6.2.1", [ 1, 3, 4, 11, 12, 22, 28 ] )
-snmp_scan_functions['fc_brocade_port'] = \
-       lambda oid: False # prefer fc_brodade_port_detailed
-# 1: swFCPortIndex, 3: swFCPortOpStatus, 4:swFCPortAdmStatus,
-# 11: swFCPortTxWords, 12: swFCPortRxWords
-# 22: swFCPortRxCrcs, 28: swFCPortC3Discards
-check_config_variables.append("brocade_perfdata_errors")
+check_info['fc_brocade_port'] = (check_brocade_port, "PORT %s", 1, no_inventory_possible)
+snmp_info['fc_brocade_port'] = []
+snmp_scan_functions['fc_brocade_port'] = lambda oid: False

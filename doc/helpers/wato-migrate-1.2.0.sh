@@ -32,8 +32,8 @@ then
     exit 1
 fi
 
-echo "Making backup of conf.d into $TAR"
 TAR=conf.d-$(date +%s).tar.gz
+echo "Making backup of conf.d into $TAR"
 tar czf $TAR conf.d
 
 cd conf.d

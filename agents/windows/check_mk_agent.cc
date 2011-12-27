@@ -855,7 +855,7 @@ void grow_eventlog_buffer(int newsize)
 
 
 bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, char type_char,
-			   const char *logname, const char *source_name, char **strings)
+			   const char *logname, const char *source_name, WCHAR **strings)
 {
     char msgbuffer[2048];
     char dll_realpath[128];
@@ -883,19 +883,29 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
     }
     else
 	dll = NULL;
-    DWORD len = FormatMessage(
+
+    WCHAR wmsgbuffer[2048];
+    DWORD len = FormatMessageW(
+    // DWORD len = FormatMessage(
 	FORMAT_MESSAGE_ARGUMENT_ARRAY |
 	FORMAT_MESSAGE_FROM_HMODULE |
 	FORMAT_MESSAGE_FROM_SYSTEM,
 	dll,
 	event->EventID,
 	0, // accept any language
-	(LPTSTR)msgbuffer,
-	sizeof(msgbuffer),
-	strings);
+	wmsgbuffer,
+	// msgbuffer,
+	2048,
+	(char **)strings);
 
     if (dll)
 	FreeLibrary(dll);
+
+    if (len) 
+    {
+        // convert message to UTF-8
+        len = WideCharToMultiByte(CP_UTF8, 0, wmsgbuffer, -1, msgbuffer, sizeof(msgbuffer), NULL, NULL);
+    }
 
     if (len == 0) // message could not be converted
     {
@@ -913,15 +923,17 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
 	int n = 0;
 	while (strings[n]) // string array is zero terminated
 	{
-	    char *s = strings[n];
-	    int l = strlen(s);
-	    if (l + 1 < sizeleft) {
-		strcpy(w, s);
-		w += l;
-		*w++ = ' ';
-		sizeleft -= l + 1;
-	    }
+	    WCHAR *s = strings[n];
+            DWORD len = WideCharToMultiByte(CP_UTF8, 0, s, -1, w, sizeleft, NULL, NULL);
+            if (!len)
+                break;
+            sizeleft -= len;
+            w += len;
+            if (sizeleft <= 0)
+                break;
 	    n++;
+            if (strings[n]) 
+                *w++ = ' ';
 	}
     }
 
@@ -950,7 +962,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 			      DWORD bytesread, DWORD *record_number, bool just_find_end,
 			      int *worst_state, int level)
 {
-    char *strings[64];
+    WCHAR *strings[64];
     char regpath[128];
     BYTE dllpath[128];
     char source_name[128];
@@ -993,11 +1005,10 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 	if (!just_find_end)
 	{
 	    // The source name is the name of the application that produced the event
-	    LPCTSTR lpSourceName = (LPCTSTR) ((LPBYTE) event + sizeof(EVENTLOGRECORD));
+            // It is UTF-16 encoded
+	    WCHAR *lpSourceName = (WCHAR *) ((LPBYTE) event + sizeof(EVENTLOGRECORD));
+            WideCharToMultiByte(CP_UTF8, 0, lpSourceName, -1, source_name, sizeof(source_name), NULL, NULL);
 
-	    // prepare source name without spaces (for check_mk output)
-	    strncpy(source_name, lpSourceName, sizeof(source_name)-1);
-	    source_name[sizeof(source_name)-1] = 0; // strncpy does not zero-terminate, if buffer is too small!
 	    char *w = source_name;
 	    while (*w) {
 		if (*w == ' ') *w = '_';
@@ -1007,12 +1018,12 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 	    // prepare array of zero terminated strings to be inserted
 	    // into message template.
 	    DWORD num_strings = event->NumStrings;
-	    char *s = ((char *)event) + event->StringOffset;
+	    WCHAR *s = (WCHAR *)(((char *)event) + event->StringOffset);
 	    unsigned ns;
 	    for (ns = 0; ns < num_strings; ns++) {
 		if (ns >= 63) break;
 		strings[ns] = s;
-		s += strlen(s) + 1;
+		s += wcslen(s) + 1;
 	    }
 	    strings[ns] = 0; // end marker in array
 
@@ -1021,7 +1032,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 	    // DLL to load in the registry. Hard to image how one could
 	    // have contrieved this more complicated...
 	    snprintf(regpath, sizeof(regpath),
-		     "SYSTEM\\CurrentControlSet\\Services\\Eventlog\\%s\\%s",
+		     "SYSTEM\\CurrentControlSet\\Services\\Eventlog\\%s\\%S",
 		     logname, lpSourceName);
 
 	    HKEY key;
@@ -1104,7 +1115,7 @@ void output_eventlog(SOCKET &out, const char *logname,
 		    flags = EVENTLOG_SEEK_READ | EVENTLOG_FORWARDS_READ;
 		}
 
-		if (ReadEventLog(hEventlog,
+		if (ReadEventLogW(hEventlog,
 				 flags,
 				 *record_number + 1,
 				 eventlog_buffer,

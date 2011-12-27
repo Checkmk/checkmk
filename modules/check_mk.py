@@ -3144,6 +3144,10 @@ def list_all_hosts_with_tags(tags):
 
 # Implementation of option -d
 def output_plain_hostinfo(hostname):
+    info = read_cache_file(hostname, 999999999)
+    if info:
+        sys.stdout.write(info)
+        return
     try:
         ipaddress = lookup_ipaddress(hostname)
         sys.stdout.write(get_agent_info(hostname, ipaddress, 0))

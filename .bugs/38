@@ -1,9 +1,13 @@
 Title: cmk -d verwendet --cache nicht
 Component: core
+State: done
+Class: nastiness
 Benefit: 1
-State: open
 Cost: 2
 Date: 2010-12-21 21:15:52
-Class: nastiness
+Targetversion: future
 
 Sollte es aber tun. So wird es erwartet.
+
+2011-12-27 19:25:03: changed state open -> done
+Ist nun umgesetzt. Auch --no-tcp funktioniert.

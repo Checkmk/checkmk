@@ -235,26 +235,11 @@ ask_dir confdir /etc/$NAME $HOMEBASEDIR $OMD_ROOT/etc/check_mk "Check_MK configu
 An example configuration file will be installed there if no main.mk is 
 present from a previous version."
 
-ask_dir checksdir /usr/share/$NAME/checks $HOMEBASEDIR/checks $OMD_ROOT/local/share/check_mk/checks "check_mk checks" \
-  "check_mk's different checks are implemented as small Python scriptlets 
-that parse and interpret the various output sections of the agents. Where 
-shall those be installed"
-
-ask_dir modulesdir /usr/share/$NAME/modules $HOMEBASEDIR/modules $OMD_ROOT/local/share/check_mk/modules "check_mk modules" \
-  "Directory for main componentents of check_mk itself. The setup will
-also create a file 'defaults' in that directory that reflects all settings
-you are doing right now" 
-
-ask_dir web_dir /usr/share/$NAME/web $HOMEBASEDIR/web $OMD_ROOT/local/share/check_mk/web "Check_MK Multisite GUI" \
-  "Directory where Check_mk's Multisite GUI should be installed. Multisite is
-an optional replacement for the Nagios GUI, but is also needed for the 
-logwatch extension.  That directory should [4;1mnot[0m be
-in your WWW document root. A separate apache configuration file will be
-installed that maps the directory into your URL schema"
-
-ask_dir localedir /usr/share/$NAME/locale $HOMEBASEDIR/locale $OMD_ROOT/local/share/check_mk/locale "Localization dir" \
-  "Base directory for gettext localization files. Multisite comes prepared for localzation
-but does not ship any language per default." 
+ask_dir sharedir /usr/share/$NAME $HOMEBASEDIR $OMD_ROOT/local/share/check_mk "Check_MK software" \
+  "The base directory for the software installation of Check_MK. This 
+directory will get the subdirectories checks, modules, web, locale,
+agents and pnp-templates. Note: in previous versions it was possible 
+to specify each of those directories separately. This is no longer possible."
 
 ask_dir docdir /usr/share/doc/$NAME $HOMEBASEDIR/doc $OMD_ROOT/local/share/check_mk/doc "documentation" \
   "Some documentation about check_mk will be installed here. Please note,
@@ -269,10 +254,6 @@ ask_dir vardir /var/lib/$NAME $HOMEBASEDIR/var $OMD_ROOT/var/check_mk "working d
   "check_mk will create caches files, automatically created checks and
 other files into this directory. The setup will create several subdirectories
 and makes them writable by the Nagios process"
-
-ask_dir agentsdir /usr/share/$NAME/agents $HOMEBASEDIR/agents $OMD_ROOT/local/share/check_mk/agents "agents for operating systems" \
-  "Agents for various operating systems will be installed here for your 
-conveniance. Take them and install them onto your target hosts"
 
 ask_title "Configuration of Linux/UNIX Agents"
 
@@ -433,6 +414,11 @@ other systems. Currently this is only Nagvis, but other might follow
 later."
 fi
 
+checksdir=$sharedir/checks
+modulesdir=$sharedir/modules
+web_dir=$sharedir/web
+localedir=$sharedir/locale
+agentsdir=$sharedir/agents
 
 create_defaults ()
 {
@@ -450,6 +436,7 @@ cat <<EOF
 check_mk_version            = '$VERSION'
 default_config_dir          = '$confdir'
 check_mk_configdir          = '$confdir/conf.d'
+share_dir                   = '$sharedir'
 checks_dir                  = '$checksdir'
 check_manpages_dir          = '$checkmandir'
 modules_dir                 = '$modulesdir'
@@ -615,6 +602,8 @@ do
 	       fi
 	       if [ -z "$YES" ] ; then echo ")" ; fi
 	   fi &&
+           mkdir -p $DESTDIR$sharedir &&
+           tar xzf $SRCDIR/share.tar.gz -C $DESTDIR$sharedir &&
 	   mkdir -p $DESTDIR$modulesdir &&
 	   create_defaults > $DESTDIR$modulesdir/defaults &&
            mkdir -p $DESTDIR$localedir &&
@@ -676,14 +665,14 @@ do
            ln -snf check_mk $DESTDIR$bindir/cmk &&
 	   echo -e "#!/bin/sh\nexec python $modulesdir/check_mk.py -P "'"$@"' > $DESTDIR$bindir/mkp &&
            chmod 755 $DESTDIR$bindir/mkp &&
-	   sed -i "s#@BINDIR@#$bindir#g"              $DESTDIR$docdir/check_mk_templates.cfg &&
-	   sed -i "s#@VARDIR@#$vardir#g"              $DESTDIR$docdir/check_mk_templates.cfg &&
-	   sed -i "s#@CHECK_ICMP@#$check_icmp_path#g" $DESTDIR$docdir/check_mk_templates.cfg &&
-	   sed -i "s#@CGIURL@#${url_prefix}nagios/cgi-bin/#g" $DESTDIR$docdir/check_mk_templates.cfg &&
-	   sed -i "s#@PNPURL@#${url_prefix}pnp4nagios/#g" $DESTDIR$docdir/check_mk_templates.cfg &&
+	   sed -i "s#@BINDIR@#$bindir#g"              $DESTDIR$sharedir/check_mk_templates.cfg &&
+	   sed -i "s#@VARDIR@#$vardir#g"              $DESTDIR$sharedir/check_mk_templates.cfg &&
+	   sed -i "s#@CHECK_ICMP@#$check_icmp_path#g" $DESTDIR$sharedir/check_mk_templates.cfg &&
+	   sed -i "s#@CGIURL@#${url_prefix}nagios/cgi-bin/#g" $DESTDIR$sharedir/check_mk_templates.cfg &&
+	   sed -i "s#@PNPURL@#${url_prefix}pnp4nagios/#g" $DESTDIR$sharedir/check_mk_templates.cfg &&
            mkdir -p "$DESTDIR$nagconfdir"
 	   if [ ! -e $DESTDIR$nagconfdir/check_mk_templates.cfg ] ; then
- 	       ln -s $docdir/check_mk_templates.cfg $DESTDIR$nagconfdir 2>/dev/null
+ 	       ln -s $sharedir/check_mk_templates.cfg $DESTDIR$nagconfdir 2>/dev/null
 	   fi
 	   if [ -n "$nagiosaddconf" -a -n "$DESTDIR$nagios_config_file" ] ; then
 	      echo "# added by setup.sh of check_mk " >> $DESTDIR$nagios_config_file

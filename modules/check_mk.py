@@ -3635,12 +3635,16 @@ def do_restart_nagios(only_reload):
     action = only_reload and "load" or "start"
     sys.stdout.write("Re%sing Nagios..." % action)
     sys.stdout.flush()
-    command = nagios_startscript + " re%s 2>&1" % action
+    if omd_root:
+        command = "omd re%s core 2>&1" % action
+    else:
+        command = nagios_startscript + " re%s 2>&1" % action
+
     process = os.popen(command, "r")
     output = process.read()
     if process.close():
         sys.stdout.write("ERROR: %s\n" % output)
-        raise MKGeneralException("Cannot re%s Nagios: %s" % (action, output))
+        raise MKGeneralException("Cannot re%s the monitoring core: %s" % (action, output))
     else:
         sys.stdout.write(tty_ok + "\n")
 

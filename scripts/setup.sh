@@ -233,13 +233,13 @@ always have to specify the installation path when calling check_mk"
 ask_dir confdir /etc/$NAME $HOMEBASEDIR $OMD_ROOT/etc/check_mk "Check_MK configuration" \
   "Directory where check_mk looks for its main configuration file main.mk. 
 An example configuration file will be installed there if no main.mk is 
-present from a previous version."
+present from a previous version"
 
 ask_dir sharedir /usr/share/$NAME $HOMEBASEDIR $OMD_ROOT/local/share/check_mk "Check_MK software" \
   "The base directory for the software installation of Check_MK. This 
-directory will get the subdirectories checks, modules, web, locale,
-agents and pnp-templates. Note: in previous versions it was possible 
-to specify each of those directories separately. This is no longer possible."
+directory will get the subdirectories checks, modules, web, locale and
+agents. Note: in previous versions it was possible to specify each of
+those directories separately. This is no longer possible"
 
 ask_dir docdir /usr/share/doc/$NAME $HOMEBASEDIR/doc $OMD_ROOT/local/share/check_mk/doc "documentation" \
   "Some documentation about check_mk will be installed here. Please note,

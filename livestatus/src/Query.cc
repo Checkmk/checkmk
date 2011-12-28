@@ -488,7 +488,6 @@ void Query::parseAuthUserHeader(char *line)
 
 void Query::parseStatsGroupLine(char *line)
 {
-    // Can be re-enabled from 1.2i1
     logger(LOG_WARNING, "Warning: StatsGroupBy is deprecated. "
                         "Please use Columns instead.");
     parseColumnsLine(line);

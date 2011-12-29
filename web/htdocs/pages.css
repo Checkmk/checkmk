@@ -321,6 +321,11 @@ tr.groupheader a:hover {
     border: 1px solid #fff;
 }
 
+img.iconbutton {
+    width: 20px;
+    height: 20px;
+}
+
 /*-------------------------------------------------------------------------.
 |                    _____                                                 |
 |                   |  ___|__  _ __ _ __ ___  ___                          |

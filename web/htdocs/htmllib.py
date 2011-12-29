@@ -322,15 +322,15 @@ class html:
                 (obj_id, style, title, disabled, text, href))
         # self.write("<a href=\"%s\" class=button%s%s>%s</a>" % (href, obj_id, style, text))
 
-    def icon_button(url, help, icon):
-        html.write('<a href="%s">'
+    def icon_button(self, url, help, icon):
+        self.write('<a href="%s">'
                    '<img class=iconbutton title="%s" src="images/button_%s_lo.png" '
                    'onmouseover=\"hilite_icon(this, 1)\" '
                    'onmouseout=\"hilite_icon(this, 0)\">'
                    '</a>\n' % (url, help, icon))
 
-    def empty_icon_button():
-        html.write('<img class=trans src="images/trans.png">')
+    def empty_icon_button(self):
+        self.write('<img class=trans src="images/trans.png">')
 
     def jsbutton(self, varname, text, onclick, style=''):
         if style:

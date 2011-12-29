@@ -113,7 +113,7 @@ class FixedValue(ValueSpec):
         if self._totext != None:
             return self._totext
         else:
-            return self.title()
+            return str(value)
 
     def from_html_vars(self, varprefix):
         return self._value

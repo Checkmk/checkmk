@@ -999,9 +999,9 @@ def show_subfolders(folder):
         enter_url    = make_link_to([("mode", "folder")], entry)
 
         html.write("<td class=buttons>")
-        icon_button(edit_url, _("Edit the properties of this folder"), "edit")
+        html.icon_button(edit_url, _("Edit the properties of this folder"), "edit")
         if config.may("wato.manage_folders"):
-            icon_button(delete_url, _("Delete this folder"), "delete")
+            html.icon_button(delete_url, _("Delete this folder"), "delete")
         html.write("</td>")
 
 
@@ -1155,11 +1155,11 @@ def show_hosts(folder):
         html.write('</td>\n')
 
         html.write("<td class=buttons>")
-        icon_button(edit_url, _("Edit the properties of this host"), "edit")
-        icon_button(services_url, _("Edit the services of this host, do an inventory"), "services")
+        html.icon_button(edit_url, _("Edit the properties of this host"), "edit")
+        html.icon_button(services_url, _("Edit the services of this host, do an inventory"), "services")
         if config.may("wato.manage_hosts"):
-            icon_button(clone_url, _("Create a clone of this host"), "insert")
-            icon_button(delete_url, _("Delete this host"), "delete")
+            html.icon_button(clone_url, _("Create a clone of this host"), "insert")
+            html.icon_button(delete_url, _("Delete this host"), "delete")
         html.write("</td>\n")
 
         # Hostname with link to details page (edit host)
@@ -4187,9 +4187,9 @@ def mode_snapshot(phase):
                 html.write('<tr class="data %s0"><td>' % odd)
 
                 # Buttons
-                icon_button(make_action_link(
+                html.icon_button(make_action_link(
                    [("mode","snapshot"),("_restore_snapshot", name)]), _("Restore"), "restore")
-                icon_button(make_action_link(
+                html.icon_button(make_action_link(
                    [("mode","snapshot"),("_delete_file", name)]), _("Delete"), "delete")
                 html.write("<td>")
 
@@ -4632,8 +4632,8 @@ def mode_groups(phase, what):
         edit_url = make_link([("mode", "edit_%s_group" % what), ("edit", name)])
         delete_url = html.makeactionuri([("_delete", name)])
         html.write("<td class=buttons>")
-        icon_button(edit_url, _("Properties"), "edit")
-        icon_button(delete_url, _("Delete"), "delete")
+        html.icon_button(edit_url, _("Properties"), "edit")
+        html.icon_button(delete_url, _("Delete"), "delete")
         html.write("</td><td>%s</td><td>%s</td>" % (name, alias))
         if what == "contact":
             html.write("<td>%s</td>" % ", ".join(
@@ -4852,8 +4852,8 @@ def mode_timeperiods(phase):
         delete_url   = html.makeactionuri([("_delete", name)])
 
         html.write("<td class=buttons>")
-        icon_button(edit_url, _("Properties"), "edit")
-        icon_button(delete_url, _("Delete"), "delete")
+        html.icon_button(edit_url, _("Properties"), "edit")
+        html.icon_button(delete_url, _("Delete"), "delete")
         html.write("</td>")
 
         html.write("<td>%s</td>" % name)
@@ -5305,8 +5305,8 @@ def mode_sites(phase):
         edit_url = make_link([("mode", "edit_site"), ("edit", id)])
         delete_url = html.makeactionuri([("_delete", id)])
         html.write("<td class=buttons>")
-        icon_button(edit_url, _("Properties"), "edit")
-        icon_button(delete_url, _("Delete"), "delete")
+        html.icon_button(edit_url, _("Properties"), "edit")
+        html.icon_button(delete_url, _("Delete"), "delete")
 
         # Alias
         html.write("</td><td>%s</td><td>%s</td>" % (id, site.get("alias", "")))
@@ -6373,9 +6373,9 @@ def mode_users(phase):
         delete_url = html.makeactionuri([("_delete", id)])
         clone_url = make_link([("mode", "edit_user"), ("clone", id)])
         html.write("<td class=buttons>")
-        icon_button(edit_url, _("Properties"), "edit")
-        icon_button(clone_url, _("Create a copy of this user"), "clone")
-        icon_button(delete_url, _("Delete"), "delete")
+        html.icon_button(edit_url, _("Properties"), "edit")
+        html.icon_button(clone_url, _("Create a copy of this user"), "clone")
+        html.icon_button(delete_url, _("Delete"), "delete")
         html.write("</td>")
 
         # ID
@@ -6630,7 +6630,7 @@ def mode_edit_user(phase):
                     id="automation_secret")
     html.write(" ")
     html.write("<b style='position: relative; top: 4px;'> &nbsp;")
-    icon_button("javascript:wato_randomize_secret('automation_secret', 20);",
+    html.icon_button("javascript:wato_randomize_secret('automation_secret', 20);",
                 _("Create random secret"), "random")
     html.write("</b>")
     html.write("</ul>")
@@ -7032,8 +7032,8 @@ def mode_roles(phase):
         edit_url = make_link([("mode", "edit_role"), ("edit", id)])
         clone_url = html.makeactionuri([("_clone", id)])
         delete_url = html.makeactionuri([("_delete", id)])
-        icon_button(edit_url, _("Properties"), "edit")
-        icon_button(clone_url, _("Clone"), "clone")
+        html.icon_button(edit_url, _("Properties"), "edit")
+        html.icon_button(clone_url, _("Clone"), "clone")
         if not role.get("builtin"):
             html.buttonlink(delete_url, _("Delete"))
         html.write("</td>")
@@ -7353,16 +7353,16 @@ def mode_hosttags(phase):
             delete_url   = html.makeactionuri([("_delete", tag_id)])
             html.write("<td>")
             if nr == 0:
-                empty_icon_button()
+                empty_html.icon_button()
             else:
-                icon_button(html.makeactionuri([("_move", str(-nr))]),
+                html.icon_button(html.makeactionuri([("_move", str(-nr))]),
                             _("Move this tag group one position up"), "up")
             if nr == len(hosttags) - 1:
-                empty_icon_button()
+                empty_html.icon_button()
             else:
-                icon_button(html.makeactionuri([("_move", str(nr))]),
+                html.icon_button(html.makeactionuri([("_move", str(nr))]),
                             _("Move this tag group one position down"), "down")
-            icon_button(delete_url, _("Delete this tag group"), "delete")
+            html.icon_button(delete_url, _("Delete this tag group"), "delete")
             html.write("</td>")
             html.write("<td>%s</td>" % tag_id)
             html.write("<td>%s</td>" % title)
@@ -8171,7 +8171,7 @@ def mode_edit_ruleset(phase):
                 ("host", hostname),
                 ("item", repr(item)),
                 ("rule_folder", folder[".path"])])
-            icon_button(edit_url, _("Edit this rule"), "edit")
+            html.icon_button(edit_url, _("Edit this rule"), "edit")
             rule_button("insert", _("Insert a copy of this rule into the folder '%s'")
                         % g_folder["title"], folder, rel_rulenr)
             rule_button("delete", _("Delete this rule"), folder, rel_rulenr)
@@ -8302,7 +8302,7 @@ def create_rule(rulespec, hostname=None, item=NO_ITEM):
 
 def rule_button(action, help=None, folder=None, rulenr=0):
     if action == None:
-        empty_icon_button()
+        empty_html.icon_button()
     else:
         vars = [("_folder", folder[".path"]),
           ("_rulenr", str(rulenr)),
@@ -8310,18 +8310,7 @@ def rule_button(action, help=None, folder=None, rulenr=0):
         if html.var("host"):
             vars.append(("host", html.var("host")))
         url = html.makeactionuri(vars)
-        icon_button(url, help, action)
-
-def empty_icon_button():
-    html.write('<img class=trans src="images/trans.png">')
-
-def icon_button(url, help, icon):
-    html.write('<a href="%s">'
-               '<img class=iconbutton title="%s" src="images/button_%s_lo.png" '
-               'onmouseover=\"hilite_icon(this, 1)\" '
-               'onmouseout=\"hilite_icon(this, 0)\">'
-               '</a>\n' % (url, help, icon))
-
+        html.icon_button(url, help, action)
 
 def parse_rule(ruleset, orig_rule):
     rule = orig_rule

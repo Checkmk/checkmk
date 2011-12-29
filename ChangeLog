@@ -12,6 +12,7 @@
       been converted from counters to rates. You might need to delete your
       existing RRDs of these checks. Sorry, but these have been that last
       checks still using counters...
+    * ibm_imm_health: added last missing scan function
 
 
 1.1.13i2:

@@ -1,10 +1,10 @@
 Title: SNMP scan: implement missing scan functions
 Component: core
+State: done
+Class: cleanup
 Benefit: 3
-State: open
 Cost: 5
 Date: 2011-01-24 16:22:26
-Class: cleanup
 Targetversion: 1.2.0
 
 All SNMP checks must define scan functions. Otherwise the scan
@@ -14,3 +14,6 @@ There is just one scan function missing:
 
 $ doc/helpers/validate_checks  -a | grep scan
 ibm_imm_health           snmp_scan manpage 
+
+2011-12-29 09:25:41: changed state open -> done
+Should work now.

@@ -362,11 +362,15 @@ class Checkbox(ValueSpec):
         if type(value) != bool:
             raise MKUserError(varprefix, _("The value has type %s, but must be either True or False") % (type(value)))
 
-# A type-save dropdown choice
+# A type-save dropdown choice. Parameters:
+# help_separator: if you set this to a character, e.g. "-", then
+# value_to_text will omit texts from the character up to the end of
+# a choices name.
 class DropdownChoice(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._choices = kwargs["choices"]
+        self._help_separator = kwargs.get("help_separator")
 
     def canonical_value(self):
         return self._choices[0][0]
@@ -384,7 +388,10 @@ class DropdownChoice(ValueSpec):
     def value_to_text(self, value):
         for val, title in self._choices:
             if value == val:
-                return title
+                if self._help_separator:
+                    return title.split(self._help_separator, 1)[0].strip()
+                else:
+                    return title
 
     def from_html_vars(self, varprefix):
         sel = html.var(varprefix)

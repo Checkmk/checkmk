@@ -28,7 +28,7 @@ from lib import *
 
 
 def edit_dictionary(entries, value):
-    new_value = {}
+    new_value = value.copy()
     if html.check_transaction():
         messages = []
         for name, vs in entries: 

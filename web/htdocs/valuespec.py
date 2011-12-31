@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import math, os
+import math, os, time
 from lib import *
 
 # Abstract base class of all value declaration classes.
@@ -239,7 +239,7 @@ class TextAscii(ValueSpec):
             raise MKUserError(varprefix, _("The value must be of type str, but it has type %s") % type(value))
 
     def validate_value(self, value, varprefix):
-        if not self._allow_empty and value == "":
+        if not self._allow_empty and value.strip() == "":
             raise MKUserError(varprefix, _("An empty value is not allowed here."))
 
 class TextUnicode(TextAscii):
@@ -366,6 +366,8 @@ class Checkbox(ValueSpec):
 # help_separator: if you set this to a character, e.g. "-", then
 # value_to_text will omit texts from the character up to the end of
 # a choices name.
+# Note: The list of choices may contain 2-tuples or 3-tuples.
+# The format is (value, text {, icon} )
 class DropdownChoice(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
@@ -379,14 +381,18 @@ class DropdownChoice(ValueSpec):
         # Convert values from choices to keys
         defval = "0"
         options = []
-        for n, (val, title) in enumerate(self._choices):
-            options.append((str(n), title))
-            if val == value:
+        for n, entry in enumerate(self._choices):
+            options.append((str(n),) + entry[1:])
+            if entry[0] == value:
                 defval = str(n)
-        html.select(varprefix, options, defval)
+        if len(options[0]) == 3:
+            html.icon_select(varprefix, options, defval)
+        else:
+            html.select(varprefix, options, defval)
 
     def value_to_text(self, value):
-        for val, title in self._choices:
+        for entry in self._choices:
+            val, title = entry[:2]
             if value == val:
                 if self._help_separator:
                     return title.split(self._help_separator, 1)[0].strip()
@@ -395,7 +401,8 @@ class DropdownChoice(ValueSpec):
 
     def from_html_vars(self, varprefix):
         sel = html.var(varprefix)
-        for n, (val, title) in enumerate(self._choices):
+        for n, entry in enumerate(self._choices):
+            val = entry[0]
             if sel == str(n):
                 return val
         return self._choices[0][0] # can only happen if user garbled URL
@@ -858,3 +865,11 @@ class ElementSelection(ValueSpec):
         if type(value) != str:
             raise MKUserError(varprefix, _("The datatype must be str (string), but is %s") % type(value))
 
+
+class AutoTimestamp(FixedValue):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._value = time.time()
+
+    def value_to_text(self, value):
+        return time.strftime("%F %T", time.localtime(value))

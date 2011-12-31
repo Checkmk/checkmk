@@ -6930,6 +6930,19 @@ def save_users(profiles):
     # Call the users_saved hook
     call_hook(call_hook_users_saved, users)
 
+# Dropdown for choosing a multisite user
+class UserSelection(ElementSelection):
+    def __init__(self, **kwargs):
+        ElementSelection.__init__(self, **kwargs)
+
+    def get_elements(self):
+        users = load_users()
+        elements = dict([ (name, "%s - %s" % (name, us.get("alias", name))) for (name, us) in users.items() ])
+        return elements
+
+    def value_to_text(self, value):
+        return self._elements.get(value, value).split(" - ")[-1]
+
 #.
 #   .-Roles----------------------------------------------------------------.
 #   |                       ____       _                                   |

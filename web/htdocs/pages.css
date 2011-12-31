@@ -400,6 +400,7 @@ table.form td.legend, table.form td.title {
     color: #274750;
     border: 1px solid #fff;
     padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 /* Bottom row with action buttons, right justified */
@@ -434,6 +435,8 @@ table.form td.content {
     padding-right: 2ex;
     border: 1px solid #fff;
     border-left-style: none;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 td.legend, td.content {

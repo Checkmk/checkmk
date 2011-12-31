@@ -461,6 +461,19 @@ class html:
         if varname:
             self.form_vars.append(varname)
 
+    def icon_select(self, varname, options, deflt=""):
+        current = self.var(varname, deflt)
+        self.write("<select class=icon name=\"%s\" id=\"%s\" size=\"1\">\n" % 
+                    (varname, varname))
+        for value, text, icon in options:
+            if value == None: value = ""
+            sel = value == current and " selected" or ""
+            self.write('<option style="background-image:url(images/icon_%s.png);" '
+                       'value=\"%s\"%s>%s</option>\n' % (icon, value, sel, text))
+        self.write("</select>\n")
+        if varname:
+            self.form_vars.append(varname)
+
     def begin_radio_group(self, horizontal=False):
         if self.mobile:
             if horizontal:

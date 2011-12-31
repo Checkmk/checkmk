@@ -77,6 +77,15 @@ input:hover, select:hover, textarea:hover {
     background-color: #EDECEB;
 }
 
+/* Select element with icons */
+select.icon option {
+    background-repeat: no-repeat;
+    background-position: bottom left;
+    background-size: 18px;
+    padding-left:22px;
+    height: 18px;
+}
+
 
 input.buttonlink {
     padding: 1px;

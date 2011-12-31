@@ -27,7 +27,7 @@
 from lib import *
 
 
-def edit_dictionary(entries, value):
+def edit_dictionary(entries, value, focus=None):
     new_value = value.copy()
     if html.check_transaction():
         messages = []
@@ -57,7 +57,7 @@ def edit_dictionary(entries, value):
         else:
             v = vs.default_value()
         vs.render_input(name, v)
-        if first:
+        if (not focus and first) or (name == focus):
             vs.set_focus(name)
             first = False 
     html.write("<tr><td class=buttons colspan=2>")

@@ -1346,3 +1346,40 @@ function unhide_context_buttons(oA)
     oDiv = null;
 }
 
+// .-----------------------------------------------------------------------.
+// |          __     __    _            ____                               |
+// |          \ \   / /_ _| |_   _  ___/ ___| _ __   ___  ___              |
+// |           \ \ / / _` | | | | |/ _ \___ \| '_ \ / _ \/ __|             |
+// |            \ V / (_| | | |_| |  __/___) | |_) |  __/ (__              |
+// |             \_/ \__,_|_|\__,_|\___|____/| .__/ \___|\___|             |
+// |                                         |_|                           |
+// +-----------------------------------------------------------------------+
+// | Functions needed by HTML code from ValueSpec (valuespec.py)           |
+// '-----------------------------------------------------------------------'
+
+function valuespec_toggle_option(oCheckbox, divid, negate) {
+    var oDiv = document.getElementById(divid);
+    if ((oCheckbox.checked && !negate) || (!oCheckbox.checked && negate))
+        oDiv.style.display = "";
+    else
+        oDiv.style.display = "none";
+    oDiv = null;
+}
+
+function valuespec_toggle_dropdown(oDropdown, divid) {
+    var oDiv = document.getElementById(divid);
+    if (oDropdown.value == "other") oDiv.style.display = "";
+    else
+        oDiv.style.display = "none";
+    oDiv = null;
+}
+
+function valuespec_toggle_dropdownn(oDropdown, divid) {
+    var oDiv = document.getElementById(divid);
+    if (oDropdown.value == "ignore")
+        oDiv.style.display = "none";
+    else
+        oDiv.style.display = "";
+    oDiv = null;
+}
+

@@ -8709,7 +8709,7 @@ def mode_edit_rule(phase):
                 ("ignore", _("ignore")),
                 ("is",     _("is")),
                 ("isnot",  _("isnot"))], deflt,
-                onchange="wato_toggle_dropdownn(this, 'tag_sel_%s');" % id)
+                onchange="valuespec_toggle_dropdownn(this, 'tag_sel_%s');" % id)
             html.write("</td><td>")
             if html.form_submitted():
                 div_is_open = html.var("tag_" + id) != "ignore"
@@ -8735,7 +8735,7 @@ def mode_edit_rule(phase):
     div_id = "div_all_hosts"
 
     checked = host_list != ALL_HOSTS
-    html.checkbox("explicit_hosts", checked, onclick="wato_toggle_option(this, %r)" % div_id)
+    html.checkbox("explicit_hosts", checked, onclick="valuespec_toggle_option(this, %r)" % div_id)
     html.write(" " + _("Specify explicit host names"))
     html.write('<div id="%s" style="display: %s">' % (
             div_id, not checked and "none" or ""))
@@ -8799,7 +8799,7 @@ def mode_edit_rule(phase):
             if checked == None: # read from rule itself
                 checked = len(item_list) == 0 or item_list[0] != ""
             div_id = "itemlist"
-            html.checkbox("explicit_services", checked, onclick="wato_toggle_option(this, %r)" % div_id)
+            html.checkbox("explicit_services", checked, onclick="valuespec_toggle_option(this, %r)" % div_id)
             html.write(" " + _("Specify explicit values"))
             html.write('<div id="%s" style="display: %s; padding: 0px;">' % (
                 div_id, not checked and "none" or ""))

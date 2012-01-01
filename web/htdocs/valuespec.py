@@ -499,7 +499,7 @@ class OptionalDropdownChoice(ValueSpec):
                 defval = str(n)
         options.append(("other", self._otherlabel))
         html.select(varprefix, options, defval, attrs={"style":"float:left;"},
-                    onchange="wato_toggle_dropdown(this, '%s_ex');" % varprefix )
+                    onchange="valuespec_toggle_dropdown(this, '%s_ex');" % varprefix )
 
         if html.form_submitted():
             div_is_open = html.var(varprefix) == "other"
@@ -561,7 +561,7 @@ class Optional(ValueSpec):
             checked = self._negate != (value != None)
         html.write("<div style=\"float: none;\">")
         html.checkbox(varprefix + "_use" , checked,
-                      onclick="wato_toggle_option(this, %r, %r)" %
+                      onclick="valuespec_toggle_option(this, %r, %r)" %
                          (div_id, self._negate and 1 or 0))
         if self._label:
             html.write(self._label)
@@ -761,7 +761,7 @@ class Dictionary(ValueSpec):
             if visible == None:
                 visible = param in value
             html.checkbox(vp + "_USE", param in value,
-                          onclick="wato_toggle_option(this, %r)" % div_id)
+                          onclick="valuespec_toggle_option(this, %r)" % div_id)
             html.write(" %s<br>" % vs.title())
             html.write('<div class=dictelement id="%s" style="display: %s">' % (
                 div_id, not visible and "none" or ""))

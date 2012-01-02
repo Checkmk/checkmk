@@ -249,13 +249,18 @@ then
     else
         IPMI_FORMAT=""
     fi
-    for class in Temperature 'Power Unit' Fan
-    do
-        $WAITMAX ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
-        # In case of a timeout immediately leave loop. 
-    if [ $? = 255 ] ; then break ; fi
-        WAITMAX="waitmax 3"
-    done
+    # Aquire lock with flock in order to avoid multiple runs of ipmi-sensors
+    # in case of parallel or overlapping calls of the agent.
+    (
+        flock -n 200 --wait 60 
+        for class in Temperature 'Power Unit' Fan
+        do
+            $WAITMAX ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+            # In case of a timeout immediately leave loop. 
+        if [ $? = 255 ] ; then break ; fi
+            WAITMAX="waitmax 3"
+        done
+    ) 200 >> $"$sdrcache" 
 fi
 
 # State of LSI MegaRAID controller via MegaCli. You can download that tool from:

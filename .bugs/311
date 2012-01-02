@@ -1,10 +1,10 @@
 Title: IPMI cache initialization race condition
 Component: checks
+State: done
+Class: nastiness
 Benefit: 1
-State: open
 Cost: 4
 Date: 2011-07-18 15:42:34
-Class: nastiness
 Targetversion: 1.2.0
 
 there is a very nasty issue with the IPMI agent code - if we kill the initial build of the SDR
@@ -18,3 +18,7 @@ Very ugly issue, maybe xinetd can disable multiple runs of the same service (but
 mean staleness issues will stop the agent forever)
 
 Or we implement a caching feature similar to that of <<<ipmitool>>>.
+
+2012-01-02 16:47:41: changed state open -> done
+I've implemented a lock with a timeout of 60 secs now. Still
+need some host with freeipmi in order to test this.

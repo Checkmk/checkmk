@@ -1,12 +1,16 @@
 Title: scan parents: documentation about output missing
 Component: docu
+State: done
+Class: todo
 Benefit: 3
-State: open
 Cost: 3
 Date: 2011-07-25 16:08:41
-Class: todo
+Targetversion: future
 
 There is no documentation about the meanings of the output of the scan parents
 feature.
 
 The single chars like o, L, G aare not mentioned in the docs.
+
+2012-01-02 11:55:51: changed state open -> done
+Is now exaplained.

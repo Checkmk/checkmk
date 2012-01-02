@@ -325,8 +325,8 @@ def page_add_snapin():
         snapin = sidebar_snapins[name]
         title = snapin["title"]
         description = snapin.get("description", "")
-        transid = html.current_transid()
-        url = 'sidebar_add_snapin.py?name=%s&_transid=%d&pos=top' % (name, transid)
+        transid = html.fresh_transid()
+        url = 'sidebar_add_snapin.py?name=%s&_transid=%s&pos=top' % (name, transid)
         html.write('<div class=snapinadder onmouseover="this.style.background=\'#cde\'; this.style.cursor=\'pointer\';" '
                 'onmouseout="this.style.background=\'#9bc\' "'
                 'onmousedown="window.location.href=\'%s\';return false;">' % url)

@@ -1,10 +1,10 @@
 Title: transid relativ zum Browserfenster machen
 Component: multisite
+State: done
+Class: nastiness
 Benefit: 1
-State: open
 Cost: 2
 Date: 2011-08-09 18:12:55
-Class: nastiness
 Targetversion: 1.2.0
 
 Ein Problem bei Multisite ist, dass in jedem Formular eine transid steckt,
@@ -32,3 +32,10 @@ sein.
 
 * Wenn die transid leer oder -1 ist, akzeptieren wir das immer
 (für die automatisierten Zugriffe).
+
+2012-01-02 17:35:31: changed state open -> done
+Ist jetzt genau so umgesetzt, allerdings mit der Gültigkeit
+von 7 Tagen. IDs die älter als sieben Tage sind, werden generell
+verworfen. Die Wahrhscheinlichkeit eines transid-Konfliktes
+ist 1/2^32 bei Transaktionen, die in der gleichen Sekunden
+begonnen wurden.

@@ -21,6 +21,10 @@
       This can be turned off with if_inventory_pad_portnumbers = False.
     * Linux agent: wrap freeipmi with lock in order to avoid cache corruption
 
+    Multisite:
+    * Improve transaction handling and reload detection: user can have 
+      multiple action threads in parallel now
+
 1.1.13i2:
     Core, Setup, etc.:
     * cmk -I: accept host tags and cluster names

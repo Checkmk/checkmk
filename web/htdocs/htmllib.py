@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from mod_python import Cookie
-import time, cgi, config, os, defaults, pwd, urllib, weblib
+import time, cgi, config, os, defaults, pwd, urllib, weblib, random
 from lib import *
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -241,7 +241,7 @@ class html:
                    (name, name, name, action, method, enctype, onsubmit))
         self.hidden_field("filled_in", name)
         if add_transid:
-            self.hidden_field("_transid", str(self.current_transid()))
+            self.hidden_field("_transid", str(self.fresh_transid()))
         self.hidden_fields(self.global_vars)
         self.form_name = name
 
@@ -298,7 +298,7 @@ class html:
         return self.req.myfile + ".py?" + urlencode_vars(vars + addvars)
 
     def makeactionuri(self, addvars):
-        return self.makeuri(addvars + [("_transid", self.current_transid())])
+        return self.makeuri(addvars + [("_transid", self.fresh_transid())])
 
     def makeuri_contextless(self, vars):
         return self.req.myfile + ".py?" + urlencode_vars(vars)
@@ -309,7 +309,7 @@ class html:
 
     def buttonlink(self, href, text, add_transid=False, obj_id='', style='', title='', disabled=''):
         if add_transid:
-            href += "&_transid=%d" % self.current_transid()
+            href += "&_transid=%s" % self.fresh_transid()
         if obj_id:
             obj_id = ' id=%s' % obj_id
         if style:
@@ -444,7 +444,7 @@ class html:
         # Sort according to display texts, not keys
         sorted = options[:]
         sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
-        html.select(self, varname, sorted, deflt, onchange, attrs)
+        self.select(self, varname, sorted, deflt, onchange, attrs)
 
     def select(self, varname, options, deflt="", onchange=None, attrs = {}):
         current = self.var(varname, deflt)
@@ -854,32 +854,50 @@ class html:
         if not self.has_var("_ajaxid"):
             self.javascript("if(parent && parent.frames[0]) parent.frames[0].location.reload();");
 
-    # Get next transaction id for that user
-    def current_transid(self):
-        user = self.req.user
-        dir = defaults.var_dir + "/web/" + user
-        try:
-            os.makedirs(dir)
-        except:
-            pass
+    # Compute a (hopefully) unique transaction id
+    def fresh_transid(self):
+        return "%d/%d" % (int(time.time()), random.getrandbits(32))
 
-        path = dir + "/transid.mk"
-        try:
-            return int(file(path).read())
-        except:
-            return 0
+    # Marks a transaction ID as used. This is done by saving
+    # it in a user specific settings file "transids.mk". At this
+    # time we remove all entries from that list that are older
+    # then one week.
+    def invalidate_transid(self, id):
+        used_ids = config.load_user_file("transids", [])
+        new_ids = []
+        now = time.time()
+        for used_id in used_ids:
+            timestamp, rand = used_id.split("/")
+            if now - int(timestamp) < 604800: # 7 * 24 hours
+                new_ids.append(used_id)
+        used_ids.append(id)
+        config.save_user_file("transids", used_ids)
 
-    def increase_transid(self):
-        current = self.current_transid()
-        config.save_user_file("transid", current + 1)
-
-    # Checks wether the current page is a reload or an original real submit
+    # Checks, if the current transaction is valid, i.e. now
+    # browser reload. The HTML variable _transid must be present.
+    # If it is empty or -1, then it's always valid (this is used
+    # for webservice calls).
     def transaction_valid(self):
-        if not self.var("_transid"):
+        if not self.has_var("_transid"):
             return False
-        transid = int(self.var("_transid"))
-        current = self.current_transid()
-        return transid == current or transid == -1
+        id = self.var("_transid")
+        if not id or id == "-1":
+            return True # automation
+        timestamp, rand = id.split("/")
+
+        # If age is too old (one week), it is always
+        # invalid:
+        now = time.time()
+        if now - int(timestamp) >= 604800: # 7 * 24 hours
+            return False
+
+        # Now check, if this id is not yet invalidated
+        return id not in config.load_user_file("transids", [])
+
+    # Checks, if the current page is a transation, i.e. something
+    # that is secured by a transid (such as a submitted form)
+    def is_transaction(self):
+        return self.has_var("_transid")
 
     # called by page functions in order to check, if this was
     # a reload or the original form submission. Increases the
@@ -890,7 +908,9 @@ class html:
     # None:  -> a browser reload or a negative confirmation
     def check_transaction(self):
         if self.transaction_valid():
-            self.increase_transid()
+            id = self.var("_transid")
+            if id and id != "-1":
+                self.invalidate_transid(id)
             return True
         else:
             return False

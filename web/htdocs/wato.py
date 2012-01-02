@@ -229,7 +229,7 @@ def page_handler():
 
     # Do actions (might switch mode)
     action_message = None
-    if html.has_var("_transid"):
+    if html.is_transaction():
         try:
             config.need_permission("wato.edit")
 
@@ -1255,12 +1255,12 @@ def move_to_folder_combo(what, thing = None, top = False):
                         attrs = {'class': 'bulk_moveto'})
         elif what == "host":
             html.hidden_field("host", thing)
-            uri = html.makeuri([("host", thing), ("_transid", html.current_transid() )])
+            uri = html.makeactionuri([("host", thing)])
             html.select("_host_move_%s" % thing, selections, "@",
                 "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
         else: # what == "folder"
             # html.hidden_field("what_folder", thing)
-            uri = html.makeuri([("what_folder", thing[".path"]), ("_transid", html.current_transid() )])
+            uri = html.makeactionuri([("what_folder", thing[".path"])])
             html.select("_folder_move_%s" % thing[".path"], selections, "@",
                 "location.href='%s' + '&_move_folder_to=' + this.value;" % uri);
 
@@ -2558,10 +2558,10 @@ def mode_auditlog(phase):
         changelog_button()
         if log_exists("audit") and config.may("wato.auditlog") and config.may("wato.edit"):
             html.context_button(_("Download"),
-                html.makeuri([("_action", "csv"), ("_transid", html.current_transid())]), "download")
+                html.makeactionuri([("_action", "csv")]), "download")
             if config.may("wato.edit"):
                 html.context_button(_("Clear Logfile"),
-                    html.makeuri([("_action", "clear"), ("_transid", html.current_transid())]), "trash")
+                    html.makeactionuri([("_action", "clear")]), "trash")
         return
 
     elif phase == "action":
@@ -2614,7 +2614,7 @@ def mode_changelog(phase):
                 (not is_distributed() and log_exists("pending"))
             or  (is_distributed() and global_replication_state() == "dirty")):
             html.context_button(_("Activate Changes!"),
-                html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]),
+                html.makeactionuri([("_action", "activate")]),
                              "apply", True, id="act_changes_button")
 
         if is_distributed():
@@ -9356,7 +9356,7 @@ def make_link_to(vars, folder):
     return html.makeuri_contextless(vars)
 
 def make_action_link(vars):
-    return make_link(vars + [("_transid", html.current_transid())])
+    return make_link(vars + [("_transid", html.fresh_transid())])
 
 
 # Show confirmation dialog, send HTML-header if dialog is shown.

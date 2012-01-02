@@ -12,11 +12,14 @@ admin_users = [ "nagiosadmin" ]
 nagvis_base_url = '/nagvis'
 
 # Views allow to play alarm sounds according to the
-# "worst" state of the show items. Configure here
-# which sounds to play. Possible events: critical,
-# warning, unknown, ok, up, down, unreachable,
-# pending. Sounds are expected in the sounds subdirectory
-# of htdocs (Default is /usr/share/check_mk/web/htdocs/sounds)
+# "worst" state of the shown items. Enable sounds here:
+# enable_sounds = True
+
+# You can configure here which sounds to play. Possible events are "critical", 
+# "warning", "unknown", "ok", "up", "down", "unreachable" and
+# "pending". Sounds are expected in the sounds subdirectory
+# of htdocs (Default is /usr/share/check_mk/web/htdocs/sounds). The
+# following setting is the default:
 # sounds = [
 #  ( "down", "down.wav" ),
 #  ( "critical", "critical.wav" ),
@@ -24,12 +27,6 @@ nagvis_base_url = '/nagvis'
 #  ( "warning", "warning.wav" ),
 #  ( None,      "ok.wav" ), 
 # ]
-# Note: this example has not sound for unreachable hosts. 
-# set sound_url to another url, if you place your sound
-# files elsewhere:
-# sound_url = "http://otherhost/path/to/sound/"
-# or
-# sound_url = "/nagios/alarms/"
 
 # Tabs for choosing number of columns refresh
 # view_option_refreshes = [ 30, 60, 90, 0 ]

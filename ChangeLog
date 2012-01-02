@@ -24,6 +24,9 @@
     Multisite:
     * Improve transaction handling and reload detection: user can have 
       multiple action threads in parallel now
+    * Sounds in views are now enabled per default. The new configuration
+      variable enable_sounds can be set to False in multisite.mk in order
+      to disable sounds.
 
 1.1.13i2:
     Core, Setup, etc.:

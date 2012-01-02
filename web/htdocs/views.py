@@ -1577,8 +1577,10 @@ def do_table_join(master_ds, master_rows, master_filters, join_painters, join_co
         row["JOIN"] = joininfo
 
 
-
 def play_alarm_sounds():
+    if not config.enable_sounds:
+        return
+
     url = config.sound_url
     if not url.endswith("/"):
         url += "/"

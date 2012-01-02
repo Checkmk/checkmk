@@ -475,7 +475,15 @@ declare_permission("ignore_hard_limit",
 #
 
 sound_url = "sounds/"
-sounds = []
+enable_sounds = False
+sounds = [
+ ( "down",     "down.wav" ),
+ ( "critical", "critical.wav" ),
+ ( "unknown",  "unknown.wav" ),
+ ( "warning",  "warning.wav" ),
+ ( None,       "ok.wav" ), 
+]
+
 
 #   __     ___                             _   _
 #   \ \   / (_) _____      __   ___  _ __ | |_(_) ___  _ __  ___

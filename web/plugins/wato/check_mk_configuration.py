@@ -71,6 +71,17 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "enable_sounds",
+    Checkbox(title = _("Enabled sounds in views"),
+             label = _("enable sounds"),
+             help = _("If sounds are enabled then the user will be alarmed by problems shown "
+                      "in a Multisite status view if that view has been configured for sounds. "
+                      "From the views shipped in with Multisite all problem views have sounds "
+                      "enabled."),
+             default_value = True),
+    domain = "multisite")
+
+register_configvar(group,
     "context_buttons_to_show",
     Optional(
         Integer(

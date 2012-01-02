@@ -481,7 +481,7 @@ sounds = [
  ( "critical", "critical.wav" ),
  ( "unknown",  "unknown.wav" ),
  ( "warning",  "warning.wav" ),
- ( None,       "ok.wav" ), 
+# ( None,       "ok.wav" ), 
 ]
 
 

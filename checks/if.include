@@ -30,6 +30,7 @@ if_inventory_porttypes = [ '6', '32', '117' ]
 if_inventory_portstates = [ '1' ]
 if_inventory_uses_description = False
 if_inventory_uses_alias = False
+if_inventory_pad_portnumbers = True
 if_inventory_monitor_speed = True
 if_inventory_monitor_state = True
 
@@ -71,6 +72,18 @@ def if_statename(st):
               '7': 'lowerLayerDown' }
     return names.get(st, st)
 
+
+# Pads port numbers with zeroes, so that items
+# nicely sort alphabetically
+def if_pad_with_zeroes(info, ifIndex):
+    if if_inventory_pad_portnumbers:
+        max_index = max([int(line[0]) for line in info])
+        digits = len(str(max_index))
+        return ("%0"+str(digits)+"d") % int(ifIndex)
+    else:
+        return ifIndex
+
+
 def inventory_if_common(info):
     if len(info) == 0 or len(info[0]) != 19:
         return []
@@ -91,7 +104,7 @@ def inventory_if_common(info):
         elif if_inventory_uses_alias and ifAlias:
             item = ifAlias
         else:
-            item = ifIndex
+            item = if_pad_with_zeroes(info, ifIndex)
 
         if item in seen_items: # duplicate
             duplicate.add(item)
@@ -147,7 +160,7 @@ def check_if_common(item, params, info):
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
-        if item == ifIndex \
+        if item.lstrip("0") == ifIndex \
             or item == ifAlias \
             or item == ifDescr \
             or item == "%s %s" % (ifAlias, ifIndex) \
@@ -155,7 +168,8 @@ def check_if_common(item, params, info):
 
             # Display port number or alias in infotext if that is not part
             # of the service description anyway
-            if item == ifIndex and (item == ifAlias or ifAlias == '') \
+            if item.lstrip("0") == ifIndex \
+                and (item == ifAlias or ifAlias == '') \
                 and (item == ifDescr or ifDescr == ''): # description trivial
                 infotext = ""
             elif item == "%s %s" % (ifAlias, ifIndex) and ifDescr != '': # non-unique Alias

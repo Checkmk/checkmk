@@ -17,6 +17,8 @@
       If you have changed the trend range, then your historic values will
       be displayed in a wrong scale. On the other hand - from now on changes
       in the range-setting will not affect the graph anymore.
+    * if/if64/lnx_if: pad port numbers with zeros in order to sort correctly.
+      This can be turned off with if_inventory_pad_portnumbers = False.
 
 1.1.13i2:
     Core, Setup, etc.:

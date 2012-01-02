@@ -368,6 +368,18 @@ register_configvar(group,
                       "parameters via a rule.")))
 
 register_configvar(group,
+    "if_inventory_pad_portnumbers",
+    Checkbox(title = _("Pad port numbers with zeroes"),
+             label = _("pad port numbers"),
+             help = _("If this option is activated then Check_MK will pad port numbers of "
+                      "network interfaces with zeroes so that all port descriptions from "
+                      "all ports of a host or switch have the same length and thus sort "
+                      "currectly in the GUI. In versions prior to 1.1.13i3 there was no "
+                      "padding. You can switch back to the old behaviour by disabling this "
+                      "option. This will retain the old service descriptions and the old "
+                      "performance data.")))
+
+register_configvar(group,
     "if_inventory_uses_description",
     Checkbox(title = _("Use description as service name for network interface checks"),
              label = _("use description"),

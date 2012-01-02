@@ -107,6 +107,11 @@ if_inventory_portstates (list of strings): Per default this variable is set to {
   only ports found in the state {up} are being added to the monitoring. If you set this to {['1', '2', '5']} then
   also ports in state {down} and {dormant} will be monitored.
 
+if_inventory_pad_portnumbers (boolean): If this is set to {True} (the default), then port numbers used as
+  items are padded with zeroes so that all items have the same length and ports will sort correctly in
+  the GUI. You can set this to {False} if you want to keep the same service descriptions as in versions
+  prior to 1.1.13i3.
+
 if_inventory_uses_description (boolean): Whether inventory should use the interface description as item (instead
   of the interface index). Default is {False}.
 

@@ -13,7 +13,10 @@
       existing RRDs of these checks. Sorry, but these have been that last
       checks still using counters...
     * ibm_imm_health: added last missing scan function
-
+    * Filesystem checks: trend performance data is now normalized to MB/24h.
+      If you have changed the trend range, then your historic values will
+      be displayed in a wrong scale. On the other hand - from now on changes
+      in the range-setting will not affect the graph anymore.
 
 1.1.13i2:
     Core, Setup, etc.:

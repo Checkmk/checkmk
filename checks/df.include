@@ -155,6 +155,7 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
     problems = []
 
     MB = 1024 * 1024.0
+    H24 = 60 * 60 * 24
 
     if levels.get("trend_range"):
         try:
@@ -165,7 +166,9 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
             # first compute current rate in MB/s by computing delta since last check
             timedif, rate = get_counter("df.%s.delta" % mountpoint, this_time, used_mb, True)
             if levels.get("trend_perfdata"):
-                perfdata.append(("growth", rate * range_sec))
+                # Change in 1.1.13i3: The trend perfdata always outputs
+                # the growth in MB/24h, not any longer in MB/trendrange
+                perfdata.append(("growth", rate * H24))
 
             # average trend, initialize with zero, rate_avg is in MB/s
             timedif, rate_avg = get_average("df.%s.trend" % mountpoint,
@@ -215,7 +218,12 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
                         problems[-1] += "!"
 
             if levels.get("trend_perfdata"):
-                perfdata.append(("trend", trend, warn_perf, crit_perf, 0, size_mb / range))
+                # New in 1.1.13i3: output trend not as MB / trend_range, but as
+                # MB / 24 hours. The same holds for the warn and crit information.
+                # It is configured in MB / trend range but in the performance data
+                # it's sent as MB / 24h.
+                perfdata.append(("trend", rate_avg * H24, warn_perf / range_sec * H24, 
+                                crit_perf / range_sec * H24, 0, size_mb / range))
 
             # compute time until filesystem is full (only for positive trend, of course)
             if trend > 0:

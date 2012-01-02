@@ -222,8 +222,10 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
                 # MB / 24 hours. The same holds for the warn and crit information.
                 # It is configured in MB / trend range but in the performance data
                 # it's sent as MB / 24h.
-                perfdata.append(("trend", rate_avg * H24, warn_perf / range_sec * H24, 
-                                crit_perf / range_sec * H24, 0, size_mb / range))
+                perfdata.append(("trend", rate_avg * H24, 
+                                warn_perf != None and (warn_perf / range_sec * H24) or None, 
+                                crit_perf != None and (crit_perf / range_sec * H24) or None, 
+                                0, size_mb / range))
 
             # compute time until filesystem is full (only for positive trend, of course)
             if trend > 0:

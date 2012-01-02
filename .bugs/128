@@ -1,12 +1,12 @@
 Title: df trends: Peak values after changing the trend_range
 Component: checks
-State: open
-Class: bug
-Date: 2011-02-10 09:45:24
 Benefit: 1
-Cost: 2
 Fun: 0
+State: done
+Cost: 2
+Date: 2011-02-10 09:45:24
 Targetversion: 1.2.0
+Class: bug
 
 After changing the trend_range to a larger time the check reports a peak
 value which is wrong. It might be needed to detect such a change and reset
@@ -44,3 +44,7 @@ range than 24h.
 
 We will do this after 1.1.11i3 is out.
 
+
+2012-01-02 10:32:06: changed state open -> done
+Is done like described. Throrough testing will need some time,
+though...

@@ -223,7 +223,8 @@ class html:
         days = hours / 24
         return "%d days" % days
 
-    def begin_form(self, name, action = None, method = "GET", onsubmit = None, add_transid = True):
+    def begin_form(self, name, action = None, method = "GET", 
+                   onsubmit = None, add_transid = True):
         self.form_vars = []
         if action == None:
             action = self.req.myfile + ".py"

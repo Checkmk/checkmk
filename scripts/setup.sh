@@ -449,7 +449,7 @@ autochecksdir               = '$vardir/autochecks'
 precompiled_hostchecks_dir  = '$vardir/precompiled'
 counters_directory          = '$vardir/counters'
 tcp_cache_dir		    = '$vardir/cache'
-tmp_dir		            = '$vardir'
+tmp_dir		            = '$vardir/tmp'
 logwatch_dir                = '$vardir/logwatch'
 nagios_objects_file         = '$nagconfdir/check_mk_objects.cfg'
 nagios_command_pipe_path    = '$nagpipe'
@@ -638,9 +638,21 @@ do
 	     chmod -R g+w $DESTDIR$vardir/web &&
 	     chgrp -R $wwwgroup $DESTDIR$vardir/wato &&
 	     chmod -R g+w $DESTDIR$vardir/wato
+             mkdir -p $DESTDIR$vardir/tmp &&
+	     chgrp -R $wwwgroup $DESTDIR$vardir/tmp &&
+             chmod g+w $DESTDIR$vardir/tmp &&
              mkdir -p $DESTDIR$confdir/conf.d/wato &&
              chmod -R g+w $DESTDIR$confdir/conf.d/wato &&
              chgrp -R $wwwgroup $DESTDIR$confdir/conf.d/wato
+             mkdir -p $DESTDIR$confdir/multisite.d/wato &&
+             chmod -R g+w $DESTDIR$confdir/multisite.d/wato &&
+             chgrp -R $wwwgroup $DESTDIR$confdir/multisite.d/wato
+             touch $DESTDIR$confdir/multisite.d/sites.mk &&
+             chgrp $wwwgroup $DESTDIR$confdir/multisite.d/sites.mk &&
+             chmod 664 $DESTDIR$confdir/multisite.d/sites.mk &&
+             touch $DESTDIR$confdir/conf.d/distributed_wato.mk &&
+             chgrp $wwwgroup $DESTDIR$confdir/conf.d/distributed_wato.mk &&
+             chmod 664 $DESTDIR$confdir/conf.d/distributed_wato.mk
 	   fi &&
 	   tar xzf $SRCDIR/conf.tar.gz -C $DESTDIR$confdir &&
 	   if [ -e $DESTDIR$confdir/check_mk.cfg -a ! -e $DESTDIR$confdir/main.mk ] ; then

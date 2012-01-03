@@ -6300,8 +6300,11 @@ def create_distributed_wato_file(siteid, mode):
 
 def delete_distributed_wato_file():
     p = defaults.check_mk_configdir + "/distributed_wato.mk"
+    # We do not delete the file but empty it. That way
+    # we do not need write permissions to the conf.d 
+    # directory!
     if os.path.exists(p):
-        os.remove(p)
+        file(p, "w").write("")
 
 #.
 #   .-Users/Contacts-------------------------------------------------------.
@@ -6832,25 +6835,26 @@ def load_users():
     # That way heroes of the command line will still be able to
     # change passwords with htpasswd.
     filename = defaults.htpasswd_file
-    for line in file(filename):
-        id, password = line.strip().split(":")[:2]
-        if password.startswith("!"):
-            locked = True
-            password = password[1:]
-        else:
-            locked = False
-        if id in result:
-            result[id]["password"] = password
-            result[id]["locked"] = locked
-        elif id in config.admin_users:
-            # Create entry if this is an admin user
-            new_user = {
-                "roles" : [ "admin" ],
-                "password" : password,
-                "locked" : False
-            }
-            result[id] = new_user
-        # Other unknown entries will silently be dropped. Sorry...
+    if os.path.exists(filename):
+        for line in file(filename):
+            id, password = line.strip().split(":")[:2]
+            if password.startswith("!"):
+                locked = True
+                password = password[1:]
+            else:
+                locked = False
+            if id in result:
+                result[id]["password"] = password
+                result[id]["locked"] = locked
+            elif id in config.admin_users:
+                # Create entry if this is an admin user
+                new_user = {
+                    "roles" : [ "admin" ],
+                    "password" : password,
+                    "locked" : False
+                }
+                result[id] = new_user
+            # Other unknown entries will silently be dropped. Sorry...
 
     # Now read the automation secrets and add them to existing
     # users or create new users automatically

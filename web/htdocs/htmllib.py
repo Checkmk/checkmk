@@ -444,7 +444,7 @@ class html:
         # Sort according to display texts, not keys
         sorted = options[:]
         sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
-        self.select(self, varname, sorted, deflt, onchange, attrs)
+        self.select(varname, sorted, deflt, onchange, attrs)
 
     def select(self, varname, options, deflt="", onchange=None, attrs = {}):
         current = self.var(varname, deflt)

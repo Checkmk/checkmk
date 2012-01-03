@@ -2,6 +2,8 @@
     Core, Setup, etc.:
     * cmk -d does now honor --cache and --no-tcp
     * cmk -O/-R now uses omd re{start,load} core if using OMD
+    * FIX: setup.sh now setups up permissions for conf.d/wato
+      correctly
 
     Checks & Agents:
     * Windows agent: output eventlog texts in UTF-8 encoding. This

@@ -632,13 +632,16 @@ do
 	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch}
 	     chown $nagiosuser $DESTDIR$vardir/web
            fi &&
+	   mkdir -p $DESTDIR$confdir/conf.d && 
 	   if [ -z "$DESTDIR" ] ; then
 	     chgrp -R $wwwgroup $DESTDIR$vardir/web &&
 	     chmod -R g+w $DESTDIR$vardir/web &&
 	     chgrp -R $wwwgroup $DESTDIR$vardir/wato &&
 	     chmod -R g+w $DESTDIR$vardir/wato
+             mkdir -p $DESTDIR$confdir/conf.d/wato &&
+             chmod -R g+w $DESTDIR$confdir/conf.d/wato &&
+             chgrp -R $wwwgroup $DESTDIR$confdir/conf.d/wato
 	   fi &&
-	   mkdir -p $DESTDIR$confdir/conf.d && 
 	   tar xzf $SRCDIR/conf.tar.gz -C $DESTDIR$confdir &&
 	   if [ -e $DESTDIR$confdir/check_mk.cfg -a ! -e $DESTDIR$confdir/main.mk ] ; then
 	       mv -v $DESTDIR$confdir/check_mk.cfg $DESTDIR$confdir/main.mk

@@ -260,7 +260,7 @@ then
         if [ $? = 255 ] ; then break ; fi
             WAITMAX="waitmax 3"
         done
-    ) 200 >> $"$sdrcache" 
+    ) 200>>"$sdrcache" 
 fi
 
 # State of LSI MegaRAID controller via MegaCli. You can download that tool from:

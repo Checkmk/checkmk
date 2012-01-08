@@ -30,6 +30,7 @@
       variable enable_sounds can be set to False in multisite.mk in order
       to disable sounds.
     * Added filter for log state (UP,DOWN,OK,CRIT...) to all log views
+    * New painter for normal and retry check interval (added to detail views)
 
 1.1.13i2:
     Core, Setup, etc.:

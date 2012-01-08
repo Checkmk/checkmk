@@ -532,6 +532,26 @@ multisite_painters["svc_attempt"] = {
     "paint"   : lambda row: (None, "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"])),
 }
 
+multisite_painters["svc_normal_interval"] = {
+    "title"   : _("Service normal check interval"),
+    "short"   : _("Check int."),
+    "columns" : [ "service_check_interval" ],
+    "paint"   : lambda row: (None, "%ds" % (row["service_check_interval"] * 60)),
+}
+multisite_painters["svc_retry_interval"] = {
+    "title"   : _("Service retry check interval"),
+    "short"   : _("Retry"),
+    "columns" : [ "service_retry_interval" ],
+    "paint"   : lambda row: (None, "%ds" % (row["service_retry_interval"] * 60)),
+}
+multisite_painters["svc_check_interval"] = {
+    "title"   : _("Service normal/retry check interval"),
+    "short"   : _("Interval"),
+    "columns" : [ "service_check_interval", "service_retry_interval" ],
+    "paint"   : lambda row: (None, "%ds/%ds" % (
+            row["service_check_interval"] * 60, row["service_retry_interval"] * 60)),
+}
+
 multisite_painters["svc_check_type"] = {
     "title"   : _("Service check type"),
     "short"   : _("Type"),
@@ -845,6 +865,26 @@ multisite_painters["host_attempt"] = {
     "short"   : _("Att."),
     "columns" : [ "host_current_attempt", "host_max_check_attempts" ],
     "paint"   : lambda row: (None, "%d/%d" % (row["host_current_attempt"], row["host_max_check_attempts"])),
+}
+
+multisite_painters["host_normal_interval"] = {
+    "title"   : _("Normal check interval"),
+    "short"   : _("Check int."),
+    "columns" : [ "host_check_interval" ],
+    "paint"   : lambda row: (None, "%ds" % (row["host_check_interval"] * 60)),
+}
+multisite_painters["host_retry_interval"] = {
+    "title"   : _("Retry check interval"),
+    "short"   : _("Retry"),
+    "columns" : [ "host_retry_interval" ],
+    "paint"   : lambda row: (None, "%ds" % (row["host_retry_interval"] * 60)),
+}
+multisite_painters["host_check_interval"] = {
+    "title"   : _("Normal/retry check interval"),
+    "short"   : _("Interval"),
+    "columns" : [ "host_check_interval", "host_retry_interval" ],
+    "paint"   : lambda row: (None, "%ds/%ds" % (
+            row["host_check_interval"] * 60, row["host_retry_interval"] * 60)),
 }
 
 multisite_painters["host_check_type"] = {

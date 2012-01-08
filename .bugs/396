@@ -1,9 +1,13 @@
 Title: Document ping_levels for main.mk
 Component: doku
+State: done
+Class: todo
 Benefit: 3
-State: open
 Cost: 3
 Date: 2011-10-18 20:21:09
-Class: todo
+Targetversion: future
 
 This is a feature many have been waiting for...
+
+2012-01-08 15:44:19: changed state open -> done
+Is documented.

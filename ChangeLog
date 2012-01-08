@@ -29,6 +29,7 @@
     * Sounds in views are now enabled per default. The new configuration
       variable enable_sounds can be set to False in multisite.mk in order
       to disable sounds.
+    * Added filter for log state (UP,DOWN,OK,CRIT...) to all log views
 
 1.1.13i2:
     Core, Setup, etc.:

@@ -1,10 +1,13 @@
 Title: Site ID must not have spaces in multisite.mk:sites
 Component: docu
+State: done
+Class: todo
 Benefit: 1
-State: open
 Cost: 1
 Date: 2011-10-21 16:24:23
 Targetversion: 1.2.0
-Class: todo
 
 Add this to docu.
+
+2012-01-08 15:55:08: changed state open -> done
+Done.

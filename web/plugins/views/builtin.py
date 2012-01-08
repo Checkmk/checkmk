@@ -2471,6 +2471,37 @@ multisite_builtin_views.update({
                      'topic': u'Business Intelligence',
                      'user_sortable': None},
 
+# Summary of all aggregations for usage as web services
+'aggr_summary': {'browser_reload': 0,
+                  'column_headers': 'off',
+                  'datasource': 'bi_aggregations',
+                  'description': u'Simple summary page of all BI aggregates that is used as a web services.',
+                  'group_painters': [],
+                  'hard_filters': [],
+                  'hard_filtervars': [],
+                  'hidden': True,
+                  'hide_filters': [],
+                  'hidebutton': True,
+                  'icon': None,
+                  'layout': 'boxed',
+                  'linktitle': u'BI Aggregations Summary State',
+                  'mobile': False,
+                  'mustsearch': False,
+                  'name': 'aggr_summary',
+                  'num_columns': 1,
+                  'painters': [('aggr_name', None, ''),
+                               ('aggr_state', None, ''),
+                               ('aggr_output', None, '')],
+                  'play_sounds': False,
+                  'public': False,
+                  'show_checkboxes': None,
+                  'show_filters': [],
+                  'sorters': [],
+                  'title': u'BI Aggregations Summary State',
+                  'topic': u'Business Intelligence',
+                  'user_sortable': 'on'},
+
+
 #   +----------------------------------------------------------------------+
 #   |       _   _       _   _  __ _           _   _                        |
 #   |      | \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __  ___        |

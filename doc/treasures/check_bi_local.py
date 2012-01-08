@@ -24,18 +24,31 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#!/usr/bin/python
+# Example for creating real Nagios checks from BI aggregations. 
 
-# Example for creating real Nagios checks from BI
-# aggregations. You need to create a view with
-# the name aggr_service with the two columns
-# Aggr State and Aggr Name.
+# Installation:
+# 1. Put this file in /usr/lib/check_mk_agent/local
+# 2. Make the file executable
+# 3. Add a correct url_prefix (OMD site and slash)
+#    user and password with read access to Multisite. 
 
-import os
+user = "omdadmin"
+password = "omd"
+url_prefix = "" # non-OMD installations
+# url_prefix = "mysite/" # with OMD site name
 
-url = 'http://omdadmin:omd@localhost/bi/check_mk/view.py?view_name=aggr_webservice&output_format=python'
+# Do not change anything below
 
-data = eval(os.popen("curl --silent '%s'" % url).read())
+import os, sys
+
+url = 'http://%s:%s@localhost/%scheck_mk/view.py?view_name=aggr_summary&output_format=python' % \
+  (user, password, url_prefix)
+
+try:
+    data = eval(os.popen("curl --silent '%s'" % url).read())
+except:
+    sys.stderr.write("Invalid output from URL %s\n" % url)
+    sys.exit(1)
 
 states = {
   "OK"      : 0,
@@ -44,9 +57,12 @@ states = {
   "UNKNOWN" : 3,
 }
 
-for state, name in data[1:]:
+for name, state, output in data[1:]:
     state_nr = states.get(state, -1)
     descr = "BI_Aggr_" + name.replace(" ", "_")
     if state_nr != -1:
-        print "%d %s - %s" % (state_nr, descr, state)
+        text = "%d %s - %s" % (state_nr, descr, state)
+        if output:
+            text += " - " + output
+        print text
 

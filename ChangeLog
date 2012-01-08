@@ -32,6 +32,10 @@
     * Added filter for log state (UP,DOWN,OK,CRIT...) to all log views
     * New painter for normal and retry check interval (added to detail views)
 
+    BI:
+    * improve doc/treasures/check_bi_local.py: local check that creates
+      Nagios services out of BI aggregates
+
 1.1.13i2:
     Core, Setup, etc.:
     * cmk -I: accept host tags and cluster names

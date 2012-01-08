@@ -3756,11 +3756,11 @@ def do_cleanup_autochecks():
                 sys.stdout.write("Deleting %s\n" % f)
             os.remove(f)
 
-def check_bin_in_path(prog):
+def find_bin_in_path(prog):
     for path in os.environ['PATH'].split(os.pathsep):
         f = path + '/' + prog
         if os.path.exists(f) and os.access(f, os.X_OK):
-            return True
+            return f
 
 def do_scan_parents(hosts):
     global max_num_processes
@@ -3778,8 +3778,12 @@ def do_scan_parents(hosts):
 
     outfilename = check_mk_configdir + "/parents.mk"
 
-    if not check_bin_in_path('traceroute'):
-        raise MKGeneralException('The traceroute command can not be found in PATH?')
+    traceroute_prog = find_bin_in_path('traceroute')
+    if not traceroute_prog:
+        raise MKGeneralException(
+           'The program "traceroute" was not found.\n'
+           'The parent scan needs this program.\n'
+           'Please install it and try again.')
 
     if os.path.exists(outfilename):
         first_line = file(outfilename, "r").readline()

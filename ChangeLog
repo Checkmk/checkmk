@@ -31,6 +31,7 @@
       to disable sounds.
     * Added filter for log state (UP,DOWN,OK,CRIT...) to all log views
     * New painter for normal and retry check interval (added to detail views)
+    * Site filter shows "(local)" in case of non multi-site setup
 
     WATO:
     * Removed IP-Address attribute from folders

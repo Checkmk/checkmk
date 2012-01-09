@@ -4922,12 +4922,12 @@ def mode_edit_timeperiod(phase):
             if not end:
                 end = "24:00"
 
-            begin, end = [ parse_bound(w, b) for (w,b) in [ ("from", begin), ("to", end) ]]
+            begin, end = [ parse_bound(varprefix, w, b) for (w,b) in [ ("from", begin), ("to", end) ]]
             ranges.append((begin, end))
         return ranges
 
 
-    def parse_bound(what, bound):
+    def parse_bound(vp,  what, bound):
         # Fully specified
         if re.match("^(24|[0-1][0-9]|2[0-3]):[0-5][0-9]$", bound):
             return bound

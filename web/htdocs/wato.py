@@ -71,6 +71,8 @@
 #                        performance issues.
 #   ".total_hosts"    -> recursive number of hosts, computed on demand by
 #                        num_hosts_in()
+#   ".siteid"         -> This attribute is mandatory for host objects and optional for folder
+#                        objects. In case of hosts and single WATO setup it is always none.
 #
 #
 # g_folder -> The folder object representing the folder the user is
@@ -1238,9 +1240,9 @@ def move_to_folder_combo(what, thing = None, top = False):
                     msg += " (%s)" % os_path
                 selections.append((os_path, msg))
         selections.sort(cmp=lambda a,b: cmp(a[1].lower(), b[1].lower()))
-        move_to_folder_combo_cache[id(g_folder)] = selections
+        move_to_folder_combo_cache[g_folder['.path']] = selections
     else:
-        selections = move_to_folder_combo_cache[id(g_folder)]
+        selections = move_to_folder_combo_cache[g_folder['.path']]
 
     if len(selections) > 1:
         if thing == None:
@@ -2152,8 +2154,11 @@ def create_target_folder_from_aliaspath(aliaspath):
                     ".folders"   : {},
                     ".files"     : {},
                     ".parent"    : folder,
-                    ".siteid"    : folder[".siteid"],
                 }
+
+                if '.siteid' in folder:
+                    new_folder['.siteid'] = folder[".siteid"]
+
                 folder[".folders"][name] = new_folder
                 g_folders[new_path] = new_folder
                 folder = new_folder
@@ -7370,12 +7375,12 @@ def mode_hosttags(phase):
             delete_url   = html.makeactionuri([("_delete", tag_id)])
             html.write("<td>")
             if nr == 0:
-                empty_html.icon_button()
+                html.empty_icon_button()
             else:
                 html.icon_button(html.makeactionuri([("_move", str(-nr))]),
                             _("Move this tag group one position up"), "up")
             if nr == len(hosttags) - 1:
-                empty_html.icon_button()
+                html.empty_icon_button()
             else:
                 html.icon_button(html.makeactionuri([("_move", str(nr))]),
                             _("Move this tag group one position down"), "down")
@@ -8319,7 +8324,7 @@ def create_rule(rulespec, hostname=None, item=NO_ITEM):
 
 def rule_button(action, help=None, folder=None, rulenr=0):
     if action == None:
-        empty_html.icon_button()
+        html.empty_icon_button()
     else:
         vars = [("_folder", folder[".path"]),
           ("_rulenr", str(rulenr)),

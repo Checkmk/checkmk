@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import math, os, time
+import math, os, time, re
 from lib import *
 
 # Abstract base class of all value declaration classes.
@@ -241,6 +241,21 @@ class TextAscii(ValueSpec):
     def validate_value(self, value, varprefix):
         if not self._allow_empty and value.strip() == "":
             raise MKUserError(varprefix, _("An empty value is not allowed here."))
+
+
+class EmailAddress(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+        self._re_email = re.compile('^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$', re.I)
+
+    def value_to_text(self, value):
+        return '<a href="mailto:%s">%s</a>' % (value, value)
+
+    def validate_value(self, value, varprefix):
+        TextAscii.validate_value(self, value, varprefix)
+        if value:
+            if not self._re_email.match(value):
+                raise MKUserError(varprefix, _("You entered an invalid email address."))
 
 class TextUnicode(TextAscii):
     def __init__(self, **kwargs):

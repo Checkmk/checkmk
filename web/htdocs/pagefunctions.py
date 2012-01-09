@@ -34,11 +34,14 @@ def add_site_icon(html, sitename):
         return False
 
 def site_selector(html, htmlvar, enforce = True):
-    if enforce:
-        choices = []
+    if not config.is_multisite():
+        choices = [("", _("(local)"))]
     else:
-        choices = [("","")]
-    for sitename, state in html.site_status.items():
-        if state["state"] == "online":
-            choices.append((sitename, config.site(sitename)["alias"]))
+        if enforce:
+            choices = []
+        else:
+            choices = [("","")]
+        for sitename, state in html.site_status.items():
+            if state["state"] == "online":
+                choices.append((sitename, config.site(sitename)["alias"]))
     html.sorted_select(htmlvar, choices)

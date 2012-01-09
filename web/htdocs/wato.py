@@ -71,6 +71,8 @@
 #                        performance issues.
 #   ".total_hosts"    -> recursive number of hosts, computed on demand by
 #                        num_hosts_in()
+#   ".siteid"         -> This attribute is mandatory for host objects and optional for folder
+#                        objects. In case of hosts and single WATO setup it is always none.
 #
 #
 # g_folder -> The folder object representing the folder the user is
@@ -2152,8 +2154,11 @@ def create_target_folder_from_aliaspath(aliaspath):
                     ".folders"   : {},
                     ".files"     : {},
                     ".parent"    : folder,
-                    ".siteid"    : folder[".siteid"],
                 }
+
+                if '.siteid' in folder:
+                    new_folder['.siteid'] = folder[".siteid"]
+
                 folder[".folders"][name] = new_folder
                 g_folders[new_path] = new_folder
                 folder = new_folder

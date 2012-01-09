@@ -34,6 +34,7 @@
 
     WATO:
     * FIX: Fixed missing folders in "move to" dropdown fields
+    * FIX: Fixed "move to target folders" after CSV import
 
     BI:
     * improve doc/treasures/check_bi_local.py: local check that creates

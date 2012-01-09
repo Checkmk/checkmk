@@ -3557,8 +3557,8 @@ class HostTagAttribute(Attribute):
             else:
                 secondary_tags = []
             choices.append(("|".join([ tagvalue ] + secondary_tags), e[1]))
-            if value != "" and value == tagvalue:
-                value = value + "|" + "|".join(secondary_tags)           
+            if value != "" and value == tagvalue and secondary_tags:
+                value = value + "|" + "|".join(secondary_tags)
 
         if len(choices) == 1:
             html.checkbox(varname, value != "", cssclass = '', onclick='wato_fix_visibility();', add_attr = ["tags=%s"%choices[0][0]])

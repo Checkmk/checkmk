@@ -4,6 +4,7 @@
 
     Checks & Agents:
     * FIX: fixed man pages of h3c_lanswitch_sensors and statgrab_cpu
+    * FIX: netapp_volumes: added raid4 as allowed state (thanks to Michaël Coquard)
 
 1.1.12p6:
     Checks & Agents:

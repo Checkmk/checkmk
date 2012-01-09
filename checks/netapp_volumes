@@ -110,7 +110,7 @@ def check_netapp_volumes(item, _not_used, info):
     if status == 'reconstructing':
         ret_state = 1
         output += '(!)'
-    elif status.split(',')[0] not in [ 'normal', 'raid_dp', 'raid0', 'raid0, mirrored' ]:
+    elif status.split(',')[0] not in [ 'normal', 'raid_dp', 'raid0', 'raid0, mirrored', 'raid4' ]:
         ret_state = 2
         output += '(!!)'
 

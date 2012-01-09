@@ -167,11 +167,13 @@ class Age(ValueSpec):
 class Integer(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._size     = kwargs.get("size", 5)
-        self._minvalue = kwargs.get("minvalue")
-        self._maxvalue = kwargs.get("maxvalue")
-        self._label    = kwargs.get("label")
-        self._unit     = kwargs.get("unit", "")
+        self._size         = kwargs.get("size", 5)
+        self._minvalue     = kwargs.get("minvalue")
+        self._maxvalue     = kwargs.get("maxvalue")
+        self._label        = kwargs.get("label")
+        self._unit         = kwargs.get("unit", "")
+        self._thousand_sep = kwargs.get("thousand_sep")
+        
         if "size" not in kwargs and "maxvalue" in kwargs:
             self._size = 1 + int(math.log10(self._maxvalue))
 
@@ -199,6 +201,15 @@ class Integer(ValueSpec):
 
     def value_to_text(self, value):
         text = str(value)
+        if self._thousand_sep:
+            sepped = ""
+            rest = text
+            while len(rest) > 3:
+                sepped = self._thousand_sep + rest[-3:] + sepped
+                rest = rest[:-3]
+            sepped = rest + sepped
+            text = sepped
+
         if self._unit:
             text += " " + self._unit
         return text

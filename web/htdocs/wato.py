@@ -9019,6 +9019,9 @@ class API:
     def register_hook(self, name, func):
         g_hooks.setdefault(name, []).append(func)
 
+    def get_all_users(self):
+        return load_users()
+
     # Get a (flat) dictionary containing all hosts with their *effective*
     # attributes (containing all inherited and default values where appropriate)
     # of the given folder. If folder is None, returns all hosts from the root folder

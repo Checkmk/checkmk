@@ -7375,12 +7375,12 @@ def mode_hosttags(phase):
             delete_url   = html.makeactionuri([("_delete", tag_id)])
             html.write("<td>")
             if nr == 0:
-                empty_html.icon_button()
+                html.empty_icon_button()
             else:
                 html.icon_button(html.makeactionuri([("_move", str(-nr))]),
                             _("Move this tag group one position up"), "up")
             if nr == len(hosttags) - 1:
-                empty_html.icon_button()
+                html.empty_icon_button()
             else:
                 html.icon_button(html.makeactionuri([("_move", str(nr))]),
                             _("Move this tag group one position down"), "down")
@@ -8324,7 +8324,7 @@ def create_rule(rulespec, hostname=None, item=NO_ITEM):
 
 def rule_button(action, help=None, folder=None, rulenr=0):
     if action == None:
-        empty_html.icon_button()
+        html.empty_icon_button()
     else:
         vars = [("_folder", folder[".path"]),
           ("_rulenr", str(rulenr)),

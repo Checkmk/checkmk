@@ -44,4 +44,4 @@ declare_host_attribute(TextAttribute("ipaddress", _("IP address"),
                          "dynamic IP addresses."),
                          allow_empty = False),
                          show_in_table = True,
-                         show_in_folder = True)
+                         show_in_folder = False)

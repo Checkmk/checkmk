@@ -1238,9 +1238,9 @@ def move_to_folder_combo(what, thing = None, top = False):
                     msg += " (%s)" % os_path
                 selections.append((os_path, msg))
         selections.sort(cmp=lambda a,b: cmp(a[1].lower(), b[1].lower()))
-        move_to_folder_combo_cache[id(g_folder)] = selections
+        move_to_folder_combo_cache[g_folder['.path']] = selections
     else:
-        selections = move_to_folder_combo_cache[id(g_folder)]
+        selections = move_to_folder_combo_cache[g_folder['.path']]
 
     if len(selections) > 1:
         if thing == None:

@@ -264,7 +264,8 @@ then
 fi
 
 # State of LSI MegaRAID controller via MegaCli. You can download that tool from:
-# http://www.lsi.com/DistributionSystem/AssetDocument/support/downloads/megaraid/miscellaneous/linux/2.00.15_Linux_MegaCLI.zip
+# http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
+
 if which MegaCli >/dev/null ; then
     echo '<<<megaraid_pdisks>>>'
     for part in $(MegaCli -EncInfo -aALL -NoLog < /dev/null | egrep 'Enclosure|Device ID'); do

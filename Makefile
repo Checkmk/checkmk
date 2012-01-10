@@ -179,7 +179,7 @@ deb-agent: $(NAME)-agent-$(VERSION)-1.noarch.rpm $(NAME)-agent-logwatch-$(VERSIO
 
 
 clean:
-	rm -rf dist.tmp rpm.topdir *.rpm *.deb mk-livestatus-*.tar.gz $(NAME)-*.tar.gz *~ counters autochecks precompiled cache
+	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe mk-livestatus-*.tar.gz $(NAME)-*.tar.gz *~ counters autochecks precompiled cache
 	find -name "*~" | xargs rm -f
 
 mrproper:

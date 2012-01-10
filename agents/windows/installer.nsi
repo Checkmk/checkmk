@@ -83,7 +83,7 @@ SectionEnd
 
 Section "Install & start service"
     DetailPrint "Installing and starting the check_mk_agent service..."
-    nsExec::Exec 'cmd /C \'"$INSTDIR\check_mk_agent.exe" install\''
+    nsExec::Exec 'cmd /C "$INSTDIR\check_mk_agent.exe" install'
     nsExec::Exec 'cmd /C "net start check_mk_agent"'
 SectionEnd
 
@@ -92,7 +92,7 @@ Section "Uninstall"
     DetailPrint "Stopping service..."
     nsExec::Exec 'cmd /C "net stop check_mk_agent"'
     DetailPrint "Removing service..."
-    nsExec::Exec 'cmd /C "$INSTDIR\check_mk_agent.exe" remove"'
+    nsExec::Exec 'cmd /C "$INSTDIR\check_mk_agent.exe" remove'
   
     ; Remove registry keys
     DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\check_mk_agent"

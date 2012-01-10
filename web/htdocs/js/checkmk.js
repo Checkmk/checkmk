@@ -1383,3 +1383,39 @@ function valuespec_toggle_dropdownn(oDropdown, divid) {
     oDiv = null;
 }
 
+function list_of_strings_init(tableid) {
+    var oTable = document.getElementById(tableid);
+    var oTBody = oTable.childNodes[0];
+    var oTr = oTBody.childNodes[oTBody.childNodes.length - 1];
+    var oTd = oTr.childNodes[0];
+    for (var j in oTd.childNodes) {
+        var o = oTd.childNodes[j];
+        if (o.tagName == "INPUT") {
+            o.onfocus = function(e) { return list_of_strings_extend(this); };
+        }
+    }
+}
+
+function list_of_strings_extend(oInput, j) {
+    var oldName = oInput.name;
+    // Transform e.g extra_emails_12 -> extra_emails_13
+    var splitted = oldName.split("_");
+    var num = 1 + parseInt(splitted[splitted.length-1]);
+    splitted[splitted.length-1] = "" + num;
+    var newName = splitted.join("_");
+
+    var oTr = oInput.parentNode.parentNode;
+    var oTBody = oTr.parentNode;
+    var oNewTr = document.createElement("TR"); 
+    oNewTr.innerHTML = oTr.innerHTML.replace('"' + oldName + '"', '"' + newName + '"');
+    oTBody.appendChild(oNewTr);
+    var oNewTd = oNewTr.childNodes[0];
+    for (var j in oNewTd.childNodes) {
+        var o = oNewTd.childNodes[j];
+        if (o.tagName == "INPUT") {
+            o.onfocus = function(e) { return list_of_strings_extend(this); };
+        }
+    }
+    // Remove handle from old last element
+    oInput.onfocus = null;
+}

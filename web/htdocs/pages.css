@@ -374,10 +374,10 @@ table.form.nomargin td.title {
     border-top-style: solid;
 }
 
-table.form td {
+table.form > tbody > tr > td {
     padding: 4px 10px;
 }
-table.form th {
+table.form > tbody > tr > th {
     border-width: 1px;
     border-color: #fff;
     border-style: solid solid none solid;

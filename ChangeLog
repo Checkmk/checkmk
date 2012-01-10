@@ -4,6 +4,8 @@
     * cmk -O/-R now uses omd re{start,load} core if using OMD
     * FIX: setup.sh now setups up permissions for conf.d/wato
       correctly
+    * cmk --localize update supports an optional ALIAS which is used as
+      display string in the multisite GUI
 
     Checks & Agents:
     * Windows agent: output eventlog texts in UTF-8 encoding. This
@@ -31,6 +33,9 @@
       to disable sounds.
     * Added filter for log state (UP,DOWN,OK,CRIT...) to all log views
     * New painter for normal and retry check interval (added to detail views)
+    * Site filter shows "(local)" in case of non multi-site setup
+    * FIX: Fixed auth problem when following logwatch icon links while using
+      the form based auth
 
     WATO:
     * Removed IP-Address attribute from folders

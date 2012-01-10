@@ -39,9 +39,10 @@ def verbose_system(command):
 
 domain = 'multisite'
 
-pot_file = None
-po_file  = None
-mo_file  = None
+pot_file   = None
+po_file    = None
+mo_file    = None
+alias_file = None
 
 if local_locale_dir:
     locale_base = local_locale_dir
@@ -61,10 +62,12 @@ def localize_usage(err = ''):
 BE AWARE: This is an experimental feature!!!
 
 Available commands are:
-   update  LANG     ...  Creates or updates a .po file for the given language.
-   compile LANG     ...  Compiles the .po file into a .mo file which can
-                         be used by gettext.
-   edit    LANG     ...  Call update, open .po in editor and compile in one step
+   update  LANG (ALIAS) ...  Creates or updates a .po file for the given language.
+                             The alias is an optional attribute which will be used as
+                             display string in the Multisite GUI.
+   compile LANG         ...  Compiles the .po file into a .mo file which can
+                             be used by gettext.
+   edit    LANG         ...  Call update, open .po in editor and compile in one step
 
   The regular process for translating is:
 
@@ -86,6 +89,10 @@ def do_localize(args):
     else:
         lang = None
 
+    alias = None
+    if len(args) > 2:
+        alias = args[2]
+
     commands = {
         "update"  : localize_update,
         "compile" : localize_compile,
@@ -97,6 +104,7 @@ def do_localize(args):
 
         try:
             f(lang)
+            write_alias(alias)
         except LocalizeException, e:
             sys.stderr.write("%s\n" % e)
             sys.exit(1)
@@ -108,6 +116,14 @@ def do_localize(args):
                 (", ".join(allc[:-1]), allc[-1]))
         sys.exit(1)
 
+def write_alias(alias):
+    if not alias:
+        return
+
+    if alias == '-':
+        os.remove(alias_file)
+    else:
+        file(alias_file, 'w').write(alias)
 
 def check_binaries():
     # Are the xgettext utils available?
@@ -121,9 +137,10 @@ def get_languages():
 
 
 def init_files(lang):
-    global po_file, mo_file
-    po_file = locale_base + '/%s/LC_MESSAGES/%s.po' % (lang, domain)
-    mo_file = locale_base + '/%s/LC_MESSAGES/%s.mo' % (lang, domain)
+    global po_file, mo_file, alias_file
+    po_file    = locale_base + '/%s/LC_MESSAGES/%s.po' % (lang, domain)
+    mo_file    = locale_base + '/%s/LC_MESSAGES/%s.mo' % (lang, domain)
+    alias_file = locale_base + '/%s/alias' % (lang)
 
 
 def localize_update_po():

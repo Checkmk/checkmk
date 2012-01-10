@@ -126,9 +126,18 @@ def get_languages():
     if defaults.omd_root:
         dirs.append(defaults.omd_root + "/local/share/check_mk/locale")
 
+    def get_language_alias(dirs, lang):
+        alias = lang
+        for lang_dir in dirs:
+            try:
+                alias = file('%s/%s/alias' % (lang_dir, lang), 'r').read().strip()
+            except (OSError, IOError):
+                pass
+        return alias
+
     for lang_dir in dirs:
         try:
-            languages += [ (val, val) for val in os.listdir(lang_dir) if not '.' in val ]
+            languages += [ (val, get_language_alias(dirs, val)) for val in os.listdir(lang_dir) if not '.' in val ]
         except OSError:
             # Catch "OSError: [Errno 2] No such file or directory:" when directory not exists
             pass

@@ -1,0 +1,9 @@
+Title: Windows agent installer: Option to include custom (config) files
+Component: core
+State: open
+Date: 2012-01-10 16:23:13
+Targetversion: 1.2.0
+Class: feature
+
+It would be nice to have the option to include custom config files, local files or plugins into
+the windows agent installer.

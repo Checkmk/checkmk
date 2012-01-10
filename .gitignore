@@ -9,6 +9,7 @@ rpm.buildroot/
 rpm.topdir/
 *.rpm
 *.deb
+check-mk-*.exe
 var/
 .bugs/.my_ids
 .bugs/.last

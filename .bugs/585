@@ -1,0 +1,9 @@
+Title: Windows agent installer: Add plugins as optional plugins
+Component: core
+State: open
+Date: 2012-01-10 16:21:20
+Targetversion: 1.2.0
+Class: feature
+
+It would ne nice to have the option to install optional plugins like windows_updates, the active directory dc
+check and so on. They could be optionally selectable as special components.

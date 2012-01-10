@@ -329,6 +329,57 @@ class Filename(TextAscii):
         # permissions and the file might be created with Nagios permissions (on OMD this
         # is the same, but for others not)
 
+class ListOfStrings(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._valuespec = kwargs.get("valuespec", TextAscii())
+
+    def render_input(self, vp, value):
+        # Form already submitted?
+        if html.has_var(vp + "_0"):
+            value = self.from_html_vars(vp)
+            # Remove variables from URL, so that they do not appear
+            # in hidden_fields()
+            nr = 0
+            while html.has_var(vp + "_%d" % nr):
+                html.del_var(vp + "_%d" % nr)
+                nr += 1
+        html.write('<table border=0 cellspacing=0 cellpadding=0 id="%s">' % vp)
+        
+        for nr, s in enumerate(value + [""]):
+            html.write('<tr><td>')
+            self._valuespec.render_input(vp + "_%d" % nr, s)
+            html.write('</td></tr>')
+
+        html.write('</table>')
+        html.javascript("list_of_strings_init('%s');" % vp);
+
+    def canonical_value(self):
+        return []
+
+    def value_to_text(self, value):
+        return ", ".join([self._valuespec.value_to_text(v) for v in value])
+
+    def from_html_vars(self, vp):
+        value = []
+        nr = 0
+        while html.has_var(vp + "_%d" % nr):
+            s = html.var(vp + "_%d" % nr).strip()
+            if s:
+                value.append(s)
+            nr += 1
+        return value
+
+    def validate_datatype(self, value, vp):
+        if type(value) != list:
+            raise MKUserError(varprefix, _("Expected data type is "
+            "list, but your type is %s." % type(value)))
+        for nr, s in enumerate(value):
+            self._valuespec.validate_datatype(s, vp + "_%d" % nr)
+
+    def validate_value(self, value, vp):
+        for nr, s in enumerate(value):
+            self._valuespec.validate_value(s, vp + "_%d" % nr)
 
 # Same but for floating point values
 class Float(Integer):

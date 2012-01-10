@@ -24,6 +24,7 @@
     * if/if64/lnx_if: pad port numbers with zeros in order to sort correctly.
       This can be turned off with if_inventory_pad_portnumbers = False.
     * Linux agent: wrap freeipmi with lock in order to avoid cache corruption
+    * New check: megaraid_bbu - check existance & status of LSI MegaRaid BBU module
 
     Multisite:
     * Improve transaction handling and reload detection: user can have 

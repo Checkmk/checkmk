@@ -43,7 +43,7 @@ examples:
  check_parameters += [
    # Alert if backup files are too small
    ( { "minsize" : (5000000, 10000000) },
-     ALL_HOSTS, [ r"File D:\\Backup\\.*.zip" ] ),
+     ALL_HOSTS, [ "File D:\\Backup\\.*.zip" ] ),
 
    # Alert if snapshot file are too old
    ( { "maxage" : (120, 180) },

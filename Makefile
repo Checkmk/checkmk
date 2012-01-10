@@ -117,6 +117,7 @@ setversion:
 	    fi ; \
 	done ; \
 	sed -i 's/#define CHECK_MK_VERSION .*/#define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' agents/windows/check_mk_agent.cc ; \
+	sed -i 's/!define CHECK_MK_VERSION .*/#define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' agents/windows/installer.nsi ; \
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files ; \

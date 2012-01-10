@@ -4,8 +4,8 @@
 ; Useful sources:
 ; http://nsis.sourceforge.net/Reusable_installer_script
 
-!define VERSION "1.1.13i3"
-!define NAME "Check_MK Agent ${VERSION}"
+!define CHECK_MK_VERSION "1.1.13i3"
+!define NAME "Check_MK Agent ${CHECK_MK_VERSION}"
 
 XPStyle on
 Icon "installer.ico"
@@ -14,7 +14,7 @@ Icon "installer.ico"
 Name "${NAME}"
 
 ; The file to write
-OutFile "check_mk_agent_install-${VERSION}.exe"
+OutFile "check_mk_agent_install-${CHECK_MK_VERSION}.exe"
 
 SetDateSave on
 SetDatablockOptimize on

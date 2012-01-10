@@ -6647,8 +6647,8 @@ def mode_edit_user(phase):
 
     # Locking
     html.write("<tr><td class=legend>")
-    html.write(_("<i>Disabling the password prevents a user from logging in without "
-                 "the need of changing the password. Notifications are not affected "
+    html.write(_("<i>Disabling the password will prevent a user from logging in while "
+                 "retaining the original password. Notifications are not affected "
                  "by this setting.</i>"))
     html.write("</td><td class=content>")
     html.checkbox("locked", user.get("locked", False))

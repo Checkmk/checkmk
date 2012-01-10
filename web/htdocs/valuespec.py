@@ -232,6 +232,9 @@ class TextAscii(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._size     = kwargs.get("size", 30)
         self._allow_empty = kwargs.get("allow_empty", True)
+        self._regex = kwargs.get("regex")
+        if type(self._regex) == str:
+            self._regex = re.compile(self._regex)
 
     def canonical_value(self):
         return ""
@@ -252,21 +255,19 @@ class TextAscii(ValueSpec):
     def validate_value(self, value, varprefix):
         if not self._allow_empty and value.strip() == "":
             raise MKUserError(varprefix, _("An empty value is not allowed here."))
+        if value and self._regex:
+            if not self._regex.match(value):
+                raise MKUserError(varprefix, _("Your input odes not match the required format."))
 
 
 class EmailAddress(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
-        self._re_email = re.compile('^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$', re.I)
+        self._regex = re.compile('^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$', re.I)
 
     def value_to_text(self, value):
         return '<a href="mailto:%s">%s</a>' % (value, value)
 
-    def validate_value(self, value, varprefix):
-        TextAscii.validate_value(self, value, varprefix)
-        if value:
-            if not self._re_email.match(value):
-                raise MKUserError(varprefix, _("You entered an invalid email address."))
 
 class TextUnicode(TextAscii):
     def __init__(self, **kwargs):

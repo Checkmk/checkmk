@@ -10,7 +10,7 @@ description:
  search path. The usual way is to install it into {/usr/local/bin}.
 
  The utility {MegaCli} can be downloaded from
- {http://www.lsi.com/DistributionSystem/AssetDocument/support/downloads/megaraid/miscellaneous/linux/2.00.15_Linux_MegaCLI.zip}.
+ {http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip}.
  This is an alternative to the utility {cfggen}. {cfggen} only works
  with the driver {mptsas}, whereas {MegaCli} uses a device created
  by the driver {megaraid_sas}.

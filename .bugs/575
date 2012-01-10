@@ -1,0 +1,10 @@
+Title: Undo changes from the commit queue
+Component: wato
+State: open
+Date: 2012-01-09 15:38:00
+Targetversion: 1.2.0
+Class: nastiness
+
+This will be an unloved request...
+We will need an option to undo a change that has been "clicked" but is still waiting for activation.
+In a larger setup there could be 20 pending changes because the admin(s) will try to match nagios downtimes for activation or some other se. on the other hand right now you need to COMMIT a change into the live configuration to UNDO it - even if you already noticed it was erronoeous. (Ja, ich kann heute nicht tippen)

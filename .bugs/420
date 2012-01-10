@@ -1,0 +1,9 @@
+Title: local Check Namen mit Leerzeichen erlauben
+Component: core
+State: open
+Date: 2012-01-10 16:17:08
+Targetversion: 1.2.0
+Class: feature
+
+Momentan sind Leerzeichen offenbar nicht erlaubt. Der Parser kommt durcheinander.
+Eventuell könnte man Quotes erlauben um schönere Service Namen bei local Checks zu erlauben.

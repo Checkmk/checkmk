@@ -197,7 +197,7 @@ multisite_icons.append({
 #   +----------------------------------------------------------------------+
 
 def logwatch_url(sitename, notes_url):
-    i = notes_url.index("/check_mk/logwatch.py")
+    i = notes_url.index("check_mk/logwatch.py")
     site = html.site_status[sitename]["site"]
     return site["url_prefix"] + notes_url[i:]
 

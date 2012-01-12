@@ -70,13 +70,13 @@ def mobile_html_foot():
     html.write("</body></html>\n")
 
 def jqm_header_button(url, title, icon=""):
-    html.write('<a href="%s" data-direction="reverse" data-iconpos="notext" data-icon="%s" title="%s" data-theme="f"></a>' % (url, icon, title))
+    html.write('<a href="%s" data-direction="reverse" data-icon="%s" title="%s" >%s</a>' % (url, icon, title, title ))
 
 def jqm_page_header(title, id=None, left_button=None, right_button=None):
     idtxt = id and (' id="%s"' % id) or ''
     html.write(
         '<div data-role="page"%s>\n'
-        '<div data-role="header">\n' % idtxt)
+        '<div data-role="header" data-position="fixed">\n' % idtxt)
     if left_button:
         jqm_header_button(*left_button)
     html.write('<h1>%s</h1>\n' % title)
@@ -117,19 +117,26 @@ def jqm_page_navfooter(items, current, page_id):
     html.write('</div>') # close page-div
 
 
-def jqm_page_index(title, items):
-    last_topic = ''
-    first_run = True
-    items.sort(cmp = lambda a,b: cmp((a[0],a[2]),(b[0],b[2])))
-    for topic, href, title in items:
-        if last_topic != topic:
-	    if first_run != True:
-	        html.write("</ul>")
-	    last_topic = topic
-	    html.write('<p>%s</p><ul data-role="listview" data-inset="true">\n' % topic)
-	    first_run = False;
-	html.write('<li><a data-ajax="false" data-transition="flip" href="%s">%s</a></li>\n' % (href, title))
-    html.write("</ul>\n")
+def jqm_page_index(title, items): 
+    manual_sort = [_("Hosts"), _("Services"), _("Events")] 
+    
+    for topic in manual_sort:
+        jqm_page_index_topic_renderer(topic, items) 
+    
+    other_topics = list(set([ x[0] for x in items if x[0] not in manual_sort]))
+    other_topics.sort()
+
+    for topic in other_topics:
+        jqm_page_index_topic_renderer(topic, items) 
+
+
+def jqm_page_index_topic_renderer(topic, items): 
+    html.write('<p>%s</p><ul data-role="listview" data-inset="true">\n' % topic) 
+    for top, href, title in items:
+        if top == topic:
+            html.write('<li><a data-ajax="false" data-transition="flip" href="%s">%s</a></li>\n' % (href, title))
+    html.write('</ul>')
+
 
 def jqm_page(title, content, foot, id=None):
     jqm_page_header(title, id)

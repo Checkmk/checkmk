@@ -186,7 +186,7 @@ class Integer(ValueSpec):
     def render_input(self, varprefix, value):
         html.number_input(varprefix, str(value), size = self._size)
         if self._label or self._unit:
-            html.write(" ")
+            html.write("&nbsp;")
             if self._label:
                 html.write(self._label)
             elif self._unit:
@@ -211,7 +211,7 @@ class Integer(ValueSpec):
             text = sepped
 
         if self._unit:
-            text += " " + self._unit
+            text += "&nbsp;" + self._unit
         return text
 
     def validate_datatype(self, value, varprefix):

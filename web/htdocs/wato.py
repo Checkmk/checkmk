@@ -7024,6 +7024,7 @@ class UserSelection(ElementSelection):
         return elements
 
     def value_to_text(self, value):
+        self.load_elements()
         return self._elements.get(value, value).split(" - ")[-1]
 
 #.

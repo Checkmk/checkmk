@@ -1062,9 +1062,9 @@ def get_filesize_human_readable(size):
     if size < 4 * 1024 * 1024:
         return str(size)
     elif size < 4 * 1024 * 1024 * 1024:
-        return "%.2fMB" % (float(s) / (1024 * 1024))
+        return "%.2fMB" % (float(size) / (1024 * 1024))
     else:
-        return "%.2fGB" % (float(s) / (1024 * 1024 * 1024))
+        return "%.2fGB" % (float(size) / (1024 * 1024 * 1024))
 
 
 def get_nic_speed_human_readable(speed):

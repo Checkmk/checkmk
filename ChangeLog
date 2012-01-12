@@ -26,6 +26,7 @@
       This can be turned off with if_inventory_pad_portnumbers = False.
     * Linux agent: wrap freeipmi with lock in order to avoid cache corruption
     * New check: megaraid_bbu - check existance & status of LSI MegaRaid BBU module
+    * HP-UX Agent: fix mrpe (remove echo -e and test -e, thanks to Philipp Lemke)
 
     Multisite:
     * Improve transaction handling and reload detection: user can have 
@@ -38,6 +39,9 @@
     * Site filter shows "(local)" in case of non multi-site setup
     * FIX: Fixed auth problem when following logwatch icon links while using
       the form based auth
+
+    Mobile:
+    * Improved sorting of views in main page
 
     WATO:
     * Removed IP-Address attribute from folders

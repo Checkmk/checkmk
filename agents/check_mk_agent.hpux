@@ -128,7 +128,7 @@ fi
 
 
 # MK's Remote Plugin Executor
-if [ -e "$MK_CONFDIR/mrpe.cfg" ]
+if [ -f "$MK_CONFDIR/mrpe.cfg" ]
 then
     echo '<<<mrpe>>>'
     grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
@@ -136,7 +136,7 @@ then
     do
         PLUGIN=${cmdline%% *}
         OUTPUT=$(eval "$cmdline")
-        echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+        echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
         echo
     done
 fi

@@ -1,0 +1,9 @@
+Title: CPU Load immer auf 100% bei -nv (Windows)
+Component: core
+State: open
+Date: 2012-01-10 17:58:52
+Targetversion: 1.2.0
+Class: nastiness
+
+Windows Hosts zeigen bei einem cmk -nv immer einen CPU Load von 100% an.
+Der Normale Check funktioniert. Tritt hier bei 1.1.13i2 auf.

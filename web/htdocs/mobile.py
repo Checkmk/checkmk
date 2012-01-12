@@ -70,13 +70,13 @@ def mobile_html_foot():
     html.write("</body></html>\n")
 
 def jqm_header_button(url, title, icon=""):
-    html.write('<a href="%s" data-direction="reverse" data-iconpos="notext" data-icon="%s" title="%s" data-theme="f"></a>' % (url, icon, title))
+    html.write('<a href="%s" data-direction="reverse" data-icon="%s" title="%s" >%s</a>' % (url, icon, title, title ))
 
 def jqm_page_header(title, id=None, left_button=None, right_button=None):
     idtxt = id and (' id="%s"' % id) or ''
     html.write(
         '<div data-role="page"%s>\n'
-        '<div data-role="header">\n' % idtxt)
+        '<div data-role="header" data-position="fixed">\n' % idtxt)
     if left_button:
         jqm_header_button(*left_button)
     html.write('<h1>%s</h1>\n' % title)

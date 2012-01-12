@@ -257,7 +257,6 @@ multisite_builtin_views.update({
             ('svc_in_downtime', None, ''),
             ('svc_in_notifper', None, ''),
             ('svc_notifper', None, ''),
-            ('check_manpage', None, ''),
             ('svc_custom_notes', None, ''),
             ('svc_pnpgraph', None, ''),
         ],

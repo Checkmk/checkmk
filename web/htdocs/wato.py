@@ -280,8 +280,12 @@ def page_handler():
             action_message = e.reason
             html.add_user_error(None, e.reason)
 
+    styles = modefunc("styles")
+    if not styles:
+        styles = []
+
     # Title
-    html.header(modefunc("title"), stylesheets = wato_styles)
+    html.header(modefunc("title"), stylesheets = wato_styles + styles)
     html.write("<script type='text/javascript' src='js/wato.js'></script>")
     html.write("<div class=wato>\n")
 

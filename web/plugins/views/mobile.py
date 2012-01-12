@@ -94,7 +94,7 @@ multisite_builtin_views.update({
                'num_columns': 2,
                'owner': '',
                'painters': [
-                   ('service_state_appr', None, ''),
+                   ('service_state', None, ''),
                    ('host',                'mobile_hoststatus', ''),
                    ('service_description', 'mobile_service', ''),
                    ('svc_plugin_output',   '' ),
@@ -148,7 +148,7 @@ multisite_builtin_views.update({
         'name': 'mobile_svcproblems',
         'num_columns': 2,
         'painters': [
-            ('service_state_appr', None, ''),
+            ('service_state', None, ''),
             ('host',                'mobile_hoststatus', ''),
             ('service_description', 'mobile_service', ''),
             ('svc_plugin_output',   '' ),
@@ -199,7 +199,7 @@ multisite_builtin_views.update({
         'name': 'mobile_svcproblems_unack',
         'num_columns': 2,
         'painters': [
-            ('service_state_appr', None, ''),
+            ('service_state', None, ''),
             ('host',                'mobile_hoststatus', ''),
             ('service_description', 'mobile_service', ''),
             ('svc_plugin_output',   '' ),
@@ -234,7 +234,7 @@ multisite_builtin_views.update({
         'hidden' : True,
         'painters': [
             ('sitealias', None, ''),
-            ('host', 'hoststatus', ''),
+            ('host', 'mobile_host', ''),
             ('service_description', ''),
             ('svc_plugin_output', None, ''),
             ('service_icons', None, ''),
@@ -283,7 +283,7 @@ multisite_builtin_views.update({
         'name': 'mobile_svcproblems',
         'num_columns': 1,
         'painters': [
-            ('service_state_appr', None),
+            ('service_state', None),
             ('service_description', 'mobile_service'),
             ('svc_plugin_output', None),
             ('svc_state_age', None),
@@ -309,12 +309,11 @@ multisite_builtin_views.update({
         'hidden' : True,
         'painters': [
             ('sitealias', None),
-            ('host', 'host'),
+            ('host', 'mobile_host'),
             ('alias', None),
             ('host_icons', None),
             ('host_state', None),
             ('host_address', None),
-            ('host_group_memberlist', None),
             ('host_parents', None),
             ('host_childs', None),
             ('host_contact_groups', None),

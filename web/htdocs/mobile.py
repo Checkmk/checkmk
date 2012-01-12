@@ -131,11 +131,14 @@ def jqm_page_index(title, items):
 
 
 def jqm_page_index_topic_renderer(topic, items): 
-    html.write('<p>%s</p><ul data-role="listview" data-inset="true">\n' % topic) 
     for top, href, title in items:
         if top == topic:
-            html.write('<li><a data-ajax="false" data-transition="flip" href="%s">%s</a></li>\n' % (href, title))
-    html.write('</ul>')
+            html.write('<p>%s</p><ul data-role="listview" data-inset="true">\n' % topic) 
+            for top, href, title in items:
+                if top == topic:
+                    html.write('<li><a data-ajax="false" data-transition="flip" href="%s">%s</a></li>\n' % (href, title))
+            html.write('</ul>')
+            return
 
 
 def jqm_page(title, content, foot, id=None):

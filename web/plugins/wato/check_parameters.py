@@ -276,7 +276,24 @@ checkgroups.append((
                     ]
                 )
             ),
-
+            ("minsize",
+                Tuple( 
+                    title = _("Minimal size"),
+                    elements = [ 
+                      Filesize(title = _("Warning lower as")), 
+                      Filesize(title = _("Critical lower as")), 
+                    ]
+                )
+            ),
+            ("maxsize",
+                Tuple( 
+                    title = _("Maximal size"),
+                    elements = [ 
+                      Filesize(title = _("Warning higher as")), 
+                      Filesize(title = _("Critical higher as")), 
+                    ]
+                )
+            )
 
         ]
     ),

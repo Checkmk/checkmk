@@ -87,8 +87,8 @@ function wato_fix_visibility() {
             var oCheckbox = oTr.childNodes[1].childNodes[0];
             if( oCheckbox.checked == false ){
                 var attrname = oCheckbox.parentNode.parentNode.id;
-                if( attrname in inherited_tags ){
-                    currentTags = currentTags.concat(inherited_tags[oCheckbox.parentNode.parentNode.id].split("|"));
+                if(attrname in inherited_tags && inherited_tags[attrname]){
+                    currentTags = currentTags.concat(inherited_tags[attrname].split("|"));
                 }
             } else {
                 /* Find the <select>/<checkbox> object in this tr */

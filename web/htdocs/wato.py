@@ -4000,13 +4000,14 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
 
     # Provide Javascript world with the tag dependency information
     # of all attributes.
-    html.javascript("var inherited_tags = %r;\n"\
-                    "var wato_depends_on = %r;\n"\
-                    "var volatile_topics = %r;\n"\
+    import json
+    html.javascript("var inherited_tags = %s;\n"\
+                    "var wato_depends_on = %s;\n"\
+                    "var volatile_topics = %s;\n"\
                     "wato_fix_visibility();\n" % (
-                       inherited_tags,
-                       dependency_mapping,
-                       volatile_topics))
+                       json.dumps(inherited_tags),
+                       json.dumps(dependency_mapping),
+                       json.dumps(volatile_topics)))
 
 
 # Check if at least one host in a folder (or its subfolders)

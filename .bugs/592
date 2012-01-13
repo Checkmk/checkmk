@@ -1,0 +1,8 @@
+Title: Multisite Debug Parameter an check_mk automation commands übergeben (z.b. wato restart)
+Component: wato
+State: open
+Date: 2012-01-13 10:01:05
+Targetversion: 1.2.0
+Class: feature
+
+Aktuell muss man den Befehl dann manuell aufrufen um die Exception zu bekommen

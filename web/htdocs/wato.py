@@ -3528,15 +3528,17 @@ class HostTagAttribute(Attribute):
         Attribute.__init__(self, name, title, "", def_value)
 
     def paint(self, value, hostname):
+        # Localize the titles. To make the strings available in the scanned localization
+        # files the _() function must also be placed in the configuration files
         if len(self._taglist) == 1:
             title = self._taglist[0][1]
             if value:
-                return "", title
+                return "", _(title)
             else:
-                return "", "%s %s" % (_("not"), title)
+                return "", "%s %s" % (_("not"), _(title))
         for entry in self._taglist:
             if value == entry[0]:
-                return "", entry[1]
+                return "", _(entry[1])
         return "", "" # Should never happen, at least one entry should match
                       # But case could occur if tags definitions have been changed.
 
@@ -3556,7 +3558,7 @@ class HostTagAttribute(Attribute):
                 secondary_tags = e[2]
             else:
                 secondary_tags = []
-            choices.append(("|".join([ tagvalue ] + secondary_tags), e[1]))
+            choices.append(("|".join([ tagvalue ] + secondary_tags), _(e[1])))
             if value != "" and value == tagvalue and secondary_tags:
                 value = value + "|" + "|".join(secondary_tags)
 
@@ -6502,7 +6504,7 @@ def mode_edit_user(phase):
             new_user = users[id]
 
         # Full name
-        alias = html.var("alias").strip()
+        alias = html.var_utf8("alias").strip()
         if not alias:
             raise MKUserError("alias",
             _("Please specify a full name or descriptive alias for the user."))

@@ -40,12 +40,14 @@
     * Made "wato folder" columns sortable
     * FIX: Fixed auth problem when following logwatch icon links while using
       the form based auth
+    * FIX: Fix problem with Umlaut in contact alias
 
     Mobile:
     * Improved sorting of views in main page
 
     WATO:
     * Removed IP-Address attribute from folders
+    * Supporting localized tag titles
     * FIX: Fixed missing folders in "move to" dropdown fields
     * FIX: Fixed "move to target folders" after CSV import
 

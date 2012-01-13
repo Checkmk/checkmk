@@ -120,22 +120,25 @@ def jqm_page_navfooter(items, current, page_id):
 def jqm_page_index(title, items): 
     manual_sort = [_("Hosts"), _("Services"), _("Events")] 
     
+    items.sort(cmp = lambda a,b: cmp((a[0],a[2]),(b[0],b[2])))
     for topic in manual_sort:
         jqm_page_index_topic_renderer(topic, items) 
     
     other_topics = list(set([ x[0] for x in items if x[0] not in manual_sort]))
-    other_topics.sort()
 
     for topic in other_topics:
         jqm_page_index_topic_renderer(topic, items) 
 
 
 def jqm_page_index_topic_renderer(topic, items): 
-    html.write('<p>%s</p><ul data-role="listview" data-inset="true">\n' % topic) 
     for top, href, title in items:
         if top == topic:
-            html.write('<li><a data-ajax="false" data-transition="flip" href="%s">%s</a></li>\n' % (href, title))
-    html.write('</ul>')
+            html.write('<p>%s</p><ul data-role="listview" data-inset="true">\n' % topic) 
+            for top, href, title in items:
+                if top == topic:
+                    html.write('<li><a data-ajax="false" data-transition="flip" href="%s">%s</a></li>\n' % (href, title))
+            html.write('</ul>')
+            return
 
 
 def jqm_page(title, content, foot, id=None):
@@ -181,14 +184,16 @@ def page_index():
     for view_name, view in html.available_views.items():
         if view.get("mobile") and not view.get("hidden"):
             url = "mobile_view.py?view_name=%s" % view_name
-            count = ""
+            count = "" 
             if not view.get("mustsearch"):
 	        count = views.show_view(view, only_count = True)
-	        count = '<span class="ui-li-count">%d</span>' % count
+                count = '<span class="ui-li-count">%d</span>' % count
             items.append((view.get("topic"), url, '%s %s' % (view["title"], count)))
     jqm_page_index(_("Check_MK Mobile"), items)
     # Link to non-mobile GUI
-    html.write('<ul data-role="listview" data-inset="true">\n')
+
+    html.write('<hr>')
+    html.write('<ul data-role="listview" data-theme="b" data-inset="true">\n')
     html.write('<li><a data-ajax="false" data-transition="fade" href="%s">%s</a></li>\n' %                 ("index.py?mobile=", _("Classical web GUI")))
     html.write('</ul>\n')
     jqm_page_footer()

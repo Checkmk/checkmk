@@ -42,7 +42,7 @@ def wato_link(folder, site, hostname, where):
         return ""
 
 def paint_wato(what, row, tags, custom_vars):
-    if not wato.may_see_hosts():
+    if not wato.may_see_hosts() or html.mobile:
         return
 
     filename = row["host_filename"]

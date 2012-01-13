@@ -124,7 +124,7 @@ multisite_dir      = defaults.default_config_dir + "/multisite.d/wato/"
 sites_mk           = defaults.default_config_dir + "/multisite.d/sites.mk"
 var_dir            = defaults.var_dir + "/wato/"
 log_dir            = var_dir + "log/"
-snapshot_dir       = var_dir + "/snapshots/"
+snapshot_dir       = var_dir + "snapshots/"
 sync_snapshot_file = defaults.tmp_dir + "/sync_snapshot.tar.gz"
 repstatus_file     = var_dir + "replication_status.mk"
 

@@ -120,24 +120,27 @@ def load_web_plugins(forwhat, globalvars):
                     if fn.endswith(".py"):
                         execfile(local_plugins_path + "/" + fn, globalvars)
 
-def get_languages():
-    languages = []
+def get_language_dirs():
     dirs = [ defaults.locale_dir ]
     if defaults.omd_root:
         dirs.append(defaults.omd_root + "/local/share/check_mk/locale")
+    return dirs
 
-    def get_language_alias(dirs, lang):
-        alias = lang
-        for lang_dir in dirs:
-            try:
-                alias = file('%s/%s/alias' % (lang_dir, lang), 'r').read().strip()
-            except (OSError, IOError):
-                pass
-        return alias
-
-    for lang_dir in dirs:
+def get_language_alias(lang):
+    alias = lang
+    for lang_dir in get_language_dirs():
         try:
-            languages += [ (val, get_language_alias(dirs, val)) for val in os.listdir(lang_dir) if not '.' in val ]
+            alias = file('%s/%s/alias' % (lang_dir, lang), 'r').read().strip()
+        except (OSError, IOError):
+            pass
+    return alias
+
+def get_languages():
+    languages = []
+
+    for lang_dir in get_language_dirs():
+        try:
+            languages += [ (val, get_language_alias(val)) for val in os.listdir(lang_dir) if not '.' in val ]
         except OSError:
             # Catch "OSError: [Errno 2] No such file or directory:" when directory not exists
             pass

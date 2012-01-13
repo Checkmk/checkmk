@@ -32,4 +32,5 @@ pagehandlers.update({
     "wato_ajax_replication" : wato.ajax_replication,
     "automation_login"      : wato.page_automation_login,
     "automation"            : wato.page_automation,
+    "user_profile"          : wato.page_user_profile,
 })

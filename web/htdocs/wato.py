@@ -9001,6 +9001,118 @@ def register_rule(group, varname, valuespec = None, title = None,
     g_rulespec_groups.setdefault(group, []).append(ruleset)
     g_rulespecs[varname] = ruleset
 
+#
+# User profile edit page
+# The user can edit the own profile
+#
+
+def page_user_profile():
+    html.header(_("Edit user profile"), javascripts = ['wato'], stylesheets = ['check_mk', 'pages', 'wato', 'status'])
+
+    if not config.user_id:
+        raise MKUserError(None, _('Not logged in.'))
+
+    if not config.may('edit_profile') and not config.may('change_password'):
+        raise MKAuthException(_("You are not allowed to edit your user profile."))
+
+    if html.has_var('_save') and html.check_transaction():
+        try:
+            users = load_users()
+
+            #
+            # Profile edit (user options like language etc.)
+            #
+            if config.may('edit_profile'):
+                set_lang = html.var('_set_lang')
+                language = html.var('language')
+                # Set the users language if requested
+                if set_lang and language and language != config.get_language():
+                        # Set custom language
+                        users[config.user_id]['language'] = language
+                        config.user['language'] = language
+
+                else:
+                    # Remove the customized language
+                    del users[config.user_id]['language']
+                    del config.user['language']
+
+            #
+            # Change the password if requested
+            #
+            if config.may('change_password'):
+                password  = html.var('password')
+                password2 = html.var('password2', '')
+                if password:
+                    if password2 and password != password2:
+                        raise MKUserError("password2", _("The both passwords do not match."))
+
+                    users[config.user_id]['password'] = encrypt_password(password)
+
+            save_users(users)
+
+            html.message(_("Successfully updated user profile."))
+
+            if password:
+                html.write("<script type='text/javascript'>if(top) top.location.reload(); else document.location.reload();</script>")
+        except MKUserError, e:
+            html.add_user_error(e.varname, e.message)
+
+    if html.has_user_errors():
+        html.show_user_errors()
+
+    html.begin_form("profile", method="POST")
+    html.write('<div class=wato>')
+    html.write("<table class=form>")
+
+    html.write("<tr><td class=legend colspan=2>")
+    html.write(_("Username"))
+    html.write("</td><td class=content>")
+    html.write(config.user_id)
+    html.write("</td></tr>")
+
+    if config.may('edit_profile'):
+        languages = get_languages()
+        user_language = config.get_language('')
+        active = bool(user_language)
+
+        if languages:
+            html.write("<tr><td class=legend>")
+            html.write(_("Language"))
+            html.write("</td><td class=checkbox>")
+            html.checkbox('_set_lang', active, onclick = 'wato_toggle_attribute(this, \'language\')')
+            html.write("</td><td class=content>")
+            default_label = _('Default: %s') % (get_language_alias(config.default_language) or 'english')
+            html.write('<div class="inherited" id="attr_default_language" style="%s">%s</div>' %
+                                                (active and "display: none" or "", default_label))
+            html.write('<div id="attr_entry_language" style="%s">' % ((not active) and "display: none" or ""))
+            html.select("language", languages, user_language)
+            html.set_focus("lang")
+            html.write("</div></td></tr>")
+
+    if config.may('change_password'):
+        html.write("<tr><td class=legend colspan=2>")
+        html.write(_("Password"))
+        html.write("</td><td class=content>")
+        html.password_input('password')
+        html.write("</td></tr>")
+
+        html.write("<tr><td class=legend colspan=2>")
+        html.write(_("Password confirmation"))
+        html.write("</td><td class=content>")
+        html.password_input('password2')
+        html.write("</td></tr>")
+
+    # Save button
+    html.write("<tr><td colspan=3 class=buttons>")
+    html.button("_save", _("Save"))
+    html.write("</td></tr>")
+
+    html.write("</table>")
+    html.write('</div>')
+    html.hidden_fields()
+    html.end_form()
+    html.footer()
+
 #.
 #   .-Hooks-&-API----------------------------------------------------------.
 #   |       _   _             _           ___        _    ____ ___         |

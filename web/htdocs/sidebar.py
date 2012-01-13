@@ -128,7 +128,7 @@ def sidebar_foot():
     if config.may("configure_sidebar"):
         html.write('<li><a target="main" href="sidebar_add_snapin.py">Add snapin</a></li>')
     if config.may("edit_profile") or config.may("change_password"):
-        html.write('<li><a class=profile target="main" href="edit_profile.py" title="%s"></a></li>' % _('Edit user profile'))
+        html.write('<li><a class=profile target="main" href="user_profile.py" title="%s"></a></li>' % _('Edit user profile'))
     if config.may("logout"):
         html.write('<li><a class=logout target="_top" href="logout.py" title="%s"></a></li>' % _('Logout'))
     html.write('</ul>')

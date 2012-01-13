@@ -3875,7 +3875,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                     inherited_value = container["attributes"][attrname]
                     has_inherited = True
                     if topic == _("Host tags"):
-                        inherited_tags["attr_%s" % attrname] = attr.get_tag_list(inherited_value)
+                        inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
                     break
 
                 container = container.get(".parent")
@@ -3886,7 +3886,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 inherited_value = attr.default_value()
                 # Also add the default values to the inherited values dict
                 if topic == _("Host tags"):
-                    inherited_tags["attr_%s" % attrname] = attr.get_tag_list(inherited_value)
+                    inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
 
             # Legend and Help
             html.write('<tr id="attr_%s"><td class=legend>' % attrname)

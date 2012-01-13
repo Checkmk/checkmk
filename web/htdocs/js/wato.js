@@ -87,7 +87,7 @@ function wato_fix_visibility() {
             var oCheckbox = oTr.childNodes[1].childNodes[0];
             if( oCheckbox.checked == false ){
                 var attrname = oCheckbox.parentNode.parentNode.id;
-                if(attrname in inherited_tags && inherited_tags[attrname]){
+                if(attrname in inherited_tags && inherited_tags[attrname] !== null){
                     currentTags = currentTags.concat(inherited_tags[attrname].split("|"));
                 }
             } else {

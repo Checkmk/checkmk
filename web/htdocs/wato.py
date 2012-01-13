@@ -730,9 +730,6 @@ def mode_folder(phase):
     if phase == "title":
         return g_folder["title"]
 
-    elif phase == 'styles':
-        return []
-
     elif phase == "buttons":
         global_buttons()
         if config.may("wato.rulesets") or config.may("wato.seeall"):
@@ -1417,9 +1414,6 @@ def mode_editfolder(phase, new):
     if phase == "title":
         return page_title
 
-    elif phase == 'styles':
-        return []
-
     elif phase == "buttons":
         linkvars = [("mode", "folder")]
         if html.has_var("backfolder"):
@@ -1648,9 +1642,6 @@ def mode_edithost(phase, new):
     if phase == "title":
         return title
 
-    elif phase == 'styles':
-        return []
-
     elif phase == "buttons":
         if not new:
             host_status_button(hostname, "hoststatus")
@@ -1803,9 +1794,6 @@ def mode_inventory(phase, firsttime):
         else:
             title += _(" (cached data)")
         return title
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         host_status_button(hostname, "host")
@@ -1970,9 +1958,6 @@ def show_service_table(host, firsttime):
 def mode_search(phase):
     if phase == "title":
         return _("Search for hosts in %s and below" % (g_folder["title"]))
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
@@ -2207,9 +2192,6 @@ def mode_bulk_inventory(phase):
     if phase == "title":
         return _("Bulk service detection (inventory)")
 
-    elif phase == 'styles':
-        return []
-
     elif phase == "buttons":
         html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         return
@@ -2307,9 +2289,6 @@ def mode_bulk_edit(phase):
     if phase == "title":
         return _("Bulk edit hosts")
 
-    elif phase == 'styles':
-        return []
-
     elif phase == "buttons":
         html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         return
@@ -2365,9 +2344,6 @@ def mode_bulk_edit(phase):
 def mode_bulk_cleanup(phase):
     if phase == "title":
         return _("Bulk removal of explicit attributes")
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
@@ -2491,9 +2467,6 @@ def mode_random_hosts(phase):
     if phase == "title":
         return _("Random Hosts")
 
-    elif phase == 'styles':
-        return []
-
     elif phase == "buttons":
         html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         return
@@ -2589,9 +2562,6 @@ def mode_auditlog(phase):
     if phase == "title":
         return _("Audit logfile")
 
-    elif phase == 'styles':
-        return []
-
     elif phase == "buttons":
         home_button()
         changelog_button()
@@ -2642,9 +2612,6 @@ def mode_changelog(phase):
 
     if phase == "title":
         return _("Pending changes to activate")
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         home_button()
@@ -4101,10 +4068,6 @@ def effective_attributes(host, folder):
 def mode_snapshot(phase):
     if phase == "title":
         return _("Backup/Restore")
-
-    elif phase == 'styles':
-        return []
-
     elif phase == "buttons":
         home_button()
         changelog_button()
@@ -4354,9 +4317,6 @@ def mode_main(phase):
     if phase == "title":
         return _("WATO - Check_MK's Web Administration Tool")
 
-    elif phase == 'styles':
-        return []
-
     elif phase == "buttons":
         changelog_button()
         return
@@ -4398,9 +4358,6 @@ def render_main_menu(some_modules, columns = 2):
 def mode_globalvars(phase):
     if phase == "title":
         return _("Global configuration settings for Check_MK")
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         global_buttons()
@@ -4482,9 +4439,6 @@ def mode_globalvars(phase):
 def mode_edit_configvar(phase):
     if phase == "title":
         return "Global configuration settings for Check_MK"
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         html.context_button(_("Abort"), make_link([("mode", "globalvars")]), "abort")
@@ -4614,9 +4568,6 @@ def mode_groups(phase, what):
     if phase == "title":
         return what_name.title()
 
-    elif phase == 'styles':
-        return []
-
     elif phase == "buttons":
         global_buttons()
         html.context_button(_("New group"), make_link([("mode", "edit_%s_group" % what)]), "new")
@@ -4720,9 +4671,6 @@ def mode_edit_group(phase, what):
                 return _("Edit service group")
             elif what == "contact":
                 return _("Edit contact group")
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         html.context_button(_("All groups"), make_link([("mode", "%s_groups" % what)]), "back")
@@ -4855,9 +4803,6 @@ class CheckTypeGroupSelection(ElementSelection):
 def mode_timeperiods(phase):
     if phase == "title":
         return _("Timeperiod definitions")
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         global_buttons()
@@ -5015,9 +4960,6 @@ def mode_edit_timeperiod(phase):
             return _("Create new time period")
         else:
             return _("Edit time period")
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         html.context_button(_("All Timeperiods"), make_link([("mode", "timeperiods")]), "back")
@@ -5217,9 +5159,6 @@ def find_usage_of_timeperiod(tpname):
 def mode_sites(phase):
     if phase == "title":
         return _("Manage Multisite connections")
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         global_buttons()
@@ -5443,9 +5382,6 @@ def mode_edit_site(phase):
             return _("Create new site connection")
         else:
             return _("Edit site connection %s" % siteid)
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         html.context_button(_("All Sites"), make_link([("mode", "sites")]), "back")
@@ -6395,9 +6331,6 @@ def mode_users(phase):
     if phase == "title":
         return _("Manage Users & Contacts")
 
-    elif phase == 'styles':
-        return []
-
     elif phase == "buttons":
         global_buttons()
         html.context_button(_("New user"), make_link([("mode", "edit_user")]), "new")
@@ -6537,9 +6470,6 @@ def mode_edit_user(phase):
             return _("Create new user")
         else:
             return _("Edit user %s" % userid)
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         html.context_button(_("All Users"), make_link([("mode", "users")]), "back")
@@ -7058,9 +6988,6 @@ def mode_roles(phase):
     if phase == "title":
         return _("Manage Roles & Permissions")
 
-    elif phase == 'styles':
-        return []
-
     elif phase == "buttons":
         global_buttons()
         return
@@ -7170,9 +7097,6 @@ def mode_edit_role(phase):
 
     if phase == "title":
         return _("Edit user role %s" % id)
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         html.context_button(_("All Roles"), make_link([("mode", "roles")]), "back")
@@ -7378,9 +7302,6 @@ def mode_hosttags(phase):
     if phase == "title":
         return _("Manage host tag groups")
 
-    elif phase == 'styles':
-        return []
-
     elif phase == "buttons":
         global_buttons()
         html.context_button(_("New Tag group"), make_link([("mode", "edit_hosttag")]), "new")
@@ -7496,9 +7417,6 @@ def mode_edit_hosttag(phase):
             return _("Create new tag group")
         else:
             return _("Edit tag group")
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         html.context_button(_("All Hosttags"), make_link([("mode", "hosttags")]), "back")
@@ -7989,9 +7907,6 @@ def mode_rulesets(phase):
         else:
             return _("Rulesets for hosts and services")
 
-    elif phase == 'styles':
-        return []
-
     elif phase == "buttons":
         if only_host:
             home_button()
@@ -8133,9 +8048,6 @@ def mode_edit_ruleset(phase):
             if html.has_var("item") and rulespec["itemtype"]:
                 title += _(" and %s '%s'") % (rulespec["itemname"], item)
         return title
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         global_buttons()
@@ -8691,9 +8603,6 @@ def mode_edit_rule(phase):
 
     if phase == "title":
         return _("Edit rule %s") % rulespec["title"]
-
-    elif phase == 'styles':
-        return []
 
     elif phase == "buttons":
         html.context_button(_("Abort"),

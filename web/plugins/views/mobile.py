@@ -208,7 +208,6 @@ multisite_builtin_views.update({
         'show_filters': [
 	    'service_in_notification_period',
             'hoststate',
-            'service_acknowledged',
             'svchardstate',
             'svcstate'],
         'sorters': [
@@ -393,7 +392,7 @@ multisite_builtin_views.update({
                       ('hst1', 'on'),
                       ('hst2', 'on'),
                       ('hstp', ''),
-                      ('is_host_acknowledged', '-1'),
+                      ('is_host_acknowledged', '0'),
                       ('host', ''),
                       ('is_summary_host', '0'),
                       ('opthostgroup', '')
@@ -425,15 +424,15 @@ multisite_builtin_views.update({
      'mobile_hostproblems_unack': mobile_view({
                   'datasource': 'hosts',
                   'group_painters': [('host_state_appr', None)],
-                  'hard_filters': ['host_scheduled_downtime_depth', 'summary_host'],
+                  'hard_filters': ['host_scheduled_downtime_depth', 'summary_host', 'host_acknowledged'],
                   'hard_filtervars': [
-		      ('is_host_scheduled_downtime_depth', '-1'),
+		      ('is_host_scheduled_downtime_depth', '0'),
                       ('is_host_in_notification_period', '-1'),
                       ('hst0', ''),
                       ('hst1', 'on'),
                       ('hst2', 'on'),
                       ('hstp', ''),
-                      ('is_host_acknowledged', '-1'),
+                      ('is_host_acknowledged', '0'),
                       ('host', ''),
                       ('is_summary_host', '0'),
                       ('opthostgroup', '')],
@@ -451,8 +450,7 @@ multisite_builtin_views.update({
                   'show_filters': ['host_in_notification_period',
                                    'hoststate',
                                    'hostregex',
-                                   'opthostgroup',
-                                   'host_acknowledged'],
+                                   'opthostgroup'],
                   'sorters': [],
                   'title': _('Problems (unhandled)'),
                   'topic': _('Hosts')}),

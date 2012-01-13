@@ -3884,6 +3884,9 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             if not container: # We are the root folder - we inherit the default values
                 inherited_from = _("Default value")
                 inherited_value = attr.default_value()
+                # Also add the default values to the inherited values dict
+                if topic == _("Host tags"):
+                    inherited_tags["attr_%s" % attrname] = inherited_value
 
             # Legend and Help
             html.write('<tr id="attr_%s"><td class=legend>' % attrname)

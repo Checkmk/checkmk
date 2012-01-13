@@ -46,6 +46,7 @@ class ValueSpec:
     # is prepended to the HTML variable names and is needed
     # in order to make the variable unique in case that another
     # Value of the same type is being used as well.
+    # The function may assume that the type of the value is valid.
     def render_input(self, varprefix, value):
         pass
 
@@ -72,6 +73,7 @@ class ValueSpec:
     # Creates a text-representation of the value that can be
     # used in tables and other contextes. It is to be read
     # by the user and need not to be parsable.
+    # The function may assume that the type of the value is valid.
     def value_to_text(self, value):
         return repr(value)
 
@@ -225,6 +227,36 @@ class Integer(ValueSpec):
         if self._maxvalue != None and value > self._maxvalue:
             raise MKUserError(varprefix, _("%s is too high. The maximum allowed value is %s." % (
                                      value, self._maxvalue)))
+# Filesize in Byte,Kbyte,Mbyte,Gigatbyte, Terrabyte
+class Filesize(Integer):
+    def __init__(self, **kwargs):
+        Integer.__init__(self, **kwargs)
+        self._names = [ 'Byte', 'KByte', 'MByte', 'GByte', 'TByte', ]
+
+
+    def get_exponent(self, value):
+        for exp, unit_name in list(enumerate(self._names))[::-1]: 
+            if value == 0:
+               return 0,0
+            if value % (1024 ** exp) == 0:
+                return exp, value / (1024 ** exp)
+
+    def render_input(self, varprefix, value):
+        exp, count = self.get_exponent(value) 
+        html.number_input(varprefix + '_size', count, size = self._size)
+        html.write("&nbsp;")
+        html.select(varprefix + '_unit', enumerate(self._names), exp)
+
+    def from_html_vars(self, varprefix):  
+        try:
+            return int(html.var(varprefix + '_size')) * (1024 ** int(html.var(varprefix + '_unit')))
+        except:
+            raise MKUserError(varprefix + '_size', _("Please enter a valid integer number"))
+
+    def value_to_text(self, value):
+        exp, count = self.get_exponent(value) 
+        return "%s %s" %  (count, self._names[exp]) 
+
 
 # Editor for a line of text
 class TextAscii(ValueSpec):

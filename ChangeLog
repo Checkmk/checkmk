@@ -40,6 +40,7 @@
     * Made "wato folder" columns sortable
     * FIX: Fixed auth problem when following logwatch icon links while using
       the form based auth
+    * FIX: Fix problem with Umlaut in contact alias
 
     Mobile:
     * Improved sorting of views in main page

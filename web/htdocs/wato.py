@@ -6502,7 +6502,7 @@ def mode_edit_user(phase):
             new_user = users[id]
 
         # Full name
-        alias = html.var("alias").strip()
+        alias = html.var_utf8("alias").strip()
         if not alias:
             raise MKUserError("alias",
             _("Please specify a full name or descriptive alias for the user."))

@@ -196,6 +196,7 @@
     Multisite:
     * FIX: detail view of host was missing column headers
     * FIX: fix problem on IE with background color 'white'
+    * FIX: fix hitting enter in host search form on IE
 
     Checks & Agents:
     * FIX: fixed man pages of h3c_lanswitch_sensors and statgrab_cpu

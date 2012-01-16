@@ -1043,6 +1043,9 @@ function highlight_row(elem, on) {
 function highlight_elem(elem, on) {
     // Find all elements below "elem" with a defined background-color and change it
     var bg_color = real_style(elem, 'background-color', 'backgroundColor');
+    if (bg_color == 'white')
+        bg_color = "#ffffff";
+
     if(on) {
         elem['hover_orig_bg'] = bg_color;
         elem.style.backgroundColor = lightenColor(elem['hover_orig_bg'], -20);

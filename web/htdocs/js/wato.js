@@ -84,22 +84,22 @@ function wato_fix_visibility() {
         var oTr = oTable.childNodes[i];
         if (oTr.tagName == 'TR') {
             /* If the Checkbox is unchecked try to get a value from the inherited_tags */
-            var oCheckbox = oTr.childNodes[1].childNodes[0]
+            var oCheckbox = oTr.childNodes[1].childNodes[0];
             if( oCheckbox.checked == false ){
-                attrname = oCheckbox.parentNode.parentNode.id
-                if( attrname in inherited_tags ){
-                    currentTags = currentTags.concat(inherited_tags[oCheckbox.parentNode.parentNode.id].split("|"))
+                var attrname = oCheckbox.parentNode.parentNode.id;
+                if(attrname in inherited_tags && inherited_tags[attrname] !== null){
+                    currentTags = currentTags.concat(inherited_tags[attrname].split("|"));
                 }
-                continue
-            }
-            /* Find the <select>/<checkbox> object in this tr */
-            /*                td.content    div           select/checkbox */
-            var oElement = oTr.childNodes[2].childNodes[0].childNodes[0];
-            if( oElement.type == 'checkbox' && oElement.checked ){ // <checkbox>
-                currentTags = currentTags.concat(oElement.getAttribute('tags').split("|"));
-            }
-            else{ // <select>
-                currentTags = currentTags.concat(oElement.value.split("|"));
+            } else {
+                /* Find the <select>/<checkbox> object in this tr */
+                /*                td.content    div           select/checkbox */
+                var oElement = oTr.childNodes[2].childNodes[0].childNodes[0];
+                if( oElement.type == 'checkbox' && oElement.checked ){ // <checkbox>
+                    currentTags = currentTags.concat(oElement.getAttribute('tags').split("|"));
+                }
+                else{ // <select>
+                    currentTags = currentTags.concat(oElement.value.split("|"));
+                }
             }
         }
     }
@@ -136,7 +136,7 @@ function wato_fix_visibility() {
         }
     }
     for (var item in volatile_topics){
-        var name = volatile_topics[item]
+        var name = volatile_topics[item];
         var oTr = document.getElementById("topic_" + name);
         if(oTr) {
             if(hide_topics.indexOf(name) > -1 )

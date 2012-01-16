@@ -1,0 +1,9 @@
+Title: Wato Replikation Transaktionssicher machen
+Component: multisite
+State: open
+Date: 2012-01-13 11:05:09
+Targetversion: 1.2.0
+Class: todo
+
+Repliziert User A in Wato änderungen und User B produziert gleichzeitig neue, verhält sich die Replizierung falsch
+.

@@ -1,0 +1,8 @@
+Title: Wato verweist für die Hostag Konfiguration noch in die multisite.mk
+Component: wato
+State: open
+Date: 2012-01-13 18:21:44
+Targetversion: 1.2.0
+Class: nastiness
+
+Anstelle eines Links in die Multisite Einstellungen zu Host Tags, wird via Text auf die multisite.mk verwiesen um hostags anzulegen

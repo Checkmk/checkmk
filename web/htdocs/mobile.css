@@ -159,7 +159,7 @@ body.mobile table.data td.perfometer td.inner {
 | Styles for hiliting data cells in status displays                        |
 '-------------------------------------------------------------------------*/
 .ui-li-aside.state {
-    width: 3em;
+    width: 4.5em;
     text-align: center;
 }
 

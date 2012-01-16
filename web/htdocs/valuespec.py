@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import math, os, time, re
+import math, os, time, re, urlparse
 from lib import *
 
 # Abstract base class of all value declaration classes.
@@ -299,6 +299,44 @@ class EmailAddress(TextAscii):
 
     def value_to_text(self, value):
         return '<a href="mailto:%s">%s</a>' % (value, value)
+
+# Valuespec for a HTTP Url (not HTTPS), that
+# automatically adds http:// to the value
+class HTTPUrl(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+        self._target= kwargs.get("target")
+
+    def validate_value(self, value, varprefix):
+        TextAscii.validate_value(self, value, varprefix)
+        if value:
+            if not value.startswith("http://"):
+                raise MKUserError(varprefix, _("The URL must begin with http://"))
+
+    def from_html_vars(self, varprefix):
+        value = TextAscii.from_html_vars(self, varprefix)
+        if value:
+            if not "://" in value:
+                value = "http://" + value
+        return value
+
+    def value_to_text(self, url):
+        if not url.startswith("http://"):
+            url = "http://" + url
+        try:
+            parts = urlparse.urlparse(url)
+            if parts.path in [ '', '/' ]:
+                text = parts.netloc
+            else:
+                text = url[7:]
+        except:
+            text = url[7:]
+
+        # Remove trailing / if the url does not contain
+        # any path component
+        return '<a %shref="%s">%s</a>' % (
+            (self._target and 'target="%s" ' % self._target or ""),
+            url, text)
 
 
 class TextUnicode(TextAscii):

@@ -562,6 +562,43 @@ class DropdownChoice(ValueSpec):
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
             ", ".join([v for (v,t) in self._choices]))
 
+# The same logic as the dropdown choice, but rendered
+# as a group of radio buttons.
+# columns == None or unset -> separate with "&nbsp;"
+class RadioChoice(DropdownChoice):
+    def __init__(self, **kwargs):
+        DropdownChoice.__init__(self, **kwargs)
+        self._columns = kwargs.get("columns")
+
+    def render_input(self, varprefix, value):
+        html.begin_radio_group()
+        if self._columns != None:
+            html.write("<table class=radiochoice>")
+            html.write("<tr>")
+
+        for n, entry in enumerate(self._choices):
+            if self._columns != None:
+                html.write("<td>")
+            if len(entry) > 2: # icon!
+                label = '<img class=icon align=absmiddle src="images/icon_%s.png" title="%s">' % \
+                        ( entry[2], entry[1].encode("utf-8"))
+            else:
+                label = entry[1]
+            html.radiobutton(varprefix, str(n), value == entry[0], label)
+            if self._columns != None:
+                html.write("</td>")
+                if (n+1) % self._columns == 0 and (n+1) < len(self._choices)-1:
+                    html.write("<tr></tr>") 
+            else:
+                html.write("&nbsp;")
+        if self._columns != None:
+            mod = len(self._choices) % self._columns
+            if mod:
+                html.write("<td></td>" * (self._columns - mod - 1))
+            html.write("</tr></table>")
+        html.end_radio_group()
+
+
 
 # A list of checkboxes representing a list of values
 class ListChoice(ValueSpec):

@@ -348,7 +348,7 @@ table.form {
     border-collapse: collapse;
     empty-cells: show;
     border-spacing: 0px;
-    margin: 10px;
+    margin: 0px 10px 10px 0px;
 }
 /* Sorry for the mess here. It is due to using foldable_containter
    within a form table (currently only in WATO in the host and

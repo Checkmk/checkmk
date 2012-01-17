@@ -159,14 +159,17 @@ body.mobile table.data td.perfometer td.inner {
 | Styles for hiliting data cells in status displays                        |
 '-------------------------------------------------------------------------*/
 .ui-li-aside.state {
-    width: 3em;
+    width: 4.5em;
     text-align: center;
 }
 
 td.pnpgraph img {
-     max-width: 100%;
+     max-width: 97%;
 }
 
+body.mobile table.dataset tr.data td.state {
+    font-size: 25px;
+}
 /*-------------------------------------------------------------------------.
 |                      _                _                                  |
 |                     | |    ___   __ _(_)_ __                             |
@@ -193,6 +196,16 @@ td.pnpgraph img {
 }
 img.logomk {
     width: 20%;
+}
+
+
+td.icons img {
+    height: 40px;
+    width: 40px;
+}
+
+td.icons a { 
+    padding-left: 8px;
 }
 
 

@@ -1237,7 +1237,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     painter_options.sort()
 
     # Fetch data. Some views show data only after pressing [Search]
-    if (only_count or (not view["mustsearch"]) or html.var("search")):
+    if (only_count or (not view["mustsearch"]) or html.var("filled_in") == "filter"):
         # names for additional columns (through Stats: headers)
         add_columns = datasource.get("add_columns", [])
 
@@ -1330,7 +1330,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 
         # Filter-button
         if 'F' in display_options and len(show_filters) > 0:
-            filter_isopen = html.var("search", "") == "" and view["mustsearch"]
+            filter_isopen = html.var("filled_in") != "filter" and view["mustsearch"]
             # Show warning-icon if some filter is set
             label = _("Filter")
             if html.var("filled_in") == "filter":

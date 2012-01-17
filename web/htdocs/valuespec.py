@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import math, os, time, re
+import math, os, time, re, urlparse
 from lib import *
 
 # Abstract base class of all value declaration classes.
@@ -46,6 +46,7 @@ class ValueSpec:
     # is prepended to the HTML variable names and is needed
     # in order to make the variable unique in case that another
     # Value of the same type is being used as well.
+    # The function may assume that the type of the value is valid.
     def render_input(self, varprefix, value):
         pass
 
@@ -72,6 +73,7 @@ class ValueSpec:
     # Creates a text-representation of the value that can be
     # used in tables and other contextes. It is to be read
     # by the user and need not to be parsable.
+    # The function may assume that the type of the value is valid.
     def value_to_text(self, value):
         return repr(value)
 
@@ -186,7 +188,7 @@ class Integer(ValueSpec):
     def render_input(self, varprefix, value):
         html.number_input(varprefix, str(value), size = self._size)
         if self._label or self._unit:
-            html.write(" ")
+            html.write("&nbsp;")
             if self._label:
                 html.write(self._label)
             elif self._unit:
@@ -211,7 +213,7 @@ class Integer(ValueSpec):
             text = sepped
 
         if self._unit:
-            text += " " + self._unit
+            text += "&nbsp;" + self._unit
         return text
 
     def validate_datatype(self, value, varprefix):
@@ -225,6 +227,36 @@ class Integer(ValueSpec):
         if self._maxvalue != None and value > self._maxvalue:
             raise MKUserError(varprefix, _("%s is too high. The maximum allowed value is %s." % (
                                      value, self._maxvalue)))
+# Filesize in Byte,Kbyte,Mbyte,Gigatbyte, Terrabyte
+class Filesize(Integer):
+    def __init__(self, **kwargs):
+        Integer.__init__(self, **kwargs)
+        self._names = [ 'Byte', 'KByte', 'MByte', 'GByte', 'TByte', ]
+
+
+    def get_exponent(self, value):
+        for exp, unit_name in list(enumerate(self._names))[::-1]: 
+            if value == 0:
+               return 0,0
+            if value % (1024 ** exp) == 0:
+                return exp, value / (1024 ** exp)
+
+    def render_input(self, varprefix, value):
+        exp, count = self.get_exponent(value) 
+        html.number_input(varprefix + '_size', count, size = self._size)
+        html.write("&nbsp;")
+        html.select(varprefix + '_unit', enumerate(self._names), exp)
+
+    def from_html_vars(self, varprefix):  
+        try:
+            return int(html.var(varprefix + '_size')) * (1024 ** int(html.var(varprefix + '_unit')))
+        except:
+            raise MKUserError(varprefix + '_size', _("Please enter a valid integer number"))
+
+    def value_to_text(self, value):
+        exp, count = self.get_exponent(value) 
+        return "%s %s" %  (count, self._names[exp]) 
+
 
 # Editor for a line of text
 class TextAscii(ValueSpec):
@@ -267,6 +299,44 @@ class EmailAddress(TextAscii):
 
     def value_to_text(self, value):
         return '<a href="mailto:%s">%s</a>' % (value, value)
+
+# Valuespec for a HTTP Url (not HTTPS), that
+# automatically adds http:// to the value
+class HTTPUrl(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+        self._target= kwargs.get("target")
+
+    def validate_value(self, value, varprefix):
+        TextAscii.validate_value(self, value, varprefix)
+        if value:
+            if not value.startswith("http://"):
+                raise MKUserError(varprefix, _("The URL must begin with http://"))
+
+    def from_html_vars(self, varprefix):
+        value = TextAscii.from_html_vars(self, varprefix)
+        if value:
+            if not "://" in value:
+                value = "http://" + value
+        return value
+
+    def value_to_text(self, url):
+        if not url.startswith("http://"):
+            url = "http://" + url
+        try:
+            parts = urlparse.urlparse(url)
+            if parts.path in [ '', '/' ]:
+                text = parts.netloc
+            else:
+                text = url[7:]
+        except:
+            text = url[7:]
+
+        # Remove trailing / if the url does not contain
+        # any path component
+        return '<a %shref="%s">%s</a>' % (
+            (self._target and 'target="%s" ' % self._target or ""),
+            url, text)
 
 
 class TextUnicode(TextAscii):
@@ -491,6 +561,43 @@ class DropdownChoice(ValueSpec):
                 return
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
             ", ".join([v for (v,t) in self._choices]))
+
+# The same logic as the dropdown choice, but rendered
+# as a group of radio buttons.
+# columns == None or unset -> separate with "&nbsp;"
+class RadioChoice(DropdownChoice):
+    def __init__(self, **kwargs):
+        DropdownChoice.__init__(self, **kwargs)
+        self._columns = kwargs.get("columns")
+
+    def render_input(self, varprefix, value):
+        html.begin_radio_group()
+        if self._columns != None:
+            html.write("<table class=radiochoice>")
+            html.write("<tr>")
+
+        for n, entry in enumerate(self._choices):
+            if self._columns != None:
+                html.write("<td>")
+            if len(entry) > 2: # icon!
+                label = '<img class=icon align=absmiddle src="images/icon_%s.png" title="%s">' % \
+                        ( entry[2], entry[1].encode("utf-8"))
+            else:
+                label = entry[1]
+            html.radiobutton(varprefix, str(n), value == entry[0], label)
+            if self._columns != None:
+                html.write("</td>")
+                if (n+1) % self._columns == 0 and (n+1) < len(self._choices)-1:
+                    html.write("<tr></tr>") 
+            else:
+                html.write("&nbsp;")
+        if self._columns != None:
+            mod = len(self._choices) % self._columns
+            if mod:
+                html.write("<td></td>" * (self._columns - mod - 1))
+            html.write("</tr></table>")
+        html.end_radio_group()
+
 
 
 # A list of checkboxes representing a list of values

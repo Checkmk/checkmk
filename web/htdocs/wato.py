@@ -124,7 +124,7 @@ multisite_dir      = defaults.default_config_dir + "/multisite.d/wato/"
 sites_mk           = defaults.default_config_dir + "/multisite.d/sites.mk"
 var_dir            = defaults.var_dir + "/wato/"
 log_dir            = var_dir + "log/"
-snapshot_dir       = var_dir + "/snapshots/"
+snapshot_dir       = var_dir + "snapshots/"
 sync_snapshot_file = defaults.tmp_dir + "/sync_snapshot.tar.gz"
 repstatus_file     = var_dir + "replication_status.mk"
 
@@ -3528,15 +3528,17 @@ class HostTagAttribute(Attribute):
         Attribute.__init__(self, name, title, "", def_value)
 
     def paint(self, value, hostname):
+        # Localize the titles. To make the strings available in the scanned localization
+        # files the _() function must also be placed in the configuration files
         if len(self._taglist) == 1:
             title = self._taglist[0][1]
             if value:
-                return "", title
+                return "", _(title)
             else:
-                return "", "%s %s" % (_("not"), title)
+                return "", "%s %s" % (_("not"), _(title))
         for entry in self._taglist:
             if value == entry[0]:
-                return "", entry[1]
+                return "", _(entry[1])
         return "", "" # Should never happen, at least one entry should match
                       # But case could occur if tags definitions have been changed.
 
@@ -3556,7 +3558,7 @@ class HostTagAttribute(Attribute):
                 secondary_tags = e[2]
             else:
                 secondary_tags = []
-            choices.append(("|".join([ tagvalue ] + secondary_tags), e[1]))
+            choices.append(("|".join([ tagvalue ] + secondary_tags), _(e[1])))
             if value != "" and value == tagvalue and secondary_tags:
                 value = value + "|" + "|".join(secondary_tags)
 
@@ -3873,7 +3875,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                     inherited_value = container["attributes"][attrname]
                     has_inherited = True
                     if topic == _("Host tags"):
-                        inherited_tags["attr_%s" % attrname] = inherited_value
+                        inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
                     break
 
                 container = container.get(".parent")
@@ -3882,6 +3884,9 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             if not container: # We are the root folder - we inherit the default values
                 inherited_from = _("Default value")
                 inherited_value = attr.default_value()
+                # Also add the default values to the inherited values dict
+                if topic == _("Host tags"):
+                    inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
 
             # Legend and Help
             html.write('<tr id="attr_%s"><td class=legend>' % attrname)
@@ -3995,13 +4000,14 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
 
     # Provide Javascript world with the tag dependency information
     # of all attributes.
-    html.javascript("var inherited_tags = %r;\n"\
-                    "var wato_depends_on = %r;\n"\
-                    "var volatile_topics = %r;\n"\
+    import json
+    html.javascript("var inherited_tags = %s;\n"\
+                    "var wato_depends_on = %s;\n"\
+                    "var volatile_topics = %s;\n"\
                     "wato_fix_visibility();\n" % (
-                       inherited_tags,
-                       dependency_mapping,
-                       volatile_topics))
+                       json.dumps(inherited_tags),
+                       json.dumps(dependency_mapping),
+                       json.dumps(volatile_topics)))
 
 
 # Check if at least one host in a folder (or its subfolders)
@@ -6502,7 +6508,7 @@ def mode_edit_user(phase):
             new_user = users[id]
 
         # Full name
-        alias = html.var("alias").strip()
+        alias = html.var_utf8("alias").strip()
         if not alias:
             raise MKUserError("alias",
             _("Please specify a full name or descriptive alias for the user."))
@@ -8994,6 +9000,118 @@ def register_rule(group, varname, valuespec = None, title = None,
 
     g_rulespec_groups.setdefault(group, []).append(ruleset)
     g_rulespecs[varname] = ruleset
+
+#
+# User profile edit page
+# The user can edit the own profile
+#
+
+def page_user_profile():
+    html.header(_("Edit user profile"), javascripts = ['wato'], stylesheets = ['check_mk', 'pages', 'wato', 'status'])
+
+    if not config.user_id:
+        raise MKUserError(None, _('Not logged in.'))
+
+    if not config.may('edit_profile') and not config.may('change_password'):
+        raise MKAuthException(_("You are not allowed to edit your user profile."))
+
+    if html.has_var('_save') and html.check_transaction():
+        try:
+            users = load_users()
+
+            #
+            # Profile edit (user options like language etc.)
+            #
+            if config.may('edit_profile'):
+                set_lang = html.var('_set_lang')
+                language = html.var('language')
+                # Set the users language if requested
+                if set_lang and language and language != config.get_language():
+                        # Set custom language
+                        users[config.user_id]['language'] = language
+                        config.user['language'] = language
+
+                else:
+                    # Remove the customized language
+                    del users[config.user_id]['language']
+                    del config.user['language']
+
+            #
+            # Change the password if requested
+            #
+            if config.may('change_password'):
+                password  = html.var('password')
+                password2 = html.var('password2', '')
+                if password:
+                    if password2 and password != password2:
+                        raise MKUserError("password2", _("The both passwords do not match."))
+
+                    users[config.user_id]['password'] = encrypt_password(password)
+
+            save_users(users)
+
+            html.message(_("Successfully updated user profile."))
+
+            if password:
+                html.write("<script type='text/javascript'>if(top) top.location.reload(); else document.location.reload();</script>")
+        except MKUserError, e:
+            html.add_user_error(e.varname, e.message)
+
+    if html.has_user_errors():
+        html.show_user_errors()
+
+    html.begin_form("profile", method="POST")
+    html.write('<div class=wato>')
+    html.write("<table class=form>")
+
+    html.write("<tr><td class=legend colspan=2>")
+    html.write(_("Username"))
+    html.write("</td><td class=content>")
+    html.write(config.user_id)
+    html.write("</td></tr>")
+
+    if config.may('edit_profile'):
+        languages = get_languages()
+        user_language = config.get_language('')
+        active = bool(user_language)
+
+        if languages:
+            html.write("<tr><td class=legend>")
+            html.write(_("Language"))
+            html.write("</td><td class=checkbox>")
+            html.checkbox('_set_lang', active, onclick = 'wato_toggle_attribute(this, \'language\')')
+            html.write("</td><td class=content>")
+            default_label = _('Default: %s') % (get_language_alias(config.default_language) or 'english')
+            html.write('<div class="inherited" id="attr_default_language" style="%s">%s</div>' %
+                                                (active and "display: none" or "", default_label))
+            html.write('<div id="attr_entry_language" style="%s">' % ((not active) and "display: none" or ""))
+            html.select("language", languages, user_language)
+            html.set_focus("lang")
+            html.write("</div></td></tr>")
+
+    if config.may('change_password'):
+        html.write("<tr><td class=legend colspan=2>")
+        html.write(_("Password"))
+        html.write("</td><td class=content>")
+        html.password_input('password')
+        html.write("</td></tr>")
+
+        html.write("<tr><td class=legend colspan=2>")
+        html.write(_("Password confirmation"))
+        html.write("</td><td class=content>")
+        html.password_input('password2')
+        html.write("</td></tr>")
+
+    # Save button
+    html.write("<tr><td colspan=3 class=buttons>")
+    html.button("_save", _("Save"))
+    html.write("</td></tr>")
+
+    html.write("</table>")
+    html.write('</div>')
+    html.hidden_fields()
+    html.end_form()
+    html.footer()
 
 #.
 #   .-Hooks-&-API----------------------------------------------------------.

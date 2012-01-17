@@ -27,7 +27,7 @@
 from lib import *
 
 
-def edit_dictionary(entries, value, focus=None):
+def edit_dictionary(entries, value, focus=None, hover_help=True):
     new_value = value.copy()
     if html.check_transaction():
         messages = []
@@ -48,8 +48,12 @@ def edit_dictionary(entries, value, focus=None):
     html.write("<table class=form>\n")
     first = True
     for name, vs in entries:
-        html.write("<tr><td class=legend>%s" % vs.title())
-        if vs.help():
+
+        html.write("<tr><td ")
+        if vs.help() and hover_help:
+            html.write('title="%s" ' % vs.help().replace('"', "&quot;"))
+        html.write("class=legend>%s" % vs.title())
+        if vs.help() and not hover_help:
             html.write("<br><i>%s</i>" % vs.help())
         html.write("</td><td class=content>")
         if name in value:

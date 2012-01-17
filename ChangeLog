@@ -26,6 +26,7 @@
       This can be turned off with if_inventory_pad_portnumbers = False.
     * Linux agent: wrap freeipmi with lock in order to avoid cache corruption
     * New check: megaraid_bbu - check existance & status of LSI MegaRaid BBU module
+    * HP-UX Agent: fix mrpe (remove echo -e and test -e, thanks to Philipp Lemke)
 
     Multisite:
     * Improve transaction handling and reload detection: user can have 
@@ -36,11 +37,17 @@
     * Added filter for log state (UP,DOWN,OK,CRIT...) to all log views
     * New painter for normal and retry check interval (added to detail views)
     * Site filter shows "(local)" in case of non multi-site setup
+    * Made "wato folder" columns sortable
     * FIX: Fixed auth problem when following logwatch icon links while using
       the form based auth
+    * FIX: Fix problem with Umlaut in contact alias
+
+    Mobile:
+    * Improved sorting of views in main page
 
     WATO:
     * Removed IP-Address attribute from folders
+    * Supporting localized tag titles
     * FIX: Fixed missing folders in "move to" dropdown fields
     * FIX: Fixed "move to target folders" after CSV import
 
@@ -188,6 +195,8 @@
 1.1.12p7:
     Multisite:
     * FIX: detail view of host was missing column headers
+    * FIX: fix problem on IE with background color 'white'
+    * FIX: fix hitting enter in host search form on IE
 
     Checks & Agents:
     * FIX: fixed man pages of h3c_lanswitch_sensors and statgrab_cpu

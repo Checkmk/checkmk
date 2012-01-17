@@ -1233,7 +1233,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     painter_options.sort()
 
     # Fetch data. Some views show data only after pressing [Search]
-    if (not view["mustsearch"]) or html.var("filled_in") == "filter"):
+    if (not view["mustsearch"]) or html.var("filled_in") == "filter":
         # names for additional columns (through Stats: headers)
         add_columns = datasource.get("add_columns", [])
 

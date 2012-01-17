@@ -331,7 +331,7 @@ class html:
                    '</a>\n' % (url, help, icon))
 
     def empty_icon_button(self):
-        self.write('<img class=trans src="images/trans.png">')
+        self.write('<img class="iconbutton trans" src="images/trans.png">\n')
 
     def jsbutton(self, varname, text, onclick, style=''):
         if style:

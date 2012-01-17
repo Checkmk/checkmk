@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import math, os, time, re
+import math, os, time, re, urlparse
 from lib import *
 
 # Abstract base class of all value declaration classes.
@@ -300,6 +300,44 @@ class EmailAddress(TextAscii):
     def value_to_text(self, value):
         return '<a href="mailto:%s">%s</a>' % (value, value)
 
+# Valuespec for a HTTP Url (not HTTPS), that
+# automatically adds http:// to the value
+class HTTPUrl(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+        self._target= kwargs.get("target")
+
+    def validate_value(self, value, varprefix):
+        TextAscii.validate_value(self, value, varprefix)
+        if value:
+            if not value.startswith("http://"):
+                raise MKUserError(varprefix, _("The URL must begin with http://"))
+
+    def from_html_vars(self, varprefix):
+        value = TextAscii.from_html_vars(self, varprefix)
+        if value:
+            if not "://" in value:
+                value = "http://" + value
+        return value
+
+    def value_to_text(self, url):
+        if not url.startswith("http://"):
+            url = "http://" + url
+        try:
+            parts = urlparse.urlparse(url)
+            if parts.path in [ '', '/' ]:
+                text = parts.netloc
+            else:
+                text = url[7:]
+        except:
+            text = url[7:]
+
+        # Remove trailing / if the url does not contain
+        # any path component
+        return '<a %shref="%s">%s</a>' % (
+            (self._target and 'target="%s" ' % self._target or ""),
+            url, text)
+
 
 class TextUnicode(TextAscii):
     def __init__(self, **kwargs):
@@ -523,6 +561,43 @@ class DropdownChoice(ValueSpec):
                 return
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
             ", ".join([v for (v,t) in self._choices]))
+
+# The same logic as the dropdown choice, but rendered
+# as a group of radio buttons.
+# columns == None or unset -> separate with "&nbsp;"
+class RadioChoice(DropdownChoice):
+    def __init__(self, **kwargs):
+        DropdownChoice.__init__(self, **kwargs)
+        self._columns = kwargs.get("columns")
+
+    def render_input(self, varprefix, value):
+        html.begin_radio_group()
+        if self._columns != None:
+            html.write("<table class=radiochoice>")
+            html.write("<tr>")
+
+        for n, entry in enumerate(self._choices):
+            if self._columns != None:
+                html.write("<td>")
+            if len(entry) > 2: # icon!
+                label = '<img class=icon align=absmiddle src="images/icon_%s.png" title="%s">' % \
+                        ( entry[2], entry[1].encode("utf-8"))
+            else:
+                label = entry[1]
+            html.radiobutton(varprefix, str(n), value == entry[0], label)
+            if self._columns != None:
+                html.write("</td>")
+                if (n+1) % self._columns == 0 and (n+1) < len(self._choices)-1:
+                    html.write("<tr></tr>") 
+            else:
+                html.write("&nbsp;")
+        if self._columns != None:
+            mod = len(self._choices) % self._columns
+            if mod:
+                html.write("<td></td>" * (self._columns - mod - 1))
+            html.write("</tr></table>")
+        html.end_radio_group()
+
 
 
 # A list of checkboxes representing a list of values

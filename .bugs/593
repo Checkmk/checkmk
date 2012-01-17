@@ -1,0 +1,9 @@
+Title: Permissions of snapshot dir are wrong after switch form OMD own to shared
+Component: wato
+State: open
+Date: 2012-01-13 18:51:03
+Targetversion: 1.2.0
+Class: nastiness
+
+a chmod 775 is missing for the snapshot directory.
+Maybe same for the auth directory and others.

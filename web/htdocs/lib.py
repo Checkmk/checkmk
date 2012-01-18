@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import grp, defaults, pprint, os, gettext
+import grp, defaults, pprint, os, gettext, __builtin__
 
 nagios_state_names = { -1: "NODATA", 0: "OK", 1: "WARNING", 2: "CRITICAL", 3: "UNKNOWN", 4: "DEPENDENT" }
 nagios_short_state_names = { -1: "PEND", 0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKN", 4: "DEP" }
@@ -146,6 +146,28 @@ def get_languages():
             pass
 
     return languages
+
+def load_language(lang):
+    # Make current language globally known to all of our modules
+    __builtin__.current_language = lang
+
+    if lang:
+        locale_base = defaults.locale_dir
+        local_locale_path = defaults.omd_root + "/local/share/check_mk/locale"
+        po_path = '/%s/LC_MESSAGES/multisite.po' % lang
+        # Use file in OMD local strucuture when existing
+        if os.path.exists(local_locale_path + po_path):
+            locale_base = local_locale_path
+
+        try:
+            i18n = gettext.translation('multisite', locale_base, languages = [ lang ], codeset = 'UTF-8')
+            i18n.install(unicode = True)
+        except IOError, e:
+            # Fallback to hardcoded default if the given language does not exist
+            __builtin__.current_language = config.default_language
+    else:
+        # Replace the _() function to disable i18n again
+        __builtin__._ = lambda x: x
 
 def pnp_cleanup(s):
     return s \

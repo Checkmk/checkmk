@@ -4772,7 +4772,7 @@ class GroupSelection(ElementSelection):
         all_groups = load_group_information()
         this_group = all_groups.get(self._what, {})
         # replace the title with the key if the title is empty
-        return dict([ (k, t and ("%s - %s" % (k,t)) or k) for (k, t) in this_group.items() ])
+        return dict([ (k, t and t or k) for (k, t) in this_group.items() ])
 
 
 class CheckTypeGroupSelection(ElementSelection):

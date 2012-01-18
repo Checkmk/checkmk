@@ -265,6 +265,8 @@ class TextAscii(ValueSpec):
         self._size     = kwargs.get("size", 30)
         self._allow_empty = kwargs.get("allow_empty", True)
         self._regex = kwargs.get("regex")
+        self._regex_error = kwargs.get("regex_error",
+                _("Your input odes not match the required format."))
         if type(self._regex) == str:
             self._regex = re.compile(self._regex)
 
@@ -289,7 +291,7 @@ class TextAscii(ValueSpec):
             raise MKUserError(varprefix, _("An empty value is not allowed here."))
         if value and self._regex:
             if not self._regex.match(value):
-                raise MKUserError(varprefix, _("Your input odes not match the required format."))
+                raise MKUserError(varprefix, self._regex_error)
 
 
 class EmailAddress(TextAscii):

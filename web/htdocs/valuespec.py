@@ -702,6 +702,9 @@ class OptionalDropdownChoice(ValueSpec):
         html.write("</span>")
 
     def value_to_text(self, value):
+        for val, title in self._choices:
+            if val == value:
+                return title
         return self._explicit.value_to_text(value)
 
     def from_html_vars(self, varprefix):

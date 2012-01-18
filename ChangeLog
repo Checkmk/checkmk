@@ -58,6 +58,7 @@
     * FIX: Fixed missing folders in "move to" dropdown fields
     * FIX: Fixed "move to target folders" after CSV import
     * FIX: Fixed problem with duplicate extra_buttons when using the i18n of multiisite
+    * FIX: Fixed problem with duplicate permissions when using the i18n of multiisite
     * FIX: Writing single host_contactgroups rules for each selected
       contactgroup in host edit dialog
 

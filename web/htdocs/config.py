@@ -148,8 +148,16 @@ permission_sections  = {}
 
 def declare_permission(name, title, description, defaults):
     perm = { "name" : name, "title" : title, "description" : description, "defaults" : defaults }
+
+    # Detect if this permission has already been declared before
+    # The dict value is replaced automatically but the list value
+    # to be replaced -> INPLACE!
+    if perm in permissions_by_order:
+        permissions_by_order[permissions_by_order.index(perm)] = perm
+    else:
+        permissions_by_order.append(perm)
+
     permissions_by_name[name] = perm
-    permissions_by_order.append(perm)
 
 def declare_permission_section(name, title):
     permission_sections[name] = title

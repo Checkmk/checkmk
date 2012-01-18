@@ -610,6 +610,8 @@ class ListChoice(ValueSpec):
         self._choices = kwargs.get("choices")
         self._columns = kwargs.get("columns", 1)
         self._loaded_at = None
+        self._render_function = kwargs.get("render_function", 
+                  lambda id, val: val)
 
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
@@ -640,7 +642,7 @@ class ListChoice(ValueSpec):
     def value_to_text(self, value):
         self.load_elements()
         d = dict(self._elements)
-        return ", ".join([ str(d.get(v,v)) for v in value ])
+        return ", ".join([ self._render_function(v, d.get(v,v)) for v in value ])
 
     def from_html_vars(self, varprefix):
         self.load_elements()

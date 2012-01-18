@@ -624,7 +624,10 @@ def save_hosts(folder = None):
         if "contactgroups" in host:
             use, cgs = host["contactgroups"]
             if use and cgs:
-                out.write("\nhost_contactgroups.append(( %r, [%r] ))\n" % (cgs, hostname))
+                out.write("\nhost_contactgroups += [\n")
+                for cg in cgs:
+                    out.write('    ( %r, [%r] )\n' % (cg, hostname))
+                out.write(']\n\n')
 
         for attr, topic in host_attributes:
             attrname = attr.name()
@@ -4772,7 +4775,7 @@ class GroupSelection(ElementSelection):
         all_groups = load_group_information()
         this_group = all_groups.get(self._what, {})
         # replace the title with the key if the title is empty
-        return dict([ (k, t and ("%s - %s" % (k,t)) or k) for (k, t) in this_group.items() ])
+        return dict([ (k, t and t or k) for (k, t) in this_group.items() ])
 
 
 class CheckTypeGroupSelection(ElementSelection):

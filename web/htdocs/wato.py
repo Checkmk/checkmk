@@ -6611,7 +6611,7 @@ def mode_edit_user(phase):
     html.write("<tr><td class=legend>")
     html.write(_("Full name") + "<br><i>" + _("Full name or alias of the user</i>"))
     html.write("</td><td class=content>")
-    html.text_input("alias", user.get("alias", ""), size = 50)
+    html.text_input("alias", user.get("alias", userid), size = 50)
     if not new:
         html.set_focus("alias")
     html.write("</td></tr>")

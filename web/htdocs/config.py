@@ -148,92 +148,99 @@ permission_sections  = {}
 
 def declare_permission(name, title, description, defaults):
     perm = { "name" : name, "title" : title, "description" : description, "defaults" : defaults }
+
+    # Detect if this permission has already been declared before
+    # The dict value is replaced automatically but the list value
+    # to be replaced -> INPLACE!
+    if perm in permissions_by_order:
+        permissions_by_order[permissions_by_order.index(perm)] = perm
+    else:
+        permissions_by_order.append(perm)
+
     permissions_by_name[name] = perm
-    permissions_by_order.append(perm)
 
 def declare_permission_section(name, title):
     permission_sections[name] = title
 
-# TODO: _(...)
 declare_permission("use",
-     "Use Multisite at all",
-     "Users without this permission are not let in at all",
+     _("Use Multisite at all"),
+     _("Users without this permission are not let in at all"),
      [ "admin", "user", "guest" ])
 
 declare_permission("edit_permissions",
-     "Configure permissions",
-     "Configure, which user role has which permissions",
+     _("Configure permissions"),
+     _("Configure, which user role has which permissions"),
      [ "admin" ])
 
 declare_permission("see_all",
-     "See all Nagios objects",
-     "See all objects regardless of contacts and contact groups. If combined with 'perform commands' then commands may be done on all objects.",
+     _("See all Nagios objects"),
+     _("See all objects regardless of contacts and contact groups. If combined with 'perform commands' then commands may be done on all objects."),
      [ "admin", "guest" ])
 
 declare_permission("edit_views",
-     "Edit views",
-     "Create own views and customize builtin views",
+     _("Edit views"),
+     _("Create own views and customize builtin views"),
      [ "admin", "user" ])
 
 declare_permission("publish_views",
-     "Publish views",
-     "Make views visible and usable for other users",
+     _("Publish views"),
+     _("Make views visible and usable for other users"),
      [ "admin", "user" ])
 
 declare_permission("force_views",
-     "Modify builtin views",
-     "Make own published views override builtin views for all users",
+     _("Modify builtin views"),
+     _("Make own published views override builtin views for all users"),
      [ "admin" ])
 
 declare_permission("view_option_columns",
-     "Change view display columns",
-     "Interactively change the number of columns being displayed by a view (does not edit or customize the view)",
+     _("Change view display columns"),
+     _("Interactively change the number of columns being displayed by a view (does not edit or customize the view)"),
      [ "admin", "user", "guest" ])
 
 declare_permission("view_option_refresh",
-     "Change view display refresh",
-     "Interactively change the automatic browser reload of a view being displayed (does not edit or customize the view)",
+     _("Change view display refresh"),
+     _("Interactively change the automatic browser reload of a view being displayed (does not edit or customize the view)"),
      [ "admin", "user" ])
 
 declare_permission("painter_options",
-     "Change column display options",
-     "Some of the display columns offer options for customizing their output. "
+     _("Change column display options"),
+     _("Some of the display columns offer options for customizing their output. "
      "For example time stamp columns can be displayed absolute, relative or "
-     "in a mixed style. This permission allows the user to modify display options",
+     "in a mixed style. This permission allows the user to modify display options"),
      [ "admin", "user", "guest" ])
 
 declare_permission("act",
-     "Perform commands",
-     "Allows users to perform Nagios commands. If now futher permissions are granted, actions can only be done one objects one is a contact for",
+     _("Perform commands"),
+     _("Allows users to perform Nagios commands. If now futher permissions are granted, actions can only be done one objects one is a contact for"),
      [ "admin", "user" ])
 
 
 declare_permission("see_sidebar",
-     "Use Check_MK sidebar",
-     "Without this permission the Check_MK sidebar will be invisible",
+     _("Use Check_MK sidebar"),
+     _("Without this permission the Check_MK sidebar will be invisible"),
      [ "admin", "user", "guest" ])
 
 declare_permission("configure_sidebar",
-     "Configure sidebar",
-     "This allows the user to add, move and remove sidebar snapins.",
+     _("Configure sidebar"),
+     _("This allows the user to add, move and remove sidebar snapins."),
      [ "admin", "user" ])
 
 
 declare_permission('edit_profile',
-    'Edit the user profile',
-    'Permits the user to change the user profile settings.',
+    _('Edit the user profile'),
+    _('Permits the user to change the user profile settings.'),
     [ 'admin', 'user' ]
 )
 
 declare_permission('change_password',
-    'Edit the user password',
-    'Permits the user to change the password.',
+    _('Edit the user password'),
+    _('Permits the user to change the password.'),
     [ 'admin', 'user' ]
 )
 
 declare_permission('logout',
-    'Logout',
-    'Permits the user to logout.',
+    _('Logout'),
+    _('Permits the user to logout.'),
     [ 'admin', 'user', 'guest' ]
 )
 

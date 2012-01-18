@@ -1,11 +1,15 @@
 1.1.13i3:
     Core, Setup, etc.:
+    * *_contactgroups lists: Single group rules are all appended. When a list
+      is found as a value this first list is used exclusively. All other
+      matching rules are ignored
     * cmk -d does now honor --cache and --no-tcp
     * cmk -O/-R now uses omd re{start,load} core if using OMD
     * FIX: setup.sh now setups up permissions for conf.d/wato
       correctly
     * cmk --localize update supports an optional ALIAS which is used as
       display string in the multisite GUI
+    * FIX: Fixed encoding problems with umlauts in group aliases
 
     Checks & Agents:
     * Windows agent: output eventlog texts in UTF-8 encoding. This
@@ -41,6 +45,8 @@
     * FIX: Fixed auth problem when following logwatch icon links while using
       the form based auth
     * FIX: Fix problem with Umlaut in contact alias
+    * FIX: Creating auth.php file on first login dialog based login to ensure
+      it exists after login when it is first needed
 
     Mobile:
     * Improved sorting of views in main page
@@ -48,8 +54,13 @@
     WATO:
     * Removed IP-Address attribute from folders
     * Supporting localized tag titles
+    * Using Username as default value for full names when editing users
     * FIX: Fixed missing folders in "move to" dropdown fields
     * FIX: Fixed "move to target folders" after CSV import
+    * FIX: Fixed problem with duplicate extra_buttons when using the i18n of multiisite
+    * FIX: Fixed problem with duplicate permissions when using the i18n of multiisite
+    * FIX: Writing single host_contactgroups rules for each selected
+      contactgroup in host edit dialog
 
     BI:
     * improve doc/treasures/check_bi_local.py: local check that creates

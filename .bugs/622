@@ -1,0 +1,9 @@
+Title: Inventory prüft die Rechte nicht ordentlich
+Component: wato
+State: open
+Date: 2012-01-18 10:31:24
+Targetversion: 1.2.0
+Class: bug
+
+Ich kann sowohl via Bulk Inventory, als auch über das normale Inventory das Inventory eines
+Hosts anstoßen, auch wenn ich keine Rechte habe.

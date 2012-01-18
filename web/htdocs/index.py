@@ -156,23 +156,6 @@ def connect_to_livestatus(html):
     # Default auth domain is read. Please set to None to switch off authorization
     html.live.set_auth_domain('read')
 
-def load_language(lang):
-    # Make current language globally known to all of our modules
-    __builtin__.current_language = lang
-
-    if lang:
-        locale_base = defaults.locale_dir
-        po_path = '/%s/LC_MESSAGES/multisite.po' % lang
-        # Use file in OMD local strucuture when existing
-        if os.path.exists(local_locale_path + po_path):
-            locale_base = local_locale_path
-        try:
-            i18n = gettext.translation('multisite', locale_base, languages = [ lang ], codeset = 'UTF-8')
-            i18n.install(unicode = True)
-        except IOError, e:
-            # Fallback to hardcoded default if the given language does not exist
-            __builtin__.current_language = config.default_language
-
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)
 def handler(req, profiling = True):

@@ -202,6 +202,16 @@ def page_login():
         return normal_login_page()
 
 def normal_login_page():
+    # Working around the problem that the auth.php file needed for multisite based
+    # authorization of external addons might not exist when setting up a new installation
+    # We assume: Each user must visit this login page before using the multisite based
+    #            authorization. So we can easily create the file here if it is missing.
+    # This is a good place to replace old api based files in the future.
+    if not os.path.exists(defaults.var_dir + '/wato/auth/auth.php'):
+        import wato
+        wato.load_plugins()
+        wato.create_auth_file(wato.load_users())
+
     html.set_render_headfoot(False)
     html.header(_("Check_MK Multisite Login"), javascripts=[], stylesheets=["pages", "login"])
 

@@ -110,7 +110,7 @@ def get_wato_folder(row, how, with_links = True):
     wato_path = filename[6:-9]
     title_path = wato.api.get_folder_title_path(wato_path, with_links)
     if how == "plain":
-        return "", title_path[-1]
+        return title_path[-1]
     elif how == "abs":
         return " / ".join(title_path)
     else:

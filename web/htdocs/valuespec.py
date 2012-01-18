@@ -169,12 +169,13 @@ class Age(ValueSpec):
 class Integer(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._size         = kwargs.get("size", 5)
-        self._minvalue     = kwargs.get("minvalue")
-        self._maxvalue     = kwargs.get("maxvalue")
-        self._label        = kwargs.get("label")
-        self._unit         = kwargs.get("unit", "")
-        self._thousand_sep = kwargs.get("thousand_sep")
+        self._size           = kwargs.get("size", 5)
+        self._minvalue       = kwargs.get("minvalue")
+        self._maxvalue       = kwargs.get("maxvalue")
+        self._label          = kwargs.get("label")
+        self._unit           = kwargs.get("unit", "")
+        self._thousand_sep   = kwargs.get("thousand_sep")
+        self._display_format = kwargs.get("display_format", "%d")
         
         if "size" not in kwargs and "maxvalue" in kwargs:
             self._size = 1 + int(math.log10(self._maxvalue))
@@ -186,13 +187,13 @@ class Integer(ValueSpec):
             return 0
 
     def render_input(self, varprefix, value):
-        html.number_input(varprefix, str(value), size = self._size)
-        if self._label or self._unit:
+        if self._label:
+            html.write(self._label)
             html.write("&nbsp;")
-            if self._label:
-                html.write(self._label)
-            elif self._unit:
-                html.write(self._unit)
+        html.number_input(varprefix, str(value), size = self._size)
+        if self._unit:
+            html.write("&nbsp;")
+            html.write(self._unit)
 
     def from_html_vars(self, varprefix):
         try:
@@ -202,7 +203,7 @@ class Integer(ValueSpec):
                   _("The text <b><tt>%s</tt></b> is not a valid integer number." % html.var(varprefix)))
 
     def value_to_text(self, value):
-        text = str(value)
+        text = self._display_format % value
         if self._thousand_sep:
             sepped = ""
             rest = text
@@ -265,6 +266,8 @@ class TextAscii(ValueSpec):
         self._size     = kwargs.get("size", 30)
         self._allow_empty = kwargs.get("allow_empty", True)
         self._regex = kwargs.get("regex")
+        self._regex_error = kwargs.get("regex_error",
+                _("Your input odes not match the required format."))
         if type(self._regex) == str:
             self._regex = re.compile(self._regex)
 
@@ -289,7 +292,7 @@ class TextAscii(ValueSpec):
             raise MKUserError(varprefix, _("An empty value is not allowed here."))
         if value and self._regex:
             if not self._regex.match(value):
-                raise MKUserError(varprefix, _("Your input odes not match the required format."))
+                raise MKUserError(varprefix, self._regex_error)
 
 
 class EmailAddress(TextAscii):
@@ -607,6 +610,8 @@ class ListChoice(ValueSpec):
         self._choices = kwargs.get("choices")
         self._columns = kwargs.get("columns", 1)
         self._loaded_at = None
+        self._render_function = kwargs.get("render_function", 
+                  lambda id, val: val)
 
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
@@ -637,7 +642,7 @@ class ListChoice(ValueSpec):
     def value_to_text(self, value):
         self.load_elements()
         d = dict(self._elements)
-        return ", ".join([ str(d.get(v,v)) for v in value ])
+        return ", ".join([ self._render_function(v, d.get(v,v)) for v in value ])
 
     def from_html_vars(self, varprefix):
         self.load_elements()
@@ -683,21 +688,23 @@ class OptionalDropdownChoice(ValueSpec):
             if val == value:
                 defval = str(n)
         options.append(("other", self._otherlabel))
-        html.select(varprefix, options, defval, attrs={"style":"float:left;"},
+        html.select(varprefix, options, defval, # attrs={"style":"float:left;"},
                     onchange="valuespec_toggle_dropdown(this, '%s_ex');" % varprefix )
-
         if html.form_submitted():
             div_is_open = html.var(varprefix) == "other"
         else:
             div_is_open = self.value_is_explicit(value)
 
-        html.write('<div id="%s_ex" style="white-space: nowrap; %s">' % (
+        html.write('<span id="%s_ex" style="white-space: nowrap; %s">' % (
             varprefix, not div_is_open and "display: none;" or ""))
-        html.write("&nbsp;&nbsp;&nbsp;")
+        html.write("&nbsp;")
         self._explicit.render_input(varprefix + "_ex", value)
-        html.write("</div>")
+        html.write("</span>")
 
     def value_to_text(self, value):
+        for val, title in self._choices:
+            if val == value:
+                return title
         return self._explicit.value_to_text(value)
 
     def from_html_vars(self, varprefix):
@@ -927,30 +934,36 @@ class Dictionary(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
-
-##    def help(self):
-##        h = []
-##        for key, vs in self._elements:
-##            hh = vs.help()
-##            if hh:
-##              h.append("</i>%s<br><i>%s" % (vs.title(), hh))
-##        return "<br><br>".join(h)
+        self._optional_keys = kwargs.get("optional_keys", True)
+        self._columns = kwargs.get("columns", 1) # possible: 1 or 2
 
     def render_input(self, varprefix, value):
         html.write("<table class=dictionary>")
         for param, vs in self._elements:
-            html.write("<tr><td>")
+            html.write("<tr><td class=dictleft>")
             vp = varprefix + "_" + param
             div_id = vp
-            visible = html.get_checkbox(vp + "_USE")
-            if visible == None:
-                visible = param in value
-            html.checkbox(vp + "_USE", param in value,
-                          onclick="valuespec_toggle_option(this, %r)" % div_id)
-            html.write(" %s<br>" % vs.title())
+            if self._optional_keys:
+                visible = html.get_checkbox(vp + "_USE")
+                if visible == None:
+                    visible = param in value
+                html.checkbox(vp + "_USE", param in value,
+                              onclick="valuespec_toggle_option(this, %r)" % div_id)
+            else:
+                visible = True
+
+            html.write(" %s" % vs.title())
+            if self._columns == 2:
+                html.write(':')
+                if vs.help():
+                    html.write("<ul class=help>%s</ul>" % vs.help())
+                html.write('</td><td class=dictright>')
+            else:
+                html.write("<br>")
+
             html.write('<div class=dictelement id="%s" style="display: %s">' % (
                 div_id, not visible and "none" or ""))
-            if vs.help():
+            if self._columns == 1 and vs.help():
                 html.write("<ul class=help>%s</ul>" % vs.help())
             vs.render_input(vp, value.get(param, vs.canonical_value()))
             html.write("</div></td></tr>")
@@ -960,7 +973,11 @@ class Dictionary(ValueSpec):
         self._elements[0][1].set_focus(varprefix + self._elements[0][0])
 
     def canonical_value(self):
-        return {}
+        if self._optional_keys:
+            return {}
+        else:
+            return dict([
+                (name, vs.canonical_value()) for (name, vs) in self._elements])
 
     def value_to_text(self, value):
         parts = []
@@ -973,7 +990,7 @@ class Dictionary(ValueSpec):
         value = {}
         for param, vs in self._elements:
             vp = varprefix + "_" + param
-            if html.get_checkbox(vp + "_USE"):
+            if not self._optional_keys or html.get_checkbox(vp + "_USE"):
                 value[param] = vs.from_html_vars(vp)
         return value
 
@@ -985,6 +1002,8 @@ class Dictionary(ValueSpec):
             if param in value:
                 vp = varprefix + "_" + param
                 vs.validate_datatype(value[param], vp)
+            elif not self._optional_keys:
+                raise MKUserError(varprefix, _("The entry %s is missing") % vp.title())
 
         # Check for exceeding keys
         allowed_keys = [ p for (p,v) in self._elements ]
@@ -998,6 +1017,8 @@ class Dictionary(ValueSpec):
             if param in value:
                 vp = varprefix + "_" + param
                 vs.validate_value(value[param], vp)
+            elif not self._optional_keys:
+                raise MKUserError(varprefix, _("The entry %s is missing") % vp.title())
 
 
 # Base class for selection of a Nagios element out

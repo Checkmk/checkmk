@@ -1136,12 +1136,14 @@ def host_contactgroups_of(hostlist):
     cgrs = []
     for host in hostlist:
         # host_contactgroups may take single values as well as
-        # lists as item value. When a list is found only this list
-        # is used. The single-contact-group entries are skipped in
-        # this case.
+        # lists as item value. Of all list entries only the first
+        # one is used. The single-contact-groups entries are all
+        # recognized.
+        first_list = True
         for entry in host_extra_conf(host, host_contactgroups):
-            if type(entry) == list:
-                return entry
+            if type(entry) == list and first_list:
+                cgrs += entry
+                first_list = False
             else:
                 cgrs.append(entry)
     return list(set(cgrs))
@@ -1782,7 +1784,7 @@ define hostgroup {
   hostgroup_name\t\t%s
   alias\t\t\t\t%s
 }
-""" % (hg, alias.encode("utf-8")))
+""" % (hg, alias))
 
     # No creation of host groups but we need to define
     # default host group
@@ -1812,7 +1814,7 @@ define servicegroup {
   servicegroup_name\t\t%s
   alias\t\t\t\t%s
 }
-""" % (sg, alias.encode("utf-8")))
+""" % (sg, alias))
 
 def create_nagios_config_contactgroups(outfile):
     if define_contactgroups:
@@ -1829,7 +1831,7 @@ def create_nagios_config_contactgroups(outfile):
             outfile.write("\ndefine contactgroup {\n"
                     "  contactgroup_name\t\t%s\n"
                     "  alias\t\t\t\t%s\n"
-                    "}\n" % (name, alias.encode("utf-8")))
+                    "}\n" % (name, alias))
 
 
 def create_nagios_config_commands(outfile):

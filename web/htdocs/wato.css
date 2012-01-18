@@ -303,37 +303,6 @@ Boston, MA 02110-1301 USA.
     position: relative;
     top: -3px;
 }
-.wato table.ruleeditor td.content ul.help {
-    color: white;
-    font-style: italic;
-    font-size: 8pt;
-    padding: 0;
-    margin: 0 0 5px 0;
-    width: 300px;
-}
-
-.wato div.dictelement * {
-    font-size: 8pt;
-}
-.wato div.dictelement {
-    font-size: 8pt;
-    padding-left: 10px;
-    border-left: 2px solid #ccc;
-    margin-left: 8px;
-    margin-bottom: 10px;
-    margin-top: 3px;
-    float: none;
-}
-
-.wato table.form.ruleeditor td.content table.valuespec_tuple td.left {
-    padding-right: 10px;
-}
-
-.wato table.form.ruleeditor td.content table.valuespec_tuple td.right,
-.wato table.form.ruleeditor td.content table.valuespec_tuple td.left {
-    vertical-align: top;
-    padding-bottom: 10px;
-}
 
 .wato div.rule div.title {
     position: absolute;

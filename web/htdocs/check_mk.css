@@ -241,3 +241,54 @@ div.warning {
     border-color: #fc0;
 }
 
+/*-ValueSpec---------------------------------------------------------------.
+|          __     __    _            ____                                  |
+|          \ \   / /_ _| |_   _  ___/ ___| _ __   ___  ___                 |
+|           \ \ / / _` | | | | |/ _ \___ \| '_ \ / _ \/ __|                |
+|            \ V / (_| | | |_| |  __/___) | |_) |  __/ (__                 |
+|             \_/ \__,_|_|\__,_|\___|____/| .__/ \___|\___|                |
+|                                         |_|                              |
++--------------------------------------------------------------------------+
+| Styles needed for HTML code produced by valuespec.py.                    |
+'-------------------------------------------------------------------------*/
+
+td.content ul.help {
+    color: white;
+    font-style: italic;
+    font-size: 8pt;
+    padding: 0;
+    margin: 0 0 5px 0;
+    /* width: 300px; */
+}
+
+table.dictionary {
+}
+
+table.dictionary td.dictright {
+    white-space: nowrap;
+    padding: 0px;
+    border-style: none;
+}
+
+div.dictelement * {
+    font-size: 8pt;
+}
+div.dictelement {
+    font-size: 8pt;
+    padding-left: 10px;
+    border-left: 2px solid #ccc;
+    margin-left: 8px;
+    margin-bottom: 10px;
+    margin-top: 3px;
+    float: none;
+}
+
+td.content table.valuespec_tuple td.left {
+    padding-right: 10px;
+}
+
+td.content table.valuespec_tuple td.right,
+td.content table.valuespec_tuple td.left {
+    vertical-align: top;
+    padding-bottom: 10px;
+}

@@ -190,7 +190,7 @@ class Integer(ValueSpec):
         if self._label:
             html.write(self._label)
             html.write("&nbsp;")
-        html.number_input(varprefix, self._display_format % value, size = self._size)
+        html.number_input(varprefix, str(value), size = self._size)
         if self._unit:
             html.write("&nbsp;")
             html.write(self._unit)
@@ -686,19 +686,18 @@ class OptionalDropdownChoice(ValueSpec):
             if val == value:
                 defval = str(n)
         options.append(("other", self._otherlabel))
-        html.select(varprefix, options, defval, attrs={"style":"float:left;"},
+        html.select(varprefix, options, defval, # attrs={"style":"float:left;"},
                     onchange="valuespec_toggle_dropdown(this, '%s_ex');" % varprefix )
-
         if html.form_submitted():
             div_is_open = html.var(varprefix) == "other"
         else:
             div_is_open = self.value_is_explicit(value)
 
-        html.write('<div id="%s_ex" style="white-space: nowrap; %s">' % (
+        html.write('<span id="%s_ex" style="white-space: nowrap; %s">' % (
             varprefix, not div_is_open and "display: none;" or ""))
-        html.write("&nbsp;&nbsp;&nbsp;")
+        html.write("&nbsp;")
         self._explicit.render_input(varprefix + "_ex", value)
-        html.write("</div>")
+        html.write("</span>")
 
     def value_to_text(self, value):
         return self._explicit.value_to_text(value)
@@ -936,7 +935,7 @@ class Dictionary(ValueSpec):
     def render_input(self, varprefix, value):
         html.write("<table class=dictionary>")
         for param, vs in self._elements:
-            html.write("<tr><td>")
+            html.write("<tr><td class=dictleft>")
             vp = varprefix + "_" + param
             div_id = vp
             if self._optional_keys:
@@ -948,17 +947,18 @@ class Dictionary(ValueSpec):
             else:
                 visible = True
 
-            if self._columns == 2:
-                html.write('<div style="float: left">')
             html.write(" %s" % vs.title())
             if self._columns == 2:
-                html.write(':&nbsp;</div>')
+                html.write(':')
+                if vs.help():
+                    html.write("<ul class=help>%s</ul>" % vs.help())
+                html.write('</td><td class=dictright>')
             else:
                 html.write("<br>")
 
-            html.write('<div class=dictelement id="%s" style="float: left; display: %s">' % (
+            html.write('<div class=dictelement id="%s" style="display: %s">' % (
                 div_id, not visible and "none" or ""))
-            if vs.help():
+            if self._columns == 1 and vs.help():
                 html.write("<ul class=help>%s</ul>" % vs.help())
             vs.render_input(vp, value.get(param, vs.canonical_value()))
             html.write("</div></td></tr>")

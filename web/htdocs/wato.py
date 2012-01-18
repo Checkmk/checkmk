@@ -4001,16 +4001,18 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             if topic == topics[-1]:
                 html.write('<table class="form nomargin">')
 
+    def dump_json(obj):
+        return repr(obj).replace('None', 'null')
+
     # Provide Javascript world with the tag dependency information
     # of all attributes.
-    import json
     html.javascript("var inherited_tags = %s;\n"\
                     "var wato_depends_on = %s;\n"\
                     "var volatile_topics = %s;\n"\
                     "wato_fix_visibility();\n" % (
-                       json.dumps(inherited_tags),
-                       json.dumps(dependency_mapping),
-                       json.dumps(volatile_topics)))
+                       dump_json(inherited_tags),
+                       dump_json(dependency_mapping),
+                       dump_json(volatile_topics)))
 
 
 # Check if at least one host in a folder (or its subfolders)

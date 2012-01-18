@@ -1141,9 +1141,11 @@ def host_contactgroups_of(hostlist):
         # recognized.
         first_list = True
         for entry in host_extra_conf(host, host_contactgroups):
-            if type(entry) == list and first_list:
-                cgrs += entry
-                first_list = False
+            if type(entry) == list:
+                if first_list:
+                    cgrs += entry
+                    first_list = False
+                # else: silenty ignore any further matching rules
             else:
                 cgrs.append(entry)
     return list(set(cgrs))

@@ -3095,7 +3095,7 @@ def render_audit_log(log, what, with_filename = False):
         htmlcode += "<div class=info>%s</div>" % empty_msg
         return
     elif what == 'audit':
-        htmlcode += "<h3>" + _("Audit log") + "</h3>"
+        htmlcode += "<h3>" + _("Audit logfile") + "</h3>"
     elif what == 'pending':
         if is_distributed():
             htmlcode += "<h3>" + _("Changes that are not activated on all sites:") + "</h3>"
@@ -3647,7 +3647,7 @@ class ContactGroupsAttribute(Attribute):
         items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
         for name, alias in items:
             html.checkbox(self._name + "_" + name, name in cgs)
-            html.write(" %s<br>" % (alias and alias or name))
+            html.write(' <a href="%s">%s</a><br>' % (make_link([("mode", "edit_contact_group"), ("edit", name)]), alias and alias or name))
         html.write("<hr>")
         html.checkbox(self._name + "_use", use)
         html.write( " " + _("Add these contact groups to the host's contact groups in the monitoring configuration"))
@@ -4069,7 +4069,7 @@ def effective_attributes(host, folder):
 
 def mode_snapshot(phase):
     if phase == "title":
-        return _("Backup/Restore")
+        return _("Backup & Restore")
     elif phase == "buttons":
         home_button()
         changelog_button()
@@ -4634,7 +4634,7 @@ def mode_groups(phase, what):
         for userid, user in users.items():
             cgs = user.get("contactgroups", [])
             for cg in cgs:
-                members.setdefault(cg, []).append(userid)
+                members.setdefault(cg, []).append((userid, user.get('alias', userid)))
 
     odd = "even"
     for name, alias in sorted:
@@ -4648,8 +4648,8 @@ def mode_groups(phase, what):
         html.write("</td><td>%s</td><td>%s</td>" % (name, alias))
         if what == "contact":
             html.write("<td>%s</td>" % ", ".join(
-               [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_user"), ("edit", n)]), n)
-                 for n in members.get(name, [])]))
+               [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_user"), ("edit", userid)]), alias)
+                 for userid, alias in members.get(name, [])]))
         html.write("</tr>")
     html.write("</table>")
 
@@ -4804,7 +4804,7 @@ class CheckTypeGroupSelection(ElementSelection):
 
 def mode_timeperiods(phase):
     if phase == "title":
-        return _("Timeperiod definitions")
+        return _("Time Periods")
 
     elif phase == "buttons":
         global_buttons()
@@ -4839,7 +4839,7 @@ def mode_timeperiods(phase):
             else:
                 return None
 
-    html.write("<h3>" + _("Timeperiod definitions") + "</h3>")
+    html.write("<h3>" + _("Time Periods") + "</h3>")
 
     if len(timeperiods) == 0:
         html.write("<div class=info>" + _("There are no timeperiods defined yet.") + "</div>")
@@ -5160,7 +5160,7 @@ def find_usage_of_timeperiod(tpname):
 
 def mode_sites(phase):
     if phase == "title":
-        return _("Manage Multisite connections")
+        return _("Multisite connections")
 
     elif phase == "buttons":
         global_buttons()
@@ -6331,15 +6331,17 @@ def delete_distributed_wato_file():
 
 def mode_users(phase):
     if phase == "title":
-        return _("Manage Users & Contacts")
+        return _("Users & Contacts")
 
     elif phase == "buttons":
         global_buttons()
         html.context_button(_("New user"), make_link([("mode", "edit_user")]), "new")
         return
 
+    roles = load_roles()
     users = load_users()
     timeperiods = load_timeperiods()
+    contact_groups = load_group_information().get("contact", {})
 
     if phase == "action":
         delid = html.var("_delete")
@@ -6365,7 +6367,7 @@ def mode_users(phase):
     html.write("<h3>" + _("Users & Contacts") + "</h3>")
     html.write("<table class=data>")
     html.write("<tr><th>" + _("Actions") + "<th>"
-                + _("ID")
+                + _("Name")
                 + "</th><th>" + _("Authentication")
                 + "</th><th>" + _("Locked")
                 + "</th><th>" + _("Full Name")
@@ -6417,7 +6419,7 @@ def mode_users(phase):
         # Roles
         if user.get("roles", []):
             html.write("<td>%s</td>" % ", ".join(
-               [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_role"), ("edit", r)]), r) for r in user["roles"]]))
+               [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_role"), ("edit", r)]), roles[r].get('alias')) for r in user["roles"]]))
         else:
             html.write("<td></td>")
 
@@ -6426,7 +6428,7 @@ def mode_users(phase):
         cgs = user.get("contactgroups", [])
         if cgs:
             html.write(", ".join(
-               [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_contact_group"), ("edit", c)]), c) for c in cgs]))
+               [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_contact_group"), ("edit", c)]), contact_groups[c]) for c in cgs]))
         else:
             html.write("<i>" + _("none") + "</i>")
         html.write("</td>")
@@ -6447,6 +6449,8 @@ def mode_users(phase):
             elif tp != "24X7":
                 url = make_link([("mode", "edit_timeperiod"), ("edit", tp)])
                 tp = '<a href="%s">%s</a>' % (url, timeperiods[tp].get("alias", tp))
+            else:
+                tp = _("Always")
             html.write(tp)
         html.write("</td>")
         html.write("</tr>")
@@ -6497,9 +6501,9 @@ def mode_edit_user(phase):
 
         id = html.var("userid").strip()
         if new and id in users:
-            raise MKUserError("userid", _("This id is already being used by another user."))
+            raise MKUserError("userid", _("This username is already being used by another user."))
         if not re.match("^[-a-z0-9A-Z_]+$", id):
-            raise MKUserError("userid", _("The user id must consist only of letters, digit and the underscore."))
+            raise MKUserError("userid", _("The username must consist only of letters, digit and the underscore."))
 
         if new:
             new_user = {}
@@ -6597,7 +6601,7 @@ def mode_edit_user(phase):
 
     # ID
     html.write("<tr><td class=legend>")
-    html.write(_("User ID"))
+    html.write(_("Username"))
     html.write("</td><td class=content>")
     if new:
         html.text_input("userid", userid)
@@ -6683,7 +6687,7 @@ def mode_edit_user(phase):
     for role_id, role in entries:
         html.checkbox("role_" + role_id, role_id in user.get("roles", []))
         url = make_link([("mode", "edit_role"), ("edit", role_id)])
-        html.write("%s - <a href='%s'>%s</a><br>" % (role_id, url, role["alias"]))
+        html.write("<a href='%s'>%s</a><br>" % (url, role["alias"]))
     html.write("</td></tr>")
 
     # Contact groups
@@ -6710,7 +6714,7 @@ def mode_edit_user(phase):
                 alias = gid
             html.checkbox("cg_" + gid, gid in user.get("contactgroups", []))
             url = make_link([("mode", "edit_contact_group"), ("edit", gid)])
-            html.write(" %s - <a href=\"%s\">%s</a><br>" % (gid, url, alias))
+            html.write(" <a href=\"%s\">%s</a><br>" % (url, alias))
 
     html.write("</td></tr>")
 
@@ -6728,8 +6732,8 @@ def mode_edit_user(phase):
     html.write(_("Notification time period<br><i>Only during this time period the "
                  "user will get notifications about host or service alerts."))
     html.write("</td><td class=content>")
-    choices = [ ( "24X7", _("24X7 - Always")) ] + \
-              [ ( id, "%s - %s" % (id, tp["alias"])) for (id, tp) in timeperiods.items() ]
+    choices = [ ( "24X7", _("Always")) ] + \
+              [ ( id, "%s" % (tp["alias"])) for (id, tp) in timeperiods.items() ]
     html.sorted_select("notification_period", choices, user.get("notification_period"))
     html.write("</td></tr>")
 
@@ -6988,7 +6992,7 @@ class UserSelection(ElementSelection):
 
 def mode_roles(phase):
     if phase == "title":
-        return _("Manage Roles & Permissions")
+        return _("Roles & Permissions")
 
     elif phase == "buttons":
         global_buttons()
@@ -7035,11 +7039,11 @@ def mode_roles(phase):
                 return None
 
 
-    html.write("<h3>" + _("User Roles") + "</h3>")
+    html.write("<h3>" + _("Roles") + "</h3>")
     html.write("<table class=data>")
     html.write("<tr>"
              + "<th>" + _("Actions")       + "</th>"
-             + "<th>" + _("ID")            + "</th>"
+             + "<th>" + _("Name")          + "</th>"
              + "<th>" + _("Alias")         + "</th>"
              + "<th>" + _("Type")          + "</th>"
              + "<th>" + _("Modifications") + "</th>"
@@ -7302,7 +7306,7 @@ def rename_user_role(id, new_id):
 
 def mode_hosttags(phase):
     if phase == "title":
-        return _("Manage host tag groups")
+        return _("Host tag groups")
 
     elif phase == "buttons":
         global_buttons()
@@ -9075,7 +9079,7 @@ def page_user_profile():
     html.write("<table class=form>")
 
     html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Username"))
+    html.write(_("Name"))
     html.write("</td><td class=content>")
     html.write(config.user_id)
     html.write("</td></tr>")
@@ -9606,15 +9610,17 @@ modes = {
    "edit_hosttag"       : (["hosttags"], mode_edit_hosttag),
 }
 
-extra_buttons = [
-]
-
 loaded_with_language = False
 def load_plugins():
+    global extra_buttons
     global loaded_with_language
     if loaded_with_language == current_language:
         return
     loaded_with_language = current_language
+
+    # Reset global vars
+    global extra_buttons
+    extra_buttons = []
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))

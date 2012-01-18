@@ -624,7 +624,10 @@ def save_hosts(folder = None):
         if "contactgroups" in host:
             use, cgs = host["contactgroups"]
             if use and cgs:
-                out.write("\nhost_contactgroups.append(( %r, [%r] ))\n" % (cgs, hostname))
+                out.write("\nhost_contactgroups += [\n")
+                for cg in cgs:
+                    out.write('    ( %r, [%r] )\n' % (cg, hostname))
+                out.write(']\n\n')
 
         for attr, topic in host_attributes:
             attrname = attr.name()

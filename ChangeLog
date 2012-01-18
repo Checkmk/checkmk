@@ -41,6 +41,8 @@
     * FIX: Fixed auth problem when following logwatch icon links while using
       the form based auth
     * FIX: Fix problem with Umlaut in contact alias
+    * FIX: Creating auth.php file on first login dialog based login to ensure
+      it exists after login when it is first needed
 
     Mobile:
     * Improved sorting of views in main page

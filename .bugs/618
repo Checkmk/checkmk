@@ -1,0 +1,15 @@
+Title: Hosts Snapin berücksichtigt Nutzer Berechtigungen nicht
+Component: multisite
+State: open
+Date: 2012-01-18 10:25:53
+Targetversion: 1.2.0
+Class: bug
+
+Ich habe gerade eine leere Site mit 2 Hosts in 2 Foldern angelegt. Auf den einen ist
+der Nutzer berechtigt, auf den anderen nicht. Im Hosts Snapin sehe ich troztem beide
+Folder und auch die Summen der Hosts zählen 2, obwohl ich nur 1 sehen darf.
+
+Lösungsmöglichkeit:
+
+Das Snapin nur noch für die Statusgui Navigation benutzen und dann via Livestatus
+Query die Anzahl der Hosts herausfinden.

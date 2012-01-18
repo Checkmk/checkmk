@@ -41,6 +41,8 @@
     * FIX: Fixed auth problem when following logwatch icon links while using
       the form based auth
     * FIX: Fix problem with Umlaut in contact alias
+    * FIX: Creating auth.php file on first login dialog based login to ensure
+      it exists after login when it is first needed
 
     Mobile:
     * Improved sorting of views in main page
@@ -48,6 +50,7 @@
     WATO:
     * Removed IP-Address attribute from folders
     * Supporting localized tag titles
+    * Using Username as default value for full names when editing users
     * FIX: Fixed missing folders in "move to" dropdown fields
     * FIX: Fixed "move to target folders" after CSV import
 

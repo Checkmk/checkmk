@@ -6611,7 +6611,7 @@ def mode_edit_user(phase):
     html.write("<tr><td class=legend>")
     html.write(_("Full name") + "<br><i>" + _("Full name or alias of the user</i>"))
     html.write("</td><td class=content>")
-    html.text_input("alias", user.get("alias", ""), size = 50)
+    html.text_input("alias", user.get("alias", userid), size = 50)
     if not new:
         html.set_focus("alias")
     html.write("</td></tr>")
@@ -9007,14 +9007,13 @@ def register_rule(group, varname, valuespec = None, title = None,
 #
 
 def page_user_profile():
-    html.header(_("Edit user profile"), javascripts = ['wato'], stylesheets = ['check_mk', 'pages', 'wato', 'status'])
-
     if not config.user_id:
         raise MKUserError(None, _('Not logged in.'))
 
     if not config.may('edit_profile') and not config.may('change_password'):
         raise MKAuthException(_("You are not allowed to edit your user profile."))
 
+    success = None
     if html.has_var('_save') and html.check_transaction():
         try:
             users = load_users()
@@ -9033,8 +9032,13 @@ def page_user_profile():
 
                 else:
                     # Remove the customized language
-                    del users[config.user_id]['language']
-                    del config.user['language']
+                    if 'language' in users[config.user_id]:
+                        del users[config.user_id]['language']
+                    if 'language' in config.user:
+                        del config.user['language']
+
+                # load the new language
+                load_language(config.get_language())
 
             #
             # Change the password if requested
@@ -9049,13 +9053,19 @@ def page_user_profile():
                     users[config.user_id]['password'] = encrypt_password(password)
 
             save_users(users)
-
-            html.message(_("Successfully updated user profile."))
+            success = True
 
             if password:
                 html.write("<script type='text/javascript'>if(top) top.location.reload(); else document.location.reload();</script>")
+            else:
+                html.reload_sidebar()
         except MKUserError, e:
             html.add_user_error(e.varname, e.message)
+
+    html.header(_("Edit user profile"), javascripts = ['wato'], stylesheets = ['check_mk', 'pages', 'wato', 'status'])
+
+    if success:
+        html.message(_("Successfully updated user profile."))
 
     if html.has_user_errors():
         html.show_user_errors()

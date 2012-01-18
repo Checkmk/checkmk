@@ -9,6 +9,7 @@
       correctly
     * cmk --localize update supports an optional ALIAS which is used as
       display string in the multisite GUI
+    * FIX: Fixed encoding problems with umlauts in group aliases
 
     Checks & Agents:
     * Windows agent: output eventlog texts in UTF-8 encoding. This

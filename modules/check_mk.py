@@ -1136,14 +1136,12 @@ def host_contactgroups_of(hostlist):
     cgrs = []
     for host in hostlist:
         # host_contactgroups may take single values as well as
-        # lists as item value. Of all list entries only the first
-        # one is used. The single-contact-groups entries are all
-        # recognized.
-        first_list = True
+        # lists as item value. When a list is found only this list
+        # is used. The single-contact-group entries are skipped in
+        # this case.
         for entry in host_extra_conf(host, host_contactgroups):
-            if type(entry) == list and first_list:
-                cgrs += entry
-                first_list = False
+            if type(entry) == list:
+                return entry
             else:
                 cgrs.append(entry)
     return list(set(cgrs))

@@ -9606,15 +9606,17 @@ modes = {
    "edit_hosttag"       : (["hosttags"], mode_edit_hosttag),
 }
 
-extra_buttons = [
-]
-
 loaded_with_language = False
 def load_plugins():
+    global extra_buttons
     global loaded_with_language
     if loaded_with_language == current_language:
         return
     loaded_with_language = current_language
+
+    # Reset global vars
+    global extra_buttons
+    extra_buttons = []
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))

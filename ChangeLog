@@ -53,6 +53,7 @@
     * Using Username as default value for full names when editing users
     * FIX: Fixed missing folders in "move to" dropdown fields
     * FIX: Fixed "move to target folders" after CSV import
+    * FIX: Fixed problem with duplicate extra_buttons when using the i18n of multiisite
 
     BI:
     * improve doc/treasures/check_bi_local.py: local check that creates

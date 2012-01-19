@@ -210,10 +210,20 @@ def page_handler():
     if not config.may("wato.use"):
         raise MKAuthException(_("You are not allowed to use WATO."))
 
-    # Make information about current folder and hosts available
-    prepare_folder_info()
-
     current_mode = html.var("mode") or "main"
+
+    try:
+        # Make information about current folder and hosts available
+        # To be able to perform a "factory reset" or a snapshot restore
+        # even with a broken config ignore exceptions in this function
+        # when running in "snapshot" mode
+        prepare_folder_info()
+    except:
+        if current_mode == 'snapshot':
+            pass
+        else:
+            raise
+
     modeperms, modefunc = modes.get(current_mode, ([], None))
     if modefunc == None:
         html.header(_("Sorry"), stylesheets=wato_styles)

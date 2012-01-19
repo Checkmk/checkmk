@@ -8717,9 +8717,7 @@ def mode_edit_rule(phase):
     html.write("</i></td>")
     html.write("<td class=content>")
     if len(config.wato_host_tags) == 0:
-        html.write(_("You have not configured any host tags. If you work with rules "
-                     "you should better do so and add a <tt>wato_host_tags = ..</tt> "
-                     "to your <tt>multisite.mk</tt>. You will find an example there."))
+        html.write(_("You have not configured any <a href=\"wato.py?mode=hosttags\">host tags</a>."))
     else:
         html.write("<table>")
         for entry in config.wato_host_tags:

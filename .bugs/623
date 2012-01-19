@@ -1,8 +1,11 @@
 Title: Plugin Permissions sind doppelt registriert (bei i18n)
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-01-18 13:45:56
 Targetversion: 1.2.0
-Class: bug
 
 Die Permissions werden bei Umschaltung der Sprache doppelt registriert.
+
+2012-01-19 15:57:58: changed state open -> done
+Has been fixed yesterday.

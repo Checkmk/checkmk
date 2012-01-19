@@ -897,6 +897,7 @@ def get_folder_permissions_of_users(users):
 
     permissions = {}
 
+    users = load_users()
     for username in users.iterkeys():
         permissions[username] = {}
         for folder_path, folder in folders.iteritems():
@@ -922,12 +923,15 @@ def check_folder_permissions(folder, how, exception=True, user = None):
     effective = effective_attributes(None, folder)
     use, cgs = effective.get("contactgroups", (None, []))
 
+    if not user:
+        user = config.user_id
+
     # Get contact groups of user
     users = load_users()
-    if config.user_id not in users:
+    if user not in users:
         user_cgs = []
     else:
-        user_cgs = users[config.user_id].get("contactgroups", [])
+        user_cgs = users[user].get("contactgroups", [])
 
     for c in user_cgs:
         if c in cgs:

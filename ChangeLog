@@ -61,6 +61,7 @@
     * FIX: Fixed problem with duplicate permissions when using the i18n of multiisite
     * FIX: Writing single host_contactgroups rules for each selected
       contactgroup in host edit dialog
+    * FIX: Fixed wrong folder contacgroup related permissions in auth.php api
 
     BI:
     * improve doc/treasures/check_bi_local.py: local check that creates

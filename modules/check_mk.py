@@ -1784,7 +1784,7 @@ define hostgroup {
   hostgroup_name\t\t%s
   alias\t\t\t\t%s
 }
-""" % (hg, alias))
+""" % (hg, alias.encode('utf-8')))
 
     # No creation of host groups but we need to define
     # default host group
@@ -1814,7 +1814,7 @@ define servicegroup {
   servicegroup_name\t\t%s
   alias\t\t\t\t%s
 }
-""" % (sg, alias))
+""" % (sg, alias.encode('utf-8')))
 
 def create_nagios_config_contactgroups(outfile):
     if define_contactgroups:
@@ -1831,7 +1831,7 @@ def create_nagios_config_contactgroups(outfile):
             outfile.write("\ndefine contactgroup {\n"
                     "  contactgroup_name\t\t%s\n"
                     "  alias\t\t\t\t%s\n"
-                    "}\n" % (name, alias))
+                    "}\n" % (name, alias.encode('utf-8')))
 
 
 def create_nagios_config_commands(outfile):

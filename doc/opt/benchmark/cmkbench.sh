@@ -15,12 +15,25 @@ fi
 #_sites=5
 #_hosts=1000
 #_pnp=on
+#_delay_precompile=False
 
 
 central=${_central}
 pnp=${_pnp}
 pingonly=${_pingonly}
 
+
+setup_apache()
+{
+if [ -r /etc/redhat-release ]; then
+    # most OS don't just blindly enable and start a service.
+    chkconfig httpd on
+    service   httpd start
+    # stop the firewall - i don't know how to carefully punch a hole.
+    chkconfig iptables off
+    service   iptables stop
+fi
+}
 
 gen_sites()
 {
@@ -49,6 +62,7 @@ for site in ${sites} ; do
     omd config $site set LIVESTATUS_TCP on
     omd config $site set APACHE_TCP_PORT $(( 5000 + $i ))
     omd config $site set LIVESTATUS_TCP_PORT $(( 6557 + $i ))
+    # Bug - dont yet listen to livecheck y/n
     echo "broker_module=/omd/sites/${site}/lib/mk-livestatus/livestatus.o livecheck=/omd/versions/default/lib/mk-livestatus/livecheck num_livecheck_helpers=${_livecheck_helpers} num_client_threads=20 pnp_path=/omd/sites/${site}/var/pnp4nagios/perfdata /omd/sites/${site}/tmp/run/live
 event_broker_options=-1" > /omd/sites/$site/etc/mk-livestatus/nagios.cfg
 
@@ -82,6 +96,7 @@ fi
 prepare()
 {
     get_cache
+    setup_apache
     config_omd_sites    
     config_omd_central
     chmod u+s /opt/omd/versions/default/lib/mk-livestatus/livecheck
@@ -126,7 +141,7 @@ add_hosts()
 
 for site in $sites ; do
 
-echo "delay_precompile = True" > /omd/sites/$site/etc/check_mk/conf.d/options.mk
+echo "delay_precompile = ${_delay_precompile}" > /omd/sites/$site/etc/check_mk/conf.d/options.mk
 
  
 cat <<EOF > /omd/sites/$site/etc/check_mk/conf.d/hosts.mk
@@ -149,6 +164,15 @@ while _i < _hosts:
         "dummyhost%d" % _i : "127.0.0.1" 
     })
 EOF
+
+cat <<ZXY > /omd/sites/$site/etc/check_mk/conf.d/service.mk
+extra_service_conf["normal_check_interval"] = [ 
+    ( "0.01", ALL_HOSTS, [ "Ping" ] ),
+]
+legacy_checks += [ 
+    (( "check-mk-ping", "Ping", True), ALL_HOSTS), 
+]
+ZXY
     
     if [ $pingonly = "no" ]; then
     
@@ -156,7 +180,7 @@ cat <<ABC > /omd/sites/$site/etc/check_mk/conf.d/datasources.mk
 datasource_programs += [( "cat /dev/shm/cmk.cache", ALL_HOSTS )]
 ABC
         
-cat <<ZZZ > /omd/sites/$site/etc/check_mk/conf.d/service.mk
+cat <<ZZZ >> /omd/sites/$site/etc/check_mk/conf.d/service.mk
 checks += [
           (ALL_HOSTS, "cpu.loads", None, cpuload_default_levels),
           (ALL_HOSTS, "cpu.threads", None, threads_default_levels),
@@ -174,9 +198,6 @@ checks += [
           (ALL_HOSTS, "tcp_conn_stats", None, tcp_conn_stats_default_levels),
           (ALL_HOSTS, "uptime", None, None),
 ]
-extra_service_conf["check_interval"] = [ 
-    ( "0.1", ALL_HOSTS, [ "Ping"]),
-]
 ZZZ
         
     fi
@@ -185,6 +206,8 @@ ZZZ
 done
 
 }
+
+
 
 prepare         
 setup_central

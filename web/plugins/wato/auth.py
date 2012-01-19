@@ -91,7 +91,7 @@ def create_php_file(users, role_permissions, folder_permissions):
         users[username].setdefault('language', config.default_language)
 
     file(g_auth_base_dir + '/auth.php', 'w').write('''<?php
-global $mk_users, $mk_roles;
+global $mk_users, $mk_roles, $mk_folders;
 $mk_users   = %s;
 $mk_roles   = %s;
 $mk_folders = %s;

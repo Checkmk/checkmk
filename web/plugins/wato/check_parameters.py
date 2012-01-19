@@ -190,7 +190,7 @@ checkgroups.append((
                                     ("5", _("noSync") ),
                                     ("6", _("inSync") ),
                                     ("7", _("portFault") ),
-                                    ("8", _("daigFault") ),
+                                    ("8", _("diagFault") ),
                                     ("9", _("lockRef") ),
                                   ]
                     ),

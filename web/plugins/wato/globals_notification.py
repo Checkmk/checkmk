@@ -95,7 +95,7 @@ register_configvar(group,
         help = _ ("This template will be used as email body when sending notifications. "
                   "Appended to it will be a specific body for either host or service "
                   "notifications configured in two extra parameters. "
-                  "The following macros are available all templates:<br><br>"
+                  "The following macros are available in all templates:<br><br>"
                   "<tt><b>$CONTACTNAME$</b></tt>: login name of the contact person, "
                   "<tt><b>$CONTACTEMAIL$</b></tt>: email address of the contact person, "
                   "<tt><b>$NOTIFICATIONTYPE$</b></tt>: one of PROBLEM, RECOVERY, ACKNOWLEDGEMENT, FLAPPINGSTART, FLAPPINGSTOP, FLAPPINGDISABLED, DOWNTIMESTART, DOWNTIMEEND, or DOWNTIMECANCELLED, "

@@ -6627,7 +6627,7 @@ def mode_edit_user(phase):
 
     # Authentication
     html.write("<tr><td class=legend>")
-    html.write(_("Authentication<br><i>If you want to user to be able to login "
+    html.write(_("Authentication<br><i>If you want the user to be able to login "
                  "then specify a password here. Users without a login make sense "
                  "if they are monitoring contacts that are just used for "
                  "notifications. The repetition of the password is optional. "
@@ -7914,7 +7914,7 @@ def mode_rulesets(phase):
 
     if phase == "title":
         if only_host:
-            return _("Rulesets for for hosts %s") % only_host
+            return _("Rulesets for hosts %s") % only_host
         else:
             return _("Rulesets for hosts and services")
 

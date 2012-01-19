@@ -1,8 +1,11 @@
 Title: WATO: factory reset nicht erreichbar bei defekter hosts.mk
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-01-12 12:20:44
 Targetversion: 1.2.0
-Class: bug
 
 Man kommt nicht ins Backup/Restore, wenn beim Einlesen der hosts.mk ein Fehler auftritt
+
+2012-01-19 16:19:32: changed state open -> done
+Has just been implemented

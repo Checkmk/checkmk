@@ -3648,7 +3648,8 @@ class ContactGroupsAttribute(Attribute):
         items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
         for name, alias in items:
             if name in cgs:
-                texts.append(alias and alias or name)
+                display_name = alias and alias or name
+                texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' % (name, display_name))
         result = ", ".join(texts)
         if texts:
             result += "<span title='%s'><b>*</b></span>" % \

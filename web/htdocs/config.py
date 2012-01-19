@@ -375,12 +375,17 @@ def need_permission(pname):
 
 def get_role_permissions():
     role_permissions = {}
+    # Loop all permissions
+    # and for each permission loop all roles
+    # and check wether it has the permission or not
+    roleids = roles.keys()
     for perm in permissions_by_order:
-        for role in perm['defaults']:
-            if not role in role_permissions:
-                role_permissions[role] = [ perm['name'] ]
-            else:
-                role_permissions[role].append(perm['name'])
+        for role_id in roleids:
+            if not role_id in role_permissions:
+                role_permissions[role_id] = []
+
+            if may_with_roles([role_id], perm['name']):
+                role_permissions[role_id].append(perm['name'])
     return role_permissions
 
 

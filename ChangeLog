@@ -62,6 +62,7 @@
     * FIX: Writing single host_contactgroups rules for each selected
       contactgroup in host edit dialog
     * FIX: Fixed wrong folder contacgroup related permissions in auth.php api
+    * FIX: Fixed not up-to-date role permission data in roles_saved hook
 
     BI:
     * improve doc/treasures/check_bi_local.py: local check that creates

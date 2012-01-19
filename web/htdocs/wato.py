@@ -7269,6 +7269,11 @@ def load_roles():
     try:
         vars = { "roles" : roles }
         execfile(filename, vars, vars)
+        # Reflect the data in the roles dict kept in the config module Needed
+        # for instant changes in current page while saving modified roles.
+        # Otherwise the hooks would work with old data when using helper
+        # functions from the config module
+        config.roles.update(vars['roles'])
         return vars["roles"]
 
     except Exception, e:
@@ -7279,6 +7284,12 @@ def load_roles():
 
 
 def save_roles(roles):
+    # Reflect the data in the roles dict kept in the config module Needed
+    # for instant changes in current page while saving modified roles.
+    # Otherwise the hooks would work with old data when using helper
+    # functions from the config module
+    config.roles.update(roles)
+
     make_nagios_directory(multisite_dir)
     filename = multisite_dir + "roles.mk"
     out = file(filename, "w")

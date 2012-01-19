@@ -9,6 +9,10 @@
     * FIX: netapp_volumes: added raid4 as allowed state (thanks to Michaël Coquard)
     * HP-UX Agent: fix mrpe (remove echo -e and test -e, thanks to Philipp Lemke)
 
+    Livestatus
+    * FIX: fix type column in 'GET columns' for dict-type columns (bug found
+      by Gerhard Lausser)
+
 1.1.12p6:
     Checks & Agents:
     * FIX: lnx_if: remove debug output (left over from 1.1.12p5)

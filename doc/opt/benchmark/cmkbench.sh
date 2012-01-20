@@ -167,11 +167,19 @@ EOF
 
 cat <<ZXY > /omd/sites/$site/etc/check_mk/conf.d/service.mk
 extra_service_conf["normal_check_interval"] = [ 
-    ( "0.01", ALL_HOSTS, [ "Ping" ] ),
+#    ( "0.0166", ALL_HOSTS, [ "Dummy" ] ),
+    ( "0.0166", ALL_HOSTS, [ "Ping" ] ),
 ]
 legacy_checks += [ 
-    (( "check-mk-ping", "Ping", True), ALL_HOSTS), 
+#    (( "check-mk-vapor", "Dummy", True), ALL_HOSTS), 
+    (( "check-mk-ping",  "Ping",  True), ALL_HOSTS), 
 ]
+extra_nagios_conf += r"""
+define command {
+    command_name check-mk-vapor
+    command_line /usr/bin/printf OK
+}
+"""
 ZXY
     
     if [ $pingonly = "no" ]; then

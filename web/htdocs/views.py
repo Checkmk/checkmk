@@ -1640,7 +1640,8 @@ def show_context_links(thisview, active_filters):
     if html.has_var("host") \
        and config.wato_enabled \
        and config.may("wato.use") \
-       and (config.may("wato.hosts") or config.may("wato.seeall")):
+       and (config.may("wato.hosts") or config.may("wato.seeall")) \
+       and wato.using_wato_hosts():
         host = html.var("host")
         if host:
             url = wato.api.link_to_host(host)

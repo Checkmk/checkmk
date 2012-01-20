@@ -1,0 +1,8 @@
+Title: WATO Folder Filter wird auch bei single host views angezeigt
+Component: multisite
+State: open
+Date: 2012-01-20 15:54:20
+Targetversion: 1.2.0
+Class: nastiness
+
+Der Filter ist in solchen Ansichten eigentlich sinnlos.

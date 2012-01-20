@@ -5486,6 +5486,8 @@ def mode_edit_site(phase):
 
         # Persist
         new_site["persist"] = html.get_checkbox("persist")
+        # Handle the insecure replication flag
+        new_site["insecure"] = html.get_checkbox("insecure")
 
         # Status host
         sh_site = html.var("sh_site")
@@ -5641,7 +5643,7 @@ def mode_edit_site(phase):
 
     # Persistent connections
     html.write("<tr><td class=legend>")
-    html.write(_("<i>If you enable persistent connections then Multisite will try to keep open "
+    html.write(_("Persistent Connection<br><i>If you enable persistent connections then Multisite will try to keep open "
                  "the connection to the remote sites. This brings a great speed up in high-latency "
                  "situations but locks a number of threads in the Livestatus module of the target site. "))
     html.write("</td><td class=content>")
@@ -5711,6 +5713,10 @@ def mode_edit_site(phase):
          "that URL will be fetched by the Apache server of the local "
          "site itself, whilst the URL-Prefix is used by your local Browser.")))
     html.text_input("multisiteurl", site.get("multisiteurl", ""), size=60)
+    html.checkbox("insecure", site.get("insecure", False))
+    html.write(_('Ignore SSL certificate errors<br>'
+                 '<i>This might be needed to make the synchronization accept problems with '
+                 'SSL certificates when using an SSL secured connection.</i>'))
     html.write("</td></tr>")
     html.write("<tr><td colspan=2 class=buttons>")
     html.button("save", _("Save"))
@@ -5785,7 +5791,10 @@ def do_site_login(site_id, name, password):
         raise MKUserError("_passwd",
             _("Please specify your password."))
 
-    o = open_url(site["multisiteurl"] + "automation_login.py", name, password)
+    # Trying basic auth AND form based auth to ensure the site login works
+    o = open_url(site["multisiteurl"] + 'automation_login.py?_login=1'
+                 '&_username=%s&_password=%s&_origtarget=automation_login.py' %
+                                             (name, password), name, password)
     response = o.read()
     try:
         return eval(response)
@@ -6086,7 +6095,9 @@ def push_snapshot_to_site(site, do_restart):
     # you know a better method for uploading, without the use of external
     # programs...
     # -s -S: Disable progress meter but enable error messages
-    response_text = os.popen("curl -s -S -F snapshot=@%s '%s'" % (sync_snapshot_file, url)).read()
+    insecure = site.get('insecure', False) and ' --insecure' or ''
+    response_text = os.popen("curl -s -S%s -F snapshot=@%s '%s' 2>&1" %
+                               (insecure, sync_snapshot_file, url)).read()
     try:
         response = eval(response_text)
         return response

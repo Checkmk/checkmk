@@ -146,6 +146,7 @@ def do_login():
     # handle the sent login form
     err = None
     if html.var('_login'):
+        html.write('xxxxx')
         try:
             username = html.var('_username', '')
             if username == '':

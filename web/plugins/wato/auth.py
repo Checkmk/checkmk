@@ -184,9 +184,7 @@ function may($username, $need_permission) {
 ''' % (parse_php(users), parse_php(role_permissions), parse_php(folder_permissions)))
 
 def create_auth_file(users):
-    if not os.path.exists(g_auth_base_dir):
-        os.mkdir(g_auth_base_dir)
-
+    make_nagios_directory(g_auth_base_dir)
     create_php_file(users, config.get_role_permissions(), get_folder_permissions_of_users(users))
 
 api.register_hook('users-saved',      create_auth_file)

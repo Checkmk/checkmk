@@ -4246,8 +4246,7 @@ def mode_snapshot(phase):
 
 
 def create_snapshot():
-    if not os.path.exists(snapshot_dir):
-       os.mkdir(snapshot_dir)
+    make_nagios_directory(snapshot_dir)
 
     snapshot_name = "wato-snapshot-%s.tar.gz" %  \
                     time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))

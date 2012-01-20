@@ -33,7 +33,7 @@ def check_if(item, params, info):
 def if_convert_to_if64(info):
     newinfo = []
     for line in info:
-        newinfo.append(line[0:8] + ['0'] + line[8:12] + ['0'] + line[12:16] + line[1:2])
+        newinfo.append(line[0:8] + ['0'] + line[8:12] + ['0'] + line[12:16] + line[1:2] + line[16:17])
     return newinfo
 
 check_info['if'] = (check_if, "Interface %s", 1,  inventory_if)
@@ -59,6 +59,7 @@ snmp_info['if'] = \
      19,           # ifOutDiscards          13
      20,           # ifOutErrors            14
      21,           # ifOutQLen              15
+     6,            # ifPhysAddress          16
   ] )
 
 # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2

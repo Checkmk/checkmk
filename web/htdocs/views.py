@@ -108,15 +108,20 @@ def show_filter_form(is_open, filters):
     s.sort()
     col = 0
     for sort_index, title, f in s:
-        if col == 0:
-            html.write("<tr>")
-        html.write("<td class=legend>%s</td>" % title)
-        html.write("<td class=content>")
-        f.display()
-        html.write("</td>")
-        if col == config.filter_columns - 1:
-            html.write("</tr>\n")
-        col = (col + 1) % config.filter_columns
+        if not f.visible():
+            html.write('<div style="display:none">')
+            f.display()
+            html.write('</div>')
+        else:
+            if col == 0:
+                html.write("<tr>")
+            html.write("<td class=legend>%s</td>" % title)
+            html.write("<td class=content>")
+            f.display()
+            html.write("</td>")
+            if col == config.filter_columns - 1:
+                html.write("</tr>\n")
+            col = (col + 1) % config.filter_columns
     if col == 1:
         html.write("<td class=legend></td>\n<td class=content></td></tr>\n")
     html.write('<tr><td class="legend button" colspan=%d>' % (config.filter_columns * 2))
@@ -189,6 +194,14 @@ class Filter:
     # Some filters can be unavailable due to the configuration (e.g.
     # the WATO Folder filter is only available if WATO is enabled.
     def available(self):
+        return True
+
+    # Some filters can be invisible. This is useful to hide filters which have always
+    # the same value but can not be removed using available() because the value needs
+    # to be set during runtime.
+    # A good example is the "site" filter which does not need to be available to the
+    # user in single site setups.
+    def visible(self):
         return True
 
     def display(self):
@@ -1640,7 +1653,8 @@ def show_context_links(thisview, active_filters):
     if html.has_var("host") \
        and config.wato_enabled \
        and config.may("wato.use") \
-       and (config.may("wato.hosts") or config.may("wato.seeall")):
+       and (config.may("wato.hosts") or config.may("wato.seeall")) \
+       and wato.using_wato_hosts():
         host = html.var("host")
         if host:
             url = wato.api.link_to_host(host)

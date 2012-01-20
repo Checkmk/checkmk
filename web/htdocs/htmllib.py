@@ -324,8 +324,11 @@ class html:
         # self.write("<a href=\"%s\" class=button%s%s>%s</a>" % (href, obj_id, style, text))
 
     def icon(self, help, icon):
-       self.write('<img class=icon title="%s" src="images/icon_%s.png">' % (
+       self.write('<img align=absmiddle class=icon title="%s" src="images/icon_%s.png">' % (
         help, icon))
+
+    def empty_icon(self):
+        self.write('<img class=icon src="images/trans.png">')
 
     def icon_button(self, url, help, icon):
         self.write('<a href="%s">'
@@ -517,7 +520,7 @@ class html:
             add_attr = [] # do not use [] as default element, it will be a global variable!
         error = self.user_errors.get(varname)
         if error:
-            html = "<x class=inputerror>"
+            self.write("<x class=inputerror><span class=checkbox>")
         # Problem with checkboxes: The browser will add the variable
         # only to the URL if the box is checked. So in order to detect
         # wether we should add the default value, we need to detect
@@ -541,7 +544,7 @@ class html:
         if label:
             self.write('<label for="%s">%s</label>\n' % (id, label))
         if error:
-            html += "</x>"
+            self.write("</span></x>")
 
     # Get value of checkbox. Return True, False or None. None means
     # that no form has been submitted. The problem here is the distintion

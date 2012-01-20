@@ -210,10 +210,20 @@ def page_handler():
     if not config.may("wato.use"):
         raise MKAuthException(_("You are not allowed to use WATO."))
 
-    # Make information about current folder and hosts available
-    prepare_folder_info()
-
     current_mode = html.var("mode") or "main"
+
+    try:
+        # Make information about current folder and hosts available
+        # To be able to perform a "factory reset" or a snapshot restore
+        # even with a broken config ignore exceptions in this function
+        # when running in "snapshot" mode
+        prepare_folder_info()
+    except:
+        if current_mode == 'snapshot':
+            pass
+        else:
+            raise
+
     modeperms, modefunc = modes.get(current_mode, ([], None))
     if modefunc == None:
         html.header(_("Sorry"), stylesheets=wato_styles)
@@ -853,7 +863,6 @@ def mode_folder(phase):
                     "be used to navigate in the status GUI. Attributes can be inherited along the "
                     "paths of that tree. The usage of folders is optional."))])
 
-
 def prepare_folder_info():
     declare_host_tag_attributes() # create attributes out of tag definitions
     declare_site_attribute()      # create attribute for distributed WATO
@@ -897,6 +906,7 @@ def get_folder_permissions_of_users(users):
 
     permissions = {}
 
+    users = load_users()
     for username in users.iterkeys():
         permissions[username] = {}
         for folder_path, folder in folders.iteritems():
@@ -922,12 +932,15 @@ def check_folder_permissions(folder, how, exception=True, user = None):
     effective = effective_attributes(None, folder)
     use, cgs = effective.get("contactgroups", (None, []))
 
+    if not user:
+        user = config.user_id
+
     # Get contact groups of user
     users = load_users()
-    if config.user_id not in users:
+    if user not in users:
         user_cgs = []
     else:
-        user_cgs = users[config.user_id].get("contactgroups", [])
+        user_cgs = users[user].get("contactgroups", [])
 
     for c in user_cgs:
         if c in cgs:
@@ -1168,7 +1181,15 @@ def show_hosts(folder):
         html.write("</td>\n")
 
         # Hostname with link to details page (edit host)
-        html.write('<td><a href="%s">%s</a></td>\n' % (edit_url, hostname))
+        html.write('<td>')
+        errors = validate_host(host)
+        if errors:
+            msg = _("Warning: This host has an invalid configuration: ")
+            msg += ", ".join(errors)
+            html.icon(msg, "validation_error")
+            html.write("&nbsp;")
+        html.write('<a href="%s">%s</a></td>\n' % (edit_url, hostname))
+
 
         # Am I authorized?
         auth = check_host_permissions(hostname, False)
@@ -1714,15 +1735,33 @@ def mode_edithost(phase, new):
                 save_folder_and_hosts(g_folder)
                 call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
-            if new:
+
+            errors = validate_host(g_folder[".hosts"][hostname])
+            if errors: # keep on this page if host does not validate
+                return
+            elif new:
                 return go_to_services and "firstinventory" or "folder"
             else:
                 return go_to_services and "inventory" or "folder"
 
-
     else:
         if new:
             render_folder_path()
+
+        # Show outcome of host validation
+        errors = validate_host(host)
+        if errors:
+            html.write("<div class=info>")
+            html.write('<table class=validationerror border=0 cellspacing=0 cellpadding=0><tr><td class=img>')
+            html.write('<img src="images/icon_validation_error.png"></td><td>')
+            html.write('<p><h3>%s</h3><ul>%s</ul></p>' % 
+                (_("Warning: This host has an invalid configuration!"), 
+                 "".join(["<li>%s</li>" % error for error in errors])))
+
+            if html.form_submitted():
+                html.write("<br><b>%s</b>" % _("Your changes have been saved nevertheless."))
+
+            html.write("</td></tr></table></div>")
 
         html.begin_form("edithost")
         html.write('<table class="form nomargin">\n')
@@ -2629,6 +2668,14 @@ def mode_changelog(phase):
             html.context_button(_("Site Configuration"), make_link([("mode", "sites")]), "sites")
 
     elif phase == "action":
+        defective_hosts = validate_all_hosts()
+        if defective_hosts:
+            raise MKUserError(None, _("You cannot activate changes while some hosts have "
+              "an invalid configuration: ") + ", ".join(
+                [ '<a href="%s">%s</a>' % (make_link([("mode", "edithost"), ("host", hn)]), hn)
+                  for hn in defective_hosts ]))
+              
+
         sitestatus_do_async_replication = False # see below
         if html.has_var("_siteaction"):
             config.need_permission("wato.activate")
@@ -3634,7 +3681,8 @@ class ContactGroupsAttribute(Attribute):
         items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
         for name, alias in items:
             if name in cgs:
-                texts.append(alias and alias or name)
+                display_name = alias and alias or name
+                texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' % (name, display_name))
         result = ", ".join(texts)
         if texts:
             result += "<span title='%s'><b>*</b></span>" % \
@@ -4231,8 +4279,7 @@ def mode_snapshot(phase):
 
 
 def create_snapshot():
-    if not os.path.exists(snapshot_dir):
-       os.mkdir(snapshot_dir)
+    make_nagios_directory(snapshot_dir)
 
     snapshot_name = "wato-snapshot-%s.tar.gz" %  \
                     time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
@@ -5471,6 +5518,8 @@ def mode_edit_site(phase):
 
         # Persist
         new_site["persist"] = html.get_checkbox("persist")
+        # Handle the insecure replication flag
+        new_site["insecure"] = html.get_checkbox("insecure")
 
         # Status host
         sh_site = html.var("sh_site")
@@ -5626,7 +5675,7 @@ def mode_edit_site(phase):
 
     # Persistent connections
     html.write("<tr><td class=legend>")
-    html.write(_("<i>If you enable persistent connections then Multisite will try to keep open "
+    html.write(_("Persistent Connection<br><i>If you enable persistent connections then Multisite will try to keep open "
                  "the connection to the remote sites. This brings a great speed up in high-latency "
                  "situations but locks a number of threads in the Livestatus module of the target site. "))
     html.write("</td><td class=content>")
@@ -5696,6 +5745,10 @@ def mode_edit_site(phase):
          "that URL will be fetched by the Apache server of the local "
          "site itself, whilst the URL-Prefix is used by your local Browser.")))
     html.text_input("multisiteurl", site.get("multisiteurl", ""), size=60)
+    html.checkbox("insecure", site.get("insecure", False))
+    html.write(_('Ignore SSL certificate errors<br>'
+                 '<i>This might be needed to make the synchronization accept problems with '
+                 'SSL certificates when using an SSL secured connection.</i>'))
     html.write("</td></tr>")
     html.write("<tr><td colspan=2 class=buttons>")
     html.button("save", _("Save"))
@@ -5770,7 +5823,10 @@ def do_site_login(site_id, name, password):
         raise MKUserError("_passwd",
             _("Please specify your password."))
 
-    o = open_url(site["multisiteurl"] + "automation_login.py", name, password)
+    # Trying basic auth AND form based auth to ensure the site login works
+    o = open_url(site["multisiteurl"] + 'automation_login.py?_login=1'
+                 '&_username=%s&_password=%s&_origtarget=automation_login.py' %
+                                             (name, password), name, password)
     response = o.read()
     try:
         return eval(response)
@@ -5818,8 +5874,11 @@ def do_remote_automation(site, command, vars):
         raise MKAutomationException(_("You are not logged into the remote site."))
 
     url = base_url + "automation.py?" + \
-        htmllib.urlencode_vars(
-           [("command", command), ("secret", secret)] + vars)
+        htmllib.urlencode_vars([
+               ("command", command),
+               ("secret",  secret),
+               ("debug",   config.debug and '1' or '')
+        ] + vars)
     connection = open_url(url)
     response_code = connection.read().strip()
     if not response_code:
@@ -6065,13 +6124,16 @@ def push_snapshot_to_site(site, do_restart):
         ("siteid",     site["id"]),         # This site must know it's ID
         ("mode",       mode),
         ("restart",    do_restart and "yes" or "on"),
+        ("debug",      config.debug and "1" or ""),
     ])
     url = url_base + var_string
     # urllib2 does not seem to support file uploads. Please tell me, if
     # you know a better method for uploading, without the use of external
     # programs...
     # -s -S: Disable progress meter but enable error messages
-    response_text = os.popen("curl -s -S -F snapshot=@%s '%s'" % (sync_snapshot_file, url)).read()
+    insecure = site.get('insecure', False) and ' --insecure' or ''
+    response_text = os.popen("curl -s -S%s -F snapshot=@%s '%s' 2>&1" %
+                               (insecure, sync_snapshot_file, url)).read()
     try:
         response = eval(response_text)
         return response
@@ -6582,6 +6644,22 @@ def mode_edit_user(phase):
 
         # Notifications
         new_user["notifications_enabled"] = html.get_checkbox("notifications_enabled")
+
+        # Check if user can receive notifications
+        if new_user["notifications_enabled"]:
+            if not new_user["email"]:
+                raise MKUserError("email",
+                     _('You have enabled the notifications but missed to configure a '
+                       'Email address. You need to configure your mail address in order '
+                       'to be able to receive emails.'))
+
+            if not new_user["contactgroups"]:
+                raise MKUserError("notifications_enabled",
+                     _('You have enabled the notifications but missed to make the '
+                       'user member of at least one contact group. You need to make '
+                       'the user member of a contact group which has hosts assigned '
+                       'in order to be able to receive emails.'))
+
         ntp = html.var("notification_period")
         if ntp not in timeperiods:
             ntp = "24X7"
@@ -6627,7 +6705,7 @@ def mode_edit_user(phase):
 
     # Authentication
     html.write("<tr><td class=legend>")
-    html.write(_("Authentication<br><i>If you want to user to be able to login "
+    html.write(_("Authentication<br><i>If you want the user to be able to login "
                  "then specify a password here. Users without a login make sense "
                  "if they are monitoring contacts that are just used for "
                  "notifications. The repetition of the password is optional. "
@@ -6952,7 +7030,7 @@ def save_users(profiles):
             os.remove(auth_file)
 
     # Call the users_saved hook
-    call_hook(call_hook_users_saved, users)
+    call_hook_users_saved(users)
 
 # Dropdown for choosing a multisite user
 class UserSelection(ElementSelection):
@@ -7265,6 +7343,11 @@ def load_roles():
     try:
         vars = { "roles" : roles }
         execfile(filename, vars, vars)
+        # Reflect the data in the roles dict kept in the config module Needed
+        # for instant changes in current page while saving modified roles.
+        # Otherwise the hooks would work with old data when using helper
+        # functions from the config module
+        config.roles.update(vars['roles'])
         return vars["roles"]
 
     except Exception, e:
@@ -7275,13 +7358,19 @@ def load_roles():
 
 
 def save_roles(roles):
+    # Reflect the data in the roles dict kept in the config module Needed
+    # for instant changes in current page while saving modified roles.
+    # Otherwise the hooks would work with old data when using helper
+    # functions from the config module
+    config.roles.update(roles)
+
     make_nagios_directory(multisite_dir)
     filename = multisite_dir + "roles.mk"
     out = file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("roles.update(\n%s)\n" % pprint.pformat(roles))
 
-    call_hook(call_hook_roles_saved, roles)
+    call_hook_roles_saved(roles)
 
 
 # Adapt references in users. Builtin rules cannot
@@ -7914,7 +8003,7 @@ def mode_rulesets(phase):
 
     if phase == "title":
         if only_host:
-            return _("Rulesets for for hosts %s") % only_host
+            return _("Rulesets for hosts %s") % only_host
         else:
             return _("Rulesets for hosts and services")
 
@@ -8702,9 +8791,7 @@ def mode_edit_rule(phase):
     html.write("</i></td>")
     html.write("<td class=content>")
     if len(config.wato_host_tags) == 0:
-        html.write(_("You have not configured any host tags. If you work with rules "
-                     "you should better do so and add a <tt>wato_host_tags = ..</tt> "
-                     "to your <tt>multisite.mk</tt>. You will find an example there."))
+        html.write(_("You have not configured any <a href=\"wato.py?mode=hosttags\">host tags</a>."))
     else:
         html.write("<table>")
         for entry in config.wato_host_tags:
@@ -9346,17 +9433,6 @@ def call_hooks(name, *args):
             traceback.print_exception(t, v, tb, None, txt)
             html.show_error("<h3>" + _("Error executing hook") + " %s #%d: %s</h3><pre>%s</pre>" % (name, n, e, txt.getvalue()))
 
-# Call the hooks. This is executed at the places where to run the hooks
-# This includes exception handling with raising user errors on exceptions
-def call_hook(handler, *args):
-    try:
-        handler(*args)
-    except Exception, e:
-        if config.debug:
-            raise
-        else:
-            raise MKUserError(None, "Error executing hooks: %s" % str(e))
-
 def call_hook_hosts_changed(folder):
     if "hosts-changed" in g_hooks:
         hosts = collect_hosts(folder)
@@ -9400,6 +9476,38 @@ def call_hook_roles_saved(roles):
     if hook_registered('roles-saved'):
         call_hooks("roles-saved", roles)
 
+# This hook is called in order to determine if a host has a 'valid'
+# configuration. It used used for displaying warning symbols in the
+# host list and in the host detail view.
+def validate_host(host):
+    if hook_registered('validate-host'):
+        errors = []
+        eff = effective_attributes(host, host[".folder"])
+        for hk in g_hooks.get('validate-host', []):
+            try:
+                hk(eff)
+            except MKUserError, e:
+                errors.append(e.message)
+        return errors
+    else:
+        return []
+
+def validate_all_hosts():
+    if hook_registered('validate-host'):
+        hosts = collect_hosts(g_root_folder)
+        defective_hosts = []
+        for hn, eff in hosts.iteritems():
+            for hk in g_hooks.get('validate-host', []):
+                try:
+                    hk(eff)
+                except MKUserError, e:
+                    defective_hosts.append(hn)
+                    break # reason not interesting here
+        defective_hosts.sort()
+        return defective_hosts
+    else:
+        return []
+
 
 #.
 #   .-Helpers--------------------------------------------------------------.
@@ -9412,6 +9520,25 @@ def call_hook_roles_saved(roles):
 #   +----------------------------------------------------------------------+
 #   | Functions needed at various places                                   |
 #   '----------------------------------------------------------------------'
+
+# Returns true when at least one folder is defined in WATO
+def have_folders():
+    root_folder = load_folder(root_dir)
+    if len(root_folder[".folders"]) > 0:
+        return True
+    return False
+
+# Returns true if at least one host or folder exists in the wato root
+def using_wato_hosts():
+    root_folder = load_folder(root_dir)
+    if len(root_folder[".folders"]) > 0:
+        return True
+
+    load_hosts(root_folder)
+    if len(root_folder[".hosts"]) > 0:
+        return True
+
+    return False
 
 def host_status_button(hostname, viewname):
     html.context_button(_("Status"),

@@ -85,15 +85,17 @@ def if_pad_with_zeroes(info, ifIndex):
 
 
 def inventory_if_common(info):
-    if len(info) == 0 or len(info[0]) != 19:
+    if len(info) == 0 or len(info[0]) != 20:
         return []
     pre_inventory = []
 
     seen_items = set([])
     duplicate = set([])
 
-    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
-        ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias in info:
+    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
+            inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
+            outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
+            ifOutQLen, ifAlias, ifPhysAddress in info:
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
@@ -156,7 +158,7 @@ def check_if_common(item, params, info):
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets,  \
             inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
             outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
-            ifOutQLen, ifAlias in info:
+            ifOutQLen, ifAlias, ifPhysAddress in info:
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
@@ -201,6 +203,10 @@ def check_if_common(item, params, info):
                 ref_speed = targetspeed / 8.0
             else:
                 ref_speed = None
+
+	    if ifPhysAddress:
+		ifPhysAddress = ':'.join(convert_to_hex(ifPhysAddress).strip().split(' '))
+                infotext += 'MAC: %s, ' % ifPhysAddress
 
             # Check speed settings of interface, but only if speed information
             # is available. This is not always the case.

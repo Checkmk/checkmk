@@ -15,6 +15,7 @@
     * Windows agent: output eventlog texts in UTF-8 encoding. This
       should fix problems with german umlauts in message texts.
     * Windows agent: Added installer for the windows agent (install_agent.exe)
+    * Windows agent: Added dmi_sysinfo.bat plugin (Thanks to Arne-Nils Kromer for sharing)
     * Disabled obsolete checks fc_brocade_port and fc_brocade_port_detailed.
       Please use brocade_fcport instead.
     * aironet_errors, statgrab_disk, statgrab_net: Performance data has
@@ -42,6 +43,7 @@
     * New painter for normal and retry check interval (added to detail views)
     * Site filter shows "(local)" in case of non multi-site setup
     * Made "wato folder" columns sortable
+    * Hiding site filter in multisite views in single site setups
     * FIX: Fixed auth problem when following logwatch icon links while using
       the form based auth
     * FIX: Fix problem with Umlaut in contact alias
@@ -55,16 +57,30 @@
     * Removed IP-Address attribute from folders
     * Supporting localized tag titles
     * Using Username as default value for full names when editing users
+    * Snapshot/Factory Reset is possible even with a broken config
+    * Added error messages to user edit dialog to prevent notification problems
+      caused by incomplete configuration
+    * Replication: Can now handle replication sites which use the form based auth
+    * Replication: Added option to ignore problems with the ssl certificates
+                   used in ssl secured replications
     * FIX: Fixed missing folders in "move to" dropdown fields
     * FIX: Fixed "move to target folders" after CSV import
     * FIX: Fixed problem with duplicate extra_buttons when using the i18n of multiisite
     * FIX: Fixed problem with duplicate permissions when using the i18n of multiisite
     * FIX: Writing single host_contactgroups rules for each selected
       contactgroup in host edit dialog
+    * FIX: Fixed wrong folder contacgroup related permissions in auth.php api
+    * FIX: Fixed not up-to-date role permission data in roles_saved hook
 
     BI:
     * improve doc/treasures/check_bi_local.py: local check that creates
       Nagios services out of BI aggregates
+
+    Livestatus:
+    * ColumnHeaders: on is now able to switch column header on even if Stats:
+      headers are used. Artifical header names stats_1, stats_2, etc. are
+      begin used. Important: Use "ColumnHeaders: on" after Columns: and 
+      after Stats:.
 
 1.1.13i2:
     Core, Setup, etc.:
@@ -212,6 +228,10 @@
     Checks & Agents:
     * FIX: fixed man pages of h3c_lanswitch_sensors and statgrab_cpu
     * FIX: netapp_volumes: added raid4 as allowed state (thanks to Michaël Coquard)
+
+    Livestatus
+    * FIX: fix type column in 'GET columns' for dict-type columns (bug found
+      by Gerhard Lausser)
 
 1.1.12p6:
     Checks & Agents:

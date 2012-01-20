@@ -6,5 +6,16 @@ Targetversion: 1.2.0
 Class: nastiness
 
 This will be an unloved request...
-We will need an option to undo a change that has been "clicked" but is still waiting for activation.
-In a larger setup there could be 20 pending changes because the admin(s) will try to match nagios downtimes for activation or some other se. on the other hand right now you need to COMMIT a change into the live configuration to UNDO it - even if you already noticed it was erronoeous. (Ja, ich kann heute nicht tippen)
+
+We will need an option to undo a change that has been "clicked" but is still
+waiting for activation.  In a larger setup there could be 20 pending changes
+because the admin(s) will try to match nagios downtimes for activation
+or some other se. on the other hand right now you need to COMMIT a change
+into the live configuration to UNDO it - even if you already noticed it was
+erronoeous. (Ja, ich kann heute nicht tippen)
+
+WONTFIX: This is impossible to implement. Changes are not stored as files
+ore transactions but are direct modifications to the config files. Also
+changes build are built on previous changes. The only possible thing is
+to make a snapshot and get back to the snapshot later.
+

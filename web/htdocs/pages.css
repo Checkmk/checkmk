@@ -475,8 +475,19 @@ input.date, input.time {
     font-family: monospace;
 }
 
-.inputerror input, .inputerror textarea {
+.inputerror input, .inputerror textarea, span.checkbox {
     background-color: #f84;
+}
+
+.inputerror span.checkbox {
+    display: block;
+    float: left;
+    height: 17px;
+    margin-right: 2px;
+}
+
+.inputerror span.checkbox input {
+    margin: 1px;
 }
 
 /*-------------------------------------------------------------------------.

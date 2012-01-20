@@ -31,12 +31,16 @@
 cpuload_default_levels = (5, 10)
 
 def inventory_hpux_cpu_load(info):
-    if len(info) == 2 and 'load' in info[0]:
+    if len(info) >= 1 and 'load' in info[0]:
         return [(None, "cpuload_default_levels")]
 
 def check_hpux_cpu_load(item, params, info):
     load = [ float(l.strip(',')) for l in info[0][-3:] ]
-    num_cpus = int(info[1][0])
+    # Assuming 1 cpu when none can be found in the agent output
+    try:
+        num_cpus = int(info[1][0])
+    except:
+        num_cpus = 1
 
     warn, crit = params # apply on 15min average, relative to number of CPUs
     warn = warn * num_cpus

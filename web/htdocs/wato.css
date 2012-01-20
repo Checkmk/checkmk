@@ -199,6 +199,21 @@ Boston, MA 02110-1301 USA.
     margin-bottom: 2px;
 }
 
+/* host validation error */
+table.validationerror  {
+    width: 100%;
+}
+
+table.validationerror td.img {
+    width: 68px;
+}
+
+table.validationerror img {
+    margin-left: 5px;
+    margin-top: 10px;
+    margin-right: 15px;
+}
+
 /* Path to current folder at top of screen */
 .wato div.folderpath {
     margin-bottom: 10px;
@@ -248,7 +263,7 @@ Boston, MA 02110-1301 USA.
     margin-top: 10px;
     margin-bottom: 10px;
     padding: 5px 8px;
-    width: 800px;
+    width: 834px;
     -moz-border-radius: 3px;
     background-image: url("images/form_background.png");
     background-repeat: repeat;

@@ -1,8 +1,11 @@
 Title: WATO replication over HTTPS does not work
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2011-12-23 12:17:16
 Targetversion: 1.2.0
-Class: bug
 
 Reason probable self signed certificates.
+
+2012-01-20 11:31:32: changed state open -> done
+Has been solved. There is a new option to disable the ssl certificate check of curl.

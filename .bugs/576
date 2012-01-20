@@ -1,9 +1,9 @@
 Title: Host tags are lost in WATO display
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-01-11 09:59:37
 Targetversion: 1.1.13i1
-Class: bug
 
 siehe mail: Re: [Check_mk (english)] display problem in WATO, cmk 1.1.13i2
 from scott
@@ -11,3 +11,6 @@ from scott
 2.: Even worse,  if I were to save here without reselecting “Test”  it will set the host back to Production!   So, by just viewing and saving this host, like you might do to get to services, I set all the tags back to defaults
 
 fh saw the same issue
+
+2012-01-20 11:32:09: changed state open -> done
+Has already been fixed days ago.

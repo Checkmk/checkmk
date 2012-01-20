@@ -5842,8 +5842,11 @@ def do_remote_automation(site, command, vars):
         raise MKAutomationException(_("You are not logged into the remote site."))
 
     url = base_url + "automation.py?" + \
-        htmllib.urlencode_vars(
-           [("command", command), ("secret", secret)] + vars)
+        htmllib.urlencode_vars([
+               ("command", command),
+               ("secret",  secret),
+               ("debug",   config.debug and '1' or '')
+        ] + vars)
     connection = open_url(url)
     response_code = connection.read().strip()
     if not response_code:
@@ -6089,6 +6092,7 @@ def push_snapshot_to_site(site, do_restart):
         ("siteid",     site["id"]),         # This site must know it's ID
         ("mode",       mode),
         ("restart",    do_restart and "yes" or "on"),
+        ("debug",      config.debug and "1" or ""),
     ])
     url = url_base + var_string
     # urllib2 does not seem to support file uploads. Please tell me, if

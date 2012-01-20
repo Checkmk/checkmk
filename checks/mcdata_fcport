@@ -69,6 +69,7 @@ def mcdata_fcport_convert_line_to_if64(line):
       '0',                            # ifOutErrors              16
       '0',                            # ifOutQLen                17
       index,                          # ifAlias                  18
+      '',                             # ifPhysAddress            19
     ]
 
 

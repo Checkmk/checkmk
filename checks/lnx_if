@@ -128,11 +128,14 @@ def if_lnx_convert_to_if64(info):
             else:
                 ifOperStatus = 4 # unknown (NIC has never been used)
 
+        # There is no mac adress data available for the moment
+        ifPhysAddress = ''
+
         if_table.append(map(str, [
           ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus,
           ifInOctets, inucast, inmcast, inbcast, ifInDiscards,
           ifInErrors, ifOutOctets, outucast, outmcast, outbcast,
-          ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias ]))
+          ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress ]))
 
     return if_table
 

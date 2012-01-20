@@ -63,7 +63,7 @@ def hpux_convert_to_if64(info):
     for line in info:
         if '***' in line:
             nicname = line[1]
-            nic = ['0'] * 19
+            nic = ['0'] * 20
             nics.append(nic)
             nic[2] = '6' # fake port type Ethernet
         elif '=' in line:

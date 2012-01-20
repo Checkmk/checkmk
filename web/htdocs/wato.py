@@ -6597,6 +6597,22 @@ def mode_edit_user(phase):
 
         # Notifications
         new_user["notifications_enabled"] = html.get_checkbox("notifications_enabled")
+
+        # Check if user can receive notifications
+        if new_user["notifications_enabled"]:
+            if not new_user["email"]:
+                raise MKUserError("email",
+                     _('You have enabled the notifications but missed to configure a '
+                       'Email address. You need to configure your mail address in order '
+                       'to be able to receive emails.'))
+
+            if not new_user["contactgroups"]:
+                raise MKUserError("notifications_enabled",
+                     _('You have enabled the notifications but missed to make the '
+                       'user member of at least one contact group. You need to make '
+                       'the user member of a contact group which has hosts assigned '
+                       'in order to be able to receive emails.'))
+
         ntp = html.var("notification_period")
         if ntp not in timeperiods:
             ntp = "24X7"

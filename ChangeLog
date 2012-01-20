@@ -57,6 +57,8 @@
     * Supporting localized tag titles
     * Using Username as default value for full names when editing users
     * Snapshot/Factory Reset is possible even with a broken config
+    * Added error messages to user edit dialog to prevent notification problems
+      caused by incomplete configuration
     * FIX: Fixed missing folders in "move to" dropdown fields
     * FIX: Fixed "move to target folders" after CSV import
     * FIX: Fixed problem with duplicate extra_buttons when using the i18n of multiisite

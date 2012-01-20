@@ -863,7 +863,6 @@ def mode_folder(phase):
                     "be used to navigate in the status GUI. Attributes can be inherited along the "
                     "paths of that tree. The usage of folders is optional."))])
 
-
 def prepare_folder_info():
     declare_host_tag_attributes() # create attributes out of tag definitions
     declare_site_attribute()      # create attribute for distributed WATO
@@ -9521,6 +9520,25 @@ def validate_all_hosts():
 #   +----------------------------------------------------------------------+
 #   | Functions needed at various places                                   |
 #   '----------------------------------------------------------------------'
+
+# Returns true when at least one folder is defined in WATO
+def have_folders():
+    root_folder = load_folder(root_dir)
+    if len(root_folder[".folders"]) > 0:
+        return True
+    return False
+
+# Returns true if at least one host or folder exists in the wato root
+def using_wato_hosts():
+    root_folder = load_folder(root_dir)
+    if len(root_folder[".folders"]) > 0:
+        return True
+
+    load_hosts(root_folder)
+    if len(root_folder[".hosts"]) > 0:
+        return True
+
+    return False
 
 def host_status_button(hostname, viewname):
     html.context_button(_("Status"),

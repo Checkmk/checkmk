@@ -1,11 +1,14 @@
 Title: Hide WATO filter if no WATO is used
 Component: multisite
+State: done
+Class: feature
 Benefit: 1
-State: open
 Cost: 1
 Date: 2011-12-13 16:46:00
 Targetversion: future
-Class: feature
 
 If you have no folders defined then the WATO filter is
 useless and should not appear in the filter form.
+
+2012-01-20 15:05:26: changed state open -> done
+Added check if at least one folder exists in the root folder

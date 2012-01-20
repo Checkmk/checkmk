@@ -43,6 +43,7 @@
     * New painter for normal and retry check interval (added to detail views)
     * Site filter shows "(local)" in case of non multi-site setup
     * Made "wato folder" columns sortable
+    * Hiding site filter in multisite views in single site setups
     * FIX: Fixed auth problem when following logwatch icon links while using
       the form based auth
     * FIX: Fix problem with Umlaut in contact alias

@@ -76,6 +76,12 @@
     * improve doc/treasures/check_bi_local.py: local check that creates
       Nagios services out of BI aggregates
 
+    Livestatus:
+    * ColumnHeaders: on is now able to switch column header on even if Stats:
+      headers are used. Artifical header names stats_1, stats_2, etc. are
+      begin used. Important: Use "ColumnHeaders: on" after Columns: and 
+      after Stats:.
+
 1.1.13i2:
     Core, Setup, etc.:
     * cmk -I: accept host tags and cluster names

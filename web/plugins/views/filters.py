@@ -325,6 +325,9 @@ class FilterSite(Filter):
         Filter.__init__(self, name, _("Site"), None, ["site"], [])
         self.enforce = enforce
 
+    def visible(self):
+        return config.is_multisite()
+
     def display(self):
         site_selector(html, "site", self.enforce)
 

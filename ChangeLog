@@ -15,7 +15,7 @@
     * Windows agent: output eventlog texts in UTF-8 encoding. This
       should fix problems with german umlauts in message texts.
     * Windows agent: Added installer for the windows agent (install_agent.exe)
-    * Windows agent: Added dmi_sysinfo.bat plugin (Thanks to Housecrew for sharing)
+    * Windows agent: Added dmi_sysinfo.bat plugin (Thanks to Arne-Nils Kromer for sharing)
     * Disabled obsolete checks fc_brocade_port and fc_brocade_port_detailed.
       Please use brocade_fcport instead.
     * aironet_errors, statgrab_disk, statgrab_net: Performance data has

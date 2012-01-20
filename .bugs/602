@@ -1,0 +1,9 @@
+Title: Restoring snapshots does not restore htpasswd
+Component: wato
+State: open
+Date: 2012-01-20 14:28:22
+Targetversion: 1.2.0
+Class: bug
+
+When restoring a snapshot, the etc/htpasswd file should also be restored.
+Or is this already implemented?

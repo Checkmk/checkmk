@@ -753,7 +753,6 @@ weekdays = {
 }
 
 class RelativeDate(OptionalDropdownChoice):
-
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._choices = [
@@ -772,10 +771,13 @@ class RelativeDate(OptionalDropdownChoice):
             self._choices.append((w + 7, weekdays[wd] + title))
         self._explicit = Integer()
         self._otherlabel = _("in ... days")
-
+        if "default_days" in kwargs:
+            self._default_value = kwargs["default_days"] * seconds_per_day + today()
+        else:
+            self._default_value = today()
 
     def canonical_value(self):
-        return today()
+        return self._default_value
 
     def render_input(self, varprefix, value):
         reldays = (round_date(value) - today()) / seconds_per_day
@@ -907,14 +909,17 @@ class Alternative(ValueSpec):
             else:
                 checked = vs == mvs
 
-            html.radiobutton(varprefix + "_use", str(nr), checked, vs.title())
-            html.write("<ul>")
+            title = vs.title()
+            html.radiobutton(varprefix + "_use", str(nr), checked, title)
+            if title:
+                html.write("<ul>")
             if vs == mvs:
                 val = value
             else:
                 val = vs.canonical_value()
             vs.render_input(varprefix + "_%d" % nr, val)
-            html.write("</ul>\n")
+            if title:
+                html.write("</ul>\n")
 
     def set_focus(self, varprefix):
         # TODO: Set focus to currently active option

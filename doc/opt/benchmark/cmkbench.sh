@@ -168,11 +168,11 @@ EOF
 cat <<ZXY > /omd/sites/$site/etc/check_mk/conf.d/service.mk
 extra_service_conf["normal_check_interval"] = [ 
 #    ( "0.0166", ALL_HOSTS, [ "Dummy" ] ),
-    ( "0.0166", ALL_HOSTS, [ "Ping" ] ),
+#    ( "0.0166", ALL_HOSTS, [ "Ping" ] ),
 ]
 legacy_checks += [ 
 #    (( "check-mk-vapor", "Dummy", True), ALL_HOSTS), 
-    (( "check-mk-ping",  "Ping",  True), ALL_HOSTS), 
+#    (( "check-mk-ping",  "Ping",  True), ALL_HOSTS), 
 ]
 extra_nagios_conf += r"""
 define command {
@@ -194,14 +194,14 @@ checks += [
           (ALL_HOSTS, "cpu.threads", None, threads_default_levels),
           (ALL_HOSTS, "df", '/', {}),
           (ALL_HOSTS, "df", '/opt', {}),
-          (ALL_HOSTS, "diskstat", 'SUMMARY', diskstat_default_levels),
-          (ALL_HOSTS, "kernel", 'Context Switches', kernel_default_levels),
-          (ALL_HOSTS, "kernel", 'Major Page Faults', kernel_default_levels),
-          (ALL_HOSTS, "kernel", 'Process Creations', kernel_default_levels),
+#          (ALL_HOSTS, "diskstat", 'SUMMARY', diskstat_default_levels),
+#          (ALL_HOSTS, "kernel", 'Context Switches', kernel_default_levels),
+#          (ALL_HOSTS, "kernel", 'Major Page Faults', kernel_default_levels),
+#          (ALL_HOSTS, "kernel", 'Process Creations', kernel_default_levels),
           (ALL_HOSTS, "kernel.util", None, kernel_util_default_levels),
           (ALL_HOSTS, "mem.used", None, memused_default_levels),
-          (ALL_HOSTS, "mounts", '/', ['data=ordered', 'errors=remount-ro', 'relatime', 'rw']),
-          (ALL_HOSTS, "mounts", '/opt', ['attr2', 'noatime', 'nobarrier', 'nodiratime', 'noquota', 'rw']),
+#          (ALL_HOSTS, "mounts", '/', ['data=ordered', 'errors=remount-ro', 'relatime', 'rw']),
+#          (ALL_HOSTS, "mounts", '/opt', ['attr2', 'noatime', 'nobarrier', 'nodiratime', 'noquota', 'rw']),
           (ALL_HOSTS, "omd_status", 'zentrale', None),
           (ALL_HOSTS, "tcp_conn_stats", None, tcp_conn_stats_default_levels),
           (ALL_HOSTS, "uptime", None, None),

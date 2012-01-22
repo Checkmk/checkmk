@@ -786,7 +786,7 @@ class RelativeDate(OptionalDropdownChoice):
     def value_to_text(self, value):
         reldays = (round_date(value) - today()) / seconds_per_day
         if reldays == -1:
-            return _("Yesterday")
+            return _("yesterday")
         elif reldays == -2:
             return _("two days ago")
         elif reldays < 0:

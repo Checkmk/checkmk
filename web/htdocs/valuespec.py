@@ -165,6 +165,7 @@ class Age(ValueSpec):
         if type(value) != int:
             raise MKUserError(varprefix, _("The value has type %s, but must be of type int") % (type(value)))
 
+
 # Editor for a single integer
 class Integer(ValueSpec):
     def __init__(self, **kwargs):
@@ -729,6 +730,85 @@ class OptionalDropdownChoice(ValueSpec):
         self._explicit.validate_datatype(self, value, varprefix + "_ex")
 
 
+# Input of date with optimization for nearby dates
+# in the future. Useful for example for alarms. The 
+# date is represented by a UNIX timestamp where the
+# seconds are silently ignored.
+def round_date(t):
+    return int(t) / seconds_per_day * seconds_per_day
+
+def today():
+    return round_date(time.time())
+
+seconds_per_day = 86400
+
+weekdays = {
+   0: _("Monday"),
+   1: _("Tuesday"),
+   2: _("Wednesday"),
+   3: _("Thursday"),
+   4: _("Friday"),
+   5: _("Saturday"),
+   6: _("Sunday"),
+}
+
+class RelativeDate(OptionalDropdownChoice):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._choices = [
+          (0, _("today")),
+          (1, _("tomorrow"))]
+        weekday = time.localtime(today()).tm_wday
+        for w in range(2, 7):
+            wd = (weekday + w) % 7
+            self._choices.append((w, weekdays[wd]))
+        for w in range(0, 7):
+            wd = (weekday + w) % 7
+            if w < 2:
+                title = _(" next week")
+            else:
+                title = _(" in %d days") % (w + 7)
+            self._choices.append((w + 7, weekdays[wd] + title))
+        self._explicit = Integer()
+        self._otherlabel = _("in ... days")
+        if "default_days" in kwargs:
+            self._default_value = kwargs["default_days"] * seconds_per_day + today()
+        else:
+            self._default_value = today()
+
+    def canonical_value(self):
+        return self._default_value
+
+    def render_input(self, varprefix, value):
+        reldays = (round_date(value) - today()) / seconds_per_day
+        OptionalDropdownChoice.render_input(self, varprefix, reldays)
+
+    def value_to_text(self, value):
+        reldays = (round_date(value) - today()) / seconds_per_day
+        if reldays == -1:
+            return _("yesterday")
+        elif reldays == -2:
+            return _("two days ago")
+        elif reldays < 0:
+            return _("%d days ago") % -reldays
+        elif reldays < len(self._choices):
+            return self._choices[reldays][1]
+        else:
+            return _("in %d days") % reldays
+
+    def from_html_vars(self, varprefix):
+        reldays = OptionalDropdownChoice.from_html_vars(self, varprefix)
+        return today() + reldays * seconds_per_day
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) not in [ float, int ]:
+            raise MKUserError(varprefix, _("Date must be a number value"))
+
+    def validate_value(self, value, varprefix):
+        pass
+
+
+
 
 # Make a configuration value optional, i.e. it may be None.
 # The user has a checkbox for activating the option. Example:
@@ -751,31 +831,35 @@ class Optional(ValueSpec):
             checked = html.get_checkbox(varprefix + "_use")
         else:
             checked = self._negate != (value != None)
-        html.write("<div style=\"float: none;\">")
+        html.write("<span>")
+
+        if self._label:
+            label = self._label
+        elif self.title():
+            label = _(self.title())
+        elif self._negate:
+            label = _(" Ignore this option")
+        else:
+            label = _(" Activate this option")
+
         html.checkbox(varprefix + "_use" , checked,
                       onclick="valuespec_toggle_option(this, %r, %r)" %
-                         (div_id, self._negate and 1 or 0))
-        if self._label:
-            html.write(self._label)
-        elif self.title():
-            html.write(_(self.title()))
-        elif self._negate:
-            html.write(_(" Ignore this option"))
-        else:
-            html.write(_(" Activate this option"))
+                         (div_id, self._negate and 1 or 0),
+                      label = label)
+
         if self._sameline:
             html.write("&nbsp;")
         else:
             html.write("<br><br>")
-        html.write("</div>")
-        html.write('<div id="%s" style="float: left; display: %s">' % (
+        html.write("</span>")
+        html.write('<span id="%s" display: %s">' % (
                 div_id, checked == self._negate and "none" or ""))
         if value == None:
             value = self._valuespec.default_value()
         if self._valuespec.title():
             html.write(self._valuespec.title() + " ")
         self._valuespec.render_input(varprefix + "_value", value)
-        html.write('</div>\n')
+        html.write('</span>\n')
 
     def value_to_text(self, value):
         if value == None:
@@ -825,14 +909,17 @@ class Alternative(ValueSpec):
             else:
                 checked = vs == mvs
 
-            html.radiobutton(varprefix + "_use", str(nr), checked, vs.title())
-            html.write("<ul>")
+            title = vs.title()
+            html.radiobutton(varprefix + "_use", str(nr), checked, title)
+            if title:
+                html.write("<ul>")
             if vs == mvs:
                 val = value
             else:
                 val = vs.canonical_value()
             vs.render_input(varprefix + "_%d" % nr, val)
-            html.write("</ul>\n")
+            if title:
+                html.write("</ul>\n")
 
     def set_focus(self, varprefix):
         # TODO: Set focus to currently active option

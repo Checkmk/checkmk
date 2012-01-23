@@ -324,8 +324,11 @@ class html:
         # self.write("<a href=\"%s\" class=button%s%s>%s</a>" % (href, obj_id, style, text))
 
     def icon(self, help, icon):
-       self.write('<img class=icon title="%s" src="images/icon_%s.png">' % (
+       self.write('<img align=absmiddle class=icon title="%s" src="images/icon_%s.png">' % (
         help, icon))
+
+    def empty_icon(self):
+        self.write('<img class=icon src="images/trans.png">')
 
     def icon_button(self, url, help, icon):
         self.write('<a href="%s">'

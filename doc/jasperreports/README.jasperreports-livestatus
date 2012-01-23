@@ -1,0 +1,68 @@
+    Livestatus queries with JasperReports
+
+The livestatus.jar plugin provides the capability to start livestatus queries within 
+the iReport application. These are executed through the plugins JRQueryExecuter interface.
+
+Build livestatus.jar
+======================
+To create the livestatus.jar file from scratch type:
+
+make all
+
+This compiles the java files within the src folder into class
+files, which are stored in the classes folder. Afterwards the a jar
+process packs all necessary files into the livestatus.jar archive
+
+Requirements
+=======================
+livestatus.jar requires at least mk-livestatus-1.1.13i3 to run.
+
+The livestatus interface needs to be accessible through a tcp port on the nagios host. 
+This can be done via xinetd. More information can be found at
+mathias-kettner.de/checkmk_livestatus.html
+
+Installation in iReport
+=======================
+Start iReport.
+The livestatus.jar file needs to be put into the applications classpath
+Tools -> Options -> iReport -> Classpath
+Add the livestatus.jar "Add Jar" button.
+
+Register the new Livestatus Query Language(lql) Executer with
+Tools -> Options -> iReport -> QueryExecuters
+"Add" a new query Executer with the parameters:
+Language        : lql
+Factory Class   : livestatus.LivestatusQueryExecuterFactory
+Fields Provider : livestatus.LivestatusFieldsProvider
+
+Usage
+=======================
+I) Create a new Connection/Datasource with the Datasource Type "Query Executer Mode".
+
+II) Within the iReport Designer Window open the "Report Query" and select lql as query language.
+Enter the query in the text area with the following Syntax:
+[ Server Server_Port ]
+[ Valid LQL Query ]
+
+For example:
+
+10.32.128.4 6557
+GET hosts
+Columns: name check_command
+Stats: state = 1
+
+This query is send to the livestatus plugin. The plugin itself adds further query options
+to the initial query, so that it always receives processable data from the livestatus socket.
+Automatically added options:
+ColumnHeaders: on
+ResponseHeader: fixed16
+OutputFormat: csv
+
+If the query was successful, field information is displayed in the middle of the screen:
+- field name
+- field type ( Java Class types of Integer, String, ArrayList, String )
+- field description
+
+Press OK in the "Report Query" dialog -> The fields are now available in the Report Inspector
+
+

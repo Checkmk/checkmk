@@ -427,6 +427,10 @@ void Query::parseStatsLine(char *line)
     else
         stats_col = new StatsColumn(column, 0, operation);
     _stats_columns.push_back(stats_col);
+
+    /* Default to old behaviour: do not output column headers if we 
+       do Stats queries */
+    _show_column_headers = false;
 }
 
 
@@ -717,18 +721,40 @@ void Query::start()
                 _stats_aggregators[i] = _stats_columns[i]->createAggregator();
         }
     }
-    else if (_show_column_headers)
+
+    if (_show_column_headers)
     {
         outputDatasetBegin();
+        bool first = true;
+
         for (_columns_t::iterator it = _columns.begin();
                 it != _columns.end();
                 ++it)
         {
-            if (it != _columns.begin())
+            if (first)
+                first = false;
+            else
                 outputFieldSeparator();
             Column *column = *it;
             outputString(column->name());
         }
+
+        // Output dummy headers for stats columns 
+        int col = 1;
+        char colheader[32];
+        for (_stats_columns_t::iterator it = _stats_columns.begin();
+                it != _stats_columns.end();
+                ++it)
+        {
+            if (first)
+                first = false;
+            else
+                outputFieldSeparator();
+            snprintf(colheader, 32, "stats_%d", col);
+            outputString(colheader);
+            col ++;
+        }
+
         outputDatasetEnd();
         _need_ds_separator = true;
     }

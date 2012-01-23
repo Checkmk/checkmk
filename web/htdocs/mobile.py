@@ -55,8 +55,8 @@ def mobile_html_head(title, ready_code=""):
   <link rel="stylesheet" type="text/css" href="status.css">
   <link rel="stylesheet" type="text/css" href="mobile.css">
   <script type='text/javascript' src='jquery/jquery-1.6.4.min.js'></script>
-  <script type='text/javascript' src='jquery/jquery.mobile-1.0.min.js'></script>
   <script type='text/javascript' src='js/mobile.js'></script>
+  <script type='text/javascript' src='jquery/jquery.mobile-1.0.min.js'></script>
   <script type='text/javascript' src='js/checkmk.js'></script>
   <script type='text/javascript'>
       $(document).ready(function() { %s });
@@ -69,8 +69,8 @@ def mobile_html_head(title, ready_code=""):
 def mobile_html_foot():
     html.write("</body></html>\n")
 
-def jqm_header_button(url, title, icon=""):
-    html.write('<a href="%s" data-direction="reverse" data-icon="%s" title="%s" >%s</a>' % (url, icon, title, title ))
+def jqm_header_button(pos, url, title, icon=""):
+    html.write('<a href="%s" class="ui-btn-%s" data-direction="reverse" data-icon="%s" data-iconpos="notext"  title="%s" ></a>' % (url, pos, icon, title )) 
 
 def jqm_page_header(title, id=None, left_button=None, right_button=None):
     idtxt = id and (' id="%s"' % id) or ''
@@ -78,10 +78,10 @@ def jqm_page_header(title, id=None, left_button=None, right_button=None):
         '<div data-role="page"%s>\n'
         '<div data-role="header" data-position="fixed">\n' % idtxt)
     if left_button:
-        jqm_header_button(*left_button)
+        jqm_header_button("left", *left_button)
     html.write('<h1>%s</h1>\n' % title)
     if right_button:
-        jqm_header_button(*right_button)
+        jqm_header_button("right",*right_button)
     html.write('</div>')
     html.write('<div data-role="content">\n')
 
@@ -178,7 +178,7 @@ def page_login():
 def page_index():
     title = "Check_MK Mobile"
     mobile_html_head(title)
-    jqm_page_header(title, left_button=("logout.py", "Logout", "delete"),right_button=("javascript:document.location.reload();", _("Reload"), "refresh"))
+    jqm_page_header(title, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),id="data")
     views.load_views()
     items = []
     for view_name, view in html.available_views.items():
@@ -188,7 +188,7 @@ def page_index():
             if not view.get("mustsearch"):
 	        count = views.show_view(view, only_count = True)
                 count = '<span class="ui-li-count">%d</span>' % count
-            items.append((view.get("topic"), url, '%s %s' % (view["title"], count)))
+            items.append((view.get("topic"), url, '%s %s' % (view.get("linktitle", view["title"]), count)))
     jqm_page_index(_("Check_MK Mobile"), items)
     # Link to non-mobile GUI
 
@@ -196,7 +196,10 @@ def page_index():
     html.write('<ul data-role="listview" data-theme="b" data-inset="true">\n')
     html.write('<li><a data-ajax="false" data-transition="fade" href="%s">%s</a></li>\n' %                 ("index.py?mobile=", _("Classical web GUI")))
     html.write('</ul>\n')
-    jqm_page_footer()
+
+    html.write('<ul data-role="listview" data-theme="f" data-inset="true">\n')
+    html.write('<li><a data-ajax="false" data-transition="fade" href="%s">%s</a></li>\n' %                 ("logout.py", _("Logout")))
+    html.write('</ul>\n')
     mobile_html_foot()
 
 def page_view():

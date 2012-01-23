@@ -1181,7 +1181,15 @@ def show_hosts(folder):
         html.write("</td>\n")
 
         # Hostname with link to details page (edit host)
-        html.write('<td><a href="%s">%s</a></td>\n' % (edit_url, hostname))
+        html.write('<td>')
+        errors = validate_host(host)
+        if errors:
+            msg = _("Warning: This host has an invalid configuration: ")
+            msg += ", ".join(errors)
+            html.icon(msg, "validation_error")
+            html.write("&nbsp;")
+        html.write('<a href="%s">%s</a></td>\n' % (edit_url, hostname))
+
 
         # Am I authorized?
         auth = check_host_permissions(hostname, False)
@@ -1727,15 +1735,33 @@ def mode_edithost(phase, new):
                 save_folder_and_hosts(g_folder)
                 call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
-            if new:
+
+            errors = validate_host(g_folder[".hosts"][hostname])
+            if errors: # keep on this page if host does not validate
+                return
+            elif new:
                 return go_to_services and "firstinventory" or "folder"
             else:
                 return go_to_services and "inventory" or "folder"
 
-
     else:
         if new:
             render_folder_path()
+
+        # Show outcome of host validation
+        errors = validate_host(host)
+        if errors:
+            html.write("<div class=info>")
+            html.write('<table class=validationerror border=0 cellspacing=0 cellpadding=0><tr><td class=img>')
+            html.write('<img src="images/icon_validation_error.png"></td><td>')
+            html.write('<p><h3>%s</h3><ul>%s</ul></p>' % 
+                (_("Warning: This host has an invalid configuration!"), 
+                 "".join(["<li>%s</li>" % error for error in errors])))
+
+            if html.form_submitted():
+                html.write("<br><b>%s</b>" % _("Your changes have been saved nevertheless."))
+
+            html.write("</td></tr></table></div>")
 
         html.begin_form("edithost")
         html.write('<table class="form nomargin">\n')
@@ -2642,6 +2668,14 @@ def mode_changelog(phase):
             html.context_button(_("Site Configuration"), make_link([("mode", "sites")]), "sites")
 
     elif phase == "action":
+        defective_hosts = validate_all_hosts()
+        if defective_hosts:
+            raise MKUserError(None, _("You cannot activate changes while some hosts have "
+              "an invalid configuration: ") + ", ".join(
+                [ '<a href="%s">%s</a>' % (make_link([("mode", "edithost"), ("host", hn)]), hn)
+                  for hn in defective_hosts ]))
+              
+
         sitestatus_do_async_replication = False # see below
         if html.has_var("_siteaction"):
             config.need_permission("wato.activate")
@@ -9441,6 +9475,38 @@ def call_hook_users_saved(users):
 def call_hook_roles_saved(roles):
     if hook_registered('roles-saved'):
         call_hooks("roles-saved", roles)
+
+# This hook is called in order to determine if a host has a 'valid'
+# configuration. It used used for displaying warning symbols in the
+# host list and in the host detail view.
+def validate_host(host):
+    if hook_registered('validate-host'):
+        errors = []
+        eff = effective_attributes(host, host[".folder"])
+        for hk in g_hooks.get('validate-host', []):
+            try:
+                hk(eff)
+            except MKUserError, e:
+                errors.append(e.message)
+        return errors
+    else:
+        return []
+
+def validate_all_hosts():
+    if hook_registered('validate-host'):
+        hosts = collect_hosts(g_root_folder)
+        defective_hosts = []
+        for hn, eff in hosts.iteritems():
+            for hk in g_hooks.get('validate-host', []):
+                try:
+                    hk(eff)
+                except MKUserError, e:
+                    defective_hosts.append(hn)
+                    break # reason not interesting here
+        defective_hosts.sort()
+        return defective_hosts
+    else:
+        return []
 
 
 #.

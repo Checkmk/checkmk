@@ -37,4 +37,6 @@ $(document).ready(function() {
 
 $(document).bind("mobileinit", function(){
     $.mobile.ajaxEnabled = false;
+    $.mobile.hashListeningEnabled = false;
+
 });

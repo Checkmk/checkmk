@@ -215,6 +215,7 @@ multisite_builtin_views.update({
             ('stateage', False),
             ('svcdescr', False)
          ],
+        'linktitle': _('Problems (unhandled)'),
         'title': _('Problems (unhandled)'),
         'topic': _('Services'),
     }),
@@ -337,7 +338,7 @@ multisite_builtin_views.update({
         'show_filters': [],
         'sorters': [],
         'linktitle': _('Host status'),
-        'title': _('Status of Host'),
+        'title': '',
     }),
 
     # Search hosts

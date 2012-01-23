@@ -70,7 +70,7 @@ def mobile_html_foot():
     html.write("</body></html>\n")
 
 def jqm_header_button(url, title, icon=""):
-    html.write('<a href="%s" data-direction="reverse" data-icon="%s" title="%s" >%s</a>' % (url, icon, title, title ))
+    html.write('<a href="%s" data-direction="reverse" data-icon="%s" data-iconpos="notext"  title="%s" ></a>' % (url, icon, title ))
 
 def jqm_page_header(title, id=None, left_button=None, right_button=None):
     idtxt = id and (' id="%s"' % id) or ''
@@ -188,7 +188,7 @@ def page_index():
             if not view.get("mustsearch"):
 	        count = views.show_view(view, only_count = True)
                 count = '<span class="ui-li-count">%d</span>' % count
-            items.append((view.get("topic"), url, '%s %s' % (view["title"], count)))
+            items.append((view.get("topic"), url, '%s %s' % (view.get("linktitle", view["title"]), count)))
     jqm_page_index(_("Check_MK Mobile"), items)
     # Link to non-mobile GUI
 

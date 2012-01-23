@@ -178,7 +178,7 @@ def page_login():
 def page_index():
     title = "Check_MK Mobile"
     mobile_html_head(title)
-    jqm_page_header(title, left_button=("logout.py", "Logout", "delete"),right_button=("javascript:document.location.reload();", _("Reload"), "refresh"))
+    jqm_page_header(title, left_button=("logout.py", "Logout", "delete"),right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),id="data")
     views.load_views()
     items = []
     for view_name, view in html.available_views.items():
@@ -196,7 +196,6 @@ def page_index():
     html.write('<ul data-role="listview" data-theme="b" data-inset="true">\n')
     html.write('<li><a data-ajax="false" data-transition="fade" href="%s">%s</a></li>\n' %                 ("index.py?mobile=", _("Classical web GUI")))
     html.write('</ul>\n')
-    jqm_page_footer()
     mobile_html_foot()
 
 def page_view():

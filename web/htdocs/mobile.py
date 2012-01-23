@@ -55,8 +55,8 @@ def mobile_html_head(title, ready_code=""):
   <link rel="stylesheet" type="text/css" href="status.css">
   <link rel="stylesheet" type="text/css" href="mobile.css">
   <script type='text/javascript' src='jquery/jquery-1.6.4.min.js'></script>
-  <script type='text/javascript' src='jquery/jquery.mobile-1.0.min.js'></script>
   <script type='text/javascript' src='js/mobile.js'></script>
+  <script type='text/javascript' src='jquery/jquery.mobile-1.0.min.js'></script>
   <script type='text/javascript' src='js/checkmk.js'></script>
   <script type='text/javascript'>
       $(document).ready(function() { %s });

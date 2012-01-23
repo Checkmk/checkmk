@@ -33,3 +33,8 @@ $(document).ready(function() {
     $("div.really").addClass("ui-shadow");
     $("div.warning").addClass("ui-shadow");
 });
+
+
+$(document).bind("mobileinit", function(){
+    $.mobile.ajaxEnabled = false;
+});

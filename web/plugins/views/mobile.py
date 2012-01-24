@@ -215,6 +215,7 @@ multisite_builtin_views.update({
             ('stateage', False),
             ('svcdescr', False)
          ],
+        'linktitle': _('Problems (unhandled)'),
         'title': _('Problems (unhandled)'),
         'topic': _('Services'),
     }),
@@ -337,7 +338,7 @@ multisite_builtin_views.update({
         'show_filters': [],
         'sorters': [],
         'linktitle': _('Host status'),
-        'title': _('Status of Host'),
+        'title': '',
     }),
 
     # Search hosts
@@ -366,7 +367,7 @@ multisite_builtin_views.update({
         'mustsearch': True,
         'num_columns': 2,
         'painters': [
-		      ('host_state_appr', None),
+		      ('host_state', None),
 		      ('host', 'mobile_host'),
                       ('host_plugin_output', None),
         ],
@@ -383,7 +384,7 @@ multisite_builtin_views.update({
      #List all host problems
      'mobile_hostproblems': mobile_view({
                   'datasource': 'hosts',
-                  'group_painters': [('host_state_appr', None)],
+                  'group_painters': [('host_state', None)],
                   'hard_filters': ['host_scheduled_downtime_depth', 'summary_host'],
                   'hard_filtervars': [
 		      ('is_host_scheduled_downtime_depth', '0'),
@@ -403,7 +404,7 @@ multisite_builtin_views.update({
                   'name': 'hostproblems',
                   'num_columns': 2,
                   'painters': [
-		      ('host_state_appr', None),
+		      ('host_state', None),
 		      ('host', 'mobile_host'),
                       ('host_plugin_output', None),
                    ],
@@ -423,7 +424,7 @@ multisite_builtin_views.update({
      #List unhandled host problems
      'mobile_hostproblems_unack': mobile_view({
                   'datasource': 'hosts',
-                  'group_painters': [('host_state_appr', None)],
+                  'group_painters': [('host_state', None)],
                   'hard_filters': ['host_scheduled_downtime_depth', 'summary_host', 'host_acknowledged'],
                   'hard_filtervars': [
 		      ('is_host_scheduled_downtime_depth', '0'),
@@ -442,7 +443,7 @@ multisite_builtin_views.update({
                   'name': 'hostproblems',
                   'num_columns': 2,
                   'painters': [
-                      ('host_state_appr', None),
+                      ('host_state', None),
                       ('host', 'mobile_host'),
                       ('host_plugin_output', None),
                    ],

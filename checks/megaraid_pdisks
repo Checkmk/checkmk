@@ -46,46 +46,53 @@
 #
 # On new inventory runs the enclosure number is used as
 # index and item part.
+megaraid_pdisks_legacy_mode = False
+megaraid_pdisks_adapterstr  = ['e','f','g','h','i','j','k','l']
 
-def inventory_megaraid_pdisks(info):
-    inventory = []
-    dev2enc = {}
-    for line in info:
-        if line[0] == "dev2enc":
-            dev2enc[line[5]] = 'e'+line[2]
+def megaraid_pdisks_parse(info): 
+    adapters = { 0: {} }
+    current_adapter = adapters[0] 
+    return_var = []
+    adapter = 0
+    for line in  info:
+        if line[0] == 'adapter':
+            current_adapter = {}
+            adapters[int(line[1])] = current_adapter
+        elif line[0] == 'dev2enc':
+            current_adapter[int(line[5])] = int(line[2])
+        elif line[0] == 'Adapter' and len(line) == 2:
+            current_adapter = adapters[int(line[1][1:])] # Raute weglassen
+            adapter = int(line[1][1:])
         elif line[0] == "Enclosure" and line[1] == "Device":
-            enclosure = dev2enc.get(line[-1], line[-1])
+            enclosure_devid   = int(line[-1])
         elif line[0] == "Slot":
             slot = int(line[-1])
         elif line[0] == "Firmware" and line[1] == "state:":
-            inventory.append(( "%s/%d" % (enclosure, slot), "", repr(line[2]) ))
+            state = line[2]
+        elif line[0] == "Inquiry" and line[1] == "Data:":
+            name = " ".join(line[2:])
+            #Adapter, Enclosure, Encolsure Device ID, Slot, State, Name
+            return_var.append((megaraid_pdisks_adapterstr[adapter], adapters[adapter][enclosure_devid], enclosure_devid, slot, state, name))
+    return return_var
+
+
+def inventory_megaraid_pdisks(info):
+    
+    info = megaraid_pdisks_parse(info)
+    inventory = []
+    for adapter, enclosure, enc_dev_id, slot, state, name  in info:
+        inventory.append(("%s%s/%s" % (adapter,enclosure ,slot) ,"",repr(state))) 
     return inventory
 
 def check_megaraid_pdisks(item, target_state, info):
-    # item is "$ENCLOSURE/$SLOT"
-    # param is the target state
-    dev2enc = {}
-    found = None
-    for line in info:
-        if line[0] == "dev2enc":
-            dev2enc[line[5]] = 'e'+line[2]
-        elif line[0] == "Enclosure" and line[1] == "Device":
-            if item.startswith('e') and line[-1] in dev2enc:
-                enclosure = dev2enc[line[-1]]
-            else:
-                enclosure = line[-1]
-        elif line[0] == "Slot":
-            slot = int(line[-1])
-            found = "%s/%d" % (enclosure, slot) == item
-        elif found and line[0] == "Firmware" and line[1] == "state:":
-            state = line[2]
-        elif found and line[0] == "Inquiry" and line[1] == "Data:":
-            name = " ".join(line[2:])
-            infotext = " - %s (%s)" % (state, name)
-            if state == target_state:
-                return (0, "OK" + infotext)
-            else:
-                return (2, "CRIT" + infotext)
+    info = megaraid_pdisks_parse(info)
+    for adapter, enclosure, enc_dev_id, slot, state, name in info:
+        if "%s%s/%s" % (adapter,enclosure, slot) == item:
+           infotext = " - %s (%s)" % (state, name)
+           if state == target_state:
+               return (0, "OK" + infotext)
+           else:
+               return (2, "CRIT" + infotext)
     return (3, "UNKNOWN - No disk in encl/slot %s found" % item)
 
-check_info['megaraid_pdisks'] = (check_megaraid_pdisks, "RAID PDisk Enc/Sl %s", 1, inventory_megaraid_pdisks)
+check_info['megaraid_pdisks'] = (check_megaraid_pdisks, "RAID PDisk Adapt/Enc/Sl %s", 1, inventory_megaraid_pdisks)

@@ -147,6 +147,9 @@ body.mobile table.data td.perfometer td.inner {
     height: 14px;
 }
 
+.ui-header .ui-title, .ui-footer .ui-title {
+        margin: .6em 46px .8em; 
+}
 
 /*-------------------------------------------------------------------------.
 |                    ____  _        _                                      |

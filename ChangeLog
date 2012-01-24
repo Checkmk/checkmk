@@ -1,4 +1,7 @@
 1.1.12p7:
+    Core, Setup, etc.:
+    * FIX: honor extra_summary_host_conf (was ignored)
+
     Multisite:
     * FIX: detail view of host was missing column headers
     * FIX: fix problem on IE with background color 'white'

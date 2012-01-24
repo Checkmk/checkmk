@@ -1,0 +1,60 @@
+Title: OMD: Probleme im Shared-Mode
+Component: wato
+State: open
+Date: 2012-01-23 17:19:31
+Targetversion: 1.2.0
+Class: bug
+
+Hallo Lars,
+
+ 
+
+  wir haben noch ein Problem auf unserem SuSE10SP2 basierten
+
+System mit OMD festgestellt:  wir konnten ueber die check_MK
+
+Web-Oberflaeche keine User/Roles anlegen oder modifizieren.
+
+ 
+
+Grund sind File-Permissions Probleme zwischen omd
+
+(user/group = "gt1" = site-name) und httpd
+
+(user=wwwrun, group=www).  Wegen Einschraenkungen
+
+auf Suse10 wird ja der System-httpd genutzt und nicht ein
+
+eigener pro OMD Site.
+
+ 
+
+Betroffen sind mindestens die folgenden Files:
+
+
+drwxr-xr-x 2 gt1 gt1 4096 2012-01-19 15:28 /omd/sites/gt1/etc/check_mk/multisite.d/
+-rw-r--r-- 1 gt1 gt1   69 2012-01-19 15:33 /omd/sites/gt1/etc/htpasswd
+ 
+
+Ich habe mich jetzt mit "chmod 777/666" beholfen, aber  das ist
+
+nicht schoen.  Was ist das Konzept bei OMD fuer dieses Problem?
+
+Group-Write Acccess und dann ein chown wwwrun, also:
+
+ 
+
+drwxrwxr-x 2 wwwrun gt1 4096 2012-01-19 15:28 /omd/sites/gt1/etc/check_mk/multisite.d/
+-rw-rw-r-- 1 wwwrun gt1   69 2012-01-19 15:33 /omd/sites/gt1/etc/htpasswd
+
+ 
+
+Welche Files waeren noch betroffen?
+
+ 
+
+Danke fuer eine kurze Antwort.
+
+Gruesse,
+
+Andreas

@@ -269,12 +269,13 @@ fi
 if which MegaCli >/dev/null ; then
     echo '<<<megaraid_pdisks>>>'
     for part in $(MegaCli -EncInfo -aALL -NoLog < /dev/null \
-        | sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; /^(Enclosure|Device ID) [0-9]+$/ p'); do
+        | sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
+        [ $part = adapter ] && echo "" 
         [ $part = 'Enclosure' ] && echo -ne "\ndev2enc"
         echo -n " $part"
     done
     echo
-    MegaCli -PDList -aALL -NoLog < /dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry'
+    MegaCli -PDList -aALL -NoLog < /dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
     echo '<<<megaraid_ldisks>>>'
     MegaCli -LDInfo -Lall -aALL -NoLog < /dev/null | egrep 'Size|State|Number|Adapter|Virtual'
     echo '<<<megaraid_bbu>>>'

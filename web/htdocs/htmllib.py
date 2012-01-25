@@ -711,8 +711,8 @@ class html:
         else:
             login_text = _("not logged in")
         self.write("<table class=header><tr><td class=left>%s</td><td class=right>"
-                   "%s &nbsp; &nbsp; <b id=headertime>%s</b> <a href=\"http://mathias-kettner.de\"><img src=\"images/mk_logo_small.gif\"/></a></td></tr></table>" %
-                   (title, login_text, time.strftime("%H:%M")))
+                   "%s &nbsp; &nbsp; <b id=headertime>%s</b>%s</td></tr></table>" %
+                   (title, login_text, time.strftime("%H:%M"),_("<a href=\"http://mathias-kettner.de\"><img src=\"images/mk_logo_small.gif\"/></a>")))
         self.write("<hr class=header>\n")
         if config.debug:
             self.write("<div class=urldebug>%s</div>" % self.makeuri([]))

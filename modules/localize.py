@@ -60,20 +60,21 @@ def localize_usage(err = ''):
     sys.stdout.write("""Usage: check_mk [-v] --localize COMMAND [ARGS]
 
 Available commands are:
-   update  LANG (ALIAS) ...  Creates or updates a .po file for the given language.
-                             The alias is an optional attribute which will be used as
-                             display string in the Multisite GUI.
-   compile LANG         ...  Compiles the .po file into a .mo file which can
-                             be used by gettext.
-   edit    LANG         ...  Call update, open .po in editor and compile in one step
+  update  LANG [ALIAS] ... Creates or updates a .po file for the given 
+                           language. The alias is an optional attribute 
+                           which will be used as display string in the 
+                           Multisite GUI.
+  compile LANG         ... Compiles the .po file into a .mo file which can
+                           be used by gettext.
+  edit    LANG         ... Call update, open .po in editor and compile in one step
 
-  The regular process for translating is:
+ The regular process for translating is:
 
-  1.) Create/update the .po file for the given language
-  2.) Edit the .po file
-  3.) Compile the .po file to get a .mo file which can be used by gettext
+ 1.) Create/update the .po file for the given language
+ 2.) Edit the .po file
+ 3.) Compile the .po file to get a .mo file which can be used by gettext
 
-  Locale files are located in: %s
+ Locale files are located in: %s
 """ % locale_base)
 
 def do_localize(args):
@@ -247,7 +248,6 @@ def localize_update(lang):
     else:
         sys.stdout.write('Updating .po file for language %s...\n' % lang)
         localize_update_po()
-
 
 # Create a .mo file from the given .po file
 def localize_compile(lang):

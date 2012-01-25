@@ -34,6 +34,7 @@
     * New check: megaraid_bbu - check existance & status of LSI MegaRaid BBU module
     * HP-UX Agent: fix mrpe (remove echo -e and test -e, thanks to Philipp Lemke)
     * FIX: ntp checks: output numeric data also if stratum too high
+    * Linux agent: new check for dmraid-based "bios raid" (agent part as plugin)
 
     Multisite:
     * Improve transaction handling and reload detection: user can have 

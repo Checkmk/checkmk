@@ -1,0 +1,13 @@
+Title: default_language not honored by login maski
+Component: multisite
+State: open
+Date: 2012-01-25 09:58:35
+Targetversion: 1.2.0
+Class: bug
+
+I've translated "Username" and "Password" into 'de'. Then I've
+set default_language = 'de' in multisite.mk. Texts are not
+translated in the Cookie based login form, even after are restart
+of Apache. The I login, set my user language to 'de' and logout.
+Now the login screen is in German. After a logout the login screen
+is in German. Restarting Apache now switches it back to english.

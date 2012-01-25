@@ -1,0 +1,27 @@
+Title: Language selection of user: Default is missing
+Component: multisite
+State: open
+Date: 2012-01-25 18:41:17
+Targetversion: 1.1.13i1
+Class: bug
+
+Wenn man als Benutzer seine Sprache umstellen will, bekommt
+man in der Liste keine Auswahl für Englisch. Es muss so 
+funktionieren:
+
+Checkbox nicht angekreuzt -> Sprache, die in multisit.mk
+eingestellt ist. Wenn dort nichts steht dann "English".
+Das bedeutet, dass im Userprofil keine Sprache hinterlegt
+wird. Wenn der Admin die Defaultsprache in multisite.mk
+ändert, dann schlägt das durch.
+
+Checkbox angekreuzt -> Jetzt wird English als Eintrag in der
+Liste sichtbar. Damit kann der User auf Englisch stellen, wenn
+der admin in der multisite.mk "de" eingestellt hat. Im
+Userprofile muss jetzt "None" eingetragen werden. Das ist
+nicht das gleiche, als wie wenn keine Sprache eingestellt
+ist.
+
+Das Verhalten muss dann im user_profile.py und bei der
+Benutzervewaltung genau gleich sein.
+

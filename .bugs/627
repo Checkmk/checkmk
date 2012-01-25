@@ -1,0 +1,11 @@
+Title: Use language name from .mo or .po?
+Component: multisite
+State: open
+Date: 2012-01-25 18:58:02
+Targetversion: 1.2.0
+Class: cleanup
+
+The .po files contains meta-Data to the translation.
+There is a file "Language: ". Isn't it possible to extract the
+language alias name from that instead of keeping this in
+a separate non-standard file?

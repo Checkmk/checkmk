@@ -109,7 +109,7 @@ def check_ntp_server_state(line, params):
     elif state in [ "falsetick" ]:
         return (2, infotext, offset, jitter)
     elif stratum >= maxstratum:
-        return (2, "stratum %d is too high (max allowed is %d)" % (stratum, maxstratum - 1))
+        return (2, infotext + (", stratum is too high (max allowed is %d)" % (maxstratum - 1)))
     elif when > 2*poll and when > 128: # when can exceed poll for small polling values
         return (3, "response due since %d secs%s" % (when - poll, infotext), offset, jitter)
 

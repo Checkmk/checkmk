@@ -332,7 +332,7 @@ class html:
 
     def icon_button(self, url, help, icon):
         self.write('<a href="%s">'
-                   '<img class=iconbutton title="%s" src="images/button_%s_lo.png" '
+                   '<img align=absmiddle class=iconbutton title="%s" src="images/button_%s_lo.png" '
                    'onmouseover=\"hilite_icon(this, 1)\" '
                    'onmouseout=\"hilite_icon(this, 0)\">'
                    '</a>\n' % (url, help, icon))
@@ -707,12 +707,16 @@ class html:
 
     def top_heading(self, title):
         if type(self.req.user) == str:
-            login_text = "<b>%s</b> (%s)" % (config.user_id, "+".join(config.user_role_ids))
+            login_text = "<b>%s</b> (%s" % (config.user_id, "+".join(config.user_role_ids))
+            if config.debug:
+                if config.get_language():
+                    login_text += "/%s" % config.get_language()
+            login_text += ')'
         else:
             login_text = _("not logged in")
         self.write("<table class=header><tr><td class=left>%s</td><td class=right>"
-                   "%s &nbsp; &nbsp; <b id=headertime>%s</b> <a href=\"http://mathias-kettner.de\"><img src=\"images/mk_logo_small.gif\"/></a></td></tr></table>" %
-                   (title, login_text, time.strftime("%H:%M")))
+                   "%s &nbsp; &nbsp; <b id=headertime>%s</b>%s</td></tr></table>" %
+                   (title, login_text, time.strftime("%H:%M"),_("<a href=\"http://mathias-kettner.de\"><img src=\"images/mk_logo_small.gif\"/></a>")))
         self.write("<hr class=header>\n")
         if config.debug:
             self.write("<div class=urldebug>%s</div>" % self.makeuri([]))

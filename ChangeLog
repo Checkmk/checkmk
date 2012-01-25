@@ -10,6 +10,7 @@
     * cmk --localize update supports an optional ALIAS which is used as
       display string in the multisite GUI
     * FIX: Fixed encoding problems with umlauts in group aliases
+    * FIX: honor extra_summary_host_conf (was ignored)
 
     Checks & Agents:
     * Windows agent: output eventlog texts in UTF-8 encoding. This
@@ -32,6 +33,8 @@
     * Linux agent: wrap freeipmi with lock in order to avoid cache corruption
     * New check: megaraid_bbu - check existance & status of LSI MegaRaid BBU module
     * HP-UX Agent: fix mrpe (remove echo -e and test -e, thanks to Philipp Lemke)
+    * FIX: ntp checks: output numeric data also if stratum too high
+    * Linux agent: new check for dmraid-based "bios raid" (agent part as plugin)
 
     Multisite:
     * Improve transaction handling and reload detection: user can have 
@@ -51,7 +54,12 @@
       it exists after login when it is first needed
 
     Mobile:
-    * Improved sorting of views in main page
+    * Improved sorting of views in main page 
+    * Fix: Use all the availiable space in header
+    * Fix: Navigation with Android Hardwarekeys now working
+    * Fix: Links to pnp4nagios now work better
+    * Fix: Host and Service Icons now finger friendly
+    * Fix: Corrected some buildin views
 
     WATO:
     * Removed IP-Address attribute from folders
@@ -60,6 +68,7 @@
     * Snapshot/Factory Reset is possible even with a broken config
     * Added error messages to user edit dialog to prevent notification problems
       caused by incomplete configuration
+    * Activate Changes: Wato can also reload instead of restarting nagios
     * Replication: Can now handle replication sites which use the form based auth
     * Replication: Added option to ignore problems with the ssl certificates
                    used in ssl secured replications

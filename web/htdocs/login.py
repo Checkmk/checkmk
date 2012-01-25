@@ -221,8 +221,7 @@ def normal_login_page():
 
     html.write("<div id=login>")
     html.write("<div id=logo></div>")
-    html.write("<h1>Check_MK Multisite</h2>")
-
+    html.write("<h1>%s</h2>" % _("Check_MK Multisite"))
     html.write('<div id=form>')
 
     if html.has_user_errors():

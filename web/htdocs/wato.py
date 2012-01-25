@@ -1745,11 +1745,13 @@ def mode_edithost(phase, new):
                 return go_to_services and "inventory" or "folder"
 
     else:
+        # Show outcome of host validation. Do not validate new hosts 
+        errors = None
         if new:
             render_folder_path()
+        else:
+            errors = validate_host(host)
 
-        # Show outcome of host validation
-        errors = validate_host(host)
         if errors:
             html.write("<div class=info>")
             html.write('<table class=validationerror border=0 cellspacing=0 cellpadding=0><tr><td class=img>')

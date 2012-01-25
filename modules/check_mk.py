@@ -1575,6 +1575,7 @@ def create_nagios_hostdefs(outfile, hostname):
 
         if is_clust:
             outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(node_ips))
+        outfile.write(extra_summary_host_conf_of(hostname))
         outfile.write("}\n")
     outfile.write("\n")
 

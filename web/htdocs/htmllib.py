@@ -332,7 +332,7 @@ class html:
 
     def icon_button(self, url, help, icon):
         self.write('<a href="%s">'
-                   '<img class=iconbutton title="%s" src="images/button_%s_lo.png" '
+                   '<img align=absmiddle class=iconbutton title="%s" src="images/button_%s_lo.png" '
                    'onmouseover=\"hilite_icon(this, 1)\" '
                    'onmouseout=\"hilite_icon(this, 0)\">'
                    '</a>\n' % (url, help, icon))

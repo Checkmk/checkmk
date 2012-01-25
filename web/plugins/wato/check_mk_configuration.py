@@ -162,6 +162,18 @@ register_configvar(group,
              default_value = 50),
     domain = "multisite")
 
+register_configvar(group,
+    "wato_activation_method",
+    DropdownChoice(
+        title = _("Wato restart mode for Nagios"),
+        help = _("Should Wato restart or reload Nagios when activating changes"),
+        choices = [
+            ('restart', _("Restart")),
+            ('reload' , _("Reload") ),
+            ]),
+    domain = "multisite"
+    )
+
 group = _("Operation mode of Check_MK")
 
 register_configvar(group,

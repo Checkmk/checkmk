@@ -2720,7 +2720,7 @@ def mode_changelog(phase):
                 sitestatus_do_async_replication = True
             else:
                 try:
-                    check_mk_local_automation("restart")
+                    check_mk_local_automation(config.wato_activation_method)
                 except Exception, e:
                     if config.debug:
                         raise
@@ -6111,8 +6111,8 @@ def synchronize_site(site, restart):
 # Isolated restart without prior synchronization. Currently this
 # is only being called for the local site.
 def restart_site(site):
-    start = time.time()
-    check_mk_automation(site["id"], "restart")
+    start = time.time() 
+    check_mk_automation(site["id"], config.wato_activation_method) 
     duration = time.time() - start
     update_replication_status(site["id"],
         { "need_restart" : False }, { "restart" : duration })
@@ -6362,7 +6362,7 @@ def automation_push_snapshot():
         create_distributed_wato_file(site_id, mode)
         log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
         if html.var("restart", "no") == "yes":
-            check_mk_local_automation("restart")
+            check_mk_local_automation(config.wato_activation_method)
         return True
     except Exception, e:
         if config.debug:

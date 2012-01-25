@@ -147,7 +147,7 @@ def jqm_page(title, content, foot, id=None):
     jqm_page_footer(foot)
 
 def page_login():
-    title = "Check_MK Mobile"
+    title = _("Check_MK Mobile")
     mobile_html_head(title)
     jqm_page_header(title, id="login")
     html.write('<div id="loginhead">%s</div>' %

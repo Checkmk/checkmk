@@ -53,7 +53,12 @@
       it exists after login when it is first needed
 
     Mobile:
-    * Improved sorting of views in main page
+    * Improved sorting of views in main page 
+    * Fix: Use all the availiable space in header
+    * Fix: Navigation with Android Hardwarekeys now working
+    * Fix: Links to pnp4nagios now work better
+    * Fix: Host and Service Icons now finger friendly
+    * Fix: Corrected some buildin views
 
     WATO:
     * Removed IP-Address attribute from folders
@@ -62,6 +67,7 @@
     * Snapshot/Factory Reset is possible even with a broken config
     * Added error messages to user edit dialog to prevent notification problems
       caused by incomplete configuration
+    * Activate Changes: Wato can also reload instead of restarting nagios
     * Replication: Can now handle replication sites which use the form based auth
     * Replication: Added option to ignore problems with the ssl certificates
                    used in ssl secured replications

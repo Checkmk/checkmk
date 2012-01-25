@@ -56,10 +56,10 @@ def check_dmraid_pdisks(item, _no_params, info):
             if disk == item:
                 status = line[4].split(",")[0]
                 if status == "ok":
-		    pos=line.index("Model:")
-		    model=" ".join(line[pos+1:])
+        pos=line.index("Model:")
+        model=" ".join(line[pos+1:])
                     return (0, "OK - Online (%s)" % model)
-		else:
+        else:
                     return (2, "CRIT - Error on disk!!")
     return (2, "CRIT - Missing disk!!")
 
@@ -67,16 +67,16 @@ def check_dmraid_pdisks(item, _no_params, info):
 def check_dmraid_ldisks(item, _no_params, info):
     LDISK_FOUND=False
     for line in info:
-	if  LDISK_FOUND:
-	    if line[0] == "status":
-	        status = line[2]
-		if   status == "ok":
-		    return(0, "OK - state is %s" % status)
-		else:
-		    return(2, "CRIT - %s" % status) 
+        if  LDISK_FOUND:
+            if line[0] == "status":
+                status = line[2]
+                if   status == "ok":
+                    return(0, "OK - state is %s" % status)
+                else:
+                    return(2, "CRIT - %s" % status) 
         if line[0] == "name" and line[2] == item:
             LDISK_FOUND=True
-    
+
     return (3, "UNKNOWN - incomplete data from agent")
 
 

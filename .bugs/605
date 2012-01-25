@@ -1,10 +1,13 @@
 Title: User is logged out if he changes his language
 Component: multisite
-State: open
+Class: nastiness
+State: wontfix
 Date: 2012-01-25 18:22:41
 Targetversion: 1.2.0
-Class: nastiness
 
 If a user changes his language and does *not* change 
 is password, he is logged out nevertheless (Cookie based
 auth). There should rather happen a page reload only.
+
+2012-01-25 18:47:09: changed state open -> wontfix
+Same as #606

@@ -592,7 +592,7 @@ wato_hide_filenames = True
 wato_max_snapshots = 50
 wato_num_hostspecs = 12
 wato_num_itemspecs = 15
-
+wato_activation_method = 'restart'
 wato_write_nagvis_auth = False
 
 

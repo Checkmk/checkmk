@@ -3582,12 +3582,16 @@ class HostTagAttribute(Attribute):
     def paint(self, value, hostname):
         # Localize the titles. To make the strings available in the scanned localization
         # files the _() function must also be placed in the configuration files
+        # But don't localize empty strings - This empty string is connected to the header
+        # of the .mo file
         if len(self._taglist) == 1:
             title = self._taglist[0][1]
+            if title:
+                title = _(title)
             if value:
-                return "", _(title)
+                return "", title
             else:
-                return "", "%s %s" % (_("not"), _(title))
+                return "", "%s %s" % (_("not"), title)
         for entry in self._taglist:
             if value == entry[0]:
                 return "", _(entry[1])

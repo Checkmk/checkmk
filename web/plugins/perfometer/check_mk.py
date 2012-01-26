@@ -182,9 +182,12 @@ perfometers["check_mk-systemtime"] = lambda r, c, p: perfometer_check_mk_ntp(r, 
 
 def perfometer_check_mk_ipmi_sensors(row, check_command, perf_data):
     state = row["service_state"]
-    color = { 0: "#06f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[state]
+    color = { 0: "#39f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[state]
     value = float(perf_data[0][1])
-    crit = float(perf_data[0][4])
+    crit = savefloat(perf_data[0][4])
+    if not crit:
+        return "%d" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
+
     perc = 100 * value / crit
     # some sensors get critical if the value is < crit (fans), some if > crit (temp)
     h = '<table><tr>'

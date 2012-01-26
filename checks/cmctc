@@ -70,7 +70,7 @@ def check_cmctc_temp(item, no_params, info):
 
     return (3, "UNKNOWN - Sensor %s not found in SNMP data" % item)
 
-check_info['cmctc.temp'] = (check_cmctc_temp, "CMC Temperature %s", 1,  inventory_cmctc_temp)
+check_info['cmctc.temp'] = (check_cmctc_temp, "Temperature %s", 1,  inventory_cmctc_temp)
 snmp_info['cmctc'] = (
    # Base to all IO units
    ".1.3.6.1.4.1.2606.4.2",

@@ -59,7 +59,7 @@ def check_dmraid_pdisks(item, _no_params, info):
                     pos=line.index("Model:")
                     model=" ".join(line[pos+1:])
                     return (0, "OK - Online (%s)" % model)
-        else:
+                else:
                     return (2, "CRIT - Error on disk!!")
     return (2, "CRIT - Missing disk!!")
 

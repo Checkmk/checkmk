@@ -632,6 +632,53 @@ checkgroups.append((
     None, None))
 
 checkgroups.append((
+    "4xthreshold",
+    _("4 Threshold limits"),
+    Tuple(
+          help = _("This rulset enables you to setup the threshold limts for checks"
+                   "who needs critmin, warnmin, warnmax, critmax levels "),
+          elements = [
+              Integer(title = _("Critical if lower then")),
+              Integer(title = _("Warning if lower then")),
+              Integer(title = _("Warning if higher then")),
+              Integer(title = _("Critical if higher then")),
+              ]),
+    TextAscii(
+        title = _("Service descriptions"),
+        allow_empty = False),
+     None))
+
+checkgroups.append((
+    "2xthreshold",
+    _("2 Threshold limits"),
+    Tuple(
+          help = _("This rulset enables you to setup the threshold limts for checks"
+                   "who needs a warn and a critical level"),
+          elements = [
+              Integer(title = _("Warning if higher then")),
+              Integer(title = _("Critical if higher then")),
+              ]),
+    TextAscii(
+        title = _("Service descriptions"),
+        allow_empty = False),
+     None))
+
+checkgroups.append((
+    "2xthresholdPercent",
+    _("2 Percentage Threshold limits"),
+    Tuple(
+          help = _("This rulset enables you to setup the threshold limts for checks"
+                   "who needs a warn- and a critical percent level"),
+          elements = [
+              Percentage(title = _("Warning if higher then")),
+              Percentage(title = _("Critical if higher then")),
+              ]),
+    TextAscii(
+        title = _("Service descriptions"),
+        allow_empty = False),
+     None))
+
+checkgroups.append((
     "threads",
     _("Number of threads"),
     Tuple(

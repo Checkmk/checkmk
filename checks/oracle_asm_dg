@@ -25,13 +25,13 @@
 # Boston, MA 02110-1301 USA.
 
 
-oracle_asm_dg_default_levels       = (80, 90)
+    oracle_asm_dg_default_levels       = (80, 90)
 
-def inventory_oracle_asm_dg(info):
-    return [ (line[0], "", "oracle_asm_dg_default_levels") for line in info ]
+    def inventory_oracle_asm_dg(info):
+        return [ (line[0], "", "oracle_asm_dg_default_levels") for line in info ]
 
-def check_oracle_asm_dg(name, params, info):
-    (warn, crit) = params
+    def check_oracle_asm_dg(name, params, info):
+        (warn, crit) = params
     for line in info:
         if line[0] == name:
             size_mb = int(line[2])
@@ -56,3 +56,4 @@ check_info['oracle_asm_dg'] = (
     "ASM disk group %s",
     1,
     inventory_oracle_asm_dg)
+checkgroup_of['oracle_asm_dg'] = "2xthresholdPercent"

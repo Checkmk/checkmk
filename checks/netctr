@@ -123,3 +123,4 @@ def check_netctr_combined(nic, params, info):
 
 check_info['netctr.combined'] = (check_netctr_combined, "NIC %s counters", 1,  inventory_netctr_combined )
 check_config_variables.append("netctr_counters")
+checkgroup_of['netctr.combined'] = "2xthresholdPercent"

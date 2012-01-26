@@ -155,3 +155,4 @@ def check_win_dhcp_pools_stats(item, params, info):
 
 check_info['win_dhcp_pools'] = (check_win_dhcp_pools, "DHCP Pool %s",  1, inventory_win_dhcp_pools)
 check_info['win_dhcp_pools.stats'] = (check_win_dhcp_pools_stats, "DHCP Stats",  1, inventory_win_dhcp_pools_stats)
+checkgroup_of['win_dhcp_pools'] = "2xthresholdPercent"

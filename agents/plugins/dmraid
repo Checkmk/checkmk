@@ -1,0 +1,19 @@
+#!/bin/sh
+echo '<<<dmraid>>>'
+
+STATUS=$(dmraid -r)
+if [ $? != 0 ]; then
+	exit 1
+fi
+
+# Name und Status ausgeben
+dmraid -s | grep -e ^name -e ^status
+
+# Diskname der Raidplatten ausgeben
+DISKS=$(echo "$STATUS" | cut -f1 -d\:)
+
+for disk in $DISKS ; do 
+    device=$(cat /sys/block/$(basename $disk)/device/model )
+    status=$(echo "$STATUS" | grep ^${disk})
+    echo "$status Model: $device"
+done

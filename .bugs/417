@@ -1,11 +1,11 @@
 Title: Split SNMPv2 and snmpwulkwalk options
 Component: core
+State: done
+Class: nastiness
 Benefit: 4
-State: open
 Cost: 2
 Date: 2011-11-29 15:16:00
 Targetversion: 1.1.13i1
-Class: nastiness
 
 Einige Geräte können zwar SNMPv2, setzen aber snmpbulkwalks nicht korrekt um oder
 antworten gar nicht auf bulkwalks. Normale snmpwalks funktionieren gut.
@@ -15,3 +15,6 @@ Das ist mir sowohl bei Switchen, als auch gerade bei einem netapp filer aufgefal
 Für solch einen Fall ist es wichtig, dass man SNMPv2 und die Bulkwalk Option getrennt
 schalten kann. Man könnte z.B. bei gesetztem "bulk" Implizit "snmpv2" setzen, bei 
 manuell gesetztem "snmpv2" aber nicht automatisch "bulk".
+
+2012-01-26 08:15:49: changed state open -> done
+Erledigt durch neue Variable snmpv2c_hosts (siehe doku).

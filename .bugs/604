@@ -1,0 +1,10 @@
+Title: User cannot select "unlocalized", i.e. English
+Component: multisite
+State: open
+Date: 2012-01-25 10:02:10
+Targetversion: 1.2.0
+Class: bug
+
+If you create one language "de" then the user cannot
+select the language in his properties (default language is
+also set to "de"). 

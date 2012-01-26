@@ -11,6 +11,9 @@
       display string in the multisite GUI
     * FIX: Fixed encoding problems with umlauts in group aliases
     * FIX: honor extra_summary_host_conf (was ignored)
+    * new config variable snmpv2c_hosts that allows to enable SNMP v2c
+      but *not* bulkwalk (for some broken devices). bulkwalk_hosts still
+      implies v2c.
 
     Checks & Agents:
     * Windows agent: output eventlog texts in UTF-8 encoding. This
@@ -34,6 +37,7 @@
     * New check: megaraid_bbu - check existance & status of LSI MegaRaid BBU module
     * HP-UX Agent: fix mrpe (remove echo -e and test -e, thanks to Philipp Lemke)
     * FIX: ntp checks: output numeric data also if stratum too high
+    * Linux agent: new check for dmraid-based "bios raid" (agent part as plugin)
 
     Multisite:
     * Improve transaction handling and reload detection: user can have 
@@ -232,6 +236,7 @@
     * FIX: detail view of host was missing column headers
     * FIX: fix problem on IE with background color 'white'
     * FIX: fix hitting enter in host search form on IE
+    * FIX: fix problem in ipmi_sensors perfometer
 
     Checks & Agents:
     * FIX: fixed man pages of h3c_lanswitch_sensors and statgrab_cpu

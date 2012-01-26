@@ -1,10 +1,11 @@
 Title: Multisite: i18n and l10n docs missing
 Component: docu
+State: done
+Class: todo
 Benefit: 1
-State: open
 Cost: 2
 Date: 2011-10-14 12:21:00
-Class: todo
+Targetversion: future
 
 There are no docs for this feature.
 
@@ -24,3 +25,6 @@ Available commands are:
   3.) Compile the .po file to get a .mo file which can be used by gettext
 
   Locale files are located in: /omd/sites/lancom/local/share/check_mk/locale
+
+2012-01-25 19:00:06: changed state open -> done
+Documentation is done.

@@ -140,9 +140,11 @@ def get_languages():
 
     for lang_dir in get_language_dirs():
         try:
-            languages += [ (val, get_language_alias(val)) for val in os.listdir(lang_dir) if not '.' in val ]
+            languages += [ (val, get_language_alias(val)) 
+                for val in os.listdir(lang_dir) if not '.' in val ]
         except OSError:
-            # Catch "OSError: [Errno 2] No such file or directory:" when directory not exists
+            # Catch "OSError: [Errno 2] No such file or 
+            # directory:" when directory not exists
             pass
 
     return languages
@@ -154,7 +156,7 @@ def load_language(lang):
     if lang:
         locale_base = defaults.locale_dir
         local_locale_path = defaults.omd_root + "/local/share/check_mk/locale"
-        po_path = '/%s/LC_MESSAGES/multisite.po' % lang
+        po_path = '/%s/LC_MESSAGES/multisite.mo' % lang
         # Use file in OMD local strucuture when existing
         if os.path.exists(local_locale_path + po_path):
             locale_base = local_locale_path
@@ -163,7 +165,8 @@ def load_language(lang):
             i18n = gettext.translation('multisite', locale_base, languages = [ lang ], codeset = 'UTF-8')
             i18n.install(unicode = True)
         except IOError, e:
-            # Fallback to hardcoded default if the given language does not exist
+            # Fallback to non localized multisite
+            # I'd prefer to fallback to multisite default language but can not import config module here
             __builtin__.current_language = config.default_language
     else:
         # Replace the _() function to disable i18n again

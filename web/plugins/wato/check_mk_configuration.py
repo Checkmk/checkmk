@@ -752,14 +752,22 @@ register_rule(group,
 
 register_rule(group,
     "bulkwalk_hosts",
-    title = _("Hosts using SNMP v2c (and bulk walk)"),
+    title = _("Hosts using bulk walk (and SNMP v2c)"),
     help = _("Most SNMP hosts support SNMP version 2c. However, Check_MK defaults to version 1, "
              "in order to support as many devices as possible. Please use this ruleset in order "
              "to configure SNMP v2c for as many hosts as possible. That version has two advantages: "
-             "it supports 64 bit counters, which avoid problems with wrapping counters at too "
-             "much traffic. And it support bulk walk, which saves much CPU and network ressourecs. "
+             "it supports 64 bit counters, which avoids problems with wrapping counters at too "
+             "much traffic. And it support bulk walk, which saves much CPU and network ressources. "
              "Please be aware, however, that there are some broken devices out there, that support "
-             "v2c but behave very bad when it is used. "))
+             "bulk walk but behave very bad when it is used. When you want to enable v2c while not using "
+             "bulk walk, please use the rule set snmpv2c_hosts instead."))
+
+register_rule(group,
+    "snmpv2c_hosts",
+    title = _("Hosts using SNMP v2c (and no bulk walk)"),
+    help = _("There exist a few devices out there that behave very badly when using SNMP bulk walk. "
+             "If you want to use SNMP v2c on those devices, nevertheless, then use this rule set. "
+             "One reason is enabling 64 bit counters."))
 
 group = _("Operation mode of Check_MK")
 

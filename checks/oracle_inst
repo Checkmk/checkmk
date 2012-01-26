@@ -117,3 +117,4 @@ check_info['oracle_inst'] = (
     "DB_%s",
     1,
     inventory_oracle_inst)
+checkgroup_of['oracle_inst'] = "2xthreshold"

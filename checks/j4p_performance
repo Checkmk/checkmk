@@ -269,3 +269,5 @@ check_info["j4p_performance.app_state"] = ( check_j4p_performance_app_state, "JM
 check_info["j4p_performance.app_sess"]  = ( check_j4p_performance_app_sess,  "JMX %s Sessions", 1, lambda i: inventory_j4p_performance_apps(i, "app_sess"))
 # Servlet specific checks
 check_info["j4p_performance.serv_req"]  = ( check_j4p_performance_serv_req,  "JMX %s Requests", 1, lambda i: inventory_j4p_performance_serv(i, "serv_req"))
+checkgroup_of['j4p_performance.mem'] = "2xthreshold"
+checkgroup_of['j4p_performance.threads'] = "2xthreshold"

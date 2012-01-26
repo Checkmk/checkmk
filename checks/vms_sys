@@ -129,3 +129,4 @@ def check_vms_cpu_utilization(item, param, info):
         % (user_perc, system_perc, wait_perc, cputext), perfdata)
 
 check_info['vms_sys.util'] =  (check_vms_cpu_utilization, "CPU utilization", 1,  inventory_vms_cpu_utilization)
+checkgroup_of['vms_sys.util'] = "2xthresholdPercent"

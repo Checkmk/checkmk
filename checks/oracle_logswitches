@@ -50,3 +50,4 @@ def check_oracle_logswitches(item, params, info):
     return (2, "UNKNOWN - Database not existing or not running")
 
 check_info['oracle_logswitches'] = (check_oracle_logswitches, "ORA %s Logswitches", 1,  inventory_oracle_logswitches )
+checkgroup_of['oracle_logswitches'] = "4xthreshold"

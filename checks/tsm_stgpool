@@ -52,3 +52,4 @@ check_info['tsm_stgpool'] = (
     "Storage Pool %s",
     1,
     inventory_tsm_stgpool)
+checkgroup_of['tsm_stgpool'] = "2xthresholdPercent"

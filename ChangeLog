@@ -11,6 +11,9 @@
       display string in the multisite GUI
     * FIX: Fixed encoding problems with umlauts in group aliases
     * FIX: honor extra_summary_host_conf (was ignored)
+    * new config variable snmpv2c_hosts that allows to enable SNMP v2c
+      but *not* bulkwalk (for some broken devices). bulkwalk_hosts still
+      implies v2c.
 
     Checks & Agents:
     * Windows agent: output eventlog texts in UTF-8 encoding. This

@@ -1,11 +1,14 @@
 Title: cmctc.temp service description
 Component: checks
+State: done
+Class: cleanup
 Benefit: 1
-State: open
 Cost: 1
 Date: 2011-11-10 09:23:51
 Targetversion: 1.2.0
-Class: cleanup
 
 Change the service description to Temperature %s, like the 
 others.
+
+2012-01-26 18:57:17: changed state open -> done
+Done.

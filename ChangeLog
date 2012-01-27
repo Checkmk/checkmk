@@ -38,6 +38,10 @@
     * HP-UX Agent: fix mrpe (remove echo -e and test -e, thanks to Philipp Lemke)
     * FIX: ntp checks: output numeric data also if stratum too high
     * Linux agent: new check for dmraid-based "bios raid" (agent part as plugin)
+    * FIX: if64 now uses ifHighSpeed instead of ifSpeed for determining the
+      link speed (fixes speed of 10GBit/s and 20GBit/s ports, thanks Marco Poet)
+    * cmctc.temp: serivce has been renamed from "CMC Temperature %s" to just
+      "Temperature %s", in order to be consistent with the other checks.
 
     Multisite:
     * Improve transaction handling and reload detection: user can have 

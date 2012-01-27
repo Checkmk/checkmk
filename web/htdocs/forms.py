@@ -27,7 +27,7 @@
 from lib import *
 
 
-def edit_dictionary(entries, value, focus=None, hover_help=True):
+def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None):
     new_value = value.copy()
     if html.var("filled_in") == "form" and html.check_transaction():
         messages = []
@@ -39,6 +39,14 @@ def edit_dictionary(entries, value, focus=None, hover_help=True):
             except MKUserError, e:
                 messages.append(u"%s: %s" % (vs.title(), e.message))
                 html.add_user_error(e.varname, e.message)
+
+        if validate:
+            try:
+                validate(new_value)
+            except MKUserError, e:
+                messages.append(e.message)
+                html.add_user_error(e.varname, e.message)
+
         if messages:
             html.show_error("".join(["%s<br>\n" % m for m in messages]))
         else:

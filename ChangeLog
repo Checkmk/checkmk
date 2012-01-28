@@ -59,6 +59,8 @@
     * FIX: Fix problem with Umlaut in contact alias
     * FIX: Creating auth.php file on first login dialog based login to ensure
       it exists after login when it is first needed
+    * Dashboard: link problem views to *unhandled* views (this was
+      inconsistent)
 
     Mobile:
     * Improved sorting of views in main page 

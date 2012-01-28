@@ -632,16 +632,33 @@ checkgroups.append((
     None, None))
 
 checkgroups.append((
-    "4xthreshold",
-    _("4 Threshold limits"),
+    "akcp_humidity",
+    _("AKCP Humidity Levels"),
     Tuple(
-          help = _("This rulset enables you to setup the threshold limts for checks"
-                   "who needs critmin, warnmin, warnmax, critmax levels "),
+          help = _("This Rulset sets the threshold limits for humidity sensors attached to " 
+                   "AKCP Sensor Probe "),
           elements = [
-              Integer(title = _("Critical if lower then")),
-              Integer(title = _("Warning if lower then")),
-              Integer(title = _("Warning if higher then")),
-              Integer(title = _("Critical if higher then")),
+              Integer(title = _("Critical if moisture lower than")),
+              Integer(title = _("Warning if moisture lower than")),
+              Integer(title = _("Warning if moisture higher than")),
+              Integer(title = _("Critical if moisture higher than")),
+              ]),
+    TextAscii(
+        title = _("Service descriptions"),
+        allow_empty = False),
+     None))
+
+checkgroups.append((
+    "oracle_logswitches",
+    _("Oracle Logswitches"),
+    Tuple(
+          help = _("This check monitors the number of log switches of an ORACLE " 
+                   "database instance in the last 60 minutes. You can set levels for upper and lower bounds."),
+          elements = [
+              Integer(title = _("Critical if fewer than"), unit=_("log switches")),
+              Integer(title = _("Warning if fewer than"), unit=_("log switches")),
+              Integer(title = _("Warning if more than"), unit=_("log switches")),
+              Integer(title = _("Critical if more than"), unit=_("log switches")),
               ]),
     TextAscii(
         title = _("Service descriptions"),
@@ -655,8 +672,8 @@ checkgroups.append((
           help = _("This rulset enables you to setup the threshold limts for checks"
                    "who needs a warn and a critical level"),
           elements = [
-              Integer(title = _("Warning if higher then")),
-              Integer(title = _("Critical if higher then")),
+              Integer(title = _("Warning if higher than")),
+              Integer(title = _("Critical if higher than")),
               ]),
     TextAscii(
         title = _("Service descriptions"),
@@ -670,8 +687,23 @@ checkgroups.append((
           help = _("This rulset enables you to setup the threshold limts for checks"
                    "who needs a warn- and a critical percent level"),
           elements = [
-              Percentage(title = _("Warning if higher then")),
-              Percentage(title = _("Critical if higher then")),
+              Percentage(title = _("Warning if higher than")),
+              Percentage(title = _("Critical if higher than")),
+              ]),
+    TextAscii(
+        title = _("Service descriptions"),
+        allow_empty = False),
+     None))
+
+checkgroups.append((
+    "win_dhcp_pools",
+    _("Windows DHCP Pool"),
+    Tuple(
+          help = _("The count of remaining entries in the DHCP pool represents "
+                   "the number of IP addresses left which can be assigned in the network"),
+          elements = [
+              Percentage(title = _("Warning if pool usage higher than")),
+              Percentage(title = _("Critical if pool usage higher than")),
               ]),
     TextAscii(
         title = _("Service descriptions"),

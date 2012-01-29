@@ -1,10 +1,14 @@
 Title: Documentation for dashboards is missing
 Component: docu
+State: done
+Class: todo
 Benefit: 3
-State: open
 Cost: 3
 Date: 2011-10-14 12:30:36
-Class: todo
+Targetversion: future
 
 A common question will be how to customize the dashboard. Create basic docs
 for the dashboard format and how to create custom dashlets and dashboards
+
+2012-01-29 17:01:19: changed state open -> done
+Documentation is finally written. Phuey.

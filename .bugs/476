@@ -1,13 +1,20 @@
-Title: mounts Checks should only check ro flag
+Title: mounts check should only check ro flag
 Component: checks
+State: done
+Class: bug
 Benefit: 1
-State: open
 Cost: 1
 Date: 2011-12-06 08:52:27
 Targetversion: 1.2.0
-Class: bug
 
 Currently on my laptop the mounts check is flapping around because
 the kernel seems to add a mount option with "commit" and change
 it all the time. Basically we'd need to just monitor the ro
 status.
+
+Another idea is to consolidate the check into one single
+check. This is difficult - however - because we need to 
+safe one per-filesystem parameter: the expected options.
+
+2012-01-29 22:29:13: changed state open -> done
+commit is now excluded.

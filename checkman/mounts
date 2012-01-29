@@ -6,13 +6,16 @@ distribution: check_mk
 description:
  This check monitors the options with which a filesystem is mounted by
  using the output of {/proc/mounts}. In normal operation mount options
- should never change. If they do a severe problem can be the case: In
- case of an I/O error while writing to disk, most filesystems (e.g.
- {ext3}) will switch to read-only per default in order to avoid further
- filesystem corruption. This check makes sure that you get to know
- if this happens.
+ should never change. In recent versions of Linux (e.g. UBUNTU oneiric),
+ the mount option {commit=} may change automatically depending
+ on the current battery state, so this option is being excluded from
+ the monitoring.
 
- Any change in the mount options results in a {CRITICAL} state.
+ This check goes critical if the mount option {ro} appears. This
+ might indicate IO errors are even a filesystem corruption!
+
+ Any other change of mount options will trigger a warning state.
+
  If the filesystem is not being found mounted, the check returns
  an {UNKNOWN} state.
 
@@ -27,5 +30,6 @@ inventory:
  by the agent.
 
 [parameters]
-target_options (list of strings): The list of expected mount options. Any change
- in that list will result in a critical state. Example: {['data=ordered', 'rw']}
+target_options (list of strings): The list of expected mount options. During
+ inventory this list is being put into the check's parameter.
+ Example: {['data=ordered', 'rw']}

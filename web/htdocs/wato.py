@@ -1150,6 +1150,7 @@ def show_hosts(folder):
         (config.may("wato.edit_hosts") or config.may("wato.manage_hosts")):
         bulk_actions(at_least_one_imported, top = True)
 
+    host_errors = validate_all_hosts(hostnames) 
     # Now loop again over all hosts and display them
     for hostname in hostnames:
         if search_text and (search_text.lower() not in hostname.lower()):
@@ -1182,7 +1183,7 @@ def show_hosts(folder):
 
         # Hostname with link to details page (edit host)
         html.write('<td>')
-        errors = validate_host(host)
+        errors = host_errors.get(hostname,[]) + validate_host(hostname)
         if errors:
             msg = _("Warning: This host has an invalid configuration: ")
             msg += ", ".join(errors)
@@ -1736,7 +1737,7 @@ def mode_edithost(phase, new):
                 call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
 
-            errors = validate_host(g_folder[".hosts"][hostname])
+            errors = validate_all_hosts([hostname]) + validate_host(hostname)
             if errors: # keep on this page if host does not validate
                 return
             elif new:
@@ -1750,7 +1751,7 @@ def mode_edithost(phase, new):
         if new:
             render_folder_path()
         else:
-            errors = validate_host(host)
+            errors = validate_all_hosts([hostname]) + validate_host(hostname)
 
         if errors:
             html.write("<div class=info>")
@@ -2670,12 +2671,12 @@ def mode_changelog(phase):
             html.context_button(_("Site Configuration"), make_link([("mode", "sites")]), "sites")
 
     elif phase == "action":
-        defective_hosts = validate_all_hosts()
+        defective_hosts = validate_all_hosts([], force_all = True)
         if defective_hosts:
             raise MKUserError(None, _("You cannot activate changes while some hosts have "
               "an invalid configuration: ") + ", ".join(
                 [ '<a href="%s">%s</a>' % (make_link([("mode", "edithost"), ("host", hn)]), hn)
-                  for hn in defective_hosts ]))
+                  for hn in defective_hosts.keys() ]))
               
 
         sitestatus_do_async_replication = False # see below
@@ -4184,7 +4185,6 @@ def mode_snapshot(phase):
                                 delete_file
                             )
             if c:
-                # FIXME: kein join verwenden
                 os.remove(os.path.join(snapshot_dir, delete_file))
                 return None, _("Snapshot deleted.")
             elif c == False: # not yet confirmed
@@ -9479,7 +9479,7 @@ def call_hook_roles_saved(roles):
         call_hooks("roles-saved", roles)
 
 # This hook is called in order to determine if a host has a 'valid'
-# configuration. It used used for displaying warning symbols in the
+# configuration. It used for displaying warning symbols in the
 # host list and in the host detail view.
 def validate_host(host):
     if hook_registered('validate-host'):
@@ -9494,22 +9494,30 @@ def validate_host(host):
     else:
         return []
 
-def validate_all_hosts():
-    if hook_registered('validate-host'):
-        hosts = collect_hosts(g_root_folder)
-        defective_hosts = []
-        for hn, eff in hosts.iteritems():
-            for hk in g_hooks.get('validate-host', []):
-                try:
-                    hk(eff)
-                except MKUserError, e:
-                    defective_hosts.append(hn)
-                    break # reason not interesting here
-        defective_hosts.sort()
-        return defective_hosts
-    else:
-        return []
+# This hook is called in order to determine the errors of the given
+# hostnames. These informations are used for displaying warning
+# symbols in the host list and the host detail view
+# Returns dictionary { hostname: [errors] }
+def validate_all_hosts(hostnames, force_all = False):
+    if hook_registered('validate-all-hosts') and (len(hostnames) > 0 or force_all):
+        hosts_errors = {}
+        all_hosts = collect_hosts(g_root_folder)
+        
+        if force_all:
+            hostnames = all_hosts.keys()
 
+        for name in hostnames:
+            eff = all_hosts[name]
+            errors = []
+            for hk in g_hooks.get('validate-all-hosts', []):
+                try:
+                    hk(eff, all_hosts)
+                except MKUserError, e:
+                    errors.append(e.message)
+            hosts_errors[name] = errors
+        return hosts_errors
+    else:
+        return {}
 
 #.
 #   .-Helpers--------------------------------------------------------------.

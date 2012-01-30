@@ -24,25 +24,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Output is taken from /proc/loadavg plus the number of cores:
+# 0.26 0.47 0.52 2/459 19531 4
+
 
 cpuload_default_levels = (5, 10)
 threads_default_levels = (2000.0, 4000.0)
 
 def inventory_cpu_load(info):
     if len(info) == 1 and len(info[0]) >= 5:
-        return [(None, "", "cpuload_default_levels")]
+        return [(None, "cpuload_default_levels")]
 
 def check_cpu_load(item, params, info):
-    try:
-        load = []
-        for i in [ 0, 1, 2 ]:
-            load.append(float(info[0][i]))
-        if len(info[0]) >= 6:
-            num_cpus = int(info[0][5])
-        else:
-            num_cpus = 1
-    except:
-        return (3, "Unknown - invalid or incomplete output from plugin")
+    load = []
+    for i in [ 0, 1, 2 ]:
+        load.append(float(info[0][i]))
+    if len(info[0]) >= 6:
+        num_cpus = int(info[0][5])
+    else:
+        num_cpus = 1
 
     warn, crit = params # apply on 15min average, relative to number of CPUs
     warn = warn * num_cpus

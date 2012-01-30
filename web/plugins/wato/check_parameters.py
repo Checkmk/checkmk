@@ -614,7 +614,7 @@ checkgroups.append((
 
 checkgroups.append((
     "cpu_utilization",
-    _("CPU utilization"),
+    _("CPU utilization (disk wait)"),
     Optional(
         Tuple(
               elements = [

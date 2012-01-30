@@ -1,0 +1,9 @@
+Title: OMD: Keine command.cfg mehr
+Component: core
+State: open
+Date: 2012-01-30 22:20:50
+Targetversion: 1.2.0
+Class: nastiness
+
+Zumindest in unseren OMD Versionen findet sich keine commands.cfg mehr, welche die Nagios Command definitionen der Mitgelieferten Checks enthält.
+Ist das absicht?

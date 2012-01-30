@@ -1,0 +1,13 @@
+Title: Creating a ruleset for Number of Threads causes cmk -U to fail
+Component: wato
+State: open
+Date: 2012-01-30 18:56:25
+Targetversion: 1.1.13i1
+Class: bug
+
+1. Create a Ruleset for Number of Threads
+2. Try Activate-Changes within wato or cmk -U in command line
+3. Observe
+Generating Nagios configuration...Configuration Error: ERROR: Duplicate service description 'Number of threads' for host 'klappkiste'!
+ - 1st occurrance: checktype = cpu.threads, item = None
+ - 2nd occurrance: checktype = cpu.threads, item = (1, 22)

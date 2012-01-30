@@ -419,6 +419,32 @@ checkgroups.append((
 ))
 
 checkgroups.append((
+    "msx_queues",
+    _("MS Exchange message queues"),
+    Tuple(
+        help = _("The length of the queues"),
+        elements = [
+            Integer(title = _("Warning at queue length")),
+            Integer(title = _("Critical at queue length"))
+        ]),
+        OptionalDropdownChoice(
+            title = _("Explicit Queue Names"),
+            help = _("You can enter a number of explicit queues names that "
+                     "rule should or should not apply here. Builtin queues:<br>"
+                     "Active Remote Delivery<br>Active Mailbox Delivery<br>"
+                     "Retry Remote Delivery<br>Poison Queue Length<br>"),
+           choices = [
+              ( "Active Remote Delivery",  "Active Remote Delivery" ),
+              ( "Retry Remote Delivery",   "Retry Remote Delivery" ),
+              ( "Active Mailbox Delivery", "Active Mailbox Delivery" ),
+              ( "Poison Queue Length",     "Poison Queue Length" ),
+              ],
+           otherlabel = _("specify manually ->"),
+           explicit = TextAscii(allow_empty = False)),
+    "first")
+)
+
+checkgroups.append((
     "filesystem",
     _("Filesystems (used space and growth)"),
     Dictionary(

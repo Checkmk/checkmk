@@ -83,3 +83,4 @@ def check_winperf_msx_queues(item, params, info):
 check_info['winperf_msx_queues'] = (check_winperf_msx_queues, "Queue %s", 1, inventory_winperf_msx_queues)
 
 check_config_variables.append("winperf_msx_queues")
+checkgroup_of["winperf_msx_queues"] = "msx_queues"

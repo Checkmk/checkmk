@@ -1,0 +1,13 @@
+Title: Chaning of wato_activation_method in Wato needs apache restart
+Component: wato
+State: open
+Date: 2012-01-27 14:46:10
+Targetversion: 1.2.0
+Class: nastiness
+
+Das Ändern der Einstellung: wato_activation_method über Wato erforder einen
+Apache restart damit es funktioniert. Wato führt diesen jedoch nicht aus.
+
+Mathias: Das kann eigentlich nicht so sein. Änderungen in multisite.mk brauchen
+nie einen Neustart. WATO kann auch keinen Neustart von Apache machen. Der
+Fehler muss wo anders liegen.

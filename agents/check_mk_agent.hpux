@@ -61,7 +61,8 @@ UNIX95=yes ps -ef -o user,vsz,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\)
 
 echo '<<<hpux_cpu>>>'
 uptime
-machinfo | grep 'logical proc'
+# machinfo is unsupported addon thus not in $PATH
+/usr/contrib/bin/machinfo | grep 'logical proc'
 
 # Several machine performance counters
 echo '<<<hpux_vmstat>>>'

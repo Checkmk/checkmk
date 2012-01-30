@@ -306,7 +306,7 @@ function mkSearchGetUrl(objType, objName, objSite, numMatches) {
         else if(numMatches > 1)
             return 'view.py?view_name=hosts&host=' + objName;
         else
-            return 'view.py?view_name=searchsvc&search=Search&filled_in=on&service=' + objName;
+            return 'view.py?view_name=searchsvc&search=Search&filled_in=filter&service=' + objName;
     else if(objType == 'hg')
         if(numMatches == 1)
             return 'view.py?view_name=hostgroup&hostgroup=' + objName + '&site=' + objSite;

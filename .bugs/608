@@ -1,0 +1,14 @@
+Title: Sidebar Refresh bei Nagios Reload
+Component: multisite
+State: open
+Date: 2012-01-27 16:09:02
+Targetversion: 1.2.0
+Class: nastiness
+
+Wird über Wato ein Nagios Reload anstelle des Restart ausgeführt, braucht
+das Neuladen des Livestatus Modules zu lange und die Sidebar läuf in einen
+Livestatus Timeout und muss neu geladen werden.
+
+Mathias: Ich denke wir lösen das Problem in der Livestatus-API für Python.
+Wenn der Connect nicht klappt, probieren wir es eine Zeitlang. Dafür
+gibt es ja eine Timeout-Einstellung.

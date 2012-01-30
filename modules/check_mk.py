@@ -263,6 +263,7 @@ host_paths                           = {}
 snmp_hosts                           = [ (['snmp'], ALL_HOSTS) ]
 tcp_hosts                            = [ (['tcp'], ALL_HOSTS), (NEGATE, ['snmp'], ALL_HOSTS), (['!ping'], ALL_HOSTS) ]
 bulkwalk_hosts                       = []
+snmpv2c_hosts                        = []
 usewalk_hosts                        = []
 dyndns_hosts                         = [] # use host name as ip address for these hosts
 ignored_checktypes                   = [] # exclude from inventory
@@ -593,9 +594,12 @@ def snmp_base_command(what, hostname):
         if is_bulkwalk_host(hostname):
             options = '-v2c'
         else:
-            options = '-v1'
             if what == 'walk':
                 command = 'snmpwalk'
+            if is_snmpv2c_host(hostname):
+                options = '-v2c'
+            else:
+                options = '-v1'
         options += " -c '%s'" % credentials
 
         # Handle V3
@@ -647,6 +651,10 @@ def is_bulkwalk_host(hostname):
         return in_binary_hostlist(hostname, bulkwalk_hosts)
     else:
         return False
+
+def is_snmpv2c_host(hostname):
+    return is_bulkwalk_host(hostname) or \
+        in_binary_hostlist(hostname, snmpv2c_hosts)
 
 def is_usewalk_host(hostname):
     return in_binary_hostlist(hostname, usewalk_hosts)
@@ -1575,6 +1583,7 @@ def create_nagios_hostdefs(outfile, hostname):
 
         if is_clust:
             outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(node_ips))
+        outfile.write(extra_summary_host_conf_of(hostname))
         outfile.write("}\n")
     outfile.write("\n")
 

@@ -72,7 +72,9 @@ def megaraid_pdisks_parse(info):
         elif line[0] == "Inquiry" and line[1] == "Data:":
             name = " ".join(line[2:])
             #Adapter, Enclosure, Encolsure Device ID, Slot, State, Name
-            return_var.append((megaraid_pdisks_adapterstr[adapter], adapters[adapter][enclosure_devid], enclosure_devid, slot, state, name))
+            return_var.append((megaraid_pdisks_adapterstr[adapter], 
+                               adapters[adapter][enclosure_devid], 
+                               enclosure_devid, slot, state, name))
     return return_var
 
 
@@ -81,13 +83,13 @@ def inventory_megaraid_pdisks(info):
     info = megaraid_pdisks_parse(info)
     inventory = []
     for adapter, enclosure, enc_dev_id, slot, state, name  in info:
-        inventory.append(("%s%s/%s" % (adapter,enclosure ,slot) ,"",repr(state))) 
+        inventory.append(("%s%s/%s" % (adapter, enclosure, slot), repr(state))) 
     return inventory
 
 def check_megaraid_pdisks(item, target_state, info):
     info = megaraid_pdisks_parse(info)
     for adapter, enclosure, enc_dev_id, slot, state, name in info:
-        if "%s%s/%s" % (adapter,enclosure, slot) == item:
+        if "%s%s/%s" % (adapter, enclosure, slot) == item:
            infotext = " - %s (%s)" % (state, name)
            if state == target_state:
                return (0, "OK" + infotext)

@@ -64,7 +64,7 @@ def inventory_cisco_temp_perf(info):
         inventory.append((name, None))
     return inventory
 
-def check_cisco_temp_perf(item, params, info):
+def check_cisco_temp_perf(item, _no_params, info):
     for line in info:
         if line[0] == item or line[4] == item:
             temp = saveint(line[1])

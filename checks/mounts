@@ -36,13 +36,34 @@ def inventory_mounts(info):
 def check_mounts(item, targetopts, info):
     for dev, mp, fstype, options, dump, fsck in info:
         if item == mp:
-            targetopts.sort()
             opts = options.split(",")
-            opts.sort()
-            if opts != targetopts:
-                return (2, "CRIT - mount options are %s, expected are %s" % (",".join(opts), ",".join(targetopts)))
-            else:
-                return (0, "OK - mount options are %s" % (",".join(opts)))
+            # Now compute the exact difference.
+            exceeding = []
+            missing = []
+            for o in opts:
+                if o not in targetopts and not o.startswith("commit="):
+                    exceeding.append(o)
+            for o in targetopts and not o.startswith("commit="):
+                if o not in opts:
+                    missing.append(o)
+
+            if not missing and not exceeding:
+                return (0, "OK - mount options exactly as expected")
+
+            infos = []
+            if missing:
+                infos.append("missing: %s" % ",".join(missing))
+            if exceeding:
+                infos.append("exceeding: %s" % ",".join(exceeding))
+            infotext = ", ".join(infos)
+
+            if "ro" in exceeding:
+                return (2, "CRIT - filesystem has switched to read-only "
+                           "and is probably corrupted(!!), " + infotext)
+
+            # Just warn in other cases
+            return (1, "OK - " + infotext)
+
     return (3, "UNKNOWN - filesystem not mounted")
 
 

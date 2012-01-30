@@ -10,6 +10,10 @@
     * cmk --localize update supports an optional ALIAS which is used as
       display string in the multisite GUI
     * FIX: Fixed encoding problems with umlauts in group aliases
+    * FIX: honor extra_summary_host_conf (was ignored)
+    * new config variable snmpv2c_hosts that allows to enable SNMP v2c
+      but *not* bulkwalk (for some broken devices). bulkwalk_hosts still
+      implies v2c.
 
     Checks & Agents:
     * Windows agent: output eventlog texts in UTF-8 encoding. This
@@ -32,6 +36,14 @@
     * Linux agent: wrap freeipmi with lock in order to avoid cache corruption
     * New check: megaraid_bbu - check existance & status of LSI MegaRaid BBU module
     * HP-UX Agent: fix mrpe (remove echo -e and test -e, thanks to Philipp Lemke)
+    * FIX: ntp checks: output numeric data also if stratum too high
+    * Linux agent: new check for dmraid-based "bios raid" (agent part as plugin)
+    * FIX: if64 now uses ifHighSpeed instead of ifSpeed for determining the
+      link speed (fixes speed of 10GBit/s and 20GBit/s ports, thanks Marco Poet)
+    * cmctc.temp: serivce has been renamed from "CMC Temperature %s" to just
+      "Temperature %s", in order to be consistent with the other checks.
+    * mounts: exclude changes of the commit option (might change on laptops),
+      make only switch to ro critical, other changes warning.
 
     Multisite:
     * Improve transaction handling and reload detection: user can have 
@@ -49,9 +61,16 @@
     * FIX: Fix problem with Umlaut in contact alias
     * FIX: Creating auth.php file on first login dialog based login to ensure
       it exists after login when it is first needed
+    * Dashboard: link problem views to *unhandled* views (this was
+      inconsistent)
 
     Mobile:
-    * Improved sorting of views in main page
+    * Improved sorting of views in main page 
+    * Fix: Use all the availiable space in header
+    * Fix: Navigation with Android Hardwarekeys now working
+    * Fix: Links to pnp4nagios now work better
+    * Fix: Host and Service Icons now finger friendly
+    * Fix: Corrected some buildin views
 
     WATO:
     * Removed IP-Address attribute from folders
@@ -60,6 +79,7 @@
     * Snapshot/Factory Reset is possible even with a broken config
     * Added error messages to user edit dialog to prevent notification problems
       caused by incomplete configuration
+    * Activate Changes: Wato can also reload instead of restarting nagios
     * Replication: Can now handle replication sites which use the form based auth
     * Replication: Added option to ignore problems with the ssl certificates
                    used in ssl secured replications
@@ -224,6 +244,7 @@
     * FIX: detail view of host was missing column headers
     * FIX: fix problem on IE with background color 'white'
     * FIX: fix hitting enter in host search form on IE
+    * FIX: fix problem in ipmi_sensors perfometer
 
     Checks & Agents:
     * FIX: fixed man pages of h3c_lanswitch_sensors and statgrab_cpu

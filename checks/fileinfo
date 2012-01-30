@@ -80,3 +80,4 @@ def check_fileinfo(item, params, info):
 
 
 check_info["fileinfo"] = (check_fileinfo, "File %s", 1, inventory_fileinfo)
+checkgroup_of['fileinfo'] = "fileinfo"

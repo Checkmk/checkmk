@@ -2721,7 +2721,7 @@ def mode_changelog(phase):
                 sitestatus_do_async_replication = True
             else:
                 try:
-                    check_mk_local_automation("restart")
+                    check_mk_local_automation(config.wato_activation_method)
                 except Exception, e:
                     if config.debug:
                         raise
@@ -3583,12 +3583,16 @@ class HostTagAttribute(Attribute):
     def paint(self, value, hostname):
         # Localize the titles. To make the strings available in the scanned localization
         # files the _() function must also be placed in the configuration files
+        # But don't localize empty strings - This empty string is connected to the header
+        # of the .mo file
         if len(self._taglist) == 1:
             title = self._taglist[0][1]
+            if title:
+                title = _(title)
             if value:
-                return "", _(title)
+                return "", title
             else:
-                return "", "%s %s" % (_("not"), _(title))
+                return "", "%s %s" % (_("not"), title)
         for entry in self._taglist:
             if value == entry[0]:
                 return "", _(entry[1])
@@ -6111,8 +6115,8 @@ def synchronize_site(site, restart):
 # Isolated restart without prior synchronization. Currently this
 # is only being called for the local site.
 def restart_site(site):
-    start = time.time()
-    check_mk_automation(site["id"], "restart")
+    start = time.time() 
+    check_mk_automation(site["id"], config.wato_activation_method) 
     duration = time.time() - start
     update_replication_status(site["id"],
         { "need_restart" : False }, { "restart" : duration })
@@ -6362,7 +6366,7 @@ def automation_push_snapshot():
         create_distributed_wato_file(site_id, mode)
         log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
         if html.var("restart", "no") == "yes":
-            check_mk_local_automation("restart")
+            check_mk_local_automation(config.wato_activation_method)
         return True
     except Exception, e:
         if config.debug:
@@ -9116,17 +9120,15 @@ def page_user_profile():
         try:
             users = load_users()
 
-            #
             # Profile edit (user options like language etc.)
-            #
             if config.may('edit_profile'):
                 set_lang = html.var('_set_lang')
                 language = html.var('language')
                 # Set the users language if requested
                 if set_lang and language and language != config.get_language():
-                        # Set custom language
-                        users[config.user_id]['language'] = language
-                        config.user['language'] = language
+                    # Set custom language
+                    users[config.user_id]['language'] = language
+                    config.user['language'] = language
 
                 else:
                     # Remove the customized language
@@ -9138,9 +9140,7 @@ def page_user_profile():
                 # load the new language
                 load_language(config.get_language())
 
-            #
             # Change the password if requested
-            #
             if config.may('change_password'):
                 password  = html.var('password')
                 password2 = html.var('password2', '')
@@ -9154,13 +9154,17 @@ def page_user_profile():
             success = True
 
             if password:
-                html.write("<script type='text/javascript'>if(top) top.location.reload(); else document.location.reload();</script>")
+                html.javascript(
+                    "if(top) top.location.reload(); "
+                    "else document.location.reload();")
             else:
                 html.reload_sidebar()
         except MKUserError, e:
             html.add_user_error(e.varname, e.message)
 
-    html.header(_("Edit user profile"), javascripts = ['wato'], stylesheets = ['check_mk', 'pages', 'wato', 'status'])
+    html.header(_("Edit user profile"), 
+                javascripts = ['wato'], 
+                stylesheets = ['check_mk', 'pages', 'wato', 'status'])
 
     if success:
         html.message(_("Successfully updated user profile."))

@@ -51,8 +51,10 @@ def do_automation(cmd, args):
                 result = automation_get_autochecks(args)
             elif cmd == "set-autochecks":
                 result = automation_set_autochecks(args)
+            elif cmd == "reload":
+                result = automation_restart("reload")
             elif cmd == "restart":
-                result = automation_restart()
+                result = automation_restart("restart")
             else:
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
@@ -354,7 +356,7 @@ def automation_delete_host(args):
         "%s/%s.*"  % (tcp_cache_dir, hostname)]:
         os.system("rm -rf '%s'" % path)
 
-def automation_restart():
+def automation_restart(job="restart"):
     # make sure, Nagios does not inherit any open
     # filedescriptors. This really happens, e.g. if
     # check_mk is called by WATO via Apache. Nagios inherits
@@ -395,7 +397,10 @@ def automation_restart():
             if backup_path:
                 os.remove(backup_path)
             do_precompile_hostchecks()
-            do_restart_nagios(False)
+            if job == 'restart': 
+                do_restart_nagios(False) 
+            elif job == 'reload':
+                do_restart_nagios(True)
         else:
             if backup_path:
                 os.rename(backup_path, nagios_objects_file)

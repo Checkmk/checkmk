@@ -1,0 +1,15 @@
+Title: Service search does not work
+Component: multisite
+Class: bug
+State: done
+Date: 2012-01-26 15:46:33
+Targetversion: 1.2.0
+
+Looks like the service search view does not work.
+Test: enter fs_/ into Quicksearch and hit enter. 
+The service search view is shown - but with the
+filters being displayed and not submitted.
+
+2012-01-27 08:15:14: changed state open -> done
+Was due to new interpretation of HTML var filled_in. Is
+fixed now.

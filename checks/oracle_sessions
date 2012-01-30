@@ -49,3 +49,4 @@ def check_oracle_sessions(item, params, info):
     return (2, "UNKNOWN - Database not existing or not running")
 
 check_info['oracle_sessions'] = (check_oracle_sessions, "ORA %s Sessions", 1,  inventory_oracle_sessions )
+checkgroup_of['oracle_sessions'] = "2xthreshold"

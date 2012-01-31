@@ -211,7 +211,7 @@ declare_permission("painter_options",
 
 declare_permission("act",
      _("Perform commands"),
-     _("Allows users to perform Nagios commands. If now futher permissions are granted, actions can only be done one objects one is a contact for"),
+     _("Allows users to perform Nagios commands. If no further permissions are granted, actions can only be done on objects one is a contact for"),
      [ "admin", "user" ])
 
 

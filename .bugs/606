@@ -1,9 +1,9 @@
 Title: Language selection of user: Default is missing
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-01-25 18:41:17
 Targetversion: 1.1.13i1
-Class: bug
 
 Wenn man als Benutzer seine Sprache umstellen will, bekommt
 man in der Liste keine Auswahl für Englisch. Es muss so 
@@ -25,3 +25,6 @@ ist.
 Das Verhalten muss dann im user_profile.py und bei der
 Benutzervewaltung genau gleich sein.
 
+
+2012-01-31 13:18:04: changed state open -> done
+Has been implemented.

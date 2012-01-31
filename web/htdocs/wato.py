@@ -9193,7 +9193,7 @@ def page_user_profile():
             html.write("</td><td class=checkbox>")
             html.checkbox('_set_lang', active, onclick = 'wato_toggle_attribute(this, \'language\')')
             html.write("</td><td class=content>")
-            default_label = _('Default: %s') % (get_language_alias(config.default_language) or 'english')
+            default_label = _('Default: %s') % (get_language_alias(config.default_language) or _('English'))
             html.write('<div class="inherited" id="attr_default_language" style="%s">%s</div>' %
                                                 (active and "display: none" or "", default_label))
             html.write('<div id="attr_entry_language" style="%s">' % ((not active) and "display: none" or ""))

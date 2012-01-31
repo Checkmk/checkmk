@@ -147,7 +147,7 @@ def do_login():
     err = None
     if html.var('_login'):
         try:
-            username = html.var('_username', '')
+            username = html.var('_username', '').rstrip()
             if username == '':
                 raise MKUserError('_username', _('No username given.'))
 

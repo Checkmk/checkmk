@@ -91,6 +91,7 @@
     * Replication: Can now handle replication sites which use the form based auth
     * Replication: Added option to ignore problems with the ssl certificates
                    used in ssl secured replications
+    * WATO now supports configuring Check_MK clusters
     * FIX: Fixed missing folders in "move to" dropdown fields
     * FIX: Fixed "move to target folders" after CSV import
     * FIX: Fixed problem with duplicate extra_buttons when using the i18n of multiisite

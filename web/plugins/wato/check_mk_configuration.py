@@ -707,6 +707,17 @@ register_rule(group,
                  "installed."),
     ))
 
+register_rule(group,
+    "clustered_services",
+    title = _("Clustered services"),
+    help = _("When you define HA clusters in WATO then you also have to specify "
+             "which services of a node should be assigned to the cluster and "
+             "which services to the physical node. This is done by this ruleset. "
+             "Please note that the rule will be applied to the <i>nodes</i>, not "
+             "to the cluster.<br><br>Please make sure that you re-inventorize the " 
+             "cluster and the physical nodes after changing this ruleset."),
+    itemtype = "service")
+
 
 group = _("SNMP")
 

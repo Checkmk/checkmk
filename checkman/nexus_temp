@@ -1,0 +1,24 @@
+title: Check temperature sensors on Cisco NEXUS devices
+agents: snmp 
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors all temperature sensors for Cisco NEXUS
+ devices. It uses a combination of data from the standardized
+ sensors MIB and vendor specific information.
+
+ Warning and critical levels are retrieved from the device
+ via SNMP and thus need not to be configured.
+
+item:
+ The name of the sensors as found in the OID tree below.
+ .1.3.6.1.2.1.47.1.1.1.1.2.
+
+
+perfdata:
+ One value: the current temperature including warning and critical levels.
+
+inventory:
+ One separate service per sensor is being created.
+

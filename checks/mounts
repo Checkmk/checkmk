@@ -38,13 +38,15 @@ def check_mounts(item, targetopts, info):
         if item == mp:
             opts = options.split(",")
             # Now compute the exact difference.
+
             exceeding = []
-            missing = []
             for o in opts:
                 if o not in targetopts and not o.startswith("commit="):
                     exceeding.append(o)
-            for o in targetopts and not o.startswith("commit="):
-                if o not in opts:
+
+            missing = []
+            for o in targetopts:
+                if o not in opts and not o.startswith("commit="):
                     missing.append(o)
 
             if not missing and not exceeding:

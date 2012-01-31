@@ -636,7 +636,7 @@ def save_hosts(folder = None):
             if use and cgs:
                 out.write("\nhost_contactgroups += [\n")
                 for cg in cgs:
-                    out.write('    ( %r, [%r] )\n' % (cg, hostname))
+                    out.write('    ( %r, [%r] ),\n' % (cg, hostname))
                 out.write(']\n\n')
 
         for attr, topic in host_attributes:
@@ -1737,7 +1737,7 @@ def mode_edithost(phase, new):
                 call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
 
-            errors = validate_all_hosts([hostname]) + validate_host(hostname)
+            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(hostname)
             if errors: # keep on this page if host does not validate
                 return
             elif new:
@@ -1751,7 +1751,7 @@ def mode_edithost(phase, new):
         if new:
             render_folder_path()
         else:
-            errors = validate_all_hosts([hostname]) + validate_host(hostname)
+            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(hostname)
 
         if errors:
             html.write("<div class=info>")
@@ -3737,7 +3737,6 @@ class ContactGroupsAttribute(Attribute):
 # Declare an attribute for each host tag configured in multisite.mk
 # Also make sure that the tags are reconfigured as soon as the
 # configuration of the tags has changed.
-configured_host_tags = None
 def declare_host_tag_attributes():
     global configured_host_tags
     global host_attributes
@@ -9764,8 +9763,10 @@ def load_plugins():
     loaded_with_language = current_language
 
     # Reset global vars
-    global extra_buttons
+    global extra_buttons, configured_host_tags, host_attributes
     extra_buttons = []
+    configured_host_tags = None
+    host_attributes = []
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))

@@ -742,8 +742,6 @@ function wato_tree_click(folderpath) {
         href = add_html_var(href, "wato_folder", folderpath);
     else if (href.indexOf("/dashboard.py") >= 0)
         href = add_html_var(href, "wato_folder", folderpath);
-    else if (href.indexOf("/wato.py") >= 0)
-        href = "wato.py?mode=folder&folder=" + escape(folderpath);
     else
         href = "view.py?view_name=allhosts&wato_folder=" + escape(folderpath);
     parent.frames[1].location = href;

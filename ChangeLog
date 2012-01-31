@@ -45,6 +45,7 @@
     * mounts: exclude changes of the commit option (might change on laptops),
       make only switch to ro critical, other changes warning.
     * nexus_temp: new check for Cisco NEXUS temperature sensors (first version)
+    * oracle_tablespace: Fixed tablespace size/free space calculations
 
     Multisite:
     * Improve transaction handling and reload detection: user can have 
@@ -57,6 +58,9 @@
     * Site filter shows "(local)" in case of non multi-site setup
     * Made "wato folder" columns sortable
     * Hiding site filter in multisite views in single site setups
+    * Replaced "wato" sidebar snapin which mixed up WATO and status GUIs with
+      the new "wato_foldertree" snapin which only links to the status views
+      filtered by the WATO folder.
     * FIX: Fixed auth problem when following logwatch icon links while using
       the form based auth
     * FIX: Fix problem with Umlaut in contact alias
@@ -94,6 +98,7 @@
       contactgroup in host edit dialog
     * FIX: Fixed wrong folder contacgroup related permissions in auth.php api
     * FIX: Fixed not up-to-date role permission data in roles_saved hook
+    * FIX: Fixed duplicate custom columns in WATO after switching languages
 
     BI:
     * improve doc/treasures/check_bi_local.py: local check that creates

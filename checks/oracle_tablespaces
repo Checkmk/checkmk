@@ -45,6 +45,7 @@
 # 9. wheter the file is in use (online)
 # 10. block size in bytes
 # 11. status of the table space
+# 12. free space in the datafile
 
 # default levels for *free* space. float: percent,
 # integer: MB.
@@ -99,7 +100,7 @@ def check_oracle_tablespaces(item, params, info):
             if line[3] in [ "AVAILABLE", "ONLINE", "READONLY" ]:
                 num_avail += 1
                 current_size += blocksize * int(line[5])
-                used += blocksize * int(line[7])
+                used += blocksize * (int(line[5]) - int(line[12]))
                 # Autoextensible? Honor max size
                 if line[4] == "YES":
                     num_extensible += 1
@@ -112,12 +113,12 @@ def check_oracle_tablespaces(item, params, info):
                     incs = free_bl / incsize
                     num_increments += incs
                     increment_size += blocksize * incsize * incs
-                    free_space += blocksize * (incsize * incs + (int(line[5]) - int(line[7])))
+                    free_space += blocksize * (incsize * incs + (int(line[12])))
                 # not autoextensible: take current size as maximum
                 else:
                     my_max_size = blocksize * int(line[5])
                     max_size += my_max_size
-                    free_space += blocksize * (int(line[5]) - int(line[7]))
+                    free_space += blocksize *  int(line[12])
 
 
     if ts_status == None:

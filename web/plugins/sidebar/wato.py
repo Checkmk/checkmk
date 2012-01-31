@@ -69,27 +69,80 @@ def render_wato_folders():
     if not config.wato_enabled:
         html.write(_("WATO is disabled in <tt>multisite.mk</tt>."))
     else:
-        #EE if config.is_multisite():
-        #EE     sitenames = config.allsites().keys()
-        #EE     sitenames.sort()
-        #EE     for sitename in sitenames:
-        #EE         site = config.sites[sitename]
-        #EE         state = html.site_status[sitename]["state"]
-        #EE         if state != "disabled":
-        #EE             html.write("<h3>%s</h3>\n" % site["alias"])
-        #EE             ajax_url = site["url_prefix"] + "check_mk/ajax_wato_folders.py"
-        #EE             html.javascript("document.write(get_url_sync('%s'));" % ajax_url)
-        #EE else:
-        ajax_wato_folders()
-        num_pending = wato.api.num_pending_changes()
-        if num_pending:
-            footnotelinks([(_("%d changes pending") % num_pending, "wato.py?mode=changelog")])
+        html.write(_('This snapin is deprecated. Please use the WATO foldertree snapin instead.'))
 
-def ajax_wato_folders():
-    render_linktree_folder(wato.api.get_folder_tree())
+sidebar_snapins["wato"] = {
+    "title" : _("Hosts"),
+    "description" : _("A foldable tree showing all your WATO folders and files - "
+                      "allowing you to navigate in the tree while using views or being in WATO"),
+    "author" : "Mathias Kettner",
+    "render" : render_wato_folders,
+    "allowed" : [ "admin", "user", "guest" ],
+}
 
+#   .----------------------------------------------------------------------.
+#   |            _____     _     _           _                             |
+#   |           |  ___|__ | | __| | ___ _ __| |_ _ __ ___  ___             |
+#   |           | |_ / _ \| |/ _` |/ _ \ '__| __| '__/ _ \/ _ \            |
+#   |           |  _| (_) | | (_| |  __/ |  | |_| | |  __/  __/            |
+#   |           |_|  \___/|_|\__,_|\___|_|   \__|_|  \___|\___|            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
-def render_linktree_folder(f):
+def render_wato_foldertree():
+    if not config.wato_enabled:
+        html.write(_("WATO is disabled in <tt>multisite.mk</tt>."))
+    else:
+        render_wato_foldertree()
+
+def render_wato_foldertree():
+    html.live.set_prepend_site(True)
+    query = "GET hosts\n" \
+            "Columns: name host_filename"
+    hosts = html.live.query(query)
+    html.live.set_prepend_site(False)
+    hosts.sort()
+
+    # Get number of hosts by folder
+    # Count all childs for each folder
+    user_folders = {}
+    for site, hostname, wato_folder in hosts:
+        # Remove leading /wato/
+        wato_folder = wato_folder[6:]
+
+        # Loop through all levels of this folder to add the
+        # host count to all parent levels
+        folder_parts = wato_folder.split('/')
+        for num_parts in range(0, len(folder_parts)):
+            this_folder = '/'.join(folder_parts[:num_parts])
+
+            if this_folder not in user_folders:
+                user_folders[this_folder] = wato.api.get_folder(this_folder)
+                user_folders[this_folder]['.num_hosts'] = 1
+            else:
+                user_folders[this_folder]['.num_hosts'] += 1
+
+    # Update the WATO folder tree with the user specific permissions
+    folder_tree = wato.api.get_folder_tree()
+    def update_foldertree(f):
+        this_path = f['.path']
+        if this_path in user_folders:
+            f['.num_hosts'] = user_folders[this_path]['.num_hosts']
+
+        for subfolder_path, subfolder in f.get(".folders", {}).items():
+            # Only handle paths which the user is able to see
+            if subfolder['.path'] in user_folders:
+                update_foldertree(subfolder)
+            else:
+                del f['.folders'][subfolder['.path']]
+    update_foldertree(folder_tree)
+
+    # Now render the whole tree
+    render_tree_folder(folder_tree)
+
+def render_tree_folder(f):
     subfolders = f.get(".folders", {})
     is_leaf = len(subfolders) == 0
 
@@ -100,23 +153,22 @@ def render_linktree_folder(f):
         html.write("<ul style='padding-left: 0px;'>")
 
     title = '<a href="#" onclick="wato_tree_click(%r);">%s (%d)</a>' % (
-            f[".path"], f["title"], f[".total_hosts"])
+            f[".path"], f["title"], f[".num_hosts"])
 
     if not is_leaf:
         html.begin_foldable_container('wato-hosts', "/" + f[".path"], False, title)
         for sf in wato.api.sort_by_title(subfolders.values()):
-            render_linktree_folder(sf)
+            render_tree_folder(sf)
         html.end_foldable_container()
     else:
         html.write("<li>" + title + "</li>")
     if ".parent" in f or is_leaf:
         html.write("</ul>")
 
-sidebar_snapins["wato"] = {
-    "title" : _("Hosts"),
-    "description" : _("A foldable tree showing all your WATO folders and files - "
-                      "allowing you to navigate in the tree while using views or being in WATO"),
-    "author" : "Mathias Kettner",
-    "render" : render_wato_folders,
-    "allowed" : [ "admin", "user", "guest" ],
+sidebar_snapins['wato_foldertree'] = {
+    'title'       : _('WATO Foldertree'),
+    'description' : _(''),
+    'author'      : 'Lars Michelsen',
+    'render'      : render_wato_foldertree,
+    'allowed'     : [ 'admin', 'user', 'guest' ],
 }

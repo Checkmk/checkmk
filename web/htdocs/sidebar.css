@@ -338,6 +338,8 @@ div.snapin div.footnotelink a:hover {
 div.snapin img.iconbutton {
     margin: 0px 2px 0px 0px;
     border: none;
+    width: 10px;
+    height: 10px;
 }
 
 div.snapin img.iconbutton.bookmark {

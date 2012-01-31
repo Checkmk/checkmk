@@ -1,0 +1,10 @@
+Title: About page
+Component: multisite
+State: open
+Date: 2012-01-31 10:15:54
+Targetversion: 1.2.0
+Class: todo
+
+Create an about page about Multisite, Check_MK and the
+copyrights. This page can be reachable via the (C) Mathias Kettner
+Link.

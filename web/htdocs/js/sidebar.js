@@ -733,18 +733,48 @@ function storeScrollPos() {
 
 /* Foldable Tree in snapin */
 function wato_tree_click(folderpath) {
-    // Get the URL in the main frame. If that is a view or a dashboard,
-    // then reload that view with an updated "filename" variable. If that is
-    // a wato.py page, navigate to the according wato page. In all other
-    // cases, select the view "allhosts" with the according path.
-    var href = parent.frames[1].location + ""; // adding "" converts url from something magic to string
-    if (href.indexOf("/view.py") >= 0)
-        href = add_html_var(href, "wato_folder", folderpath);
-    else if (href.indexOf("/dashboard.py") >= 0)
-        href = add_html_var(href, "wato_folder", folderpath);
-    else
-        href = "view.py?view_name=allhosts&wato_folder=" + escape(folderpath);
+    var topic  = document.getElementById('topic').value;
+    var target = document.getElementById('target_' + topic).value;
+
+    if(target.substr(0, 9) == 'dashboard') {
+        dashboard_name = target.substr(9, target.length);
+        href = 'dashboard.py?name=' + escape(dashboard_name);
+    } else {
+        href = 'view.py?view_name=' + escape(target);
+    }
+
+    href += '&wato_folder=' + escape(folderpath);
+
     parent.frames[1].location = href;
+}
+
+function wato_tree_topic_changed(topic_field) {
+    // First toggle the topic dropdown field
+    var topic = topic_field.value;
+
+    // Hide all select fields but the wanted one
+    var select_fields = document.getElementsByTagName('select');
+    for(var i = 0; i < select_fields.length; i++) {
+        if(select_fields[i].id && select_fields[i].id.substr(0, 7) == 'target_') {
+            select_fields[i].selected = '';
+            if(select_fields[i].id == 'target_' + topic) {
+                select_fields[i].style.display = 'inline';
+            } else {
+                select_fields[i].style.display = 'none';
+            }
+        }
+    }
+
+    // Then send the info to python code via ajax call for persistance
+    get_url('ajax_set_foldertree.py?topic=' + escape(topic) + '&target=');
+}
+
+function wato_tree_target_changed(target_field) {
+    var topic = target_field.id.substr(7, target_field.id.length);
+    var target = target_field.value;
+
+    // Send the info to python code via ajax call for persistance
+    get_url('ajax_set_foldertree.py?topic=' + escape(topic) + '&target=' + escape(target));
 }
 
 // adds a variable to a GET url, but tries to remove that

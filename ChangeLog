@@ -56,6 +56,9 @@
     * Site filter shows "(local)" in case of non multi-site setup
     * Made "wato folder" columns sortable
     * Hiding site filter in multisite views in single site setups
+    * Replaced "wato" sidebar snapin which mixed up WATO and status GUIs with
+      the new "wato_foldertree" snapin which only links to the status views
+      filtered by the WATO folder.
     * FIX: Fixed auth problem when following logwatch icon links while using
       the form based auth
     * FIX: Fix problem with Umlaut in contact alias

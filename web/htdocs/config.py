@@ -453,7 +453,6 @@ def save_site_config():
 sidebar = \
 [('tactical_overview', 'open'),
  ('search',            'open'),
- ('wato',              'open'),
  ('views',             'open'),
  ('bookmarks',         'open'),
  ('admin',             'open'),

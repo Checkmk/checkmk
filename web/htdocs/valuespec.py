@@ -265,6 +265,7 @@ class TextAscii(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._size     = kwargs.get("size", 30)
+        self._strip    = kwargs.get("strip", True)
         self._allow_empty = kwargs.get("allow_empty", True)
         self._regex = kwargs.get("regex")
         self._regex_error = kwargs.get("regex_error",
@@ -282,7 +283,11 @@ class TextAscii(ValueSpec):
         return value
 
     def from_html_vars(self, varprefix):
-        return html.var(varprefix, "").strip()
+        value = html.var(varprefix, "")
+        if self._strip:
+            return value.strip()
+        else:
+            return value()
 
     def validate_datatype(self, value, varprefix):
         if type(value) != str:
@@ -408,6 +413,7 @@ class ListOfStrings(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._valuespec = kwargs.get("valuespec", TextAscii())
+        self._vertical = kwargs.get("orientation", "vertical") == "vertical"
 
     def render_input(self, vp, value):
         # Form already submitted?
@@ -420,12 +426,20 @@ class ListOfStrings(ValueSpec):
                 html.del_var(vp + "_%d" % nr)
                 nr += 1
         html.write('<table border=0 cellspacing=0 cellpadding=0 id="%s">' % vp)
+        if not self._vertical:
+            html.write('<tr>')
         
         for nr, s in enumerate(value + [""]):
-            html.write('<tr><td>')
+            if self._vertical:
+                html.write('<tr>')
+            html.write('<td>')
             self._valuespec.render_input(vp + "_%d" % nr, s)
-            html.write('</td></tr>')
+            html.write('</td>')
+            if self._vertical:
+                html.write('</tr>')
 
+        if not self._vertical:
+            html.write('</tr>')
         html.write('</table>')
         html.javascript("list_of_strings_init('%s');" % vp);
 

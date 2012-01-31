@@ -521,6 +521,7 @@ def load_hosts_file(folder):
             "FOLDER_PATH"         : "",
             "ALL_HOSTS"           : ALL_HOSTS,
             "all_hosts"           : [],
+            "clusters"            : {},
             "ipaddresses"         : {},
             "extra_host_conf"     : { "alias" : [] },
             "extra_service_conf"  : { "_WATO" : [] },
@@ -528,6 +529,12 @@ def load_hosts_file(folder):
             "host_contactgroups"  : [],
         }
         execfile(filename, variables, variables)
+        nodes_of = {}
+        # Add entries in clusters{} to all_hosts
+        for cluster_with_tags, nodes in variables["clusters"].items():
+            variables["all_hosts"].append(cluster_with_tags)
+            nodes_of[cluster_with_tags.split('|')[0]] = nodes
+
         for h in variables["all_hosts"]:
 
             parts = h.split('|')
@@ -555,6 +562,10 @@ def load_hosts_file(folder):
                     if isinstance(attr, HostTagAttribute):
                         tagvalue = attr.get_tag_value(tags)
                         host[attr.name()] = tagvalue
+
+            # Add cluster nodes if this is a cluster
+            if hostname in nodes_of:
+                host[".nodes"] = nodes_of[hostname]
 
             # access to "raw" tags, needed for rule engine, remove implicit tags
             host[".tags"] = [ p for p in parts[1:] if p not in [ "wato", "//" ] ]
@@ -598,14 +609,15 @@ def save_hosts(folder = None):
             os.remove(filename)
         return
 
-
-    all_hosts = [] # pair-list of (hostname, tags)
+    all_hosts = [] # list of [Python string for all_hosts]
+    clusters = [] # tuple list of (Python string, nodes)
     ipaddresses = {}
     hostnames = hosts.keys()
     hostnames.sort()
     custom_macros = {} # collect value for attributes that are to be present in Nagios
     cleaned_hosts = {}
     for hostname in hostnames:
+        nodes = hosts[hostname].get(".nodes")
         # Remove temporary entries from the dictionary
         cleaned_hosts[hostname] = dict([(k, v) for (k, v) in hosts[hostname].iteritems() if not k.startswith('.') ])
 
@@ -621,10 +633,18 @@ def save_hosts(folder = None):
             value = effective.get(attr.name())
             tags.update(attr.get_tag_list(value))
 
-        all_hosts.append((hostname, list(tags)))
+        tagstext = "|".join(list(tags))
+        if tagstext:
+            tagstext += "|"
+        hostentry = '"%s|%swato|/" + FOLDER_PATH + "/"' % (hostname, tagstext)
+
+        if nodes:
+            clusters.append((hostentry, nodes))
+        else:
+            all_hosts.append(hostentry)
+
         if ipaddress:
             ipaddresses[hostname] = ipaddress
-
 
         # Create contact group rule entries for hosts with explicitely set values
         # Note: since the type if this entry is a list, not a single contact group, all other list
@@ -654,12 +674,16 @@ def save_hosts(folder = None):
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     if len(all_hosts) > 0:
         out.write("all_hosts += [\n")
-        for hostname, taglist in all_hosts:
-            tagstext = "|".join(taglist)
-            if tagstext:
-                tagstext += "|"
-            out.write('  "%s|%swato|/" + FOLDER_PATH + "/",\n' % (hostname, tagstext))
+        for entry in all_hosts:
+            out.write('  %s,\n' % entry)
         out.write("]\n")
+
+        if len(clusters) > 0:
+            out.write("\nclusters.update({")
+            for entry, nodes in clusters:
+                out.write('\n  %s : %s,\n' % (entry, repr(nodes))) 
+            out.write("})\n")
+
         if len(ipaddresses) > 0:
             out.write("\n# Explicit IP addresses\n")
             out.write("ipaddresses.update(")
@@ -747,7 +771,8 @@ def mode_folder(phase):
         if config.may("wato.manage_folders"):
             html.context_button(_("New folder"),        make_link([("mode", "newfolder")]), "newfolder")
         if config.may("wato.manage_hosts"):
-            html.context_button(_("New host"),          make_link([("mode", "newhost")]), "new")
+            html.context_button(_("New host"),    make_link([("mode", "newhost")]), "new")
+            html.context_button(_("New cluster"), make_link([("mode", "newcluster")]), "new_cluster")
         search_button()
         folder_status_button()
         if config.may("wato.random_hosts"):
@@ -858,6 +883,10 @@ def mode_folder(phase):
                     "you first have installed the Check_MK agent on that host. If that "
                     "host shall be monitored via SNMP, please make sure, that the monitoring "
                     "system has access and the <a href='%s'>SNMP community</a> has been set.") % url),
+                ("newcluster", _("Create new cluster"), "new_cluster", "hosts",
+                  _("Click here to create a high availability cluster to be monitored. You will "
+                    "created a virtual host in the monitoring that is based on the data of two "
+                    "or more physically monitored hosts.")),
                 ("newfolder", _("Create new folder"), "newfolder", "hosts",
                   _("Hosts are organized in folders. The folders construct a tree which can also "
                     "be used to navigate in the status GUI. Attributes can be inherited along the "
@@ -1166,7 +1195,8 @@ def show_hosts(folder):
         # Column with actions (buttons)
         edit_url     = make_link([("mode", "edithost"), ("host", hostname)])
         services_url = make_link([("mode", "inventory"), ("host", hostname)])
-        clone_url    = make_link([("mode", "newhost"), ("clone", hostname)])
+        clone_url    = make_link([("mode", host.get(".nodes") and "newcluster" or "newhost"), 
+                                 ("clone", hostname)])
         delete_url   = make_action_link([("mode", "folder"), ("_delete_host", hostname)])
 
         html.write('<td class=checkbox>')
@@ -1189,7 +1219,13 @@ def show_hosts(folder):
             msg += ", ".join(errors)
             html.icon(msg, "validation_error")
             html.write("&nbsp;")
-        html.write('<a href="%s">%s</a></td>\n' % (edit_url, hostname))
+
+        html.write('<a href="%s">%s</a>\n' % (edit_url, hostname))
+
+        if ".nodes" in host:
+            html.write("&nbsp;")
+            html.icon(_("This host is a cluster of %s") % ", ".join(host[".nodes"]), "cluster")
+        html.write('</td>')
 
 
         # Am I authorized?
@@ -1640,7 +1676,7 @@ def convert_title_to_filename(title):
 #   | Mode for host details (new, clone, edit)                             |
 #   '----------------------------------------------------------------------'
 
-def mode_edithost(phase, new):
+def mode_edithost(phase, new, cluster):
     hostname = html.var("host") # may be empty in new/clone mode
 
     clonename = html.var("clone")
@@ -1650,14 +1686,20 @@ def mode_edithost(phase, new):
     if clonename:
         title = _("Create clone of %s") % clonename
         host = g_folder[".hosts"][clonename]
+        cluster = ".nodes" in host
         mode = "clone"
     elif not new and hostname in g_folder[".hosts"]:
         title = _("Edit host") + " " + hostname
         host = g_folder[".hosts"][hostname]
+        cluster = ".nodes" in host
         mode = "edit"
     else:
-        title = _("Create new host")
-        host = {}
+        if cluster:
+            title = _("Create new cluster")
+            host = { ".nodes" : [] }
+        else:
+            title = _("Create new host")
+            host = {}
         mode = "new"
 
     if phase == "title":
@@ -1683,6 +1725,14 @@ def mode_edithost(phase, new):
                 return delete_host_after_confirm(hostname)
 
         host = collect_attributes()
+        if cluster:
+            nodes = ListOfStrings().from_html_vars("nodes")
+            if len(nodes) < 1:
+                raise MKUserError("nodes_0", _("The cluster must have at least one node"))
+            for nr, node in enumerate(nodes):
+                if not find_host(node):
+                    raise MKUserError("nodes_%d" % nr, _("The node <b>%s</b> is not a WATO host.") % node)
+            host[".nodes"] = nodes
 
         # handle clone & new
         if new:
@@ -1778,6 +1828,16 @@ def mode_edithost(phase, new):
             html.text_input("host")
             html.set_focus("host")
         html.write("</td></tr>\n")
+
+        # Cluster: nodes
+        if cluster:
+            vs = ListOfStrings(valuespec = TextAscii(size = 19))
+            html.write('<tr><td class=legend>' + _("Nodes") + 
+                       '<br><i>%s</i></td>' % _('Enter the host names of the cluster nodes. These '
+                       'hosts must be present in WATO. '))
+            html.write('<td class=checkbox></td><td class=content>')
+            vs.render_input("nodes", host[".nodes"]) 
+            html.write('</td></tr>')
 
         configure_attributes({hostname: host}, "host", parent = g_folder)
 
@@ -9719,8 +9779,9 @@ modes = {
    "folder"             : (["hosts"], mode_folder),
    "newfolder"          : (["hosts", "manage_folders"], lambda phase: mode_editfolder(phase, True)),
    "editfolder"         : (["hosts" ], lambda phase: mode_editfolder(phase, False)),
-   "newhost"            : (["hosts", "manage_hosts"], lambda phase: mode_edithost(phase, True)),
-   "edithost"           : (["hosts"], lambda phase: mode_edithost(phase, False)),
+   "newhost"            : (["hosts", "manage_hosts"], lambda phase: mode_edithost(phase, True, False)),
+   "newcluster"         : (["hosts", "manage_hosts"], lambda phase: mode_edithost(phase, True, True)),
+   "edithost"           : (["hosts"], lambda phase: mode_edithost(phase, False, None)),
    "firstinventory"     : (["hosts", "services"], lambda phase: mode_inventory(phase, True)),
    "inventory"          : (["hosts"], lambda phase: mode_inventory(phase, False)),
    "search"             : (["hosts"], mode_search),

@@ -1,0 +1,185 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# OIDs for name and type of the sensors (type 8 = temperature sensor)
+# SNMPv2-SMI::mib-2.47.1.1.1.1.2.21594 = STRING: "module-1 Crossbar(s5)"
+# SNMPv2-SMI::mib-2.47.1.1.1.1.2.21601 = STRING: "module-1 QEng1Sn1(s12)"
+# SNMPv2-SMI::mib-2.47.1.1.1.1.2.21602 = STRING: "module-1 QEng1Sn2(s13)"
+# SNMPv2-SMI::mib-2.47.1.1.1.1.2.21603 = STRING: "module-1 QEng1Sn3(s14)"
+# SNMPv2-SMI::mib-2.47.1.1.1.1.2.21604 = STRING: "module-1 QEng1Sn4(s15)"
+# SNMPv2-SMI::mib-2.47.1.1.1.1.2.21605 = STRING: "module-1 QEng2Sn1(s16)"
+# SNMPv2-SMI::mib-2.47.1.1.1.1.2.21606 = STRING: "module-1 QEng2Sn2(s17)"
+# [...]
+# Types of sensors:
+#        other(1):        a measure other than those listed below
+#        unknown(2):      unknown measurement, or arbitrary, relative numbers
+#        voltsAC(3):      electric potential
+#        voltsDC(4):      electric potential
+#        amperes(5):      electric current
+#        watts(6):        power
+#        hertz(7):        frequency
+#        celsius(8):      temperature
+#        percentRH(9):    percent relative humidity
+#        rpm(10):         shaft revolutions per minute
+#        cmm(11),:        cubic meters per minute (airflow)
+#        truthvalue(12):  value takes { true(1), false(2) }
+#        specialEnum(13): value takes user defined enumerated values
+#        dBm(14):         dB relative to 1mW of power
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.1.21594 = INTEGER: 8
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.1.21601 = INTEGER: 8
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.1.21602 = INTEGER: 8
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.1.21603 = INTEGER: 8
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.1.21604 = INTEGER: 8
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.1.21605 = INTEGER: 8
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.1.21606 = INTEGER: 8
+# [...]
+
+# Current value of the sensor
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.4.21594 = INTEGER: 62
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.4.21601 = INTEGER: 102
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.4.21602 = INTEGER: 99
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.4.21603 = INTEGER: 98
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.4.21604 = INTEGER: 99
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.4.21605 = INTEGER: 101
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.4.21606 = INTEGER: 99
+# [...]
+
+# State of the sensor itself
+#        ok(1) means the agent can read the sensor
+#        value.
+#
+#        unavailable(2) means that the agent presently
+#        can not report the sensor value.
+#
+#        nonoperational(3) means that the agent believes
+#        the sensor is broken.  The sensor could have a
+#        hard failure (disconnected wire), or a soft failure
+#        such as out-of-range, jittery, or wildly fluctuating
+#        readings.
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.5.21594 = INTEGER: 1
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.5.21601 = INTEGER: 1
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.5.21602 = INTEGER: 1
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.5.21603 = INTEGER: 1
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.5.21604 = INTEGER: 1
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.5.21605 = INTEGER: 1
+# SNMPv2-SMI::enterprises.9.9.91.1.1.1.1.5.21606 = INTEGER: 1
+
+# Thresholds
+# SNMPv2-SMI::enterprises.9.9.91.1.2.1.1.4.21594.9 = INTEGER: 95
+# SNMPv2-SMI::enterprises.9.9.91.1.2.1.1.4.21594.10 = INTEGER: 105
+# SNMPv2-SMI::enterprises.9.9.91.1.2.1.1.4.21601.23 = INTEGER: 110
+# SNMPv2-SMI::enterprises.9.9.91.1.2.1.1.4.21601.24 = INTEGER: 115
+# SNMPv2-SMI::enterprises.9.9.91.1.2.1.1.4.21602.25 = INTEGER: 110
+# SNMPv2-SMI::enterprises.9.9.91.1.2.1.1.4.21602.26 = INTEGER: 115
+# SNMPv2-SMI::enterprises.9.9.91.1.2.1.1.4.21603.27 = INTEGER: 110
+# SNMPv2-SMI::enterprises.9.9.91.1.2.1.1.4.21603.28 = INTEGER: 115
+# SNMPv2-SMI::enterprises.9.9.91.1.2.1.1.4.21604.29 = INTEGER: 110
+# SNMPv2-SMI::enterprises.9.9.91.1.2.1.1.4.21604.30 = INTEGER: 115
+# SNMPv2-SMI::enterprises.9.9.91.1.2.1.1.4.21605.31 = INTEGER: 110
+# SNMPv2-SMI::enterprises.9.9.91.1.2.1.1.4.21605.32 = INTEGER: 115
+# SNMPv2-SMI::enterprises.9.9.91.1.2.1.1.4.21606.33 = INTEGER: 110
+# SNMPv2-SMI::enterprises.9.9.91.1.2.1.1.4.21606.34 = INTEGER: 115
+
+
+# Create a dictionary with the information about each
+# sensor. The key into the dict is the end OID of the
+# sensor.
+def parse_nexus_temp(info):
+    description_info, state_info, levels_info = info
+
+    # Create dict of sensor descriptions
+    descriptions = dict(description_info)
+
+    # Create dict with thresholds
+    thresholds = {}
+    for endoid, level in levels_info:
+       # endoid is e.g. 21549.9 or 21459.10
+       id, subid = endoid.split('.')
+       thresholds.setdefault(id, []).append(saveint(level))
+
+    # Create main dictionary (only of temperature sensors)
+    sensors = []
+    for id, sensortype, value, sensorstate in state_info:
+        sensors.append( ( id, descriptions.get(id), sensortype,
+                        saveint(value), sensorstate, thresholds[id] ) )
+
+    return sensors
+
+
+def inventory_nexus_temp(info):
+    sensors = parse_nexus_temp(info)
+    # Use all temperature sensors with a non-empty description
+    return [ (entry[1], None) for entry 
+              in sensors if entry[1] != None 
+                            and entry[2] == '8' ]
+
+def check_nexus_temp(item, _no_params, info):
+    sensors = parse_nexus_temp(info)
+    for id, descr, sensortype, value, sensorstate, levels in sensors:
+        if item == descr:
+            warn, crit = levels
+	    if sensorstate == "2":
+	        return (3, "UNKNOWN - data from sensor currently not available")
+            elif sensorstate == "3":
+		return (3, "UNKNOWN - sensor is broken")
+            if value >= crit:
+		state = 2
+            elif value >= warn:
+		state = 1
+	    else:
+		state = 0
+	    return (state, nagios_state_names[state] + " - %dC (levels at %d/%d)" % (value, warn, crit), [
+			( "temperature", value, warn, crit ) ])
+           
+    return (3, "UKNOWN - sensor not found in SNMP data")
+
+check_info['nexus_temp'] = (check_nexus_temp, "Temperature %s", 1,  inventory_nexus_temp)
+
+snmp_info['nexus_temp'] = [
+   # Description of sensors
+   ( ".1.3.6.1.2.1.47.1.1.1.1", [ 
+     OID_END,
+     2, # Description of the sensor
+   ]),
+
+   # Type and current state
+   ( ".1.3.6.1.4.1.9.9.91.1.1.1.1", [
+     OID_END,
+     1, # Type (see above), 8 = Celsius, 12 = truth value
+     4, # Most recent measurement
+     5, # Status of the sensor 1 == ok, 2 == cannot report, 3 == broken
+   ]),
+
+   # Threshold
+   ( ".1.3.6.1.4.1.9.9.91.1.2.1.1", [
+     OID_END,
+     4, # Thresholds
+   ]),
+]
+
+snmp_scan_functions['nexus_temp'] = \
+    lambda oid: "nx-os" in oid(".1.3.6.1.2.1.1.1.0").lower()

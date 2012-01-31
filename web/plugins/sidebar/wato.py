@@ -147,7 +147,7 @@ def render_wato_foldertree():
     topic_views  = views_by_topic()
     topics = [ (t, t) for t, s in topic_views ]
     html.select("topic", topics, selected_topic, onchange = 'wato_tree_topic_changed(this)')
-    html.write('<span class=left>%s</span>' % _('Topic'))
+    html.write('<span class=left>%s</span>' % _('Topic:'))
 
     for topic, views in topic_views:
         targets = []
@@ -170,8 +170,7 @@ def render_wato_foldertree():
 
         html.select("target_%s" % topic, targets, default, attrs = attrs, onchange = 'wato_tree_target_changed(this)')
 
-    html.write('<span class=left>%s</span>' % _('View'))
-    html.write('<hr />')
+    html.write('<span class=left>%s</span>' % _('View:'))
 
     # Now render the whole tree
     render_tree_folder(folder_tree)
@@ -213,20 +212,14 @@ sidebar_snapins['wato_foldertree'] = {
     float: right;
     padding: 0;
     width:   190px;
+    margin-bottom: 2px;
+    background-color: #8EAEB8;
+    color: #fff;
 }
 #snapin_wato_foldertree span {
     display: block;
     color:  #ffffff;
-    height: 19px;
-}
-#snapin_wato_foldertree hr {
-    background-color: #fff;
-    height: 1px;
-    padding: 0;
-    margin: 4px;
-    border: 0;
-    /* Needed for older IE versions */
-    color: #fff;
+    height: 21px;
 }
 """
 }

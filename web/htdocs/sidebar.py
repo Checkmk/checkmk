@@ -126,7 +126,7 @@ def sidebar_foot():
     html.write('<div id="side_footer">')
     html.write('<ul class=buttons>\n')
     if config.may("configure_sidebar"):
-        html.write('<li><a target="main" href="sidebar_add_snapin.py">Add snapin</a></li>')
+        html.write('<li><a target="main" href="sidebar_add_snapin.py">%s</a></li>' % _('Add snapin'))
     if config.may("edit_profile") or config.may("change_password"):
         html.write('<li><a class=profile target="main" href="user_profile.py" title="%s"></a></li>' % _('Edit user profile'))
     if config.may("logout"):
@@ -235,8 +235,8 @@ def snapin_exception(e):
         raise
     else:
         html.write("<div class=snapinexception>\n"
-                "<h2>Error</h2>\n"
-                "<p>%s</p></div>" % e)
+                "<h2>%s</h2>\n"
+                "<p>%s</p></div>" % (_('Error'), e))
 
 def ajax_nagios_restarted():
     # Tells the requestor the "since" time or the program start time

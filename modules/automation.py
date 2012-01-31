@@ -142,6 +142,31 @@ def automation_try_inventory(args):
         args = args[1:]
 
     hostname = args[0]
+
+    # hostname might be a cluster. In that case we compute the clustered
+    # services of that cluster.
+    services = []
+    if is_cluster(hostname):
+        descriptions = set([])
+        for node in nodes_of(hostname):
+            new_services = automation_try_inventory_node(node)
+            for entry in new_services:
+                if host_of_clustered_service(node, entry[6]) == hostname:
+                    if entry[6] not in descriptions:
+                        services.append(entry)
+                        descriptions.add(entry[6]) # make it unique
+
+    else:
+        new_services = automation_try_inventory_node(hostname)
+        for entry in new_services:
+            if host_of_clustered_service(hostname, entry[6]) == hostname:
+                services.append(entry)
+
+    return services
+
+        
+
+def automation_try_inventory_node(hostname):
     try:
         ipaddress = lookup_ipaddress(hostname)
     except:

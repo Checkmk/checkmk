@@ -44,6 +44,7 @@
       "Temperature %s", in order to be consistent with the other checks.
     * mounts: exclude changes of the commit option (might change on laptops),
       make only switch to ro critical, other changes warning.
+    * nexus_temp: new check for Cisco NEXUS temperature sensors (first version)
 
     Multisite:
     * Improve transaction handling and reload detection: user can have 

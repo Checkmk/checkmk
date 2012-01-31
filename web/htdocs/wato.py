@@ -1737,7 +1737,7 @@ def mode_edithost(phase, new):
                 call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
 
-            errors = validate_all_hosts([hostname]) + validate_host(hostname)
+            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(hostname)
             if errors: # keep on this page if host does not validate
                 return
             elif new:
@@ -1751,7 +1751,7 @@ def mode_edithost(phase, new):
         if new:
             render_folder_path()
         else:
-            errors = validate_all_hosts([hostname]) + validate_host(hostname)
+            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(hostname)
 
         if errors:
             html.write("<div class=info>")

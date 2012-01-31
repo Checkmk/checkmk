@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import views, time, defaults
+import views, time, defaults, dashboard
 import weblib
 from lib import *
 
@@ -70,6 +70,36 @@ sidebar_snapins["about"] = {
 # --------------------------------------------------------------
 visible_views = [ "allhosts", "searchsvc" ]
 
+def views_by_topic():
+    s = [ (view.get("topic", _("Other")), view["title"], name)
+          for name, view
+          in html.available_views.items()
+          if not view["hidden"] and not view.get("mobile")]
+
+    # Add all the dashboards to the views list
+    s += [ (_('Dashboards'), d['title'], d_name)
+           for d_name, d
+           in dashboard.dashboards.items()
+    ]
+
+    s.sort()
+
+    # Enforce a certain order on the topics
+    known_topics = [ _('Dashboards'), "Hosts", "Hostgroups", "Services", "Servicegroups",
+                     _("Business Intelligence"), _("Problems"), _("Addons") ]
+
+    result = []
+    for topic in known_topics:
+        result.append((topic, s))
+
+    rest = list(set([ t for (t, _t, _v) in s if t not in known_topics ]))
+    rest.sort()
+    for topic in rest:
+        if topic:
+            result.append((topic, s))
+
+    return result
+
 def render_views():
     def render_topic(topic, s):
         first = True
@@ -82,28 +112,15 @@ def render_views():
                 if first:
                     html.begin_foldable_container("views", topic, False, topic, indent=True)
                     first = False
-                bulletlink(title, "view.py?view_name=%s" % name)
+                if topic == _('Dashboards'):
+                    bulletlink(title, 'dashboard.py?name=%s' % name)
+                else:
+                    bulletlink(title, "view.py?view_name=%s" % name)
         if not first: # at least one item rendered
             html.end_foldable_container()
 
-    s = [ (view.get("topic", _("Other")), view["title"], name)
-          for name, view
-          in html.available_views.items()
-          if not view["hidden"] and not view.get("mobile")]
-    s.sort()
-
-    # Enforce a certain order on the topics
-    known_topics = [ "Hosts", "Hostgroups", "Services", "Servicegroups",
-                     _("Business Intelligence"), _("Problems"), _("Addons") ]
-    for topic in known_topics:
+    for topic, s in views_by_topic():
         render_topic(topic, s)
-
-    rest = list(set([ t for (t, _t, _v) in s if t not in known_topics ]))
-    rest.sort()
-    for topic in rest:
-        if topic:
-            render_topic(topic, s)
-
 
     links = []
     if config.may("edit_views"):

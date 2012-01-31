@@ -139,8 +139,45 @@ def render_wato_foldertree():
                 del f['.folders'][subfolder['.path']]
     update_foldertree(folder_tree)
 
+    #
+    # Render link target selection
+    #
+    selected_topic, selected_target = config.load_user_file("foldertree", (_('Hosts'), 'allhosts'))
+
+    topic_views  = views_by_topic()
+    topics = [ (t, t) for t, s in topic_views ]
+    html.select("topic", topics, selected_topic, onchange = 'wato_tree_topic_changed(this)')
+    html.write('<span class=left>%s</span>' % _('Topic'))
+
+    for topic, views in topic_views:
+        targets = []
+        for t, title, name in views:
+            if config.visible_views and name not in config.visible_views:
+                continue
+            if config.hidden_views and name in config.hidden_views:
+                continue
+            if t == topic:
+                if topic == _('Dashboards'):
+                    name = 'dashboard|' + name
+                targets.append((name, title))
+
+        attrs = {}
+        if topic != selected_topic:
+            attrs['style'] = 'display:none'
+            default = ''
+        else:
+            default = selected_target
+
+        html.select("target_%s" % topic, targets, default, attrs = attrs, onchange = 'wato_tree_target_changed(this)')
+
+    html.write('<span class=left>%s</span>' % _('View'))
+    html.write('<hr />')
+
     # Now render the whole tree
     render_tree_folder(folder_tree)
+
+def ajax_set_foldertree():
+    config.save_user_file("foldertree", (html.var('topic'), html.var('target')))
 
 def render_tree_folder(f):
     subfolders = f.get(".folders", {})
@@ -171,4 +208,25 @@ sidebar_snapins['wato_foldertree'] = {
     'author'      : 'Lars Michelsen',
     'render'      : render_wato_foldertree,
     'allowed'     : [ 'admin', 'user', 'guest' ],
+    'styles'      : """
+#snapin_wato_foldertree select {
+    float: right;
+    padding: 0;
+    width:   190px;
+}
+#snapin_wato_foldertree span {
+    display: block;
+    color:  #ffffff;
+    height: 19px;
+}
+#snapin_wato_foldertree hr {
+    background-color: #fff;
+    height: 1px;
+    padding: 0;
+    margin: 4px;
+    border: 0;
+    /* Needed for older IE versions */
+    color: #fff;
+}
+"""
 }

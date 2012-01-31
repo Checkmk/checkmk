@@ -1,0 +1,10 @@
+Title: User Migration nach WatoNG
+Component: wato
+State: open
+Date: 2012-01-30 22:18:13
+Targetversion: 1.2.0
+Class: bug
+
+Die Userverwaltung in WatoNG liest weder bestehende User aus der OMD htpasswd datei aus, noch werden die
+bestehenden User aus dieser Datei behalten wenn man einen User in WatoNG anlegt.
+Auch wenn das eigentlich Funktionieren sollte, tat es das noch bei keiner Seite die ich migriert habe.

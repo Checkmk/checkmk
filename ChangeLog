@@ -63,6 +63,8 @@
       it exists after login when it is first needed
     * Dashboard: link problem views to *unhandled* views (this was
       inconsistent)
+    * Localization: Fixed detection of gettext template file when using the
+      local/ hierarchy in OMD
 
     Mobile:
     * Improved sorting of views in main page 

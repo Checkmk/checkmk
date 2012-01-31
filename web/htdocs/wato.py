@@ -1150,6 +1150,7 @@ def show_hosts(folder):
         (config.may("wato.edit_hosts") or config.may("wato.manage_hosts")):
         bulk_actions(at_least_one_imported, top = True)
 
+    host_errors = validate_all_hosts(hostnames) 
     # Now loop again over all hosts and display them
     for hostname in hostnames:
         if search_text and (search_text.lower() not in hostname.lower()):
@@ -1182,7 +1183,7 @@ def show_hosts(folder):
 
         # Hostname with link to details page (edit host)
         html.write('<td>')
-        errors = validate_host(host)
+        errors = host_errors.get(hostname,[]) + validate_host(hostname)
         if errors:
             msg = _("Warning: This host has an invalid configuration: ")
             msg += ", ".join(errors)
@@ -1736,7 +1737,7 @@ def mode_edithost(phase, new):
                 call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
 
-            errors = validate_host(g_folder[".hosts"][hostname])
+            errors = validate_all_hosts([hostname]) + validate_host(hostname)
             if errors: # keep on this page if host does not validate
                 return
             elif new:
@@ -1750,7 +1751,7 @@ def mode_edithost(phase, new):
         if new:
             render_folder_path()
         else:
-            errors = validate_host(host)
+            errors = validate_all_hosts([hostname]) + validate_host(hostname)
 
         if errors:
             html.write("<div class=info>")
@@ -2670,12 +2671,12 @@ def mode_changelog(phase):
             html.context_button(_("Site Configuration"), make_link([("mode", "sites")]), "sites")
 
     elif phase == "action":
-        defective_hosts = validate_all_hosts()
+        defective_hosts = validate_all_hosts([], force_all = True)
         if defective_hosts:
             raise MKUserError(None, _("You cannot activate changes while some hosts have "
               "an invalid configuration: ") + ", ".join(
                 [ '<a href="%s">%s</a>' % (make_link([("mode", "edithost"), ("host", hn)]), hn)
-                  for hn in defective_hosts ]))
+                  for hn in defective_hosts.keys() ]))
               
 
         sitestatus_do_async_replication = False # see below
@@ -4188,7 +4189,6 @@ def mode_snapshot(phase):
                                 delete_file
                             )
             if c:
-                # FIXME: kein join verwenden
                 os.remove(os.path.join(snapshot_dir, delete_file))
                 return None, _("Snapshot deleted.")
             elif c == False: # not yet confirmed
@@ -6635,10 +6635,13 @@ def mode_edit_user(phase):
                                    roles.keys())
 
         # Language configuration
+        set_lang = html.var('_set_lang')
         language = html.var('language')
-        if language and language != config.default_language:
+        if set_lang and language != config.default_language:
+            if language == '':
+                language = None
             new_user['language'] = language
-        elif not language and 'language' in new_user:
+        elif not set_lang and 'language' in new_user:
             del new_user['language']
 
         # Contact groups
@@ -6689,7 +6692,7 @@ def mode_edit_user(phase):
     html.write("<table class=form>")
 
     # ID
-    html.write("<tr><td class=legend>")
+    html.write("<tr><td class=legend colspan=2>")
     html.write(_("Username"))
     html.write("</td><td class=content>")
     if new:
@@ -6701,7 +6704,7 @@ def mode_edit_user(phase):
     html.write("</td></tr>")
 
     # Full name
-    html.write("<tr><td class=legend>")
+    html.write("<tr><td class=legend colspan=2>")
     html.write(_("Full name") + "<br><i>" + _("Full name or alias of the user</i>"))
     html.write("</td><td class=content>")
     html.text_input("alias", user.get("alias", userid), size = 50)
@@ -6710,7 +6713,7 @@ def mode_edit_user(phase):
     html.write("</td></tr>")
 
     # Authentication
-    html.write("<tr><td class=legend>")
+    html.write("<tr><td class=legend colspan=2>")
     html.write(_("Authentication<br><i>If you want the user to be able to login "
                  "then specify a password here. Users without a login make sense "
                  "if they are monitoring contacts that are just used for "
@@ -6745,7 +6748,7 @@ def mode_edit_user(phase):
     html.write("</td></tr>")
 
     # Locking
-    html.write("<tr><td class=legend>")
+    html.write("<tr><td class=legend colspan=2>")
     html.write(_("<i>Disabling the password will prevent a user from logging in while "
                  "retaining the original password. Notifications are not affected "
                  "by this setting.</i>"))
@@ -6755,7 +6758,7 @@ def mode_edit_user(phase):
     html.write("</td></tr>")
 
     # Email address
-    html.write("<tr><td class=legend>")
+    html.write("<tr><td class=legend colspan=2>")
     html.write(_("Email address<br><i>The email address is optional and is needed "
                  "if the user is a monitoring contact and receives notifications "
                  "via Email."))
@@ -6764,7 +6767,7 @@ def mode_edit_user(phase):
     html.write("</td></tr>")
 
     # Roles
-    html.write("<tr><td class=legend>")
+    html.write("<tr><td class=legend colspan=2>")
     html.write(_("Roles<br><i>By assigning roles to a user he obtains permissions. "
                  "If a user has more then one role, he gets the maximum of all "
                  "permissions of his roles. "
@@ -6780,7 +6783,7 @@ def mode_edit_user(phase):
     html.write("</td></tr>")
 
     # Contact groups
-    html.write("<tr><td class=legend>")
+    html.write("<tr><td class=legend colspan=2>")
     url1 = make_link([("mode", "contact_groups")])
     url2 = make_link([("mode", "rulesets")])
     html.write(_("Contact groups<br><i>Contact groups are used to assign monitoring "
@@ -6808,7 +6811,7 @@ def mode_edit_user(phase):
     html.write("</td></tr>")
 
     # Notifications enabled
-    html.write("<tr><td class=legend>")
+    html.write("<tr><td class=legend colspan=2>")
     html.write(_("Notifications enabled<br><i>Notifications are sent out "
                 "when the status of a host or service changes.</i>"))
     html.write("</td><td class=content>")
@@ -6817,7 +6820,7 @@ def mode_edit_user(phase):
     html.write("</td></tr>")
 
     # Notification period
-    html.write("<tr><td class=legend>")
+    html.write("<tr><td class=legend colspan=2>")
     html.write(_("Notification time period<br><i>Only during this time period the "
                  "user will get notifications about host or service alerts."))
     html.write("</td><td class=content>")
@@ -6845,7 +6848,7 @@ def mode_edit_user(phase):
         }
     }
 
-    html.write("<tr><td class=legend>")
+    html.write("<tr><td class=legend colspan=2>")
     html.write(_("Notification options<br><i>Here you specify which types of alerts "
                "will be notified to this contact.</i>"))
     html.write("</td><td class=content>")
@@ -6861,24 +6864,14 @@ def mode_edit_user(phase):
         html.write("</ul>")
     html.write("</td></tr>")
 
-    languages = get_languages()
-    if languages:
-        html.write("<tr><td class=legend>")
-        html.write(_("Language") + _('<br><i>Configure the default language '
-                   'to be used in the multisite GUI.</i>'))
-        html.write("</td><td class=content>")
-        default_label = _('Default (%s)') % config.default_language
-        languages = [ ('', default_label) ] + languages
-        html.select("language", languages, config.get_language(default_label))
-        html.write("</td></tr>")
-
+    select_language(user.get('language', ''))
 
     # TODO: Later we could add custom macros here, which
     # then could be used for notifications. On the other hand,
     # if we implement some check_mk --notify, we could directly
     # access the data in the account with the need to store
     # values in the monitoring core. We'll see what future brings.
-    html.write("<tr><td class=buttons colspan=2>")
+    html.write("<tr><td class=buttons colspan=3>")
     html.button("save", _("Save"))
     html.write("</tr>")
 
@@ -9108,6 +9101,25 @@ def register_rule(group, varname, valuespec = None, title = None,
 # The user can edit the own profile
 #
 
+def select_language(user_language):
+    languages = get_languages()
+    inactive = user_language != ''
+
+    if languages:
+        html.write("<tr><td class=legend>")
+        html.write(_("Language") + _('<br><i>Configure the default language '
+                           'to be used in the multisite GUI.</i>'))
+        html.write("</td><td class=checkbox>")
+        html.checkbox('_set_lang', inactive, onclick = 'wato_toggle_attribute(this, \'language\')')
+        html.write("</td><td class=content>")
+        default_label = _('Default: %s') % (get_language_alias(config.default_language) or _('English'))
+        html.write('<div class="inherited" id="attr_default_language" style="%s">%s</div>' %
+                                            (inactive and "display: none" or "", default_label))
+        html.write('<div id="attr_entry_language" style="%s">' % ((not inactive) and "display: none" or ""))
+        html.select("language", languages, user_language)
+        html.set_focus("lang")
+        html.write("</div></td></tr>")
+
 def page_user_profile():
     if not config.user_id:
         raise MKUserError(None, _('Not logged in.'))
@@ -9125,7 +9137,9 @@ def page_user_profile():
                 set_lang = html.var('_set_lang')
                 language = html.var('language')
                 # Set the users language if requested
-                if set_lang and language and language != config.get_language():
+                if set_lang and language != config.get_language():
+                    if language == '':
+                        language = None
                     # Set custom language
                     users[config.user_id]['language'] = language
                     config.user['language'] = language
@@ -9183,23 +9197,7 @@ def page_user_profile():
     html.write("</td></tr>")
 
     if config.may('edit_profile'):
-        languages = get_languages()
-        user_language = config.get_language('')
-        active = bool(user_language)
-
-        if languages:
-            html.write("<tr><td class=legend>")
-            html.write(_("Language"))
-            html.write("</td><td class=checkbox>")
-            html.checkbox('_set_lang', active, onclick = 'wato_toggle_attribute(this, \'language\')')
-            html.write("</td><td class=content>")
-            default_label = _('Default: %s') % (get_language_alias(config.default_language) or 'english')
-            html.write('<div class="inherited" id="attr_default_language" style="%s">%s</div>' %
-                                                (active and "display: none" or "", default_label))
-            html.write('<div id="attr_entry_language" style="%s">' % ((not active) and "display: none" or ""))
-            html.select("language", languages, user_language)
-            html.set_focus("lang")
-            html.write("</div></td></tr>")
+        select_language(config.get_language(''))
 
     if config.may('change_password'):
         html.write("<tr><td class=legend colspan=2>")
@@ -9483,7 +9481,7 @@ def call_hook_roles_saved(roles):
         call_hooks("roles-saved", roles)
 
 # This hook is called in order to determine if a host has a 'valid'
-# configuration. It used used for displaying warning symbols in the
+# configuration. It used for displaying warning symbols in the
 # host list and in the host detail view.
 def validate_host(host):
     if hook_registered('validate-host'):
@@ -9498,22 +9496,30 @@ def validate_host(host):
     else:
         return []
 
-def validate_all_hosts():
-    if hook_registered('validate-host'):
-        hosts = collect_hosts(g_root_folder)
-        defective_hosts = []
-        for hn, eff in hosts.iteritems():
-            for hk in g_hooks.get('validate-host', []):
-                try:
-                    hk(eff)
-                except MKUserError, e:
-                    defective_hosts.append(hn)
-                    break # reason not interesting here
-        defective_hosts.sort()
-        return defective_hosts
-    else:
-        return []
+# This hook is called in order to determine the errors of the given
+# hostnames. These informations are used for displaying warning
+# symbols in the host list and the host detail view
+# Returns dictionary { hostname: [errors] }
+def validate_all_hosts(hostnames, force_all = False):
+    if hook_registered('validate-all-hosts') and (len(hostnames) > 0 or force_all):
+        hosts_errors = {}
+        all_hosts = collect_hosts(g_root_folder)
+        
+        if force_all:
+            hostnames = all_hosts.keys()
 
+        for name in hostnames:
+            eff = all_hosts[name]
+            errors = []
+            for hk in g_hooks.get('validate-all-hosts', []):
+                try:
+                    hk(eff, all_hosts)
+                except MKUserError, e:
+                    errors.append(e.message)
+            hosts_errors[name] = errors
+        return hosts_errors
+    else:
+        return {}
 
 #.
 #   .-Helpers--------------------------------------------------------------.

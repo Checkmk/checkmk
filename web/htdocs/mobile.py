@@ -176,7 +176,7 @@ def page_login():
 
 
 def page_index():
-    title = "Check_MK Mobile"
+    title = _("Check_MK Mobile")
     mobile_html_head(title)
     jqm_page_header(title, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),id="data")
     views.load_views()

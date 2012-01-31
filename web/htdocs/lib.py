@@ -136,7 +136,10 @@ def get_language_alias(lang):
     return alias
 
 def get_languages():
-    languages = []
+    # Add the hard coded english language to the language list
+    # It must be choosable even if the administrator changed the default
+    # language to a custom value
+    languages = [ (None, _('English')) ]
 
     for lang_dir in get_language_dirs():
         try:

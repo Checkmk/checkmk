@@ -3737,7 +3737,6 @@ class ContactGroupsAttribute(Attribute):
 # Declare an attribute for each host tag configured in multisite.mk
 # Also make sure that the tags are reconfigured as soon as the
 # configuration of the tags has changed.
-configured_host_tags = None
 def declare_host_tag_attributes():
     global configured_host_tags
     global host_attributes
@@ -9764,8 +9763,10 @@ def load_plugins():
     loaded_with_language = current_language
 
     # Reset global vars
-    global extra_buttons
+    global extra_buttons, configured_host_tags, host_attributes
     extra_buttons = []
+    configured_host_tags = None
+    host_attributes = []
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))

@@ -96,6 +96,7 @@
       contactgroup in host edit dialog
     * FIX: Fixed wrong folder contacgroup related permissions in auth.php api
     * FIX: Fixed not up-to-date role permission data in roles_saved hook
+    * FIX: Fixed duplicate custom columns in WATO after switching languages
 
     BI:
     * improve doc/treasures/check_bi_local.py: local check that creates

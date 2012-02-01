@@ -27,7 +27,7 @@
 from lib import *
 
 
-def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None):
+def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None, buttontext = None):
     new_value = value.copy()
     if html.var("filled_in") == "form" and html.check_transaction():
         messages = []
@@ -60,7 +60,7 @@ def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None):
         html.write("<tr><td ")
         if vs.help() and hover_help:
             html.write('title="%s" ' % vs.help().replace('"', "&quot;"))
-        html.write("class=legend>%s" % vs.title())
+        html.write("class=legend>%s" % (vs.title() or "")) 
         if vs.help() and not hover_help:
             html.write("<br><i>%s</i>" % vs.help())
         html.write("</td><td class=content>")
@@ -73,7 +73,9 @@ def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None):
             vs.set_focus(name)
             first = False 
     html.write("<tr><td class=buttons colspan=2>")
-    html.button("save", _("Save"))
+    if buttontext == None:
+        buttontext = _("Save")
+    html.button("save", buttontext)
     html.write("</td></tr>\n")
     html.write("</table>\n")
     html.hidden_fields()

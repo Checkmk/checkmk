@@ -1422,3 +1422,19 @@ function list_of_strings_extend(oInput, j) {
     // Remove handle from old last element
     oInput.onfocus = null;
 }
+
+function valuespec_cascading_change(oSelect, varprefix, count) { 
+    var nr = parseInt(oSelect.value);
+
+    for (var i=0; i<count; i++) {
+        var oDiv = document.getElementById(varprefix + "_" + i + "_sub"); 
+        if (oDiv) {
+            if (nr == i) {
+                oDiv.style.display = ""; 
+            }
+            else
+                oDiv.style.display = "none";
+        }
+    }
+}
+

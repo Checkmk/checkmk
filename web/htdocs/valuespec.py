@@ -580,6 +580,94 @@ class DropdownChoice(ValueSpec):
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
             ", ".join([v for (v,t) in self._choices]))
 
+
+# A Dropdown choice where the elements are ValueSpecs.
+# The currently selected ValueSpec will be displayed.
+# The text representations of the ValueSpecs will be used as texts.
+# A ValueSpec of None is also allowed and will return
+# the value None.
+# The resulting value is either a single value (if no 
+# value spec is defined for the selected entry) or a pair
+# of (x, y) where x is the value of the selected entry and
+# y is the value of the valuespec assigned to that entry.
+# choices is a list of triples: [ ( value, title, vs ), ... ]
+class CascadingDropdown(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._choices = kwargs["choices"]
+        self._separator = kwargs.get("separator", ", ") 
+        self._html_separator = kwargs.get("html_separator", "<br>") 
+
+    def canonical_value(self):
+        if self._choices[0][2]:
+            return (self._choices[0][0], self._choices[0][2].canonical_value())
+        else:
+            return self._choices[0][0]
+
+    def render_input(self, varprefix, value):
+        def_val = 0
+        options = []
+        for nr, (val, title, vs) in enumerate(self._choices):
+            options.append((str(nr), title))
+            if value == val or (
+                type(value) == tuple and value[0] == val):
+                def_val = nr
+        html.select(varprefix + "_sel", options, def_val,
+                    onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(self._choices)))  
+        html.write(self._html_separator)
+        for nr, (val, title, vs) in enumerate(self._choices):
+            if vs:
+                vp = varprefix + "_%d" % nr
+                if value == val or (
+                    type(value) == tuple and value[0] == val):
+                    def_val = value[1]
+                    disp = ""
+                else:
+                    def_val = vs.default_value()
+                    disp = "none"
+                html.write('<div id="%s_%s_sub" style="display: %s">' % (varprefix, nr, disp))
+                vs.render_input(vp, def_val)
+                html.write('</div>')
+
+    def value_to_text(self, value):
+        for val, title, vs in self._choices:
+            if value[0] == val:
+                if not vs:
+                    return title
+                else:
+                    return title + self._separator + \
+                       vs.value_to_text(value[1])
+        return "" # Nothing selected? Should never happen
+
+    def from_html_vars(self, varprefix):
+        sel = int(html.var(varprefix + "_sel"))
+        val, title, vs = self._choices[sel]
+        if vs:
+            val = (val, vs.from_html_vars(varprefix + "_%d" % sel))
+        return val
+
+    def validate_datatype(self, value, varprefix):
+        for nr, (val, title, vs) in enumerate(self._choices):
+            if value == val or (
+                type(value) == tuple and value[0] == val):
+                if vs:
+                    if type(value) != tuple or len(value) != 2:
+                        raise MKUserError(varprefix + "_sel", _("Value must a tuple with two elements."))
+                    vs.validate_datatype(value[1], varprefix + "_%d" % nr) 
+                return
+        raise MKUserError(_("Value %r is not allowed here.") % value)
+
+    def validate_value(self, value, varprefix):
+        for nr, (val, title, vs) in enumerate(self._choices):
+            if value == val or (
+                type(value) == tuple and value[0] == val):
+                if vs:
+                    vs.validate_value(value[1], varprefix + "_%d" % nr)
+                return
+        raise MKUserError(varprefix, _("Value %r is not allowed here.") % (value, ))
+
+
+
 # The same logic as the dropdown choice, but rendered
 # as a group of radio buttons.
 # columns == None or unset -> separate with "&nbsp;"

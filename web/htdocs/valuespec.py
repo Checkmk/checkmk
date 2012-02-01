@@ -821,6 +821,65 @@ class RelativeDate(OptionalDropdownChoice):
     def validate_value(self, value, varprefix):
         pass
 
+# A ValueSpec for editing a date. The date is
+# represented as a UNIX timestamp x where x % seconds_per_day
+# is zero (or will be ignored if non-zero).
+class AbsoluteDate(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._default_value = today()
+
+    def canonical_value(self):
+        return self._default_value
+
+    def split_date(self, value):
+        lt = time.localtime(value)
+        return lt.tm_year, lt.tm_mon, lt.tm_mday
+
+    def render_input(self, varprefix, value):
+        html.write('<table class=vs_date>')
+        html.write('<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
+                _("Year"), _("Month"), _("Day")))
+        html.write('<tr><td>')
+        year, month, day = self.split_date(value)
+        html.number_input(varprefix + "_year", year, size=4)
+        html.write('</td><td>')
+        html.number_input(varprefix + "_month", month, size=2)
+        html.write('</td><td>')
+        html.number_input(varprefix + "_day", day, size=2)
+        html.write('</td></tr></table>')
+
+    def set_focus(self, varprefix):
+        html.set_focus(varprefix + "_year")
+
+    def value_to_text(self, value):
+        return time.strftime("%F", time.localtime(value))
+
+    def from_html_vars(self, varprefix):
+        parts = []
+        for what, mmin, mmax in [
+            ("year", 1970, 2038),
+            ("month",   1,   12),
+            ("day",     1,   31)]:
+            try:
+                varname = varprefix + "_" + what
+                part = int(html.var(varname))
+            except:
+                raise MKUserError(varname, _("Please enter a correct number"))
+            if part < mmin or part > mmax:
+                raise MKUserError(varname, _("The value for %s must be between %d and %d" % (mmin, mmax)))
+            parts.append(part)
+        parts += [0] * 6
+        return time.mktime(tuple(parts))
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) not in [ int, float ]:
+            raise MKUserError(varprefix, _("The type of the timestamp must be int or float, but is %s") % 
+                              type(value))
+
+    def validate_value(self, value, varprefix):
+        if value < 0 or int(value) > (2**31-1):
+            return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
 
 
 

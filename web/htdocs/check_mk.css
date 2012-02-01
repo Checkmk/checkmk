@@ -292,3 +292,18 @@ td.content table.valuespec_tuple td.left {
     vertical-align: top;
     padding-bottom: 10px;
 }
+
+table.vs_date {
+    border-spacing: 0px;
+}
+
+table.vs_date td {
+    padding-top: 0px;
+    padding-right: 3px;
+}
+table.vs_date th {
+    text-align: center;
+    font-weight: normal;
+    font-size: 7pt;
+    padding: 0px;
+}

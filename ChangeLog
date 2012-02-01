@@ -217,6 +217,8 @@
     * check_submission defaults now to "file" (was "pipe")
     * Added pre-configured notification via cmk --notify
     * Drop RRA-configuration files for PNP4Nagios completely
+    * New configuration variable ping_levels for configuring parameters
+      for the host checks.
 
     Checks & Agents:
     * if/if64: new ruleset if_disable_if64_hosts, that force if on

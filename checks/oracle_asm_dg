@@ -56,4 +56,3 @@ check_info['oracle_asm_dg'] = (
     "ASM disk group %s",
     1,
     inventory_oracle_asm_dg)
-checkgroup_of['oracle_asm_dg'] = "2xthresholdPercent"

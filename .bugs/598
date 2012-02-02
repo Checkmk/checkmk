@@ -1,10 +1,13 @@
 Title: WATO inventory does not honor clustered services
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-01-12 13:59:10
 Targetversion: 1.2.0
-Class: bug
 
 When doing inventory on a cluster node in WATO, the
 clustered services are not honored but put to the
 node.
+
+2012-02-02 12:10:16: changed state open -> done
+Should work now.

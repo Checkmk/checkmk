@@ -702,35 +702,6 @@ checkgroups.append((
         allow_empty = False),
      None))
 
-checkgroups.append((
-    "2xthreshold",
-    _("2 Threshold limits"),
-    Tuple(
-          help = _("This rulset enables you to setup the threshold limts for checks"
-                   "who needs a warn and a critical level"),
-          elements = [
-              Integer(title = _("Warning if higher than")),
-              Integer(title = _("Critical if higher than")),
-              ]),
-    TextAscii(
-        title = _("Service descriptions"),
-        allow_empty = False),
-     None))
-
-checkgroups.append((
-    "2xthresholdPercent",
-    _("2 Percentage Threshold limits"),
-    Tuple(
-          help = _("This rulset enables you to setup the threshold limts for checks"
-                   "who needs a warn- and a critical percent level"),
-          elements = [
-              Percentage(title = _("Warning if higher than")),
-              Percentage(title = _("Critical if higher than")),
-              ]),
-    TextAscii(
-        title = _("Service descriptions"),
-        allow_empty = False),
-     None))
 
 checkgroups.append((
     "win_dhcp_pools",

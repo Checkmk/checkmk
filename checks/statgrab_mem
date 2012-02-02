@@ -78,4 +78,3 @@ def check_statgrab_mem(item, params, info):
 
 
 check_info['statgrab_mem'] = (check_statgrab_mem, "Memory used", 1, inventory_statgrab_mem)
-checkgroup_of['statgrab_mem'] = "2xthresholdPercent"

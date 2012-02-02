@@ -66,4 +66,3 @@ snmp_info["cpsecure_sessions"] = ( ".1.3.6.1.4.1.26546.3.1.2.1.1.1", [ "1", "2",
 
 snmp_scan_functions["cpsecure_sessions"] = \
     lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.26546.1.1.2"
-checkgroup_of['cpsecure_sessions'] = "2xthreshold"

@@ -98,4 +98,3 @@ snmp_info["hr_mem"] = ( ".1.3.6.1.2.1.25.2.3.1", [
 ] )
 snmp_scan_functions["hr_mem"] = lambda oid: \
         not not oid('.1.3.6.1.2.1.25.1.1.0') # HOST-RESOURCES-MIB::hrSystemUptime.0
-checkgroup_of['hr_mem'] = "2xthreshold"

@@ -50,4 +50,3 @@ check_info['fsc_fans'] = (check_fsc_fans, "FSC %s", 1,  inventory_fsc_fans)
 snmp_info['fsc_fans'] = ( ".1.3.6.1.4.1.231.2.10.2.2.5.2.2.1", [ 16, 8 ]) # , 9, 10 ] )
 snmp_scan_functions['fsc_fans'] = lambda oid: \
     oid(".1.3.6.1.4.1.231.2.10.2.1.1.0")
-checkgroup_of['fsc_fans'] = "2xthreshold"

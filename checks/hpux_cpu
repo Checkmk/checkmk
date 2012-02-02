@@ -55,4 +55,3 @@ def check_hpux_cpu_load(item, params, info):
         return (0, "OK - 15min Load %.2f at %s CPUs" % (load[2], num_cpus), perfdata)
 
 check_info['hpux_cpu'] = (check_hpux_cpu_load, "CPU load", 1,  inventory_hpux_cpu_load )
-checkgroup_of['hpux_cpu'] = "2xthreshold"

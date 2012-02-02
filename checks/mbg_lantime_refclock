@@ -105,4 +105,3 @@ snmp_info['mbg_lantime_refclock'] = ( ".1.3.6.1.4.1.5597.3.2", [
 
 snmp_scan_functions['mbg_lantime_refclock'] \
         = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.3"
-checkgroup_of['mbg_lantime_refclock'] = "2xthreshold"

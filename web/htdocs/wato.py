@@ -6729,6 +6729,10 @@ def mode_edit_user(phase):
                        'the user member of a contact group which has hosts assigned '
                        'in order to be able to receive emails.'))
 
+            if not new_user["roles"]:
+                raise MKUserError("role_user",
+                    _("Your user has no roles. Please assign at least one role."))
+
         ntp = html.var("notification_period")
         if ntp not in timeperiods:
             ntp = "24X7"

@@ -208,6 +208,7 @@ def perfometer_check_mk_ipmi_sensors(row, check_command, perf_data):
 # Also all checks dealing with temperature can use this perfometer
 perfometers["check_mk-ipmi_sensors"] = perfometer_check_mk_ipmi_sensors
 perfometers["check_mk-nvidia.temp"] = perfometer_check_mk_ipmi_sensors
+perfometers["check_mk-cisco_temp_sensor"] = perfometer_check_mk_ipmi_sensors
 
 def perfometer_check_mk_if(row, check_command, perf_data):
     txt = []

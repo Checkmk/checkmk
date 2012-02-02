@@ -44,7 +44,8 @@
       "Temperature %s", in order to be consistent with the other checks.
     * mounts: exclude changes of the commit option (might change on laptops),
       make only switch to ro critical, other changes warning.
-    * nexus_temp: new check for Cisco NEXUS temperature sensors (first version)
+    * cisco_temp_sensor: new check for temperature sensors of Cisco NEXUS
+      and other new Cisco devices
     * oracle_tablespace: Fixed tablespace size/free space calculations
 
     Multisite:

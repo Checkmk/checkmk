@@ -23,8 +23,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 $title = str_replace("_", " ", $servicedesc);
-$opt[1] = "--vertical-label \"Celsius\"  -l 0 -u 40 --title \"$title\" ";
+$opt[1] = "--vertical-label \"Celsius\" --title \"$title\" -h 140 ";
 
 $def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ";
 $def[1] .= "AREA:var1#2080ff:\"Temperature\:\" ";

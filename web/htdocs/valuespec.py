@@ -597,6 +597,7 @@ class CascadingDropdown(ValueSpec):
         self._choices = kwargs["choices"]
         self._separator = kwargs.get("separator", ", ") 
         self._html_separator = kwargs.get("html_separator", "<br>") 
+        self._sorted = kwargs.get("sorted", True)
 
     def canonical_value(self):
         if self._choices[0][2]:
@@ -612,8 +613,14 @@ class CascadingDropdown(ValueSpec):
             if value == val or (
                 type(value) == tuple and value[0] == val):
                 def_val = nr
-        html.select(varprefix + "_sel", options, def_val,
-                    onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(self._choices)))  
+
+        vp = varprefix + "_sel"
+        onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(self._choices))  
+        if self._sorted:
+            html.select(vp, options, def_val, onchange=onchange)
+        else:
+            html.sorted_select(vp, options, def_val, onchange=onchange)
+
         html.write(self._html_separator)
         for nr, (val, title, vs) in enumerate(self._choices):
             if vs:

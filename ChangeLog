@@ -47,6 +47,8 @@
     * cisco_temp_sensor: new check for temperature sensors of Cisco NEXUS
       and other new Cisco devices
     * oracle_tablespace: Fixed tablespace size/free space calculations
+    * FIX: if/if64: omit check result on counter wrap if bandwidth traffic levels
+      are used.
 
     Multisite:
     * Improve transaction handling and reload detection: user can have 

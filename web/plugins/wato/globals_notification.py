@@ -115,6 +115,10 @@ register_configvar(group,
                   "<tt><b>$LONGSERVICEOUTPUT$</b></tt>: the long output of the check command, "
                   "<tt><b>$SERVICEPERFDATA$</b></tt>: the performance data of the check, "
                   "<tt><b>$SERVICECHECKCOMMAND$</b></tt>: the name of the service check command"
+                  "<br><br>"
+                  "<tt><b>$MONITORING_HOST$</b></tt>: the host name of the monitoring server "
+                  "<tt><b>$OMD_ROOT$</b></tt>: the home directory of the OMD site (only on OMD) "
+                  "<tt><b>$OMD_SITE$</b></tt>: the name of the OMD site (only on OMD) "
                  ),
     ),
     domain = "check_mk")

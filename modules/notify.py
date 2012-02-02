@@ -97,6 +97,15 @@ def do_notify(args):
             in os.environ.items()
             if var.startswith("NOTIFY_")
                 and not re.match('^\$[A-Z]+\$$', value)])
+    
+        # Add a few further helper variables
+        import socket
+        context["MONITORING_HOST"] = socket.gethostname()
+        if omd_root:
+            context["OMD_ROOT"] = omd_root
+            context["OMD_SITE"] = os.getenv("OMD_SITE", "")
+
+
         if notification_logging >= 2:
             notify_log("Notification context:\n"
                        + "\n".join(["%s=%s" % v for v in sorted(context.items())]))
@@ -140,7 +149,10 @@ def do_notify(args):
                 sys.stderr.write("Details have been logged to %s.\n" % notification_log)
             sys.exit(1)
     except Exception, e:
-        file(var_dir + "/notify/crash.log", "a").write("CRASH:\n%s\n\n" % format_exception())
+        crash_dir = var_dir + "/notify"
+        if not os.path.exists(crash_dir):
+            os.makedirs(crash_dir)
+        file(crash_dir + "/crash.log", "a").write("CRASH:\n%s\n\n" % format_exception())
 
 def format_exception():
     import traceback, StringIO, sys

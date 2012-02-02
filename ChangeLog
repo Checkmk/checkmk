@@ -219,6 +219,7 @@
     * Drop RRA-configuration files for PNP4Nagios completely
     * New configuration variable ping_levels for configuring parameters
       for the host checks.
+    * cmk --notify: new macros $MONITORING_HOST$, $OMD_ROOT$ and $OMD_SITE$
 
     Checks & Agents:
     * if/if64: new ruleset if_disable_if64_hosts, that force if on

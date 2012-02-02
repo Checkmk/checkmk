@@ -12,6 +12,8 @@
     * FIX: netapp_volumes: added raid4 as allowed state (thanks to Michaël Coquard)
     * FIX: HP-UX Agent: fix mrpe (remove echo -e and test -e, thanks to Philipp Lemke)
     * FIX: ntp checks: output numeric data also if stratum too high
+    * FIX: if/if64: omit check result on counter wrap if bandwidth traffic levels
+      are used.
 
     Livestatus
     * FIX: fix type column in 'GET columns' for dict-type columns (bug found

@@ -242,6 +242,10 @@ def check_if_common(item, params, info):
 
             # if at least one counter wrapped, we do not handle the counters at all
             if wrapped:
+                # If there is a threshold on the bandwidth, we cannot proceed
+                # futher (the check would be flapping to green on a wrap)
+                if bw_crit != None:
+                    raise MKCounterWrapped("", "Counter wrap, skipping checks this time") 
                 perfdata = []
             else:
                 perfdata.append(("outqlen", saveint(ifOutQLen)))

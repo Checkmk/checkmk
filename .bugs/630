@@ -1,0 +1,13 @@
+Title: Reset counter in case of time step
+Component: core
+State: open
+Date: 2012-02-02 15:08:44
+Targetversion: 1.2.0
+Class: bug
+
+If get_counter detects a future timestamp then it
+should reset the counter to the current time so
+that at least the next time the counter will work.
+This happens e.g. in at Windows, because the agent
+was sending invalid timestamps in older versions
+that are lying in the future and are now repaired.

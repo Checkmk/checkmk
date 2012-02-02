@@ -29,7 +29,7 @@
 
 
 cpuload_default_levels = (5, 10)
-threads_default_levels = (2000.0, 4000.0)
+threads_default_levels = (2000, 4000)
 
 def inventory_cpu_load(info):
     if len(info) == 1 and len(info[0]) >= 5:

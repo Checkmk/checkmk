@@ -453,8 +453,8 @@ checkgroups.append((
               Tuple(
                   title = _("Levels for the used space"),
                   elements = [
-                      Percentage(title = _("Warning at"),  label = _("% usage")),
-                      Percentage(title = _("Critical at"), label = _("% usage"))])),
+                      Percentage(title = _("Warning at"),  label = _("% usage"), allow_int = True),
+                      Percentage(title = _("Critical at"), label = _("% usage"), allow_int = True)])),
             (  "magic",
                Float(
                   title = _("Magic factor (automatic level adaptation for large filesystems)"),
@@ -465,11 +465,22 @@ checkgroups.append((
                    title = _("Reference size for magic factor"),
                    minvalue = 1,
                    label = _("GB"))),
+            ( "levels_low",
+              Tuple(
+                  title = _("Minimum levels if using magic factor"),
+                  help = _("The filesystem levels will never fall below these values, when using "
+                           "the magic factor and the filesystem is very small."),
+                  elements = [
+                      Percentage(title = _("Warning at"),  label = _("% usage"), allow_int = True),
+                      Percentage(title = _("Critical at"), label = _("% usage"), allow_int = True)])),
             (  "trend_range",
-               Integer(
-                   title = _("Range for filesystem trend computation"),
-                   minvalue = 1,
-                   label= _("hours"))),
+               Optional(
+                   Integer(
+                       title = _("Range for filesystem trend computation"),
+                       minvalue = 1,
+                       label= _("hours")),
+                   title = _("Trend computation"),
+                   label = _("Enable trend computation"))),
             (  "trend_mb",
                Tuple(
                    title = _("Levels on trends in MB per range"),
@@ -612,8 +623,8 @@ checkgroups.append((
             Tuple(
                 title = _("Specify levels in percentage of total RAM"),
                 elements = [
-                  Percentage(title = _("Warning at a usage of"), label = _("% of RAM")),
-                  Percentage(title = _("Critical at a usage of"), label = _("% of RAM"))]),
+                  Percentage(title = _("Warning at a usage of"), label = _("% of RAM"), max_value = None),
+                  Percentage(title = _("Critical at a usage of"), label = _("% of RAM"), max_value = None)]),
             Tuple(
                 title = _("Specify levels in absolute usage values"),
                 elements = [

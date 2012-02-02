@@ -116,7 +116,7 @@ def inventory_if_common(info):
             paramstring = "{"
 
             if if_inventory_monitor_state:
-                paramstring += '"state" : "%s",' % ifOperStatus
+                paramstring += '"state" : ["%s"],' % ifOperStatus
 
             if ifSpeed != "" and if_inventory_monitor_speed:
                 paramstring += '"speed" : %d,' % int(ifSpeed)

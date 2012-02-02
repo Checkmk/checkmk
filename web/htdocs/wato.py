@@ -2027,9 +2027,16 @@ def show_service_table(host, firsttime):
                                      ("varname", varname),
                                      ("host", hostname),
                                      ("item", repr(item))])
-                    title = _("Edit rules for this check parameter")
-                    title = "Check parameters for this service: " + \
-                        rulespec["valuespec"].value_to_text(params)
+                    try:
+                        rulespec["valuespec"].validate_datatype(params, "")
+                        rulespec["valuespec"].validate_value(params, "")
+                        paramtext = rulespec["valuespec"].value_to_text(params)
+                    except Exception, e:
+                        if config.debug:
+                            raise
+                        paramtext = _("Invalid check parameter: %s!") % e
+
+                    title = "Check parameters for this service: " + paramtext
                     html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
                        (url, title))
 

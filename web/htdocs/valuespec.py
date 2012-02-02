@@ -163,7 +163,7 @@ class Age(ValueSpec):
 
     def validate_datatype(self, value, varprefix):
         if type(value) != int:
-            raise MKUserError(varprefix, _("The value has type %s, but must be of type int") % (type(value)))
+            raise MKUserError(varprefix, _("The value %r has type %s, but must be of type int") % (value, type(value)))
 
 
 # Editor for a single integer
@@ -220,7 +220,8 @@ class Integer(ValueSpec):
 
     def validate_datatype(self, value, varprefix):
         if type(value) != int:
-            raise MKUserError(varprefix, _("The value has type %s, but must be of type int") % (type(value)))
+            raise MKUserError(varprefix, _("The value %r has the wrong type %s, but must be of type int")
+            % (value, type(value)))
 
     def validate_value(self, value, varprefix):
         if self._minvalue != None and value < self._minvalue:
@@ -487,7 +488,7 @@ class Float(Integer):
 
     def validate_datatype(self, value, varprefix):
         if type(value) != float:
-            raise MKUserError(varprefix, _("The value has type %s, but must be of type float") % (type(value)))
+            raise MKUserError(varprefix, _("The value %r has type %s, but must be of type float") % (value, type(value)))
 
 
 class Percentage(Float):
@@ -499,9 +500,18 @@ class Percentage(Float):
             self._maxvalue = 101.0
         if "unit" not in kwargs:
             self._unit = "%"
+        self._allow_int = kwargs.get("allow_int", False)
 
     def value_to_text(self, value):
         return "%.1f%%" % value
+
+    def validate_datatype(self, value, varprefix):
+        if self._allow_int:
+            if type(value) not in [ int, float ]:
+                raise MKUserError(varprefix, _("The value %r has type %s, but must be either float or int") 
+                                % (value, type(value)))
+        else:
+            Float.validate_datatype(self, value, varprefix)
 
 
 class Checkbox(ValueSpec):
@@ -526,7 +536,7 @@ class Checkbox(ValueSpec):
 
     def validate_datatype(self, value, varprefix):
         if type(value) != bool:
-            raise MKUserError(varprefix, _("The value has type %s, but must be either True or False") % (type(value)))
+            raise MKUserError(varprefix, _("The value %r has type %s, but must be of type bool") % (value, type(value)))
 
 # A type-save dropdown choice. Parameters:
 # help_separator: if you set this to a character, e.g. "-", then
@@ -1256,7 +1266,10 @@ class Dictionary(ValueSpec):
         for param, vs in self._elements:
             if param in value:
                 vp = varprefix + "_" + param
-                vs.validate_datatype(value[param], vp)
+                try:
+                    vs.validate_datatype(value[param], vp)
+                except MKUserError, e:
+                    raise MKUserError(e.varname, _("%s: %s") % (vs.title(), e.message))
             elif not self._optional_keys:
                 raise MKUserError(varprefix, _("The entry %s is missing") % vp.title())
 
@@ -1265,7 +1278,7 @@ class Dictionary(ValueSpec):
         for param in value.keys():
             if param not in allowed_keys:
                 raise MKUserError(varprefix, _("Undefined key '%s' in the dictionary. Allowed are %s.") %
-                        ", ".join(allowed_keys))
+                        (param, ", ".join(allowed_keys)))
 
     def validate_value(self, value, varprefix):
         for param, vs in self._elements:

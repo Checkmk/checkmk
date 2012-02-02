@@ -1770,10 +1770,11 @@ define service {
         outfile.write("""
 define service {
   use\t\t\t\t%s
+  check_command\t\t\tcheck-mk-ping!%s
 %s  host_name\t\t\t%s
 }
 
-""" % (pingonly_template, extra_service_conf_of(hostname, "PING"), hostname))
+""" % (pingonly_template, check_icmp_arguments(hostname), extra_service_conf_of(hostname, "PING"), hostname))
 
 
 def create_nagios_config_hostgroups(outfile):

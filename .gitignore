@@ -13,4 +13,4 @@ check-mk-*.exe
 var/
 .bugs/.my_ids
 .bugs/.last
-check_mk_agent-*.exe
+check-mk-agent-*.exe

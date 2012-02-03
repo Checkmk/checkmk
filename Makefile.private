@@ -9,7 +9,7 @@ upload:
 	@echo "Alles OK. URL ist: $(DOWNLOADURL)"
 
 mkde:
-	cp -v agents/windows/install_agent.exe check_mk_agent-$(VERSION).exe
+	cp -v agents/windows/install_agent.exe check-mk-agent-$(VERSION).exe
 	echo 'TI:Table of check types (incomplete)' > $(CHECKMANDIR)/checks
 	echo "DT:$$(date +%F)" >> $(CHECKMANDIR)/checks
 	echo "H1:Table of checks with documentation" >> $(CHECKMANDIR)/checks

@@ -167,6 +167,8 @@ def automation_try_inventory(args):
         
 
 def automation_try_inventory_node(hostname):
+    global opt_use_cachefile
+
     try:
         ipaddress = lookup_ipaddress(hostname)
     except:

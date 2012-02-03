@@ -197,6 +197,15 @@ register_configvar(group,
                       "been copied here from another monitoring site.")),
     need_restart = True)
 
+register_configvar(group,
+    "agent_simulator",
+    Checkbox(title = _("SNMP Agent Simulator"),
+             label = _("Process stored SNMP walks with agent simulator"),
+             help = _("When using stored SNMP walks you can place inline code generating "
+                      "dynamic simulation data. This feature can be activated here. There "
+                      "is a big chance that you will never need this feature...")),
+    need_restart = True)
+
 
 register_configvar(group,
     "delay_precompile",
@@ -812,3 +821,10 @@ register_rule(group,
                  "<tt>&lt;HOST&gt;</tt>."),
         label = _("Command line to execute")))
 
+register_rule(group,
+    "usewalk_hosts",
+    title = _("Hosts that simulate SNMP by using a stored SNMP walk"),
+    help = _("This ruleset helps in test and development. You can create stored SNMP "
+             "walks on the command line with cmk --snmpwalk HOSTNAME. A host that "
+             "is configured with this ruleset will then use the information from that "
+             "file instead of using real SNMP. "))

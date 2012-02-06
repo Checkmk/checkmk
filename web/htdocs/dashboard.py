@@ -45,11 +45,11 @@ MAX = -1
 # These settings might go into the config module, sometime in future,
 # in order to allow the user to customize this.
 
-header_height   = 40     # Distance from top of the screen to the lower border of the heading
-screen_margin   = 5      # Distance from the left border of the main-frame to the dashboard area
-dashlet_padding = 8      # Margin between outer border of dashlet and its content
-title_height    = 20     # Height of dashlet title-box
-raster          = 32, 32 # Raster the dashlet choords are measured in
+header_height   = 60             # Distance from top of the screen to the lower border of the heading
+screen_margin   = 5              # Distance from the left border of the main-frame to the dashboard area
+dashlet_padding = 21, 11, 10, 11 # Margin (N, E, S, W) between outer border of dashlet and its content
+title_height    = 0             # Height of dashlet title-box
+raster          = 32, 32         # Raster the dashlet choords are measured in
 
 # Load plugins in web/plugins/dashboard and declare permissions,
 # note: these operations produce language-specific results and
@@ -147,7 +147,7 @@ def render_dashboard(name):
 var header_height = %d;
 var screen_margin = %d;
 var title_height = %d;
-var dashlet_padding = %d;
+var dashlet_padding = Array%s;
 var refresh_dashlets = %r;
 var dashboard_name = '%s';
 set_dashboard_size();

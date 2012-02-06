@@ -59,15 +59,14 @@ div.dashlet iframe {
 
 div.dashlet div.title {
     position: absolute;
-    left: 0px;
+    left: 9px;
     width: 150px; /* will be changed by javascript later */
     color: #fff;
-    text-align: center;
     padding: 0px;
     margin: 0px;
-    padding-top: 5px;
+    padding-top: 3px;
     font-size: 10pt;
-    font-weight: bold;
+    font-weight: normal;
 }
 div.dashlet div.title a {
     text-decoration: none;
@@ -82,52 +81,52 @@ div.dashlet img.shadow {
     position: absolute;
 }
 div.dashlet img.shadow.n {
-    top: 0px;
-    left: 16px;
-    width: 40px;
-    height: 8px;
+    top: -2px;
+    left: 11px;
+    width: 1px;
+    height: 23px;
 }
 div.dashlet img.shadow.s {
-    bottom: 0px;
-    left: 16px;
-    width: 40px;
-    height: 8px;
+    bottom: -2px;
+    left: 11px;
+    width: 1px;
+    height: 12px;
 }
 div.dashlet img.shadow.w {
-    left: 0px;
-    top: 16px;
-    width: 8px;
-    height: 40px;
+    left: -2px;
+    top: 21px;
+    width: 13px;
+    height: 1px;
 }
 div.dashlet img.shadow.e {
-    right: 0px;
-    top: 16px;
-    width: 8px;
-    height: 40px;
+    right: -2px;
+    top: 21px;
+    width: 13px;
+    height: 1px;
 }
 div.dashlet img.shadow.nw {
-    width: 16px;
-    height: 16px;
-    top: 0px;
-    left: 0px;
+    top: -2px;
+    left: -2px;
+    width: 13px;
+    height: 23px;
 }
 div.dashlet img.shadow.sw {
-    width: 16px;
-    height: 16px;
-    bottom: 0px;
-    left: 0px;
+    bottom: -2px;
+    left: -2px;
+    width: 13px;
+    height: 12px;
 }
 div.dashlet img.shadow.ne {
-    width: 16px;
-    height: 16px;
-    top: 0px;
-    right: 0px;
+    top: -2px;
+    right: -2px;
+    width: 13px;
+    height: 23px;
 }
 div.dashlet img.shadow.se {
-    width: 16px;
-    height: 16px;
-    bottom: 0px;
-    right: 0px;
+    bottom: -2px;
+    right: -2px;
+    width: 13px;
+    height: 12px;
 }
 
 table.dashlet_overview h2 {

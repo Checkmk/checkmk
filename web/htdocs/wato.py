@@ -108,7 +108,6 @@
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
        shutil, tarfile, StringIO, math, fcntl
-import urllib, urllib2
 import config, htmllib, multitar
 from lib import *
 from valuespec import *
@@ -3057,7 +3056,6 @@ def log_commit_pending():
     pending = log_dir + "pending.log"
     if os.path.exists(pending):
         os.remove(pending)
-    need_sidebar_reload()
 
 def clear_audit_log():
     path = log_dir + "audit.log"
@@ -5897,32 +5895,41 @@ def do_site_login(site_id, name, password):
             _("Please specify your password."))
 
     # Trying basic auth AND form based auth to ensure the site login works
-    o = open_url(site["multisiteurl"] + 'automation_login.py?_login=1'
-                 '&_username=%s&_password=%s&_origtarget=automation_login.py' %
-                                             (name, password), name, password)
-    response = o.read()
+    response = get_url(site["multisiteurl"] + 'automation_login.py?_login=1'
+                        '&_username=%s&_password=%s&_origtarget=automation_login.py' %
+                                             (name, password), site.get('insecure', False), name, password)
     try:
         return eval(response)
     except:
         raise MKAutomationException(response)
 
+def upload_file(url, file_path, insecure):
+    return get_url(url, insecure, params = ' -F snapshot=@%s' % file_path)
 
-def open_url(url, user=None, password=None):
+def get_url(url, insecure, user=None, password=None, params = ''):
+    cred = ''
     if user:
-        try:
-            passwdmngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            passwdmngr.add_password(None, url, user, password)
-            authhandler = urllib2.HTTPBasicAuthHandler(passwdmngr)
-            opener = urllib2.build_opener(authhandler)
-            urllib2.install_opener(opener)
-            return urllib2.urlopen(url)
-        except urllib2.HTTPError, e:
-            if e.code == 401:
-                raise MKUserError("_passwd", _("Authentication failed. Invalid login/password."))
-            else:
-                raise MKUserError("_passwd", _("HTTP Error: %s" % e))
-    else:
-        return urllib.FancyURLopener().open(url)
+        cred = ' -u "%s:%s"' % (user, password)
+
+    insecure = insecure and ' --insecure' or ''
+
+    # -s: silent
+    # -S: show errors
+    # -w '%{http_code}': add the http status code to the end of the output
+    response = os.popen('curl -w "\n%%{http_code}" -s -S%s%s%s "%s" 2>&1' % (insecure, cred, params, url)).read().strip()
+    try:
+        status_code = int(response[-3:])
+        response_body = response[:-3]
+    except:
+        status_code = None
+        response_body = response
+
+    if status_code == 401:
+        raise MKUserError("_passwd", _("Authentication failed. Invalid login/password."))
+    elif status_code != 200:
+        raise MKUserError("_passwd", _("HTTP Error - %s: %s") % (status_code, response_body))
+
+    return response_body
 
 def check_mk_remote_automation(siteid, command, args, indata):
     # If the site is not up-to-date, synchronize it first.
@@ -5952,16 +5959,15 @@ def do_remote_automation(site, command, vars):
                ("secret",  secret),
                ("debug",   config.debug and '1' or '')
         ] + vars)
-    connection = open_url(url)
-    response_code = connection.read().strip()
-    if not response_code:
+    response = get_url(url, site.get('insecure', False))
+    if not response:
         raise MKAutomationException("Empty output from remote site.")
     try:
-        response = eval(response_code)
+        response = eval(response)
     except:
         # The remote site will send non-Python data in case of an
         # error.
-        raise MKAutomationException("<pre>%s</pre>" % response_code)
+        raise MKAutomationException("<pre>%s</pre>" % response)
     return response
 
 
@@ -6200,13 +6206,7 @@ def push_snapshot_to_site(site, do_restart):
         ("debug",      config.debug and "1" or ""),
     ])
     url = url_base + var_string
-    # urllib2 does not seem to support file uploads. Please tell me, if
-    # you know a better method for uploading, without the use of external
-    # programs...
-    # -s -S: Disable progress meter but enable error messages
-    insecure = site.get('insecure', False) and ' --insecure' or ''
-    response_text = os.popen("curl -s -S%s -F snapshot=@%s '%s' 2>&1" %
-                               (insecure, sync_snapshot_file, url)).read()
+    response_text = upload_file(url, sync_snapshot_file, site.get('insecure', False))
     try:
         response = eval(response_text)
         return response

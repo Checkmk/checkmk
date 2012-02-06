@@ -8,6 +8,12 @@
     * if.include: fix handling of NIC with index 0
     * hpux_lunstats: new check for disk IO on HP-UX
 
+    Multisite:
+    * Added several missing localization stringsw
+
+    WATO:
+    * Distributed WATO: Made all url calls using curl now
+
 1.1.13i3:
     Core, Setup, etc.:
     * *_contactgroups lists: Single group rules are all appended. When a list

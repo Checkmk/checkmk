@@ -66,13 +66,11 @@ div.dashlet div.title {
     color: #fff;
     padding: 0px;
     margin: 0px;
-    padding-top: 3px;
-    font-size: 10pt;
+    padding-top: 4px;
     font-weight: normal;
 }
 div.dashlet div.title a {
     text-decoration: none;
-    border-bottom: 1px dotted white;
     color: white;
 }
 div.dashlet div.title a:hover {

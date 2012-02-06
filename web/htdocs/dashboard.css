@@ -45,6 +45,8 @@ div.dashlet div.dashlet_inner {
     position: absolute;
     padding: 0px;
     margin: 0px;
+    top: 21px;
+    left: 11px;
 }
 
 /* Dashlets with "background" set to True */

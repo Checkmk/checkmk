@@ -206,12 +206,12 @@ def render_snapin(name, state):
         html.write('<div class="closesnapin">')
         iconbutton("closesnapin", "sidebar_openclose.py?name=%s&state=off" % name, "side", "removeSnapin", 'snapin_'+name)
         html.write('</div>')
-        # Show reload button, but only for reloadable Snapins
-        if snapin.get("reload") or snapin.get("restart"):
-            html.write('<div class="reloadsnapin">')
-            iconbutton("reloadsnapin", url="sidebar_snapin.py?name=" + name, handler="updateContents",
-                       name = "snapin_" + name);
-            html.write('</div>')
+        # # Show reload button, but only for reloadable Snapins
+        # if snapin.get("reload") or snapin.get("restart"):
+        #     html.write('<div class="reloadsnapin">')
+        #     iconbutton("reloadsnapin", url="sidebar_snapin.py?name=" + name, handler="updateContents",
+        #                name = "snapin_" + name);
+        #     html.write('</div>')
     html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
                "onmouseout=\"this.style.cursor='auto'\">%s</b>" % (url, snapin["title"]))
     html.write("</div>")

@@ -93,9 +93,9 @@ function resize_dashlets(id, code)
             oDash.style.position = 'absolute';
             oDash.style.left   = dashlet_padding[3] + "px";
             oDash.style.top    = dashlet_padding[0] + "px";
-            if((d_width - 2*dashlet_padding) > 0)
+            if (netto_width > 0)
                 oDash.style.width  = netto_width + "px";
-            if((d_height - 2*dashlet_padding) > 0)
+            if (netto_height > 0)
                 oDash.style.height = netto_height + "px";
         }
     }

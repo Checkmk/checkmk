@@ -1,0 +1,83 @@
+title: Monitor throughput on HP-UX LUNs
+agents: hpux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+
+ This check measures the throughput LUNs on HP-UX. This check
+ is fully compatible with {diskstat} and uses the same
+ parameters and configuration variables.
+
+item:
+ Either {"SUMMARY"} for a summarized check of alls LUNs or the
+ name of the disk device, e.g. {"sda"}. In order to support configurations
+ up to version 1.1.10 also the items {"read"} and {"write"} are supported.
+
+examples:
+ # switch inventory behaviour to 1.1.10 mode
+ diskstat_inventory_mode = "legacy"
+
+ # alternative: create one check for all disks
+ diskstat_inventory_mode = "summary"
+
+ # Set default levels for diskstat
+ diskstat_default_levels = {
+   "read" :    (10, 20),   # level for read MB/sec
+   "write" :   (20, 40),   # level for write MB/sec
+   "average" : 15,         # averaging in minutes
+ }
+
+ # Alternative: just enable averaging over 10 minutes,
+ # do not apply levels:
+ diskstat_default_levels = {
+     "average" : 15
+ }
+
+ # Settings for certain hosts:
+ check_parameters += [
+   ( {"write" : (20, 50), "average" : 10 }, [ "oracle" ], ALL_HOSTS, [ "Disk IO" ])
+ ]
+
+perfdata:
+  The disk throughput for read and write in bytes per second. If averaging
+  is turned on, then two additional values are sent: the averaged read and
+  write throughput.
+
+  In the legacy mode only one variable: the throughput since the last check
+  in in bytes(!) per second, either for read or for write.
+
+inventory:
+  The inventory is configured via {diskstat_inventory_mode}. If this is set
+  to {"single"} (the default), then one check will be created for each
+  disk. If it is set to {"summary"} then only one service per host will be
+  created that has at least one hard disk. If set to {"legacy"} then a
+  separate check for read and write will be created (deprecated).
+
+[parameters]
+"read": The levels to be applied to the read throughput. It this entry is
+ {None} or missing in the dictionary, then no levels are applied. This is
+ the defaut. The values are in MB per second. Setting {"read"} to {(20, 40)}
+ will warn if 20 MB/s is exceeded and make the check critical at 40 MB/s.
+ If averaging is turned on, then the levels are applied to the averaged
+ values!
+
+"write": The levels for the write throughput.
+
+"average": If this is not {None}, it will be interpreted as a time range
+ in minutes to do averaging over. Set this to {15} in order to have
+ the levels applied to a 15-minute average instead of the current
+ values (approx.). Turning the average on will also create two additional
+ performance values. Make sure that your graphing tool is setup to
+ a changing number of variables.
+
+[configuration]
+diskstat_defaul_levels(dict): The default parameter used for inventorized
+                             checks. This is preset to the empty dictionary.
+                              That means that no averaging is done and no
+                              levels are applied.
+
+diskstat_inventory_mode(string): Either {"single"} for one service per disk
+ or {"summary"} for the throughput of all disks summed up in one service.
+ Also possible is {"legacy"} for the old style mode (see above). Default
+ is {"single"}.

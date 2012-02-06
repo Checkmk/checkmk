@@ -1,0 +1,65 @@
+#!/usr/bin/ksh
+
+# Put this file into /usr/lib/check_mk_agent/plugins. Then
+# reinventorize your host. 
+
+get_stats()
+{
+    scsimgr get_stat -D $LUN | tr '\=' ':' | grep -e 'STATISTICS FOR LUN'  -e 'Bytes' -e 'Total I/Os processed' -e 'I/O failure' -e 'IO failures due
+to'
+    return $?
+}
+
+
+# Ex:
+#LUN PATH INFORMATION FOR LUN : /dev/pt/pt2
+#World Wide Identifier(WWID) =
+#LUN PATH INFORMATION FOR LUN : /dev/rdisk/disk5
+#World Wide Identifier(WWID) = 0x60a98000572d44745634645076556357
+#LUN PATH INFORMATION FOR LUN : /dev/rdisk/disk6
+
+get_lun_map()
+{
+scsimgr lun_map | egrep '^[[:space:]]*(LUN PATH|World Wide Identifier)' | tr '\=' ':'
+}
+
+
+main()
+{
+get_lun_map | while read line ; do
+    descr=$(echo $line | awk -F: '{print $1}')
+    val=$(  echo $line | awk -F: '{print $2}')
+    case $descr in
+      LUN*)
+          if echo $val | grep /dev/rdisk 1>/dev/null; then
+              DMP=yes
+              LUN=$val
+          else
+              DMP=no
+              unset LUN
+          fi
+      ;;
+      World*)
+          if [ $DMP = "yes" ]; then
+              echo "WWID: $val"
+              get_stats $LUN
+          fi
+      ;;
+      *)
+          echo "Fehler:"
+          echo $line
+          echo $descr
+          echo $val
+          sleep 1
+      ;;
+    esac
+done
+
+
+
+# Verify the system is using new multipath device model.
+if [ -d /dev/rdisk ] && [ -d /dev/disk ]; then
+    echo '<<<hpux_lunstats:sep(58)>>>'
+    main
+fi
+

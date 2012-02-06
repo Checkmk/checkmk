@@ -1,0 +1,76 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<hpux_lunstats>>>
+# WWID:  0x600508b1001cf7f0d25c51941cf5e2d7
+#         STATISTICS FOR LUN :/dev/rdisk/disk11
+# Bytes read                                       : 841717976279
+# Bytes written                                    : 430393024512
+# Total I/Os processed                             : 206684834
+# I/O failures                                     : 0
+# Retried I/O failures                             : 0
+# I/O failures due to invalid IO size              : 0
+# IO failures due to misallignment or boundary      : 0
+# WWID:  0x60a98000572d44745634645076556357
+#         STATISTICS FOR LUN :/dev/rdisk/disk5
+# Bytes read                                       : 1035897815087
+# Bytes written                                    : 113475461120
+# Total I/Os processed                             : 23920189
+# I/O failures                                     : 24
+# Retried I/O failures                             : 0
+# I/O failures due to invalid IO size              : 0
+# IO failures due to misallignment or boundary      : 0
+# WWID:  0x60a98000572d4474563464507665446d
+#         STATISTICS FOR LUN :/dev/rdisk/disk6
+
+
+check_includes['diskstat'] = [ "diskstat.include" ]
+
+# Convert info to output needed for generic diskstat check
+def hpux_lunstats_convert(info):
+    luns = []
+    for line in info:
+        if len(line) == 2:
+            left = line[0].strip()
+            right = line[1].strip()
+            if left == 'STATISTICS FOR LUN':
+                lun = right
+            elif left == 'Bytes read':
+                bytes_read = int(right) / 512
+            elif left == 'Bytes written':
+                bytes_written = int(right) / 512
+                luns.append((lun, bytes_read, bytes_written))
+    return luns
+
+def check_hpux_lunstats(item, params, info):
+    return check_diskstat_generic(item, params, time.time(), hpux_lunstats_convert(info))
+
+def inventory_hpux_lunstats(info):
+    return inventory_diskstat_generic(hpux_lunstats_convert(info))
+
+check_info['hpux_lunstats'] = (check_hpux_lunstats, "Disk IO %s", 1, inventory_hpux_lunstats)
+checkgroup_of["diskstat"] = "disk_io"
+

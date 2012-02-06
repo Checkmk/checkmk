@@ -133,8 +133,7 @@ def automation_inventory(args):
 
 
 def automation_try_inventory(args):
-    global opt_use_cachefile, opt_no_tcp, opt_dont_submit, \
-            inventory_max_cachefile_age, check_max_cachefile_age
+    global opt_use_cachefile, inventory_max_cachefile_age, check_max_cachefile_age
     if args[0] == '--cache':
         opt_use_cachefile = True
         check_max_cachefile_age = 1000000000
@@ -167,7 +166,7 @@ def automation_try_inventory(args):
         
 
 def automation_try_inventory_node(hostname):
-    global opt_use_cachefile
+    global opt_use_cachefile, opt_no_tcp, opt_dont_submit
 
     try:
         ipaddress = lookup_ipaddress(hostname)

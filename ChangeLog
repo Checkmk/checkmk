@@ -14,6 +14,7 @@
     * FIX: ntp checks: output numeric data also if stratum too high
     * FIX: if/if64: omit check result on counter wrap if bandwidth traffic levels
       are used.
+    * FIX: hpux_if: fix missing default parameter errors
 
     Livestatus
     * FIX: fix type column in 'GET columns' for dict-type columns (bug found

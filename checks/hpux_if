@@ -129,3 +129,5 @@ def check_hpux_if(item, params, info):
 
 check_includes['hpux_if'] = [ "if.include" ]
 check_info['hpux_if'] = (check_hpux_if, "NIC %s", 1,  inventory_hpux_if )
+checkgroup_of['hpux_if'] = "if"
+check_default_levels['hpux_if'] = "if_default_levels"

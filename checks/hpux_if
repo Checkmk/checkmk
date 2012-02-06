@@ -104,6 +104,9 @@ def hpux_convert_to_if64(info):
             elif left == "Interface Name":
                 nic[1] = right
                 nic[18] = right
+            elif left == "Station Address":
+                h = right[2:]
+                nic[19] = "".join([ chr(int(x+y, 16)) for (x,y) in zip(h[::2],h[1::2]) ])
     return nics
 
 

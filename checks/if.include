@@ -163,6 +163,7 @@ def check_if_common(item, params, info):
         ifAlias = cleanup_if_strings(ifAlias)
 
         if item.lstrip("0") == ifIndex \
+            or (item == "0" * len(item) and saveint(ifIndex) == 0) \
             or item == ifAlias \
             or item == ifDescr \
             or item == "%s %s" % (ifAlias, ifIndex) \

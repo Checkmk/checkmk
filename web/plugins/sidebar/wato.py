@@ -100,15 +100,19 @@ def render_wato_foldertree():
 def render_wato_foldertree():
     html.live.set_prepend_site(True)
     query = "GET hosts\n" \
-            "Columns: name host_filename"
+            "Stats: state >= 0\n" \
+            "Columns: filename"
     hosts = html.live.query(query)
     html.live.set_prepend_site(False)
     hosts.sort()
 
-    # Get number of hosts by folder
+    # After the query we have a list of lists where each
+    # row is a folder with the number of hosts on this level.
+    #
+    # Now get number of hosts by folder
     # Count all childs for each folder
     user_folders = {}
-    for site, hostname, wato_folder in hosts:
+    for site, wato_folder, num in hosts:
         # Remove leading /wato/
         wato_folder = wato_folder[6:]
 
@@ -119,25 +123,26 @@ def render_wato_foldertree():
             this_folder = '/'.join(folder_parts[:num_parts])
 
             if this_folder not in user_folders:
-                user_folders[this_folder] = wato.api.get_folder(this_folder)
-                user_folders[this_folder]['.num_hosts'] = 1
+                wato_folder = wato.load_folder(wato.root_dir + this_folder, childs = False)
+                user_folders[this_folder] = {
+                    'title':      wato_folder['title'],
+                    '.path':      this_folder,
+                    '.num_hosts': num,
+                    '.folders':   {},
+                }
             else:
-                user_folders[this_folder]['.num_hosts'] += 1
+                user_folders[this_folder]['.num_hosts'] += num
 
-    # Update the WATO folder tree with the user specific permissions
-    folder_tree = wato.api.get_folder_tree()
-    def update_foldertree(f):
-        this_path = f['.path']
-        if this_path in user_folders:
-            f['.num_hosts'] = user_folders[this_path]['.num_hosts']
-
-        for subfolder_path, subfolder in f.get(".folders", {}).items():
-            # Only handle paths which the user is able to see
-            if subfolder['.path'] in user_folders:
-                update_foldertree(subfolder)
-            else:
-                del f['.folders'][subfolder['.path']]
-    update_foldertree(folder_tree)
+    #
+    # Now build the folder tree
+    #
+    for folder_path, folder in user_folders.items():
+        if not folder_path:
+            continue
+        folder_parts = folder_path.split('/')
+        parent_folder = '/'.join(folder_parts[:-1])
+        user_folders[parent_folder]['.folders'][folder_path] = folder
+        del user_folders[folder_path]
 
     #
     # Render link target selection
@@ -173,7 +178,7 @@ def render_wato_foldertree():
     html.write('<span class=left>%s</span>' % _('View:'))
 
     # Now render the whole tree
-    render_tree_folder(folder_tree)
+    render_tree_folder(user_folders[''])
 
 def ajax_set_foldertree():
     config.save_user_file("foldertree", (html.var('topic'), html.var('target')))
@@ -183,12 +188,12 @@ def render_tree_folder(f):
     is_leaf = len(subfolders) == 0
 
     # Suppress indentation for non-emtpy root folder
-    if ".parent" not in f and is_leaf:
+    if f['.path'] == '' and is_leaf:
         html.write("<ul>") # empty root folder
-    elif ".parent" in f:
+    elif f and f['.path'] != '':
         html.write("<ul style='padding-left: 0px;'>")
 
-    title = '<a href="#" onclick="wato_tree_click(%r);">%s (%d)</a>' % (
+    title = '<a href="#" onclick="wato_tree_click(\'%s\');">%s (%d)</a>' % (
             f[".path"], f["title"], f[".num_hosts"])
 
     if not is_leaf:
@@ -198,12 +203,12 @@ def render_tree_folder(f):
         html.end_foldable_container()
     else:
         html.write("<li>" + title + "</li>")
-    if ".parent" in f or is_leaf:
+    if f['.path'] == '' and f or is_leaf:
         html.write("</ul>")
 
 sidebar_snapins['wato_foldertree'] = {
     'title'       : _('WATO Foldertree'),
-    'description' : _(''),
+    'description' : _('This snapin shows the folders defined in WATO. It can be used to open views filtered by theWATO folder.'),
     'author'      : 'Lars Michelsen',
     'render'      : render_wato_foldertree,
     'allowed'     : [ 'admin', 'user', 'guest' ],

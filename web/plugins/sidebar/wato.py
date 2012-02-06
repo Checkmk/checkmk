@@ -178,7 +178,8 @@ def render_wato_foldertree():
     html.write('<span class=left>%s</span>' % _('View:'))
 
     # Now render the whole tree
-    render_tree_folder(user_folders[''])
+    if user_folders:
+        render_tree_folder(user_folders[''])
 
 def ajax_set_foldertree():
     config.save_user_file("foldertree", (html.var('topic'), html.var('target')))

@@ -106,6 +106,15 @@ def render_wato_foldertree():
     html.live.set_prepend_site(False)
     hosts.sort()
 
+    def get_folder(path, num = 0):
+        wato_folder = wato.load_folder(wato.root_dir + path, childs = False)
+        return {
+            'title':      wato_folder['title'],
+            '.path':      path,
+            '.num_hosts': num,
+            '.folders':   {},
+        }
+
     # After the query we have a list of lists where each
     # row is a folder with the number of hosts on this level.
     #
@@ -123,24 +132,19 @@ def render_wato_foldertree():
             this_folder = '/'.join(folder_parts[:num_parts])
 
             if this_folder not in user_folders:
-                wato_folder = wato.load_folder(wato.root_dir + this_folder, childs = False)
-                user_folders[this_folder] = {
-                    'title':      wato_folder['title'],
-                    '.path':      this_folder,
-                    '.num_hosts': num,
-                    '.folders':   {},
-                }
+                user_folders[this_folder] = get_folder(this_folder, num)
             else:
                 user_folders[this_folder]['.num_hosts'] += num
 
     #
     # Now build the folder tree
     #
-    for folder_path, folder in user_folders.items():
+    for folder_path, folder in sorted(user_folders.items(), reverse = True):
         if not folder_path:
             continue
         folder_parts = folder_path.split('/')
         parent_folder = '/'.join(folder_parts[:-1])
+
         user_folders[parent_folder]['.folders'][folder_path] = folder
         del user_folders[folder_path]
 

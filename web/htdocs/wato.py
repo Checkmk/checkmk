@@ -427,7 +427,7 @@ def save_all_folders():
 # it in g_folders, load recursively all subfolders and then
 # return the folder object. The case the .wato file is missing
 # it will be assume to contain default values.
-def load_folder(dir, name="", path="", parent=None):
+def load_folder(dir, name="", path="", parent=None, childs = True):
     fn = dir + "/.wato"
     try:
         folder = eval(file(fn).read())
@@ -457,19 +457,20 @@ def load_folder(dir, name="", path="", parent=None):
             folder[".siteid"] = default_site()
 
     # Now look subdirectories
-    for entry in os.listdir(dir):
-        if entry[0] == '.': # entries '.' and '..'
-            continue
+    if childs:
+        for entry in os.listdir(dir):
+            if entry[0] == '.': # entries '.' and '..'
+                continue
 
-        p = dir + "/" + entry
+            p = dir + "/" + entry
 
-        if os.path.isdir(p):
-            if path == "":
-                subpath = entry
-            else:
-                subpath = path + "/" + entry
-            f = load_folder(p, entry, subpath, folder)
-            folder[".folders"][entry] = f
+            if os.path.isdir(p):
+                if path == "":
+                    subpath = entry
+                else:
+                    subpath = path + "/" + entry
+                f = load_folder(p, entry, subpath, folder)
+                folder[".folders"][entry] = f
 
     g_folders[path] = folder
     return folder
@@ -876,13 +877,12 @@ def mode_folder(phase):
         have_something = show_subfolders(g_folder)
         have_something = show_hosts(g_folder) or have_something
         if not have_something:
-            url = "wato.py?mode=view_ruleset&varname=snmp_communities"
             render_main_menu([
                 ("newhost", _("Create new host"), "new", "hosts",
                   _("Click here to create a host to be monitored. Please make sure that "
                     "you first have installed the Check_MK agent on that host. If that "
                     "host shall be monitored via SNMP, please make sure, that the monitoring "
-                    "system has access and the <a href='%s'>SNMP community</a> has been set.") % url),
+                    "system has access and the SNMP community has been set.")),
                 ("newcluster", _("Create new cluster"), "new_cluster", "hosts",
                   _("Click here to create a high availability cluster to be monitored. You will "
                     "created a virtual host in the monitoring that is based on the data of two "

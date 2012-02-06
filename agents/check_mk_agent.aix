@@ -38,7 +38,7 @@ LOCALDIR=$MK_LIBDIR/local
 
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.13i3
+echo Version: 1.1.13i4
 echo AgentOS: aix
 
 echo '<<<df>>>'

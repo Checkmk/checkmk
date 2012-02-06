@@ -2,6 +2,7 @@
     Checks & Agents:
     * hpux_if: fix missing default parameter errors
     * hpux_if: make configurable via WATO
+    * if.include: fix handling of NIC with index 0
 
 1.1.13i3:
     Core, Setup, etc.:

@@ -1,4 +1,7 @@
 1.1.13i4:
+    WATO:
+    * diskstat: make inventory mode configurable via WATO
+
     Checks & Agents:
     * hpux_if: fix missing default parameter errors
     * hpux_if: make configurable via WATO

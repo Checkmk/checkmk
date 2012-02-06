@@ -191,6 +191,10 @@ div.snapin div.head {
     padding-top: 9px;
 }
 
+div.snapin b.header {
+    font-weight: normal;
+}
+
 div.snapin div.head.open {
     background-image: url("images/snapin_header.png");
     height: 17px;

@@ -442,6 +442,19 @@ register_configvar(group,
               choices = _if_porttype_choices,
               columns = 3))
 
+register_configvar(group,
+    "diskstat_inventory_mode",
+    DropdownChoice(
+        title = _("Inventory mode for disk IO checks"),
+        help = _("When doing inventory the various disk IO checks can either create "
+                 "a single check per host, one check per device or a separate check "
+                 "for read and written bytes."),
+        choices = [
+            ('summary', _("one summary check per host")),
+            ('single' , _("one check per individual disk/LUN") ),
+            ('legacy' , _("one check for read, one for write") ),
+            ]),
+    )
 
 
 #   +----------------------------------------------------------------------+

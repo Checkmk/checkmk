@@ -49,7 +49,7 @@ check_includes['diskstat'] = [ "diskstat.include" ]
 
 # Convert information to generic format also generated
 # by winperf_phydisk
-# [ now, ( disk, readctr, writectr ), ... ]
+# [ now, [( disk, readctr, writectr ), ... ]]
 # where counters are in sectors (512 bytes)
 
 def linux_diskstat_convert(info):

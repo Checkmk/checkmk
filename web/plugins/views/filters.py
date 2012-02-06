@@ -83,14 +83,14 @@ def all_groups(what):
     return [ (name, groups[name]) for name in names ]
 
 class FilterGroupCombo(Filter):
-    def __init__(self, what, enforce):
+    def __init__(self, what, title, enforce):
         self.enforce = enforce
         self.prefix = not self.enforce and "opt" or ""
         htmlvars = [ self.prefix + what + "group" ]
         if not enforce:
             htmlvars.append("neg_" + htmlvars[0])
         Filter.__init__(self, self.prefix + what + "group", # name,     e.g. "hostgroup"
-                what[0].upper() + what[1:].replace("_"," ") + " group",       # title,    e.g. "Hostgroup"
+                title,                                      # title,    e.g. "Hostgroup"
                 what.split("_")[0],                         # info,     e.g. "host"
                 htmlvars,                                   # htmlvars, e.g. "hostgroup"
                 [ what + "group_name" ])                    # rows needed to fetch for link information
@@ -149,12 +149,12 @@ class FilterGroupCombo(Filter):
             return alias
 
 
-declare_filter(104, FilterGroupCombo("host",            True),  _("Dropdown list, selection of host group is <b>enforced</b>"))
-declare_filter(204, FilterGroupCombo("service",         True),  _("Dropdown list, selection of service group is <b>enforced</b>"))
-declare_filter(105, FilterGroupCombo("host",            False), _("Optional selection of host group"))
-declare_filter(205, FilterGroupCombo("service",         False), _("Optional selection of service group"))
-declare_filter(106, FilterGroupCombo("host_contact",    False), _("Optional selection of host contact group group"))
-declare_filter(206, FilterGroupCombo("service_contact", False), _("Optional selection of service contact group group"))
+declare_filter(104, FilterGroupCombo("host",            _("Hostgroup"),            True),  _("Dropdown list, selection of host group is <b>enforced</b>"))
+declare_filter(204, FilterGroupCombo("service",         _("Servicegroup"),         True),  _("Dropdown list, selection of service group is <b>enforced</b>"))
+declare_filter(105, FilterGroupCombo("host",            _("Hostgroup"),            False), _("Optional selection of host group"))
+declare_filter(205, FilterGroupCombo("service",         _("Servicegroup"),         False), _("Optional selection of service group"))
+declare_filter(106, FilterGroupCombo("host_contact",    _("Host Contactgroup"),    False), _("Optional selection of host contact group group"))
+declare_filter(206, FilterGroupCombo("service_contact", _("Service Contactgroup"), False), _("Optional selection of service contact group group"))
 # Livestatus still misses "contact_groups" column.
 # declare_filter(FilterGroupCombo("contact"))
 

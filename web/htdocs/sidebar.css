@@ -69,11 +69,12 @@ body.side {
 #side_version {
     position: absolute;
     top: 24px;
-    left: 54px;
+    left: 64px;
     z-index: 54;
     color: #fff;
     text-align: right;
     width: 200px;
+    font-size: 8pt;
 }
 
 /* Scrolling part with snapins */

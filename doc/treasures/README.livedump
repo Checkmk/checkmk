@@ -1,0 +1,65 @@
+LIVEDUMP
+----------------
+
+livedump is a small utility that can dump configuration and status
+information from a running Nagios core in order to transport that
+data to another core - effectively replicating the data.
+
+This can be used as a very efficient replacement for NSCA.
+
+Advantages:
+- Much more performant
+- Creates your Nagios configuration for the passive services
+- No obsess_over.. configuration neccessary on the source host
+
+Disadvantages:
+- Introduces some latency
+
+How to setup livedump
+---------------------
+Copy the file livedump to a conveniant place. Make sure that
+../livestatus/api/python/livestatus.py is either in the same
+directory as livedump or somewhere in the Python path.
+
+Using livedump
+--------------
+The first step is to extract the configuration from the source system using. This step
+is needed whenever your configuration of hosts or services changes.
+NSCA users will now this. This is easily done by:
+
+./livedump -TC > some_file.cfg
+
+and then copying that file to your objects or conf.d directory on
+your target nagios. Note: The option -C will add some templates
+to the configuration that are used by the created host and service
+definitions. If you import data from more than on source those
+template will be duplicate. Use -T in that case in order to avoid
+duplication.
+
+Now restart your target system and new hosts and services will appear
+and be in pending state.
+
+Now create a cronjob that does the following every 1 or 5 minutes:
+
+1. ./livedump > cgagaga
+2. copy that file to the target system into the checkresults directory
+   (in OMD this is ~/tmp/nagios/checkresults)
+3. After a correct copy touch the file cgagaga.ok in that
+   directory
+
+Nagios will now read in that file (which is containing all current
+host and service states).
+
+Filtering
+---------
+In each operation mode livedump allows to filter the number of data
+to be dumped. This is done by adding options -H and -S for host
+and service livestatus headers. The following example will only dump
+hosts and services of the host group "foo". Please make sure that 
+all hosts that are needed by the dumped services are also dumped:
+
+./livedump -H "Filter: host_groups > foo"
+
+Note: The -H headers will also be added to the service queries.
+Make sure that all columns are prefixed with host_ in these.
+

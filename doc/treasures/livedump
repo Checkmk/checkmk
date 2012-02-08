@@ -1,0 +1,310 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+import os, sys, getopt, livestatus, tempfile, time
+
+# These variable will be substituted at 'make dist' time
+check_mk_version  = '(inofficial)'
+
+def dump_templates():
+    sys.stdout.write("""
+define host {
+    name                    livedump-host
+    register                0
+    active_checks_enabled   0
+    passive_checks_enabled  1
+}
+
+define service {
+    name                    livedump-service
+    register                0
+    active_checks_enabled   0
+    passive_checks_enabled  1
+    check_period            0x0
+}
+
+define command {
+    command_name            check-livedump
+    command_line            echo "WARN - You did an active check, but this check is passive" ; exit 1
+}
+
+define timeperiod {
+    timeperiod_name 0x0
+    alias           Never ever
+}
+""")
+
+def encode_row(row):
+    for key, val in row.items():
+        if type(val) == unicode:
+            row[key] = val.encode("utf-8")
+
+
+#   .-Livedump-------------------------------------------------------------.
+#   |            _     _               _                                   |
+#   |           | |   (_)_   _____  __| |_   _ _ __ ___  _ __              |
+#   |           | |   | \ \ / / _ \/ _` | | | | '_ ` _ \| '_ \             |
+#   |           | |___| |\ V /  __/ (_| | |_| | | | | | | |_) |            |
+#   |           |_____|_| \_/ \___|\__,_|\__,_|_| |_| |_| .__/             |
+#   |                                                   |_|                |
+#   +----------------------------------------------------------------------+
+#   | The actual livedump                                                  |
+#   '----------------------------------------------------------------------'
+
+def connect():
+    global g_connection, opt_socket
+
+    if not opt_socket and not omd_root():
+        bail_out("Please specify the URL of the livestatus socket.")
+    elif omd_root():
+        opt_socket = "unix:%s/tmp/run/live" % omd_root()
+
+    g_connection = livestatus.SingleSiteConnection(opt_socket)
+
+def livedump_config():
+    if opt_dump_templates:
+        dump_templates()
+
+    check_commands = set([])
+
+    def prepare_row(row):
+        encode_row(row)
+        check_commands.add(row["check_command"])
+        row["contactsstring"] = (",".join(row["contacts"])).encode("utf-8")
+
+
+    # Dump host config
+    query = \
+         "GET hosts\n" \
+         "Columns: name alias address groups check_command " \
+         "max_check_attempts contacts\n" + \
+         opt_host_headers
+    for row in g_connection.query_table_assoc(query):
+        prepare_row(row)
+        row["groupstring"] = ",".join(row["groups"])
+        sys.stdout.write(
+           "define host {\n"
+           "  use                livedump-host\n"
+           "  host_name          %(name)s\n"
+           "  alias              %(alias)s\n"
+           "  address            %(address)s\n"
+           "  host_groups        %(groupstring)s\n" 
+           "  contacts           %(contactsstring)s\n"
+           "  check_command      %(check_command)s\n"
+           "  max_check_attempts %(max_check_attempts)d\n"
+           "}\n\n"
+           % row)
+
+    # Dump service config
+    query = \
+         "GET services\n" \
+         "Columns: host_name description groups check_command " \
+         "max_check_attempts contacts\n" + \
+         opt_host_headers + \
+         opt_service_headers
+    for row in g_connection.query_table_assoc(query):
+        prepare_row(row)
+        if row["groups"]:
+            row["groupstring"] = "service_groups " + ",".join(row["groups"])
+        else:
+            row["groupstring"] = ""
+        row["contactsstring"] = (",".join(row["contacts"])).encode("utf-8")
+        sys.stdout.write(
+           "define service {\n"
+           "  use                livedump-service\n"
+           "  host_name          %(host_name)s\n"
+           "  description        %(description)s\n"
+           "%(groupstring)s"
+           "  check_command      check-livedump\n"
+           "  contacts           %(contactsstring)s\n"
+           "  max_check_attempts %(max_check_attempts)d\n"
+           "}\n\n"
+           % row)
+
+
+def livedump_state():
+    now = time.time()
+    # Dump hosts
+    query = \
+        "GET hosts\n" \
+        "Columns: name state plugin_output perf_data latency\n" \
+        + opt_host_headers
+
+    for row in g_connection.query_table_assoc(query):
+        encode_row(row)
+        row["now"] = now
+        sys.stdout.write("""host_name=%(name)s
+check_type=1
+check_options=0
+reschedule_check
+latency=%(latency).2f
+start_time=%(now).1f
+finish_time=%(now).1f
+return_code=%(state)d
+output=%(plugin_output)s|%(perf_data)%s
+
+""" % row)
+
+    query = \
+        "GET services\n" \
+        "Columns: host_name description state plugin_output perf_data latency\n" \
+        + opt_host_headers \
+        + opt_service_headers
+
+    for row in g_connection.query_table_assoc(query):
+        row["now"] = now
+        encode_row(row)
+        sys.stdout.write("""host_name=%(host_name)s
+service_description=%(description)s
+check_type=1
+check_options=0
+reschedule_check
+latency=%(latency).2f
+start_time=%(now).1f
+finish_time=%(now).1f
+return_code=%(state)d
+output=%(plugin_output)s|%(perf_data)%s
+
+""" % row)
+
+
+
+
+#.
+#   .-Helpers--------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   | Various helper functions                                             |
+#   '----------------------------------------------------------------------'
+
+def omd_root():
+    return os.getenv("OMD_ROOT")
+
+def verbose(x):
+    if opt_verbose:
+        sys.stderr.write("%s\n" % x)
+
+def bail_out(x):
+    sys.stderr.write("%s\n" % x)
+    sys.exit(1)
+
+def usage():
+    sys.stderr.write("""Usage: %s [OPTIONS] [-C]
+
+  -C, --config           Dump configuration (instead of state)
+
+  -h, --help             Show this cruft
+  -V, --version          Show version and exit
+  -T, --dump-templates   Also dump host/service templates
+
+  -s, --socket S         connect to Livestatus-socket at S
+                          -s tcp:10.11.0.55:6557
+                          -s unix:/var/run/nagios/rw/live
+  -H, --host-header H    add header H to host LQL (usually Filter: ...)
+  -S, --service-header H add header H to service LQL (usually Filter: ...)
+                    
+  -v, --verbose          output debug information an stderr
+  --debug                do not catch Python exceptions
+
+""")
+
+def print_version():
+    sys.stdout.write("This is livedump version %s" % check_mk_version)
+
+#.
+#   .-main-----------------------------------------------------------------.
+#   |                                       _                              |
+#   |                       _ __ ___   __ _(_)_ __                         |
+#   |                      | '_ ` _ \ / _` | | '_ \                        |
+#   |                      | | | | | | (_| | | | | |                       |
+#   |                      |_| |_| |_|\__,_|_|_| |_|                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Main entry point, getopt, etc.                                       |
+#   '----------------------------------------------------------------------'
+
+short_options = 'hVvc:H:S:TC'
+long_options = [ "help", "version", "verbose", "debug", "socket=", 
+                 "host-header=", "service-header=",
+                 "dump-templates", "config", "state" ]  
+
+opt_verbose = False
+opt_debug = False
+opt_socket = None
+opt_host_headers = ""
+opt_service_headers = ""
+opt_dump_templates = False
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n\n" % err)
+    usage()
+    sys.exit(1)
+
+for o,a in opts:
+    # Docu modes
+    if o in [ '-h', '--help' ]:
+        usage()
+        sys.exit(0)
+    elif o in [ '-V', '--version' ]:
+        print_version()
+        sys.exit(0)
+
+    # Modifiers
+    elif o in [ '-v', '--verbose' ]:
+        opt_verbose = True
+    elif o == '--debug':
+        opt_debug = True
+    elif o in [ '-s', '--socket' ]:
+        opt_socket = a
+    elif o in [ '-H', '--host-header' ]:
+        opt_host_headers += a + "\n"
+    elif o in [ '-S', '--service-header' ]:
+        opt_service_headers += a + "\n"
+    elif o in [ '-T', '--dump-templates' ]:
+        opt_dump_templates = True
+
+
+# Main modes
+try:
+    connect()
+    for o, a in opts:
+        if o in [ '-C', '--config' ]:
+            livedump_config()
+            sys.exit(0)
+    livedump_state()
+
+except Exception, e:
+    if opt_debug:
+        raise
+    bail_out(e)
+

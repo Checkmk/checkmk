@@ -1,18 +1,21 @@
 1.1.13i4:
+    Core, Setup, etc.:
+    * new tool 'livedump' for dumping configuration and status
+      information from one monitoring core and importing this
+      into another.
+
     WATO:
-    * diskstat: make inventory mode configurable via WATO
+    * Distributed WATO: Made all url calls using curl now
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors
     * hpux_if: make configurable via WATO
     * if.include: fix handling of NIC with index 0
     * hpux_lunstats: new check for disk IO on HP-UX
+    * diskstat: make inventory mode configurable via WATO
 
     Multisite:
     * Added several missing localization stringsw
-
-    WATO:
-    * Distributed WATO: Made all url calls using curl now
 
 1.1.13i3:
     Core, Setup, etc.:

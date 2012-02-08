@@ -637,7 +637,7 @@ class CascadingDropdown(ValueSpec):
             options.append((str(nr), title))
             if value == val or (
                 type(value) == tuple and value[0] == val):
-                def_val = nr
+                def_val = str(nr)
 
         vp = varprefix + "_sel"
         onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(self._choices))  

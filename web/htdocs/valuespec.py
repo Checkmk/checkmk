@@ -479,9 +479,14 @@ class ListOfStrings(ValueSpec):
 class Float(Integer):
     def __init__(self, **kwargs):
         Integer.__init__(self, **kwargs)
+        self._decimal_separator = kwargs.get("decimal_separator", ".")
+        self._display_format = kwargs.get("display_format", "%.2f")
 
     def canonical_value(self):
         return float(Integer.canonical_value(self))
+
+    def value_to_text(self, value):
+        return Integer.value_to_text(self, value).replace(".", self._decimal_separator)
 
     def from_html_vars(self, varprefix):
         try:

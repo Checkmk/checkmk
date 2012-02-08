@@ -1,0 +1,77 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# 
+# check_mk plugin to monitor storage systems like Fujitsu ETERNUS DX80 S2 supporting FJDARY-E100.MIB
+# Copyright (c) 2012 FuH Entwicklungsgesellschaft mbH, Umkirch, Germany. All rights reserved.
+# Author: Philipp Hoefflin, 2012, hoefflin+cmk@fuh-e.de
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation in version 2.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 675 Mass Ave, Cambridge MA 02139, USA or see <http://www.gnu.org/licenses/>
+#
+# example snmpwalk output:
+# snmpwalk -c public -v 1 dx80 .1.3.6.1.4.1.211.1.21.1.100.3.4.2.1.2
+# FJDARY-E100::fjdaryRluInfoTable0.0 =
+# Hex-STRING: 00 00 00 A0 10 10 00 00 04 00 00 00 00 FF FF FF
+#             00 00 D0 E3 00 00 00 00 80 00 00 00 80 00 00 00
+#             00 00 00 00 01 20 40 40 0F 01 01 04 32 00 00 00
+#             01 00 00 01
+# FJDARY-E100::fjdaryRluInfoTable0.1 =
+# Hex-STRING: 01 00 00 A0 11 11 00 00 01 00 00 00 00 FF FF FF
+#             00 00 00 11 01 00 00 00 00 02 00 00 00 02 00 00
+#             01 00 01 00 01 20 40 40 0F 01 01 02 32 00 00 00
+#             01 00 00 01
+# FJDARY-E100::fjdaryRluInfoTable0.2 =
+# Hex-STRING: 02 00 03 00 00 00 00 00 00 00 00 00 00 FF FF FF
+#             00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+#             02 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00
+#             00 00 00 00
+# FJDARY-E100::fjdaryRluInfoTable0.3 =
+# Hex-STRING: 03 00 03 00 00 00 00 00 00 00 00 00 00 FF FF FF
+#             00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+#             03 00 03 00 00 00 00 00 00 00 00 00 00 00 00 00
+#             00 00 00 00
+#
+
+def inventoryfunc(info):
+    inventory = []
+    for line in info:
+        rawdata = line[1]
+        if rawdata[3] == '\xa0': # RLUN is present
+            inventory.append( (line[0], "", None) )
+    return inventory
+
+def checkfunc(item, _no_params, info):
+    for line in info:
+        if item == line[0]:
+            rawdata = line[1]
+            if rawdata[3] != '\xa0':
+                return (2, "CRIT - RLUN is not present" )
+            elif rawdata[2] == '\x08':
+                return (1, "WARN - RLUN is rebuilding")
+            elif rawdata[2] == '\x07':
+                return (1, "WARN - RLUN copyback in progress")
+            elif rawdata[2] == '\x41':
+                return (1, "WARN - RLUN spare is in use")
+            elif rawdata[2] == '\x00':
+                return (0, "OK - RLUN is in normal state") # assumption
+            else:
+                return (2, "CRIT - RLUN in unknown state %02x" % ord(rawdata[2]) )
+
+    return (3, "UNKNOWN - No RLUN %s in SNMP output" % item)
+
+check_info['fjdarye100_rluns'] = (checkfunc, "RLUN %s", 0,  inventoryfunc)
+# 2: fjdaryRluInfoTable0
+snmp_info['fjdarye100_rluns'] = (".1.3.6.1.4.1.211.1.21.1.100.3.4.2.1", [ 0, "2" ])
+
+snmp_scan_functions['fjdarye100_rluns'] \
+        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.100"

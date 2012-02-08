@@ -17,6 +17,7 @@
     * diskstat: make inventory mode configurable via WATO
     * added new checks for Fujitsu ETERNUS DX80 S2 
       (thanks to Philipp Höfflin)
+    * Fix Perf-O-Meter of fileage
 
     Multisite:
     * Added several missing localization stringsw

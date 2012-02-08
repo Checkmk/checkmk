@@ -18,6 +18,8 @@
     * added new checks for Fujitsu ETERNUS DX80 S2 
       (thanks to Philipp Höfflin)
     * Fix Perf-O-Meter of fileage
+    * hpux_snmp_cs.cpu: new SNMP check for CPU utilization
+      on HP-UX.
 
     Multisite:
     * Added several missing localization stringsw

@@ -862,7 +862,7 @@ class OptionalDropdownChoice(ValueSpec):
         for val, title in self._choices:
             if val == value:
                 return
-        self._explicit.validate_datatype(self, value, varprefix + "_ex")
+        self._explicit.validate_datatype(value, varprefix + "_ex")
 
 
 # Input of date with optimization for nearby dates

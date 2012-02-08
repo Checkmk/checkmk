@@ -7,6 +7,7 @@
     WATO:
     * Distributed WATO: Made all url calls using curl now
     * FIX: fix bug in inventory in validate_datatype()
+    * Better output in case of inventory error
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors

@@ -274,11 +274,13 @@ def login(u):
         user_baserole_id = "guest"
 
     # Prepare user object
-    global user
+    global user, user_alias
     if u in multisite_users:
         user = multisite_users[u]
+        user_alias = user.get("alias", user_id)
     else:
         user = { "roles" : user_role_ids }
+        user_alias = user_id
 
     # Prepare cache of already computed permissions
     global user_permissions

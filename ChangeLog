@@ -1,6 +1,13 @@
 1.1.13i4:
+    Core, Setup, etc.:
+    * new tool 'livedump' for dumping configuration and status
+      information from one monitoring core and importing this
+      into another.
+
     WATO:
-    * diskstat: make inventory mode configurable via WATO
+    * Distributed WATO: Made all url calls using curl now
+    * FIX: fix bug in inventory in validate_datatype()
+    * Better output in case of inventory error
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors
@@ -8,12 +15,15 @@
     * if.include: fix handling of NIC with index 0
     * hpux_lunstats: new check for disk IO on HP-UX
     * windows - mk_oracle tablespace: Added missing sid column
+    * diskstat: make inventory mode configurable via WATO
+    * added new checks for Fujitsu ETERNUS DX80 S2 
+      (thanks to Philipp Höfflin)
+    * Fix Perf-O-Meter of fileage
+    * hpux_snmp_cs.cpu: new SNMP check for CPU utilization
+      on HP-UX.
 
     Multisite:
     * Added several missing localization stringsw
-
-    WATO:
-    * Distributed WATO: Made all url calls using curl now
 
 1.1.13i3:
     Core, Setup, etc.:

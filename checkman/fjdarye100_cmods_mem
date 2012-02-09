@@ -1,0 +1,20 @@
+title: Monitor memory of channel modules on Fujitsu ETERNUS DX80 S2 storage systems
+agents: SNMP
+author: Philipp Hoefflin <hoefflin+cmk@fuh-e.de>
+license: GPLv2
+distribution: none
+description:
+ This check monitors the reported status of the memory of all installed channel
+ modules in storage systems from Fujitsu which support the
+ FJDARY-E100.MIB like the ETERNUS DX80 S2.
+ This is an adaption of the corresponding fjdarye60 check.
+
+item:
+ The index of the channel module memory in the SNMP table. It is of type
+ integer. The first module has an index of {0}.
+
+inventory:
+ The check supports automatic inventory. All available items which have
+ a state other than {invalid} (4) during the inventory run are added to the
+ configuration. The {invalid} state is excluded because it means that some memory
+ is not installed.

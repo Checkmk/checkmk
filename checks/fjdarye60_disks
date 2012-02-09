@@ -24,49 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# available(1), broken(2), notavailable(3), notsupported(4), present(5),
-# readying(6), recovering(7), partbroken(64), spare(65), formatting(66),
-# unformatted(67), notexist(68), copying(69)
-fjdarye60_disks_status = { 1: 'available', 2: 'broken', 3: 'notavailable',
-    4: 'notsupported', 5: 'present', 6: 'readying', 7: 'recovering',
-    64: 'partbroken', 65: 'spare', 66: 'formatting', 67: 'unformated',
-    68: 'notexist', 69: 'copying' }
-
 # 1. Summary version of check -> all disks into one service
-def fjdary60_disks_summary(info):
-    # compute the number of disks in each state.
-    states = {}
-    for index, state in info:
-        state = int(state)
-        statename = fjdarye60_disks_status[state]
-        if state != 3:
-            states[statename] = states.get(statename, 0) + 1
-    return states
-
-def inventory_fjdarye60_disks_summary(info):
-    current_state = fjdary60_disks_summary(info)
-    if len(current_state) > 0:
-        return [ (None, '', current_state) ]
-
-def fjdarye60_disks_printstates(state):
-    return ", ".join(["%s: %s" % (s,c) for (s,c) in state.items()])
-
-def check_fjdarye60_disks_summary(index, expected_status, info):
-    current_state = fjdary60_disks_summary(info)
-    infotext = " - " + fjdarye60_disks_printstates(current_state)
-    if current_state == expected_status:
-        return (0, "OK" + infotext)
-
-    result = 1
-    for ename, ecount in expected_status.items():
-        if current_state.get(ename, 0) < ecount:
-            result = 2
-            break
-
-    return (result, nagios_state_names[result] + infotext + \
-            " (expected was: %s)" % fjdarye60_disks_printstates(expected_status))
-
-check_info['fjdarye60_disks.summary'] = (check_fjdarye60_disks_summary, "Disk summary", 0,  inventory_fjdarye60_disks_summary)
+check_info['fjdarye60_disks.summary'] = (check_fjdarye_disks_summary, "Disk summary", 0,  inventory_fjdarye_disks_summary)
+check_includes['fjdarye60_disks.summary'] = ["fjdarye.include"]
 snmp_info['fjdarye60_disks.summary'] = (".1.3.6.1.4.1.211.1.21.1.60.2.12.2.1", [ 1, 3 ])
 snmp_scan_functions['fjdarye60_disks.summary'] \
         = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60"
@@ -74,22 +34,9 @@ snmp_scan_functions['fjdarye60_disks.summary'] \
 # --------------------------------------------------------------------------------
 # 2. Single disk version of check -> one check for each disk
 
-def inventory_fjdarye60_disks(info):
-    return [ (int(index), '', repr(fjdarye60_disks_status[int(status)])) for index, status in info if int(status) != 3 ]
 
-def check_fjdarye60_disks(index, expected_status, info):
-    for line in info:
-        if int(line[0]) == index:
-            status = fjdarye60_disks_status[int(line[1])]
-
-            if status == expected_status:
-                return (0, "OK - Status is %s" % status)
-            else:
-                return (2, "CRIT - Status is %s (expected status is %s)" % (status, expected_status))
-
-    return (3, "UNKNOWN - No status for disk number %d present" % index)
-
-check_info['fjdarye60_disks'] = (check_fjdarye60_disks, "Disk %s", 0,  inventory_fjdarye60_disks)
+check_info['fjdarye60_disks'] = (check_fjdarye_disks, "Disk %s", 0,  inventory_fjdarye_disks)
+check_includes['fjdarye60_disks'] = ["fjdarye.include"]
 snmp_info['fjdarye60_disks'] = (".1.3.6.1.4.1.211.1.21.1.60.2.12.2.1", [ 1, 3 ])
 
 snmp_scan_functions['fjdarye60_disks'] \

@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,10 +23,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_info['fjdarye60_devencs'] = (check_fjdarye_item, "Device Enclosure %s", 0,  inventory_fjdarye_item)
-check_includes['fjdarye60_devencs'] = ["fjdarye.include"]
-# 1: fjdaryDeIndex, 3: fjdaryDeStatus
-snmp_info['fjdarye60_devencs'] = (".1.3.6.1.4.1.211.1.21.1.60.2.7.2.1", [ 1, 3 ])
+$opt[1] = "--vertical-label 'CPU utilization %' -l0  -u 100 --title \"CPU Utilization for $hostname\" ";
+#
+$def[1] =  "DEF:user=$RRDFILE[1]:$DS[1]:AVERAGE " ;
+$def[1] .= "DEF:system=$RRDFILE[2]:$DS[2]:AVERAGE " ;
+$def[1] .= "DEF:idle=$RRDFILE[3]:$DS[3]:AVERAGE " ;
+$def[1] .= "DEF:nice=$RRDFILE[4]:$DS[4]:AVERAGE " ;
+$def[1] .= "CDEF:sum=user,system,+,nice,+ ";
 
-snmp_scan_functions['fjdarye60_devencs'] \
-        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60"
+$def[1] .= "AREA:user#60f020:\"User\" " ;
+$def[1] .= "GPRINT:user:LAST:\"%2.1lf%%\" " ;
+
+$def[1] .= "AREA:system#ff6000:\"System\":STACK " ;
+$def[1] .= "GPRINT:system:LAST:\"%2.1lf%%\" " ;
+
+$def[1] .= "AREA:nice#00d080:\"Nice\":STACK " ;
+$def[1] .= "GPRINT:nice:LAST:\"%2.1lf%%\" " ;
+
+$def[1] .= "LINE:idle#ffffff:\"Idle\":STACK " ;
+$def[1] .= "GPRINT:idle:LAST:\"%2.1lf%%\" " ;
+
+$def[1] .= "LINE:sum#004080:\"Utilization\" " ;
+
+?>

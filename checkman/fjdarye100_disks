@@ -1,0 +1,26 @@
+title: Monitor status of disks in Fujitsu ETERNUS DX80 S2 storage systems
+agents: SNMP
+author: Philipp Hoefflin <hoefflin+cmk@fuh-e.de>
+license: GPLv2
+distribution: none
+description:
+ This check monitors the reported status of one of a physical disk
+ in storage systems from Fujitsu which support the
+ FJDARY-E100.MIB like the ETERNUS DX80 S2.
+ This is an adaption of the corresponding fjdarye60 check.
+
+item:
+ The index of the device enclosure in the SNMP table. It is of type
+ integer. The first module has an index of {0}.
+
+inventory:
+ The check supports automatic inventory. All available items which have
+ a state other than {notavailable} (3) during the inventory run are added to the
+ configuration. The {notavailable} state indicates that one disk is not installed.
+
+[parameters]
+expected_state (string): The expected state where the check reports {OK}.
+ On all other states the check will report {CRITICAL}. Valid states are:
+ {"available"}, {"broken"}, {"notavailable"}, {"notsupported"},{"present"},
+ {"readying"}, {"recovering"}, {"partbroken"}, {"spare"}, {"formating"},
+ {"unformated"}, {"notexist"}, {"copying"}.

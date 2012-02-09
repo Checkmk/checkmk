@@ -193,14 +193,18 @@ table.data td.perfometer td.inner {
     height: 22px;
     padding: 0px 0px 0px 1px;
 }
+
 table.data td.perfometer div.stacked table:first-child {
     border-bottom-style: none;
+}
+
+table.data td.perfometer div.stacked table {
+    height: 12px;
 }
 
 table.data td.perfometer div.stacked td.inner {
     height: 10px;
 }
-
 
 td.perfometer a {
     color: #000;

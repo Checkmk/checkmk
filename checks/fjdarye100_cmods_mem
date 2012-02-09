@@ -24,10 +24,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_info['fjdarye60_devencs'] = (check_fjdarye_item, "Device Enclosure %s", 0,  inventory_fjdarye_item)
-check_includes['fjdarye60_devencs'] = ["fjdarye.include"]
-# 1: fjdaryDeIndex, 3: fjdaryDeStatus
-snmp_info['fjdarye60_devencs'] = (".1.3.6.1.4.1.211.1.21.1.60.2.7.2.1", [ 1, 3 ])
+# check_mk plugin to monitor storage systems like Fujitsu ETERNUS DX80 S2 supporting FJDARY-E100.MIB
+# Copyright (c) 2012 FuH Entwicklungsgesellschaft mbH, Umkirch, Germany. All rights reserved.
+# Author: Philipp Hoefflin, 2012, hoefflin+cmk@fuh-e.de
 
-snmp_scan_functions['fjdarye60_devencs'] \
-        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60"
+# example snmpwalk output:
+# snmpwalk -c public -v 1 dx80 .1.3.6.1.4.1.211.1.21.1.100.2.4.2.1.1
+# FJDARY-E100::fjdaryCmmemoryIndex.0 = INTEGER: 0
+# FJDARY-E100::fjdaryCmmemoryIndex.1 = INTEGER: 1
+# FJDARY-E100::fjdaryCmmemoryIndex.2 = INTEGER: 2
+# snmpwalk -c public -v 1 dx80 .1.3.6.1.4.1.211.1.21.1.100.2.4.2.1.3
+# FJDARY-E100::fjdaryCmmemoryStatus.0 = INTEGER: normal(1)
+# FJDARY-E100::fjdaryCmmemoryStatus.1 = INTEGER: normal(1)
+# FJDARY-E100::fjdaryCmmemoryStatus.2 = INTEGER: invalid(4)
+
+check_info['fjdarye100_cmods_mem'] = (check_fjdarye_item, "Channel Module Memory %s", 0,  inventory_fjdarye_item)
+check_includes['fjdarye100_cmods_mem'] = ["fjdarye.include"]
+# 1: fjdaryCmmemoryIndex, 3: fjdaryCmmemoryStatus
+snmp_info['fjdarye100_cmods_mem'] = (".1.3.6.1.4.1.211.1.21.1.100.2.4.2.1", [ 1, 3 ])
+
+snmp_scan_functions['fjdarye100_cmods_mem'] \
+        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.100"

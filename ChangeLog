@@ -23,6 +23,8 @@
     * Fix Perf-O-Meter of fileage
     * hpux_snmp_cs.cpu: new SNMP check for CPU utilization
       on HP-UX.
+    * if/if64: inventory also picks up type 62 (fastEther). This
+      is needed on Cisco WLC 21xx series (thanks to Ralf Ertzinger)
 
     Multisite:
     * Added several missing localization stringsw

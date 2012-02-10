@@ -85,7 +85,7 @@ def views_by_topic():
     s.sort()
 
     # Enforce a certain order on the topics
-    known_topics = [ _('Dashboards'), "Hosts", "Hostgroups", "Services", "Servicegroups",
+    known_topics = [ _('Dashboards'), _("Hosts"), _("Hostgroups"), _("Services"), _("Servicegroups"),
                      _("Business Intelligence"), _("Problems"), _("Addons") ]
 
     result = []

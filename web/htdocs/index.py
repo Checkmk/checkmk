@@ -240,6 +240,10 @@ def handler(req, profiling = True):
                     # While api call don't show the login dialog
                     raise MKUnauthenticatedException(_('You are not authenticated.'))
 
+                # Initialize the i18n for the login dialog. This might be overridden
+                # later after user login
+                load_language(html.var("lang", config.get_language()))
+
                 # After auth check the regular page can be shown
                 result = login.page_login()
                 if type(result) == tuple:

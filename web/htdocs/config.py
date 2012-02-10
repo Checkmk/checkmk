@@ -304,7 +304,7 @@ def login(u):
 def get_language(default = None):
     if default == None:
         default = default_language
-    return user.get('language', default)
+    return user and user.get('language', default) or default
 
 def roles_of_user(user):
     # Make sure, builtin roles are present, even if not modified

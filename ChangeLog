@@ -29,6 +29,7 @@
     * Chrome: Fixed styling problem of foldertree snapin
     * Views: Only show the commands and row selection options for views where
       commands are possible
+    * The login mask honors the default_language definition now
 
 1.1.13i3:
     Core, Setup, etc.:

@@ -1204,7 +1204,8 @@ def show_hosts(folder):
 
         html.write("<td class=buttons>")
         html.icon_button(edit_url, _("Edit the properties of this host"), "edit")
-        html.icon_button(services_url, _("Edit the services of this host, do an inventory"), "services")
+        if check_host_permissions(hostname, False) == True:
+            html.icon_button(services_url, _("Edit the services of this host, do an inventory"), "services")
         if config.may("wato.manage_hosts"):
             html.icon_button(clone_url, _("Create a clone of this host"), "insert")
             html.icon_button(delete_url, _("Delete this host"), "delete")

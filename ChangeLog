@@ -26,6 +26,8 @@
     * Added several missing localization stringsw
     * IE: Fixed problem with clicking SELECT fields in the new wato foldertree snapin
     * Fixed problem when trying to visit dashboards from new wato foldertree snapin
+    * Views: Only show the commands and row selection options for views where
+      commands are possible
 
 1.1.13i3:
     Core, Setup, etc.:

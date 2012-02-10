@@ -626,7 +626,7 @@ class MonitoringIcon(ValueSpec):
             dirs = [ defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons",
                      defaults.omd_root + "/share/check_mk/web/htdocs/images/icons" ]
         else:
-            dir = [ defaults.web_dir + "/htdocs/images/icons" ]
+            dirs = [ defaults.web_dir + "/htdocs/images/icons" ]
 
         icons = []
         for dir in dirs:

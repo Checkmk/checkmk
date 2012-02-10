@@ -8,6 +8,8 @@
     * Distributed WATO: Made all url calls using curl now
     * FIX: fix bug in inventory in validate_datatype()
     * Better output in case of inventory error
+    * FIX: fix bug in host_icon rule on non OMD
+    * FIX: do not use isdisjoint() (was in rule editor on Lenny)
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors
@@ -21,6 +23,8 @@
     * Fix Perf-O-Meter of fileage
     * hpux_snmp_cs.cpu: new SNMP check for CPU utilization
       on HP-UX.
+    * if/if64: inventory also picks up type 62 (fastEther). This
+      is needed on Cisco WLC 21xx series (thanks to Ralf Ertzinger)
 
     Multisite:
     * Added several missing localization stringsw

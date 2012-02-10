@@ -6245,6 +6245,9 @@ def preferred_peer():
     best_peer = None
     best_working_peer = None
     for site_id, site in config.allsites().items():
+        if site.get("replication") == "slave":
+            continue # Ignore slave sites
+
         if site_is_local(site_id):
             if best_peer == None or site_id < best_peer["id"]:
                 best_peer = site
@@ -8394,7 +8397,7 @@ def mode_edit_ruleset(phase):
                         img = 'imatch'
                     else:
                         new_keys = set(value.keys())
-                        if match_keys.isdisjoint(new_keys):
+                        if set_is_disjoint(match_keys, new_keys):
                             title = _("This rule matches and defines new parameters.")
                             img = 'match'
                         elif new_keys.issubset(match_keys):

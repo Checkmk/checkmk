@@ -437,6 +437,7 @@ function startDragScroll(event) {
   if (dragging === false && button == 'LEFT'
       && target.tagName != 'A'
       && target.tagName != 'INPUT'
+      && target.tagName != 'SELECT'
       && !(target.tagName == 'DIV' && target.className == 'heading')) {
     if (event.preventDefault)
       event.preventDefault();

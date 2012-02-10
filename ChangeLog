@@ -24,6 +24,7 @@
 
     Multisite:
     * Added several missing localization stringsw
+    * IE: Fixed problem with clicking SELECT fields in the new views snapin
 
 1.1.13i3:
     Core, Setup, etc.:

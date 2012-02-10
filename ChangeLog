@@ -9,6 +9,7 @@
     * FIX: fix bug in inventory in validate_datatype()
     * Better output in case of inventory error
     * FIX: fix bug in host_icon rule on non OMD
+    * FIX: do not use isdisjoint() (was in rule editor on Lenny)
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors

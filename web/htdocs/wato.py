@@ -8396,7 +8396,7 @@ def mode_edit_ruleset(phase):
                         img = 'imatch'
                     else:
                         new_keys = set(value.keys())
-                        if match_keys.isdisjoint(new_keys):
+                        if set_is_disjoint(match_keys, new_keys):
                             title = _("This rule matches and defines new parameters.")
                             img = 'match'
                         elif new_keys.issubset(match_keys):

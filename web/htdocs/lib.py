@@ -194,3 +194,9 @@ def saveint(x):
         return int(x)
     except:
         return 0
+
+def set_is_disjoint(a, b):
+    for elem in a:
+        if elem in b:
+            return False
+    return True

@@ -6244,6 +6244,9 @@ def preferred_peer():
     best_peer = None
     best_working_peer = None
     for site_id, site in config.allsites().items():
+        if site.get("replication") == "slave":
+            continue # Ignore slave sites
+
         if site_is_local(site_id):
             if best_peer == None or site_id < best_peer["id"]:
                 best_peer = site

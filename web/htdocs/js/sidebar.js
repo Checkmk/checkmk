@@ -738,7 +738,7 @@ function wato_tree_click(folderpath) {
     var target = document.getElementById('target_' + topic).value;
 
     if(target.substr(0, 9) == 'dashboard') {
-        dashboard_name = target.substr(9, target.length);
+        dashboard_name = target.substr(10, target.length);
         href = 'dashboard.py?name=' + escape(dashboard_name);
     } else {
         href = 'view.py?view_name=' + escape(target);

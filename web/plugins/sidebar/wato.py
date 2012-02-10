@@ -212,8 +212,8 @@ def render_tree_folder(f):
         html.write("</ul>")
 
 sidebar_snapins['wato_foldertree'] = {
-    'title'       : _('WATO Foldertree'),
-    'description' : _('This snapin shows the folders defined in WATO. It can be used to open views filtered by theWATO folder.'),
+    'title'       : _('Foldertree'),
+    'description' : _('This snapin shows the folders defined in WATO. It can be used to open views filtered by the WATO folder.'),
     'author'      : 'Lars Michelsen',
     'render'      : render_wato_foldertree,
     'allowed'     : [ 'admin', 'user', 'guest' ],
@@ -222,14 +222,20 @@ sidebar_snapins['wato_foldertree'] = {
     float: right;
     padding: 0;
     width:   190px;
+    height: 19px;
     margin-bottom: 2px;
     background-color: #8EAEB8;
     color: #fff;
 }
+#snapin_wato_foldertree select option {
+    background-color: #8EAEB8;
+}
 #snapin_wato_foldertree span {
+    text-align: middle;
+    margin-top: 1px;
     display: block;
     color:  #ffffff;
-    height: 21px;
+    height: 20px;
 }
 """
 }

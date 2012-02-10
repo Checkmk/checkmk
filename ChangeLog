@@ -14,6 +14,7 @@
     * hpux_if: make configurable via WATO
     * if.include: fix handling of NIC with index 0
     * hpux_lunstats: new check for disk IO on HP-UX
+    * windows - mk_oracle tablespace: Added missing sid column
     * diskstat: make inventory mode configurable via WATO
     * added new checks for Fujitsu ETERNUS DX80 S2 
       (thanks to Philipp Höfflin)
@@ -23,6 +24,11 @@
 
     Multisite:
     * Added several missing localization stringsw
+    * IE: Fixed problem with clicking SELECT fields in the new wato foldertree snapin
+    * Fixed problem when trying to visit dashboards from new wato foldertree snapin
+    * Chrome: Fixed styling problem of foldertree snapin
+    * Views: Only show the commands and row selection options for views where
+      commands are possible
 
 1.1.13i3:
     Core, Setup, etc.:

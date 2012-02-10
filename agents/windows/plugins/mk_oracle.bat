@@ -41,6 +41,8 @@ echo "set head off"
 echo "select count(*) from v$loghist where first_time > sysdate - 1/24;"
 ) | sqlplus -S %AUTH%
 
+REM ; This is nearly the same query as in the linux agent. With the exception that the
+REM ; column th.instance is fetched as first column to get the SID
 echo ^<^<^<oracle_tablespaces^>^>^>
 (
 echo set cmdsep on
@@ -52,5 +54,5 @@ echo "set feedback off"
 echo "set head off"
 echo "column instance format a10"
 echo "column file_name format a100"
-echo "select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE, f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, f.ONLINE_STATUS, t.BLOCK_SIZE, t.status, decode(sum(fs.blocks), NULL, 0, sum(fs.blocks)) free_blocks from dba_data_files f, dba_tablespaces t, dba_free_space fs where f.tablespace_name = t.tablespace_name and f.file_id = fs.file_id(+) group by f.file_name, f.tablespace_name, f.status, f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by, f.online_status, t.block_size, t.status UNION select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE, f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, 'TEMP', t.BLOCK_SIZE, t.status, 0 from dba_temp_files f, dba_tablespaces t where f.tablespace_name = t.tablespace_name;"
+echo "select th.instance, f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE, f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, f.ONLINE_STATUS, t.BLOCK_SIZE, t.status, decode(sum(fs.blocks), NULL, 0, sum(fs.blocks)) free_blocks from v$thread th, dba_data_files f, dba_tablespaces t, dba_free_space fs where f.tablespace_name = t.tablespace_name and f.file_id = fs.file_id(+) group by th.instance, f.file_name, f.tablespace_name, f.status, f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by, f.online_status, t.block_size, t.status UNION select th.instance, f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE, f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, 'TEMP', t.BLOCK_SIZE, t.status, 0 from v$thread th, dba_temp_files f, dba_tablespaces t where f.tablespace_name = t.tablespace_name;"
 ) | sqlplus -S %AUTH%

@@ -1326,8 +1326,11 @@ def render_view(view, rows, datasource, group_painters, painters,
     if show_buttons and 'B' in display_options:
         show_context_links(view, hide_filters)
 
+    # Show the command form? Are commands possible?
+    command_form = len(rows) > 0 and display_command_form(display_options, datasource)
+
     need_navi = show_buttons and \
-                not html.do_actions() and (
+        not html.do_actions() and (
         'D' in display_options or
         'F' in display_options or
         'C' in display_options or
@@ -1353,7 +1356,7 @@ def render_view(view, rows, datasource, group_painters, painters,
             html.write("<td class=minigap></td>\n")
 
         # Command-button, open command form if checkboxes are currently shown
-        if 'C' in display_options and len(rows) > 0 and config.may("act"):
+        if command_form:
             toggle_button("table_actions", False, _("Commands"))
             # toggle_button("table_actions", show_checkboxes, _("Commands"))
             html.write("<td class=minigap></td>\n")
@@ -1361,7 +1364,7 @@ def render_view(view, rows, datasource, group_painters, painters,
         # Buttons for view options
         if 'O' in display_options:
             # Link for selecting/deselecting all rows
-            if 'C' in display_options and config.may("act") and layout["checkboxes"]:
+            if command_form and layout["checkboxes"]:
                 if show_checkboxes:
                     addclass = " selected"
                     title = _("Hide check boxes")
@@ -1423,7 +1426,7 @@ def render_view(view, rows, datasource, group_painters, painters,
             show_filter_form(filter_isopen, show_filters)
 
     # Actions
-    if len(rows) > 0:
+    if command_form:
         # If we are currently within an action (confirming or executing), then
         # we display only the selected rows (if checkbox mode is active)
         if html.var("selected_rows", "") and html.do_actions():
@@ -1949,12 +1952,28 @@ def collist_of_collection(collection, join_target = []):
 #   | the other time of "action". Both is the same here...                 |
 #   '----------------------------------------------------------------------'
 
-def show_command_form(is_open, datasource):
+# Checks wether or not this view handles commands for the current user
+# When it does not handle commands the command tab, command form, row
+# selection and processing commands is disabled.
+def display_command_form(display_options, datasource):
+    if not 'C' in display_options:
+        return False
     if not config.may("act"):
-        return
+        return False
     if html.has_var("try"):
-        return
+        return False
 
+    # What commands are available depends on the Livestatus table we
+    # deal with. If a data source provides information about more
+    # than one table, (like services datasource also provide host
+    # information) then the first info is the primary table. So 'what'
+    # will be one of "host", "service", "command" or "downtime".
+    what = datasource["infos"][0]
+    for command in multisite_commands:
+        if what in command["tables"] and config.may(command["permission"]):
+            return True
+
+def show_command_form(is_open, datasource):
     # What commands are available depends on the Livestatus table we
     # deal with. If a data source provides information about more
     # than one table, (like services datasource also provide host
@@ -1973,16 +1992,12 @@ def show_command_form(is_open, datasource):
 
     # Commands are defined in plugins/views/commands.py. Iterate
     # over all command definitions and render HTML input fields.
-    one_shown = False
     for command in multisite_commands:
         if what in command["tables"] and config.may(command["permission"]):
             html.write('<tr><td class=legend>%s</td>\n' % command["title"])
             html.write('<td class=content>\n')
             command["render"]()
             html.write('</td></tr>\n')
-            one_shown = True
-    if not one_shown:
-        html.write("<tr><td>"+ _('No commands possible for %ss') % what +"</td></tr>")
 
     html.write("</table></div>\n")
     html.end_form()

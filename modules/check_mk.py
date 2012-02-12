@@ -398,6 +398,10 @@ if __name__ == "__main__":
                     raise
                 sys.exit(5)
 
+    # Now convert check_info to new format.
+    convert_check_info()
+
+
 
 #   +----------------------------------------------------------------------+
 #   |                    ____ _               _                            |
@@ -408,12 +412,6 @@ if __name__ == "__main__":
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def have_perfdata(checkname):
-    try:
-        return check_info[checkname][2]
-    except:
-        return False
-
 def output_check_info():
     print "Available check types:"
     print
@@ -423,14 +421,13 @@ def output_check_info():
 
     checks_sorted = check_info.items()
     checks_sorted.sort()
-    for check_type, info in checks_sorted:
+    for check_type, check in checks_sorted:
         try:
-            func, itemstring, have_perfdata, invfunc = info
-            if have_perfdata == 1:
+            if check["has_perfdata"]:
                 p = tty_green + tty_bold + "yes" + tty_normal
             else:
                 p = "no"
-            if invfunc == no_inventory_possible:
+            if check["inventory_function"] == None:
                 i = "no"
             else:
                 i = tty_blue + tty_bold + "yes" + tty_normal
@@ -441,7 +438,7 @@ def output_check_info():
                 typename = tty_yellow + "tcp " + tty_normal
 
             print (tty_bold + "%-19s" + tty_normal + "   %s     %-3s    %-3s    %s") % \
-                  (check_type, typename, p, i, itemstring)
+                  (check_type, typename, p, i, check["service_description"])
         except Exception, e:
             sys.stderr.write("ERROR in check_type %s: %s\n" % (check_type, e))
 
@@ -634,8 +631,9 @@ def get_snmp_character_encoding(hostname):
         return entries[0]
 
 def check_uses_snmp(check_type):
-    check_name = check_type.split(".")[0]
-    return snmp_info.has_key(check_name)
+    base_check_name = check_type.split(".")[0]
+    return base_check_name in check_info and \
+           check_info[base_check_name]["snmp_info"] != None
 
 def is_snmp_host(hostname):
     return in_binary_hostlist(hostname, snmp_hosts)
@@ -739,41 +737,32 @@ def snmp_scan(hostname, ipaddress):
         return []
 
     found = []
-    items = snmp_scan_functions.items()
-    items.sort()
-    for checktype, detect_function in items:
-        if checktype in ignored_checktypes:
+    for check_type, check in check_info.items():
+        if check_type in ignored_checktypes:
             continue
-        try:
-            if detect_function(lambda oid: get_single_oid(hostname, ipaddress, oid)):
-                found.append(checktype)
-                if opt_verbose:
-                    sys.stdout.write(tty_green + tty_bold + checktype + " " + tty_normal)
-                    sys.stdout.flush()
-        except:
-            pass
-
-    # Now try all checks not having a scan function
-    items = check_info.keys()
-    items.sort()
-    for checktype in items:
-        if checktype in ignored_checktypes:
+        elif not check_uses_snmp(check_type):
             continue
-
-        datatype = checktype.split('.')[0]
-        if not check_uses_snmp(datatype):
-            continue # no snmp check
-        if checktype not in snmp_scan_functions:
+        scan_function = check["snmp_scan_function"]
+        if scan_function:
+            try:
+                if scan_function(lambda oid: get_single_oid(hostname, ipaddress, oid)):
+                    found.append(check_type)
+                    if opt_verbose:
+                        sys.stdout.write(tty_green + tty_bold + check_type
+                           + " " + tty_normal)
+                        sys.stdout.flush()
+            except:
+                pass
+        else:
+            found.append(check_type)
             if opt_verbose:
-                sys.stdout.write(tty_blue + tty_bold + checktype + tty_normal + " ")
+                sys.stdout.write(tty_blue + tty_bold + check_type \
+                    + tty_normal + " ")
                 sys.stdout.flush()
-            found.append(checktype)
 
     if opt_verbose:
-        if found == []:
-            sys.stdout.write("nothing detected.\n")
-        else:
-            sys.stdout.write("\n")
+        sys.stdout.write("\n")
+    found.sort()
     return found
 
 
@@ -1034,20 +1023,20 @@ def snmp_port_spec(hostname):
         return ":%d" % port
 
 
-def service_description(checkname, item):
-    if checkname not in check_info:
+def service_description(check_type, item):
+    if check_type not in check_info:
         if item:
-            return "Unimplmented check %s / %s" % (checkname, item)
+            return "Unimplmented check %s / %s" % (check_type, item)
         else:
-            return "Unimplemented check %s" % checkname
+            return "Unimplemented check %s" % check_type
 
         # raise MKGeneralException("Unknown check type '%s'.\n"
-        #                         "Please use check_mk -L for a list of all check types.\n" % checkname)
+        #                         "Please use check_mk -L for a list of all check types.\n" % check_type)
 
     # use user-supplied service description, of available
-    descr_format = service_descriptions.get(checkname)
+    descr_format = service_descriptions.get(check_type)
     if not descr_format:
-        descr_format = check_info[checkname][1]
+        descr_format = check_info[check_type]["service_description"]
 
     # Note: we strip the service description (remove spaces).
     # One check defines "Pages %s" as a desription, but the item
@@ -1612,7 +1601,7 @@ def create_nagios_servicedefs(outfile, hostname):
 
         else:
             used_descriptions[description] = ( checkname, item )
-        if have_perfdata(checkname):
+        if check_info[checkname]["has_perfdata"]:
             template = passive_service_template_perf
         else:
             template = passive_service_template
@@ -1923,9 +1912,9 @@ def create_nagios_config_contacts(outfile):
 
 def inventorable_checktypes(what): # snmp, tcp, all
     checknames = [ k for k in check_info.keys()
-                   if check_info[k][3] != no_inventory_possible
-#                   and (k not in ignored_checktypes)
-                   and (what == "all" or ((k.split('.')[0] in snmp_info) == (what == "snmp")))
+                   if check_info[k]["inventory_function"] != None
+                   and (what == "all" 
+                        or check_uses_snmp(k) == (what == "snmp"))
                  ]
     checknames.sort()
     return checknames
@@ -1963,7 +1952,9 @@ def do_snmp_scan(hostnamelist, check_only=False, include_state=False):
 
 def make_inventory(checkname, hostnamelist, check_only=False, include_state=False):
     try:
-        inventory_function = check_info[checkname][3]
+        inventory_function = check_info[checkname]["inventory_function"]
+        if inventory_function == None:
+            inventory_function = no_inventory_possible
     except KeyError:
         sys.stderr.write("No such check type '%s'. Try check_mk -L.\n" % checkname)
         sys.exit(1)
@@ -2461,6 +2452,9 @@ no_inventory_possible = None
         output.write("\n\n")
         if opt_verbose:
             sys.stderr.write(" %s%s%s" % (tty_green, filename.split('/')[-1], tty_normal))
+
+    # Make sure all checks are converted to the new API
+    output.write("convert_check_info()\n")
 
     # handling of clusters
     if is_cluster(hostname):
@@ -4220,7 +4214,7 @@ def compute_check_parameters(host, checktype, item, params):
     return params
 
 def get_checkgroup_parameters(host, checktype, item):
-    checkgroup = checkgroup_of.get(checktype)
+    checkgroup = check_info[checktype]["group"]
     if not checkgroup:
         return []
     rules = checkgroup_parameters.get(checkgroup)

@@ -274,7 +274,7 @@ def automation_try_inventory_node(hostname):
                     tcp_error = output
 
             if exitcode == None:
-                check_function = check_info[ct][0]
+                check_function = check_info[ct]["check_function"]
                 # apply check_parameters
                 try:
                     if type(paramstring) == str:
@@ -301,7 +301,7 @@ def automation_try_inventory_node(hostname):
             output = "WAITING - Legacy check, cannot be done offline"
             perfdata = []
 
-        checkgroup = checkgroup_of.get(ct)
+        checkgroup = check_info[ct]["group"]
         table.append((state_type, ct, checkgroup, item, paramstring, params, descr, exitcode, output, perfdata))
 
     if not table and (tcp_error or snmp_error):
@@ -506,13 +506,13 @@ def automation_get_configuration():
 def automation_get_check_information():
     manuals = all_manuals()
     checks = {}
-    for checkname in check_info:
-        manfile = manuals.get(checkname)
+    for check_type, check in check_info.items():
+        manfile = manuals.get(check_type)
         if manfile:
             title = file(manfile).readline().strip().split(":", 1)[1].strip()
         else:
-            title = checkname
-        checks[checkname] = { "title" : title }
-        if checkname in checkgroup_of:
-            checks[checkname]["group"] = checkgroup_of[checkname]
+            title = check_type
+        checks[check_type] = { "title" : title }
+        if check["group"]:
+            checks[check_type]["group"] = check["group"]
     return checks

@@ -3,6 +3,7 @@
     * new tool 'livedump' for dumping configuration and status
       information from one monitoring core and importing this
       into another.
+    * Enable new check registration API (not yet used in checks)
 
     WATO:
     * Distributed WATO: Made all url calls using curl now

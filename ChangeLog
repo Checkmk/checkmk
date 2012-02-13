@@ -25,6 +25,7 @@
       on HP-UX.
     * if/if64: inventory also picks up type 62 (fastEther). This
       is needed on Cisco WLC 21xx series (thanks to Ralf Ertzinger)
+    * mk_oracle (lnx+win): Fixed TEMP tablespace size calculations
 
     Multisite:
     * Added several missing localization stringsw

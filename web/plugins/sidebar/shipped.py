@@ -358,7 +358,7 @@ def render_hostmatrix():
 
 sidebar_snapins["hostmatrix"] = {
     "title"       : _("Host Matrix"),
-    "description" : _("A matrix showing s colored square for each host"),
+    "description" : _("A matrix showing a colored square for each host"),
     "author"      : "Mathias Kettner",
     "render"      : render_hostmatrix,
     "allowed"     : [ "user", "admin", "guest" ],

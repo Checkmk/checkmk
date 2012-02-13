@@ -7379,7 +7379,9 @@ def mode_edit_role(phase):
 
         pvalue = role["permissions"].get(pname)
         def_value = base_role_id in perm["defaults"]
-        html.write("<tr><td class=left>%s<br><i>%s</i></td>" % (perm["title"], perm["description"]))
+        html.write("<tr><td class=left>%s<br><i>%s</i></td>" % (
+	    make_unicode(perm["title"]), make_unicode(perm["description"])))
+
         html.write("<td class=right>")
         choices = [ ( "yes", _("yes")),
                     ( "no", _("no")),
@@ -7395,6 +7397,12 @@ def mode_edit_role(phase):
     html.write("</table>")
     html.hidden_fields()
     html.end_form()
+
+def make_unicode(s):
+    if type(s) != unicode: # assume utf-8 encoded bytestring
+        return s.decode("utf-8")
+    else:
+	return s
 
 
 def load_roles():

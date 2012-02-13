@@ -4,6 +4,7 @@
       information from one monitoring core and importing this
       into another.
     * Enable new check registration API (not yet used in checks)
+    * FIX: fix handling of prefix-tag rules (+), needed for WATO
 
     WATO:
     * Distributed WATO: Made all url calls using curl now

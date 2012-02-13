@@ -480,15 +480,14 @@ def hosttags_match_taglist(hosttags, required_tags):
             for t in hosttags:
                 if t.startswith(tag):
                     matches = True
-            if not matches:
-                return False
+                    break
 
         else:
-            if (tag in hosttags) == negate:
-                return False
+            matches = (tag in hosttags)
 
-        if (tag in hosttags) == negate:
+        if matches == negate:
             return False
+
     return True
 
 #   +----------------------------------------------------------------------+

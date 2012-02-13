@@ -633,7 +633,7 @@ def get_snmp_character_encoding(hostname):
 def check_uses_snmp(check_type):
     base_check_name = check_type.split(".")[0]
     return base_check_name in check_info and \
-           check_info[base_check_name]["snmp_info"] != None
+           check_info[base_check_name].get("snmp_info") != None
 
 def is_snmp_host(hostname):
     return in_binary_hostlist(hostname, snmp_hosts)
@@ -2395,15 +2395,17 @@ no_inventory_possible = None
 
     # Do we need to load the SNMP module? This is the case, if the host
     # has at least one SNMP based check. Also collect the needed check
-    # types.
+    # types and sections.
     need_snmp_module = False
-    needed_types = set([])
-    for checktype, item, param, descr, aggr in check_table:
-        if checktype not in check_info:
-            sys.stderr.write('Warning: Ignoring missing check %s.\n' % checktype)
+    needed_check_types = set([])
+    needed_sections = set([])
+    for check_type, item, param, descr, aggr in check_table:
+        if check_type not in check_info:
+            sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_type)
             continue
-        needed_types.add(checktype.split(".")[0])
-        if check_uses_snmp(checktype):
+        needed_sections.add(check_type.split(".")[0])
+        needed_check_types.add(check_type)
+        if check_uses_snmp(check_type):
             need_snmp_module = True
 
     if need_snmp_module:
@@ -2416,9 +2418,9 @@ no_inventory_possible = None
     # We need to include all those plugins that are referenced in the host's
     # check table
     filenames = []
-    for checktype in needed_types:
+    for check_type in needed_check_types:
         # Add library files needed by check (also look in local)
-        for lib in check_includes.get(checktype, []):
+        for lib in check_info[check_type].get("includes", []):
             if local_checks_dir and os.path.exists(local_checks_dir + "/" + lib):
                 to_add = local_checks_dir + "/" + lib
             else:
@@ -2426,11 +2428,12 @@ no_inventory_possible = None
             if to_add not in filenames:
                 filenames.append(to_add)
 
-        # Now add check file itself
-        path = find_check_plugin(checktype)
+        # Now add check file itself (convert check_type to section)
+        section = check_type.split(".")[0]
+        path = find_check_plugin(section)
         if not path:
-            raise MKGeneralException("Cannot find plugin for check type %s (missing file %s/%s)\n" % \
-                                     (checktype, checks_dir, checktype))
+            raise MKGeneralException("Cannot find check file %s needed for check type %s" % \
+                                     (section, check_type))
 
         if path not in filenames:
             filenames.append(path)
@@ -2520,6 +2523,11 @@ no_inventory_possible = None
     # influence the check itself - not those needed during inventory.
     for var in check_config_variables:
         output.write("%s = %r\n" % (var, eval(var)))
+
+    # The same for those checks that use the new API
+    for check_type in needed_check_types:
+        for var in check_info[check_type].get("check_config_variables", []):
+            output.write("%s = %r\n" % (var, eval(var)))
 
     # perform actual check
     output.write("do_check(%r, %r)\n" % (hostname, ipaddress))
@@ -4000,8 +4008,10 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
     global vars_before_config, final_mk, local_mk, checks
 
     # Initialize dictionary-type default levels variables
-    for varname in check_default_levels.values():
-        globals()[varname] = {}
+    for check in check_info.values():
+        def_var = check.get("default_levels_variable")
+        if def_var:
+            globals()[def_var] = {}
 
     # Create list of all files to be included
     if with_conf_d:
@@ -4090,7 +4100,7 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
             # at least those keys defined in the factory
             # settings are present in the parameters
             if type(params) == dict:
-                def_levels_varname = check_default_levels.get(checktype)
+                def_levels_varname = check_info[checktype].get("default_levels_variable")
                 if def_levels_varname:
                     for key, value in factory_settings.get(def_levels_varname, {}).items():
                         if key not in params:
@@ -4159,7 +4169,7 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
 # the values code in autochecks (given as parameter params)
 def compute_check_parameters(host, checktype, item, params):
     # Handle dictionary based checks
-    def_levels_varname = check_default_levels.get(checktype)
+    def_levels_varname = check_info[checktype].get("default_levels_variable")
     if def_levels_varname:
         vars_before_config.add(def_levels_varname)
 

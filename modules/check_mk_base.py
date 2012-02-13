@@ -730,21 +730,22 @@ def check_unimplemented(checkname, params, info):
     return (3, 'UNKNOWN - Check not implemented')
 
 def convert_check_info():
-    for checkname, info in check_info.items():
+    for check_type, info in check_info.items():
         if type(info) != dict:
             check_function, service_description, has_perfdata, inventory_function = info
             if inventory_function == no_inventory_possible:
                 inventory_function = None
 
-            check_info[checkname] = {
-                "check_function"      : check_function,
-                "service_description" : service_description,
-                "has_perfdata"        : not not has_perfdata,
-                "inventory_function"  : inventory_function,
-                "group"               : checkgroup_of.get(checkname),
-                "snmp_info"           : snmp_info.get(checkname),
-                "snmp_scan_function"  : snmp_scan_functions.get(checkname),
-                "includes"            : check_includes.get(checkname, []),
+            check_info[check_type] = {
+                "check_function"          : check_function,
+                "service_description"     : service_description,
+                "has_perfdata"            : not not has_perfdata,
+                "inventory_function"      : inventory_function,
+                "group"                   : checkgroup_of.get(check_type),
+                "snmp_info"               : snmp_info.get(check_type),
+                "snmp_scan_function"      : snmp_scan_functions.get(check_type),
+                "includes"                : check_includes.get(check_type, []),
+                "default_levels_variable" : check_default_levels.get(check_type),
             }
 
 # Loops over all checks for a host, gets the data, calls the check

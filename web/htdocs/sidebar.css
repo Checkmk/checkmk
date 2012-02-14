@@ -189,7 +189,7 @@ div.snapin div.head {
     width: 260px;
     text-align: center;
     color: #fff;
-    padding-top: 9px;
+    padding-top: 8px;
 }
 
 div.snapin div.head b {
@@ -213,12 +213,27 @@ div.snapin div.closesnapin {
     margin-right: 10px;
     margin-top:   2px;
 }
-/* Reload-Button */
-div.snapin div.reloadsnapin {
-    float: right;
-    margin-right: 4px;
-    margin-top:   2px;
+
+div.snapin div.closesnapin img {
+    width: 8px;
+    height: 8px;
+    position: relative;
+    top: 1px;
 }
+div.snapin div.minisnapin {
+    position: relative;
+    top: 2px;
+    left: 13px;
+    width: 0px;
+    height: 0px;
+}
+div.snapin div.minisnapin img {
+    width: 8px;
+    height: 8px;
+    position: relative;
+    top: 1px;
+}
+
 
 div.snapin div.content {
     background-image: url("images/snapin_background.png");

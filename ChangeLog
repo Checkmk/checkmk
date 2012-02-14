@@ -13,6 +13,7 @@
     * FIX: fix bug in host_icon rule on non OMD
     * FIX: do not use isdisjoint() (was in rule editor on Lenny)
     * FIX: allow UTF-8 encoded permission translations
+    * FIX: Fixed several problems in OMD apache shared mode
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors
@@ -29,6 +30,7 @@
     * if/if64: inventory also picks up type 62 (fastEther). This
       is needed on Cisco WLC 21xx series (thanks to Ralf Ertzinger)
     * FIX: fix inventory of f5_bigip_temp
+    * mk_oracle (lnx+win): Fixed TEMP tablespace size calculations
 
     Multisite:
     * Added several missing localization stringsw

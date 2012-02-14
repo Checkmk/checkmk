@@ -137,7 +137,7 @@ def livedump_config():
            "  use                livedump-service\n"
            "  host_name          %(host_name)s\n"
            "  description        %(description)s\n"
-           "%(groupstring)s"
+           "  %(groupstring)s\n"
            "  check_command      check-livedump\n"
            "  contacts           %(contactsstring)s\n"
            "  max_check_attempts %(max_check_attempts)d\n"

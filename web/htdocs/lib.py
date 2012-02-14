@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import grp, defaults, pprint, os, gettext, __builtin__
+import grp, defaults, pprint, os, errno, gettext, __builtin__
 
 nagios_state_names = { -1: "NODATA", 0: "OK", 1: "WARNING", 2: "CRITICAL", 3: "UNKNOWN", 4: "DEPENDENT" }
 nagios_short_state_names = { -1: "PEND", 0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKN", 4: "DEP" }
@@ -74,6 +74,23 @@ def make_nagios_directory(path):
                     "Please make sure that:<ul><li>the base directory is writable by the web server.</li>"
                     "<li>Both Nagios and the web server are in the group <tt>%s</tt>.</ul>Reason: %s" % (
                         path, defaults.www_group, defaults.www_group, e))
+
+# Same as make_nagios_directory but also creates parent directories
+# Logic has been copied from os.makedirs()
+def make_nagios_directories(name):
+    head, tail = os.path.split(name)
+    if not tail:
+        head, tail = os.path.split(head)
+    if head and tail and not os.path.exists(head):
+        try:
+            make_nagios_directories(head)
+        except os.OSError, e:
+            # be happy if someone already created the path
+            if e.errno != errno.EEXIST:
+                raise
+        if tail == curdir:           # xxx/newdir/. exists if xxx/newdir exists
+            return
+    make_nagios_directory(name)
 
 def create_user_file(path, mode):
     f = file(path, mode, 0)

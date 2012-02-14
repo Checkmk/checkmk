@@ -38,6 +38,7 @@
     * Views: Only show the commands and row selection options for views where
       commands are possible
     * The login mask honors the default_language definition now
+    * check_bi_local.py: works now with cookie based authentication
 
 1.1.13i3:
     Core, Setup, etc.:

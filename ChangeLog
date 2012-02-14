@@ -1,4 +1,7 @@
 1.1.12p7:
+    Core, Setup, etc.:
+    * FIX: honor extra_summary_host_conf (was ignored)
+
     Multisite:
     * FIX: detail view of host was missing column headers
     * FIX: fix problem on IE with background color 'white'
@@ -8,7 +11,11 @@
     Checks & Agents:
     * FIX: fixed man pages of h3c_lanswitch_sensors and statgrab_cpu
     * FIX: netapp_volumes: added raid4 as allowed state (thanks to Michaël Coquard)
-    * HP-UX Agent: fix mrpe (remove echo -e and test -e, thanks to Philipp Lemke)
+    * FIX: HP-UX Agent: fix mrpe (remove echo -e and test -e, thanks to Philipp Lemke)
+    * FIX: ntp checks: output numeric data also if stratum too high
+    * FIX: if/if64: omit check result on counter wrap if bandwidth traffic levels
+      are used.
+    * FIX: hpux_if: fix missing default parameter errors
 
     Livestatus
     * FIX: fix type column in 'GET columns' for dict-type columns (bug found

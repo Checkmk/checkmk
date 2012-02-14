@@ -75,7 +75,7 @@ def load_secret():
     secret_path = '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file)
     if not os.path.exists(secret_path):
         secret = md5.md5(str(time.time())).hexdigest()
-        file(secret_path, 'w').write(secret)
+        file(secret_path, 'w').write(secret + "\n")
     else:
         secret = file(secret_path).read().strip()
     return secret

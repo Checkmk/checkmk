@@ -483,7 +483,7 @@ def reload_folder(folder):
 # Load the information about all folders - except the hosts
 def load_all_folders():
     if not os.path.exists(root_dir):
-        os.makedirs(root_dir)
+        make_nagios_directories(root_dir)
 
     global g_root_folder, g_folders
     g_folders = {}
@@ -599,9 +599,9 @@ def save_hosts(folder = None):
     dirname = root_dir + folder_path
     filename = dirname + "/hosts.mk"
     if not os.path.isdir(dirname):
-        os.makedirs(dirname)
+        make_nagios_directories(dirname)
 
-    out = file(filename, "w")
+    out = create_user_file(filename, 'w')
 
     hosts = folder.get(".hosts", [])
     if len(hosts) == 0:
@@ -4666,7 +4666,7 @@ def save_configuration_settings(vars):
     save_configuration_vars(per_domain.get("multisite", {}), multisite_dir + "global.mk")
 
 def save_configuration_vars(vars, filename):
-    out = file(filename, "w")
+    out = create_user_file(filename, 'w')
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     for varname, value in vars.items():
         out.write("%s = %r\n" % (varname, value))
@@ -4879,7 +4879,7 @@ def load_group_information():
 
 def save_group_information(groups):
     make_nagios_directory(root_dir)
-    out = file(root_dir + "groups.mk", "w")
+    out = create_user_file(root_dir + "groups.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     for what in [ "host", "service", "contact" ]:
         if what in groups and len(groups[what]) > 0:
@@ -5016,7 +5016,7 @@ def load_timeperiods():
 
 def save_timeperiods(timeperiods):
     make_nagios_directory(root_dir)
-    out = file(root_dir + "timeperiods.mk", "w")
+    out = create_user_file(root_dir + "timeperiods.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("timeperiods.update(%s)\n" % pprint.pformat(timeperiods))
 
@@ -5851,7 +5851,7 @@ def save_sites(sites):
     # Important: even write out sites if it's empty. The global 'sites'
     # variable will otherwise survive in the Python interpreter of the
     # Apache processes.
-    out = file(sites_mk, "w")
+    out = create_user_file(sites_mk, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("sites = \\\n%s\n" % pprint.pformat(sites))
     update_distributed_wato_file(sites)
@@ -6446,7 +6446,7 @@ def automation_push_snapshot():
             return _("Internal automation error: %s") % e
 
 def create_distributed_wato_file(siteid, mode):
-    out = file(defaults.check_mk_configdir + "/distributed_wato.mk", "w")
+    out = create_user_file(defaults.check_mk_configdir + "/distributed_wato.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("# This file has been created by the master site\n"
               "# push the configuration to us. It makes sure that\n"
@@ -6459,7 +6459,7 @@ def delete_distributed_wato_file():
     # we do not need write permissions to the conf.d 
     # directory!
     if os.path.exists(p):
-        file(p, "w").write("")
+        create_user_file(p, "w").write("")
 
 #.
 #   .-Users/Contacts-------------------------------------------------------.
@@ -7068,14 +7068,14 @@ def save_users(profiles):
 
     # Check_MK's monitoring contacts
     filename = root_dir + "contacts.mk"
-    out = file(filename, "w")
+    out = create_user_file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("contacts.update(\n%s\n)\n" % pprint.pformat(contacts))
 
     # Users with passwords for Multisite
     make_nagios_directory(multisite_dir)
     filename = multisite_dir + "users.mk"
-    out = file(filename, "w")
+    out = create_user_file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("multisite_users = \\\n%s\n" % pprint.pformat(users))
 
@@ -7085,7 +7085,7 @@ def save_users(profiles):
     # WATO, you should continue to do so or stop doing to for ever...
     # Locked accounts get a '!' before their password. This disable it.
     filename = defaults.htpasswd_file
-    out = file(filename, "w")
+    out = create_user_file(filename, "w")
     for id, user in profiles.items():
         if user.get("password"):
             if user.get("locked", False):
@@ -7416,7 +7416,7 @@ def load_roles():
 
     try:
         vars = { "roles" : roles }
-        execfile(filename, vars, vars)
+        exec(filename, vars, vars)
         # Reflect the data in the roles dict kept in the config module Needed
         # for instant changes in current page while saving modified roles.
         # Otherwise the hooks would work with old data when using helper
@@ -7440,7 +7440,7 @@ def save_roles(roles):
 
     make_nagios_directory(multisite_dir)
     filename = multisite_dir + "roles.mk"
-    out = file(filename, "w")
+    out = create_user_file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("roles.update(\n%s)\n" % pprint.pformat(roles))
 
@@ -7810,7 +7810,7 @@ def load_hosttags():
 
 def save_hosttags(hosttags):
     make_nagios_directory(multisite_dir)
-    out = file(multisite_dir + "hosttags.mk", "w")
+    out = create_user_file(multisite_dir + "hosttags.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("wato_host_tags += \\\n%s\n" % pprint.pformat(hosttags))
 
@@ -9029,7 +9029,7 @@ def mode_edit_rule(phase):
 def save_rulesets(folder, rulesets):
     make_nagios_directory(root_dir)
     path = root_dir + '/' + folder['.path'] + '/' + "rules.mk"
-    out = file(path, "w")
+    out = create_user_file(path, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
 
     for varname, rulespec in g_rulespecs.items():

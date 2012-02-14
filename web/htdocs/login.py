@@ -73,11 +73,15 @@ def load_htpasswd():
 # FIXME: Secret auch replizieren
 def load_secret():
     secret_path = '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file)
-    if not os.path.exists(secret_path):
+    secret = ''
+    if os.path.exists(secret_path):
+        secret = file(secret_path).read().strip()
+
+    # Create new secret when this installation has no secret
+    if secret == '':
         secret = md5.md5(str(time.time())).hexdigest()
         file(secret_path, 'w').write(secret)
-    else:
-        secret = file(secret_path).read().strip()
+
     return secret
 
 # Generates the hash to be added into the cookie value

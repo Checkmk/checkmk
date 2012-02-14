@@ -31,8 +31,6 @@
 # /dev/sda1     reiserfs  256666     16052    227362       7% /boot
 # /dev/mapper/mirrored-database ext3  20642428   1027112  19405604       6% /mirrored/database
 
-check_includes['df'] = [ "df.include" ]
-
 def inventory_df(info):
     inventory = []
     for line in info:
@@ -81,7 +79,12 @@ def check_df(mountpoint, params, info):
 
     return df_check_filesystem(g_hostname, mountpoint, size_mb, avail_mb, params)
 
-
-check_info['df']           = (check_df, "fs_%s", 1, inventory_df)
-check_default_levels['df'] = "filesystem_default_levels"
-checkgroup_of['df']        = "filesystem"
+check_info['df'] = {
+    "check_function"          : check_df,
+    "inventory_function"      : inventory_df,
+    "service_description"     : "fs_%s",
+    "has_perfdata"            : True,
+    "group"                   : "df",
+    "default_levels_variable" : "filesystem_default_levels",
+    "includes"                : [ "df.include" ],
+}

@@ -295,15 +295,17 @@ def get_host_info(hostname, ipaddress, checkname):
 #
 # This function assumes, that each check type is queried
 # only once for each host.
-def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
+def get_realhost_info(hostname, ipaddress, check_type, max_cache_age):
     info = get_cached_hostinfo(hostname)
-    if info and info.has_key(checkname):
-        return info[checkname]
+    if info and info.has_key(check_type):
+        return info[check_type]
 
-    cache_relpath = hostname + "." + checkname
+    cache_relpath = hostname + "." + check_type
 
     # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
-    oid_info = snmp_info.get(checkname)
+    # Please note, that if the check_type is foo.bar then we lookup the
+    # snmp info for "foo", not for "foo.bar".
+    oid_info = check_info.get(check_type, {}).get("snmp_info")
     if oid_info:
         content = read_cache_file(cache_relpath, max_cache_age)
         if content:
@@ -325,7 +327,7 @@ def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
                 table = None
         else:
             table = get_snmp_table(hostname, ipaddress, oid_info)
-        store_cached_checkinfo(hostname, checkname, table)
+        store_cached_checkinfo(hostname, check_type, table)
         write_cache_file(cache_relpath, repr(table) + "\n")
         return table
 
@@ -347,7 +349,7 @@ def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
     lines = [ l.strip() for l in output.split('\n') ]
     info = parse_info(lines)
     store_cached_hostinfo(hostname, info)
-    return info.get(checkname, []) # return only data for specified check
+    return info.get(check_type, []) # return only data for specified check
 
 
 def read_cache_file(relpath, max_cache_age):
@@ -727,6 +729,25 @@ def do_check(hostname, ipaddress):
 def check_unimplemented(checkname, params, info):
     return (3, 'UNKNOWN - Check not implemented')
 
+def convert_check_info():
+    for check_type, info in check_info.items():
+        if type(info) != dict:
+            check_function, service_description, has_perfdata, inventory_function = info
+            if inventory_function == no_inventory_possible:
+                inventory_function = None
+
+            check_info[check_type] = {
+                "check_function"          : check_function,
+                "service_description"     : service_description,
+                "has_perfdata"            : not not has_perfdata,
+                "inventory_function"      : inventory_function,
+                "group"                   : checkgroup_of.get(check_type),
+                "snmp_info"               : snmp_info.get(check_type),
+                "snmp_scan_function"      : snmp_scan_functions.get(check_type),
+                "includes"                : check_includes.get(check_type, []),
+                "default_levels_variable" : check_default_levels.get(check_type),
+            }
+
 # Loops over all checks for a host, gets the data, calls the check
 # function that examines that data and sends the result to Nagios
 def do_all_checks_on_host(hostname, ipaddress):
@@ -767,7 +788,7 @@ def do_all_checks_on_host(hostname, ipaddress):
         if info or info == []:
             num_success += 1
             try:
-                check_funktion = check_info[checkname][0]
+                check_funktion = check_info[checkname]["check_function"]
             except:
                 check_funktion = check_unimplemented
 

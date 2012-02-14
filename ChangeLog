@@ -3,6 +3,8 @@
     * new tool 'livedump' for dumping configuration and status
       information from one monitoring core and importing this
       into another.
+    * Enable new check registration API (not yet used in checks)
+    * FIX: fix handling of prefix-tag rules (+), needed for WATO
 
     WATO:
     * Distributed WATO: Made all url calls using curl now
@@ -10,6 +12,7 @@
     * Better output in case of inventory error
     * FIX: fix bug in host_icon rule on non OMD
     * FIX: do not use isdisjoint() (was in rule editor on Lenny)
+    * FIX: allow UTF-8 encoded permission translations
     * FIX: Fixed several problems in OMD apache shared mode
 
     Checks & Agents:
@@ -26,6 +29,7 @@
       on HP-UX.
     * if/if64: inventory also picks up type 62 (fastEther). This
       is needed on Cisco WLC 21xx series (thanks to Ralf Ertzinger)
+    * FIX: fix inventory of f5_bigip_temp
     * mk_oracle (lnx+win): Fixed TEMP tablespace size calculations
 
     Multisite:
@@ -36,6 +40,7 @@
     * Views: Only show the commands and row selection options for views where
       commands are possible
     * The login mask honors the default_language definition now
+    * check_bi_local.py: works now with cookie based authentication
 
 1.1.13i3:
     Core, Setup, etc.:

@@ -80,7 +80,7 @@ def load_secret():
     # Create new secret when this installation has no secret
     if secret == '':
         secret = md5.md5(str(time.time())).hexdigest()
-        file(secret_path, 'w').write(secret)
+        file(secret_path, 'w').write(secret + "\n")
 
     return secret
 

@@ -75,6 +75,46 @@ multisite_icons.append({
     'paint':           paint_icon_image,
 })
 
+
+#   +----------------------------------------------------------------------+
+#   |          ____                _              _       _                |
+#   |         |  _ \ ___  ___  ___| |__   ___  __| |_   _| | ___           |
+#   |         | |_) / _ \/ __|/ __| '_ \ / _ \/ _` | | | | |/ _ \          |
+#   |         |  _ <  __/\__ \ (__| | | |  __/ (_| | |_| | |  __/          |
+#   |         |_| \_\___||___/\___|_| |_|\___|\__,_|\__,_|_|\___|          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+def paint_reschedule(what, row, tags, custom_vars):
+    # Reschedule button
+    if (row[what + "_active_checks_enabled"] == 1
+        or row[what + '_check_command'].startswith('check_mk-')) \
+       and config.may('action.reschedule'):
+
+        servicedesc = ''
+        wait_svc    = ''
+        icon        = 'icon_reload'
+        txt         = _('Reschedule an immediate check of this %s') % _(what)
+
+        if what == 'service':
+            servicedesc = row['service_description']
+            wait_svc = servicedesc
+
+            # Use Check_MK service for cmk based services
+            if row[what + '_check_command'].startswith('check_mk-'):
+                servicedesc = 'Check_MK'
+                icon        = 'icon_reload_cmk'
+                txt         = _('Reschedule an immediate check of the \'Check_MK\' service')
+
+        return '<a href=\"javascript:void(0);\" ' \
+               'onclick="performAction(this, \'reschedule\', \'%s\', \'%s\', \'%s\', \'%s\');">' \
+               '<img class=icon title="%s" src="images/%s.gif" /></a>' % \
+                (row["site"], row["host_name"], servicedesc, wait_svc, txt, icon)
+
+multisite_icons.append({
+    'columns':         [ 'active_checks_enabled' ],
+    'paint':           paint_reschedule,
+})
 #   +----------------------------------------------------------------------+
 #   |       _        _                        _          _                 |
 #   |      / \   ___| | ___ __   _____      _| | ___  __| | __ _  ___      |
@@ -408,44 +448,4 @@ def paint_aggregations(what, row, tags, custom_vars):
 
 multisite_icons.append({
     'paint':           paint_aggregations,
-})
-
-#   +----------------------------------------------------------------------+
-#   |          ____                _              _       _                |
-#   |         |  _ \ ___  ___  ___| |__   ___  __| |_   _| | ___           |
-#   |         | |_) / _ \/ __|/ __| '_ \ / _ \/ _` | | | | |/ _ \          |
-#   |         |  _ <  __/\__ \ (__| | | |  __/ (_| | |_| | |  __/          |
-#   |         |_| \_\___||___/\___|_| |_|\___|\__,_|\__,_|_|\___|          |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-
-def paint_reschedule(what, row, tags, custom_vars):
-    # Reschedule button
-    if (row[what + "_active_checks_enabled"] == 1
-        or row[what + '_check_command'].startswith('check_mk-')) \
-       and config.may('action.reschedule'):
-
-        servicedesc = ''
-        wait_svc    = ''
-        icon        = 'icon_reload'
-        txt         = _('Reschedule an immediate check of this %s') % _(what)
-
-        if what == 'service':
-            servicedesc = row['service_description']
-            wait_svc = servicedesc
-
-            # Use Check_MK service for cmk based services
-            if row[what + '_check_command'].startswith('check_mk-'):
-                servicedesc = 'Check_MK'
-                icon        = 'icon_reload_cmk'
-                txt         = _('Reschedule an immediate check of the \'Check_MK\' service')
-
-        return '<a href=\"javascript:void(0);\" ' \
-               'onclick="performAction(this, \'reschedule\', \'%s\', \'%s\', \'%s\', \'%s\');">' \
-               '<img class=icon title="%s" src="images/%s.gif" /></a>' % \
-                (row["site"], row["host_name"], servicedesc, wait_svc, txt, icon)
-
-multisite_icons.append({
-    'columns':         [ 'active_checks_enabled' ],
-    'paint':           paint_reschedule,
 })

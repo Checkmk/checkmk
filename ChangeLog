@@ -14,6 +14,7 @@
     * FIX: do not use isdisjoint() (was in rule editor on Lenny)
     * FIX: allow UTF-8 encoded permission translations
     * FIX: Fixed several problems in OMD apache shared mode
+    * FIX: Do not use None$ as item when creating new rules
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors

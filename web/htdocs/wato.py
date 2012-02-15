@@ -8250,7 +8250,7 @@ def mode_edit_ruleset(phase):
             if html.check_transaction():
                 if html.var("_new_rule"):
                     hostname = None
-                    item = None
+                    item = NO_ITEM
                 new_rule = create_rule(rulespec, hostname, item)
                 if hostname:
                     rules[0:0] = [new_rule]
@@ -8471,7 +8471,7 @@ def mode_edit_ruleset(phase):
             title += _(" and %s '%s'") % (rulespec["itemname"], item)
         html.button("_new_host_rule", title)
         html.write(" " + _("or") + " ")
-    html.button("_new_rule", _("General rule in folder: "))
+    html.button("_new_rule", _("Create rule in folder: "))
     html.select("folder", folder_selection(g_root_folder))
     html.write("</p>\n")
     html.hidden_fields()

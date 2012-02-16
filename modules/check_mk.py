@@ -630,9 +630,7 @@ def get_snmp_character_encoding(hostname):
         return entries[0]
 
 def check_uses_snmp(check_type):
-    base_check_name = check_type.split(".")[0]
-    return base_check_name in check_info and \
-           check_info[base_check_name].get("snmp_info") != None
+    return snmp_info.get(check_type.split(".")[0]) != None
 
 def is_snmp_host(hostname):
     return in_binary_hostlist(hostname, snmp_hosts)
@@ -741,7 +739,13 @@ def snmp_scan(hostname, ipaddress):
             continue
         elif not check_uses_snmp(check_type):
             continue
-        scan_function = check["snmp_scan_function"]
+        basename = check_type.split(".")[0]
+        # The scan function should be assigned to the basename, because
+        # subchecks sharing the same SNMP info of course should have
+        # an identical scan function. But some checks do not do this
+        # correctly
+        scan_function = snmp_scan_functions.get(check_type,
+                snmp_scan_functions.get(basename))
         if scan_function:
             try:
                 if scan_function(lambda oid: get_single_oid(hostname, ipaddress, oid)):

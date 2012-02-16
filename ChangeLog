@@ -48,6 +48,10 @@
     * check_bi_local.py: works now with cookie based authentication
     * FIX: Fixed wrong redirection after login in some cases
 
+    BI:
+    * New column (painter) for simplistic box display of tree.
+      This is used in a view for a single hostgroup.
+
 1.1.13i3:
     Core, Setup, etc.:
     * *_contactgroups lists: Single group rules are all appended. When a list

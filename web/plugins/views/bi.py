@@ -147,7 +147,10 @@ multisite_painter_options["aggr_onlyproblems"] = {
 multisite_painter_options["aggr_treetype"] = {
  "title"   : _("Type of tree layout"),
  "default" : "foldable",
- "values"  : [ ("foldable", "foldable"), ("bottom-up", "bottom up"), ("top-down", "top down")]
+ "values"  : [ 
+    ("foldable",  "foldable"), 
+    ("bottom-up", "bottom up"), 
+    ("top-down",  "top down")]
 }
 
 multisite_painter_options["aggr_wrap"] = {
@@ -186,10 +189,13 @@ def render_assume_icon(site, host, service):
     current = str(ass).lower()
     return u'<img state="%s" class=assumption %s src="images/assume_%s.png">\n' % (current, mousecode, current)
 
-def aggr_render_leaf(tree, show_host):
+def aggr_render_leaf(tree, show_host, bare = False):
     site, host = tree[2]["host"]
     service = tree[2].get("service")
-    content = u"" + render_assume_icon(site, host, service)
+    if bare:
+        content = u""
+    else:
+        content = u"" + render_assume_icon(site, host, service)
 
     # Four cases:
     # (1) zbghora17 . Host status   (show_host == True, service == None)
@@ -211,7 +217,10 @@ def aggr_render_leaf(tree, show_host):
     else:
         content += '<a href="%s">%s</a>' % (service_url, service)
 
-    return aggr_render_node(tree, content, None, show_host)
+    if bare:
+        return content
+    else:
+        return aggr_render_node(tree, content, None, show_host)
 
 def aggr_render_node(tree, title, mousecode, show_host):
     state = tree[0]
@@ -259,7 +268,43 @@ def filter_tree_only_problems(tree):
     return state, assumed_state, node, new_subtrees
 
 
-def paint_aggr_tree_foldable(row):
+def paint_aggr_tree_boxes(row):
+    mousecode = \
+       'onmouseover="this.style.cursor=\'pointer\';" ' \
+       'onmouseout="this.style.cursor=\'auto\';" ' \
+       'onclick="toggle_bi_box(this);" '
+
+    def render_subtree(tree, open, show_host):
+        ret = ""
+        if not open:
+            state = tree[0]
+            if len(tree) == 3:
+                mc = ""
+            else:
+                mc = mousecode
+            ret = '<div %s class="bibox_box state%s">' % (mc, state["state"])
+            if len(tree) == 3: # leaf
+                ret += aggr_render_leaf(tree, show_host, bare = True)
+            else:
+                ret += tree[2]["title"]
+            ret += '</div>'
+        if len(tree) >= 4:
+            ret += '<div class="bibox" style="%s">' % (not open and "display: none;" or "")
+            parts = []
+            for node in tree[3]:
+                ret += render_subtree(node, False, show_host)
+            ret += '</div>'
+        return ret
+
+    tree = row["aggr_treestate"]
+    if get_painter_option("aggr_onlyproblems") == "1":
+        tree = filter_tree_only_problems(tree)
+
+    affected_hosts = row["aggr_hosts"]
+    htmlcode = render_subtree(tree, True, len(affected_hosts) > 1)
+    return "aggrtree", htmlcode
+
+def paint_aggr_tree_foldable(row, boxes=False):
     saved_expansion_level = bi.load_ex_level()
     treestate = weblib.get_tree_states('bi')
     expansion_level = int(get_painter_option("aggr_expand"))
@@ -378,7 +423,7 @@ def paint_aggregated_tree_state(row):
         return paint_aggr_tree_foldable(row)
     elif treetype == "bottom-up":
         return paint_aggr_tree_ltr(row, False)
-    else:
+    elif treetype == "top-down":
         return paint_aggr_tree_ltr(row, True)
 
 multisite_painters["aggr_treestate"] = {
@@ -389,6 +434,12 @@ multisite_painters["aggr_treestate"] = {
     "paint"   : paint_aggregated_tree_state,
 }
 
+multisite_painters["aggr_treestate_boxed"] = {
+    "title"   : _("Aggregation: simplistic boxed layout"),
+    "short"   : _("Tree"),
+    "columns" : [ "aggr_treestate", "aggr_hosts" ],
+    "paint"   : paint_aggr_tree_boxes,
+}
 
 #     _____ _ _ _
 #    |  ___(_) | |_ ___ _ __ ___

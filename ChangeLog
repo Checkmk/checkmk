@@ -1,6 +1,8 @@
 1.1.12p7:
     Core, Setup, etc.:
     * FIX: honor extra_summary_host_conf (was ignored)
+    * FIX: handle buggy SNMP devices with non-consecutive OIDS
+      (such as BINTEC routers)
 
     Multisite:
     * FIX: detail view of host was missing column headers

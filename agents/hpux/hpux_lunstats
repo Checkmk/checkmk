@@ -54,6 +54,7 @@ get_lun_map | while read line ; do
       ;;
     esac
 done
+}
 
 
 

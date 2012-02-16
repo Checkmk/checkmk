@@ -173,7 +173,7 @@ TESTS = {
     'reindent':    C_OK,
     'global_vars': C_OK,
     'linelength':  C_OK,
-    'group':       C_OK,
+    'wato':        C_OK,
     'debug':       C_OK,
 }
 
@@ -311,11 +311,24 @@ def verify_perfometer(check):
     return 'check_mk-' + check in perfometers
 
 # Has this check a group assigned to?
-def is_valid_group(check):
+def is_valid_wato(check):
     return True
 
-def verify_group(check):
-    return not not check_info[check]["group"]
+def verify_wato(check):
+    group = check_info[check]["group"]
+    now = False
+    for line in file("web/plugins/wato/check_parameters.py"):
+        line = line.strip()
+        if line.startswith("checkgroups.append(("):
+            now = True
+        elif now:
+            this_group = line.strip(",").strip('"').strip("'")
+            if group == this_group:
+                return True
+            now = False
+        else:
+            now = False
+    return False
 
 # #############################################################################
 # MAIN

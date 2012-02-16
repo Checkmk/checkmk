@@ -1,0 +1,8 @@
+Title: "Table" preview styles broken in view editor preview
+Component: multisite
+State: open
+Date: 2012-02-15 08:51:28
+Targetversion: future
+Class: bug
+
+The background colors are broken in the view editor.

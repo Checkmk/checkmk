@@ -173,7 +173,7 @@ def do_login():
 
                 # Use redirects for URLs or simply execute other handlers for
                 # mulitsite modules
-                if '/' in origtarget:
+                if '/' in origtarget or '?' in origtarget:
                     html.set_http_header('Location', origtarget)
                     raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
                 else:
@@ -221,7 +221,7 @@ def normal_login_page():
 
     origtarget = html.var('_origtarget', '')
     if not origtarget and not html.req.myfile == 'login':
-        origtarget = html.req.uri
+        origtarget = html.makeuri([])
 
     html.write("<div id=login>")
     html.write("<div id=logo></div>")

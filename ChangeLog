@@ -44,6 +44,7 @@
       commands are possible
     * The login mask honors the default_language definition now
     * check_bi_local.py: works now with cookie based authentication
+    * FIX: Fixed wrong redirection after login in some cases
 
 1.1.13i3:
     Core, Setup, etc.:

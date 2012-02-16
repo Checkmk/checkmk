@@ -17,6 +17,8 @@
     * FIX: allow UTF-8 encoded permission translations
     * FIX: Fixed several problems in OMD apache shared mode
     * FIX: Do not use None$ as item when creating new rules
+    * FIX: Do load *all* users from htpasswd, so passwords from
+      users not created via WATO will not be lost.
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors

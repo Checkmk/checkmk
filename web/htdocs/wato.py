@@ -7005,7 +7005,11 @@ def load_users():
 
     # Passwords are read directly from the apache htpasswd-file.
     # That way heroes of the command line will still be able to
-    # change passwords with htpasswd.
+    # change passwords with htpasswd. Users *only* appearing
+    # in htpasswd will also be loaded and assigned to the role
+    # they are getting according to the multisite old-style
+    # configuration variables.
+
     filename = defaults.htpasswd_file
     if os.path.exists(filename):
         for line in file(filename):
@@ -7018,12 +7022,12 @@ def load_users():
             if id in result:
                 result[id]["password"] = password
                 result[id]["locked"] = locked
-            elif id in config.admin_users:
+            else:
                 # Create entry if this is an admin user
                 new_user = {
-                    "roles" : [ "admin" ],
+                    "roles"    : config.roles_of_user(id),
                     "password" : password,
-                    "locked" : False
+                    "locked"   : False
                 }
                 result[id] = new_user
             # Other unknown entries will silently be dropped. Sorry...

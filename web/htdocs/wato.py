@@ -4414,9 +4414,13 @@ class CheckTypeSelection(ListChoice):
 
 def edit_value(valuespec, value):
     help = valuespec.help() or ""
-    html.write('<tr><td class=legend><i>%s</i></td>' % help)
+    html.write('<tr>')
+    if help:
+        html.write('<td class=legend><i>%s</i></td>' % help)
+        html.write("<td class=content>")
+    else:
+        html.write('<td colspan=2 class=content>')
 
-    html.write("<td class=content>")
     valuespec.render_input("ve", value)
     html.write("</td></tr>")
 

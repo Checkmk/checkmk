@@ -742,7 +742,8 @@ def convert_check_info():
                 "service_description"     : service_description,
                 "has_perfdata"            : not not has_perfdata,
                 "inventory_function"      : inventory_function,
-                "group"                   : checkgroup_of.get(check_type),
+                # Insert check name as group if no group is being defined
+                "group"                   : checkgroup_of.get(check_type, check_type),
                 "snmp_info"               : snmp_info.get(check_type),
                 # Sometimes the scan function is assigned to the check_type
                 # rather than to the base name.

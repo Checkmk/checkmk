@@ -9,6 +9,7 @@
       (such as BINTEC routers)
 
     WATO:
+    * More checks are configurable via WATO now
     * Distributed WATO: Made all url calls using curl now
     * FIX: fix bug in inventory in validate_datatype()
     * Better output in case of inventory error

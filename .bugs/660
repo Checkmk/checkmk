@@ -1,20 +1,11 @@
-Title: WATO: unsichtbare mandatory attribute
+Title: WATO: invisible mandatory attributes
 Component: wato
-State: open
+Class: bug
+State: closed
 Date: 2012-02-17 15:43:57
 Targetversion: future
-Class: bug
 
-Wir haben Betriebsmitteltypen bei denen die meisten der Attribute ausgeblendet sind
-Beispielsweise der SWITCH
-In dk.py sind allerdings viele Attribute als mandatory hinterlegt( hostdb_server, etc. )
+duplicate
 
-Momentan haben wir den workaround, dass sich die Attribute ueber die Ordnerstruktur hineinvererben lassen
-Das kann aber kein Dauerzustand sein. Sobald man die Hosts in einen frischen Ordner verschiebt gehts schief.
-
-Problem:
-Ueber die Sichtbarkeit wird erst im Javascript Context entschieden, je nachdem wie die
-host_tags aktuell gesetzt sind. Diese Information fehlt in der Einzelvalidierung der Mandatory Attribute.
-Da heisst es stur: Steht nix drin -> Fehler
-Evtl. kann man ueber die html.var noch pruefen ob das Attribut eingeblendet ist und dann erst
-die enstprechende Validierung starten
+2012-02-17 16:53:25: changed state open -> closed
+duplicate

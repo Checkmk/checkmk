@@ -1,10 +1,10 @@
-Title: "omd su" aufbohren
+Title: "omd su" upgrade
 Component: core
 State: open
 Date: 2012-02-17 15:41:07
 Targetversion: future
 Class: feature
 
-"omd su" könnte direkt die Site wechseln, wenn es nur eine Site gibt.
-Wenn man keine Site angibt, dann soll ein dialog hochkokmmen.
+"omd su" should switch directly to a site, if there is only one present
+if no sitename is given, a dialog may open up
 

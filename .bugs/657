@@ -5,8 +5,4 @@ State: closed
 Date: 2012-02-17 15:18:08
 Targetversion: future
 
-Änderungen im omd Paket
-In der WATO Eingabemaske existieren Pflichtfelder(mandatory), die Aufgrund des Rechnertyps
-nicht benoetigt werden und daher ausgeblendet sind.
 
-2012-02-17 16:45:44: changed state open -> closed

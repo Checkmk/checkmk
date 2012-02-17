@@ -2,8 +2,6 @@ Title: cmk -I on cluster should work
 Component: core
 State: done
 Class: feature
-Benefit: 1
-Cost: 1
 Date: 2011-12-09 14:27:05
 Targetversion: future
 

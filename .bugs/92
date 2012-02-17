@@ -1,8 +1,6 @@
 Title: Make snmp command configurable
 Component: core
-Benefit: 2
 State: open
-Cost: 2
 Date: 2011-01-09 16:28:27
 Class: feature
 

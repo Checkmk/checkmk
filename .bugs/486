@@ -1,8 +1,6 @@
 Title: Replication Slaves should lock WATO
 Component: wato
-Benefit: 2
 State: open
-Cost: 2
 Date: 2011-12-08 16:50:35
 Targetversion: 1.2.0
 Class: todo

@@ -2,8 +2,6 @@ Title: Restart nagios on OMD - use OMD method
 Component: core
 State: done
 Class: cleanup
-Benefit: 1
-Cost: 2
 Date: 2011-01-22 13:53:40
 Targetversion: 1.2.0
 

@@ -1,8 +1,6 @@
 Title: Reschedule could spread checks over time
 Component: multisite
-Benefit: 3
 State: open
-Cost: 2
 Date: 2011-02-14 10:02:18
 Class: feature
 

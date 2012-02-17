@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: feature
 Date: 2010-12-21 22:16:00
-Benefit: 1
-Cost: 3
 Fun: 0
 
 orschlag von Bastian: Bei den Views könnte man den Datenbereich (Tabelle)

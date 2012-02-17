@@ -1,8 +1,6 @@
 Title: Warn on Hosts without services if 'ping' tag is missing
 Component: core
-Benefit: 1
 State: open
-Cost: 1
 Date: 2011-03-08 16:30:03
 Class: feature
 

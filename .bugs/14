@@ -3,8 +3,6 @@ Component: livestatus
 State: done
 Class: bug
 Date: 2010-12-21 12:12:58
-Benefit: 2
-Cost: 3
 Fun: 0
 
 Currently Livestatus correctly handles 2-Byte UTF-8

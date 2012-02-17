@@ -1,8 +1,6 @@
 Title: Allow --checks options while checking
 Component: core
-Benefit: 1
 State: open
-Cost: 2
 Date: 2011-02-09 09:20:52
 Class: feature
 

@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: cleanup
 Date: 2011-01-25 10:03:20
-Benefit: 1
-Cost: 1
 Fun: 0
 
 The numbers had been bold once. This looked better. Make them bold again.

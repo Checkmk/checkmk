@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: cleanup
 Date: 2011-09-30 11:23:36
-Benefit: 1
-Cost: 1
 Fun: 0
 
 Simply sort the sites after their Alias.

@@ -2,8 +2,6 @@ Title: Hide WATO filter if no WATO is used
 Component: multisite
 State: done
 Class: feature
-Benefit: 1
-Cost: 1
 Date: 2011-12-13 16:46:00
 Targetversion: future
 

@@ -3,8 +3,6 @@ Component: core
 State: done
 Class: nastiness
 Date: 2011-01-24 15:07:41
-Benefit: 1
-Cost: 1
 Fun: 0
 
 In some scan functions 1.3.6.1.2.1.1.1.0 is used, in other

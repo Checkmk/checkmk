@@ -2,8 +2,6 @@ Title: Site ID must not have spaces in multisite.mk:sites
 Component: docu
 State: done
 Class: todo
-Benefit: 1
-Cost: 1
 Date: 2011-10-21 16:24:23
 Targetversion: 1.2.0
 

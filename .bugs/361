@@ -2,8 +2,6 @@ Title: setup.sh does not setup permissions for WATO correctly
 Component: core
 State: done
 Class: cleanup
-Benefit: 1
-Cost: 2
 Date: 2011-08-27 14:04:23
 Targetversion: future
 

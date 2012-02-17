@@ -3,8 +3,6 @@ Component: checks
 State: closed
 Class: bug
 Date: 2011-09-07 19:09:23
-Benefit: 2
-Cost: 2
 Fun: 0
 
 the infotext seems to mix up numbers

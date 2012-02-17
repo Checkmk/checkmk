@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: bug
 Date: 2011-01-24 16:20:52
-Benefit: 1
-Cost: 1
 Fun: 0
 
 The search field (text entry) is not centered in Firefox.

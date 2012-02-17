@@ -2,8 +2,6 @@ Title: Move check_mk_templates.cfg to /usr/share/check_mk
 Component: core
 State: done
 Class: cleanup
-Benefit: 1
-Cost: 2
 Date: 2011-01-04 13:51:15
 Targetversion: 1.2.0
 

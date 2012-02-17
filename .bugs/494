@@ -2,8 +2,6 @@ Title: Single dataset layout does not honor column-headers-off
 Component: multisite
 State: done
 Class: bug
-Benefit: 1
-Cost: 1
 Date: 2011-12-13 16:47:59
 Targetversion: 1.1.13i1
 

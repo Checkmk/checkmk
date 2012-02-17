@@ -1,8 +1,6 @@
 Title: Change handling of undefined columns
 Component: livestatus
-Benefit: 3
 State: open
-Cost: 2
 Date: 2011-01-30 13:45:33
 Class: feature
 

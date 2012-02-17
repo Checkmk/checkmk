@@ -1,8 +1,6 @@
 Title: legacy_checks could allow passive services
 Component: core
-Benefit: 1
 State: open
-Cost: 2
 Date: 2011-03-01 18:24:00
 Class: feature
 

@@ -3,8 +3,6 @@ Component: checks
 State: done
 Class: cleanup
 Date: 2011-08-23 17:49:06
-Benefit: 1
-Cost: 1
 Fun: 0
 
 Also describe this in the migration notes.

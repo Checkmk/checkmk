@@ -1,8 +1,6 @@
 Title: Disk IO read/write: Zu einem Check zusammenfassen
 Component: checks
-Benefit: 2
 State: open
-Cost: 2
 Date: 2010-12-22 11:06:47
 Class: feature
 

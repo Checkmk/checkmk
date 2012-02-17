@@ -2,8 +2,6 @@ Title: cmk -d verwendet --cache nicht
 Component: core
 State: done
 Class: nastiness
-Benefit: 1
-Cost: 2
 Date: 2010-12-21 21:15:52
 Targetversion: future
 

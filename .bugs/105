@@ -2,8 +2,6 @@ Title: SNMP scan: implement missing scan functions
 Component: core
 State: done
 Class: cleanup
-Benefit: 3
-Cost: 5
 Date: 2011-01-24 16:22:26
 Targetversion: 1.2.0
 

@@ -1,8 +1,6 @@
 Title: Windows agent: make sections disableable by config
 Component: checks
-Benefit: 1
 State: open
-Cost: 1
 Date: 2011-09-07 17:35:51
 Class: feature
 

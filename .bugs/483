@@ -1,8 +1,6 @@
 Title: Rule-Editor: autocompletion for explicit hosts
 Component: wato
-Benefit: 2
 State: open
-Cost: 2
 Date: 2011-12-07 14:11:27
 Targetversion: future
 Class: feature

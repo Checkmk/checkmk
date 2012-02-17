@@ -3,8 +3,6 @@ Component: checks
 State: done
 Class: bug
 Date: 2010-12-21 16:33:25
-Benefit: 1
-Cost: 2
 Fun: 0
 
 Wenn aus irgendeinem Grund die state-Datei vom Logwatch-Agenten kaputt

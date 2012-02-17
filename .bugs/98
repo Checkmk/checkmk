@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: bug
 Date: 2011-01-22 14:20:58
-Benefit: 2
-Cost: 2
 Fun: 0
 
 When Nagios is restarted (e.g. via WATO), then for a short time the

@@ -3,8 +3,6 @@ Component: core
 State: done
 Class: feature
 Date: 2010-12-21 21:16:28
-Benefit: 3
-Cost: 2
 Fun: 0
 
 Anstelle von der Pipe sollte man direkt die checkresults-Files schreiben.

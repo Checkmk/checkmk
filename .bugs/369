@@ -1,10 +1,8 @@
 Title: Make lnx_if the default check for Linux
 Component: checks
-Cost: 1
 Date: 2011-09-12 15:07:39
 State: done
 Class: cleanup
-Benefit: 1
 Fun: 0
 Targetversion: 
 

@@ -3,8 +3,6 @@ Component: core
 State: wontfix
 Class: bug
 Date: 2011-02-28 15:48:05
-Benefit: 1
-Cost: 1
 Fun: 0
 
 At the moment BI does not catch direct loops (an object pointing to itselfs) or indirect loops

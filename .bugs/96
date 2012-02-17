@@ -1,10 +1,8 @@
 Title: PNP Popup does not work with HTTP-Login on different host
 Component: multisite
-Cost: 2
 Date: 2011-01-16 10:57:40
 State: wontfix
 Class: bug
-Benefit: 2
 Fun: 0
 Targetversion: 
 

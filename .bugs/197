@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: nastiness
 Date: 2011-08-26 14:24:58
-Benefit: 3
-Cost: 2
 Fun: 0
 
 Momentan ist der Dashlet Hintergrund bei iframes immer weiß. Das sieht nicht gut aus.

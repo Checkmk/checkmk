@@ -1,10 +1,8 @@
 Title: Service "1st perf data" in host view: search broken
 Component: multisite
-Cost: 2
 Date: 2011-10-27 18:53:50
 State: done
 Class: bug
-Benefit: 2
 Fun: 0
 Targetversion: 1.1.12
 

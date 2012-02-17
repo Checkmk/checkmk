@@ -3,8 +3,6 @@ Component: wato
 State: done
 Class: nastiness
 Date: 2010-12-21 12:09:13
-Benefit: 2
-Cost: 3
 Fun: 0
 
 Wenn der Check_MK Agent einen nicht reinlässt (only_from gesetzt),

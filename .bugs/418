@@ -1,8 +1,6 @@
 Title: CPU Check: Schwellwerte nicht automatisch gegen 15 Minuten Wert prüfen
 Component: checks
-Benefit: 2
 State: open
-Cost: 2
 Date: 2011-12-13 13:57:51
 Targetversion: 1.1.13i1
 Class: feature

@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: bug
 Date: 2011-02-04 10:06:44
-Benefit: 2
-Cost: 1
 Fun: 0
 
 In view editor if you add more than one column in one turn

@@ -3,8 +3,6 @@ Component: bi
 State: done
 Class: bug
 Date: 2011-04-07 17:44:13
-Benefit: 2
-Cost: 2
 Fun: 0
 
 If the selected service does not exist, an exception occurs. This

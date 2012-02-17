@@ -2,8 +2,6 @@ Title: mounts check should only check ro flag
 Component: checks
 State: done
 Class: bug
-Benefit: 1
-Cost: 1
 Date: 2011-12-06 08:52:27
 Targetversion: 1.2.0
 

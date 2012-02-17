@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: nastiness
 Date: 2010-12-21 20:48:09
-Benefit: 1
-Cost: 3
 Fun: 0
 
 Wenn man z.B. die active checks aus und wieder eingeschaltet hat,

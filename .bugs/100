@@ -1,8 +1,6 @@
 Title: Set unknown IP addresses to a configurable one
 Component: core
-Benefit: 2
 State: open
-Cost: 1
 Date: 2011-01-24 14:10:18
 Class: feature
 

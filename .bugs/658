@@ -1,0 +1,10 @@
+Title: "omd su" aufbohren
+Component: core
+State: open
+Date: 2012-02-17 15:41:07
+Targetversion: future
+Class: feature
+
+"omd su" könnte direkt die Site wechseln, wenn es nur eine Site gibt.
+Wenn man keine Site angibt, dann soll ein dialog hochkokmmen.
+

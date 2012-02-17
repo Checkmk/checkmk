@@ -1,0 +1,10 @@
+Title: WATO: Nicht sichtbare mandatory Felder
+Component: wato
+State: open
+Date: 2012-02-17 15:18:08
+Targetversion: future
+Class: bug
+
+- Änderungen im omd Paket
+  In der WATO Eingabemaske existieren Pflichtfelder(mandatory), die Aufgrund des Rechnertyps
+  nicht benoetigt werden und daher ausgeblendet sind.

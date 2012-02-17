@@ -1,0 +1,10 @@
+Title: Host validierungsfehler schliesst nicht das host edit fenster
+Component: wato
+State: open
+Date: 2012-02-17 15:42:32
+Targetversion: future
+Class: bug
+
+Es scheint so als ob man nichts mehr im aktuellen Fenster speichern kann
+wenn ein Validierungsfehler angezeigt wurde.
+Man muss erst zurueck zum folder und dann erst wieder in den host edit dialog

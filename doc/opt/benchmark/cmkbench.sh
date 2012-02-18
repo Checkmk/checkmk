@@ -88,9 +88,16 @@ config_omd_central()
 
 get_cache()
 {
-
+# We build a ramdisk backed cache file for replaying agent outputs here.
+# It'll match your test host which might not have all services we later configure.
+# might change this by running an inventory and using that?
 if [ -x `which check_mk_agent` ]; then
     check_mk_agent > /dev/shm/cmk.cache
+    # now also fudge 20 local checks.
+    i=0 ; while [ 20 -gt $i ]; do
+        i=$(( $i + 1 ))
+        echo "0 daemon${i}_status - OK funky output" >> /dev/shm/cmk.cache
+    done
 else
     echo "Check_MK Agent fehlt"
 fi
@@ -111,7 +118,7 @@ prepare()
 setup_central()
 {
     echo "all_hosts += [ 'localhost|tcp', ]" > /omd/sites/${central}/etc/check_mk/conf.d/server.mk
-    su - $central -c ". .profile && cmk -I"
+    su - $central -c ". .profile && cmk -I && cmk -O"
 
     siteconfig=/omd/sites/${central}/etc/check_mk/multisite.d/connections.mk
     echo "sites = {"         > $siteconfig
@@ -176,10 +183,11 @@ extra_service_conf["normal_check_interval"] = [
 ]
 extra_host_conf["normal_check_interval"] = [ 
   ( "100", ALL_HOSTS),
-#   ( "check-mk-vapor", ALL_HOSTS)
 ]
 legacy_checks += [ 
-#    (( "check-mk-vapor", "Dummy", True), ALL_HOSTS), 
+    (( "check-mk-vapor", "Dummy", True), ALL_HOSTS), 
+    (( "check-mk-vapor", "Dummy2", True), ALL_HOSTS), 
+    (( "check-mk-vapor", "Dummy3", True), ALL_HOSTS), 
 #    (( "check-mk-ping",  "Ping",  True), ALL_HOSTS), 
 ]
 extra_nagios_conf += r"""
@@ -210,9 +218,29 @@ checks += [
           (ALL_HOSTS, "mem.used", None, memused_default_levels),
 #          (ALL_HOSTS, "mounts", '/', ['data=ordered', 'errors=remount-ro', 'relatime', 'rw']),
 #          (ALL_HOSTS, "mounts", '/opt', ['attr2', 'noatime', 'nobarrier', 'nodiratime', 'noquota', 'rw']),
-          (ALL_HOSTS, "omd_status", 'zentrale', None),
+#          (ALL_HOSTS, "omd_status", 'zentrale', None),
           (ALL_HOSTS, "tcp_conn_stats", None, tcp_conn_stats_default_levels),
           (ALL_HOSTS, "uptime", None, None),
+          (ALL_HOSTS, "local", 'daemon10_status', ""),
+          (ALL_HOSTS, "local", 'daemon11_status', ""),
+          (ALL_HOSTS, "local", 'daemon12_status', ""),
+          (ALL_HOSTS, "local", 'daemon13_status', ""),
+          (ALL_HOSTS, "local", 'daemon14_status', ""),
+          (ALL_HOSTS, "local", 'daemon15_status', ""),
+          (ALL_HOSTS, "local", 'daemon16_status', ""),
+          (ALL_HOSTS, "local", 'daemon17_status', ""),
+          (ALL_HOSTS, "local", 'daemon18_status', ""),
+          (ALL_HOSTS, "local", 'daemon19_status', ""),
+          (ALL_HOSTS, "local", 'daemon1_status', ""),
+          (ALL_HOSTS, "local", 'daemon20_status', ""),
+          (ALL_HOSTS, "local", 'daemon2_status', ""),
+          (ALL_HOSTS, "local", 'daemon3_status', ""),
+          (ALL_HOSTS, "local", 'daemon4_status', ""),
+          (ALL_HOSTS, "local", 'daemon5_status', ""),
+          (ALL_HOSTS, "local", 'daemon6_status', ""),
+          (ALL_HOSTS, "local", 'daemon7_status', ""),
+          (ALL_HOSTS, "local", 'daemon8_status', ""),
+          (ALL_HOSTS, "local", 'daemon9_status', ""),
 ]
 ZZZ
         

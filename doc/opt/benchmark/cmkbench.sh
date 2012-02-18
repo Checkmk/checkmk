@@ -1,27 +1,4 @@
 #!/bin/bash
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
 
 if test -r /etc/check_mk/bench.cfg  ; then
     . /etc/check_mk/bench.cfg
@@ -74,6 +51,9 @@ config_omd_sites()
 
 gen_sites
 i=0
+if [ "$_livecheck" = "yes" ]; then
+   livecheck_string="livecheck=/omd/versions/default/lib/mk-livestatus/livecheck num_livecheck_helpers=${_livecheck_helpers}"
+fi
 for site in ${sites} ; do
     i=$(( $i + 1 ))
     omd   stop $site
@@ -86,7 +66,7 @@ for site in ${sites} ; do
     omd config $site set APACHE_TCP_PORT $(( 5000 + $i ))
     omd config $site set LIVESTATUS_TCP_PORT $(( 6557 + $i ))
     # Bug - dont yet listen to livecheck y/n
-    echo "broker_module=/omd/sites/${site}/lib/mk-livestatus/livestatus.o livecheck=/omd/versions/default/lib/mk-livestatus/livecheck num_livecheck_helpers=${_livecheck_helpers} num_client_threads=20 pnp_path=/omd/sites/${site}/var/pnp4nagios/perfdata /omd/sites/${site}/tmp/run/live
+    echo "broker_module=/omd/sites/${site}/lib/mk-livestatus/livestatus.o $livecheck_string num_client_threads=20 pnp_path=/omd/sites/${site}/var/pnp4nagios/perfdata /omd/sites/${site}/tmp/run/live 
 event_broker_options=-1" > /omd/sites/$site/etc/mk-livestatus/nagios.cfg
 
 done
@@ -190,12 +170,15 @@ EOF
 
 cat <<ZXY > /omd/sites/$site/etc/check_mk/conf.d/service.mk
 extra_service_conf["normal_check_interval"] = [ 
-#    ( "0.0166", ALL_HOSTS, [ "Dummy" ] ),
-    ( "0.0166", ALL_HOSTS, [ "Ping" ] ),
+    ( "5", ALL_HOSTS, [ "PING" ] ),
+]
+extra_host_conf["normal_check_interval"] = [ 
+  ( "100", ALL_HOSTS),
+#   ( "check-mk-vapor", ALL_HOSTS)
 ]
 legacy_checks += [ 
 #    (( "check-mk-vapor", "Dummy", True), ALL_HOSTS), 
-    (( "check-mk-ping",  "Ping",  True), ALL_HOSTS), 
+#    (( "check-mk-ping",  "Ping",  True), ALL_HOSTS), 
 ]
 extra_nagios_conf += r"""
 define command {
@@ -217,14 +200,14 @@ checks += [
           (ALL_HOSTS, "cpu.threads", None, threads_default_levels),
           (ALL_HOSTS, "df", '/', {}),
           (ALL_HOSTS, "df", '/opt', {}),
-          (ALL_HOSTS, "diskstat", 'SUMMARY', diskstat_default_levels),
-          (ALL_HOSTS, "kernel", 'Context Switches', kernel_default_levels),
-          (ALL_HOSTS, "kernel", 'Major Page Faults', kernel_default_levels),
-          (ALL_HOSTS, "kernel", 'Process Creations', kernel_default_levels),
+#          (ALL_HOSTS, "diskstat", 'SUMMARY', diskstat_default_levels),
+#          (ALL_HOSTS, "kernel", 'Context Switches', kernel_default_levels),
+#          (ALL_HOSTS, "kernel", 'Major Page Faults', kernel_default_levels),
+#          (ALL_HOSTS, "kernel", 'Process Creations', kernel_default_levels),
           (ALL_HOSTS, "kernel.util", None, kernel_util_default_levels),
           (ALL_HOSTS, "mem.used", None, memused_default_levels),
-          (ALL_HOSTS, "mounts", '/', ['data=ordered', 'errors=remount-ro', 'relatime', 'rw']),
-          (ALL_HOSTS, "mounts", '/opt', ['attr2', 'noatime', 'nobarrier', 'nodiratime', 'noquota', 'rw']),
+#          (ALL_HOSTS, "mounts", '/', ['data=ordered', 'errors=remount-ro', 'relatime', 'rw']),
+#          (ALL_HOSTS, "mounts", '/opt', ['attr2', 'noatime', 'nobarrier', 'nodiratime', 'noquota', 'rw']),
           (ALL_HOSTS, "omd_status", 'zentrale', None),
           (ALL_HOSTS, "tcp_conn_stats", None, tcp_conn_stats_default_levels),
           (ALL_HOSTS, "uptime", None, None),

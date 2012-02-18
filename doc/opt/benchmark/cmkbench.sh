@@ -32,6 +32,8 @@ if [ -r /etc/redhat-release ]; then
     # stop the firewall - i don't know how to carefully punch a hole.
     chkconfig iptables off
     service   iptables stop
+    # and OMG also stop freq scaling
+    service cpuspeed off
 fi
 }
 

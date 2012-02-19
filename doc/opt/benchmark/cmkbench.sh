@@ -94,7 +94,7 @@ get_cache()
 if [ -x `which check_mk_agent` ]; then
     check_mk_agent > /dev/shm/cmk.cache
     # now also fudge 20 local checks.
-    i=0 ; while [ 20 -gt $i ]; do
+    i=0 ; while [ 32 -gt $i ]; do
         i=$(( $i + 1 ))
         echo "0 daemon${i}_status - OK funky output" >> /dev/shm/cmk.cache
     done
@@ -179,7 +179,7 @@ EOF
 
 cat <<ZXY > /omd/sites/$site/etc/check_mk/conf.d/service.mk
 extra_service_conf["normal_check_interval"] = [ 
-    ( "5", ALL_HOSTS, [ "PING" ] ),
+    ( "5", ALL_HOSTS, ALL_SERVICES ),
 ]
 extra_host_conf["normal_check_interval"] = [ 
   ( "100", ALL_HOSTS),
@@ -241,6 +241,18 @@ checks += [
           (ALL_HOSTS, "local", 'daemon7_status', ""),
           (ALL_HOSTS, "local", 'daemon8_status', ""),
           (ALL_HOSTS, "local", 'daemon9_status', ""),
+          (ALL_HOSTS, "local", 'daemon21_status', ""),
+          (ALL_HOSTS, "local", 'daemon22_status', ""),
+          (ALL_HOSTS, "local", 'daemon23_status', ""),
+          (ALL_HOSTS, "local", 'daemon24_status', ""),
+          (ALL_HOSTS, "local", 'daemon25_status', ""),
+          (ALL_HOSTS, "local", 'daemon26_status', ""),
+          (ALL_HOSTS, "local", 'daemon27_status', ""),
+          (ALL_HOSTS, "local", 'daemon28_status', ""),
+          (ALL_HOSTS, "local", 'daemon29_status', ""),
+          (ALL_HOSTS, "local", 'daemon30_status', ""),
+          (ALL_HOSTS, "local", 'daemon31_status', ""),
+          (ALL_HOSTS, "local", 'daemon32_status', ""),
 ]
 ZZZ
         

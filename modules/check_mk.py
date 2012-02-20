@@ -2032,6 +2032,13 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
             checkname_base = checkname.split('.')[0]    # make e.g. 'lsi' from 'lsi.arrays'
             try:
                 info = get_realhost_info(hostname, ipaddress, checkname_base, inventory_max_cachefile_age)
+                # Add information about nodes if check wants this
+                if check_info[checkname]["node_info"]:
+                    if cluster_of(hostname):
+                        add_host = hostname
+                    else:
+                        add_host = None
+                    info = [ [add_host] + line for line in info ]
             except MKAgentError, e:
                 # This special handling is needed for the inventory check. It needs special
                 # handling for WATO.

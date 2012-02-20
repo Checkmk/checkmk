@@ -40,6 +40,7 @@
       is needed on Cisco WLC 21xx series (thanks to Ralf Ertzinger)
     * FIX: fix inventory of f5_bigip_temp
     * mk_oracle (lnx+win): Fixed TEMP tablespace size calculations
+    * ps: output node process is running on (only for clusters)
 
     Multisite:
     * Added several missing localization stringsw

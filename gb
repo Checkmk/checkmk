@@ -375,6 +375,8 @@ def input_choice(what, choices):
     ctc = {}
     texts = []
     for choice in choices:
+        if type(choice) == tuple:
+            choice = choice[0]
         for c in choice:
             if c not in ".-_/" and c not in ctc:
                 ctc[c] = choice

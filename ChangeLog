@@ -51,6 +51,8 @@
     * FIX: Fixed wrong redirection after login in some cases
     * FIX: Fixed missing stats grouping in alert statistics view
     * FIX: Fixed preview table styling in view editor
+    * FIX: Multisite authed users without permission to multisite are
+      automatically logged out after showing the error message
 
     BI:
     * New column (painter) for simplistic box display of tree.

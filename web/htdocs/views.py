@@ -500,7 +500,7 @@ def page_edit_view():
             html.write("<div class=error>%s</div>\n" % e.message)
             html.add_user_error(e.varname, e.message)
 
-    html.header(_("Edit view"), stylesheets=["pages","views"])
+    html.header(_("Edit view"), stylesheets=["pages", "views", "status"])
     html.write("<table class=navi><tr>\n")
     html.write('<td class="left open">%s</td>\n' % _('Edit'))
     html.write("<td class=gap></td>\n")

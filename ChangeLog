@@ -7,6 +7,8 @@
     * FIX: fix handling of prefix-tag rules (+), needed for WATO
     * FIX: handle buggy SNMP devices with non-consecutive OIDS
       (such as BINTEC routers)
+    * Check API allows a check to get node information
+    * FIX: fix problem with check includes in subchecks
 
     WATO:
     * More checks are configurable via WATO now

@@ -161,5 +161,5 @@ multisite_datasources["alert_stats"] = {
     "add_columns" : [ "alerts_ok", "alerts_warn", "alerts_crit", "alerts_unknown", "alerts_problem" ],
     "infos"       : [ "log", "host", "service", "contact", "command" ],
     "keys"        : [],
-    "idkeys"      : [ "log_lineno" ],
+    "idkeys"      : [ 'host_name', 'service_description' ],
 }

@@ -48,6 +48,7 @@
     * The login mask honors the default_language definition now
     * check_bi_local.py: works now with cookie based authentication
     * FIX: Fixed wrong redirection after login in some cases
+    * FIX: Fixed missing stats grouping in alert statistics view
 
     BI:
     * New column (painter) for simplistic box display of tree.

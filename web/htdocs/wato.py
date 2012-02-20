@@ -6849,7 +6849,7 @@ def mode_edit_user(phase):
     # Roles
     html.write("<tr><td class=legend colspan=2>")
     html.write(_("Roles<br><i>By assigning roles to a user he obtains permissions. "
-                 "If a user has more then one role, he gets the maximum of all "
+                 "If a user has more than one role, he gets the maximum of all "
                  "permissions of his roles. "
                  "Users without any role have no permissions to use Multisite at all "
                  "but still can be monitoring contacts and receive notifications.</i>"))

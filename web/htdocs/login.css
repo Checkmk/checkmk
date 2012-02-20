@@ -123,8 +123,8 @@ label {
 
 #button_text {
     position: absolute;
-    top: 355px;
-    left: 505px;
+    top: 350px;
+    left: 500px;
     text-align: center;
     width: 61px;
     color: white;
@@ -135,12 +135,16 @@ label {
 
 #login_error {
     position: absolute;
-    top: -60px;
-    left: 135px;
-    width: 360px;
+    top: 350px;
+    left: 264px;
+    width: 205px;
     z-index: 100;
 }
 
+#login_error div.error {
+    margin:0;
+    padding:6px 0;
+}
 
 #foot {
     position: absolute;

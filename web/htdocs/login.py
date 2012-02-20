@@ -224,11 +224,6 @@ def normal_login_page():
         origtarget = html.makeuri([])
 
     html.write("<div id=login>")
-    if html.has_user_errors():
-        html.write('<div id=login_error>')
-        html.show_user_errors()
-        html.write('</div>')
-
     html.write("<img id=login_window src=\"images/login_window.png\">")
     html.write("<div id=version>%s</div>" % defaults.check_mk_version)
 
@@ -239,11 +234,16 @@ def normal_login_page():
     html.text_input("_username", size = 50, id="input_user")
     html.write("<label id=label_pass class=legend for=_password>%s:</label><br />" % _('Password'))
     html.password_input("_password", size = 50, id="input_pass")
-    html.write("<div id=button_text>%s</div>" % _("Login"))
-    html.icon_button("javascript:document.getElementById('form_login').submit();", _("Login"), "login", id="button_login")
-    html.write('<input type=submit style="display: none;">')
 
-    # Footer with copyright and stuff
+    if html.has_user_errors():
+        html.write('<div id=login_error>')
+        html.show_user_errors()
+        html.write('</div>')
+
+    html.write("<div id=button_text>")
+    html.image_button("_login", _('Login'))
+    html.write("</div>")
+
     html.write("<div id=foot>Version: %s - &copy; "
                "<a href=\"http://mathias-kettner.de\">Mathias Kettner</a><br><br>" % defaults.check_mk_version)
     html.write(_("You can use, modify and distribute Check_MK under the terms of the <a href='%s'>"

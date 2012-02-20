@@ -1,8 +1,6 @@
 Title: Cache selected SNMP trees containing static data
 Component: core
-Benefit: 4
 State: open
-Cost: 4
 Date: 2011-08-09 10:19:02
 Class: feature
 

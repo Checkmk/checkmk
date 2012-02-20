@@ -3,8 +3,6 @@ Component: checks
 State: done
 Class: feature
 Date: 2010-12-22 11:23:13
-Benefit: 1
-Cost: 2
 Fun: 0
 
 Der if-Check kann manchmal die Bandbreite nicht korrekt erkennen

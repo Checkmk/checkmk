@@ -1,8 +1,6 @@
 Title: Snapins should not show error on Nagios reload
 Component: multisite
-Benefit: 1
 State: open
-Cost: 2
 Date: 2011-03-10 11:06:15
 Class: feature
 

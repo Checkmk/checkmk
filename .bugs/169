@@ -3,8 +3,6 @@ Component: wato
 State: done
 Class: bug
 Date: 2011-03-02 09:45:16
-Benefit: 4
-Cost: 2
 Fun: 0
 
 In some strange cases WATO seems to loose services:

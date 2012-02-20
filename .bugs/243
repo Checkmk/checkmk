@@ -3,8 +3,6 @@ Component: bi
 State: wontfix
 Class: bug
 Date: 2011-04-07 17:52:29
-Benefit: 1
-Cost: 2
 Fun: 0
 
 Invalid regular expression '(zbghora12)):((zbghora13)$': unbalanced parenthesis.

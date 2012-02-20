@@ -1,0 +1,27 @@
+title: Monitor status of RLUNs in Fujitsu ETERNUS DX80 S2 storage systems
+agents: SNMP
+author: Philipp Hoefflin <hoefflin+cmk@fuh-e.de>
+license: GPLv2
+distribution: none
+description:
+ This check monitors the state of an RLUN in
+ a storage system from Fujitsu that support the
+ FJDARY-E100-MIB like the ETERNUS DX80 S2.
+
+ Note: Unfortunately the MIB does not provide any information
+ about the exact meanings of the state objects of the RLUNs
+ (hex dumps). Follwing assumptions have been made based on some
+ simple Tests: {A0} in byte 4 means "present", {08} in byte 3
+ means "rebuilding", {07} in byte 3 means "copyback", {41} in
+ byte 3 means "spare is in use" and {00} in byte 3 means "normal state".
+ Please mail me, if you have more profound information...
+
+ This is an adaption of the corresponding fjdarye60 check.
+
+item:
+ The index of the RLUN in the SNMP table (integer). The first RLUN usually
+ has index {1}.
+
+inventory:
+ All RLUNs with byte 4 being {A0} (assumed to mean "present") are inventorized.
+

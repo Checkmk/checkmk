@@ -1,10 +1,8 @@
 Title: blade_bays only supports 16 slots/bays
 Component: checks
-Cost: 3
 Date: 2011-10-21 12:14:43
 State: done
 Class: bug
-Benefit: 5
 Fun: 0
 Targetversion: 
 

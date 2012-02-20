@@ -3,8 +3,6 @@ Component: livestatus
 State: done
 Class: nastiness
 Date: 2010-12-21 12:11:12
-Benefit: 1
-Cost: 3
 Fun: 0
 
 Wenn ich im Thruk im Suchfenster einfach Enter drücke, kommt folgende Query bei raus:

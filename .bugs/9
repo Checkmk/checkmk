@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: bug
 Date: 2010-12-21 11:01:09
-Benefit: 4
-Cost: 3
 Fun: 0
 
 Multisite: Endgültig kompatibel mit IE machen. Bekannte Probleme:

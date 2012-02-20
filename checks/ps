@@ -40,13 +40,14 @@ inventory_processes_perf = []
 ANY_USER = None
 GRAB_USER = False
 
+def inventory_ps(info):
+    return inventory_ps_common(inventory_processes, info)
 
-def inventory_ps(check_name, info):
+def inventory_ps_perf(info):
+    return inventory_ps_common(inventory_processes_perf, info)
+
+def inventory_ps_common(invdata, info):
     inventory = []
-    if check_name == "ps":
-        invdata = inventory_processes
-    else:
-        invdata = inventory_processes_perf
 
     for inventry in invdata:
         # New in 1.1.7i1: inventory_processes may be prefixed with list of
@@ -69,7 +70,9 @@ def inventory_ps(check_name, info):
         servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax = inventry
 
         num_perc_s = servicedesc.count("%s")
-        for ps in info:
+        for line in info:
+            # First entry in line is the node name or None for non-clusters
+            ps = line[1:]
             l_user = [userspec]
             matches = process_matches(ps, pattern, l_user)
             if matches != False:
@@ -171,9 +174,14 @@ def check_procs(item, params, info, with_perfdata):
     percent_cpu    = 0.0
     extended_perfdata = False
 
-    for ps in info:
+    running_on = set([]) # collect information about nodes the processes run on
+    for line in info:
+        node_name = line[0]
+        ps = line[1:]
         if process_matches(ps, procname, [user]) != False:
             count += 1
+            if node_name != None:
+                running_on.add(node_name)
             if ps[0][0] == '(':
                 addinfo = ps[0][1:-1].split(",")
                 if len(addinfo) >= 4: # extended performance data
@@ -201,12 +209,31 @@ def check_procs(item, params, info, with_perfdata):
     else:
         perfdata = []
 
-    if count > warnmax or count < warnmin:
-        return (2, "CRIT - %d processes (ok from %d to %d)" % (count, okmin, okmax), perfdata)
-    elif count > okmax or count < okmin:
-        return (1, "WARN - %d processes (ok from %d to %d)" % (count, okmin, okmax), perfdata)
-    else:
-        return (0, "OK - %d processes" % count, perfdata)
+    infotext = " - %d processes" % count
+    if running_on:
+        infotext += " [running on %s]" % ", ".join(running_on)
 
-check_info['ps']      = (lambda i,p,n: check_procs(i,p,n,False), "proc_%s", 0, inventory_ps)
-check_info['ps.perf'] = (lambda i,p,n: check_procs(i,p,n,True),  "proc_%s", 1, inventory_ps)
+    if count > warnmax or count < warnmin:
+        return (2, "CRIT" + infotext + " (ok from %d to %d)" % (okmin, okmax), perfdata)
+    elif count > okmax or count < okmin:
+        return (1, "WARN" + infotext + " (ok from %d to %d)" % (okmin, okmax), perfdata)
+    else:
+        return (0, "OK" + infotext, perfdata)
+
+check_info['ps'] = {
+    "check_function"          : lambda i,p,n: check_procs(i,p,n,False),
+    "inventory_function"      : inventory_ps,
+    "service_description"     : "proc_%s",
+    "has_perfdata"            : False,
+    "node_info"               : True, # add first column with actual host name
+    "group"                   : "ps",
+}
+
+check_info['ps.perf'] = {
+    "check_function"          : lambda i,p,n: check_procs(i,p,n,True),
+    "inventory_function"      : inventory_ps_perf,
+    "service_description"     : "proc_%s",
+    "has_perfdata"            : True,
+    "node_info"               : True, # add first column with actual host name
+    "group"                   : "ps",
+}

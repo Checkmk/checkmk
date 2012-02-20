@@ -265,6 +265,7 @@ class Filesize(Integer):
 class TextAscii(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
+        self._label    = kwargs.get("label")
         self._size     = kwargs.get("size", 30)
         self._strip    = kwargs.get("strip", True)
         self._allow_empty = kwargs.get("allow_empty", True)
@@ -278,6 +279,9 @@ class TextAscii(ValueSpec):
         return ""
 
     def render_input(self, varprefix, value):
+        if self._label:
+            html.write(self._label)
+            html.write("&nbsp;")
         html.text_input(varprefix, str(value), size = self._size)
 
     def value_to_text(self, value):
@@ -475,9 +479,14 @@ class ListOfStrings(ValueSpec):
 class Float(Integer):
     def __init__(self, **kwargs):
         Integer.__init__(self, **kwargs)
+        self._decimal_separator = kwargs.get("decimal_separator", ".")
+        self._display_format = kwargs.get("display_format", "%.2f")
 
     def canonical_value(self):
         return float(Integer.canonical_value(self))
+
+    def value_to_text(self, value):
+        return Integer.value_to_text(self, value).replace(".", self._decimal_separator)
 
     def from_html_vars(self, varprefix):
         try:
@@ -595,7 +604,9 @@ class DropdownChoice(ValueSpec):
 # The currently selected ValueSpec will be displayed.
 # The text representations of the ValueSpecs will be used as texts.
 # A ValueSpec of None is also allowed and will return
-# the value None.
+# the value None. It is also allowed to leave out the
+# value spec for some of the choices (which is the same as
+# using None).
 # The resulting value is either a single value (if no 
 # value spec is defined for the selected entry) or a pair
 # of (x, y) where x is the value of the selected entry and
@@ -604,7 +615,11 @@ class DropdownChoice(ValueSpec):
 class CascadingDropdown(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._choices = kwargs["choices"]
+        self._choices = []
+        for entry in kwargs["choices"]:
+            if len(entry) == 2:
+                entry = entry + (None,)
+            self._choices.append(entry)
         self._separator = kwargs.get("separator", ", ") 
         self._html_separator = kwargs.get("html_separator", "<br>") 
         self._sorted = kwargs.get("sorted", True)
@@ -622,7 +637,7 @@ class CascadingDropdown(ValueSpec):
             options.append((str(nr), title))
             if value == val or (
                 type(value) == tuple and value[0] == val):
-                def_val = nr
+                def_val = str(nr)
 
         vp = varprefix + "_sel"
         onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(self._choices))  
@@ -642,13 +657,14 @@ class CascadingDropdown(ValueSpec):
                 else:
                     def_val = vs.default_value()
                     disp = "none"
-                html.write('<div id="%s_%s_sub" style="display: %s">' % (varprefix, nr, disp))
+                html.write('<span id="%s_%s_sub" style="display: %s">' % (varprefix, nr, disp))
                 vs.render_input(vp, def_val)
-                html.write('</div>')
+                html.write('</span>')
 
     def value_to_text(self, value):
         for val, title, vs in self._choices:
-            if value[0] == val:
+            if (vs and value[0] == val) or \
+               (value == val):
                 if not vs:
                     return title
                 else:
@@ -846,7 +862,7 @@ class OptionalDropdownChoice(ValueSpec):
         for val, title in self._choices:
             if val == value:
                 return
-        self._explicit.validate_datatype(self, value, varprefix + "_ex")
+        self._explicit.validate_datatype(value, varprefix + "_ex")
 
 
 # Input of date with optimization for nearby dates

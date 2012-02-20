@@ -308,16 +308,25 @@ warn_marker    = '<b class="stmark state1">WARN</b>'
 crit_marker    = '<b class="stmark state2">CRIT</b>'
 unknown_marker = '<b class="stmark state3">UNKN</b>'
 
-def format_plugin_output(output):
-    return output.replace("(!)", warn_marker) \
-           .replace("(!!)", crit_marker) \
-           .replace("(?)", unknown_marker)
+def format_plugin_output(row, output):
+    output =  output.replace("(!)", warn_marker) \
+              .replace("(!!)", crit_marker) \
+              .replace("(?)", unknown_marker)
+    if "[running on" in output:
+        a = output.index("[running on")
+        e = output.index("]", a)
+        hosts = output[a+12:e].replace(" ","").split(",")
+        css, h = paint_host_list(row["site"], hosts)
+        output = output[:a] + "running on " + h + output[e+1:]
+
+    return output
+
 
 multisite_painters["svc_plugin_output"] = {
     "title"   : _("Output of check plugin"),
     "short"   : _("Status detail"),
     "columns" : ["service_plugin_output"],
-    "paint"   : lambda row: ("", format_plugin_output(row["service_plugin_output"])),
+    "paint"   : lambda row: ("", format_plugin_output(row, row["service_plugin_output"])),
     "sorter"  : 'svcoutput',
 }
 multisite_painters["svc_long_plugin_output"] = {
@@ -1549,7 +1558,7 @@ multisite_painters["log_plugin_output"] = {
     "title"   : _("Log: output of check plugin"),
     "short"   : _("Check output"),
     "columns" : ["log_plugin_output"],
-    "paint"   : lambda row: ("", format_plugin_output(row["log_plugin_output"])),
+    "paint"   : lambda row: ("", format_plugin_output(row, row["log_plugin_output"])),
 }
 
 multisite_painters["log_attempt"] = {

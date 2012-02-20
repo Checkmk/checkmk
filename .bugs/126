@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: nastiness
 Date: 2011-02-09 12:04:09
-Benefit: 2
-Cost: 1
 Fun: 0
 
 If you press the reschedule button on the Check_MK service then it

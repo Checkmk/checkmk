@@ -2,8 +2,6 @@ Title: Check for duplicate host tags values
 Component: wato
 State: done
 Class: bug
-Benefit: 1
-Cost: 1
 Date: 2011-12-06 12:18:18
 Targetversion: 1.2.0
 

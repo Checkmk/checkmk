@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: bug
 Date: 2011-02-16 11:49:44
-Benefit: 2
-Cost: 1
 Fun: 0
 
 Somehow this feature is broken.

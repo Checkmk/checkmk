@@ -61,7 +61,9 @@ register_rule(group,
             ( "packets",
               Integer(
                   title = _("Number of packets"),
-                  help = _("Number ICMP echo request packets to send to the target host"),
+                  help = _("Number ICMP echo request packets to send to the target host on each "
+                           "check execution. All packets are sent directly on check execution. Afterwards "
+                           "the check waits for the incoming packets."),
                   minvalue = 1,
                   maxvalue = 20,
                )),
@@ -803,7 +805,8 @@ checkgroups.append((
     "mailqueue_length",
     _("Number of mails in outgoing mail queue"),
     Tuple(
-          help = _("This levels is applied to the number of Email that are currently in the outgoing mail queue."),
+          help = _("These levels are applied to the number of Email that are "
+                   "currently in the outgoing mail queue."),
           elements = [
               Integer(title = _("Warning at"), label = _("mails")),
               Integer(title = _("Critical at"), label = _("mails"))]),
@@ -814,6 +817,55 @@ checkgroups.append((
     _("Display the system's uptime as a check"),
     None,
     None, None))
+
+checkgroups.append((
+    "zpool_status",
+    _("Check ZFS Storage Pool status"),
+    None,
+    None, None))
+
+checkgroups.append((
+    "room_temperature",
+    _("Room temperature (e.g. external thermal sensors in datacenters)"),
+    Tuple(
+        help = _("Temperature levels for external thermometers that are used "
+                 "for monitoring the temperature of a datacenter. An example "
+                 "is the webthem from W&amp;T."),
+      elements = [
+          Integer(title = "warning at", unit = u"°C"),
+          Integer(title = "critical at", unit = u"°C"),
+      ]),
+    TextAscii(
+        title = _("Thermomether ID"),
+        help = _("The identificator of the themal sensor.")),
+    "first"))
+
+checkgroups.append((
+    "wmic_process",
+    _("Memory and CPU consumption of processes on Windows (via WMI)"),
+    Tuple(
+        elements = [
+            TextAscii(
+                title = _("Name of the process"),
+                allow_empty = False,
+            ),
+            Integer(title = _("Memory waring at"), unit = "MB"),
+            Integer(title = _("Memory critical at"), unit = "MB"),
+            Integer(title = _("Pagefile warning at"), unit = "MB"),
+            Integer(title = _("Pagefile critical at"), unit = "MB"), 
+            Percentage(title = _("CPU usage warning at")),
+            Percentage(title = _("CPU usage critical at")),
+        ],
+    ),
+    TextAscii(
+        title = _("Process name for usage in the Nagios service description"),
+        allow_empty = False),
+    "first"))
+
+
+
+            
+
 
 # Create rules for check parameters of inventorized checks
 for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:

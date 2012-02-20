@@ -1,10 +1,8 @@
 Title: aix ps check does not count threads correctly
 Component: checks
-Cost: 1
 Date: 2011-10-21 13:12:14
 State: done
 Class: bug
-Benefit: 1
 Fun: 0
 Targetversion: 1.1.12
 

@@ -1,8 +1,6 @@
 Title: define_host/servicegroups per default True
 Component: core
-Benefit: 1
 State: open
-Cost: 1
 Date: 2011-02-15 15:14:53
 Class: feature
 

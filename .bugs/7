@@ -3,8 +3,6 @@ Component: livestatus
 State: done
 Class: feature
 Date: 2010-12-21 10:56:28
-Benefit: 3
-Cost: 1
 Fun: 0
 
 Livestatus hält ja ohnehin einen Cache der Timeperiods. Immer

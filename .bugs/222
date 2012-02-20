@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: feature
 Date: 2011-03-10 11:07:54
-Benefit: 2
-Cost: 3
 Fun: 0
 
 Quicksearch should also do a refresh every 10 Seconds but only retrieve

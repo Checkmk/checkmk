@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: bug
 Date: 2011-01-27 17:02:58
-Benefit: 2
-Cost: 1
 Fun: 0
 
 When you add tooltips to a group column in the view editor,

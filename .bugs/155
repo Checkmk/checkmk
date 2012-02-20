@@ -2,8 +2,6 @@ Title: check_mk -I should accept tags
 Component: core
 State: done
 Class: feature
-Benefit: 2
-Cost: 1
 Date: 2011-02-21 17:42:12
 Targetversion: future
 

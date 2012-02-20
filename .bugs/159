@@ -1,8 +1,6 @@
 Title: Make PING timeouts configurable via main.mk
 Component: core
-Benefit: 3
 State: open
-Cost: 2
 Date: 2011-02-27 12:33:39
 Class: feature
 

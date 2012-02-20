@@ -1,8 +1,6 @@
 Title: Provide monitoring data of Livestatus threads
 Component: livestatus
-Benefit: 1
 State: open
-Cost: 1
 Date: 2011-11-10 17:11:19
 Targetversion: future
 Class: feature

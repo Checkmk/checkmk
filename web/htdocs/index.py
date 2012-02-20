@@ -240,6 +240,10 @@ def handler(req, profiling = True):
                     # While api call don't show the login dialog
                     raise MKUnauthenticatedException(_('You are not authenticated.'))
 
+                # Initialize the i18n for the login dialog. This might be overridden
+                # later after user login
+                load_language(html.var("lang", config.get_language()))
+
                 # After auth check the regular page can be shown
                 result = login.page_login()
                 if type(result) == tuple:
@@ -280,6 +284,11 @@ def handler(req, profiling = True):
                 reason += _("<b>You do not have any roles.</b> ")
             reason += _("If you think this is an error, "
                         "please ask your administrator to check the permissions configuration.")
+
+            if config.auth_type == 'cookie':
+                reason += _('<p>You have been logged out. Please reload the page to re-authenticate.</p>')
+                login.del_auth_cookie()
+
             raise MKAuthException(reason)
 
         # General access allowed. Now connect to livestatus

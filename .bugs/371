@@ -3,8 +3,6 @@ Component: wato
 State: done
 Class: bug
 Date: 2011-09-15 10:34:11
-Benefit: 1
-Cost: 1
 Fun: 0
 
 If you select several hosts and use the bulk move dropdown from the

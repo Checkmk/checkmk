@@ -3,8 +3,6 @@ Component: checks
 State: done
 Class: bug
 Date: 2011-03-25 09:39:07
-Benefit: 2
-Cost: 2
 Fun: 0
 
 Der if/if64 Check unterschlägt doppelte Interfaces, wenn ein Host mehrere Interfaces

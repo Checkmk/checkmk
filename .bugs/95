@@ -1,8 +1,6 @@
 Title: Improve output of relative timestamps (since, ago, in)
 Component: multisite
-Benefit: 1
 State: open
-Cost: 1
 Date: 2011-01-12 08:09:36
 Class: feature
 

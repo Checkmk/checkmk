@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: nastiness
 Date: 2011-03-01 14:42:34
-Benefit: 2
-Cost: 4
 Fun: 0
 
 The problem is that the host_state is not fetched via livestatus. These code parts were written by sir hack-a-lot ;-).

@@ -74,8 +74,19 @@ def check_cpu_threads(item, params, info):
     else:
         return (0, "OK - %d threads" % (nthreads,), perfdata)
 
-check_info['cpu.loads'] = (check_cpu_load, "CPU load", 1,  inventory_cpu_load )
-checkgroup_of['cpu.loads'] = "cpu_load"
+check_info["cpu.loads"] = {
+    "check_function"        : check_cpu_load,
+    "inventory_function"    : inventory_cpu_load,
+    "service_description"   : "CPU load",
+    "has_perfdata"          : True,
+    "group"                 : "cpu_load",
+}
 
-check_info['cpu.threads'] = (check_cpu_threads, "Number of threads", 1,  inventory_cpu_threads)
-checkgroup_of['cpu.threads'] = "threads"
+check_info["cpu.threads"] = {
+    "check_function"        : check_cpu_threads,
+    "inventory_function"    : inventory_cpu_threads,
+    "service_description"   : "Number of threads",
+    "has_perfdata"          : True,
+    "group"                 : "threads",
+}
+

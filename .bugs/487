@@ -1,8 +1,6 @@
 Title: Add optional comment when restarting Nagios via WATO
 Component: wato
-Benefit: 1
 State: open
-Cost: 1
 Date: 2011-12-08 17:03:28
 Targetversion: 1.2.0
 Class: feature

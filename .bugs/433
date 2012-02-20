@@ -1,8 +1,6 @@
 Title: cmk -II should keep services on error
 Component: core
-Benefit: 1
 State: open
-Cost: 2
 Date: 2011-11-10 11:52:56
 Targetversion: future
 Class: nastiness

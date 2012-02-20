@@ -1,10 +1,8 @@
 Title: Check plugins are executed as root
 Component: livecheck
-Cost: 1
 Date: 2011-11-28 08:20:20
 State: done
 Class: bug
-Benefit: 2
 Fun: 0
 Targetversion: 1.1.13i1
 

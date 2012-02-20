@@ -2,8 +2,6 @@ Title: Split SNMPv2 and snmpwulkwalk options
 Component: core
 State: done
 Class: nastiness
-Benefit: 4
-Cost: 2
 Date: 2011-11-29 15:16:00
 Targetversion: 1.1.13i1
 

@@ -398,6 +398,10 @@ if __name__ == "__main__":
                     raise
                 sys.exit(5)
 
+    # Now convert check_info to new format.
+    convert_check_info()
+
+
 
 #   +----------------------------------------------------------------------+
 #   |                    ____ _               _                            |
@@ -408,12 +412,6 @@ if __name__ == "__main__":
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def have_perfdata(checkname):
-    try:
-        return check_info[checkname][2]
-    except:
-        return False
-
 def output_check_info():
     print "Available check types:"
     print
@@ -423,14 +421,13 @@ def output_check_info():
 
     checks_sorted = check_info.items()
     checks_sorted.sort()
-    for check_type, info in checks_sorted:
+    for check_type, check in checks_sorted:
         try:
-            func, itemstring, have_perfdata, invfunc = info
-            if have_perfdata == 1:
+            if check["has_perfdata"]:
                 p = tty_green + tty_bold + "yes" + tty_normal
             else:
                 p = "no"
-            if invfunc == no_inventory_possible:
+            if check["inventory_function"] == None:
                 i = "no"
             else:
                 i = tty_blue + tty_bold + "yes" + tty_normal
@@ -441,7 +438,7 @@ def output_check_info():
                 typename = tty_yellow + "tcp " + tty_normal
 
             print (tty_bold + "%-19s" + tty_normal + "   %s     %-3s    %-3s    %s") % \
-                  (check_type, typename, p, i, itemstring)
+                  (check_type, typename, p, i, check["service_description"])
         except Exception, e:
             sys.stderr.write("ERROR in check_type %s: %s\n" % (check_type, e))
 
@@ -483,15 +480,14 @@ def hosttags_match_taglist(hosttags, required_tags):
             for t in hosttags:
                 if t.startswith(tag):
                     matches = True
-            if not matches:
-                return False
+                    break
 
         else:
-            if (tag in hosttags) == negate:
-                return False
+            matches = (tag in hosttags)
 
-        if (tag in hosttags) == negate:
+        if matches == negate:
             return False
+
     return True
 
 #   +----------------------------------------------------------------------+
@@ -634,8 +630,7 @@ def get_snmp_character_encoding(hostname):
         return entries[0]
 
 def check_uses_snmp(check_type):
-    check_name = check_type.split(".")[0]
-    return snmp_info.has_key(check_name)
+    return snmp_info.get(check_type.split(".")[0]) != None
 
 def is_snmp_host(hostname):
     return in_binary_hostlist(hostname, snmp_hosts)
@@ -739,41 +734,38 @@ def snmp_scan(hostname, ipaddress):
         return []
 
     found = []
-    items = snmp_scan_functions.items()
-    items.sort()
-    for checktype, detect_function in items:
-        if checktype in ignored_checktypes:
+    for check_type, check in check_info.items():
+        if check_type in ignored_checktypes:
             continue
-        try:
-            if detect_function(lambda oid: get_single_oid(hostname, ipaddress, oid)):
-                found.append(checktype)
-                if opt_verbose:
-                    sys.stdout.write(tty_green + tty_bold + checktype + " " + tty_normal)
-                    sys.stdout.flush()
-        except:
-            pass
-
-    # Now try all checks not having a scan function
-    items = check_info.keys()
-    items.sort()
-    for checktype in items:
-        if checktype in ignored_checktypes:
+        elif not check_uses_snmp(check_type):
             continue
-
-        datatype = checktype.split('.')[0]
-        if not check_uses_snmp(datatype):
-            continue # no snmp check
-        if checktype not in snmp_scan_functions:
+        basename = check_type.split(".")[0]
+        # The scan function should be assigned to the basename, because
+        # subchecks sharing the same SNMP info of course should have
+        # an identical scan function. But some checks do not do this
+        # correctly
+        scan_function = snmp_scan_functions.get(check_type,
+                snmp_scan_functions.get(basename))
+        if scan_function:
+            try:
+                if scan_function(lambda oid: get_single_oid(hostname, ipaddress, oid)):
+                    found.append(check_type)
+                    if opt_verbose:
+                        sys.stdout.write(tty_green + tty_bold + check_type
+                           + " " + tty_normal)
+                        sys.stdout.flush()
+            except:
+                pass
+        else:
+            found.append(check_type)
             if opt_verbose:
-                sys.stdout.write(tty_blue + tty_bold + checktype + tty_normal + " ")
+                sys.stdout.write(tty_blue + tty_bold + check_type \
+                    + tty_normal + " ")
                 sys.stdout.flush()
-            found.append(checktype)
 
     if opt_verbose:
-        if found == []:
-            sys.stdout.write("nothing detected.\n")
-        else:
-            sys.stdout.write("\n")
+        sys.stdout.write("\n")
+    found.sort()
     return found
 
 
@@ -1034,20 +1026,20 @@ def snmp_port_spec(hostname):
         return ":%d" % port
 
 
-def service_description(checkname, item):
-    if checkname not in check_info:
+def service_description(check_type, item):
+    if check_type not in check_info:
         if item:
-            return "Unimplmented check %s / %s" % (checkname, item)
+            return "Unimplmented check %s / %s" % (check_type, item)
         else:
-            return "Unimplemented check %s" % checkname
+            return "Unimplemented check %s" % check_type
 
         # raise MKGeneralException("Unknown check type '%s'.\n"
-        #                         "Please use check_mk -L for a list of all check types.\n" % checkname)
+        #                         "Please use check_mk -L for a list of all check types.\n" % check_type)
 
     # use user-supplied service description, of available
-    descr_format = service_descriptions.get(checkname)
+    descr_format = service_descriptions.get(check_type)
     if not descr_format:
-        descr_format = check_info[checkname][1]
+        descr_format = check_info[check_type]["service_description"]
 
     # Note: we strip the service description (remove spaces).
     # One check defines "Pages %s" as a desription, but the item
@@ -1612,7 +1604,7 @@ def create_nagios_servicedefs(outfile, hostname):
 
         else:
             used_descriptions[description] = ( checkname, item )
-        if have_perfdata(checkname):
+        if check_info[checkname]["has_perfdata"]:
             template = passive_service_template_perf
         else:
             template = passive_service_template
@@ -1923,9 +1915,9 @@ def create_nagios_config_contacts(outfile):
 
 def inventorable_checktypes(what): # snmp, tcp, all
     checknames = [ k for k in check_info.keys()
-                   if check_info[k][3] != no_inventory_possible
-#                   and (k not in ignored_checktypes)
-                   and (what == "all" or ((k.split('.')[0] in snmp_info) == (what == "snmp")))
+                   if check_info[k]["inventory_function"] != None
+                   and (what == "all" 
+                        or check_uses_snmp(k) == (what == "snmp"))
                  ]
     checknames.sort()
     return checknames
@@ -1963,7 +1955,9 @@ def do_snmp_scan(hostnamelist, check_only=False, include_state=False):
 
 def make_inventory(checkname, hostnamelist, check_only=False, include_state=False):
     try:
-        inventory_function = check_info[checkname][3]
+        inventory_function = check_info[checkname]["inventory_function"]
+        if inventory_function == None:
+            inventory_function = no_inventory_possible
     except KeyError:
         sys.stderr.write("No such check type '%s'. Try check_mk -L.\n" % checkname)
         sys.exit(1)
@@ -2038,6 +2032,13 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
             checkname_base = checkname.split('.')[0]    # make e.g. 'lsi' from 'lsi.arrays'
             try:
                 info = get_realhost_info(hostname, ipaddress, checkname_base, inventory_max_cachefile_age)
+                # Add information about nodes if check wants this
+                if check_info[checkname]["node_info"]:
+                    if cluster_of(hostname):
+                        add_host = hostname
+                    else:
+                        add_host = None
+                    info = [ [add_host] + line for line in info ]
             except MKAgentError, e:
                 # This special handling is needed for the inventory check. It needs special
                 # handling for WATO.
@@ -2073,7 +2074,8 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                     try:
                         inventory = inventory_function(checkname, info) # inventory is a list of pairs (item, current_value)
                     except Exception, ee:
-                        raise e # raise original exception
+                        # Let the first exception happen again
+                        inventory_function(info)
 
                 if inventory == None: # tolerate if function does no explicit return
                     inventory = []
@@ -2404,15 +2406,17 @@ no_inventory_possible = None
 
     # Do we need to load the SNMP module? This is the case, if the host
     # has at least one SNMP based check. Also collect the needed check
-    # types.
+    # types and sections.
     need_snmp_module = False
-    needed_types = set([])
-    for checktype, item, param, descr, aggr in check_table:
-        if checktype not in check_info:
-            sys.stderr.write('Warning: Ignoring missing check %s.\n' % checktype)
+    needed_check_types = set([])
+    needed_sections = set([])
+    for check_type, item, param, descr, aggr in check_table:
+        if check_type not in check_info:
+            sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_type)
             continue
-        needed_types.add(checktype.split(".")[0])
-        if check_uses_snmp(checktype):
+        needed_sections.add(check_type.split(".")[0])
+        needed_check_types.add(check_type)
+        if check_uses_snmp(check_type):
             need_snmp_module = True
 
     if need_snmp_module:
@@ -2425,9 +2429,10 @@ no_inventory_possible = None
     # We need to include all those plugins that are referenced in the host's
     # check table
     filenames = []
-    for checktype in needed_types:
+    for check_type in needed_check_types:
+        basename = check_type.split(".")[0]
         # Add library files needed by check (also look in local)
-        for lib in check_includes.get(checktype, []):
+        for lib in set(check_includes.get(basename, [])):
             if local_checks_dir and os.path.exists(local_checks_dir + "/" + lib):
                 to_add = local_checks_dir + "/" + lib
             else:
@@ -2435,11 +2440,12 @@ no_inventory_possible = None
             if to_add not in filenames:
                 filenames.append(to_add)
 
-        # Now add check file itself
-        path = find_check_plugin(checktype)
+        # Now add check file itself (convert check_type to section)
+        section = check_type.split(".")[0]
+        path = find_check_plugin(section)
         if not path:
-            raise MKGeneralException("Cannot find plugin for check type %s (missing file %s/%s)\n" % \
-                                     (checktype, checks_dir, checktype))
+            raise MKGeneralException("Cannot find check file %s needed for check type %s" % \
+                                     (section, check_type))
 
         if path not in filenames:
             filenames.append(path)
@@ -2461,6 +2467,9 @@ no_inventory_possible = None
         output.write("\n\n")
         if opt_verbose:
             sys.stderr.write(" %s%s%s" % (tty_green, filename.split('/')[-1], tty_normal))
+
+    # Make sure all checks are converted to the new API
+    output.write("convert_check_info()\n")
 
     # handling of clusters
     if is_cluster(hostname):
@@ -2526,6 +2535,11 @@ no_inventory_possible = None
     # influence the check itself - not those needed during inventory.
     for var in check_config_variables:
         output.write("%s = %r\n" % (var, eval(var)))
+
+    # The same for those checks that use the new API
+    for check_type in needed_check_types:
+        for var in check_info[check_type].get("check_config_variables", []):
+            output.write("%s = %r\n" % (var, eval(var)))
 
     # perform actual check
     output.write("do_check(%r, %r)\n" % (hostname, ipaddress))
@@ -4006,8 +4020,10 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
     global vars_before_config, final_mk, local_mk, checks
 
     # Initialize dictionary-type default levels variables
-    for varname in check_default_levels.values():
-        globals()[varname] = {}
+    for check in check_info.values():
+        def_var = check.get("default_levels_variable")
+        if def_var:
+            globals()[def_var] = {}
 
     # Create list of all files to be included
     if with_conf_d:
@@ -4096,7 +4112,7 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
             # at least those keys defined in the factory
             # settings are present in the parameters
             if type(params) == dict:
-                def_levels_varname = check_default_levels.get(checktype)
+                def_levels_varname = check_info[checktype].get("default_levels_variable")
                 if def_levels_varname:
                     for key, value in factory_settings.get(def_levels_varname, {}).items():
                         if key not in params:
@@ -4165,7 +4181,7 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
 # the values code in autochecks (given as parameter params)
 def compute_check_parameters(host, checktype, item, params):
     # Handle dictionary based checks
-    def_levels_varname = check_default_levels.get(checktype)
+    def_levels_varname = check_info[checktype].get("default_levels_variable")
     if def_levels_varname:
         vars_before_config.add(def_levels_varname)
 
@@ -4220,7 +4236,7 @@ def compute_check_parameters(host, checktype, item, params):
     return params
 
 def get_checkgroup_parameters(host, checktype, item):
-    checkgroup = checkgroup_of.get(checktype)
+    checkgroup = check_info[checktype]["group"]
     if not checkgroup:
         return []
     rules = checkgroup_parameters.get(checkgroup)
@@ -4498,7 +4514,7 @@ if __name__ == "__main__":
                                 missing.append(node)
                         if len(missing) == 0:
                             if opt_verbose:
-                                sys.stdout.write("All nodes of %s specified, dropping checks of %s, too.\n" % (clust, clust))
+                                sys.stdout.write("All nodes of %s specified, dropping checks of %s, too.\n" % (clust, node))
                             remove_autochecks_of(clust, checknames)
                         else:
                             sys.stdout.write("Warning: %s is part of cluster %s, but you didn't specify %s as well.\nChecks on %s will be kept.\n" %

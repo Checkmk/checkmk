@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: bug
 Date: 2011-01-24 15:40:40
-Benefit: 1
-Cost: 1
 Fun: 0
 
 If you hover of a host square the name of the host should

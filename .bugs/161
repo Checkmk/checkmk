@@ -3,8 +3,6 @@ Component: core
 State: done
 Class: feature
 Date: 2011-02-27 14:08:10
-Benefit: 1
-Cost: 1
 Fun: 0
 
 This avoids problem on some devices. But Might also introduce new ones.

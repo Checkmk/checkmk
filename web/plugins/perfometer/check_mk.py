@@ -300,6 +300,19 @@ def perfometer_cpu_utilization(row, check_command, perf_data):
 perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-winperf_processor.util"] = perfometer_cpu_utilization
 
+def perfometer_hpux_snmp_cs_cpu(row, check_command, perf_data): 
+    h = '<table><tr>'
+    h += perfometer_td(float(perf_data[0][1]), "#60f020")
+    h += perfometer_td(float(perf_data[1][1]), "#ff6000")
+    h += perfometer_td(float(perf_data[2][1]), "#00d080")
+    h += perfometer_td(float(perf_data[3][1]), "#ffffff")
+    h += '</tr></table>'
+    sum = float(perf_data[0][1]) + float(perf_data[1][1]) + float(perf_data[2][1])
+    return "%.0f%%" % sum, h 
+
+perfometers["check_mk-hpux_snmp_cs.cpu"] = perfometer_hpux_snmp_cs_cpu
+
+
 def perfometer_check_mk_uptime(row, check_command, perf_data):
     days,    rest    = divmod(int(perf_data[0][1]), 60*60*24)
     hours,   rest    = divmod(rest,   60*60)

@@ -3,8 +3,6 @@ Component: wato
 State: wontfix
 Class: nastiness
 Date: 2011-08-23 07:46:25
-Benefit: 3
-Cost: 3
 Fun: 0
 
 Es ist nicht mehr möglich cmk --automation Kommandos abzusetzen, wenn man z.B.

@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: bug
 Date: 2010-12-22 11:15:59
-Benefit: 1
-Cost: 4
 Fun: 0
 
 local-Struktur: Hier gibt es scheinbar einen Bug in mod_python.

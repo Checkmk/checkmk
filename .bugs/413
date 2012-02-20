@@ -2,8 +2,6 @@ Title: filesystem_levels aus Dokus entfernen
 Component: docu
 State: done
 Class: bug
-Benefit: 2
-Cost: 1
 Date: 2011-11-07 10:27:18
 Targetversion: 1.1.12
 

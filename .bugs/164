@@ -3,8 +3,6 @@ Component: checks
 State: done
 Class: bug
 Date: 2011-03-01 11:21:46
-Benefit: 1
-Cost: 2
 Fun: 0
 
 Currently only one value is painted. The best way would be probably

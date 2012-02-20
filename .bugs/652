@@ -1,0 +1,9 @@
+Title: Rulesets: not configurable with "secondary tags"
+Component: wato
+State: open
+Date: 2012-02-14 15:54:52
+Targetversion: future
+Class: feature
+
+When e.g. the "snmp" tag is added to the hosts as implicit tag it can not
+be used in rulesets.

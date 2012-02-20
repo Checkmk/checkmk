@@ -3,8 +3,6 @@ Component: checks
 State: wontfix
 Class: feature
 Date: 2011-03-03 13:39:02
-Benefit: 6
-Cost: 6
 Fun: 0
 
 The services check only supports exact match of service names in inventory_services. This should allow pattern match like in other check_mk config parts to make the service selection more flexible.

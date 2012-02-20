@@ -1,0 +1,34 @@
+title: Monitor summarized status of all disks in Fujitsu ETERNUS DX80 S2 storage systems
+agents: SNMP
+author: Philipp Hoefflin <hoefflin+cmk@fuh-e.de>
+license: GPLv2
+distribution: none
+description:
+ This check monitors the reported summary status of all installed
+ physical disks
+ in storage systems from Fujitsu which support the
+ FJDARY-E100.MIB like the ETERNUS DX80 S2.
+ This is an adaption of the corresponding fjdarye60 check.
+
+item:
+ {None}
+
+inventory:
+ If at least one disk is found, exactly one check will be created for
+ the host.
+
+examples:
+ # Expect 5 available(=online) and one spare disk
+ checks += [
+   ( 'arc', 'fjdarye100_disks.summary', None, { "available": 5, "spare": 1 } )
+ ]
+
+[parameters]
+expected_state (dictionary): A dictionary from the statenames to the number
+ of disks expected in that state. Possible state names are:
+ {"available"}, {"broken"}, {"notavailable"}, {"notsupported"},{"present"},
+ {"readying"}, {"recovering"}, {"partbroken"}, {"spare"}, {"formating"},
+ {"unformated"}, {"notexist"}, {"copying"}. The check will report {CRITICAL}
+ if there are not enough disks in at least one state or otherwise {WARNING} if at
+ least one state has an exceeding number of disks.
+

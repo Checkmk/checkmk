@@ -2,8 +2,6 @@ Title: Describe bulkwalk_hosts in SNMP article
 Component: docu
 State: done
 Class: cleanup
-Benefit: 1
-Cost: 1
 Date: 2011-09-15 15:22:36
 Targetversion: future
 

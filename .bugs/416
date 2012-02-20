@@ -1,8 +1,6 @@
 Title: BI: Aggregation Groups snapin should show remote aggregates
 Component: bi
-Benefit: 2
 State: open
-Cost: 2
 Date: 2011-11-29 13:08:56
 Targetversion: 1.1.13i1
 Class: wontfix

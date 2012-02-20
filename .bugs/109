@@ -3,8 +3,6 @@ Component: wato
 State: done
 Class: bug
 Date: 2011-01-26 09:12:21
-Benefit: 4
-Cost: 2
 Fun: 0
 
 If you restart Nagios via WATO, then Apache restarts Nagios

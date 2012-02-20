@@ -1,8 +1,6 @@
 Title: cmk --list-tags soll alle Tags ausgeben
 Component: core
-Benefit: 1
 State: open
-Cost: 1
 Date: 2010-12-21 22:23:00
 Class: feature
 

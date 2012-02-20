@@ -1,8 +1,6 @@
 Title: Enable login without password
 Component: multisite
-Benefit: 1
 State: open
-Cost: 1
 Date: 2011-12-08 16:05:54
 Targetversion: future
 Class: feature

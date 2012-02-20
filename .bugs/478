@@ -1,8 +1,6 @@
 Title: parents ruleset should only use first entry
 Component: core
-Benefit: 1
 State: open
-Cost: 2
 Date: 2011-12-06 11:46:35
 Targetversion: 1.2.0
 Class: feature

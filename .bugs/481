@@ -1,10 +1,8 @@
 Title: Tag group with empty tag does not show default
 Component: wato
-Cost: 1
 Date: 2011-12-06 12:26:37
 State: done
 Class: bug
-Benefit: 1
 Fun: 0
 Targetversion: 1.2.0
 

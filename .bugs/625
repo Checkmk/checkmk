@@ -1,9 +1,9 @@
 Title: OMD: Probleme im Shared-Mode
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-01-23 17:19:31
 Targetversion: 1.2.0
-Class: bug
 
 Hallo Lars,
 
@@ -58,3 +58,6 @@ Danke fuer eine kurze Antwort.
 Gruesse,
 
 Andreas
+
+2012-02-10 12:04:56: changed state open -> done
+Has been fixed in OMD. The etc/htpasswd has now 664 credentials by default.

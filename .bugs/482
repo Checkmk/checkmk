@@ -1,8 +1,6 @@
 Title: Make cmk --checks=local -v Localhost work
 Component: core
-Benefit: 1
 State: open
-Cost: 1
 Date: 2011-12-07 09:37:54
 Targetversion: 1.2.0
 Class: feature

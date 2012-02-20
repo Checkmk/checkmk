@@ -284,6 +284,11 @@ def handler(req, profiling = True):
                 reason += _("<b>You do not have any roles.</b> ")
             reason += _("If you think this is an error, "
                         "please ask your administrator to check the permissions configuration.")
+
+            if config.auth_type == 'cookie':
+                reason += _('<p>You have been logged out. Please reload the page to re-authenticate.</p>')
+                login.del_auth_cookie()
+
             raise MKAuthException(reason)
 
         # General access allowed. Now connect to livestatus

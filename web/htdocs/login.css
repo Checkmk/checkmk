@@ -46,12 +46,13 @@ body.main {
 
 div#login {
     background-image: url("images/login_spotlight.png");
-    width: 605px;
-    height: 410px;
+    background-repeat: no-repeat;
+    width: 770px;
+    height: 605px;
     position: absolute;
     top: 50%;
     left: 50%;
-    margin: -205px 0px 0px -302px;
+    margin: -276px 0px 0px -386px;
     /* border: 1px solid yellow; */
 }
 
@@ -60,7 +61,7 @@ img#login_window {
     height: 230px;
     position: relative;
     left: 10px;
-    top: 10px;
+    top: 160px;
     float: none;
 }
 
@@ -70,35 +71,38 @@ label {
 
 #version {
     position: absolute;
-    top: 25px;
-    left: 420px;
+    text-align: right;
+    width: 150px;
+    top: 173px;
+    left: 415px;
     color: white;
+    font-size: 8pt;
 }
 
 #label_user, #label_pass {
-    left: 174px;
+    left: 264px;
 }
 
 #input_user, #input_pass {
-    left: 250px;
+    left: 330px;
 }
 
 #label_user {
     position: absolute;
-    top: 132px;
+    top: 275px;
 }
 #input_user {
     position: absolute;
-    top: 128px;
+    top: 270px;
 }
 
 #label_pass {
     position: absolute;
-    top: 168px;
+    top: 315px;
 }
 #input_pass {
     position: absolute;
-    top: 164px;
+    top: 310px;
 }
 
 #input_user, #input_pass {
@@ -108,8 +112,8 @@ label {
 
 #button_login {
     position: absolute;
-    top: 190px;
-    left: 415px;
+    top: 345px;
+    left: 505px;
 }
 
 #button_login img {
@@ -119,12 +123,14 @@ label {
 
 #button_text {
     position: absolute;
-    top: 198px;
-    left: 415px;
+    top: 355px;
+    left: 505px;
     text-align: center;
     width: 61px;
     color: white;
     z-index: 100;
+    font-size: 10px;
+    text-transform: uppercase;
 }
 
 #login_error {
@@ -139,8 +145,8 @@ label {
 #foot {
     position: absolute;
     text-align: center;
-    top: 250px;
-    left: 135px;
+    top: 400px;
+    left: 220px;
     width: 350px;
     color: white;
     font-size: 8pt;

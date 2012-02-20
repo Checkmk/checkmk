@@ -3057,6 +3057,7 @@ def log_commit_pending():
     pending = log_dir + "pending.log"
     if os.path.exists(pending):
         os.remove(pending)
+    need_sidebar_reload()
 
 def clear_audit_log():
     path = log_dir + "audit.log"

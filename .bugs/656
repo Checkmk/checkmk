@@ -1,0 +1,27 @@
+Title: Commands help texts
+Component: multisite
+State: open
+Date: 2012-02-20 11:13:34
+Targetversion: future
+Class: feature
+
+Create help texts for commands in the views. Add them as context helps
+
+Custom notification:
+
+  Sends a test notification with the given text for all selected items.
+  This can be used to notify admins about an issue regarding the selected
+  hosts or services.
+  Selecting the forced option the notifications will be sent out ignoring
+  time restrictions.
+  Using the broadcast option you can send out notifications to all contacts
+  (escalated and non-escalated).
+
+Acknowledge:
+
+  When a service problem is acknowledged, future notifications about problems
+  are temporarily disabled until the service changes from its current state.
+  If you want acknowledgement to disable notifications until the service recovers,
+  check the 'Sticky Acknowledgement' checkbox.
+
+In general: Take a look at the nagios cgis there are useful texts for the commands.

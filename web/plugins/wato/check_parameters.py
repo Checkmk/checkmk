@@ -61,7 +61,9 @@ register_rule(group,
             ( "packets",
               Integer(
                   title = _("Number of packets"),
-                  help = _("Number ICMP echo request packets to send to the target host"),
+                  help = _("Number ICMP echo request packets to send to the target host on each "
+                           "check execution. All packets are sent directly on check execution. Afterwards "
+                           "the check waits for the incoming packets."),
                   minvalue = 1,
                   maxvalue = 20,
                )),

@@ -68,10 +68,11 @@ def if_lnx_convert_to_if64(info):
     # in that case.
 
     if_table = []
+    index = 0
     for nic, attr in nic_info.items():
         counters = attr.get("counters", [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-
-        ifIndex = attr["index"]
+        index += 1
+        ifIndex = attr.get("index",index)
         ifDescr = nic
         ifAlias = nic
 

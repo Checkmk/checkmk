@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: bug
 Date: 2011-02-18 09:44:34
-Benefit: 1
-Cost: 1
 Fun: 0
 
 When you enter a view where the display options for the PNP timerange

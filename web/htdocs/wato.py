@@ -4414,9 +4414,13 @@ class CheckTypeSelection(ListChoice):
 
 def edit_value(valuespec, value):
     help = valuespec.help() or ""
-    html.write('<tr><td class=legend><i>%s</i></td>' % help)
+    html.write('<tr>')
+    if help:
+        html.write('<td class=legend><i>%s</i></td>' % help)
+        html.write("<td class=content>")
+    else:
+        html.write('<td colspan=2 class=content>')
 
-    html.write("<td class=content>")
     valuespec.render_input("ve", value)
     html.write("</td></tr>")
 
@@ -7005,7 +7009,11 @@ def load_users():
 
     # Passwords are read directly from the apache htpasswd-file.
     # That way heroes of the command line will still be able to
-    # change passwords with htpasswd.
+    # change passwords with htpasswd. Users *only* appearing
+    # in htpasswd will also be loaded and assigned to the role
+    # they are getting according to the multisite old-style
+    # configuration variables.
+
     filename = defaults.htpasswd_file
     if os.path.exists(filename):
         for line in file(filename):
@@ -7018,12 +7026,12 @@ def load_users():
             if id in result:
                 result[id]["password"] = password
                 result[id]["locked"] = locked
-            elif id in config.admin_users:
+            else:
                 # Create entry if this is an admin user
                 new_user = {
-                    "roles" : [ "admin" ],
+                    "roles"    : config.roles_of_user(id),
                     "password" : password,
-                    "locked" : False
+                    "locked"   : False
                 }
                 result[id] = new_user
             # Other unknown entries will silently be dropped. Sorry...
@@ -8250,7 +8258,7 @@ def mode_edit_ruleset(phase):
             if html.check_transaction():
                 if html.var("_new_rule"):
                     hostname = None
-                    item = None
+                    item = NO_ITEM
                 new_rule = create_rule(rulespec, hostname, item)
                 if hostname:
                     rules[0:0] = [new_rule]
@@ -8471,7 +8479,7 @@ def mode_edit_ruleset(phase):
             title += _(" and %s '%s'") % (rulespec["itemname"], item)
         html.button("_new_host_rule", title)
         html.write(" " + _("or") + " ")
-    html.button("_new_rule", _("General rule in folder: "))
+    html.button("_new_rule", _("Create rule in folder: "))
     html.select("folder", folder_selection(g_root_folder))
     html.write("</p>\n")
     html.hidden_fields()

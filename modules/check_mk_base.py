@@ -305,7 +305,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age):
     # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
     # Please note, that if the check_type is foo.bar then we lookup the
     # snmp info for "foo", not for "foo.bar".
-    oid_info = check_info.get(check_type, {}).get("snmp_info")
+    oid_info = snmp_info.get(check_type.split(".")[0])
     if oid_info:
         content = read_cache_file(cache_relpath, max_cache_age)
         if content:
@@ -735,18 +735,42 @@ def convert_check_info():
             check_function, service_description, has_perfdata, inventory_function = info
             if inventory_function == no_inventory_possible:
                 inventory_function = None
+            basename = check_type.split(".")[0]
 
             check_info[check_type] = {
                 "check_function"          : check_function,
                 "service_description"     : service_description,
                 "has_perfdata"            : not not has_perfdata,
                 "inventory_function"      : inventory_function,
-                "group"                   : checkgroup_of.get(check_type),
+                # Insert check name as group if no group is being defined
+                "group"                   : checkgroup_of.get(check_type, check_type),
                 "snmp_info"               : snmp_info.get(check_type),
-                "snmp_scan_function"      : snmp_scan_functions.get(check_type),
+                # Sometimes the scan function is assigned to the check_type
+                # rather than to the base name.
+                "snmp_scan_function"      : 
+                    snmp_scan_functions.get(check_type,
+                        snmp_scan_functions.get(basename)),
                 "includes"                : check_includes.get(check_type, []),
                 "default_levels_variable" : check_default_levels.get(check_type),
             }
+        else:
+            # Make sure that all keys are present
+            info.setdefault("inventory_function", None)
+            info.setdefault("group", None)
+            info.setdefault("snmp_info", None)
+            info.setdefault("snmp_scan_function", None)
+            info.setdefault("includes", [])
+            info.setdefault("default_levels_variable", None)
+
+    # Now gather snmp_info and snmp_scan_function back to the 
+    # original arrays. Note: these information is tied to a "agent section",
+    # not to a check. Several checks may use the same SNMP info and scan function.
+    for info in check_info.values():
+        basename = check_type.split(".")[0]
+        if info["snmp_info"] and basename not in snmp_info:
+            snmp_info[basename] = info["snmp_info"]
+        if info["snmp_scan_function"] and basename not in snmp_scan_functions:
+            snmp_scan_functions[basename] = info["snmp_scan_function"]
 
 # Loops over all checks for a host, gets the data, calls the check
 # function that examines that data and sends the result to Nagios

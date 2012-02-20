@@ -2,8 +2,6 @@ Title: Set in_notification_period filter in problem views
 Component: multisite
 State: wontfix
 Class: cleanup
-Benefit: 2
-Cost: 2
 Date: 2011-10-28 09:22:31
 Targetversion: 1.2.0
 

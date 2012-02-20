@@ -3,8 +3,6 @@ Component: wato
 State: done
 Class: bug
 Date: 2011-02-16 16:26:02
-Benefit: 1
-Cost: 1
 Fun: 0
 
 If you add checks with checks +=, then WATO should display

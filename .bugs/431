@@ -1,8 +1,6 @@
 Title: Intervals and wait parameters for mrpe
 Component: checks
-Benefit: 4
 State: open
-Cost: 2
 Date: 2011-10-21 15:50:46
 Targetversion: 1.2.0
 Class: feature

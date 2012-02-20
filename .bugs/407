@@ -2,8 +2,6 @@ Title: Painter for normal/retry check interval
 Component: multisite
 State: done
 Class: cleanup
-Benefit: 1
-Cost: 1
 Date: 2011-10-28 10:10:23
 Targetversion: 1.2.0
 

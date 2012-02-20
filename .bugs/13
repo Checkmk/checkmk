@@ -3,8 +3,6 @@ Component: checks
 State: done
 Class: bug
 Date: 2010-12-21 12:12:02
-Benefit: 1
-Cost: 4
 Fun: 0
 
 Ein Drucker sendet per SNMP Latin1

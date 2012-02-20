@@ -1,8 +1,6 @@
 Title: if: allow to configure link speed statically
 Component: checks
-Benefit: 1
 State: open
-Cost: 1
 Date: 2011-02-27 12:24:35
 Class: feature
 

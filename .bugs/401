@@ -2,8 +2,6 @@ Title: IE8: Hiliting of rows in checkbox mode is broken
 Component: multisite
 State: done
 Class: bug
-Benefit: 1
-Cost: 1
 Date: 2011-10-27 18:51:44
 Targetversion: 1.1.12
 

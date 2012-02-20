@@ -3,8 +3,6 @@ Component: checks
 State: done
 Class: cleanup
 Date: 2011-04-20 10:48:22
-Benefit: 2
-Cost: 2
 Fun: 0
 
 There are already a lot of temperature checks. *Each* of them

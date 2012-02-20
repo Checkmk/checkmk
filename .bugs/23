@@ -3,8 +3,6 @@ Component: checks
 State: closed
 Class: cleanup
 Date: 2010-12-21 16:27:39
-Benefit: 1
-Cost: 2
 Fun: 0
 
 z.B. das mit der Magic-Number. Der df-spezifische Code kann dann

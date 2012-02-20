@@ -10,4 +10,4 @@ description:
  has an error the check goes CRITICAL.
 
 inventory:
- The inventory will automatically find zpools.
+ The inventory will create one service per host if there are any pools.

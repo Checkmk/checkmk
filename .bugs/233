@@ -3,8 +3,6 @@ Component: checks
 State: wontfix
 Class: bug
 Date: 2011-04-19 13:49:29
-Benefit: 3
-Cost: 4
 Fun: 0
 
 lnx_if should only rely on ethtool for ethernet interfaces

@@ -3,8 +3,6 @@ Component: checks
 State: done
 Class: bug
 Date: 2011-09-12 09:53:17
-Benefit: 3
-Cost: 2
 Fun: 0
 
 The check does not give WARN crit states at the configured level but one at one degree less than the level

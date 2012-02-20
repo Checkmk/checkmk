@@ -1,10 +1,8 @@
 Title: Multisite Fehler  'module' object has no attribute 'wato_enabled'
 Component: multisite
-Cost: 3
 Date: 2011-11-18 07:46:27
 State: done
 Class: bug
-Benefit: 7
 Fun: 0
 Targetversion: 1.1.12
 

@@ -2,8 +2,6 @@ Title: if checks: Add 0 prefix on port numbers below 10
 Component: core
 State: done
 Class: todo
-Benefit: 3
-Cost: 5
 Date: 2011-02-11 11:17:50
 Targetversion: 1.2.0
 

@@ -3,8 +3,6 @@ Component: core
 State: done
 Class: feature
 Date: 2011-01-24 16:33:31
-Benefit: 1
-Cost: 1
 Fun: 0
 
 The dump of a output (cmk -D) should show the hosts

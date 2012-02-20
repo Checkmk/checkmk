@@ -1,8 +1,6 @@
 Title: Livestatus: relative variants for time columns
 Component: livestatus
-Benefit: 1
 State: open
-Cost: 2
 Date: 2011-10-28 10:17:53
 Targetversion: 
 Class: feature

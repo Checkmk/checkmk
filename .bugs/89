@@ -2,8 +2,6 @@ Title: Re-Enable StatsGroupBy deprecated warning (1.2i1)
 Component: livestatus
 State: done
 Class: cleanup
-Benefit: 1
-Cost: 1
 Date: 2011-01-05 10:33:21
 Targetversion: 1.2.0
 

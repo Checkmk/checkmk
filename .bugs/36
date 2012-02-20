@@ -3,8 +3,6 @@ Component: core
 State: done
 Class: cleanup
 Date: 2010-12-21 20:52:24
-Benefit: 2
-Cost: 2
 Fun: 0
 
 Man könnte das doch evtl. kompatibel mit if machen. Und dann evtl auch die

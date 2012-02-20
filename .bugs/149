@@ -3,8 +3,6 @@ Component: checks
 State: done
 Class: cleanup
 Date: 2011-02-17 15:02:35
-Benefit: 1
-Cost: 1
 Fun: 0
 
 For some people this is confusing...

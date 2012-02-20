@@ -1,8 +1,6 @@
 Title: Precompile und cmk -N parallelisieren
 Component: core
-Benefit: 1
 State: open
-Cost: 3
 Date: 2010-12-21 22:12:32
 Class: feature
 

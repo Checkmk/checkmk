@@ -2,8 +2,6 @@ Title: mem.vmalloc falsche Default Limits
 Component: checks
 State: done
 Class: cleanup
-Benefit: 2
-Cost: 1
 Date: 2011-12-13 14:50:04
 Targetversion: 1.1.13i1
 

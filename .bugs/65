@@ -1,8 +1,6 @@
 Title: hosts/services -> neue Spalte mit expandiertem check_command
 Component: livestatus
-Benefit: 3
 State: open
-Cost: 3
 Date: 2010-12-21 22:23:58
 Class: feature
 

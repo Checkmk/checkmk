@@ -3,8 +3,6 @@ Component: core
 State: closed
 Class: bug
 Date: 2011-03-05 23:02:05
-Benefit: 1
-Cost: 2
 Fun: 0
 
 Somebody said that cmk -N HOSTNAME outputs always all

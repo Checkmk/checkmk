@@ -2,8 +2,6 @@ Title: Keine Counter mehr in den Perfdaten senden
 Component: checks
 State: done
 Class: cleanup
-Benefit: 2
-Cost: 5
 Date: 2010-12-21 21:28:27
 Targetversion: 1.2.0
 

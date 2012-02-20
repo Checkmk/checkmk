@@ -1,8 +1,6 @@
 Title: PING service of ping only hosts shown no 'perfdata' icon in multisite
 Component: core
-Benefit: 4
 State: wontfix
-Cost: 2
 Date: 2011-03-16 11:29:45
 Class: bug
 

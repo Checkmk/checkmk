@@ -3,8 +3,6 @@ Component: checks
 State: done
 Class: feature
 Date: 2011-02-27 13:18:21
-Benefit: 1
-Cost: 1
 Fun: 0
 
 Like the agent based one but retrieved via SNMP.

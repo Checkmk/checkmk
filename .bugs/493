@@ -2,8 +2,6 @@ Title: Repair Perf-O-Meter in single dataset view
 Component: multisite
 State: done
 Class: bug
-Benefit: 1
-Cost: 1
 Date: 2011-12-13 16:47:27
 Targetversion: 1.1.13i1
 

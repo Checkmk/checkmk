@@ -3,8 +3,6 @@ Component: checks
 State: done
 Class: bug
 Date: 2011-03-02 10:51:14
-Benefit: 1
-Cost: 2
 Fun: 0
 
 This is unbelievable. But on Windows popen() on a .txt

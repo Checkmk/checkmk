@@ -1,10 +1,8 @@
 Title: Rename kernel_util_default_levels to cpu_utilization_default_levels
 Component: checks
-Cost: 2
 Date: 2011-02-08 14:45:45
 State: wontfix
 Class: cleanup
-Benefit: 1
 Fun: 0
 Targetversion: 
 

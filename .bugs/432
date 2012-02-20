@@ -2,8 +2,6 @@ Title: cmctc.temp service description
 Component: checks
 State: done
 Class: cleanup
-Benefit: 1
-Cost: 1
 Date: 2011-11-10 09:23:51
 Targetversion: 1.2.0
 

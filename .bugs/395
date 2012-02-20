@@ -3,8 +3,6 @@ Component: core
 State: done
 Class: cleanup
 Date: 2011-10-18 08:51:10
-Benefit: 1
-Cost: 1
 Fun: 0
 
 When a host gets an explicit alias, the host definition will contain

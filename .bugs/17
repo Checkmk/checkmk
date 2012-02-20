@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: bug
 Date: 2010-12-21 12:17:45
-Benefit: 2
-Cost: 3
 Fun: 0
 
 Die Logereignisse von den verschiedenen Sites werden nicht

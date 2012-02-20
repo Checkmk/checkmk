@@ -1,8 +1,6 @@
 Title: Warnung im Logfile, wenn environment_macros an sind
 Component: livestatus
-Benefit: 1
 State: open
-Cost: 1
 Date: 2010-12-21 22:18:56
 Class: feature
 

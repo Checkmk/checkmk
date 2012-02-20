@@ -3,8 +3,6 @@ Component: livestatus
 State: done
 Class: bug
 Date: 2011-01-30 13:15:35
-Benefit: 1
-Cost: 1
 Fun: 0
 
 Beim Neustart von Nagios tauchen teils Fehlermeldungen im Logfile auf:

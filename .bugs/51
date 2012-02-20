@@ -3,8 +3,6 @@ Component: livestatus
 State: done
 Class: cleanup
 Date: 2010-12-21 22:01:17
-Benefit: 1
-Cost: 2
 Fun: 0
 
 Livestatus: Bei den Tabellen hosts und services fehlt die

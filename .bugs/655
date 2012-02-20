@@ -3,6 +3,7 @@ Component: multisite
 State: open
 Date: 2012-02-15 08:51:28
 Targetversion: future
+Effort: 10
 Class: bug
 
 The background colors are broken in the view editor.

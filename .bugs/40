@@ -1,8 +1,6 @@
 Title: cmk -C soll Liste von Hosts bekommen können
 Component: core
-Benefit: 2
 State: open
-Cost: 2
 Date: 2010-12-21 21:17:57
 Class: feature
 

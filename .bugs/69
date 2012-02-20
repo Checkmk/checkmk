@@ -1,8 +1,6 @@
 Title: Automatisch dummy IP-Adresse nehmen bei DNS-Problem
 Component: core
-Benefit: 1
 State: open
-Cost: 1
 Date: 2010-12-21 22:28:59
 Class: feature
 

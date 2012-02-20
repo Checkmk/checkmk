@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: feature
 Date: 2010-12-22 11:07:51
-Benefit: 1
-Cost: 1
 Fun: 0
 
 Evtl. sollte das Case-Insensitive werden. Es spricht doch eigentlich

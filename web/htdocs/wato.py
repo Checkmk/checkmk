@@ -5821,10 +5821,10 @@ def mode_edit_site(phase):
          "that URL will be fetched by the Apache server of the local "
          "site itself, whilst the URL-Prefix is used by your local Browser.")))
     html.text_input("multisiteurl", site.get("multisiteurl", ""), size=60)
-    html.checkbox("insecure", site.get("insecure", False))
-    html.write(_('Ignore SSL certificate errors<br>'
-                 '<i>This might be needed to make the synchronization accept problems with '
-                 'SSL certificates when using an SSL secured connection.</i>'))
+    html.write("<br><br>")
+    html.checkbox("insecure", site.get("insecure", False), label = _('Ignore SSL certificate errors'))
+    html.write('<br><i>This might be needed to make the synchronization accept problems with '
+               'SSL certificates when using an SSL secured connection.</i>')
     html.write("</td></tr>")
     html.write("<tr><td colspan=2 class=buttons>")
     html.button("save", _("Save"))
@@ -5982,7 +5982,7 @@ def is_distributed(sites = None):
     if sites == None:
         sites = config.sites
     for site in sites.values():
-        if site.get("replication"):
+        if site.get("replication") and not site.get("disabled"):
             return True
     return False
 

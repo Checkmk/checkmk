@@ -2067,7 +2067,8 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                     try:
                         inventory = inventory_function(checkname, info) # inventory is a list of pairs (item, current_value)
                     except Exception, ee:
-                        raise e # raise original exception
+                        # Let the first exception happen again
+                        inventory_function(info)
 
                 if inventory == None: # tolerate if function does no explicit return
                     inventory = []
@@ -2422,8 +2423,9 @@ no_inventory_possible = None
     # check table
     filenames = []
     for check_type in needed_check_types:
+        basename = check_type.split(".")[0]
         # Add library files needed by check (also look in local)
-        for lib in check_info[check_type].get("includes", []):
+        for lib in set(check_includes.get(basename, [])):
             if local_checks_dir and os.path.exists(local_checks_dir + "/" + lib):
                 to_add = local_checks_dir + "/" + lib
             else:
@@ -4505,7 +4507,7 @@ if __name__ == "__main__":
                                 missing.append(node)
                         if len(missing) == 0:
                             if opt_verbose:
-                                sys.stdout.write("All nodes of %s specified, dropping checks of %s, too.\n" % (clust, clust))
+                                sys.stdout.write("All nodes of %s specified, dropping checks of %s, too.\n" % (clust, node))
                             remove_autochecks_of(clust, checknames)
                         else:
                             sys.stdout.write("Warning: %s is part of cluster %s, but you didn't specify %s as well.\nChecks on %s will be kept.\n" %

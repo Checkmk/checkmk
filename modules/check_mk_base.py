@@ -249,8 +249,15 @@ def submit_check_mk_aggregation(hostname, status, output):
 # and thus do no network activity at all...
 
 def get_host_info(hostname, ipaddress, checkname):
-    nodes = nodes_of(hostname)
 
+    # If the check want's the node info, we add an additional
+    # column (as the first column) with the name of the node
+    # or None (in case of non-clustered nodes). On problem arises,
+    # if we deal with subchecks. We assume that all subchecks 
+    # have the same setting here. If not, let's raise an exception.
+    add_nodeinfo = check_info.get(checkname, {}).get("node_info", False)
+
+    nodes = nodes_of(hostname)
     if nodes != None:
         info = []
         at_least_one_without_exception = False
@@ -263,7 +270,10 @@ def get_host_info(hostname, ipaddress, checkname):
             # try the other node.
             try:
                 ipaddress = lookup_ipaddress(node)
-                info += get_realhost_info(node, ipaddress, checkname, cluster_max_cachefile_age)
+                new_info = get_realhost_info(node, ipaddress, checkname, cluster_max_cachefile_age)
+                if add_nodeinfo:
+                    new_info = [ [node] + line for line in new_info ]
+                info += new_info
                 at_least_one_without_exception = True
             except MKAgentError, e:
 		if str(e) != "": # only first error contains text
@@ -281,7 +291,11 @@ def get_host_info(hostname, ipaddress, checkname):
                 raise MKAgentError(", ".join(exception_texts))
         return info
     else:
-        return get_realhost_info(hostname, ipaddress, checkname, check_max_cachefile_age)
+        info = get_realhost_info(hostname, ipaddress, checkname, check_max_cachefile_age)
+        if add_nodeinfo:
+            return [ [ None ] + line for line in info ]
+        else:
+            return info
 
 # Gets info from a real host (not a cluster). There are three possible
 # ways: TCP, SNMP and external command.  This function raises
@@ -731,11 +745,13 @@ def check_unimplemented(checkname, params, info):
 
 def convert_check_info():
     for check_type, info in check_info.items():
+        basename = check_type.split(".")[0]
+
         if type(info) != dict:
+            # Convert check declaration from old style to new API
             check_function, service_description, has_perfdata, inventory_function = info
             if inventory_function == no_inventory_possible:
                 inventory_function = None
-            basename = check_type.split(".")[0]
 
             check_info[check_type] = {
                 "check_function"          : check_function,
@@ -750,17 +766,35 @@ def convert_check_info():
                 "snmp_scan_function"      : 
                     snmp_scan_functions.get(check_type,
                         snmp_scan_functions.get(basename)),
-                "includes"                : check_includes.get(check_type, []),
                 "default_levels_variable" : check_default_levels.get(check_type),
+                "node_info"               : False,
             }
         else:
-            # Make sure that all keys are present
+            # Check does already use new API. Make sure that all keys are present,
+            # extra check-specific information into file-specific variables.
             info.setdefault("inventory_function", None)
             info.setdefault("group", None)
             info.setdefault("snmp_info", None)
             info.setdefault("snmp_scan_function", None)
-            info.setdefault("includes", [])
             info.setdefault("default_levels_variable", None)
+            info.setdefault("node_info", False)
+
+            # Include files are related to the check file (= the basename),
+            # not to the (sub-)check. So we keep them in check_includes.
+            check_includes.setdefault(basename, [])
+            check_includes[basename] += info.get("includes", [])
+
+    # Make sure that setting for node_info of check and subcheck matches
+    for check_type, info in check_info.iteritems():
+        if "." in check_type:
+            base_check = check_type.split(".")[0]
+            if base_check not in check_info:
+                if info["node_info"]:
+                    raise MKGeneralException("Invalid check implementation: node_info for %s is True, but base check %s not defined" %
+                        (check_type, base_check))
+            elif check_info[base_check]["node_info"] != info["node_info"]:
+               raise MKGeneralException("Invalid check implementation: node_info for %s and %s are different." % (
+                   (base_check, check_type)))
 
     # Now gather snmp_info and snmp_scan_function back to the 
     # original arrays. Note: these information is tied to a "agent section",

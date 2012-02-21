@@ -1,9 +1,9 @@
 Title: No Multisite-permission but login
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-02-14 16:24:10
 Targetversion: 1.2.0
-Class: bug
 
 If you have no role and thus no permission to use Multisite, then
 you can login anyways (via Cookie-based login or other). But
@@ -16,3 +16,7 @@ Solution:
 1. Do not allow to save a user without any roles
 2. (in addition): Add a logout link to the error
 message.
+
+2012-02-21 17:49:12: changed state open -> done
+Lars has done this. The user is automatically logged
+out again in such a case.

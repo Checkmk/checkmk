@@ -2412,8 +2412,18 @@ def mode_bulk_edit(phase):
 
     elif phase == "action":
         if html.check_transaction():
+            config.need_permission("wato.edit_hosts")
             changed_attributes = collect_attributes()
+            if "contactgroups" in changed_attributes:
+                 if True != check_folder_permissions(g_folder, "write", False):
+                     raise MKAuthException(_("Sorry. In order to change the permissions of a host you need write "
+                                             "access to the folder it is contained in."))
+
             hostnames = get_hostnames_from_checkboxes()
+            # Check all permissions for doing any edit
+            for hostname in hostnames:
+                check_host_permissions(hostname)
+
             for hostname in hostnames:
                 host = g_folder[".hosts"][hostname]
                 mark_affected_sites_dirty(g_folder, hostname)
@@ -2468,8 +2478,18 @@ def mode_bulk_cleanup(phase):
 
     elif phase == "action":
         if html.check_transaction():
+            config.need_permission("wato.edit_hosts")
             to_clean = bulk_collect_cleaned_attributes()
+            if "contactgroups" in to_clean:
+                 if True != check_folder_permissions(g_folder, "write", False):
+                     raise MKAuthException(_("Sorry. In order to change the permissions of a host you need write "
+                                             "access to the folder it is contained in."))
             hostnames = get_hostnames_from_checkboxes()
+
+            # Check all permissions for doing any edit
+            for hostname in hostnames:
+                check_host_permissions(hostname)
+
             for hostname in hostnames:
                 mark_affected_sites_dirty(g_folder, hostname)
                 host = g_folder[".hosts"][hostname]

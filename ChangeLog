@@ -24,6 +24,7 @@
       users not created via WATO will not be lost.
     * FIX: honor site disabling in replication module
     * FIX: honor write permissions on folder in "bulk delete"
+    * FIX: honor permissions for "bulk cleanup" and "bulk edit"
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors

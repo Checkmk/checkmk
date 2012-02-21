@@ -1,11 +1,14 @@
 Title: Sidebar Reload macht während Nagios Restart Probleme
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2012-02-06 12:46:07
 Targetversion: future
-Class: nastiness
 
 Man könnte so lange versuchen die Livestatus Verbindung aufzubauen
 bis das Connect Timeout erreicht ist.
 
 Momentan wird es nur einmal versucht. Dann wird mit "Connection reset by peer" abgebrochen.
+
+2012-02-21 15:56:50: changed state open -> done
+Now within the timeout a reconnect is tried.

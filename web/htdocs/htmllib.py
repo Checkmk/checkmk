@@ -978,7 +978,7 @@ class html:
         return (omd_mode, omd_site)
 
     def begin_foldable_container(self, treename, id, isopen, title, indent = True, first = False):
-        # try to get persistet state of tree
+        # try to get persisted state of tree
         tree_state = weblib.get_tree_states(treename)
 
         if id in tree_state:

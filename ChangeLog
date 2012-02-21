@@ -56,6 +56,9 @@
     * FIX: Fixed preview table styling in view editor
     * FIX: Multisite authed users without permission to multisite are
       automatically logged out after showing the error message
+    * Retry livestatus connect until timeout is used up. This avoids
+      error messages when the core is being restarted
+
 
     BI:
     * New column (painter) for simplistic box display of tree.

@@ -5741,11 +5741,12 @@ def mode_edit_site(phase):
 
     # Timeout
     html.write("<tr><td class=legend>")
-    html.write(_("Connect Timeout<br><i>This setting limits the time Multisites waits for a connection "
+    html.write(_("Connect Timeout<br><i>This sets the time that Multisite waits for a connection "
                  "to the site to be established before the site is considered to be unreachable. "
-                 "If not set, the operating system defaults are begin used.</i>"))
+                 "If not set, the operating system defaults are begin used and just one login attempt is being. "
+                 "performed.</i>"))
     html.write("</td><td class=content>")
-    timeout = site.get("timeout", "")
+    timeout = site.get("timeout", 10)
     html.number_input("timeout", timeout, size=2)
     html.write(_(" seconds"))
     html.write("</td></tr>")

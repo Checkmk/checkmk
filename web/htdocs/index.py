@@ -139,6 +139,7 @@ def connect_to_livestatus(html):
 
     else:
         html.live = livestatus.SingleSiteConnection("unix:" + defaults.livestatus_unix_socket)
+        html.live.set_timeout(10) # default timeout is 10 seconds
         html.site_status = { '': { "state" : "dead", "site" : config.site('') } }
         v1, v2, ps = html.live.query_row("GET status\nColumns: livestatus_version program_version program_start")
         html.site_status[''].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2, "program_start" : ps })

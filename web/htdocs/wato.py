@@ -4418,8 +4418,10 @@ def factory_reset():
     save_users(users) # this will cleanup htpasswd
 
     for path in [ root_dir, multisite_dir, sites_mk, log_dir ]:
-        if os.path.exists(path):
+        if os.path.isdir(path):
             shutil.rmtree(path)
+        elif os.path.exists(path):
+            os.remove(path)
 
     log_pending(SYNCRESTART, None, "factory-reset", _("Complete reset to factory settings."))
 

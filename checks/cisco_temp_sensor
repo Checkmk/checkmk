@@ -186,3 +186,5 @@ snmp_info['cisco_temp_sensor'] = [
 snmp_scan_functions['cisco_temp_sensor'] = \
     lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
        oid(".1.3.6.1.4.1.9.9.91.1.1.1.1.*") != None
+
+checkgroup_of["cisco_temp_sensor"] = "temperature_auto"

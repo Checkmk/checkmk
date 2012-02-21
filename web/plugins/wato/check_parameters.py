@@ -946,14 +946,40 @@ checkgroups.append((
         help = _("Temperature levels for external thermometers that are used "
                  "for monitoring the temperature of a datacenter. An example "
                  "is the webthem from W&amp;T."),
-      elements = [
-          Integer(title = "warning at", unit = u"°C"),
-          Integer(title = "critical at", unit = u"°C"),
-      ]),
+        elements = [
+            Integer(title = "warning at", unit = u"°C"),
+            Integer(title = "critical at", unit = u"°C"),
+        ]),
     TextAscii(
-        title = _("Thermomether ID"),
+        title = _("Sensor ID"),
         help = _("The identificator of the themal sensor.")),
     "first"))
+
+checkgroups.append((
+    "hw_temperature",
+    _("Hardware temperature (CPU, Memory, Mainboard, etc.)"),
+    Tuple(
+        help = _("Temperature levels for internal sensors found in many appliances, "
+                 "switches, routers, mainboards and other devices. "),  
+        elements = [
+            Integer(title = "warning at", unit = u"°C"),
+            Integer(title = "critical at", unit = u"°C"),
+        ]),
+    TextAscii(
+        title = _("Sensor ID"),
+        help = _("The identificator of the themal sensor.")),
+    "first"))
+
+checkgroups.append((
+    "temperature_auto",
+    _("Temperature sensors with builtin levels"),
+    None,
+    TextAscii(
+        title = _("Sensor ID"),
+        help = _("The identificator of the themal sensor.")),
+    "first"))
+
+
 
 checkgroups.append((
     "wmic_process",

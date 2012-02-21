@@ -8148,6 +8148,7 @@ def mode_rulesets(phase):
     for groupname in groupnames:
         # Show information about a ruleset
         title_shown = False
+        g_rulespec_groups[groupname].sort()
         for rulespec in g_rulespec_groups[groupname]:
 
             varname = rulespec["varname"]

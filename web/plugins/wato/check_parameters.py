@@ -820,9 +820,66 @@ checkgroups.append((
 
 checkgroups.append((
     "zpool_status",
-    _("Check ZFS Storage Pool status"),
+    _("ZFS storage pool status"),
     None,
     None, None))
+
+checkgroups.append((
+    "vm_state",
+    _("Overall state of a virtual machine"),
+    None,
+    None, None))
+
+checkgroups.append((
+    "hw_errors",
+    _("Simple checks for BIOS/Hardware errors without parameters"),
+    None,
+    None, None))
+
+checkgroups.append((
+    "omd_status",
+    _("OMD site status"),
+    None,
+    TextAscii(
+        title = _("Name of the OMD site"),
+        help = _("The name of the OMD site to check the status for")),
+    "first"))
+
+checkgroups.append((
+    "network_fs",
+    _("Network filesystem - overall status (e.g. NFS)"),
+    None,
+    TextAscii(
+        title = _("Name of the mount point"),
+        help = _("For NFS enter the name of the mount point.")),
+    "first"))
+
+checkgroups.append((
+    "multipath",
+    _("Multipathing - health of a multipath LUN"),
+    Integer(
+        title = _("Expected number of active paths")),
+    TextAscii(
+        title = _("Name of the MP LUN"),
+        help = _("For Linux multipathing this is either the UUID (e.g. "
+                 "60a9800043346937686f456f59386741), or the configured "
+                 "alias.")),
+    "first"))
+
+checkgroups.append((
+    "services",
+    _("Windows services"),
+    None,
+    TextAscii(
+        title = _("Name of the service"),
+        help = _("Pleae Please  note, that the agent replaces spaces in "
+         "the service names with underscores. If you are unsure about the "
+         "correct spelling of the name then please look at the output of "
+         "the agent (cmk -d HOSTNAME). The service names  are in the first "
+         "column of the section &lt;&lt;&lt;services&gt;&gt;&gt;. Please "
+         "do not mix up the service name with the display name of the service."
+         "The latter one is just being displayed as a further information.")),
+    "first"))
 
 checkgroups.append((
     "room_temperature",
@@ -920,7 +977,8 @@ for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
             FixedValue(None,
                 help = _("This check has no parameters."),
                 totext = "")
-    valuespec._title = _("Parameters")
+    if not valuespec.title():
+        valuespec._title = _("Parameters")
     elements.append(valuespec)
 
     register_rule(

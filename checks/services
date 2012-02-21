@@ -110,7 +110,7 @@ def inventory_windows_services(info):
     return inventory
 
 
-def check_windows_services(item, params, info):
+def check_windows_services(item, _no_params, info):
     # make sure, that thing also works for clusters:
     # here a service can be listed more than once.
     # It is sufficient of at least one "running" is
@@ -139,3 +139,4 @@ def check_windows_services(item, params, info):
 
 
 check_info['services'] = (check_windows_services, "service_%s", 0, inventory_windows_services)
+checkgroup_of['services'] = 'services'

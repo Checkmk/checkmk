@@ -26,6 +26,7 @@
     * FIX: honor write permissions on folder in "bulk delete"
     * FIX: honor permissions for "bulk cleanup" and "bulk edit"
     * FIX: honor write permissions and source folder when moving hosts
+    * FIX: honor permissions on hosts also on bulk inventory
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors

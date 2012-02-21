@@ -1915,6 +1915,7 @@ def mode_inventory(phase, firsttime):
 
     elif phase == "action":
         config.need_permission("wato.services")
+        check_host_permissions(hostname)
         if html.check_transaction():
             cache_options = not html.var("_scan") and [ '--cache' ] or []
             table = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
@@ -2347,7 +2348,14 @@ def mode_bulk_inventory(phase):
 
     # interactive progress is *not* done in action phase. It
     # renders the page content itself.
+
     hostnames = get_hostnames_from_checkboxes()
+
+    # check all permissions before beginning inventory
+    config.need_permission("wato.services")
+    for hostname in hostnames:
+        check_host_permissions(hostname)
+
     items = [ "%s|%s" % (g_folder[".path"], hostname)
              for hostname in hostnames ]
 

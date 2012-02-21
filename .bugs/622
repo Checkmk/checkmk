@@ -1,9 +1,12 @@
 Title: Inventory prüft die Rechte nicht ordentlich
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-01-18 10:31:24
 Targetversion: 1.2.0
-Class: bug
 
 Ich kann sowohl via Bulk Inventory, als auch über das normale Inventory das Inventory eines
 Hosts anstoßen, auch wenn ich keine Rechte habe.
+
+2012-02-21 16:50:01: changed state open -> done
+Das sollte jetzt beides funktionieren.

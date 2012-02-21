@@ -49,7 +49,7 @@
       (this prevents an exception of pfSense)
 
     Multisite:
-    * Added several missing localization stringsw
+    * Added several missing localization strings
     * IE: Fixed problem with clicking SELECT fields in the new wato foldertree snapin
     * Fixed problem when trying to visit dashboards from new wato foldertree snapin
     * Chrome: Fixed styling problem of foldertree snapin
@@ -64,6 +64,7 @@
       automatically logged out after showing the error message
     * Retry livestatus connect until timeout is used up. This avoids
       error messages when the core is being restarted
+    * Events view now shows icon and text for "flapping" events
 
 
     BI:

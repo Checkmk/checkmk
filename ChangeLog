@@ -49,6 +49,8 @@
       (this prevents an exception of pfSense)
     * statgrab_load: level is now checked against 15min average - 
       in order to be consistent with the Linux load check
+    * dell_powerconnect_cpu: hopefully correctly handle incomplete
+      output from agent now.
 
     Multisite:
     * Added several missing localization strings

@@ -43,7 +43,7 @@ dell_powerconnect_cpu_default_levels = (80, 90)
 # Inventory of dell power connect CPU details.
 def inventory_dell_powerconnect_cpu(checkname, info):
     enabled, onesecondperc, oneminuteperc, fiveminutesperc = info[0]
-    if int(enabled) == 1 and int(onesecondperc) >= 0 <= 100:
+    if enabled == '1' and onesecondperc != '' and int(onesecondperc) >= 0:
         return [ (None, 'dell_powerconnect_cpu_default_levels') ]
 
 # Check of dell power connect CPU details.
@@ -53,7 +53,7 @@ def check_dell_powerconnect_cpu(item, params, info):
     except ValueError:
         raise MKCounterWrapped("", "Ignoring empty data from SNMP agent")
     if int(enabled) == 1:
-        cpu_load = int(onesecondperc)
+        cpu_load = saveint(onesecondperc)
         if cpu_load >= 0 <= 100:
             status = 0
             output = ''
@@ -67,8 +67,8 @@ def check_dell_powerconnect_cpu(item, params, info):
             return (status, '%s - CPU utilization is %d%% %s' %
                         (nagios_state_names[status], cpu_load, output),
                    [('load', '%d%%' % cpu_load, params[0], params[1], 0, 100),
-                    ('loadavg 60s', '%d%%' % int(oneminuteperc), params[0], params[1], 0, 100),
-                    ('loadavg 5m', '%d%%' % int(fiveminutesperc), params[0], params[1], 0, 100),
+                    ('loadavg 60s', '%d%%' % saveint(oneminuteperc), params[0], params[1], 0, 100),
+                    ('loadavg 5m', '%d%%' % saveint(fiveminutesperc), params[0], params[1], 0, 100),
                    ])
 
     return (3, "UNKNOWN - Invalid  information in SNMP data")

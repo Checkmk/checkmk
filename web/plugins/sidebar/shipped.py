@@ -85,7 +85,7 @@ def views_by_topic():
     s.sort()
 
     # Enforce a certain order on the topics
-    known_topics = [ _('Dashboards'), "Hosts", "Hostgroups", "Services", "Servicegroups",
+    known_topics = [ _('Dashboards'), _("Hosts"), _("Hostgroups"), _("Services"), _("Servicegroups"),
                      _("Business Intelligence"), _("Problems"), _("Addons") ]
 
     result = []
@@ -358,7 +358,7 @@ def render_hostmatrix():
 
 sidebar_snapins["hostmatrix"] = {
     "title"       : _("Host Matrix"),
-    "description" : _("A matrix showing s colored square for each host"),
+    "description" : _("A matrix showing a colored square for each host"),
     "author"      : "Mathias Kettner",
     "render"      : render_hostmatrix,
     "allowed"     : [ "user", "admin", "guest" ],

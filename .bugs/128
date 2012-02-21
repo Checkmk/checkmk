@@ -1,9 +1,7 @@
 Title: df trends: Peak values after changing the trend_range
 Component: checks
-Benefit: 1
 Fun: 0
 State: done
-Cost: 2
 Date: 2011-02-10 09:45:24
 Targetversion: 1.2.0
 Class: bug

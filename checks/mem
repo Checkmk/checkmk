@@ -120,9 +120,14 @@ def check_mem_used(item, params, info):
             return (0, 'OK - %s' % infotext, perfdata)
 
 
-check_info['mem.used'] = (check_mem_used, "Memory used", 1,  inventory_mem_used)
-check_config_variables.append("mem_extended_perfdata")
-checkgroup_of["mem.used"] = "memory"
+check_info['mem.used'] = {
+    "check_function"         : check_mem_used,
+    "inventory_function"     : inventory_mem_used,
+    "service_description"    : "Memory used",
+    "has_perfdata"           : True,
+    "group"                  : "memory",
+    "check_config_variables" : [ "mem_extended_perfdata" ],
+}
 
 
 #   +----------------------------------------------------------------------+

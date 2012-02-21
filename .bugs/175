@@ -3,8 +3,6 @@ Component: core
 State: wontfix
 Class: bug
 Date: 2011-03-03 12:09:11
-Benefit: 3
-Cost: 3
 Fun: 0
 
 In our tests the parent scan did only find and add the nearest gateway to the target system. The

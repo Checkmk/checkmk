@@ -73,11 +73,15 @@ def load_htpasswd():
 # FIXME: Secret auch replizieren
 def load_secret():
     secret_path = '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file)
-    if not os.path.exists(secret_path):
-        secret = md5.md5(str(time.time())).hexdigest()
-        file(secret_path, 'w').write(secret)
-    else:
+    secret = ''
+    if os.path.exists(secret_path):
         secret = file(secret_path).read().strip()
+
+    # Create new secret when this installation has no secret
+    if secret == '':
+        secret = md5.md5(str(time.time())).hexdigest()
+        file(secret_path, 'w').write(secret + "\n")
+
     return secret
 
 # Generates the hash to be added into the cookie value
@@ -169,7 +173,7 @@ def do_login():
 
                 # Use redirects for URLs or simply execute other handlers for
                 # mulitsite modules
-                if '/' in origtarget:
+                if '/' in origtarget or '?' in origtarget:
                     html.set_http_header('Location', origtarget)
                     raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
                 else:
@@ -217,7 +221,7 @@ def normal_login_page():
 
     origtarget = html.var('_origtarget', '')
     if not origtarget and not html.req.myfile == 'login':
-        origtarget = html.req.uri
+        origtarget = html.makeuri([])
 
     html.write("<div id=login>")
     if html.has_user_errors():

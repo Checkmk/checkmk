@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: bug
 Date: 2011-03-07 16:08:31
-Benefit: 1
-Cost: 1
 Fun: 0
 
 For example the column editor: the input box is far too small.

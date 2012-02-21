@@ -2,8 +2,6 @@ Title: Windows agent: Eventlog nach UTF-8 kodieren
 Component: checks
 State: done
 Class: nastiness
-Benefit: 2
-Cost: 4
 Date: 2010-12-21 16:41:20
 Targetversion: 1.2.0
 

@@ -1,0 +1,10 @@
+Title: "omd su" upgrade
+Component: core
+State: open
+Date: 2012-02-17 15:41:07
+Targetversion: future
+Class: feature
+
+"omd su" should switch directly to a site, if there is only one present
+if no sitename is given, a dialog may open up
+

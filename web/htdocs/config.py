@@ -274,11 +274,13 @@ def login(u):
         user_baserole_id = "guest"
 
     # Prepare user object
-    global user
+    global user, user_alias
     if u in multisite_users:
         user = multisite_users[u]
+        user_alias = user.get("alias", user_id)
     else:
         user = { "roles" : user_role_ids }
+        user_alias = user_id
 
     # Prepare cache of already computed permissions
     global user_permissions
@@ -302,7 +304,7 @@ def login(u):
 def get_language(default = None):
     if default == None:
         default = default_language
-    return user.get('language', default)
+    return user and user.get('language', default) or default
 
 def roles_of_user(user):
     # Make sure, builtin roles are present, even if not modified

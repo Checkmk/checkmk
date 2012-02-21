@@ -46,7 +46,7 @@ def inventory_lsi(check_type, info):
     else:
         return [(id, '"%s"' % state) for (id, state) in disks]
 
-def check_lsi_array(item, params, info):
+def check_lsi_array(item, _no_params, info):
     volumeid = -1
     for line in info:
         if line[0] == 'VolumeID':
@@ -75,4 +75,7 @@ def check_lsi_disk(item, target_state, info):
 
 
 check_info['lsi.array'] = (check_lsi_array, "RAID array %s", 0,  lambda info: inventory_lsi('lsi.array', info))
+checkgroup_of['lsi.array'] = "raid"
+
 check_info['lsi.disk'] = (check_lsi_disk, "RAID disk %s", 0,  lambda info: inventory_lsi('lsi.disk', info))
+checkgroup_of['lsi.disk'] = "raid_disk"

@@ -483,7 +483,7 @@ def reload_folder(folder):
 # Load the information about all folders - except the hosts
 def load_all_folders():
     if not os.path.exists(root_dir):
-        os.makedirs(root_dir)
+        make_nagios_directories(root_dir)
 
     global g_root_folder, g_folders
     g_folders = {}
@@ -599,9 +599,9 @@ def save_hosts(folder = None):
     dirname = root_dir + folder_path
     filename = dirname + "/hosts.mk"
     if not os.path.isdir(dirname):
-        os.makedirs(dirname)
+        make_nagios_directories(dirname)
 
-    out = file(filename, "w")
+    out = create_user_file(filename, 'w')
 
     hosts = folder.get(".hosts", [])
     if len(hosts) == 0:
@@ -848,6 +848,7 @@ def mode_folder(phase):
         # Deletion
         if html.var("_bulk_delete"):
             config.need_permission("wato.manage_hosts")
+            check_folder_permissions(g_folder, "write")
             return delete_hosts_after_confirm(selected_hosts)
 
         # Move
@@ -974,9 +975,16 @@ def check_folder_permissions(folder, how, exception=True, user = None):
         if c in cgs:
             return True
 
-    reason = _("Sorry, you have no permission on the folder '<b>%s</b>'. The folder's contact "
-               "groups are <b>%s</b>, your contact groups are <b>%s</b>.") % \
-               (folder["title"], ", ".join(cgs), ", ".join(user_cgs))
+    reason = _("Sorry, you have no permission on the folder '<b>%s</b>'. " % folder["title"])
+    if not cgs:
+        reason += _("The folder has no contact groups assigned to.")
+    else:
+        reason += _("The folder's contact groups are <b>%s</b>. " % ", ".join(cgs))
+        if user_cgs:
+            reason += _("Your contact groups are <b>%s</b>.") %  ", ".join(user_cgs)
+        else:
+            reason += _("But you are not a member of any contact group.")
+
     if exception:
         raise MKAuthException(reason)
     else:
@@ -1204,7 +1212,8 @@ def show_hosts(folder):
 
         html.write("<td class=buttons>")
         html.icon_button(edit_url, _("Edit the properties of this host"), "edit")
-        html.icon_button(services_url, _("Edit the services of this host, do an inventory"), "services")
+        if check_host_permissions(hostname, False) == True:
+            html.icon_button(services_url, _("Edit the services of this host, do an inventory"), "services")
         if config.may("wato.manage_hosts"):
             html.icon_button(clone_url, _("Create a clone of this host"), "insert")
             html.icon_button(delete_url, _("Delete this host"), "delete")
@@ -1334,6 +1343,7 @@ def move_hosts_to(hostnames, path):
         return
 
     target_folder = g_folders[path]
+    check_folder_permissions(g_folder, "write")
     check_folder_permissions(target_folder, "write")
 
     if target_folder == g_folder:
@@ -1905,6 +1915,7 @@ def mode_inventory(phase, firsttime):
 
     elif phase == "action":
         config.need_permission("wato.services")
+        check_host_permissions(hostname)
         if html.check_transaction():
             cache_options = not html.var("_scan") and [ '--cache' ] or []
             table = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
@@ -2337,7 +2348,14 @@ def mode_bulk_inventory(phase):
 
     # interactive progress is *not* done in action phase. It
     # renders the page content itself.
+
     hostnames = get_hostnames_from_checkboxes()
+
+    # check all permissions before beginning inventory
+    config.need_permission("wato.services")
+    for hostname in hostnames:
+        check_host_permissions(hostname)
+
     items = [ "%s|%s" % (g_folder[".path"], hostname)
              for hostname in hostnames ]
 
@@ -2403,8 +2421,18 @@ def mode_bulk_edit(phase):
 
     elif phase == "action":
         if html.check_transaction():
+            config.need_permission("wato.edit_hosts")
             changed_attributes = collect_attributes()
+            if "contactgroups" in changed_attributes:
+                 if True != check_folder_permissions(g_folder, "write", False):
+                     raise MKAuthException(_("Sorry. In order to change the permissions of a host you need write "
+                                             "access to the folder it is contained in."))
+
             hostnames = get_hostnames_from_checkboxes()
+            # Check all permissions for doing any edit
+            for hostname in hostnames:
+                check_host_permissions(hostname)
+
             for hostname in hostnames:
                 host = g_folder[".hosts"][hostname]
                 mark_affected_sites_dirty(g_folder, hostname)
@@ -2459,8 +2487,18 @@ def mode_bulk_cleanup(phase):
 
     elif phase == "action":
         if html.check_transaction():
+            config.need_permission("wato.edit_hosts")
             to_clean = bulk_collect_cleaned_attributes()
+            if "contactgroups" in to_clean:
+                 if True != check_folder_permissions(g_folder, "write", False):
+                     raise MKAuthException(_("Sorry. In order to change the permissions of a host you need write "
+                                             "access to the folder it is contained in."))
             hostnames = get_hostnames_from_checkboxes()
+
+            # Check all permissions for doing any edit
+            for hostname in hostnames:
+                check_host_permissions(hostname)
+
             for hostname in hostnames:
                 mark_affected_sites_dirty(g_folder, hostname)
                 host = g_folder[".hosts"][hostname]
@@ -3056,6 +3094,7 @@ def log_commit_pending():
     pending = log_dir + "pending.log"
     if os.path.exists(pending):
         os.remove(pending)
+    need_sidebar_reload()
 
 def clear_audit_log():
     path = log_dir + "audit.log"
@@ -4379,8 +4418,10 @@ def factory_reset():
     save_users(users) # this will cleanup htpasswd
 
     for path in [ root_dir, multisite_dir, sites_mk, log_dir ]:
-        if os.path.exists(path):
+        if os.path.isdir(path):
             shutil.rmtree(path)
+        elif os.path.exists(path):
+            os.remove(path)
 
     log_pending(SYNCRESTART, None, "factory-reset", _("Complete reset to factory settings."))
 
@@ -4413,9 +4454,13 @@ class CheckTypeSelection(ListChoice):
 
 def edit_value(valuespec, value):
     help = valuespec.help() or ""
-    html.write('<tr><td class=legend><i>%s</i></td>' % help)
+    html.write('<tr>')
+    if help:
+        html.write('<td class=legend><i>%s</i></td>' % help)
+        html.write("<td class=content>")
+    else:
+        html.write('<td colspan=2 class=content>')
 
-    html.write("<td class=content>")
     valuespec.render_input("ve", value)
     html.write("</td></tr>")
 
@@ -4665,7 +4710,7 @@ def save_configuration_settings(vars):
     save_configuration_vars(per_domain.get("multisite", {}), multisite_dir + "global.mk")
 
 def save_configuration_vars(vars, filename):
-    out = file(filename, "w")
+    out = create_user_file(filename, 'w')
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     for varname, value in vars.items():
         out.write("%s = %r\n" % (varname, value))
@@ -4878,7 +4923,7 @@ def load_group_information():
 
 def save_group_information(groups):
     make_nagios_directory(root_dir)
-    out = file(root_dir + "groups.mk", "w")
+    out = create_user_file(root_dir + "groups.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     for what in [ "host", "service", "contact" ]:
         if what in groups and len(groups[what]) > 0:
@@ -5015,7 +5060,7 @@ def load_timeperiods():
 
 def save_timeperiods(timeperiods):
     make_nagios_directory(root_dir)
-    out = file(root_dir + "timeperiods.mk", "w")
+    out = create_user_file(root_dir + "timeperiods.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("timeperiods.update(%s)\n" % pprint.pformat(timeperiods))
 
@@ -5735,11 +5780,12 @@ def mode_edit_site(phase):
 
     # Timeout
     html.write("<tr><td class=legend>")
-    html.write(_("Connect Timeout<br><i>This setting limits the time Multisites waits for a connection "
+    html.write(_("Connect Timeout<br><i>This sets the time that Multisite waits for a connection "
                  "to the site to be established before the site is considered to be unreachable. "
-                 "If not set, the operating system defaults are begin used.</i>"))
+                 "If not set, the operating system defaults are begin used and just one login attempt is being. "
+                 "performed.</i>"))
     html.write("</td><td class=content>")
-    timeout = site.get("timeout", "")
+    timeout = site.get("timeout", 10)
     html.number_input("timeout", timeout, size=2)
     html.write(_(" seconds"))
     html.write("</td></tr>")
@@ -5816,10 +5862,10 @@ def mode_edit_site(phase):
          "that URL will be fetched by the Apache server of the local "
          "site itself, whilst the URL-Prefix is used by your local Browser.")))
     html.text_input("multisiteurl", site.get("multisiteurl", ""), size=60)
-    html.checkbox("insecure", site.get("insecure", False))
-    html.write(_('Ignore SSL certificate errors<br>'
-                 '<i>This might be needed to make the synchronization accept problems with '
-                 'SSL certificates when using an SSL secured connection.</i>'))
+    html.write("<br><br>")
+    html.checkbox("insecure", site.get("insecure", False), label = _('Ignore SSL certificate errors'))
+    html.write('<br><i>This might be needed to make the synchronization accept problems with '
+               'SSL certificates when using an SSL secured connection.</i>')
     html.write("</td></tr>")
     html.write("<tr><td colspan=2 class=buttons>")
     html.button("save", _("Save"))
@@ -5850,7 +5896,7 @@ def save_sites(sites):
     # Important: even write out sites if it's empty. The global 'sites'
     # variable will otherwise survive in the Python interpreter of the
     # Apache processes.
-    out = file(sites_mk, "w")
+    out = create_user_file(sites_mk, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("sites = \\\n%s\n" % pprint.pformat(sites))
     update_distributed_wato_file(sites)
@@ -5977,7 +6023,7 @@ def is_distributed(sites = None):
     if sites == None:
         sites = config.sites
     for site in sites.values():
-        if site.get("replication"):
+        if site.get("replication") and not site.get("disabled"):
             return True
     return False
 
@@ -6244,6 +6290,9 @@ def preferred_peer():
     best_peer = None
     best_working_peer = None
     for site_id, site in config.allsites().items():
+        if site.get("replication") == "slave":
+            continue # Ignore slave sites
+
         if site_is_local(site_id):
             if best_peer == None or site_id < best_peer["id"]:
                 best_peer = site
@@ -6442,7 +6491,7 @@ def automation_push_snapshot():
             return _("Internal automation error: %s") % e
 
 def create_distributed_wato_file(siteid, mode):
-    out = file(defaults.check_mk_configdir + "/distributed_wato.mk", "w")
+    out = create_user_file(defaults.check_mk_configdir + "/distributed_wato.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("# This file has been created by the master site\n"
               "# push the configuration to us. It makes sure that\n"
@@ -6455,7 +6504,7 @@ def delete_distributed_wato_file():
     # we do not need write permissions to the conf.d 
     # directory!
     if os.path.exists(p):
-        file(p, "w").write("")
+        create_user_file(p, "w").write("")
 
 #.
 #   .-Users/Contacts-------------------------------------------------------.
@@ -6840,7 +6889,7 @@ def mode_edit_user(phase):
     # Roles
     html.write("<tr><td class=legend colspan=2>")
     html.write(_("Roles<br><i>By assigning roles to a user he obtains permissions. "
-                 "If a user has more then one role, he gets the maximum of all "
+                 "If a user has more than one role, he gets the maximum of all "
                  "permissions of his roles. "
                  "Users without any role have no permissions to use Multisite at all "
                  "but still can be monitoring contacts and receive notifications.</i>"))
@@ -7001,7 +7050,11 @@ def load_users():
 
     # Passwords are read directly from the apache htpasswd-file.
     # That way heroes of the command line will still be able to
-    # change passwords with htpasswd.
+    # change passwords with htpasswd. Users *only* appearing
+    # in htpasswd will also be loaded and assigned to the role
+    # they are getting according to the multisite old-style
+    # configuration variables.
+
     filename = defaults.htpasswd_file
     if os.path.exists(filename):
         for line in file(filename):
@@ -7014,12 +7067,12 @@ def load_users():
             if id in result:
                 result[id]["password"] = password
                 result[id]["locked"] = locked
-            elif id in config.admin_users:
+            else:
                 # Create entry if this is an admin user
                 new_user = {
-                    "roles" : [ "admin" ],
+                    "roles"    : config.roles_of_user(id),
                     "password" : password,
-                    "locked" : False
+                    "locked"   : False
                 }
                 result[id] = new_user
             # Other unknown entries will silently be dropped. Sorry...
@@ -7064,14 +7117,14 @@ def save_users(profiles):
 
     # Check_MK's monitoring contacts
     filename = root_dir + "contacts.mk"
-    out = file(filename, "w")
+    out = create_user_file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("contacts.update(\n%s\n)\n" % pprint.pformat(contacts))
 
     # Users with passwords for Multisite
     make_nagios_directory(multisite_dir)
     filename = multisite_dir + "users.mk"
-    out = file(filename, "w")
+    out = create_user_file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("multisite_users = \\\n%s\n" % pprint.pformat(users))
 
@@ -7081,7 +7134,7 @@ def save_users(profiles):
     # WATO, you should continue to do so or stop doing to for ever...
     # Locked accounts get a '!' before their password. This disable it.
     filename = defaults.htpasswd_file
-    out = file(filename, "w")
+    out = create_user_file(filename, "w")
     for id, user in profiles.items():
         if user.get("password"):
             if user.get("locked", False):
@@ -7375,7 +7428,9 @@ def mode_edit_role(phase):
 
         pvalue = role["permissions"].get(pname)
         def_value = base_role_id in perm["defaults"]
-        html.write("<tr><td class=left>%s<br><i>%s</i></td>" % (perm["title"], perm["description"]))
+        html.write("<tr><td class=left>%s<br><i>%s</i></td>" % (
+	    make_unicode(perm["title"]), make_unicode(perm["description"])))
+
         html.write("<td class=right>")
         choices = [ ( "yes", _("yes")),
                     ( "no", _("no")),
@@ -7391,6 +7446,12 @@ def mode_edit_role(phase):
     html.write("</table>")
     html.hidden_fields()
     html.end_form()
+
+def make_unicode(s):
+    if type(s) != unicode: # assume utf-8 encoded bytestring
+        return s.decode("utf-8")
+    else:
+	return s
 
 
 def load_roles():
@@ -7412,7 +7473,7 @@ def load_roles():
 
     try:
         vars = { "roles" : roles }
-        execfile(filename, vars, vars)
+        exec(filename, vars, vars)
         # Reflect the data in the roles dict kept in the config module Needed
         # for instant changes in current page while saving modified roles.
         # Otherwise the hooks would work with old data when using helper
@@ -7436,7 +7497,7 @@ def save_roles(roles):
 
     make_nagios_directory(multisite_dir)
     filename = multisite_dir + "roles.mk"
-    out = file(filename, "w")
+    out = create_user_file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("roles.update(\n%s)\n" % pprint.pformat(roles))
 
@@ -7806,7 +7867,7 @@ def load_hosttags():
 
 def save_hosttags(hosttags):
     make_nagios_directory(multisite_dir)
-    out = file(multisite_dir + "hosttags.mk", "w")
+    out = create_user_file(multisite_dir + "hosttags.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("wato_host_tags += \\\n%s\n" % pprint.pformat(hosttags))
 
@@ -8127,6 +8188,7 @@ def mode_rulesets(phase):
     for groupname in groupnames:
         # Show information about a ruleset
         title_shown = False
+        g_rulespec_groups[groupname].sort()
         for rulespec in g_rulespec_groups[groupname]:
 
             varname = rulespec["varname"]
@@ -8238,7 +8300,7 @@ def mode_edit_ruleset(phase):
             if html.check_transaction():
                 if html.var("_new_rule"):
                     hostname = None
-                    item = None
+                    item = NO_ITEM
                 new_rule = create_rule(rulespec, hostname, item)
                 if hostname:
                     rules[0:0] = [new_rule]
@@ -8393,7 +8455,7 @@ def mode_edit_ruleset(phase):
                         img = 'imatch'
                     else:
                         new_keys = set(value.keys())
-                        if match_keys.isdisjoint(new_keys):
+                        if set_is_disjoint(match_keys, new_keys):
                             title = _("This rule matches and defines new parameters.")
                             img = 'match'
                         elif new_keys.issubset(match_keys):
@@ -8459,7 +8521,7 @@ def mode_edit_ruleset(phase):
             title += _(" and %s '%s'") % (rulespec["itemname"], item)
         html.button("_new_host_rule", title)
         html.write(" " + _("or") + " ")
-    html.button("_new_rule", _("General rule in folder: "))
+    html.button("_new_rule", _("Create rule in folder: "))
     html.select("folder", folder_selection(g_root_folder))
     html.write("</p>\n")
     html.hidden_fields()
@@ -9025,7 +9087,7 @@ def mode_edit_rule(phase):
 def save_rulesets(folder, rulesets):
     make_nagios_directory(root_dir)
     path = root_dir + '/' + folder['.path'] + '/' + "rules.mk"
-    out = file(path, "w")
+    out = create_user_file(path, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
 
     for varname, rulespec in g_rulespecs.items():

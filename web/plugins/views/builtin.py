@@ -2503,6 +2503,37 @@ multisite_builtin_views.update({
                   'topic': u'Business Intelligence',
                   'user_sortable': 'on'},
 
+# Hostgroup with boxed BIs for each host
+'aggr_hostgroup_boxed': {'browser_reload': 0,
+               'column_headers': 'off',
+               'datasource': 'bi_host_aggregations',
+               'description': '',
+               'group_painters': [('site_icon', None),
+                                  ('sitealias', 'sitehosts')],
+               'hard_filters': [],
+               'hard_filtervars': [],
+               'hidden': True,
+               'hide_filters': ['hostgroup'],
+               'icon' : 'aggr',
+               'layout': 'boxed',
+               'linktitle': _('BI Boxes'),
+               'mustsearch': False,
+               'name': 'hostgroup',
+               'num_columns': 2,
+               'owner': 'admin',
+               'painters': [('host_state', None),
+                            ('host', 'host'),
+                            ('host_icons', None),
+                            ('alias', None),
+                            ('aggr_treestate_boxed', None),
+                           ],
+               'play_sounds': False,
+               'public': True,
+               'show_filters': [],
+               'sorters': [('site', False), ('site_host', False)],
+               'title': _('Hostgroup with BI state'),
+               'topic': _('hidden')},
+
 
 #   +----------------------------------------------------------------------+
 #   |       _   _       _   _  __ _           _   _                        |

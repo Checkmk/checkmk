@@ -3,8 +3,6 @@ Component: livestatus
 State: done
 Class: bug
 Date: 2010-12-21 16:22:55
-Benefit: 2
-Cost: 1
 Fun: 0
 
 Ein eigenes Logfile für Livestatus anlegen, sofern das konfiguriert

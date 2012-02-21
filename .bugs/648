@@ -1,0 +1,27 @@
+Title: WATO API in multisite.mk einbinden
+Component: multisite
+Class: nastiness
+State: wontfix
+Date: 2012-02-08 10:34:20
+Targetversion: future
+
+Momentan muss man ziemliche Verrenkungen machen um aus der multisite.mk auf die
+WATO API zugreifen zu können.
+
+import __builtin__
+__builtin__._ = lambda x: x
+
+import config
+config.login('')
+import wato
+wato.load_plugins()
+
+Eigentlich sollte
+
+import wato
+wato.load_plugins()
+
+ausreichen.
+
+2012-02-20 12:34:58: changed state open -> wontfix
+this is kind of a hack. wont implement that.

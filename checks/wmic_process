@@ -66,27 +66,27 @@ def check_wmic_process(item, params, info):
 
     if cpu_perc >= cpucrit:
         state = 2
-        infos[7] = "(!! critical at %d%%)" % cpucrit
+        infos[7] = "(!!) - critical at %d%%" % cpucrit
 
     elif page_mb >= pagecrit:
         state = 2
-        infos[5] = "(!! critical at %d MB)" % pagecrit
+        infos[5] = "(!!) critical at %d MB" % pagecrit
 
     elif mem_mb >= memcrit:
         state = 2
-        infos[3] = "(!! critical at %d MB)" % memcrit
+        infos[3] = "(!!) critical at %d MB" % memcrit
 
     elif cpu_perc >= cpuwarn:
         state = 1
-        infos[7] = "(! warning at %d%%)" % cpuwarn
+        infos[7] = "(!) warning at %d%%" % cpuwarn
 
     elif mem_mb >= memwarn:
         state = 1
-        infos[3] = "(! warning at %d MB)" % memwarn
+        infos[3] = "(!) warning at %d MB" % memwarn
 
     elif page_mb >= pagewarn:
         state = 1
-        infos[5] = "(! warning at %d MB)" % pagewarn
+        infos[5] = "(!) warning at %d MB" % pagewarn
 
     else:
         state = 0

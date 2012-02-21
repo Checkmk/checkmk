@@ -3,8 +3,6 @@ Component: multisite
 State: wontfix
 Class: bug
 Date: 2011-08-16 17:13:46
-Benefit: 2
-Cost: 2
 Fun: 0
 
 Der Apache Fehler bleibt stehen. Der Reload passiert nicht mehr:

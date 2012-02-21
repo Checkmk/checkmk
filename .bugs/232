@@ -3,8 +3,6 @@ Component: checks
 State: wontfix
 Class: bug
 Date: 2011-04-11 16:41:52
-Benefit: 5
-Cost: 2
 Fun: 0
 
 offenbar greift der lnx_if auch wenn ein agent-OS != linux vom agent gemeldet wird.

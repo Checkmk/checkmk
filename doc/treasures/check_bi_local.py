@@ -32,22 +32,42 @@
 # 3. Add a correct url_prefix (OMD site and slash)
 #    user and password with read access to Multisite. 
 
-user = "omdadmin"
-password = "omd"
 url_prefix = "" # non-OMD installations
 # url_prefix = "mysite/" # with OMD site name
+
+# HTTP Basic Auth
+user = "omdadmin"
+password = "omd"
+# Alternatively: Multisite Cookie authentication:
+# If you are using Cookie base authentication, then
+# login with your browser and get the cookie content
+# of auth_... from your browser settings and put
+# it here:
+# cookie = "omdadmin:1329218457.69:16b1d572fe059e00a89b7f24592733f2"
+
 
 # Do not change anything below
 
 import os, sys
 
-url = 'http://%s:%s@localhost/%scheck_mk/view.py?view_name=aggr_summary&output_format=python' % \
-  (user, password, url_prefix)
+if cookie:
+    logininfo = ""
+    opts = "-b 'auth_=%s'" % cookie
+else:
+    logininfo = "%s:%s@" % (user, password)
+    opts = ""
+
+url = 'http://%slocalhost/%scheck_mk/view.py?view_name=aggr_summary&output_format=python' % \
+  (logininfo, url_prefix)
 
 try:
-    data = eval(os.popen("curl --silent '%s'" % url).read())
+    command = "curl --silent %s '%s'" % (opts, url)
+    output = os.popen(command).read()
+    data = eval(output)
 except:
-    sys.stderr.write("Invalid output from URL %s\n" % url)
+    sys.stderr.write("Invalid output from URL %s:\n" % url)
+    sys.stderr.write(output)
+    sys.stderr.write("Command was: %s\n" % command)
     sys.exit(1)
 
 states = {

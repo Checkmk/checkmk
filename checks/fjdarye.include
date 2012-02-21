@@ -1,0 +1,117 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# check_mk plugin to monitor Fujitsu storage systems supporting FJDARY-E60.MIB or FJDARY-E100.MIB
+# Copyright (c) 2012 FuH Entwicklungsgesellschaft mbH, Umkirch, Germany. All rights reserved.
+# Author: Philipp Hoefflin, 2012, hoefflin+cmk@fuh-e.de
+
+# generic data structure widely used in the FJDARY-Mibs:
+# <oid>
+# <oid>.1: Index
+# <oid>.3: Status
+# the latter can be one of the following:
+fjdarye_item_status = { 1: 'normal',  2: 'alarm',       3: 'warning',
+                        4: 'invalid', 5: 'maintenance', 6: 'undefined' }
+
+# generic inventory item - status other than 'invalid' is ok for inventory
+def inventory_fjdarye_item(info):
+    return [ (int(index), '', None) for index, status in info if int(status) != 4 ]
+
+# generic check_function returning the nagios-code and the status text
+def check_fjdarye_item(index, _no_param, info):
+    for line in info:
+        if int(line[0]) == index:
+            status = int(line[1])
+            if status == 1:
+                code = 0
+            elif status == 3:
+                code = 1
+            else:
+                code = 2
+            return(code, "%s - Status is %s" % (nagios_state_names[code], fjdarye_item_status[status]))
+    return(3, 'UNKNOWN - No status for item %d present' % index )
+
+# --------------------------------------------------------------------------------
+# disk checks:
+# available(1), broken(2), notavailable(3), notsupported(4), present(5),
+# readying(6), recovering(7), partbroken(64), spare(65), formatting(66),
+# unformatted(67), notexist(68), copying(69)
+fjdarye_disks_status = { 1: 'available', 2: 'broken', 3: 'notavailable',
+    4: 'notsupported', 5: 'present', 6: 'readying', 7: 'recovering',
+    64: 'partbroken', 65: 'spare', 66: 'formatting', 67: 'unformated',
+    68: 'notexist', 69: 'copying' }
+
+# 1. Summary version of check -> all disks into one service
+def fjdarye_disks_summary(info):
+    # compute the number of disks in each state.
+    states = {}
+    for index, state in info:
+        state = int(state)
+        statename = fjdarye_disks_status[state]
+        if state != 3:
+            states[statename] = states.get(statename, 0) + 1
+    return states
+
+def inventory_fjdarye_disks_summary(info):
+    current_state = fjdarye_disks_summary(info)
+    if len(current_state) > 0:
+        return [ (None, current_state) ]
+
+def fjdarye_disks_printstates(state):
+    return ", ".join(["%s: %s" % (s,c) for (s,c) in state.items()])
+
+def check_fjdarye_disks_summary(index, expected_status, info):
+    current_state = fjdarye_disks_summary(info)
+    infotext = " - " + fjdarye_disks_printstates(current_state)
+    if current_state == expected_status:
+        return (0, "OK" + infotext)
+
+    result = 1
+    for ename, ecount in expected_status.items():
+        if current_state.get(ename, 0) < ecount:
+            result = 2
+            break
+
+    return (result, nagios_state_names[result] + infotext + \
+            " (expected was: %s)" % fjdarye_disks_printstates(expected_status))
+
+# --------------------------------------------------------------------------------
+# 2. Single disk version of check -> one check for each disk
+def inventory_fjdarye_disks(info):
+    return [ (int(index), repr(fjdarye_disks_status[int(status)])) for index, status in info if int(status) != 3 ]
+
+def check_fjdarye_disks(index, expected_status, info):
+    for line in info:
+        if int(line[0]) == index:
+            status = fjdarye_disks_status[int(line[1])]
+
+            if status == expected_status:
+                return (0, "OK - Status is %s" % status)
+            else:
+                return (2, "CRIT - Status is %s (expected status is %s)" % (status, expected_status))
+
+    return (3, "UNKNOWN - No status for disk number %d present" % index)
+

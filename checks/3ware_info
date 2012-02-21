@@ -51,7 +51,7 @@ def inventory_3ware_info(info):
             inventory.append( (controller, None) )
     return inventory
 
-def check_3ware_info(item, params, info):
+def check_3ware_info(item, _no_params, info):
     infotext =''
     for line in info:
         line = ' '.join(line[1:])

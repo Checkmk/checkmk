@@ -3,8 +3,6 @@ Component: checks
 State: wontfix
 Class: cleanup
 Date: 2011-02-25 09:42:02
-Benefit: 5
-Cost: 3
 Fun: 0
 
 A couple of checks still have no SNMP scan function. This must

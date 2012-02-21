@@ -2,8 +2,6 @@ Title: transid relativ zum Browserfenster machen
 Component: multisite
 State: done
 Class: nastiness
-Benefit: 1
-Cost: 2
 Date: 2011-08-09 18:12:55
 Targetversion: 1.2.0
 

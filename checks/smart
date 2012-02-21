@@ -139,3 +139,4 @@ def check_smart_temp(item, params, info):
 
 check_info['smart.stats'] = (check_smart_stats, "SMART %s Stats",       1, lambda info: inventory_smart("smart.stats", info))
 check_info['smart.temp']  = (check_smart_temp,  "Temperature SMART %s", 1, lambda info: inventory_smart("smart.temp", info))
+checkgroup_of['smart.temp'] = "hw_temperature"

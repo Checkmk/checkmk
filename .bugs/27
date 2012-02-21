@@ -2,8 +2,6 @@ Title: windows agent: Startmodus von Dienstens ausgeben
 Component: checks
 State: done
 Class: feature
-Benefit: 2
-Cost: 2
 Date: 2010-12-21 16:40:20
 Targetversion: future
 

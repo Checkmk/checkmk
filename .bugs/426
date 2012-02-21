@@ -2,8 +2,6 @@ Title: hpux_cpu problem parsing uptime info
 Component: checks
 State: done
 Class: bug
-Benefit: 1
-Cost: 4
 Date: 2011-10-21 12:55:23
 Targetversion: 1.2.0
 

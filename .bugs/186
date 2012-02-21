@@ -3,8 +3,6 @@ Component: core
 State: wontfix
 Class: bug
 Date: 2011-06-30 11:44:52
-Benefit: 1
-Cost: 4
 Fun: 0
 
 Beim aktuellen Windows Agenten werden auf einem Windows 2000 SP4 System die Plugins nicht ausgeführt.

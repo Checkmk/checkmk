@@ -2,8 +2,6 @@ Title: Livestatus grouping by check_interval does not work
 Component: livestatus
 State: works4me
 Class: bug
-Benefit: 1
-Cost: 2
 Date: 2011-10-28 10:14:07
 Targetversion: 
 

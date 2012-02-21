@@ -1,8 +1,6 @@
 Title: Make sections in windows agent configurable
 Component: checks
-Benefit: 2
 State: open
-Cost: 3
 Date: 2011-03-07 19:06:24
 Class: feature
 

@@ -98,7 +98,7 @@ smbios_sel_msg_types = {
 
 def inventory_smbios_sel(info):
     if len(info) > 0:
-        return [(None, "", "None")]
+        return [(None, "None")]
 
 def check_smbios_sel(_no_item, _no_params, info):
     if len(info) == 0:
@@ -164,3 +164,4 @@ def check_smbios_sel(_no_item, _no_params, info):
     return (sum_status, "%s: %s" % (nagios_state_names[sum_status], sum_output))
 
 check_info['smbios_sel'] = (check_smbios_sel, "SMBIOS Event Log", 0, inventory_smbios_sel)
+checkgroup_of['smbios_sel'] = 'hw_errors'

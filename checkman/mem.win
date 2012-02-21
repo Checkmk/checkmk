@@ -25,7 +25,7 @@ examples:
 
  # Disable memory levels for all hosts with the tag "test"
  check_parameters += [
-    ( { "memory" : ("101.0", "101.0") },
+    ( { "memory" : (101.0, 101.0) },
       [ "test" ], ALL_HOSTS, [ "Memory and pagefile" ] ),
  ]
 

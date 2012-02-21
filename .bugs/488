@@ -1,11 +1,9 @@
 Title: SNMP v3 settings are not sensible
 Component: wato
-Benefit: 1
 State: open
-Cost: 1
 Date: 2011-12-09 10:21:05
 Targetversion: 1.1.13i1
-Class: bug
+Class: todo
 
 Only when selecting authPriv, we should display
 privacy protocol and pass phrase.

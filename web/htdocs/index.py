@@ -139,6 +139,7 @@ def connect_to_livestatus(html):
 
     else:
         html.live = livestatus.SingleSiteConnection("unix:" + defaults.livestatus_unix_socket)
+        html.live.set_timeout(10) # default timeout is 10 seconds
         html.site_status = { '': { "state" : "dead", "site" : config.site('') } }
         v1, v2, ps = html.live.query_row("GET status\nColumns: livestatus_version program_version program_start")
         html.site_status[''].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2, "program_start" : ps })
@@ -240,6 +241,10 @@ def handler(req, profiling = True):
                     # While api call don't show the login dialog
                     raise MKUnauthenticatedException(_('You are not authenticated.'))
 
+                # Initialize the i18n for the login dialog. This might be overridden
+                # later after user login
+                load_language(html.var("lang", config.get_language()))
+
                 # After auth check the regular page can be shown
                 result = login.page_login()
                 if type(result) == tuple:
@@ -280,6 +285,11 @@ def handler(req, profiling = True):
                 reason += _("<b>You do not have any roles.</b> ")
             reason += _("If you think this is an error, "
                         "please ask your administrator to check the permissions configuration.")
+
+            if config.auth_type == 'cookie':
+                reason += _('<p>You have been logged out. Please reload the page to re-authenticate.</p>')
+                login.del_auth_cookie()
+
             raise MKAuthException(reason)
 
         # General access allowed. Now connect to livestatus

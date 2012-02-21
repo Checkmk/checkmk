@@ -74,7 +74,7 @@ def get_perfometer_files():
     return [ f for f in files if f.endswith(".py") and not f.startswith('.') ]
 
 def check_has_perfdata(check):
-    return check_info[check][2] == 1
+    return check_info[check]["has_perfdata"]
 
 def get_all_checks():
     k = check_info.keys()
@@ -168,12 +168,12 @@ TESTS = {
     'manpage':     C_OK,
     'snmp_scan':   C_OK,
     'pnp_tmpl':    C_OK,
-    'pnp_rra':     C_OK,
     'perfometer':  C_OK,
     'snmp_scan':   C_OK,
     'reindent':    C_OK,
     'global_vars': C_OK,
     'linelength':  C_OK,
+    'wato':        C_OK,
     'debug':       C_OK,
 }
 
@@ -240,6 +240,7 @@ def verify_reindent(check):
     f.close()
     return not r.run()
 
+
 # Debug:
 # - are there 'print' statements in the code?
 # - are there 'sys.*.write' statements?
@@ -300,15 +301,6 @@ def is_valid_pnp_tmpl(check):
 def verify_pnp_tmpl(check):
     return os.path.exists('pnp-templates/check_mk-%s.php' % check)
 
-# PNP-Template:
-# Does the chekc which produces perfdata have a rra config?
-
-def is_valid_pnp_rra(check):
-    return check_has_perfdata(check)
-
-def verify_pnp_rra(check):
-    return os.path.exists('pnp-rraconf/check_mk-%s.rra.cfg' % check)
-
 # Perfometer:
 # Checks with perfdata should provide a perfometer
 
@@ -317,6 +309,29 @@ def is_valid_perfometer(check):
 
 def verify_perfometer(check):
     return 'check_mk-' + check in perfometers
+
+# Has this check a group assigned to?
+def is_valid_wato(check):
+    return True
+
+def verify_wato(check):
+    group = check_info[check]["group"]
+    if group == "obsolete":
+        return True
+
+    now = False
+    for line in file("web/plugins/wato/check_parameters.py"):
+        line = line.strip()
+        if line.startswith("checkgroups.append(("):
+            now = True
+        elif now:
+            this_group = line.strip(",").strip('"').strip("'")
+            if group == this_group:
+                return True
+            now = False
+        else:
+            now = False
+    return False
 
 # #############################################################################
 # MAIN
@@ -358,6 +373,8 @@ for o, a in opts:
         usage()
     else:
         usage('Unhandled parameter: %s' % str(o))
+
+convert_check_info()
 
 # 1) Perform checks
 #

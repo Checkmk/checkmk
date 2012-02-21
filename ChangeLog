@@ -1,18 +1,72 @@
 1.1.13i4:
+    Core, Setup, etc.:
+    * new tool 'livedump' for dumping configuration and status
+      information from one monitoring core and importing this
+      into another.
+    * Enable new check registration API (not yet used in checks)
+    * FIX: fix handling of prefix-tag rules (+), needed for WATO
+    * FIX: handle buggy SNMP devices with non-consecutive OIDS
+      (such as BINTEC routers)
+    * Check API allows a check to get node information
+    * FIX: fix problem with check includes in subchecks
+
     WATO:
-    * diskstat: make inventory mode configurable via WATO
+    * Much more checks are configurable via WATO now
+    * Distributed WATO: Made all URL calls using curl now
+    * FIX: fix bug in inventory in validate_datatype()
+    * Better output in case of inventory error
+    * FIX: fix bug in host_icon rule on non OMD
+    * FIX: do not use isdisjoint() (was in rule editor on Lenny)
+    * FIX: allow UTF-8 encoded permission translations
+    * FIX: Fixed several problems in OMD apache shared mode
+    * FIX: Do not use None$ as item when creating new rules
+    * FIX: Do load *all* users from htpasswd, so passwords from
+      users not created via WATO will not be lost.
+    * FIX: honor site disabling in replication module
+    * FIX: honor write permissions on folder in "bulk delete"
+    * FIX: honor permissions for "bulk cleanup" and "bulk edit"
+    * FIX: honor write permissions and source folder when moving hosts
+    * FIX: honor permissions on hosts also on bulk inventory
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors
     * hpux_if: make configurable via WATO
     * if.include: fix handling of NIC with index 0
     * hpux_lunstats: new check for disk IO on HP-UX
+    * windows - mk_oracle tablespace: Added missing sid column
+    * diskstat: make inventory mode configurable via WATO
+    * added new checks for Fujitsu ETERNUS DX80 S2 
+      (thanks to Philipp Höfflin)
+    * Fix Perf-O-Meter of fileage
+    * hpux_snmp_cs.cpu: new SNMP check for CPU utilization
+      on HP-UX.
+    * if/if64: inventory also picks up type 62 (fastEther). This
+      is needed on Cisco WLC 21xx series (thanks to Ralf Ertzinger)
+    * FIX: fix inventory of f5_bigip_temp
+    * mk_oracle (lnx+win): Fixed TEMP tablespace size calculations
+    * ps: output node process is running on (only for clusters)
 
     Multisite:
     * Added several missing localization stringsw
+    * IE: Fixed problem with clicking SELECT fields in the new wato foldertree snapin
+    * Fixed problem when trying to visit dashboards from new wato foldertree snapin
+    * Chrome: Fixed styling problem of foldertree snapin
+    * Views: Only show the commands and row selection options for views where
+      commands are possible
+    * The login mask honors the default_language definition now
+    * check_bi_local.py: works now with cookie based authentication
+    * FIX: Fixed wrong redirection after login in some cases
+    * FIX: Fixed missing stats grouping in alert statistics view
+    * FIX: Fixed preview table styling in view editor
+    * FIX: Multisite authed users without permission to multisite are
+      automatically logged out after showing the error message
+    * Retry livestatus connect until timeout is used up. This avoids
+      error messages when the core is being restarted
 
-    WATO:
-    * Distributed WATO: Made all url calls using curl now
+
+    BI:
+    * New column (painter) for simplistic box display of tree.
+      This is used in a view for a single hostgroup.
 
 1.1.13i3:
     Core, Setup, etc.:

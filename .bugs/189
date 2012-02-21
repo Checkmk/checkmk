@@ -3,8 +3,6 @@ Component: core
 State: done
 Class: nastiness
 Date: 2011-07-25 15:57:55
-Benefit: 3
-Cost: 3
 Fun: 0
 
 Scanparents function should check if the parents.mk has been created by the

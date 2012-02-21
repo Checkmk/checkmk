@@ -3,8 +3,6 @@ Component: checks
 State: done
 Class: bug
 Date: 2010-12-21 16:23:51
-Benefit: 2
-Cost: 2
 Fun: 0
 
 Das Einrechnen in Swap ist Müll. Windows tickt anders. Hier muss

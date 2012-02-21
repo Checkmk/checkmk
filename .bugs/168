@@ -1,8 +1,6 @@
 Title: ORACLE agent: mounted (readonly) databases make problems
 Component: checks
-Benefit: 1
 State: open
-Cost: 2
 Date: 2011-03-01 18:39:44
 Class: feature
 

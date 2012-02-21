@@ -249,8 +249,15 @@ def submit_check_mk_aggregation(hostname, status, output):
 # and thus do no network activity at all...
 
 def get_host_info(hostname, ipaddress, checkname):
-    nodes = nodes_of(hostname)
 
+    # If the check want's the node info, we add an additional
+    # column (as the first column) with the name of the node
+    # or None (in case of non-clustered nodes). On problem arises,
+    # if we deal with subchecks. We assume that all subchecks 
+    # have the same setting here. If not, let's raise an exception.
+    add_nodeinfo = check_info.get(checkname, {}).get("node_info", False)
+
+    nodes = nodes_of(hostname)
     if nodes != None:
         info = []
         at_least_one_without_exception = False
@@ -263,7 +270,10 @@ def get_host_info(hostname, ipaddress, checkname):
             # try the other node.
             try:
                 ipaddress = lookup_ipaddress(node)
-                info += get_realhost_info(node, ipaddress, checkname, cluster_max_cachefile_age)
+                new_info = get_realhost_info(node, ipaddress, checkname, cluster_max_cachefile_age)
+                if add_nodeinfo:
+                    new_info = [ [node] + line for line in new_info ]
+                info += new_info
                 at_least_one_without_exception = True
             except MKAgentError, e:
 		if str(e) != "": # only first error contains text
@@ -281,7 +291,11 @@ def get_host_info(hostname, ipaddress, checkname):
                 raise MKAgentError(", ".join(exception_texts))
         return info
     else:
-        return get_realhost_info(hostname, ipaddress, checkname, check_max_cachefile_age)
+        info = get_realhost_info(hostname, ipaddress, checkname, check_max_cachefile_age)
+        if add_nodeinfo:
+            return [ [ None ] + line for line in info ]
+        else:
+            return info
 
 # Gets info from a real host (not a cluster). There are three possible
 # ways: TCP, SNMP and external command.  This function raises
@@ -295,15 +309,17 @@ def get_host_info(hostname, ipaddress, checkname):
 #
 # This function assumes, that each check type is queried
 # only once for each host.
-def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
+def get_realhost_info(hostname, ipaddress, check_type, max_cache_age):
     info = get_cached_hostinfo(hostname)
-    if info and info.has_key(checkname):
-        return info[checkname]
+    if info and info.has_key(check_type):
+        return info[check_type]
 
-    cache_relpath = hostname + "." + checkname
+    cache_relpath = hostname + "." + check_type
 
     # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
-    oid_info = snmp_info.get(checkname)
+    # Please note, that if the check_type is foo.bar then we lookup the
+    # snmp info for "foo", not for "foo.bar".
+    oid_info = snmp_info.get(check_type.split(".")[0])
     if oid_info:
         content = read_cache_file(cache_relpath, max_cache_age)
         if content:
@@ -325,7 +341,7 @@ def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
                 table = None
         else:
             table = get_snmp_table(hostname, ipaddress, oid_info)
-        store_cached_checkinfo(hostname, checkname, table)
+        store_cached_checkinfo(hostname, check_type, table)
         write_cache_file(cache_relpath, repr(table) + "\n")
         return table
 
@@ -347,7 +363,7 @@ def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
     lines = [ l.strip() for l in output.split('\n') ]
     info = parse_info(lines)
     store_cached_hostinfo(hostname, info)
-    return info.get(checkname, []) # return only data for specified check
+    return info.get(check_type, []) # return only data for specified check
 
 
 def read_cache_file(relpath, max_cache_age):
@@ -727,6 +743,69 @@ def do_check(hostname, ipaddress):
 def check_unimplemented(checkname, params, info):
     return (3, 'UNKNOWN - Check not implemented')
 
+def convert_check_info():
+    for check_type, info in check_info.items():
+        basename = check_type.split(".")[0]
+
+        if type(info) != dict:
+            # Convert check declaration from old style to new API
+            check_function, service_description, has_perfdata, inventory_function = info
+            if inventory_function == no_inventory_possible:
+                inventory_function = None
+
+            check_info[check_type] = {
+                "check_function"          : check_function,
+                "service_description"     : service_description,
+                "has_perfdata"            : not not has_perfdata,
+                "inventory_function"      : inventory_function,
+                # Insert check name as group if no group is being defined
+                "group"                   : checkgroup_of.get(check_type, check_type),
+                "snmp_info"               : snmp_info.get(check_type),
+                # Sometimes the scan function is assigned to the check_type
+                # rather than to the base name.
+                "snmp_scan_function"      : 
+                    snmp_scan_functions.get(check_type,
+                        snmp_scan_functions.get(basename)),
+                "default_levels_variable" : check_default_levels.get(check_type),
+                "node_info"               : False,
+            }
+        else:
+            # Check does already use new API. Make sure that all keys are present,
+            # extra check-specific information into file-specific variables.
+            info.setdefault("inventory_function", None)
+            info.setdefault("group", None)
+            info.setdefault("snmp_info", None)
+            info.setdefault("snmp_scan_function", None)
+            info.setdefault("default_levels_variable", None)
+            info.setdefault("node_info", False)
+
+            # Include files are related to the check file (= the basename),
+            # not to the (sub-)check. So we keep them in check_includes.
+            check_includes.setdefault(basename, [])
+            check_includes[basename] += info.get("includes", [])
+
+    # Make sure that setting for node_info of check and subcheck matches
+    for check_type, info in check_info.iteritems():
+        if "." in check_type:
+            base_check = check_type.split(".")[0]
+            if base_check not in check_info:
+                if info["node_info"]:
+                    raise MKGeneralException("Invalid check implementation: node_info for %s is True, but base check %s not defined" %
+                        (check_type, base_check))
+            elif check_info[base_check]["node_info"] != info["node_info"]:
+               raise MKGeneralException("Invalid check implementation: node_info for %s and %s are different." % (
+                   (base_check, check_type)))
+
+    # Now gather snmp_info and snmp_scan_function back to the 
+    # original arrays. Note: these information is tied to a "agent section",
+    # not to a check. Several checks may use the same SNMP info and scan function.
+    for info in check_info.values():
+        basename = check_type.split(".")[0]
+        if info["snmp_info"] and basename not in snmp_info:
+            snmp_info[basename] = info["snmp_info"]
+        if info["snmp_scan_function"] and basename not in snmp_scan_functions:
+            snmp_scan_functions[basename] = info["snmp_scan_function"]
+
 # Loops over all checks for a host, gets the data, calls the check
 # function that examines that data and sends the result to Nagios
 def do_all_checks_on_host(hostname, ipaddress):
@@ -767,7 +846,7 @@ def do_all_checks_on_host(hostname, ipaddress):
         if info or info == []:
             num_success += 1
             try:
-                check_funktion = check_info[checkname][0]
+                check_funktion = check_info[checkname]["check_function"]
             except:
                 check_funktion = check_unimplemented
 

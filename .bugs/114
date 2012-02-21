@@ -3,8 +3,6 @@ Component: core
 State: wontfix
 Class: feature
 Date: 2011-01-30 13:03:57
-Benefit: 1
-Cost: 2
 Fun: 0
 
 We could do this similar to ps. There should be a rule based variant

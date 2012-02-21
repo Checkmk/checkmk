@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: nastiness
 Date: 2011-08-26 10:49:22
-Benefit: 1
-Cost: 2
 Fun: 0
 
 Ich musste das Sortieren der joined colums umsetzen. Das war gar nicht so trivial.

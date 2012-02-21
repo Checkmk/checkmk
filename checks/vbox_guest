@@ -27,7 +27,7 @@
 def vbox_guest_make_dict(info):
     return dict([(l[1].split('/',2)[2].rstrip(','), l[3]) for l in info])
 
-def check_vbox_guest(item, _no_params, info):
+def check_vbox_guest(_no_item, _no_params, info):
     if len(info) == 1 and info[0][0] == "ERROR":
         return (3, "UNKNOWN - Error running VBoxControl guestproperty enumerate")
     try:
@@ -56,3 +56,4 @@ def inventory_vbox_guest(info):
         return [(None, None)]
 
 check_info["vbox_guest"] = ( check_vbox_guest, "VBox Guest Additions", 0, inventory_vbox_guest)
+checkgroup_of["vbox_guest"] = "vm_state"

@@ -3,8 +3,6 @@ Component: checks
 State: done
 Class: bug
 Date: 2011-09-19 09:45:55
-Benefit: 6
-Cost: 3
 Fun: 0
 
 The reference clock check seems to be off by a factor of 1000.

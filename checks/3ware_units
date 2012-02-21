@@ -47,7 +47,7 @@ def inventory_3ware_units(info):
     return inventory
 
 # check
-def check_3ware_units(item, param, info):
+def check_3ware_units(item, _no_params, info):
     for line in info:
         if line[0] == item:
             unit_type = line[1]
@@ -77,3 +77,4 @@ def check_3ware_units(item, param, info):
 # declare the check to Check_MK
 check_info['3ware_units'] = \
         (check_3ware_units, "RAID 3ware unit %s", 0, inventory_3ware_units)
+checkgroup_of['3ware_units'] = "raid"

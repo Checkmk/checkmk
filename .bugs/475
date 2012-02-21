@@ -2,8 +2,6 @@ Title: lnx_if fails if ethtool is not working
 Component: checks
 State: done
 Class: bug
-Benefit: 1
-Cost: 2
 Date: 2011-12-06 08:47:42
 Targetversion: 1.1.12
 

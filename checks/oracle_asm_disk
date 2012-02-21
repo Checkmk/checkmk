@@ -24,9 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Note: this check only works with a customer specific agent
+# plugin that is not portable and not shipped with Check_MK.
+# It will be removed in a future version.
 
 def inventory_oracle_asm_disk(info):
-    return [ (line[0], "", '""') for line in info if line[1] != "0" ]
+    return [ (line[0], '""') for line in info if line[1] != "0" ]
 
 def check_oracle_asm_disk(diskname, params, info):
     for line in info:
@@ -47,3 +50,4 @@ check_info['oracle_asm_disk'] = (
         "ASM disk %s",
         0,
         inventory_oracle_asm_disk)
+checkgroup_of['oracle_asm_disk'] = "obsolete"

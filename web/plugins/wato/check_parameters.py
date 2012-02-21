@@ -61,7 +61,9 @@ register_rule(group,
             ( "packets",
               Integer(
                   title = _("Number of packets"),
-                  help = _("Number ICMP echo request packets to send to the target host"),
+                  help = _("Number ICMP echo request packets to send to the target host on each "
+                           "check execution. All packets are sent directly on check execution. Afterwards "
+                           "the check waits for the incoming packets."),
                   minvalue = 1,
                   maxvalue = 20,
                )),
@@ -238,6 +240,22 @@ checkgroups.append((
     ),
     "first"
 ))
+
+checkgroups.append((
+    "fs_mount_options",
+    _("Filesystem mount options (Linux/UNIX)"),
+    ListOfStrings(
+       title = _("Expected mount options"),
+       help = _("Specify all expected mount options here. If the list of "
+         "actually found options differs from this list, the check will go "
+         "warning or critical. Just the option <tt>commit</tt> is being "
+         "ignored since it is modified by the power saving algorithms.")),
+    TextAscii(
+        title = _("Mount point"),
+        allow_empty = False),
+    "first"))
+
+
 
 checkgroups.append((
     "systemtime",
@@ -803,7 +821,8 @@ checkgroups.append((
     "mailqueue_length",
     _("Number of mails in outgoing mail queue"),
     Tuple(
-          help = _("This levels is applied to the number of Email that are currently in the outgoing mail queue."),
+          help = _("These levels are applied to the number of Email that are "
+                   "currently in the outgoing mail queue."),
           elements = [
               Integer(title = _("Warning at"), label = _("mails")),
               Integer(title = _("Critical at"), label = _("mails"))]),
@@ -814,6 +833,180 @@ checkgroups.append((
     _("Display the system's uptime as a check"),
     None,
     None, None))
+
+checkgroups.append((
+    "zpool_status",
+    _("ZFS storage pool status"),
+    None,
+    None, None))
+
+checkgroups.append((
+    "vm_state",
+    _("Overall state of a virtual machine"),
+    None,
+    None, None))
+
+checkgroups.append((
+    "hw_errors",
+    _("Simple checks for BIOS/Hardware errors without parameters"),
+    None,
+    None, None))
+
+checkgroups.append((
+    "omd_status",
+    _("OMD site status"),
+    None,
+    TextAscii(
+        title = _("Name of the OMD site"),
+        help = _("The name of the OMD site to check the status for")),
+    "first"))
+
+checkgroups.append((
+    "network_fs",
+    _("Network filesystem - overall status (e.g. NFS)"),
+    None,
+    TextAscii(
+        title = _("Name of the mount point"),
+        help = _("For NFS enter the name of the mount point.")),
+    "first"))
+
+checkgroups.append((
+    "multipath",
+    _("Multipathing - health of a multipath LUN"),
+    Integer(
+        title = _("Expected number of active paths")),
+    TextAscii(
+        title = _("Name of the MP LUN"),
+        help = _("For Linux multipathing this is either the UUID (e.g. "
+                 "60a9800043346937686f456f59386741), or the configured "
+                 "alias.")),
+    "first"))
+
+checkgroups.append((
+    "hpux_multipath",
+    _("Multipathing on HPUX - state of paths of a LUN"),
+    Tuple(
+        title = _("Expected path situation"),
+        elements = [
+            Integer(title = _("Number of active paths")),
+            Integer(title = _("Number of standby paths")),
+            Integer(title = _("Number of failed paths")),
+            Integer(title = _("Number of unopen paths")),
+        ]),
+    TextAscii(
+        title = _("WWID of the LUN")),
+    "first"))
+
+
+checkgroups.append((
+    "services",
+    _("Windows services"),
+    None,
+    TextAscii(
+        title = _("Name of the service"),
+        help = _("Pleae Please  note, that the agent replaces spaces in "
+         "the service names with underscores. If you are unsure about the "
+         "correct spelling of the name then please look at the output of "
+         "the agent (cmk -d HOSTNAME). The service names  are in the first "
+         "column of the section &lt;&lt;&lt;services&gt;&gt;&gt;. Please "
+         "do not mix up the service name with the display name of the service."
+         "The latter one is just being displayed as a further information.")),
+    "first"))
+
+checkgroups.append((
+    "raid",
+    _("RAID: overal state"),
+    None,
+    TextAscii(
+        title = _("Name of the device"),
+        help = _("For Linux MD specify the device name without the "
+                 "<tt>/dev/</tt>, e.g. <tt>md0</tt>, for hardware raids "
+                 "please refer to the manual of the actual check being used.")),
+    "first"))
+
+checkgroups.append((
+    "raid_disk",
+    _("RAID: state of a single disk"),
+    TextAscii(
+        title = _("Target state"),
+        help = _("State the disk is expected to be in. Typical good states "
+            "are online, host spare, OK and the like. The exact way of how "
+            "to specify a state depends on the check and hard type being used. "
+            "Please take examples from inventorized checks for reference.")),
+    TextAscii(
+        title = _("Number or ID of the disk"),
+        help = _("How the disks are named depends on the type of hardware being "
+                 "used. Please look at already inventorized checks for examples.")),
+    "first"))
+
+checkgroups.append((
+    "room_temperature",
+    _("Room temperature (e.g. external thermal sensors in datacenters)"),
+    Tuple(
+        help = _("Temperature levels for external thermometers that are used "
+                 "for monitoring the temperature of a datacenter. An example "
+                 "is the webthem from W&amp;T."),
+        elements = [
+            Integer(title = "warning at", unit = u"°C"),
+            Integer(title = "critical at", unit = u"°C"),
+        ]),
+    TextAscii(
+        title = _("Sensor ID"),
+        help = _("The identificator of the themal sensor.")),
+    "first"))
+
+checkgroups.append((
+    "hw_temperature",
+    _("Hardware temperature (CPU, Memory, Mainboard, etc.)"),
+    Tuple(
+        help = _("Temperature levels for internal sensors found in many appliances, "
+                 "switches, routers, mainboards and other devices. "),  
+        elements = [
+            Integer(title = "warning at", unit = u"°C"),
+            Integer(title = "critical at", unit = u"°C"),
+        ]),
+    TextAscii(
+        title = _("Sensor ID"),
+        help = _("The identificator of the themal sensor.")),
+    "first"))
+
+checkgroups.append((
+    "temperature_auto",
+    _("Temperature sensors with builtin levels"),
+    None,
+    TextAscii(
+        title = _("Sensor ID"),
+        help = _("The identificator of the themal sensor.")),
+    "first"))
+
+
+
+checkgroups.append((
+    "wmic_process",
+    _("Memory and CPU consumption of processes on Windows (via WMI)"),
+    Tuple(
+        elements = [
+            TextAscii(
+                title = _("Name of the process"),
+                allow_empty = False,
+            ),
+            Integer(title = _("Memory waring at"), unit = "MB"),
+            Integer(title = _("Memory critical at"), unit = "MB"),
+            Integer(title = _("Pagefile warning at"), unit = "MB"),
+            Integer(title = _("Pagefile critical at"), unit = "MB"), 
+            Percentage(title = _("CPU usage warning at")),
+            Percentage(title = _("CPU usage critical at")),
+        ],
+    ),
+    TextAscii(
+        title = _("Process name for usage in the Nagios service description"),
+        allow_empty = False),
+    "first"))
+
+
+
+            
+
 
 # Create rules for check parameters of inventorized checks
 for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
@@ -868,7 +1061,8 @@ for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
             FixedValue(None,
                 help = _("This check has no parameters."),
                 totext = "")
-    valuespec._title = _("Parameters")
+    if not valuespec.title():
+        valuespec._title = _("Parameters")
     elements.append(valuespec)
 
     register_rule(

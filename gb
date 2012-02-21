@@ -220,7 +220,7 @@ def show_bug(bug):
     list_bug(bug)
     sys.stdout.write("\n%s\n" % bug["description"])
 
-def main_list(args):
+def main_list(args, format):
     bugs = g_bugs.values()
 
     # arguments are tags from state, component and class. Multiple values
@@ -243,6 +243,8 @@ def main_list(args):
           ( "targetversion",  targetversions),
           ]:
             for v in values:
+                if type(v) == tuple:
+                    v = v[0]
                 if v.startswith(a):
                     entries = filters.get(tp, [])
                     entries.append(v)
@@ -273,9 +275,52 @@ def main_list(args):
         newbugs.reverse()
 
     # Output
-    for bug in bugs:
-        list_bug(bug)
+    if format == "console":
+        for bug in bugs:
+            list_bug(bug)
+    else:
+        output_csv(bugs)
 
+
+# CSV Table has the following columns:
+# Component;ID;Title;Class;Effort
+def output_csv(bugs):
+    def line(*l):
+        sys.stdout.write('"' + '";"'.join(map(str, l)) + '"\n')
+
+    nr = 1
+    for entry in components:
+        if len(entry) == 2:
+            name, alias = entry
+        else:
+            name = entry
+            alias = entry
+
+        line("", "", "", "", "")
+
+        total_effort = 0
+        for bug in bugs:
+            if bug["component"] == name:
+                total_effort += bug_effort(bug)
+        line("", "%d. %s" % (nr, alias), "", total_effort)
+        nr += 1
+
+        for bug in bugs:
+            if bug["component"] == name:
+                line(bug["id"], bug["title"], bug_class(bug), bug_effort(bug))
+                line("", bug["description"].replace("\n", " ").replace('"', "'"), "", "")
+
+def bug_class(bug):
+    cl = bug["class"]
+    for entry in classes:
+        if entry == cl:
+            return cl
+        elif type(entry) == tuple and entry[0] == cl:
+            return entry[1]
+    return cl
+
+def bug_effort(bug):
+    return int(bug.get("effort", "0"))
 
 def main_show(args):
     ids = args
@@ -330,6 +375,8 @@ def input_choice(what, choices):
     ctc = {}
     texts = []
     for choice in choices:
+        if type(choice) == tuple:
+            choice = choice[0]
         for c in choice:
             if c not in ".-_/" and c not in ctc:
                 ctc[c] = choice
@@ -556,7 +603,8 @@ if len(sys.argv) < 2:
 
 cmd = sys.argv[1]
 commands = {
-  "list"    : main_list,
+  "list"    : lambda args: main_list(args, "console"),
+  "export"  : lambda args: main_list(args, "csv"),
   "show"    : main_show,
   "new"     : main_new,
   "resolve" : main_resolve,
@@ -581,7 +629,7 @@ if len(hits) < 1:
 
 elif len(hits) > 1:
     sys.stderr.write("Command '%s' is ambigous. Possible are: %s\n" % \
-            ", ".join([ n for (n,f) in hits]))
+            (cmd, ", ".join([ n for (n,f) in hits])))
 
 else:
     hits[0][1](sys.argv[2:])

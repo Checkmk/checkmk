@@ -76,7 +76,7 @@ def inventory_zpool_status(info):
         else:
             return [ (None, None) ]
 #
-def check_zpool_status(_no_item, params, info):
+def check_zpool_status(_no_item, _no_params, info):
     #print info
     for line in info:
         l = " ".join(line)

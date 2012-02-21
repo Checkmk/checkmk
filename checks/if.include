@@ -26,7 +26,7 @@
 
 # Functions and definitions used by if and if64
 
-if_inventory_porttypes = [ '6', '32', '117' ]
+if_inventory_porttypes = [ '6', '32', '62', '117' ]
 if_inventory_portstates = [ '1' ]
 if_inventory_uses_description = False
 if_inventory_uses_alias = False

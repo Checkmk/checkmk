@@ -173,25 +173,51 @@ def automation_try_inventory_node(hostname):
     except:
         raise MKAutomationError("Cannot lookup IP address of host %s" % hostname)
 
-    f = []
+    found_services = []
+
+    dual_host = is_snmp_host(hostname) and is_tcp_host(hostname)
 
     # if we are using cache files, then we restrict us to existing
     # check types. SNMP scan is only done without the --cache option
+    snmp_error = None
     if is_snmp_host(hostname):
-        if opt_use_cachefile:
-            existing_checks = set([ cn for (cn, item) in get_check_table(hostname) ])
-            for cn in inventorable_checktypes("snmp"):
-                if cn in existing_checks:
-                    f += make_inventory(cn, [hostname], True, True)
-        else:
-            f = do_snmp_scan([hostname], True, True)
+        try:
+            if opt_use_cachefile:
+                existing_checks = set([ cn for (cn, item) in get_check_table(hostname) ])
+                for cn in inventorable_checktypes("snmp"):
+                    if cn in existing_checks:
+                        found_services += make_inventory(cn, [hostname], True, True)
+            else:
+                sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
+                if sys_descr != None:
+                    found_services = do_snmp_scan([hostname], True, True)
+                else:
+                    raise MKSNMPError("Cannot get system description via SNMP. "
+                                      "SNMP agent is not responding. Probably wrong "
+                                      "community or wrong SNMP version.")
+                
+        except Exception, e:
+            if not dual_host:
+                raise
+            snmp_error = str(e)
 
+    tcp_error = None
     if is_tcp_host(hostname):
-        for cn in inventorable_checktypes("tcp"):
-            f += make_inventory(cn, [hostname], True, True)
+        try:
+            for cn in inventorable_checktypes("tcp"):
+                found_services += make_inventory(cn, [hostname], True, True)
+        except Exception, e:
+            if not dual_host:
+                raise
+            tcp_error = str(e)
+
+    # raise MKAutomationError("%s/%s/%s" % (dual_host, snmp_error, tcp_error))
+    if dual_host and snmp_error and tcp_error:
+        raise MKAutomationError("Error using TCP (%s)\nand SNMP (%s)" %
+                (tcp_error, snmp_error))
 
     found = {}
-    for hn, ct, item, paramstring, state_type in f:
+    for hn, ct, item, paramstring, state_type in found_services:
        found[(ct, item)] = ( state_type, paramstring )
 
     # Check if already in autochecks (but not found anymore)
@@ -210,6 +236,7 @@ def automation_try_inventory_node(hostname):
     for cmd, descr, perf in legchecks:
         found[('legacy', descr)] = ( 'legacy', 'None' )
 
+    # Collect current status information about all existing checks
     table = []
     for (ct, item), (state_type, paramstring) in found.items():
         if state_type != 'legacy':
@@ -220,47 +247,72 @@ def automation_try_inventory_node(hostname):
             opt_dont_submit = True
 
             try:
+                exitcode = None
+                perfdata = []
                 info = get_host_info(hostname, ipaddress, infotype)
             # Handle cases where agent does not output data
             except MKAgentError, e:
-                if str(e) == "":
-                    continue
-                else:
-                    raise
+                exitcode = 3
+                output = "Error getting data from agent"
+                if str(e):
+                    output += ": %s" % e
+                tcp_error = output
+
             except MKSNMPError, e:
-                if str(e) == "":
-                    continue
-                else:
-                    raise
+                exitcode = 3
+                output = "Error getting data from agent for %s via SNMP" % infotype
+                if str(e):
+                    output += ": %s" % e
+                snmp_error = output
 
-            check_function = check_info[ct][0]
-            # apply check_parameters
-            try:
-                if type(paramstring) == str:
-                    params = eval(paramstring)
-                else:
-                    params = paramstring
-            except:
-                raise MKAutomationError("Invalid check parameter string '%s'" % paramstring)
-            if state_type != 'manual':
-                params = compute_check_parameters(hostname, ct, item, params)
-
-            try:
-                result = check_function(item, params, info)
-            except MKCounterWrapped, e:
-                result = (None, "WAITING - Counter based check, cannot be done offline")
             except Exception, e:
-                result = (3, "UNKNOWN - invalid output from agent or error in check implementation")
-            if len(result) == 2:
-                result = (result[0], result[1], [])
-            exitcode, output, perfdata = result
+                exitcode = 3
+                output = "Error getting data for %s: %s" % (infotype, e)
+                if check_uses_snmp(ct):
+                    snmp_error = output
+                else:
+                    tcp_error = output
+
+            if exitcode == None:
+                check_function = check_info[ct]["check_function"]
+                # apply check_parameters
+                try:
+                    if type(paramstring) == str:
+                        params = eval(paramstring)
+                    else:
+                        params = paramstring
+                except:
+                    raise MKAutomationError("Invalid check parameter string '%s'" % paramstring)
+                if state_type != 'manual':
+                    params = compute_check_parameters(hostname, ct, item, params)
+
+                try:
+                    result = check_function(item, params, info)
+                except MKCounterWrapped, e:
+                    result = (None, "WAITING - Counter based check, cannot be done offline")
+                except Exception, e:
+                    result = (3, "UNKNOWN - invalid output from agent or error in check implementation")
+                if len(result) == 2:
+                    result = (result[0], result[1], [])
+                exitcode, output, perfdata = result
         else:
             descr = item
             exitcode = None
             output = "WAITING - Legacy check, cannot be done offline"
             perfdata = []
-        checkgroup = checkgroup_of.get(ct)
+
+        checkgroup = check_info[ct]["group"]
         table.append((state_type, ct, checkgroup, item, paramstring, params, descr, exitcode, output, perfdata))
+
+    if not table and (tcp_error or snmp_error):
+        error = ""
+        if snmp_error:
+            error = "Error getting data via SNMP: %s" % snmp_error
+        if tcp_error:
+            if error: 
+                error += ", "
+            error += "Error getting data from Check_MK agent: %s" % tcp_error
+        raise MKAutomationError(error)
 
     return table
 
@@ -454,13 +506,13 @@ def automation_get_configuration():
 def automation_get_check_information():
     manuals = all_manuals()
     checks = {}
-    for checkname in check_info:
-        manfile = manuals.get(checkname)
+    for check_type, check in check_info.items():
+        manfile = manuals.get(check_type)
         if manfile:
             title = file(manfile).readline().strip().split(":", 1)[1].strip()
         else:
-            title = checkname
-        checks[checkname] = { "title" : title }
-        if checkname in checkgroup_of:
-            checks[checkname]["group"] = checkgroup_of[checkname]
+            title = check_type
+        checks[check_type] = { "title" : title }
+        if check["group"]:
+            checks[check_type]["group"] = check["group"]
     return checks

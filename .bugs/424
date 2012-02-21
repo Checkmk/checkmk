@@ -1,10 +1,8 @@
 Title: lnx multipath check looks for hardcoded multipath device strings
 Component: checks
-Cost: 4
 Date: 2011-10-21 11:48:52
 State: done
 Class: bug
-Benefit: 6
 Fun: 0
 Targetversion: 
 

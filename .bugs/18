@@ -3,8 +3,6 @@ Component: multisite
 State: done
 Class: bug
 Date: 2010-12-21 16:18:53
-Benefit: 1
-Cost: 3
 Fun: 0
 
 * Bei Opera kann man kein Snapin nach ganz unten ziehen. Der Indikator

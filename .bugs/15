@@ -3,8 +3,6 @@ Component: core
 State: wontfix
 Class: nastiness
 Date: 2010-12-21 12:14:07
-Benefit: 1
-Cost: 3
 Fun: 0
 
 Wenn ein Counter Wrap passiert und der check selbst die Exception

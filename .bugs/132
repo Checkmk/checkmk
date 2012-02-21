@@ -3,8 +3,6 @@ Component: wato
 State: done
 Class: bug
 Date: 2011-02-13 18:31:09
-Benefit: 3
-Cost: 1
 Fun: 0
 
 It seems that WATO is dropping some service when inventorizing

@@ -41,6 +41,24 @@ function toggle_subtree(oImg)
     get_url(url);
 }
 
+function toggle_bi_box(oDiv)
+{
+    oDiv.style.display = "none";
+
+    // find child nodes that belong to this node
+    var found = false;
+    for (var i in oDiv.parentNode.childNodes) {
+        var onode = oDiv.parentNode.childNodes[i];
+        if (onode == oDiv) 
+            found = true;
+        else if (found) {
+            onode.style.display = "";
+            return;
+        }
+    }
+}
+
+
 function toggle_assumption(oImg, site, host, service)
 {
     // get current state

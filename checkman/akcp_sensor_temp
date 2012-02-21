@@ -1,36 +1,29 @@
-title: Check AKCP Sensor Humidity
+title: Check AKCP Sensor Temperature
 agents: snmp
 author: Michael Nieporte <michael.nieporte@uk-essen.de>
 license: GPL
 distribution:
 description:
- This check monitors the humidity of sensors attached
+ This check monitors the temperature of sensors attached
  to AKCP SensorProbe.
 
 item:
  The item is the sensor description of the sensor as string.
 
 perfdata:
- the current humidity in percent, lower crit, lower warn, upper warn, upper crit
+ the current temperature in degree celsius
 
 inventory:
- All available humidity sensors are automatically inventorized.
+ All available temperature sensors are automatically inventorized.
 
 examples:
- # set default levels for all akcp humidity sensors
- akcp_sensor_humidity_defaultlevels = (35, 40, 60, 65)
-
- # to Overwrite the default levels levels for a sensor
- checks += [
-   ( 'hostname', "akcp_sensor_humidity", 'sensor description', ( lower crit, lower warn, upper warn, upper crit ) ),
- ]
+ # set default levels for all akcp temperature sensors
+ akcp_sensor_temp_defaultlevels = (28, 34)
 
 [parameters]
-critical low (int): lower border for triggering critical level
-warning low (int): lower border for warning level
-warning high (int): upper border for triggering warning level
-critical high (int): upper border for critical level
+warning (int): temperature in degrees at which the check goes warning
+critical (int): level for critical temperature
 
 [configuration]
-akcp_sensor_humidity (int, int, int, int): default levels for lower critical lower warning
- and upper warning, upper critical. Preset to ( 35, 40, 60, 65 ).
+akcp_sensor_temp_defaultlevels (int, int): Default levels. This is
+preset to {(28, 32)}.

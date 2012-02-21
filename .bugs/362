@@ -3,8 +3,6 @@ Component: multisite
 State: wontfix
 Class: bug
 Date: 2011-08-27 14:21:47
-Benefit: 1
-Cost: 2
 Fun: 0
 
 When one has a WATO path context (by clicking on the Hosts-Snapin with

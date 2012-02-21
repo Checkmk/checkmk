@@ -3,8 +3,6 @@ Component: livestatus
 State: done
 Class: cleanup
 Date: 2011-03-01 18:35:46
-Benefit: 1
-Cost: 1
 Fun: 0
 
 Take the API from web/htdocs/livestatus.py, rework the examples,

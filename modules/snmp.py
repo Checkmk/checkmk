@@ -256,9 +256,10 @@ def get_snmp_table(hostname, ip, oid_info):
             # an endoid differs empty values are added until the hole is filled
             for o, value in column:
                 eo = extract_end_oid(fetchoid, o)
-                while i < len(endoids) and endoids[i] != eo:
-                    new_column.append("") # (beginoid + '.' +endoids[i], "" ) )
-                    i += 1
+                if len(column) != len(endoids):
+                    while i < len(endoids) and endoids[i] != eo:
+                        new_column.append("") # (beginoid + '.' +endoids[i], "" ) )
+                        i += 1
                 new_column.append(value)
                 i += 1
 
@@ -279,6 +280,7 @@ def get_snmp_table(hostname, ip, oid_info):
             info += new_info
 
     return info
+
 
 # SNMP-Helper functions used in various checks
 

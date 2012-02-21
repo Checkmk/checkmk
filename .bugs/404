@@ -2,8 +2,6 @@ Title: Add filter for alert state in log views (OK/CRIT, etc)
 Component: multisite
 State: done
 Class: todo
-Benefit: 2
-Cost: 2
 Date: 2011-10-27 18:55:56
 Targetversion: 1.2.0
 

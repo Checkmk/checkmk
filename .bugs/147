@@ -3,8 +3,6 @@ Component: core
 State: wontfix
 Class: feature
 Date: 2011-02-17 11:43:29
-Benefit: 2
-Cost: 1
 Fun: 0
 
 With the new config variable snmp_options one could add custom

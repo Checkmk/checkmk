@@ -1,0 +1,15 @@
+title: Monitor summary status of Fujitsu ETERNUS DX80 S2 storage systems
+agents: SNMP
+author: Philipp Hoefflin <hoefflin+cmk@fuh-e.de>
+license: GPLv2
+distribution: none
+description:
+ This check monitors the reported summary status of storage systems from
+ Fujitsu which support the FJDARY-E100.MIB like the ETERNUS DX80 S2.
+ This is an adaption of the corresponding fjdarye60 check.
+
+item:
+ The item is {0} (integer) in all cases because on system can only have one summary status.
+
+inventory:
+ The check supports automatic inventory. Each system gets one summary checks.

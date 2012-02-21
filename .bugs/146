@@ -2,8 +2,6 @@ Title: logwatch_max_filesize is missing in 'config variables' doku
 Component: docu
 State: wontfix
 Class: todo
-Benefit: 5
-Cost: 6
 Date: 2011-02-11 11:20:58
 Targetversion: future
 

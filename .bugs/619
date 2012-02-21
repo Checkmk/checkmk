@@ -1,8 +1,11 @@
 Title: Bulk löschen berücksichtigt die Nutzer Rechte nicht
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-01-18 10:28:38
 Targetversion: 1.2.0
-Class: bug
 
 Ich kann als Nutzer ohne Rechte auf die Hosts in einem Folder alle Hosts löschen.
+
+2012-02-21 16:11:13: changed state open -> done
+Ist erledigt, wird nun geprüft.

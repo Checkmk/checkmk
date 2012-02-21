@@ -2,8 +2,6 @@ Title: IE8: Hitting enter in Quicksearch does not work
 Component: multisite
 State: done
 Class: bug
-Benefit: 1
-Cost: 1
 Date: 2011-10-27 18:52:58
 Targetversion: 1.1.12
 

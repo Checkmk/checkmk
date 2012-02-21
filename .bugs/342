@@ -2,8 +2,6 @@ Title: Enable sounds per default
 Component: multisite
 State: done
 Class: cleanup
-Benefit: 1
-Cost: 2
 Date: 2011-08-24 16:32:16
 Targetversion: 1.2.0
 

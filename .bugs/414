@@ -1,10 +1,8 @@
 Title: BI: FOREACH_* auch in untergeordneten Ebenen nutzbar machen
 Component: bi
-Cost: 4
 Date: 2011-11-24 12:26:52
 State: done
 Class: feature
-Benefit: 2
 Fun: 0
 Targetversion: future
 

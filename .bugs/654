@@ -1,0 +1,10 @@
+Title: View editor mixes up views on editing
+Component: multisite
+State: open
+Date: 2012-02-15 08:48:38
+Targetversion: future
+Class: bug
+
+We had a strange problem. We had a view named "offline_locations" using the "All services"
+table. Then we added a "offline_locations1" view which used the "All hosts" table.
+BUt after saving the second view had the same options as the first view.

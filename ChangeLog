@@ -47,6 +47,8 @@
     * ps: output node process is running on (only for clusters)
     * hr_mem: handle rare case where more than one entry is present
       (this prevents an exception of pfSense)
+    * statgrab_load: level is now checked against 15min average - 
+      in order to be consistent with the Linux load check
 
     Multisite:
     * Added several missing localization strings

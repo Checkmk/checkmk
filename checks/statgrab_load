@@ -39,15 +39,18 @@ def check_statgrab_load(item, params, info):
             load_15 = float(value)
 
     warn, crit = params
-    perfdata = [ ('load' + str(z), l, warn, crit, 0 ) for (z,l) in [ (1,load_1), (5,load_5), (15, load_15) ] ]
+    perfdata = [ ('load' + str(z), l, warn, crit, 0 ) 
+                 for (z,l) in 
+                 [ (1, load_1), (5, load_5), (15, load_15) ] ]
 
-
-    if load_1 >= crit:
-        return (2, "CRIT - %.2f (critical at %.2f)" % (load_1, crit), perfdata)
-    elif load_1 >= warn:
-        return (1, "WARN - %.2f (warning at %.2f)" % (load_1, warn), perfdata)
+    if load_15 >= crit:
+        return (2, "CRIT - 15min load %.2f (critical at %.2f)" % (load_15, crit), perfdata)
+    elif load_15 >= warn:
+        return (1, "WARN - 15min load %.2f (warning at %.2f)" % (load_15, warn), perfdata)
     else:
-        return (0, "OK - %.2f" % load_1, perfdata)
+        return (0, "OK - 15min load %.2f" % load_15, perfdata)
+
 
 
 check_info['statgrab_load'] = (check_statgrab_load, "CPU load", 1, inventory_statgrab_load)
+checkgroup_of['statgrab_load'] = "cpu_load" 

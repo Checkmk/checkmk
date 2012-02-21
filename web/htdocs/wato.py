@@ -848,6 +848,7 @@ def mode_folder(phase):
         # Deletion
         if html.var("_bulk_delete"):
             config.need_permission("wato.manage_hosts")
+            check_folder_permissions(g_folder, "write")
             return delete_hosts_after_confirm(selected_hosts)
 
         # Move
@@ -974,9 +975,16 @@ def check_folder_permissions(folder, how, exception=True, user = None):
         if c in cgs:
             return True
 
-    reason = _("Sorry, you have no permission on the folder '<b>%s</b>'. The folder's contact "
-               "groups are <b>%s</b>, your contact groups are <b>%s</b>.") % \
-               (folder["title"], ", ".join(cgs), ", ".join(user_cgs))
+    reason = _("Sorry, you have no permission on the folder '<b>%s</b>'. " % folder["title"])
+    if not cgs:
+        reason += _("The folder has no contact groups assigned to.")
+    else:
+        reason += _("The folder's contact groups are <b>%s</b>. " % ", ".join(cgs))
+        if user_cgs:
+            reason += _("Your contact groups are <b>%s</b>.") %  ", ".join(user_cgs)
+        else:
+            reason += _("But you are not a member of any contact group.")
+
     if exception:
         raise MKAuthException(reason)
     else:

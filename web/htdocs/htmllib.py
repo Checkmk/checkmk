@@ -303,6 +303,11 @@ class html:
     def makeuri_contextless(self, vars):
         return self.req.myfile + ".py?" + urlencode_vars(vars)
 
+    def image_button(self, varname, title, cssclass = ''):
+        self.write('<label for="%s" class=image_button>' % varname)
+        self.button(varname, title, cssclass)
+        self.write('</label>')
+
     def button(self, varname, title, cssclass=""):
         self.write("<input type=submit name=\"%s\" id=\"%s\" value=\"%s\" class=\"%s\">\n" % \
                    ( varname, varname, title, cssclass))

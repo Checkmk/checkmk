@@ -73,10 +73,6 @@ input, select, textarea {
     background-color: #fff;
 }
 
-input:hover, select:hover, textarea:hover {
-    background-color: #EDECEB;
-}
-
 /* Select element with icons */
 select.icon option {
     background-repeat: no-repeat;
@@ -106,6 +102,47 @@ a.button {
     -moz-border-radius: 4px;
     border-radius: 4px;
     margin: 2px;
+}
+
+/* Image submit button styling */
+label.image_button {
+    display: block;
+    margin: 0 auto;
+    background: transparent url('images/image_button_l.png') no-repeat;
+    background-position: 0 -30px;
+    padding: 0 0 0 14px;
+    height: 30px;
+}
+label.image_button:hover {
+    background-position: 0 -60px;
+}
+label.image_button:active {
+    background-position: 0 -90px;
+}
+label.image_button input {
+    height: 30px;
+    color: #fff;
+    border: none;
+    padding-right: 16px;
+    background: transparent url('images/image_button_r.png') no-repeat;
+    background-position: right -30px;
+}
+label.image_button input:hover {
+    background-position: right -60px;
+}
+label.image_button input:active {
+    background-position: right -90px;
+}
+label.image_button input[type="submit"]::-moz-focus-inner {
+    border: 0px;
+} 
+/*for IE8 */
+input[type="submit"]:focus {
+    outline: none; 
+}
+
+input:hover, select:hover, textarea:hover {
+    background-color: #EDECEB;
 }
 
 /* Images have a native size of 48x48 and are scaled down by the

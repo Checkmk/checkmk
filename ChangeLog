@@ -41,6 +41,7 @@
     * FIX: fix inventory of f5_bigip_temp
     * mk_oracle (lnx+win): Fixed TEMP tablespace size calculations
     * ps: output node process is running on (only for clusters)
+    * FIX: Linux Agent: Fixed ipmi-sensors handling of Power_Unit data
 
     Multisite:
     * Added several missing localization stringsw

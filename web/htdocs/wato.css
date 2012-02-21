@@ -377,10 +377,12 @@ table.validationerror img {
     padding: 0;
 }
 
-.wato table.form td.content td {
+/* This style destroys many other td styles since
+   it is too specific or too unspecific */
+/* .wato table.form td.content td {
     padding: 0;
     vertical-align: middle;
-}
+}*/
 
 .wato table.data.ruleset td {
 /*    vertical-align: top; */

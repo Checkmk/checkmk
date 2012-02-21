@@ -1173,8 +1173,8 @@ class Tuple(ValueSpec):
             html.write("<tr>")
             if self._show_titles:
                 title = element.title()[0].upper() + element.title()[1:]
-                html.write("<td class=left>%s:%s</td>" % (title, help))
-            html.write("<td class=right>")
+                html.write("<td class=tuple_left>%s:%s</td>" % (title, help))
+            html.write("<td class=tuple_right>")
             element.render_input(vp, val)
             html.write("</td></tr>")
         html.write("</table>")

@@ -45,6 +45,8 @@
     * FIX: fix inventory of f5_bigip_temp
     * mk_oracle (lnx+win): Fixed TEMP tablespace size calculations
     * ps: output node process is running on (only for clusters)
+    * hr_mem: handle rare case where more than one entry is present
+      (this prevents an exception of pfSense)
 
     Multisite:
     * Added several missing localization stringsw

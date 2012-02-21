@@ -1,8 +1,11 @@
 Title: OMD shared mode: <site>/etc/auth.secret not writeable
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-02-13 16:05:37
 Targetversion: future
-Class: bug
 
 The file can not be written by the system wide apache.
+
+2012-02-21 17:44:15: changed state open -> done
+Already has been fixed by Lars some days ago.

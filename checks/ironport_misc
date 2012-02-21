@@ -33,3 +33,5 @@ check_info['ironport_misc'] = (
     "%s",
     0,
     no_inventory_possible)
+
+checkgroup_of['ironport_misc'] = "obsolete"

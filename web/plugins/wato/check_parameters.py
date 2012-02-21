@@ -883,6 +883,22 @@ checkgroups.append((
     "first"))
 
 checkgroups.append((
+    "hpux_multipath",
+    _("Multipathing on HPUX - state of paths of a LUN"),
+    Tuple(
+        title = _("Expected path situation"),
+        elements = [
+            Integer(title = _("Number of active paths")),
+            Integer(title = _("Number of standby paths")),
+            Integer(title = _("Number of failed paths")),
+            Integer(title = _("Number of unopen paths")),
+        ]),
+    TextAscii(
+        title = _("WWID of the LUN")),
+    "first"))
+
+
+checkgroups.append((
     "services",
     _("Windows services"),
     None,

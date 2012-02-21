@@ -19,6 +19,8 @@
       are used.
     * FIX: hpux_if: fix missing default parameter errors
     * FIX: fix inventory of f5_bigip_temp
+    * hr_mem: handle rare case where more than one entry is present
+      (this prevents an exception of pfSense)
 
     Livestatus
     * FIX: fix type column in 'GET columns' for dict-type columns (bug found

@@ -74,10 +74,10 @@ def inventory_md(info):
         elif line[1] == 'blocks':
             if line[-1] != "chunks": # ignore RAID 0 devices
                 disk_state = line[-1][1:-1]
-                inventory.append( (device, '%s / %s' % (raid_state, disk_state), None) )
+                inventory.append( (device, None) )
     return inventory
 
-def check_md(item, params, info):
+def check_md(item, _no_params, info):
     raid_state = ''
     its_next = False
     for line in info:
@@ -104,3 +104,4 @@ def check_md(item, params, info):
 
 
 check_info['md'] = (check_md, "MD Softraid %s", 0, inventory_md)
+checkgroup_of['md'] = "raid"

@@ -98,3 +98,4 @@ def check_megaraid_pdisks(item, target_state, info):
     return (3, "UNKNOWN - No disk in encl/slot %s found" % item)
 
 check_info['megaraid_pdisks'] = (check_megaraid_pdisks, "RAID PDisk Adapt/Enc/Sl %s", 1, inventory_megaraid_pdisks)
+checkgroup_of['megaraid_pdisks'] = "raid_disk"

@@ -11,8 +11,8 @@
     * FIX: fix problem with check includes in subchecks
 
     WATO:
-    * More checks are configurable via WATO now
-    * Distributed WATO: Made all url calls using curl now
+    * Much more checks are configurable via WATO now
+    * Distributed WATO: Made all URL calls using curl now
     * FIX: fix bug in inventory in validate_datatype()
     * Better output in case of inventory error
     * FIX: fix bug in host_icon rule on non OMD

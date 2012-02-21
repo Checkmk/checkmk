@@ -70,3 +70,4 @@ def check_mounts(item, targetopts, info):
 
 
 check_info['mounts'] = ( check_mounts, "Mount options of %s", 0, inventory_mounts)
+checkgroup_of['mounts'] = "fs_mount_options"

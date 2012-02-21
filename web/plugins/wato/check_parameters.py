@@ -242,6 +242,22 @@ checkgroups.append((
 ))
 
 checkgroups.append((
+    "fs_mount_options",
+    _("Filesystem mount options (Linux/UNIX)"),
+    ListOfStrings(
+       title = _("Expected mount options"),
+       help = _("Specify all expected mount options here. If the list of "
+         "actually found options differs from this list, the check will go "
+         "warning or critical. Just the option <tt>commit</tt> is being "
+         "ignored since it is modified by the power saving algorithms.")),
+    TextAscii(
+        title = _("Mount point"),
+        allow_empty = False),
+    "first"))
+
+
+
+checkgroups.append((
     "systemtime",
     _("System time offset"),
     Tuple(
@@ -879,6 +895,32 @@ checkgroups.append((
          "column of the section &lt;&lt;&lt;services&gt;&gt;&gt;. Please "
          "do not mix up the service name with the display name of the service."
          "The latter one is just being displayed as a further information.")),
+    "first"))
+
+checkgroups.append((
+    "raid",
+    _("RAID: overal state"),
+    None,
+    TextAscii(
+        title = _("Name of the device"),
+        help = _("For Linux MD specify the device name without the "
+                 "<tt>/dev/</tt>, e.g. <tt>md0</tt>, for hardware raids "
+                 "please refer to the manual of the actual check being used.")),
+    "first"))
+
+checkgroups.append((
+    "raid_disk",
+    _("RAID: state of a single disk"),
+    TextAscii(
+        title = _("Target state"),
+        help = _("State the disk is expected to be in. Typical good states "
+            "are online, host spare, OK and the like. The exact way of how "
+            "to specify a state depends on the check and hard type being used. "
+            "Please take examples from inventorized checks for reference.")),
+    TextAscii(
+        title = _("Number or ID of the disk"),
+        help = _("How the disks are named depends on the type of hardware being "
+                 "used. Please look at already inventorized checks for examples.")),
     "first"))
 
 checkgroups.append((

@@ -1,8 +1,12 @@
 Title: Bulk moveto berücksichtigt die Nutzer Rechte nicht
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-01-18 10:30:57
 Targetversion: 1.2.0
-Class: bug
 
 Ich kann Hosts aus anderen Foldern in meine Folder verschieben
+
+2012-02-21 16:30:09: changed state open -> done
+Ist jetzt repariert. War auch beim normalen verschieben. Jetzt
+braucht man Schreibrechte auf Quelle und Ziel.

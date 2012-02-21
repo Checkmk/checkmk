@@ -1343,6 +1343,7 @@ def move_hosts_to(hostnames, path):
         return
 
     target_folder = g_folders[path]
+    check_folder_permissions(g_folder, "write")
     check_folder_permissions(target_folder, "write")
 
     if target_folder == g_folder:

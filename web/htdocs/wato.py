@@ -602,6 +602,7 @@ def save_hosts(folder = None):
         make_nagios_directories(dirname)
 
     out = create_user_file(filename, 'w')
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
 
     hosts = folder.get(".hosts", [])
     if len(hosts) == 0:
@@ -671,7 +672,6 @@ def save_hosts(folder = None):
                             custom_macros[nag_varname] = {}
                         custom_macros[nag_varname][hostname] = nagstring
 
-    out.write("# Written by WATO\n# encoding: utf-8\n\n")
     if len(all_hosts) > 0:
         out.write("all_hosts += [\n")
         for entry in all_hosts:

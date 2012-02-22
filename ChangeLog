@@ -56,6 +56,7 @@
     * ntp: do not check 'when' anymore since it can produce false
       alarms.
     * postfix_mailq: handle output with 'Total requests:' in last line
+    * FIX: check_mk-hp_blade_psu.php: allow more than 4 power supplies
 
     Multisite:
     * Added several missing localization strings

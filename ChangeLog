@@ -53,6 +53,7 @@
       output from agent now.
     * ntp: do not check 'when' anymore since it can produce false
       alarms.
+    * postfix_mailq: handle output with 'Total requests:' in last line
 
     Multisite:
     * Added several missing localization strings

@@ -2045,6 +2045,7 @@ def show_service_table(host, firsttime):
                         if config.debug:
                             raise
                         paramtext = _("Invalid check parameter: %s!") % e
+                        paramtext += _(" The parameter is: %r") % (params,)
 
                     title = "Check parameters for this service: " + paramtext
                     html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %

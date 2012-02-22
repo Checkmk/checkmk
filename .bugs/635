@@ -1,0 +1,11 @@
+Title: Password changes are not replicated
+Component: wato
+State: open
+Date: 2012-02-22 19:32:35
+Targetversion: 1.2.0
+Class: todo
+
+When a user changes his password, then that change is not automatically
+replicated to the slave sites in replicated mode. I think we'd really
+need to do some isolated replication only of htpasswd in that case - 
+automatically.

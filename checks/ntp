@@ -110,8 +110,13 @@ def check_ntp_server_state(line, params):
         return (2, infotext, offset, jitter)
     elif stratum >= maxstratum:
         return (2, infotext + (", stratum is too high (max allowed is %d)" % (maxstratum - 1)))
-    elif when > 2*poll and when > 128: # when can exceed poll for small polling values
-        return (3, "response due since %d secs%s" % (when - poll, infotext), offset, jitter)
+
+    # The following check in some cases produces false alarms. The poll interval can
+    # switch back to a low value while 'when' still being at a high value. While
+    # this happens only for a short time, it will make the check alarm. So we
+    # rather switch this condition off:
+    # elif when > 2*poll and when > 128: # when can exceed poll for small polling values
+    #     return (3, "response due since %d secs%s" % (when - poll, infotext), offset, jitter)
 
     elif abs(offset) >= warn:
         return (1, "offset too high" + infotext, offset, jitter)

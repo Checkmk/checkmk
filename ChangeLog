@@ -51,6 +51,8 @@
       in order to be consistent with the Linux load check
     * dell_powerconnect_cpu: hopefully correctly handle incomplete
       output from agent now.
+    * ntp: do not check 'when' anymore since it can produce false
+      alarms.
 
     Multisite:
     * Added several missing localization strings

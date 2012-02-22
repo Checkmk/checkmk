@@ -456,7 +456,7 @@ def load_folder(dir, name="", path="", parent=None, childs = True):
             folder[".siteid"] = default_site()
 
     # Now look subdirectories
-    if childs:
+    if childs and os.path.exists(dir):
         for entry in os.listdir(dir):
             if entry[0] == '.': # entries '.' and '..'
                 continue

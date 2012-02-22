@@ -9,6 +9,8 @@
       (such as BINTEC routers)
     * Check API allows a check to get node information
     * FIX: fix problem with check includes in subchecks
+    * Option --checks now also applies to ad-hoc check (e.g.
+      cmk --checks=mrpe,df -v somehost)
 
     WATO:
     * Much more checks are configurable via WATO now

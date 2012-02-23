@@ -11,6 +11,8 @@
     * FIX: fix problem with check includes in subchecks
     * Option --checks now also applies to ad-hoc check (e.g.
       cmk --checks=mrpe,df -v somehost)
+    * check_mk_templates.cfg: added s to notification options
+      of host and service (= downtime alerts)
 
     WATO:
     * Much more checks are configurable via WATO now

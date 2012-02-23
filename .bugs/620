@@ -1,8 +1,12 @@
 Title: Bulk edit berücksichtigt die Nutzer Rechte nicht
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-01-18 10:30:06
 Targetversion: 1.2.0
-Class: bug
 
 Ich kann Hosts auf die ich keine Rechte habe über die Bulk Edit Funktion bearbeiten.
+
+2012-02-21 16:23:38: changed state open -> done
+Bulk edit und Bulk cleanup prüft jetzt die Rechte
+korrekt.

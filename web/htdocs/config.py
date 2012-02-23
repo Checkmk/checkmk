@@ -580,6 +580,9 @@ auth_type = 'basic'
 # always all buttons to be shown
 context_buttons_to_show = 5
 
+# Buffering of HTML output stream
+buffered_http_stream = True
+
 #    __        ___  _____ ___
 #    \ \      / / \|_   _/ _ \
 #     \ \ /\ / / _ \ | || | | |

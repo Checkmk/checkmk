@@ -9,10 +9,14 @@
       (such as BINTEC routers)
     * Check API allows a check to get node information
     * FIX: fix problem with check includes in subchecks
+    * Option --checks now also applies to ad-hoc check (e.g.
+      cmk --checks=mrpe,df -v somehost)
+    * check_mk_templates.cfg: added s to notification options
+      of host and service (= downtime alerts)
 
     WATO:
-    * More checks are configurable via WATO now
-    * Distributed WATO: Made all url calls using curl now
+    * Much more checks are configurable via WATO now
+    * Distributed WATO: Made all URL calls using curl now
     * FIX: fix bug in inventory in validate_datatype()
     * Better output in case of inventory error
     * FIX: fix bug in host_icon rule on non OMD
@@ -23,6 +27,10 @@
     * FIX: Do load *all* users from htpasswd, so passwords from
       users not created via WATO will not be lost.
     * FIX: honor site disabling in replication module
+    * FIX: honor write permissions on folder in "bulk delete"
+    * FIX: honor permissions for "bulk cleanup" and "bulk edit"
+    * FIX: honor write permissions and source folder when moving hosts
+    * FIX: honor permissions on hosts also on bulk inventory
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors
@@ -33,6 +41,8 @@
     * diskstat: make inventory mode configurable via WATO
     * added new checks for Fujitsu ETERNUS DX80 S2 
       (thanks to Philipp Höfflin)
+    * New checks: lgp_info, lgp_pdu_info and lgp_pdu_aux to monitor Liebert
+      MPH/MPX devices
     * Fix Perf-O-Meter of fileage
     * hpux_snmp_cs.cpu: new SNMP check for CPU utilization
       on HP-UX.
@@ -42,11 +52,23 @@
     * mk_oracle (lnx+win): Fixed TEMP tablespace size calculations
     * ps: output node process is running on (only for clusters)
     * FIX: Linux Agent: Fixed ipmi-sensors handling of Power_Unit data
-    * New checks: lgp_info, lgp_pdu_info and lgp_pdu_aux to monitor Liebert
-      MPH/MPX devices
+    * hr_mem: handle rare case where more than one entry is present
+      (this prevents an exception of pfSense)
+    * statgrab_load: level is now checked against 15min average - 
+      in order to be consistent with the Linux load check
+    * dell_powerconnect_cpu: hopefully correctly handle incomplete
+      output from agent now.
+    * ntp: do not check 'when' anymore since it can produce false
+      alarms.
+    * postfix_mailq: handle output with 'Total requests:' in last line
+    * FIX: check_mk-hp_blade_psu.php: allow more than 4 power supplies
+    * FIX: smart plugin: handle cases with missing vendor (thanks
+      to Stefan Kärst)
+    * FIX: megaraid_bbu: fix problem with alternative agent output
+      (thanks to Daniel Tuecks)
 
     Multisite:
-    * Added several missing localization stringsw
+    * Added several missing localization strings
     * IE: Fixed problem with clicking SELECT fields in the new wato foldertree snapin
     * Fixed problem when trying to visit dashboards from new wato foldertree snapin
     * Chrome: Fixed styling problem of foldertree snapin
@@ -59,6 +81,13 @@
     * FIX: Fixed preview table styling in view editor
     * FIX: Multisite authed users without permission to multisite are
       automatically logged out after showing the error message
+    * Retry livestatus connect until timeout is used up. This avoids
+      error messages when the core is being restarted
+    * Events view now shows icon and text for "flapping" events
+    * Use buffer for HTML creation (this speeds up esp. HTTPS a lot)
+
+    Livestatus:
+    * Add missing column check_freshness to services table
 
     BI:
     * New column (painter) for simplistic box display of tree.

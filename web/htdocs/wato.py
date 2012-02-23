@@ -456,7 +456,7 @@ def load_folder(dir, name="", path="", parent=None, childs = True):
             folder[".siteid"] = default_site()
 
     # Now look subdirectories
-    if childs:
+    if childs and os.path.exists(dir):
         for entry in os.listdir(dir):
             if entry[0] == '.': # entries '.' and '..'
                 continue
@@ -602,6 +602,7 @@ def save_hosts(folder = None):
         make_nagios_directories(dirname)
 
     out = create_user_file(filename, 'w')
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
 
     hosts = folder.get(".hosts", [])
     if len(hosts) == 0:
@@ -671,7 +672,6 @@ def save_hosts(folder = None):
                             custom_macros[nag_varname] = {}
                         custom_macros[nag_varname][hostname] = nagstring
 
-    out.write("# Written by WATO\n# encoding: utf-8\n\n")
     if len(all_hosts) > 0:
         out.write("all_hosts += [\n")
         for entry in all_hosts:
@@ -848,6 +848,7 @@ def mode_folder(phase):
         # Deletion
         if html.var("_bulk_delete"):
             config.need_permission("wato.manage_hosts")
+            check_folder_permissions(g_folder, "write")
             return delete_hosts_after_confirm(selected_hosts)
 
         # Move
@@ -974,9 +975,16 @@ def check_folder_permissions(folder, how, exception=True, user = None):
         if c in cgs:
             return True
 
-    reason = _("Sorry, you have no permission on the folder '<b>%s</b>'. The folder's contact "
-               "groups are <b>%s</b>, your contact groups are <b>%s</b>.") % \
-               (folder["title"], ", ".join(cgs), ", ".join(user_cgs))
+    reason = _("Sorry, you have no permission on the folder '<b>%s</b>'. " % folder["title"])
+    if not cgs:
+        reason += _("The folder has no contact groups assigned to.")
+    else:
+        reason += _("The folder's contact groups are <b>%s</b>. " % ", ".join(cgs))
+        if user_cgs:
+            reason += _("Your contact groups are <b>%s</b>.") %  ", ".join(user_cgs)
+        else:
+            reason += _("But you are not a member of any contact group.")
+
     if exception:
         raise MKAuthException(reason)
     else:
@@ -1335,6 +1343,7 @@ def move_hosts_to(hostnames, path):
         return
 
     target_folder = g_folders[path]
+    check_folder_permissions(g_folder, "write")
     check_folder_permissions(target_folder, "write")
 
     if target_folder == g_folder:
@@ -1906,6 +1915,7 @@ def mode_inventory(phase, firsttime):
 
     elif phase == "action":
         config.need_permission("wato.services")
+        check_host_permissions(hostname)
         if html.check_transaction():
             cache_options = not html.var("_scan") and [ '--cache' ] or []
             table = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
@@ -2035,6 +2045,7 @@ def show_service_table(host, firsttime):
                         if config.debug:
                             raise
                         paramtext = _("Invalid check parameter: %s!") % e
+                        paramtext += _(" The parameter is: %r") % (params,)
 
                     title = "Check parameters for this service: " + paramtext
                     html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
@@ -2338,7 +2349,14 @@ def mode_bulk_inventory(phase):
 
     # interactive progress is *not* done in action phase. It
     # renders the page content itself.
+
     hostnames = get_hostnames_from_checkboxes()
+
+    # check all permissions before beginning inventory
+    config.need_permission("wato.services")
+    for hostname in hostnames:
+        check_host_permissions(hostname)
+
     items = [ "%s|%s" % (g_folder[".path"], hostname)
              for hostname in hostnames ]
 
@@ -2404,8 +2422,18 @@ def mode_bulk_edit(phase):
 
     elif phase == "action":
         if html.check_transaction():
+            config.need_permission("wato.edit_hosts")
             changed_attributes = collect_attributes()
+            if "contactgroups" in changed_attributes:
+                 if True != check_folder_permissions(g_folder, "write", False):
+                     raise MKAuthException(_("Sorry. In order to change the permissions of a host you need write "
+                                             "access to the folder it is contained in."))
+
             hostnames = get_hostnames_from_checkboxes()
+            # Check all permissions for doing any edit
+            for hostname in hostnames:
+                check_host_permissions(hostname)
+
             for hostname in hostnames:
                 host = g_folder[".hosts"][hostname]
                 mark_affected_sites_dirty(g_folder, hostname)
@@ -2460,8 +2488,18 @@ def mode_bulk_cleanup(phase):
 
     elif phase == "action":
         if html.check_transaction():
+            config.need_permission("wato.edit_hosts")
             to_clean = bulk_collect_cleaned_attributes()
+            if "contactgroups" in to_clean:
+                 if True != check_folder_permissions(g_folder, "write", False):
+                     raise MKAuthException(_("Sorry. In order to change the permissions of a host you need write "
+                                             "access to the folder it is contained in."))
             hostnames = get_hostnames_from_checkboxes()
+
+            # Check all permissions for doing any edit
+            for hostname in hostnames:
+                check_host_permissions(hostname)
+
             for hostname in hostnames:
                 mark_affected_sites_dirty(g_folder, hostname)
                 host = g_folder[".hosts"][hostname]
@@ -4381,8 +4419,10 @@ def factory_reset():
     save_users(users) # this will cleanup htpasswd
 
     for path in [ root_dir, multisite_dir, sites_mk, log_dir ]:
-        if os.path.exists(path):
+        if os.path.isdir(path):
             shutil.rmtree(path)
+        elif os.path.exists(path):
+            os.remove(path)
 
     log_pending(SYNCRESTART, None, "factory-reset", _("Complete reset to factory settings."))
 
@@ -5741,11 +5781,12 @@ def mode_edit_site(phase):
 
     # Timeout
     html.write("<tr><td class=legend>")
-    html.write(_("Connect Timeout<br><i>This setting limits the time Multisites waits for a connection "
+    html.write(_("Connect Timeout<br><i>This sets the time that Multisite waits for a connection "
                  "to the site to be established before the site is considered to be unreachable. "
-                 "If not set, the operating system defaults are begin used.</i>"))
+                 "If not set, the operating system defaults are begin used and just one login attempt is being. "
+                 "performed.</i>"))
     html.write("</td><td class=content>")
-    timeout = site.get("timeout", "")
+    timeout = site.get("timeout", 10)
     html.number_input("timeout", timeout, size=2)
     html.write(_(" seconds"))
     html.write("</td></tr>")
@@ -8148,6 +8189,7 @@ def mode_rulesets(phase):
     for groupname in groupnames:
         # Show information about a ruleset
         title_shown = False
+        g_rulespec_groups[groupname].sort()
         for rulespec in g_rulespec_groups[groupname]:
 
             varname = rulespec["varname"]

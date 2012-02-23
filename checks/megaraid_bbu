@@ -82,11 +82,14 @@ def check_megaraid_bbu(item, _no_params, info):
 
     # verify defined important parameters to current level
     for varname, (refvalue, refstate) in megaraid_bbu_refvalues.items():
-        value = controller[varname]
-        # build a list of all errors
-        if controller[varname] != refvalue:
-    	    broken.append("%s is %s, but should be %s(%s)" % (varname, value, refvalue, "!" * refstate))
-    	    state = max(state, refstate)
+        try:
+            value = controller[varname]
+            # build a list of all errors
+            if controller[varname] != refvalue:
+    	        broken.append("%s is %s, but should be %s(%s)" % (varname, value, refvalue, "!" * refstate))
+    	        state = max(state, refstate)
+        except:
+            pass
 
     # return assembled info 
     if broken:

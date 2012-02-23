@@ -283,12 +283,12 @@ div.dictelement {
     float: none;
 }
 
-td.content table.valuespec_tuple td.left {
+table.valuespec_tuple td.tuple_left {
     padding-right: 10px;
 }
 
-td.content table.valuespec_tuple td.right,
-td.content table.valuespec_tuple td.left {
+table.valuespec_tuple td.tuple_right,
+table.valuespec_tuple td.tuple_left {
     vertical-align: top;
     padding-bottom: 10px;
 }

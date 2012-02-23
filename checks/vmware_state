@@ -54,7 +54,7 @@ def inventory_vmware_state(info):
             vm_ipaddr = line[0][7:]
             # add machine to inventory (if IP address is not empty)
             if vm_ipaddr != '':
-                inventory.append((vm_name, vm_ipaddr, None))
+                inventory.append((vm_name, None))
     return inventory
 
 # 1. Variant: loop over all machines and
@@ -86,7 +86,7 @@ def inventory_vmware_state(info):
 # we do the check and return immediately.
 # If we go through the loop without finding
 # the machine, we return an UNKNOWN state.
-def check_vmware_state(item, params, info):
+def check_vmware_state(item, _no_params, info):
     # item is the name of the machine.
     for line in info:
         if line[0].startswith("name:"):
@@ -101,3 +101,4 @@ def check_vmware_state(item, params, info):
     return (3, "UNKNOWN - no such machine")
 
 check_info['vmware_state'] = (check_vmware_state, "VM %s", 0, inventory_vmware_state)
+checkgroup_of['vmware_state'] = 'vm_state'

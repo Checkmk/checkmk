@@ -273,3 +273,5 @@ check_info['multipath'] = (
     "Multipath %s",
     0,
     inventory_multipath)
+
+checkgroup_of['multipath'] = 'multipath'

@@ -51,7 +51,7 @@ def inventory_hpux_serviceguard(info):
         inventory.append((item, None))
     return inventory
 
-def check_hpux_serviceguard(item, params, info):
+def check_hpux_serviceguard(item, _no_params, info):
     for line in info:
         if (item == "Total Status" and len(line) == 1) or \
             (item == line[0] and len(line) == 2):

@@ -78,7 +78,7 @@ def fjdarye_disks_summary(info):
 def inventory_fjdarye_disks_summary(info):
     current_state = fjdarye_disks_summary(info)
     if len(current_state) > 0:
-        return [ (None, '', current_state) ]
+        return [ (None, current_state) ]
 
 def fjdarye_disks_printstates(state):
     return ", ".join(["%s: %s" % (s,c) for (s,c) in state.items()])
@@ -101,7 +101,7 @@ def check_fjdarye_disks_summary(index, expected_status, info):
 # --------------------------------------------------------------------------------
 # 2. Single disk version of check -> one check for each disk
 def inventory_fjdarye_disks(info):
-    return [ (int(index), '', repr(fjdarye_disks_status[int(status)])) for index, status in info if int(status) != 3 ]
+    return [ (int(index), repr(fjdarye_disks_status[int(status)])) for index, status in info if int(status) != 3 ]
 
 def check_fjdarye_disks(index, expected_status, info):
     for line in info:
@@ -115,4 +115,3 @@ def check_fjdarye_disks(index, expected_status, info):
 
     return (3, "UNKNOWN - No status for disk number %d present" % index)
 
-# vim: tabstop=4 shiftwidth=4 expandtab

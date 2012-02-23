@@ -1,4 +1,4 @@
-title: Monitor status of disks in Fujitsu ETERNUS DX storage systems
+title: Monitor status of disk in Fujitsu ETERNUS DX storage systems
 agents: SNMP
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL

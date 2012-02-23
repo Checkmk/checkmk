@@ -110,3 +110,4 @@ def check_hpux_multipath(item, params, info):
 
 
 check_info['hpux_multipath'] = (check_hpux_multipath, "Multipath %s", 0, inventory_hpux_multipath )
+checkgroup_of['hpux_multipath'] = "hpux_multipath"

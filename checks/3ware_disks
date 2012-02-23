@@ -61,7 +61,7 @@ def inventory_3ware_disks(info):
             inventory.append( (disk, None) )
     return inventory
 
-def check_3ware_disks(item, params, info):
+def check_3ware_disks(item, _no_params, info):
     for line in info:
         if line[0] == item:
             status = line[1]
@@ -81,3 +81,4 @@ def check_3ware_disks(item, params, info):
 # declare the check to Check_MK
 check_info['3ware_disks'] = \
         (check_3ware_disks, "RAID 3ware disk %s", 0, inventory_3ware_disks)
+checkgroup_of['3ware_disks'] = "raid_disk"

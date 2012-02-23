@@ -26,9 +26,9 @@
 
 
 def inventory_nfsmounts(info):
-    return [ (line[0], None, None) for line in info ]
+    return [ (line[0], None) for line in info ]
 
-def check_nfsmounts(item, params, info):
+def check_nfsmounts(item, _no_params, info):
     for line in info:
         mountpoint = line[0]
         if mountpoint == item:
@@ -54,3 +54,4 @@ def check_nfsmounts(item, params, info):
     return (3, "UNKNOWN - not mounted")
 
 check_info['nfsmounts'] = (check_nfsmounts, "NFS mount %s", 0, inventory_nfsmounts)
+checkgroup_of['nfsmounts'] = 'network_fs'

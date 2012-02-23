@@ -316,6 +316,9 @@ def is_valid_wato(check):
 
 def verify_wato(check):
     group = check_info[check]["group"]
+    if group == "obsolete":
+        return True
+
     now = False
     for line in file("web/plugins/wato/check_parameters.py"):
         line = line.strip()

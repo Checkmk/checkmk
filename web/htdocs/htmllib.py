@@ -173,6 +173,10 @@ class html:
         self.form_vars = []
         self.context_buttons_open = False
         self.mobile = False
+        self.buffering = True
+
+    def set_buffering(self, b):
+        self.buffering = b
 
     def plugin_stylesheets(self):
         global plugin_stylesheets
@@ -199,7 +203,10 @@ class html:
     def write(self, text):
         if type(text) == unicode:
 	    text = text.encode("utf-8")
-        self.req.write(text)
+        if self.buffering:
+            self.req.write(text, 0)
+        else:
+            self.req.write(text)
 
     def heading(self, text):
         self.write("<h2>%s</h2>\n" % text)
@@ -978,7 +985,7 @@ class html:
         return (omd_mode, omd_site)
 
     def begin_foldable_container(self, treename, id, isopen, title, indent = True, first = False):
-        # try to get persistet state of tree
+        # try to get persisted state of tree
         tree_state = weblib.get_tree_states(treename)
 
         if id in tree_state:

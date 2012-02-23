@@ -51,6 +51,16 @@
 #                                          lm@larsmichelsen.com
 #
 # -- 1 Kbytes in 1 Request.
+# 
+# Yet another one (I believe, this is from sendmail, though:)
+# <<<postfix_mailq>>>
+#       8BITMIME   (Deferred: Connection refused by mail.gargl.com.)
+#                                          <franz@gargle.com>
+# q1L4ovDO002485     3176 Tue Feb 21 05:50 MAILER-DAEMON
+#                  (Deferred: 451 Try again later)
+#                                          <wrdlpfrmpft@karl-valentin.com>
+#                 Total requests: 2
+# 
 
 # WARN num, CRIT num
 postfix_mailq_default_levels = (10, 20)
@@ -73,9 +83,14 @@ def check_postfix_mailq(item, params, info):
         if " ".join(line[-2:]) == 'is empty':
             return (0, 'OK - The mailqueue is empty ', [ ('length', 0, params[0], params[1]),
                                                          ('size', '0') ])
-        elif line[0] == '--':
-            size    = postfix_mailq_to_bytes(float(line[1]), line[2])
-            len     = int(line[4])
+        elif line[0] == '--' or line[0:2] == [ 'Total', 'requests:']:
+            if line[0] == '--':
+                size    = postfix_mailq_to_bytes(float(line[1]), line[2])
+                len     = int(line[4])
+            else:
+                size    = 0
+                len     = int(line[2])
+
             perfdata = [ ('length', len, params[0], params[1]),
                          ('size', '%d' % size) ]
 

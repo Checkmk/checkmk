@@ -58,7 +58,7 @@ def inventory_nvidia_errors(info):
         if line[0] == 'GPUErrors:':
             return [(None, None)]
 
-def check_nvidia_errors(item, params, info):
+def check_nvidia_errors(_no_item, _no_params, info):
     for line in info:
         if line[0] == "GPUErrors:":
             errors = int(line[1])
@@ -70,3 +70,4 @@ def check_nvidia_errors(item, params, info):
 
 
 check_info['nvidia.errors'] = ( check_nvidia_errors, "NVIDIA GPU Errors", 0, inventory_nvidia_errors )
+checkgroup_of['nvidia.errors'] = 'hw_errors'

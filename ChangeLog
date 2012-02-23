@@ -61,6 +61,8 @@
     * FIX: check_mk-hp_blade_psu.php: allow more than 4 power supplies
     * FIX: smart plugin: handle cases with missing vendor (thanks
       to Stefan Kärst)
+    * FIX: megaraid_bbu: fix problem with alternative agent output
+      (thanks to Daniel Tuecks)
 
     Multisite:
     * Added several missing localization strings

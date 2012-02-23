@@ -5,8 +5,22 @@ if which smartctl > /dev/null 2>&1 ; then
     echo '<<<smart>>>'
     for D in /dev/[sh]d[a-z] /dev/[sh]d[a-z][a-z]; do
         N=${D##*/}
-        VEND=$(tr -d ' ' < /sys/block/$N/device/vendor)
-        MODEL=$(sed -e 's/ /_/g' -e 's/_*$//g' < /sys/block/$N/device/model)
-        smartctl -A $D | grep Always | sed "s|^|$D $VEND $MODEL |"
+        if [ -r /sys/block/$N/device/vendor ]; then
+            VEND=$(tr -d ' ' < /sys/block/$N/device/vendor)
+        else
+            # 2012-01-25 Stefan Kaerst CDJ - in case $N does not exist
+            VEND=ATA
+        fi
+        # 2012-01-25 Stefan Kaerst CDJ - special option in case vendor is AMCC
+        if [ "$VEND" == "AMCC" ]; then
+            D='/dev/twa0'
+            SPECOPS='-d 3ware,0'
+        fi
+        if [ -r /sys/block/$N/device/model ]; then
+            MODEL=$(sed -e 's/ /_/g' -e 's/_*$//g' < /sys/block/$N/device/model)
+        else
+            MODEL=$(smartctl -a $D | grep -i "device model" | sed -e "s/.*:[ ]*//g" -e "s/\ /_/g")
+        fi
+        smartctl $SPECOPS -v 9,raw48 -A $D | grep Always  | egrep -v '^190(.*)Temperature(.*)' | sed "s|^|$D $VEND $MODEL |"
     done 2>/dev/null
 fi

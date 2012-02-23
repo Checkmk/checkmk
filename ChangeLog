@@ -78,6 +78,8 @@
       error messages when the core is being restarted
     * Events view now shows icon and text for "flapping" events
 
+    Livestatus:
+    * Add missing column check_freshness to services table
 
     BI:
     * New column (painter) for simplistic box display of tree.

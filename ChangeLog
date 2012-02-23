@@ -42,6 +42,8 @@
     * mk_oracle (lnx+win): Fixed TEMP tablespace size calculations
     * ps: output node process is running on (only for clusters)
     * FIX: Linux Agent: Fixed ipmi-sensors handling of Power_Unit data
+    * New checks: lgp_info, lgp_pdu_info and lgp_pdu_aux to monitor Liebert
+      MPH/MPX devices
 
     Multisite:
     * Added several missing localization stringsw

@@ -689,7 +689,7 @@ def save_counters(hostname):
 
 # This is the main check function - the central entry point to all and
 # everything
-def do_check(hostname, ipaddress):
+def do_check(hostname, ipaddress, only_check_types = None):
 
     if opt_verbose:
         sys.stderr.write("Check_mk version %s\n" % check_mk_version)
@@ -698,7 +698,7 @@ def do_check(hostname, ipaddress):
 
     try:
         load_counters(hostname)
-        agent_version, num_success, error_sections, problems = do_all_checks_on_host(hostname, ipaddress)
+        agent_version, num_success, error_sections, problems = do_all_checks_on_host(hostname, ipaddress, only_check_types)
         num_errors = len(error_sections)
         save_counters(hostname)
         if problems:
@@ -808,7 +808,7 @@ def convert_check_info():
 
 # Loops over all checks for a host, gets the data, calls the check
 # function that examines that data and sends the result to Nagios
-def do_all_checks_on_host(hostname, ipaddress):
+def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
     global g_aggregated_service_results
     g_aggregated_service_results = {}
     global g_hostname
@@ -819,6 +819,9 @@ def do_all_checks_on_host(hostname, ipaddress):
     problems = []
 
     for checkname, item, params, description, info in check_table:
+        if only_check_types != None and checkname not in only_check_types:
+            continue
+
         # In case of a precompiled check table info is the aggrated
         # service name. In the non-precompiled version there are the dependencies
         if type(info) == str:

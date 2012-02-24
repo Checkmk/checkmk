@@ -3511,7 +3511,7 @@ OPTIONS:
   --usewalk      use snmpwalk stored with --snmpwalk
   --debug        never catch Python exceptions
   --procs N      start up to N processes in parallel during --scan-parents
-  --checks A,..  restrict inventory to specified checks (tcp/snmp/check type)
+  --checks A,..  restrict checks/inventory to specified checks (tcp/snmp/check type)
 
 NOTES:
   -I can be restricted to certain check types. Write '--checks df -I' if you
@@ -4566,5 +4566,11 @@ if __name__ == "__main__":
                     print "Cannot resolve hostname '%s'." % hostname
                     sys.exit(2)
 
-        do_check(hostname, ipaddress)
+        # honor --checks= also when checking (makes testing easier)
+        if inventory_checks:
+            check_types = inventory_checks.split(",")
+        else:
+            check_types = None
+
+        do_check(hostname, ipaddress, check_types)
 

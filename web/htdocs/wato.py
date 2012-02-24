@@ -456,7 +456,7 @@ def load_folder(dir, name="", path="", parent=None, childs = True):
             folder[".siteid"] = default_site()
 
     # Now look subdirectories
-    if childs:
+    if childs and os.path.exists(dir):
         for entry in os.listdir(dir):
             if entry[0] == '.': # entries '.' and '..'
                 continue
@@ -602,6 +602,7 @@ def save_hosts(folder = None):
         make_nagios_directories(dirname)
 
     out = create_user_file(filename, 'w')
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
 
     hosts = folder.get(".hosts", [])
     if len(hosts) == 0:
@@ -671,7 +672,6 @@ def save_hosts(folder = None):
                             custom_macros[nag_varname] = {}
                         custom_macros[nag_varname][hostname] = nagstring
 
-    out.write("# Written by WATO\n# encoding: utf-8\n\n")
     if len(all_hosts) > 0:
         out.write("all_hosts += [\n")
         for entry in all_hosts:
@@ -2045,6 +2045,7 @@ def show_service_table(host, firsttime):
                         if config.debug:
                             raise
                         paramtext = _("Invalid check parameter: %s!") % e
+                        paramtext += _(" The parameter is: %r") % (params,)
 
                     title = "Check parameters for this service: " + paramtext
                     html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %

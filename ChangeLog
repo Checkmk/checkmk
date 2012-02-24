@@ -9,6 +9,10 @@
       (such as BINTEC routers)
     * Check API allows a check to get node information
     * FIX: fix problem with check includes in subchecks
+    * Option --checks now also applies to ad-hoc check (e.g.
+      cmk --checks=mrpe,df -v somehost)
+    * check_mk_templates.cfg: added s to notification options
+      of host and service (= downtime alerts)
 
     WATO:
     * Much more checks are configurable via WATO now
@@ -37,6 +41,8 @@
     * diskstat: make inventory mode configurable via WATO
     * added new checks for Fujitsu ETERNUS DX80 S2 
       (thanks to Philipp Höfflin)
+    * New checks: lgp_info, lgp_pdu_info and lgp_pdu_aux to monitor Liebert
+      MPH/MPX devices
     * Fix Perf-O-Meter of fileage
     * hpux_snmp_cs.cpu: new SNMP check for CPU utilization
       on HP-UX.
@@ -45,12 +51,21 @@
     * FIX: fix inventory of f5_bigip_temp
     * mk_oracle (lnx+win): Fixed TEMP tablespace size calculations
     * ps: output node process is running on (only for clusters)
+    * FIX: Linux Agent: Fixed ipmi-sensors handling of Power_Unit data
     * hr_mem: handle rare case where more than one entry is present
       (this prevents an exception of pfSense)
     * statgrab_load: level is now checked against 15min average - 
       in order to be consistent with the Linux load check
     * dell_powerconnect_cpu: hopefully correctly handle incomplete
       output from agent now.
+    * ntp: do not check 'when' anymore since it can produce false
+      alarms.
+    * postfix_mailq: handle output with 'Total requests:' in last line
+    * FIX: check_mk-hp_blade_psu.php: allow more than 4 power supplies
+    * FIX: smart plugin: handle cases with missing vendor (thanks
+      to Stefan Kärst)
+    * FIX: megaraid_bbu: fix problem with alternative agent output
+      (thanks to Daniel Tuecks)
 
     Multisite:
     * Added several missing localization strings
@@ -69,7 +84,10 @@
     * Retry livestatus connect until timeout is used up. This avoids
       error messages when the core is being restarted
     * Events view now shows icon and text for "flapping" events
+    * Use buffer for HTML creation (this speeds up esp. HTTPS a lot)
 
+    Livestatus:
+    * Add missing column check_freshness to services table
 
     BI:
     * New column (painter) for simplistic box display of tree.

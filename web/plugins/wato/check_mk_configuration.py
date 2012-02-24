@@ -61,6 +61,18 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "buffered_http_stream",
+    Checkbox(title = _("Buffered HTTP stream"),
+             label = _("enable buffering"),
+             help = _("When buffering the HTTP stream is enabled, then Multisite "
+                      "will not send single TCP segments for each particle of HTML "
+                      "output but try to make larger segments. This saves bandwidth "
+                      "especially when using HTTPS. On the backside there might be "
+                      "a higher latency for the beginning of pages being displayed."),
+            default_value = True),
+    domain = "multisite")
+
+register_configvar(group,
     "show_livestatus_errors",
     Checkbox(title = _("Show MK Livestatus error messages"),
              label = _("show errors"),

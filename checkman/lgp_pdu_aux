@@ -1,0 +1,24 @@
+title: Monitors PDU AUX sensors from Liebert MPH/MPX devices
+agents: snmp
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors connected Power Distribution (PDU) Auxiliary (AUX) sensors
+ provided by Liebert MPH/MPX devices using SNMP. The check has been developed
+ using a Network Power Rack PDU Card with temperature, humidity and door sensors.
+
+ This check monitors devices which support the {.1.3.6.1.4.1.476.1.42.3.8.60.15} ({lgpPduAuxMeasTable})
+ table in the {LIEBERT-GP-PDU-MIB}.
+
+ The lower and upper thresholds configured in the device are read from the device
+ and used for warning/critical states.
+
+ One service is created for each AUX device.
+
+item:
+ An item is created using one of the labels TEMP, HUM, DOOR, CONTACT and the internal
+ aux sensor index.
+
+inventory:
+ One service is created for each AUX device.

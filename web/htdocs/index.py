@@ -157,6 +157,16 @@ def connect_to_livestatus(html):
     # Default auth domain is read. Please set to None to switch off authorization
     html.live.set_auth_domain('read')
 
+# Call the load_plugins() function in all modules
+def load_all_plugins():
+    for module in [ views, sidebar, dashboard, wato, bi, mobile ]:
+        try:
+            module.load_plugins # just check if this function exists
+            module.load_plugins()
+        except AttributeError:
+            pass
+        except Exception:
+            raise
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)
 def handler(req, profiling = True):
@@ -189,6 +199,7 @@ def handler(req, profiling = True):
         config.load_config() # load multisite.mk
         if html.var("debug"): # Debug flag may be set via URL
             config.debug = True
+        html.set_buffering(config.buffered_http_stream)
 
         # profiling can be enabled in multisite.mk
         if profiling and config.profile:
@@ -222,6 +233,7 @@ def handler(req, profiling = True):
         # here. Automation calls bybass the normal authentication stuff
         if req.myfile == "automation":
             try:
+                load_all_plugins()
                 handler()
             except Exception, e:
                 html.write(str(e))
@@ -265,15 +277,7 @@ def handler(req, profiling = True):
         load_language(html.var("lang", config.get_language()))
 
         # All plugins might have to be reloaded due to a language change
-        # FIXME: Hier werden alle Module geladen, obwohl diese gar nicht immer alle benötigt würden
-        for module in [ views, sidebar, dashboard, wato, bi, mobile ]:
-            try:
-                module.load_plugins # just check if this function exists
-                module.load_plugins()
-            except AttributeError:
-                pass
-            except Exception:
-                raise
+        load_all_plugins()
 
         # User allowed to login at all?
         if not config.may("use"):

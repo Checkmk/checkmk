@@ -253,7 +253,8 @@ then
     # in case of parallel or overlapping calls of the agent.
     (
         flock -n 200 --wait 60 
-        for class in Temperature 'Power Unit' Fan
+        # At least with ipmi-sensoirs 0.7.16 this group is Power_Unit instead of "Power Unit"
+        for class in Temperature Power_Unit Fan
         do
             $WAITMAX ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
             # In case of a timeout immediately leave loop. 

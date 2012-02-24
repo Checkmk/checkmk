@@ -3553,6 +3553,15 @@ class Attribute:
     def from_html_vars(self):
         return None
 
+
+    # Check whether this attribute needs to be validated at all
+    # Attributes might be permanently hidden (show_in_form = False)
+    # or dynamically hidden by the depends_on_tags feature
+    def needs_validation(self):
+        if not self._show_in_form:
+            return False
+        return html.var('attr_display_%s' % self._name, "1") == "1"
+
     # Check if the value entered by the user is valid.
     # This method may raise MKUserError in case of invalid user input.
     def validate_input(self):
@@ -3916,8 +3925,9 @@ def collect_attributes(do_validate = True):
         if not html.var("_change_%s" % attrname, False):
             continue
 
-        if do_validate:
+        if do_validate and attr.needs_validation():
             attr.validate_input()
+
         host[attrname] = attr.from_html_vars()
     return host
 
@@ -3982,8 +3992,9 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 continue # e.g. needed to skip ipaddress in CSV-Import
 
             # Skip hidden attributes
+            hide_attribute = False
             if not attr.show_in_form():
-                continue
+                hide_attribute = True
 
             # In folder not all attributes are shown
             if for_what == "folder" and not attr.show_in_folder():
@@ -3996,9 +4007,10 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 if depends_on_tags:
                     dependency_mapping[attrname] = depends_on_tags
                 else:
-                    # One attribute is always shown -> topic can never
-                    # be made invisible
-                    topic_is_volatile = False
+                    if attr.show_in_form():
+                        # One attribute is always shown -> topic can never
+                        # be made invisible
+                        topic_is_volatile = False
             else:
                 topic_is_volatile = False
 
@@ -4051,7 +4063,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                     inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
 
             # Legend and Help
-            html.write('<tr id="attr_%s"><td class=legend>' % attrname)
+            html.write('<tr id="attr_%s" %s><td class=legend>' % (attrname, hide_attribute and 'style="display: none"' or ""))
             if attr.help():
                 html.begin_foldable_container("attribute_help", attrname, True, "<b>%s</b>" % attr.title(), indent=False)
                 html.write("<i>%s</i>" % attr.help())

@@ -1871,7 +1871,7 @@ def create_nagios_config_timeperiods(outfile):
 def create_nagios_config_contacts(outfile):
     if len(contacts) > 0:
         outfile.write("\n# ------------------------------------------------------------\n")
-        outfile.write("# Timeperiod definitions (controlled by variable 'contacts'\n")
+        outfile.write("# Contact definitions (controlled by variable 'contacts')\n")
         outfile.write("# ------------------------------------------------------------\n\n")
         cnames = contacts.keys()
         cnames.sort()

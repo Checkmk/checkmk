@@ -7474,7 +7474,7 @@ def load_roles():
 
     try:
         vars = { "roles" : roles }
-        exec(filename, vars, vars)
+        execfile(filename, vars, vars)
         # Reflect the data in the roles dict kept in the config module Needed
         # for instant changes in current page while saving modified roles.
         # Otherwise the hooks would work with old data when using helper

@@ -7275,7 +7275,7 @@ def mode_roles(phase):
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Clone"), "clone")
         if not role.get("builtin"):
-            html.buttonlink(delete_url, _("Delete"))
+            html.icon_button(delete_url, _("Delete this role"), "delete")
         html.write("</td>")
 
         # ID

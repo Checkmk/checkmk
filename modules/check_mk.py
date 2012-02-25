@@ -1891,7 +1891,9 @@ def create_nagios_config_contacts(outfile):
                 outfile.write("  %s_notification_period\t%s\n" % (what, contact.get("notification_period", "24X7")))
                 outfile.write("  %s_notification_commands\tcheck-mk-notify\n" % what)
 
-            # Refer only to those contact groups that actually have objects assigned to
+            # Refer only to those contact groups that actually have objects assigned to. Otherwise
+            # we will run into problems since Nagios does not allow contact groups that
+            # are not assigned to at least one host or service?
             cgrs = [ cgr for cgr in contact.get("contactgroups", []) if cgr in contactgroups_to_define ]
             # Use dummy group if none is set. Nagios will not start otherwise
             if not cgrs:

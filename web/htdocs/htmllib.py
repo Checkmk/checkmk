@@ -865,6 +865,17 @@ class html:
         else:
             return val.decode("utf-8")
 
+    # Return all values of a variable that possible occurs more
+    # than once in the URL. note: req.listvars does contain those
+    # variable only, if the really occur more than once.
+    def list_var(self, varname):
+        if varname in self.req.listvars:
+            return self.req.listvars[varname]
+        elif varname in self.req.vars:
+            return [self.req.vars[varname]]
+        else:
+            return []
+
     def set_var(self, varname, value):
         if value == None:
             self.del_var(varname)

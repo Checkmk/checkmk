@@ -58,11 +58,19 @@ if defaults.omd_root:
 
 def read_get_vars(req):
     req.vars = {}
+    req.listvars = {} # for variables with more than one occurrance
     fields = util.FieldStorage(req, keep_blank_values = 1)
     for field in fields.list:
         varname = field.name
         value = field.value
-        req.vars[varname] = value
+        # Multiple occurrance of a variable? Store in extra list dict
+        if varname in req.vars:
+            if varname in req.listvars:
+                req.listvars[varname].append(value)
+            else:
+                req.listvars[varname] = [ req.vars[varname], value ]
+        else:
+            req.vars[varname] = value
 
 def read_cookies(req):
     req.cookies = Cookie.get_cookies(req)

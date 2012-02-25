@@ -885,6 +885,33 @@ class ListChoice(ValueSpec):
                 raise MKUserError(varprefix, _("%s is not an allowed value") % v)
 
 
+# A alternative way of editing list choices
+class MultiSelect(ListChoice):
+    def __init__(self, **kwargs):
+        ListChoice.__init__(self, **kwargs)
+
+    def render_input(self, varprefix, value):
+        self.load_elements()
+        html.write("<select multiple name='%s'>" % varprefix)
+        for nr, (key, title) in enumerate(self._elements):
+            if key in value:
+                sel = " selected"
+            else:
+                sel = ""
+            html.write('<option value="%s"%s>%s</option>\n' % (key, sel, title))
+        html.write("</select>")
+
+    def from_html_vars(self, varprefix):
+        self.load_elements()
+        value = []
+        hv = html.list_var(varprefix)
+        for key, title in self._elements:
+            if key in hv:
+                value.append(key)
+        return value
+
+
+
 
 # A type-save dropdown choice with one extra field that
 # opens a further value spec for entering an alternative

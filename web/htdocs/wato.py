@@ -7850,20 +7850,27 @@ def mode_edit_hosttag(phase):
         Tuple(
             elements = [
                 TextAscii(
+                    title = _("Tag ID"),
                     size=10,
                     regex="^[-a-z0-9A-Z_]*$",
                     none_is_empty = True,
                     regex_error = _("Invalid tag ID. Only the characters a-z, A-Z, "
                                   "0-9, _ and - are allowed.")),
                 TextUnicode(
+                    title = _("Description"),
                     allow_empty = False,
                     size=20),
 
-                ListChoice(
-                    choices = auxtags),
+                Foldable(
+                    MultiSelect(
+                        title = _("Auxiliary tags"),
+                        help = _("These tags will implicitely added to a host if the "
+                                 "user selects this entry in the tag group. Select multiple "
+                                 "entries with the <b>Ctrl</b> key."),
+                        choices = auxtags)),
 
             ],
-            show_titles = False,
+            show_titles = True,
             orientation = "horizontal"),
 
         add_label = _("Add tag choice"),

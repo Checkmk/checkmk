@@ -59,6 +59,15 @@ function hasClass(obj, cls) {
     return obj.className.match(classRegexes[cls]);
 }
 
+// simple string replace that replaces all occurrances.
+// Unbelievable that JS does not have a builtin way to
+// to that.
+function replace_all(haystack, needle, r) {
+    while (haystack.search(needle) != -1)
+        haystack = haystack.replace(needle, r);
+    return haystack;
+}
+
 // This implements getElementsByClassName() for IE<9
 if (!document.getElementsByClassName) {
   document.getElementsByClassName = function(className, root, tagName) {
@@ -1436,5 +1445,25 @@ function valuespec_cascading_change(oSelect, varprefix, count) {
                 oDiv.style.display = "none";
         }
     }
+}
+
+function valuespec_listof_add(varprefix, magic) {
+  var oCountInput = document.getElementById(varprefix + "_count");
+  var count = parseInt(oCountInput.value);
+  var strcount = "" + (count + 1);
+  oCountInput.value = strcount;
+  var oPrototype = document.getElementById(varprefix + "_prototype");
+  var htmlcode = oPrototype.innerHTML;
+  htmlcode = replace_all(htmlcode, magic, strcount);
+  var oTable = document.getElementById(varprefix + "_table");
+  if (count == 0) {  // first: no <tbody> present!
+      oTable.innerHTML = "<tbody><tr><td>" + htmlcode + "</td></tr></tbody>";
+  }
+  else {
+      var oTbody = oTable.childNodes[0];
+      var oTr = document.createElement("tr")
+      oTr.innerHTML = "<td>" + htmlcode + "</td>";
+      oTbody.appendChild(oTr);
+  }
 }
 

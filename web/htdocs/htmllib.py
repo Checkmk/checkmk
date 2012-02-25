@@ -339,7 +339,8 @@ class html:
 
     def icon_button(self, url, help, icon):
         self.write('<a href="%s">'
-                   '<img align=absmiddle class=iconbutton title="%s" src="images/button_%s_lo.png" '
+                   '<img align=absmiddle class=iconbutton title="%s" '
+                   'src="images/button_%s_lo.png" '
                    'onmouseover=\"hilite_icon(this, 1)\" '
                    'onmouseout=\"hilite_icon(this, 0)\">'
                    '</a>\n' % (url, help, icon))
@@ -553,6 +554,15 @@ class html:
         if error:
             self.write("</span></x>")
 
+    # Check if the current form is currently filled in (i.e. we display
+    # the form a second time while showing value typed in at the first
+    # time and complaining about invalid user input)
+    def form_filled_in(self):
+        return self.has_var("filled_in") and (
+            self.form_name == None or \
+            self.var("filled_in") == self.form_name)
+
+
     # Get value of checkbox. Return True, False or None. None means
     # that no form has been submitted. The problem here is the distintion
     # between False and None. The browser does not set the variables for
@@ -560,8 +570,7 @@ class html:
     def get_checkbox(self, varname, form_name = None):
         if self.has_var(varname):
             return not not self.var(varname)
-        elif not self.has_var("filled_in") or ( # no form filled in
-            self.form_name != None and self.var("filled_in") != self.form_name): # wrong form filled in
+        elif not self.form_filled_in():
             return None
         else:
             # Form filled in but variable missing -> Checkbox not checked

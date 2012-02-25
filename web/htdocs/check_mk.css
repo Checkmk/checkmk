@@ -73,6 +73,10 @@ input, select, textarea {
     background-color: #fff;
 }
 
+form {
+    margin: 0px;
+}
+
 input:hover, select:hover, textarea:hover {
     background-color: #EDECEB;
 }

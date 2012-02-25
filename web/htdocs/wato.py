@@ -7279,7 +7279,7 @@ def mode_roles(phase):
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Clone"), "clone")
         if not role.get("builtin"):
-            html.buttonlink(delete_url, _("Delete"))
+            html.icon_button(delete_url, _("Delete this role"), "delete")
         html.write("</td>")
 
         # ID
@@ -7478,7 +7478,7 @@ def load_roles():
 
     try:
         vars = { "roles" : roles }
-        exec(filename, vars, vars)
+        execfile(filename, vars, vars)
         # Reflect the data in the roles dict kept in the config module Needed
         # for instant changes in current page while saving modified roles.
         # Otherwise the hooks would work with old data when using helper

@@ -43,6 +43,8 @@
     * diskstat: make inventory mode configurable via WATO
     * added new checks for Fujitsu ETERNUS DX80 S2 
       (thanks to Philipp Höfflin)
+    * New checks: lgp_info, lgp_pdu_info and lgp_pdu_aux to monitor Liebert
+      MPH/MPX devices
     * Fix Perf-O-Meter of fileage
     * hpux_snmp_cs.cpu: new SNMP check for CPU utilization
       on HP-UX.
@@ -51,6 +53,7 @@
     * FIX: fix inventory of f5_bigip_temp
     * mk_oracle (lnx+win): Fixed TEMP tablespace size calculations
     * ps: output node process is running on (only for clusters)
+    * FIX: Linux Agent: Fixed ipmi-sensors handling of Power_Unit data
     * hr_mem: handle rare case where more than one entry is present
       (this prevents an exception of pfSense)
     * statgrab_load: level is now checked against 15min average - 

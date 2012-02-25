@@ -297,6 +297,10 @@ table.valuespec_tuple td.tuple_left {
     padding-bottom: 10px;
 }
 
+table.valuespec_tuple span.title {
+    font-size: 8pt;
+}
+
 table.vs_date {
     border-spacing: 0px;
 }
@@ -310,4 +314,14 @@ table.vs_date th {
     font-weight: normal;
     font-size: 7pt;
     padding: 0px;
+}
+
+table.valuespec_listof td.vlof_buttons {
+    margin-right: 5px;
+}
+table.valuespec_listof td.vlof_content {
+    border: 1px solid white;
+    box-shadow: 1px 1px 2px #808080;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
 }

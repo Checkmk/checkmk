@@ -1452,7 +1452,7 @@ function valuespec_listof_add(varprefix, magic) {
   var count = parseInt(oCountInput.value);
   var strcount = "" + (count + 1);
   oCountInput.value = strcount;
-  var oPrototype = document.getElementById(varprefix + "_prototype");
+  var oPrototype = document.getElementById(varprefix + "_prototype").childNodes[0].childNodes[0]; // TR
   var htmlcode = oPrototype.innerHTML;
   htmlcode = replace_all(htmlcode, magic, strcount);
   var oTable = document.getElementById(varprefix + "_table");
@@ -1462,7 +1462,7 @@ function valuespec_listof_add(varprefix, magic) {
   else {
       var oTbody = oTable.childNodes[0];
       var oTr = document.createElement("tr")
-      oTr.innerHTML = "<td>" + htmlcode + "</td>";
+      oTr.innerHTML = htmlcode;
       oTbody.appendChild(oTr);
   }
 }
@@ -1471,6 +1471,8 @@ function valuespec_listof_add(varprefix, magic) {
 // remove the according table row and add an invisible
 // input element with the name varprefix + "_deleted_%nr"
 function valuespec_listof_delete(oA, varprefix, nr) {
-    var oTd = oA.parentNode;
-    oTd.innerHTML = '<input type=hidden name="_' + varprefix + '_deleted_' + nr + '" value=1>'
+    var oTr = oA.parentNode.parentNode; // TR
+    var oTdContent = oTr.childNodes[1];
+    oTdContent.innerHTML = '<input type=hidden name="_' + varprefix + '_deleted_' + nr + '" value=1>'
+    oTr.style.display = "none";
 }

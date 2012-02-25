@@ -337,13 +337,17 @@ class html:
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png">')
 
-    def icon_button(self, url, help, icon):
-        self.write('<a href="%s">'
+    def icon_button(self, url, help, icon, onclick=None):
+        if onclick:
+            onclick = " onclick=\"%s\"" % onclick
+            url = "#"
+
+        self.write('<a href="%s"%s>'
                    '<img align=absmiddle class=iconbutton title="%s" '
                    'src="images/button_%s_lo.png" '
                    'onmouseover=\"hilite_icon(this, 1)\" '
                    'onmouseout=\"hilite_icon(this, 0)\">'
-                   '</a>\n' % (url, help, icon))
+                   '</a>\n' % (url, onclick, help, icon))
 
     def empty_icon_button(self):
         self.write('<img class="iconbutton trans" src="images/trans.png">\n')

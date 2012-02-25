@@ -1467,3 +1467,10 @@ function valuespec_listof_add(varprefix, magic) {
   }
 }
 
+// When deleting we do not fix up indices but simply
+// remove the according table row and add an invisible
+// input element with the name varprefix + "_deleted_%nr"
+function valuespec_listof_delete(oA, varprefix, nr) {
+    var oTd = oA.parentNode;
+    oTd.innerHTML = '<input type=hidden name="_' + varprefix + '_deleted_' + nr + '" value=1>'
+}

@@ -592,6 +592,7 @@ buffered_http_stream = True
 
 wato_enabled = True
 wato_host_tags = []
+wato_aux_tags = []
 wato_hide_filenames = True
 wato_max_snapshots = 50
 wato_num_hostspecs = 12

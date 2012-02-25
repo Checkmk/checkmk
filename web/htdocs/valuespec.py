@@ -500,8 +500,8 @@ class ListOf(ValueSpec):
         self._add_label = kwargs.get("add_label", _("Add new element"))
 
     def del_button(self, vp, nr):
-        html.icon_button("javascript:valuespec_listof_delete('%s', %s)" % (vp, nr),
-            _("Delete this entry"), "delete")
+        js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
+        html.icon_button("#", _("Delete this entry"), "delete", onclick=js)
 
     # Implementation idea: we render our element-valuespec
     # once in a hidden div that is not evaluated. All occurances
@@ -544,6 +544,7 @@ class ListOf(ValueSpec):
     def from_html_vars(self, varprefix):
         value = []
         for n in range(1, 1 + int(html.var(varprefix + "_count"))):
+            if not html.var("_%s_deleted_%d" % (varprefix, n)):
                 value.append(self._valuespec.from_html_vars(
                     varprefix + "_%d" % n))
         return value

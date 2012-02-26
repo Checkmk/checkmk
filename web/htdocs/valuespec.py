@@ -839,7 +839,7 @@ class ListChoice(ValueSpec):
 
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
-        if self._choices:
+        if self._choices != None:
             self._elements = self._choices
             return
 

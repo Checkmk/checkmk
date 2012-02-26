@@ -15,6 +15,8 @@
       of host and service (= downtime alerts)
 
     WATO:
+    * Create very basic sample configuration when using
+      WATO the first time (three tag groups, two rules)
     * Much more checks are configurable via WATO now
     * Distributed WATO: Made all URL calls using curl now
     * FIX: fix bug in inventory in validate_datatype()

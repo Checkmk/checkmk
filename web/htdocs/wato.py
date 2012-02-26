@@ -894,9 +894,10 @@ def mode_folder(phase):
                     "paths of that tree. The usage of folders is optional."))])
 
 def prepare_folder_info():
+    load_all_folders()            # load information about all folders
+    create_sample_config()        # if called for the very first time!
     declare_host_tag_attributes() # create attributes out of tag definitions
     declare_site_attribute()      # create attribute for distributed WATO
-    load_all_folders()            # load information about all folders
     set_current_folder()          # set g_folder from HTML variable
 
 
@@ -9334,8 +9335,6 @@ def get_tag_conditions():
         elif mode == "isnot":
             tag_list.append("!" + id)
 
-    html.debug_vars()
-    html.debug(tag_list)
     return tag_list
 
 
@@ -9612,6 +9611,69 @@ def page_user_profile():
     html.footer()
 
 #.
+#.
+#   .--Sampleconfig--------------------------------------------------------.
+#   |   ____                        _                       __ _           |
+#   |  / ___|  __ _ _ __ ___  _ __ | | ___  ___ ___  _ __  / _(_) __ _     |
+#   |  \___ \ / _` | '_ ` _ \| '_ \| |/ _ \/ __/ _ \| '_ \| |_| |/ _` |    |
+#   |   ___) | (_| | | | | | | |_) | |  __/ (_| (_) | | | |  _| | (_| |    |
+#   |  |____/ \__,_|_| |_| |_| .__/|_|\___|\___\___/|_| |_|_| |_|\__, |    |
+#   |                        |_|                                 |___/     |
+#   +----------------------------------------------------------------------+
+#   | Functions for creating an example configuration                      |
+#   '----------------------------------------------------------------------'
+
+# Create a very basic sample configuration, but only if no host tags
+# or rules have been defined *ever*.
+def create_sample_config():
+    if os.path.exists(multisite_dir + "hosttags.mk") \
+        or os.path.exists(multisite_dir + "rules.mk"):
+        return
+
+    # Example values for host tags
+    wato_host_tags = \
+    [('agent',
+      u'Agent type',
+      [('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
+       ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
+       ('snmp-v1', u'Legacy SNMP device (using V1)', ['snmp']),
+       ('snmp-tcp', u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
+       ('ping', u'Only PING this device', [])]),
+     ('criticality',
+      u'Criticality',
+      [('prod', u'Productive system', []),
+       ('critical', u'Business critical', []),
+       ('test', u'Test system', []),
+       ('offline', u'Do not monitor this host', [])]),
+     ('networking',
+      u'Networking Segment',
+      [('lan', u'Local network (low latency)', []),
+       ('wan', u'WAN (high latency)', []),
+       ('dmz', u'DMZ (low latency, secure access)', [])])]
+
+    wato_aux_tags = \
+    [('snmp', u'monitor via SNMP'), 
+     ('tcp', u'monitor via Check_MK Agent')]
+
+    save_hosttags(wato_host_tags, wato_aux_tags)
+
+    # Example values for rules
+    rulesets = { 
+        'only_hosts': [
+            (['!offline'], ['@all'])],
+         'ping_levels': [
+            ({'loss': (80.0, 100.0),
+              'packets': 6,
+              'rta': (1500.0, 3000.0),
+              'timeout': 20}, ['wan'], ['@all'])],
+         'bulkwalk_hosts': [
+            (['!snmp-v1'], ['@all'])],
+    }
+
+    save_rulesets(g_root_folder, rulesets)
+        
+
+
 #   .-Hooks-&-API----------------------------------------------------------.
 #   |       _   _             _           ___        _    ____ ___         |
 #   |      | | | | ___   ___ | | _____   ( _ )      / \  |  _ \_ _|        |

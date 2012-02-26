@@ -358,7 +358,6 @@ table.form.nomargin {
     margin: 0;
 }
 table.form.nomargin td.legend,
-.wato table.form.nomargin td.checkbox,
 table.form.nomargin td.content,
 table.form.nomargin td.buttons {
     border-top-style: none;
@@ -369,11 +368,6 @@ table.form.nomargin td.title {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
 }
-.wato table.form tr.top td,
-.wato table.form tr.top td.checkbox {
-    border-top-style: solid;
-}
-
 table.form > tbody > tr > td {
     padding: 4px 10px;
 }
@@ -440,7 +434,7 @@ table.form td.content {
 }
 
 td.legend, td.content {
-    border: 1px solid #884;
+    /* border: 1px solid #884; */
     padding: 2px 0.5ex;
 }
 

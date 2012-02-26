@@ -312,12 +312,18 @@ class html:
 
     def image_button(self, varname, title, cssclass = ''):
         self.write('<label for="%s" class=image_button>' % varname)
-        self.button(varname, title, cssclass)
+        self.raw_button(varname, title, cssclass)
         self.write('</label>')
 
-    def button(self, varname, title, cssclass=""):
-        self.write("<input type=submit name=\"%s\" id=\"%s\" value=\"%s\" class=\"%s\">\n" % \
+    def button(self, *args):
+        self.image_button(*args)
+
+    def raw_button(self, varname, title, cssclass=""):
+        self.write("<input onfocus=\"if (this.blur) this.blur();\" "
+                   "type=submit name=\"%s\" id=\"%s\" value=\"%s\" "
+                   "class=\"%s\">\n" % \
                    ( varname, varname, title, cssclass))
+
 
     def buttonlink(self, href, text, add_transid=False, obj_id='', style='', title='', disabled=''):
         if add_transid:

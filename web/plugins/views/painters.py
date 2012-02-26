@@ -1554,11 +1554,31 @@ multisite_painters["log_message"] = {
     "paint"   : lambda row: ("", row["log_message"]),
 }
 
+def paint_log_plugin_output(row):
+    output = row["log_plugin_output"]
+    if output:
+        return "", format_plugin_output(row, output)
+    else:
+        log_type = row["log_type"]
+        lst = row["log_state_type"]
+        if "FLAPPING" in log_type:
+            if "HOST" in log_type:
+                what = _("host")
+            else:
+                what = _("service")
+            if lst == "STOPPED":
+                return "", _("The %s stopped flapping") % what
+            else:
+                return "", _("The %s started flapping") % what
+
+        return "", (lst + " - " + log_type)
+
+
 multisite_painters["log_plugin_output"] = {
     "title"   : _("Log: output of check plugin"),
     "short"   : _("Check output"),
-    "columns" : ["log_plugin_output"],
-    "paint"   : lambda row: ("", format_plugin_output(row, row["log_plugin_output"])),
+    "columns" : ["log_plugin_output", "log_type", "log_state_type" ],
+    "paint"   : paint_log_plugin_output,
 }
 
 multisite_painters["log_attempt"] = {
@@ -1607,6 +1627,8 @@ def paint_log_icon(row):
         img = "start"
     elif "shutdown..." in log_type:
         img = "stop"
+    elif " FLAPPING " in log_type:
+        img = "flapping"
 
     if img:
         return "icon", '<img src="images/alert_%s.png">' % img

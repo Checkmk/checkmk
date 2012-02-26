@@ -1,0 +1,10 @@
+Title: extra_service_conf["use"] should work
+Component: core
+State: open
+Date: 2012-02-23 11:50:15
+Targetversion: future
+Class: feature
+
+Somehow this does not seem to work. We should handle this
+specially and omit the standard use in case we see a 
+custom extra_conf "use".

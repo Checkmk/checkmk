@@ -140,7 +140,7 @@ def show_file(host, filename):
         return
 
     if config.may("act") and may_see(host):
-        html.context_button(_("Acknowledge"), "logwatch.py?host=%s&amp;file=%s&amp;ack=1" % \
+        html.context_button(_("Clear logs"), "logwatch.py?host=%s&amp;file=%s&amp;ack=1" % \
                    (htmllib.urlencode(host), htmllib.urlencode(html.var('file')) ))
 
     html.context_button(_("Context"), 'logwatch.py?host=%s&file=%s&hidecontext=%s">%s</a>' % \

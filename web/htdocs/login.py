@@ -211,7 +211,8 @@ def normal_login_page():
     # We assume: Each user must visit this login page before using the multisite based
     #            authorization. So we can easily create the file here if it is missing.
     # This is a good place to replace old api based files in the future.
-    if not os.path.exists(defaults.var_dir + '/wato/auth/auth.php'):
+    auth_php = defaults.var_dir + '/wato/auth/auth.php'
+    if not os.path.exists(auth_php) or os.path.getsize(auth_php) == 0:
         import wato
         wato.load_plugins()
         wato.create_auth_file(wato.load_users())

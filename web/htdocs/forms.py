@@ -26,6 +26,19 @@
 
 from lib import *
 
+# A input function with the same call syntax as htmllib.textinput()
+def input(valuespec, varprefix, defvalue):
+    if html.form_filled_in():
+        value = valuespec.from_html_vars(varprefix)
+    else:
+        value = defvalue
+    valuespec.render_input(varprefix, value)
+
+def get_input(valuespec, varprefix):
+    value = valuespec.from_html_vars(varprefix)
+    valuespec.validate_value(value, varprefix)
+    return value
+
 
 def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None, buttontext = None):
     new_value = value.copy()

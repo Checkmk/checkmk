@@ -1871,7 +1871,7 @@ def create_nagios_config_timeperiods(outfile):
 def create_nagios_config_contacts(outfile):
     if len(contacts) > 0:
         outfile.write("\n# ------------------------------------------------------------\n")
-        outfile.write("# Timeperiod definitions (controlled by variable 'contacts'\n")
+        outfile.write("# Contact definitions (controlled by variable 'contacts')\n")
         outfile.write("# ------------------------------------------------------------\n\n")
         cnames = contacts.keys()
         cnames.sort()
@@ -1891,7 +1891,9 @@ def create_nagios_config_contacts(outfile):
                 outfile.write("  %s_notification_period\t%s\n" % (what, contact.get("notification_period", "24X7")))
                 outfile.write("  %s_notification_commands\tcheck-mk-notify\n" % what)
 
-            # Refer only to those contact groups that actually have objects assigned to
+            # Refer only to those contact groups that actually have objects assigned to. Otherwise
+            # we will run into problems since Nagios does not allow contact groups that
+            # are not assigned to at least one host or service?
             cgrs = [ cgr for cgr in contact.get("contactgroups", []) if cgr in contactgroups_to_define ]
             # Use dummy group if none is set. Nagios will not start otherwise
             if not cgrs:
@@ -3511,7 +3513,7 @@ OPTIONS:
   --usewalk      use snmpwalk stored with --snmpwalk
   --debug        never catch Python exceptions
   --procs N      start up to N processes in parallel during --scan-parents
-  --checks A,..  restrict inventory to specified checks (tcp/snmp/check type)
+  --checks A,..  restrict checks/inventory to specified checks (tcp/snmp/check type)
 
 NOTES:
   -I can be restricted to certain check types. Write '--checks df -I' if you
@@ -4566,5 +4568,11 @@ if __name__ == "__main__":
                     print "Cannot resolve hostname '%s'." % hostname
                     sys.exit(2)
 
-        do_check(hostname, ipaddress)
+        # honor --checks= also when checking (makes testing easier)
+        if inventory_checks:
+            check_types = inventory_checks.split(",")
+        else:
+            check_types = None
+
+        do_check(hostname, ipaddress, check_types)
 

@@ -44,8 +44,12 @@ def check_hr_mem(item, params, info):
                        ".1.3.6.1.2.1.25.2.1.3" ]:
             size = saveint(hrsize) * saveint(hrunits) / 1048576.0
             used = saveint(hrused) * saveint(hrunits) / 1048576.0
-            usage[hrtype] = (size, used)
-
+	    # We use only the first entry of each type. We have 
+	    # seen devices (pfSense), that have lots of additional
+            # entries that are not useful.
+	    if hrtype not in usage:
+	        usage[hrtype] = (size, used)
+    
     # Account for cached memory (this works at least for systems using
     # the UCD snmpd (such as Linux based applicances)
     cached_mb = 0
@@ -57,6 +61,7 @@ def check_hr_mem(item, params, info):
     ramused_mb -= cached_mb
     totalvirt_mb, virtused_mb  = usage.get(".1.3.6.1.2.1.25.2.1.3", (0,0))
     totalmem_mb,  totalused_mb = totalram_mb + totalvirt_mb, ramused_mb + virtused_mb
+   
     if totalmem_mb > 0:
         totalused_perc = 100 * totalused_mb / totalram_mb
 

@@ -53,7 +53,7 @@ $def[0] = '';
 
 $i = 0;
 foreach($files AS $file) {
-  $color = $colors[$i];
+  $color = $colors[$i % 4];
   $name  = str_replace('_', ' ', str_replace('.rrd', '', $file));
 
   $def[0] .= "DEF:var$i=$path/$file:$DS[1]:AVERAGE " ;

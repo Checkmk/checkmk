@@ -208,8 +208,8 @@ def render_tree_folder(f):
         html.end_foldable_container()
     else:
         html.write("<li>" + title + "</li>")
-    if f['.path'] == '' and f or is_leaf:
-        html.write("</ul>")
+
+    html.write("</ul>")
 
 sidebar_snapins['wato_foldertree'] = {
     'title'       : _('Foldertree'),

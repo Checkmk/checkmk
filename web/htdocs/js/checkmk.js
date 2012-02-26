@@ -1457,7 +1457,7 @@ function valuespec_listof_add(varprefix, magic) {
   htmlcode = replace_all(htmlcode, magic, strcount);
   var oTable = document.getElementById(varprefix + "_table");
   if (count == 0) {  // first: no <tbody> present!
-      oTable.innerHTML = "<tbody><tr><td>" + htmlcode + "</td></tr></tbody>";
+      oTable.innerHTML = "<tbody><tr>" + htmlcode + "</tr></tbody>";
   }
   else {
       var oTbody = oTable.childNodes[0];

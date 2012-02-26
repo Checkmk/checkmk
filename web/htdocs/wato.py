@@ -8064,7 +8064,7 @@ def save_hosttags(hosttags, auxtags):
     make_nagios_directory(multisite_dir)
     out = create_user_file(multisite_dir + "hosttags.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
-    out.write("wato_host_tags += \\\n%s\n" % pprint.pformat(hosttags))
+    out.write("wato_host_tags += \\\n%s\n\n" % pprint.pformat(hosttags))
     out.write("wato_aux_tags += \\\n%s\n" % pprint.pformat(auxtags))
 
 # Handle renaming and deletion of host tags: find affected
@@ -8880,6 +8880,9 @@ def tag_alias(tag):
         for t in tags:
             if t[0] == tag:
                 return t[1]
+    for id, alias in config.wato_aux_tags:
+        if id == tag:
+            return alias
 
 def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
     html.write("<ul class=conditions>")
@@ -8968,16 +8971,7 @@ def ruleeditor_hover_code(varname, rulenr, mode, boolval, folder=None):
 
 
 def get_rule_conditions(ruleset):
-    # Tag list
-    tag_list = []
-    for entry in config.wato_host_tags:
-        id, title, tags = entry[:3]
-        mode = html.var("tag_" + id)
-        tagvalue = html.var("tagvalue_" + id)
-        if mode == "is":
-            tag_list.append(tagvalue)
-        elif mode == "isnot":
-            tag_list.append("!" + tagvalue)
+    tag_list = get_tag_conditions()
 
     # Host list
     if not html.get_checkbox("explicit_hosts"):
@@ -9127,49 +9121,7 @@ def mode_edit_rule(phase):
 
     html.write("</i></td>")
     html.write("<td class=content>")
-    if len(config.wato_host_tags) == 0:
-        html.write(_("You have not configured any <a href=\"wato.py?mode=hosttags\">host tags</a>."))
-    else:
-        html.write("<table>")
-        for entry in config.wato_host_tags:
-            id, title, tags = entry[:3]
-            html.write("<tr><td>%s: &nbsp;</td>" % title)
-            default_tag = None
-            ignore = True
-            for t in tag_specs:
-                if t[0] == '!':
-                    n = True
-                    t = t[1:]
-                else:
-                    n = False
-                if t in [ x[0] for x in tags ]:
-                    default_tag = t
-                    ignore = False
-                    negate = n
-            if ignore:
-                deflt = "ignore"
-            elif negate:
-                deflt = "isnot"
-            else:
-                deflt = "is"
-
-            html.write("<td>")
-            html.select("tag_" + id, [
-                ("ignore", _("ignore")),
-                ("is",     _("is")),
-                ("isnot",  _("isnot"))], deflt,
-                onchange="valuespec_toggle_dropdownn(this, 'tag_sel_%s');" % id)
-            html.write("</td><td>")
-            if html.form_submitted():
-                div_is_open = html.var("tag_" + id) != "ignore"
-            else:
-                div_is_open = deflt != "ignore"
-            html.write('<div id="tag_sel_%s" style="white-space: nowrap; %s">' % (
-                id, not div_is_open and "display: none;" or ""))
-            html.select("tagvalue_" + id, [t[0:2] for t in tags if t[0] != None], deflt=default_tag)
-            html.write("</div>")
-            html.write("</td></tr>")
-        html.write("</table>")
+    render_condition_editor(tag_specs)
     html.write("</td></tr>")
 
 
@@ -9287,6 +9239,104 @@ def mode_edit_rule(phase):
     html.write("</table>")
     html.hidden_fields()
     html.end_form()
+
+# Render HTML input fields for editing a tag based condition
+def render_condition_editor(tag_specs):
+    if len(config.wato_aux_tags) + len(config.wato_host_tags) == 0:
+        html.write(_("You have not configured any <a href=\"wato.py?mode=hosttags\">host tags</a>."))
+        return
+
+    # Determine current (default) setting of tag by looking
+    # into tag_specs (e.g. [ "snmp", "!tcp", "test" ] )
+    def current_tag_setting(choices):
+        default_tag = None
+        ignore = True
+        for t in tag_specs:
+            if t[0] == '!':
+                n = True
+                t = t[1:]
+            else:
+                n = False
+            if t in [ x[0] for x in choices ]:
+                default_tag = t
+                ignore = False
+                negate = n
+        if ignore:
+            deflt = "ignore"
+        elif negate:
+            deflt = "isnot"
+        else:
+            deflt = "is"
+        return default_tag, deflt
+
+    # Show dropdown with "is/isnot/ignore" and beginning
+    # of div that is switched visible by is/isnot
+    def tag_condition_dropdown(tagtype, deflt, id):
+        html.write("<td>")
+        html.select(tagtype + "_" + id, [
+            ("ignore", _("ignore")),
+            ("is",     _("is")),
+            ("isnot",  _("isnot"))], deflt,
+            onchange="valuespec_toggle_dropdownn(this, 'tag_sel_%s');" % id)
+        html.write("</td><td>")
+        if html.form_submitted():
+            div_is_open = html.var(tagtype + "_" + id) != "ignore"
+        else:
+            div_is_open = deflt != "ignore"
+        html.write('<div id="tag_sel_%s" style="white-space: nowrap; %s">' % (
+            id, not div_is_open and "display: none;" or ""))
+
+    # Show main tags
+    html.write("<table>")
+    if len(config.wato_host_tags):
+        for entry in config.wato_host_tags:
+            id, title, choices = entry[:3]
+            html.write("<tr><td>%s: &nbsp;</td>" % title)
+            default_tag, deflt = current_tag_setting(choices)
+            tag_condition_dropdown("tag", deflt, id)
+            html.select("tagvalue_" + id, 
+                [t[0:2] for t in choices if t[0] != None], deflt=default_tag)
+            html.write("</div>")
+            html.write("</td></tr>")
+
+    # And auxiliary tags
+    if len(config.wato_aux_tags):
+        for id, title in config.wato_aux_tags:
+            html.write("<tr><td>%s: &nbsp;</td>" % title)
+            default_tag, deflt = current_tag_setting([(id, title)])
+            tag_condition_dropdown("auxtag", deflt, id)
+            html.write(" " + _("set"))
+            html.write("</div>")
+            html.write("</td></tr>")
+
+
+    html.write("</table>")
+
+
+# Retrieve current tag condition settings from HTML variables
+def get_tag_conditions():
+    # Main tags
+    tag_list = []
+    for entry in config.wato_host_tags:
+        id, title, tags = entry[:3]
+        mode = html.var("tag_" + id)
+        tagvalue = html.var("tagvalue_" + id)
+        if mode == "is":
+            tag_list.append(tagvalue)
+        elif mode == "isnot":
+            tag_list.append("!" + tagvalue)
+
+    # Auxiliary tags
+    for id, title in config.wato_aux_tags:
+        mode = html.var("auxtag_" + id)
+        if mode == "is":
+            tag_list.append(id)
+        elif mode == "isnot":
+            tag_list.append("!" + id)
+
+    html.debug_vars()
+    html.debug(tag_list)
+    return tag_list
 
 
 def save_rulesets(folder, rulesets):

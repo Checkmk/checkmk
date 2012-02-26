@@ -33,6 +33,8 @@
     * FIX: honor permissions on hosts also on bulk inventory
     * Only create contacts in Nagios if they are member of at
       least one contact group.
+    * It is now possible to configure auxiliary tags via WATO
+      (formerly also called secondary tags)
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors

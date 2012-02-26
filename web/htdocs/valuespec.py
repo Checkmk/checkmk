@@ -1510,7 +1510,7 @@ class Foldable(ValueSpec):
         html.begin_foldable_container("valuespec_foldable", varprefix, self._open, 
                         self._valuespec.title(), False)
         if self._valuespec.help():
-            html.write("<i class=help>%s</i><br>" % self._valuespec.help())
+            html.write("<i class=help>%s</i><br><br>" % self._valuespec.help())
         self._valuespec.render_input(varprefix, value)
         html.end_foldable_container()
 

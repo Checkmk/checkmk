@@ -7658,7 +7658,6 @@ def mode_hosttags(phase):
                        "<th>" + _("Type") + "</th>"
                        "<th>" + _("Choices") + "</th>"
                        "<th>" + _("Demonstration") + "</th>"
-                       "<th></th>"
                        "</tr>")
             odd = "even"
             for nr, (tag_id, title, choices) in enumerate(hosttags):
@@ -7677,6 +7676,7 @@ def mode_hosttags(phase):
                 else:
                     html.icon_button(html.makeactionuri([("_move", str(nr))]),
                                 _("Move this tag group one position down"), "down")
+                html.icon_button(edit_url,   _("Edit this tag group"), "edit")
                 html.icon_button(delete_url, _("Delete this tag group"), "delete")
                 html.write("</td>")
                 html.write("<td>%s</td>" % tag_id)
@@ -7687,9 +7687,6 @@ def mode_hosttags(phase):
                 html.begin_form("tag_%s" % tag_id)
                 host_attribute["tag_%s" % tag_id].render_input(None)
                 html.end_form()
-                html.write("</td>")
-                html.write("<td class=buttons>")
-                html.buttonlink(edit_url, _("Edit"))
                 html.write("</td>")
 
                 html.write("</tr>")

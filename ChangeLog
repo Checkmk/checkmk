@@ -37,6 +37,8 @@
       least one contact group.
     * It is now possible to configure auxiliary tags via WATO
       (formerly also called secondary tags)
+    * FIX: Fixed wrong label "Main Overview" shown for moved WATO folders
+      in foldertree snapin
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors

@@ -423,6 +423,9 @@ def save_folders(folder):
 def save_all_folders():
     save_folders(g_root_folder)
 
+def folder_config_exists(dir):
+    return os.path.exists(dir + "/.wato")
+
 # Load the meta-data of a folder (it's .wato file), register
 # it in g_folders, load recursively all subfolders and then
 # return the folder object. The case the .wato file is missing

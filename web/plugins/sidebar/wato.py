@@ -184,8 +184,6 @@ def render_wato_foldertree():
 
     html.write('<span class=left>%s</span>' % _('View:'))
 
-    html.debug(repr(user_folders['']))
-
     # Now render the whole tree
     if user_folders:
         render_tree_folder(user_folders[''])

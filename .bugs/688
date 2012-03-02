@@ -1,0 +1,8 @@
+Title: Add permissions to controll the single host/folder actions
+Component: wato
+State: open
+Date: 2012-03-02 14:17:03
+Targetversion: 1.2.0
+Class: feature
+
+It is needed to disable single actions like "move to" or "inventory" for single roles/users.

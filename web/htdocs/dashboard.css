@@ -51,8 +51,9 @@ div.dashlet div.dashlet_inner {
 
 /* Dashlets with "background" set to True */
 div.dashlet div.dashlet_inner.background {
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+    /* background-image: url("images/form_background.png"); */
+    /* background-repeat: repeat; */
+    background-color: #ccc;
 }
 
 div.dashlet iframe {
@@ -118,7 +119,7 @@ div.dashlet img.shadow.sw {
 }
 div.dashlet img.shadow.ne {
     top: -2px;
-    right: -2px;
+    right: 3px;
     width: 13px;
     height: 23px;
 }

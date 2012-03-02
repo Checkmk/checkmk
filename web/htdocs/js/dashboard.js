@@ -79,12 +79,12 @@ function resize_dashlets(id, code)
         oShadow = document.getElementById("dashadow_n_" + d_number);
         if (oShadow) oShadow.style.display  = disstyle;
         if (oShadow && d_width - 32 > 0)
-            oShadow.style.width = netto_width + "px";
+            oShadow.style.width = netto_width - corner_overlap + "px";
 
         oShadow = document.getElementById("dashadow_s_" + d_number);
         if (oShadow) oShadow.style.display  = disstyle;
         if (oShadow && d_width - 32 > 0)
-            oShadow.style.width = netto_width + "px";
+            oShadow.style.width = netto_width - corner_overlap + "px";
 
         // resize content div
         oDash = document.getElementById("dashlet_inner_" + d_number);

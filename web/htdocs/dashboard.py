@@ -47,7 +47,8 @@ MAX = -1
 
 header_height   = 60             # Distance from top of the screen to the lower border of the heading
 screen_margin   = 5              # Distance from the left border of the main-frame to the dashboard area
-dashlet_padding = 21, 11, 10, 11 # Margin (N, E, S, W) between outer border of dashlet and its content
+dashlet_padding = 21, 5, 5, 0 # Margin (N, E, S, W) between outer border of dashlet and its content
+corner_overlap  = 22
 title_height    = 0             # Height of dashlet title-box
 raster          = 32, 32         # Raster the dashlet choords are measured in
 
@@ -148,12 +149,14 @@ var header_height = %d;
 var screen_margin = %d;
 var title_height = %d;
 var dashlet_padding = Array%s;
+var corner_overlap = %d;
 var refresh_dashlets = %r;
 var dashboard_name = '%s';
 set_dashboard_size();
 window.onresize = function () { set_dashboard_size(); }
 dashboard_scheduler(1);
-    """ % (header_height, screen_margin, title_height, dashlet_padding, refresh_dashlets, name))
+    """ % (header_height, screen_margin, title_height, dashlet_padding, 
+           corner_overlap, refresh_dashlets, name))
 
     html.body_end() # omit regular footer with status icons, etc.
 

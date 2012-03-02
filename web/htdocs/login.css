@@ -106,8 +106,19 @@ label {
 }
 
 #input_user, #input_pass {
-    width: 130px;
-    height: 16px;
+    width: 160px;
+    height: 20px;
+    border: none;
+    border-radius: 0px;
+    outline: none;
+    padding: 0px 0px 5px 0px;
+    background-image: url("images/login_input_normal.png");
+    background-repeat: no-repeat;
+}
+
+.inputerror #input_user, .inputerror #input_pass {
+    background-image: url("images/login_input_error.png");
+    background-repeat: no-repeat;
 }
 
 #button_login {
@@ -123,8 +134,8 @@ label {
 
 #button_text {
     position: absolute;
-    top: 350px;
-    left: 500px;
+    top: 355px;
+    left: 505px;
     text-align: center;
     width: 61px;
     color: white;
@@ -135,15 +146,16 @@ label {
 
 #login_error {
     position: absolute;
-    top: 350px;
-    left: 264px;
-    width: 205px;
+    top: 0px;
+    left: 0px;
+    width: 180px;
+    height: 30px;
     z-index: 100;
-}
-
-#login_error div.error {
-    margin:0;
-    padding:6px 0;
+    background-image: url("images/login_error_message.png");
+    background-repeat: no-repeat;
+    border: none;
+    margin: 0px;
+    padding: 0px;
 }
 
 #foot {

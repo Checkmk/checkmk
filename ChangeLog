@@ -93,6 +93,7 @@
       error messages when the core is being restarted
     * Events view now shows icon and text for "flapping" events
     * Use buffer for HTML creation (this speeds up esp. HTTPS a lot)
+    * FIX: Fixed state filter in log views
 
     Livestatus:
     * Add missing column check_freshness to services table

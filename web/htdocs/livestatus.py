@@ -246,6 +246,8 @@ class BaseConnection:
 
     def receive_data(self, size):
         result = ""
+        # Timeout is only honored when connecting
+        self.socket.settimeout(None)
         while size > 0:
             packet = self.socket.recv(size)
             if len(packet) == 0:
@@ -319,6 +321,9 @@ class BaseConnection:
                 return self.recv_response() # do not send query again -> danger of infinite loop
             else:
                 raise MKLivestatusSocketError(str(e))
+
+        except Exception, e:
+            raise MKLivestatusSocketError("Unhandled exception: %s" % e)
 
 
     def do_command(self, command):

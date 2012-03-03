@@ -107,9 +107,12 @@ def render_wato_foldertree():
     hosts.sort()
 
     def get_folder(path, num = 0):
-        wato_folder = wato.load_folder(wato.root_dir + path, childs = False)
+        wato_folder = {}
+        if wato.folder_config_exists(wato.root_dir + path):
+            wato_folder = wato.load_folder(wato.root_dir + path, childs = False)
+
         return {
-            'title':      wato_folder['title'],
+            'title':      wato_folder.get('title', path.split('/')[-1]),
             '.path':      path,
             '.num_hosts': num,
             '.folders':   {},

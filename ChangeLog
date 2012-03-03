@@ -37,6 +37,8 @@
       least one contact group.
     * It is now possible to configure auxiliary tags via WATO
       (formerly also called secondary tags)
+    * FIX: Fixed wrong label "Main Overview" shown for moved WATO folders
+      in foldertree snapin
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors
@@ -91,6 +93,7 @@
       error messages when the core is being restarted
     * Events view now shows icon and text for "flapping" events
     * Use buffer for HTML creation (this speeds up esp. HTTPS a lot)
+    * FIX: Fixed state filter in log views
 
     Livestatus:
     * Add missing column check_freshness to services table

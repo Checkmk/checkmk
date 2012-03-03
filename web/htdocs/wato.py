@@ -423,6 +423,9 @@ def save_folders(folder):
 def save_all_folders():
     save_folders(g_root_folder)
 
+def folder_config_exists(dir):
+    return os.path.exists(dir + "/.wato")
+
 # Load the meta-data of a folder (it's .wato file), register
 # it in g_folders, load recursively all subfolders and then
 # return the folder object. The case the .wato file is missing
@@ -1223,7 +1226,7 @@ def show_hosts(folder):
 
         # Hostname with link to details page (edit host)
         html.write('<td>')
-        errors = host_errors.get(hostname,[]) + validate_host(hostname)
+        errors = host_errors.get(hostname,[]) + validate_host(host, g_folder)
         if errors:
             msg = _("Warning: This host has an invalid configuration: ")
             msg += ", ".join(errors)
@@ -1798,7 +1801,7 @@ def mode_edithost(phase, new, cluster):
                 call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
 
-            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(hostname)
+            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(host, g_folder)
             if errors: # keep on this page if host does not validate
                 return
             elif new:
@@ -1812,7 +1815,7 @@ def mode_edithost(phase, new, cluster):
         if new:
             render_folder_path()
         else:
-            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(hostname)
+            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(host, g_folder)
 
         if errors:
             html.write("<div class=info>")
@@ -4205,6 +4208,7 @@ def effective_attributes(host, folder):
         chain = [ host ]
     else:
         chain = [ ]
+
     while folder:
         chain.append(folder.get("attributes", {}))
         folder = folder.get(".parent")
@@ -7658,7 +7662,6 @@ def mode_hosttags(phase):
                        "<th>" + _("Type") + "</th>"
                        "<th>" + _("Choices") + "</th>"
                        "<th>" + _("Demonstration") + "</th>"
-                       "<th></th>"
                        "</tr>")
             odd = "even"
             for nr, (tag_id, title, choices) in enumerate(hosttags):
@@ -7677,6 +7680,7 @@ def mode_hosttags(phase):
                 else:
                     html.icon_button(html.makeactionuri([("_move", str(nr))]),
                                 _("Move this tag group one position down"), "down")
+                html.icon_button(edit_url,   _("Edit this tag group"), "edit")
                 html.icon_button(delete_url, _("Delete this tag group"), "delete")
                 html.write("</td>")
                 html.write("<td>%s</td>" % tag_id)
@@ -7687,9 +7691,6 @@ def mode_hosttags(phase):
                 html.begin_form("tag_%s" % tag_id)
                 host_attribute["tag_%s" % tag_id].render_input(None)
                 html.end_form()
-                html.write("</td>")
-                html.write("<td class=buttons>")
-                html.buttonlink(edit_url, _("Edit"))
                 html.write("</td>")
 
                 html.write("</tr>")
@@ -9933,10 +9934,10 @@ def call_hook_roles_saved(roles):
 # This hook is called in order to determine if a host has a 'valid'
 # configuration. It used for displaying warning symbols in the
 # host list and in the host detail view.
-def validate_host(host):
+def validate_host(host, folder):
     if hook_registered('validate-host'):
         errors = []
-        eff = effective_attributes(host, host[".folder"])
+        eff = effective_attributes(host, folder)
         for hk in g_hooks.get('validate-host', []):
             try:
                 hk(eff)

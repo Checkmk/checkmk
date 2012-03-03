@@ -132,7 +132,7 @@ def check_lgp_pdu_aux(item, params, info):
             else:
                 output.append('Label: ' + pdu['SystemLabel'])
 
-            def handle_type(ty, label):
+            def handle_type(ty, label, uom):
                 state = 0
                 perfdata = (ty.lower(), pdu[ty],
                             '%0.2f:%0.2f' % (pdu[ty+'LowWarn'], pdu[ty+'HighWarn']),
@@ -151,15 +151,15 @@ def check_lgp_pdu_aux(item, params, info):
                     state = 1
                     s_out = ' <= %0.2f (!)' % pdu[ty+'LowWarn']
 
-                return state, '%s: %0.2fC%s' % (label, pdu[ty], s_out), perfdata
+                return state, '%s: %0.2f%s%s' % (label, pdu[ty], uom, s_out), perfdata
             
             if pdu['Type'] == 'TEMP':
-                state, out, perf = handle_type('Temp', 'Temperature')
+                state, out, perf = handle_type('Temp', 'Temperature', 'C')
                 output.append(out)
                 perfdata.append(perf)
 
             elif pdu['Type'] == 'HUM':
-                state, out, perf = handle_type('Hum', 'Humidity')
+                state, out, perf = handle_type('Hum', 'Humidity', '%')
                 output.append(out)
                 perfdata.append(perf)
 

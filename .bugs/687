@@ -1,0 +1,9 @@
+Title: Hide Roles/Users (depending on own permissions)
+Component: wato
+State: open
+Date: 2012-03-02 14:15:14
+Targetversion: 1.2.0
+Class: feature
+
+It is neccessary to hide some roles and users from others. For example some admins which are only allowed
+to administrate a small part of the system and only some users/roles must not see e.g. the super-admins.

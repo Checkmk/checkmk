@@ -210,12 +210,12 @@ def aggr_render_leaf(tree, show_host, bare = False):
         service_url = html.makeuri([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
 
     if show_host:
-        content += '<a href="%s">%s</a><b class=bullet>&diams;</b>' % (host_url, host)
+        content += '<a href="%s">%s</a><b class=bullet>&diams;</b>' % (host_url, host.replace(" ", "&nbsp;"))
 
     if not service:
-        content += '<a href="%s">%s</a>' % (host_url, _("Host status"))
+        content += '<a href="%s">%s</a>' % (host_url, _("Host&nbsp;status"))
     else:
-        content += '<a href="%s">%s</a>' % (service_url, service)
+        content += '<a href="%s">%s</a>' % (service_url, service.replace(" ", "&nbsp;"))
 
     if bare:
         return content
@@ -274,7 +274,7 @@ def paint_aggr_tree_boxes(row):
        'onmouseout="this.style.cursor=\'auto\';" ' \
        'onclick="toggle_bi_box(this);" '
 
-    def render_subtree(tree, open, show_host):
+    def render_subtree(tree, open, show_host, level):
         ret = ""
         if not open:
             state = tree[0]
@@ -282,18 +282,23 @@ def paint_aggr_tree_boxes(row):
                 mc = ""
             else:
                 mc = mousecode
-            ret = '<div %s class="bibox_box state%s">' % (mc, state["state"])
-            if len(tree) == 3: # leaf
-                ret += aggr_render_leaf(tree, show_host, bare = True)
+            if len(tree) == 3:
+                leaf = " leaf"
             else:
-                ret += tree[2]["title"]
-            ret += '</div>'
+                leaf = " noleaf"
+            ret = '<span %s class="bibox_box%s state%s">' % (mc, leaf, state["state"])
+            # ret += "&gt;" * (level-1) 
+            if len(tree) == 3:
+                ret += aggr_render_leaf(tree, show_host, bare = True) # .replace(" ", "&nbsp;")
+            else:
+                ret += tree[2]["title"].replace(" ", "&nbsp;")
+            ret += '</span> '
         if len(tree) >= 4:
-            ret += '<div class="bibox" style="%s">' % (not open and "display: none;" or "")
+            ret += '<span class="bibox" style="%s">' % (not open and "display: none;" or "")
             parts = []
             for node in tree[3]:
-                ret += render_subtree(node, False, show_host)
-            ret += '</div>'
+                ret += render_subtree(node, False, show_host, level+1)
+            ret += '</span>'
         return ret
 
     tree = row["aggr_treestate"]
@@ -301,8 +306,9 @@ def paint_aggr_tree_boxes(row):
         tree = filter_tree_only_problems(tree)
 
     affected_hosts = row["aggr_hosts"]
-    htmlcode = render_subtree(tree, True, len(affected_hosts) > 1)
-    return "aggrtree", htmlcode
+    htmlcode = render_subtree(tree, True, len(affected_hosts) > 1, 0)
+    return "aggrtree_box", htmlcode
+
 
 def paint_aggr_tree_foldable(row, boxes=False):
     saved_expansion_level = bi.load_ex_level()

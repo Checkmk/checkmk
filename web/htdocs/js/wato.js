@@ -105,22 +105,36 @@ function wato_fix_visibility() {
     }
 
     var hide_topics = volatile_topics.slice(0);
-
     /* Now loop over all attributes that have conditions. Those are
-       stored in the global variable wato_depends_on, which is filled
+       stored in the global variable wato_depends_on_tags, which is filled
        during the creation of the web page. */
-    for (var attrname in wato_depends_on) {
+    for (var i in wato_check_attributes) {
+        var attrname = wato_check_attributes[i]
         /* Now comes the tricky part: decide whether that attribute should
            be visible or not: */
         var display = "";
-        for (var i in wato_depends_on[attrname]) {
-            var tag = wato_depends_on[attrname][i];
-            var negate = tag[0] == '!';
-            var tagname = negate ? tag.substr(1) : tag;
-            var have_tag = currentTags.indexOf(tagname) != -1;
-            if (have_tag == negate) {
-                display = "none";
-                break;
+        if(attrname in wato_depends_on_roles){
+            for (var i in wato_depends_on_roles[attrname]) {
+                var role = wato_depends_on_roles[attrname][i];
+                var negate = role[0] == '!';
+                var rolename = negate ? role.substr(1) : role;
+                var have_role = user_roles.indexOf(rolename) != -1;
+                if (have_role == negate) {
+                    display = "none";
+                    break;
+                }
+            }
+        }
+        if(attrname in wato_depends_on_tags){
+            for (var i in wato_depends_on_tags[attrname]) {
+                var tag = wato_depends_on_tags[attrname][i];
+                var negate = tag[0] == '!';
+                var tagname = negate ? tag.substr(1) : tag;
+                var have_tag = currentTags.indexOf(tagname) != -1;
+                if (have_tag == negate) {
+                    display = "none";
+                    break;
+                }
             }
         }
 
@@ -164,8 +178,6 @@ function wato_fix_visibility() {
         }
     }
 }
-
-
 
 // ----------------------------------------------------------------------------
 // Interactive progress code

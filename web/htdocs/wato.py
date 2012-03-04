@@ -3534,6 +3534,15 @@ class Attribute:
     def is_mandatory(self):
         return False
 
+    # Return information about the user roles we depend on.
+    # The method is usually not overridden, but the variable
+    # _depends_on_roles is set by declare_host_attribute().
+    def depends_on_roles(self):
+        try:
+            return self._depends_on_roles
+        except:
+            return []
+
     # Return information about the host tags we depend on.
     # The method is usually not overridden, but the variable
     # _depends_on_tags is set by declare_host_attribute().
@@ -3870,15 +3879,19 @@ def declare_host_tag_attributes():
         for entry in config.wato_host_tags:
             # if the entry has o fourth component, then its
             # the tag dependency defintion.
+            depends_on_tags = []
+            depends_on_roles = []
+            if len(entry) >= 5:
+                depends_on_roles = entry[4]
             if len(entry) >= 4:
                 depends_on_tags = entry[3]
-            else:
-                depends_on_tags = []
+
             declare_host_attribute(
                 HostTagAttribute(entry[:3]),
                     show_in_table = False,
                     show_in_folder = True,
                     depends_on_tags = depends_on_tags,
+                    depends_on_roles = depends_on_roles,
                     topic = _("Host tags"))
 
         configured_host_tags = config.wato_host_tags
@@ -3902,13 +3915,15 @@ host_attribute = {}
 
 # Declare attributes with this method
 def declare_host_attribute(a, show_in_table = True, show_in_folder = True,
-       topic = None, show_in_form = True, depends_on_tags = []):
+       topic = None, show_in_form = True, depends_on_tags = [],depends_on_roles = []):
     host_attributes.append((a, topic))
     host_attribute[a.name()] = a
     a._show_in_table   = show_in_table
     a._show_in_folder  = show_in_folder
     a._show_in_form    = show_in_form
     a._depends_on_tags = depends_on_tags
+    a._depends_on_roles = depends_on_roles
+
 
 def undeclare_host_attribute(attrname):
     if attrname in host_attribute:
@@ -3964,6 +3979,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
     # Collect dependency mapping for attributes (attributes that are only
     # visible, if certain host tags are set).
     dependency_mapping = {}
+    dependency_mapping_roles = {}
     inherited_tags     = {}
 
     volatile_topics = []
@@ -4005,13 +4021,15 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             # modes we always need to show all attributes.
             if for_what == "host":
                 depends_on_tags = attr.depends_on_tags()
+                depends_on_roles = attr.depends_on_roles()
                 if depends_on_tags:
-                    dependency_mapping[attrname] = depends_on_tags
-                else:
-                    if attr.show_in_form():
-                        # One attribute is always shown -> topic can never
-                        # be made invisible
-                        topic_is_volatile = False
+                    dependency_mapping_tags[attrname] = depends_on_tags
+                if depends_on_roles:
+                    dependency_mapping_roles[attrname] = depends_on_roles
+
+                if not depends_on_tags and not depends_on_roles:
+                    # One attribute is always shown -> topic is always visible 
+                    topic_is_volatile = False
             else:
                 topic_is_volatile = False
 
@@ -4179,12 +4197,18 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
     # Provide Javascript world with the tag dependency information
     # of all attributes.
     html.javascript("var inherited_tags = %s;\n"\
-                    "var wato_depends_on = %s;\n"\
+                    "var wato_check_attributes = %s;\n"\
+                    "var wato_depends_on_tags = %s;\n"\
+                    "var wato_depends_on_roles = %s;\n"\
                     "var volatile_topics = %s;\n"\
+                    "var user_roles = %s;\n"\
                     "wato_fix_visibility();\n" % (
                        dump_json(inherited_tags),
-                       dump_json(dependency_mapping),
-                       dump_json(volatile_topics)))
+                       dump_json(list(set(dependency_mapping_tags.keys()+dependency_mapping_roles.keys()))),
+                       dump_json(dependency_mapping_tags),
+                       dump_json(dependency_mapping_roles),
+                       dump_json(volatile_topics),
+                       dump_json(config.user_role_ids)))
 
 
 # Check if at least one host in a folder (or its subfolders)

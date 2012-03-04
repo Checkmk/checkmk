@@ -125,7 +125,8 @@ function wato_fix_visibility() {
                 }
             }
         }
-        if(attrname in wato_depends_on_tags){
+        
+        if( display == "" && attrname in wato_depends_on_tags){
             for (var i in wato_depends_on_tags[attrname]) {
                 var tag = wato_depends_on_tags[attrname][i];
                 var negate = tag[0] == '!';

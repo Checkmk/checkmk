@@ -3983,7 +3983,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
 
     # Collect dependency mapping for attributes (attributes that are only
     # visible, if certain host tags are set).
-    dependency_mapping = {}
+    dependency_mapping_tags = {}
     dependency_mapping_roles = {}
     inherited_tags     = {}
 

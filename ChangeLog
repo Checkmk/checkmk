@@ -15,6 +15,8 @@
       of host and service (= downtime alerts)
 
     WATO:
+    * Create very basic sample configuration when using
+      WATO the first time (three tag groups, two rules)
     * Much more checks are configurable via WATO now
     * Distributed WATO: Made all URL calls using curl now
     * FIX: fix bug in inventory in validate_datatype()
@@ -31,6 +33,12 @@
     * FIX: honor permissions for "bulk cleanup" and "bulk edit"
     * FIX: honor write permissions and source folder when moving hosts
     * FIX: honor permissions on hosts also on bulk inventory
+    * Only create contacts in Nagios if they are member of at
+      least one contact group.
+    * It is now possible to configure auxiliary tags via WATO
+      (formerly also called secondary tags)
+    * FIX: Fixed wrong label "Main Overview" shown for moved WATO folders
+      in foldertree snapin
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors
@@ -85,6 +93,7 @@
       error messages when the core is being restarted
     * Events view now shows icon and text for "flapping" events
     * Use buffer for HTML creation (this speeds up esp. HTTPS a lot)
+    * FIX: Fixed state filter in log views
 
     Livestatus:
     * Add missing column check_freshness to services table

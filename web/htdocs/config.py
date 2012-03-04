@@ -92,7 +92,11 @@ def load_config():
     global auth_type
     auth_type = 'basic'
 
-    # Reset values that can be appended to
+    # Reset values that can be appended to. Otherwise
+    # those lists will get longer for each web page called while
+    # using the same Python interpreter (i.e. Apache process). 
+    # Remember: the module config.py is only loaded once per process
+    # and is being reused in later sessions.
     global aggregations
     aggregations = []
 
@@ -101,6 +105,9 @@ def load_config():
 
     global wato_host_tags
     wato_host_tags = []
+
+    global wato_aux_tags
+    wato_aux_tags = []
 
     include("multisite.mk")
 
@@ -592,6 +599,7 @@ buffered_http_stream = True
 
 wato_enabled = True
 wato_host_tags = []
+wato_aux_tags = []
 wato_hide_filenames = True
 wato_max_snapshots = 50
 wato_num_hostspecs = 12

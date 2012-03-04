@@ -1,0 +1,12 @@
+Title: Reschedule does not work anymore
+Component: multisite
+State: open
+Date: 2012-02-26 11:18:29
+Targetversion: 1.2.0
+Class: bug
+
+When clicking on the rotating arrows only the error 
+message ERROR cannot reschedule check: time out
+appears (after ~ 1 sec.)
+
+LM: Works for me.

@@ -58,10 +58,20 @@ if defaults.omd_root:
 
 def read_get_vars(req):
     req.vars = {}
+    req.listvars = {} # for variables with more than one occurrance
     fields = util.FieldStorage(req, keep_blank_values = 1)
     for field in fields.list:
         varname = field.name
         value = field.value
+        # Multiple occurrance of a variable? Store in extra list dict
+        if varname in req.vars:
+            if varname in req.listvars:
+                req.listvars[varname].append(value)
+            else:
+                req.listvars[varname] = [ req.vars[varname], value ]
+        # In the single-value-store the last occurrance of a variable
+        # has precedence. That makes appending variables to the current
+        # URL simpler.
         req.vars[varname] = value
 
 def read_cookies(req):

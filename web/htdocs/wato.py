@@ -111,6 +111,7 @@ import sys, pprint, socket, re, subprocess, time, datetime,  \
 import config, htmllib, multitar
 from lib import *
 from valuespec import *
+import forms
 
 
 class MKAutomationException(Exception):
@@ -421,6 +422,9 @@ def save_folders(folder):
 
 def save_all_folders():
     save_folders(g_root_folder)
+
+def folder_config_exists(dir):
+    return os.path.exists(dir + "/.wato")
 
 # Load the meta-data of a folder (it's .wato file), register
 # it in g_folders, load recursively all subfolders and then
@@ -893,9 +897,10 @@ def mode_folder(phase):
                     "paths of that tree. The usage of folders is optional."))])
 
 def prepare_folder_info():
+    load_all_folders()            # load information about all folders
+    create_sample_config()        # if called for the very first time!
     declare_host_tag_attributes() # create attributes out of tag definitions
     declare_site_attribute()      # create attribute for distributed WATO
-    load_all_folders()            # load information about all folders
     set_current_folder()          # set g_folder from HTML variable
 
 
@@ -1221,7 +1226,7 @@ def show_hosts(folder):
 
         # Hostname with link to details page (edit host)
         html.write('<td>')
-        errors = host_errors.get(hostname,[]) + validate_host(hostname)
+        errors = host_errors.get(hostname,[]) + validate_host(host, g_folder)
         if errors:
             msg = _("Warning: This host has an invalid configuration: ")
             msg += ", ".join(errors)
@@ -1796,7 +1801,7 @@ def mode_edithost(phase, new, cluster):
                 call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
 
-            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(hostname)
+            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(host, g_folder)
             if errors: # keep on this page if host does not validate
                 return
             elif new:
@@ -1810,7 +1815,7 @@ def mode_edithost(phase, new, cluster):
         if new:
             render_folder_path()
         else:
-            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(hostname)
+            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(host, g_folder)
 
         if errors:
             html.write("<div class=info>")
@@ -1851,10 +1856,10 @@ def mode_edithost(phase, new, cluster):
         configure_attributes({hostname: host}, "host", parent = g_folder)
 
         html.write('<tr><td class="buttons" colspan=3>')
+        html.button("services", _("Save &amp; go to Services"), "submit")
         html.button("save", _("Save &amp; Finish"), "submit")
         if not new:
             html.button("delete", _("Delete host!"), "submit")
-        html.button("services", _("Save &amp; go to Services"), "submit")
         html.write("</td></tr>\n")
         html.write("</table>\n")
         html.hidden_fields()
@@ -4239,6 +4244,7 @@ def effective_attributes(host, folder):
         chain = [ host ]
     else:
         chain = [ ]
+
     while folder:
         chain.append(folder.get("attributes", {}))
         folder = folder.get(".parent")
@@ -7142,10 +7148,14 @@ def save_users(profiles):
     non_contact_keys = [ "roles", "password", "locked", "automation_secret", "language" ]
     multisite_keys   = [ "roles", "language" ]
 
-    # Remove multisite keys in contacts
-    contacts = dict([ (id, split_dict(user, non_contact_keys, False))
-                      for (id, user)
-                      in profiles.items() ])
+    # Remove multisite keys in contacts. And use only such entries
+    # that have any contact groups assigned to.
+    contacts = dict(
+        e for e in 
+            [ (id, split_dict(user, non_contact_keys, False))
+               for (id, user)
+               in profiles.items() ]
+        if e[1].get("contactgroups"))
 
     # Only allow explicit defined attributes to be written to multisite config
     users = {}
@@ -7311,7 +7321,7 @@ def mode_roles(phase):
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Clone"), "clone")
         if not role.get("builtin"):
-            html.buttonlink(delete_url, _("Delete"))
+            html.icon_button(delete_url, _("Delete this role"), "delete")
         html.write("</td>")
 
         # ID
@@ -7510,7 +7520,7 @@ def load_roles():
 
     try:
         vars = { "roles" : roles }
-        exec(filename, vars, vars)
+        execfile(filename, vars, vars)
         # Reflect the data in the roles dict kept in the config module Needed
         # for instant changes in current page while saving modified roles.
         # Otherwise the hooks would work with old data when using helper
@@ -7573,11 +7583,13 @@ def mode_hosttags(phase):
     elif phase == "buttons":
         global_buttons()
         html.context_button(_("New Tag group"), make_link([("mode", "edit_hosttag")]), "new")
+        html.context_button(_("New Aux tag"), make_link([("mode", "edit_auxtag")]), "new")
         return
 
-    hosttags = load_hosttags()
+    hosttags, auxtags = load_hosttags()
 
     if phase == "action":
+        # Deletion of tag groups
         del_id = html.var("_delete")
         if del_id:
             for e in hosttags:
@@ -7599,9 +7611,51 @@ def mode_hosttags(phase):
 
             if message:
                 hosttags = [ e for e in hosttags if e[0] != del_id ]
-                save_hosttags(hosttags)
+                save_hosttags(hosttags, auxtags)
                 rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts
                 log_pending(SYNCRESTART, None, "edit-hosttags", _("Removed host tag group %s (%s)") % (message, del_id))
+                return "hosttags", message != True and message or None
+
+        # Deletion of auxiliary tags
+        del_nr = html.var("_delaux")
+        if del_nr:
+            nr = int(del_nr)
+            del_id = auxtags[nr][0]
+
+            # Make sure that this aux tag is not begin used by any tag group
+            for entry in hosttags:
+                choices = entry[2]
+                for e in choices:
+                    if len(e) > 2:
+                        if del_id in e[2]:
+                            raise MKUserError(None, _("You cannot delete this auxiliary tag. "
+                               "It is being used in the tag group <b>%s</b>.") % entry[1])
+
+            operations = { del_id : False }
+            message = rename_host_tags_after_confirmation(None, operations)
+            if message == True: # no confirmation yet
+                c = wato_confirm(_("Confirm deletion of the auxiliary "
+                                   "tag '%s'") % del_id,
+                                _("Do you really want to delete the "
+                                  "auxiliary tag '%s'?") % del_id)
+                if c == False:
+                    return ""
+                elif c == None:
+                    return None
+
+            if message:
+                del auxtags[nr]
+                # Remove auxiliary tag from all host tags
+                for e in hosttags:
+                    choices = e[2]
+                    for choice in choices:
+                        if len(choice) > 2:
+                            if del_id in choice[2]:
+                                choice[2].remove(del_id)
+
+                save_hosttags(hosttags, auxtags)
+                rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts
+                log_pending(SYNCRESTART, None, "edit-hosttags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
                 return "hosttags", message != True and message or None
 
         move_nr = html.var("_move")
@@ -7616,65 +7670,194 @@ def mode_hosttags(phase):
                 moved = hosttags[move_nr]
                 del hosttags[move_nr]
                 hosttags[move_nr+dir:move_nr+dir] = [moved]
-                save_hosttags(hosttags)
+                save_hosttags(hosttags, auxtags)
                 config.wato_host_tags = hosttags
                 log_pending(SYNCRESTART, None, "edit-hosttags", _("Changed order of host tag groups"))
         return
 
-    if len(hosttags) == 0:
+    if len(hosttags) + len(auxtags) == 0:
         render_main_menu([
             ("edit_hosttag", _("Create new tag group"), "new", "hosttags",
             _("Click here to create a first host tag group. For each tag group a dropdown choice or "
               "checkbox will be added to the folder and host properties. When defining rules, host tags "
-              "are the fundament of the rules' conditions.")),])
+              "are the fundament of the rules' conditions.")),
+            ("edit_auxtag", _("Create new auxiliary tag"), "new", "hosttags",
+            _("Auxiliary tags are automatically added if the users selects certain "
+              "configurable primary tags. That way you can for example automatically append "
+              "the tag <tt>snmp</tt> when the user selects a tag for a certain type of hardware.")),
+            ])
 
     else:
-        html.write("<h3>" + _("Host tag groups") + "</h3>")
-        html.write("<table class=data>")
-        html.write("<tr>" +
-                   "<th>" + _("Actions") + "</th>"
-                   "<th>" + _("ID") + "</th>"
-                   "<th>" + _("Title") + "</th>"
-                   "<th>" + _("Type") + "</th>"
-                   "<th>" + _("Choices") + "</th>"
-                   "<th>" + _("Demonstration") + "</th>"
-                   "<th></th>"
-                   "</tr>")
-        odd = "even"
-        for nr, (tag_id, title, choices) in enumerate(hosttags):
-            odd = odd == "odd" and "even" or "odd"
-            html.write('<tr class="data %s0">' % odd)
-            edit_url     = make_link([("mode", "edit_hosttag"), ("edit", tag_id)])
-            delete_url   = html.makeactionuri([("_delete", tag_id)])
-            html.write("<td>")
-            if nr == 0:
-                html.empty_icon_button()
-            else:
-                html.icon_button(html.makeactionuri([("_move", str(-nr))]),
-                            _("Move this tag group one position up"), "up")
-            if nr == len(hosttags) - 1:
-                html.empty_icon_button()
-            else:
-                html.icon_button(html.makeactionuri([("_move", str(nr))]),
-                            _("Move this tag group one position down"), "down")
-            html.icon_button(delete_url, _("Delete this tag group"), "delete")
-            html.write("</td>")
-            html.write("<td>%s</td>" % tag_id)
-            html.write("<td>%s</td>" % title)
-            html.write("<td>%s</td>" % (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
-            html.write("<td class=number>%d</td>" % len(choices))
-            html.write("<td>")
-            html.begin_form("tag_%s" % tag_id)
-            host_attribute["tag_%s" % tag_id].render_input(None)
-            html.end_form()
-            html.write("</td>")
-            html.write("<td class=buttons>")
-            html.buttonlink(edit_url, _("Edit"))
-            html.write("</td>")
+        if hosttags:
+            html.write("<h3>" + _("Host tag groups") + "</h3>")
+            html.write("<table class=data>")
+            html.write("<tr>" +
+                       "<th>" + _("Actions") + "</th>"
+                       "<th>" + _("ID") + "</th>"
+                       "<th>" + _("Title") + "</th>"
+                       "<th>" + _("Type") + "</th>"
+                       "<th>" + _("Choices") + "</th>"
+                       "<th>" + _("Demonstration") + "</th>"
+                       "</tr>")
+            odd = "even"
+            for nr, (tag_id, title, choices) in enumerate(hosttags):
+                odd = odd == "odd" and "even" or "odd"
+                html.write('<tr class="data %s0">' % odd)
+                edit_url     = make_link([("mode", "edit_hosttag"), ("edit", tag_id)])
+                delete_url   = html.makeactionuri([("_delete", tag_id)])
+                html.write("<td>")
+                if nr == 0:
+                    html.empty_icon_button()
+                else:
+                    html.icon_button(html.makeactionuri([("_move", str(-nr))]),
+                                _("Move this tag group one position up"), "up")
+                if nr == len(hosttags) - 1:
+                    html.empty_icon_button()
+                else:
+                    html.icon_button(html.makeactionuri([("_move", str(nr))]),
+                                _("Move this tag group one position down"), "down")
+                html.icon_button(edit_url,   _("Edit this tag group"), "edit")
+                html.icon_button(delete_url, _("Delete this tag group"), "delete")
+                html.write("</td>")
+                html.write("<td>%s</td>" % tag_id)
+                html.write("<td>%s</td>" % title)
+                html.write("<td>%s</td>" % (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
+                html.write("<td class=number>%d</td>" % len(choices))
+                html.write("<td>")
+                html.begin_form("tag_%s" % tag_id)
+                host_attribute["tag_%s" % tag_id].render_input(None)
+                html.end_form()
+                html.write("</td>")
 
-            html.write("</tr>")
-        html.write("</table>")
+                html.write("</tr>")
+            html.write("</table>")
+        if auxtags:
+            html.write("<h3>" + _("Auxiliary tags") + "</h3>")
+            html.write("<table class=data>")
+            html.write("<tr>" +
+                       "<th>" + _("Actions") + "</th>"
+                       "<th>" + _("ID") + "</th>"
+                       "<th>" + _("Title") + "</th>"
+                       "</tr>")
+            odd = "even"
+            for nr, (tag_id, title) in enumerate(auxtags):
+                odd = odd == "odd" and "even" or "odd"
+                html.write('<tr class="data %s0">' % odd)
+                edit_url     = make_link([("mode", "edit_auxtag"), ("edit", nr)])
+                delete_url   = html.makeactionuri([("_delaux", nr)])
+                html.write("<td class=buttons>")
+                html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
+                html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
+                html.write("</td>")
+                html.write("<td>%s</td>" % tag_id)
+                html.write("<td>%s</td>" % title)
+                html.write("</tr>")
+            html.write("</table>")
 
+
+def mode_edit_auxtag(phase):
+    tag_nr = html.var("edit")
+    new = tag_nr == None
+    if not new:
+        tag_nr = int(tag_nr)
+
+    if phase == "title":
+        if new:
+            return _("Create new auxiliary tag")
+        else:
+            return _("Edit auxiliary tag")
+
+    elif phase == "buttons":
+        html.context_button(_("All Hosttags"), make_link([("mode", "hosttags")]), "back")
+        return
+
+    hosttags, auxtags = load_hosttags()
+
+    if phase == "action":
+        if html.transaction_valid():
+            html.check_transaction() # use up transaction id
+            if new:
+                tag_id = html.var("tag_id").strip()
+                if not tag_id:
+                    raise MKUserError("tag_id", _("Please enter a tag ID"))
+                validate_tag_id(tag_id, "tag_id")
+            else:
+                tag_id = auxtags[tag_nr][0]
+
+            title = html.var_utf8("title").strip()
+            if not title:
+                raise MKUserError("title", _("Please supply a title "
+                "for you auxiliary tag."))
+
+            # Make sure that this ID is not used elsewhere
+            for entry in config.wato_host_tags:
+                tgid = entry[0]
+                tit  = entry[1]
+                ch   = entry[2]
+                for e in ch:
+                    if e[0] == tag_id:
+                        raise MKUserError("tag_id",
+                        _("This tag id is already being used "
+                          "in the host tag group %s") % tit)
+
+            for nr, (id, name) in enumerate(auxtags):
+                if nr != tag_nr and id == tag_id:
+                    raise MKUserError("tag_id",
+                    _("This tag id does already exist in the list "
+                      "of auxiliary tags."))
+
+            if new:
+                auxtags.append((tag_id, title))
+            else:
+                auxtags[tag_nr] = (tag_id, title)
+            save_hosttags(hosttags, auxtags)
+        return "hosttags"
+
+
+    if new:
+        title = ""
+        tag_id = ""
+    else:
+        tag_id, title = auxtags[tag_nr]
+
+    html.begin_form("auxtag")
+    html.write("<table class=form>")
+
+    # Tag ID
+    html.write("<tr><td class=legend>")
+    html.write(_("Tag ID") + "<br><i>")
+    html.write(_("The internal name of the tag. The special tags "
+                 "<tt>snmp</tt>, <tt>tcp</tt> and <tt>ping</tt> can "
+                 "be used here in order to specify the agent type."))
+    html.write("</i></td><td class=content>")
+    if new:
+        html.text_input("tag_id", "")
+        html.set_focus("tag_id")
+    else:
+        html.write(tag_id)
+    html.write("</td></tr>")
+
+    # Title
+    html.write("<tr><td class=legend>")
+    html.write(_("Title") + "<br><i>" + _("An alias or description of this auxiliary tag</i>"))
+    html.write("</td><td class=content>")
+    html.text_input("title", title, size = 30)
+    html.write("</td></tr>")
+
+    # Button and end
+    html.write("<tr><td colspan=2 class=buttons>")
+    html.button("save", _("Save"))
+    html.write("</td></tr>")
+    html.write("</table>")
+    html.hidden_fields()
+    html.end_form()
+
+# Validate the syntactic form of a tag
+def validate_tag_id(id, varname):
+    if not re.match("^[-a-z0-9A-Z_]*$", id):
+        raise MKUserError(varname,
+            _("Invalid tag ID. Only the characters a-z, A-Z, "
+              "0-9, _ and - are allowed."))
 
 def mode_edit_hosttag(phase):
     tag_id = html.var("edit")
@@ -7690,9 +7873,8 @@ def mode_edit_hosttag(phase):
         html.context_button(_("All Hosttags"), make_link([("mode", "hosttags")]), "back")
         return
 
-    hosttags = load_hosttags()
+    hosttags, auxtags = load_hosttags()
     if new:
-        tag_id = None
         title = ""
         choices = []
     else:
@@ -7702,11 +7884,42 @@ def mode_edit_hosttag(phase):
                 choices = ch
                 break
 
+    vs_choices = ListOf(
+        Tuple(
+            elements = [
+                TextAscii(
+                    title = _("Tag ID"),
+                    size=10,
+                    regex="^[-a-z0-9A-Z_]*$",
+                    none_is_empty = True,
+                    regex_error = _("Invalid tag ID. Only the characters a-z, A-Z, "
+                                  "0-9, _ and - are allowed.")),
+                TextUnicode(
+                    title = _("Description"),
+                    allow_empty = False,
+                    size=20),
+
+                Foldable(
+                    MultiSelect(
+                        title = _("Auxiliary tags"),
+                        help = _("These tags will implicitely added to a host if the "
+                                 "user selects this entry in the tag group. Select multiple "
+                                 "entries with the <b>Ctrl</b> key."),
+                        choices = auxtags)),
+
+            ],
+            show_titles = True,
+            orientation = "horizontal"),
+
+        add_label = _("Add tag choice"),
+        row_label = "@. Choice")
+
     if phase == "action":
         if html.transaction_valid():
             if new:
                 html.check_transaction() # use up transaction id
                 tag_id = html.var("tag_id").strip()
+                validate_tag_id(tag_id, "tag_id")
                 if len(tag_id) == 0:
                     raise MKUserError("tag_id", _("Please specify an ID for your tag group."))
                 if not re.match("^[-a-z0-9A-Z_]*$", tag_id):
@@ -7721,27 +7934,20 @@ def mode_edit_hosttag(phase):
             if not title:
                 raise MKUserError("title", _("Please specify a title for your host tag group."))
 
-            nr = 0
-            new_choices = []
+            new_choices = forms.get_input(vs_choices, "choices")
             have_none_tag = False
-            while html.has_var("id_%d" % nr):
-                id = html.var("id_%d" % nr).strip()
-                descr = html.var_utf8("descr_%d" % nr).strip()
+            for nr, (id, descr, aux) in enumerate(new_choices):
                 if id or descr:
-                    if not re.match("^[-a-z0-9A-Z_]*$", id):
-                        raise MKUserError("id_%d" % nr, _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
-                    if not descr:
-                        raise MKUserError("descr_%d" % nr, _("Please supply an alias for the tag with the ID %s.") % id)
                     if not id:
                         id = None
                         if have_none_tag:
-                            raise MKUserError("id_%d" % nr, _("Only on tag may be empty."))
+                            raise MKUserError("choices_%d_id" % (nr+1), _("Only on tag may be empty."))
                         have_none_tag = True
                     # Make sure tag ID is unique within this group
-                    if id in [ x[0] for x in new_choices ]:
-                        raise MKUserError("id_%d" % nr, _("Tags IDs must be unique. You've used <b>%s</b> twice.") % id)
+                    for (n, x) in enumerate(new_choices):
+                        if n != nr and x[0] == id:
+                            raise MKUserError("choices_id_%d" % (nr+1), _("Tags IDs must be unique. You've used <b>%s</b> twice.") % id)
 
-                    new_choices.append((id, descr))
                 if id:
                     # Make sure this ID is not used elsewhere
                     for entry in config.wato_host_tags:
@@ -7752,12 +7958,12 @@ def mode_edit_hosttag(phase):
                             for e in ch:
                                 # Check primary and secondary tags
                                 if id == e[0] or len(e) > 2 and id in e[2]:
-                                    raise MKUserError("id_%d" % nr,
+                                    raise MKUserError("choices_id_%d" % (nr+1),
                                       _("The tag ID '%s' is already being used by the choice "
                                         "'%s' in the tag group '%s'.") %
                                         ( id, e[1], tit ))
 
-                nr += 1
+                
             if len(new_choices) == 0:
                 raise MKUserError("id_0", _("Please specify at least on tag."))
             if len(new_choices) == 1 and new_choices[0][0] == None:
@@ -7766,7 +7972,7 @@ def mode_edit_hosttag(phase):
             if new:
                 taggroup = tag_id, title, new_choices
                 hosttags.append(taggroup)
-                save_hosttags(hosttags)
+                save_hosttags(hosttags, auxtags)
                 config.wato_host_tags = hosttags
                 declare_host_tag_attributes()
                 rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts
@@ -7783,31 +7989,36 @@ def mode_edit_hosttag(phase):
                 # This is the major effort of WATO when it comes to
                 # host tags: renaming and deleting of tags that might be
                 # in use by folders, hosts and rules. First we create a
-                # kind auf "patch" from the old to the new tags. The renaming
+                # kind of "patch" from the old to the new tags. The renaming
                 # of a tag is detected by comparing the titles. Addition
-                # of new tags is not a problem and need not be handled.
+                # of new tags is not a problem and need not be handled. 
+                # Result of this is the dict 'operations': it's keys are
+                # current tag names, its values the corresponding new names
+                # or False in case of tag removals.
                 operations = {}
 
                 # Detect renaming
-                new_by_title = dict([(tit, tag) for (tag, tit) in new_choices])
-                for tag, tit in choices:
+                new_by_title = dict([e[:2] for e in new_choices])
+                for entry in choices:
+                    tag, tit = entry[:2] # optional third element: aux tags
                     if tit in new_by_title:
                         new_tag = new_by_title[tit]
                         if new_tag != tag:
                             operations[tag] = new_tag # might be None
 
                 # Detect removal
-                for tag, tit in choices:
-                   if tag != None \
-                       and tag not in [ e[0] for e in new_choices ] \
-                       and tag not in operations:
-                       # remove explicit tag (hosts/folders) or remove it from tag specs (rules)
-                       operations[tag] = False
+                for entry in choices:
+                    tag, tit = entry[:2] # optional third element: aux tags
+                    if tag != None \
+                        and tag not in [ e[0] for e in new_choices ] \
+                        and tag not in operations:
+                        # remove explicit tag (hosts/folders) or remove it from tag specs (rules)
+                        operations[tag] = False
 
                 # Now check, if any folders, hosts or rules are affected
                 message = rename_host_tags_after_confirmation(tag_id, operations)
                 if message:
-                    save_hosttags(new_hosttags)
+                    save_hosttags(new_hosttags, auxtags)
                     config.wato_host_tags = new_hosttags
                     declare_host_tag_attributes()
                     rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts
@@ -7857,22 +8068,7 @@ def mode_edit_hosttag(phase):
                  "be able to detect the renaming and cannot exchange the tags "
                  "in all folders, hosts and rules accordingly.</i>"))
     html.write("</td><td class=content>")
-    html.write("<table>")
-    html.write("<tr><th>%s</th><th>%s</th></tr>" %
-        (_("Tag ID"), _("Alias")))
-    for nr in range(max(num_choices, len(choices))):
-        if nr < len(choices):
-            tag_id, descr = choices[nr]
-        else:
-            tag_id, descr = "", ""
-        if tag_id == None:
-            tag_id = "" # for empty tag
-        html.write("<tr><td>")
-        html.text_input("id_%d" % nr, tag_id, size=10)
-        html.write("</td><td>")
-        html.text_input("descr_%d" % nr, descr, size=30)
-        html.write("</td></tr>")
-    html.write("</table>")
+    forms.input(vs_choices, "choices", choices)
     html.write("</td></tr>")
 
 
@@ -7885,36 +8081,42 @@ def mode_edit_hosttag(phase):
     html.end_form()
 
 
-
-
 def load_hosttags():
     filename = multisite_dir + "hosttags.mk"
     if not os.path.exists(filename):
         return []
     try:
-        vars = { "wato_host_tags" : [] }
+        vars = { 
+            "wato_host_tags" : [],
+            "wato_aux_tags" : []}
         execfile(filename, vars, vars)
-        return vars["wato_host_tags"]
+        return vars["wato_host_tags"], vars["wato_aux_tags"]
 
     except Exception, e:
         if config.debug:
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
                           (filename, e)))
-        return []
+        return [], []
 
-def save_hosttags(hosttags):
+def save_hosttags(hosttags, auxtags):
     make_nagios_directory(multisite_dir)
     out = create_user_file(multisite_dir + "hosttags.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
-    out.write("wato_host_tags += \\\n%s\n" % pprint.pformat(hosttags))
+    out.write("wato_host_tags += \\\n%s\n\n" % pprint.pformat(hosttags))
+    out.write("wato_aux_tags += \\\n%s\n" % pprint.pformat(auxtags))
 
+# Handle renaming and deletion of host tags: find affected
+# hosts, folders and rules. Remove or fix those rules according
+# the the users' wishes. In case auf auxiliary tags the tag_id
+# is None. In other cases it is the id of the tag group currently
+# being edited.
 def rename_host_tags_after_confirmation(tag_id, operations):
     mode = html.var("_repair")
     if mode == "abort":
         raise MKUserError("id_0", _("Aborting change."))
 
     elif mode:
-        if type(operations) == list: # make attribute unknown to system, important for save() operations
+        if tag_id and type(operations) == list: # make attribute unknown to system, important for save() operations
             undeclare_host_tag_attribute(tag_id)
         affected_folders, affected_hosts, affected_rulespecs = \
         change_host_tags_in_folders(tag_id, operations, mode, g_root_folder)
@@ -8014,43 +8216,47 @@ def rename_host_tags_after_confirmation(tag_id, operations):
     return True
 
 # operation == None -> tag group is deleted completely
+# tag_id == None -> Auxiliary tag has been deleted, no
+# tag group affected
 def change_host_tags_in_folders(tag_id, operations, mode, folder):
     need_save = False
     affected_folders = []
     affected_hosts = []
     affected_rulespecs = []
-    attrname = "tag_" + tag_id
-    attributes = folder["attributes"]
-    if attrname in attributes: # this folder has set the tag group in question
-        if type(operations) == list: # deletion of tag group
-            if attrname in attributes:
-                affected_folders.append(folder)
-                if mode != "check":
-                    del attributes[attrname]
-                    need_save = True
-        else:
-            current = attributes[attrname]
-            if current in operations:
-                affected_folders.append(folder)
-                if mode != "check":
-                    new_tag = operations[current]
-                    if new_tag == False: # tag choice has been removed -> fall back to default
+    if tag_id:
+        attrname = "tag_" + tag_id
+        attributes = folder["attributes"]
+        if attrname in attributes: # this folder has set the tag group in question
+            if type(operations) == list: # deletion of tag group
+                if attrname in attributes:
+                    affected_folders.append(folder)
+                    if mode != "check":
                         del attributes[attrname]
-                    else:
-                        attributes[attrname] = new_tag
-                    need_save = True
-    if need_save:
-        save_folder(folder)
+                        need_save = True
+            else:
+                current = attributes[attrname]
+                if current in operations:
+                    affected_folders.append(folder)
+                    if mode != "check":
+                        new_tag = operations[current]
+                        if new_tag == False: # tag choice has been removed -> fall back to default
+                            del attributes[attrname]
+                        else:
+                            attributes[attrname] = new_tag
+                        need_save = True
+        if need_save:
+            save_folder(folder)
 
-    for subfolder in folder[".folders"].values():
-        aff_folders, aff_hosts, aff_rulespecs = change_host_tags_in_folders(tag_id, operations, mode, subfolder)
-        affected_folders += aff_folders
-        affected_hosts += aff_hosts
-        affected_rulespecs += aff_rulespecs
+        for subfolder in folder[".folders"].values():
+            aff_folders, aff_hosts, aff_rulespecs = change_host_tags_in_folders(tag_id, operations, mode, subfolder)
+            affected_folders += aff_folders
+            affected_hosts += aff_hosts
+            affected_rulespecs += aff_rulespecs
 
-    load_hosts(folder)
-    affected_hosts += change_host_tags_in_hosts(folder, tag_id, operations, mode, folder[".hosts"])
-    affected_rulespecs += change_host_tags_in_rules(folder, tag_id, operations, mode)
+        load_hosts(folder)
+        affected_hosts += change_host_tags_in_hosts(folder, tag_id, operations, mode, folder[".hosts"])
+
+    affected_rulespecs += change_host_tags_in_rules(folder, operations, mode)
     return affected_folders, affected_hosts, affected_rulespecs
 
 def change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
@@ -8084,7 +8290,7 @@ def change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
 # are removed then the depending on the mode affected rules
 # are either deleted ("delete") or the vanished tags are
 # removed from the rule ("remove").
-def change_host_tags_in_rules(folder, tag_id, operations, mode):
+def change_host_tags_in_rules(folder, operations, mode):
     need_save = False
     affected_rulespecs = []
     all_rulesets = load_rulesets(folder)
@@ -8712,6 +8918,9 @@ def tag_alias(tag):
         for t in tags:
             if t[0] == tag:
                 return t[1]
+    for id, alias in config.wato_aux_tags:
+        if id == tag:
+            return alias
 
 def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
     html.write("<ul class=conditions>")
@@ -8800,16 +9009,7 @@ def ruleeditor_hover_code(varname, rulenr, mode, boolval, folder=None):
 
 
 def get_rule_conditions(ruleset):
-    # Tag list
-    tag_list = []
-    for entry in config.wato_host_tags:
-        id, title, tags = entry[:3]
-        mode = html.var("tag_" + id)
-        tagvalue = html.var("tagvalue_" + id)
-        if mode == "is":
-            tag_list.append(tagvalue)
-        elif mode == "isnot":
-            tag_list.append("!" + tagvalue)
+    tag_list = get_tag_conditions()
 
     # Host list
     if not html.get_checkbox("explicit_hosts"):
@@ -8959,49 +9159,7 @@ def mode_edit_rule(phase):
 
     html.write("</i></td>")
     html.write("<td class=content>")
-    if len(config.wato_host_tags) == 0:
-        html.write(_("You have not configured any <a href=\"wato.py?mode=hosttags\">host tags</a>."))
-    else:
-        html.write("<table>")
-        for entry in config.wato_host_tags:
-            id, title, tags = entry[:3]
-            html.write("<tr><td>%s: &nbsp;</td>" % title)
-            default_tag = None
-            ignore = True
-            for t in tag_specs:
-                if t[0] == '!':
-                    n = True
-                    t = t[1:]
-                else:
-                    n = False
-                if t in [ x[0] for x in tags ]:
-                    default_tag = t
-                    ignore = False
-                    negate = n
-            if ignore:
-                deflt = "ignore"
-            elif negate:
-                deflt = "isnot"
-            else:
-                deflt = "is"
-
-            html.write("<td>")
-            html.select("tag_" + id, [
-                ("ignore", _("ignore")),
-                ("is",     _("is")),
-                ("isnot",  _("isnot"))], deflt,
-                onchange="valuespec_toggle_dropdownn(this, 'tag_sel_%s');" % id)
-            html.write("</td><td>")
-            if html.form_submitted():
-                div_is_open = html.var("tag_" + id) != "ignore"
-            else:
-                div_is_open = deflt != "ignore"
-            html.write('<div id="tag_sel_%s" style="white-space: nowrap; %s">' % (
-                id, not div_is_open and "display: none;" or ""))
-            html.select("tagvalue_" + id, [t[0:2] for t in tags if t[0] != None], deflt=default_tag)
-            html.write("</div>")
-            html.write("</td></tr>")
-        html.write("</table>")
+    render_condition_editor(tag_specs)
     html.write("</td></tr>")
 
 
@@ -9119,6 +9277,102 @@ def mode_edit_rule(phase):
     html.write("</table>")
     html.hidden_fields()
     html.end_form()
+
+# Render HTML input fields for editing a tag based condition
+def render_condition_editor(tag_specs):
+    if len(config.wato_aux_tags) + len(config.wato_host_tags) == 0:
+        html.write(_("You have not configured any <a href=\"wato.py?mode=hosttags\">host tags</a>."))
+        return
+
+    # Determine current (default) setting of tag by looking
+    # into tag_specs (e.g. [ "snmp", "!tcp", "test" ] )
+    def current_tag_setting(choices):
+        default_tag = None
+        ignore = True
+        for t in tag_specs:
+            if t[0] == '!':
+                n = True
+                t = t[1:]
+            else:
+                n = False
+            if t in [ x[0] for x in choices ]:
+                default_tag = t
+                ignore = False
+                negate = n
+        if ignore:
+            deflt = "ignore"
+        elif negate:
+            deflt = "isnot"
+        else:
+            deflt = "is"
+        return default_tag, deflt
+
+    # Show dropdown with "is/isnot/ignore" and beginning
+    # of div that is switched visible by is/isnot
+    def tag_condition_dropdown(tagtype, deflt, id):
+        html.write("<td>")
+        html.select(tagtype + "_" + id, [
+            ("ignore", _("ignore")),
+            ("is",     _("is")),
+            ("isnot",  _("isnot"))], deflt,
+            onchange="valuespec_toggle_dropdownn(this, 'tag_sel_%s');" % id)
+        html.write("</td><td>")
+        if html.form_submitted():
+            div_is_open = html.var(tagtype + "_" + id) != "ignore"
+        else:
+            div_is_open = deflt != "ignore"
+        html.write('<div id="tag_sel_%s" style="white-space: nowrap; %s">' % (
+            id, not div_is_open and "display: none;" or ""))
+
+    # Show main tags
+    html.write("<table>")
+    if len(config.wato_host_tags):
+        for entry in config.wato_host_tags:
+            id, title, choices = entry[:3]
+            html.write("<tr><td>%s: &nbsp;</td>" % title)
+            default_tag, deflt = current_tag_setting(choices)
+            tag_condition_dropdown("tag", deflt, id)
+            html.select("tagvalue_" + id, 
+                [t[0:2] for t in choices if t[0] != None], deflt=default_tag)
+            html.write("</div>")
+            html.write("</td></tr>")
+
+    # And auxiliary tags
+    if len(config.wato_aux_tags):
+        for id, title in config.wato_aux_tags:
+            html.write("<tr><td>%s: &nbsp;</td>" % title)
+            default_tag, deflt = current_tag_setting([(id, title)])
+            tag_condition_dropdown("auxtag", deflt, id)
+            html.write(" " + _("set"))
+            html.write("</div>")
+            html.write("</td></tr>")
+
+
+    html.write("</table>")
+
+
+# Retrieve current tag condition settings from HTML variables
+def get_tag_conditions():
+    # Main tags
+    tag_list = []
+    for entry in config.wato_host_tags:
+        id, title, tags = entry[:3]
+        mode = html.var("tag_" + id)
+        tagvalue = html.var("tagvalue_" + id)
+        if mode == "is":
+            tag_list.append(tagvalue)
+        elif mode == "isnot":
+            tag_list.append("!" + tagvalue)
+
+    # Auxiliary tags
+    for id, title in config.wato_aux_tags:
+        mode = html.var("auxtag_" + id)
+        if mode == "is":
+            tag_list.append(id)
+        elif mode == "isnot":
+            tag_list.append("!" + id)
+
+    return tag_list
 
 
 def save_rulesets(folder, rulesets):
@@ -9394,6 +9648,69 @@ def page_user_profile():
     html.footer()
 
 #.
+#.
+#   .--Sampleconfig--------------------------------------------------------.
+#   |   ____                        _                       __ _           |
+#   |  / ___|  __ _ _ __ ___  _ __ | | ___  ___ ___  _ __  / _(_) __ _     |
+#   |  \___ \ / _` | '_ ` _ \| '_ \| |/ _ \/ __/ _ \| '_ \| |_| |/ _` |    |
+#   |   ___) | (_| | | | | | | |_) | |  __/ (_| (_) | | | |  _| | (_| |    |
+#   |  |____/ \__,_|_| |_| |_| .__/|_|\___|\___\___/|_| |_|_| |_|\__, |    |
+#   |                        |_|                                 |___/     |
+#   +----------------------------------------------------------------------+
+#   | Functions for creating an example configuration                      |
+#   '----------------------------------------------------------------------'
+
+# Create a very basic sample configuration, but only if no host tags
+# or rules have been defined *ever*.
+def create_sample_config():
+    if os.path.exists(multisite_dir + "hosttags.mk") \
+        or os.path.exists(multisite_dir + "rules.mk"):
+        return
+
+    # Example values for host tags
+    wato_host_tags = \
+    [('agent',
+      u'Agent type',
+      [('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
+       ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
+       ('snmp-v1', u'Legacy SNMP device (using V1)', ['snmp']),
+       ('snmp-tcp', u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
+       ('ping', u'Only PING this device', [])]),
+     ('criticality',
+      u'Criticality',
+      [('prod', u'Productive system', []),
+       ('critical', u'Business critical', []),
+       ('test', u'Test system', []),
+       ('offline', u'Do not monitor this host', [])]),
+     ('networking',
+      u'Networking Segment',
+      [('lan', u'Local network (low latency)', []),
+       ('wan', u'WAN (high latency)', []),
+       ('dmz', u'DMZ (low latency, secure access)', [])])]
+
+    wato_aux_tags = \
+    [('snmp', u'monitor via SNMP'), 
+     ('tcp', u'monitor via Check_MK Agent')]
+
+    save_hosttags(wato_host_tags, wato_aux_tags)
+
+    # Example values for rules
+    rulesets = { 
+        'only_hosts': [
+            (['!offline'], ['@all'])],
+         'ping_levels': [
+            ({'loss': (80.0, 100.0),
+              'packets': 6,
+              'rta': (1500.0, 3000.0),
+              'timeout': 20}, ['wan'], ['@all'])],
+         'bulkwalk_hosts': [
+            (['!snmp-v1'], ['@all'])],
+    }
+
+    save_rulesets(g_root_folder, rulesets)
+        
+
+
 #   .-Hooks-&-API----------------------------------------------------------.
 #   |       _   _             _           ___        _    ____ ___         |
 #   |      | | | | ___   ___ | | _____   ( _ )      / \  |  _ \_ _|        |
@@ -9653,10 +9970,10 @@ def call_hook_roles_saved(roles):
 # This hook is called in order to determine if a host has a 'valid'
 # configuration. It used for displaying warning symbols in the
 # host list and in the host detail view.
-def validate_host(host):
+def validate_host(host, folder):
     if hook_registered('validate-host'):
         errors = []
-        eff = effective_attributes(host, host[".folder"])
+        eff = effective_attributes(host, folder)
         for hk in g_hooks.get('validate-host', []):
             try:
                 hk(eff)
@@ -9923,6 +10240,7 @@ modes = {
    "edit_role"          : (["users"], mode_edit_role),
    "hosttags"           : (["hosttags"], mode_hosttags),
    "edit_hosttag"       : (["hosttags"], mode_edit_hosttag),
+   "edit_auxtag"        : (["hosttags"], mode_edit_auxtag),
 }
 
 loaded_with_language = False

@@ -265,13 +265,14 @@ class Filesize(Integer):
 class TextAscii(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._label    = kwargs.get("label")
-        self._size     = kwargs.get("size", 30)
-        self._strip    = kwargs.get("strip", True)
-        self._allow_empty = kwargs.get("allow_empty", True)
-        self._regex = kwargs.get("regex")
-        self._regex_error = kwargs.get("regex_error",
-                _("Your input odes not match the required format."))
+        self._label         = kwargs.get("label")
+        self._size          = kwargs.get("size", 30)
+        self._strip         = kwargs.get("strip", True)
+        self._allow_empty   = kwargs.get("allow_empty", True)
+        self._none_is_empty = kwargs.get("none_is_empty", False)
+        self._regex         = kwargs.get("regex")
+        self._regex_error   = kwargs.get("regex_error",
+            _("Your input odes not match the required format."))
         if type(self._regex) == str:
             self._regex = re.compile(self._regex)
 
@@ -279,26 +280,39 @@ class TextAscii(ValueSpec):
         return ""
 
     def render_input(self, varprefix, value):
+        if value == None:
+            value = ""
+
         if self._label:
             html.write(self._label)
             html.write("&nbsp;")
         html.text_input(varprefix, str(value), size = self._size)
 
     def value_to_text(self, value):
-        return value
+        if value == None:
+            return _("none")
+        else:
+            return value
 
     def from_html_vars(self, varprefix):
         value = html.var(varprefix, "")
         if self._strip:
-            return value.strip()
+            value = value.strip()
+        if self._none_is_empty and not value:
+            return None
         else:
-            return value()
+            return value
 
     def validate_datatype(self, value, varprefix):
+        if self._none_is_empty and value == None:
+            return
+
         if type(value) != str:
             raise MKUserError(varprefix, _("The value must be of type str, but it has type %s") % type(value))
 
     def validate_value(self, value, varprefix):
+        if self._none_is_empty and value == "":
+            raise MKUserError(varprefix, _("An empty value must be represented with None here."))
         if not self._allow_empty and value.strip() == "":
             raise MKUserError(varprefix, _("An empty value is not allowed here."))
         if value and self._regex:
@@ -474,6 +488,80 @@ class ListOfStrings(ValueSpec):
     def validate_value(self, value, vp):
         for nr, s in enumerate(value):
             self._valuespec.validate_value(s, vp + "_%d" % nr)
+
+# Generic list-of-valuespec ValueSpec with Javascript-based
+# add/delete/move
+class ListOf(ValueSpec):
+    def __init__(self, valuespec, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._valuespec = valuespec
+        self._magic = kwargs.get("magic", "@")
+        self._rowlabel = kwargs.get("row_label")
+        self._add_label = kwargs.get("add_label", _("Add new element"))
+
+    def del_button(self, vp, nr):
+        js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
+        html.icon_button("#", _("Delete this entry"), "delete", onclick=js)
+
+    # Implementation idea: we render our element-valuespec
+    # once in a hidden div that is not evaluated. All occurances
+    # of a magic string are replaced with the actual number
+    # of entry, while beginning with 1 (this makes visual
+    # numbering in labels, etc. possible). The current number
+    # of entries is stored in the hidden variable 'varprefix'
+    def render_input(self, varprefix, value):
+        html.write('<input type=hidden name="%s_count" value="%d" id="%s_count">\n' % 
+            (varprefix, len(value), varprefix))
+
+        # Render reference element for cloning
+        html.write('<table style="display:none" id="%s_prototype">' % varprefix)
+        html.write('<tr><td class=vlof_buttons>')
+        self.del_button(varprefix, self._magic)
+        html.write('</td><td class=vlof_content>')
+        self._valuespec.render_input(
+            varprefix + "_" + self._magic, 
+            self._valuespec.canonical_value())
+        html.write('</td></tr></table>')
+
+        # Actual table of currently existing entries
+        html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
+        for nr, v  in enumerate(value):
+            html.write('<tr><td class=vlof_buttons>')
+            self.del_button(varprefix, nr+1)
+            html.write("</td><td class=vlof_content>")
+            self._valuespec.render_input(varprefix + "_%d" % (nr+1), v)
+            html.write("</td></tr>")
+        html.write("</table>")
+        html.write("<br>")
+        html.jsbutton(varprefix + "_add", self._add_label,
+            "valuespec_listof_add('%s', '%s')" % (varprefix, self._magic));
+
+    def canonical_value(self):
+        return []
+
+    def value_to_text(self, value):
+        return ", ".join([
+            self._valuespec.value_to_text(v) for v in value])
+
+    def from_html_vars(self, varprefix):
+        value = []
+        for n in range(1, 1 + int(html.var(varprefix + "_count"))):
+            if not html.var("_%s_deleted_%d" % (varprefix, n)):
+                value.append(self._valuespec.from_html_vars(
+                    varprefix + "_%d" % n))
+        return value
+
+    def validate_datatype(self, value, varprefix):
+        if type(self) != list:
+            raise MKUserError(varprefx, _("The type must be list, but is %s") % type(value))
+        for n, v in enumerate(value):
+            self._valuespec.validate_datatype(v, varprefix + "_%d" % (n+1))
+
+    def validate_value(self, value, varprefix):
+        for n, v in enumerate(value):
+            self._valuespec.validate_value(v, varprefix + "_%d" % (n+1))
+
+
 
 # Same but for floating point values
 class Float(Integer):
@@ -751,7 +839,7 @@ class ListChoice(ValueSpec):
 
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
-        if self._choices:
+        if self._choices != None:
             self._elements = self._choices
             return
 
@@ -797,6 +885,33 @@ class ListChoice(ValueSpec):
         for v in value:
             if v not in d:
                 raise MKUserError(varprefix, _("%s is not an allowed value") % v)
+
+
+# A alternative way of editing list choices
+class MultiSelect(ListChoice):
+    def __init__(self, **kwargs):
+        ListChoice.__init__(self, **kwargs)
+
+    def render_input(self, varprefix, value):
+        self.load_elements()
+        html.write("<select multiple name='%s'>" % varprefix)
+        for nr, (key, title) in enumerate(self._elements):
+            if key in value:
+                sel = " selected"
+            else:
+                sel = ""
+            html.write('<option value="%s"%s>%s</option>\n' % (key, sel, title))
+        html.write("</select>")
+
+    def from_html_vars(self, varprefix):
+        self.load_elements()
+        value = []
+        hv = html.list_var(varprefix)
+        for key, title in self._elements:
+            if key in hv:
+                value.append(key)
+        return value
+
 
 
 
@@ -1158,25 +1273,44 @@ class Tuple(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
         self._show_titles = kwargs.get("show_titles", True)
+        self._vertical = kwargs.get("orientation", "vertical") == "vertical"
 
     def canonical_value(self):
         return tuple([x.canonical_value() for x in self._elements])
 
     def render_input(self, varprefix, value):
         html.write('<table class="valuespec_tuple">')
+        if not self._vertical:
+            html.write("<tr>")
         for no, (element, val) in enumerate(zip(self._elements, value)):
             vp = varprefix + "_" + str(no)
             if element.help():
                 help = "<br><i>%s</i>" % element.help()
             else:
                 help = ""
-            html.write("<tr>")
+            if self._vertical:
+                html.write("<tr>")
             if self._show_titles:
-                title = element.title()[0].upper() + element.title()[1:]
-                html.write("<td class=tuple_left>%s:%s</td>" % (title, help))
-            html.write("<td class=tuple_right>")
+                elem_title = element.title()
+                if elem_title:
+                    title = element.title()[0].upper() + element.title()[1:]
+                else:
+                    title = ""
+                if self._vertical:
+                    html.write("<td class=tuple_left>%s:%s</td>" % (title, help))
+                else:
+                    html.write("<td class=tuple_td><span class=title>%s" % title)
+                    if help:
+                        html.write("<br><i>%s</i>" % help)
+                    html.write("</span><br>")
+            if self._vertical:
+                html.write("<td class=tuple_right>")
             element.render_input(vp, val)
-            html.write("</td></tr>")
+            html.write("</td>")
+            if self._vertical:
+                html.write("</tr>")
+        if not self._vertical:
+            html.write("</tr>")
         html.write("</table>")
 
     def set_focus(self, varprefix):
@@ -1363,3 +1497,43 @@ class AutoTimestamp(FixedValue):
 
     def value_to_text(self, value):
         return time.strftime("%F %T", time.localtime(value))
+
+# Fully transparant VS encapsulating a vs in a foldable
+# container.
+class Foldable(ValueSpec):
+    def __init__(self, valuespec, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._valuespec = valuespec
+        self._open = kwargs.get("open", False)
+
+    def render_input(self, varprefix, value):
+        html.begin_foldable_container("valuespec_foldable", varprefix, self._open, 
+                        self._valuespec.title(), False)
+        if self._valuespec.help():
+            html.write("<i class=help>%s</i><br><br>" % self._valuespec.help())
+        self._valuespec.render_input(varprefix, value)
+        html.end_foldable_container()
+
+    def set_focus(self, varprefix):
+        self._valuespec.set_focus(varprefix)
+
+    def canonical_value(self):
+        return self._valuespec.canonical_value()
+
+    def default_value(self):
+        return self._valuespec.default_value()
+
+    def value_to_text(self, value):
+        return self._valuespec.value_to_text(value)
+
+    def from_html_vars(self, varprefix):
+        return self._valuespec.from_html_vars(varprefix)
+
+    def validate_datatype(self, value, varprefix):
+        self._valuespec.validate_datatype(value, varprefix)
+
+    def validate_value(self, value, varprefix):
+        self._valuespec.validate_value(value, varprefix)
+
+
+

@@ -72,6 +72,7 @@ for SID in $SIDS; do
     CACHE_FILE=$MK_CONFDIR/oracle_$SID.cache
 
     # Check if file exists and recent enough
+    USE_CACHE_FILE=
     if [ -s $CACHE_FILE ]; then
         NOW=$(date +%s)
         MTIME=$(stat -c %Y $CACHE_FILE)

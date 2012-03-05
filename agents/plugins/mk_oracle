@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -102,7 +102,7 @@ for SID in $SIDS; do
             {
             # Only execute checks when not filtered
             if [ "$EXCLUDE" = "${EXCLUDE/oracle_version/}" ]; then
-                echo '<<<oracle_sessions>>>'
+                echo '<<<oracle_version>>>'
                 echo \"select banner from v\\\$version where banner like 'Oracle%';\" | sqlplus \"$SID\"
             fi
 
@@ -133,7 +133,7 @@ for SID in $SIDS; do
                 select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE,
                 f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, 'TEMP',
                 t.BLOCK_SIZE, t.status, sum(sh.blocks_free) free_blocks
-                from v\$thread th, dba_temp_files f, dba_tablespaces t, v\$temp_space_header sh
+                from v\\\$thread th, dba_temp_files f, dba_tablespaces t, v\\\$temp_space_header sh
                 WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
                 GROUP BY th.instance, f.file_name, f.tablespace_name, f.status,
                 f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,

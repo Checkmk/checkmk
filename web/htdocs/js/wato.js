@@ -105,27 +105,60 @@ function wato_fix_visibility() {
     }
 
     var hide_topics = volatile_topics.slice(0);
-
     /* Now loop over all attributes that have conditions. Those are
-       stored in the global variable wato_depends_on, which is filled
+       stored in the global variable wato_depends_on_tags, which is filled
        during the creation of the web page. */
-    for (var attrname in wato_depends_on) {
+    for (var i in wato_check_attributes) {
+        var attrname = wato_check_attributes[i]
         /* Now comes the tricky part: decide whether that attribute should
            be visible or not: */
         var display = "";
-        for (var i in wato_depends_on[attrname]) {
-            var tag = wato_depends_on[attrname][i];
-            var negate = tag[0] == '!';
-            var tagname = negate ? tag.substr(1) : tag;
-            var have_tag = currentTags.indexOf(tagname) != -1;
-            if (have_tag == negate) {
-                display = "none";
-                break;
+        if(attrname in wato_depends_on_roles){
+            for (var i in wato_depends_on_roles[attrname]) {
+                var role = wato_depends_on_roles[attrname][i];
+                var negate = role[0] == '!';
+                var rolename = negate ? role.substr(1) : role;
+                var have_role = user_roles.indexOf(rolename) != -1;
+                if (have_role == negate) {
+                    display = "none";
+                    break;
+                }
+            }
+        }
+        
+        if( display == "" && attrname in wato_depends_on_tags){
+            for (var i in wato_depends_on_tags[attrname]) {
+                var tag = wato_depends_on_tags[attrname][i];
+                var negate = tag[0] == '!';
+                var tagname = negate ? tag.substr(1) : tag;
+                var have_tag = currentTags.indexOf(tagname) != -1;
+                if (have_tag == negate) {
+                    display = "none";
+                    break;
+                }
             }
         }
 
         var oTr = document.getElementById("attr_" + attrname);
         oTr.style.display = display;
+
+        // Prepare current visibility information which is used
+        // within the attribut validation in wato
+        // Hidden attributes are not validated at all
+        if ( !document.getElementById("attr_display_" + attrname) ){
+            var newInput = document.createElement("input");
+            newInput.name  = "attr_display_" + attrname;
+            newInput.id  = "attr_display_" + attrname;
+            newInput.type = "hidden";
+            newInput.className = "text";
+            oTr.appendChild(newInput);
+        }
+        var display_info = document.getElementById("attr_display_" + attrname)
+        if ( display == "none" ) {
+            display_info.value = "0";
+        }else{
+            display_info.value = "1";
+        }
 
         // There is at least one item in this topic -> show it
         var topic = oTr.parentNode.parentNode.parentNode.id.substr(21);
@@ -146,8 +179,6 @@ function wato_fix_visibility() {
         }
     }
 }
-
-
 
 // ----------------------------------------------------------------------------
 // Interactive progress code

@@ -85,7 +85,6 @@ def action_reschedule():
         last_check = row[0]
         if last_check < now:
             html.write("['TIMEOUT', 'Check not executed within %d seconds']\n" % (config.reschedule_timeout))
-
         else:
             if service == "Check_MK":
                 # Passive services triggered by Check_MK often are updated
@@ -97,4 +96,4 @@ def action_reschedule():
 
     except Exception, e:
         html.live.set_only_sites()
-        raise MKGeneralException("Cannot reschedule check: %s" % e)
+        raise MKGeneralException(_("Cannot reschedule check: %s") % e)

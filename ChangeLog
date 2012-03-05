@@ -75,6 +75,8 @@
       to Stefan Kärst)
     * FIX: megaraid_bbu: fix problem with alternative agent output
       (thanks to Daniel Tuecks)
+    * mk_oracle: fix quoting problem, replace sessions with version,
+      use /bin/bash instead of /bin/sh
 
     Multisite:
     * Added several missing localization strings

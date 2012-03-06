@@ -69,8 +69,10 @@ def read_get_vars(req):
                 req.listvars[varname].append(value)
             else:
                 req.listvars[varname] = [ req.vars[varname], value ]
-        else:
-            req.vars[varname] = value
+        # In the single-value-store the last occurrance of a variable
+        # has precedence. That makes appending variables to the current
+        # URL simpler.
+        req.vars[varname] = value
 
 def read_cookies(req):
     req.cookies = Cookie.get_cookies(req)

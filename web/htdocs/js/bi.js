@@ -46,11 +46,13 @@ function toggle_bi_box(oDiv)
     oDiv.style.display = "none";
 
     // find child nodes that belong to this node
-    var found = false;
+    var found = 0;
     for (var i in oDiv.parentNode.childNodes) {
         var onode = oDiv.parentNode.childNodes[i];
         if (onode == oDiv) 
-            found = true;
+            found = 1;
+        else if (found == 1) 
+            found ++;
         else if (found) {
             onode.style.display = "";
             return;

@@ -118,15 +118,22 @@ table.aggrtree td.node {
     background-color: #e8e8e8;
 }
 
-
-div.bibox_box {
-    border-style: solid;
+td.aggrtree_box {
+    line-height: 22px;
+}
+.bibox_box {
     border-width: 1px;
-    float: left;
-    margin: 1px 4px 1px 0px;
+    margin: 0px 0px 0px 0px;
     padding: 1px 3px;
 }
-div.bibox {
-    float: left;
+.bibox_box.noleaf {
+    border: 1px solid black;
+    box-shadow: 1px 1px 3px #000;
+}
+.bibox_box.leaf {
+    border-style: solid;
+}
+.bibox {
+    padding: 0px;
 }
 

@@ -46,7 +46,7 @@ echo Version: 1.1.13i4
 echo AgentOS: solaris
 
 echo '<<<df>>>'
-for fs in ufs zfs
+for fs in ufs zfs vxfs
 do
    df -lk -F $fs 2>/dev/null | sed 1d | \
    while read Filesystem kbytes used avail capacity Mountedon

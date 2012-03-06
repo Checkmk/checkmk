@@ -152,7 +152,7 @@ checkgroups.append((
                     ]
                 )
             ),
-            ("notcredits",
+            ("notxcredits",
                 Tuple (
                     title = _("No-TxCredits errors"),
                     elements = [

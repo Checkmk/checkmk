@@ -198,6 +198,7 @@ def check_mem_windows(item, params, info):
 
 
 check_info['mem.win'] = (check_mem_windows, "Memory and pagefile", 1, inventory_mem_win)
+checkgroup_of['mem.win'] = "memory_pagefile_win"
 
 
 #   +----------------------------------------------------------------------+

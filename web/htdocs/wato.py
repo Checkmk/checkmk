@@ -3724,7 +3724,7 @@ class HostTagAttribute(Attribute):
                 return "", "%s %s" % (_("not"), title)
         for entry in self._taglist:
             if value == entry[0]:
-                return "", _(entry[1])
+                return "", entry[1] and _(entry[1]) or ''
         return "", "" # Should never happen, at least one entry should match
                       # But case could occur if tags definitions have been changed.
 
@@ -3744,7 +3744,7 @@ class HostTagAttribute(Attribute):
                 secondary_tags = e[2]
             else:
                 secondary_tags = []
-            choices.append(("|".join([ tagvalue ] + secondary_tags), _(e[1])))
+            choices.append(("|".join([ tagvalue ] + secondary_tags), e[1] and _(e[1]) or ''))
             if value != "" and value == tagvalue and secondary_tags:
                 value = value + "|" + "|".join(secondary_tags)
 

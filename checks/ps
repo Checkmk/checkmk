@@ -199,7 +199,7 @@ def check_procs(item, params, info, with_perfdata):
             # correct number of DSes. To just look at the first process
             # in the agent output to make sure. We assume that at least
             # one process is always present.
-            firstword = info[0][0]
+            firstword = info[0][1]
             if firstword[0] == '(' and firstword.count(",") >= 3:
                 extended_perfdata = True
         if extended_perfdata:

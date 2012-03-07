@@ -3791,6 +3791,36 @@ class HostTagAttribute(Attribute):
         return [] # No matching tag
 
 
+# An attribute using the generic ValueSpec mechanism
+class ValueSpecAttribute(Attribute):
+    def __init__(self, name, vs):
+        Attribute.__init__(self, name)
+        self._valuespec = vs
+
+    def title(self):
+        return self._valuespec.title()
+
+    def help(self):
+        return self._valuespec.help()
+
+    def default_value(self):
+        return self._valuespec.default_value()
+
+    def paint(self, value, hostname):
+        return "", \
+            self._valuespec.value_to_text(value)
+
+    def render_input(self, value):
+        self._valuespec.render_input(self._name, value)
+
+    def from_html_vars(self):
+        return self._valuespec.from_html_vars(self._name)
+
+    def validate_input(self):
+        value = self.from_html_vars()
+        self._valuespec.validate_value(value, self._name)
+
+
 # Attribute needed for folder permissions
 class ContactGroupsAttribute(Attribute):
     # The constructor stores name and title. If those are

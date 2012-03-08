@@ -526,6 +526,7 @@ class ListOf(ValueSpec):
         # Render reference element for cloning
         html.write('<table style="display:none" id="%s_prototype">' % varprefix)
         html.write('<tr><td class=vlof_buttons>')
+        html.hidden_field(varprefix + "_indexof_" + self._magic, "") # reconstruct order after moving stuff
         self.del_button(varprefix, self._magic)
         self.move_button(varprefix, self._magic, "up")
         self.move_button(varprefix, self._magic, "down")
@@ -539,6 +540,7 @@ class ListOf(ValueSpec):
         html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
         for nr, v  in enumerate(value):
             html.write('<tr><td class=vlof_buttons>')
+            html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "") # reconstruct order after moving stuff
             self.del_button(varprefix, nr+1)
             self.move_button(varprefix, self._magic, "up") # visibility fixed by javascript
             self.move_button(varprefix, self._magic, "down")
@@ -560,10 +562,14 @@ class ListOf(ValueSpec):
 
     def from_html_vars(self, varprefix):
         value = []
-        for n in range(1, 1 + int(html.var(varprefix + "_count"))):
-            if not html.var("_%s_deleted_%d" % (varprefix, n)):
-                value.append(self._valuespec.from_html_vars(
-                    varprefix + "_%d" % n))
+        n = 0
+        while True:
+            indexof = html.var(varprefix + "_indexof_%d" % (n+1))
+            if indexof == None:
+                break;
+            value.append(self._valuespec.from_html_vars(
+                varprefix + "_%d" % int(indexof)))
+            n += 1
         return value
 
     def validate_datatype(self, value, varprefix):

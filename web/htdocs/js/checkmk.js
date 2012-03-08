@@ -1474,9 +1474,15 @@ function valuespec_listof_add(varprefix, magic) {
 // input element with the name varprefix + "_deleted_%nr"
 function valuespec_listof_delete(oA, varprefix, nr) {
     var oTr = oA.parentNode.parentNode; // TR
-    var oTdContent = oTr.childNodes[1];
-    oTdContent.innerHTML = '<input type=hidden name="_' + varprefix + '_deleted_' + nr + '" value=1>'
-    oTr.style.display = "none";
+    var oTbody = oTr.parentNode;
+    oInput = document.createElement("input");
+    oInput.type = "hidden";
+    oInput.name = "_" + varprefix + '_deleted_' + nr
+    oInput.value = "1"
+    var oTable = oTbody.parentNode;
+    oTable.parentNode.insertBefore(oInput, oTable);
+    oTbody.removeChild(oTr);
+    valuespec_listof_fixarrows(oTbody);
 }
 
 function valuespec_listof_move(oA, varprefix, nr, where) {
@@ -1503,8 +1509,10 @@ function valuespec_listof_move(oA, varprefix, nr, where) {
 function valuespec_listof_fixarrows(oTbody) {
     for (var i in oTbody.childNodes) {
         var oTd = oTbody.childNodes[i].childNodes[0]; /* TD with buttons */
-        var oUpTrans = oTd.childNodes[1];
-        var oUp      = oTd.childNodes[2];
+        var oIndex = oTd.childNodes[0];
+        oIndex.value = "" + (parseInt(i) + 1);
+        var oUpTrans = oTd.childNodes[2];
+        var oUp      = oTd.childNodes[3];
         if (i == 0) {
             oUpTrans.style.display = "";
             oUp.style.display = "none";
@@ -1513,8 +1521,8 @@ function valuespec_listof_fixarrows(oTbody) {
             oUpTrans.style.display = "none";
             oUp.style.display = "";
         }
-        var oDownTrans = oTd.childNodes[3];
-        var oDown      = oTd.childNodes[4];
+        var oDownTrans = oTd.childNodes[4];
+        var oDown      = oTd.childNodes[5];
         if (i >= oTbody.childNodes.length - 1) {
             oDownTrans.style.display = "";
             oDown.style.display = "none";

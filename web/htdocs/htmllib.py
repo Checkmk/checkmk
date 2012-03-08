@@ -275,7 +275,7 @@ class html:
 
     def hidden_field(self, var, value):
         if value != None:
-            self.write("<input type=hidden name=%s value=\"%s\">\n" % (var, attrencode(value)))
+            self.write("<input type=hidden name=%s value=\"%s\">" % (var, attrencode(value)))
 
     # Beware: call this method just before end_form(). It will
     # add all current non-underscored HTML variables as hiddedn

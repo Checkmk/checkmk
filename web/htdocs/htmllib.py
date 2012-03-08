@@ -337,17 +337,20 @@ class html:
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png">')
 
-    def icon_button(self, url, help, icon, onclick=None):
+    def icon_button(self, url, help, icon, onclick=None, style=""):
         if onclick:
             onclick = " onclick=\"%s\"" % onclick
             url = "#"
 
-        self.write('<a href="%s"%s>'
+        if style:
+            style = ' style="%s"' % style
+
+        self.write('<a href="%s"%s%s>'
                    '<img align=absmiddle class=iconbutton title="%s" '
                    'src="images/button_%s_lo.png" '
                    'onmouseover=\"hilite_icon(this, 1)\" '
                    'onmouseout=\"hilite_icon(this, 0)\">'
-                   '</a>\n' % (url, onclick, help, icon))
+                   '</a>\n' % (url, onclick, style, help, icon))
 
     def empty_icon_button(self):
         self.write('<img class="iconbutton trans" src="images/trans.png">\n')
@@ -532,7 +535,9 @@ class html:
             add_attr = [] # do not use [] as default element, it will be a global variable!
         error = self.user_errors.get(varname)
         if error:
-            self.write("<x class=inputerror><span class=checkbox>")
+            self.write("<x class=inputerror>")
+            
+        self.write("<span class=checkbox>")
         # Problem with checkboxes: The browser will add the variable
         # only to the URL if the box is checked. So in order to detect
         # wether we should add the default value, we need to detect
@@ -555,8 +560,9 @@ class html:
         self.form_vars.append(varname)
         if label:
             self.write('<label for="%s">%s</label>\n' % (id, label))
+        self.write("</span>")
         if error:
-            self.write("</span></x>")
+            self.write("</x>")
 
     # Check if the current form is currently filled in (i.e. we display
     # the form a second time while showing value typed in at the first

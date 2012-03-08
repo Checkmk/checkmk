@@ -503,6 +503,15 @@ class ListOf(ValueSpec):
         js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
         html.icon_button("#", _("Delete this entry"), "delete", onclick=js)
 
+    def move_button(self, vp, nr, where, visible):
+        js = "valuespec_listof_move(this, '%s', '%s', '%s')" % (vp, nr, where)
+        where_name = {
+            "up" : _("up"),
+            "down" : _("down"),
+        }
+        html.icon_button("#", _("Move this entry %s") % where_name[where], 
+           where, onclick=js, style = not visible and "display: none;" or "")
+
     # Implementation idea: we render our element-valuespec
     # once in a hidden div that is not evaluated. All occurances
     # of a magic string are replaced with the actual number
@@ -517,6 +526,8 @@ class ListOf(ValueSpec):
         html.write('<table style="display:none" id="%s_prototype">' % varprefix)
         html.write('<tr><td class=vlof_buttons>')
         self.del_button(varprefix, self._magic)
+        self.move_button(varprefix, self._magic, "up", True)
+        self.move_button(varprefix, self._magic, "down", True)
         html.write('</td><td class=vlof_content>')
         self._valuespec.render_input(
             varprefix + "_" + self._magic, 
@@ -528,6 +539,8 @@ class ListOf(ValueSpec):
         for nr, v  in enumerate(value):
             html.write('<tr><td class=vlof_buttons>')
             self.del_button(varprefix, nr+1)
+            self.move_button(varprefix, self._magic, "up", nr > 0)
+            self.move_button(varprefix, self._magic, "down", nr < len(value) - 1)
             html.write("</td><td class=vlof_content>")
             self._valuespec.render_input(varprefix + "_%d" % (nr+1), v)
             html.write("</td></tr>")

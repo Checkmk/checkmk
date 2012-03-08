@@ -318,6 +318,7 @@ table.vs_date th {
 
 table.valuespec_listof td.vlof_buttons {
     margin-right: 5px;
+    white-space: nowrap;
 }
 table.valuespec_listof td.vlof_content {
     border: 1px solid white;

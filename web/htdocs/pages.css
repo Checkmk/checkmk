@@ -475,7 +475,7 @@ input.date, input.time {
     font-family: monospace;
 }
 
-.inputerror input, .inputerror textarea, span.checkbox {
+.inputerror input, .inputerror textarea, .inputerror span.checkbox {
     background-color: #f84;
 }
 
@@ -488,6 +488,10 @@ input.date, input.time {
 
 .inputerror span.checkbox input {
     margin: 1px;
+}
+
+span.checkbox {
+    white-space: nowrap;
 }
 
 /*-------------------------------------------------------------------------.

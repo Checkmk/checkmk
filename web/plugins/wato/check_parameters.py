@@ -320,6 +320,28 @@ checkgroups.append((
 ))
 
 checkgroups.append((
+    "memory_pagefile_win",
+    _("Memory and pagefile levels for Windows"),
+    Dictionary(
+        elements = [
+            ( "memory",
+              Tuple(
+                  title = _("Memory levels"),
+                  elements = [
+                      Percentage(title = _("Warning at"),  label = _("% usage"), allow_int = True),
+                      Percentage(title = _("Critical at"), label = _("% usage"), allow_int = True)])),
+            ( "pagefile",
+              Tuple(
+                  title = _("Pagefile levels"),
+                  elements = [
+                      Percentage(title = _("Warning at"),  label = _("% usage"), allow_int = True),
+                      Percentage(title = _("Critical at"), label = _("% usage"), allow_int = True)])),
+        ]),
+    None,
+    "dict"
+))
+
+checkgroups.append((
     "tcp_conn_stats",
     ("TCP connection stats"),
     Dictionary(

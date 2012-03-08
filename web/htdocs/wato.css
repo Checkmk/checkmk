@@ -306,7 +306,8 @@ table.validationerror img {
 }
 
 .wato img.trans {
-    width: 24px;
+    width: 16px;
+    height: 16px;
 }
 .wato td.value img {
     width: 20px;

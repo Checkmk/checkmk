@@ -324,6 +324,10 @@ tr.groupheader a:hover {
 img.iconbutton {
     width: 20px;
     height: 20px;
+    padding: 0px 2px;
+}
+img.iconbutton.trans {
+    width: 100px;
 }
 
 /*-------------------------------------------------------------------------.

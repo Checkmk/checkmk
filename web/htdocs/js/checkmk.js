@@ -1458,12 +1458,14 @@ function valuespec_listof_add(varprefix, magic) {
   var oTable = document.getElementById(varprefix + "_table");
   if (count == 0) {  // first: no <tbody> present!
       oTable.innerHTML = "<tbody><tr>" + htmlcode + "</tr></tbody>";
+      valuespec_listof_fixarrows(oTable.childNodes[0]);
   }
   else {
       var oTbody = oTable.childNodes[0];
       var oTr = document.createElement("tr")
       oTr.innerHTML = htmlcode;
       oTbody.appendChild(oTr);
+      valuespec_listof_fixarrows(oTbody);
   }
 }
 
@@ -1475,4 +1477,51 @@ function valuespec_listof_delete(oA, varprefix, nr) {
     var oTdContent = oTr.childNodes[1];
     oTdContent.innerHTML = '<input type=hidden name="_' + varprefix + '_deleted_' + nr + '" value=1>'
     oTr.style.display = "none";
+}
+
+function valuespec_listof_move(oA, varprefix, nr, where) {
+    var oTr = oA.parentNode.parentNode; // TR to move
+    var oTbody = oTr.parentNode;
+
+    if (where == "up")  {
+        var sib = oTr.previousSibling;
+        oTbody.removeChild(oTr);
+        oTbody.insertBefore(oTr, sib);
+    }
+    else /* down */ {
+        var sib = oTr.nextSibling;
+        oTbody.removeChild(oTr);
+        if (sib == oTbody.lastChild)
+            oTbody.appendChild(oTr);
+        else
+            oTbody.insertBefore(oTr, sib.nextSibling);
+    }
+    valuespec_listof_fixarrows(oTbody);
+}
+
+
+function valuespec_listof_fixarrows(oTbody) {
+    for (var i in oTbody.childNodes) {
+        var oTd = oTbody.childNodes[i].childNodes[0]; /* TD with buttons */
+        var oUpTrans = oTd.childNodes[1];
+        var oUp      = oTd.childNodes[2];
+        if (i == 0) {
+            oUpTrans.style.display = "";
+            oUp.style.display = "none";
+        }
+        else {
+            oUpTrans.style.display = "none";
+            oUp.style.display = "";
+        }
+        var oDownTrans = oTd.childNodes[3];
+        var oDown      = oTd.childNodes[4];
+        if (i >= oTbody.childNodes.length - 1) {
+            oDownTrans.style.display = "";
+            oDown.style.display = "none";
+        }
+        else {
+            oDownTrans.style.display = "none";
+            oDown.style.display = "";
+        }
+    }
 }

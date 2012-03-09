@@ -15,6 +15,7 @@
       of host and service (= downtime alerts)
 
     WATO:
+    * Hosttag-editor: allow reordering of tags
     * Create very basic sample configuration when using
       WATO the first time (three tag groups, two rules)
     * Much more checks are configurable via WATO now

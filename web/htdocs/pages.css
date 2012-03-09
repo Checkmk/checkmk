@@ -80,7 +80,7 @@ body.main hr.header {
 
 body.main table.header td.left {
     font-size: 15pt;
-    font-weight: bold;
+    /*font-weight: bold;*/
     vertical-align: bottom;
     padding-left: 0px;
     height: 31px;
@@ -473,7 +473,7 @@ input.date, input.time {
     font-family: monospace;
 }
 
-.inputerror input, .inputerror textarea, .inputerror span.checkbox {
+.inputerror input, .inputerror textarea, span.checkbox {
     background-color: #f84;
 }
 

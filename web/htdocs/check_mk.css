@@ -194,10 +194,10 @@ div.livestatus.message {
 '-------------------------------------------------------------------------*/
 
 img.treeangle {
-    width: 9px;
-    height: 9px;
+    width: 13px;
+    height: 12px;
     margin-right: 3px;
-    margin-top: 2px;
+    margin-top: 0px;
 }
 b.treeangle.title {
    font-weight: bold;

@@ -7234,6 +7234,14 @@ def save_users(profiles):
         elif os.path.exists(auth_file):
             os.remove(auth_file)
 
+    # Remove settings directories of non-existant users
+    dir = defaults.var_dir + "/web"
+    for e in os.listdir(dir):
+        if e not in ['.', '..'] and e not in profiles: 
+            entry = dir + "/" + e
+            if os.path.isdir(entry):
+                shutil.rmtree(entry)
+
     # Call the users_saved hook
     call_hook_users_saved(users)
 

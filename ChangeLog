@@ -1,3 +1,7 @@
+1.2.0b2:
+    WATO:
+    * FIX: deletion of automation accounts now works
+
 1.2.0b1:
     Core, Setup, etc.:
     * new tool 'livedump' for dumping configuration and status

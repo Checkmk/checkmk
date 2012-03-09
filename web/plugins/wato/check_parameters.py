@@ -566,7 +566,7 @@ checkgroups.append((
               Tuple(
                   title = _("Levels for error rates"),
                   help = _("This levels make the check go warning or critical whenever the "
-                           "<b>percentual error rate</b> of the monitored interface exceeds "
+                           "<b>percentual error rate</b> of the monitored interface reaches "
                            "the given bounds. The error rate is computed by dividing number of "
                            "errors by the total number of packets (successful plus errors)."),
                   elements = [

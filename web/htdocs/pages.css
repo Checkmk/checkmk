@@ -324,6 +324,10 @@ tr.groupheader a:hover {
 img.iconbutton {
     width: 20px;
     height: 20px;
+    padding: 0px 2px;
+}
+img.iconbutton.trans {
+    width: 100px;
 }
 
 /*-------------------------------------------------------------------------.
@@ -469,7 +473,7 @@ input.date, input.time {
     font-family: monospace;
 }
 
-.inputerror input, .inputerror textarea, span.checkbox {
+.inputerror input, .inputerror textarea, .inputerror span.checkbox {
     background-color: #f84;
 }
 
@@ -482,6 +486,10 @@ input.date, input.time {
 
 .inputerror span.checkbox input {
     margin: 1px;
+}
+
+span.checkbox {
+    white-space: nowrap;
 }
 
 /*-------------------------------------------------------------------------.

@@ -531,7 +531,7 @@ class FilterLogState(Filter):
         headers = []
         for varsuffix, what, state, text in self._items:
             if html.get_checkbox("logst_" + varsuffix) != False: # None = form not filled in = allow
-                headers.append("Filter: log_type = %s ALERT\nFilter: log_state = %d\nAnd: 2\n" %
+                headers.append("Filter: log_type ~ %s .*\nFilter: log_state = %d\nAnd: 2\n" %
                             (what.upper(), state))
         if len(headers) == 0:
             return "Limit: 0\n" # no allowed state

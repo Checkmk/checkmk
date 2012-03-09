@@ -1,4 +1,8 @@
-1.1.13i4:
+1.2.0b2:
+    WATO:
+    * FIX: deletion of automation accounts now works
+
+1.2.0b1:
     Core, Setup, etc.:
     * new tool 'livedump' for dumping configuration and status
       information from one monitoring core and importing this
@@ -15,6 +19,7 @@
       of host and service (= downtime alerts)
 
     WATO:
+    * Hosttag-editor: allow reordering of tags
     * Create very basic sample configuration when using
       WATO the first time (three tag groups, two rules)
     * Much more checks are configurable via WATO now
@@ -37,6 +42,10 @@
       least one contact group.
     * It is now possible to configure auxiliary tags via WATO
       (formerly also called secondary tags)
+    * FIX: Fixed wrong label "Main Overview" shown for moved WATO folders
+      in foldertree snapin
+    * FIX: Fixed localization of empty host tags
+    * FIX: User alias and notification enabling was not saved
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors
@@ -72,6 +81,8 @@
       to Stefan Kärst)
     * FIX: megaraid_bbu: fix problem with alternative agent output
       (thanks to Daniel Tuecks)
+    * mk_oracle: fix quoting problem, replace sessions with version,
+      use /bin/bash instead of /bin/sh
 
     Multisite:
     * Added several missing localization strings
@@ -91,6 +102,7 @@
       error messages when the core is being restarted
     * Events view now shows icon and text for "flapping" events
     * Use buffer for HTML creation (this speeds up esp. HTTPS a lot)
+    * FIX: Fixed state filter in log views
 
     Livestatus:
     * Add missing column check_freshness to services table

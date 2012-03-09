@@ -423,6 +423,9 @@ def save_folders(folder):
 def save_all_folders():
     save_folders(g_root_folder)
 
+def folder_config_exists(dir):
+    return os.path.exists(dir + "/.wato")
+
 # Load the meta-data of a folder (it's .wato file), register
 # it in g_folders, load recursively all subfolders and then
 # return the folder object. The case the .wato file is missing
@@ -912,7 +915,7 @@ def check_host_permissions(hostname, exception=True):
     if config.user_id not in users:
         user_cgs = []
     else:
-        user_cgs = users[config.user_id]["contactgroups"]
+        user_cgs = users[config.user_id].get("contactgroups",[])
 
     for c in user_cgs:
         if c in cgs:
@@ -1223,7 +1226,7 @@ def show_hosts(folder):
 
         # Hostname with link to details page (edit host)
         html.write('<td>')
-        errors = host_errors.get(hostname,[]) + validate_host(hostname)
+        errors = host_errors.get(hostname,[]) + validate_host(host, g_folder)
         if errors:
             msg = _("Warning: This host has an invalid configuration: ")
             msg += ", ".join(errors)
@@ -1798,7 +1801,7 @@ def mode_edithost(phase, new, cluster):
                 call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
 
-            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(hostname)
+            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(host, g_folder)
             if errors: # keep on this page if host does not validate
                 return
             elif new:
@@ -1812,7 +1815,7 @@ def mode_edithost(phase, new, cluster):
         if new:
             render_folder_path()
         else:
-            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(hostname)
+            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(host, g_folder)
 
         if errors:
             html.write("<div class=info>")
@@ -1853,10 +1856,10 @@ def mode_edithost(phase, new, cluster):
         configure_attributes({hostname: host}, "host", parent = g_folder)
 
         html.write('<tr><td class="buttons" colspan=3>')
+        html.image_button("services", _("Save &amp; go to Services"), "submit")
         html.image_button("save", _("Save &amp; Finish"), "submit")
         if not new:
             html.image_button("delete", _("Delete host!"), "submit")
-        html.image_button("services", _("Save &amp; go to Services"), "submit")
         html.write("</td></tr>\n")
         html.write("</table>\n")
         html.hidden_fields()
@@ -3536,6 +3539,15 @@ class Attribute:
     def is_mandatory(self):
         return False
 
+    # Return information about the user roles we depend on.
+    # The method is usually not overridden, but the variable
+    # _depends_on_roles is set by declare_host_attribute().
+    def depends_on_roles(self):
+        try:
+            return self._depends_on_roles
+        except:
+            return []
+
     # Return information about the host tags we depend on.
     # The method is usually not overridden, but the variable
     # _depends_on_tags is set by declare_host_attribute().
@@ -3555,6 +3567,15 @@ class Attribute:
     # Create value from HTML variables.
     def from_html_vars(self):
         return None
+
+
+    # Check whether this attribute needs to be validated at all
+    # Attributes might be permanently hidden (show_in_form = False)
+    # or dynamically hidden by the depends_on_tags feature
+    def needs_validation(self):
+        if not self._show_in_form:
+            return False
+        return html.var('attr_display_%s' % self._name, "1") == "1"
 
     # Check if the value entered by the user is valid.
     # This method may raise MKUserError in case of invalid user input.
@@ -3703,7 +3724,7 @@ class HostTagAttribute(Attribute):
                 return "", "%s %s" % (_("not"), title)
         for entry in self._taglist:
             if value == entry[0]:
-                return "", _(entry[1])
+                return "", entry[1] and _(entry[1]) or ''
         return "", "" # Should never happen, at least one entry should match
                       # But case could occur if tags definitions have been changed.
 
@@ -3723,7 +3744,7 @@ class HostTagAttribute(Attribute):
                 secondary_tags = e[2]
             else:
                 secondary_tags = []
-            choices.append(("|".join([ tagvalue ] + secondary_tags), _(e[1])))
+            choices.append(("|".join([ tagvalue ] + secondary_tags), e[1] and _(e[1]) or ''))
             if value != "" and value == tagvalue and secondary_tags:
                 value = value + "|" + "|".join(secondary_tags)
 
@@ -3768,6 +3789,36 @@ class HostTagAttribute(Attribute):
                     taglist = taglist[1:]
                 return taglist
         return [] # No matching tag
+
+
+# An attribute using the generic ValueSpec mechanism
+class ValueSpecAttribute(Attribute):
+    def __init__(self, name, vs):
+        Attribute.__init__(self, name)
+        self._valuespec = vs
+
+    def title(self):
+        return self._valuespec.title()
+
+    def help(self):
+        return self._valuespec.help()
+
+    def default_value(self):
+        return self._valuespec.default_value()
+
+    def paint(self, value, hostname):
+        return "", \
+            self._valuespec.value_to_text(value)
+
+    def render_input(self, value):
+        self._valuespec.render_input(self._name, value)
+
+    def from_html_vars(self):
+        return self._valuespec.from_html_vars(self._name)
+
+    def validate_input(self):
+        value = self.from_html_vars()
+        self._valuespec.validate_value(value, self._name)
 
 
 # Attribute needed for folder permissions
@@ -3863,15 +3914,19 @@ def declare_host_tag_attributes():
         for entry in config.wato_host_tags:
             # if the entry has o fourth component, then its
             # the tag dependency defintion.
+            depends_on_tags = []
+            depends_on_roles = []
+            if len(entry) >= 5:
+                depends_on_roles = entry[4]
             if len(entry) >= 4:
                 depends_on_tags = entry[3]
-            else:
-                depends_on_tags = []
+
             declare_host_attribute(
                 HostTagAttribute(entry[:3]),
                     show_in_table = False,
                     show_in_folder = True,
                     depends_on_tags = depends_on_tags,
+                    depends_on_roles = depends_on_roles,
                     topic = _("Host tags"))
 
         configured_host_tags = config.wato_host_tags
@@ -3895,13 +3950,15 @@ host_attribute = {}
 
 # Declare attributes with this method
 def declare_host_attribute(a, show_in_table = True, show_in_folder = True,
-       topic = None, show_in_form = True, depends_on_tags = []):
+       topic = None, show_in_form = True, depends_on_tags = [],depends_on_roles = []):
     host_attributes.append((a, topic))
     host_attribute[a.name()] = a
     a._show_in_table   = show_in_table
     a._show_in_folder  = show_in_folder
     a._show_in_form    = show_in_form
     a._depends_on_tags = depends_on_tags
+    a._depends_on_roles = depends_on_roles
+
 
 def undeclare_host_attribute(attrname):
     if attrname in host_attribute:
@@ -3919,8 +3976,9 @@ def collect_attributes(do_validate = True):
         if not html.var("_change_%s" % attrname, False):
             continue
 
-        if do_validate:
+        if do_validate and attr.needs_validation():
             attr.validate_input()
+
         host[attrname] = attr.from_html_vars()
     return host
 
@@ -3955,7 +4013,8 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
 
     # Collect dependency mapping for attributes (attributes that are only
     # visible, if certain host tags are set).
-    dependency_mapping = {}
+    dependency_mapping_tags = {}
+    dependency_mapping_roles = {}
     inherited_tags     = {}
 
     volatile_topics = []
@@ -3985,8 +4044,9 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 continue # e.g. needed to skip ipaddress in CSV-Import
 
             # Skip hidden attributes
+            hide_attribute = False
             if not attr.show_in_form():
-                continue
+                hide_attribute = True
 
             # In folder not all attributes are shown
             if for_what == "folder" and not attr.show_in_folder():
@@ -3996,11 +4056,14 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             # modes we always need to show all attributes.
             if for_what == "host":
                 depends_on_tags = attr.depends_on_tags()
+                depends_on_roles = attr.depends_on_roles()
                 if depends_on_tags:
-                    dependency_mapping[attrname] = depends_on_tags
-                else:
-                    # One attribute is always shown -> topic can never
-                    # be made invisible
+                    dependency_mapping_tags[attrname] = depends_on_tags
+                if depends_on_roles:
+                    dependency_mapping_roles[attrname] = depends_on_roles
+
+                if not depends_on_tags and not depends_on_roles:
+                    # One attribute is always shown -> topic is always visible 
                     topic_is_volatile = False
             else:
                 topic_is_volatile = False
@@ -4054,7 +4117,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                     inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
 
             # Legend and Help
-            html.write('<tr id="attr_%s"><td class=legend>' % attrname)
+            html.write('<tr id="attr_%s" %s><td class=legend>' % (attrname, hide_attribute and 'style="display: none"' or ""))
             if attr.help():
                 html.begin_foldable_container("attribute_help", attrname, True, "<b>%s</b>" % attr.title(), indent=False)
                 html.write("<i>%s</i>" % attr.help())
@@ -4169,12 +4232,18 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
     # Provide Javascript world with the tag dependency information
     # of all attributes.
     html.javascript("var inherited_tags = %s;\n"\
-                    "var wato_depends_on = %s;\n"\
+                    "var wato_check_attributes = %s;\n"\
+                    "var wato_depends_on_tags = %s;\n"\
+                    "var wato_depends_on_roles = %s;\n"\
                     "var volatile_topics = %s;\n"\
+                    "var user_roles = %s;\n"\
                     "wato_fix_visibility();\n" % (
                        dump_json(inherited_tags),
-                       dump_json(dependency_mapping),
-                       dump_json(volatile_topics)))
+                       dump_json(list(set(dependency_mapping_tags.keys()+dependency_mapping_roles.keys()))),
+                       dump_json(dependency_mapping_tags),
+                       dump_json(dependency_mapping_roles),
+                       dump_json(volatile_topics),
+                       dump_json(config.user_role_ids)))
 
 
 # Check if at least one host in a folder (or its subfolders)
@@ -4205,6 +4274,7 @@ def effective_attributes(host, folder):
         chain = [ host ]
     else:
         chain = [ ]
+
     while folder:
         chain.append(folder.get("attributes", {}))
         folder = folder.get(".parent")
@@ -6694,7 +6764,7 @@ def mode_edit_user(phase):
         id = html.var("userid").strip()
         if new and id in users:
             raise MKUserError("userid", _("This username is already being used by another user."))
-        if not re.match("^[-a-z0-9A-Z_]+$", id):
+        if not re.match("^[-a-z0-9A-Z_\.]+$", id):
             raise MKUserError("userid", _("The username must consist only of letters, digit and the underscore."))
 
         if new:
@@ -6973,7 +7043,8 @@ def mode_edit_user(phase):
 
     html.write("<tr><td class=legend colspan=2>")
     html.write(_("Notification options<br><i>Here you specify which types of alerts "
-               "will be notified to this contact.</i>"))
+               "will be notified to this contact. Note: these settings will only be saved "
+               "and used if the user is member of a contact group.</i>"))
     html.write("</td><td class=content>")
     for title, what, opts in [ ( _("Host events"), "host", "durfs"),
                   (_("Service events"), "service", "wucrfs") ]:
@@ -7105,8 +7176,12 @@ def split_dict(d, keylist, positive):
 def save_users(profiles):
     # TODO: delete var/check_mk/web/$USER of non-existing users. Do we
     # need to remove other references as well?
-    non_contact_keys = [ "roles", "password", "locked", "automation_secret", "language" ]
-    multisite_keys   = [ "roles", "language" ]
+
+    # Keys not to put into contact definitions for Check_MK
+    non_contact_keys = [ "roles", "notifications_enabled", "password", "locked", "automation_secret", "language" ] 
+
+    # Keys to put into multisite configuration
+    multisite_keys   = [ "roles", "notifications_enabled", "locked", "automation_secret", "alias", "language", ]
 
     # Remove multisite keys in contacts. And use only such entries
     # that have any contact groups assigned to.
@@ -7117,7 +7192,7 @@ def save_users(profiles):
                in profiles.items() ]
         if e[1].get("contactgroups"))
 
-    # Only allow explicit defined attributes to be written to multisite config
+    # Only allow explicitely defined attributes to be written to multisite config
     users = {}
     for uid, profile in profiles.items():
         users[uid] = dict([ (p, val) for p, val in profile.items() if p in multisite_keys ])
@@ -7158,6 +7233,14 @@ def save_users(profiles):
             create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
         elif os.path.exists(auth_file):
             os.remove(auth_file)
+
+    # Remove settings directories of non-existant users
+    dir = defaults.var_dir + "/web"
+    for e in os.listdir(dir):
+        if e not in ['.', '..'] and e not in profiles: 
+            entry = dir + "/" + e
+            if os.path.isdir(entry):
+                shutil.rmtree(entry)
 
     # Call the users_saved hook
     call_hook_users_saved(users)
@@ -7658,7 +7741,6 @@ def mode_hosttags(phase):
                        "<th>" + _("Type") + "</th>"
                        "<th>" + _("Choices") + "</th>"
                        "<th>" + _("Demonstration") + "</th>"
-                       "<th></th>"
                        "</tr>")
             odd = "even"
             for nr, (tag_id, title, choices) in enumerate(hosttags):
@@ -7677,6 +7759,7 @@ def mode_hosttags(phase):
                 else:
                     html.icon_button(html.makeactionuri([("_move", str(nr))]),
                                 _("Move this tag group one position down"), "down")
+                html.icon_button(edit_url,   _("Edit this tag group"), "edit")
                 html.icon_button(delete_url, _("Delete this tag group"), "delete")
                 html.write("</td>")
                 html.write("<td>%s</td>" % tag_id)
@@ -7687,9 +7770,6 @@ def mode_hosttags(phase):
                 html.begin_form("tag_%s" % tag_id)
                 host_attribute["tag_%s" % tag_id].render_input(None)
                 html.end_form()
-                html.write("</td>")
-                html.write("<td class=buttons>")
-                html.buttonlink(edit_url, _("Edit"))
                 html.write("</td>")
 
                 html.write("</tr>")
@@ -9933,10 +10013,10 @@ def call_hook_roles_saved(roles):
 # This hook is called in order to determine if a host has a 'valid'
 # configuration. It used for displaying warning symbols in the
 # host list and in the host detail view.
-def validate_host(host):
+def validate_host(host, folder):
     if hook_registered('validate-host'):
         errors = []
-        eff = effective_attributes(host, host[".folder"])
+        eff = effective_attributes(host, folder)
         for hk in g_hooks.get('validate-host', []):
             try:
                 hk(eff)

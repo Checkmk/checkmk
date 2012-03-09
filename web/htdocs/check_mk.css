@@ -134,7 +134,7 @@ label.image_button input {
     height: 30px;
     color: #fff;
     border: none;
-    padding-right: 16px;
+    padding-right: 10px;
     background: transparent url('images/image_button_r.png') no-repeat;
     background-position: right -30px;
     float: left;

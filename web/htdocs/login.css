@@ -106,12 +106,12 @@ label {
 }
 
 #input_user, #input_pass {
-    width: 160px;
-    height: 20px;
+    width: 150px;
+    height: 17px;
     border: none;
     border-radius: 0px;
     outline: none;
-    padding: 0px 0px 5px 0px;
+    padding: 3px 5px 3px 5px;
     background-image: url("images/login_input_normal.png");
     background-repeat: no-repeat;
 }
@@ -134,7 +134,7 @@ label {
 
 #button_text {
     position: absolute;
-    top: 355px;
+    top: 351px;
     left: 505px;
     text-align: center;
     width: 61px;
@@ -146,8 +146,8 @@ label {
 
 #login_error {
     position: absolute;
-    top: 0px;
-    left: 0px;
+    top: 347px;
+    left: 285px;
     width: 180px;
     height: 30px;
     z-index: 100;
@@ -156,6 +156,13 @@ label {
     border: none;
     margin: 0px;
     padding: 0px;
+}
+
+#login_error div.error {
+    border-style: none;
+    background-color: transparent;
+    margin: 0px;
+    padding: 8px 0px 0px 0px;
 }
 
 #foot {

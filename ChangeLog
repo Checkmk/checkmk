@@ -41,6 +41,7 @@
     * FIX: Fixed wrong label "Main Overview" shown for moved WATO folders
       in foldertree snapin
     * FIX: Fixed localization of empty host tags
+    * FIX: User alias and notification enabling was not saved
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors

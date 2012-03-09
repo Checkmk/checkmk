@@ -7043,7 +7043,8 @@ def mode_edit_user(phase):
 
     html.write("<tr><td class=legend colspan=2>")
     html.write(_("Notification options<br><i>Here you specify which types of alerts "
-               "will be notified to this contact.</i>"))
+               "will be notified to this contact. Note: these settings will only be saved "
+               "and used if the user is member of a contact group.</i>"))
     html.write("</td><td class=content>")
     for title, what, opts in [ ( _("Host events"), "host", "durfs"),
                   (_("Service events"), "service", "wucrfs") ]:
@@ -7175,8 +7176,12 @@ def split_dict(d, keylist, positive):
 def save_users(profiles):
     # TODO: delete var/check_mk/web/$USER of non-existing users. Do we
     # need to remove other references as well?
-    non_contact_keys = [ "roles", "password", "locked", "automation_secret", "language" ]
-    multisite_keys   = [ "roles", "language" ]
+
+    # Keys not to put into contact definitions for Check_MK
+    non_contact_keys = [ "roles", "notifications_enabled", "password", "locked", "automation_secret", "language" ] 
+
+    # Keys to put into multisite configuration
+    multisite_keys   = [ "roles", "notifications_enabled", "locked", "automation_secret", "alias", "language", ]
 
     # Remove multisite keys in contacts. And use only such entries
     # that have any contact groups assigned to.
@@ -7187,7 +7192,7 @@ def save_users(profiles):
                in profiles.items() ]
         if e[1].get("contactgroups"))
 
-    # Only allow explicit defined attributes to be written to multisite config
+    # Only allow explicitely defined attributes to be written to multisite config
     users = {}
     for uid, profile in profiles.items():
         users[uid] = dict([ (p, val) for p, val in profile.items() if p in multisite_keys ])

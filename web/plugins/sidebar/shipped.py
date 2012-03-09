@@ -952,21 +952,21 @@ def render_master_control():
     html.live.set_prepend_site(True)
     data = html.live.query("GET status\nColumns: %s" % " ".join([ i[0] for i in items ]))
     html.live.set_prepend_site(False)
-    html.write("<table class=master_control>\n")
     for siteline in data:
         siteid = siteline[0]
         if siteid:
             sitealias = html.site_status[siteid]["site"]["alias"]
-            html.write("<tr><td class=left colspan=2>")
-            heading(sitealias)
-            html.write("</tr>\n")
+            html.begin_foldable_container("master_control", siteid, True, sitealias)
+        html.write("<table class=master_control>\n")
         for i, (colname, title) in enumerate(items):
             colvalue = siteline[i + 1]
             url = defaults.url_prefix + ("check_mk/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
             onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
             enabled = colvalue and "enabled" or "disabled"
             html.write("<tr><td class=left>%s</td><td class=%s><a onclick=\"%s\" href=\"#\">%s</a></td></tr>\n" % (title, enabled, onclick, enabled))
-    html.write("</table>")
+        html.write("</table>")
+        if siteid:
+            html.end_foldable_container()
 
 sidebar_snapins["master_control"] = {
     "title" : _("Master control"),
@@ -977,7 +977,7 @@ sidebar_snapins["master_control"] = {
     "styles" : """
 div.snapin table.master_control {
     width: %dpx;
-    margin: 0px;
+    margin: 0px 0px 8px 0px;
     border-spacing: 0px;
 }
 
@@ -1017,7 +1017,7 @@ div.snapin table.master_control td.disabled a {
     border-color: #c00;
     color: #fff;
 }
-""" % snapin_width
+""" % (snapin_width - 20)
 }
 
 def ajax_switch_masterstate():

@@ -1,4 +1,8 @@
-1.1.13i4:
+1.2.0b2:
+    WATO:
+    * FIX: deletion of automation accounts now works
+
+1.2.0b1:
     Core, Setup, etc.:
     * new tool 'livedump' for dumping configuration and status
       information from one monitoring core and importing this
@@ -15,6 +19,7 @@
       of host and service (= downtime alerts)
 
     WATO:
+    * Hosttag-editor: allow reordering of tags
     * Create very basic sample configuration when using
       WATO the first time (three tag groups, two rules)
     * Much more checks are configurable via WATO now
@@ -40,6 +45,7 @@
     * FIX: Fixed wrong label "Main Overview" shown for moved WATO folders
       in foldertree snapin
     * FIX: Fixed localization of empty host tags
+    * FIX: User alias and notification enabling was not saved
 
     Checks & Agents:
     * hpux_if: fix missing default parameter errors

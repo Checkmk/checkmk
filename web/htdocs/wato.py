@@ -3791,6 +3791,36 @@ class HostTagAttribute(Attribute):
         return [] # No matching tag
 
 
+# An attribute using the generic ValueSpec mechanism
+class ValueSpecAttribute(Attribute):
+    def __init__(self, name, vs):
+        Attribute.__init__(self, name)
+        self._valuespec = vs
+
+    def title(self):
+        return self._valuespec.title()
+
+    def help(self):
+        return self._valuespec.help()
+
+    def default_value(self):
+        return self._valuespec.default_value()
+
+    def paint(self, value, hostname):
+        return "", \
+            self._valuespec.value_to_text(value)
+
+    def render_input(self, value):
+        self._valuespec.render_input(self._name, value)
+
+    def from_html_vars(self):
+        return self._valuespec.from_html_vars(self._name)
+
+    def validate_input(self):
+        value = self.from_html_vars()
+        self._valuespec.validate_value(value, self._name)
+
+
 # Attribute needed for folder permissions
 class ContactGroupsAttribute(Attribute):
     # The constructor stores name and title. If those are
@@ -6734,7 +6764,7 @@ def mode_edit_user(phase):
         id = html.var("userid").strip()
         if new and id in users:
             raise MKUserError("userid", _("This username is already being used by another user."))
-        if not re.match("^[-a-z0-9A-Z_]+$", id):
+        if not re.match("^[-a-z0-9A-Z_\.]+$", id):
             raise MKUserError("userid", _("The username must consist only of letters, digit and the underscore."))
 
         if new:
@@ -7013,7 +7043,8 @@ def mode_edit_user(phase):
 
     html.write("<tr><td class=legend colspan=2>")
     html.write(_("Notification options<br><i>Here you specify which types of alerts "
-               "will be notified to this contact.</i>"))
+               "will be notified to this contact. Note: these settings will only be saved "
+               "and used if the user is member of a contact group.</i>"))
     html.write("</td><td class=content>")
     for title, what, opts in [ ( _("Host events"), "host", "durfs"),
                   (_("Service events"), "service", "wucrfs") ]:
@@ -7145,8 +7176,12 @@ def split_dict(d, keylist, positive):
 def save_users(profiles):
     # TODO: delete var/check_mk/web/$USER of non-existing users. Do we
     # need to remove other references as well?
-    non_contact_keys = [ "roles", "password", "locked", "automation_secret", "language" ]
-    multisite_keys   = [ "roles", "language" ]
+
+    # Keys not to put into contact definitions for Check_MK
+    non_contact_keys = [ "roles", "notifications_enabled", "password", "locked", "automation_secret", "language" ] 
+
+    # Keys to put into multisite configuration
+    multisite_keys   = [ "roles", "notifications_enabled", "locked", "automation_secret", "alias", "language", ]
 
     # Remove multisite keys in contacts. And use only such entries
     # that have any contact groups assigned to.
@@ -7157,7 +7192,7 @@ def save_users(profiles):
                in profiles.items() ]
         if e[1].get("contactgroups"))
 
-    # Only allow explicit defined attributes to be written to multisite config
+    # Only allow explicitely defined attributes to be written to multisite config
     users = {}
     for uid, profile in profiles.items():
         users[uid] = dict([ (p, val) for p, val in profile.items() if p in multisite_keys ])
@@ -7198,6 +7233,14 @@ def save_users(profiles):
             create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
         elif os.path.exists(auth_file):
             os.remove(auth_file)
+
+    # Remove settings directories of non-existant users
+    dir = defaults.var_dir + "/web"
+    for e in os.listdir(dir):
+        if e not in ['.', '..'] and e not in profiles: 
+            entry = dir + "/" + e
+            if os.path.isdir(entry):
+                shutil.rmtree(entry)
 
     # Call the users_saved hook
     call_hook_users_saved(users)

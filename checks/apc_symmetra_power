@@ -38,9 +38,9 @@ def check_apc_power(item, params, info):
             infotext = " - current power: %d W, warn/crit at and below %d/%d W" % \
                 (power, warn, crit)
 
-            if power <= crit:
+            if power != -1 and power <= crit:
                 return (2, "CRIT" + infotext, perfdata)
-            elif power <= warn:
+            elif power != -1 and power <= warn:
                 return (1, "WARN" + infotext, perfdata)
             else:
                 return (0, "OK" + infotext, perfdata)

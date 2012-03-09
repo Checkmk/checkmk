@@ -503,6 +503,16 @@ class ListOf(ValueSpec):
         js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
         html.icon_button("#", _("Delete this entry"), "delete", onclick=js)
 
+    def move_button(self, vp, nr, where):
+        js = "valuespec_listof_move(this, '%s', '%s', '%s')" % (vp, nr, where)
+        where_name = {
+            "up" : _("up"),
+            "down" : _("down"),
+        }
+        html.empty_icon_button() # needed as placeholder
+        html.icon_button("#", _("Move this entry %s") % where_name[where], 
+           where, onclick=js)
+
     # Implementation idea: we render our element-valuespec
     # once in a hidden div that is not evaluated. All occurances
     # of a magic string are replaced with the actual number
@@ -516,7 +526,10 @@ class ListOf(ValueSpec):
         # Render reference element for cloning
         html.write('<table style="display:none" id="%s_prototype">' % varprefix)
         html.write('<tr><td class=vlof_buttons>')
+        html.hidden_field(varprefix + "_indexof_" + self._magic, "") # reconstruct order after moving stuff
         self.del_button(varprefix, self._magic)
+        self.move_button(varprefix, self._magic, "up")
+        self.move_button(varprefix, self._magic, "down")
         html.write('</td><td class=vlof_content>')
         self._valuespec.render_input(
             varprefix + "_" + self._magic, 
@@ -527,7 +540,10 @@ class ListOf(ValueSpec):
         html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
         for nr, v  in enumerate(value):
             html.write('<tr><td class=vlof_buttons>')
+            html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "") # reconstruct order after moving stuff
             self.del_button(varprefix, nr+1)
+            self.move_button(varprefix, self._magic, "up") # visibility fixed by javascript
+            self.move_button(varprefix, self._magic, "down")
             html.write("</td><td class=vlof_content>")
             self._valuespec.render_input(varprefix + "_%d" % (nr+1), v)
             html.write("</td></tr>")
@@ -535,6 +551,7 @@ class ListOf(ValueSpec):
         html.write("<br>")
         html.jsbutton(varprefix + "_add", self._add_label,
             "valuespec_listof_add('%s', '%s')" % (varprefix, self._magic));
+        html.javascript("valuespec_listof_fixarrows(document.getElementById('%s_table').childNodes[0]);" % varprefix)
 
     def canonical_value(self):
         return []
@@ -545,10 +562,14 @@ class ListOf(ValueSpec):
 
     def from_html_vars(self, varprefix):
         value = []
-        for n in range(1, 1 + int(html.var(varprefix + "_count"))):
-            if not html.var("_%s_deleted_%d" % (varprefix, n)):
-                value.append(self._valuespec.from_html_vars(
-                    varprefix + "_%d" % n))
+        n = 0
+        while True:
+            indexof = html.var(varprefix + "_indexof_%d" % (n+1))
+            if indexof == None:
+                break;
+            value.append(self._valuespec.from_html_vars(
+                varprefix + "_%d" % int(indexof)))
+            n += 1
         return value
 
     def validate_datatype(self, value, varprefix):

@@ -524,7 +524,7 @@ def render_tactical_overview():
             (_("Hosts"),    hstdata, 'hostproblems', 'host'),
             (_("Services"), svcdata, 'svcproblems',  'service'),
             ]:
-        html.write("<tr><th>%s</th><th>%s</th><th>%s</th></tr>\n" % \
+        html.write("<tr><th><span>%s</span></th><th><span>%s</span></th><th><span>%s</span></th></tr>\n" % \
                                      (title, _('Problems'), _('Unhandled')))
         html.write("<tr>")
 
@@ -556,15 +556,20 @@ table.tacticaloverview {
     * border-spacing: 5px 2px;
     */
    width: %dpx;
-   margin-top: 0;
+   margin-top: -9px;
 }
 table.tacticaloverview th { 
-      font-size: 7pt; 
-      text-align: left; 
-      color: #123a4a; 
-      font-weight: normal; 
-      padding: 0; 
-      padding-top: 2px; 
+    font-size: 8pt; 
+    text-align: left; 
+    color: #123a4a; 
+    font-weight: normal; 
+    padding: 0; 
+    padding-top: 2px; 
+    vertical-align: bottom;
+}
+table.tacticaloverview th span {
+    position: relative;
+    top: 2px;
 }
 table.tacticaloverview td { 
     width: 33.3%%; 
@@ -573,6 +578,7 @@ table.tacticaloverview td {
     background-color: #6da1b8;
     padding: 0px; 
     height: 14px; 
+    box-shadow: 0px 0px 1px #386068;
 }
 table.tacticaloverview a { display: block; margin-right: 2px; }
 """ % snapin_width

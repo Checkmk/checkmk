@@ -367,8 +367,8 @@ sidebar_snapins["hostmatrix"] = {
 table.hostmatrix { border-spacing: 0;  }
 table.hostmatrix tr { padding: 0; border-spacing: 0; }
 table.hostmatrix a { display: block; width: 100%%; height: 100%%; line-height: 100%%; }
-table.hostmatrix td { border: 1px solid white; padding: 0; border-spacing: 0; }
-"""
+table.hostmatrix td { border: 1px solid #123a4a; padding: 0; border-spacing: 0; }
+    """
 
 }
 
@@ -558,8 +558,22 @@ table.tacticaloverview {
    width: %dpx;
    margin-top: 0;
 }
-table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0; padding-top: 2px; }
-table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; }
+table.tacticaloverview th { 
+      font-size: 7pt; 
+      text-align: left; 
+      color: #123a4a; 
+      font-weight: normal; 
+      padding: 0; 
+      padding-top: 2px; 
+}
+table.tacticaloverview td { 
+    width: 33.3%%; 
+    text-align: right; 
+    border: 1px solid #123a4a;
+    background-color: #6da1b8;
+    padding: 0px; 
+    height: 14px; 
+}
 table.tacticaloverview a { display: block; margin-right: 2px; }
 """ % snapin_width
 }
@@ -617,14 +631,17 @@ sidebar_snapins["performance"] = {
 table.performance {
     width: %dpx;
     -moz-border-radius: 5px;
-    font-size: 8pt;
     background-color: #589;
+    /* background-color: #6da1b8;*/
     border-style: solid;
     border-color: #444 #bbb #eee #666;
     /* The border needs to be substracted from the width */
     border-width: 1px;
 }
-table.performance td { padding: 0px; }
+table.performance td {
+    padding: 0px 2px;
+    font-size: 8pt;
+}
 table.performance td.right {
     text-align: right;
     padding: 0px;
@@ -902,7 +919,7 @@ def render_nagios():
                 nagioscgilink(text, ref)
 
 sidebar_snapins["nagios_legacy"] = {
-    "title" : _("Nagios"),
+    "title" : _("Old Nagios GUI"),
     "description" : _("The classical sidebar of Nagios 3.2.0 with links to your local Nagios instance (no multi site support)"),
     "author" : "Mathias Kettner",
     "render" : render_nagios,

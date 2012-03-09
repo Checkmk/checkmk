@@ -374,8 +374,9 @@ div.statebullet {
     margin-right: 6px;
     width: 10px;
     height: 10px;
-    border: 1px solid #eee;
+    border: 1px solid #123a4a;
     float: left;
+    box-shadow: 0px 0px 1px #123a4a;
 }
 
 

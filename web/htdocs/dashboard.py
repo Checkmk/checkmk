@@ -50,7 +50,7 @@ screen_margin   = 5              # Distance from the left border of the main-fra
 dashlet_padding = 21, 5, 5, 0 # Margin (N, E, S, W) between outer border of dashlet and its content
 corner_overlap  = 22
 title_height    = 0             # Height of dashlet title-box
-raster          = 32, 32         # Raster the dashlet choords are measured in
+raster          = 10, 10        # Raster the dashlet choords are measured in
 
 # Load plugins in web/plugins/dashboard and declare permissions,
 # note: these operations produce language-specific results and
@@ -498,8 +498,8 @@ def dashlet_servicestats():
 
 
 def render_statistics(pie_id, what, table, filter):
-    pie_diameter = 130
-    pie_left_aspect = 0.4
+    pie_diameter     = 130
+    pie_left_aspect  = 0.5
     pie_right_aspect = 0.8
 
     # Is the query restricted to a certain WATO-path?

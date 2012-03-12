@@ -104,7 +104,7 @@ function resize_dashlets(id, code)
 
 function set_dashboard_size()
 {
-  var body_padding = 0;
+  var body_padding = 5;
   var width  = pageWidth();
   var height = pageHeight();
   width  = width - 2*screen_margin - 2*body_padding;

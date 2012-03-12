@@ -452,6 +452,19 @@ def dashlet_servicestats():
         "Stats: host_has_been_checked = 1\n" \
         "StatsAnd: 5\n"),
 
+       ( _("in downtime"), "#0af",
+        "searchsvc&is_in_downtime=1",
+        "Stats: scheduled_downtime_depth > 0\n" \
+        "Stats: host_scheduled_downtime_depth > 0\n" \
+        "StatsOr: 2\n"),
+
+       ( _("on down host"), "#048",
+        "searchsvc&hst1=on&hst2=on&hstp=on&is_in_downtime=0",
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
+        "Stats: host_state != 0\n" \
+        "StatsAnd: 3\n"),
+
        ( _("warning"), "#ff0",
         "searchsvc&hst0=on&st1=on&is_in_downtime=0",
         "Stats: state = 1\n" \
@@ -478,19 +491,6 @@ def dashlet_servicestats():
         "Stats: host_state = 0\n" \
         "Stats: host_has_been_checked = 1\n" \
         "StatsAnd: 5\n"),
-
-       ( _("in downtime"), "#0af",
-        "searchsvc&is_in_downtime=1",
-        "Stats: scheduled_downtime_depth > 0\n" \
-        "Stats: host_scheduled_downtime_depth > 0\n" \
-        "StatsOr: 2\n"),
-
-       ( _("on down host"), "#048",
-        "searchsvc&hst1=on&hst2=on&hstp=on&is_in_downtime=0",
-        "Stats: scheduled_downtime_depth = 0\n" \
-        "Stats: host_scheduled_downtime_depth = 0\n" \
-        "Stats: host_state != 0\n" \
-        "StatsAnd: 3\n"),
     ]
     filter = "Filter: host_custom_variable_names < _REALNAME\n"
 
@@ -498,6 +498,10 @@ def dashlet_servicestats():
 
 
 def render_statistics(pie_id, what, table, filter):
+    pie_diameter = 130
+    pie_left_aspect = 0.4
+    pie_right_aspect = 0.8
+
     # Is the query restricted to a certain WATO-path?
     wato_folder = html.var("wato_folder")
     if wato_folder:
@@ -512,10 +516,10 @@ def render_statistics(pie_id, what, table, filter):
     result = html.live.query_summed_stats(query)
     pies = zip(table, result)
     total = sum([x[1] for x in pies])
-    pie_diameter = 136
 
-    html.write('<canvas class=pie width=%d height=%d id=%s_stats style="float: left"></canvas>' %
+    html.write('<canvas class=pie width=%d height=%d id="%s_stats" style="float: left"></canvas>' %
             (pie_diameter, pie_diameter, pie_id))
+    html.write('<img src="images/globe.png" class="globe">')
 
     html.write('<table class="hoststats%s" style="float:left">' % (
         len(pies) > 5 and " narrow" or ""))
@@ -534,30 +538,49 @@ def render_statistics(pie_id, what, table, filter):
     r = 0.0
     pie_parts = []
     if total > 0:
-        for (name, color, viewurl, q), value in pies:
-            perc = 100.0 * value / total
-            pie_parts.append('chart_pie("%s", %f, %f, %r);' % (pie_id, r, r + perc, color))
-            r += perc
+        # Counter number of non-zero classes
+        num_nonzero = 0
+        for info, value in pies:
+            if value > 0:
+                num_nonzero += 1
+
+        # Each non-zero class gets at least a view pixels of visible thickness
+        separator = 0.05 # 5% of radius
+        rest_radius = 1 - num_nonzero * separator
+
+        # Make sure, that each class that is not zero has at least a certain
+        # amount so that it will be visible
+        totalpart = 1
+        # Loop over classes, begin with red (most inner ball)
+        sum_separator = num_nonzero * separator
+        for (name, color, viewurl, q), value in pies[::1]:
+            part = float(value) / total
+            if value > 0 and totalpart > 0:
+                radius = sum_separator + rest_radius * totalpart ** (1/3.0)
+                pie_parts.append('chart_pie("%s", %f, %f, %r);' % (pie_id, pie_right_aspect, radius, color))
+                pie_parts.append('chart_pie("%s", -%f, %f, %r);' % (pie_id, pie_left_aspect, radius, color))
+                totalpart -= part
+                sum_separator -= separator
+
 
     html.javascript("""
-function chart_pie(pie_id, from, to, color) {
+function chart_pie(pie_id, x_scale, radius, color) {
     var context = document.getElementById(pie_id + "_stats").getContext('2d');
     if (!context)
         return;
     var pie_x = %(x)f;
     var pie_y = %(y)f;
     var pie_d = %(d)f;
-    context.beginPath();
-    context.moveTo(pie_x, pie_y);
-    context.arc(pie_x, pie_y, pie_d / 2 - 2, rad(from), rad(to), false);
-    context.closePath();
     context.fillStyle = color;
-    context.shadowOffsetX = 5;
-    context.shadowOffsetY = 5;
-    context.shadowBlur = 10;
-    context.strokeStyle = "#ffffff";
+    context.save();
+    context.translate(pie_x, pie_y);
+    context.scale(x_scale, 1);
+    context.beginPath();
+    context.moveTo(0, 0);
+    context.arc(0, 0, (pie_d / 2) * radius, 1.5 * Math.PI, 0.5 * Math.PI, false);
+    context.closePath();
     context.fill();
-    context.stroke();
+    context.restore();
     context = null;
 }
 

@@ -139,6 +139,16 @@ table.dashlet_overview h2 {
 canvas.pie {
     margin-top: 10px;
     margin-left: 10px;
+    z-index: 20;
+}
+
+img.globe {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+img.globe {
+    z-index: 10;
 }
 
 div.dashlet table.hoststats {

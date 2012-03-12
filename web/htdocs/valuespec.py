@@ -563,6 +563,9 @@ class ListOf(ValueSpec):
     # numbering in labels, etc. possible). The current number
     # of entries is stored in the hidden variable 'varprefix'
     def render_input(self, varprefix, value):
+        if html.has_var(varprefix + "_count"): # already filled in, complain
+            value = self.from_html_vars(varprefix)
+
         html.write('<input type=hidden name="%s_count" value="%d" id="%s_count">\n' % 
             (varprefix, len(value), varprefix))
 

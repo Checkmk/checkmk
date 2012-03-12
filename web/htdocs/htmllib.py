@@ -174,9 +174,16 @@ class html:
         self.context_buttons_open = False
         self.mobile = False
         self.buffering = True
+        self.transformations = []
 
     def set_buffering(self, b):
         self.buffering = b
+
+    def push_transformation(self, tf):
+        self.transformations.append(tf)
+
+    def pop_transformation(self):
+        del self.transformations[-1]
 
     def plugin_stylesheets(self):
         global plugin_stylesheets
@@ -201,6 +208,9 @@ class html:
         self.link_target = framename
 
     def write(self, text):
+        for tf in self.transformations:
+            text = tf(text)
+
         if type(text) == unicode:
 	    text = text.encode("utf-8")
         if self.buffering:

@@ -563,9 +563,6 @@ class ListOf(ValueSpec):
     # numbering in labels, etc. possible). The current number
     # of entries is stored in the hidden variable 'varprefix'
     def render_input(self, varprefix, value):
-        if html.has_var(varprefix + "_count"): # already filled in, complain
-            value = self.from_html_vars(varprefix)
-
         html.write('<input type=hidden name="%s_count" value="%d" id="%s_count">\n' % 
             (varprefix, len(value), varprefix))
 
@@ -584,6 +581,12 @@ class ListOf(ValueSpec):
 
         # Actual table of currently existing entries
         html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
+        if html.has_var(varprefix + "_count"): # already filled in, complain
+            value = [None] * int(html.var(varprefix + "_count"))
+            # the underlying render_input-functions should ignore the
+            # value in this case themselves, so that the "None" should not
+            # harm here.
+
         for nr, v  in enumerate(value):
             html.push_transformation(lambda x: x.replace(self._magic, str(nr+1)))
             html.write('<tr><td class=vlof_buttons>')
@@ -1351,6 +1354,12 @@ class Tuple(ValueSpec):
         html.write('<table class="valuespec_tuple">')
         if not self._vertical:
             html.write("<tr>")
+
+        # If the form is already filled in and we are in complain mode,
+        # the value in value must be ignored
+        if html.form_filled_in():
+            value = (None,) * len(self._elements)
+
         for no, (element, val) in enumerate(zip(self._elements, value)):
             vp = varprefix + "_" + str(no)
             if element.help():

@@ -328,6 +328,49 @@ class EmailAddress(TextAscii):
     def value_to_text(self, value):
         return '<a href="mailto:%s">%s</a>' % (value, value)
 
+
+# Network as used in routing configuration, such as
+# "10.0.0.0/8" or "192.168.56.1"
+class IPv4Network(TextAscii):
+    def __init__(self, **kwargs):
+        kwargs.setdefault("size", 12)
+        TextAscii.__init__(self, **kwargs)
+
+    def validate_value(self, value, varprefix):
+        if "/" in value:
+            try:
+                network, bits = value.split("/")
+                bits = int(bits)
+            except:
+                raise MKUserError(varprefix, _("Please use the syntax X.X.X.X/YY"))
+        else:
+            network = value
+            bits = 32 
+
+        if bits < 0 or bits > 32:
+            raise MKUserError(varprefix, _("Invalid number of bits. Must be in range 1 ... 32"))
+
+        if value.count(".") != 3:
+            raise MKUserError(varprefix, _("The network must contain three dots"))
+        try:
+            octets = map(int, network.split("."))
+            if len(octets) != 4:
+                raise MKUserError(varprefix, _("Please specify four octets (X.X.X.X/YY)"))
+            for o in octets:
+                if o < 0 or o > 255:
+                    raise MKUserError(varprefix, _("Invalid octet %d (must be in range 1 ... 255)") % o)
+        except MKUserError:
+            raise
+        except:
+            raise MKUserError(varprefix, _("Please use the syntax X.X.X.X/YY"))
+
+        # Make sure that non-network bits are zero
+        l = (octets[0] << 24) + (octets[1] << 16) + (octets[2] << 8) + (octets[3])
+        for b in range(bits, 32):
+            if l & (2 ** (31-b)) != 0:
+                raise MKUserError(varprefix, _("Please make sure that only the %d non-network bits are non-zero") % bits)
+
+
 # Valuespec for a HTTP Url (not HTTPS), that
 # automatically adds http:// to the value
 class HTTPUrl(TextAscii):
@@ -538,7 +581,14 @@ class ListOf(ValueSpec):
 
         # Actual table of currently existing entries
         html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
+        if html.has_var(varprefix + "_count"): # already filled in, complain
+            value = [None] * int(html.var(varprefix + "_count"))
+            # the underlying render_input-functions should ignore the
+            # value in this case themselves, so that the "None" should not
+            # harm here.
+
         for nr, v  in enumerate(value):
+            html.push_transformation(lambda x: x.replace(self._magic, str(nr+1)))
             html.write('<tr><td class=vlof_buttons>')
             html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "") # reconstruct order after moving stuff
             self.del_button(varprefix, nr+1)
@@ -547,6 +597,7 @@ class ListOf(ValueSpec):
             html.write("</td><td class=vlof_content>")
             self._valuespec.render_input(varprefix + "_%d" % (nr+1), v)
             html.write("</td></tr>")
+            html.pop_transformation()
         html.write("</table>")
         html.write("<br>")
         html.jsbutton(varprefix + "_add", self._add_label,
@@ -1303,6 +1354,12 @@ class Tuple(ValueSpec):
         html.write('<table class="valuespec_tuple">')
         if not self._vertical:
             html.write("<tr>")
+
+        # If the form is already filled in and we are in complain mode,
+        # the value in value must be ignored
+        if html.form_filled_in():
+            value = (None,) * len(self._elements)
+
         for no, (element, val) in enumerate(zip(self._elements, value)):
             vp = varprefix + "_" + str(no)
             if element.help():

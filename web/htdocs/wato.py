@@ -4043,30 +4043,28 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             if attrname in without_attributes:
                 continue # e.g. needed to skip ipaddress in CSV-Import
 
-            # Skip hidden attributes
+            # Hide invisible attributes 
             hide_attribute = False
-            if not attr.show_in_form():
+            if for_what == "host" and not attr.show_in_form():
+                hide_attribute = True
+            elif (for_what == "folder" or for_what == "bulk") and not attr.show_in_folder():
                 hide_attribute = True
 
-            # In folder not all attributes are shown
-            if for_what == "folder" and not attr.show_in_folder():
-                continue
-
-            # Add host tag dependencies, but only in host mode. In other
-            # modes we always need to show all attributes.
-            if for_what == "host":
+            # Determine visibility information if this attribute is not always hidden
+            if not hide_attribute:
                 depends_on_tags = attr.depends_on_tags()
                 depends_on_roles = attr.depends_on_roles()
-                if depends_on_tags:
+                # Add host tag dependencies, but only in host mode. In other
+                # modes we always need to show all attributes.
+                if for_what == "host" and depends_on_tags:
                     dependency_mapping_tags[attrname] = depends_on_tags
+
                 if depends_on_roles:
                     dependency_mapping_roles[attrname] = depends_on_roles
 
                 if not depends_on_tags and not depends_on_roles:
                     # One attribute is always shown -> topic is always visible 
                     topic_is_volatile = False
-            else:
-                topic_is_volatile = False
 
             # "bulk": determine, if this attribute has the same setting for all hosts.
             values = []

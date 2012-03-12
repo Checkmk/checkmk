@@ -301,7 +301,10 @@ def automation_try_inventory_node(hostname):
             output = "WAITING - Legacy check, cannot be done offline"
             perfdata = []
 
-        checkgroup = check_info[ct]["group"]
+        if ct == "legacy":
+            checkgroup = None
+        else:
+            checkgroup = check_info[ct]["group"]
         table.append((state_type, ct, checkgroup, item, paramstring, params, descr, exitcode, output, perfdata))
 
     if not table and (tcp_error or snmp_error):

@@ -80,7 +80,7 @@ def inventory_printer_supply(info):
     # Also fix trailing zero bytes (seen on HP Jetdirect 143)
     return [ (line[0].rstrip('\0'), "printer_supply_default_levels")
              for line in printer_supply_fix_infos(info)
-             if not (line[1] == '-2' and line[2] == '-2') ] # ignore useless devices
+             if not (line[1] == '-2' and line[2] == '-2') and len(line[1]) > 0 ] # ignore useless devices
 
 def check_printer_supply(item, params, info):
     for line in printer_supply_fix_infos(info):

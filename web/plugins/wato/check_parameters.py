@@ -320,6 +320,28 @@ checkgroups.append((
 ))
 
 checkgroups.append((
+    "memory_pagefile_win",
+    _("Memory and pagefile levels for Windows"),
+    Dictionary(
+        elements = [
+            ( "memory",
+              Tuple(
+                  title = _("Memory levels"),
+                  elements = [
+                      Percentage(title = _("Warning at"),  label = _("% usage"), allow_int = True),
+                      Percentage(title = _("Critical at"), label = _("% usage"), allow_int = True)])),
+            ( "pagefile",
+              Tuple(
+                  title = _("Pagefile levels"),
+                  elements = [
+                      Percentage(title = _("Warning at"),  label = _("% usage"), allow_int = True),
+                      Percentage(title = _("Critical at"), label = _("% usage"), allow_int = True)])),
+        ]),
+    None,
+    "dict"
+))
+
+checkgroups.append((
     "tcp_conn_stats",
     ("TCP connection stats"),
     Dictionary(
@@ -544,7 +566,7 @@ checkgroups.append((
               Tuple(
                   title = _("Levels for error rates"),
                   help = _("This levels make the check go warning or critical whenever the "
-                           "<b>percentual error rate</b> of the monitored interface exceeds "
+                           "<b>percentual error rate</b> of the monitored interface reaches "
                            "the given bounds. The error rate is computed by dividing number of "
                            "errors by the total number of packets (successful plus errors)."),
                   elements = [

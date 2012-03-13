@@ -3821,6 +3821,40 @@ class ValueSpecAttribute(Attribute):
         self._valuespec.validate_value(value, self._name)
 
 
+# Attribute for selecting the name of an other host
+class HostSelectionAttribute(Attribute):
+    def __init__(self, name, title, help=None, hostfilter = lambda h: True): 
+        Attribute.__init__(self, name, title, help)
+        self._hostfilter = hostfilter
+
+    def paint(self, value, hostname):
+        return "", (value and value or "")
+
+    def render_input(self, value):
+        hosts = api.get_all_hosts().items()
+        hosts.sort()
+        selections = [("", _("-- not connected --"))] 
+        for n, h in hosts:
+            if self._hostfilter(h):
+                selections.append((n, n))
+        if len(selections) == 1:
+            html.write(_("There are no possible hosts."))
+        else:
+            html.select(self._name, selections, value)
+
+    def from_html_vars(self):
+        hostname = html.var(self._name).strip()
+        if not hostname:
+            return None
+        folder = find_host(hostname)
+        if not folder:
+            raise MKUserError(self._name, _("This host is not configured."))
+        host = api.get_host(folder, hostname)
+        if not self._hostfilter(host):
+            raise MKUserError(self._name, _("This host is not possible."))
+        return hostname and hostname or None
+
+
 # Attribute needed for folder permissions
 class ContactGroupsAttribute(Attribute):
     # The constructor stores name and title. If those are
@@ -4185,6 +4219,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 defvalue = values[0]
             else:
                 defvalue = attr.default_value()
+
             attr.render_input(defvalue)
             html.write("</div>")
 

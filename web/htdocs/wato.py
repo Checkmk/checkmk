@@ -3884,7 +3884,7 @@ class ContactGroupsAttribute(Attribute):
                 display_name = alias and alias or name
                 texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' % (name, display_name))
         result = ", ".join(texts)
-        if texts:
+        if texts and use:
             result += "<span title='%s'><b>*</b></span>" % \
                   _("These contact groups are also used in the monitoring configuration.")
         return "", result

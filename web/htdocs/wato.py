@@ -9015,7 +9015,7 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
         alias = tag_alias(tag)
         if alias:
             if negate:
-                html.write(_("Host is <b>" + _("not") + "</b> of type "))
+                html.write(_("Host is <b>not</b> of type "))
             else:
                 html.write(_("Host is of type "))
             html.write("<b>" + alias + "</b>")

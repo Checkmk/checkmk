@@ -1801,7 +1801,7 @@ def mode_edithost(phase, new, cluster):
                 call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
 
-            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(host, g_folder)
+            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(g_folder[".hosts"][hostname], g_folder)
             if errors: # keep on this page if host does not validate
                 return
             elif new:

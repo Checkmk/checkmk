@@ -28,6 +28,7 @@
 # Configuration variables in main.mk needed during the actual check
 logwatch_dir = var_dir + '/logwatch'
 logwatch_patterns = { }
+logwatch_rules = []
 logwatch_max_filesize = 500000 # do not save more than 500k of message (configurable)
 
 # Variables embedded in precompiled checks
@@ -76,8 +77,18 @@ def inventory_logwatch(info):
 # Extracts patterns that are relevant for the current host and item.
 # Constructs simple list of pairs: [ ('W', 'crash.exe'), ('C', 'sshd.*test') ]
 def logwatch_precompile(hostname, item, params):
-    patterns = logwatch_patterns.get(item)
+    # First load the logwatch_rules var (used by WATO)
+    description = check_info['logwatch']['service_description'] % item
+    rules = service_extra_conf(hostname, description, logwatch_rules)
+
+    # Initialize params with these rules but remove the comment
     params = []
+    for rule in rules:
+        for pattern in rule:
+            params.append((pattern[0], pattern[1]))
+
+    # Now load the old logwatch_patterns var
+    patterns = logwatch_patterns.get(item)
     if patterns:
         for entry in patterns:
             hostlist = None
@@ -277,10 +288,11 @@ def check_logwatch(item, params, info):
                 return (worst, state + " - error messages present!")
 
 
-check_info['logwatch'] = (
-    check_logwatch,
-    "LOG %s",
-    0,
-    inventory_logwatch)
+check_info['logwatch'] = {
+    'check_function':      check_logwatch,
+    'service_description': "LOG %s",
+    'has_perfdata':        0,
+    'inventory_function':  inventory_logwatch,
+}
 
 precompile_params['logwatch'] = logwatch_precompile

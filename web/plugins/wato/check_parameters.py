@@ -24,10 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#!/usr/bin/python
-# encoding: utf-8
-
-# Rules for configuring parameters of checks (services)                |
+# Rules for configuring parameters of checks (services)
 
 group = _("Parameters and rules for inventorized checks")
 
@@ -97,6 +94,43 @@ checkgroups.append((
     "first"
 ))
 
+register_rule(group,
+    "logwatch_rules",
+    ListOf(
+      Tuple(
+          help = _("This defines one logwatch pattern rule"),
+          show_titles = True,
+          orientation = "horizontal",
+          elements = [
+             DropdownChoice(
+               title = _("State"),
+               choices = [
+                   ('C', _('CRITICAL')),
+                   ('W', _('WARNING')),
+                   ('I', _('IGNORE')),
+               ],
+             ),
+             # FIXME: Own object type (optional hidden text field for regex validation)
+             TextAscii(
+                 title = _("Pattern"),
+                 size  = 20,
+                 #help = _("The regular expression to match the log lines."),
+             ),
+             TextAscii(
+                 title = _("Comment"),
+                 #help = _("You can insert a log line or a part of a log line to test the pattern stated left."),
+             ),
+          ]
+      ),
+      help = _('You can define one or several patterns in each logwatch pattern rule. '
+               'These patterns are applied to the selected logfiles to reclassify the '
+               'matching log messages. The first pattern which matches a line will '
+               'be used for reclassifying a message.'),
+      add_label = _("Add pattern"),
+    ),
+    title = _("Logwatch patterns"),
+    itemtype = "service",
+)
 
 checkgroups.append((
     "brocade_fcport",

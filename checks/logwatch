@@ -227,39 +227,92 @@ def check_logwatch(item, params, info):
         else:
             patterns = logwatch_precompile(g_hostname, item, None)
 
+        state = "OK"
+        worst = 0
+
+        def parse_line(line):
+            parts = line.split(None, 1)
+            level = parts[0]
+            if len(parts) > 1:
+                text = parts[1]
+            else:
+                text = ""
+            return level, text
+
+        def reclassify_line(counts, patterns, text, level):
+            if patterns:
+                newlevel = logwatch_reclassify(counts, patterns, text)
+                if newlevel != None:
+                    level = newlevel
+            return level
+
+        def logwatch_state(worst):
+            if worst == 1:
+                return "WARN"
+            elif worst != 0:
+                return "CRIT"
+            else:
+                return "OK"
+
+        def logwatch_level_worst(worst, level):
+            if   level == 'W': return max(worst, 1)
+            elif level == 'C': return max(worst, 2)
+            else: return worst
+
+        # Read old messages and reclassify
+        if had_old_messages:
+            # Scan old archive log messages for state. But also reclassify the lines
+            reclassified_lines = []
+            counts = {} # for counting number of matches of a certain pattern
+            block_header = None
+            block_worst = 0
+            block_lines = []
+
+            def finish_section(header, block_worst, block_lines):
+                start = header.split(' ')[0]
+                return [ start + ' %s>>>' % logwatch_state(block_worst) ] + block_lines
+
+            for line in file(logfile):
+                line = line.rstrip('\n')
+                if line.startswith('<<<') and line.endswith('>>>'):
+                    if block_header:
+                        # The last section is finished here. Save it!
+                        reclassified_lines += finish_section(block_header, block_worst, block_lines)
+                        worst = max(worst, block_worst)
+                        block_lines = []
+                        block_worst = 0
+                    block_header = line
+                    counts = {}
+                else:
+                    level, text = parse_line(line)
+                    level = reclassify_line(counts, patterns, text, level)
+                    block_worst = logwatch_level_worst(block_worst, level)
+                    block_lines.append(level + ' ' + text)
+            if block_header:
+                reclassified_lines += finish_section(block_header, block_worst, block_lines)
+                worst = max(worst, block_worst)
+            file(logfile, 'w').write('\n'.join(reclassified_lines))
+
+        #
+        # Now handle the new logs
+        #
         counts = {} # for counting number of matches of a certain pattern
         if len(loglines) > 0:
             worst = 0
             newloglines = []
             for line in loglines:
-                parts = line.split(None, 1)
-                level = parts[0]
-                if len(parts) > 1:
-                    text = parts[1]
-                else:
-                    text = ""
-                if patterns and level != '.': # do never reclassify informational context messages
-                    newlevel = logwatch_reclassify(counts, patterns, text)
-                    if newlevel != None:
-                        level = newlevel
+                level, text = parse_line(line)
+                level = reclassify_line(counts, patterns, text, level)
 
-                if   level == 'W': worst = max(worst, 1)
-                elif level == 'C': worst = max(worst, 2)
+                worst = logwatch_level_worst(worst, level)
                 newloglines.append(level + ' ' + text)
-
-            if worst == 1:
-                state = "WARN"
-            elif worst != 0:
-                state = "CRIT"
-            else:
-                state = "OK"
 
             # Append new logfile lines to archive file. If state is "OK, do not
             # write anything
             if worst > 0:
                 try:
                     logarch = file(logfile, "a+")
-                    logarch.write(time.strftime("<<<%Y-%m-%d %H:%M:%S " + state + ">>>\n"))
+                    logarch.write(time.strftime("<<<%Y-%m-%d %H:%M:%S " + logwatch_state(worst) + ">>>\n"))
                     logarch.write("\n".join(newloglines) + "\n")
                 except Exception, e:
                     raise MKGeneralException("User %s cannot create logfile: %s" % \
@@ -267,25 +320,22 @@ def check_logwatch(item, params, info):
             else:
                 logfiles = [] # appearently all logfiles reclassified to "I"
 
+        #
+        # Render output
+        #
+
+        state = logwatch_state(worst)
+
         # Determine current state by scanning logarch for status
         if not had_old_messages and len(loglines) == 0:
             return (0, "OK - no old or new error messages")
         elif not had_old_messages and len(loglines) > 0:
             return (worst, state + " - %d new messages!" % len(newloglines))
         else:
-            # had old messages. Scan old archive log messages for state
-            logarch = file(logfile)
-            state = "WARN"
-            worst = 1
-            for line in logarch:
-                if line.endswith("CRIT>>>\n"):
-                    state = "CRIT"
-                    worst = 2
-                    break
             if len(loglines) > 0:
                 return (worst, state + " - some old and %d new messages present!" % len(newloglines))
             else:
-                return (worst, state + " - error messages present!")
+                return (worst, state + " - messages present!")
 
 
 check_info['logwatch'] = {

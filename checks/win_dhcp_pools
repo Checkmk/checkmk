@@ -104,6 +104,10 @@ def check_win_dhcp_pools(item, params, info):
         used, free, pending = poolStats
         size = used + free + pending
 
+        # Catch unused pools
+        if size == 0:
+            return (3, "UNKNOWN - DHCP Pool contains no IP addresses")
+
         if free > 0:
             percFree = 100 - size / free
         else:

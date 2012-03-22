@@ -1210,7 +1210,10 @@ class Optional(ValueSpec):
         div_id = "option_" + varprefix
         checked = html.get_checkbox(varprefix + "_use")
         if checked == None:
-            checked = (value != None)
+            if self._negate:
+                checked = value == None
+            else:
+                checked = value != None
 
         html.write("<span>")
 
@@ -1233,8 +1236,12 @@ class Optional(ValueSpec):
         else:
             html.write("<br><br>")
         html.write("</span>")
-        html.write('<span id="%s" display: %s">' % (
-                div_id, checked == self._negate and "none" or ""))
+        if checked == self._negate:
+            display = "none"
+        else:
+            display = ""
+
+        html.write('<span id="%s" style="display: %s">' % (div_id, display))
         if value == None:
             value = self._valuespec.default_value()
         if self._valuespec.title():

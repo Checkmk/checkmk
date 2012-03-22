@@ -1208,10 +1208,10 @@ class Optional(ValueSpec):
 
     def render_input(self, varprefix, value):
         div_id = "option_" + varprefix
-        if html.has_var(varprefix + "_use"):
-            checked = html.get_checkbox(varprefix + "_use")
-        else:
-            checked = self._negate != (value != None)
+        checked = html.get_checkbox(varprefix + "_use")
+        if checked == None:
+            checked = (value != None)
+
         html.write("<span>")
 
         if self._label:

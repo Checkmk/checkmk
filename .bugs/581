@@ -1,0 +1,9 @@
+Title: windows dhcp check doesnt if its needed on a server
+Component: checks
+State: open
+Date: 2012-03-19 16:38:29
+Targetversion: 1.2.0
+Class: cleanup
+
+If would be nice if the windows agent plugin for dhcp pools checked if its run on an active dhcp server.
+then it would be unix-like so that the plugins autodetects applicable checks.

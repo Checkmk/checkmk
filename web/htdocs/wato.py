@@ -1801,7 +1801,7 @@ def mode_edithost(phase, new, cluster):
                 call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
 
-            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(host, g_folder)
+            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(g_folder[".hosts"][hostname], g_folder)
             if errors: # keep on this page if host does not validate
                 return
             elif new:
@@ -3884,7 +3884,7 @@ class ContactGroupsAttribute(Attribute):
                 display_name = alias and alias or name
                 texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' % (name, display_name))
         result = ", ".join(texts)
-        if texts:
+        if texts and use:
             result += "<span title='%s'><b>*</b></span>" % \
                   _("These contact groups are also used in the monitoring configuration.")
         return "", result
@@ -9015,7 +9015,7 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
         alias = tag_alias(tag)
         if alias:
             if negate:
-                html.write(_("Host is <b>" + _("not") + "</b> of type "))
+                html.write(_("Host is <b>not</b> of type "))
             else:
                 html.write(_("Host is of type "))
             html.write("<b>" + alias + "</b>")

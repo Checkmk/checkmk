@@ -96,8 +96,7 @@ function wato_fix_visibility() {
                 var oElement = oTr.childNodes[2].childNodes[0].childNodes[0];
                 if( oElement.type == 'checkbox' && oElement.checked ){ // <checkbox>
                     currentTags = currentTags.concat(oElement.getAttribute('tags').split("|"));
-                }
-                else{ // <select>
+                } else if(oElement.tagName == 'SELECT') { // <select>
                     currentTags = currentTags.concat(oElement.value.split("|"));
                 }
             }

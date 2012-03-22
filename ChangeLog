@@ -2,6 +2,9 @@
     WATO:
     * FIX: deletion of automation accounts now works
 
+    Multisite
+    * FIX: Fixed encoding problem in "custom notification" message
+
 1.2.0b1:
     Core, Setup, etc.:
     * new tool 'livedump' for dumping configuration and status

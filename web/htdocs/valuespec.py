@@ -687,6 +687,8 @@ class Checkbox(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._label = kwargs.get("label")
+        self._true_label = kwargs.get("true_label", _("on"))
+        self._false_label = kwargs.get("false_label", _("off"))
 
     def canonical_value(self):
         return False
@@ -695,7 +697,7 @@ class Checkbox(ValueSpec):
         html.checkbox(varprefix, value, label = self._label)
 
     def value_to_text(self, value):
-        return value and _("on") or _("off")
+        return value and self._true_label or self._false_label
 
     def from_html_vars(self, varprefix):
         if html.var(varprefix):

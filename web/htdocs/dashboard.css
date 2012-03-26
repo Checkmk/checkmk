@@ -153,8 +153,8 @@ img.globe {
 
 div.dashlet table.hoststats {
     margin-top: 10px;
-    margin-left: 5px;
-    width: 143px;
+    margin-left: 13px;
+    width: 135px;
     height: 142px;
     border-collapse: collapse;
     border-spacing: 0px;
@@ -176,8 +176,7 @@ div.dashlet table.hoststats td {
     text-align: right;
     padding-right: 4px;
     padding-left: 4px;
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+    background-color: #95bbcd;
 }
 
 div.dashlet table.hoststats th {
@@ -187,7 +186,7 @@ div.dashlet table.hoststats th {
 }
 div.dashlet table.hoststats td.color {
     padding: 0px;
-    width: 3px;
+    width: 4px;
 }
 div.dashlet table.hoststats th, table.hoststats td {
     padding-top: 3px;
@@ -199,6 +198,7 @@ div.dashlet table.hoststats th, table.hoststats td {
 }
 div.dashlet table.hoststats.narrow th, table.hoststats.narrow td {
     font-size: 8pt;
+    font-weight: normal;
 }
 
 div.dashlet_inner div.stats {

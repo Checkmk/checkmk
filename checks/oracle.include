@@ -24,35 +24,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<oracle_sessions>>>
-# pengt  15
-# hirni  22
 
-oracle_sessions_default_levels = (50, 100)
+# This function must be executed for each agent line which has been
+# found for the current item. It must deal with the ORA-* error
+# messages. It has to skip over the lines which show the SQL statement
+# and the SQL error message which comes before the ORA-* message.
+#
+# The check must completely skip the lines before the ORA-* messages
+# and return UNKNOWN on the first found ORA-* message.
+# line[0] is the item (db instance)
+#
+# This function returns a tuple when an ORA-* message has been found.
+# It returns False if this line should be skipped by the check.
+def oracle_handle_ora_errors(line):
+    if line[1] in [ 'select', '*', 'ERROR' ]:
+        return False
+    if line[1].startswith('ORA-'):
+        return (3, 'UNKNOWN - Found error in agent output "%s"' % ' '.join(line[1:]))
 
-def inventory_oracle_sessions(info):
-    return [ (line[0], "oracle_sessions_default_levels") for line in info if len(line) >= 2 ]
-
-def check_oracle_sessions(item, params, info):
-    for line in info:
-        if line[0] == item:
-            err = oracle_handle_ora_errors(line)
-            if err == False:
-                continue
-            elif isinstance(err, tuple):
-                return err
-
-            warn, crit = params
-            sessions = int(line[1])
-            infotext = " - %d active sessions (levels at %d/%d)" % (sessions, warn, crit)
-            perfdata = [("sessions", sessions, warn, crit)]
-            if sessions >= crit:
-                return (2, "CRIT" + infotext, perfdata)
-            elif sessions >= warn:
-                return (1, "WARN" + infotext, perfdata)
-            else:
-                return (0, "OK" + infotext, perfdata)
-    return (2, "UNKNOWN - Database not existing or not running")
-
-check_info['oracle_sessions'] = (check_oracle_sessions, "ORA %s Sessions", 1,  inventory_oracle_sessions )
-check_includes['oracle_sessions'] = [ "oracle.include" ]

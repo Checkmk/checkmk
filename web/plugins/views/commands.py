@@ -197,7 +197,7 @@ config.declare_permission("action.customnotification",
 
 def command_custom_notification(cmdtag, spec, row):
     if html.var("_customnotification"):
-        comment = html.var("_cusnot_comment")
+        comment = html.var_utf8("_cusnot_comment")
         broadcast = html.get_checkbox("_cusnot_broadcast") and 1 or 0
         forced = html.get_checkbox("_cusnot_forced") and 2 or 0
         command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % \

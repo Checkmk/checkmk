@@ -1801,7 +1801,7 @@ def mode_edithost(phase, new, cluster):
                 call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
 
-            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(host, g_folder)
+            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(g_folder[".hosts"][hostname], g_folder)
             if errors: # keep on this page if host does not validate
                 return
             elif new:
@@ -3821,6 +3821,40 @@ class ValueSpecAttribute(Attribute):
         self._valuespec.validate_value(value, self._name)
 
 
+# Attribute for selecting the name of an other host
+class HostSelectionAttribute(Attribute):
+    def __init__(self, name, title, help=None, hostfilter = lambda h: True): 
+        Attribute.__init__(self, name, title, help)
+        self._hostfilter = hostfilter
+
+    def paint(self, value, hostname):
+        return "", (value and value or "")
+
+    def render_input(self, value):
+        hosts = api.get_all_hosts().items()
+        hosts.sort()
+        selections = [("", _("-- not connected --"))] 
+        for n, h in hosts:
+            if self._hostfilter(h):
+                selections.append((n, n))
+        if len(selections) == 1:
+            html.write(_("There are no possible hosts."))
+        else:
+            html.select(self._name, selections, value)
+
+    def from_html_vars(self):
+        hostname = html.var(self._name).strip()
+        if not hostname:
+            return None
+        folder = find_host(hostname)
+        if not folder:
+            raise MKUserError(self._name, _("This host is not configured."))
+        host = api.get_host(folder, hostname)
+        if not self._hostfilter(host):
+            raise MKUserError(self._name, _("This host is not possible."))
+        return hostname and hostname or None
+
+
 # Attribute needed for folder permissions
 class ContactGroupsAttribute(Attribute):
     # The constructor stores name and title. If those are
@@ -3850,7 +3884,7 @@ class ContactGroupsAttribute(Attribute):
                 display_name = alias and alias or name
                 texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' % (name, display_name))
         result = ", ".join(texts)
-        if texts:
+        if texts and use:
             result += "<span title='%s'><b>*</b></span>" % \
                   _("These contact groups are also used in the monitoring configuration.")
         return "", result
@@ -4185,6 +4219,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 defvalue = values[0]
             else:
                 defvalue = attr.default_value()
+
             attr.render_input(defvalue)
             html.write("</div>")
 
@@ -6589,6 +6624,14 @@ def delete_distributed_wato_file():
 #   | Mode for managing users and contacts.                                |
 #   '----------------------------------------------------------------------'
 
+# Custom user attributes
+user_attributes = []
+user_attribute = {}
+
+def declare_user_attribute(name, vs):
+    user_attributes.append((name, vs))
+    user_attribute[name] = vs
+
 def mode_users(phase):
     if phase == "title":
         return _("Users & Contacts")
@@ -6869,6 +6912,11 @@ def mode_edit_user(phase):
             new_user[what + "_notification_options"] = "".join(
               [ opt for opt in opts if html.get_checkbox(what + "_" + opt) ])
 
+        # Custom attributes
+        for name, vs in user_attributes:
+            value = vs.from_html_vars('ua_' + name)
+            vs.validate_value(value, "ua_" + name)
+            new_user[name] = value
 
         # Saving
         save_users(users)
@@ -7058,6 +7106,14 @@ def mode_edit_user(phase):
 
     select_language(user.get('language', ''))
 
+    for name, vs in user_attributes:
+        html.write("<tr><td colspan=2 class=legend>%s" % vs.title())
+        if vs.help():
+            html.write("<br><i>%s</i>" % vs.help())
+        html.write("</td><td class=content>")
+        vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+        html.write("</td></tr>")
+
     # TODO: Later we could add custom macros here, which
     # then could be used for notifications. On the other hand,
     # if we implement some check_mk --notify, we could directly
@@ -7175,11 +7231,12 @@ def save_users(profiles):
     # TODO: delete var/check_mk/web/$USER of non-existing users. Do we
     # need to remove other references as well?
 
-    # Keys not to put into contact definitions for Check_MK
-    non_contact_keys = [ "roles", "notifications_enabled", "password", "locked", "automation_secret", "language" ] 
+    custom_values = [ name for (name, vs) in user_attributes ]
 
+    # Keys not to put into contact definitions for Check_MK
+    non_contact_keys = [ "roles", "notifications_enabled", "password", "locked", "automation_secret", "language" ] + custom_values
     # Keys to put into multisite configuration
-    multisite_keys   = [ "roles", "notifications_enabled", "locked", "automation_secret", "alias", "language", ]
+    multisite_keys   = [ "roles", "notifications_enabled", "locked", "automation_secret", "alias", "language", ] + custom_values
 
     # Remove multisite keys in contacts. And use only such entries
     # that have any contact groups assigned to.
@@ -8980,7 +9037,7 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
         alias = tag_alias(tag)
         if alias:
             if negate:
-                html.write(_("Host is <b>" + _("not") + "</b> of type "))
+                html.write(_("Host is <b>not</b> of type "))
             else:
                 html.write(_("Host is of type "))
             html.write("<b>" + alias + "</b>")
@@ -9689,7 +9746,6 @@ def page_user_profile():
     html.footer()
 
 #.
-#.
 #   .--Sampleconfig--------------------------------------------------------.
 #   |   ____                        _                       __ _           |
 #   |  / ___|  __ _ _ __ ___  _ __ | | ___  ___ ___  _ __  / _(_) __ _     |
@@ -10293,10 +10349,13 @@ def load_plugins():
     loaded_with_language = current_language
 
     # Reset global vars
-    global extra_buttons, configured_host_tags, host_attributes
+    global extra_buttons, configured_host_tags, host_attributes, user_attributes, \
+           user_attribute
     extra_buttons = []
     configured_host_tags = None
     host_attributes = []
+    user_attributes = []
+    user_attribute = {}
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))

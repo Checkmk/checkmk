@@ -335,6 +335,13 @@ def roles_of_user(user):
     else:
         return []
 
+def alias_of_user(user):
+    if user in multisite_users:
+        return multisite_users[user].get("alias", user)
+    else:
+        return user
+
+
 def base_roles_of(some_roles):
     base_roles = set([])
     for r in some_roles:

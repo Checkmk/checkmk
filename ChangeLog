@@ -3,6 +3,8 @@
     * FIX: deletion of automation accounts now works
 
     Multisite
+    * Added config option default_ts_format to configure default timestamp
+      output format in multisite
     * FIX: Fixed encoding problem in "custom notification" message
 
     Checks & Agents:

@@ -71,6 +71,11 @@ input, select, textarea {
     -moz-border-radius: 3px;
     border-radius: 3px;
     background-color: #fff;
+    font-family: arial, helvetica, sans-serif;
+}
+
+select {
+    padding: 1px 3px;
 }
 
 form {
@@ -115,29 +120,30 @@ a.button {
 
 /* Image submit button styling */
 label.image_button {
-    display: block;
-    margin: 0 auto;
+    display: inline-block;
+    margin: -5px -5px -0px 0; /* margin: 0 3px 0 0; */
     background: transparent url('images/image_button_l.png') no-repeat;
-    background-position: 0 -30px;
-    padding: 0 0 0 14px;
+    background-position: -5px -30px;
+    padding: 0 0 0 8px;
     height: 30px;
-    float: left;
     margin-right: 5px;
 }
 label.image_button:hover {
-    background-position: 0 -60px;
+    background-position: -5px -60px;
 }
 label.image_button:active {
-    background-position: 0 -90px;
+    background-position: -5px -90px;
 }
 label.image_button input {
     height: 30px;
     color: #fff;
     border: none;
-    padding-right: 10px;
+    padding-right: 11px;
+    padding-top: 5px;
     background: transparent url('images/image_button_r.png') no-repeat;
     background-position: right -30px;
     float: left;
+    font-size: 8pt;
 }
 label.image_button input:hover {
     background-position: right -60px;
@@ -266,23 +272,24 @@ table.debug_vars td {
 '-------------------------------------------------------------------------*/
 
 div.really {
-    background-color: #f88;
+    background-color: #fdc400;
     border-color: #800;
 }
 
 div.success {
-    background-color: #8f8;
+    background-color: #9dbecd;
     border-color: #080;
 }
 
 div.message {
-    background-color: #8cf;
+    background-color: #9dbecd;
     border-color: #048;
 }
 
 div.error {
-    background-color: #f84;
+    background-color: #e70000;
     border-color: #e40;
+    color: white;
 }
 
 div.warning {

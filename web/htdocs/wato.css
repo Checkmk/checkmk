@@ -52,12 +52,6 @@ Boston, MA 02110-1301 USA.
     background-color: #508aa1;
     background-color: #73a1b4;
 }
-.wato input[type=submit], .wato input[type=button], .wato select {
-    box-shadow: 0px 0px 1px #888888;
-}
-.wato input[type=submit]:hover, .wato input[type=button]:hover, .wato select:hover {
-    box-shadow: 0px 0px 1px white;
-}
 
 
 
@@ -66,7 +60,7 @@ Boston, MA 02110-1301 USA.
     -moz-border-radius: 4px 0px 0px 0px;
 }
 .wato table.data td {
-    border-style: dashed;
+    /* border-style: dashed; */
 }
 
 .wato table.data td.select {
@@ -87,15 +81,13 @@ Boston, MA 02110-1301 USA.
 }
 
 .wato table.form td {
-    border-style: dashed;
+    /* border-style: dashed; */
 }
 
 .wato table.form td.legend {
     width: 300px;
     padding-bottom: 8px;
     padding-left: 20px;
-    border-left-style: none;
-    border-right-style: none;
 }
 
 .wato table.form td.legend h3 {
@@ -105,7 +97,7 @@ Boston, MA 02110-1301 USA.
     font-weight: normal;
 }
 .wato table.form td.title {
-    border-style: none none dashed none;
+    border-style: none none solid none;
 }
 
 .wato table.form td.title i {
@@ -127,12 +119,6 @@ Boston, MA 02110-1301 USA.
     padding-top: 7px;
     padding-bottom: 7px;
     padding-right: 20px;
-    border-left-style: dashed;
-    border-right-style: none;
-}
-
-.wato table.form td.buttons {
-    border-style: solid none none none;
 }
 
 .wato table.form tr.top td,
@@ -153,8 +139,8 @@ Boston, MA 02110-1301 USA.
     vertical-align: top;
     text-align: right;
     border-width: 1px;
-    border-color: #fff;
-    border-style: dashed none dashed none;
+    border-style: solid none solid none;
+    border-color: #2f5f73;
 }
 
 .wato div.sitestatus {

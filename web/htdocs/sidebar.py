@@ -132,7 +132,7 @@ def sidebar_foot():
     if config.may("logout"):
         html.write('<li><a class=logout target="_top" href="logout.py" title="%s"></a></li>' % _('Logout'))
     html.write('</ul>')
-    html.write("<div class=copyright>%s</div>\n" % _("&copy; <a target=\"main\" href=\"http://mathias-kettner.de\">Mathias Kettner</a>"))
+    html.write("<div class=copyright>%s</div>\n" % _("&copy; <a target=\"_blank\" href=\"http://mathias-kettner.de\">Mathias Kettner</a>"))
     html.write('</div>')
 
 # Standalone sidebar

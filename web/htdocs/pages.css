@@ -395,16 +395,21 @@ table.form img.toggleheader.hover {
 
 /* Left side where title and help is printed */
 table.form td.legend, table.form td.title {
-    color: #274750;
-    border: 1px solid #fff;
+    color: #000;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #2f5f73;
     padding-top: 10px;
     padding-bottom: 10px;
+    border-right-style: none;
 }
 
 /* Bottom row with action buttons, right justified */
 table.form td.buttons {
     color: #274750;
-    border: 1px solid #fff;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #2f5f73;
     padding-top: 10px;
     text-align: right;
 }
@@ -431,10 +436,13 @@ table.form td.lgend.button {
 
 table.form td.content {
     padding-right: 2ex;
-    border: 1px solid #fff;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #2f5f73;
     border-left-style: none;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
 }
 
 td.legend, td.content {
@@ -473,7 +481,7 @@ input.date, input.time {
     font-family: monospace;
 }
 
-.inputerror input, .inputerror textarea, span.checkbox {
+.inputerror input, .inputerror textarea, .inputerror span.checkbox {
     background-color: #f84;
 }
 
@@ -503,11 +511,11 @@ span.checkbox {
 | Confirmation dialogs, success and error messages when performing actions |
 '-------------------------------------------------------------------------*/
 div.really, div.success, div.error, div.message, div.warning {
-    margin: 2em 2em 2em 2em;
+    margin: 2em 0em;
     -moz-border-radius: 1ex;
     padding: 1em 2em;
-    border-width: 2px;
-    border-style: solid;
+    /* border-width: 2px; 
+    border-style: solid;*/
 }
 
 div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 {
@@ -516,11 +524,5 @@ div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 {
      margin-bottom: 5px;
      color: #000;
      margin-left: 0px;
-}
-
-div.really input {
-    font-weight: bold;
-    margin-top: 1em;
-    padding: 0.5ex 2em;
 }
 

@@ -134,8 +134,8 @@ label {
 
 #button_text {
     position: absolute;
-    top: 351px;
-    left: 505px;
+    top: 356px;
+    left: 513px;
     text-align: center;
     width: 61px;
     color: white;
@@ -147,7 +147,7 @@ label {
 #login_error {
     position: absolute;
     top: 347px;
-    left: 285px;
+    left: 320px;
     width: 180px;
     height: 30px;
     z-index: 100;
@@ -163,6 +163,7 @@ label {
     background-color: transparent;
     margin: 0px;
     padding: 8px 0px 0px 0px;
+    color: black;
 }
 
 #foot {

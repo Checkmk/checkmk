@@ -498,6 +498,7 @@ def dashlet_servicestats():
 
 
 def render_statistics(pie_id, what, table, filter):
+    html.write("<div class=stats>")
     pie_diameter     = 130
     pie_left_aspect  = 0.5
     pie_right_aspect = 0.8
@@ -522,8 +523,12 @@ def render_statistics(pie_id, what, table, filter):
     html.write('<img src="images/globe.png" class="globe">')
 
     html.write('<table class="hoststats%s" style="float:left">' % (
-        len(pies) > 5 and " narrow" or ""))
-    for (name, color, viewurl, query), count in pies + [ ((_("Total"), "", "all%s" % what, ""), total) ]:
+        len(pies) > 1 and " narrow" or ""))
+    table_entries = pies
+    while len(table_entries) < 6:
+        table_entries = table_entries + [ (("", "fff", "", ""), "&nbsp;") ]
+    table_entries.append(((_("Total"), "", "all%s" % what, ""), total))
+    for (name, color, viewurl, query), count in table_entries:
         url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder=" \
               + htmllib.urlencode(html.var("wato_folder", ""))
         html.write('<tr><th><a href="%s">%s</a></th>' % (url, name))
@@ -531,7 +536,7 @@ def render_statistics(pie_id, what, table, filter):
         if color:
             style = ' style="background-color: %s"' % color
         html.write('<td class=color%s>'
-                   '</td><td><a href="%s">%d</a></td></tr>' % (style, url, count))
+                   '</td><td><a href="%s">%s</a></td></tr>' % (style, url, count))
 
     html.write("</table>")
 
@@ -563,6 +568,7 @@ def render_statistics(pie_id, what, table, filter):
                 sum_separator -= separator
 
 
+    html.write("</div>")
     html.javascript("""
 function chart_pie(pie_id, x_scale, radius, color) {
     var context = document.getElementById(pie_id + "_stats").getContext('2d');

@@ -137,14 +137,14 @@ table.dashlet_overview h2 {
 
 /* Styles for various builtin dashlets */
 canvas.pie {
-    margin-top: 10px;
+    margin-top: 5px;
     margin-left: 10px;
     z-index: 20;
 }
 
 img.globe {
     position: absolute;
-    top: 10px;
+    top: 5px;
     left: 10px;
 }
 img.globe {
@@ -155,12 +155,12 @@ div.dashlet table.hoststats {
     margin-top: 10px;
     margin-left: 5px;
     width: 143px;
-    height: 136px;
+    height: 142px;
     border-collapse: collapse;
     border-spacing: 0px;
 }
 div.dashlet table.hoststats.narrow {
-    margin-top: 4px;
+    margin-top: 6px;
 }
 
 div.dashlet table.hoststats a {
@@ -186,18 +186,28 @@ div.dashlet table.hoststats th {
     padding-left: 4px;
 }
 div.dashlet table.hoststats td.color {
-    padding: 2px;
+    padding: 0px;
+    width: 3px;
 }
 div.dashlet table.hoststats th, table.hoststats td {
     padding-top: 3px;
     padding-bottom: 3px;
-    border-color: #fff;
+    border-color: #498aa6;
     border-style: solid none;
     border-width: 1px;
     vertical-align: middle;
 }
 div.dashlet table.hoststats.narrow th, table.hoststats.narrow td {
     font-size: 8pt;
+}
+
+div.dashlet_inner div.stats {
+    background-color: #6da1b8;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    padding: 0px;
+    margin: 0px;
 }
 
 div.dashlet div.nograph {
@@ -209,5 +219,4 @@ div.dashlet div.nograph {
 div.dashlet div.nograph div.msg {
     padding: 10px;
 }
-
 

@@ -831,6 +831,7 @@ def mode_folder(phase):
         # Move single hosts to other folders
         if html.has_var("_move_host_to"):
             config.need_permission("wato.edit_hosts")
+            config.need_permission("wato.move_hosts")
             hostname = html.var("host")
             check_folder_permissions(g_folder, "write")
             if hostname:
@@ -858,6 +859,7 @@ def mode_folder(phase):
         # Move
         elif html.var("_bulk_move"):
             config.need_permission("wato.edit_hosts")
+            config.need_permission("wato.move_hosts")
             target_folder_name = html.var("bulk_moveto")
             if target_folder_name == "@":
                 raise MKUserError("bulk_moveto", _("Please select the destination folder"))
@@ -868,6 +870,7 @@ def mode_folder(phase):
         # Move to target folder (from import)
         elif html.var("_bulk_movetotarget"):
             config.need_permission("wato.edit_hosts")
+            config.need_permission("wato.move_hosts")
             return move_to_imported_folders(selected_hosts)
 
         elif html.var("_bulk_edit"):
@@ -1129,7 +1132,7 @@ def show_hosts(folder):
     hostnames.sort()
 
     # Show table of hosts in this folder
-    colspan = 6
+    colspan = 5
     html.begin_form("hosts", None, "POST", onsubmit = 'add_row_selections(this);')
     html.write("<table class=data>\n")
     html.write("<tr><th class=left></th><th></th><th>"
@@ -1142,7 +1145,9 @@ def show_hosts(folder):
             html.write("<th>%s</th>" % attr.title())
             colspan += 1
 
-    html.write("<th class=right>" + _("Move To") + "</th>")
+    if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+        html.write("<th class=right>" + _("Move To") + "</th>")
+        colspan += 1
     html.write("</tr>\n")
     odd = "odd"
 
@@ -1159,7 +1164,7 @@ def show_hosts(folder):
             html.button("_bulk_cleanup", _("Cleanup"))
         if config.may("wato.services"):
             html.button("_bulk_inventory", _("Inventory"))
-        if config.may("wato.edit_hosts"):
+        if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
             move_to_folder_combo("host", None, top)
             if at_least_one_imported:
                 html.button("_bulk_movetotarget", _("Move to Target Folders"))
@@ -1273,10 +1278,10 @@ def show_hosts(folder):
                 html.write("</td>\n")
 
         # Move to
-        html.write("<td>")
-        if config.may("wato.edit_hosts"):
+        if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+            html.write("<td>")
             move_to_folder_combo("host", hostname)
-        html.write("</td>\n")
+            html.write("</td>\n")
         html.write("</tr>\n")
 
     if config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
@@ -10412,10 +10417,16 @@ def load_plugins():
            "a separate permission (see below)"),
          [ "admin", "user" ])
 
+    config.declare_permission("wato.move_hosts",
+         _("Move existing hosts"),
+         _("Move existing hosts to other folders. Please also add the permission "
+           "<i>Modify existing hosts</i>."),
+         [ "admin", "user" ])
+
     config.declare_permission("wato.manage_hosts",
          _("Add & remove hosts"),
          _("Add hosts to the monitoring and remove hosts "
-           "from the monitoring. Please also add the permissions "
+           "from the monitoring. Please also add the permission "
            "<i>Modify existing hosts</i>."),
          [ "admin", "user" ])
 

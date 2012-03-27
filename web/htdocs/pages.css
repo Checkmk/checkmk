@@ -399,8 +399,8 @@ table.form td.legend, table.form td.title {
     border-width: 1px;
     border-style: solid;
     border-color: #2f5f73;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
     border-right-style: none;
 }
 

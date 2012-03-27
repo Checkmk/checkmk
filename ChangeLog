@@ -4,6 +4,8 @@
 
     Multisite
     * Layout and design update
+    * Quicksearch: display site name if more than one different site
+      is present in the current search result list
     * FIX: Fixed encoding problem in "custom notification" message
 
     Checks & Agents:

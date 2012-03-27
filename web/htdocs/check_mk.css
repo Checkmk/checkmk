@@ -121,29 +121,32 @@ a.button {
 /* Image submit button styling */
 label.image_button {
     display: inline-block;
-    margin: -5px -5px -0px 0; /* margin: 0 3px 0 0; */
+    margin: -5px 4px 0 0; /* margin: 0 3px 0 0; */
     background: transparent url('images/image_button_l.png') no-repeat;
-    background-position: -5px -30px;
+    background-position: 0px -30px;
     padding: 0 0 0 8px;
     height: 30px;
     margin-right: 5px;
 }
 label.image_button:hover {
-    background-position: -5px -60px;
+    background-position: -0px -60px;
 }
 label.image_button:active {
-    background-position: -5px -90px;
+    background-position: -0px -90px;
 }
 label.image_button input {
     height: 30px;
     color: #fff;
     border: none;
-    padding-right: 11px;
+    padding-left: 0px;
+    padding-right: 10px;
     padding-top: 5px;
+    padding-bottom: 0px;
     background: transparent url('images/image_button_r.png') no-repeat;
     background-position: right -30px;
     float: left;
     font-size: 8pt;
+    margin-left: 3px;
 }
 label.image_button input:hover {
     background-position: right -60px;

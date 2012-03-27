@@ -183,7 +183,7 @@ clean:
 	find -name "*~" | xargs rm -f
 
 mrproper:
-	git clean -xfd
+	git clean -xfd -e .bugs
 
 check:
 	@set -e ; for checkfile in *.HS ; do \

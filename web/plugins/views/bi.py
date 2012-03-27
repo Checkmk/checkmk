@@ -117,10 +117,10 @@ multisite_painters["aggr_output"] = {
     "paint"   : lambda row: ("", row["aggr_output"])
 }
 
-def paint_aggr_hosts(row):
+def paint_aggr_hosts(row, link_to_view):
     h = []
     for site, host in row["aggr_hosts"]:
-        url = html.makeuri([("view_name", "aggr_host"), ("site", site), ("host", host)])
+        url = html.makeuri([("view_name", link_to_view), ("site", site), ("host", host)])
         h.append('<a href="%s">%s</a>' % (url, host))
     return "", " ".join(h)
 
@@ -128,9 +128,15 @@ multisite_painters["aggr_hosts"] = {
     "title"   : _("Aggregation: affected hosts"),
     "short"   : _("Hosts"),
     "columns" : [ "aggr_hosts" ],
-    "paint"   : paint_aggr_hosts,
+    "paint"   : lambda row: paint_aggr_hosts(row, "aggr_host"),
 }
 
+multisite_painters["aggr_hosts_services"] = {
+    "title"   : _("Aggregation: affected hosts (link to host page)"),
+    "short"   : _("Hosts"),
+    "columns" : [ "aggr_hosts" ],
+    "paint"   : lambda row: paint_aggr_hosts(row, "host"),
+}
 
 multisite_painter_options["aggr_expand"] = {
  "title"   : _("Initial expansion of aggregations"),

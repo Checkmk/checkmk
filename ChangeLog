@@ -3,6 +3,7 @@
     * FIX: deletion of automation accounts now works
 
     Multisite
+    * Layout and design update
     * FIX: Fixed encoding problem in "custom notification" message
 
     Checks & Agents:

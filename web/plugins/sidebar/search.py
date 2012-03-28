@@ -67,6 +67,7 @@ def render_searchform():
     try:
         import json
         data = html.live.query("GET hosts\nColumns: name\n")
+        html.debug(data)
         html.write("aSearchHosts = %s;\n" % json.dumps(data))
         data = sort_data(html.live.query("GET hostgroups\nColumns: name\n"))
         html.write("aSearchHostgroups = %s;\n" % json.dumps(data))
@@ -122,7 +123,7 @@ sidebar_snapins["search"] = {
     background-color: #DFDFDF;
     color: #000;
     font-size: 80%%;
-    width:140px;
+    width: 223px;
 }
 
 #mk_search_results a {
@@ -131,7 +132,7 @@ sidebar_snapins["search"] = {
     text-decoration: none;
     text-align: left;
     padding-left: 5px;
-    width: 135px;
+    width: 217px;
 }
 
 #mk_search_results a:hover, #mk_search_results a.active {

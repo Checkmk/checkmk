@@ -225,34 +225,35 @@ def normal_login_page():
         origtarget = html.makeuri([])
 
     html.write("<div id=login>")
-    html.write("<div id=logo></div>")
-    html.write("<h1>%s</h2>" % _("Check_MK Multisite"))
-    html.write('<div id=form>')
-
-    if html.has_user_errors():
-        html.show_user_errors()
+    html.write("<img id=login_window src=\"images/login_window.png\">")
+    html.write("<div id=version>%s</div>" % defaults.check_mk_version)
 
     html.begin_form("login", method = 'POST', add_transid = False)
+    html.hidden_field('_login', '1')
     html.hidden_field('_origtarget', htmllib.attrencode(origtarget))
-    html.write('<p>')
-    html.write("<label class=legend for=_username>%s</label><br />" % _('Username'))
-    html.text_input("_username", size = 50)
-    html.write('</p>')
+    html.write("<label id=label_user class=legend for=_username>%s:</label><br />" % _('Username'))
+    html.text_input("_username", size = 50, id="input_user")
+    html.write("<label id=label_pass class=legend for=_password>%s:</label><br />" % _('Password'))
+    html.password_input("_password", size = 50, id="input_pass")
 
-    html.write('<p>')
-    html.write("<label class=legend for=_password>%s</label><br />" % _('Password'))
-    html.password_input("_password", size = 50)
-    html.write('</p>')
+    if html.has_user_errors():
+        html.write('<div id=login_error>')
+        html.show_user_errors()
+        html.write('</div>')
 
-    html.write('<p class=submit>')
-    html.button("_login", _('Login'))
-    html.write('</p>')
-    html.write('</div>')
+    html.write("<div id=button_text>")
+    html.image_button("_login", _('Login'))
+    html.write("</div>")
 
     html.write("<div id=foot>Version: %s - &copy; "
-               "<a href=\"http://mathias-kettner.de\">Mathias Kettner</a></div>" % defaults.check_mk_version)
+               "<a href=\"http://mathias-kettner.de\">Mathias Kettner</a><br><br>" % defaults.check_mk_version)
+    html.write(_("You can use, modify and distribute Check_MK under the terms of the <a href='%s'>"
+                 "GNU GPL Version 2</a>." % "http://mathias-kettner.de/gpl.html"))
+    html.write("</div>")
+
     html.write("</div>")
     html.set_focus('_username')
+    html.hidden_fields()
     html.end_form()
 
     html.footer()

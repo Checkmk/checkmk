@@ -1861,10 +1861,10 @@ def mode_edithost(phase, new, cluster):
         configure_attributes({hostname: host}, "host", parent = g_folder)
 
         html.write('<tr><td class="buttons" colspan=3>')
-        html.button("services", _("Save &amp; go to Services"), "submit")
-        html.button("save", _("Save &amp; Finish"), "submit")
+        html.image_button("services", _("Save &amp; go to Services"), "submit")
+        html.image_button("save", _("Save &amp; Finish"), "submit")
         if not new:
-            html.button("delete", _("Delete host!"), "submit")
+            html.image_button("delete", _("Delete host!"), "submit")
         html.write("</td></tr>\n")
         html.write("</table>\n")
         html.hidden_fields()

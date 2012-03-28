@@ -320,9 +320,20 @@ class html:
     def makeuri_contextless(self, vars):
         return self.req.myfile + ".py?" + urlencode_vars(vars)
 
-    def button(self, varname, title, cssclass=""):
-        self.write("<input type=submit name=\"%s\" id=\"%s\" value=\"%s\" class=\"%s\">\n" % \
+    def image_button(self, varname, title, cssclass = ''):
+        self.write('<label for="%s" class=image_button>' % varname)
+        self.raw_button(varname, title, cssclass)
+        self.write('</label>')
+
+    def button(self, *args):
+        self.image_button(*args)
+
+    def raw_button(self, varname, title, cssclass=""):
+        self.write("<input onfocus=\"if (this.blur) this.blur();\" "
+                   "type=submit name=\"%s\" id=\"%s\" value=\"%s\" "
+                   "class=\"%s\">\n" % \
                    ( varname, varname, title, cssclass))
+
 
     def buttonlink(self, href, text, add_transid=False, obj_id='', style='', title='', disabled=''):
         if add_transid:
@@ -347,20 +358,23 @@ class html:
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png">')
 
-    def icon_button(self, url, help, icon, onclick=None, style=""):
+    def icon_button(self, url, help, icon, id="", onclick="", style=""):
+        if id:
+            id = "id='%s' " % id
+
         if onclick:
-            onclick = " onclick=\"%s\"" % onclick
+            onclick = 'onclick="%s" ' % onclick
             url = "#"
 
         if style:
-            style = ' style="%s"' % style
+            style = 'style="%s" ' % style
 
-        self.write('<a href="%s"%s%s>'
+        self.write('<a %s%s%sonfocus="if (this.blur) this.blur();" href="%s">'
                    '<img align=absmiddle class=iconbutton title="%s" '
                    'src="images/button_%s_lo.png" '
                    'onmouseover=\"hilite_icon(this, 1)\" '
                    'onmouseout=\"hilite_icon(this, 0)\">'
-                   '</a>' % (url, onclick, style, help, icon))
+                   '</a>' % (id, onclick, style, url, help, icon))
 
     def empty_icon_button(self):
         self.write('<img class="iconbutton trans" src="images/trans.png">')

@@ -72,6 +72,7 @@ input, select, textarea {
     border-radius: 3px;
     background-color: #fff;
     font-family: arial, helvetica, sans-serif;
+    vertical-align: middle;
 }
 
 select {
@@ -129,7 +130,7 @@ label.image_button {
     padding: 0 0 0 8px;
     height: 22px;
     margin-right: 5px;
-    
+    vertical-align: middle;
 }
 label.image_button:hover {
     background-position: -0px -65px;

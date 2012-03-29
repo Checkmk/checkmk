@@ -1,4 +1,7 @@
 1.2.0b2:
+    Core:
+    * FIX: Cluster host checks were UNKNOWN all the time
+
     WATO:
     * Added new permission "move hosts" to allow/deny moving of hosts in WATO
     * Also write out contact definitions for users without contactgroups to
@@ -21,6 +24,7 @@
     * FIX: Oracle checks try to handle ORA-* errors reported by the agent
       All oracle checks will return UNKNOWN when finding an ORA-* message
     * FIX: filesystem levels set via WATO didn't work, but do now
+    * FIX: Group filters can handle groups without aliases now
 
 1.2.0b1:
     Core, Setup, etc.:

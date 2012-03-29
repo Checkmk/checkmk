@@ -71,7 +71,7 @@ declare_filter(100, FilterText("servicegroupname", _("Servicegroup"),   "service
 declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "~~"),
                           _("Search field allowing regular expression and partial matches"))
 
-declare_filter(202, FilterText("output",  _("Service check output"), "service", "service_plugin_output", "service_output", "~~"))
+declare_filter(202, FilterText("output",  _("Status detail"), "service", "service_plugin_output", "service_output", "~~"))
 
 
 
@@ -80,7 +80,8 @@ def all_groups(what):
     groups = dict(html.live.query("GET %sgroups\nColumns: name alias\n" % what))
     names = groups.keys()
     names.sort()
-    return [ (name, groups[name]) for name in names ]
+    # use alias by default but fallback to name if no alias defined
+    return [ (name, groups[name] or name) for name in names ]
 
 class FilterGroupCombo(Filter):
     def __init__(self, what, title, enforce):

@@ -236,7 +236,6 @@ sidebar_snapins['wato_foldertree'] = {
     background-color: #6da1b8;
 }
 #snapin_wato_foldertree span {
-    text-align: middle;
     margin-top: 1px;
     display: block;
     color:  #ffffff;

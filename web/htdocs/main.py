@@ -24,16 +24,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config
+import defaults, config
 
 def page_index():
     start_url = html.var("start_url", config.start_url)
     html.req.headers_out.add("Cache-Control", "max-age=7200, public");
+    if "%s" in config.page_heading:
+        heading = config.page_heading % (defaults.omd_site or "Multisite")
+    else:
+        heading = config.page_heading
+
     html.write("""
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">
 <html>
 <head>
- <title>Check_MK Multisite</title>
+ <title>%s</title>
  <link rel="shortcut icon" href="images/favicon.ico" type="image/ico">
 </head>
 <frameset cols="280,*" frameborder="0" framespacing="0" border="0">
@@ -41,7 +46,7 @@ def page_index():
     <frame src="%s" name="main" noresize>
 </frameset>
 </html>
-""" % start_url)
+""" % (heading, start_url))
 
 def page_main():
     html.header("Check_MK Multisite")

@@ -577,6 +577,9 @@ custom_style_sheet = None
 # URL for start page in main frame (welcome page)
 start_url = "dashboard.py"
 
+# Page heading for main frame set
+page_heading = "Check_MK %s" 
+
 # Timeout for rescheduling of host- and servicechecks
 reschedule_timeout = 10.0
 

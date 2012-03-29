@@ -12,6 +12,7 @@
     * FIX: Fixed filtering of Single-Host Aggregations
     * New sorter for aggregation group
     * FIX: fix sorting of Single-Host Aggregations after group
+    * Avoid duplicate rule incarnations when using FOREACH_*
 
     Checks & Agents:
     * FIX: snmp_uptime handles empty snmp information without exception

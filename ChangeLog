@@ -8,6 +8,11 @@
       is present in the current search result list
     * FIX: Fixed encoding problem in "custom notification" message
 
+    BI
+    * FIX: Fixed filtering of Single-Host Aggregations
+    * New sorter for aggregation group
+    * FIX: fix sorting of Single-Host Aggregations after group
+
     Checks & Agents:
     * FIX: snmp_uptime handles empty snmp information without exception
     * FIX: Oracle checks try to handle ORA-* errors reported by the agent

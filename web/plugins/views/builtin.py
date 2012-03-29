@@ -2108,7 +2108,7 @@ multisite_builtin_views.update({
                'hard_filters': ['summary_host'],
                'hard_filtervars': [('is_host_scheduled_downtime_depth', '-1'),
                                    ('aggr_name', ''),
-                                   ('aggr_group', 'Hosts'),
+                                   ('aggr_group', ''),
                                    ('birs0', 'on'),
                                    ('birs1', 'on'),
                                    ('birs2', 'on'),
@@ -2161,7 +2161,7 @@ multisite_builtin_views.update({
                                 'hostregex',
                                 'opthostgroup',
                                 'aggr_effective_state'],
-               'sorters': [('site_host', False)],
+               'sorters': [('aggr_group', False), ('site_host', False)],
                'title': _('Single-Host Aggregations'),
                'topic': _('Business Intelligence')},
 

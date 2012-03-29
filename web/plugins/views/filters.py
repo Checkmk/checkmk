@@ -71,7 +71,7 @@ declare_filter(100, FilterText("servicegroupname", _("Servicegroup"),   "service
 declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "~~"),
                           _("Search field allowing regular expression and partial matches"))
 
-declare_filter(202, FilterText("output",  _("Service check output"), "service", "service_plugin_output", "service_output", "~~"))
+declare_filter(202, FilterText("output",  _("Status detail"), "service", "service_plugin_output", "service_output", "~~"))
 
 
 

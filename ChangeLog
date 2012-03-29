@@ -9,6 +9,7 @@
     * FIX: Fixed encoding problem in "custom notification" message
     * New configuration parameter page_heading for the HTML page heads
       of the main frameset (%s will be replaced with OMD site name)
+    * FIX: Fix problem where snapins where invisible
 
     BI
     * FIX: Fixed filtering of Single-Host Aggregations

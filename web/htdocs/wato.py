@@ -7239,9 +7239,22 @@ def save_users(profiles):
     custom_values = [ name for (name, vs) in user_attributes ]
 
     # Keys not to put into contact definitions for Check_MK
-    non_contact_keys = [ "roles", "notifications_enabled", "password", "locked", "automation_secret", "language" ] + custom_values
+    non_contact_keys = [
+        "roles",
+        "password",
+        "locked",
+        "automation_secret",
+        "language",
+    ] + custom_values
+
     # Keys to put into multisite configuration
-    multisite_keys   = [ "roles", "notifications_enabled", "locked", "automation_secret", "alias", "language", ] + custom_values
+    multisite_keys   = [
+        "roles",
+        "locked",
+        "automation_secret",
+        "alias",
+        "language",
+    ] + custom_values
 
     # Remove multisite keys in contacts.
     contacts = dict(

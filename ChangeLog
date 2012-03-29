@@ -4,6 +4,7 @@
     * Also write out contact definitions for users without contactgroups to
       have the mail addresses and other notification options persisted
     * FIX: deletion of automation accounts now works
+    * FIX: Disabling notifications for users does work now
 
     Multisite
     * Added config option default_ts_format to configure default timestamp

@@ -67,7 +67,6 @@ def render_searchform():
     try:
         import json
         data = html.live.query("GET hosts\nColumns: name\n")
-        html.debug(data)
         html.write("aSearchHosts = %s;\n" % json.dumps(data))
         data = sort_data(html.live.query("GET hostgroups\nColumns: name\n"))
         html.write("aSearchHostgroups = %s;\n" % json.dumps(data))

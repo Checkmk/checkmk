@@ -2529,7 +2529,7 @@ multisite_builtin_views.update({
                            ],
                'play_sounds': False,
                'public': True,
-               'show_filters': [],
+               'show_filters': ['aggr_group', 'hostregex' ],
                'sorters': [('site', False), ('site_host', False)],
                'title': _('Hostgroup with BI state'),
                'topic': _('hidden')},

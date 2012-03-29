@@ -2042,7 +2042,7 @@ multisite_builtin_views.update({
                              'aggr_output',
                              'aggr_assumed_state',
                              'aggr_effective_state'],
-            'sorters': [],
+            'sorters': [ ('aggr_group', False), ('aggr_name', False) ],
             'title': _('All Aggregations'),
             'topic': _('Business Intelligence')},
 
@@ -2095,7 +2095,7 @@ multisite_builtin_views.update({
                              'aggr_output',
                              'aggr_assumed_state',
                              'aggr_effective_state'],
-            'sorters': [],
+            'sorters': [ ('aggr_name', False) ],
             'title': _('Aggregation group'),
             'topic': _('Business Intelligence')},
 
@@ -2189,7 +2189,7 @@ multisite_builtin_views.update({
               'play_sounds': False,
               'public': True,
               'show_filters': [],
-              'sorters': [],
+              'sorters': [ ('aggr_name', False) ],
               'title': _('Single-Host Aggregations of Host'),
               'topic': _('Other')},
 
@@ -2239,7 +2239,7 @@ multisite_builtin_views.update({
                              'aggr_output',
                              'aggr_assumed_state',
                              'aggr_effective_state'],
-            'sorters': [],
+            'sorters': [ ('aggr_name', False) ],
             'title': _('Aggregations Affected by Host'),
             'topic': _('Business Intelligence')},
 
@@ -2289,7 +2289,7 @@ multisite_builtin_views.update({
                              'aggr_output',
                              'aggr_assumed_state',
                              'aggr_effective_state'],
-            'sorters': [],
+            'sorters': [ ('aggr_name', False) ],
             'title': _('Aggregations Affected by Service'),
             'topic': _('Business Intelligence')},
 
@@ -2342,7 +2342,7 @@ multisite_builtin_views.update({
                              'aggr_output',
                              'aggr_assumed_state',
                              'aggr_effective_state'],
-            'sorters': [],
+            'sorters': [ ('aggr_group', False), ('aggr_name', False)],
             'title': _('Problem Aggregations'),
             'topic': _('Business Intelligence')},
 
@@ -2409,7 +2409,7 @@ multisite_builtin_views.update({
                                 'hostregex',
                                 'opthostgroup',
                                 'aggr_effective_state'],
-               'sorters': [('site_host', False)],
+               'sorters': [('aggr_group'), ('site_host', False)],
                'title': 'Single-Host Problems',
                'topic': _('Business Intelligence')},
 
@@ -2530,7 +2530,7 @@ multisite_builtin_views.update({
                            ],
                'play_sounds': False,
                'public': True,
-               'show_filters': ['aggr_group', 'hostregex' ],
+               'show_filters': [ 'siteopt', 'hostregex', 'aggr_group' ],
                'sorters': [('site', False), ('site_host', False)],
                'title': _('Hostgroup with BI state'),
                'topic': _('hidden')},

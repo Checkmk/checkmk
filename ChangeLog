@@ -18,6 +18,7 @@
     * Avoid duplicate rule incarnations when using FOREACH_*
     * BI Boxes: allow closing boxes (not yet persisted)
     * New filter for services (not) contained in any aggregate
+    * Configure sorting for all BI views
 
     Checks & Agents:
     * FIX: snmp_uptime handles empty snmp information without exception

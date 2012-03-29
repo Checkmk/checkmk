@@ -239,6 +239,7 @@ def automation_try_inventory_node(hostname):
     # Collect current status information about all existing checks
     table = []
     for (ct, item), (state_type, paramstring) in found.items():
+        params = None
         if state_type != 'legacy':
             descr = service_description(ct, item)
             infotype = ct.split('.')[0]

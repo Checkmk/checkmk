@@ -589,6 +589,9 @@ filter_columns = 2
 # Default language for l10n
 default_language = None
 
+# Default timestamp format to be used in multisite
+default_ts_format = 'mixed'
+
 # Default authentication type. Can be changed to e.g. "cookie" for
 # using the cookie auth
 auth_type = 'basic'

@@ -1,8 +1,19 @@
 1.2.0b2:
+    Core:
+    * FIX: Cluster host checks were UNKNOWN all the time
+
     WATO:
+    * Added new permission "move hosts" to allow/deny moving of hosts in WATO
+    * Also write out contact definitions for users without contactgroups to
+      have the mail addresses and other notification options persisted
     * FIX: deletion of automation accounts now works
+    * FIX: Disabling notifications for users does work now
 
     Multisite
+    * Added config option default_ts_format to configure default timestamp
+      output format in multisite
+    * BI: Added new painter "affected hosts (link to host page)" to show all
+      host names with links to the "hosts" view
     * Layout and design update
     * Quicksearch: display site name if more than one different site
       is present in the current search result list
@@ -25,6 +36,7 @@
     * FIX: Oracle checks try to handle ORA-* errors reported by the agent
       All oracle checks will return UNKNOWN when finding an ORA-* message
     * FIX: filesystem levels set via WATO didn't work, but do now
+    * FIX: Group filters can handle groups without aliases now
 
 1.2.0b1:
     Core, Setup, etc.:

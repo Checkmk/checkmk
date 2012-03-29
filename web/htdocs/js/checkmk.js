@@ -123,7 +123,7 @@ function get_url(url, handler, data, errorHandler) {
         AJAX.open("GET", url + dyn, true);
         if (typeof handler === 'function')
             AJAX.onreadystatechange = function() {
-                if (AJAX.readyState == 4)
+                if (AJAX && AJAX.readyState == 4) {
                     if (AJAX.status == 200) {
                         handler(data, AJAX.responseText);
                     }
@@ -141,6 +141,7 @@ function get_url(url, handler, data, errorHandler) {
                         if (typeof errorHandler !== 'undefined')
                             errorHandler(data, AJAX.status);
                     }
+                }
             }
         AJAX.send(null);
         return true;

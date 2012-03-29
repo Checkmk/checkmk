@@ -80,7 +80,8 @@ def all_groups(what):
     groups = dict(html.live.query("GET %sgroups\nColumns: name alias\n" % what))
     names = groups.keys()
     names.sort()
-    return [ (name, groups[name]) for name in names ]
+    # use alias by default but fallback to name if no alias defined
+    return [ (name, groups[name] or name) for name in names ]
 
 class FilterGroupCombo(Filter):
     def __init__(self, what, title, enforce):

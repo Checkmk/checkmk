@@ -7243,14 +7243,12 @@ def save_users(profiles):
     # Keys to put into multisite configuration
     multisite_keys   = [ "roles", "notifications_enabled", "locked", "automation_secret", "alias", "language", ] + custom_values
 
-    # Remove multisite keys in contacts. And use only such entries
-    # that have any contact groups assigned to.
+    # Remove multisite keys in contacts.
     contacts = dict(
         e for e in 
             [ (id, split_dict(user, non_contact_keys, False))
                for (id, user)
-               in profiles.items() ]
-        if e[1].get("contactgroups"))
+               in profiles.items() ])
 
     # Only allow explicitely defined attributes to be written to multisite config
     users = {}

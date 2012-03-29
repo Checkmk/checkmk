@@ -1,6 +1,8 @@
 1.2.0b2:
     WATO:
     * Added new permission "move hosts" to allow/deny moving of hosts in WATO
+    * Also write out contact definitions for users without contactgroups to
+      have the mail addresses and other notification options persisted
     * FIX: deletion of automation accounts now works
 
     Multisite

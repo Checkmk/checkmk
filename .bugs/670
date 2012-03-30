@@ -18,3 +18,16 @@ Output:   OK - no unchecked services found
 Perfdata: 
 
 OK -> OK is not good....
+
+Another case: 
+
+Host:     Eiger
+Alias:    Eiger
+Address:  127.0.0.1
+Service:  Build_State_centos60-32
+State:    CRITICAL -> CRITICAL
+Command:  check_mk-local
+Output:   CRITICAL: Build problem. State: error, last update: 2012-03-30 02:27:11.000000000 +0200
+Perfdata: 
+
+

@@ -1,0 +1,9 @@
+Title: Quicksearch: search for IP addresses
+Component: multisite
+State: open
+Date: 2012-03-30 16:12:34
+Targetversion: future
+Class: feature
+
+In Quicksearch it should be possible to search for 
+IP addresses (and find hosts).

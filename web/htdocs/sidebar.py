@@ -42,6 +42,8 @@ def load_plugins():
     loaded_with_language = current_language
 
     # Load all snapins
+    global sidebar_snapins
+    sidebar_snapins = {}
     load_web_plugins("sidebar", globals())
 
     # Declare permissions: each snapin creates one permission
@@ -132,7 +134,7 @@ def sidebar_foot():
     if config.may("logout"):
         html.write('<li><a class=logout target="_top" href="logout.py" title="%s"></a></li>' % _('Logout'))
     html.write('</ul>')
-    html.write("<div class=copyright>%s</div>\n" % _("&copy; <a target=\"main\" href=\"http://mathias-kettner.de\">Mathias Kettner</a>"))
+    html.write("<div class=copyright>%s</div>\n" % _("&copy; <a target=\"_blank\" href=\"http://mathias-kettner.de\">Mathias Kettner</a>"))
     html.write('</div>')
 
 # Standalone sidebar
@@ -153,15 +155,14 @@ def page_side():
     for name, state in user_config:
         if not name in sidebar_snapins or not config.may("sidesnap." + name):
             continue
-        if state in [ "open", "closed" ]:
-            refresh_url  = render_snapin(name, state)
-            refresh_time = sidebar_snapins.get(name).get("refresh", 0)
-            if refresh_time > 0:
-                refresh_snapins.append([name, refresh_time, refresh_url])
+        refresh_url  = render_snapin(name, state)
+        refresh_time = sidebar_snapins.get(name).get("refresh", 0)
+        if refresh_time > 0:
+            refresh_snapins.append([name, refresh_time, refresh_url])
 
-            restart = sidebar_snapins.get(name, {}).get('restart', False)
-            if restart:
-                restart_snapins.append(name)
+        restart = sidebar_snapins.get(name, {}).get('restart', False)
+        if restart:
+            restart_snapins.append(name)
     html.write('</div>')
     sidebar_foot()
     html.write('</div>')
@@ -190,32 +191,46 @@ def render_snapin(name, state):
     if state == "closed":
         style = ' style="display:none"'
         headclass = "closed"
+        minimaxi = "maxi"
     else:
         style = ""
         headclass = "open"
-    url = "sidebar_openclose.py?name=%s&state=" % name
+        minimaxi = "mini"
+    toggle_url = "sidebar_openclose.py?name=%s&state=" % name
 
     html.write('<div class="head %s" ' % headclass)
+
+    # If the user may modify the sidebar then add code for dragging the snapin
     if config.may("configure_sidebar"):
-        html.write("onmouseover=\"document.body.style.cursor='move';\" onmouseout=\"document.body.style.cursor='';\""
-               " onmousedown=\"snapinStartDrag(event)\" onmouseup=\"snapinStopDrag(event)\">")
+        html.write("onmouseover=\"document.body.style.cursor='move';\" "
+                   "onmouseout=\"document.body.style.cursor='';\" "
+                   "onmousedown=\"snapinStartDrag(event)\" onmouseup=\"snapinStopDrag(event)\">")
     else:
         html.write(">")
-    if config.may("configure_sidebar"):
 
+
+    # Icon for mini/maximizing, does not need permission
+    html.write('<div class="minisnapin">')
+    iconbutton(minimaxi + "snapin", None,
+               "side", "toggle_sidebar_snapin(this, '%s')" % toggle_url, 'snapin_'+name)
+    html.write('</div>')
+
+    if config.may("configure_sidebar"):
+        # Button for closing (removing) a snapin
         html.write('<div class="closesnapin">')
-        iconbutton("closesnapin", "sidebar_openclose.py?name=%s&state=off" % name, "side", "removeSnapin", 'snapin_'+name)
+        iconbutton("closesnapin", "sidebar_openclose.py?name=%s&state=off" % name, 
+                   "side", "removeSnapin", 'snapin_'+name)
         html.write('</div>')
-        # Show reload button, but only for reloadable Snapins
-        if snapin.get("reload") or snapin.get("restart"):
-            html.write('<div class="reloadsnapin">')
-            iconbutton("reloadsnapin", url="sidebar_snapin.py?name=" + name, handler="updateContents",
-                       name = "snapin_" + name);
-            html.write('</div>')
-    html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
-               "onmouseout=\"this.style.cursor='auto'\">%s</b>" % (url, snapin["title"]))
+
+    # The heading. A click on the heading mini/maximizes the snapin
+    html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" "
+               "onmouseover=\"this.style.cursor='pointer'\" "
+               "onmouseout=\"this.style.cursor='auto'\">%s</b>" % (toggle_url, snapin["title"]))
+
+    # End of header
     html.write("</div>")
 
+    # Now comes the content
     html.write("<div id=\"snapin_%s\" class=content%s>\n" % (name, style))
     refresh_url = ''
     try:

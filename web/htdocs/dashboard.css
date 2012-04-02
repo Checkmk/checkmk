@@ -45,12 +45,15 @@ div.dashlet div.dashlet_inner {
     position: absolute;
     padding: 0px;
     margin: 0px;
+    top: 21px;
+    left: 11px;
 }
 
 /* Dashlets with "background" set to True */
 div.dashlet div.dashlet_inner.background {
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+    /* background-image: url("images/form_background.png"); */
+    /* background-repeat: repeat; */
+    background-color: #cbd6da;
 }
 
 div.dashlet iframe {
@@ -59,19 +62,16 @@ div.dashlet iframe {
 
 div.dashlet div.title {
     position: absolute;
-    left: 0px;
+    left: 9px;
     width: 150px; /* will be changed by javascript later */
     color: #fff;
-    text-align: center;
     padding: 0px;
     margin: 0px;
-    padding-top: 5px;
-    font-size: 10pt;
-    font-weight: bold;
+    padding-top: 4px;
+    font-weight: normal;
 }
 div.dashlet div.title a {
     text-decoration: none;
-    border-bottom: 1px dotted white;
     color: white;
 }
 div.dashlet div.title a:hover {
@@ -82,52 +82,52 @@ div.dashlet img.shadow {
     position: absolute;
 }
 div.dashlet img.shadow.n {
-    top: 0px;
-    left: 16px;
-    width: 40px;
-    height: 8px;
+    top: -2px;
+    left: 11px;
+    width: 1px;
+    height: 23px;
 }
 div.dashlet img.shadow.s {
-    bottom: 0px;
-    left: 16px;
-    width: 40px;
-    height: 8px;
+    bottom: -2px;
+    left: 11px;
+    width: 1px;
+    height: 12px;
 }
 div.dashlet img.shadow.w {
-    left: 0px;
-    top: 16px;
-    width: 8px;
-    height: 40px;
+    left: -2px;
+    top: 21px;
+    width: 13px;
+    height: 1px;
 }
 div.dashlet img.shadow.e {
-    right: 0px;
-    top: 16px;
-    width: 8px;
-    height: 40px;
+    right: -2px;
+    top: 21px;
+    width: 13px;
+    height: 1px;
 }
 div.dashlet img.shadow.nw {
-    width: 16px;
-    height: 16px;
-    top: 0px;
-    left: 0px;
+    top: -2px;
+    left: -2px;
+    width: 13px;
+    height: 23px;
 }
 div.dashlet img.shadow.sw {
-    width: 16px;
-    height: 16px;
-    bottom: 0px;
-    left: 0px;
+    bottom: -2px;
+    left: -2px;
+    width: 13px;
+    height: 12px;
 }
 div.dashlet img.shadow.ne {
-    width: 16px;
-    height: 16px;
-    top: 0px;
-    right: 0px;
+    top: -2px;
+    right: 3px;
+    width: 13px;
+    height: 23px;
 }
 div.dashlet img.shadow.se {
-    width: 16px;
-    height: 16px;
-    bottom: 0px;
-    right: 0px;
+    bottom: -2px;
+    right: -2px;
+    width: 13px;
+    height: 12px;
 }
 
 table.dashlet_overview h2 {
@@ -137,20 +137,30 @@ table.dashlet_overview h2 {
 
 /* Styles for various builtin dashlets */
 canvas.pie {
-    margin-top: 10px;
+    margin-top: 5px;
     margin-left: 10px;
+    z-index: 20;
+}
+
+img.globe {
+    position: absolute;
+    top: 5px;
+    left: 10px;
+}
+img.globe {
+    z-index: 10;
 }
 
 div.dashlet table.hoststats {
     margin-top: 10px;
-    margin-left: 5px;
-    width: 143px;
-    height: 136px;
+    margin-left: 13px;
+    width: 135px;
+    height: 142px;
     border-collapse: collapse;
     border-spacing: 0px;
 }
 div.dashlet table.hoststats.narrow {
-    margin-top: 4px;
+    margin-top: 6px;
 }
 
 div.dashlet table.hoststats a {
@@ -166,8 +176,7 @@ div.dashlet table.hoststats td {
     text-align: right;
     padding-right: 4px;
     padding-left: 4px;
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+    background-color: #95bbcd;
 }
 
 div.dashlet table.hoststats th {
@@ -176,18 +185,29 @@ div.dashlet table.hoststats th {
     padding-left: 4px;
 }
 div.dashlet table.hoststats td.color {
-    padding: 2px;
+    padding: 0px;
+    width: 4px;
 }
 div.dashlet table.hoststats th, table.hoststats td {
     padding-top: 3px;
     padding-bottom: 3px;
-    border-color: #fff;
+    border-color: #498aa6;
     border-style: solid none;
     border-width: 1px;
     vertical-align: middle;
 }
 div.dashlet table.hoststats.narrow th, table.hoststats.narrow td {
     font-size: 8pt;
+    font-weight: normal;
+}
+
+div.dashlet_inner div.stats {
+    background-color: #6da1b8;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    padding: 0px;
+    margin: 0px;
 }
 
 div.dashlet div.nograph {
@@ -199,5 +219,4 @@ div.dashlet div.nograph {
 div.dashlet div.nograph div.msg {
     padding: 10px;
 }
-
 

@@ -367,8 +367,8 @@ sidebar_snapins["hostmatrix"] = {
 table.hostmatrix { border-spacing: 0;  }
 table.hostmatrix tr { padding: 0; border-spacing: 0; }
 table.hostmatrix a { display: block; width: 100%%; height: 100%%; line-height: 100%%; }
-table.hostmatrix td { border: 1px solid white; padding: 0; border-spacing: 0; }
-"""
+table.hostmatrix td { border: 1px solid #123a4a; padding: 0; border-spacing: 0; }
+    """
 
 }
 
@@ -524,7 +524,7 @@ def render_tactical_overview():
             (_("Hosts"),    hstdata, 'hostproblems', 'host'),
             (_("Services"), svcdata, 'svcproblems',  'service'),
             ]:
-        html.write("<tr><th>%s</th><th>%s</th><th>%s</th></tr>\n" % \
+        html.write("<tr><th><span>%s</span></th><th><span>%s</span></th><th><span>%s</span></th></tr>\n" % \
                                      (title, _('Problems'), _('Unhandled')))
         html.write("<tr>")
 
@@ -556,10 +556,30 @@ table.tacticaloverview {
     * border-spacing: 5px 2px;
     */
    width: %dpx;
-   margin-top: 0;
+   margin-top: -9px;
 }
-table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0; padding-top: 2px; }
-table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; }
+table.tacticaloverview th { 
+    font-size: 8pt; 
+    text-align: left; 
+    color: #123a4a; 
+    font-weight: normal; 
+    padding: 0; 
+    padding-top: 2px; 
+    vertical-align: bottom;
+}
+table.tacticaloverview th span {
+    position: relative;
+    top: 2px;
+}
+table.tacticaloverview td { 
+    width: 33.3%%; 
+    text-align: right; 
+    border: 1px solid #123a4a;
+    background-color: #6da1b8;
+    padding: 0px; 
+    height: 14px; 
+    box-shadow: 0px 0px 1px #386068;
+}
 table.tacticaloverview a { display: block; margin-right: 2px; }
 """ % snapin_width
 }
@@ -617,14 +637,17 @@ sidebar_snapins["performance"] = {
 table.performance {
     width: %dpx;
     -moz-border-radius: 5px;
-    font-size: 8pt;
     background-color: #589;
+    /* background-color: #6da1b8;*/
     border-style: solid;
     border-color: #444 #bbb #eee #666;
     /* The border needs to be substracted from the width */
     border-width: 1px;
 }
-table.performance td { padding: 0px; }
+table.performance td {
+    padding: 0px 2px;
+    font-size: 8pt;
+}
 table.performance td.right {
     text-align: right;
     padding: 0px;
@@ -902,7 +925,7 @@ def render_nagios():
                 nagioscgilink(text, ref)
 
 sidebar_snapins["nagios_legacy"] = {
-    "title" : _("Nagios"),
+    "title" : _("Old Nagios GUI"),
     "description" : _("The classical sidebar of Nagios 3.2.0 with links to your local Nagios instance (no multi site support)"),
     "author" : "Mathias Kettner",
     "render" : render_nagios,
@@ -929,21 +952,21 @@ def render_master_control():
     html.live.set_prepend_site(True)
     data = html.live.query("GET status\nColumns: %s" % " ".join([ i[0] for i in items ]))
     html.live.set_prepend_site(False)
-    html.write("<table class=master_control>\n")
     for siteline in data:
         siteid = siteline[0]
         if siteid:
             sitealias = html.site_status[siteid]["site"]["alias"]
-            html.write("<tr><td class=left colspan=2>")
-            heading(sitealias)
-            html.write("</tr>\n")
+            html.begin_foldable_container("master_control", siteid, True, sitealias)
+        html.write("<table class=master_control>\n")
         for i, (colname, title) in enumerate(items):
             colvalue = siteline[i + 1]
             url = defaults.url_prefix + ("check_mk/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
             onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
             enabled = colvalue and "enabled" or "disabled"
             html.write("<tr><td class=left>%s</td><td class=%s><a onclick=\"%s\" href=\"#\">%s</a></td></tr>\n" % (title, enabled, onclick, enabled))
-    html.write("</table>")
+        html.write("</table>")
+        if siteid:
+            html.end_foldable_container()
 
 sidebar_snapins["master_control"] = {
     "title" : _("Master control"),
@@ -954,7 +977,7 @@ sidebar_snapins["master_control"] = {
     "styles" : """
 div.snapin table.master_control {
     width: %dpx;
-    margin: 0px;
+    margin: 0px 0px 8px 0px;
     border-spacing: 0px;
 }
 
@@ -994,7 +1017,7 @@ div.snapin table.master_control td.disabled a {
     border-color: #c00;
     color: #fff;
 }
-""" % snapin_width
+""" % (snapin_width - 20)
 }
 
 def ajax_switch_masterstate():

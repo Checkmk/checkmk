@@ -36,6 +36,12 @@ def inventory_oracle_sessions(info):
 def check_oracle_sessions(item, params, info):
     for line in info:
         if line[0] == item:
+            err = oracle_handle_ora_errors(line)
+            if err == False:
+                continue
+            elif isinstance(err, tuple):
+                return err
+
             warn, crit = params
             sessions = int(line[1])
             infotext = " - %d active sessions (levels at %d/%d)" % (sessions, warn, crit)
@@ -49,3 +55,4 @@ def check_oracle_sessions(item, params, info):
     return (2, "UNKNOWN - Database not existing or not running")
 
 check_info['oracle_sessions'] = (check_oracle_sessions, "ORA %s Sessions", 1,  inventory_oracle_sessions )
+check_includes['oracle_sessions'] = [ "oracle.include" ]

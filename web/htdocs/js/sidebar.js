@@ -567,7 +567,14 @@ function removeSnapin(id, code) {
 
 
 function toggle_sidebar_snapin(oH2, url) {
-    var childs = oH2.parentNode.parentNode.childNodes;
+    // oH2 can also be an <a>. In that case it is the minimize
+    // image itself
+
+    var childs;
+    if (oH2.tagName == "A")
+        childs = oH2.parentNode.parentNode.parentNode.childNodes;
+    else
+        childs = oH2.parentNode.parentNode.childNodes;
     for (var i in childs) {
         child = childs[i];
         if (child.tagName == 'DIV' && child.className == 'content')
@@ -577,17 +584,21 @@ function toggle_sidebar_snapin(oH2, url) {
         else if (child.tagName == 'DIV' && child.className == 'foot')
             var oFoot = child;
     }
+    var oImgMini = oHead.childNodes[0].childNodes[0].childNodes[0];
+
     // FIXME: Does oContent really exist?
     var closed = oContent.style.display == "none";
     if (closed) {
         oContent.style.display = "block";
         oFoot.style.display = "block";
         oHead.className = "head open";
+        oImgMini.src = "images/button_minisnapin_lo.png";
     }
     else {
         oContent.style.display = "none";
         oFoot.style.display = "none";
         oHead.className = "head closed";
+        oImgMini.src = "images/button_maxisnapin_lo.png";
     }
     /* make this persistent -> save */
     get_url(url + (closed ? "open" : "closed"));

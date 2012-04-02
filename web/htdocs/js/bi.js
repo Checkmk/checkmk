@@ -43,7 +43,17 @@ function toggle_subtree(oImg)
 
 function toggle_bi_box(oDiv)
 {
-    oDiv.style.display = "none";
+    // oDiv.style.display = "none";
+    if (oDiv.style.borderStyle != "dashed") {
+        oDiv.style.boxShadow = "none";
+        oDiv.style.borderStyle = "dashed";
+        oDiv.style.BiBoxHidden = true;
+    }
+    else {
+        oDiv.style.boxShadow = "1px 1px 3px #000";
+        oDiv.style.borderStyle = "solid";
+        oDiv.style.BiBoxHidden = false;
+    }
 
     // find child nodes that belong to this node
     var found = 0;
@@ -54,7 +64,10 @@ function toggle_bi_box(oDiv)
         else if (found == 1) 
             found ++;
         else if (found) {
-            onode.style.display = "";
+            if (onode.style.display)
+                onode.style.display = "";
+            else
+                onode.style.display = "none";
             return;
         }
     }

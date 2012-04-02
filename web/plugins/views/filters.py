@@ -71,7 +71,7 @@ declare_filter(100, FilterText("servicegroupname", _("Servicegroup"),   "service
 declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "~~"),
                           _("Search field allowing regular expression and partial matches"))
 
-declare_filter(202, FilterText("output",  _("Service check output"), "service", "service_plugin_output", "service_output", "~~"))
+declare_filter(202, FilterText("output",  _("Status detail"), "service", "service_plugin_output", "service_output", "~~"))
 
 
 
@@ -80,7 +80,8 @@ def all_groups(what):
     groups = dict(html.live.query("GET %sgroups\nColumns: name alias\n" % what))
     names = groups.keys()
     names.sort()
-    return [ (name, groups[name]) for name in names ]
+    # use alias by default but fallback to name if no alias defined
+    return [ (name, groups[name] or name) for name in names ]
 
 class FilterGroupCombo(Filter):
     def __init__(self, what, title, enforce):
@@ -541,3 +542,25 @@ class FilterLogState(Filter):
             return "".join(headers) + ("Or: %d\n" % len(headers))
 
 declare_filter(270, FilterLogState())
+
+class BIServiceIsUsedFilter(FilterTristate):
+    def __init__(self):
+	FilterTristate.__init__(self, "aggr_service_used", _("Used in BI aggregate"), "service", None)
+
+    def filter(self, infoname):
+	return ""
+
+    def filter_table(self, rows):
+        current = self.tristate_value()
+        if current == -1:
+	    return rows
+        new_rows = []
+        for row in rows:
+	    is_part = bi.is_part_of_aggregation(
+                   "service", row["site"], row["host_name"], row["service_description"])
+	    if (is_part and current == 1) or \
+               (not is_part and current == 0):
+	        new_rows.append(row)
+	return new_rows
+
+declare_filter(300, BIServiceIsUsedFilter())

@@ -1,0 +1,33 @@
+Title: Notification emails do not handle flapping nicely
+Component: core
+State: open
+Date: 2012-03-30 08:39:31
+Targetversion: 1.2.0
+Class: nastiness
+
+The notifications that are sent because of flapping
+should better display this. Currently it is like this:
+
+Host:     nagios
+Alias:    nagios
+Address:  127.0.0.1
+Service:  Check_MK inventory
+State:    OK -> OK
+Command:  check-mk-inventory
+Output:   OK - no unchecked services found
+Perfdata: 
+
+OK -> OK is not good....
+
+Another case: 
+
+Host:     Eiger
+Alias:    Eiger
+Address:  127.0.0.1
+Service:  Build_State_centos60-32
+State:    CRITICAL -> CRITICAL
+Command:  check_mk-local
+Output:   CRITICAL: Build problem. State: error, last update: 2012-03-30 02:27:11.000000000 +0200
+Perfdata: 
+
+

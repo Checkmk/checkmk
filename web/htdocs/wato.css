@@ -49,12 +49,8 @@ Boston, MA 02110-1301 USA.
 }
 .wato table.data th {
     -moz-border-radius: 0px;
-}
-.wato input[type=submit], .wato input[type=button], .wato select {
-    box-shadow: 0px 0px 1px #888888;
-}
-.wato input[type=submit]:hover, .wato input[type=button]:hover, .wato select:hover {
-    box-shadow: 0px 0px 1px white;
+    background-color: #508aa1;
+    background-color: #73a1b4;
 }
 
 
@@ -63,6 +59,10 @@ Boston, MA 02110-1301 USA.
     border-left-style: none;
     -moz-border-radius: 4px 0px 0px 0px;
 }
+.wato table.data td {
+    /* border-style: dashed; */
+}
+
 .wato table.data td.select {
     text-align: center;
     width: 1px;
@@ -72,15 +72,22 @@ Boston, MA 02110-1301 USA.
     border-right-style: none;
     -moz-border-radius: 0px 4px 0px 0px;
 }
+
+/* WATO configuration forms */
 .wato table.form {
-    width: 850px;
+    width: 100%;
+    /* width: 850px; */
     margin-left: 0px;
 }
 
+.wato table.form td {
+    /* border-style: dashed; */
+}
+
 .wato table.form td.legend {
-    border-right-style: none;
+    width: 300px;
     padding-bottom: 8px;
-    width: 350px;
+    padding-left: 20px;
 }
 
 .wato table.form td.legend h3 {
@@ -89,9 +96,14 @@ Boston, MA 02110-1301 USA.
     font-size: 9pt;
     font-weight: normal;
 }
+.wato table.form td.title {
+    border-style: none none solid none;
+}
+
 .wato table.form td.title i {
     font-weight: normal;
     padding-bottom: 8px;
+    border-top-style: solid;
 }
 
 
@@ -103,10 +115,22 @@ Boston, MA 02110-1301 USA.
 
 .wato table.form td.content {
     border-left-style: solid;
-    width: 494px;
+    /* width: 494px; */
     padding-top: 7px;
     padding-bottom: 7px;
+    padding-right: 20px;
 }
+
+.wato table.form tr.top td,
+.wato table.form tr.top td,
+.wato table.form tr.top td.checkbox {
+    border-top-style: none;
+}
+
+.wato table.form.nomargin td.checkbox {
+    border-top-style: none;
+}
+
 
 .wato table.form td.checkbox {
     width: 40px;
@@ -114,8 +138,9 @@ Boston, MA 02110-1301 USA.
     padding-top: 7px;
     vertical-align: top;
     text-align: right;
-    border: 1px solid #fff;
-    border-left-style: none;
+    border-width: 1px;
+    border-style: solid none solid none;
+    border-color: #2f5f73;
 }
 
 .wato div.sitestatus {
@@ -307,7 +332,7 @@ table.validationerror img {
 
 .wato img.trans {
     width: 20px;
-    height: 16px;
+    height: 13px;
 }
 .wato td.value img {
     width: 20px;

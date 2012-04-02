@@ -831,6 +831,7 @@ def mode_folder(phase):
         # Move single hosts to other folders
         if html.has_var("_move_host_to"):
             config.need_permission("wato.edit_hosts")
+            config.need_permission("wato.move_hosts")
             hostname = html.var("host")
             check_folder_permissions(g_folder, "write")
             if hostname:
@@ -858,6 +859,7 @@ def mode_folder(phase):
         # Move
         elif html.var("_bulk_move"):
             config.need_permission("wato.edit_hosts")
+            config.need_permission("wato.move_hosts")
             target_folder_name = html.var("bulk_moveto")
             if target_folder_name == "@":
                 raise MKUserError("bulk_moveto", _("Please select the destination folder"))
@@ -868,6 +870,7 @@ def mode_folder(phase):
         # Move to target folder (from import)
         elif html.var("_bulk_movetotarget"):
             config.need_permission("wato.edit_hosts")
+            config.need_permission("wato.move_hosts")
             return move_to_imported_folders(selected_hosts)
 
         elif html.var("_bulk_edit"):
@@ -1129,7 +1132,7 @@ def show_hosts(folder):
     hostnames.sort()
 
     # Show table of hosts in this folder
-    colspan = 6
+    colspan = 5
     html.begin_form("hosts", None, "POST", onsubmit = 'add_row_selections(this);')
     html.write("<table class=data>\n")
     html.write("<tr><th class=left></th><th></th><th>"
@@ -1142,7 +1145,9 @@ def show_hosts(folder):
             html.write("<th>%s</th>" % attr.title())
             colspan += 1
 
-    html.write("<th class=right>" + _("Move To") + "</th>")
+    if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+        html.write("<th class=right>" + _("Move To") + "</th>")
+        colspan += 1
     html.write("</tr>\n")
     odd = "odd"
 
@@ -1159,7 +1164,7 @@ def show_hosts(folder):
             html.button("_bulk_cleanup", _("Cleanup"))
         if config.may("wato.services"):
             html.button("_bulk_inventory", _("Inventory"))
-        if config.may("wato.edit_hosts"):
+        if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
             move_to_folder_combo("host", None, top)
             if at_least_one_imported:
                 html.button("_bulk_movetotarget", _("Move to Target Folders"))
@@ -1273,10 +1278,10 @@ def show_hosts(folder):
                 html.write("</td>\n")
 
         # Move to
-        html.write("<td>")
-        if config.may("wato.edit_hosts"):
+        if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+            html.write("<td>")
             move_to_folder_combo("host", hostname)
-        html.write("</td>\n")
+            html.write("</td>\n")
         html.write("</tr>\n")
 
     if config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
@@ -1856,10 +1861,10 @@ def mode_edithost(phase, new, cluster):
         configure_attributes({hostname: host}, "host", parent = g_folder)
 
         html.write('<tr><td class="buttons" colspan=3>')
-        html.button("services", _("Save &amp; go to Services"), "submit")
-        html.button("save", _("Save &amp; Finish"), "submit")
+        html.image_button("services", _("Save &amp; go to Services"), "submit")
+        html.image_button("save", _("Save &amp; Finish"), "submit")
         if not new:
-            html.button("delete", _("Delete host!"), "submit")
+            html.image_button("delete", _("Delete host!"), "submit")
         html.write("</td></tr>\n")
         html.write("</table>\n")
         html.hidden_fields()
@@ -6624,6 +6629,14 @@ def delete_distributed_wato_file():
 #   | Mode for managing users and contacts.                                |
 #   '----------------------------------------------------------------------'
 
+# Custom user attributes
+user_attributes = []
+user_attribute = {}
+
+def declare_user_attribute(name, vs):
+    user_attributes.append((name, vs))
+    user_attribute[name] = vs
+
 def mode_users(phase):
     if phase == "title":
         return _("Users & Contacts")
@@ -6904,6 +6917,11 @@ def mode_edit_user(phase):
             new_user[what + "_notification_options"] = "".join(
               [ opt for opt in opts if html.get_checkbox(what + "_" + opt) ])
 
+        # Custom attributes
+        for name, vs in user_attributes:
+            value = vs.from_html_vars('ua_' + name)
+            vs.validate_value(value, "ua_" + name)
+            new_user[name] = value
 
         # Saving
         save_users(users)
@@ -7093,6 +7111,14 @@ def mode_edit_user(phase):
 
     select_language(user.get('language', ''))
 
+    for name, vs in user_attributes:
+        html.write("<tr><td colspan=2 class=legend>%s" % vs.title())
+        if vs.help():
+            html.write("<br><i>%s</i>" % vs.help())
+        html.write("</td><td class=content>")
+        vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+        html.write("</td></tr>")
+
     # TODO: Later we could add custom macros here, which
     # then could be used for notifications. On the other hand,
     # if we implement some check_mk --notify, we could directly
@@ -7210,20 +7236,32 @@ def save_users(profiles):
     # TODO: delete var/check_mk/web/$USER of non-existing users. Do we
     # need to remove other references as well?
 
+    custom_values = [ name for (name, vs) in user_attributes ]
+
     # Keys not to put into contact definitions for Check_MK
-    non_contact_keys = [ "roles", "notifications_enabled", "password", "locked", "automation_secret", "language" ] 
+    non_contact_keys = [
+        "roles",
+        "password",
+        "locked",
+        "automation_secret",
+        "language",
+    ] + custom_values
 
     # Keys to put into multisite configuration
-    multisite_keys   = [ "roles", "notifications_enabled", "locked", "automation_secret", "alias", "language", ]
+    multisite_keys   = [
+        "roles",
+        "locked",
+        "automation_secret",
+        "alias",
+        "language",
+    ] + custom_values
 
-    # Remove multisite keys in contacts. And use only such entries
-    # that have any contact groups assigned to.
+    # Remove multisite keys in contacts.
     contacts = dict(
         e for e in 
             [ (id, split_dict(user, non_contact_keys, False))
                for (id, user)
-               in profiles.items() ]
-        if e[1].get("contactgroups"))
+               in profiles.items() ])
 
     # Only allow explicitely defined attributes to be written to multisite config
     users = {}
@@ -9724,7 +9762,6 @@ def page_user_profile():
     html.footer()
 
 #.
-#.
 #   .--Sampleconfig--------------------------------------------------------.
 #   |   ____                        _                       __ _           |
 #   |  / ___|  __ _ _ __ ___  _ __ | | ___  ___ ___  _ __  / _(_) __ _     |
@@ -10328,10 +10365,13 @@ def load_plugins():
     loaded_with_language = current_language
 
     # Reset global vars
-    global extra_buttons, configured_host_tags, host_attributes
+    global extra_buttons, configured_host_tags, host_attributes, user_attributes, \
+           user_attribute
     extra_buttons = []
     configured_host_tags = None
     host_attributes = []
+    user_attributes = []
+    user_attribute = {}
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))
@@ -10388,10 +10428,16 @@ def load_plugins():
            "a separate permission (see below)"),
          [ "admin", "user" ])
 
+    config.declare_permission("wato.move_hosts",
+         _("Move existing hosts"),
+         _("Move existing hosts to other folders. Please also add the permission "
+           "<i>Modify existing hosts</i>."),
+         [ "admin", "user" ])
+
     config.declare_permission("wato.manage_hosts",
          _("Add & remove hosts"),
          _("Add hosts to the monitoring and remove hosts "
-           "from the monitoring. Please also add the permissions "
+           "from the monitoring. Please also add the permission "
            "<i>Modify existing hosts</i>."),
          [ "admin", "user" ])
 

@@ -45,11 +45,12 @@ MAX = -1
 # These settings might go into the config module, sometime in future,
 # in order to allow the user to customize this.
 
-header_height   = 40     # Distance from top of the screen to the lower border of the heading
-screen_margin   = 5      # Distance from the left border of the main-frame to the dashboard area
-dashlet_padding = 8      # Margin between outer border of dashlet and its content
-title_height    = 20     # Height of dashlet title-box
-raster          = 32, 32 # Raster the dashlet choords are measured in
+header_height   = 60             # Distance from top of the screen to the lower border of the heading
+screen_margin   = 5              # Distance from the left border of the main-frame to the dashboard area
+dashlet_padding = 21, 5, 5, 0 # Margin (N, E, S, W) between outer border of dashlet and its content
+corner_overlap  = 22
+title_height    = 0             # Height of dashlet title-box
+raster          = 10, 10        # Raster the dashlet choords are measured in
 
 # Load plugins in web/plugins/dashboard and declare permissions,
 # note: these operations produce language-specific results and
@@ -147,13 +148,15 @@ def render_dashboard(name):
 var header_height = %d;
 var screen_margin = %d;
 var title_height = %d;
-var dashlet_padding = %d;
+var dashlet_padding = Array%s;
+var corner_overlap = %d;
 var refresh_dashlets = %r;
 var dashboard_name = '%s';
 set_dashboard_size();
 window.onresize = function () { set_dashboard_size(); }
 dashboard_scheduler(1);
-    """ % (header_height, screen_margin, title_height, dashlet_padding, refresh_dashlets, name))
+    """ % (header_height, screen_margin, title_height, dashlet_padding, 
+           corner_overlap, refresh_dashlets, name))
 
     html.body_end() # omit regular footer with status icons, etc.
 
@@ -411,25 +414,25 @@ def dashlet_mk_logo():
 
 def dashlet_hoststats():
     table = [
-       ( _("up"), "#0b3",
+       ( _("Up"), "#0b3",
         "searchhost&is_host_scheduled_downtime_depth=0&hst0=on",
         "Stats: state = 0\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "StatsAnd: 2\n"),
 
-       ( _("down"), "#f00",
+       ( _("Down"), "#f00",
         "searchhost&is_host_scheduled_downtime_depth=0&hst1=on",
         "Stats: state = 1\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "StatsAnd: 2\n"),
 
-       ( _("unreachable"), "#f80",
+       ( _("Unreachable"), "#f80",
         "searchhost&is_host_scheduled_downtime_depth=0&hst2=on",
         "Stats: state = 2\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "StatsAnd: 2\n"),
 
-       ( _("in downtime"), "#0af",
+       ( _("In Downtime"), "#0af",
         "searchhost&search=1&is_host_scheduled_downtime_depth=1",
         "Stats: scheduled_downtime_depth > 0\n" \
        )
@@ -449,7 +452,20 @@ def dashlet_servicestats():
         "Stats: host_has_been_checked = 1\n" \
         "StatsAnd: 5\n"),
 
-       ( _("warning"), "#ff0",
+       ( _("In Downtime"), "#0af",
+        "searchsvc&is_in_downtime=1",
+        "Stats: scheduled_downtime_depth > 0\n" \
+        "Stats: host_scheduled_downtime_depth > 0\n" \
+        "StatsOr: 2\n"),
+
+       ( _("On Down host"), "#048",
+        "searchsvc&hst1=on&hst2=on&hstp=on&is_in_downtime=0",
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
+        "Stats: host_state != 0\n" \
+        "StatsAnd: 3\n"),
+
+       ( _("Warning"), "#ff0",
         "searchsvc&hst0=on&st1=on&is_in_downtime=0",
         "Stats: state = 1\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
@@ -458,7 +474,7 @@ def dashlet_servicestats():
         "Stats: host_has_been_checked = 1\n" \
         "StatsAnd: 5\n"),
 
-       ( _("unknown"), "#f80",
+       ( _("Unknown"), "#f80",
         "searchsvc&hst0=on&st3=on&is_in_downtime=0",
         "Stats: state = 3\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
@@ -467,7 +483,7 @@ def dashlet_servicestats():
         "Stats: host_has_been_checked = 1\n" \
         "StatsAnd: 5\n"),
 
-       ( _("critical"), "#f00",
+       ( _("Critical"), "#f00",
         "searchsvc&hst0=on&st2=on&is_in_downtime=0",
         "Stats: state = 2\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
@@ -475,19 +491,6 @@ def dashlet_servicestats():
         "Stats: host_state = 0\n" \
         "Stats: host_has_been_checked = 1\n" \
         "StatsAnd: 5\n"),
-
-       ( _("in downtime"), "#0af",
-        "searchsvc&is_in_downtime=1",
-        "Stats: scheduled_downtime_depth > 0\n" \
-        "Stats: host_scheduled_downtime_depth > 0\n" \
-        "StatsOr: 2\n"),
-
-       ( _("on down host"), "#048",
-        "searchsvc&hst1=on&hst2=on&hstp=on&is_in_downtime=0",
-        "Stats: scheduled_downtime_depth = 0\n" \
-        "Stats: host_scheduled_downtime_depth = 0\n" \
-        "Stats: host_state != 0\n" \
-        "StatsAnd: 3\n"),
     ]
     filter = "Filter: host_custom_variable_names < _REALNAME\n"
 
@@ -495,6 +498,11 @@ def dashlet_servicestats():
 
 
 def render_statistics(pie_id, what, table, filter):
+    html.write("<div class=stats>")
+    pie_diameter     = 130
+    pie_left_aspect  = 0.5
+    pie_right_aspect = 0.8
+
     # Is the query restricted to a certain WATO-path?
     wato_folder = html.var("wato_folder")
     if wato_folder:
@@ -509,14 +517,18 @@ def render_statistics(pie_id, what, table, filter):
     result = html.live.query_summed_stats(query)
     pies = zip(table, result)
     total = sum([x[1] for x in pies])
-    pie_diameter = 136
 
-    html.write('<canvas class=pie width=%d height=%d id=%s_stats style="float: left"></canvas>' %
+    html.write('<canvas class=pie width=%d height=%d id="%s_stats" style="float: left"></canvas>' %
             (pie_diameter, pie_diameter, pie_id))
+    html.write('<img src="images/globe.png" class="globe">')
 
     html.write('<table class="hoststats%s" style="float:left">' % (
-        len(pies) > 5 and " narrow" or ""))
-    for (name, color, viewurl, query), count in pies + [ ((_("Total"), "", "all%s" % what, ""), total) ]:
+        len(pies) > 1 and " narrow" or ""))
+    table_entries = pies
+    while len(table_entries) < 6:
+        table_entries = table_entries + [ (("", "#fff", "", ""), "&nbsp;") ]
+    table_entries.append(((_("Total"), "", "all%s" % what, ""), total))
+    for (name, color, viewurl, query), count in table_entries:
         url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder=" \
               + htmllib.urlencode(html.var("wato_folder", ""))
         html.write('<tr><th><a href="%s">%s</a></th>' % (url, name))
@@ -524,37 +536,57 @@ def render_statistics(pie_id, what, table, filter):
         if color:
             style = ' style="background-color: %s"' % color
         html.write('<td class=color%s>'
-                   '</td><td><a href="%s">%d</a></td></tr>' % (style, url, count))
+                   '</td><td><a href="%s">%s</a></td></tr>' % (style, url, count))
 
     html.write("</table>")
 
     r = 0.0
     pie_parts = []
     if total > 0:
-        for (name, color, viewurl, q), value in pies:
-            perc = 100.0 * value / total
-            pie_parts.append('chart_pie("%s", %f, %f, %r);' % (pie_id, r, r + perc, color))
-            r += perc
+        # Counter number of non-zero classes
+        num_nonzero = 0
+        for info, value in pies:
+            if value > 0:
+                num_nonzero += 1
 
+        # Each non-zero class gets at least a view pixels of visible thickness
+        separator = 0.05 # 5% of radius
+        rest_radius = 1 - num_nonzero * separator
+
+        # Make sure, that each class that is not zero has at least a certain
+        # amount so that it will be visible
+        totalpart = 1
+        # Loop over classes, begin with red (most inner ball)
+        sum_separator = num_nonzero * separator
+        for (name, color, viewurl, q), value in pies[::1]:
+            part = float(value) / total
+            if value > 0 and totalpart > 0:
+                radius = sum_separator + rest_radius * totalpart ** (1/3.0)
+                pie_parts.append('chart_pie("%s", %f, %f, %r);' % (pie_id, pie_right_aspect, radius, color))
+                pie_parts.append('chart_pie("%s", -%f, %f, %r);' % (pie_id, pie_left_aspect, radius, color))
+                totalpart -= part
+                sum_separator -= separator
+
+
+    html.write("</div>")
     html.javascript("""
-function chart_pie(pie_id, from, to, color) {
+function chart_pie(pie_id, x_scale, radius, color) {
     var context = document.getElementById(pie_id + "_stats").getContext('2d');
     if (!context)
         return;
     var pie_x = %(x)f;
     var pie_y = %(y)f;
     var pie_d = %(d)f;
-    context.beginPath();
-    context.moveTo(pie_x, pie_y);
-    context.arc(pie_x, pie_y, pie_d / 2 - 2, rad(from), rad(to), false);
-    context.closePath();
     context.fillStyle = color;
-    context.shadowOffsetX = 5;
-    context.shadowOffsetY = 5;
-    context.shadowBlur = 10;
-    context.strokeStyle = "#ffffff";
+    context.save();
+    context.translate(pie_x, pie_y);
+    context.scale(x_scale, 1);
+    context.beginPath();
+    context.moveTo(0, 0);
+    context.arc(0, 0, (pie_d / 2) * radius, 1.5 * Math.PI, 0.5 * Math.PI, false);
+    context.closePath();
     context.fill();
-    context.stroke();
+    context.restore();
     context = null;
 }
 

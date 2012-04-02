@@ -245,9 +245,12 @@ def compile_rule_node(calllist, lvl):
     if calllist[0] in [ config.FOREACH_HOST, config.FOREACH_SERVICE ]:
         matches = find_matching_services(calllist[0], calllist[1:])
         new_elements = []
+	handled_args = set([]) # avoid duplicate rule incarnations
         for match in matches:
             args = [ substitute_matches(a, match) for a in arglist ]
-            new_elements += compile_aggregation_rule(rule, args, lvl)
+	    if tuple(args) not in handled_args:
+                new_elements += compile_aggregation_rule(rule, args, lvl)
+		handled_args.add(tuple(args))
         return new_elements
 
     else:
@@ -474,9 +477,12 @@ def compile_aggregation_rule(rule, args, lvl = 0):
                 # 2: (['waage'], '(.*)')
                 matches = find_matching_services(config.FOREACH_HOST, node[1:-2])
                 new_elements = []
+		handled_args = set([]) # avoid duplicate rule incarnations
                 for match in matches:
                     arginfo = {'HOST': match[0]}
-                    new_elements += compile_leaf_node(subst_vars(node[-2], arginfo), subst_vars(node[-1], arginfo))
+		    if tuple(args) not in handled_args:
+                        new_elements += compile_leaf_node(subst_vars(node[-2], arginfo), subst_vars(node[-1], arginfo))
+		        handled_args.add(tuple(args))
 
                 host_name, service_description = node[-2:]
             else:

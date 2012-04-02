@@ -80,7 +80,7 @@ def parse_php(data, lvl = 1):
     elif data is None:
         s += 'null'
     else:
-        s += data
+        s += str(data)
 
     return s
 

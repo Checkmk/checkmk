@@ -137,27 +137,27 @@ table.dashlet_overview h2 {
 
 /* Styles for various builtin dashlets */
 canvas.pie {
-    margin-top: 5px;
-    margin-left: 10px;
-    z-index: 20;
+    position: absolute;
+    top:5px;
+    left:10px;
+    z-index: 10;
 }
 
 img.globe {
     position: absolute;
     top: 5px;
     left: 10px;
-}
-img.globe {
-    z-index: 10;
+    z-index: 20;
 }
 
 div.dashlet table.hoststats {
     margin-top: 10px;
-    margin-left: 13px;
     width: 135px;
     height: 142px;
     border-collapse: collapse;
     border-spacing: 0px;
+    position:absolute;
+    right:5px;
 }
 div.dashlet table.hoststats.narrow {
     margin-top: 6px;
@@ -203,7 +203,7 @@ div.dashlet table.hoststats.narrow th, table.hoststats.narrow td {
 
 div.dashlet_inner div.stats {
     background-color: #6da1b8;
-    position: absolute;
+    position: relative;
     height: 100%;
     width: 100%;
     padding: 0px;

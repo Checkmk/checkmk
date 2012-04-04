@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import views, time, defaults
-from lib import *
 import bi
 
 # Python 2.3 does not have 'set' in normal namespace.

@@ -221,9 +221,9 @@ div.snapin div.closesnapin img {
     top: 1px;
 }
 div.snapin div.minisnapin {
-    position: relative;
-    top: 2px;
-    left: 13px;
+    float: left;
+    margin-top: 2px;
+    margin-left: 13px;
     width: 0px;
     height: 0px;
 }

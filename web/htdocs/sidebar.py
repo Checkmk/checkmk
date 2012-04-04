@@ -42,6 +42,8 @@ def load_plugins():
     loaded_with_language = current_language
 
     # Load all snapins
+    global sidebar_snapins
+    sidebar_snapins = {}
     load_web_plugins("sidebar", globals())
 
     # Declare permissions: each snapin creates one permission
@@ -153,15 +155,14 @@ def page_side():
     for name, state in user_config:
         if not name in sidebar_snapins or not config.may("sidesnap." + name):
             continue
-        if state in [ "open", "closed" ]:
-            refresh_url  = render_snapin(name, state)
-            refresh_time = sidebar_snapins.get(name).get("refresh", 0)
-            if refresh_time > 0:
-                refresh_snapins.append([name, refresh_time, refresh_url])
+        refresh_url  = render_snapin(name, state)
+        refresh_time = sidebar_snapins.get(name).get("refresh", 0)
+        if refresh_time > 0:
+            refresh_snapins.append([name, refresh_time, refresh_url])
 
-            restart = sidebar_snapins.get(name, {}).get('restart', False)
-            if restart:
-                restart_snapins.append(name)
+        restart = sidebar_snapins.get(name, {}).get('restart', False)
+        if restart:
+            restart_snapins.append(name)
     html.write('</div>')
     sidebar_foot()
     html.write('</div>')

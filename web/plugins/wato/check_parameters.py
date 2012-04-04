@@ -673,6 +673,19 @@ checkgroups.append((
             ]),
     None, None))
 
+checkgroups.append((
+    "printer_supply",
+    _("Printer cardridge levels"),
+    Tuple(
+          help = _("Levels for printer cardridges."),
+          elements = [
+              Float(title = _("Warning remaining")),
+              Float(title = _("Critical remaining"))]),
+    TextAscii(
+        title = _("cardridge specification"),
+        allow_empty = True),
+    "dict",
+    ))
 
 checkgroups.append((
     "cpu_load",

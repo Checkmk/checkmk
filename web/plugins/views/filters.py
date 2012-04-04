@@ -542,3 +542,25 @@ class FilterLogState(Filter):
             return "".join(headers) + ("Or: %d\n" % len(headers))
 
 declare_filter(270, FilterLogState())
+
+class BIServiceIsUsedFilter(FilterTristate):
+    def __init__(self):
+	FilterTristate.__init__(self, "aggr_service_used", _("Used in BI aggregate"), "service", None)
+
+    def filter(self, infoname):
+	return ""
+
+    def filter_table(self, rows):
+        current = self.tristate_value()
+        if current == -1:
+	    return rows
+        new_rows = []
+        for row in rows:
+	    is_part = bi.is_part_of_aggregation(
+                   "service", row["site"], row["host_name"], row["service_description"])
+	    if (is_part and current == 1) or \
+               (not is_part and current == 0):
+	        new_rows.append(row)
+	return new_rows
+
+declare_filter(300, BIServiceIsUsedFilter())

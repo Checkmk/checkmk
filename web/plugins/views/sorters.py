@@ -338,3 +338,4 @@ declare_simple_sorter("alerts_problem",  _("Number of problem alerts"),  "alerts
 
 # Aggregations
 declare_simple_sorter("aggr_name",   _("Aggregation name"),  "aggr_name",       cmp_simple_string)
+declare_simple_sorter("aggr_group",  _("Aggregation group"),  "aggr_group",       cmp_simple_string)

@@ -18,6 +18,18 @@
     * Quicksearch: display site name if more than one different site
       is present in the current search result list
     * FIX: Fixed encoding problem in "custom notification" message
+    * New configuration parameter page_heading for the HTML page heads
+      of the main frameset (%s will be replaced with OMD site name)
+    * FIX: Fix problem where snapins where invisible
+
+    BI
+    * FIX: Fixed filtering of Single-Host Aggregations
+    * New sorter for aggregation group
+    * FIX: fix sorting of Single-Host Aggregations after group
+    * Avoid duplicate rule incarnations when using FOREACH_*
+    * BI Boxes: allow closing boxes (not yet persisted)
+    * New filter for services (not) contained in any aggregate
+    * Configure sorting for all BI views
 
     Checks & Agents:
     * FIX: snmp_uptime handles empty snmp information without exception
@@ -25,6 +37,8 @@
       All oracle checks will return UNKNOWN when finding an ORA-* message
     * FIX: filesystem levels set via WATO didn't work, but do now
     * FIX: Group filters can handle groups without aliases now
+    * nfsmounts: Added nfs4 support thanks to Thorsten Hintemann
+    * megaraid_pdisks megaraid_ldisks: Support for Windows.  Thanks to Josef Hack
 
 1.2.0b1:
     Core, Setup, etc.:

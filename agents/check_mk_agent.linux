@@ -88,7 +88,7 @@ then
     STAT_BROKE="5.3.0"
 
     echo '<<<nfsmounts>>>'
-    sed -n '/ nfs /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts |
+    sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts |
         while read MP
 	do
 	 if [ $STAT_VERSION != $STAT_BROKE ]; then

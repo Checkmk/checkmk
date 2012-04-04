@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -120,8 +120,14 @@ def check_mem_used(item, params, info):
             return (0, 'OK - %s' % infotext, perfdata)
 
 
-check_info['mem.used'] = (check_mem_used, "Memory used", 1,  inventory_mem_used)
-check_config_variables.append("mem_extended_perfdata")
+check_info['mem.used'] = {
+    "check_function"         : check_mem_used,
+    "inventory_function"     : inventory_mem_used,
+    "service_description"    : "Memory used",
+    "has_perfdata"           : True,
+    "group"                  : "memory",
+    "check_config_variables" : [ "mem_extended_perfdata" ],
+}
 
 
 #   +----------------------------------------------------------------------+
@@ -145,7 +151,7 @@ factory_settings["memory_win_default_levels"] = {
 
 def inventory_mem_win(info):
     meminfo = parse_proc_meminfo(info)
-    if "SwapTotal" in meminfo:
+    if "PageTotal" in meminfo:
         return [(None, {})]
 
 def check_mem_windows(item, params, info):
@@ -156,7 +162,7 @@ def check_mem_windows(item, params, info):
     worststate = 0
     for title, what, paramname in [
         ( "Memory",    "Mem",  "memory" ),
-        ( "Page file", "Swap", "pagefile" )]:
+        ( "Page file", "Page", "pagefile" )]:
         total_kb = meminfo[what + "Total"]
         free_kb  = meminfo[what + "Free"]
         used_kb  = total_kb - free_kb
@@ -192,6 +198,7 @@ def check_mem_windows(item, params, info):
 
 
 check_info['mem.win'] = (check_mem_windows, "Memory and pagefile", 1, inventory_mem_win)
+checkgroup_of['mem.win'] = "memory_pagefile_win"
 
 
 #   +----------------------------------------------------------------------+

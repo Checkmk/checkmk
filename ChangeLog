@@ -37,6 +37,7 @@
       All oracle checks will return UNKNOWN when finding an ORA-* message
     * FIX: filesystem levels set via WATO didn't work, but do now
     * FIX: Group filters can handle groups without aliases now
+    * nfsmounts: Added nfs4 support thanks to Thorsten Hintemann
 
 1.2.0b1:
     Core, Setup, etc.:

@@ -38,6 +38,7 @@
     * FIX: filesystem levels set via WATO didn't work, but do now
     * FIX: Group filters can handle groups without aliases now
     * nfsmounts: Added nfs4 support thanks to Thorsten Hintemann
+    * megaraid_pdisks megaraid_ldisks: Support for Windows.  Thanks to Josef Hack
 
 1.2.0b1:
     Core, Setup, etc.:

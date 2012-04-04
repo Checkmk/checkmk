@@ -47,7 +47,7 @@
 #         STATISTICS FOR LUN :/dev/rdisk/disk6
 
 
-check_includes['diskstat'] = [ "diskstat.include" ]
+check_includes['hpux_lunstats'] = [ "diskstat.include" ]
 
 # Convert info to output needed for generic diskstat check
 def hpux_lunstats_convert(info):

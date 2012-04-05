@@ -524,6 +524,14 @@ table.validationerror img {
     font-size: 8pt;
 }
 
+.wato td.tag-ellipsis {
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+}
+
 /*-------------------------------------------------------------------------.
 |               ____                                                       |
 |              |  _ \ _ __ ___   __ _ _ __ ___  ___ ___                    |

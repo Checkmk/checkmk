@@ -165,6 +165,14 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "wato_hide_hosttags",
+    Checkbox(title = _("Hide hosttags in WATO folder view"),
+             label = _("hide hosttags"),
+             help = _("When enabled, hosttags are no longer shown within the WATO folder view"),
+             default_value = False),
+    domain = "multisite")
+
+register_configvar(group,
     "wato_max_snapshots",
     Integer(title = _("Number of configuration snapshots to keep"),
             help = _("Whenever you successfully activate changes a snapshot of the configuration "

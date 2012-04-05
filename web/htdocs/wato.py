@@ -1137,8 +1137,9 @@ def show_hosts(folder):
     html.write("<table class=data>\n")
     html.write("<tr><th class=left></th><th></th><th>"
                + _("Hostname") + "</th><th>"
-               + _("Auth") + "</th>"
-               + "<th>" + _("Tags") + "</th>")
+               + _("Auth") + "</th>")
+    if not config.wato_hide_hosttags:
+        html.write("<th>" + _("Tags") + "</th>")
 
     for attr, topic in host_attributes:
         if attr.show_in_table():
@@ -1256,13 +1257,15 @@ def show_hosts(folder):
             title = htmllib.strip_tags(auth)
         html.write('<td><img class=icon src="images/icon_%s.png" title="%s"></td>' % (icon, title))
 
-        # Raw tags
-        #
-        # Optimize wraps:
-        # 1. add <nobr> round the single tags to prevent wrap within tags
-        # 2. add "zero width space" (&#8203;)
-        html.write("<td>%s</td>" % "<b style='color: #888;'>|</b>&#8203;".join(
-                                                [ '<nobr>%s</nobr>' % t for t in host[".tags"] ]))
+        if not config.wato_hide_hosttags:
+            # Raw tags
+            #
+            # Optimize wraps:
+            # 1. add <nobr> round the single tags to prevent wrap within tags
+            # 2. add "zero width space" (&#8203;)
+            tag_title = "|".join([ '%s' % t for t in host[".tags"] ])
+            html.write("<td title='%s' class='tag-ellipsis'>%s</td>" % (tag_title, "<b style='color: #888;'>|</b>&#8203;".join(
+                                                [ '<nobr>%s</nobr>' % t for t in host[".tags"] ])))
 
         # Show attributes
         for attr, topic in host_attributes:

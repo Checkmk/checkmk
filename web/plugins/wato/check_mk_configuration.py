@@ -183,6 +183,19 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "reschedule_timeout",
+    Float(title = _("Timeout for rescheduling checks in Multisite"),
+          help = _("When you reschedule a check by clicking on the &quot;arrow&quot;-icon "
+                   "then Multisite will use this number of seconds as a timeout. If the "
+                   "monitoring core has not executed the check within this time, an error "
+                   "will be displayed and the page not reloaded."),
+          minvalue = 1.0,
+          default_value = 10.0,
+          unit = "sec",
+          display_format = "%.1f sec"),
+    domain = "multisite")
+
+register_configvar(group,
     "wato_activation_method",
     DropdownChoice(
         title = _("Wato restart mode for Nagios"),

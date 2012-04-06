@@ -1,10 +1,14 @@
 Title: BI nodes must not use the label of the aggregation for the node id
 Component: bi
-State: open
+Class: bug
+State: works4me
 Date: 2012-03-21 11:24:20
 Targetversion: 1.2.0
-Class: bug
 
 At the moment the aggregation label is used for the html node id without any escaping or similar.
 Labels like this "Host <a href=\"view.py?view_name=hoststatus&site=&host=$HOST$\">$HOST$</a>" will
 destroy the bi page but should really be possible.
+
+2012-04-06 11:26:05: changed state open -> works4me
+The label should not be used for HTML hacks. We'd rather invent
+some general method of adding custom data into the BI tree view.

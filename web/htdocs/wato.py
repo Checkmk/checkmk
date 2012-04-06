@@ -1840,6 +1840,7 @@ def mode_edithost(phase, new, cluster):
 
         html.begin_form("edithost")
         html.write('<table class="form nomargin">\n')
+        # html.write('<table class="form">\n')
 
         # host name
         html.write("<tr class=top><td class=legend>" + _("Hostname") +

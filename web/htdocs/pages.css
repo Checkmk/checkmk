@@ -363,24 +363,28 @@ table.form.nomargin {
 }
 table.form.nomargin td.legend,
 table.form.nomargin td.content,
+table.form.nomargin td.checkbox,
 table.form.nomargin td.buttons {
     border-top-style: none;
 }
 table.form.nomargin td.title {
     border-top-style: none;
-    padding-bottom: 10px;
     background-image: url("images/form_background.png");
     background-repeat: repeat;
 }
 table.form > tbody > tr > td {
-    padding: 4px 10px;
+    padding: 5px 8px;
+    color: #000;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #2f5f73;
 }
-table.form > tbody > tr > th {
+/*table.form > tbody > tr > th {
     border-width: 1px;
     border-color: #fff;
     border-style: solid solid none solid;
     padding: 4px 4px;
-}
+}*/
 
 table.form img.toggleheader {
     width: 20px;
@@ -394,15 +398,15 @@ table.form img.toggleheader.hover {
 }
 
 /* Left side where title and help is printed */
-table.form td.legend, table.form td.title {
+/*table.form td.legend,
+table.form td.title,
+table.form td.content,
+table.form td.checkbox {
     color: #000;
     border-width: 1px;
     border-style: solid;
     border-color: #2f5f73;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    border-right-style: none;
-}
+}*/
 
 /* Bottom row with action buttons, right justified */
 table.form td.buttons {
@@ -410,8 +414,7 @@ table.form td.buttons {
     border-width: 1px;
     border-style: solid;
     border-color: #2f5f73;
-    padding-top: 10px;
-    text-align: right;
+    /* text-align: right; */
 }
 
 /* Inter-heading row over complete width */
@@ -434,31 +437,36 @@ table.form td.lgend.button {
     border-right: 1px solid #fff;
 }
 
-table.form td.content {
-    padding-right: 2ex;
+/* table.form td.content {
     border-width: 1px;
     border-style: solid;
     border-color: #2f5f73;
     border-left-style: none;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    padding-left: 10px;
-}
+}*/
 
 td.legend, td.content {
     /* border: 1px solid #884; */
-    padding: 2px 0.5ex;
+   /* padding: 2px 0.5ex; */
+}
+
+td.content hr {
+    height: 1px;
+    border-style: none;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
 }
 
 td.legend {
-    padding-top: 3px;
+    /* padding-top: 3px; */
     color: #884;
     width: 150px;
 }
 
-td.content i {
-    font-size: 8pt;
+td.content i, td.legend i, td.content i a, td.legend i a, i.help, i.help a {
+    /* font-size: 8pt; */
+    font-style: italic;
     color: #fff;
+    font-weight: normal;
 }
 
 input.tab#results, input.tabactive#results { background-color: #fe6; }

@@ -86,8 +86,6 @@ Boston, MA 02110-1301 USA.
 
 .wato table.form td.legend {
     width: 300px;
-    padding-bottom: 8px;
-    padding-left: 20px;
 }
 
 .wato table.form td.legend h3 {
@@ -96,8 +94,9 @@ Boston, MA 02110-1301 USA.
     font-size: 9pt;
     font-weight: normal;
 }
+1* Foldable sections in host properties */
 .wato table.form td.title {
-    border-style: none none solid none;
+    /* border-style: none none solid none; */
 }
 
 .wato table.form td.title i {
@@ -109,38 +108,34 @@ Boston, MA 02110-1301 USA.
 
 .wato table.form td.legend i, .wato table.form td.title i {
     margin-top: 13px;
-    font-size: 9pt;
-    color: #eee;
+    /* color: #eee; */
 }
 
 .wato table.form td.content {
-    border-left-style: solid;
+    /* border-left-style: solid; */
     /* width: 494px; */
-    padding-top: 7px;
-    padding-bottom: 7px;
-    padding-right: 20px;
 }
 
 .wato table.form tr.top td,
 .wato table.form tr.top td,
 .wato table.form tr.top td.checkbox {
-    border-top-style: none;
+    /* border-top-style: none; */
 }
 
 .wato table.form.nomargin td.checkbox {
-    border-top-style: none;
+    /* border-top-style: none; */
 }
 
 
 .wato table.form td.checkbox {
-    width: 40px;
-    height: 40px;
-    padding-top: 7px;
-    vertical-align: top;
-    text-align: right;
-    border-width: 1px;
-    border-style: solid none solid none;
-    border-color: #2f5f73;
+    width: 20px;
+    /* height: 40px; */
+    /* padding-top: 7px; */
+    /* vertical-align: top; */
+    text-align: center;
+    /* border-width: 1px; */
+    /* border-style: solid none solid none; */
+    /* border-color: #2f5f73 */
 }
 
 .wato div.sitestatus {

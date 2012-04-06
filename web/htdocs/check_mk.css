@@ -57,7 +57,7 @@ th {
 }
 
 /* Default font size for the complete Multisite GUI */
-button, input, td, th, select {
+button, input, td, th, select, textarea {
     font-size: 9pt;
 }
 
@@ -144,7 +144,7 @@ label.image_button input {
     border: none;
     padding-left: 0px;
     padding-right: 10px;
-    padding-top: 2px;
+    padding-top: 0px;
     padding-bottom: 0px;
     background: transparent url('images/image_button_r.png') no-repeat;
     background-position: right -35px;

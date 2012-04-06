@@ -45,7 +45,7 @@ register_configvar(group,
     "debug",
     Checkbox(title = _("Debug mode"),
              label = _("enable debug mode"),
-             help = _("When Multisite is running in debug mode, interal Python error messages "
+             help = _("When Multisite is running in debug mode, internal Python error messages "
                       "are being displayed and various debug information in other places is "
                       "also available."),
             default_value = False),

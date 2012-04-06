@@ -335,13 +335,8 @@ table.filters {
     margin-left: 3px;
     width: 100%;
 }
-div.filtercomment {
-    margin-left: 0px;
-    font-size: 8pt;
+table.filters td.filtertitle {
     width: 300px;
-    font-style: italic;
-    color: #478;
-    padding-bottom: 6px;
 }
 
 table.filters td {
@@ -361,39 +356,19 @@ table.filters th {
     border-bottom: 1px solid #fff;
 }
 
-table.filters td.usageshow { background-color: #ff0; }
-table.filters td.usagehide { background-color: #f0f; }
-table.filters td.usagehard { background-color: #89f; }
-
-table.filters td.usageoff {
-    background-image: url("images/tableshadow.png");
-    background-repeat: repeat;
+table.filters td.widgetoff *,
+table.filters td.widgethide * {
+    display: none;
 }
 
-table.filters td.usageshow select { background-color: #cc0; }
-table.filters td.usagehide select { background-color: #f6f; }
-table.filters td.usagehard select { background-color: #67c; }
-
-table.filters td.widgetshow {
-    background-color: #FAF995;
-}
-table.filters td.widgetoff {
-    background-image: none;
-    color: #aa6;
-}
-table.filters td.widgethard {
-    background-image: none;
-    background-color: #abf;
-    color: #000;
-}
-table.filters td.widgethide {
-    background-image: none;
-    background-color: #e8e;
-    color: #000;
-}
+table.filters td.usageshow select { border: 3px solid #ff4; }
+table.filters td.usagehide select { border: 3px solid #f8f; }
+table.filters td.usageoff select { border: 3px solid #888; }
+table.filters td.usagehard select { border: 3px solid #45f; }
 
 table.filters td.title {
     padding-right: 1em;
+    width: 300px;
 }
 
 /* The column editor is part of the view editor */
@@ -406,8 +381,6 @@ div.columneditor table {
     margin: 0;
     background-image: url("images/form_background.png");
     background-repeat: repeat;
-    border: 1px solid #fff;
-    -moz-border-radius: 5px;
     width: 100%;
 }
 
@@ -426,9 +399,9 @@ div.columneditor select {
     width: 100%;
 }
 
-div.columneditor td, div.columneditor select {
+/*div.columneditor td, div.columneditor select {
     font-size: 0.9em;
-}
+}*/
 
 input#try{
     float:left;

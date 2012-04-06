@@ -529,11 +529,11 @@ def page_edit_view():
     html.write("<tr><td class=legend>" + _("Buttontext") + "</td><td class=content>")
     html.text_input("view_linktitle", size=26)
     html.write("&nbsp; Icon: ")
-    html.text_input("view_icon", size=16)
+    html.text_input("view_icon", size=14)
     html.write("</td></tr>\n")
 
     html.write("<tr><td class=legend>" + _("Description") + "</td><td class=content>")
-    html.text_area("view_description", "", 4)
+    html.text_area("view_description", "", rows=4, cols=50)
     html.write("</td></tr>\n")
 
     # Larger sections are foldable and closed by default
@@ -550,12 +550,15 @@ function toggle_section(nr, oImg) {
 """)
 
 
-    def section_header(sid, title):
+    def section_header(sid, title, help=None):
         html.write("<tr><td class=legend>")
         html.write("<img src=images/tree_00.png id=img_%d onclick=\"toggle_section('%d', this)\" class=toggleheader "
                    "title=\"Click to open this section\" "
                    "onmouseover=\"this.className='toggleheader hover';\" "
                    "onmouseout=\"this.className='toggleheader';\"><b>%s</b> " % (sid, sid, title))
+        # We cannot show the help yet, since the hiding will not hide it
+        # if help:
+        #    html.write("<br><i class=help>%s</i>" % help)
         html.write("</td><td class=content>")
         html.write("<div id=\"ed_%d\" style=\"display: none;\">" % sid)
 
@@ -590,11 +593,19 @@ function toggle_section(nr, oImg) {
 
     # [3] Filters
     sid = 3
-    section_header(sid, _("Filters"))
+    section_header(sid, _("Filters"), help=
+        _("Please configure, which of the available filters will be used in this "
+          "view. <br><br><b>Show to user</b>: the user will be able to see and modify these "
+          "filters. You can define default values. <br><br><b>Hardcode</b>: these filters " 
+          "will be in effect but not visible to the user. <br><br><b>Use for linking</b>: "
+          "These filters (usually site, host name and service) are needed for views "
+          "that have a context (such as a host or a service). Such views can be used "
+          "as targets for columns. Whenever the context is available, a button to that "
+          "view will be displayed in related views."))
     html.write("<table class=filters>")
     html.write("<tr><th>")
     html.write(_("Filter"))
-    html.write("</th><th>"+_('usage')+"</th><th>"+_('hardcoded settings')+"</th></tr>\n")
+    html.write("</th><th>"+_('Usage')+"</th><th>"+_('Hardcoded Settings')+"</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
     # sort filters according to title
     s = [(filt.sort_index, filt.title, fname, filt)
@@ -603,9 +614,9 @@ function toggle_section(nr, oImg) {
     s.sort()
     for sortindex, title, fname, filt in s:
         html.write("<tr>")
-        html.write("<td class=title>%s" % title)
+        html.write("<td class=filtertitle>%s" % title)
         if filt.comment:
-            html.write("<br><div class=filtercomment>%s</div>" % filt.comment)
+            html.write("<br><i class=help>%s</i>" % filt.comment)
         html.write("</td>")
         html.write("<td class=usage>")
         html.sorted_select("filter_%s" % fname,
@@ -728,24 +739,20 @@ def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
         collist += [ ("-", "---") ] + collist_of_collection(joined, collist)
 
     html.write("<div class=columneditor id=%seditor_%d><table><tr>" % (var_prefix, n))
+
+    # Buttons for deleting and moving around
     html.write('<td class="cebuttons" rowspan=5>')
-    html.write('<img onclick="delete_view_column(this);" '
-            'onmouseover=\"hilite_icon(this, 1)\" '
-            'onmouseout=\"hilite_icon(this, 0)\" '
-            'src="images/button_closesnapin_lo.png">')
+    html.icon_button("#", _("Delete this column"), "delete", onclick="delete_view_column(this);")
+    display = n == 1 and 'display:none;' or ''
+    html.icon_button("#", _("Move this column up"), "up", onclick="move_column_up(this);",
+                     id="%sup_%d" % (var_prefix, n), style=display)
 
-    display = n == 1 and ' style="display:none;"' or ''
-    html.write('<img id="%sup_%d" onclick="move_column_up(this);" '
-            'onmouseover=\"hilite_icon(this, 1)\" '
-            'onmouseout=\"hilite_icon(this, 0)\" '
-            'src="images/button_moveup_lo.png"%s>' % (var_prefix, n, display))
-
-    display = n == maxnum - 1 and ' style="display:none;"' or ''
-    html.write('<img id="%sdown_%d" onclick="move_column_down(this);" '
-            'onmouseover=\"hilite_icon(this, 1)\" '
-            'onmouseout=\"hilite_icon(this, 0)\" '
-            'src="images/button_movedown_lo.png"%s>' % (var_prefix, n, display))
+    display = n == maxnum - 1 and 'display:none;' or ''
+    html.icon_button("#", _("Move this column down"), "down", onclick="move_column_down(this);",
+                     id="%sdown_%d" % (var_prefix, n), style=display)
     html.write('</td>')
+
+    # Actual column editor
     html.write('<td id="%slabel_%d" class=celeft>%s %d:</td><td>' % (var_prefix, n, _('Column'), n))
     html.select("%s%d" % (var_prefix, n), collist, "", "toggle_join_fields('%s', %d, this)" % (var_prefix, n))
     display = 'none'

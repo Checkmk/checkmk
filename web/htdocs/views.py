@@ -2020,20 +2020,23 @@ def core_command(what, row):
         spec = "%s;%s" % (host, descr)
         cmdtag = "SVC"
         prefix = "service_"
-    elif what in [ "comment", "downtime" ]:
+    else:
         spec = row.get(what + "_id")
         if descr:
             cmdtag = "SVC"
         else:
             cmdtag = "HOST"
-    else:
-        raise MKInternalError(_("Sorry, no actions possible on table %s") % tablename)
 
     commands = None
+    # Call all command actions. The first one that detects
+    # itself to be executed (by examining the HTML variables)
+    # will return a command to execute and a title for the
+    # confirmation dialog.
     for cmd in multisite_commands:
         if config.may(cmd["permission"]):
             result = cmd["action"](cmdtag, spec, row)
             if result:
+                executor = cmd.get("executor", command_executor_livestatus)
                 commands, title = result
                 break
 
@@ -2043,10 +2046,13 @@ def core_command(what, row):
     # Some commands return lists of complete command lines, others
     # just return one basic command without timestamp. Convert those
     if type(commands) != list:
-        commands = ["[%d] %s\n" % (int(time.time()), commands)]
+        commands = [commands]
 
-    return commands, title
+    return commands, title, executor
 
+
+def command_executor_livestatus(command, site):
+    html.live.command("[%d] %s" % (int(time.time()), command), site)
 
 # Returns:
 # True -> Actions have been done
@@ -2064,18 +2070,18 @@ def do_actions(view, what, action_rows, backurl):
         return False # no actions done
 
     command = None
-    title = core_command(what, action_rows[0])[1] # just get the title
+    title, executor = core_command(what, action_rows[0])[1:3] # just get the title and executor
     if not html.confirm(_("Do you really want to %s the following %d %ss?") %
                                                (title, len(action_rows), what)):
         return False
 
     count = 0
     for row in action_rows:
-        nagios_commands, title = core_command(what, row)
+        nagios_commands, title, executor = core_command(what, row)
         for command in nagios_commands:
             if type(command) == unicode:
                 command = command.encode("utf-8")
-            html.live.command(command, row["site"])
+            executor(command, row["site"])
             count += 1
 
     if command:

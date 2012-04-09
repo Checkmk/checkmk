@@ -770,7 +770,7 @@ def mode_folder(phase):
     elif phase == "buttons":
         global_buttons()
         if config.may("wato.rulesets") or config.may("wato.seeall"):
-            html.context_button(_("Rulesets"),        make_link([("mode", "rulesets")]), "rulesets")
+            html.context_button(_("Rulesets"),        make_link([("mode", "ruleeditor")]), "rulesets")
         html.context_button(_("Folder Properties"), make_link_to([("mode", "editfolder")], g_folder), "edit")
         if config.may("wato.manage_folders"):
             html.context_button(_("New folder"),        make_link([("mode", "newfolder")]), "newfolder")
@@ -1735,7 +1735,7 @@ def mode_edithost(phase, new, cluster):
             html.context_button(_("Services"),
                   make_link([("mode", "inventory"), ("host", hostname)]), "services")
             html.context_button(_("Rulesets"),
-                  make_link([("mode", "rulesets"), ("host", hostname), ("local", "on")]), "rulesets")
+                  make_link([("mode", "ruleeditor"), ("host", hostname), ("local", "on")]), "rulesets")
 
     elif phase == "action":
         if not new and html.var("delete"): # Delete this host
@@ -3870,7 +3870,7 @@ class ContactGroupsAttribute(Attribute):
     # dynamic than leave them out and override name() and
     # title()
     def __init__(self):
-        url = "wato.py?mode=rulesets"
+        url = "wato.py?mode=rulesets&group=grouping"
         Attribute.__init__(self, "contactgroups", _("Permissions"),
           _("Only members of the contact groups listed here have WATO permission "
             "to the host / folder. If you want, you can make those contact groups "
@@ -4613,13 +4613,16 @@ def mode_main(phase):
 
 def render_main_menu(some_modules, columns = 2):
     html.write("<table class=configmodules>")
-    for nr, (mode, title, icon, permission, help) in enumerate(some_modules):
+    for nr, (mode_or_url, title, icon, permission, help) in enumerate(some_modules):
         if not config.may("wato." + permission) and not config.may("wato.seeall"):
             continue
 
         if nr % columns == 0:
             html.write("<tr>")
-        url = make_link([("mode", mode)])
+        if '?' in mode_or_url or '/' in mode_or_url:
+            url = mode_or_url
+        else:
+            url = make_link([("mode", mode_or_url)])
         html.write('<td class=icon><a href="%s"><img src="images/icon_%s.png"></a></td>' %
               (url, icon))
         html.write('</td><td class=text><a href="%s">%s</a><br><i class=help>%s</i></td>' %
@@ -7033,7 +7036,7 @@ def mode_edit_user(phase):
     # Contact groups
     html.write("<tr><td class=legend colspan=2>")
     url1 = make_link([("mode", "contact_groups")])
-    url2 = make_link([("mode", "rulesets")])
+    url2 = make_link([("mode", "rulesets"), ("group", "grouping")])
     html.write(_("Contact groups<br><i>Contact groups are used to assign monitoring "
                  "objects to users. If you haven't defined any contact groups yet, "
                  "then first <a href='%s'>do so</a>. Hosts and services can be "
@@ -8489,23 +8492,58 @@ def change_host_tags_in_rules(folder, operations, mode):
 #   | from main.mk.                                                        |
 #   '----------------------------------------------------------------------'
 
+def mode_ruleeditor(phase):
+    only_host = html.var("host", "")
+    only_local = html.var("local")
+
+    if phase == "title":
+        return _("Configuration of Hosts and Services (Ruleeditor)")
+
+    elif phase == "buttons":
+        global_buttons()
+        return
+    
+    elif phase == "action":
+        return
+    
+    if not only_host:
+        render_folder_path(keepvarnames = ["mode", "local"])
+
+    # Group names are separated with "/" into main group and optional subgroup
+    groupnames = list(set([ gn.split("/")[0] for gn in g_rulespec_groups.keys() ]))
+    groupnames.sort()
+    menu = []
+    for groupname in groupnames:
+        url = make_link([("mode", "rulesets"), ("group", groupname), 
+                         ("host", only_host), ("local", only_local)])
+        title, help = g_rulegroups.get(groupname, (groupname, ""))
+        menu.append((url, title, "rulesets", "rulesets", help))
+    render_main_menu(menu)
+        
+
+
+
 def mode_rulesets(phase):
+    group = html.var("group") # obligatory
+    title, help = g_rulegroups.get(group, (group, None))
     only_host = html.var("host", "")
     only_local = html.var("local")
 
     if phase == "title":
         if only_host:
-            return _("Rulesets for hosts %s") % only_host
+            return _("%s - %s") % (only_host, title)
         else:
-            return _("Rulesets for hosts and services")
+            return title
 
     elif phase == "buttons":
         if only_host:
             home_button()
+            html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
             html.context_button(only_host,
                  make_link([("mode", "edithost"), ("host", only_host)]), "back")
         else:
             global_buttons()
+            html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
             if config.may("wato.hosts") or config.may("wato.seeall"):
                 html.context_button(_("Folder"), make_link([("mode", "folder")]), "folder")
         return
@@ -8515,6 +8553,9 @@ def mode_rulesets(phase):
 
     if not only_host:
         render_folder_path(keepvarnames = ["mode", "local"])
+
+    if help:
+        html.write("<div class=info>%s</div>" % help)
 
     html.begin_form("local")
     html.checkbox("local", False, onclick="form.submit();")
@@ -8541,8 +8582,10 @@ def mode_rulesets(phase):
     else:
         all_rulesets = load_all_rulesets()
 
-    groupnames = g_rulespec_groups.keys()
+    groupnames = [ gn for gn in g_rulespec_groups.keys() 
+                   if gn == group or gn.startswith(group + "/") ]
     groupnames.sort()
+    do_folding = len(groupnames) > 1
 
     something_shown = False
     # Loop over all ruleset groups
@@ -8577,8 +8620,14 @@ def mode_rulesets(phase):
             if not title_shown:
                 if something_shown:
                     html.write("</table>")
-                    html.end_foldable_container()
-                html.begin_foldable_container("rulesets", groupname, False, groupname, indent=False)
+                    if do_folding:
+                        html.end_foldable_container()
+                if '/' in groupname:
+                    subgroupname = groupname.split("/", 1)[1]
+                else:
+                    subgroupname = groupname
+                if do_folding:
+                    html.begin_foldable_container("rulesets", groupname, False, subgroupname, indent=False)
                 html.write('<table class="data rulesets">')
                 html.write("<tr><th>" + _("Rule set") + "</th>"
                            "<th>" + _("Check_MK Variable") + "</th><th>" + _("Rules") + "</th></tr>\n")
@@ -8610,7 +8659,8 @@ def mode_rulesets(phase):
 
     if something_shown:
         html.write("</table>")
-        html.end_foldable_container()
+        if do_folding:
+            html.end_foldable_container()
 
     else:
         if only_host:
@@ -8644,8 +8694,9 @@ def mode_edit_ruleset(phase):
 
     elif phase == "buttons":
         global_buttons()
+        group = rulespec["group"].split("/")[0]
         html.context_button(_("All rulesets"),
-              make_link([("mode", "rulesets"), ("host", hostname)]), "back")
+              make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
         if hostname:
             html.context_button(_("Services"),
                  make_link([("mode", "inventory"), ("host", hostname)]), "back")
@@ -9615,6 +9666,10 @@ def load_all_rulesets():
     return all_rulesets
 
 
+g_rulegroups = {}
+def register_rulegroup(group, title, help):
+    g_rulegroups[group] = (title, help)
+
 g_rulespecs = {}
 g_rulespec_groups = {}
 def register_rule(group, varname, valuespec = None, title = None,
@@ -10338,6 +10393,7 @@ modes = {
    "snapshot"           : (["snapshots"], mode_snapshot),
    "globalvars"         : (["global"], mode_globalvars),
    "edit_configvar"     : (["global"], mode_edit_configvar),
+   "ruleeditor"         : (["rulesets"], mode_ruleeditor),
    "rulesets"           : (["rulesets"], mode_rulesets),
    "edit_ruleset"       : (["rulesets"], mode_edit_ruleset),
    "edit_rule"          : (["rulesets"], mode_edit_rule),

@@ -507,7 +507,11 @@ register_configvar(group,
 #   | Declaration of rules to be defined in main.mk or in folders          |
 #   +----------------------------------------------------------------------+
 
-group = _("Grouping")
+register_rulegroup("grouping", _("Grouping"), 
+   _("Assignment of host and services to host groups, service groups and contacts groups. "
+     "The assignment to contacts groups is neccessary for configuring notifications. "
+     "Before you can assign to groups, you need to create them."))
+group = "grouping"
 
 register_rule(group,
     "host_groups",
@@ -540,7 +544,10 @@ register_rule(group,
     itemtype = "service")
 
 
-group = _("Monitoring Configuration")
+register_rulegroup("monconf", _("Monitoring Configuration"), 
+    _("General object configuration like timeperiods and intervals for checking and configuration, "
+      "services to be ignored by inventory, and clustering"))
+group = "monconf"
 
 register_rule(group,
     "extra_host_conf:max_check_attempts",
@@ -774,7 +781,9 @@ register_rule(group,
     itemtype = "service")
 
 
-group = _("SNMP")
+register_rulegroup("snmp", "SNMP", 
+   _("General settings for SNMP like communities and SNMPv3 parameters"))
+group = "snmp"
 
 _snmpv3_basic_elements = [
      DropdownChoice(
@@ -835,7 +844,10 @@ register_rule(group,
              "If you want to use SNMP v2c on those devices, nevertheless, then use this rule set. "
              "One reason is enabling 64 bit counters."))
 
-group = _("Operation mode of Check_MK")
+register_rulegroup("checkmk", _("Operation mode of Check_MK"),
+   _("Settings for the data aquisition via Check_MK, port numbers, timeouts, alternative "
+     "datasource programs, etc."))
+group = "checkmk"
 
 register_rule(group,
     "agent_ports",

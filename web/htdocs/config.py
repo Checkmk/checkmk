@@ -615,6 +615,7 @@ wato_host_tags = []
 wato_aux_tags = []
 wato_hide_filenames = True
 wato_hide_hosttags = False
+wato_hide_varnames = False
 wato_max_snapshots = 50
 wato_num_hostspecs = 12
 wato_num_itemspecs = 15

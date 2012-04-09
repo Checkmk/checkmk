@@ -8,6 +8,9 @@
       have the mail addresses and other notification options persisted
     * FIX: deletion of automation accounts now works
     * FIX: Disabling notifications for users does work now
+    * New main overview for rule editor
+    * New multisite.mk option wato_hide_varnames for hiding Check_MK 
+      configuration variable names from the user
 
     Multisite
     * Added config option default_ts_format to configure default timestamp

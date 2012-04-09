@@ -173,6 +173,15 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "wato_hide_varnames",
+    Checkbox(title = _("Hide names of configuration variables"),
+             label = _("hide variable names"),
+             help = _("When enabled, internal configuration variable names of Check_MK are hidded "
+                      "from the user (for example in the rule editor)"),
+             default_value = False),
+    domain = "multisite")
+
+register_configvar(group,
     "wato_max_snapshots",
     Integer(title = _("Number of configuration snapshots to keep"),
             help = _("Whenever you successfully activate changes a snapshot of the configuration "

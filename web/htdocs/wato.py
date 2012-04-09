@@ -4684,9 +4684,10 @@ def mode_globalvars(phase):
     for groupname in groupnames:
         html.begin_foldable_container("globalvars", groupname, False, groupname, indent=False)
         html.write('<table class="data globalvars">')
-        html.write("<tr><th>" + _("Configuration variable") +
-                   "</th><th>" +_("Check_MK variable") + "</th><th>" +
-                   _("Default") + "</th><th>" + _("Your setting") + "</th><th></th></tr>\n")
+        html.write("<tr><th>" + _("Configuration variable") + "</th>")
+        if not config.wato_hide_varnames:
+            html.write("<th>" +_("Check_MK variable") + "</th>")
+        html.write("<th>" + _("Default") + "</th><th>" + _("Your setting") + "</th><th></th></tr>\n")
         odd = "even"
 
         for domain, varname, valuespec in g_configvar_groups[groupname]:
@@ -4704,7 +4705,8 @@ def mode_globalvars(phase):
             edit_url = make_link([("mode", "edit_configvar"), ("varname", varname)])
 
             html.write('<td class=title><a href="%s">%s</a></td>' % (edit_url, valuespec.title()))
-            html.write('<td class=varname><tt>%s</tt></td>' % varname)
+            if not config.wato_hide_varnames:
+                html.write('<td class=varname><tt>%s</tt></td>' % varname)
             if varname in current_settings:
                 html.write('<td class=inherited>%s</td>' % valuespec.value_to_text(defaultvalue))
                 html.write('<td><b>%s</b></td>'          % valuespec.value_to_text(current_settings[varname]))
@@ -8552,7 +8554,7 @@ def mode_rulesets(phase):
         return
 
     if not only_host:
-        render_folder_path(keepvarnames = ["mode", "local"])
+        render_folder_path(keepvarnames = ["mode", "local", "group"])
 
     if help:
         html.write("<div class=info>%s</div>" % help)
@@ -8629,8 +8631,10 @@ def mode_rulesets(phase):
                 if do_folding:
                     html.begin_foldable_container("rulesets", groupname, False, subgroupname, indent=False)
                 html.write('<table class="data rulesets">')
-                html.write("<tr><th>" + _("Rule set") + "</th>"
-                           "<th>" + _("Check_MK Variable") + "</th><th>" + _("Rules") + "</th></tr>\n")
+                html.write("<tr><th>" + _("Rule set") + "</th>")
+                if not config.wato_hide_varnames:
+                    html.write("<th>" + _("Check_MK Variable") + "</th>")
+                html.write("<th>" + _("Rules") + "</th></tr>\n")
                 odd = "even"
                 title_shown = True
 
@@ -8645,7 +8649,8 @@ def mode_rulesets(phase):
 
             html.write('<td class=title><a href="%s">%s</a></td>' % (view_url, rulespec["title"]))
             display_varname = ':' in varname and '%s["%s"]' % tuple(varname.split(":")) or varname
-            html.write('<td class=varname><tt>%s</tt></td>' % display_varname)
+            if not config.wato_hide_varnames:
+                html.write('<td class=varname><tt>%s</tt></td>' % display_varname)
             html.write('<td class=number>')
             if num_local_rules:
                 if only_host:

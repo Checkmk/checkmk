@@ -357,7 +357,8 @@ def handler(req, profiling = True):
             html.header(_("Livestatus problem"))
             html.show_error(_("Livestatus problem: %s") % e)
             html.footer()
-        response_code = apache.HTTP_INTERNAL_SERVER_ERROR
+        else:
+            response_code = apache.HTTP_BAD_GATEWAY
 
     except apache.SERVER_RETURN:
         raise

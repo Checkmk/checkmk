@@ -1,10 +1,12 @@
-Title: Commands with checkboxes ->  Request-URI Too Large
-Component: multisite
+Title: Hosts with many services in replicated WATO ->  Request-URI Too Large
+Component: wato
 State: open
 Date: 2012-04-06 11:23:12
 Targetversion: 1.2.0
 Class: bug
 
-When you use checkboxes for selecting many items in a host
-or service view and then issue a command, then the request
-URI will be too long. Can we convert this to a POST request?
+When a host has many services and you save a manual check
+configuration for a host on a slave site, then the internal
+web services the remotely does inventory creates a too large
+URL. Either convert this to POST or send the list of 
+services as a Python object as the body of the request.

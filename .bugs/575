@@ -1,9 +1,9 @@
 Title: Undo changes from the commit queue
 Component: wato
-State: open
+Class: nastiness
+State: wontfix
 Date: 2012-01-09 15:38:00
 Targetversion: 1.2.0
-Class: nastiness
 
 This will be an unloved request...
 
@@ -19,3 +19,5 @@ ore transactions but are direct modifications to the config files. Also
 changes build are built on previous changes. The only possible thing is
 to make a snapshot and get back to the snapshot later.
 
+
+2012-04-10 08:53:57: changed state open -> wontfix

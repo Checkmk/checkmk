@@ -997,7 +997,7 @@ checkgroups.append((
 checkgroups.append((
     subgroup_storage,
     "raid",
-    _("RAID: overal state"),
+    _("RAID: overall state"),
     None,
     TextAscii(
         title = _("Name of the device"),

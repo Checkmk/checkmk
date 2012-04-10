@@ -244,7 +244,7 @@ multisite_icons.append({
 def logwatch_url(sitename, notes_url):
     i = notes_url.index("check_mk/logwatch.py")
     site = html.site_status[sitename]["site"]
-    return site["url_prefix"] + notes_url[i:]
+    return site["url_prefix"] + notes_url[i:] + '&master_url=&'
 
 def paint_notes(what, row, tags, custom_vars):
     if 'X' in html.display_options:

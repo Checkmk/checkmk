@@ -6523,9 +6523,7 @@ def encrypt_password(password, salt = None):
     return md5crypt.md5crypt(password, salt, '$1$')
 
 def site_is_local(siteid):
-    site = config.sites[siteid]
-    return "socket" not in site \
-        or site["socket"] == "unix:" + defaults.livestatus_unix_socket
+    return config.site_is_local(siteid)
 
 # Returns the ID of our site. This function only works in replication
 # mode and looks for an entry connecting to the local socket.

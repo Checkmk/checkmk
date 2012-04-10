@@ -45,7 +45,7 @@ register_configvar(group,
     "debug",
     Checkbox(title = _("Debug mode"),
              label = _("enable debug mode"),
-             help = _("When Multisite is running in debug mode, interal Python error messages "
+             help = _("When Multisite is running in debug mode, internal Python error messages "
                       "are being displayed and various debug information in other places is "
                       "also available."),
             default_value = False),
@@ -165,6 +165,23 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "wato_hide_hosttags",
+    Checkbox(title = _("Hide hosttags in WATO folder view"),
+             label = _("hide hosttags"),
+             help = _("When enabled, hosttags are no longer shown within the WATO folder view"),
+             default_value = False),
+    domain = "multisite")
+
+register_configvar(group,
+    "wato_hide_varnames",
+    Checkbox(title = _("Hide names of configuration variables"),
+             label = _("hide variable names"),
+             help = _("When enabled, internal configuration variable names of Check_MK are hidded "
+                      "from the user (for example in the rule editor)"),
+             default_value = False),
+    domain = "multisite")
+
+register_configvar(group,
     "wato_max_snapshots",
     Integer(title = _("Number of configuration snapshots to keep"),
             help = _("Whenever you successfully activate changes a snapshot of the configuration "
@@ -172,6 +189,19 @@ register_configvar(group,
                      "snapshots when the maximum number of snapshots is reached."),
              minvalue = 1,
              default_value = 50),
+    domain = "multisite")
+
+register_configvar(group,
+    "reschedule_timeout",
+    Float(title = _("Timeout for rescheduling checks in Multisite"),
+          help = _("When you reschedule a check by clicking on the &quot;arrow&quot;-icon "
+                   "then Multisite will use this number of seconds as a timeout. If the "
+                   "monitoring core has not executed the check within this time, an error "
+                   "will be displayed and the page not reloaded."),
+          minvalue = 1.0,
+          default_value = 10.0,
+          unit = "sec",
+          display_format = "%.1f sec"),
     domain = "multisite")
 
 register_configvar(group,
@@ -486,7 +516,11 @@ register_configvar(group,
 #   | Declaration of rules to be defined in main.mk or in folders          |
 #   +----------------------------------------------------------------------+
 
-group = _("Grouping")
+register_rulegroup("grouping", _("Grouping"), 
+   _("Assignment of host and services to host groups, service groups and contacts groups. "
+     "The assignment to contacts groups is neccessary for configuring notifications. "
+     "Before you can assign to groups, you need to create them."))
+group = "grouping"
 
 register_rule(group,
     "host_groups",
@@ -519,7 +553,10 @@ register_rule(group,
     itemtype = "service")
 
 
-group = _("Monitoring Configuration")
+register_rulegroup("monconf", _("Monitoring Configuration"), 
+    _("General object configuration like timeperiods and intervals for checking and configuration, "
+      "services to be ignored by inventory, and clustering"))
+group = "monconf"
 
 register_rule(group,
     "extra_host_conf:max_check_attempts",
@@ -753,7 +790,9 @@ register_rule(group,
     itemtype = "service")
 
 
-group = _("SNMP")
+register_rulegroup("snmp", "SNMP", 
+   _("General settings for SNMP like communities and SNMPv3 parameters"))
+group = "snmp"
 
 _snmpv3_basic_elements = [
      DropdownChoice(
@@ -814,7 +853,10 @@ register_rule(group,
              "If you want to use SNMP v2c on those devices, nevertheless, then use this rule set. "
              "One reason is enabling 64 bit counters."))
 
-group = _("Operation mode of Check_MK")
+register_rulegroup("checkmk", _("Operation mode of Check_MK"),
+   _("Settings for the data aquisition via Check_MK, port numbers, timeouts, alternative "
+     "datasource programs, etc."))
+group = "checkmk"
 
 register_rule(group,
     "agent_ports",

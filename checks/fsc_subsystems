@@ -42,7 +42,7 @@ def check_fsc_subsystems(item, params, info):
         else:
             return (3, "UNKNOWN - unknown status %d" % status)
 
-    return (3, "UNKNOWN - FAN %s not found in SNMP data" % item)
+    return (3, "UNKNOWN - Subsystem %s not found in SNMP data" % item)
 
 check_info['fsc_subsystems'] = (check_fsc_subsystems, "FSC %s", 0,  inventory_fsc_subsystems)
 snmp_info['fsc_subsystems'] = ( ".1.3.6.1.4.1.231.2.10.2.11.3.1.1", [ 2, 3 ])

@@ -335,6 +335,13 @@ def roles_of_user(user):
     else:
         return []
 
+def alias_of_user(user):
+    if user in multisite_users:
+        return multisite_users[user].get("alias", user)
+    else:
+        return user
+
+
 def base_roles_of(some_roles):
     base_roles = set([])
     for r in some_roles:
@@ -570,6 +577,9 @@ custom_style_sheet = None
 # URL for start page in main frame (welcome page)
 start_url = "dashboard.py"
 
+# Page heading for main frame set
+page_heading = "Check_MK %s" 
+
 # Timeout for rescheduling of host- and servicechecks
 reschedule_timeout = 10.0
 
@@ -578,6 +588,9 @@ filter_columns = 2
 
 # Default language for l10n
 default_language = None
+
+# Default timestamp format to be used in multisite
+default_ts_format = 'mixed'
 
 # Default authentication type. Can be changed to e.g. "cookie" for
 # using the cookie auth
@@ -601,6 +614,8 @@ wato_enabled = True
 wato_host_tags = []
 wato_aux_tags = []
 wato_hide_filenames = True
+wato_hide_hosttags = False
+wato_hide_varnames = False
 wato_max_snapshots = 50
 wato_num_hostspecs = 12
 wato_num_itemspecs = 15

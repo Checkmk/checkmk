@@ -26,9 +26,25 @@
 
 # Rules for configuring parameters of checks (services)
 
-group = _("Parameters and rules for inventorized checks")
+register_rulegroup("checkparams", _("Parameters and rules for inventorized checks"),
+    _("With these rules you configure parameters (such as levels) for checks that "
+      "have been found and created by Check_MK inventory."))
+group = "checkparams"
 
-register_rule(group,
+subgroup_networking =   _("Networking")
+subgroup_windows =      _("Windows")
+subgroup_storage =      _("Storage, Filesystems and Files")
+subgroup_cpumem =       _("Memory, CPU, Kernel ressources")
+subgroup_time =         _("Time synchronization")
+subgroup_printing =     _("Printers")
+subgroup_environment =  _("Temperature, Humidity, etc.")
+subgroup_database =     _("SQL Databases")
+subgroup_applications = _("Various applications")
+subgroup_virt =         _("Virtualization")
+subgroup_hardware =     _("Hardware, BIOS")
+subgroup_ps =           _("Processes and Services")
+
+register_rule(group + "/" + subgroup_networking,
     "ping_levels",
     Dictionary(
         title = _("PING and host check parameters"),
@@ -78,6 +94,7 @@ register_rule(group,
 checkgroups = []
 
 checkgroups.append((
+    subgroup_windows,
     "ad_replication",
     _("Active Directory Replication"),
     Tuple(
@@ -133,6 +150,7 @@ register_rule(group,
 )
 
 checkgroups.append((
+    subgroup_storage,
     "brocade_fcport",
     _("Brocade FC FibreChannel ports"),
     Dictionary(
@@ -276,6 +294,7 @@ checkgroups.append((
 ))
 
 checkgroups.append((
+    subgroup_storage,
     "fs_mount_options",
     _("Filesystem mount options (Linux/UNIX)"),
     ListOfStrings(
@@ -292,6 +311,7 @@ checkgroups.append((
 
 
 checkgroups.append((
+   subgroup_time,
     "systemtime",
     _("System time offset"),
     Tuple(
@@ -306,6 +326,7 @@ checkgroups.append((
 ))
 
 checkgroups.append((
+    subgroup_storage,
     "fileinfo",
     _("Fileinfo"),
     Dictionary(
@@ -354,6 +375,7 @@ checkgroups.append((
 ))
 
 checkgroups.append((
+    subgroup_cpumem,
     "memory_pagefile_win",
     _("Memory and pagefile levels for Windows"),
     Dictionary(
@@ -376,6 +398,7 @@ checkgroups.append((
 ))
 
 checkgroups.append((
+    subgroup_networking,
     "tcp_conn_stats",
     ("TCP connection stats"),
     Dictionary(
@@ -493,6 +516,7 @@ checkgroups.append((
 ))
 
 checkgroups.append((
+    subgroup_windows,
     "msx_queues",
     _("MS Exchange message queues"),
     Tuple(
@@ -519,6 +543,7 @@ checkgroups.append((
 )
 
 checkgroups.append((
+    subgroup_storage,
     "filesystem",
     _("Filesystems (used space and growth)"),
     Dictionary(
@@ -592,6 +617,7 @@ checkgroups.append((
 )
 
 checkgroups.append((
+    subgroup_networking,
     "if",
     _("Network interfaces and switch ports"),
     Dictionary(
@@ -685,6 +711,7 @@ checkgroups.append((
 
 
 checkgroups.append((
+    subgroup_cpumem,
     "memory",
     _("Main memory usage (Linux / UNIX)"),
     Alternative(
@@ -707,8 +734,23 @@ checkgroups.append((
             ]),
     None, None))
 
+checkgroups.append((
+    subgroup_printing,
+    "printer_supply",
+    _("Printer cardridge levels"),
+    Tuple(
+          help = _("Levels for printer cardridges."),
+          elements = [
+              Float(title = _("Warning remaining")),
+              Float(title = _("Critical remaining"))]),
+    TextAscii(
+        title = _("cardridge specification"),
+        allow_empty = True),
+    "dict",
+    ))
 
 checkgroups.append((
+    subgroup_cpumem,
     "cpu_load",
     _("CPU load (not utilization!)"),
     Tuple(
@@ -724,6 +766,7 @@ checkgroups.append((
     None, None))
 
 checkgroups.append((
+    subgroup_cpumem,
     "cpu_utilization",
     _("CPU utilization (disk wait)"),
     Optional(
@@ -743,6 +786,7 @@ checkgroups.append((
     None, None))
 
 checkgroups.append((
+    subgroup_environment,
     "akcp_humidity",
     _("AKCP Humidity Levels"),
     Tuple(
@@ -760,6 +804,7 @@ checkgroups.append((
      None))
 
 checkgroups.append((
+    subgroup_database,
     "oracle_logswitches",
     _("Oracle Logswitches"),
     Tuple(
@@ -778,6 +823,7 @@ checkgroups.append((
 
 
 checkgroups.append((
+    subgroup_windows,
     "win_dhcp_pools",
     _("Windows DHCP Pool"),
     Tuple(
@@ -793,6 +839,7 @@ checkgroups.append((
      None))
 
 checkgroups.append((
+    subgroup_cpumem,
     "threads",
     _("Number of threads"),
     Tuple(
@@ -804,6 +851,7 @@ checkgroups.append((
     None, None))
 
 checkgroups.append((
+    subgroup_cpumem,
     "vm_counter",
     _("Number of kernel events per second"),
     Tuple(
@@ -831,6 +879,7 @@ checkgroups.append((
     "first"))
 
 checkgroups.append((
+    subgroup_storage,
     "disk_io",
     _("Levels on disk IO (throughput)"),
     Dictionary(
@@ -874,6 +923,7 @@ checkgroups.append((
 
 
 checkgroups.append((
+    subgroup_applications,
     "mailqueue_length",
     _("Number of mails in outgoing mail queue"),
     Tuple(
@@ -885,30 +935,35 @@ checkgroups.append((
     None, None))
 
 checkgroups.append((
+    subgroup_time,
     "uptime",
     _("Display the system's uptime as a check"),
     None,
     None, None))
 
 checkgroups.append((
+    subgroup_storage,
     "zpool_status",
     _("ZFS storage pool status"),
     None,
     None, None))
 
 checkgroups.append((
+    subgroup_virt,
     "vm_state",
     _("Overall state of a virtual machine"),
     None,
     None, None))
 
 checkgroups.append((
+    subgroup_hardware,
     "hw_errors",
     _("Simple checks for BIOS/Hardware errors without parameters"),
     None,
     None, None))
 
 checkgroups.append((
+    subgroup_applications,
     "omd_status",
     _("OMD site status"),
     None,
@@ -918,6 +973,7 @@ checkgroups.append((
     "first"))
 
 checkgroups.append((
+    subgroup_storage,
     "network_fs",
     _("Network filesystem - overall status (e.g. NFS)"),
     None,
@@ -927,6 +983,7 @@ checkgroups.append((
     "first"))
 
 checkgroups.append((
+     subgroup_storage,
     "multipath",
     _("Multipathing - health of a multipath LUN"),
     Integer(
@@ -939,6 +996,7 @@ checkgroups.append((
     "first"))
 
 checkgroups.append((
+     subgroup_storage,
     "hpux_multipath",
     _("Multipathing on HPUX - state of paths of a LUN"),
     Tuple(
@@ -955,6 +1013,7 @@ checkgroups.append((
 
 
 checkgroups.append((
+    subgroup_ps,
     "services",
     _("Windows services"),
     None,
@@ -970,6 +1029,7 @@ checkgroups.append((
     "first"))
 
 checkgroups.append((
+    subgroup_storage,
     "raid",
     _("RAID: overal state"),
     None,
@@ -981,6 +1041,7 @@ checkgroups.append((
     "first"))
 
 checkgroups.append((
+    subgroup_storage,
     "raid_disk",
     _("RAID: state of a single disk"),
     TextAscii(
@@ -996,6 +1057,7 @@ checkgroups.append((
     "first"))
 
 checkgroups.append((
+    subgroup_environment,
     "room_temperature",
     _("Room temperature (e.g. external thermal sensors in datacenters)"),
     Tuple(
@@ -1012,6 +1074,7 @@ checkgroups.append((
     "first"))
 
 checkgroups.append((
+    subgroup_environment,
     "hw_temperature",
     _("Hardware temperature (CPU, Memory, Mainboard, etc.)"),
     Tuple(
@@ -1027,6 +1090,7 @@ checkgroups.append((
     "first"))
 
 checkgroups.append((
+    subgroup_environment,
     "temperature_auto",
     _("Temperature sensors with builtin levels"),
     None,
@@ -1038,6 +1102,7 @@ checkgroups.append((
 
 
 checkgroups.append((
+    subgroup_ps,
     "wmic_process",
     _("Memory and CPU consumption of processes on Windows (via WMI)"),
     Tuple(
@@ -1065,7 +1130,7 @@ checkgroups.append((
 
 
 # Create rules for check parameters of inventorized checks
-for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
+for subgroup, checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
     if not valuespec:
         continue # would be useles rule if check has no parameters
     itemenum = None
@@ -1081,7 +1146,7 @@ for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
         itemhelp = None
 
     register_rule(
-        group,
+        group + "/" + subgroup,
         varname = "checkgroup_parameters:%s" % checkgroup,
         title = title,
         valuespec = valuespec,
@@ -1092,7 +1157,7 @@ for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
 
 
 register_rule(
-    group,
+    group + "/" + subgroup_networking,
     "if_disable_if64_hosts",
     title = _("Hosts forced to use <tt>if</tt> instead of <tt>if64</tt>"),
     help = _("A couple of switches with broken firmware report that they "
@@ -1102,9 +1167,13 @@ register_rule(
 
 
 # Create Rules for static checks
-group = _("Statically configured checks")
+register_rulegroup("static", _("Statically configured checks"),
+    _("In cases where you do not want or are not able to use inventory, "
+      "you can manually configure Check_MK based services to monitor "
+      "on your hosts."))
+group = "static"
 
-for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
+for subgroup, checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
     elements = [
         CheckTypeGroupSelection(
             checkgroup,
@@ -1122,7 +1191,8 @@ for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
     elements.append(valuespec)
 
     register_rule(
-        group, "static_checks:%s" % checkgroup,
+        group + "/" + subgroup, 
+        "static_checks:%s" % checkgroup,
         title = title,
         valuespec = Tuple(
             title = valuespec.title(),

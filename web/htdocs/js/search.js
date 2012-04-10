@@ -347,13 +347,30 @@ function mkSearchAddSearchResults(aSearchObjects, objType, val) {
     var objName, objSite;
     aSearchContents = '';
     var numHits = 0;
-    for(var i = 0; i < aSearchObjects.length; i++) {
+
+    // First check, if all matched items have the same
+    // site. If not, we will display the site name in 
+    // brackets after the item
+    var the_only_site = null;
+    var show_site = false;
+    for (var i = 0; i < aSearchObjects.length; i++) {
+        objName  = aSearchObjects[i][1];
+        if (mkSearchMatch(objName, val)) {
+            objSite  = aSearchObjects[i][0];
+            if (the_only_site == null)
+                the_only_site = objSite;
+            else if (the_only_site != objSite) {
+                show_site = true;
+                break;
+            }
+        }
+    }
+
+    for (var i = 0; i < aSearchObjects.length; i++) {
         objSite  = aSearchObjects[i][0];
         objName  = aSearchObjects[i][1];
 
-        // if(objName.match(oMatch)) {
-				// case insensitive search!
-        if(mkSearchMatch(objName, val)) {
+        if (mkSearchMatch(objName, val)) {
             var url = mkSearchGetUrl(objType, objName, objSite, 1);
             var oResult = {
                 'id': 'result_' + objName,
@@ -373,7 +390,10 @@ function mkSearchAddSearchResults(aSearchObjects, objType, val) {
             aSearchContents += '<a id="' + oResult.id + '" class="' + oResult.type
                 + '" href="' + oResult.url
                 + '" onclick="mkSearchClose()" target="' + mkSearchTargetFrame
-                + '">'+ objName + "</a>\n";
+                + '">' + objName
+            if (show_site)
+                aSearchContents += " (" + objSite + ")"
+            aSearchContents += "</a>\n";
         }
     }
 }

@@ -84,7 +84,7 @@ check_info['df'] = {
     "inventory_function"      : inventory_df,
     "service_description"     : "fs_%s",
     "has_perfdata"            : True,
-    "group"                   : "df",
+    "group"                   : "filesystem",
     "default_levels_variable" : "filesystem_default_levels",
     "includes"                : [ "df.include" ],
 }

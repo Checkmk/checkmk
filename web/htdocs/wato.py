@@ -770,7 +770,7 @@ def mode_folder(phase):
     elif phase == "buttons":
         global_buttons()
         if config.may("wato.rulesets") or config.may("wato.seeall"):
-            html.context_button(_("Rulesets"),        make_link([("mode", "rulesets")]), "rulesets")
+            html.context_button(_("Rulesets"),        make_link([("mode", "ruleeditor")]), "rulesets")
         html.context_button(_("Folder Properties"), make_link_to([("mode", "editfolder")], g_folder), "edit")
         if config.may("wato.manage_folders"):
             html.context_button(_("New folder"),        make_link([("mode", "newfolder")]), "newfolder")
@@ -831,6 +831,7 @@ def mode_folder(phase):
         # Move single hosts to other folders
         if html.has_var("_move_host_to"):
             config.need_permission("wato.edit_hosts")
+            config.need_permission("wato.move_hosts")
             hostname = html.var("host")
             check_folder_permissions(g_folder, "write")
             if hostname:
@@ -858,6 +859,7 @@ def mode_folder(phase):
         # Move
         elif html.var("_bulk_move"):
             config.need_permission("wato.edit_hosts")
+            config.need_permission("wato.move_hosts")
             target_folder_name = html.var("bulk_moveto")
             if target_folder_name == "@":
                 raise MKUserError("bulk_moveto", _("Please select the destination folder"))
@@ -868,6 +870,7 @@ def mode_folder(phase):
         # Move to target folder (from import)
         elif html.var("_bulk_movetotarget"):
             config.need_permission("wato.edit_hosts")
+            config.need_permission("wato.move_hosts")
             return move_to_imported_folders(selected_hosts)
 
         elif html.var("_bulk_edit"):
@@ -1129,20 +1132,23 @@ def show_hosts(folder):
     hostnames.sort()
 
     # Show table of hosts in this folder
-    colspan = 6
+    colspan = 5
     html.begin_form("hosts", None, "POST", onsubmit = 'add_row_selections(this);')
     html.write("<table class=data>\n")
     html.write("<tr><th class=left></th><th></th><th>"
                + _("Hostname") + "</th><th>"
-               + _("Auth") + "</th>"
-               + "<th>" + _("Tags") + "</th>")
+               + _("Auth") + "</th>")
+    if not config.wato_hide_hosttags:
+        html.write("<th>" + _("Tags") + "</th>")
 
     for attr, topic in host_attributes:
         if attr.show_in_table():
             html.write("<th>%s</th>" % attr.title())
             colspan += 1
 
-    html.write("<th class=right>" + _("Move To") + "</th>")
+    if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+        html.write("<th class=right>" + _("Move To") + "</th>")
+        colspan += 1
     html.write("</tr>\n")
     odd = "odd"
 
@@ -1159,7 +1165,7 @@ def show_hosts(folder):
             html.button("_bulk_cleanup", _("Cleanup"))
         if config.may("wato.services"):
             html.button("_bulk_inventory", _("Inventory"))
-        if config.may("wato.edit_hosts"):
+        if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
             move_to_folder_combo("host", None, top)
             if at_least_one_imported:
                 html.button("_bulk_movetotarget", _("Move to Target Folders"))
@@ -1251,13 +1257,15 @@ def show_hosts(folder):
             title = htmllib.strip_tags(auth)
         html.write('<td><img class=icon src="images/icon_%s.png" title="%s"></td>' % (icon, title))
 
-        # Raw tags
-        #
-        # Optimize wraps:
-        # 1. add <nobr> round the single tags to prevent wrap within tags
-        # 2. add "zero width space" (&#8203;)
-        html.write("<td>%s</td>" % "<b style='color: #888;'>|</b>&#8203;".join(
-                                                [ '<nobr>%s</nobr>' % t for t in host[".tags"] ]))
+        if not config.wato_hide_hosttags:
+            # Raw tags
+            #
+            # Optimize wraps:
+            # 1. add <nobr> round the single tags to prevent wrap within tags
+            # 2. add "zero width space" (&#8203;)
+            tag_title = "|".join([ '%s' % t for t in host[".tags"] ])
+            html.write("<td title='%s' class='tag-ellipsis'>%s</td>" % (tag_title, "<b style='color: #888;'>|</b>&#8203;".join(
+                                                [ '<nobr>%s</nobr>' % t for t in host[".tags"] ])))
 
         # Show attributes
         for attr, topic in host_attributes:
@@ -1273,10 +1281,10 @@ def show_hosts(folder):
                 html.write("</td>\n")
 
         # Move to
-        html.write("<td>")
-        if config.may("wato.edit_hosts"):
+        if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+            html.write("<td>")
             move_to_folder_combo("host", hostname)
-        html.write("</td>\n")
+            html.write("</td>\n")
         html.write("</tr>\n")
 
     if config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
@@ -1727,7 +1735,7 @@ def mode_edithost(phase, new, cluster):
             html.context_button(_("Services"),
                   make_link([("mode", "inventory"), ("host", hostname)]), "services")
             html.context_button(_("Rulesets"),
-                  make_link([("mode", "rulesets"), ("host", hostname), ("local", "on")]), "rulesets")
+                  make_link([("mode", "ruleeditor"), ("host", hostname), ("local", "on")]), "rulesets")
 
     elif phase == "action":
         if not new and html.var("delete"): # Delete this host
@@ -1801,7 +1809,7 @@ def mode_edithost(phase, new, cluster):
                 call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
 
-            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(host, g_folder)
+            errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(g_folder[".hosts"][hostname], g_folder)
             if errors: # keep on this page if host does not validate
                 return
             elif new:
@@ -1832,6 +1840,7 @@ def mode_edithost(phase, new, cluster):
 
         html.begin_form("edithost")
         html.write('<table class="form nomargin">\n')
+        # html.write('<table class="form">\n')
 
         # host name
         html.write("<tr class=top><td class=legend>" + _("Hostname") +
@@ -1856,10 +1865,10 @@ def mode_edithost(phase, new, cluster):
         configure_attributes({hostname: host}, "host", parent = g_folder)
 
         html.write('<tr><td class="buttons" colspan=3>')
-        html.button("services", _("Save &amp; go to Services"), "submit")
-        html.button("save", _("Save &amp; Finish"), "submit")
+        html.image_button("services", _("Save &amp; go to Services"), "submit")
+        html.image_button("save", _("Save &amp; Finish"), "submit")
         if not new:
-            html.button("delete", _("Delete host!"), "submit")
+            html.image_button("delete", _("Delete host!"), "submit")
         html.write("</td></tr>\n")
         html.write("</table>\n")
         html.hidden_fields()
@@ -3861,7 +3870,7 @@ class ContactGroupsAttribute(Attribute):
     # dynamic than leave them out and override name() and
     # title()
     def __init__(self):
-        url = "wato.py?mode=rulesets"
+        url = "wato.py?mode=rulesets&group=grouping"
         Attribute.__init__(self, "contactgroups", _("Permissions"),
           _("Only members of the contact groups listed here have WATO permission "
             "to the host / folder. If you want, you can make those contact groups "
@@ -4604,13 +4613,16 @@ def mode_main(phase):
 
 def render_main_menu(some_modules, columns = 2):
     html.write("<table class=configmodules>")
-    for nr, (mode, title, icon, permission, help) in enumerate(some_modules):
+    for nr, (mode_or_url, title, icon, permission, help) in enumerate(some_modules):
         if not config.may("wato." + permission) and not config.may("wato.seeall"):
             continue
 
         if nr % columns == 0:
             html.write("<tr>")
-        url = make_link([("mode", mode)])
+        if '?' in mode_or_url or '/' in mode_or_url:
+            url = mode_or_url
+        else:
+            url = make_link([("mode", mode_or_url)])
         html.write('<td class=icon><a href="%s"><img src="images/icon_%s.png"></a></td>' %
               (url, icon))
         html.write('</td><td class=text><a href="%s">%s</a><br><i class=help>%s</i></td>' %
@@ -4672,9 +4684,10 @@ def mode_globalvars(phase):
     for groupname in groupnames:
         html.begin_foldable_container("globalvars", groupname, False, groupname, indent=False)
         html.write('<table class="data globalvars">')
-        html.write("<tr><th>" + _("Configuration variable") +
-                   "</th><th>" +_("Check_MK variable") + "</th><th>" +
-                   _("Default") + "</th><th>" + _("Your setting") + "</th><th></th></tr>\n")
+        html.write("<tr><th>" + _("Configuration variable") + "</th>")
+        if not config.wato_hide_varnames:
+            html.write("<th>" +_("Check_MK variable") + "</th>")
+        html.write("<th>" + _("Default") + "</th><th>" + _("Your setting") + "</th><th></th></tr>\n")
         odd = "even"
 
         for domain, varname, valuespec in g_configvar_groups[groupname]:
@@ -4692,7 +4705,8 @@ def mode_globalvars(phase):
             edit_url = make_link([("mode", "edit_configvar"), ("varname", varname)])
 
             html.write('<td class=title><a href="%s">%s</a></td>' % (edit_url, valuespec.title()))
-            html.write('<td class=varname><tt>%s</tt></td>' % varname)
+            if not config.wato_hide_varnames:
+                html.write('<td class=varname><tt>%s</tt></td>' % varname)
             if varname in current_settings:
                 html.write('<td class=inherited>%s</td>' % valuespec.value_to_text(defaultvalue))
                 html.write('<td><b>%s</b></td>'          % valuespec.value_to_text(current_settings[varname]))
@@ -6624,6 +6638,14 @@ def delete_distributed_wato_file():
 #   | Mode for managing users and contacts.                                |
 #   '----------------------------------------------------------------------'
 
+# Custom user attributes
+user_attributes = []
+user_attribute = {}
+
+def declare_user_attribute(name, vs):
+    user_attributes.append((name, vs))
+    user_attribute[name] = vs
+
 def mode_users(phase):
     if phase == "title":
         return _("Users & Contacts")
@@ -6904,6 +6926,11 @@ def mode_edit_user(phase):
             new_user[what + "_notification_options"] = "".join(
               [ opt for opt in opts if html.get_checkbox(what + "_" + opt) ])
 
+        # Custom attributes
+        for name, vs in user_attributes:
+            value = vs.from_html_vars('ua_' + name)
+            vs.validate_value(value, "ua_" + name)
+            new_user[name] = value
 
         # Saving
         save_users(users)
@@ -7011,7 +7038,7 @@ def mode_edit_user(phase):
     # Contact groups
     html.write("<tr><td class=legend colspan=2>")
     url1 = make_link([("mode", "contact_groups")])
-    url2 = make_link([("mode", "rulesets")])
+    url2 = make_link([("mode", "rulesets"), ("group", "grouping")])
     html.write(_("Contact groups<br><i>Contact groups are used to assign monitoring "
                  "objects to users. If you haven't defined any contact groups yet, "
                  "then first <a href='%s'>do so</a>. Hosts and services can be "
@@ -7092,6 +7119,14 @@ def mode_edit_user(phase):
     html.write("</td></tr>")
 
     select_language(user.get('language', ''))
+
+    for name, vs in user_attributes:
+        html.write("<tr><td colspan=2 class=legend>%s" % vs.title())
+        if vs.help():
+            html.write("<br><i>%s</i>" % vs.help())
+        html.write("</td><td class=content>")
+        vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+        html.write("</td></tr>")
 
     # TODO: Later we could add custom macros here, which
     # then could be used for notifications. On the other hand,
@@ -7210,20 +7245,32 @@ def save_users(profiles):
     # TODO: delete var/check_mk/web/$USER of non-existing users. Do we
     # need to remove other references as well?
 
+    custom_values = [ name for (name, vs) in user_attributes ]
+
     # Keys not to put into contact definitions for Check_MK
-    non_contact_keys = [ "roles", "notifications_enabled", "password", "locked", "automation_secret", "language" ] 
+    non_contact_keys = [
+        "roles",
+        "password",
+        "locked",
+        "automation_secret",
+        "language",
+    ] + custom_values
 
     # Keys to put into multisite configuration
-    multisite_keys   = [ "roles", "notifications_enabled", "locked", "automation_secret", "alias", "language", ]
+    multisite_keys   = [
+        "roles",
+        "locked",
+        "automation_secret",
+        "alias",
+        "language",
+    ] + custom_values
 
-    # Remove multisite keys in contacts. And use only such entries
-    # that have any contact groups assigned to.
+    # Remove multisite keys in contacts.
     contacts = dict(
         e for e in 
             [ (id, split_dict(user, non_contact_keys, False))
                for (id, user)
-               in profiles.items() ]
-        if e[1].get("contactgroups"))
+               in profiles.items() ])
 
     # Only allow explicitely defined attributes to be written to multisite config
     users = {}
@@ -8447,23 +8494,58 @@ def change_host_tags_in_rules(folder, operations, mode):
 #   | from main.mk.                                                        |
 #   '----------------------------------------------------------------------'
 
+def mode_ruleeditor(phase):
+    only_host = html.var("host", "")
+    only_local = html.var("local")
+
+    if phase == "title":
+        return _("Configuration of Hosts and Services (Ruleeditor)")
+
+    elif phase == "buttons":
+        global_buttons()
+        return
+    
+    elif phase == "action":
+        return
+    
+    if not only_host:
+        render_folder_path(keepvarnames = ["mode", "local"])
+
+    # Group names are separated with "/" into main group and optional subgroup
+    groupnames = list(set([ gn.split("/")[0] for gn in g_rulespec_groups.keys() ]))
+    groupnames.sort()
+    menu = []
+    for groupname in groupnames:
+        url = make_link([("mode", "rulesets"), ("group", groupname), 
+                         ("host", only_host), ("local", only_local)])
+        title, help = g_rulegroups.get(groupname, (groupname, ""))
+        menu.append((url, title, "rulesets", "rulesets", help))
+    render_main_menu(menu)
+        
+
+
+
 def mode_rulesets(phase):
+    group = html.var("group") # obligatory
+    title, help = g_rulegroups.get(group, (group, None))
     only_host = html.var("host", "")
     only_local = html.var("local")
 
     if phase == "title":
         if only_host:
-            return _("Rulesets for hosts %s") % only_host
+            return _("%s - %s") % (only_host, title)
         else:
-            return _("Rulesets for hosts and services")
+            return title
 
     elif phase == "buttons":
         if only_host:
             home_button()
+            html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
             html.context_button(only_host,
                  make_link([("mode", "edithost"), ("host", only_host)]), "back")
         else:
             global_buttons()
+            html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
             if config.may("wato.hosts") or config.may("wato.seeall"):
                 html.context_button(_("Folder"), make_link([("mode", "folder")]), "folder")
         return
@@ -8472,7 +8554,10 @@ def mode_rulesets(phase):
         return
 
     if not only_host:
-        render_folder_path(keepvarnames = ["mode", "local"])
+        render_folder_path(keepvarnames = ["mode", "local", "group"])
+
+    if help:
+        html.write("<div class=info>%s</div>" % help)
 
     html.begin_form("local")
     html.checkbox("local", False, onclick="form.submit();")
@@ -8499,8 +8584,10 @@ def mode_rulesets(phase):
     else:
         all_rulesets = load_all_rulesets()
 
-    groupnames = g_rulespec_groups.keys()
+    groupnames = [ gn for gn in g_rulespec_groups.keys() 
+                   if gn == group or gn.startswith(group + "/") ]
     groupnames.sort()
+    do_folding = len(groupnames) > 1
 
     something_shown = False
     # Loop over all ruleset groups
@@ -8535,11 +8622,19 @@ def mode_rulesets(phase):
             if not title_shown:
                 if something_shown:
                     html.write("</table>")
-                    html.end_foldable_container()
-                html.begin_foldable_container("rulesets", groupname, False, groupname, indent=False)
+                    if do_folding:
+                        html.end_foldable_container()
+                if '/' in groupname:
+                    subgroupname = groupname.split("/", 1)[1]
+                else:
+                    subgroupname = groupname
+                if do_folding:
+                    html.begin_foldable_container("rulesets", groupname, False, subgroupname, indent=False)
                 html.write('<table class="data rulesets">')
-                html.write("<tr><th>" + _("Rule set") + "</th>"
-                           "<th>" + _("Check_MK Variable") + "</th><th>" + _("Rules") + "</th></tr>\n")
+                html.write("<tr><th>" + _("Rule set") + "</th>")
+                if not config.wato_hide_varnames:
+                    html.write("<th>" + _("Check_MK Variable") + "</th>")
+                html.write("<th>" + _("Rules") + "</th></tr>\n")
                 odd = "even"
                 title_shown = True
 
@@ -8554,7 +8649,8 @@ def mode_rulesets(phase):
 
             html.write('<td class=title><a href="%s">%s</a></td>' % (view_url, rulespec["title"]))
             display_varname = ':' in varname and '%s["%s"]' % tuple(varname.split(":")) or varname
-            html.write('<td class=varname><tt>%s</tt></td>' % display_varname)
+            if not config.wato_hide_varnames:
+                html.write('<td class=varname><tt>%s</tt></td>' % display_varname)
             html.write('<td class=number>')
             if num_local_rules:
                 if only_host:
@@ -8568,7 +8664,8 @@ def mode_rulesets(phase):
 
     if something_shown:
         html.write("</table>")
-        html.end_foldable_container()
+        if do_folding:
+            html.end_foldable_container()
 
     else:
         if only_host:
@@ -8602,8 +8699,9 @@ def mode_edit_ruleset(phase):
 
     elif phase == "buttons":
         global_buttons()
+        group = rulespec["group"].split("/")[0]
         html.context_button(_("All rulesets"),
-              make_link([("mode", "rulesets"), ("host", hostname)]), "back")
+              make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
         if hostname:
             html.context_button(_("Services"),
                  make_link([("mode", "inventory"), ("host", hostname)]), "back")
@@ -9573,6 +9671,10 @@ def load_all_rulesets():
     return all_rulesets
 
 
+g_rulegroups = {}
+def register_rulegroup(group, title, help):
+    g_rulegroups[group] = (title, help)
+
 g_rulespecs = {}
 g_rulespec_groups = {}
 def register_rule(group, varname, valuespec = None, title = None,
@@ -9723,7 +9825,6 @@ def page_user_profile():
     html.end_form()
     html.footer()
 
-#.
 #.
 #   .--Sampleconfig--------------------------------------------------------.
 #   |   ____                        _                       __ _           |
@@ -10297,6 +10398,7 @@ modes = {
    "snapshot"           : (["snapshots"], mode_snapshot),
    "globalvars"         : (["global"], mode_globalvars),
    "edit_configvar"     : (["global"], mode_edit_configvar),
+   "ruleeditor"         : (["rulesets"], mode_ruleeditor),
    "rulesets"           : (["rulesets"], mode_rulesets),
    "edit_ruleset"       : (["rulesets"], mode_edit_ruleset),
    "edit_rule"          : (["rulesets"], mode_edit_rule),
@@ -10328,10 +10430,13 @@ def load_plugins():
     loaded_with_language = current_language
 
     # Reset global vars
-    global extra_buttons, configured_host_tags, host_attributes
+    global extra_buttons, configured_host_tags, host_attributes, user_attributes, \
+           user_attribute
     extra_buttons = []
     configured_host_tags = None
     host_attributes = []
+    user_attributes = []
+    user_attribute = {}
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))
@@ -10388,10 +10493,16 @@ def load_plugins():
            "a separate permission (see below)"),
          [ "admin", "user" ])
 
+    config.declare_permission("wato.move_hosts",
+         _("Move existing hosts"),
+         _("Move existing hosts to other folders. Please also add the permission "
+           "<i>Modify existing hosts</i>."),
+         [ "admin", "user" ])
+
     config.declare_permission("wato.manage_hosts",
          _("Add & remove hosts"),
          _("Add hosts to the monitoring and remove hosts "
-           "from the monitoring. Please also add the permissions "
+           "from the monitoring. Please also add the permission "
            "<i>Modify existing hosts</i>."),
          [ "admin", "user" ])
 

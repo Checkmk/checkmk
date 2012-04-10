@@ -84,7 +84,7 @@ multisite_painter_options["pnpview"] = {
 
 multisite_painter_options["ts_format"] = {
  "title"   : _("Time stamp format"),
- "default" : "mixed",
+ "default" : config.default_ts_format,
  "values"  : [
      ("mixed", _("Mixed")),
      ("abs", _("Absolute")),

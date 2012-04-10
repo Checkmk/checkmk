@@ -1457,7 +1457,7 @@ def create_nagios_hostdefs(outfile, hostname):
     try:
         ip = lookup_ipaddress(hostname)
     except:
-        if not is_cluster(hostname):
+        if not is_clust:
             raise MKGeneralException("Cannot determine ip address of %s. Please add to ipaddresses." % hostname)
         ip = None
 
@@ -1479,7 +1479,7 @@ def create_nagios_hostdefs(outfile, hostname):
     if is_clust and ip: # Do check cluster IP address if one is there
         outfile.write("  check_command\t\t\tcheck-mk-ping!%s\n" % ping_args)
     elif ping_args and is_clust: # use check_icmp in cluster mode
-        outfile.write("  check_command\t\t\tcheck-mk-ping-cluster!%s\n" % args)
+        outfile.write("  check_command\t\t\tcheck-mk-ping-cluster!%s\n" % ping_args)
     elif ping_args: # use special arguments
         outfile.write("  check_command\t\t\tcheck-mk-ping!%s\n" % ping_args)
 

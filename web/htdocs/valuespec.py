@@ -687,6 +687,8 @@ class Checkbox(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._label = kwargs.get("label")
+        self._true_label = kwargs.get("true_label", _("on"))
+        self._false_label = kwargs.get("false_label", _("off"))
 
     def canonical_value(self):
         return False
@@ -695,7 +697,7 @@ class Checkbox(ValueSpec):
         html.checkbox(varprefix, value, label = self._label)
 
     def value_to_text(self, value):
-        return value and _("on") or _("off")
+        return value and self._true_label or self._false_label
 
     def from_html_vars(self, varprefix):
         if html.var(varprefix):
@@ -1208,10 +1210,13 @@ class Optional(ValueSpec):
 
     def render_input(self, varprefix, value):
         div_id = "option_" + varprefix
-        if html.has_var(varprefix + "_use"):
-            checked = html.get_checkbox(varprefix + "_use")
-        else:
-            checked = self._negate != (value != None)
+        checked = html.get_checkbox(varprefix + "_use")
+        if checked == None:
+            if self._negate:
+                checked = value == None
+            else:
+                checked = value != None
+
         html.write("<span>")
 
         if self._label:
@@ -1233,8 +1238,12 @@ class Optional(ValueSpec):
         else:
             html.write("<br><br>")
         html.write("</span>")
-        html.write('<span id="%s" display: %s">' % (
-                div_id, checked == self._negate and "none" or ""))
+        if checked == self._negate:
+            display = "none"
+        else:
+            display = ""
+
+        html.write('<span id="%s" style="display: %s">' % (div_id, display))
         if value == None:
             value = self._valuespec.default_value()
         if self._valuespec.title():

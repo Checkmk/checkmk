@@ -61,6 +61,8 @@ def inventory_oracle_tablespaces(info):
     tablespaces = set([])
     autoextensible = set([])
     for line in info:
+        if len(line) != 13:
+            continue
         ts = (line[0], line[2])
         if line[11] in [ "ONLINE", "READONLY" ]:
             tablespaces.add(ts)
@@ -93,32 +95,39 @@ def check_oracle_tablespaces(item, params, info):
     uses_default_increment = False
 
     for line in info:
-        if line[0] == sid and line[2] == tbsname:
-            ts_status = line[11]
-            blocksize = int(line[10])
-            num_files += 1
-            if line[3] in [ "AVAILABLE", "ONLINE", "READONLY" ]:
-                num_avail += 1
-                current_size += blocksize * int(line[5])
-                used += blocksize * (int(line[5]) - int(line[12]))
-                # Autoextensible? Honor max size
-                if line[4] == "YES":
-                    num_extensible += 1
-                    my_max_size = blocksize * int(line[6])
-                    max_size += my_max_size
-                    free_bl = int(line[6]) - int(line[5]) # number of free extension blocks
-                    incsize = int(line[8]) # size of next increment in blocks
-                    if incsize == 1:
-                        uses_default_increment = True
-                    incs = free_bl / incsize
-                    num_increments += incs
-                    increment_size += blocksize * incsize * incs
-                    free_space += blocksize * (incsize * incs + (int(line[12])))
-                # not autoextensible: take current size as maximum
-                else:
-                    my_max_size = blocksize * int(line[5])
-                    max_size += my_max_size
-                    free_space += blocksize *  int(line[12])
+        if line[0] == sid:
+            err = oracle_handle_ora_errors(line)
+            if err == False:
+                continue
+            elif isinstance(err, tuple):
+                return err
+
+            if line[2] == tbsname and len(line) == 13:
+                ts_status = line[11]
+                blocksize = int(line[10])
+                num_files += 1
+                if line[3] in [ "AVAILABLE", "ONLINE", "READONLY" ]:
+                    num_avail += 1
+                    current_size += blocksize * int(line[5])
+                    used += blocksize * (int(line[5]) - int(line[12]))
+                    # Autoextensible? Honor max size
+                    if line[4] == "YES":
+                        num_extensible += 1
+                        my_max_size = blocksize * int(line[6])
+                        max_size += my_max_size
+                        free_bl = int(line[6]) - int(line[5]) # number of free extension blocks
+                        incsize = int(line[8]) # size of next increment in blocks
+                        if incsize == 1:
+                            uses_default_increment = True
+                        incs = free_bl / incsize
+                        num_increments += incs
+                        increment_size += blocksize * incsize * incs
+                        free_space += blocksize * (incsize * incs + (int(line[12])))
+                    # not autoextensible: take current size as maximum
+                    else:
+                        my_max_size = blocksize * int(line[5])
+                        max_size += my_max_size
+                        free_space += blocksize *  int(line[12])
 
 
     if ts_status == None:
@@ -189,3 +198,4 @@ def check_oracle_tablespaces(item, params, info):
 
 check_info['oracle_tablespaces'] = (check_oracle_tablespaces, "ORA %s Tablespace", 1,  inventory_oracle_tablespaces )
 check_config_variables.append("oracle_tablespaces_check_default_increment")
+check_includes['oracle_tablespaces'] = [ "oracle.include" ]

@@ -1,0 +1,10 @@
+Title: Commands with checkboxes ->  Request-URI Too Large
+Component: multisite
+State: open
+Date: 2012-04-06 11:23:12
+Targetversion: 1.2.0
+Class: bug
+
+When you use checkboxes for selecting many items in a host
+or service view and then issue a command, then the request
+URI will be too long. Can we convert this to a POST request?

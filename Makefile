@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.2.0b1
+VERSION        	= 1.2.0b2
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -183,7 +183,7 @@ clean:
 	find -name "*~" | xargs rm -f
 
 mrproper:
-	git clean -xfd
+	git clean -xfd -e .bugs
 
 check:
 	@set -e ; for checkfile in *.HS ; do \

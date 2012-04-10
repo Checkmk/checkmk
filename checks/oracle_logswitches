@@ -36,6 +36,12 @@ def inventory_oracle_logswitches(info):
 def check_oracle_logswitches(item, params, info):
     for line in info:
         if line[0] == item:
+            err = oracle_handle_ora_errors(line)
+            if err == False:
+                continue
+            elif isinstance(err, tuple):
+                return err
+
             locrit, lowarn, warn, crit = params
             logswitches = int(line[1])
             infotext = " - %d log switches in the last 60 minutes (levels at %d/%d .. %d/%d)" \
@@ -51,3 +57,4 @@ def check_oracle_logswitches(item, params, info):
 
 check_info['oracle_logswitches'] = (check_oracle_logswitches, "ORA %s Logswitches", 1,  inventory_oracle_logswitches )
 checkgroup_of['oracle_logswitches'] = "oracle_logswitches" 
+check_includes['oracle_logswitches'] = [ "oracle.include" ]

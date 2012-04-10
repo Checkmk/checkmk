@@ -45,7 +45,7 @@ body.main {
     padding: 10px 10px 0 10px;
     background-attachment: fixed;
     background-repeat: repeat;
-    font-family: verdana, arial, helvetica, sans-serif;
+    font-family: arial, helvetica, sans-serif;
     font-size: 9pt;
     margin: 0;
 }
@@ -80,7 +80,7 @@ body.main hr.header {
 
 body.main table.header td.left {
     font-size: 15pt;
-    font-weight: bold;
+    /*font-weight: bold;*/
     vertical-align: bottom;
     padding-left: 0px;
     height: 31px;
@@ -362,31 +362,29 @@ table.form.nomargin {
     margin: 0;
 }
 table.form.nomargin td.legend,
-.wato table.form.nomargin td.checkbox,
 table.form.nomargin td.content,
+table.form.nomargin td.checkbox,
 table.form.nomargin td.buttons {
     border-top-style: none;
 }
 table.form.nomargin td.title {
     border-top-style: none;
-    padding-bottom: 10px;
     background-image: url("images/form_background.png");
     background-repeat: repeat;
 }
-.wato table.form tr.top td,
-.wato table.form tr.top td.checkbox {
-    border-top-style: solid;
-}
-
 table.form > tbody > tr > td {
-    padding: 4px 10px;
+    padding: 5px 8px;
+    color: #000;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #2f5f73;
 }
-table.form > tbody > tr > th {
+/*table.form > tbody > tr > th {
     border-width: 1px;
     border-color: #fff;
     border-style: solid solid none solid;
     padding: 4px 4px;
-}
+}*/
 
 table.form img.toggleheader {
     width: 20px;
@@ -400,19 +398,23 @@ table.form img.toggleheader.hover {
 }
 
 /* Left side where title and help is printed */
-table.form td.legend, table.form td.title {
-    color: #274750;
-    border: 1px solid #fff;
-    padding-top: 10px;
-    padding-bottom: 10px;
-}
+/*table.form td.legend,
+table.form td.title,
+table.form td.content,
+table.form td.checkbox {
+    color: #000;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #2f5f73;
+}*/
 
 /* Bottom row with action buttons, right justified */
 table.form td.buttons {
     color: #274750;
-    border: 1px solid #fff;
-    padding-top: 10px;
-    text-align: right;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #2f5f73;
+    /* text-align: right; */
 }
 
 /* Inter-heading row over complete width */
@@ -435,28 +437,36 @@ table.form td.lgend.button {
     border-right: 1px solid #fff;
 }
 
-table.form td.content {
-    padding-right: 2ex;
-    border: 1px solid #fff;
+/* table.form td.content {
+    border-width: 1px;
+    border-style: solid;
+    border-color: #2f5f73;
     border-left-style: none;
-    padding-top: 10px;
-    padding-bottom: 10px;
-}
+}*/
 
 td.legend, td.content {
-    border: 1px solid #884;
-    padding: 2px 0.5ex;
+    /* border: 1px solid #884; */
+   /* padding: 2px 0.5ex; */
+}
+
+td.content hr {
+    height: 1px;
+    border-style: none;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
 }
 
 td.legend {
-    padding-top: 3px;
+    /* padding-top: 3px; */
     color: #884;
     width: 150px;
 }
 
-td.content i {
-    font-size: 8pt;
+td.content i, td.legend i, td.content i a, td.legend i a, i.help, i.help a {
+    /* font-size: 8pt; */
+    font-style: italic;
     color: #fff;
+    font-weight: normal;
 }
 
 input.tab#results, input.tabactive#results { background-color: #fe6; }
@@ -509,11 +519,11 @@ span.checkbox {
 | Confirmation dialogs, success and error messages when performing actions |
 '-------------------------------------------------------------------------*/
 div.really, div.success, div.error, div.message, div.warning {
-    margin: 2em 2em 2em 2em;
+    margin: 2em 0em;
     -moz-border-radius: 1ex;
     padding: 1em 2em;
-    border-width: 2px;
-    border-style: solid;
+    /* border-width: 2px; 
+    border-style: solid;*/
 }
 
 div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 {
@@ -522,11 +532,5 @@ div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 {
      margin-bottom: 5px;
      color: #000;
      margin-left: 0px;
-}
-
-div.really input {
-    font-weight: bold;
-    margin-top: 1em;
-    padding: 0.5ex 2em;
 }
 

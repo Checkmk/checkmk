@@ -42,7 +42,7 @@ body.side {
     width: 280px;
     height: 100%;
     overflow:hidden;
-    font-family: verdana, arial, helvetica, sans-serif;
+    font-family: arial, helvetica, sans-serif;
     font-size: 9pt;
     margin: 0px;
 }
@@ -69,11 +69,12 @@ body.side {
 #side_version {
     position: absolute;
     top: 24px;
-    left: 54px;
+    left: 64px;
     z-index: 54;
     color: #fff;
     text-align: right;
     width: 200px;
+    font-size: 8pt;
 }
 
 /* Scrolling part with snapins */
@@ -188,8 +189,13 @@ div.snapin div.head {
     width: 260px;
     text-align: center;
     color: #fff;
-    padding-top: 9px;
+    padding-top: 8px;
 }
+
+div.snapin div.head b {
+    font-weight: normal;
+}
+
 
 div.snapin div.head.open {
     background-image: url("images/snapin_header.png");
@@ -207,12 +213,27 @@ div.snapin div.closesnapin {
     margin-right: 10px;
     margin-top:   2px;
 }
-/* Reload-Button */
-div.snapin div.reloadsnapin {
-    float: right;
-    margin-right: 4px;
-    margin-top:   2px;
+
+div.snapin div.closesnapin img {
+    width: 8px;
+    height: 8px;
+    position: relative;
+    top: 1px;
 }
+div.snapin div.minisnapin {
+    float: left;
+    margin-top: 2px;
+    margin-left: 13px;
+    width: 0px;
+    height: 0px;
+}
+div.snapin div.minisnapin img {
+    width: 8px;
+    height: 8px;
+    position: relative;
+    top: 1px;
+}
+
 
 div.snapin div.content {
     background-image: url("images/snapin_background.png");
@@ -353,8 +374,9 @@ div.statebullet {
     margin-right: 6px;
     width: 10px;
     height: 10px;
-    border: 1px solid #eee;
+    border: 1px solid #123a4a;
     float: left;
+    box-shadow: 0px 0px 1px #123a4a;
 }
 
 

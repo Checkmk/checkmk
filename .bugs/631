@@ -1,12 +1,15 @@
 Title: WATO folder view: tags in table take too much space
 Component: wato
-State: open
+Class: nastiness
+State: done
 Date: 2012-02-13 11:39:57
 Targetversion: 1.2.0
-Class: nastiness
 
 In the table of hosts when you have defined more than just a few
 host tags the table looks nasty since the tags column takes
 up to much space. We could either hide the tags or - maybe
 this is better - just show the first X characters and put
 the complete list into the title= attribute.
+
+2012-04-10 09:15:02: changed state open -> done
+Is controlled by a global setting.

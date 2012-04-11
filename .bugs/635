@@ -9,3 +9,8 @@ When a user changes his password, then that change is not automatically
 replicated to the slave sites in replicated mode. I think we'd really
 need to do some isolated replication only of htpasswd in that case - 
 automatically.
+
+Solution: Create a new webservice that just replicates the password
+file. This mini-replication is then automatically done when the
+user changes his password.
+

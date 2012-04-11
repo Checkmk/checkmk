@@ -301,7 +301,8 @@ class html:
         else: # add *all* get variables, that are not set by any input!
             for var, value in self.req.vars.items():
                 if var not in self.form_vars and \
-                    (var[0] != "_" or add_action_vars):
+                    (var[0] != "_" or add_action_vars) and \
+                    var != "filled_in":
                     self.hidden_field(var, value)
 
     def add_global_vars(self, varnames):

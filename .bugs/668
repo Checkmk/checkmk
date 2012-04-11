@@ -10,3 +10,6 @@ message ERROR cannot reschedule check: time out
 appears (after ~ 1 sec.)
 
 LM: Works for me.
+
+MK: Most time for me as well. But sometimes it
+immediately fails....

@@ -1,0 +1,9 @@
+Title: Rule-Icon missing for df check in WATO services list
+Component: wato
+State: open
+Date: 2012-04-10 17:04:16
+Targetversion: 1.2.0
+Class: bug
+
+In the inventory list you have usually a rule icon for each
+check the can be parameterized. At df this is missing latetly.

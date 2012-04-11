@@ -1,0 +1,12 @@
+Title: parenting configuration from WATO (folders/tags)
+Component: wato
+State: open
+Date: 2012-04-10 10:31:31
+Targetversion: 1.2.0
+Class: feature
+
+Currently you can't edit the parents from within WATO.
+There's multiple ways to get this, usually you'd just need a location tag
+for systems in a certain location,
+on the other hand we could think about doing this on the folder level as
+a WATO-super-feature (most people seem to have "geo-folders" anyway)

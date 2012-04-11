@@ -2,8 +2,11 @@ Title: Mandatory Attribut in wato nicht ersichtlich
 Component: wato
 State: open
 Date: 2012-01-12 10:42:27
-Targetversion: 1.2.0
-Class: nastiness
+Targetversion: future
+Class: feature
 
-Man kann in den Masken von WATO nicht erkennen, welche Felder unbedingt ausgefüllt
-werden müssen. Eine Markierung ist auf jeden Fall sinnvoll.
+Man kann in den Masken von WATO nicht erkennen, welche Felder unbedingt
+ausgefüllt werden müssen. Eine Markierung ist auf jeden Fall sinnvoll.
+
+Wenn man das macht, dann muss das allerdings in *allen* WATO-Masken
+und auch bei dem Vieweditor, etc. durchgezogen werden.

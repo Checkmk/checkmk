@@ -1,0 +1,11 @@
+Title: configure first_notification_delay from WATO
+Component: wato
+State: open
+Date: 2012-04-10 10:27:46
+Targetversion: 1.2.0
+Class: feature
+
+Currently we don't have support for setting the first notification delay from within WATO. 
+This is a helpful feature we recommended to many people, so it would be important to have it available;
+I think it's the only notification-related setting not available in WATO, so by adding it we'd have 
+it all covered.

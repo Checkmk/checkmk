@@ -1,11 +1,13 @@
 Title: Multisite should wait a couple of secs when live is missing
 Component: multisite
-State: open
+Class: todo
+State: done
 Date: 2012-01-13 11:02:04
 Targetversion: 1.2.0
-Class: todo
 
 When one users restarts the core and another user is in
 Multisite, he gets an error message that live is missing.
 The Livestatus API should wait up to "connect_timeout"
 seconds and retry to find the socket instead.
+
+2012-04-10 09:06:55: changed state open -> done

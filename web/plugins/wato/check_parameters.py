@@ -111,11 +111,13 @@ checkgroups.append((
     "first"
 ))
 
-register_rule(group,
+checkgroups.append((
+    subgroup_applications,
     "logwatch_rules",
+    _("Logfile patterns"),
     ListOf(
       Tuple(
-          help = _("This defines one logwatch pattern rule"),
+          help = _("This defines one logfile pattern rule"),
           show_titles = True,
           orientation = "horizontal",
           elements = [
@@ -139,15 +141,18 @@ register_rule(group,
              ),
           ]
       ),
-      help = _('You can define one or several patterns in each logwatch pattern rule. '
+      help = _('You can define one or several patterns in each logfile pattern rule. '
                'These patterns are applied to the selected logfiles to reclassify the '
                'matching log messages. The first pattern which matches a line will '
                'be used for reclassifying a message.'),
       add_label = _("Add pattern"),
     ),
-    title = _("Logwatch patterns"),
-    itemtype = "service",
-)
+    TextAscii(
+        title = _("Set of logfile patterns"),
+        help = _("One or several regular expressions for matching logfile lines."),
+    ),
+    'first',
+))
 
 checkgroups.append((
     subgroup_storage,

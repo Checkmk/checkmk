@@ -241,10 +241,18 @@ multisite_icons.append({
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+# Adds the url_prefix of the services site to the notes url configured in this site.
+# It also adds the master_url which will be used to link back to the source site
+# in multi site environments.
 def logwatch_url(sitename, notes_url):
     i = notes_url.index("check_mk/logwatch.py")
     site = html.site_status[sitename]["site"]
-    return site["url_prefix"] + notes_url[i:] + '&master_url=&'
+
+    master_url = ''
+    if config.is_multisite():
+        master_url = '&master_url=' + defaults.checkmk_web_uri + '/'
+
+    return site["url_prefix"] + notes_url[i:] + master_url
 
 def paint_notes(what, row, tags, custom_vars):
     if 'X' in html.display_options:

@@ -71,5 +71,8 @@ modules = [
 
       ( "snapshot", _("Backup & Restore"), "backup", "snapshots",
         _("Make snapshots of your current configuration, download, upload and restore snapshots.")),
+
+      ( "pattern_editor", _("Logfile pattern editor"), "logwatch", "pattern_editor",
+        _("Edit and validate logfile patterns")),
     ]
 

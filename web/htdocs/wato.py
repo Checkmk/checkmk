@@ -9883,7 +9883,123 @@ def create_sample_config():
     }
 
     save_rulesets(g_root_folder, rulesets)
-        
+
+#.
+#   .--Pattern Editor------------------------------------------------------.
+#   |   ____       _   _                    _____    _ _ _                 |
+#   |  |  _ \ __ _| |_| |_ ___ _ __ _ __   | ____|__| (_) |_ ___  _ __     |
+#   |  | |_) / _` | __| __/ _ \ '__| '_ \  |  _| / _` | | __/ _ \| '__|    |
+#   |  |  __/ (_| | |_| ||  __/ |  | | | | | |__| (_| | | || (_) | |       |
+#   |  |_|   \__,_|\__|\__\___|_|  |_| |_| |_____\__,_|_|\__\___/|_|       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def mode_pattern_editor(phase):
+    import logwatch
+
+    # 1. Variablen auslesen
+    hostname   = html.var('host', '')
+    item       = html.var('file', '')
+    master_url = html.var('master_url', '')
+
+    if phase == "title":
+        return _("Edit patterns of host %s: %s") % (hostname, item)
+
+    elif phase == "buttons":
+        html.context_button(_("Services"), "%sview.py?view_name=host&site=&host=%s" %
+                                               (master_url, htmllib.urlencode(hostname)))
+        html.context_button(_("Show logfile"), "logwatch.py?host=%s&amp;file=%s" %
+            (htmllib.urlencode(hostname), htmllib.urlencode(item)))
+        return
+
+    # FIXME
+    if phase == "action":
+        if not hostname:
+            raise MKUserError('host', _('The mandatory parameter "host" is missing.'))
+
+        if not item:
+            raise MKUserError('file', _('The mandatory parameter "file" is missing.'))
+
+        hosts = load_hosts(g_folder)
+        host = hosts.get(hostname)
+        if not host:
+            raise MKUserError('host', _('The given host does not exist.'))
+
+        # Check user permissions on the host
+        # Not needed here since not really accessing data of host. The host/service is only
+        # a reference to find out the rules to use
+        #if not logwatch.may_see(host):
+        #    raise MKAuthException(_("You are not allowed to access the logs of the host %s") % host)
+
+        return
+
+    int_filename = logwatch.form_file_to_int(item)
+
+    # 3. Eingabefeld fuer Text zum Probieren + Try Button
+    html.write('<div class=logwatch_try>')
+    html.begin_form('try')
+    html.write('<table>')
+    html.write('<tr>')
+    html.write('<td style="width:80px"><label for=host>%s</label></td>' % _('Hostname'))
+    html.write('<td style="width:100px">')
+    html.text_input('host')
+    html.write('</td>')
+    html.write('<td style="width:80px"><label for=file>%s</label></td>' % _('Logfile'))
+    html.write('<td style="width:100px">')
+    html.text_input('file')
+    html.write('</td><td></td></tr>')
+    html.write('<tr>')
+    html.write('<td><label for=match>%s</label></td>' % _('Text to match'))
+    html.write('<td colspan=4>')
+    html.text_input('match', cssclass = 'match')
+    html.write('</td></tr><tr>')
+    html.write('<td></td>')
+    html.write('<td colspan=4 class=help>')
+    html.write(
+        'You can insert some text into the text field above to test the patterns defined '
+        'for this logfile. All patterns for this logfile are listed below. Matchin patterns '
+        'will be highlighted after clicking the "Try out" button.'
+    )
+    html.write('</td></tr><tr>')
+    html.write('<td></td>')
+    html.write('<td colspan=4>')
+    html.image_button('_try', _('Try out'))
+    html.write('</td></tr></table>')
+    html.hidden_fields()
+    html.end_form()
+    html.write('</div>')
+
+    def create_rule_button():
+        pass
+        #html.buttonlink('%swato.py?'master_urlf, text, add_transid=False, obj_id='', style='', title='', disabled='')
+
+    # 4. Regel Anlegen Button (fuer dieses Log)
+    create_rule_button()
+
+    # 5. Regeln auflisten
+    varname = 'checkgroup_parameters:logwatch_rules'
+    rulespec = g_rulespecs[varname]
+    all_rulesets = load_all_rulesets()
+    ruleset = all_rulesets.get(varname)
+
+    if not ruleset:
+        html.write("<div class=info>" + _("There are no rules defined in this set.") + "</div>")
+
+    for rulenr in range(0, len(ruleset)):
+        folder, rule = ruleset[rulenr]
+        value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+
+        reason = rule_matches_host_and_item(
+                      rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, item)
+
+    # 5.1. Pro Regel:
+    #      - Match hervorheben (1. besonders, andere irgendwie)
+    #      - Link zu WATO
+
+    # 6. Regel Anlegen Button (fuer dieses Log)
+    create_rule_button()
 
 
 #   .-Hooks-&-API----------------------------------------------------------.
@@ -10417,6 +10533,7 @@ modes = {
    "hosttags"           : (["hosttags"], mode_hosttags),
    "edit_hosttag"       : (["hosttags"], mode_edit_hosttag),
    "edit_auxtag"        : (["hosttags"], mode_edit_auxtag),
+   "pattern_editor"     : (["pattern_editor"], mode_pattern_editor)
 }
 
 loaded_with_language = False
@@ -10588,5 +10705,11 @@ def load_plugins():
            "can make arbitrary changes to the configuration by restoring uploaded snapshots "
            "and even do a complete factory reset!"),
          [ "admin", ])
+
+    config.declare_permission("wato.pattern_editor",
+         _("Logfile Pattern Editor"),
+         _("Access to the module for editing and validating Check_MK logfile patterns."),
+         [ "admin", "user" ])
+
 
     load_web_plugins("wato", globals())

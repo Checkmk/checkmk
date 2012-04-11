@@ -662,3 +662,34 @@ table.validationerror img {
     padding: 0;
     float: left;
 }
+
+/* Logwatch pattern editor */
+
+.logwatch_try {
+    background-image: url("images/form_background.png");
+    border-radius: 5px;
+    padding: 6px;
+    width: 834px;
+}
+
+.logwatch_try table {
+    width: 100%;
+}
+
+.logwatch_try td {
+    vertical-align: middle;
+    padding: 5px;
+}
+
+.logwatch_try label {
+    margin-right:5px;
+    width: 80px;
+}
+
+.logwatch_try input.match {
+    width: 99%;
+}
+
+.logwatch_try td.help {
+   color: #fff;
+}

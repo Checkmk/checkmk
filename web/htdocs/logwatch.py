@@ -30,7 +30,18 @@ import views
 
 stylesheets = [ 'pages', 'status', 'logwatch' ]
 
-def page():
+#   .----------------------------------------------------------------------.
+#   |          ____  _                     _                               |
+#   |         / ___|| |__   _____      __ | |    ___   __ _ ___            |
+#   |         \___ \| '_ \ / _ \ \ /\ / / | |   / _ \ / _` / __|           |
+#   |          ___) | | | | (_) \ V  V /  | |__| (_) | (_| \__ \           |
+#   |         |____/|_| |_|\___/ \_/\_/   |_____\___/ \__, |___/           |
+#   |                                                 |___/                |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def page_show():
     host = html.var('host')
     filename = html.var('file')
     if not host:
@@ -64,9 +75,11 @@ def show_log_list():
 
 # Shows all problematic logfiles of a host
 def show_host_log_list(host):
+    master_url = html.var('master_url', '')
     html.header(_("Logfiles of host %s") % host, stylesheets = stylesheets)
     html.begin_context_buttons()
-    html.context_button(_("Services"), "view.py?view_name=host&site=&host=%s" % htmllib.urlencode(host))
+    html.context_button(_("Services"), "%sview.py?view_name=host&site=&host=%s" %
+                                                   (master_url, htmllib.urlencode(host)))
     html.context_button(_("All logfiles"), "logwatch.py")
     html.end_context_buttons()
 
@@ -111,10 +124,12 @@ def list_logs(host, logfiles):
 
 
 def show_file(host, filename):
-    file = form_file_to_int(filename)
+    master_url = html.var('master_url', '')
+
+    int_filename = form_file_to_int(filename)
     html.header(_("Logfiles of host %s: %s") % (host, filename), stylesheets = stylesheets)
     html.begin_context_buttons()
-    html.context_button(_("Services"), "view.py?view_name=host&site=&host=%s" % htmllib.urlencode(host))
+    html.context_button(_("Services"), "%sview.py?view_name=host&site=&host=%s" % (master_url, htmllib.urlencode(host)))
     html.context_button(_("All logfiles of Host"), "logwatch.py?host=%s" % htmllib.urlencode(host))
     html.context_button(_("All logfiles"), "logwatch.py")
 
@@ -127,7 +142,7 @@ def show_file(host, filename):
         hide_context_param = 'yes'
         hide = False
 
-    logs = parse_file(host, file, hide)
+    logs = parse_file(host, int_filename, hide)
     if type(logs) != list:
         html.end_context_buttons()
         html.show_error(_("Unable to show logfile: <b>%s</b>") % logs)
@@ -141,13 +156,16 @@ def show_file(host, filename):
 
     if config.may("act") and may_see(host):
         html.context_button(_("Clear logs"), "logwatch.py?host=%s&amp;file=%s&amp;ack=1" % \
-                   (htmllib.urlencode(host), htmllib.urlencode(html.var('file')) ))
+                   (htmllib.urlencode(host), htmllib.urlencode(filename) ))
 
     html.context_button(_("Context"), 'logwatch.py?host=%s&file=%s&hidecontext=%s">%s</a>' % \
                    (htmllib.urlencode(host), \
-                    htmllib.urlencode(html.var('file')), \
+                    htmllib.urlencode(filename), \
                     htmllib.urlencode(hide_context_param), \
                     htmllib.attrencode(hide_context_label) ))
+
+    html.context_button(_("Edit patterns"), "%swato.py?mode=pattern_editor&host=%s&file=%s" %
+                                (master_url, htmllib.urlencode(host), htmllib.urlencode(filename)))
 
     html.end_context_buttons()
 

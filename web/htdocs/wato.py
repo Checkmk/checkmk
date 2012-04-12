@@ -9923,8 +9923,12 @@ def mode_pattern_editor(phase):
                 title = _("Show Logfile")
             else:
                 title = _("Host Logfiles")
-            html.context_button(title, "logwatch.py?host=%s&amp;file=%s" %
-                (htmllib.urlencode(hostname), htmllib.urlencode(item)), 'logwatch')
+
+            master_url = ''
+            if config.is_multisite():
+                master_url = '&master_url=' + defaults.checkmk_web_uri + '/'
+            html.context_button(title, "logwatch.py?host=%s&amp;file=%s%s" %
+                (htmllib.urlencode(hostname), htmllib.urlencode(item), master_url), 'logwatch')
 
         html.context_button(_('Edit Logfile Rules'), make_link([
                 ('mode', 'edit_ruleset'),
@@ -10040,9 +10044,6 @@ def mode_pattern_editor(phase):
             match_title = reason
 
         html.begin_foldable_container("rule", str(rulenr), True, "<b>Rule #%d</b>" % (rulenr + 1), indent = False)
-
-        #html.write('<tr class="data %s0 %s">' % (odd, reason_class))
-        #html.write('<td rowspan="%d" class=number>%d</td>' % (len(pattern_list), rulenr + 1))
         html.write('<table style="width:100%" class="data logwatch"><tr>')
         html.write('<th style="width:30px;">' + _('Match') + '</th>')
         html.write('<th style="width:50px;">' + _('State') + '</th>')

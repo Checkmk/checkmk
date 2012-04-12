@@ -9913,8 +9913,12 @@ def mode_pattern_editor(phase):
     if phase == "title":
         if not hostname and not item:
             return _("Logfile Pattern Analyzer")
+        elif not hostname:
+            return _("Logfile Patterns of Logfile %s on all Hosts") % (item)
+        elif not item:
+            return _("Logfile Patterns of Host %s") % (hostname)
         else:
-            return _("Logfile Patterns of Host %s: %s") % (hostname, item)
+            return _("Logfile Patterns of Logfile %s on Host %s") % (item, hostname)
 
     elif phase == "buttons":
         html.context_button(_("Home"), make_link([("mode", "main")]), "home")
@@ -9940,23 +9944,7 @@ def mode_pattern_editor(phase):
         return
 
     if phase == "action":
-        if not hostname:
-            raise MKUserError('host', _('The mandatory parameter "host" is missing.'))
-
-        if not host:
-            raise MKUserError('host', _('The given host does not exist.'))
-
-        if not item:
-            raise MKUserError('file', _('The mandatory parameter "file" is missing.'))
-
         return
-
-    if not host:
-        html.add_user_error('host', _('The given host does not exist.'))
-        hostname = ''
-    else:
-        # FIXME: Check if item exists
-        pass
 
     html.write(
         '<div class=info> '
@@ -9995,6 +9983,12 @@ def mode_pattern_editor(phase):
     html.hidden_fields()
     html.end_form()
 
+    # Bail out if the given hostname does not exist
+    if hostname and not host:
+        html.add_user_error('host', _('The given host does not exist.'))
+        html.show_user_errors()
+        return
+
     varname = 'checkgroup_parameters:logwatch_rules'
     rulespec = g_rulespecs[varname]
     all_rulesets = load_all_rulesets()
@@ -10027,10 +10021,19 @@ def mode_pattern_editor(phase):
 
         # Check if this rule applies to the given host/service
         if hostname:
+            # If hostname (and maybe filename) try match it
             reason = rule_matches_host_and_item(
                           rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, item)
+        elif item:
+            # If only a filename is given
+            reason = False
+            for i in item_list:
+                if re.match(i, str(item)):
+                    reason = True
+                    break
         else:
-            reason = _('No hostname given.')
+            # If no host/file given match all rules
+            reason = True
 
         match_img = ''
         if reason == True:

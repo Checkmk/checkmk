@@ -74,10 +74,10 @@ def check_diskstat_line(this_time, item, params, line):
             mb_per_sec = bytes_per_sec / 1048576
             if mb_per_sec >= crit:
                 status = 2
-                infos[-1] += "!!"
+                infos[-1] += "(!!)"
             elif mb_per_sec >= warn:
                 status = max(status, 1)
-                infos[-1] += "!"
+                infos[-1] += "(!)"
 
     if average_range != None:
         perfdata = [ perfdata[0], perfdata[2], perfdata[1], perfdata[3] ]

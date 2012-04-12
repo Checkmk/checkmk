@@ -1,0 +1,18 @@
+Title: User is added to default contact group check_mk, but should not
+Component: core
+State: open
+Date: 2012-04-10 16:30:42
+Targetversion: 1.2.0
+Class: bug
+
+We did:
+- Create a contact group "alle"
+- Create a user "hh"
+- Added "hh" to "alle"
+- Created two hosts, but no rules for contact groups
+
+Happened:
+- The hosts are only in the contact group check_mk
+- BUT: hh and omdadmin are members of check_mk automatically
+  (and should not)
+- and thus hh receives notifications, but should not

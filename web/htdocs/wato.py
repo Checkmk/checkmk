@@ -8671,6 +8671,20 @@ def mode_rulesets(phase):
         else:
             html.write("<div class=info>" + _("There are no rules defined in this folder.") + "</div>")
 
+def create_new_rule_form(rulespec, hostname = None, item = None):
+    html.begin_form("new_rule")
+    html.write(_("Create a new rule: "))
+    if hostname:
+        title = _("Exception rule for host %s" % hostname)
+        if item != NO_ITEM and rulespec["itemtype"]:
+            title += _(" and %s '%s'") % (rulespec["itemname"], item)
+        html.button("_new_host_rule", title)
+        html.write(_("or") + " ")
+    html.button("_new_rule", _("Create rule in folder: "))
+    html.select("folder", folder_selection(g_root_folder))
+    html.write("\n")
+    html.hidden_fields()
+    html.end_form()
 
 def mode_edit_ruleset(phase):
     varname = html.var("varname")
@@ -8928,19 +8942,7 @@ def mode_edit_ruleset(phase):
 
         html.write('</table>')
 
-    html.write("<p>" + _("Create a new rule: "))
-    html.begin_form("new_rule")
-    if hostname:
-        title = _("Exception rule for host %s" % hostname)
-        if item != NO_ITEM and rulespec["itemtype"]:
-            title += _(" and %s '%s'") % (rulespec["itemname"], item)
-        html.button("_new_host_rule", title)
-        html.write(" " + _("or") + " ")
-    html.button("_new_rule", _("Create rule in folder: "))
-    html.select("folder", folder_selection(g_root_folder))
-    html.write("</p>\n")
-    html.hidden_fields()
-    html.end_form()
+    create_new_rule_form(rulespec, hostname, item)
 
 
 def folder_selection(folder, depth=0):
@@ -9902,104 +9904,214 @@ def mode_pattern_editor(phase):
     # 1. Variablen auslesen
     hostname   = html.var('host', '')
     item       = html.var('file', '')
+    match_txt  = html.var('match', '')
     master_url = html.var('master_url', '')
 
+    hosts = load_hosts(g_folder)
+    host = hosts.get(hostname)
+
     if phase == "title":
-        return _("Edit patterns of host %s: %s") % (hostname, item)
+        if not hostname and not item:
+            return _("Logfile Pattern Analyzer")
+        else:
+            return _("Logfile Patterns of Host %s: %s") % (hostname, item)
 
     elif phase == "buttons":
-        html.context_button(_("Services"), "%sview.py?view_name=host&site=&host=%s" %
-                                               (master_url, htmllib.urlencode(hostname)))
-        html.context_button(_("Show logfile"), "logwatch.py?host=%s&amp;file=%s" %
-            (htmllib.urlencode(hostname), htmllib.urlencode(item)))
+        html.context_button(_("Home"), make_link([("mode", "main")]), "home")
+        if host:
+            if item:
+                title = _("Show Logfile")
+            else:
+                title = _("Host Logfiles")
+            html.context_button(title, "logwatch.py?host=%s&amp;file=%s" %
+                (htmllib.urlencode(hostname), htmllib.urlencode(item)), 'logwatch')
+
+        html.context_button(_('Edit Logfile Rules'), make_link([
+                ('mode', 'edit_ruleset'),
+                ('varname', 'checkgroup_parameters:logwatch_rules')
+            ]),
+            'edit'
+        )
+
         return
 
-    # FIXME
     if phase == "action":
         if not hostname:
             raise MKUserError('host', _('The mandatory parameter "host" is missing.'))
 
-        if not item:
-            raise MKUserError('file', _('The mandatory parameter "file" is missing.'))
-
-        hosts = load_hosts(g_folder)
-        host = hosts.get(hostname)
         if not host:
             raise MKUserError('host', _('The given host does not exist.'))
 
-        # Check user permissions on the host
-        # Not needed here since not really accessing data of host. The host/service is only
-        # a reference to find out the rules to use
-        #if not logwatch.may_see(host):
-        #    raise MKAuthException(_("You are not allowed to access the logs of the host %s") % host)
+        if not item:
+            raise MKUserError('file', _('The mandatory parameter "file" is missing.'))
 
         return
 
-    int_filename = logwatch.form_file_to_int(item)
+    if not host:
+        html.add_user_error('host', _('The given host does not exist.'))
+        hostname = ''
+    else:
+        # FIXME: Check if item exists
+        pass
 
-    # 3. Eingabefeld fuer Text zum Probieren + Try Button
-    html.write('<div class=logwatch_try>')
+    html.write(
+        '<div class=info> '
+        + _('On this page you can test the defined logfile patterns against a custom text, '
+            'for example a line from a logfile. Using this dialog it is possible to analyze '
+            'and debug your whole set of logfile patterns.')
+        + '</div>'
+    )
+
+    # Render the tryout form
+    html.write('<h3>%s</h3>' % _('Try Pattern Match'))
     html.begin_form('try')
-    html.write('<table>')
+    html.write('<table class="form logwatch_try">')
     html.write('<tr>')
-    html.write('<td style="width:80px"><label for=host>%s</label></td>' % _('Hostname'))
-    html.write('<td style="width:100px">')
+    html.write('<td class=legend>%s</td>' % _('Hostname'))
+    html.write('<td class=content>')
     html.text_input('host')
-    html.write('</td>')
-    html.write('<td style="width:80px"><label for=file>%s</label></td>' % _('Logfile'))
-    html.write('<td style="width:100px">')
+    html.write('</td></tr><tr>')
+    html.write('<td class=legend>%s</td>' % _('Logfile'))
+    html.write('<td class=content>')
     html.text_input('file')
-    html.write('</td><td></td></tr>')
+    html.write('</td></tr>')
     html.write('<tr>')
-    html.write('<td><label for=match>%s</label></td>' % _('Text to match'))
-    html.write('<td colspan=4>')
+    html.write('<td class=legend>')
+    html.write(_('Text to match<br><i>'
+          'You can insert some text (e.g. a line of the logfile) to test the patterns defined '
+          'for this logfile. All patterns for this logfile are listed below. Matching patterns '
+          'will be highlighted after clicking the "Try out" button.</i>')
+    )
+    html.write('</td><td class=content>')
     html.text_input('match', cssclass = 'match')
     html.write('</td></tr><tr>')
-    html.write('<td></td>')
-    html.write('<td colspan=4 class=help>')
-    html.write(
-        'You can insert some text into the text field above to test the patterns defined '
-        'for this logfile. All patterns for this logfile are listed below. Matchin patterns '
-        'will be highlighted after clicking the "Try out" button.'
-    )
-    html.write('</td></tr><tr>')
-    html.write('<td></td>')
-    html.write('<td colspan=4>')
+    html.write('<td colspan=2>')
     html.image_button('_try', _('Try out'))
     html.write('</td></tr></table>')
     html.hidden_fields()
     html.end_form()
-    html.write('</div>')
 
-    def create_rule_button():
-        pass
-        #html.buttonlink('%swato.py?'master_urlf, text, add_transid=False, obj_id='', style='', title='', disabled='')
-
-    # 4. Regel Anlegen Button (fuer dieses Log)
-    create_rule_button()
-
-    # 5. Regeln auflisten
     varname = 'checkgroup_parameters:logwatch_rules'
     rulespec = g_rulespecs[varname]
     all_rulesets = load_all_rulesets()
     ruleset = all_rulesets.get(varname)
 
+    html.write('<h3>%s</h3>' % _('Logfile Pattern'))
     if not ruleset:
-        html.write("<div class=info>" + _("There are no rules defined in this set.") + "</div>")
+        html.write(
+            "<div class=info>"
+            + _('There are no logfile patterns defined. You may create '
+                'logfile patterns using the <a href="%s">Rule Editor</a>.') % make_link([
+                    ('mode', 'edit_ruleset'),
+                    ('varname', 'checkgroup_parameters:logwatch_rules')
+                ])
+            + "</div>"
+        )
 
+    # Loop all rules for this ruleset
+    already_matched = False
+    last_folder = None
     for rulenr in range(0, len(ruleset)):
         folder, rule = ruleset[rulenr]
-        value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+        if folder != last_folder:
+            rel_rulenr = 0
+            last_folder = folder
+        else:
+            rel_rulenr += 1
+        last_in_group = rulenr == len(ruleset) - 1 or ruleset[rulenr+1][0] != folder
+        pattern_list, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
 
-        reason = rule_matches_host_and_item(
-                      rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, item)
+        # Check if this rule applies to the given host/service
+        if hostname:
+            reason = rule_matches_host_and_item(
+                          rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, item)
+        else:
+            reason = _('No hostname given.')
 
-    # 5.1. Pro Regel:
-    #      - Match hervorheben (1. besonders, andere irgendwie)
-    #      - Link zu WATO
+        match_img = ''
+        if reason == True:
+            # Applies to the given host/service
+            reason_class = 'reason'
+            # match_title/match_img are set below per pattern
+        else:
+            # not matching
+            reason_class = 'noreason'
+            match_img   = 'nmatch'
+            match_title = reason
 
-    # 6. Regel Anlegen Button (fuer dieses Log)
-    create_rule_button()
+        html.begin_foldable_container("rule", str(rulenr), True, "<b>Rule #%d</b>" % (rulenr + 1), indent = False)
+
+        #html.write('<tr class="data %s0 %s">' % (odd, reason_class))
+        #html.write('<td rowspan="%d" class=number>%d</td>' % (len(pattern_list), rulenr + 1))
+        html.write('<table style="width:100%" class="data logwatch"><tr>')
+        html.write('<th style="width:30px;">' + _('Match') + '</th>')
+        html.write('<th style="width:50px;">' + _('State') + '</th>')
+        html.write('<th style="width:300px;">' + _('Pattern') + '</th>')
+        html.write('<th>' + _('Comment') + '</th>')
+        html.write('<th style="width:300px;">' + _('Matched line') + '</th>')
+        html.write('</tr>\n')
+
+        # Each rule can hold no, one or several patterns. Loop them all here
+        odd = "odd"
+        for state, pattern, comment in pattern_list:
+            match_class = ''
+            disp_match_txt = ''
+            if reason == True:
+                matched = re.search(pattern, match_txt)
+                if matched:
+
+                    # Prepare highlighted search txt
+                    match_start = matched.start()
+                    match_end   = matched.end()
+                    disp_match_txt = match_txt[:match_start] \
+                                     + '<span class=match>' + match_txt[match_start:match_end] + '</span>' \
+                                     + match_txt[match_end:]
+
+                    if already_matched == False:
+                        # First match
+                        match_class  = 'match first'
+                        match_img   = 'match'
+                        match_title = _('This logfile pattern matches first and will be used for '
+                                        'defining the state of the given line.')
+                        already_matched = True
+                    else:
+                        # subsequent match
+                        match_class = 'match'
+                        match_img  = 'imatch'
+                        match_title = _('This logfile pattern matches but another matched first.')
+                else:
+                    match_img   = 'nmatch'
+                    match_title = _('This logfile pattern does not match the given string.')
+
+            html.write('<tr class="data %s0 %s">' % (odd, reason_class))
+            html.write('<td><img align=absmiddle title="%s" ' \
+                        'class=icon src="images/icon_rule%s.png" />' % \
+                        (match_title, match_img))
+
+            cls = ''
+            if match_class == 'match first':
+                cls = ' class="svcstate state%d"' % logwatch.level_state(state)
+            html.write('<td style="text-align:center" %s>%s</td>' % (cls, logwatch.level_name(state)))
+            html.write('<td><code>%s</code></td>' % pattern)
+            html.write('<td>%s</td>' % comment)
+            html.write('<td>%s</td>' % disp_match_txt)
+            html.write('</tr>\n')
+
+            odd = odd == "odd" and "even" or "odd"
+
+        html.write('<tr class="data %s0"><td colspan=5>' % odd)
+        edit_url = make_link([
+            ("mode", "edit_rule"),
+            ("varname", varname),
+            ("rulenr", rel_rulenr),
+            ("host", hostname),
+            ("item", repr(item)),
+            ("rule_folder", folder[".path"])])
+        html.icon_button(edit_url, _("Edit this rule"), "edit")
+        html.write('</td></tr>\n')
+
+        html.write('</table>\n')
+        html.end_foldable_container()
 
 
 #   .-Hooks-&-API----------------------------------------------------------.
@@ -10707,8 +10819,8 @@ def load_plugins():
          [ "admin", ])
 
     config.declare_permission("wato.pattern_editor",
-         _("Logfile Pattern Editor"),
-         _("Access to the module for editing and validating Check_MK logfile patterns."),
+         _("Logfile Pattern Analyzer"),
+         _("Access to the module for analyzing and validating logfile patterns."),
          [ "admin", "user" ])
 
 

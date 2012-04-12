@@ -65,13 +65,17 @@ Boston, MA 02110-1301 USA.
 #logwatch p {
     font-family: courier, monospace;
     margin: 0;
-    padding: 0.2ex 0.5ex;
+    padding: 0.2ex 0 0.5ex 0.2ex;
     border-left: 1px solid #888;
     border-right: 1px solid #888;
     font-size: 10pt;
     background-color: #ddd;
     text-indent: -1.0ex;
     padding-left: 1.5ex;
+}
+
+#logwatch p img {
+    margin-right: 2px;
 }
 
 #logwatch .WARN {

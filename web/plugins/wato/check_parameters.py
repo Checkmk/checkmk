@@ -131,7 +131,7 @@ checkgroups.append((
              ),
              # FIXME: Own object type (optional hidden text field for regex validation)
              TextAscii(
-                 title = _("Pattern"),
+                 title = _("Pattern (Regex)"),
                  size  = 20,
                  #help = _("The regular expression to match the log lines."),
              ),
@@ -141,14 +141,15 @@ checkgroups.append((
              ),
           ]
       ),
-      help = _('You can define one or several patterns in each logfile pattern rule. '
+      help = _('You can define one or several patterns (regular expressions) in each logfile pattern rule. '
                'These patterns are applied to the selected logfiles to reclassify the '
                'matching log messages. The first pattern which matches a line will '
-               'be used for reclassifying a message.'),
+               'be used for reclassifying a message. You can use the <a href="%s">Logfile Pattern Analyzer</a> '
+               'to test the rules you defined here.') % html.makeuri([('mode', 'pattern_editor')]),
       add_label = _("Add pattern"),
     ),
     TextAscii(
-        title = _("Set of logfile patterns"),
+        title = _("logfile"),
         help = _("One or several regular expressions for matching logfile lines."),
     ),
     'first',

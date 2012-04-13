@@ -113,7 +113,7 @@ checkgroups.append((
 
 checkgroups.append((
     subgroup_applications,
-    "logwatch_rules",
+    "logwatch",
     _("Logfile patterns"),
     ListOf(
       Tuple(
@@ -141,8 +141,9 @@ checkgroups.append((
       help = _('You can define one or several patterns (regular expressions) in each logfile pattern rule. '
                'These patterns are applied to the selected logfiles to reclassify the '
                'matching log messages. The first pattern which matches a line will '
-               'be used for reclassifying a message. You can use the <a href="%s">Logfile Pattern Analyzer</a> '
-               'to test the rules you defined here.') % html.makeuri([('mode', 'pattern_editor')]),
+               'be used for reclassifying a message. You can use the '
+               '<a href="wato.py?mode=pattern_editor">Logfile Pattern Analyzer</a> '
+               'to test the rules you defined here.'),
       add_label = _("Add pattern"),
     ),
     TextAscii(

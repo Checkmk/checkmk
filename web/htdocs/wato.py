@@ -9936,7 +9936,7 @@ def mode_pattern_editor(phase):
 
         html.context_button(_('Edit Logfile Rules'), make_link([
                 ('mode', 'edit_ruleset'),
-                ('varname', 'checkgroup_parameters:logwatch_rules')
+                ('varname', 'checkgroup_parameters:logwatch')
             ]),
             'edit'
         )
@@ -9989,7 +9989,7 @@ def mode_pattern_editor(phase):
         html.show_user_errors()
         return
 
-    varname = 'checkgroup_parameters:logwatch_rules'
+    varname = 'checkgroup_parameters:logwatch'
     rulespec = g_rulespecs[varname]
     all_rulesets = load_all_rulesets()
     ruleset = all_rulesets.get(varname)
@@ -10001,7 +10001,7 @@ def mode_pattern_editor(phase):
             + _('There are no logfile patterns defined. You may create '
                 'logfile patterns using the <a href="%s">Rule Editor</a>.') % make_link([
                     ('mode', 'edit_ruleset'),
-                    ('varname', 'checkgroup_parameters:logwatch_rules')
+                    ('varname', 'checkgroup_parameters:logwatch')
                 ])
             + "</div>"
         )

@@ -95,8 +95,7 @@ def logwatch_level_worst(worst, level):
 # Constructs simple list of pairs: [ ('W', 'crash.exe'), ('C', 'sshd.*test') ]
 def logwatch_precompile(hostname, item, params):
     # First load the logwatch_rules var (used by WATO)
-    description = check_info['logwatch']['service_description'] % item
-    rules = service_extra_conf(hostname, description, logwatch_rules)
+    rules = get_checkgroup_parameters(hostname, 'logwatch', item)
 
     # Initialize params with these rules but remove the comment
     params = []
@@ -340,6 +339,7 @@ check_info['logwatch'] = {
     'service_description': "LOG %s",
     'has_perfdata':        0,
     'inventory_function':  inventory_logwatch,
+    'group':               'logwatch',
 }
 
 precompile_params['logwatch'] = logwatch_precompile

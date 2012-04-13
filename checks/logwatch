@@ -93,12 +93,11 @@ def logwatch_level_worst(worst, level):
 
 # Extracts patterns that are relevant for the current host and item.
 # Constructs simple list of pairs: [ ('W', 'crash.exe'), ('C', 'sshd.*test') ]
-def logwatch_precompile(hostname, item, params):
-    # First load the logwatch_rules var (used by WATO)
-    rules = get_checkgroup_parameters(hostname, 'logwatch', item)
-
-    # Initialize params with these rules but remove the comment
+def logwatch_precompile(hostname, item, _unused):
+    # Initialize the patterns list with the logwatch_rules
     params = []
+    description = check_info['logwatch']['service_description'] % item
+    rules = service_extra_conf(hostname, description, logwatch_rules)
     for rule in rules:
         for pattern in rule:
             params.append((pattern[0], pattern[1]))

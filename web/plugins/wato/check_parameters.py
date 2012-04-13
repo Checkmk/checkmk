@@ -91,31 +91,10 @@ register_rule(group + "/" + subgroup_networking,
         ]),
         match="dict")
 
-checkgroups = []
-
-checkgroups.append((
-    subgroup_windows,
-    "ad_replication",
-    _("Active Directory Replication"),
-    Tuple(
-        help = _("The number of replication failures"),
-        elements = [
-           Integer(title = _("Warning at"), unit = _("failures")),
-           Integer(title = _("Critical at"), unit = _("failures")),
-        ]
-      ),
-    TextAscii(
-        title = _("Replication Partner"),
-        help = _("The name of the replication partner (Destination DC Site/Destination DC)."),
-    ),
-    "first"
-))
-
-checkgroups.append((
-    subgroup_applications,
-    "logwatch",
-    _("Logfile patterns"),
-    ListOf(
+register_rule(group + '/' + subgroup_applications,
+    varname   = "logwatch_rules",
+    title     = _('Logwatch Patterns'),
+    valuespec = ListOf(
       Tuple(
           help = _("This defines one logfile pattern rule"),
           show_titles = True,
@@ -146,11 +125,31 @@ checkgroups.append((
                'to test the rules you defined here.'),
       add_label = _("Add pattern"),
     ),
+    itemtype = 'item',
+    itemname = 'logfile',
+    itemhelp = _("One or several regular expressions for matching logfile lines."),
+    match = 'list',
+)
+
+
+checkgroups = []
+
+checkgroups.append((
+    subgroup_windows,
+    "ad_replication",
+    _("Active Directory Replication"),
+    Tuple(
+        help = _("The number of replication failures"),
+        elements = [
+           Integer(title = _("Warning at"), unit = _("failures")),
+           Integer(title = _("Critical at"), unit = _("failures")),
+        ]
+      ),
     TextAscii(
-        title = _("logfile"),
-        help = _("One or several regular expressions for matching logfile lines."),
+        title = _("Replication Partner"),
+        help = _("The name of the replication partner (Destination DC Site/Destination DC)."),
     ),
-    'first',
+    "first"
 ))
 
 checkgroups.append((

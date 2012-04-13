@@ -129,15 +129,12 @@ checkgroups.append((
                    ('I', _('IGNORE')),
                ],
              ),
-             # FIXME: Own object type (optional hidden text field for regex validation)
-             TextAscii(
+             RegExp(
                  title = _("Pattern (Regex)"),
                  size  = 20,
-                 #help = _("The regular expression to match the log lines."),
              ),
              TextAscii(
                  title = _("Comment"),
-                 #help = _("You can insert a log line or a part of a log line to test the pattern stated left."),
              ),
           ]
       ),

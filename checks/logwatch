@@ -235,7 +235,10 @@ def check_logwatch(item, params, info):
                                      (username(), e))
 
     # Get the patterns (either compile or reuse the precompiled ones)
-    if params:
+    # Check_MK creates an empty string if the precompile function has
+    # not been exectued yet. The precomile function creates an empty
+    # list when no rules/patterns are defined.
+    if params != '':
         patterns = params # patterns already precompiled
     else:
         patterns = logwatch_precompile(g_hostname, item, None)

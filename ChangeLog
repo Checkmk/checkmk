@@ -22,6 +22,8 @@
       of userids to hide the listed users from the WATO user management GUI.
     * WATO API: Added new method rewrite_configuration to trigger a rewrite of
       all host related wato configuration files to distribute changed tags
+    * WATO: Added new internal hook pre-activate-changes to execute custom
+      code BEFORE Check_MK is called to restart Nagios
 
     Multisite
     * Added config option default_ts_format to configure default timestamp

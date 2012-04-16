@@ -3379,6 +3379,9 @@ def check_mk_local_automation(command, args=[], indata=""):
                     "<li>Retry this operation</li></ol>\n" %
                     (html.apache_user(), sudoline))
 
+    if command == 'restart':
+        call_hook_pre_activate_changes()
+
     if config.debug:
         log_audit(None, "automation", "Automation: %s" % " ".join(cmd))
     try:
@@ -10359,6 +10362,20 @@ def call_hook_folder_created(folder):
 def call_hook_folder_deleted(folder):
     if 'folder-deleted' in g_hooks:
         call_hooks("folder-deleted", folder)
+
+def call_hook_pre_activate_changes():
+    """
+    This hook is executed when one applies the pending configuration changes
+    from wato but BEFORE the nagios restart is executed.
+
+    It can be used to create custom input files for nagios/Check_MK.
+
+    The registered hooks are called with a dictionary as parameter which
+    holds all available with the hostnames as keys and the attributes of
+    the hosts as values.
+    """
+    if hook_registered('pre-activate-changes'):
+        call_hooks("pre-activate-changes", collect_hosts(g_root_folder))
 
 def call_hook_activate_changes():
     """

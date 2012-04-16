@@ -6815,7 +6815,7 @@ def mode_edit_user(phase):
             return "users"
 
         id = html.var("userid").strip()
-        if new and (id in users or in_htpasswd(id)):
+        if new and id in users:
             raise MKUserError("userid", _("This username is already being used by another user."))
         if not re.match("^[-a-z0-9A-Z_\.]+$", id):
             raise MKUserError("userid", _("The username must consist only of letters, digit and the underscore."))
@@ -7139,27 +7139,6 @@ def mode_edit_user(phase):
     html.hidden_fields()
     html.end_form()
 
-def load_htpasswd():
-    users = {}
-    filename = defaults.htpasswd_file
-    if os.path.exists(filename):
-        for line in file(filename):
-            id, password = line.strip().split(":")[:2]
-            if password.startswith("!"):
-                locked = True
-                password = password[1:]
-            else:
-                locked = False
-
-            users[id] = {
-                'password': password,
-                'locked':   locked,
-            }
-    return users
-
-def in_htpasswd(id):
-    return id in load_htpasswd()
-
 def load_users():
     # First load monitoring contacts from Check_MK's world
     filename = root_dir + "contacts.mk"
@@ -7216,19 +7195,27 @@ def load_users():
     # they are getting according to the multisite old-style
     # configuration variables.
 
-    for id, user in load_htpasswd().items():
-        if id in result:
-            result[id]["password"] = user['password']
-            result[id]["locked"] = user['locked']
-        elif config.wato_create_users_from_htpasswd:
-            # Create entry if this is an admin user
-            new_user = {
-                "roles"    : config.roles_of_user(id),
-                "password" : user['password'],
-                "locked"   : False
-            }
-            result[id] = new_user
-        # Other unknown entries will silently be dropped. Sorry...
+    filename = defaults.htpasswd_file
+    if os.path.exists(filename):
+        for line in file(filename):
+            id, password = line.strip().split(":")[:2]
+            if password.startswith("!"):
+                locked = True
+                password = password[1:]
+            else:
+                locked = False
+            if id in result:
+                result[id]["password"] = password
+                result[id]["locked"] = locked
+            elif wato_create_users_from_htpasswd:
+                # Create entry if this is an admin user
+                new_user = {
+                    "roles"    : config.roles_of_user(id),
+                    "password" : password,
+                    "locked"   : False
+                }
+                result[id] = new_user
+            # Other unknown entries will silently be dropped. Sorry...
 
     # Now read the automation secrets and add them to existing
     # users or create new users automatically

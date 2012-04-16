@@ -4917,7 +4917,7 @@ def mode_groups(phase, what):
 
     # Show member of contact groups
     if what == "contact":
-        users = load_users()
+        users = filter_hidden_users(load_users())
         members = {}
         for userid, user in users.items():
             cgs = user.get("contactgroups", [])
@@ -6654,7 +6654,7 @@ def mode_users(phase):
         return
 
     roles = load_roles()
-    users = load_users()
+    users = filter_hidden_users(load_users())
     timeperiods = load_timeperiods()
     contact_groups = load_group_information().get("contact", {})
 
@@ -7139,6 +7139,12 @@ def mode_edit_user(phase):
     html.hidden_fields()
     html.end_form()
 
+def filter_hidden_users(users):
+    if config.wato_hidden_users:
+        return dict([ (id, user) for id, user in users.items() if id not in config.wato_hidden_users ])
+    else:
+        return users
+
 def load_users():
     # First load monitoring contacts from Check_MK's world
     filename = root_dir + "contacts.mk"
@@ -7329,7 +7335,7 @@ class UserSelection(ElementSelection):
         ElementSelection.__init__(self, **kwargs)
 
     def get_elements(self):
-        users = load_users()
+        users = filter_hidden_users(load_users())
         elements = dict([ (name, "%s - %s" % (name, us.get("alias", name))) for (name, us) in users.items() ])
         return elements
 
@@ -7373,7 +7379,7 @@ def mode_roles(phase):
         return
 
     roles = load_roles()
-    users = load_users()
+    users = filter_hidden_users(load_users())
 
     if phase == "action":
         if html.var("_delete"):

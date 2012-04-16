@@ -7207,7 +7207,7 @@ def load_users():
             if id in result:
                 result[id]["password"] = password
                 result[id]["locked"] = locked
-            elif wato_create_users_from_htpasswd:
+            else:
                 # Create entry if this is an admin user
                 new_user = {
                     "roles"    : config.roles_of_user(id),

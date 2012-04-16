@@ -15,10 +15,8 @@
     * Added new variable logwatch_rules which can also be managed through the
       WATO ruleset editor (Host/Service Parameters > Parameters and rules for
       inventorized checks > Various applications > Logwatch Patterns)
-    * Users & Contacts: Added new option wato_create_users_from_htpasswd to make
-      handling of users only appearing in htpasswd configurable. The default
-      is set to True to keep the default behaviour. Users only appearing in
-      htpasswd will not be shown in this GUI when the option is set to False.
+    * Users & Contacts: Added new option wato_hidden_users which holds a list
+      of userids to hide the listed users from the WATO user management GUI.
     * WATO API: Added new method rewrite_configuration to trigger a rewrite of
       all host related wato configuration files to distribute changed tags
 

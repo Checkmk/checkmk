@@ -621,7 +621,6 @@ wato_num_hostspecs = 12
 wato_num_itemspecs = 15
 wato_activation_method = 'restart'
 wato_write_nagvis_auth = False
-wato_create_users_from_htpasswd = True
 
 
 #     ____ ___

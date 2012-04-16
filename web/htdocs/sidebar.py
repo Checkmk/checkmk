@@ -126,13 +126,16 @@ def sidebar_head():
 
 def sidebar_foot():
     html.write('<div id="side_footer">')
-    html.write('<ul class=buttons>\n')
     if config.may("configure_sidebar"):
-        html.write('<li><a target="main" href="sidebar_add_snapin.py">%s</a></li>' % _('Add snapin'))
+        html.icon_button("sidebar_add_snapin.py", _("Add snapin to the sidebar"), "sidebar_addsnapin", 
+                         target="main")
     if config.may("edit_profile") or config.may("change_password"):
-        html.write('<li><a class=profile target="main" href="user_profile.py" title="%s"></a></li>' % _('Edit user profile'))
+        html.icon_button("user_profile.py", _("Edit your personal settings, change your password"), "sidebar_settings",
+                         target="main")
+        # html.write('<li><a class=profile target="main" href="user_profile.py" title="%s"></a></li>' % _('Edit user profile'))
     if config.may("logout"):
-        html.write('<li><a class=logout target="_top" href="logout.py" title="%s"></a></li>' % _('Logout'))
+        html.icon_button("logout.py", _("Log out"), "sidebar_logout", target="_top")
+        # html.write('<li><a class=logout target="_top" href="logout.py" title="%s"></a></li>' % _('Logout'))
     html.write('</ul>')
     html.write("<div class=copyright>%s</div>\n" % _("&copy; <a target=\"_blank\" href=\"http://mathias-kettner.de\">Mathias Kettner</a>"))
     html.write('</div>')

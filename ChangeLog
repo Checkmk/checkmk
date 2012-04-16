@@ -29,6 +29,7 @@
       of the main frameset (%s will be replaced with OMD site name)
     * FIX: Fix problem where snapins where invisible
     * FIX: Fixed multisite timeout errors when nagios not running
+    * Sidebar: some new layout improvements
 
     BI
     * FIX: Fixed filtering of Single-Host Aggregations

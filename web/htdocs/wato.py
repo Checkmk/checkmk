@@ -228,7 +228,7 @@ def page_handler():
     if modefunc == None:
         html.header(_("Sorry"), stylesheets=wato_styles)
         html.begin_context_buttons()
-        html.context_button(_("Home"), make_link([("mode", "main")]), "home")
+        html.context_button(_("Main Menu"), make_link([("mode", "main")]), "home")
         html.end_context_buttons()
         html.message(_("This module has not yet been implemented."))
         html.footer()
@@ -769,6 +769,7 @@ def mode_folder(phase):
 
     elif phase == "buttons":
         global_buttons()
+        # html.write("<br><br><hr>")
         if config.may("wato.rulesets") or config.may("wato.seeall"):
             html.context_button(_("Rulesets"),        make_link([("mode", "ruleeditor")]), "rulesets")
         html.context_button(_("Folder Properties"), make_link_to([("mode", "editfolder")], g_folder), "edit")
@@ -9921,7 +9922,7 @@ def mode_pattern_editor(phase):
             return _("Logfile Patterns of Logfile %s on Host %s") % (item, hostname)
 
     elif phase == "buttons":
-        html.context_button(_("Home"), make_link([("mode", "main")]), "home")
+        html.context_button(_("Main Menu"), make_link([("mode", "main")]), "home")
         if host:
             if item:
                 title = _("Show Logfile")
@@ -10467,7 +10468,7 @@ def global_buttons():
     home_button()
 
 def home_button():
-    html.context_button(_("Home"), make_link([("mode", "main")]), "home")
+    html.context_button(_("Main Menu"), make_link([("mode", "main")]), "home")
 
 def search_button():
     html.context_button(_("Search"), make_link([("mode", "search")]), "search")

@@ -93,77 +93,25 @@ body.side {
     position: absolute;
     bottom: 0;
     left: 0;
-    height: 35px;
+    height: 50px;
     width: 100%;
     z-index: 10;
     background-repeat: no-repeat;
     background-image: url("images/sidebar_bottom.png");
 }
 
-#side_footer ul.buttons {
-    height: 20px;
-    z-index: 20;
-    position: absolute;
+#side_footer img.iconbutton {
+    position: relative;
     top: 10px;
-    left: 15px;
-    margin: 0;
-    padding: 0;
-}
-
-#side_footer ul.buttons li {
-    list-style-type: none;
-    float: left;
-    display: inline;
-    margin-left: 0;
-}
-
-#side_footer ul.buttons a {
-    width: 75px;
-    height: 17px;
-    display: block;
-    color: #fff;
-    text-align: center;
-    vertical-align: middle;
-    padding-top: 3px;
-    text-decoration: none;
-    background-repeat: repeat;
-    background-image: url("images/sidebar_button_lo.png");
-    margin: 0;
-}
-
-#side_footer ul.buttons a:hover {
-    background-image: url("images/sidebar_button_hi.png");
-}
-
-#side_footer ul.buttons a.logout {
-    width: 20px;
-    margin-left: 5px;
-    background-image: url("images/sidebar_logout_lo.png");
-}
-
-#side_footer ul.buttons a.logout:hover {
-    background-image: url("images/sidebar_logout_hi.png");
-}
-
-#side_footer ul.buttons a.profile {
-    width: 20px;
-    margin-left: 2px;
-    background-image: url("images/sidebar_profile_lo.png");
-}
-
-#side_footer ul.buttons a.profile:hover {
-    background-image: url("images/sidebar_profile_hi.png");
-}
-
-#side_footer div.buttons a {
-    float: left;
+    left: 10px;
+    margin-right: 3px;
 }
 
 #side_footer div.copyright {
     color: #fff;
     position: relative;
-    left: 130px;
-    top: 12px;
+    left: 141px;
+    top: -5px;
     width: 122px;
     text-align: right;
 }

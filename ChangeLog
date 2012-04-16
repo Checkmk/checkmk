@@ -19,6 +19,8 @@
       handling of users only appearing in htpasswd configurable. The default
       is set to True to keep the default behaviour. Users only appearing in
       htpasswd will not be shown in this GUI when the option is set to False.
+    * WATO API: Added new method rewrite_configuration to trigger a rewrite of
+      all host related wato configuration files to distribute changed tags
 
     Multisite
     * Added config option default_ts_format to configure default timestamp

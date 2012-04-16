@@ -10200,6 +10200,11 @@ class API:
         save_folder_and_hosts(folder)
         return folder[".hosts"][host["name"]]
 
+    # Rewrite the WATO configuration files
+    def rewrite_configuration(self):
+        self.prepare_folder_info()
+        rewrite_config_files_below(g_root_folder)
+
     # Return displayable information about host (call with result of get_host())
     def get_host_painted(self, host):
         result = []

@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import math, os, time, re, urlparse
+import math, os, time, re, sre_constants, urlparse
 from lib import *
 
 # Abstract base class of all value declaration classes.
@@ -319,6 +319,18 @@ class TextAscii(ValueSpec):
             if not self._regex.match(value):
                 raise MKUserError(varprefix, self._regex_error)
 
+class RegExp(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+
+    def validate_value(self, value, varprefix):
+        TextAscii.validate_value(self, value, varprefix)
+
+        # Check if the string is a valid regex
+        try:
+            re.compile(value)
+        except sre_constants.error, e:
+            raise MKUserError(varprefix, _('Invalid regex: %s') % e)
 
 class EmailAddress(TextAscii):
     def __init__(self, **kwargs):

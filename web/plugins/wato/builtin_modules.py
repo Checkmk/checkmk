@@ -29,18 +29,18 @@
 # fields: mode, title, icon, permission, help
 
 modules = [
-      ( "folder",           _("Hosts & folders"),     "folder", "hosts",
+      ( "folder",           _("Hosts & Folders"),     "folder", "hosts",
       _("Manage monitored hosts and services and the hosts' folder structure.")),
 
-      ( "hosttags",         _("Host tags"),          "hosttag", "hosttags",
+      ( "hosttags",         _("Host Tags"),          "hosttag", "hosttags",
       _("Manage your host tags. Tags are used to classify hosts and are the "
         "fundament of the configuration of hosts and services.")),
 
-      ( "globalvars",        _("Global settings"),    "configuration", "global",
+      ( "globalvars",        _("Global Settings"),    "configuration", "global",
       _("Manage global configuration settings for Check_MK, Multisite and the "
 
         "monitoring core here.")),
-      ( "ruleeditor",        _("Host/Service configuration"), "rulesets", "rulesets",
+      ( "ruleeditor",        _("Host/Service Parameters"), "rulesets", "rulesets",
       _("Check parameters and other variables that can be set on a per-host "
         "and per-service basis are managed via rules.") ),
 
@@ -71,5 +71,8 @@ modules = [
 
       ( "snapshot", _("Backup & Restore"), "backup", "snapshots",
         _("Make snapshots of your current configuration, download, upload and restore snapshots.")),
+
+      ( "pattern_editor", _("Logfile Pattern Analyzer"), "analyze", "pattern_editor",
+        _("Analyze logfile pattern rules and validate logfile patterns against custom text.")),
     ]
 

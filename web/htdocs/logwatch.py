@@ -30,7 +30,28 @@ import views
 
 stylesheets = [ 'pages', 'status', 'logwatch' ]
 
-def page():
+def level_name(level):
+    if   level == 'W': return 'WARN'
+    elif level == 'C': return 'CRIT'
+    else: return 'OK'
+
+def level_state(level):
+    if   level == 'W': return 1
+    elif level == 'C': return 2
+    else: return 0
+
+#   .----------------------------------------------------------------------.
+#   |          ____  _                     _                               |
+#   |         / ___|| |__   _____      __ | |    ___   __ _ ___            |
+#   |         \___ \| '_ \ / _ \ \ /\ / / | |   / _ \ / _` / __|           |
+#   |          ___) | | | | (_) \ V  V /  | |__| (_) | (_| \__ \           |
+#   |         |____/|_| |_|\___/ \_/\_/   |_____\___/ \__, |___/           |
+#   |                                                 |___/                |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def page_show():
     host = html.var('host')
     filename = html.var('file')
     if not host:
@@ -52,7 +73,11 @@ def page():
 
 # Shows a list of all problematic logfiles grouped by host
 def show_log_list():
-    html.header(_("All problematic Logfiles"), stylesheets = stylesheets)
+    html.header(_("All Problematic Logfiles"), stylesheets = stylesheets)
+
+    html.begin_context_buttons()
+    html.context_button(_("Analyze Patterns"), "%swato.py?mode=pattern_editor" % html.var('master_url', ''), 'analyze')
+    html.end_context_buttons()
 
     html.write("<table class=data>\n")
     for host, logs in all_logs():
@@ -64,10 +89,14 @@ def show_log_list():
 
 # Shows all problematic logfiles of a host
 def show_host_log_list(host):
+    master_url = html.var('master_url', '')
     html.header(_("Logfiles of host %s") % host, stylesheets = stylesheets)
     html.begin_context_buttons()
-    html.context_button(_("Services"), "view.py?view_name=host&site=&host=%s" % htmllib.urlencode(host))
+    html.context_button(_("Services"), "%sview.py?view_name=host&site=&host=%s" %
+                                (master_url, htmllib.urlencode(host)), 'services')
     html.context_button(_("All logfiles"), "logwatch.py")
+    html.context_button(_("Analyze Host Patterns"), "%swato.py?mode=pattern_editor&host=%s" %
+                                (master_url, htmllib.urlencode(host)), 'analyze')
     html.end_context_buttons()
 
     html.write("<table class=data>\n")
@@ -92,7 +121,8 @@ def list_logs(host, logfiles):
         if logs == [] or type(logs) != list: # corrupted logfile
             if logs == []: logs = "empty"
             html.write("<tr class=%s0>\n" % (rowno % 2 == 0 and "odd" or "even"))
-            html.write("<td>-</td><td>%s</td><td>%s</td><td>0</td></tr>\n" % (htmllib.attrencode(logs), htmllib.attrencode(file_display)))
+            html.write("<td>-</td><td>%s</td><td>%s</td><td>0</td></tr>\n" %
+                             (htmllib.attrencode(logs), htmllib.attrencode(file_display)))
         else:
             worst_log = get_worst_log(logs)
             last_log = get_last_log(logs)
@@ -111,23 +141,28 @@ def list_logs(host, logfiles):
 
 
 def show_file(host, filename):
-    file = form_file_to_int(filename)
+    master_url = html.var('master_url', '')
+
+    int_filename = form_file_to_int(filename)
     html.header(_("Logfiles of host %s: %s") % (host, filename), stylesheets = stylesheets)
     html.begin_context_buttons()
-    html.context_button(_("Services"), "view.py?view_name=host&site=&host=%s" % htmllib.urlencode(host))
-    html.context_button(_("All logfiles of Host"), "logwatch.py?host=%s" % htmllib.urlencode(host))
-    html.context_button(_("All logfiles"), "logwatch.py")
+    html.context_button(_("Services"), "%sview.py?view_name=host&site=&host=%s" % (master_url, htmllib.urlencode(host)), 'services')
+    html.context_button(_("All Logfiles of Host"), "logwatch.py?host=%s" % htmllib.urlencode(host))
+    html.context_button(_("All Logfiles"), "logwatch.py")
+
+    html.context_button(_("Analyze Patterns"), "%swato.py?mode=pattern_editor&host=%s&file=%s" %
+                                (master_url, htmllib.urlencode(host), htmllib.urlencode(filename)), 'analyze')
 
     if html.var('hidecontext', 'no') == 'yes':
-        hide_context_label = _('Show context')
+        hide_context_label = _('Show Context')
         hide_context_param = 'no'
         hide = True
     else:
-        hide_context_label = _('Hide context')
+        hide_context_label = _('Hide Context')
         hide_context_param = 'yes'
         hide = False
 
-    logs = parse_file(host, file, hide)
+    logs = parse_file(host, int_filename, hide)
     if type(logs) != list:
         html.end_context_buttons()
         html.show_error(_("Unable to show logfile: <b>%s</b>") % logs)
@@ -140,12 +175,12 @@ def show_file(host, filename):
         return
 
     if config.may("act") and may_see(host):
-        html.context_button(_("Clear logs"), "logwatch.py?host=%s&amp;file=%s&amp;ack=1" % \
-                   (htmllib.urlencode(host), htmllib.urlencode(html.var('file')) ))
+        html.context_button(_("Clear Log"), "logwatch.py?host=%s&amp;file=%s&amp;ack=1" % \
+                   (htmllib.urlencode(host), htmllib.urlencode(filename) ), 'delete')
 
     html.context_button(_("Context"), 'logwatch.py?host=%s&file=%s&hidecontext=%s">%s</a>' % \
                    (htmllib.urlencode(host), \
-                    htmllib.urlencode(html.var('file')), \
+                    htmllib.urlencode(filename), \
                     htmllib.urlencode(hide_context_param), \
                     htmllib.attrencode(hide_context_label) ))
 
@@ -160,7 +195,16 @@ def show_file(host, filename):
         html.write('</tr>\n</table>\n');
 
         for line in log['lines']:
-            html.write('<p class="%s">%s</p>\n' % (line['class'], htmllib.attrencode(line['line']) ))
+            html.write('<p class="%s">' % line['class'])
+
+            edit_url = master_url + "wato.py?" + htmllib.urlencode_vars([
+                ('mode',  'pattern_editor'),
+                ('host',  host),
+                ('file',  filename),
+                ('match', line['line']),
+            ])
+            html.icon_button(edit_url, _("Analyze this line"), "analyze")
+            html.write('%s</p>\n' % (htmllib.attrencode(line['line']) ))
 
         html.write('</div>\n')
 

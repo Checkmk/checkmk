@@ -11,6 +11,10 @@
     * New main overview for rule editor
     * New multisite.mk option wato_hide_varnames for hiding Check_MK 
       configuration variable names from the user
+    * New module "Logwatch Pattern Analyzer" to verify logwatch rules
+    * Added new variable logwatch_rules which can also be managed through the
+      WATO ruleset editor (Host/Service Parameters > Parameters and rules for
+      inventorized checks > Various applications > Logwatch Patterns)
 
     Multisite
     * Added config option default_ts_format to configure default timestamp

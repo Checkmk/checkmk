@@ -138,6 +138,10 @@ Boston, MA 02110-1301 USA.
     /* border-color: #2f5f73 */
 }
 
+.wato form.new_rule {
+    margin: 10px 0 10px 0;
+}
+
 .wato div.sitestatus {
     border-style: solid;
     border-width: 1px;
@@ -661,4 +665,21 @@ table.validationerror img {
     margin: 0;
     padding: 0;
     float: left;
+}
+
+/* Logwatch pattern editor */
+
+.logwatch_try input.match {
+    width: 99%;
+}
+
+table.logwatch tr.noreason {
+    color: #898989;
+}
+
+table.logwatch span.match {
+    border: 1px solid #49768B;
+    border-radius: 4px;
+    background-color: #fff;
+    padding: 0 2px 2px 2px;
 }

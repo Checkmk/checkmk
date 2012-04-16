@@ -24,10 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#!/usr/bin/python
-# encoding: utf-8
-
-# Rules for configuring parameters of checks (services)                |
+# Rules for configuring parameters of checks (services)
 
 register_rulegroup("checkparams", _("Parameters and rules for inventorized checks"),
     _("With these rules you configure parameters (such as levels) for checks that "
@@ -94,6 +91,47 @@ register_rule(group + "/" + subgroup_networking,
         ]),
         match="dict")
 
+register_rule(group + '/' + subgroup_applications,
+    varname   = "logwatch_rules",
+    title     = _('Logwatch Patterns'),
+    valuespec = ListOf(
+      Tuple(
+          help = _("This defines one logfile pattern rule"),
+          show_titles = True,
+          orientation = "horizontal",
+          elements = [
+             DropdownChoice(
+               title = _("State"),
+               choices = [
+                   ('C', _('CRITICAL')),
+                   ('W', _('WARNING')),
+                   ('I', _('IGNORE')),
+               ],
+             ),
+             RegExp(
+                 title = _("Pattern (Regex)"),
+                 size  = 20,
+             ),
+             TextAscii(
+                 title = _("Comment"),
+             ),
+          ]
+      ),
+      help = _('You can define one or several patterns (regular expressions) in each logfile pattern rule. '
+               'These patterns are applied to the selected logfiles to reclassify the '
+               'matching log messages. The first pattern which matches a line will '
+               'be used for reclassifying a message. You can use the '
+               '<a href="wato.py?mode=pattern_editor">Logfile Pattern Analyzer</a> '
+               'to test the rules you defined here.'),
+      add_label = _("Add pattern"),
+    ),
+    itemtype = 'item',
+    itemname = 'logfile',
+    itemhelp = _("One or several regular expressions for matching logfile lines."),
+    match = 'list',
+)
+
+
 checkgroups = []
 
 checkgroups.append((
@@ -113,7 +151,6 @@ checkgroups.append((
     ),
     "first"
 ))
-
 
 checkgroups.append((
     subgroup_storage,

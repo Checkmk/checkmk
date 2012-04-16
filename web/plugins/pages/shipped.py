@@ -49,7 +49,7 @@ pagehandlers.update({
    "count_context_button"     : views.ajax_count_button,
    "export_views"             : views.ajax_export,
    "view"                     : views.page_view,
-   "logwatch"                 : logwatch.page,
+   "logwatch"                 : logwatch.page_show,
    "side"                     : sidebar.page_side,
    "sidebar_add_snapin"       : sidebar.page_add_snapin,
    "sidebar_snapin"           : sidebar.ajax_snapin,

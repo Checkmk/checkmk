@@ -972,8 +972,8 @@ sidebar_snapins["master_control"] = {
     "allowed" : [ "admin", ],
     "styles" : """
 div.snapin table.master_control {
-    width: %dpx;
-    margin: 0px 0px 8px 0px;
+    width: 100%;
+    margin: 0px 0px 0px 0px;
     border-spacing: 0px;
 }
 
@@ -997,7 +997,7 @@ div.snapin table.master_control td img.iconbutton {
     height: 16px;
 }
 
-""" % (snapin_width - 15)
+""" 
 }
 
 def ajax_switch_masterstate():

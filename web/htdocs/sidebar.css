@@ -204,7 +204,7 @@ div.snapin div.head.open {
 
 div.snapin div.head.closed {
     background-image: url("images/snapin_closed.png");
-    height: 22px;
+    height: 23px;
 }
 
 /* close button on header */

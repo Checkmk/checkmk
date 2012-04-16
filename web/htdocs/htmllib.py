@@ -359,7 +359,7 @@ class html:
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png">')
 
-    def icon_button(self, url, help, icon, id="", onclick="", style=""):
+    def icon_button(self, url, help, icon, id="", onclick="", style="", target=""):
         if id:
             id = "id='%s' " % id
 
@@ -370,12 +370,15 @@ class html:
         if style:
             style = 'style="%s" ' % style
 
-        self.write('<a %s%s%sonfocus="if (this.blur) this.blur();" href="%s">'
+        if target:
+            target = 'target="%s" ' % target
+
+        self.write('<a %s%s%s%sonfocus="if (this.blur) this.blur();" href="%s">'
                    '<img align=absmiddle class=iconbutton title="%s" '
                    'src="images/button_%s_lo.png" '
                    'onmouseover=\"hilite_icon(this, 1)\" '
                    'onmouseout=\"hilite_icon(this, 0)\">'
-                   '</a>' % (id, onclick, style, url, help, icon))
+                   '</a>' % (id, onclick, style, target, url, help, icon))
 
     def empty_icon_button(self):
         self.write('<img class="iconbutton trans" src="images/trans.png">')

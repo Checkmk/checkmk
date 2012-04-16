@@ -47,6 +47,7 @@ def render_searchform():
 
     html.write('<div id="mk_side_search" class="content_center" onclick="mkSearchClose();">')
     html.write('<input id="mk_side_search_field" type="text" name="search" autocomplete="off" />')
+    html.icon_button("#", _("Search"), "quicksearch", onclick="mkSearchButton();")
     html.write('</div>')
     html.write("<script type='text/javascript' src='js/search.js'></script>\n")
     html.write("<script type='text/javascript'>\n")
@@ -96,23 +97,33 @@ sidebar_snapins["search"] = {
     "restart":     True,
     "allowed":     [ "user", "admin", "guest" ],
     "styles":      """
+
 #mk_side_search {
-    width: %dpx;
+    width: 225px;
     padding: 0;
+    position: relative;
+    left: -2px;
+}
+
+#mk_side_search img.iconbutton {
+    width: 33px;
+    height: 26px;
+    position: absolute;
+    top: 0px;
+    left: 196px;
 }
 
 #mk_side_search input {
     margin:  0;
-    padding: 0;
+    padding: 0px 5px;
     font-size: 8pt;
-    /* The padding and border defined below stretch the object by 2px in each
-     * direction. This needs to be substracted from the width to position the
-     * field correctly
-     */
-    width: %dpx;
-    padding: 1px;
-    border: 1px #73767A solid;
-    outline: 1px solid #fff;
+    width: 194px;
+    height: 25px;
+    background-image: url("images/quicksearch_field_bg.png"); 
+    background-repeat: no-repeat;
+    -moz-border-radius: 0px;
+    border-style: none;
+
 }
 
 #mk_search_results {
@@ -121,7 +132,7 @@ sidebar_snapins["search"] = {
     top: 1px;
     background-color: #DFDFDF;
     color: #000;
-    font-size: 80%%;
+    font-size: 80%;
     width: 223px;
 }
 
@@ -138,5 +149,5 @@ sidebar_snapins["search"] = {
     background-color: #BFBFBF;
 }
 
-""" % (snapin_width - 4, snapin_width - 8)
+""" 
 }

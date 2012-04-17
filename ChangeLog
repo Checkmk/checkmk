@@ -48,6 +48,7 @@
     * FIX: Fix problem where snapins where invisible
     * FIX: Fixed multisite timeout errors when nagios not running
     * Sidebar: some new layout improvements
+    * FIX: fix exception when disallowing changing display options
 
     BI
     * FIX: Fixed filtering of Single-Host Aggregations

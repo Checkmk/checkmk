@@ -1561,7 +1561,8 @@ def view_options(viewname):
 
     else:
         for on, opt in multisite_painter_options.items():
-            del v[on]
+            if on in v:
+                del v[on]
             opt["value"] = None
 
     if must_save:

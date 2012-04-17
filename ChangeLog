@@ -28,6 +28,8 @@
     * FIX: Only showing sudo hint message on sudo error message in automation
       command
     * FIX: Fixed js eror in IE7 on WATO host edit page
+    * FIX: Using pickle instead of repr/eval when reading data structures from
+      urls to prevent too big security issues
 
     Multisite
     * Added config option default_ts_format to configure default timestamp

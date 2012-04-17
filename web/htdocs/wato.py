@@ -107,7 +107,7 @@
 #   `----------------------------------------------------------------------'
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
-       shutil, tarfile, StringIO, math, fcntl
+       shutil, tarfile, StringIO, math, fcntl, pickle
 import config, htmllib, multitar
 from lib import *
 from valuespec import *
@@ -2051,7 +2051,7 @@ def show_service_table(host, firsttime):
                     url = make_link([("mode", "edit_ruleset"),
                                      ("varname", varname),
                                      ("host", hostname),
-                                     ("item", repr(item))])
+                                     ("item", mk_repr(item))])
                     try:
                         rulespec["valuespec"].validate_datatype(params, "")
                         rulespec["valuespec"].validate_value(params, "")
@@ -6112,8 +6112,8 @@ def check_mk_remote_automation(siteid, command, args, indata):
         config.site(siteid), "checkmk-automation",
         [
             ("automation", command),   # The Check_MK automation command
-            ("arguments", repr(args)), # The arguments for the command
-            ("indata", repr(indata)),  # The input data
+            ("arguments", mk_repr(args)),  # The arguments for the command
+            ("indata", mk_repr(indata)), # The input data
         ])
     return response
 
@@ -6550,8 +6550,8 @@ def page_automation():
     command = html.var("command")
     if command == "checkmk-automation":
         cmk_command = html.var("automation")
-        args = eval(html.var("arguments"))
-        indata = eval(html.var("indata"))
+        args   = mk_eval(html.var("arguments"))
+        indata = mk_eval(html.var("indata"))
         result = check_mk_local_automation(cmk_command, args, indata)
         html.write(repr(result))
     elif command == "push-snapshot":
@@ -8701,7 +8701,7 @@ def mode_edit_ruleset(phase):
     rulespec = g_rulespecs[varname]
     hostname = html.var("host", "")
     if html.has_var("item"):
-        item = eval(html.var("item"))
+        item = mk_eval(html.var("item"))
     else:
         item = NO_ITEM
 
@@ -8867,7 +8867,7 @@ def mode_edit_ruleset(phase):
                 ("varname", varname),
                 ("rulenr", rel_rulenr),
                 ("host", hostname),
-                ("item", repr(item)),
+                ("item", mk_repr(item)),
                 ("rule_folder", folder[".path"])])
             html.icon_button(edit_url, _("Edit this rule"), "edit")
             rule_button("insert", _("Insert a copy of this rule into the folder '%s'")
@@ -10119,7 +10119,7 @@ def mode_pattern_editor(phase):
             ("varname", varname),
             ("rulenr", rel_rulenr),
             ("host", hostname),
-            ("item", repr(item)),
+            ("item", mk_repr(item)),
             ("rule_folder", folder[".path"])])
         html.icon_button(edit_url, _("Edit this rule"), "edit")
         html.write('</td></tr>\n')
@@ -10455,6 +10455,18 @@ def validate_all_hosts(hostnames, force_all = False):
 #   +----------------------------------------------------------------------+
 #   | Functions needed at various places                                   |
 #   '----------------------------------------------------------------------'
+
+def mk_eval(s):
+    if config.debug:
+        return eval(s)
+    else:
+        return pickle.loads(s)
+
+def mk_repr(s):
+    if config.debug:
+        return repr(s)
+    else:
+        return pickle.dumps(s)
 
 # Returns true when at least one folder is defined in WATO
 def have_folders():

@@ -1,10 +1,14 @@
 Title: bulk inventory in omd shared mode
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-02-14 16:06:33
 Targetversion: future
-Class: bug
 
 At the moment the message about modifying the /etc/sudoers file is shown
 on every cmk --automation problem during inventory. This is misleading.
 The message should only occur when the entries are really missing in /etc/sudoers
+
+2012-04-17 16:00:21: changed state open -> done
+Has just been fixed. The sudo hint message is only shown when the sudo command fails "sudo:
+" in error message.

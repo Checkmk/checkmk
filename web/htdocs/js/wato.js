@@ -139,32 +139,35 @@ function wato_fix_visibility() {
         }
 
         var oTr = document.getElementById("attr_" + attrname);
-        oTr.style.display = display;
+        if(oTr) {
+            oTr.style.display = display;
 
-        // Prepare current visibility information which is used
-        // within the attribut validation in wato
-        // Hidden attributes are not validated at all
-        if ( !document.getElementById("attr_display_" + attrname) ){
-            var newInput = document.createElement("input");
-            newInput.name  = "attr_display_" + attrname;
-            newInput.id  = "attr_display_" + attrname;
-            newInput.type = "hidden";
-            newInput.className = "text";
-            oTr.appendChild(newInput);
-        }
-        var display_info = document.getElementById("attr_display_" + attrname)
-        if ( display == "none" ) {
-            display_info.value = "0";
-        }else{
-            display_info.value = "1";
-        }
+            // Prepare current visibility information which is used
+            // within the attribut validation in wato
+            // Hidden attributes are not validated at all
+            oAttrDisp = document.getElementById("attr_display_" + attrname);
+            if (!oAttrDisp){
+                var newInput = document.createElement("input");
+                newInput.name  = "attr_display_" + attrname;
+                newInput.id  = "attr_display_" + attrname;
+                newInput.type = "hidden";
+                newInput.className = "text";
+                oTr.appendChild(newInput);
+            }
+            if ( display == "none" ) {
+                oAttrDisp.value = "0";
+            } else {
+                oAttrDisp.value = "1";
+            }
+            oAttrDisp = null;
 
-        // There is at least one item in this topic -> show it
-        var topic = oTr.parentNode.parentNode.parentNode.id.substr(21);
-        if( display == "" ){
-            var index = hide_topics.indexOf(topic);
-            if( index != -1 )
-                delete hide_topics[index];
+            // There is at least one item in this topic -> show it
+            var topic = oTr.parentNode.parentNode.parentNode.id.substr(21);
+            if( display == "" ){
+                var index = hide_topics.indexOf(topic);
+                if( index != -1 )
+                    delete hide_topics[index];
+            }
         }
     }
     for (var item in volatile_topics){

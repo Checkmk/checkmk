@@ -1,9 +1,9 @@
 Title: Checkboxes in views and brower back in disharmony
 Component: multisite
-State: open
+Class: bug
+State: works4me
 Date: 2012-01-17 11:43:07
 Targetversion: 1.2.0
-Class: bug
 
 Tested on IE8, but might be browser independent.
 The following steps produce the problem:
@@ -18,3 +18,6 @@ The following steps produce the problem:
 5. Now again select a command.
    -> Now the command will be applied to *all* 
    services instead of the one.
+
+2012-04-17 15:15:51: changed state open -> works4me
+Maybe already fixed. Tested in Firefox, IE7-9

@@ -1,11 +1,14 @@
 Title: Host validation error does invalidate the _transid of the current page
 Component: wato
-State: open
+Class: bug
+State: works4me
 Date: 2012-02-17 15:42:32
 Targetversion: future
-Class: bug
 
 If a host validation error occurs on saving a host, the user needs to return
 to the folder an re-edit the host from start.
 It seems that the transaction id of the current page gets invalid, and a
 subsequent save on the same page wont work
+
+2012-04-17 15:22:17: changed state open -> works4me
+Seems that this has already been fixed. It works foor me over here

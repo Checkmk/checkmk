@@ -1877,6 +1877,15 @@ def create_nagios_config_contacts(outfile):
         cnames.sort()
         for cname in cnames:
             contact = contacts[cname]
+            # If the contact is in no contact group or all of the contact groups
+            # of the contact have neither hosts nor services assigned - in other
+            # words if the contact is not assigned to any host or service, then
+            # we do not create this contact in Nagios. It's useless and wil produce
+            # warnings.
+            cgrs = [ cgr for cgr in contact.get("contactgroups", []) if cgr in contactgroups_to_define ]
+            if not cgrs:
+                continue
+
             outfile.write("define contact {\n  contact_name\t\t\t%s\n" % cname)
             if "alias" in contact:
                 outfile.write("  alias\t\t\t\t%s\n" % contact["alias"].encode("utf-8"))
@@ -1891,13 +1900,6 @@ def create_nagios_config_contacts(outfile):
                 outfile.write("  %s_notification_period\t%s\n" % (what, contact.get("notification_period", "24X7")))
                 outfile.write("  %s_notification_commands\tcheck-mk-notify\n" % what)
 
-            # Refer only to those contact groups that actually have objects assigned to. Otherwise
-            # we will run into problems since Nagios does not allow contact groups that
-            # are not assigned to at least one host or service?
-            cgrs = [ cgr for cgr in contact.get("contactgroups", []) if cgr in contactgroups_to_define ]
-            # Use dummy group if none is set. Nagios will not start otherwise
-            if not cgrs:
-                cgrs = [ "check_mk" ]
             outfile.write("  contactgroups\t\t\t%s\n" % ", ".join(cgrs))
             outfile.write("}\n\n")
 

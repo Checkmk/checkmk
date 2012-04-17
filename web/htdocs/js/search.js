@@ -150,6 +150,12 @@ function mkSearchKeyRepeat(e, oField) {
 
 
 // On key press down event handler
+function mkSearchButton() {
+    var oField = document.getElementById("mk_side_search_field");
+    var ev = { "which" : 0, "keyCode" : 13 }
+    return mkSearchKeyDown(ev, oField);
+}
+
 function mkSearchKeyDown(e, oField) {
     var keyCode = e.which || e.keyCode;
 

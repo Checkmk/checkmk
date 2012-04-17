@@ -1,8 +1,11 @@
 Title: WAT tag management needs input fields for secondary tags
 Component: wato
-State: open
+Class: nastiness
+State: done
 Date: 2012-02-14 11:22:42
 Targetversion: future
-Class: nastiness
 
 Is an important feature to be able to manage the tags in wATo.
+
+2012-04-17 16:58:43: changed state open -> done
+Has already been implemented.

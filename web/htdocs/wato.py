@@ -107,7 +107,7 @@
 #   `----------------------------------------------------------------------'
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
-       shutil, tarfile, StringIO, math, fcntl
+       shutil, tarfile, StringIO, math, fcntl, pickle
 import config, htmllib, multitar
 from lib import *
 from valuespec import *
@@ -228,7 +228,7 @@ def page_handler():
     if modefunc == None:
         html.header(_("Sorry"), stylesheets=wato_styles)
         html.begin_context_buttons()
-        html.context_button(_("Home"), make_link([("mode", "main")]), "home")
+        html.context_button(_("Main Menu"), make_link([("mode", "main")]), "home")
         html.end_context_buttons()
         html.message(_("This module has not yet been implemented."))
         html.footer()
@@ -769,6 +769,7 @@ def mode_folder(phase):
 
     elif phase == "buttons":
         global_buttons()
+        # html.write("<br><br><hr>")
         if config.may("wato.rulesets") or config.may("wato.seeall"):
             html.context_button(_("Rulesets"),        make_link([("mode", "ruleeditor")]), "rulesets")
         html.context_button(_("Folder Properties"), make_link_to([("mode", "editfolder")], g_folder), "edit")
@@ -1924,7 +1925,7 @@ def mode_inventory(phase, firsttime):
         html.context_button(_("Folder"),
                             make_link([("mode", "folder")]), "back")
         html.context_button(_("Host properties"),
-                            make_link([("mode", "edithost"), ("host", hostname)]), "back")
+                            make_link([("mode", "edithost"), ("host", hostname)]), "host")
         html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
     elif phase == "action":
@@ -2050,7 +2051,7 @@ def show_service_table(host, firsttime):
                     url = make_link([("mode", "edit_ruleset"),
                                      ("varname", varname),
                                      ("host", hostname),
-                                     ("item", repr(item))])
+                                     ("item", mk_repr(item))])
                     try:
                         rulespec["valuespec"].validate_datatype(params, "")
                         rulespec["valuespec"].validate_value(params, "")
@@ -3379,6 +3380,9 @@ def check_mk_local_automation(command, args=[], indata=""):
                     "<li>Retry this operation</li></ol>\n" %
                     (html.apache_user(), sudoline))
 
+    if command == 'restart':
+        call_hook_pre_activate_changes()
+
     if config.debug:
         log_audit(None, "automation", "Automation: %s" % " ".join(cmd))
     try:
@@ -3401,7 +3405,7 @@ def check_mk_local_automation(command, args=[], indata=""):
         if config.debug:
             log_audit(None, "automation", "Automation command %s failed with exit code %d: %s" % (" ".join(cmd), exitcode, outdata))
         raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
-              (" ".join(cmd), exitcode, hilite_errors(outdata), sudo_msg))
+              (" ".join(cmd), exitcode, hilite_errors(outdata), outdata.lstrip().startswith('sudo:') and sudo_msg or ''))
 
     # On successful "restart" command execute the activate changes hook
     if command == 'restart':
@@ -4917,7 +4921,7 @@ def mode_groups(phase, what):
 
     # Show member of contact groups
     if what == "contact":
-        users = load_users()
+        users = filter_hidden_users(load_users())
         members = {}
         for userid, user in users.items():
             cgs = user.get("contactgroups", [])
@@ -6108,8 +6112,8 @@ def check_mk_remote_automation(siteid, command, args, indata):
         config.site(siteid), "checkmk-automation",
         [
             ("automation", command),   # The Check_MK automation command
-            ("arguments", repr(args)), # The arguments for the command
-            ("indata", repr(indata)),  # The input data
+            ("arguments", mk_repr(args)),  # The arguments for the command
+            ("indata", mk_repr(indata)), # The input data
         ])
     return response
 
@@ -6546,8 +6550,8 @@ def page_automation():
     command = html.var("command")
     if command == "checkmk-automation":
         cmk_command = html.var("automation")
-        args = eval(html.var("arguments"))
-        indata = eval(html.var("indata"))
+        args   = mk_eval(html.var("arguments"))
+        indata = mk_eval(html.var("indata"))
         result = check_mk_local_automation(cmk_command, args, indata)
         html.write(repr(result))
     elif command == "push-snapshot":
@@ -6654,7 +6658,7 @@ def mode_users(phase):
         return
 
     roles = load_roles()
-    users = load_users()
+    users = filter_hidden_users(load_users())
     timeperiods = load_timeperiods()
     contact_groups = load_group_information().get("contact", {})
 
@@ -7139,6 +7143,12 @@ def mode_edit_user(phase):
     html.hidden_fields()
     html.end_form()
 
+def filter_hidden_users(users):
+    if config.wato_hidden_users:
+        return dict([ (id, user) for id, user in users.items() if id not in config.wato_hidden_users ])
+    else:
+        return users
+
 def load_users():
     # First load monitoring contacts from Check_MK's world
     filename = root_dir + "contacts.mk"
@@ -7329,7 +7339,7 @@ class UserSelection(ElementSelection):
         ElementSelection.__init__(self, **kwargs)
 
     def get_elements(self):
-        users = load_users()
+        users = filter_hidden_users(load_users())
         elements = dict([ (name, "%s - %s" % (name, us.get("alias", name))) for (name, us) in users.items() ])
         return elements
 
@@ -7373,7 +7383,7 @@ def mode_roles(phase):
         return
 
     roles = load_roles()
-    users = load_users()
+    users = filter_hidden_users(load_users())
 
     if phase == "action":
         if html.var("_delete"):
@@ -8494,13 +8504,20 @@ def change_host_tags_in_rules(folder, operations, mode):
 
 def mode_ruleeditor(phase):
     only_host = html.var("host", "")
-    only_local = html.var("local")
+    only_local = "" # html.var("local")
 
     if phase == "title":
-        return _("Configuration of Hosts and Services (Ruleeditor)")
+        if only_host:
+            return _("Rules effective on host ") + only_host
+        else:
+            return _("Configuration of Hosts and Services (Ruleeditor)")
 
     elif phase == "buttons":
         global_buttons()
+        if only_host:
+            html.context_button(only_host,
+                make_link([("mode", "edithost"), ("host", only_host)]), "host")
+
         return
     
     elif phase == "action":
@@ -8508,10 +8525,16 @@ def mode_ruleeditor(phase):
     
     if not only_host:
         render_folder_path(keepvarnames = ["mode", "local"])
+    else:
+        html.write("<h3>%s: %s</h3>" % (_("Host"), only_host))
 
-    # Group names are separated with "/" into main group and optional subgroup
-    groupnames = list(set([ gn.split("/")[0] for gn in g_rulespec_groups.keys() ]))
-    groupnames.sort()
+    # Group names are separated with "/" into main group and optional subgroup.
+    # Do not loose carefully manually crafted order of groups!
+    groupnames = []
+    for gn, rulesets in g_rulespec_groups:
+        main_group = gn.split('/')[0]
+        if main_group not in groupnames:
+            groupnames.append(main_group)
     menu = []
     for groupname in groupnames:
         url = make_link([("mode", "rulesets"), ("group", groupname), 
@@ -8519,7 +8542,6 @@ def mode_ruleeditor(phase):
         title, help = g_rulegroups.get(groupname, (groupname, ""))
         menu.append((url, title, "rulesets", "rulesets", help))
     render_main_menu(menu)
-        
 
 
 
@@ -8527,7 +8549,7 @@ def mode_rulesets(phase):
     group = html.var("group") # obligatory
     title, help = g_rulegroups.get(group, (group, None))
     only_host = html.var("host", "")
-    only_local = html.var("local")
+    only_local = "" # html.var("local")
 
     if phase == "title":
         if only_host:
@@ -8540,7 +8562,7 @@ def mode_rulesets(phase):
             home_button()
             html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
             html.context_button(only_host,
-                 make_link([("mode", "edithost"), ("host", only_host)]), "back")
+                 make_link([("mode", "edithost"), ("host", only_host)]), "host")
         else:
             global_buttons()
             html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
@@ -8557,17 +8579,17 @@ def mode_rulesets(phase):
     if help:
         html.write("<div class=info>%s</div>" % help)
 
-    html.begin_form("local")
-    html.checkbox("local", False, onclick="form.submit();")
-    if only_host:
-        html.write(" " + _("show only rulesets that contain rules explicitely listing the host <b>%s</b>." %
-            only_host))
-    else:
-        html.write(" " + _("Show only rulesets that contain rules in the current folder."))
-    html.write(' <img align=absbottom class=icon src="images/icon_localrule.png"> ')
-    html.hidden_fields()
-    html.end_form()
-    html.write("<br>")
+    # html.begin_form("local")
+    # html.checkbox("local", False, onclick="form.submit();")
+    # if only_host:
+    #     html.write(" " + _("show only rulesets that contain rules explicitely listing the host <b>%s</b>." %
+    #         only_host))
+    # else:
+    #     html.write(" " + _("Show only rulesets that contain rules in the current folder."))
+    # html.write(' <img align=absbottom class=icon src="images/icon_localrule.png"> ')
+    # html.hidden_fields()
+    # html.end_form()
+    # html.write("<br>")
 
     # Load all rules from all folders. Hope this doesn't take too much time.
     # We need this information only for displaying the number of rules in
@@ -8582,9 +8604,9 @@ def mode_rulesets(phase):
     else:
         all_rulesets = load_all_rulesets()
 
-    groupnames = [ gn for gn in g_rulespec_groups.keys() 
+    # Select matching rule groups while keeping their configured order
+    groupnames = [ gn for gn, rulesets in g_rulespec_groups
                    if gn == group or gn.startswith(group + "/") ]
-    groupnames.sort()
     do_folding = len(groupnames) > 1
 
     something_shown = False
@@ -8592,8 +8614,10 @@ def mode_rulesets(phase):
     for groupname in groupnames:
         # Show information about a ruleset
         title_shown = False
-        g_rulespec_groups[groupname].sort()
-        for rulespec in g_rulespec_groups[groupname]:
+        # Sort rulesets according to their title
+        g_rulespec_group[groupname].sort(
+            cmp = lambda a, b: cmp(a["title"], b["title"]))
+        for rulespec in g_rulespec_group[groupname]:
 
             varname = rulespec["varname"]
             valuespec = rulespec["valuespec"]
@@ -8691,7 +8715,7 @@ def mode_edit_ruleset(phase):
     rulespec = g_rulespecs[varname]
     hostname = html.var("host", "")
     if html.has_var("item"):
-        item = eval(html.var("item"))
+        item = mk_eval(html.var("item"))
     else:
         item = NO_ITEM
 
@@ -8857,7 +8881,7 @@ def mode_edit_ruleset(phase):
                 ("varname", varname),
                 ("rulenr", rel_rulenr),
                 ("host", hostname),
-                ("item", repr(item)),
+                ("item", mk_repr(item)),
                 ("rule_folder", folder[".path"])])
             html.icon_button(edit_url, _("Edit this rule"), "edit")
             rule_button("insert", _("Insert a copy of this rule into the folder '%s'")
@@ -9676,7 +9700,8 @@ def register_rulegroup(group, title, help):
     g_rulegroups[group] = (title, help)
 
 g_rulespecs = {}
-g_rulespec_groups = {}
+g_rulespec_group = {} # for conveniant lookup
+g_rulespec_groups = [] # for keeping original order
 def register_rule(group, varname, valuespec = None, title = None,
                   help = None, itemtype = None, itemname = None,
                   itemhelp = None, itemenum = None,
@@ -9695,7 +9720,14 @@ def register_rule(group, varname, valuespec = None, title = None,
         "optional"  : optional, # rule may be None (like only_hosts)
         }
 
-    g_rulespec_groups.setdefault(group, []).append(ruleset)
+    # Register group
+    if group not in g_rulespec_group:
+        rulesets = [ ruleset ]
+        g_rulespec_groups.append((group, rulesets))
+        g_rulespec_group[group] = rulesets
+    else:
+        g_rulespec_group[group].append(ruleset)
+
     g_rulespecs[varname] = ruleset
 
 #
@@ -9719,7 +9751,6 @@ def select_language(user_language):
                                             (inactive and "display: none" or "", default_label))
         html.write('<div id="attr_entry_language" style="%s">' % ((not inactive) and "display: none" or ""))
         html.select("language", languages, user_language)
-        html.set_focus("lang")
         html.write("</div></td></tr>")
 
 def page_user_profile():
@@ -9921,7 +9952,7 @@ def mode_pattern_editor(phase):
             return _("Logfile Patterns of Logfile %s on Host %s") % (item, hostname)
 
     elif phase == "buttons":
-        html.context_button(_("Home"), make_link([("mode", "main")]), "home")
+        html.context_button(_("Main Menu"), make_link([("mode", "main")]), "home")
         if host:
             if item:
                 title = _("Show Logfile")
@@ -10109,7 +10140,7 @@ def mode_pattern_editor(phase):
             ("varname", varname),
             ("rulenr", rel_rulenr),
             ("host", hostname),
-            ("item", repr(item)),
+            ("item", mk_repr(item)),
             ("rule_folder", folder[".path"])])
         html.icon_button(edit_url, _("Edit this rule"), "edit")
         html.write('</td></tr>\n')
@@ -10199,6 +10230,11 @@ class API:
         folder[".hosts"][host["name"]].update(attr)
         save_folder_and_hosts(folder)
         return folder[".hosts"][host["name"]]
+
+    # Rewrite the WATO configuration files
+    def rewrite_configuration(self):
+        self.prepare_folder_info()
+        rewrite_config_files_below(g_root_folder)
 
     # Return displayable information about host (call with result of get_host())
     def get_host_painted(self, host):
@@ -10349,6 +10385,20 @@ def call_hook_folder_deleted(folder):
     if 'folder-deleted' in g_hooks:
         call_hooks("folder-deleted", folder)
 
+def call_hook_pre_activate_changes():
+    """
+    This hook is executed when one applies the pending configuration changes
+    from wato but BEFORE the nagios restart is executed.
+
+    It can be used to create custom input files for nagios/Check_MK.
+
+    The registered hooks are called with a dictionary as parameter which
+    holds all available with the hostnames as keys and the attributes of
+    the hosts as values.
+    """
+    if hook_registered('pre-activate-changes'):
+        call_hooks("pre-activate-changes", collect_hosts(g_root_folder))
+
 def call_hook_activate_changes():
     """
     This hook is executed when one applies the pending configuration changes
@@ -10427,6 +10477,18 @@ def validate_all_hosts(hostnames, force_all = False):
 #   | Functions needed at various places                                   |
 #   '----------------------------------------------------------------------'
 
+def mk_eval(s):
+    if config.debug:
+        return eval(s)
+    else:
+        return pickle.loads(s)
+
+def mk_repr(s):
+    if config.debug:
+        return repr(s)
+    else:
+        return pickle.dumps(s)
+
 # Returns true when at least one folder is defined in WATO
 def have_folders():
     root_folder = load_folder(root_dir)
@@ -10467,7 +10529,7 @@ def global_buttons():
     home_button()
 
 def home_button():
-    html.context_button(_("Home"), make_link([("mode", "main")]), "home")
+    html.context_button(_("Main Menu"), make_link([("mode", "main")]), "home")
 
 def search_button():
     html.context_button(_("Search"), make_link([("mode", "search")]), "search")
@@ -10668,6 +10730,12 @@ def load_plugins():
     host_attributes = []
     user_attributes = []
     user_attribute = {}
+
+    global g_rulegroups, g_rulespecs, g_rulespec_group, g_rulespec_groups
+    g_rulegroups = {}
+    g_rulespecs = {}
+    g_rulespec_group = {}
+    g_rulespec_groups = []
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))

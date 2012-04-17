@@ -439,6 +439,7 @@ table.validationerror img {
 .wato table.configmodules {
     empty-cells: show;
     border-spacing: 8px;
+    margin-left: -8px;
 }
 .wato table.configmodules td {
     background-image: url("images/form_background.png");

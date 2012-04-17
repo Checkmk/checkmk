@@ -220,6 +220,11 @@ def normal_login_page():
     html.set_render_headfoot(False)
     html.header(_("Check_MK Multisite Login"), javascripts=[], stylesheets=["pages", "login"])
 
+    # Never allow the login page to be opened in a frameset. Redirect top page to login page
+    html.javascript('''if(top != self) {
+    window.top.location.href = location;
+}''')
+
     origtarget = html.var('_origtarget', '')
     if not origtarget and not html.req.myfile == 'login':
         origtarget = html.makeuri([])

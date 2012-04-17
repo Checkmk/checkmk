@@ -421,8 +421,8 @@ def render_sitestatus():
             html.write("<tr><td class=left>%s</td>" % text)
             onclick = "switch_site('_site_switch=%s:%s')" % (sitename, switch)
             html.write("<td class=state>")
-            html.write('<a title="%s" href="#" onclick="%s" class="sitestatus %s">%s</a></td>' %
-                       (title, onclick, state, state))
+            html.icon_button("#", _("%s this site") % (state == "disabled" and "enable" or "disable"),
+                             "sitestatus_%s" % state, onclick=onclick)
             html.write("</tr>\n")
         html.write("</table>\n")
 
@@ -448,14 +448,11 @@ table.sitestate td.left {
     text-align: left;
 }
 
-table.sitestate a {
-    font-weight: bold;
-    -moz-border-radius: 4px;
-    margin: 0px;
-    padding: 0px 0px;
-    text-align: center;
-    display: block;
+div.snapin table.sitestate td img.iconbutton {
+    width: 60px;
+    height: 16px;
 }
+
 table.sitestate td.left a {
     text-align: left;
     font-weight: normal;
@@ -466,10 +463,6 @@ table.sitestate td.state {
     font-size: 7pt;
 }
 
-table.sitestate td.state a {
-    border-width: 1px;
-    border-style: solid;
-}
 """ % snapin_width
 }
 
@@ -574,11 +567,11 @@ table.tacticaloverview th span {
 table.tacticaloverview td { 
     width: 33.3%%; 
     text-align: right; 
-    border: 1px solid #123a4a;
+    /* border: 1px solid #123a4a; */
     background-color: #6da1b8;
     padding: 0px; 
     height: 14px; 
-    box-shadow: 0px 0px 1px #386068;
+    /* box-shadow: 1px 0px 1px #386068; */
 }
 table.tacticaloverview a { display: block; margin-right: 2px; }
 """ % snapin_width
@@ -962,8 +955,11 @@ def render_master_control():
             colvalue = siteline[i + 1]
             url = defaults.url_prefix + ("check_mk/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
             onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
-            enabled = colvalue and "enabled" or "disabled"
-            html.write("<tr><td class=left>%s</td><td class=%s><a onclick=\"%s\" href=\"#\">%s</a></td></tr>\n" % (title, enabled, onclick, enabled))
+            html.write("<tr><td class=left>%s</td><td>" % title)
+            html.icon_button("#", _("Switch %s %s") % (title, colvalue and "off" or "on"), 
+                             "snapin_switch_" + (colvalue and "on" or "off"), onclick=onclick)
+            html.write("</td></tr>")
+            # html.write("<a onclick=\"%s\" href=\"#\">%s</a></td></tr>\n" % (title, enabled, onclick, enabled))
         html.write("</table>")
         if siteid:
             html.end_foldable_container()
@@ -976,8 +972,8 @@ sidebar_snapins["master_control"] = {
     "allowed" : [ "admin", ],
     "styles" : """
 div.snapin table.master_control {
-    width: %dpx;
-    margin: 0px 0px 8px 0px;
+    width: 100%;
+    margin: 0px 0px 0px 0px;
     border-spacing: 0px;
 }
 
@@ -986,17 +982,6 @@ div.snapin table.master_control td {
     text-align: right;
 }
 
-div.snapin table.master_control td a {
-    font-weight: bold;
-    -moz-border-radius: 4px;
-    margin: 0px;
-    padding: 0px 3px;
-    text-align: center;
-    font-size: 7pt;
-    margin-right: 0px;
-    display: block;
-    border: 1px solid black;
-}
 div.snapin table.master_control td.left a {
     text-align: left;
     font-size: 8pt;
@@ -1007,17 +992,12 @@ div.snapin table.master_control td.left {
     text-align: left;
 }
 
-div.snapin table.master_control td.enabled a {
-    background-color: #4f6;
-    color: #000;
-    border-color: #080;
+div.snapin table.master_control td img.iconbutton {
+    width: 60px;
+    height: 16px;
 }
-div.snapin table.master_control td.disabled a {
-    background-color: #f33;
-    border-color: #c00;
-    color: #fff;
-}
-""" % (snapin_width - 20)
+
+""" 
 }
 
 def ajax_switch_masterstate():

@@ -26,7 +26,7 @@
 
 # Rules for configuring parameters of checks (services)
 
-register_rulegroup("checkparams", _("Parameters and rules for inventorized checks"),
+register_rulegroup("checkparams", _("Parameters for Inventorized Checks"),
     _("With these rules you configure parameters (such as levels) for checks that "
       "have been found and created by Check_MK inventory."))
 group = "checkparams"
@@ -1284,7 +1284,7 @@ register_rule(
 
 
 # Create Rules for static checks
-register_rulegroup("static", _("Statically configured checks"),
+register_rulegroup("static", _("Manual Checks"),
     _("In cases where you do not want or are not able to use inventory, "
       "you can manually configure Check_MK based services to monitor "
       "on your hosts."))

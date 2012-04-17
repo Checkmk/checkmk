@@ -1,6 +1,12 @@
 1.2.0b2:
     Core:
     * FIX: Cluster host checks were UNKNOWN all the time
+    * FIX: reset counter in case of (broken) future time
+    * FIX: Automation try-inventory: Fixed problem on where checks which
+      produce equal service descriptions could lead to invalid inventory
+      results on cluster hosts.
+    * FIX: do not create contacts if they won't be assigned to any host
+      or service. Do *not* assign to dummy catch-all group "check_mk".
 
     WATO:
     * Added new permission "move hosts" to allow/deny moving of hosts in WATO
@@ -15,6 +21,18 @@
     * Added new variable logwatch_rules which can also be managed through the
       WATO ruleset editor (Host/Service Parameters > Parameters and rules for
       inventorized checks > Various applications > Logwatch Patterns)
+    * Users & Contacts: Added new option wato_hidden_users which holds a list
+      of userids to hide the listed users from the WATO user management GUI.
+    * WATO API: Added new method rewrite_configuration to trigger a rewrite of
+      all host related wato configuration files to distribute changed tags
+    * Added new internal hook pre-activate-changes to execute custom
+      code BEFORE Check_MK is called to restart Nagios
+    * FIX: Only showing sudo hint message on sudo error message in automation
+      command
+    * FIX: Fixed js eror in IE7 on WATO host edit page
+    * FIX: Using pickle instead of repr/eval when reading data structures from
+      urls to prevent too big security issues
+    * Rule editor: improve sorting of groups and rulesets
 
     Multisite
     * Added config option default_ts_format to configure default timestamp
@@ -29,6 +47,10 @@
       of the main frameset (%s will be replaced with OMD site name)
     * FIX: Fix problem where snapins where invisible
     * FIX: Fixed multisite timeout errors when nagios not running
+    * Sidebar: some new layout improvements
+    * Login page is not shown in framesets anymore (redirects framed page to
+      full screen login page)
+    * FIX: fix exception when disallowing changing display options
 
     BI
     * FIX: Fixed filtering of Single-Host Aggregations

@@ -1,9 +1,12 @@
 Title: Remove/Secure eval() on html.var()
 Component: wato
-State: open
+Class: nastiness
+State: done
 Date: 2012-04-11 11:39:35
 Targetversion: 1.2.0
-Class: nastiness
 
 It is VERY insecure and VERY easy to do bad things at these places. They must be
 secured/removed in some way.
+
+2012-04-17 16:55:16: changed state open -> done
+Has been fixed for direct reading from HTML parameters

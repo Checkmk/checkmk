@@ -201,7 +201,7 @@ register_configvar(group,
           minvalue = 1.0,
           default_value = 10.0,
           unit = "sec",
-          display_format = "%.1f sec"),
+          display_format = "%.1f"),
     domain = "multisite")
 
 register_configvar(group,

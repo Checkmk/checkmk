@@ -1,7 +1,8 @@
 1.2.0b2:
     Core:
     * FIX: Cluster host checks were UNKNOWN all the time
-    * FIX: Automation Try-Inventory: Fixed problem on where checks which
+    * FIX: reset counter in case of (broken) future time
+    * FIX: Automation try-inventory: Fixed problem on where checks which
       produce equal service descriptions could lead to invalid inventory
       results on cluster hosts.
 

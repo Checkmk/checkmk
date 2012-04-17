@@ -1925,7 +1925,7 @@ def mode_inventory(phase, firsttime):
         html.context_button(_("Folder"),
                             make_link([("mode", "folder")]), "back")
         html.context_button(_("Host properties"),
-                            make_link([("mode", "edithost"), ("host", hostname)]), "back")
+                            make_link([("mode", "edithost"), ("host", hostname)]), "host")
         html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
     elif phase == "action":
@@ -8504,13 +8504,20 @@ def change_host_tags_in_rules(folder, operations, mode):
 
 def mode_ruleeditor(phase):
     only_host = html.var("host", "")
-    only_local = html.var("local")
+    only_local = "" # html.var("local")
 
     if phase == "title":
-        return _("Configuration of Hosts and Services (Ruleeditor)")
+        if only_host:
+            return _("Rules effective on host ") + only_host
+        else:
+            return _("Configuration of Hosts and Services (Ruleeditor)")
 
     elif phase == "buttons":
         global_buttons()
+        if only_host:
+            html.context_button(only_host,
+                make_link([("mode", "edithost"), ("host", only_host)]), "host")
+
         return
     
     elif phase == "action":
@@ -8518,6 +8525,8 @@ def mode_ruleeditor(phase):
     
     if not only_host:
         render_folder_path(keepvarnames = ["mode", "local"])
+    else:
+        html.write("<h3>%s: %s</h3>" % (_("Host"), only_host))
 
     # Group names are separated with "/" into main group and optional subgroup
     groupnames = list(set([ gn.split("/")[0] for gn in g_rulespec_groups.keys() ]))
@@ -8537,7 +8546,7 @@ def mode_rulesets(phase):
     group = html.var("group") # obligatory
     title, help = g_rulegroups.get(group, (group, None))
     only_host = html.var("host", "")
-    only_local = html.var("local")
+    only_local = "" # html.var("local")
 
     if phase == "title":
         if only_host:
@@ -8550,7 +8559,7 @@ def mode_rulesets(phase):
             home_button()
             html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
             html.context_button(only_host,
-                 make_link([("mode", "edithost"), ("host", only_host)]), "back")
+                 make_link([("mode", "edithost"), ("host", only_host)]), "host")
         else:
             global_buttons()
             html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
@@ -8567,17 +8576,17 @@ def mode_rulesets(phase):
     if help:
         html.write("<div class=info>%s</div>" % help)
 
-    html.begin_form("local")
-    html.checkbox("local", False, onclick="form.submit();")
-    if only_host:
-        html.write(" " + _("show only rulesets that contain rules explicitely listing the host <b>%s</b>." %
-            only_host))
-    else:
-        html.write(" " + _("Show only rulesets that contain rules in the current folder."))
-    html.write(' <img align=absbottom class=icon src="images/icon_localrule.png"> ')
-    html.hidden_fields()
-    html.end_form()
-    html.write("<br>")
+    # html.begin_form("local")
+    # html.checkbox("local", False, onclick="form.submit();")
+    # if only_host:
+    #     html.write(" " + _("show only rulesets that contain rules explicitely listing the host <b>%s</b>." %
+    #         only_host))
+    # else:
+    #     html.write(" " + _("Show only rulesets that contain rules in the current folder."))
+    # html.write(' <img align=absbottom class=icon src="images/icon_localrule.png"> ')
+    # html.hidden_fields()
+    # html.end_form()
+    # html.write("<br>")
 
     # Load all rules from all folders. Hope this doesn't take too much time.
     # We need this information only for displaying the number of rules in

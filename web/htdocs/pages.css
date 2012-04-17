@@ -304,6 +304,7 @@ tr.groupheader td {
     margin: 0px;
     padding-top: 2px;
     font-weight: bold;
+    color: white;
 }
 tr.groupheader a {
     color: #000;

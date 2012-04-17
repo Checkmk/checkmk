@@ -1,0 +1,9 @@
+Title: WATO rule editor does not show host context
+Component: wato
+State: open
+Date: 2012-04-17 14:53:36
+Targetversion: 1.2.0
+Class: bug
+
+The main rule menu keeps the host context, but does not show
+it anywhere.

@@ -50,6 +50,7 @@
     * Sidebar: some new layout improvements
     * Login page is not shown in framesets anymore (redirects framed page to
       full screen login page)
+    * FIX: fix exception when disallowing changing display options
 
     BI
     * FIX: Fixed filtering of Single-Host Aggregations

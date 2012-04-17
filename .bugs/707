@@ -1,9 +1,9 @@
 Title: WATO dashlets Service problems and Events of rec. 4 hours can die if view is missing
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2012-04-16 17:10:07
 Targetversion: 1.2.0
-Class: nastiness
 
 The dashlets will print the following error
 Internal error:: 'aggr_onlyproblems'
@@ -24,3 +24,6 @@ Change column display options
 
 
 Since this is user-modifyable we need to catch it and i.e. disable the dashlets.
+
+2012-04-17 17:07:35: changed state open -> done
+Fixed.

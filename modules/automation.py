@@ -146,14 +146,15 @@ def automation_try_inventory(args):
     # services of that cluster.
     services = []
     if is_cluster(hostname):
-        descriptions = set([])
+        already_added = set([])
         for node in nodes_of(hostname):
             new_services = automation_try_inventory_node(node)
             for entry in new_services:
                 if host_of_clustered_service(node, entry[6]) == hostname:
-                    if entry[6] not in descriptions:
+                    # 1: check, 6: Service description
+                    if (entry[1], entry[6]) not in already_added:
                         services.append(entry)
-                        descriptions.add(entry[6]) # make it unique
+                        already_added.add((entry[1], entry[6])) # make it unique
 
     else:
         new_services = automation_try_inventory_node(hostname)
@@ -163,7 +164,7 @@ def automation_try_inventory(args):
 
     return services
 
-        
+
 
 def automation_try_inventory_node(hostname):
     global opt_use_cachefile, opt_no_tcp, opt_dont_submit

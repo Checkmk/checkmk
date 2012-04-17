@@ -3380,6 +3380,9 @@ def check_mk_local_automation(command, args=[], indata=""):
                     "<li>Retry this operation</li></ol>\n" %
                     (html.apache_user(), sudoline))
 
+    if command == 'restart':
+        call_hook_pre_activate_changes()
+
     if config.debug:
         log_audit(None, "automation", "Automation: %s" % " ".join(cmd))
     try:
@@ -4918,7 +4921,7 @@ def mode_groups(phase, what):
 
     # Show member of contact groups
     if what == "contact":
-        users = load_users()
+        users = filter_hidden_users(load_users())
         members = {}
         for userid, user in users.items():
             cgs = user.get("contactgroups", [])
@@ -6655,7 +6658,7 @@ def mode_users(phase):
         return
 
     roles = load_roles()
-    users = load_users()
+    users = filter_hidden_users(load_users())
     timeperiods = load_timeperiods()
     contact_groups = load_group_information().get("contact", {})
 
@@ -7140,6 +7143,12 @@ def mode_edit_user(phase):
     html.hidden_fields()
     html.end_form()
 
+def filter_hidden_users(users):
+    if config.wato_hidden_users:
+        return dict([ (id, user) for id, user in users.items() if id not in config.wato_hidden_users ])
+    else:
+        return users
+
 def load_users():
     # First load monitoring contacts from Check_MK's world
     filename = root_dir + "contacts.mk"
@@ -7330,7 +7339,7 @@ class UserSelection(ElementSelection):
         ElementSelection.__init__(self, **kwargs)
 
     def get_elements(self):
-        users = load_users()
+        users = filter_hidden_users(load_users())
         elements = dict([ (name, "%s - %s" % (name, us.get("alias", name))) for (name, us) in users.items() ])
         return elements
 
@@ -7374,7 +7383,7 @@ def mode_roles(phase):
         return
 
     roles = load_roles()
-    users = load_users()
+    users = filter_hidden_users(load_users())
 
     if phase == "action":
         if html.var("_delete"):
@@ -10201,6 +10210,11 @@ class API:
         save_folder_and_hosts(folder)
         return folder[".hosts"][host["name"]]
 
+    # Rewrite the WATO configuration files
+    def rewrite_configuration(self):
+        self.prepare_folder_info()
+        rewrite_config_files_below(g_root_folder)
+
     # Return displayable information about host (call with result of get_host())
     def get_host_painted(self, host):
         result = []
@@ -10349,6 +10363,20 @@ def call_hook_folder_created(folder):
 def call_hook_folder_deleted(folder):
     if 'folder-deleted' in g_hooks:
         call_hooks("folder-deleted", folder)
+
+def call_hook_pre_activate_changes():
+    """
+    This hook is executed when one applies the pending configuration changes
+    from wato but BEFORE the nagios restart is executed.
+
+    It can be used to create custom input files for nagios/Check_MK.
+
+    The registered hooks are called with a dictionary as parameter which
+    holds all available with the hostnames as keys and the attributes of
+    the hosts as values.
+    """
+    if hook_registered('pre-activate-changes'):
+        call_hooks("pre-activate-changes", collect_hosts(g_root_folder))
 
 def call_hook_activate_changes():
     """

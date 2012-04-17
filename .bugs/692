@@ -1,0 +1,37 @@
+Title: Fehler bei Inventory via WATO (fs_* Services von df Check werden nicht gefunden)
+Component: wato
+Class: bug
+State: done
+Date: 2012-04-16 12:11:13
+Targetversion: future
+
+Beim Aufruf der Service Inventur im WATO bekommt man mit den "(cached data)" folgendes:
+
+Available (missing) services
+df  /mirrored/monitoring    fs_/mirrored/monitoring OK
+OK  df  /mirrored/syslog    fs_/mirrored/syslog OK
+
+Beim Klick auf "Full Scan" sieht man diese Services nicht mehr:
+
+Already configured services
+Status  Checktype   Item    Service Description Current check       
+OK  df  /mirrored/ldap  fs_/mirrored/ldap
+OK  mounts  /mirrored/ldap  Mount options of /mirrored/ldap
+OK  mounts  /mirrored/monitoring    Mount options of /mirrored/monitoring
+OK  mounts  /mirrored/syslog    Mount options of /mirrored/syslog
+
+Ignored services (configured away by admin)
+Status  Checktype   Item    Service Description Current check       
+OK  hr_fs   /mirrored/monitoring    fs_/mirrored/monitoring
+OK  hr_fs   /mirrored/monitoring/sites/vtr_whvvtr/tmp   fs_/mirrored/monitoring/sites/vtr_whvvtr/tmp
+OK  hr_fs   /mirrored/syslog    fs_/mirrored/syslog
+
+Vermutung: hr_fs erzeugt die gleichen Service Descriptions und steht auf ignore. Überdecken die
+Services womöglich die Services von df?
+
+Hier geht es um einen Cluster Host. Eventuell ist das ein Spezialproblem von Clustern.
+
+EDIT: Der Fehler kommt aus cmk --automation try-inventory.
+
+2012-04-16 12:24:31: changed state open -> done
+Bei Cluster Hosts gibt es eine Sonderbehandlung. Dort wurde nur die Service-Description behandelt.

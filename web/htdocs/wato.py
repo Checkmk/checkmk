@@ -1925,7 +1925,7 @@ def mode_inventory(phase, firsttime):
         html.context_button(_("Folder"),
                             make_link([("mode", "folder")]), "back")
         html.context_button(_("Host properties"),
-                            make_link([("mode", "edithost"), ("host", hostname)]), "back")
+                            make_link([("mode", "edithost"), ("host", hostname)]), "host")
         html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
     elif phase == "action":
@@ -8504,13 +8504,20 @@ def change_host_tags_in_rules(folder, operations, mode):
 
 def mode_ruleeditor(phase):
     only_host = html.var("host", "")
-    only_local = html.var("local")
+    only_local = "" # html.var("local")
 
     if phase == "title":
-        return _("Configuration of Hosts and Services (Ruleeditor)")
+        if only_host:
+            return _("Rules effective on host ") + only_host
+        else:
+            return _("Configuration of Hosts and Services (Ruleeditor)")
 
     elif phase == "buttons":
         global_buttons()
+        if only_host:
+            html.context_button(only_host,
+                make_link([("mode", "edithost"), ("host", only_host)]), "host")
+
         return
     
     elif phase == "action":
@@ -8518,10 +8525,16 @@ def mode_ruleeditor(phase):
     
     if not only_host:
         render_folder_path(keepvarnames = ["mode", "local"])
+    else:
+        html.write("<h3>%s: %s</h3>" % (_("Host"), only_host))
 
-    # Group names are separated with "/" into main group and optional subgroup
-    groupnames = list(set([ gn.split("/")[0] for gn in g_rulespec_groups.keys() ]))
-    groupnames.sort()
+    # Group names are separated with "/" into main group and optional subgroup.
+    # Do not loose carefully manually crafted order of groups!
+    groupnames = []
+    for gn, rulesets in g_rulespec_groups:
+        main_group = gn.split('/')[0]
+        if main_group not in groupnames:
+            groupnames.append(main_group)
     menu = []
     for groupname in groupnames:
         url = make_link([("mode", "rulesets"), ("group", groupname), 
@@ -8529,7 +8542,6 @@ def mode_ruleeditor(phase):
         title, help = g_rulegroups.get(groupname, (groupname, ""))
         menu.append((url, title, "rulesets", "rulesets", help))
     render_main_menu(menu)
-        
 
 
 
@@ -8537,7 +8549,7 @@ def mode_rulesets(phase):
     group = html.var("group") # obligatory
     title, help = g_rulegroups.get(group, (group, None))
     only_host = html.var("host", "")
-    only_local = html.var("local")
+    only_local = "" # html.var("local")
 
     if phase == "title":
         if only_host:
@@ -8550,7 +8562,7 @@ def mode_rulesets(phase):
             home_button()
             html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
             html.context_button(only_host,
-                 make_link([("mode", "edithost"), ("host", only_host)]), "back")
+                 make_link([("mode", "edithost"), ("host", only_host)]), "host")
         else:
             global_buttons()
             html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
@@ -8567,17 +8579,17 @@ def mode_rulesets(phase):
     if help:
         html.write("<div class=info>%s</div>" % help)
 
-    html.begin_form("local")
-    html.checkbox("local", False, onclick="form.submit();")
-    if only_host:
-        html.write(" " + _("show only rulesets that contain rules explicitely listing the host <b>%s</b>." %
-            only_host))
-    else:
-        html.write(" " + _("Show only rulesets that contain rules in the current folder."))
-    html.write(' <img align=absbottom class=icon src="images/icon_localrule.png"> ')
-    html.hidden_fields()
-    html.end_form()
-    html.write("<br>")
+    # html.begin_form("local")
+    # html.checkbox("local", False, onclick="form.submit();")
+    # if only_host:
+    #     html.write(" " + _("show only rulesets that contain rules explicitely listing the host <b>%s</b>." %
+    #         only_host))
+    # else:
+    #     html.write(" " + _("Show only rulesets that contain rules in the current folder."))
+    # html.write(' <img align=absbottom class=icon src="images/icon_localrule.png"> ')
+    # html.hidden_fields()
+    # html.end_form()
+    # html.write("<br>")
 
     # Load all rules from all folders. Hope this doesn't take too much time.
     # We need this information only for displaying the number of rules in
@@ -8592,9 +8604,9 @@ def mode_rulesets(phase):
     else:
         all_rulesets = load_all_rulesets()
 
-    groupnames = [ gn for gn in g_rulespec_groups.keys() 
+    # Select matching rule groups while keeping their configured order
+    groupnames = [ gn for gn, rulesets in g_rulespec_groups
                    if gn == group or gn.startswith(group + "/") ]
-    groupnames.sort()
     do_folding = len(groupnames) > 1
 
     something_shown = False
@@ -8602,8 +8614,10 @@ def mode_rulesets(phase):
     for groupname in groupnames:
         # Show information about a ruleset
         title_shown = False
-        g_rulespec_groups[groupname].sort()
-        for rulespec in g_rulespec_groups[groupname]:
+        # Sort rulesets according to their title
+        g_rulespec_group[groupname].sort(
+            cmp = lambda a, b: cmp(a["title"], b["title"]))
+        for rulespec in g_rulespec_group[groupname]:
 
             varname = rulespec["varname"]
             valuespec = rulespec["valuespec"]
@@ -9686,7 +9700,8 @@ def register_rulegroup(group, title, help):
     g_rulegroups[group] = (title, help)
 
 g_rulespecs = {}
-g_rulespec_groups = {}
+g_rulespec_group = {} # for conveniant lookup
+g_rulespec_groups = [] # for keeping original order
 def register_rule(group, varname, valuespec = None, title = None,
                   help = None, itemtype = None, itemname = None,
                   itemhelp = None, itemenum = None,
@@ -9705,7 +9720,14 @@ def register_rule(group, varname, valuespec = None, title = None,
         "optional"  : optional, # rule may be None (like only_hosts)
         }
 
-    g_rulespec_groups.setdefault(group, []).append(ruleset)
+    # Register group
+    if group not in g_rulespec_group:
+        rulesets = [ ruleset ]
+        g_rulespec_groups.append((group, rulesets))
+        g_rulespec_group[group] = rulesets
+    else:
+        g_rulespec_group[group].append(ruleset)
+
     g_rulespecs[varname] = ruleset
 
 #
@@ -9729,7 +9751,6 @@ def select_language(user_language):
                                             (inactive and "display: none" or "", default_label))
         html.write('<div id="attr_entry_language" style="%s">' % ((not inactive) and "display: none" or ""))
         html.select("language", languages, user_language)
-        html.set_focus("lang")
         html.write("</div></td></tr>")
 
 def page_user_profile():
@@ -10709,6 +10730,12 @@ def load_plugins():
     host_attributes = []
     user_attributes = []
     user_attribute = {}
+
+    global g_rulegroups, g_rulespecs, g_rulespec_group, g_rulespec_groups
+    g_rulegroups = {}
+    g_rulespecs = {}
+    g_rulespec_group = {}
+    g_rulespec_groups = []
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))

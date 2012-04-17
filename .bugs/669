@@ -1,12 +1,15 @@
 Title: Legacy checks prevent auto full scan in inventory
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-03-08 16:00:40
 Targetversion: 1.2.0
-Class: bug
 
 If you have configured legacy checks via rules then the
 inventory of a new host will only work if you click on
 "Full Scan" since the list of services of the host is
 not empty. The condition for this should rather be "if the
 host has no inventorized services".
+
+2012-04-17 15:05:37: changed state open -> done
+Has already been fixed.

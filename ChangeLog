@@ -27,6 +27,7 @@
       code BEFORE Check_MK is called to restart Nagios
     * FIX: Only showing sudo hint message on sudo error message in automation
       command
+    * FIX: Fixed js eror in IE7 on WATO host edit page
 
     Multisite
     * Added config option default_ts_format to configure default timestamp

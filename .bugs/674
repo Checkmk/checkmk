@@ -1,11 +1,14 @@
 Title: No login form in frame
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2012-04-10 09:08:07
 Targetversion: 1.2.0
-Class: nastiness
 
 When the login dialog detects that it is running in a frame
 and not as the main page (or the frame's name is "main" or "side"),
 then it should redirect to index.py and remove the frame set.
 This can be done by Javascript.
+
+2012-04-17 17:07:41: changed state open -> done
+Has just been implemented. Never allowing login.py in a frame.

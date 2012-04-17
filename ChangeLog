@@ -1,6 +1,7 @@
 1.2.0b2:
     Core:
     * FIX: Cluster host checks were UNKNOWN all the time
+    * FIX: reset counter in case of (broken) future time
 
     WATO:
     * Added new permission "move hosts" to allow/deny moving of hosts in WATO

@@ -599,6 +599,8 @@ def get_counter(countername, this_time, this_val, allow_negative=False):
     last_time, last_val = g_counters.get(countername)
     timedif = this_time - last_time
     if timedif <= 0: # do not update counter
+        # Reset counter to a (hopefully) reasonable value
+        g_counters[countername] = (this_time, this_val)
         # Do not suppress this check on check_mk -nv
         if opt_dont_submit:
             return 1.0, 0.0

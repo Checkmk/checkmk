@@ -786,7 +786,7 @@ class html:
             obj = formname + "." + varname
             self.write("<script language=\"javascript\" type=\"text/javascript\">\n"
                            "<!--\n"
-                           "if(document.%s) {"
+                           "if (document.%s) {"
                            "    document.%s.focus();\n"
                            "    document.%s.select();\n"
                            "}\n"

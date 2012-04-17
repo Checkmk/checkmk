@@ -9751,7 +9751,6 @@ def select_language(user_language):
                                             (inactive and "display: none" or "", default_label))
         html.write('<div id="attr_entry_language" style="%s">' % ((not inactive) and "display: none" or ""))
         html.select("language", languages, user_language)
-        html.set_focus("lang")
         html.write("</div></td></tr>")
 
 def page_user_profile():

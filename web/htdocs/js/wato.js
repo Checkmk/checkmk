@@ -145,14 +145,14 @@ function wato_fix_visibility() {
             // Prepare current visibility information which is used
             // within the attribut validation in wato
             // Hidden attributes are not validated at all
-            oAttrDisp = document.getElementById("attr_display_" + attrname);
-            if (!oAttrDisp){
-                var newInput = document.createElement("input");
-                newInput.name  = "attr_display_" + attrname;
-                newInput.id  = "attr_display_" + attrname;
-                newInput.type = "hidden";
-                newInput.className = "text";
-                oTr.appendChild(newInput);
+            var oAttrDisp = document.getElementById("attr_display_" + attrname);
+            if (!oAttrDisp) {
+                var oAttrDisp = document.createElement("input");
+                oAttrDisp.name  = "attr_display_" + attrname;
+                oAttrDisp.id  = "attr_display_" + attrname;
+                oAttrDisp.type = "hidden";
+                oAttrDisp.className = "text";
+                oTr.appendChild(oAttrDisp);
             }
             if ( display == "none" ) {
                 oAttrDisp.value = "0";

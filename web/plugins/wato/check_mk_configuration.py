@@ -556,7 +556,8 @@ register_rule(group,
 register_rulegroup("monconf", _("Monitoring Configuration"), 
     _("General object configuration like timeperiods and intervals for checking and configuration, "
       "services to be ignored by inventory, and clustering"))
-group = "monconf"
+
+group = "monconf/Checking"
 
 register_rule(group,
     "extra_host_conf:max_check_attempts",
@@ -599,6 +600,27 @@ register_rule(group,
             label = _("minutes")),
     itemtype = "service")
 
+register_rule(group,
+    "extra_host_conf:check_period",
+    TimeperiodSelection(
+        title = _("Check period for hosts"),
+        help = _("If you specify a check period for a host then active checks of that "
+                 "host will only take place within that period. In the rest of the time "
+                 "the state of the host will stay at its last status.")),
+    )
+
+register_rule(group,
+    "extra_service_conf:check_period",
+    TimeperiodSelection(
+        title = _("Check period for services"),
+        help = _("If you specify a notification period for a service then active checks "
+                 "of that service will only be done in that period. Please note, that the "
+                 "checks driven by Check_MK are passive checks and are not affected by this "
+                 "rule. You can use the rule for the active Check_MK check, however.")),
+    itemtype = "service")
+
+
+group = "monconf/Notifications"
 register_rule(group,
     "extra_host_conf:notifications_enabled",
     DropdownChoice(
@@ -647,24 +669,48 @@ register_rule(group,
                  "as the 'service time'.")),
     itemtype = "service")
 
+group = "monconf/Inventory and Check_MK settings"
+
 register_rule(group,
-    "extra_host_conf:check_period",
-    TimeperiodSelection(
-        title = _("Check period for hosts"),
-        help = _("If you specify a check period for a host then active checks of that "
-                 "host will only take place within that period. In the rest of the time "
-                 "the state of the host will stay at its last status.")),
+    "only_hosts",
+    title = _("Hosts to be monitored"),
+    help = _("By adding rules to this ruleset you can define a subset of your hosts "
+             "to be actually monitored. As long as the rule set is empty "
+             "all configured hosts will be monitored. As soon as you add at least one "
+             "rule, only hosts with a matching rule will be monitored."),
+    optional = True, # only_hosts is None per default
     )
 
 register_rule(group,
-    "extra_service_conf:check_period",
-    TimeperiodSelection(
-        title = _("Check period for services"),
-        help = _("If you specify a notification period for a service then active checks "
-                 "of that service will only be done in that period. Please note, that the "
-                 "checks driven by Check_MK are passive checks and are not affected by this "
-                 "rule. You can use the rule for the active Check_MK check, however.")),
+    "ignored_services",
+    title = _("Ignored services"),
+    help = _("Services that are declared as <u>ignored</u> by this rule set will not be added "
+             "to a host during inventory (automatic service detection). Services that already "
+             "exist will continued to be monitored but be marked as obsolete in the service "
+             "list of a host."),
     itemtype = "service")
+
+register_rule(group,
+    "ignored_checks",
+    CheckTypeSelection(
+        title = _("Ignored checks"),
+        help = _("This ruleset is similar to 'Ignored services', but selects checks to be ignored "
+                 "by their <b>type</b>. This allows to disable certain techinal implementations "
+                 "such as filesystem checks via SNMP on hosts that also have the Check_MK agent "
+                 "installed."),
+    ))
+
+register_rule(group,
+    "clustered_services",
+    title = _("Clustered services"),
+    help = _("When you define HA clusters in WATO then you also have to specify "
+             "which services of a node should be assigned to the cluster and "
+             "which services to the physical node. This is done by this ruleset. "
+             "Please note that the rule will be applied to the <i>nodes</i>, not "
+             "to the cluster.<br><br>Please make sure that you re-inventorize the " 
+             "cluster and the physical nodes after changing this ruleset."),
+    itemtype = "service")
+group = "monconf/Various"
 
 class MonitoringIcon(ValueSpec):
     def __init__(self, **kwargs):
@@ -749,50 +795,23 @@ register_rule(group,
         ),
     itemtype = "service")
 
+
+
+
+register_rulegroup("agent", "Access to Check_MK/SNMP Agents", 
+   _("Settings concerning the connection to the Check_MK and SNMP agents and "
+     "alternative data aquisition methods"))
+
+group = "agent/General Settings"
 register_rule(group,
-    "only_hosts",
-    title = _("Hosts to be monitored"),
-    help = _("By adding rules to this ruleset you can define a subset of your hosts "
-             "to be actually monitored. As long as the rule set is empty "
-             "all configured hosts will be monitored. As soon as you add at least one "
-             "rule, only hosts with a matching rule will be monitored."),
-    optional = True, # only_hosts is None per default
-    )
-
-register_rule(group,
-    "ignored_services",
-    title = _("Ignored services"),
-    help = _("Services that are declared as <u>ignored</u> by this rule set will not be added "
-             "to a host during inventory (automatic service detection). Services that already "
-             "exist will continued to be monitored but be marked as obsolete in the service "
-             "list of a host."),
-    itemtype = "service")
-
-register_rule(group,
-    "ignored_checks",
-    CheckTypeSelection(
-        title = _("Ignored checks"),
-        help = _("This ruleset is similar to 'Ignored services', but selects checks to be ignored "
-                 "by their <b>type</b>. This allows to disable certain techinal implementations "
-                 "such as filesystem checks via SNMP on hosts that also have the Check_MK agent "
-                 "installed."),
-    ))
-
-register_rule(group,
-    "clustered_services",
-    title = _("Clustered services"),
-    help = _("When you define HA clusters in WATO then you also have to specify "
-             "which services of a node should be assigned to the cluster and "
-             "which services to the physical node. This is done by this ruleset. "
-             "Please note that the rule will be applied to the <i>nodes</i>, not "
-             "to the cluster.<br><br>Please make sure that you re-inventorize the " 
-             "cluster and the physical nodes after changing this ruleset."),
-    itemtype = "service")
-
-
-register_rulegroup("snmp", "SNMP", 
-   _("General settings for SNMP like communities and SNMPv3 parameters"))
-group = "snmp"
+    "dyndns_hosts",
+    title = _("Hosts with dynamic DNS lookup during monitoring"),
+    help = _("This ruleset selects host for dynamic DNS lookup during monitoring. Normally "
+             "the IP addresses of hosts are statically configured or looked up when you "
+             "activate the changes. In some rare cases DNS lookups must be done each time "
+             "a host is connected to, e.g. when the IP address of the host is dynamic "
+             "and can change."))
+group = "agent/SNMP"
 
 _snmpv3_basic_elements = [
      DropdownChoice(
@@ -853,10 +872,16 @@ register_rule(group,
              "If you want to use SNMP v2c on those devices, nevertheless, then use this rule set. "
              "One reason is enabling 64 bit counters."))
 
-register_rulegroup("checkmk", _("Operation mode of Check_MK"),
-   _("Settings for the data aquisition via Check_MK, port numbers, timeouts, alternative "
-     "datasource programs, etc."))
-group = "checkmk"
+
+register_rule(group,
+    "usewalk_hosts",
+    title = _("Hosts that simulate SNMP by using a stored SNMP walk"),
+    help = _("This ruleset helps in test and development. You can create stored SNMP "
+             "walks on the command line with cmk --snmpwalk HOSTNAME. A host that "
+             "is configured with this ruleset will then use the information from that "
+             "file instead of using real SNMP. "))
+
+group = "agent/Check_MK Agent"
 
 register_rule(group,
     "agent_ports",
@@ -867,14 +892,6 @@ register_rule(group,
             maxvalue = 65535))
 
 
-register_rule(group,
-    "dyndns_hosts",
-    title = _("Hosts with dynamic DNS lookup during monitoring"),
-    help = _("This ruleset selects host for dynamic DNS lookup during monitoring. Normally "
-             "the IP addresses of hosts are statically configured or looked up when you "
-             "activate the changes. In some rare cases DNS lookups must be done each time "
-             "a host is connected to, e.g. when the IP address of the host is dynamic "
-             "and can change."))
 
 register_rule(group,
     "datasource_programs",
@@ -888,10 +905,3 @@ register_rule(group,
                  "<tt>&lt;HOST&gt;</tt>."),
         label = _("Command line to execute")))
 
-register_rule(group,
-    "usewalk_hosts",
-    title = _("Hosts that simulate SNMP by using a stored SNMP walk"),
-    help = _("This ruleset helps in test and development. You can create stored SNMP "
-             "walks on the command line with cmk --snmpwalk HOSTNAME. A host that "
-             "is configured with this ruleset will then use the information from that "
-             "file instead of using real SNMP. "))

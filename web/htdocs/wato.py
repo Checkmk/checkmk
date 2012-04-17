@@ -8528,9 +8528,13 @@ def mode_ruleeditor(phase):
     else:
         html.write("<h3>%s: %s</h3>" % (_("Host"), only_host))
 
-    # Group names are separated with "/" into main group and optional subgroup
-    groupnames = list(set([ gn.split("/")[0] for gn in g_rulespec_groups.keys() ]))
-    groupnames.sort()
+    # Group names are separated with "/" into main group and optional subgroup.
+    # Do not loose carefully manually crafted order of groups!
+    groupnames = []
+    for gn, rulesets in g_rulespec_groups:
+        main_group = gn.split('/')[0]
+        if main_group not in groupnames:
+            groupnames.append(main_group)
     menu = []
     for groupname in groupnames:
         url = make_link([("mode", "rulesets"), ("group", groupname), 
@@ -8538,7 +8542,6 @@ def mode_ruleeditor(phase):
         title, help = g_rulegroups.get(groupname, (groupname, ""))
         menu.append((url, title, "rulesets", "rulesets", help))
     render_main_menu(menu)
-        
 
 
 
@@ -8601,9 +8604,9 @@ def mode_rulesets(phase):
     else:
         all_rulesets = load_all_rulesets()
 
-    groupnames = [ gn for gn in g_rulespec_groups.keys() 
+    # Select matching rule groups while keeping their configured order
+    groupnames = [ gn for gn, rulesets in g_rulespec_groups
                    if gn == group or gn.startswith(group + "/") ]
-    groupnames.sort()
     do_folding = len(groupnames) > 1
 
     something_shown = False
@@ -8611,8 +8614,10 @@ def mode_rulesets(phase):
     for groupname in groupnames:
         # Show information about a ruleset
         title_shown = False
-        g_rulespec_groups[groupname].sort()
-        for rulespec in g_rulespec_groups[groupname]:
+        # Sort rulesets according to their title
+        g_rulespec_group[groupname].sort(
+            cmp = lambda a, b: cmp(a["title"], b["title"]))
+        for rulespec in g_rulespec_group[groupname]:
 
             varname = rulespec["varname"]
             valuespec = rulespec["valuespec"]
@@ -9695,7 +9700,8 @@ def register_rulegroup(group, title, help):
     g_rulegroups[group] = (title, help)
 
 g_rulespecs = {}
-g_rulespec_groups = {}
+g_rulespec_group = {} # for conveniant lookup
+g_rulespec_groups = [] # for keeping original order
 def register_rule(group, varname, valuespec = None, title = None,
                   help = None, itemtype = None, itemname = None,
                   itemhelp = None, itemenum = None,
@@ -9714,7 +9720,14 @@ def register_rule(group, varname, valuespec = None, title = None,
         "optional"  : optional, # rule may be None (like only_hosts)
         }
 
-    g_rulespec_groups.setdefault(group, []).append(ruleset)
+    # Register group
+    if group not in g_rulespec_group:
+        rulesets = [ ruleset ]
+        g_rulespec_groups.append((group, rulesets))
+        g_rulespec_group[group] = rulesets
+    else:
+        g_rulespec_group[group].append(ruleset)
+
     g_rulespecs[varname] = ruleset
 
 #
@@ -10706,6 +10719,12 @@ def load_plugins():
     host_attributes = []
     user_attributes = []
     user_attribute = {}
+
+    global g_rulegroups, g_rulespecs, g_rulespec_group, g_rulespec_groups
+    g_rulegroups = {}
+    g_rulespecs = {}
+    g_rulespec_group = {}
+    g_rulespec_groups = []
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))

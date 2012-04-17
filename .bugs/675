@@ -1,9 +1,9 @@
 Title: User is added to default contact group check_mk, but should not
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2012-04-10 16:30:42
 Targetversion: 1.2.0
-Class: bug
 
 We did:
 - Create a contact group "alle"
@@ -16,3 +16,5 @@ Happened:
 - BUT: hh and omdadmin are members of check_mk automatically
   (and should not)
 - and thus hh receives notifications, but should not
+
+2012-04-17 16:50:38: changed state open -> done

@@ -5,6 +5,8 @@
     * FIX: Automation try-inventory: Fixed problem on where checks which
       produce equal service descriptions could lead to invalid inventory
       results on cluster hosts.
+    * FIX: do not create contacts if they won't be assigned to any host
+      or service. Do *not* assign to dummy catch-all group "check_mk".
 
     WATO:
     * Added new permission "move hosts" to allow/deny moving of hosts in WATO

@@ -436,8 +436,8 @@ class html:
         self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % what)
         self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink%s.png\")";' ''' % what)
 
-    def number_input(self, varname, deflt = "", size=8):
-        self.text_input(varname, str(deflt), "number", size=size)
+    def number_input(self, varname, deflt = "", size=8, style=""):
+        self.text_input(varname, str(deflt), "number", size=size, style=style)
 
     def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None, **args):
         if default_value == None:
@@ -451,7 +451,8 @@ class html:
             mytype = "text"
         if "autocomplete" in args:
             addprops += " autocomplete=\"%s\"" % args["autocomplete"]
-
+        if args.get("style"):
+            addprops += " style=\"%s\"" % args["style"] 
 
         value = self.req.vars.get(varname, default_value)
         error = self.user_errors.get(varname)

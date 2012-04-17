@@ -124,13 +124,63 @@ table.navi tr.form td.whiteborder {
     border-bottom: 1px solid #fff;
 }
 
-table.navi tr.form div.whiteborder, table.navi tr.form table.whiteborder {
+table.navi tr.form div.whiteborder, 
+table.navi tr.form table.whiteborder {
     border-left: 1px solid #fff;
     border-right: 1px solid #fff;
     margin: 0;
     padding: 0;
     border-bottom: 1px solid #fff;
-    width: 100%;
+    /* width: 100%; */
+}
+
+table.navi tr.form div.whiteborder {
+    padding: 5px;
+}
+
+div.whiteborder table.form {
+    margin: 0px;
+    background-image: none;
+}
+
+table.navi tr.form {
+    /* background-image: url("images/form_background.png"); 
+    background-repeat: repeat; */
+}
+table.navi div.whiteborder table.form {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+}
+
+div.floatfilter {
+    margin: 0px 3px 3px 0px;
+    width: 320px;
+    height: 45px;
+    /* display: inline-block; */
+    float: left;
+    border: 1px solid #458;
+    box-shadow: 0.5px 0.5px 1px #444;
+    background-image: url("images/form_background.png"); 
+    background-repeat: repeat;
+}
+
+div.floatfilter input[type=text] {
+    width: 307px;
+}
+
+div.floatfilter .legend {
+    color: white;
+    margin-bottom: 2px;
+    width: 310px;
+    height: 15px;
+    background-image: url("images/form_background.png"); 
+    background-repeat: repeat;
+    padding: 1px 5px;
+}
+
+div.floatfilter .content {
+    margin-top: 3px;
+    margin-left: 3px;
 }
 
 /*-------------------------------------------------------------------------.

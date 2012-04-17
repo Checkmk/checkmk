@@ -100,8 +100,9 @@ def show_filter_form(is_open, filters):
     html.write("<td>")
     html.begin_form("filter")
     html.write("<div class=whiteborder>\n")
+    html.write("<table><tr><td>")
 
-    html.write("<table class=\"form\">\n")
+    ### HIRN html.write("<table class=\"form\">\n")
 
     # sort filters according to title
     s = [(f.sort_index, f.title, f) for f in filters if f.available()]
@@ -113,21 +114,28 @@ def show_filter_form(is_open, filters):
             f.display()
             html.write('</div>')
         else:
-            if col == 0:
-                html.write("<tr>")
-            html.write("<td class=legend>%s</td>" % title)
-            html.write("<td class=content>")
+            html.write('<div class=floatfilter>')
+            ### if col == 0:
+            ###     html.write("<tr>")
+            html.write('<div class=legend>%s</div>' % title)
+            ### html.write("<td class=legend>%s</td>" % title)
+            ### html.write("<td class=content>")
+            html.write('<div class=content>')
             f.display()
-            html.write("</td>")
-            if col == config.filter_columns - 1:
-                html.write("</tr>\n")
-            col = (col + 1) % config.filter_columns
-    if col == 1:
-        html.write("<td class=legend></td>\n<td class=content></td></tr>\n")
-    html.write('<tr><td class="legend button" colspan=%d>' % (config.filter_columns * 2))
+            ### html.write("</td>")
+            html.write("</div>")
+            ### if col == config.filter_columns - 1:
+            ###    html.write("</tr>\n")
+            ### col = (col + 1) % config.filter_columns
+            html.write("</div>")
+    ### if col == 1:
+    ###    html.write("<td class=legend></td>\n<td class=content></td></tr>\n")
+    ### html.write('<tr><td class="legend button" colspan=%d>' % (config.filter_columns * 2))
+    html.write("</td></tr><tr><td>")
     html.button("search", _("Search"), "submit")
-    html.write("</td></tr>\n")
-    html.write("</table>\n")
+    html.write("</td></tr></table>")
+    ### html.write("</td></tr>\n")
+    ### html.write("</table>\n")
 
     html.hidden_fields()
     html.end_form()

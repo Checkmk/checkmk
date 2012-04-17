@@ -191,7 +191,7 @@ class FilterServiceState(Filter):
         html.begin_checkbox_group()
         for var, text in [(self.prefix + "st0", "OK"), (self.prefix + "st1", "WARN"), \
                           (self.prefix + "st2", "CRIT"), (self.prefix + "st3", "UNKNOWN"),
-                          (self.prefix + "stp", "PENDING")]:
+                          (self.prefix + "stp", "PEND.")]:
 	    #if html.mobile:
 	        #text = text[:1]
             html.checkbox(var, True, label=text)
@@ -367,21 +367,31 @@ class FilterTime(Filter):
     def __init__(self, info, name, title, column):
         self.column = column
         self.name = name
-        self.ranges = [ (1, _("sec")), (60, _("min")), (3600, _("hours")), (86400, _("days")) ]
+        self.ranges = [ 
+           (86400, _("days")),
+           (3600, _("hours")), 
+           (60, _("min")), 
+           (1, _("sec")), 
+        ]
         Filter.__init__(self, name, title, info, [ name ] + [ name + "_" + n for (s, n) in self.ranges], [column])
 
     def display(self):
+        html.select(self.name, [("since",_("since")),("before", _("before"))], "since")
+        html.write("&nbsp;")
         for s, n in self.ranges:
             htmlvar = self.name + "_" + n
             html.write("<nobr>")
-            html.number_input(htmlvar, 0, 2)
+            html.number_input(htmlvar, 0, 2, style="width: 22px; text-align: right;")
             html.write(" %s</nobr> " % n)
-        if config.filter_columns > 1:
-            html.write("<br>\n")
-        current = html.var(self.name, "since")
-        for t in [ "before", "since" ]:
-            html.radiobutton(self.name, t, current == t, t + " &nbsp; ")
-            html.write(" ")
+        # if config.filter_columns > 1:
+            # html.write("<br>\n")
+
+        # current = html.var(self.name, "since")
+        # for t, title in [ 
+        #     ("before", _("before")),
+        #     ("since",  _("since")) ]:
+        #     html.radiobutton(self.name, t, current == t, title + " &nbsp; ")
+        #     html.write(" ")
 
     def filter(self, infoname):
         range = self.get_time_range()

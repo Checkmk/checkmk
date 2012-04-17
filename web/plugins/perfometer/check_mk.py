@@ -396,7 +396,19 @@ def perfometer_fileinfo(row, check_command, perf_data):
     texts = []
     for i, color, base, scale, verbfunc in [
         ( 0, "#ffcc50", 1000000, 10, lambda v: number_human_readable(v, precision=0) ), # size
-        ( 1, "#ccff50", 3600, 10,    age_human_redable )]:   # age
+        ( 1, "#ccff50", 3600, 10,    age_human_readable )]:   # age
+        val = float(perf_data[i][1])
+        h += perfometer_logarithmic(val, base, scale, color)
+        texts.append(verbfunc(val))
+    h += '</div>'
+    return " / ".join(texts), h #  perfometer_logarithmic(100, 200, 2, "#883875")
+
+def perfometer_fileinfo_groups(row, check_command, perf_data):
+    h = '<div class="stacked">'
+    texts = []
+    for i, color, base, scale, verbfunc in [
+        ( 2, "#aabb50", 10000, 10, lambda v: ("%d Tot") % v ), # count 
+        ( 1, "#ccff50", 3600, 10, age_human_readable )]: #age_newest
         val = float(perf_data[i][1])
         h += perfometer_logarithmic(val, base, scale, color)
         texts.append(verbfunc(val))
@@ -404,3 +416,4 @@ def perfometer_fileinfo(row, check_command, perf_data):
     return " / ".join(texts), h #  perfometer_logarithmic(100, 200, 2, "#883875")
 
 perfometers["check_mk-fileinfo"] = perfometer_fileinfo
+perfometers["check_mk-fileinfo.groups"] = perfometer_fileinfo_groups

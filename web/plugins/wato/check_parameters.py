@@ -373,7 +373,121 @@ checkgroups.append((
 
         ]
     ),
-    None,
+    TextAscii(
+        title = _("File name"),
+        allow_empty = True),
+    "first"
+))
+
+register_rule(group + '/' + subgroup_storage,
+    varname   = "fileinfo_groups",
+    title     = _('Fileinfo Grouping patterns'),
+    valuespec = ListOf(
+      Tuple(
+          help = _("This defines one fileinfo grouping pattern"),
+          show_titles = True,
+          orientation = "horizontal",
+          elements = [
+             TextAscii(
+                 title = _("Name of group"),
+             ),
+             TextAscii(
+                 title = _("File pattern (UNIX style)"),
+             ),
+          ]
+      ),
+      help = _('You can define one or several patterns in Unix Style.'
+               'Example: /var/log/apache/*.log. All matching files'
+               'will automatically be grouped'),
+      add_label = _("Add pattern"),
+    ),
+    match = 'list',
+)
+
+
+checkgroups.append((
+    subgroup_storage,
+    "fileinfo-groups",
+    _("Fileinfo Groups"),
+    Dictionary(
+        elements = [
+            ( "minage_oldest",
+                Tuple(
+                    title = _("Minimal age of oldest file"),
+                    elements = [
+                      Age(title = _("Warning younger then")),
+                      Age(title = _("Critical younger then")),
+                    ]
+                )
+            ),
+            ( "maxage_oldest",
+                Tuple(
+                    title = _("Maximal age of oldest file"),
+                    elements = [
+                      Age(title = _("Warning older then")),
+                      Age(title = _("Critical older then")),
+                    ]
+                )
+            ),
+            ( "minage_newest",
+                Tuple(
+                    title = _("Minimal age of newest file"),
+                    elements = [
+                      Age(title = _("Warning younger then")),
+                      Age(title = _("Critical younger then")),
+                    ]
+                )
+            ),
+            ( "maxage_newest",
+                Tuple(
+                    title = _("Maximal age of newest file"),
+                    elements = [
+                      Age(title = _("Warning older then")),
+                      Age(title = _("Critical older then")),
+                    ]
+                )
+            ),
+            ("minsize",
+                Tuple( 
+                    title = _("Minimal size"),
+                    elements = [ 
+                      Filesize(title = _("Warning lower as")), 
+                      Filesize(title = _("Critical lower as")), 
+                    ]
+                )
+            ),
+            ("maxsize",
+                Tuple( 
+                    title = _("Maximal size"),
+                    elements = [ 
+                      Filesize(title = _("Warning higher as")), 
+                      Filesize(title = _("Critical higher as")), 
+                    ]
+                )
+            ),
+            ("mincount",
+                Tuple( 
+                    title = _("Minimal file count"),
+                    elements = [ 
+                      Integer(title = _("Warning lower as")), 
+                      Integer(title = _("Critical lower as")), 
+                    ]
+                )
+            ),
+            ("maxcount",
+                Tuple( 
+                    title = _("Maximal file count"),
+                    elements = [ 
+                      Integer(title = _("Warning higher as")), 
+                      Integer(title = _("Critical higher as")), 
+                    ]
+                )
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Filegroup Name"),
+        allow_empty = True),
     "first"
 ))
 

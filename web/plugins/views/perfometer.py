@@ -102,7 +102,7 @@ def number_human_readable(n, precision=1):
     else:
         return (f + "B") % n
 
-def age_human_redable(secs):
+def age_human_readable(secs):
     if secs < 240:
         return "%d sec" % secs
     mins = secs / 60

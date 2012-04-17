@@ -1,0 +1,84 @@
+title: Check age, size and count of a group of files
+agents: windows
+author: Bastian Kuhn <bk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the size, age and the count of a group of files
+ in the target host's filesystem.
+ You can set lower and upper
+ limits for each: size of files, age of oldest, the newest file
+ and for the total count of files.
+
+ This check needs some configuration in the agent,
+ as the agent needs to know the information about
+ which files need to be sent.
+
+ Please refer to fileinfos manpage for information
+ about setting up the agent
+
+item:
+ Configured name of the filesize group
+
+examples:
+
+ fileinfo_groups = [
+     ([("Auth_group","/var/log/auth.*")], ALL_HOSTS),
+     ([("Message_group", "/var/log/messages*")], ['test2'], ALL_HOSTS),
+ ] 
+
+ check_parameters = [
+  ({
+    "minsize": (200.0, 300.0),
+    "maxsize": (400.0, 500.0),
+    "mincount": (2, 3),
+    "maxcount": (3, 4),
+    "minage_oldest": (50, 60),
+    "maxage_oldest": (100, 120),
+    "minage_newest": (10, 20),
+    "maxage_newest": (30, 40),
+   }, ALL_HOSTS, ["File group"]),
+ ]
+
+perfdata:
+  Four values: the aggregated size of all files in group, the age
+  of the oldest and newest file in seconds (the time since the last
+  modification of the file) and the count of all files.
+
+inventory:
+  You have to configure at least on pattern for each
+  fileinfo group
+
+[parameters]
+parameters (dict): This check uses dictionary based
+ parameters. Per default no parameters are set and
+ the check is always OK.
+
+
+ {"minage_oldest"}: A pair of integers for the warning and
+ critical level of the minimum file age in seconds 
+ for the oldest file found with the file group pattern.
+ A missing key or {None} disables the minimum age
+ checking. The borders itself always belong to the
+ better state, so {(60, 120)} will make the check
+ OK as long as the age of the file is not exceeding
+ 60 seconds and warning if the age is 120 seconds
+ or less.
+
+ {"maxage_oldest"}: Pair of integers for the maximum file
+ age in seconds for the oldest file found with file group pattern.
+
+ {"minage_newest"}: Pair of integers for the minimum file
+ age in seconds for the newest file found with file group pattern.
+
+ {"maxage_newest"}: Pair of integers for the maximum file
+ age in seconds for the newest file found with file group pattern.
+
+ {"minsize"}: The minimum size for the aggregation of all files in bytes (pair of
+ integers).
+
+ {"maxsize"}: The maximum size.
+
+ {"mincount"}: The minimum count of all files aggregatet in the group
+
+ {"maxcount"}: The maximum count

@@ -25,6 +25,8 @@
       all host related wato configuration files to distribute changed tags
     * WATO: Added new internal hook pre-activate-changes to execute custom
       code BEFORE Check_MK is called to restart Nagios
+    * FIX: Only showing sudo hint message on sudo error message in automation
+      command
 
     Multisite
     * Added config option default_ts_format to configure default timestamp

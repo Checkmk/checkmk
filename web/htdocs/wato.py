@@ -3405,7 +3405,7 @@ def check_mk_local_automation(command, args=[], indata=""):
         if config.debug:
             log_audit(None, "automation", "Automation command %s failed with exit code %d: %s" % (" ".join(cmd), exitcode, outdata))
         raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
-              (" ".join(cmd), exitcode, hilite_errors(outdata), sudo_msg))
+              (" ".join(cmd), exitcode, hilite_errors(outdata), outdata.lstrip().startswith('sudo:') and sudo_msg or ''))
 
     # On successful "restart" command execute the activate changes hook
     if command == 'restart':

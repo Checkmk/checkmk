@@ -48,6 +48,8 @@
     * FIX: Fix problem where snapins where invisible
     * FIX: Fixed multisite timeout errors when nagios not running
     * Sidebar: some new layout improvements
+    * Login page is not shown in framesets anymore (redirects framed page to
+      full screen login page)
     * FIX: fix exception when disallowing changing display options
 
     BI

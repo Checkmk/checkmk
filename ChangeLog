@@ -34,6 +34,7 @@
       urls to prevent too big security issues
     * Rule editor: improve sorting of groups and rulesets
     * FIX: Escaping single quotes in strings when writing auth.php
+    * FIX: Fix resorting of host tags (was bug in ListOf)
 
     Multisite
     * Added config option default_ts_format to configure default timestamp

@@ -624,15 +624,21 @@ class ListOf(ValueSpec):
             self._valuespec.value_to_text(v) for v in value])
 
     def from_html_vars(self, varprefix):
-        value = []
-        n = 0
+        n = 1
+        indexes = {}
         while True:
-            indexof = html.var(varprefix + "_indexof_%d" % (n+1))
+            indexof = html.var(varprefix + "_indexof_%d" % n)
             if indexof == None:
-                break;
-            value.append(self._valuespec.from_html_vars(
-                varprefix + "_%d" % int(indexof)))
+                break
+            indexes[int(indexof)] = n
             n += 1
+
+        value = []
+        k = indexes.keys()
+        k.sort()
+        for i in k:
+            val = self._valuespec.from_html_vars(varprefix + "_%d" % indexes[i])
+            value.append(val)
         return value
 
     def validate_datatype(self, value, varprefix):

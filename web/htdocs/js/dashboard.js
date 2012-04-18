@@ -132,10 +132,18 @@ function dashboard_scheduler(force) {
         var url     = refresh_dashlets[i][2];
 
         if (force || (refresh > 0 && timestamp % refresh == 0)) {
-            get_url(url, updateContents, "dashlet_inner_" + nr);
+            get_url(url, dashboard_update_contents, "dashlet_inner_" + nr);
         }
     }
     setTimeout(function() { dashboard_scheduler(0); }, 1000);
+}
+
+function dashboard_update_contents(id, code) {
+    // Update the header time
+    updateHeaderTime();
+    
+    // Call the generic function to replace the dashlet inner code
+    updateContents(id, code);
 }
 
 function update_dashlet(id, code) {

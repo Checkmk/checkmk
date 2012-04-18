@@ -53,6 +53,7 @@
     * FIX: fix exception when disallowing changing display options
     * FIX: Automatically redirect from login page to target page when already
       logged in
+    * FIX: Updating the dashboard header time when the dashlets refresh
 
     BI
     * FIX: Fixed filtering of Single-Host Aggregations

@@ -980,7 +980,9 @@ class MultiSelect(ListChoice):
 
     def render_input(self, varprefix, value):
         self.load_elements()
-        html.write("<select multiple name='%s'>" % varprefix)
+        # background_css_hack = 'onChange="this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor"'
+        background_css_hack = ""
+        html.write("<select %s multiple name='%s'>" % (background_css_hack, varprefix))
         for nr, (key, title) in enumerate(self._elements):
             if key in value:
                 sel = " selected"

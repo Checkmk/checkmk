@@ -386,3 +386,6 @@ table.valuespec_listof td.vlof_content {
     background-image: url("images/form_background.png"); 
     background-repeat: repeat;
 }
+table.valuespec_listof option[selected] {
+    font-weight: bold;
+}

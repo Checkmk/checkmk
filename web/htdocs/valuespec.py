@@ -944,7 +944,7 @@ class ListChoice(ValueSpec):
 
     def render_input(self, varprefix, value):
         self.load_elements()
-        html.write("<table>")
+        html.write("<table class=listchoice>")
         for nr, (key, title) in enumerate(self._elements):
             if nr % self._columns == 0:
                 if nr > 0:

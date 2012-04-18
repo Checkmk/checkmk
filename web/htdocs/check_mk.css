@@ -220,6 +220,7 @@ b.treeangle.title {
 ul.treeangle {
     /* border: 1px solid #4060ff; */
     padding-left: 20px;
+    margin: 8px 0px;
 }
 ul.treeangle li {
     margin: 0px;
@@ -388,4 +389,21 @@ table.valuespec_listof td.vlof_content {
 }
 table.valuespec_listof option[selected] {
     font-weight: bold;
+}
+
+table.listchoice {
+    cell-spacing: 0px;
+}
+table.listchoice td span.checkbox {
+    height: 10px;
+}
+table.listchoice td {
+    height: 12px;
+    padding: 0px;
+    margin: 0px;
+}
+table.listchoice td input[type=checkbox] {
+    margin: 0px;
+    display: inline-block;
+    height: 12px;
 }

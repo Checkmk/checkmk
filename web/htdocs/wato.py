@@ -8031,11 +8031,11 @@ def mode_edit_hosttag(phase):
                     size=20),
 
                 Foldable(
-                    MultiSelect(
+                    ListChoice(
                         title = _("Auxiliary tags"),
-                        help = _("These tags will implicitely added to a host if the "
-                                 "user selects this entry in the tag group. Select multiple "
-                                 "entries with the <b>Ctrl</b> key."),
+                        # help = _("These tags will implicitely added to a host if the "
+                        #          "user selects this entry in the tag group. Select multiple "
+                        #          "entries with the <b>Ctrl</b> key."),
                         choices = auxtags)),
 
             ],

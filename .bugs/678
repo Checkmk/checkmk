@@ -1,0 +1,9 @@
+Title: Document WATO default rules/hosttags
+Component: docu
+State: open
+Date: 2012-04-18 09:15:21
+Targetversion: 1.2.0
+Class: todo
+
+Describe the new WATO default configuration
+with three tag groups and a few rules.

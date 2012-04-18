@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import grp, defaults, pprint, os, errno, gettext, __builtin__
+import grp, defaults, pprint, os, errno, gettext, marshal, __builtin__
 
 nagios_state_names = { -1: "NODATA", 0: "OK", 1: "WARNING", 2: "CRITICAL", 3: "UNKNOWN", 4: "DEPENDENT" }
 nagios_short_state_names = { -1: "PEND", 0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKN", 4: "DEP" }
@@ -124,8 +124,14 @@ def load_web_plugins(forwhat, globalvars):
     fns = os.listdir(plugins_path)
     fns.sort()
     for fn in fns:
+        file_path = plugins_path + "/" + fn
         if fn.endswith(".py"):
-            execfile(plugins_path + "/" + fn, globalvars)
+            if not os.path.exists(file_path + "c"):
+                execfile(file_path, globalvars)
+        elif fn.endswith(".pyc"):
+            code_bytes = file(file_path).read()[8:]
+            code = marshal.loads(code_bytes)
+            exec code in globalvars
 
     if defaults.omd_root:
         local_plugins_path = defaults.omd_root + "/local/share/check_mk/web/plugins/" + forwhat

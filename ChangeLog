@@ -1,3 +1,8 @@
+1.2.0b3:
+    Multisite:
+    * FIX: allow web plugins to be byte compiled (*.pyc). Those
+      are preferred over *.py if existing
+
 1.2.0b2:
     Core:
     * FIX: Cluster host checks were UNKNOWN all the time

@@ -2792,13 +2792,24 @@ def mode_changelog(phase):
             html.context_button(_("Site Configuration"), make_link([("mode", "sites")]), "sites")
 
     elif phase == "action":
+
+        # Let host validators do their work
         defective_hosts = validate_all_hosts([], force_all = True)
         if defective_hosts:
             raise MKUserError(None, _("You cannot activate changes while some hosts have "
               "an invalid configuration: ") + ", ".join(
                 [ '<a href="%s">%s</a>' % (make_link([("mode", "edithost"), ("host", hn)]), hn)
                   for hn in defective_hosts.keys() ]))
-              
+
+        # Give hooks chance to do some pre-activation things (and maybe stop
+        # the activation)
+        try:
+            call_hook_pre_distribute_changes()
+        except Exception, e:
+            if config.debug:
+                raise
+            else:
+                raise MKUserError(None, "<h3>%s</h3>%s" % (_("Cannot activate changes"), e))
 
         sitestatus_do_async_replication = False # see below
         if html.has_var("_siteaction"):
@@ -3381,7 +3392,14 @@ def check_mk_local_automation(command, args=[], indata=""):
                     (html.apache_user(), sudoline))
 
     if command == 'restart':
-        call_hook_pre_activate_changes()
+        try:
+            call_hook_pre_activate_changes()
+        except Exception, e:
+            if config.debug:
+                raise
+            html.show_error("<h3>Cannot activate changes</h3>%s" % e)
+            return
+
 
     if config.debug:
         log_audit(None, "automation", "Automation: %s" % " ".join(cmd))
@@ -10361,11 +10379,15 @@ def call_hooks(name, *args):
         try:
             hk(*args)
         except Exception, e:
-            import traceback, StringIO
-            txt = StringIO.StringIO()
-            t, v, tb = sys.exc_info()
-            traceback.print_exception(t, v, tb, None, txt)
-            html.show_error("<h3>" + _("Error executing hook") + " %s #%d: %s</h3><pre>%s</pre>" % (name, n, e, txt.getvalue()))
+            if config.debug:
+                import traceback, StringIO
+                txt = StringIO.StringIO()
+                t, v, tb = sys.exc_info()
+                traceback.print_exception(t, v, tb, None, txt)
+                html.show_error("<h3>" + _("Error executing hook") + " %s #%d: %s</h3><pre>%s</pre>" % (name, n, e, txt.getvalue()))
+            else:
+                raise
+
 
 def call_hook_hosts_changed(folder):
     if "hosts-changed" in g_hooks:
@@ -10385,32 +10407,36 @@ def call_hook_folder_deleted(folder):
     if 'folder-deleted' in g_hooks:
         call_hooks("folder-deleted", folder)
 
+# This hook is executed before distributing changes to the remote
+# sites (in distributed WATO) or before activating them (in single-site
+# WATO). If the hook raises an exception, then the distribution and
+# activation is aborted.
+def call_hook_pre_distribute_changes():
+    if hook_registered('pre-distribute-changes'):
+        call_hooks("pre-distribute-changes", collect_hosts(g_root_folder))
+
+# This hook is executed when one applies the pending configuration changes
+# from wato but BEFORE the nagios restart is executed.
+#
+# It can be used to create custom input files for nagios/Check_MK.
+#
+# The registered hooks are called with a dictionary as parameter which
+# holds all available with the hostnames as keys and the attributes of
+# the hosts as values.
 def call_hook_pre_activate_changes():
-    """
-    This hook is executed when one applies the pending configuration changes
-    from wato but BEFORE the nagios restart is executed.
-
-    It can be used to create custom input files for nagios/Check_MK.
-
-    The registered hooks are called with a dictionary as parameter which
-    holds all available with the hostnames as keys and the attributes of
-    the hosts as values.
-    """
     if hook_registered('pre-activate-changes'):
         call_hooks("pre-activate-changes", collect_hosts(g_root_folder))
 
+# This hook is executed when one applies the pending configuration changes
+# from wato.
+#
+# But it is only excecuted when there is at least one function
+# registered for this host.
+#
+# The registered hooks are called with a dictionary as parameter which
+# holds all available with the hostnames as keys and the attributes of
+# the hosts as values.
 def call_hook_activate_changes():
-    """
-    This hook is executed when one applies the pending configuration changes
-    from wato.
-
-    But it is only excecuted when there is at least one function
-    registered for this host.
-
-    The registered hooks are called with a dictionary as parameter which
-    holds all available with the hostnames as keys and the attributes of
-    the hosts as values.
-    """
     if hook_registered('activate-changes'):
         call_hooks("activate-changes", collect_hosts(g_root_folder))
 

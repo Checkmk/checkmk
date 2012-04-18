@@ -51,6 +51,8 @@
     * Login page is not shown in framesets anymore (redirects framed page to
       full screen login page)
     * FIX: fix exception when disallowing changing display options
+    * FIX: Automatically redirect from login page to target page when already
+      logged in
 
     BI
     * FIX: Fixed filtering of Single-Host Aggregations

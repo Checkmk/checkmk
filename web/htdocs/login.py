@@ -205,7 +205,7 @@ def page_login():
     else:
         return normal_login_page()
 
-def normal_login_page():
+def normal_login_page(called_directly = True):
     # Working around the problem that the auth.php file needed for multisite based
     # authorization of external addons might not exist when setting up a new installation
     # We assume: Each user must visit this login page before using the multisite based
@@ -220,14 +220,19 @@ def normal_login_page():
     html.set_render_headfoot(False)
     html.header(_("Check_MK Multisite Login"), javascripts=[], stylesheets=["pages", "login"])
 
+    origtarget = html.var('_origtarget', '')
+    if not origtarget and not html.req.myfile == 'login':
+        origtarget = html.makeuri([])
+
+    # When someone calls the login page directly and is already authed redirect to main page
+    if html.req.myfile == 'login' and check_auth() != '':
+        html.immediate_browser_redirect(0.5, origtarget and origtarget or 'index.py')
+        return
+
     # Never allow the login page to be opened in a frameset. Redirect top page to login page
     html.javascript('''if(top != self) {
     window.top.location.href = location;
 }''')
-
-    origtarget = html.var('_origtarget', '')
-    if not origtarget and not html.req.myfile == 'login':
-        origtarget = html.makeuri([])
 
     html.write("<div id=login>")
     html.write("<img id=login_window src=\"images/login_window.png\">")

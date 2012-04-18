@@ -72,9 +72,9 @@ def parse_php(data, lvl = 1):
             s += '    ' * lvl + parse_php(key, lvl + 1) + ' => ' + parse_php(val, lvl + 1) + ',\n'
         s += '    ' * (lvl - 1) + ')'
     elif isinstance(data, str):
-        s += '\'%s\'' % data
+        s += '\'%s\'' % data.replace('\'', '\\\'')
     elif isinstance(data, unicode):
-        s += '\'%s\'' % data.encode('utf-8')
+        s += '\'%s\'' % data.encode('utf-8').replace('\'', '\\\'')
     elif isinstance(data, bool):
         s += data and 'true' or 'false'
     elif data is None:

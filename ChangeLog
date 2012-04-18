@@ -33,6 +33,7 @@
     * FIX: Using pickle instead of repr/eval when reading data structures from
       urls to prevent too big security issues
     * Rule editor: improve sorting of groups and rulesets
+    * FIX: Escaping single quotes in strings when writing auth.php
 
     Multisite
     * Added config option default_ts_format to configure default timestamp
@@ -51,6 +52,9 @@
     * Login page is not shown in framesets anymore (redirects framed page to
       full screen login page)
     * FIX: fix exception when disallowing changing display options
+    * FIX: Automatically redirect from login page to target page when already
+      logged in
+    * FIX: Updating the dashboard header time when the dashlets refresh
 
     BI
     * FIX: Fixed filtering of Single-Host Aggregations

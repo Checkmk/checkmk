@@ -1,9 +1,9 @@
 Title: Login page shown (IE) while being logged in
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-01-16 13:06:47
 Targetversion: 1.2.0
-Class: bug
 
 Test on IE: We use cookie based login and are logged in.
 Now we enter http://192.168.56.1/walks/ in the URL field
@@ -12,3 +12,6 @@ Now we can simply click "Login" without entering any data
 and are logged in.
 
 The login form should not be shown in the first place here!
+
+2012-04-18 08:52:58: changed state open -> done
+The login dialog now redirects the users to the requested page when the user is already logged in.

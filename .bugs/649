@@ -1,9 +1,12 @@
 Title: Dashboard Zeit im header verwirrt
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2012-02-09 15:28:10
 Targetversion: future
-Class: nastiness
 
 Die Zeit zeigt die Render Zeit der Seite an. Die Dashlets selbst laden sich neu
 die Zeit wird aber nicht aktualisiert.
+
+2012-04-18 08:57:41: changed state open -> done
+Der Zeitstempel wird nun bei der Aktualisierung jedes Dashlets neu gesetzt.

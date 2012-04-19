@@ -4,6 +4,7 @@
       are preferred over *.py if existing
     * View Editor: Fixed jump to top of the page after moving painters during
       editing views
+    * FIX: Fixed login redirection problem after relogging
 
     Checks & Agents:
     * FIX: Made logwatch parsing mechanism a little more robust

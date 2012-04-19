@@ -483,7 +483,8 @@ function wato_randomize_secret(id, len) {
 // Folderlist
 // ----------------------------------------------------------------------------
 
-function folder_toggle(obj, on) {
+function wato_toggle_folder(oDiv, on) {
+    var obj = oDiv.parentNode;
     var id = obj.id.substr(7);
     var obj_edit = document.getElementById('edit_' + id);
     var obj_delete = document.getElementById('delete_' + id);

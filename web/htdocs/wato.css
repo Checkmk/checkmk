@@ -302,20 +302,20 @@ table.validationerror img {
 .wato div.floatfolder .edit {
     position: absolute;
     top:20px;
-    left:20px;
+    right:42px;
 }
 
 .wato div.floatfolder .delete {
     position: absolute;
     top:20px;
-    left:42px;
+    right:20px;
 }
 
 .wato div.floatfolder .infos {
     position: absolute;
-    top: 85px;
+    bottom: 29px;
     left: 20px;
-    color: #fff;
+    color: #bde;
 }
 
 .wato div.floatfolder .title {
@@ -336,6 +336,17 @@ table.validationerror img {
     color: #fff;
     font-size: 14px;
     text-decoration: none;
+    position: relative;
+    top: -3px;
+}
+
+.wato div.hoverarea {
+    width: 154px;
+    height: 40px;
+    position: relative;
+    top: 4px;
+    left: 10px;
+    z-index: 100;
 }
 
 .wato div.floatfolder:hover {

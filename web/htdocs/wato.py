@@ -1034,14 +1034,14 @@ def show_subfolders(folder):
         # Am I authorized?
         auth = check_folder_permissions(entry, "write", False)
 
-        html.write('<div class=floatfolder onclick="location.href = \'%s\'" ' % enter_url)
+        html.write('<div class=floatfolder id="folder_%s" onclick="location.href = \'%s\'">' % (
+            entry[".name"], enter_url))
         # Only make folder openable when permitted to edit
         if auth == True:
-            html.write(
-                'onmouseover="folder_toggle(this, true);" '
-                'onmouseout="folder_toggle(this, false)" id="folder_%s"' % entry['.name']
-            )
-        html.write('>')
+            html.write('<div class=hoverarea '
+                'onmouseover="wato_toggle_folder(this, true);" '
+                'onmouseout="wato_toggle_folder(this, false)">' 
+                '</div>')
 
         if auth != True:
             html.write('<img class="icon autherr" src="images/icon_autherr.png" title="%s">' % \

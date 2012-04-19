@@ -228,15 +228,20 @@ def set_is_disjoint(a, b):
 # has terminated (in good or in bad manner). Currently only exclusive
 # locks are implemented and they always will wait for ever.
 g_aquired_locks = []
+g_locked_paths = []
 def aquire_lock(path):
+    if path in g_locked_paths:
+        return # No recursive locking
     fd = os.open(path, os.O_RDONLY)
     fcntl.flock(fd, fcntl.LOCK_EX)
     g_aquired_locks.append(fd)
+    g_locked_paths.append(path)
 
 def release_all_locks():
     global g_aquired_locks
     for fd in g_aquired_locks:
         os.close(fd)
     g_aquired_locks = []
+    g_locked_paths = []
 
 

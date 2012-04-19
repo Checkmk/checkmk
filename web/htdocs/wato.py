@@ -1098,44 +1098,28 @@ def show_hosts(folder):
         return False
 
     html.write("<h3>" + _("Hosts") + "</h3>")
-    html.begin_form("search")
-    html.text_input("search")
-    html.button("_search", _("Search"))
-    html.set_focus("search")
-    html.hidden_fields()
-    html.end_form()
-    html.write("<p>")
-
     hostnames = folder[".hosts"].keys()
     hostnames.sort()
+    search_text = html.var("search")
 
-    # Show table of hosts in this folder
-    colspan = 5
-    html.begin_form("hosts", None, "POST", onsubmit = 'add_row_selections(this);')
-    html.write("<table class=data>\n")
-    html.write("<tr><th class=left></th><th></th><th>"
-               + _("Hostname") + "</th><th>"
-               + _("Auth") + "</th>")
-    if not config.wato_hide_hosttags:
-        html.write("<th>" + _("Tags") + "</th>")
-
-    for attr, topic in host_attributes:
-        if attr.show_in_table():
-            html.write("<th>%s</th>" % attr.title())
-            colspan += 1
-
-    if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
-        html.write("<th class=right>" + _("Move To") + "</th>")
-        colspan += 1
-    html.write("</tr>\n")
-    odd = "odd"
-
-    def bulk_actions(at_least_one_imported, top = False):
+    # Helper function for showing bulk actions. This is needed at the bottom
+    # of the table of hosts and - if there are more than just a few - also
+    # at the top of the table.
+    def bulk_actions(at_least_one_imported, top, colspan):
         # bulk actions
-        html.write('<tr class="data %s0">' % odd)
-        html.write("<td colspan=%d>" % colspan)
+        html.write('<tr class="data odd0">')
+        html.write('<td>')
         html.jsbutton('_markall', _('X'), 'javascript:toggle_all_rows();')
-        html.write(' ' + _("On all selected hosts:\n"))
+        html.write("</td><td class=bulksearch colspan=2>")
+        html.begin_form("search")
+        html.text_input("search")
+        html.button("_search", _("Search"))
+        html.set_focus("search")
+        html.hidden_fields()
+        html.end_form()
+        html.write('</td>')
+        html.write("<td class=bulkactions colspan=%d>" % (colspan-3))
+        html.write(' ' + _("Selected hosts:\n"))
         if config.may("wato.manage_hosts"):
             html.button("_bulk_delete", _("Delete"))
         if config.may("wato.edit_hosts"):
@@ -1149,7 +1133,9 @@ def show_hosts(folder):
                 html.button("_bulk_movetotarget", _("Move to Target Folders"))
         html.write("</td></tr>\n")
 
-    search_text = html.var("search")
+    # Show table of hosts in this folder
+    html.begin_form("hosts", None, "POST", onsubmit = 'add_row_selections(this);')
+    html.write("<table class=data>\n")
 
     # Remember if that host has a target folder (i.e. was imported with
     # a folder information but not yet moved to that folder). If at least
@@ -1169,11 +1155,36 @@ def show_hosts(folder):
         if num == 11:
             more_than_ten_items = True
 
+    # Compute colspan for bulk actions
+    colspan = 5
+    for attr, topic in host_attributes:
+        if attr.show_in_table():
+            colspan += 1
+    if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+        colspan += 1
+
     # Add the bulk action buttons also to the top of the table when this
     # list shows more than 10 rows
     if more_than_ten_items and \
         (config.may("wato.edit_hosts") or config.may("wato.manage_hosts")):
-        bulk_actions(at_least_one_imported, top = True)
+        bulk_actions(at_least_one_imported, True, colspan)
+
+    # Header line
+    html.write("<tr><th class=left></th><th></th><th>"
+               + _("Hostname") + "</th><th>"
+               + _("Auth") + "</th>")
+    if not config.wato_hide_hosttags:
+        html.write("<th>" + _("Tags") + "</th>")
+
+    for attr, topic in host_attributes:
+        if attr.show_in_table():
+            html.write("<th>%s</th>" % attr.title())
+
+    if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+        html.write("<th class=right>" + _("Move To") + "</th>")
+
+    html.write("</tr>\n")
+    odd = "odd"
 
     host_errors = validate_all_hosts(hostnames) 
     # Now loop again over all hosts and display them
@@ -1260,13 +1271,13 @@ def show_hosts(folder):
 
         # Move to
         if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
-            html.write("<td>")
+            html.write("<td class=right>")
             move_to_folder_combo("host", hostname)
             html.write("</td>\n")
         html.write("</tr>\n")
 
     if config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
-        bulk_actions(at_least_one_imported)
+        bulk_actions(at_least_one_imported, False, colspan)
     html.write("</table>\n")
 
     html.hidden_fields() 
@@ -1306,7 +1317,7 @@ def move_to_folder_combo(what, thing = None, top = False):
 
     if len(selections) > 1:
         if thing == None:
-            html.button("_bulk_move", _("Move To:"))
+            html.button("_bulk_move", _("Move:"))
             field_name = 'bulk_moveto'
             if top:
                 field_name = '_top_bulk_moveto'

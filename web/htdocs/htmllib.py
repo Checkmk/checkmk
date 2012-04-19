@@ -365,7 +365,7 @@ class html:
 
         if onclick:
             onclick = 'onclick="%s" ' % onclick
-            url = "#"
+            url = "javascript:void(0)"
 
         if style:
             style = 'style="%s" ' % style

@@ -750,13 +750,13 @@ def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
 
     # Buttons for deleting and moving around
     html.write('<td class="cebuttons" rowspan=5>')
-    html.icon_button("#", _("Delete this column"), "delete", onclick="delete_view_column(this);")
+    html.icon_button("javascript:void(0)", _("Delete this column"), "delete", onclick="delete_view_column(this);")
     display = n == 1 and 'display:none;' or ''
-    html.icon_button("#", _("Move this column up"), "up", onclick="move_column_up(this);",
+    html.icon_button("javascript:void(0)", _("Move this column up"), "up", onclick="move_column_up(this);",
                      id="%sup_%d" % (var_prefix, n), style=display)
 
     display = n == maxnum - 1 and 'display:none;' or ''
-    html.icon_button("#", _("Move this column down"), "down", onclick="move_column_down(this);",
+    html.icon_button("javascript:void(0)", _("Move this column down"), "down", onclick="move_column_down(this);",
                      id="%sdown_%d" % (var_prefix, n), style=display)
     html.write('</td>')
 

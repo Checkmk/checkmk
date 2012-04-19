@@ -282,6 +282,75 @@ table.validationerror img {
     border-style: none;
 }
 
+.wato div.floatfolder {
+    position: relative;
+    left:-14px;
+    float:left;
+    background-image: url('images/folder_closed.png');
+    background-repeat: no-repeat;
+    background-position: top left;
+    width: 180px;
+    height: 140px;
+}
+
+.wato div.floatfolder .autherr {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.wato div.floatfolder .edit {
+    position: absolute;
+    top:20px;
+    left:20px;
+}
+
+.wato div.floatfolder .delete {
+    position: absolute;
+    top:20px;
+    left:42px;
+}
+
+.wato div.floatfolder .infos {
+    position: absolute;
+    top: 85px;
+    left: 20px;
+    color: #fff;
+}
+
+.wato div.floatfolder .title {
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    right: 20px;
+    text-align: center;
+
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+}
+
+.wato div.floatfolder .title a {
+    color: #fff;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.wato div.floatfolder:hover {
+    cursor:pointer;
+}
+
+.wato div.floatfolder:hover a {
+    text-decoration: underline;
+}
+
+.wato div.folder_foot {
+    clear: left;
+    margin-bottom:10px;
+}
+
 /* Information boxes displayed directly in the data area */
 .wato div.info {
     margin-top: 10px;

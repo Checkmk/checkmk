@@ -478,3 +478,27 @@ function wato_randomize_secret(id, len) {
     var oInput = document.getElementById(id);
     oInput.value = secret;
 }
+
+// ----------------------------------------------------------------------------
+// Folderlist
+// ----------------------------------------------------------------------------
+
+function folder_toggle(obj, on) {
+    var id = obj.id.substr(7);
+    var obj_edit = document.getElementById('edit_' + id);
+    var obj_delete = document.getElementById('delete_' + id);
+    if(on) {
+        obj_edit.style.display = 'inline';
+        if(obj_delete)
+            obj_delete.style.display = 'inline';
+        obj.style.backgroundImage = 'url("images/folder_open.png")';
+        
+    } else {
+        obj_edit.style.display = 'none';
+        if(obj_delete)
+            obj_delete.style.display = 'none';
+        obj.style.backgroundImage = 'url("images/folder_closed.png")';
+    }
+    obj_delete = null;
+    obj_edit   = null;
+}

@@ -1024,95 +1024,72 @@ def show_subfolders(folder):
     if len(folder[".folders"]) == 0:
         return False
 
-    html.write("<h3>" + _("Subfolders") + "</h3>")
-    html.write("<table class=data>\n")
-    html.write("<tr><th class=left>"
-               + _("Actions") + "</th><th>"
-               + _("Title") + "</th><th>"
-               + _("Auth") + "</th>")
-
-    for attr, topic in host_attributes:
-        if attr.show_in_table() and attr.show_in_folder():
-            html.write("<th>%s</th>" % attr.title())
-
-    if not config.wato_hide_filenames:
-        html.write("<th>%s</th>" % _("Directory"))
-    html.write("<th class=right>" + _("Hosts") + "</th>")
-    html.write("<th class=right>" + _("Subfolders") + "</th>")
-
-    may_move_folders = config.may("wato.manage_folders") and \
-            check_folder_permissions(g_folder, "write", False)
-    if may_move_folders:
-        html.write("<th>" + _("Move To") + "</th>")
-
-    html.write("</tr>\n")
-
-    odd = "even"
+    html.write('<div class=folders>')
 
     for entry in api.sort_by_title(folder[".folders"].values()):
-        odd = odd == "odd" and "even" or "odd"
-        html.write('<tr class="data %s0">' % odd)
-
-        name = entry[".name"]
-        folder_path = entry[".path"]
-
-        edit_url     = make_link_to([("mode", "editfolder"), ("backfolder", g_folder[".path"])], entry)
-        delete_url   = make_action_link([("mode", "folder"),
-                       ("_delete_folder", entry[".name"])])
-        enter_url    = make_link_to([("mode", "folder")], entry)
-
-        html.write("<td class=buttons>")
-        html.icon_button(edit_url, _("Edit the properties of this folder"), "edit")
-        if config.may("wato.manage_folders"):
-            html.icon_button(delete_url, _("Delete this folder"), "delete")
-        html.write("</td>")
-
-
-        # Title and filename
-        html.write('<td class=takeall><a href="%s">%s</a></td>' %
-                    (enter_url, entry["title"]))
+        enter_url  = make_link_to([("mode", "folder")], entry)
+        edit_url   = make_link_to([("mode", "editfolder"), ("backfolder", g_folder[".path"])], entry)
+        delete_url = make_action_link([("mode", "folder"), ("_delete_folder", entry[".name"])])
 
         # Am I authorized?
         auth = check_folder_permissions(entry, "write", False)
+
+        html.write('<div class=floatfolder onclick="location.href = \'%s\'" ' % enter_url)
+        # Only make folder openable when permitted to edit
         if auth == True:
-            icon = "authok"
-            title = _("You have permission to this folder.")
-        else:
-            icon = "autherr"
-            title = htmllib.strip_tags(auth)
-        html.write('<td><img class=icon src="images/icon_%s.png" title="%s"></td>' % (icon, title))
+            html.write(
+                'onmouseover="folder_toggle(this, true);" '
+                'onmouseout="folder_toggle(this, false)" id="folder_%s"' % entry['.name']
+            )
+        html.write('>')
 
+        if auth != True:
+            html.write('<img class="icon autherr" src="images/icon_autherr.png" title="%s">' % \
+                                                                      (htmllib.strip_tags(auth)))
 
-        # Attributes for Hosts
-        effective = effective_attributes(None, folder)
-        for attr, topic in host_attributes:
-            if attr.show_in_table() and attr.show_in_folder():
-                attrname = attr.name()
-                if attrname in entry.get("attributes", {}):
-                    tdclass, content = attr.paint(entry["attributes"][attrname], "")
-                else:
-                    tdclass, content = attr.paint(effective.get(attrname), "")
-                    tdclass += " inherited"
-                html.write('<td class="%s">%s</td>' % (tdclass, content))
+        ## Move To
+        #if may_move_folders:
+        #    html.write("<td>")
+        #    move_to_folder_combo("folder", entry, False)
+        #    html.write("</td>")
 
+        html.icon_button(
+            edit_url,
+            _("Edit the properties of this folder"),
+            "edit",
+            id = 'edit_' + entry['.name'],
+            cssclass = 'edit',
+            style = 'display:none',
+        )
+
+        if config.may("wato.manage_folders"):
+            html.icon_button(
+                delete_url,
+                _("Delete this folder"),
+                "delete",
+                id = 'delete_' + entry['.name'],
+                cssclass = 'delete',
+                style = 'display:none',
+            )
+
+        html.write('<div class=infos>')
+        html.write(
+            'Hosts: %d<br />'
+            'Folders: %d' % (num_hosts_in(entry, recurse=True), len(entry[".folders"]))
+        )
+        html.write('</div>')
+
+        title = entry['title']
         # Internal foldername
         if not config.wato_hide_filenames:
-            html.write("<td>%s</td>" % name)
+            title += ' (%s)' % entry['.name']
 
-        # Number of hosts
-        html.write("<td class=number>%d</td>" % num_hosts_in(entry, recurse=True))
+        html.write('<div class=title title="%s">' % title)
+        html.write('<a href="%s">%s</a>' % (enter_url, entry['title']))
+        html.write('</div>')
+        html.write('</div>')
 
-        # Number of subfolders
-        html.write("<td class=number>%d</td>" % len(entry[".folders"]))
-
-        # Move To
-        if may_move_folders:
-            html.write("<td>")
-            move_to_folder_combo("folder", entry, False)
-            html.write("</td>")
-
-        html.write("</tr>")
-    html.write("</table>")
+    html.write("</div><div class=folder_foot></div>")
     return True
 
 def show_hosts(folder):
@@ -1319,7 +1296,7 @@ def move_to_folder_combo(what, thing = None, top = False):
                     or thing[".name"] in afolder[".folders"])):
                 os_path = afolder[".path"]
                 msg = afolder["title"]
-                if os_path:
+                if os_path and not config.wato_hide_filenames:
                     msg += " (%s)" % os_path
                 selections.append((os_path, msg))
         selections.sort(cmp=lambda a,b: cmp(a[1].lower(), b[1].lower()))

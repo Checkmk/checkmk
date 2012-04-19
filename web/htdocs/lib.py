@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import grp, defaults, pprint, os, errno, gettext, marshal, __builtin__
+import grp, defaults, pprint, os, errno, gettext, marshal, fcntl, __builtin__
 
 nagios_state_names = { -1: "NODATA", 0: "OK", 1: "WARNING", 2: "CRITICAL", 3: "UNKNOWN", 4: "DEPENDENT" }
 nagios_short_state_names = { -1: "PEND", 0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKN", 4: "DEP" }
@@ -223,3 +223,20 @@ def set_is_disjoint(a, b):
         if elem in b:
             return False
     return True
+
+# Functions for locking files. All locks must be freed if a request
+# has terminated (in good or in bad manner). Currently only exclusive
+# locks are implemented and they always will wait for ever.
+g_aquired_locks = []
+def aquire_lock(path):
+    fd = os.open(path, os.O_RDONLY)
+    fcntl.flock(fd, fcntl.LOCK_EX)
+    g_aquired_locks.append(fd)
+
+def release_all_locks():
+    global g_aquired_locks
+    for fd in g_aquired_locks:
+        os.close(fd)
+    g_aquired_locks = []
+
+

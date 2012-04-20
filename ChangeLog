@@ -1,4 +1,8 @@
 1.2.0b3:
+    Core:
+    * FIX: fixed SNMP info declaration in checks: could be garbled
+      up in rare cases
+
     Multisite:
     * FIX: allow web plugins to be byte compiled (*.pyc). Those
       are preferred over *.py if existing

@@ -16,6 +16,7 @@
 
     WATO:
     * Reimplemented folder listing in host/folders module
+    * FIX: fix page header after confirmation dialogs
 
 1.2.0b2:
     Core:

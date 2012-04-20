@@ -10620,7 +10620,8 @@ def make_action_link(vars):
 
 # Show confirmation dialog, send HTML-header if dialog is shown.
 def wato_confirm(html_title, message):
-    wato_html_head(html_title)
+    if not html.has_var("_do_confirm") and not html.has_var("_do_actions"):
+        wato_html_head(html_title)
     return html.confirm(message)
 
 def wato_html_head(title):

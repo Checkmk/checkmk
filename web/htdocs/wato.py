@@ -638,6 +638,10 @@ def save_hosts(folder = None):
             value = effective.get(attr.name())
             tags.update(attr.get_tag_list(value))
 
+        # Slave sites preserve any SiteAttribute tag
+        if not is_distributed() and "site" in effective:
+            tags.update(SiteAttribute().get_tag_list(effective["site"]))
+
         tagstext = "|".join(list(tags))
         if tagstext:
             tagstext += "|"

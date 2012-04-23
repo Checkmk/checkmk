@@ -315,19 +315,25 @@ table.validationerror img {
 .wato div.floatfolder .autherr {
     position: absolute;
     top: 20px;
-    right: 20px;
+    right: 62px;
 }
 
 .wato div.floatfolder .edit {
     position: absolute;
     top:20px;
-    right:42px;
+    right:54px;
+}
+
+.wato div.floatfolder .move {
+    position: absolute;
+    top:20px;
+    right:32px;
 }
 
 .wato div.floatfolder .delete {
     position: absolute;
     top:20px;
-    right:20px;
+    right:10px;
 }
 
 .wato div.floatfolder .infos {
@@ -356,7 +362,35 @@ table.validationerror img {
     font-size: 14px;
     text-decoration: none;
     position: relative;
-    top: -3px;
+    top: -2px;
+}
+
+.wato div.move_dialog {
+    padding:10px;
+    background-color: #45829D;
+
+    position: relative;
+    left:105px;
+    top:35px;
+    z-index: 200;
+    height: 190px;
+
+    width: -moz-max-content;
+    width: intrinsic;
+
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    border: 1px solid #fff;
+}
+
+.wato div.move_dialog select[multiple] {
+    height: 170px;
+}
+
+.wato div.move_dialog span {
+    display: block;
+    margin-bottom: 2px;
 }
 
 .wato div.hoverarea {

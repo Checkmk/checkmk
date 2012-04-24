@@ -26,3 +26,5 @@ Traceback (most recent call last):
   File "/usr/share/check_mk/web/htdocs/valuespec.py", line 633, in from_html_vars
     indexes[int(indexof)] = n
 ValueError: invalid literal for int() with base 10: ''
+
+It also looks that the pickling does not work on this browser.

@@ -483,23 +483,88 @@ function wato_randomize_secret(id, len) {
 // Folderlist
 // ----------------------------------------------------------------------------
 
-function wato_toggle_folder(oDiv, on) {
+function wato_open_folder(event, link) {
+    if (!event)
+        event = window.event;
+    var target = getTarget(event);
+    if(target.tagName != 'DIV') {
+        // Skip this event on clicks on other elements than the pure div
+        return false;
+    }
+
+    location.href = link;
+}
+
+function wato_toggle_folder(event, oDiv, on) {
+    if (!event)
+        event = window.event;
+
+    // Skip mouseout event when moving mouse over a child element of the
+    // folder element
+    if (!on) {
+        var node = event.toElement || event.relatedTarget;
+        while (node) {
+            if (node == oDiv) {
+                return false;
+            }
+            node = node.parentNode;
+        }
+    }
+    
     var obj = oDiv.parentNode;
     var id = obj.id.substr(7);
-    var obj_edit = document.getElementById('edit_' + id);
-    var obj_delete = document.getElementById('delete_' + id);
-    if(on) {
-        obj_edit.style.display = 'inline';
-        if(obj_delete)
-            obj_delete.style.display = 'inline';
-        obj.style.backgroundImage = 'url("images/folder_open.png")';
-        
-    } else {
-        obj_edit.style.display = 'none';
-        if(obj_delete)
-            obj_delete.style.display = 'none';
-        obj.style.backgroundImage = 'url("images/folder_closed.png")';
+
+    var elements = ['edit', 'move', 'delete'];
+    for(var num in elements) {
+        var elem = document.getElementById(elements[num] + '_' + id);
+        if(elem) {
+            if(on) {
+                elem.style.display = 'inline';
+            } else {
+                elem.style.display = 'none';
+            }
+        }
     }
-    obj_delete = null;
-    obj_edit   = null;
+
+    if(on) {
+        obj.style.backgroundImage = 'url("images/folder_open.png")';
+    } else {
+        obj.style.backgroundImage = 'url("images/folder_closed.png")';
+
+        // Hide the eventual open move dialog
+        var move_dialog = document.getElementById('move_dialog_' + id);
+        if(move_dialog) {
+            move_dialog.style.display = 'none';
+            move_dialog = null;
+        }
+    }
+    elem = null;
+    obj = null;
+}
+
+function wato_toggle_move_folder(event, oButton) {
+    if(!event)
+        event = window.event;
+
+    var id = oButton.id.substr(5);
+    var obj = document.getElementById('move_dialog_' + id);
+    if(obj) {
+        if(obj.style.display == 'none') {
+            obj.style.display = 'block';
+        } else {
+            obj.style.display = 'none';
+        }
+        obj = null;
+    }
+
+    if (event.stopPropagation)
+        event.stopPropagation();
+    event.cancelBubble = true;
+
+    // Disable the default events for all the different browsers
+    if (event.preventDefault)
+        event.preventDefault();
+    else
+        event.returnValue = false;
+    return false;
 }

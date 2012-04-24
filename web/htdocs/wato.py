@@ -638,6 +638,10 @@ def save_hosts(folder = None):
             value = effective.get(attr.name())
             tags.update(attr.get_tag_list(value))
 
+        # Slave sites preserve any SiteAttribute tag
+        if not is_distributed() and "site" in effective:
+            tags.update(SiteAttribute().get_tag_list(effective["site"]))
+
         tagstext = "|".join(list(tags))
         if tagstext:
             tagstext += "|"
@@ -1034,24 +1038,18 @@ def show_subfolders(folder):
         # Am I authorized?
         auth = check_folder_permissions(entry, "write", False)
 
-        html.write('<div class=floatfolder id="folder_%s" onclick="location.href = \'%s\'">' % (
+        html.write('<div class=floatfolder id="folder_%s" onclick="wato_open_folder(event, \'%s\');">' % (
             entry[".name"], enter_url))
         # Only make folder openable when permitted to edit
         if auth == True:
-            html.write('<div class=hoverarea '
-                'onmouseover="wato_toggle_folder(this, true);" '
-                'onmouseout="wato_toggle_folder(this, false)">' 
-                '</div>')
+            html.write(
+                '<div class=hoverarea onmouseover="wato_toggle_folder(event, this, true);" '
+                'onmouseout="wato_toggle_folder(event, this, false)">'
+            )
 
         if auth != True:
             html.write('<img class="icon autherr" src="images/icon_autherr.png" title="%s">' % \
                                                                       (htmllib.strip_tags(auth)))
-
-        ## Move To
-        #if may_move_folders:
-        #    html.write("<td>")
-        #    move_to_folder_combo("folder", entry, False)
-        #    html.write("</td>")
 
         html.icon_button(
             edit_url,
@@ -1061,6 +1059,23 @@ def show_subfolders(folder):
             cssclass = 'edit',
             style = 'display:none',
         )
+
+        may_move_folders = config.may("wato.manage_folders") and \
+                           check_folder_permissions(g_folder, "write", False)
+        if may_move_folders:
+            html.icon_button(
+                '', # url is replaced by onclick code
+                _("Move this folder to another place"),
+                "move",
+                id = 'move_' + entry['.name'],
+                cssclass = 'move',
+                style = 'display:none',
+                onclick = 'wato_toggle_move_folder(event, this);'
+            )
+            html.write('<div id="move_dialog_%s" class=move_dialog style="display:none">' % entry['.name'])
+            html.write('<span>%s</span>' % _('Move this folder to:'))
+            move_to_folder_combo("folder", entry, False, multiple = True)
+            html.write('</div>')
 
         if config.may("wato.manage_folders"):
             html.icon_button(
@@ -1072,11 +1087,12 @@ def show_subfolders(folder):
                 style = 'display:none',
             )
 
+        # Close the eventuall hoverarea
+        if auth == True:
+            html.write('</div>')
+
         html.write('<div class=infos>')
-        html.write(
-            'Hosts: %d<br />'
-            'Folders: %d' % (num_hosts_in(entry, recurse=True), len(entry[".folders"]))
-        )
+        html.write('Hosts: %d' % num_hosts_in(entry, recurse=True))
         html.write('</div>')
 
         title = entry['title']
@@ -1288,11 +1304,15 @@ def show_hosts(folder):
     return True
 
 move_to_folder_combo_cache_id = None
-def move_to_folder_combo(what, thing = None, top = False):
+def move_to_folder_combo(what, thing = None, top = False, multiple = False):
     global move_to_folder_combo_cache, move_to_folder_combo_cache_id
     if move_to_folder_combo_cache_id != id(html):
         move_to_folder_combo_cache = {}
         move_to_folder_combo_cache_id = id(html)
+
+    select_attrs = {}
+    if multiple:
+        select_attrs = {'multiple': '10'}
 
     # In case of a folder move combo, thing is the folder object
     # we want to move
@@ -1330,12 +1350,12 @@ def move_to_folder_combo(what, thing = None, top = False):
             html.hidden_field("host", thing)
             uri = html.makeactionuri([("host", thing)])
             html.select("_host_move_%s" % thing, selections, "@",
-                "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
+                "location.href='%s' + '&_move_host_to=' + this.value;" % uri, attrs = select_attrs);
         else: # what == "folder"
             # html.hidden_field("what_folder", thing)
             uri = html.makeactionuri([("what_folder", thing[".path"])])
             html.select("_folder_move_%s" % thing[".path"], selections, "@",
-                "location.href='%s' + '&_move_folder_to=' + this.value;" % uri);
+                "location.href='%s' + '&_move_folder_to=' + this.value;" % uri, attrs = select_attrs);
 
 
 

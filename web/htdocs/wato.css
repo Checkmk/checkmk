@@ -306,10 +306,15 @@ table.validationerror img {
     padding-top: 1px;
     padding-bottom: 1px;
     background-color: #6da1b8;
+    color: #000;
 }
 
 .wato div.folderpath li:hover select {
     background-color: #7fb0c6;
+}
+
+.wato div.folderpath li select option {
+    background-color: #6da1b8;
 }
 
 .wato div.folderpath li div.left,

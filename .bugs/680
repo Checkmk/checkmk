@@ -1,0 +1,9 @@
+Title: Logwatch page: hilit OK blockes
+Component: checks
+State: open
+Date: 2012-04-24 12:13:52
+Targetversion: 1.2.0
+Class: todo
+
+Due to logwatch reclassification, blocks can now have OK state.
+This should be hilited green.

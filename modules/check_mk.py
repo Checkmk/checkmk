@@ -423,7 +423,7 @@ def output_check_info():
     checks_sorted.sort()
     for check_type, check in checks_sorted:
         try:
-            if check["has_perfdata"]:
+            if check.get("has_perfdata", False):
                 p = tty_green + tty_bold + "yes" + tty_normal
             else:
                 p = "no"
@@ -1604,7 +1604,7 @@ def create_nagios_servicedefs(outfile, hostname):
 
         else:
             used_descriptions[description] = ( checkname, item )
-        if check_info[checkname]["has_perfdata"]:
+        if check_info[checkname].get("has_perfdata", False):
             template = passive_service_template_perf
         else:
             template = passive_service_template

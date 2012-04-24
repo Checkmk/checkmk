@@ -1,0 +1,28 @@
+Title: Logwatch ruleeditor (or ValueSpec ListOf) breaks on older Iceweasel
+Component: multisite
+State: open
+Date: 2012-04-24 12:07:14
+Targetversion: 1.2.0
+Class: bug
+
+On Iceweasel 3.5.16 the rule editor breaks while editing ListOf()
+in the logwatch pattern editor. When adding a line, the layout
+is broken. When saving, there is the following exception:
+
+
+Internal error	nagiosadmin (admin)     00:51
+wato.py?ve_1_0=0&ve_1_1=t&ve_1_2=t&filled_in=rule_editor&host_11=&host_10=&host_13=&host_12=&item=%28dp0%0D%0A.&mode=edit_rule&tagvalue_networking=lan&tagvalue_criticality=prod&rulenr=0&item_14=&save=Save&item_10=&item_11=&item_12=&item_13=&auxtag_tcp=ignore&varname=logwatch_rules&ve_count=2&ve_@_1=&ve_indexof_1=1&ve_indexof_2=&ve_@_2=&host_4=&ve_indexof_@=&folder=monitoring&debug=1&host=&host_2=&rule_folder=monitoring&ve_@_0=0&tagvalue_agent=cmk-agent&host_7=&auxtag_snmp=ignore&tag_networking=ignore&host_1=&host_0=&host_3=&tag_agent=ignore&host_5=&ve_2_2=34t&ve_2_1=t34t&ve_2_0=0&host_9=&host_8=&tag_criticality=ignore&item_6=&item_7=&item_4=&item_5=&item_2=&item_3=&item_0=&item_1=&host_14=&host_6=&new_rule_folder=monitoring&item_8=&item_9=
+Internal error:: invalid literal for int() with base 10: ''
+
+Traceback (most recent call last):
+  File "/usr/share/check_mk/web/htdocs/index.py", line 312, in handler
+    handler()
+  File "/usr/share/check_mk/web/htdocs/wato.py", line 254, in page_handler
+    result = modefunc("action")
+  File "/usr/share/check_mk/web/htdocs/wato.py", line 9303, in mode_edit_rule
+    value = get_edited_value(valuespec)
+  File "/usr/share/check_mk/web/htdocs/wato.py", line 4593, in get_edited_value
+    value = valuespec.from_html_vars("ve")
+  File "/usr/share/check_mk/web/htdocs/valuespec.py", line 633, in from_html_vars
+    indexes[int(indexof)] = n
+ValueError: invalid literal for int() with base 10: ''

@@ -10656,10 +10656,17 @@ def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mo
         the_folder = g_folder
 
     keepvars = [ (name, html.var(name)) for name in keepvarnames ]
+
     def render_component(folder):
         return '<a href="%s">%s</a>' % (
                html.makeuri_contextless([
                   ("folder", folder[".path"])] + keepvars), folder["title"])
+
+    def bc_el_start(end = '', z_index = 0):
+        html.write('<li style="z-index:%d;"><div class="left %s"></div>' % (z_index, end))
+
+    def bc_el_end(end = ''):
+        html.write('<div class="right %s"></div></li>' % end)
 
     folders = []
     folder = the_folder.get(".parent")
@@ -10670,24 +10677,42 @@ def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mo
     parts = []
     for folder in folders[::-1]:
         parts.append(render_component(folder))
+
+    # The current folder (with link or without link)
     if link_to_last:
         parts.append(render_component(the_folder))
     else:
-        parts.append("<b>" + the_folder["title"] + "</b>")
+        parts.append(the_folder["title"])
 
-    html.write("<div class=folderpath>%s\n" % "<i> / </i>".join(parts))
+    # Render the folder path
+    html.write("<div class=folderpath><ul>\n")
+    num = 0
+    for part in parts:
+        if num == 0:
+            bc_el_start('end', z_index = 100 + num)
+        else:
+            bc_el_start(z_index = 100 + num)
+        html.write('<div class=content>%s</div>\n' % part)
+        bc_el_end()
+        num += 1
 
+    # Render the current folder when having subfolders
     subfolders = the_folder[".folders"]
     if len(subfolders) > 0 and not link_to_last:
-        html.write("<i> / </i>")
-        html.write("<form method=GET name=folderpath>")
+        bc_el_start(z_index = 100 + num)
+        html.write("<div class=content><form method=GET name=folderpath>")
         options = [ (sf[".path"], sf["title"]) for sf in subfolders.values() ]
-        html.sorted_select("folder", [ ("", "") ] + options, onchange="folderpath.submit();", attrs={"class" : "folderpath"})
+        html.sorted_select(
+            "folder", [ ("", "") ] + options,
+            onchange = "folderpath.submit();",
+            attrs = {"class" : "folderpath"}
+        )
         for var in keepvarnames:
             html.hidden_field(var, html.var(var))
-        html.write("</form>")
-    html.write("<div style='clear: both;'></div>")
-    html.write("</div>")
+        html.write("</form></div>")
+        bc_el_end('end')
+
+    html.write("</ul></div>\n")
 
 def may_see_hosts():
     return config.may("wato.use") and \

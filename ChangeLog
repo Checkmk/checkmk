@@ -19,7 +19,7 @@
     * Reimplemented folder listing in host/folders module
     * Redesigned the breadcrumb navigation
     * FIX: fix page header after confirmation dialogs
-    * FIX: fixed umlaut problem in host aliases created by WATO
+    * FIX: fixed umlaut problem in host aliases and ip addresses created by WATO
 
 1.2.0b2:
     Core:

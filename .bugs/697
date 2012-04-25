@@ -1,0 +1,9 @@
+Title: WATO host/folders - <form> must not be nested
+Component: wato
+State: open
+Date: 2012-04-25 12:47:08
+Targetversion: 1.2.0
+Class: bug
+
+It is not allowed to have nested forms. The search host form must be moved outside the
+host table form.

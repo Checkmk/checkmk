@@ -15,3 +15,4 @@ Fehler muss wo anders liegen.
 Lars: Ich kann das bestätigen. Das ist offenbar ein Caching Problem. Ich habe gerade
 die start_url geändert und nach einigen Seitenaufrufen wieder auf den Default Wert
 zurückgesetzt. Jetzt lädt aber immer noch die zwischendurch gesetzte URL.
+Ein "omd restart apache" behebt das Problem.

@@ -3710,7 +3710,7 @@ class NagiosTextAttribute(TextAttribute):
 
     def to_nagios(self, value):
         if value:
-            return value.encode("utf-8")
+            return value
         else:
             return None
 
@@ -8031,10 +8031,9 @@ def mode_edit_hosttag(phase):
         return
 
     hosttags, auxtags = load_hosttags()
-    if new:
-        title = ""
-        choices = []
-    else:
+    title = ""
+    choices = []
+    if not new:
         for id, tit, ch in hosttags:
             if id == tag_id:
                 title = tit

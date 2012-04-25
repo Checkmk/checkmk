@@ -1,0 +1,10 @@
+Title: load_plugins should raise error if plugin is broken
+Component: multisite
+State: open
+Date: 2012-04-25 10:45:52
+Targetversion: 1.2.0
+Class: nastiness
+
+When loading plugins (e.g. WATO rule_specs), and there is a syntax
+or other error in the plugin, an Exception should be raised. 
+Currently the plugin is silently ignored.

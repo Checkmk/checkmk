@@ -8210,7 +8210,6 @@ def mode_edit_hosttag(phase):
     html.write("</td></tr>")
 
     # Choices
-    num_choices = 16
     html.write("<tr><td class=legend>")
     html.write(_("Choices") + "<br><i>" +
                _("The first choice of a tag group will be its default value. "

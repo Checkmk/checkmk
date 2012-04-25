@@ -4,6 +4,7 @@
       up in rare cases
 
     Multisite:
+    * Logwatch: Colorizing OK state blocks correctly
     * FIX: allow web plugins to be byte compiled (*.pyc). Those
       are preferred over *.py if existing
     * View Editor: Fixed jump to top of the page after moving painters during
@@ -16,7 +17,9 @@
 
     WATO:
     * Reimplemented folder listing in host/folders module
+    * Redesigned the breadcrumb navigation
     * FIX: fix page header after confirmation dialogs
+    * FIX: fixed umlaut problem in host aliases created by WATO
 
 1.2.0b2:
     Core:

@@ -3710,7 +3710,7 @@ class NagiosTextAttribute(TextAttribute):
 
     def to_nagios(self, value):
         if value:
-            return value.encode("utf-8")
+            return value
         else:
             return None
 

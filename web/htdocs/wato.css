@@ -45,6 +45,7 @@ Boston, MA 02110-1301 USA.
 
 /* Tables in WATO are not size to 100% per default */
 .wato table.data {
+    box-shadow: 0 0 3px #334488;
     width: auto;
 }
 .wato table.data th {
@@ -259,8 +260,10 @@ table.validationerror img {
 
 /* Path to current folder at top of screen */
 .wato div.folderpath {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     height: 30px;
+    position: relative;
+    left: 3px;
 }
 
 .wato div.folderpath ul {
@@ -303,10 +306,16 @@ table.validationerror img {
 }
 
 .wato div.folderpath li select {
-    padding-top: 1px;
-    padding-bottom: 1px;
+    padding: 2px 0px 2px 4px;
     background-color: #6da1b8;
-    color: #000;
+    margin: 0;
+    color: #fff;
+    font-weight: normal;
+    font-size: 8pt;
+    border-style: none;
+    position: relative;
+    right: -6px;
+    z-index: 200;
 }
 
 .wato div.folderpath li:hover select {
@@ -358,43 +367,6 @@ table.validationerror img {
 
 .wato div.folderpath li:hover div.right.end {
     background-image: url('images/breadcrumb_r_hi.png');
-}
-
-/*.wato div.folderpath a, .wato div.folderpath b, .wato div.folderpath i {
-    float: left;
-}
-
-.wato div.folderpath i {
-    margin: 0px 3px;
-    font-weight: bold;
-    font-style: normal;
-}
-
-.wato div.folderpath a,
-.wato div.folderpath b {
-    -moz-border-radius: 3px;
-    background-color: #8ab;
-    padding: 2px 9px;
-    color: #fff;
-    font-weight: normal;
-}
-.wato div.folderpath a {
-    text-decoration: none;
-}
-.wato div.folderpath a:hover {
-    color: #fff;
-    background-color: #9bc;
-}*/
-
-.wato select.folderpath {
-    background-color: #8ab;
-    -moz-border-radius: 3px;
-    padding: 2px 4px;
-    margin: 0;
-    color: #fff;
-    font-weight: normal;
-    font-size: 8pt;
-    border-style: none;
 }
 
 .wato div.floatfolder {

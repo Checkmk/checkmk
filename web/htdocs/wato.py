@@ -317,7 +317,6 @@ def page_handler():
                 else:
                     html.context_button(buttontext, make_link([("mode", target)]))
         html.end_context_buttons()
-        html.write("<br>")
 
         # Show outcome of action
         if html.has_user_errors():
@@ -10704,6 +10703,7 @@ def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mo
     while folder:
         folders.append(folder)
         folder = folder.get(".parent")
+    subfolders = the_folder[".folders"]
 
     parts = []
     for folder in folders[::-1]:
@@ -10715,6 +10715,7 @@ def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mo
     else:
         parts.append(the_folder["title"])
 
+
     # Render the folder path
     html.write("<div class=folderpath><ul>\n")
     num = 0
@@ -10724,11 +10725,14 @@ def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mo
         else:
             bc_el_start(z_index = 100 + num)
         html.write('<div class=content>%s</div>\n' % part)
-        bc_el_end()
+
+        bc_el_end(num == len(parts)-1 
+                  and not (
+                    len(subfolders) > 0 and not link_to_last)
+                  and "end" or "")
         num += 1
 
     # Render the current folder when having subfolders
-    subfolders = the_folder[".folders"]
     if len(subfolders) > 0 and not link_to_last:
         bc_el_start(z_index = 100 + num)
         html.write("<div class=content><form method=GET name=folderpath>")

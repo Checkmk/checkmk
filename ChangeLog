@@ -10,6 +10,7 @@
     * View Editor: Fixed jump to top of the page after moving painters during
       editing views
     * FIX: Fixed login redirection problem after relogging
+    * Filter for times now accept ranges (from ... until)
 
     Checks & Agents:
     * FIX: Made logwatch parsing mechanism a little more robust

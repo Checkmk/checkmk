@@ -279,9 +279,10 @@ class html:
         return len(self.user_errors) > 0
 
     def show_user_errors(self):
-        self.write('<div class=error>\n')
-        self.write('<br>'.join(self.user_errors.values()))
-        self.write('</div>\n')
+        if self.has_user_errors():
+            self.write('<div class=error>\n')
+            self.write('<br>'.join(self.user_errors.values()))
+            self.write('</div>\n')
 
     def hidden_field(self, var, value):
         if value != None:

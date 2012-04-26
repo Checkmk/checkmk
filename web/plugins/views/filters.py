@@ -373,7 +373,10 @@ class FilterTime(Filter):
            (60,    _("min")), 
            (1,     _("sec")), 
         ]
-        Filter.__init__(self, name, title, info, [ name ] + [ name + "_" + n for (s, n) in self.ranges], [column])
+        varnames = [ name + "_from", name + "_from_range",
+                     name + "_until", name + "_until_range" ]
+            
+        Filter.__init__(self, name, title, info, varnames, [column])
 
     def double_height(self):
         return True

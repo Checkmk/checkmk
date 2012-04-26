@@ -4688,26 +4688,46 @@ def mode_globalvars(phase):
     current_settings = load_configuration_settings()
 
     if phase == "action":
-        varname = html.var("_reset")
+        varname = html.var("_varname")
+        action = html.var("_action")
         if varname:
             domain, valuespec, need_restart = g_configvars[varname]
             def_value = default_values.get(varname, valuespec.canonical_value())
 
-            c = wato_confirm(
-                _("Resetting configuration variable"),
-                _("Do you really want to reset the configuration variable <b>%s</b> "
-                  "back to the default value of <b><tt>%s</tt></b>?") %
-                   (varname, valuespec.value_to_text(def_value)))
+            if action == "reset" and not isinstance(valuespec, Checkbox):
+                c = wato_confirm(
+                    _("Resetting configuration variable"),
+                    _("Do you really want to reset the configuration variable <b>%s</b> "
+                      "back to the default value of <b><tt>%s</tt></b>?") %
+                       (varname, valuespec.value_to_text(def_value)))
+            else:
+                if not html.check_transaction():
+                        return
+                c = True # no confirmation for direct toggle
             if c:
-                del current_settings[varname]
+                if action == "reset":
+                    del current_settings[varname]
+                    msg = _("Resetted configuration variable %s to its default.") % varname
+                else:
+                    if varname in current_settings:
+                        current_settings[varname] = not current_settings[varname]
+                    else:
+                        current_settings[varname] = not def_value
+                    msg = _("Changed Configuration variable %s to %s." % (varname, 
+                        current_settings[varname] and "on" or "off"))
                 save_configuration_settings(current_settings)
-                msg = _("Resetted configuration variable %s to its default.") % varname
                 log_pending(need_restart and SYNCRESTART or SYNC, None, "edit-configvar", msg)
-                return "globalvars", msg
+                if action == "_reset":
+                    return "globalvars", msg
+                else:
+                    return "globalvars"
             elif c == False:
                 return ""
             else:
                 return None
+        else:
+            return
+
 
     groupnames = g_configvar_groups.keys()
     groupnames.sort()
@@ -4737,17 +4757,30 @@ def mode_globalvars(phase):
             html.write('<td class=title><a href="%s">%s</a></td>' % (edit_url, valuespec.title()))
             if not config.wato_hide_varnames:
                 html.write('<td class=varname><tt>%s</tt></td>' % varname)
+            toggle_url = make_action_link([("mode", "globalvars"), 
+                    ("_action", "toggle"), ("_varname", varname)])
             if varname in current_settings:
                 html.write('<td class=inherited>%s</td>' % valuespec.value_to_text(defaultvalue))
-                html.write('<td><b>%s</b></td>'          % valuespec.value_to_text(current_settings[varname]))
+                html.write('<td>')
+                if isinstance(valuespec, Checkbox):
+                    html.icon_button(toggle_url, _("Immediately toggle this setting"), 
+                        "snapin_switch_" + (current_settings[varname] and "on" or "off"))
+                else:
+                    html.write('<b>%s</b>' % valuespec.value_to_text(current_settings[varname]))
+                html.write("</td>")
             else:
                 html.write('<td><b>%s</b></td>'          % valuespec.value_to_text(defaultvalue))
-                html.write('<td></td>')
+                html.write('<td>')
+                if isinstance(valuespec, Checkbox):
+                    html.icon_button(toggle_url, _("Immediately toggle this setting"),
+                    "snapin_switch_" + (defaultvalue and "on" or "off"))
+                html.write('</td>')
 
             html.write("<td class=buttons>")
             # html.buttonlink(edit_url, _("Edit"))
             if varname in current_settings:
-                reset_url = make_action_link([("mode", "globalvars"), ("_reset", varname)])
+                reset_url = make_action_link([("mode", "globalvars"), 
+                        ("_action", "reset"), ("_varname", varname)])
                 html.buttonlink(reset_url, _("Reset"))
             html.write("</td>")
 

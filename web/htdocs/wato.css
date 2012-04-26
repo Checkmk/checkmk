@@ -664,6 +664,11 @@ table.validationerror img {
     font-size: 8pt;
 }
 
+.wato table.data.globalvars img.iconbutton {
+    width: 60px;
+    height: 16px;
+}
+
 /* configuration overview */
 .wato table.configmodules {
     empty-cells: show;

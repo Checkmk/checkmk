@@ -59,7 +59,8 @@ def megaraid_pdisks_parse(info):
             current_adapter = {}
             adapters[int(line[1])] = current_adapter
         elif line[0] == 'dev2enc':
-            current_adapter[int(line[5])] = int(line[2])
+            if line[2].isdigit():
+                current_adapter[int(line[5])] = int(line[2])
         elif line[0] == 'Adapter' and len(line) == 2:
             current_adapter = adapters[int(line[1][1:])] # Raute weglassen
             adapter = int(line[1][1:])

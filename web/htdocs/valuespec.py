@@ -499,7 +499,8 @@ class ListOfStrings(ValueSpec):
             while html.has_var(vp + "_%d" % nr):
                 html.del_var(vp + "_%d" % nr)
                 nr += 1
-        html.write('<table border=0 cellspacing=0 cellpadding=0 id="%s">' % vp)
+        html.write('<table class="listofstrings %s" border=0 cellspacing=0 cellpadding=0 id="%s">' % (
+                self._vertical and "vertical" or "horizontal", vp))
         if not self._vertical:
             html.write('<tr>')
         

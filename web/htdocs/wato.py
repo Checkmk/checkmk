@@ -1881,7 +1881,7 @@ def mode_edithost(phase, new, cluster):
 
         # Cluster: nodes
         if cluster:
-            vs = ListOfStrings(valuespec = TextAscii(size = 19))
+            vs = ListOfStrings(valuespec = TextAscii(size = 19), orientation="horizontal")
             html.write('<tr><td class=legend>' + _("Nodes") + 
                        '<br><i>%s</i></td>' % _('Enter the host names of the cluster nodes. These '
                        'hosts must be present in WATO. '))

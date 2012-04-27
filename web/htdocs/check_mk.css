@@ -312,8 +312,7 @@ div.warning {
 |           \ \ / / _` | | | | |/ _ \___ \| '_ \ / _ \/ __|                |
 |            \ V / (_| | | |_| |  __/___) | |_) |  __/ (__                 |
 |             \_/ \__,_|_|\__,_|\___|____/| .__/ \___|\___|                |
-|                                         |_|                              |
-+--------------------------------------------------------------------------+
+|                                         |_|                              | +--------------------------------------------------------------------------+
 | Styles needed for HTML code produced by valuespec.py.                    |
 '-------------------------------------------------------------------------*/
 
@@ -389,6 +388,10 @@ table.valuespec_listof td.vlof_content {
 }
 table.valuespec_listof option[selected] {
     font-weight: bold;
+}
+
+table.listofstrings.horizontal td { 
+    padding-right: 5px;
 }
 
 table.listchoice {

@@ -1429,12 +1429,24 @@ function list_of_strings_extend(oInput, j) {
     splitted[splitted.length-1] = "" + num;
     var newName = splitted.join("_");
 
-    var oTr = oInput.parentNode.parentNode;
+    var oTd = oInput.parentNode;
+    var oTr = oTd.parentNode;
     var oTBody = oTr.parentNode;
-    var oNewTr = document.createElement("TR"); 
-    oNewTr.innerHTML = oTr.innerHTML.replace('"' + oldName + '"', '"' + newName + '"');
-    oTBody.appendChild(oNewTr);
-    var oNewTd = oNewTr.childNodes[0];
+    var oNewTd;
+
+    var horiz = oTBody.parentNode.classList.contains("horizontal");
+
+    if (!horiz) {
+        var oNewTr = document.createElement("TR"); 
+        oNewTr.innerHTML = oTr.innerHTML.replace('"' + oldName + '"', '"' + newName + '"');
+        oTBody.appendChild(oNewTr);
+        oNewTd = oNewTr.childNodes[0];
+    }
+    else {
+        var oNewTd = document.createElement("TD");
+        oNewTd.innerHTML = oTd.innerHTML.replace('"' + oldName + '"', '"' + newName + '"');
+        oTr.appendChild(oNewTd);
+    }
     for (var j in oNewTd.childNodes) {
         var o = oNewTd.childNodes[j];
         if (o.tagName == "INPUT") {

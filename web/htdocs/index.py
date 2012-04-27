@@ -376,8 +376,8 @@ def handler(req, profiling = True):
             html.footer()
         response_code = apache.OK
 
-    # Disconnect from livestatus!
-    html.live = None
+    release_all_locks()
+    html.live = None # disconnects from livestatus
     return response_code
 
 def page_not_found():

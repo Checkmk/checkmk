@@ -45,6 +45,7 @@ Boston, MA 02110-1301 USA.
 
 /* Tables in WATO are not size to 100% per default */
 .wato table.data {
+    box-shadow: 0 0 3px #334488;
     width: auto;
 }
 .wato table.data th {
@@ -71,6 +72,9 @@ Boston, MA 02110-1301 USA.
 .wato th.right {
     border-right-style: none;
     -moz-border-radius: 0px 4px 0px 0px;
+}
+.wato td.right {
+    text-align: right;
 }
 
 /* WATO configuration forms */
@@ -238,48 +242,245 @@ table.validationerror img {
     margin-right: 15px;
 }
 
+/* bulk actions in host table */
+.wato td.bulkactions {
+    text-align: right;
+}
+
+.wato table.data tr.data td.bulksearch {
+    text-align right;
+    padding-right: 0px;
+}
+
+.wato td.bulksearch input[type=text] {
+    width: 142px;
+    margin-right: 5px;
+}
+
+
 /* Path to current folder at top of screen */
 .wato div.folderpath {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+    height: 30px;
+    position: relative;
+    left: 3px;
 }
 
-.wato div.folderpath a, .wato div.folderpath b, .wato div.folderpath i {
-    float: left;
+.wato div.folderpath ul {
+    list-style-type:none;
+    padding-left:0;
 }
 
-.wato div.folderpath i {
-    margin: 0px 3px;
-    font-weight: bold;
-    font-style: normal;
-}
+.wato div.folderpath li {
+    float:left;
+    display:block;
+    height:26px;
 
-.wato div.folderpath a,
-.wato div.folderpath b {
-    -moz-border-radius: 3px;
-    background-color: #8ab;
-    padding: 2px 9px;
+    position:relative;
+
+    /* spacing for the image divs left/right */
+    padding-left: 20px;
+    padding-right: 20px;
+
+    /* move left border of all items 22px left to make the items overlap */
+    margin-left: -13px;
+
     color: #fff;
-    font-weight: normal;
 }
-.wato div.folderpath a {
-/*    color: #46c;  */
+
+.wato div.folderpath li a {
+    color: #fff;
     text-decoration: none;
 }
-.wato div.folderpath a:hover {
-    color: #fff;
-    background-color: #9bc;
-    /* text-decoration: underline; */
+
+.wato div.folderpath li div.content {
+    height: 18px;
+    background-image: url('images/breadcrumb_c_lo.png');
+
+    padding:4px 2px;
+    line-height:18px;
 }
 
-.wato select.folderpath {
-    background-color: #8ab;
-    -moz-border-radius: 3px;
-    padding: 2px 4px;
+.wato div.folderpath li:hover div.content {
+    background-image: url('images/breadcrumb_c_hi.png');
+}
+
+.wato div.folderpath li select {
+    padding: 2px 0px 2px 4px;
+    background-color: #6da1b8;
     margin: 0;
     color: #fff;
     font-weight: normal;
     font-size: 8pt;
     border-style: none;
+    position: relative;
+    right: -6px;
+    z-index: 200;
+}
+
+.wato div.folderpath li:hover select {
+    background-color: #7fb0c6;
+}
+
+.wato div.folderpath li select option {
+    background-color: #6da1b8;
+}
+
+.wato div.folderpath li div.left,
+.wato div.folderpath li div.right {
+    position: absolute;
+    width: 20px;
+    height: 100%;
+}
+
+.wato div.folderpath li div.left {
+    top: 0;
+    left: 0;
+    background-image: url('images/breadcrumb_lm_lo.png');
+}
+
+.wato div.folderpath li:hover div.left {
+    background-image: url('images/breadcrumb_lm_hi.png');
+}
+
+.wato div.folderpath li div.left.end {
+    background-image: url('images/breadcrumb_l_lo.png');
+}
+
+.wato div.folderpath li:hover div.left.end {
+    background-image: url('images/breadcrumb_l_hi.png');
+}
+
+.wato div.folderpath li div.right {
+    top: 0;
+    right: 0;
+    background-image: url('images/breadcrumb_rm_lo.png');
+}
+
+.wato div.folderpath li:hover div.right {
+    background-image: url('images/breadcrumb_rm_hi.png');
+}
+
+.wato div.folderpath li div.right.end {
+    background-image: url('images/breadcrumb_r_lo.png');
+}
+
+.wato div.folderpath li:hover div.right.end {
+    background-image: url('images/breadcrumb_r_hi.png');
+}
+
+.wato div.floatfolder {
+    position: relative;
+    left:-14px;
+    float:left;
+    background-image: url('images/folder_closed.png');
+    background-repeat: no-repeat;
+    background-position: top left;
+    width: 180px;
+    height: 140px;
+}
+
+.wato div.floatfolder .autherr {
+    position: absolute;
+    top: 20px;
+    right: 62px;
+}
+
+.wato div.floatfolder .edit {
+    position: absolute;
+    top:20px;
+    right:54px;
+}
+
+.wato div.floatfolder .move {
+    position: absolute;
+    top:20px;
+    right:32px;
+}
+
+.wato div.floatfolder .delete {
+    position: absolute;
+    top:20px;
+    right:10px;
+}
+
+.wato div.floatfolder .infos {
+    position: absolute;
+    bottom: 29px;
+    left: 20px;
+    color: #bde;
+}
+
+.wato div.floatfolder .title {
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    right: 20px;
+    text-align: center;
+
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+}
+
+.wato div.floatfolder .title a {
+    color: #fff;
+    font-size: 14px;
+    text-decoration: none;
+    position: relative;
+    top: -2px;
+}
+
+.wato div.move_dialog {
+    padding:10px;
+    background-color: #45829D;
+
+    position: relative;
+    left:105px;
+    top:35px;
+    z-index: 200;
+    height: 190px;
+
+    width: -moz-max-content;
+    width: intrinsic;
+
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    border: 1px solid #fff;
+}
+
+.wato div.move_dialog select[multiple] {
+    height: 170px;
+}
+
+.wato div.move_dialog span {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.wato div.hoverarea {
+    width: 154px;
+    height: 40px;
+    position: relative;
+    top: 4px;
+    left: 10px;
+    z-index: 100;
+}
+
+.wato div.floatfolder:hover {
+    cursor:pointer;
+}
+
+.wato div.floatfolder:hover a {
+    text-decoration: underline;
+}
+
+.wato div.folder_foot {
+    clear: left;
+    margin-bottom:10px;
 }
 
 /* Information boxes displayed directly in the data area */
@@ -433,6 +634,11 @@ table.validationerror img {
     padding: 0px;
     margin: 0px;
     font-size: 8pt;
+}
+
+.wato table.data.globalvars img.iconbutton {
+    width: 60px;
+    height: 16px;
 }
 
 /* configuration overview */

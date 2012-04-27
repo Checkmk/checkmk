@@ -1,3 +1,32 @@
+1.2.0b3:
+    Core:
+    * FIX: fixed SNMP info declaration in checks: could be garbled
+      up in rare cases
+
+    Multisite:
+    * Logwatch: Colorizing OK state blocks correctly
+    * FIX: allow web plugins to be byte compiled (*.pyc). Those
+      are preferred over *.py if existing
+    * View Editor: Fixed jump to top of the page after moving painters during
+      editing views
+    * FIX: Fixed login redirection problem after relogging
+    * Filter for times now accept ranges (from ... until)
+
+    Checks & Agents:
+    * FIX: Made logwatch parsing mechanism a little more robust
+      (Had problems with emtpy sections from windows agent)
+
+    WATO:
+    * Reimplemented folder listing in host/folders module
+    * Redesigned the breadcrumb navigation
+    * Global settings: make boolean switches directly togglable
+    * New button "Recursive Inventory" on folder: Allows to do
+      a recursive inventory over all hosts. Also allows to selectively
+      retry only hosts that have failed in a previous inventory.
+    * FIX: fix page header after confirmation dialogs
+    * FIX: Fixed umlaut problem in host aliases and ip addresses created by WATO
+    * FIX: Fixed exception caused by validation problems during editing tags in WATO
+
 1.2.0b2:
     Core:
     * FIX: Cluster host checks were UNKNOWN all the time

@@ -423,7 +423,7 @@ def output_check_info():
     checks_sorted.sort()
     for check_type, check in checks_sorted:
         try:
-            if check["has_perfdata"]:
+            if check.get("has_perfdata", False):
                 p = tty_green + tty_bold + "yes" + tty_normal
             else:
                 p = "no"
@@ -1471,7 +1471,7 @@ def create_nagios_hostdefs(outfile, hostname):
     outfile.write("\ndefine host {\n")
     outfile.write("  host_name\t\t\t%s\n" % hostname)
     outfile.write("  use\t\t\t\t%s\n" % (is_clust and cluster_template or host_template))
-    outfile.write("  address\t\t\t%s\n" % (ip and ip or "0.0.0.0"))
+    outfile.write("  address\t\t\t%s\n" % (ip and ip.encode('utf-8') or "0.0.0.0"))
     outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
 
     # Levels for host check
@@ -1604,7 +1604,7 @@ def create_nagios_servicedefs(outfile, hostname):
 
         else:
             used_descriptions[description] = ( checkname, item )
-        if check_info[checkname]["has_perfdata"]:
+        if check_info[checkname].get("has_perfdata", False):
             template = passive_service_template_perf
         else:
             template = passive_service_template

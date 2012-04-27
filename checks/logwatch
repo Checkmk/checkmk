@@ -123,6 +123,7 @@ def logwatch_precompile(hostname, item, _unused):
                 continue
 
             params.append((level, pattern))
+
     return params
 
 
@@ -262,6 +263,7 @@ def check_logwatch(item, params, info):
     block_header = None
     block_worst = 0
     block_lines = []
+    block_last_worst_line = ''
 
     def finish_block(header, block_worst, block_lines):
         start = ' '.join(header.split(' ')[0:2])
@@ -270,6 +272,9 @@ def check_logwatch(item, params, info):
     if os.path.exists(logfile):
         for line in file(logfile):
             line = line.rstrip('\n')
+            # Skip empty lines
+            if not line:
+                continue
             if line.startswith('<<<') and line.endswith('>>>'):
                 if block_header:
                     # The section is finished here. Add it to the list of reclassified lines

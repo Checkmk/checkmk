@@ -801,7 +801,7 @@ def convert_check_info():
     # Now gather snmp_info and snmp_scan_function back to the 
     # original arrays. Note: these information is tied to a "agent section",
     # not to a check. Several checks may use the same SNMP info and scan function.
-    for info in check_info.values():
+    for check_type, info in check_info.iteritems():
         basename = check_type.split(".")[0]
         if info["snmp_info"] and basename not in snmp_info:
             snmp_info[basename] = info["snmp_info"]

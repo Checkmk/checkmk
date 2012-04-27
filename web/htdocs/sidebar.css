@@ -93,7 +93,7 @@ body.side {
     position: absolute;
     bottom: 0;
     left: 0;
-    height: 50px;
+    height: 44px;
     width: 100%;
     z-index: 10;
     background-repeat: no-repeat;
@@ -103,7 +103,7 @@ body.side {
 #side_footer img.iconbutton {
     position: relative;
     top: 10px;
-    left: 10px;
+    left: 9px;
     margin-right: 3px;
 }
 

@@ -108,34 +108,34 @@ def show_filter_form(is_open, filters):
     s = [(f.sort_index, f.title, f) for f in filters if f.available()]
     s.sort()
     col = 0
-    for sort_index, title, f in s:
+
+    def show_filter(title, f):
         if not f.visible():
             html.write('<div style="display:none">')
             f.display()
             html.write('</div>')
         else:
-            html.write('<div class=floatfilter>')
-            ### if col == 0:
-            ###     html.write("<tr>")
+            html.write('<div class="floatfilter %s">' % (f.double_height() and "double" or "single"))
             html.write('<div class=legend>%s</div>' % title)
-            ### html.write("<td class=legend>%s</td>" % title)
-            ### html.write("<td class=content>")
             html.write('<div class=content>')
             f.display()
-            ### html.write("</td>")
             html.write("</div>")
-            ### if col == config.filter_columns - 1:
-            ###    html.write("</tr>\n")
-            ### col = (col + 1) % config.filter_columns
             html.write("</div>")
-    ### if col == 1:
-    ###    html.write("<td class=legend></td>\n<td class=content></td></tr>\n")
-    ### html.write('<tr><td class="legend button" colspan=%d>' % (config.filter_columns * 2))
+
+    # First show filters with double height (due to better floating
+    # layout)
+    for sort_index, title, f in s:
+        if f.double_height():
+            show_filter(title, f)
+
+    # Now single height filters
+    for sort_index, title, f in s:
+        if not f.double_height():
+            show_filter(title, f)
+
     html.write("</td></tr><tr><td>")
     html.button("search", _("Search"), "submit")
     html.write("</td></tr></table>")
-    ### html.write("</td></tr>\n")
-    ### html.write("</table>\n")
 
     html.hidden_fields()
     html.end_form()
@@ -211,6 +211,10 @@ class Filter:
     # user in single site setups.
     def visible(self):
         return True
+
+    # More complex filters need more height in the HTML layout
+    def double_height(self):
+        return False
 
     def display(self):
         raise MKInternalError("Incomplete implementation of filter %s '%s': missing display()" % \
@@ -754,13 +758,13 @@ def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
 
     # Buttons for deleting and moving around
     html.write('<td class="cebuttons" rowspan=5>')
-    html.icon_button("#", _("Delete this column"), "delete", onclick="delete_view_column(this);")
+    html.icon_button("javascript:void(0)", _("Delete this column"), "delete", onclick="delete_view_column(this);")
     display = n == 1 and 'display:none;' or ''
-    html.icon_button("#", _("Move this column up"), "up", onclick="move_column_up(this);",
+    html.icon_button("javascript:void(0)", _("Move this column up"), "up", onclick="move_column_up(this);",
                      id="%sup_%d" % (var_prefix, n), style=display)
 
     display = n == maxnum - 1 and 'display:none;' or ''
-    html.icon_button("#", _("Move this column down"), "down", onclick="move_column_down(this);",
+    html.icon_button("javascript:void(0)", _("Move this column down"), "down", onclick="move_column_down(this);",
                      id="%sdown_%d" % (var_prefix, n), style=display)
     html.write('</td>')
 
@@ -1345,8 +1349,11 @@ def render_view(view, rows, datasource, group_painters, painters,
     if show_buttons and 'B' in display_options:
         show_context_links(view, hide_filters)
 
+    # User errors in filters
+    html.show_user_errors()
+
     # Show the command form? Are commands possible?
-    command_form = len(rows) > 0 and display_command_form(display_options, datasource)
+    command_form = len(rows) > 0 and should_show_command_form(display_options, datasource)
 
     need_navi = show_buttons and \
         not html.do_actions() and (
@@ -1975,7 +1982,7 @@ def collist_of_collection(collection, join_target = []):
 # Checks wether or not this view handles commands for the current user
 # When it does not handle commands the command tab, command form, row
 # selection and processing commands is disabled.
-def display_command_form(display_options, datasource):
+def should_show_command_form(display_options, datasource):
     if not 'C' in display_options:
         return False
     if not config.may("act"):

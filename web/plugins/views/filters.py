@@ -369,77 +369,87 @@ class FilterTime(Filter):
         self.name = name
         self.ranges = [ 
            (86400, _("days")),
-           (3600, _("hours")), 
-           (60, _("min")), 
-           (1, _("sec")), 
+           (3600,  _("hours")), 
+           (60,    _("min")), 
+           (1,     _("sec")), 
         ]
-        Filter.__init__(self, name, title, info, [ name ] + [ name + "_" + n for (s, n) in self.ranges], [column])
+        varnames = [ name + "_from", name + "_from_range",
+                     name + "_until", name + "_until_range" ]
+            
+        Filter.__init__(self, name, title, info, varnames, [column])
+
+    def double_height(self):
+        return True
 
     def display(self):
-        html.select(self.name, [("since",_("since")),("before", _("before"))], "since")
-        html.write("&nbsp;")
-        for s, n in self.ranges:
-            htmlvar = self.name + "_" + n
-            html.write("<nobr>")
-            html.number_input(htmlvar, 0, 2, style="width: 22px; text-align: right;")
-            html.write(" %s</nobr> " % n)
-        # if config.filter_columns > 1:
-            # html.write("<br>\n")
+        choices = [ (str(sec), title + " ago") for sec, title in self.ranges ] + \
+                  [ ("abs", _("Date (YYYY-MM-DD)")) ]
 
-        # current = html.var(self.name, "since")
-        # for t, title in [ 
-        #     ("before", _("before")),
-        #     ("since",  _("since")) ]:
-        #     html.radiobutton(self.name, t, current == t, title + " &nbsp; ")
-        #     html.write(" ")
+        html.write("<table class=filtertime>")
+        for what, whatname in [
+            ( "from", _("From") ),
+            ( "until", _("Until") ) ]:
+            varprefix = self.name + "_" + what
+            html.write("<tr><td>%s:</td>" % whatname)
+            html.write("<td>")
+            html.text_input(varprefix, style="width: 120px;")
+            html.write("&nbsp;")
+            html.select(varprefix + "_range", choices, "3600")
+            html.write("</td></tr>")
+        html.write("</table>")
+            
 
     def filter(self, infoname):
-        range = self.get_time_range()
-        if range == None:
-            return ""
-
-        timestamp, negate = range
-        if negate:
-            neg = "!"
-        else:
-            neg = ""
-
-        return "Filter: %s %s>= %d\n" % (self.column, neg, timestamp)
+        fromsecs, untilsecs = self.get_time_range()
+        filtertext = ""
+        if fromsecs != None:
+            filtertext += "Filter: %s >= %d\n" % (self.column, fromsecs)
+        if untilsecs != None:
+            filtertext += "Filter: %s <= %d\n" % (self.column, untilsecs)
+        return filtertext
 
 
     # Extract timerange user has selected from HTML variables
     def get_time_range(self):
-        secs = 0
-        for s, n in self.ranges:
-            htmlvar = self.name + "_" + n
-            v = html.var(htmlvar)
-            if v:
-                try:
-                    secs += int(v) * s
-                except:
-                    pass
-
-        if secs > 0:
-            timestamp = int(time.time()) - secs
-            neg = html.var(self.name, "since") != "since"
-            return timestamp, neg
-        else:
-            return None
+        range = []
+        for what in [ "from", "until" ]:
+            varprefix = self.name + "_" + what
+            count = html.var(varprefix)
+            if count == "":
+                range.append(None)
+            else:
+                rangename = html.var(varprefix + "_range")
+                if rangename == "abs":
+                    try:
+                        range.append(time.mktime(time.strptime(count, "%Y-%m-%d")))
+                    except:
+                        html.add_user_error(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
+                        range.append(None)
+                else:
+                    try:
+                        count = int(count)
+                        secs = count * int(rangename)
+                        range.append(int(time.time()) - secs)
+                    except:
+                        range.append(None)
+                        html.set_var(varprefix, "")
+            
+        return range
 
     # I'm not sure if this function is useful or ever been called.
     # Problem is, that it is not clear wether to use "since" or "before"
     # here.
-    def variable_settings(self, row):
-        vars = []
-        secs = int(time.time()) - row[self.column]
-        for s, n in self.ranges[::-1]:
-            v = secs / s
-            secs -= v * s
-            vars.append((self.name + "_" + n, secs))
-        return vars
+    # def variable_settings(self, row):
+    #     vars = []
+    #     secs = int(time.time()) - row[self.column]
+    #     for s, n in self.ranges[::-1]:
+    #         v = secs / s
+    #         secs -= v * s
+    #         vars.append((self.name + "_" + n, secs))
+    #     return vars
 
-    def heading_info(self, infoname):
-        return _("since the last couple of seconds")
+    # def heading_info(self, infoname):
+    #     return _("since the last couple of seconds")
 
 declare_filter(250, FilterTime("service", "svc_last_state_change", _("Last service state change"), "service_last_state_change"))
 declare_filter(251, FilterTime("service", "svc_last_check", _("Last service check"), "service_last_check"))
@@ -469,6 +479,9 @@ class FilterLogClass(Filter):
 
         Filter.__init__(self, "log_class", _("Logentry class"),
                 "log", [ "logclass%d" % l for l, c in self.log_classes ], [])
+
+    def double_height(self):
+        return True
 
     def display(self):
         if html.var("filled_in"):
@@ -526,11 +539,14 @@ class FilterLogState(Filter):
         Filter.__init__(self, "log_state", _("Type of alerts of hosts and services"),
                 "log", [ "logst_" + e[0] for e in self._items ], [])
 
+    def double_height(self):
+        return True
+
     def display(self):
         html.write("<table><tr><td>")
         for varsuffix, what, state, text in self._items:
             if state == 0:
-                html.write("%s %s:<br>" % (_(what.title()), _("alerts")))
+                html.write("<u>%s:</u></td><td>" % (_(what.title())))
             html.write("&nbsp; ")
             html.checkbox("logst_" + varsuffix, True)
             html.write(" " + text + "<br>")

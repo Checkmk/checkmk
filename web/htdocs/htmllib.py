@@ -279,9 +279,10 @@ class html:
         return len(self.user_errors) > 0
 
     def show_user_errors(self):
-        self.write('<div class=error>\n')
-        self.write('<br>'.join(self.user_errors.values()))
-        self.write('</div>\n')
+        if self.has_user_errors():
+            self.write('<div class=error>\n')
+            self.write('<br>'.join(self.user_errors.values()))
+            self.write('</div>\n')
 
     def hidden_field(self, var, value):
         if value != None:
@@ -359,13 +360,13 @@ class html:
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png">')
 
-    def icon_button(self, url, help, icon, id="", onclick="", style="", target=""):
+    def icon_button(self, url, help, icon, id="", onclick="", style="", target="", cssclass=""):
         if id:
             id = "id='%s' " % id
 
         if onclick:
             onclick = 'onclick="%s" ' % onclick
-            url = "#"
+            url = "javascript:void(0)"
 
         if style:
             style = 'style="%s" ' % style
@@ -373,12 +374,15 @@ class html:
         if target:
             target = 'target="%s" ' % target
 
-        self.write('<a %s%s%s%sonfocus="if (this.blur) this.blur();" href="%s">'
+        if cssclass:
+            cssclass = 'class="%s" ' % cssclass
+
+        self.write('<a %s%s%s%s%sonfocus="if (this.blur) this.blur();" href="%s">'
                    '<img align=absmiddle class=iconbutton title="%s" '
                    'src="images/button_%s_lo.png" '
                    'onmouseover=\"hilite_icon(this, 1)\" '
                    'onmouseout=\"hilite_icon(this, 0)\">'
-                   '</a>' % (id, onclick, style, target, url, help, icon))
+                   '</a>' % (id, onclick, style, target, cssclass, url, help, icon))
 
     def empty_icon_button(self):
         self.write('<img class="iconbutton trans" src="images/trans.png">')

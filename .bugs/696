@@ -1,0 +1,9 @@
+Title: WATO host/folder move to: Visualize folder tree
+Component: wato
+State: open
+Date: 2012-04-25 12:44:55
+Targetversion: 1.2.0
+Class: nastiness
+
+The display text in the dropdown fields has to visualize the folder hierarchy.
+At the moment there is only a plain list shown in the dropdown field.

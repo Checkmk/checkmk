@@ -142,6 +142,10 @@ div.whiteborder table.form {
     margin: 0px;
     background-image: none;
 }
+form.actions div.whiteborder table.form {
+    background-image: url("images/form_background.png"); 
+    background-repeat: repeat;
+}
 
 table.navi tr.form {
     /* background-image: url("images/form_background.png"); 
@@ -155,13 +159,18 @@ table.navi div.whiteborder table.form {
 div.floatfilter {
     margin: 0px 3px 3px 0px;
     width: 320px;
-    height: 45px;
+    height: 51px;
     /* display: inline-block; */
     float: left;
     border: 1px solid #458;
     box-shadow: 0.5px 0.5px 1px #444;
     background-image: url("images/form_background.png"); 
     background-repeat: repeat;
+    -moz-border-radius: 5px;
+}
+
+div.floatfilter.double {
+    height: 106px;
 }
 
 div.floatfilter input[type=text] {
@@ -170,17 +179,29 @@ div.floatfilter input[type=text] {
 
 div.floatfilter .legend {
     color: white;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
     width: 310px;
-    height: 15px;
+    height: 20px;
     background-image: url("images/form_background.png"); 
     background-repeat: repeat;
-    padding: 1px 5px;
+    padding: 3px 5px 0px 5px;
+    -moz-border-radius: 5px 5px 0px 0px;
 }
 
 div.floatfilter .content {
-    margin-top: 3px;
-    margin-left: 3px;
+    width: 316px;
+    height: 23px;
+    margin-top: 0px;
+    margin-left: 0px;
+    vertical-align: middle;
+    display: table-cell;
+    padding-left: 1px;
+}
+div.floatfilter.double .content {
+    height: 72px;
+}
+table.filtertime td {
+    vertical-align: middle;
 }
 
 /*-------------------------------------------------------------------------.

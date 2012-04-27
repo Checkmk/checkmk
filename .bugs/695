@@ -1,0 +1,15 @@
+Title: Configuring timeperiod exceptions is buggy
+Component: wato
+State: open
+Date: 2012-04-25 12:34:06
+Targetversion: 1.2.0
+Class: bug
+
+- When creating one timeperiod exception it is ok. When changing the definition in the first field
+  WATO creates a second exception entry from it but leaves the old.
+
+- Deleting an exception is not possible. It remains when clearing the fields.
+
+- On user errors the form focuses the alias field all the time.
+
+Possible fix: Migrate to valuespecs.

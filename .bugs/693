@@ -1,0 +1,9 @@
+Title: Acknowledge WATO pending changes when applying config by using cmk
+Component: core
+State: open
+Date: 2012-04-25 12:23:47
+Targetversion: future
+Class: nastiness
+
+It confuses users that a manual restart via "cmk" command does not acknowledge the pending
+changes which can be found in the wato changelog.

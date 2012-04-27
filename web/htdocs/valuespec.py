@@ -593,11 +593,6 @@ class ListOf(ValueSpec):
 
         # Actual table of currently existing entries
         html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
-        if html.has_var(varprefix + "_count"): # already filled in, complain
-            value = [None] * int(html.var(varprefix + "_count"))
-            # the underlying render_input-functions should ignore the
-            # value in this case themselves, so that the "None" should not
-            # harm here.
 
         for nr, v  in enumerate(value):
             html.push_transformation(lambda x: x.replace(self._magic, str(nr+1)))
@@ -1384,12 +1379,8 @@ class Tuple(ValueSpec):
         if not self._vertical:
             html.write("<tr>")
 
-        # If the form is already filled in and we are in complain mode,
-        # the value in value must be ignored
-        if html.form_filled_in():
-            value = (None,) * len(self._elements)
-
-        for no, (element, val) in enumerate(zip(self._elements, value)):
+        for no, element in enumerate(self._elements):
+            val = value[no]
             vp = varprefix + "_" + str(no)
             if element.help():
                 help = "<br><i>%s</i>" % element.help()

@@ -224,15 +224,16 @@ def normal_login_page(called_directly = True):
     if not origtarget and not html.req.myfile == 'login':
         origtarget = html.makeuri([])
 
+    # Never allow the login page to be opened in a frameset. Redirect top page to login page.
+    # This will result in a full screen login page.
+    html.javascript('''if(top != self) {
+    window.top.location.href = location;
+}''')
+
     # When someone calls the login page directly and is already authed redirect to main page
     if html.req.myfile == 'login' and check_auth() != '':
         html.immediate_browser_redirect(0.5, origtarget and origtarget or 'index.py')
         return
-
-    # Never allow the login page to be opened in a frameset. Redirect top page to login page
-    html.javascript('''if(top != self) {
-    window.top.location.href = location;
-}''')
 
     html.write("<div id=login>")
     html.write("<img id=login_window src=\"images/login_window.png\">")

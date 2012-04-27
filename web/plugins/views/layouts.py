@@ -367,6 +367,7 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
 
 
     index = 0
+    visible_row_number = 0
     for row in rows:
         register_events(row) # needed for playing sounds
         # Show group header, if a new group begins. But only if grouping
@@ -386,6 +387,7 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
 
                 # paint group header
                 group_open = True
+                visible_row_number = 0
                 html.write("<tr class=groupheader>")
                 html.write("<td class=groupheader colspan=%d><table class=groupheader><tr>" %
                      (num_painters * (num_columns + 2) + (num_columns - 1)))
@@ -424,6 +426,11 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
 
         # At the beginning of the line? Beginn new line
         if column == 1:
+            visible_row_number += 1
+            if view.get("column_headers") == "repeat":
+                if visible_row_number % 20 == 0:
+                    show_header_line()
+
             # In one-column layout we use the state of the service
             # or host - if available - to color the complete line
             if num_columns == 1:

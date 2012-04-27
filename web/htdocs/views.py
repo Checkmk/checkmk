@@ -712,7 +712,11 @@ function toggle_section(nr, oImg) {
     if html.var("column_headers") == 'perpage':
         html.set_var("column_headers", 'pergroup')
 
-    html.select("column_headers", [ ("off", _("off")), ("pergroup", _("once per group")) ])
+    html.select("column_headers", [ 
+        ("off",      _("off")), 
+        ("pergroup", _("once per group"), 
+        ("repeat",   _("repeat every 20'th row")) ])
+
     html.write("</td><tr>\n")
     html.write("<tr><td>%s:</td><td>" % _('Sortable by user'))
     html.checkbox('user_sortable', True)

@@ -40,7 +40,7 @@ modules = [
       _("Manage global configuration settings for Check_MK, Multisite and the "
 
         "monitoring core here.")),
-      ( "ruleeditor",        _("Host/Service Parameters"), "rulesets", "rulesets",
+      ( "ruleeditor",        _("Host &amp; Service Parameters"), "rulesets", "rulesets",
       _("Check parameters and other variables that can be set on a per-host "
         "and per-service basis are managed via rules.") ),
 

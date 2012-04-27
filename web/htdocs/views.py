@@ -718,7 +718,7 @@ function toggle_section(nr, oImg) {
 
     html.select("column_headers", [ 
         ("off",      _("off")), 
-        ("pergroup", _("once per group"), 
+        ("pergroup", _("once per group")), 
         ("repeat",   _("repeat every 20'th row")) ])
 
     html.write("</td><tr>\n")

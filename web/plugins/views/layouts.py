@@ -111,6 +111,9 @@ multisite_layouts["dataset"] = {
 #
 # -------------------------------------------------------------------------
 def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show_checkboxes):
+
+    repeat_heading_every = 20 # in case column_headers is "repeat"
+
     # N columns. Each should contain approx the same number of entries
     groups = []
     last_group = None
@@ -159,7 +162,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
 
 
     # render one group
-    def render_group(header, rows, paintheader):
+    def render_group(header, rows):
         html.write("<table class=groupheader><tr class=groupheader>")
         painted = False
         for p in group_painters:
@@ -171,8 +174,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
         html.write("<div class=tableshadow><table class=data>")
         trclass = None
 
-        # paint table headers, if configured
-        if paintheader:
+        def show_header_line():
             html.write("<tr>")
             if show_checkboxes:
                 render_group_checkbox_th()
@@ -181,7 +183,17 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
                 html.write("\n")
             html.write("</tr>\n")
 
+        column_headers = view.get("column_headers")
+        if column_headers:
+            show_header_line()
+
+        visible_row_number = 0
         for index, row in rows:
+            if view.get("column_headers") == "repeat":
+                if visible_row_number > 0 and visible_row_number % repeat_heading_every == 0:
+                    show_header_line()
+            visible_row_number += 1
+
             register_events(row) # needed for playing sounds
             if trclass == "odd":
                 trclass = "even"
@@ -203,21 +215,11 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
         init_rowselect()
 
     # render table
-    if view.get("column_headers") != "off":
-        headerswitch = -1
-    else:
-        headerswitch = 0
-
     html.write("<table class=boxlayout><tr>")
     for column in columns:
         html.write("<td class=boxcolumn>")
         for header, rows in column:
-            if headerswitch:
-                paintheader = True
-                headerswitch -= 1
-            else:
-                paintheader = False
-            render_group(header, rows, paintheader)
+            render_group(header, rows)
         html.write("</td>")
     html.write("</tr></table>\n")
 
@@ -327,6 +329,9 @@ multisite_layouts["tiled"] = {
 #
 # ------------------------------------------------------------------------
 def render_grouped_list(rows, view, group_painters, painters, num_columns, show_checkboxes):
+
+    repeat_heading_every = 20 # in case column_headers is "repeat"
+
     html.write("<table class=data>\n")
     last_group = None
     trclass = None
@@ -401,9 +406,12 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
 
                 # paint top, left and right shadows
                 group_rows = count_group_members(row, rows[index:])
-                rowspan = 3 + group_rows / num_columns
+                rowspan = group_rows / num_columns
                 if group_rows % num_columns:
                     rowspan += 1
+                if view.get("column_headers") == "repeat":
+                    rowspan += rowspan / repeat_heading_every
+                rowspan += 3
                 html.write("<tr>\n")
                 for x in range(0, num_columns):
                     if x > 0:
@@ -426,10 +434,10 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
 
         # At the beginning of the line? Beginn new line
         if column == 1:
-            visible_row_number += 1
             if view.get("column_headers") == "repeat":
-                if visible_row_number % 20 == 0:
+                if visible_row_number > 0 and visible_row_number % repeat_heading_every == 0:
                     show_header_line()
+            visible_row_number += 1
 
             # In one-column layout we use the state of the service
             # or host - if available - to color the complete line

@@ -1044,11 +1044,16 @@ function highlight_elem(elem, on) {
             highlight_elem(childs[i], on);
 }
 
-function select_all_rows(elems) {
+function select_all_rows(elems, only_failed) {
+    if (typeof only_failed === 'undefined') {
+        only_failed = false;
+    }
     for(var i = 0; i < elems.length; i++) {
-        elems[i].checked = true;
-        if(g_selected_rows.indexOf(elems[i].name) === -1)
-            g_selected_rows.push(elems[i].name);
+        if (!only_failed || elems[i].classList.contains('failed')) {
+            elems[i].checked = true;
+            if (g_selected_rows.indexOf(elems[i].name) === -1)
+                g_selected_rows.push(elems[i].name);
+        }
     }
 }
 
@@ -1195,16 +1200,23 @@ function toggle_all_rows(obj) {
     var checkboxes = get_all_checkboxes(obj || document);
 
     var all_selected = true;
-    for(var i = 0; i < checkboxes.length && all_selected == true; i++)
-        if(g_selected_rows.indexOf(checkboxes[i].name) === -1)
+    var none_selected = true;
+    var some_failed = false;
+    for(var i = 0; i < checkboxes.length; i++) {
+        if (g_selected_rows.indexOf(checkboxes[i].name) === -1)
             all_selected = false;
+        else
+            none_selected = false;
+        if (checkboxes[i].classList.contains('failed'))
+            some_failed = true;
+    }
 
     // Toggle the state
-    if(all_selected) {
+    if (all_selected)
         remove_selected_rows(checkboxes);
-    } else {
-        select_all_rows(checkboxes);
-    }
+    else
+        select_all_rows(checkboxes, some_failed && none_selected);
+
 }
 
 // Iterates over all the cells of the given checkbox and executes the given

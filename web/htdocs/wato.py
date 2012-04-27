@@ -1228,7 +1228,13 @@ def show_hosts(folder):
         delete_url   = make_action_link([("mode", "folder"), ("_delete_host", hostname)])
 
         html.write('<td class=checkbox>')
-        html.write("<input type=checkbox name=\"_c_%s\" value=%d />" % (hostname, colspan))
+        # Use CSS class "failed" in order to provide information about
+        # selective toggling inventory-failed hosts for Javascript
+        if host.get("inventory_failed"):
+            css_class = "class=failed"
+        else:
+            css_class = ""
+        html.write("<input type=checkbox %s name=\"_c_%s\" value=%d />" % (css_class, hostname, colspan))
         html.write('</td>\n')
 
         html.write("<td class=buttons>")

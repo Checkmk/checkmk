@@ -20,6 +20,9 @@
     * Reimplemented folder listing in host/folders module
     * Redesigned the breadcrumb navigation
     * Global settings: make boolean switches directly togglable
+    * New button "Recursive Inventory" on folder: Allows to do
+      a recursive inventory over all hosts. Also allows to selectively
+      retry only hosts that have failed in a previous inventory.
     * FIX: fix page header after confirmation dialogs
     * FIX: Fixed umlaut problem in host aliases and ip addresses created by WATO
     * FIX: Fixed exception caused by validation problems during editing tags in WATO

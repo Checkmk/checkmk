@@ -781,6 +781,9 @@ def mode_folder(phase):
         if config.may("wato.manage_hosts"):
             html.context_button(_("New host"),    make_link([("mode", "newhost")]), "new")
             html.context_button(_("New cluster"), make_link([("mode", "newcluster")]), "new_cluster")
+        if config.may("wato.services"):
+            html.context_button(_("Bulk Inventory"), make_link([("mode", "bulkinventory"), ("all", "1")]), 
+                        "inventory")
         search_button()
         folder_status_button()
         if config.may("wato.random_hosts"):
@@ -846,13 +849,13 @@ def mode_folder(phase):
         if not html.transaction_valid():
             return
 
-        if html.var("_bulk_inventory"):
-            return "bulkinventory"
-
         selected_hosts = get_hostnames_from_checkboxes()
         if len(selected_hosts) == 0:
             raise MKUserError(None,
             _("Please select some hosts before doing bulk operations on hosts."))
+
+        if html.var("_bulk_inventory"):
+            return "bulkinventory"
 
         # Deletion
         if html.var("_bulk_delete"):
@@ -911,11 +914,14 @@ def prepare_folder_info():
     set_current_folder()          # set g_folder from HTML variable
 
 
-def check_host_permissions(hostname, exception=True):
+def check_host_permissions(hostname, exception=True, folder=None):
+    if folder == None:
+        folder = g_folder
+
     if config.may("wato.all_folders"):
         return True
-    host = g_folder[".hosts"][hostname]
-    effective = effective_attributes(host, g_folder)
+    host = folder[".hosts"][hostname]
+    effective = effective_attributes(host, folder)
     use, cgs = effective.get("contactgroups", (None, []))
     # Get contact groups of user
     users = load_users()
@@ -1228,7 +1234,12 @@ def show_hosts(folder):
         html.write("<td class=buttons>")
         html.icon_button(edit_url, _("Edit the properties of this host"), "edit")
         if check_host_permissions(hostname, False) == True:
-            html.icon_button(services_url, _("Edit the services of this host, do an inventory"), "services")
+            msg = _("Edit the services of this host, do an inventory")
+            image =  "services"
+            if host.get("inventory_failed"):
+                image = "inventory_failed"
+                msg += ". " + _("The inventory of this host failed during a previous bulk inventory.")
+            html.icon_button(services_url, msg, image)
         if config.may("wato.manage_hosts"):
             html.icon_button(clone_url, _("Create a clone of this host"), "insert")
             html.icon_button(delete_url, _("Delete this host"), "delete")
@@ -1456,9 +1467,9 @@ def delete_folder_after_confirm(del_folder):
 
 # Create list of all hosts that are select with checkboxes in the current file.
 # This is needed for bulk operations.
-def get_hostnames_from_checkboxes():
-    hostnames = g_folder[".hosts"].keys()
-    hostnames.sort()
+def get_hostnames_from_checkboxes(filterfunc = None):
+    entries = g_folder[".hosts"].items()
+    entries.sort()
 
     selected = []
     if html.var('selected_rows', '') != '':
@@ -1466,10 +1477,12 @@ def get_hostnames_from_checkboxes():
 
     selected_hosts = []
     search_text = html.var("search")
-    for name in hostnames:
-        if (not search_text or (search_text.lower() in name.lower())) \
-            and ('_c_' + name) in selected:
-            selected_hosts.append(name)
+    for hostname, host in entries:
+        if (not search_text or (search_text.lower() in hostname.lower())) \
+            and ('_c_' + hostname) in selected:
+                if filterfunc == None or \
+                   filterfunc(host):
+                    selected_hosts.append(hostname)
     return selected_hosts
 
 #.
@@ -1957,6 +1970,9 @@ def mode_inventory(phase, firsttime):
                         active_checks[(ct, item)] = paramstring
 
             check_mk_automation(host[".siteid"], "set-autochecks", [hostname], active_checks)
+            if host.get("inventory_failed"):
+                del host["inventory_failed"]
+                save_hosts()
             message = _("Saved check configuration of host [%s] with %d services") % \
                         (hostname, len(active_checks))
             log_pending(LOCALRESTART, hostname, "set-autochecks", message)
@@ -2355,6 +2371,10 @@ def mode_bulk_inventory(phase):
                 mark_affected_sites_dirty(folder, hostname, sync=False, restart=True)
                 log_pending(AFFECTED, hostname, "bulk-inventory",
                     _("Inventorized host: %d added, %d removed, %d kept, %d total services") % counts)
+                if "inventory_failed" in host:
+                    del host["inventory_failed"]
+                    save_hosts(folder) # Could be optimized, but difficult here
+
             except Exception, e:
                 result = repr([ 'failed', 1, 1, 0, 0, 0, 0, ]) + "\n"
                 if site_id:
@@ -2364,6 +2384,9 @@ def mode_bulk_inventory(phase):
                 if config.debug:
                     msg += "<br><pre>%s</pre>" % format_exception().replace("\n", "<br>")
                 result += msg + "\n<br>"
+                if not host.get("inventory_failed"):
+                    host["inventory_failed"] = True
+                    save_hosts(folder)
             html.write(result)
             return ""
         return
@@ -2372,15 +2395,45 @@ def mode_bulk_inventory(phase):
     # interactive progress is *not* done in action phase. It
     # renders the page content itself.
 
-    hostnames = get_hostnames_from_checkboxes()
+    def recurse_hosts(folder, recurse, only_failed):
+        entries = []
+        hosts = load_hosts(folder)
+        for hostname, host in hosts.items():
+            if not only_failed or host.get("inventory_failed"):
+                entries.append((hostname, folder))
+        if recurse:
+            for f in folder[".folders"].values():
+                entries += recurse_hosts(f, recurse, only_failed)
+        return entries
+
+    # 'all' not set -> only inventorize checked hosts
+    if not html.var("all"):
+        complete_folder = False
+        if html.get_checkbox("only_failed"):
+            filterfunc = lambda host: host.get("inventory_failed")
+        else:
+            filterfunc = None
+
+        hostnames = get_hostnames_from_checkboxes(filterfunc)
+        items = [ "%s|%s" % (g_folder[".path"], hostname)
+             for hostname in hostnames ]
+
+    # all host in this folder, maybe recursively
+    else:
+        complete_folder = True
+        entries = recurse_hosts(g_folder, html.get_checkbox("recurse"), html.get_checkbox("only_failed"))
+        items = []
+        for hostname, folder in entries:
+            check_host_permissions(hostname, folder=folder)
+            items.append("%s|%s" % (folder[".path"], hostname))
+
+
 
     # check all permissions before beginning inventory
     config.need_permission("wato.services")
     for hostname in hostnames:
         check_host_permissions(hostname)
 
-    items = [ "%s|%s" % (g_folder[".path"], hostname)
-             for hostname in hostnames ]
 
     if html.var("_start"):
         # Start interactive progress
@@ -2402,9 +2455,11 @@ def mode_bulk_inventory(phase):
         html.hidden_fields()
 
         # Mode of action
-        html.write(_("<p>You have selected <b>%d</b> hosts for bulk inventory. "
-                   "Check_MK inventory will automatically find and configure "
-                   "services to be checked on your hosts.</p>") % len(hostnames))
+        html.write("<p>")
+        if not complete_folder:
+            html.write(_("You have selected <b>%d</b> hosts for bulk inventory. ") % len(hostnames))
+        html.write(_("Check_MK inventory will automatically find and configure "
+                     "services to be checked on your hosts.</p>"))
         html.write("<table class=form>")
         html.write("<tr><td class=legend>" + _("Mode") + "</td><td class=content>")
         html.radiobutton("how", "new",     True,  _("Find only new services") + "<br>")
@@ -2412,6 +2467,13 @@ def mode_bulk_inventory(phase):
         html.radiobutton("how", "fixall",  False, _("Find new &amp; remove obsolete") + "<br>")
         html.radiobutton("how", "refresh", False, _("Refresh all services (tabula rasa)") + "<br>")
         html.write("</td></tr>")
+        html.write('<tr><td class=legend>%s</td>' % _("Selection"))
+        html.write('<td class=content>')
+        if complete_folder:
+            html.checkbox("recurse", True, label=_("Include all subfolders"))
+            html.write("<br>")
+        html.checkbox("only_failed", False, label=_("Only include hosts that failed on previous inventory"))
+        html.write('</td></tr>')
 
         # Start button
         html.write('<tr><td colspan=2 class="buttons">')

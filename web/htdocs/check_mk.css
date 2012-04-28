@@ -390,8 +390,9 @@ table.valuespec_listof option[selected] {
     font-weight: bold;
 }
 
-table.listofstrings.horizontal td { 
-    padding-right: 5px;
+div.listofstrings.horizontal > div {
+    float: left;
+    margin-right: 5px;
 }
 
 table.listchoice {

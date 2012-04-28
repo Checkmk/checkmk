@@ -45,3 +45,19 @@ declare_host_attribute(TextAttribute("ipaddress", _("IP address"),
                          allow_empty = False),
                          show_in_table = True,
                          show_in_folder = False)
+
+class ParentsAttribute(ValueSpecAttribute):
+    def __init__(self):
+        ValueSpecAttribute.__init__(self, "parents",
+                           ListOfStrings(
+                               title = _("Parents"),
+                               help = _("Hier kommt die Hilfe."),
+                               orientation = "horizontal"))
+    def to_nagios(self, value):
+        if value:
+            return ",".join(value)
+
+
+declare_host_attribute(ParentsAttribute(),
+                       show_in_table = True,
+                       show_in_folder = True)

@@ -499,23 +499,15 @@ class ListOfStrings(ValueSpec):
             while html.has_var(vp + "_%d" % nr):
                 html.del_var(vp + "_%d" % nr)
                 nr += 1
-        html.write('<table class="listofstrings %s" border=0 cellspacing=0 cellpadding=0 id="%s">' % (
-                self._vertical and "vertical" or "horizontal", vp))
-        if not self._vertical:
-            html.write('<tr>')
-        
-        for nr, s in enumerate(value + [""]):
-            if self._vertical:
-                html.write('<tr>')
-            html.write('<td>')
-            self._valuespec.render_input(vp + "_%d" % nr, s)
-            html.write('</td>')
-            if self._vertical:
-                html.write('</tr>')
 
-        if not self._vertical:
-            html.write('</tr>')
-        html.write('</table>')
+        html.write('<div class="listofstrings %s" id="%s">' % (self._vertical and 'vertical' or 'horizontal', vp))
+
+        for nr, s in enumerate(value + [""]):
+            html.write('<div>')
+            self._valuespec.render_input(vp + "_%d" % nr, s)
+            html.write('</div>')
+        html.write('</div>')
+
         html.javascript("list_of_strings_init('%s');" % vp);
 
     def canonical_value(self):

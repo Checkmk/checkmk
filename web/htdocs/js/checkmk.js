@@ -1408,52 +1408,57 @@ function valuespec_toggle_dropdownn(oDropdown, divid) {
     oDiv = null;
 }
 
-function list_of_strings_init(tableid) {
-    var oTable = document.getElementById(tableid);
-    var oTBody = oTable.childNodes[0];
-    var oTr = oTBody.childNodes[oTBody.childNodes.length - 1];
-    var oTd = oTr.childNodes[0];
-    for (var j in oTd.childNodes) {
-        var o = oTd.childNodes[j];
+/* This function is called after the table with of input elements
+   has been rendered. It attaches the onFocus-function to the last
+   of the input elements. The reason is, that ListOfString does not render
+   the input fields itself. This does so other ValueSpec element
+   where we have no access to */
+function list_of_strings_init(divid) {
+    var oContainer = document.getElementById(divid);
+    var numChilds = oContainer.childNodes.length;
+    var oLastChild = oContainer.childNodes[numChilds-1];
+    list_of_strings_add_focus(oLastChild);
+}
+
+function list_of_strings_add_focus(oLastChild) {
+    /* look for <input> in last child node and attach focus handler to it. */
+    for (var j in oLastChild.childNodes) {
+        var o = oLastChild.childNodes[j];
         if (o.tagName == "INPUT") {
             o.onfocus = function(e) { return list_of_strings_extend(this); };
         }
     }
 }
 
+/* Is called when the last input field in a ListOfString gets focus.
+   In that case a new input field is being appended. */
 function list_of_strings_extend(oInput, j) {
+
+    /* The input field has a unique name like "extra_emails_2" for the field with
+       the index 2. We need to convert this into "extra_emails_3". */
+
     var oldName = oInput.name;
-    // Transform e.g extra_emails_12 -> extra_emails_13
     var splitted = oldName.split("_");
     var num = 1 + parseInt(splitted[splitted.length-1]);
     splitted[splitted.length-1] = "" + num;
     var newName = splitted.join("_");
 
-    var oTd = oInput.parentNode;
-    var oTr = oTd.parentNode;
-    var oTBody = oTr.parentNode;
-    var oNewTd;
+    /* Now create a new <div> element as a copy from the current one and
+       replace this name. We do this by simply copying the HTML code. The
+       last field is always empty. Remember: ListOfStrings() always renders
+       one exceeding empty element. */
 
-    var horiz = oTBody.parentNode.classList.contains("horizontal");
+    var oDiv = oInput.parentNode;
+    while (!oDiv.parentNode.classList.contains("listofstrings"))
+        oDiv = oDiv.parentNode;
+    var oContainer = oDiv.parentNode;
 
-    if (!horiz) {
-        var oNewTr = document.createElement("TR"); 
-        oNewTr.innerHTML = oTr.innerHTML.replace('"' + oldName + '"', '"' + newName + '"');
-        oTBody.appendChild(oNewTr);
-        oNewTd = oNewTr.childNodes[0];
-    }
-    else {
-        var oNewTd = document.createElement("TD");
-        oNewTd.innerHTML = oTd.innerHTML.replace('"' + oldName + '"', '"' + newName + '"');
-        oTr.appendChild(oNewTd);
-    }
-    for (var j in oNewTd.childNodes) {
-        var o = oNewTd.childNodes[j];
-        if (o.tagName == "INPUT") {
-            o.onfocus = function(e) { return list_of_strings_extend(this); };
-        }
-    }
-    // Remove handle from old last element
+    var oNewDiv = document.createElement("DIV");
+    oNewDiv.innerHTML = oDiv.innerHTML.replace('"' + oldName + '"', '"' + newName + '"');
+    oContainer.appendChild(oNewDiv);
+
+    /* Move focus function from old last to new last input field */
+    list_of_strings_add_focus(oNewDiv);
     oInput.onfocus = null;
 }
 

@@ -46,18 +46,46 @@ declare_host_attribute(TextAttribute("ipaddress", _("IP address"),
                          show_in_table = True,
                          show_in_folder = False)
 
+# Attribute for configuring parents
 class ParentsAttribute(ValueSpecAttribute):
     def __init__(self):
         ValueSpecAttribute.__init__(self, "parents",
-                           ListOfStrings(
-                               title = _("Parents"),
-                               help = _("Hier kommt die Hilfe."),
-                               orientation = "horizontal"))
+               ListOfStrings(
+                   title = _("Parents"),
+                   help = _("Parents are used to configure the reachability of hosts by the "
+                      "monitoring server. A host is considered to be <b>unreachable</b> if all "
+                      "of its parents are unreachable or down. Unreachable hosts will not be "
+                      "actively monitored.<br><br><b>Clusters</b> automatically configure all "
+                      "of their nodes as parents, but only if you do not configure parents "
+                      "manually.<br><br>In a distributed setup make sure that the host and all "
+                      "of its parents are monitored by the same site."),
+                   orientation = "horizontal"))
     def to_nagios(self, value):
         if value:
             return ",".join(value)
+
+    def nagios_name(self):
+        return "parents"
 
 
 declare_host_attribute(ParentsAttribute(),
                        show_in_table = True,
                        show_in_folder = True)
+
+def validate_host_parents(effective_host):
+    for parentname in effective_host["parents"]:
+        parent_folder = find_host(parentname)
+        if not parent_folder:
+            raise MKUserError(None, _("You defined the non-existing host '%s' as a parent.") % parentname)
+        # In case of distributed wato check also if site of host and parent
+        # are the same.
+        if is_distributed():
+            parent = effective_attributes(parent_folder[".hosts"][parentname], parent_folder)
+            if effective_host["site"] !=  parent["site"]:
+                raise MKUserError(None, _("The parent '%s' is monitored on site '%s' while the host itself "
+                  "is monitored on site '%s'. Both must be monitored on the same site. Remember: The parent/child "
+                  "relation is used to describe the reachability of hosts by one monitoring daemon.") % 
+                    (parentname, parent["site"], effective_host["site"])) 
+    
+api.register_hook('validate-host', validate_host_parents)
+

@@ -72,7 +72,7 @@
 #   ".total_hosts"    -> recursive number of hosts, computed on demand by
 #                        num_hosts_in()
 #   ".siteid"         -> This attribute is mandatory for host objects and optional for folder
-#                        objects. In case of hosts and single WATO setup it is always none.
+#                        objects. In case of hosts and single WATO setup it is always None.
 #
 #
 # g_folder -> The folder object representing the folder the user is
@@ -3707,7 +3707,7 @@ class Attribute:
 # A simple text attribute. It is stored in
 # a Python unicode string
 class TextAttribute(Attribute):
-    def __init__(self, name, title, help = None, default_value="", mandatory=False, allow_empty=True, size=20):
+    def __init__(self, name, title, help = None, default_value="", mandatory=False, allow_empty=True, size=25):
         Attribute.__init__(self, name, title, help, default_value)
         self._mandatory = mandatory
         self._allow_empty = allow_empty

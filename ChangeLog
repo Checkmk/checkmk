@@ -25,6 +25,8 @@
     * New button "Recursive Inventory" on folder: Allows to do
       a recursive inventory over all hosts. Also allows to selectively
       retry only hosts that have failed in a previous inventory.
+    * You can configure parents now (via a host attribute, no rules are
+      neccessary).
     * FIX: fix page header after confirmation dialogs
     * FIX: Fixed umlaut problem in host aliases and ip addresses created by WATO
     * FIX: Fixed exception caused by validation problems during editing tags in WATO

@@ -266,7 +266,7 @@ class TextAscii(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._label         = kwargs.get("label")
-        self._size          = kwargs.get("size", 30)
+        self._size          = kwargs.get("size", 25)
         self._strip         = kwargs.get("strip", True)
         self._allow_empty   = kwargs.get("allow_empty", True)
         self._none_is_empty = kwargs.get("none_is_empty", False)

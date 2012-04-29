@@ -784,6 +784,9 @@ def mode_folder(phase):
         if config.may("wato.services"):
             html.context_button(_("Bulk Inventory"), make_link([("mode", "bulkinventory"), ("all", "1")]), 
                         "inventory")
+        if config.may("wato.parentscan"):
+            html.context_button(_("Parent scan"), make_link([("mode", "parentscan"), ("all", "1")]),
+                        "parentscan")
         search_button()
         folder_status_button()
         if config.may("wato.random_hosts"):
@@ -856,6 +859,9 @@ def mode_folder(phase):
 
         if html.var("_bulk_inventory"):
             return "bulkinventory"
+
+        elif html.var("_parentscan"):
+            return "parentscan"
 
         # Deletion
         if html.var("_bulk_delete"):
@@ -1148,6 +1154,8 @@ def show_hosts(folder):
             html.button("_bulk_cleanup", _("Cleanup"))
         if config.may("wato.services"):
             html.button("_bulk_inventory", _("Inventory"))
+        if config.may("wato.parentscan"):
+            html.button("_parentscan", _("Parentscan"))
         if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
             move_to_folder_combo("host", None, top)
             if at_least_one_imported:
@@ -2685,6 +2693,218 @@ def bulk_cleanup_attributes(the_file, hosts):
         html.write("</td></tr>")
 
     return num_shown > 0
+
+
+
+#.
+#   .-Parentscan-----------------------------------------------------------.
+#   |          ____                      _                                 |
+#   |         |  _ \ __ _ _ __ ___ _ __ | |_ ___  ___ __ _ _ __            |
+#   |         | |_) / _` | '__/ _ \ '_ \| __/ __|/ __/ _` | '_ \           |
+#   |         |  __/ (_| | | |  __/ | | | |_\__ \ (_| (_| | | | |          |
+#   |         |_|   \__,_|_|  \___|_| |_|\__|___/\___\__,_|_| |_|          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Automatic scan for parents (similar to cmk --scan-parents)           |
+#   '----------------------------------------------------------------------'
+def mode_parentscan(phase):
+    if phase == "title":
+        return _("Parent scan")
+
+    elif phase == "buttons":
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
+        return
+
+    elif phase == "action":
+        if html.var("_item"):
+            # HIRN: Parameter einbeziehen zur Performance und
+            # Gatewayerzeugun
+            try:
+                # TODO: We could improve the performance by scanning
+                # in parallel. The automation already can do this.
+                # We would need to cluster hosts into bulks here.
+                folderpath, hostname = html.var("_item").split("|")
+                folder = g_folders[folderpath]
+                load_hosts(folder)
+                host = folder[".hosts"][hostname]
+                eff = effective_attributes(host, folder)
+                site_id = eff.get("site")
+                gateways = check_mk_automation(site_id, "scan-parents", [hostname])
+                gateway, error = gateways[0]
+                counts = [ 'continue', 1, gateway and 1 or 0, 0, 0, error and 1 or 0 ]
+                result = repr(counts) + "\n"
+                result += _("Scanned %s<br>\n" % hostname)
+                # TODO: Nur wenn was geändert wurde
+                mark_affected_sites_dirty(folder, hostname, sync=False, restart=True)
+                # log_pending(AFFECTED, hostname, "bulk-inventory",
+                #     _("Inventorized host: %d added, %d removed, %d kept, %d total services") % counts)
+                # if "inventory_failed" in host:
+                #     del host["inventory_failed"]
+                #     save_hosts(folder) # Could be optimized, but difficult here
+
+            except Exception, e:
+                result = repr([ 'failed', 1, 0, 0, 0, 1 ]) + "\n"
+                if site_id:
+                    msg = _("Error during parent scan of %s on site %s: %s") % (hostname, site_id, e)
+                else:
+                    msg = _("Error during parent scan of %s: %s") % (hostname, e)
+                if config.debug:
+                    msg += "<br><pre>%s</pre>" % format_exception().replace("\n", "<br>")
+                result += msg + "\n<br>"
+            html.write(result)
+            return ""
+        return
+
+
+    config.need_permission("wato.parentscan")
+
+    # interactive progress is *not* done in action phase. It
+    # renders the page content itself.
+
+    # select: 'noexplicit' -> no explicit parents
+    #         'no'         -> no implicit parents
+    #         'ignore'     -> not important
+    def include_host(folder, host, select):
+        if select == 'noexplicit' and "parents" in host:
+            return False
+        elif select == 'no':
+            effective = effective_attributes(host, folder)
+            if effective.get("parents"):
+                return False
+        return True
+
+    def recurse_hosts(folder, recurse, select):
+        entries = []
+        hosts = load_hosts(folder)
+        for hostname, host in hosts.items():
+            if include_host(folder, host, select):
+                entries.append((hostname, folder))
+
+        if recurse:
+            for f in folder[".folders"].values():
+                entries += recurse_hosts(f, recurse, select)
+        return entries
+
+    # 'all' not set -> only inventorize checked hosts
+    select = html.var("select")
+    if not html.var("all"):
+        complete_folder = False
+        if html.get_checkbox("only_failed"):
+            filterfunc = lambda host: host.get("inventory_failed")
+        else:
+            filterfunc = None
+
+        items = []
+        for hostname in get_hostnames_from_checkboxes(filterfunc):
+            host = g_folder[".hosts"][hostname]
+            if include_host(g_folder, host, select):
+                items.append("%s|%s" % (g_folder[".path"], hostname))
+
+    # all host in this folder, maybe recursively
+    else:
+        complete_folder = True
+        entries = recurse_hosts(g_folder, html.get_checkbox("recurse"), html.get_checkbox("only_failed"))
+        items = []
+        for hostname, folder in entries:
+            items.append("%s|%s" % (folder[".path"], hostname))
+
+
+    if html.var("_start"):
+        # Start interactive progress
+        interactive_progress(
+            items,
+            _("Parent scan"),  # title
+            [ (_("Total hosts"),            0),
+              (_("Gateways found"),         0),
+              (_("New parents configured"), 0),
+              (_("Gateway hosts created"),  0),
+              (_("Errors"),                 0),
+            ],
+            [ ("mode", "folder") ], # URL for "Stop/Finish" button
+            50, # ms to sleep between two steps
+        )
+
+    else:
+        html.begin_form("parentscan", None, "POST")
+        html.hidden_fields()
+
+        # Mode of action
+        html.write("<p>")
+        if not complete_folder:
+            html.write(_("You have selected <b>%d</b> hosts for parent scan. ") % len(hostnames))
+        html.write("<p>" + 
+                   _("The parent scan will try to detect the last gateway "
+                   "on layer 3 (IP) before a host. This will be done by "
+                   "calling <tt>traceroute</tt>. If a gateway is found by "
+                   "that way and its IP address belongs to one of your "
+                   "monitored hosts, that host will be used as the hosts "
+                   "parent. If no such host exists, an artifical ping-only "
+                   "gateway host will be created if you have not disabled "
+                   "this feature.") + "</p>")
+         
+        html.write("<table class=form>")
+
+        settings = {
+            "where"   : "subfolder",
+            "alias"   : _("Created by parent scan"),
+            "recurse" : True,
+            "select"  : "noexplicit",
+            "timeout" : 8,
+            "probes"  : 2,
+        }
+        
+        # Selection
+        html.write("<tr><td class=legend>" + _("Selection") + "</td><td class=content>")
+        if complete_folder:
+            html.checkbox("recurse", settings["recurse"], label=_("Include all subfolders"))
+        html.write("<br>")
+        html.radiobutton("select", "noexplicit", settings["select"] == "noexplicit",  
+                _("Skip hosts with explicit parent definitions (even if empty)") + "<br>")
+        html.radiobutton("select", "no",  settings["select"] == "no", 
+                _("Skip hosts hosts with non-empty parents (also if inherited)") + "<br>")
+        html.radiobutton("select", "ignore",  settings["select"] == "ignore", 
+                _("Scan all hosts") + "<br>")
+        html.write("</td></tr>")
+
+        # Performance
+        html.write('<tr><td class=legend>%s</td>' % _("Performance"))
+        html.write('<td class=content>')
+        html.write("<table><tr><td>")
+        html.write(_("Timeout for responses") + ":</td><td>")
+        html.number_input("timeout", settings["timeout"], size=2)
+        html.write(" sec</td></tr><tr><td>")
+        html.write(_("Number of probes per hop") + ":</td><td>")
+        html.number_input("probes", settings["probes"], size=2)
+        html.write('</td></tr></table>')
+        html.write('</td></tr>')
+
+        # Gateway creation
+        html.write('<tr><td class=legend>%s</td>' % _("Creation of gateway hosts"))
+        html.write('<td class=content>')
+        html.write(_("Create gateway hosts in<ul>"))
+        html.radiobutton("where", "subfolder", settings["where"] == "subfolder", 
+                _("in the subfolder <b>Parents</b>"))
+        html.write("<br>")
+        html.radiobutton("where", "here", settings["where"] == "here", 
+                _("directly in the folder <b>%s</b>") % g_folder["title"])
+        html.write("<br>")
+        html.radiobutton("where", "there", settings["where"] == "there",
+                _("in the same folder as the host"))
+        html.write("<br>")
+        html.radiobutton("where", "nowhere", settings["where"] == "nowhere",
+                _("do not create gateway hosts"))
+        html.write("</ul>")
+        html.write(_("Alias for created gateway hosts") + ": ")
+        html.text_input("alias", settings["alias"])
+        html.write('</td></tr>')
+
+
+        # Start button
+        html.write('<tr><td colspan=2 class="buttons">')
+        html.button("_start", _("Start"))
+        html.write("</tr>")
+
+        html.write("</table>")
 
 
 
@@ -10841,6 +11061,7 @@ modes = {
    "newhost"            : (["hosts", "manage_hosts"], lambda phase: mode_edithost(phase, True, False)),
    "newcluster"         : (["hosts", "manage_hosts"], lambda phase: mode_edithost(phase, True, True)),
    "edithost"           : (["hosts"], lambda phase: mode_edithost(phase, False, None)),
+   "parentscan"         : (["hosts"], mode_parentscan),
    "firstinventory"     : (["hosts", "services"], lambda phase: mode_inventory(phase, True)),
    "inventory"          : (["hosts"], lambda phase: mode_inventory(phase, False)),
    "search"             : (["hosts"], mode_search),
@@ -10953,6 +11174,15 @@ def load_plugins():
          _("Modify the properties of existing hosts. Please note: "
            "for the management of services (inventory) there is "
            "a separate permission (see below)"),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.parentscan",
+         _("Perform network parent scan"),
+         _("This permission is neccessary for performing automatic "
+           "scans for network parents of hosts (making use of traceroute). "
+           "Please note, that for actually modifying the parents via the "
+           "scan and for the creation of gateway hosts proper permissions "
+           "for host and folders are also neccessary."),
          [ "admin", "user" ])
 
     config.declare_permission("wato.move_hosts",

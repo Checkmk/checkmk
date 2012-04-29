@@ -60,12 +60,19 @@ class ParentsAttribute(ValueSpecAttribute):
                       "manually.<br><br>In a distributed setup make sure that the host and all "
                       "of its parents are monitored by the same site."),
                    orientation = "horizontal"))
+
     def to_nagios(self, value):
         if value:
             return ",".join(value)
 
     def nagios_name(self):
         return "parents"
+
+    def paint(self, value, hostname):
+        parts = [ '<a href="%s">%s</a>' % (
+                   "wato.py?" + htmllib.urlencode_vars([("mode", "edithost"), ("host", hn)]), hn)
+                  for hn in value ]
+        return "", ", ".join(parts)
 
 
 declare_host_attribute(ParentsAttribute(),

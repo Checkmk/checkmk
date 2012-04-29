@@ -3844,9 +3844,12 @@ def do_scan_parents(hosts):
 
         for host, (gw, state, message) in zip(chunk, gws):
             if gw:
-                gateway, gateway_ip = gw
+                gateway, gateway_ip, dns_name = gw
                 if not gateway: # create artificial host
-                    gateway = "gw-%s" % (gateway_ip.replace(".", "-"))
+                    if dns_name:
+                        gateway = dns_name
+                    else:
+                        gateway = "gw-%s" % (gateway_ip.replace(".", "-"))
                     if gateway not in gateway_hosts:
                         gateway_hosts.add(gateway)
                         parent_hosts.append("%s|parent|ping" % gateway)
@@ -4001,12 +4004,17 @@ def scan_parents_of(hosts, silent=False):
         gateway = ip_to_hostname(route)
         if opt_verbose:
             sys.stdout.write("%s(%s) " % (gateway, gateway_ip))
-        gateways.append( ((gateway, gateway_ip), "gateway", "") )
+
+        # Try to find DNS name of host via reverse DNS lookup
+        dns_name = ip_to_dnsname(gateway_ip)
+        gateways.append( ((gateway, gateway_ip, dns_name), "gateway", "") )
         dot(tty_green, 'G')
     return gateways
 
 # find hostname belonging to an ip address. We must not use
-# reverse DNS but the Check_MK mechanisms
+# reverse DNS but the Check_MK mechanisms, since we do not
+# want to find the DNS name but the name of a matching host
+# from all_hosts
 def ip_to_hostname(ip):
     global ip_to_hostname_cache
     if ip_to_hostname_cache == None:
@@ -4017,6 +4025,14 @@ def ip_to_hostname(ip):
             except:
                 pass
     return ip_to_hostname_cache.get(ip)
+
+def ip_to_dnsname(ip):
+    try:
+        dnsname, aliaslist, addresslist = socket.gethostbyaddr(ip)
+        return dnsname
+    except:
+        return None
+
 
 
 #   +----------------------------------------------------------------------+

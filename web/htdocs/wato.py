@@ -2796,17 +2796,13 @@ def mode_parentscan(phase):
                 entries += recurse_hosts(f, recurse, select)
         return entries
 
-    # 'all' not set -> only inventorize checked hosts
+    # 'all' not set -> only scan checked hosts in current folder, no recursion
     select = html.var("select")
     if not html.var("all"):
+        select = html.var("select")
         complete_folder = False
-        if html.get_checkbox("only_failed"):
-            filterfunc = lambda host: host.get("inventory_failed")
-        else:
-            filterfunc = None
-
         items = []
-        for hostname in get_hostnames_from_checkboxes(filterfunc):
+        for hostname in get_hostnames_from_checkboxes():
             host = g_folder[".hosts"][hostname]
             if include_host(g_folder, host, select):
                 items.append("%s|%s" % (g_folder[".path"], hostname))
@@ -2814,7 +2810,7 @@ def mode_parentscan(phase):
     # all host in this folder, maybe recursively
     else:
         complete_folder = True
-        entries = recurse_hosts(g_folder, html.get_checkbox("recurse"), html.get_checkbox("only_failed"))
+        entries = recurse_hosts(g_folder, html.get_checkbox("recurse"), html.var("select"))
         items = []
         for hostname, folder in entries:
             items.append("%s|%s" % (folder[".path"], hostname))
@@ -2844,7 +2840,7 @@ def mode_parentscan(phase):
         # Mode of action
         html.write("<p>")
         if not complete_folder:
-            html.write(_("You have selected <b>%d</b> hosts for parent scan. ") % len(hostnames))
+            html.write(_("You have selected <b>%d</b> hosts for parent scan. ") % len(items))
         html.write("<p>" + 
                    _("The parent scan will try to detect the last gateway "
                    "on layer 3 (IP) before a host. This will be done by "
@@ -2871,7 +2867,7 @@ def mode_parentscan(phase):
         html.write("<tr><td class=legend>" + _("Selection") + "</td><td class=content>")
         if complete_folder:
             html.checkbox("recurse", settings["recurse"], label=_("Include all subfolders"))
-        html.write("<br>")
+            html.write("<br>")
         html.radiobutton("select", "noexplicit", settings["select"] == "noexplicit",  
                 _("Skip hosts with explicit parent definitions (even if empty)") + "<br>")
         html.radiobutton("select", "no",  settings["select"] == "no", 
@@ -2943,8 +2939,7 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
     gwcreat = False
 
     if gateway:
-        gw_host, gw_ip = gateway
-        parents = [ gw_host ]
+        gw_host, gw_ip, dns_name = gateway
         if not gw_host:
             if where == "nowhere":
                 return _("No host %s configured, parents not set") % gw_ip, \
@@ -2956,6 +2951,7 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
             elif where == "subfolder":
                 if "parents" in g_folder[".folders"]:
                     gw_folder = g_folder[".folders"]["parents"]
+                    load_hosts(gw_folder)
                 else:
                     gw_folder = {
                         ".name"      : "parents",
@@ -2971,14 +2967,18 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
                     g_folder[".folders"]["parent"] = gw_folder
             elif where == "there":
                 gw_folder = folder
+                load_hosts(gw_folder)
 
             # Create gateway host
-            if site_id:
+            if dns_name:
+                gw_host = dns_name
+            elif site_id:
                 gw_host = "gw-%s-%s" % (site_id, gw_ip.replace(".", "-"))
             else:
                 gw_host = "gw-%s" % (gw_ip.replace(".", "-"))
+
             new_host = {
-                "name" :      gw_host,
+                ".name" :     gw_host,
                 "ipaddress" : gw_ip,
                 ".folder" :   gw_folder, 
             }
@@ -2992,11 +2992,17 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
             if e["site"] != site_id:
                 new_host["site"] = site_id
 
+            gw_folder[".hosts"][new_host[".name"]] = new_host
             save_folder(gw_folder)
+            save_hosts(gw_folder)
+            mark_affected_sites_dirty(gw_folder, gw_host)
+
             reload_folder(gw_folder)
             call_hook_folder_created(gw_folder)
-            log_pending(AFFECTED, new_folder, "new-folder", _("Created new folder %s") % gw_folder[".path"])
+            log_pending(AFFECTED, gw_folder, "new-folder", _("Created new folder %s") % gw_folder[".path"])
             gwcreat = True
+
+        parents = [ gw_host ]
 
     else:
         parents = []
@@ -3017,8 +3023,9 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
     if parents:
         message = _("Set parents to %s") % ",".join(parents)
     else:
-        return _("Removed parents")
+        message = _("Removed parents")
 
+    mark_affected_sites_dirty(folder, host[".name"])
     save_hosts(folder)
     log_pending(AFFECTED, folder, "set-gateway", message)
     return message, True, gwcreat
@@ -6391,7 +6398,7 @@ def mode_edit_site(phase):
     docu_url = "http://mathias-kettner.de/checkmk_multisite_modproxy.html"
     html.write(_("URL prefix<br><i>The URL prefix will be prepended to links of addons like PNP4Nagios "
                  "or the classical Nagios GUI when a link to such applications points to a host or "
-                 "service on that site. You can either use an absole URL prefix like <tt>http://some.host/mysite/</tt> "
+                 "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
                  "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you needed a mod_proxy "
                  "configuration in your local system apache that proxies such URLs ot the according remote site. "
                  "Please refer to the <a target=_blank href='%s'>online documentation</a> for details. "

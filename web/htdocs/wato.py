@@ -2730,20 +2730,31 @@ def mode_parentscan(phase):
                 eff = effective_attributes(host, folder)
                 site_id = eff.get("site")
                 gateways = check_mk_automation(site_id, "scan-parents", [hostname])
-                gateway, error = gateways[0]
-                counts = [ 'continue', 1, gateway and 1 or 0, 0, 0, error and 1 or 0 ]
-                result = repr(counts) + "\n"
-                result += _("Scanned %s<br>\n" % hostname)
-                # TODO: Nur wenn was geändert wurde
-                mark_affected_sites_dirty(folder, hostname, sync=False, restart=True)
-                # log_pending(AFFECTED, hostname, "bulk-inventory",
-                #     _("Inventorized host: %d added, %d removed, %d kept, %d total services") % counts)
-                # if "inventory_failed" in host:
-                #     del host["inventory_failed"]
-                #     save_hosts(folder) # Could be optimized, but difficult here
+                gateway, state, error = gateways[0]
+
+                if state in [ "direct", "root", "gateway" ]:
+                    message, pconf, gwcreat = \
+                        configure_gateway(state, site_id, folder, host, eff, gateway)
+                else:
+                    message = error
+                    pconf = False
+                    gwcreat = False
+
+                # Possible values for state are:
+                # failed, dnserror, garbled, root, direct, notfound, gateway
+                counts = [ 'continue', 
+                    1,                                           # Total hosts
+                    gateway and 1 or 0,                          # Gateways found
+                    state in [ "direct", "root" ] and 1 or 0,    # Directly reachable hosts
+                    state == "notfound" and 1 or 0,              # No gateway found
+                    pconf and 1 or 0,                            # New parents configured
+                    gwcreat and 1 or 0,                          # Gateway hosts created 
+                    state in [ "failed", "dnserror", "garbled" ] and 1 or 0, # Errors
+                ]
+                result = "%r\n%s: %s<br>\n" % (counts, hostname, message)
 
             except Exception, e:
-                result = repr([ 'failed', 1, 0, 0, 0, 1 ]) + "\n"
+                result = repr([ 'failed', 1, 0, 0, 0, 0, 0, 1 ]) + "\n"
                 if site_id:
                     msg = _("Error during parent scan of %s on site %s: %s") % (hostname, site_id, e)
                 else:
@@ -2814,11 +2825,13 @@ def mode_parentscan(phase):
         interactive_progress(
             items,
             _("Parent scan"),  # title
-            [ (_("Total hosts"),            0),
-              (_("Gateways found"),         0),
-              (_("New parents configured"), 0),
-              (_("Gateway hosts created"),  0),
-              (_("Errors"),                 0),
+            [ (_("Total hosts"),               0),
+              (_("Gateways found"),            0),
+              (_("Directly reachable hosts"),  0),
+              (_("No gateway found"),          0),
+              (_("New parents configured"),    0),
+              (_("Gateway hosts created"),     0),
+              (_("Errors"),                    0),
             ],
             [ ("mode", "folder") ], # URL for "Stop/Finish" button
             50, # ms to sleep between two steps
@@ -2845,12 +2858,13 @@ def mode_parentscan(phase):
         html.write("<table class=form>")
 
         settings = {
-            "where"   : "subfolder",
-            "alias"   : _("Created by parent scan"),
-            "recurse" : True,
-            "select"  : "noexplicit",
-            "timeout" : 8,
-            "probes"  : 2,
+            "where"          : "subfolder",
+            "alias"          : _("Created by parent scan"),
+            "recurse"        : True,
+            "select"         : "noexplicit",
+            "timeout"        : 8,
+            "probes"         : 2,
+            "force_explicit" : False,
         }
         
         # Selection
@@ -2878,12 +2892,20 @@ def mode_parentscan(phase):
         html.write('</td></tr></table>')
         html.write('</td></tr>')
 
+        # Configuring parent
+        html.write('<tr><td class=legend>%s</td>' % _("Configuration"))
+        html.write('<td class=content>')
+        html.checkbox("force_explicit", 
+            settings["force_explicit"], label=_("Force explicit setting for parents even if setting matches that of the folder"))
+        html.write('</td></tr>')
+
         # Gateway creation
         html.write('<tr><td class=legend>%s</td>' % _("Creation of gateway hosts"))
         html.write('<td class=content>')
         html.write(_("Create gateway hosts in<ul>"))
         html.radiobutton("where", "subfolder", settings["where"] == "subfolder", 
-                _("in the subfolder <b>Parents</b>"))
+                _("in the subfolder <b>%s/Parents</b>") % g_folder["title"])
+        # html.hidden_field("rootfolder", g_folder[".path"])
         html.write("<br>")
         html.radiobutton("where", "here", settings["where"] == "here", 
                 _("directly in the folder <b>%s</b>") % g_folder["title"])
@@ -2906,6 +2928,100 @@ def mode_parentscan(phase):
 
         html.write("</table>")
 
+
+def configure_gateway(state, site_id, folder, host, effective, gateway):
+    # Settings for configuration and gateway creation
+    force_explicit = html.get_checkbox("force_explicit")
+    where          = html.var("where")
+    alias          = html.var("alias")
+
+    # If we have found a gateway, we need to know a matching
+    # host name from our configuration. If there is none,
+    # we can create one, if the users wants this. The automation
+    # for the parent scan already tries to find such a host
+    # within the site. 
+    gwcreat = False
+
+    if gateway:
+        gw_host, gw_ip = gateway
+        parents = [ gw_host ]
+        if not gw_host:
+            if where == "nowhere":
+                return _("No host %s configured, parents not set") % gw_ip, \
+                    False, False
+            
+            # Determine folder where to create the host.
+            elif where == "here":
+                gw_folder = g_folder
+            elif where == "subfolder":
+                if "parents" in g_folder[".folders"]:
+                    gw_folder = g_folder[".folders"]["parents"]
+                else:
+                    gw_folder = {
+                        ".name"      : "parents",
+                        ".parent"    : g_folder,
+                        ".path"      : g_folder[".path"] + "/parents",
+                        "title"      : _("Parents"),
+                        "attributes" : {},
+                        ".folders"   : {},
+                        ".hosts"     : {},
+                        "num_hosts"  : 0,
+                    }
+                    g_folders[gw_folder[".path"]] = gw_folder
+                    g_folder[".folders"]["parent"] = gw_folder
+            elif where == "there":
+                gw_folder = folder
+
+            # Create gateway host
+            if site_id:
+                gw_host = "gw-%s-%s" % (site_id, gw_ip.replace(".", "-"))
+            else:
+                gw_host = "gw-%s" % (gw_ip.replace(".", "-"))
+            new_host = {
+                "name" :      gw_host,
+                "ipaddress" : gw_ip,
+                ".folder" :   gw_folder, 
+            }
+            if alias:
+                new_host["alias"] = alias
+
+            # Important: set the "site" attribute for the new host, but
+            # only set it explicitely if it differs from the id of the
+            # folder.
+            e = effective_attributes(new_host, gw_folder)
+            if e["site"] != site_id:
+                new_host["site"] = site_id
+
+            save_folder(gw_folder)
+            reload_folder(gw_folder)
+            call_hook_folder_created(gw_folder)
+            log_pending(AFFECTED, new_folder, "new-folder", _("Created new folder %s") % gw_folder[".path"])
+            gwcreat = True
+
+    else:
+        parents = []
+
+    if effective["parents"] == parents:
+        return _("Parents unchanged"), False, gwcreat
+
+    if force_explicit:
+        host["parents"] = parents
+    else:
+        # Check which parents the host would have inherited
+        if "parents" in host:
+            del host["parents"]
+            effective = effective_attributes(host, folder)
+        if effective["parents"] != parents:
+            host["parents"] = parents
+
+    if parents:
+        message = _("Set parents to %s") % ",".join(parents)
+    else:
+        return _("Removed parents")
+
+    save_hosts(folder)
+    log_pending(AFFECTED, folder, "set-gateway", message)
+    return message, True, gwcreat
 
 
 #.

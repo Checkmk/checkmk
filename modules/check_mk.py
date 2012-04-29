@@ -1507,8 +1507,12 @@ def create_nagios_hostdefs(outfile, hostname):
         outfile.write("  contact_groups\t\t%s\n" % ",".join(cgrs))
         contactgroups_to_define.update(cgrs)
 
+    # Get parents manually defined via extra_host_conf["parents"]. Only honor
+    # variable "parents" and implicit parents if this setting is empty
+    extra_conf_parents = host_extra_conf(hostname, extra_host_conf.get("parents", []))
+
     # Parents for non-clusters
-    if not is_clust:
+    if not extra_conf_parents and not is_clust:
         parents_list = parents_of(hostname)
         if len(parents_list) > 0:
             outfile.write("  parents\t\t\t%s\n" % (",".join(parents_list)))
@@ -1522,12 +1526,12 @@ def create_nagios_hostdefs(outfile, hostname):
         node_ips = [ lookup_ipaddress(h) for h in nodes ]
         alias = "cluster of %s" % ", ".join(nodes)
         outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(node_ips))
-        outfile.write("  parents\t\t\t%s\n" % ",".join(nodes))
+        if not extra_conf_parents:
+            outfile.write("  parents\t\t\t%s\n" % ",".join(nodes))
 
         # Host check uses (service-) IP address if available
         if ip:
             outfile.write("  check_command\t\t\tcheck-mk-ping\n")
-
 
     # Output alias, but only if it's not define in extra_host_conf
     aliases = host_extra_conf(hostname, extra_host_conf.get("alias", []))

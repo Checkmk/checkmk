@@ -2,6 +2,9 @@
     Core:
     * FIX: fixed SNMP info declaration in checks: could be garbled
       up in rare cases
+    * avoid duplicate parents definition, when using 'parents' and
+      extra_host_conf["parents"] at the same time. The later one has
+      precedence.
 
     Multisite:
     * Logwatch: Colorizing OK state blocks correctly

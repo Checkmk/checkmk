@@ -3877,7 +3877,7 @@ def do_scan_parents(hosts):
     out.write("parents += %s\n\n" % pprint.pformat(parent_rules))
     sys.stdout.write("\nWrote %s\n" % outfilename)
 
-def scan_parents_of(hosts, silent=False):
+def scan_parents_of(hosts, silent=False, settings={}):
     nagios_ip = lookup_ipaddress(monitoring_host)
     os.putenv("LANG", "")
     os.putenv("LC_ALL", "")
@@ -3890,7 +3890,11 @@ def scan_parents_of(hosts, silent=False):
             sys.stdout.flush()
         try:
             ip = lookup_ipaddress(host)
-            command = "traceroute -m 15 -n -w 3 '%s' 2>&1" % ip
+            command = "traceroute -w %d -q %d -m %d -n '%s' 2>&1" % (
+                settings.get("timeout", 8),
+                settings.get("probes", 2),
+                settings.get("max_ttl", 10),
+                ip)
             if opt_debug:
                 sys.stderr.write("Running '%s'\n" % command)
             procs.append( (host, ip, os.popen(command) ) )
@@ -3980,7 +3984,7 @@ def scan_parents_of(hosts, silent=False):
                 gateways.append((None, "root", "")) # We are the root-monitoring host
                 dot(tty_white, 'N')
             else:
-                gateways.append( (monitoring_host, "direct", nagios_ip) )
+                gateways.append( ((monitoring_host, nagios_ip, None), "direct", "") )
                 dot(tty_cyan, 'L')
             continue
 

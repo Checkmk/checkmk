@@ -2715,10 +2715,20 @@ def mode_parentscan(phase):
         html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         return
 
-    elif phase == "action":
+    # Ignored during initial form display
+    settings = {
+        "where"          : html.var("where"),
+        "alias"          : html.var_utf8("alias", "").strip() or None,
+        "recurse"        : html.get_checkbox("recurse"),
+        "select"         : html.var("select"),
+        "timeout"        : saveint(html.var("timeout")) or 8,
+        "probes"         : saveint(html.var("probes")) or 2,
+        "max_ttl"        : saveint(html.var("max_ttl")) or 10,
+        "force_explicit" : html.get_checkbox("force_explicit"),
+    }
+
+    if phase == "action":
         if html.var("_item"):
-            # HIRN: Parameter einbeziehen zur Performance und
-            # Gatewayerzeugun
             try:
                 # TODO: We could improve the performance by scanning
                 # in parallel. The automation already can do this.
@@ -2729,7 +2739,8 @@ def mode_parentscan(phase):
                 host = folder[".hosts"][hostname]
                 eff = effective_attributes(host, folder)
                 site_id = eff.get("site")
-                gateways = check_mk_automation(site_id, "scan-parents", [hostname])
+                params = map(str, [ settings["timeout"], settings["probes"], settings["max_ttl"] ])
+                gateways = check_mk_automation(site_id, "scan-parents", params + [hostname])
                 gateway, state, error = gateways[0]
 
                 if state in [ "direct", "root", "gateway" ]:
@@ -2797,20 +2808,18 @@ def mode_parentscan(phase):
         return entries
 
     # 'all' not set -> only scan checked hosts in current folder, no recursion
-    select = html.var("select")
     if not html.var("all"):
-        select = html.var("select")
         complete_folder = False
         items = []
         for hostname in get_hostnames_from_checkboxes():
             host = g_folder[".hosts"][hostname]
-            if include_host(g_folder, host, select):
+            if include_host(g_folder, host, settings["select"]):
                 items.append("%s|%s" % (g_folder[".path"], hostname))
 
     # all host in this folder, maybe recursively
     else:
         complete_folder = True
-        entries = recurse_hosts(g_folder, html.get_checkbox("recurse"), html.var("select"))
+        entries = recurse_hosts(g_folder, settings["recurse"], settings["select"])
         items = []
         for hostname, folder in entries:
             items.append("%s|%s" % (folder[".path"], hostname))
@@ -2818,15 +2827,6 @@ def mode_parentscan(phase):
 
     if html.var("_start"):
         # Persist settings
-        settings = {
-            "where"          : html.var("where"),
-            "alias"          : html.var_utf8("alias").strip() or None,
-            "recurse"        : html.get_checkbox("recurse"),
-            "select"         : html.var("select"),
-            "timeout"        : saveint(html.var("timeout")) or 8,
-            "probes"         : saveint(html.var("probes")) or 2,
-            "force_explicit" : html.get_checkbox("force_explicit"),
-        }
         config.save_user_file("parentscan", settings)
 
 
@@ -2873,6 +2873,7 @@ def mode_parentscan(phase):
             "select"         : "noexplicit",
             "timeout"        : 8,
             "probes"         : 2,
+            "max_ttl"        : 10,
             "force_explicit" : False,
         })
         
@@ -2895,10 +2896,16 @@ def mode_parentscan(phase):
         html.write("<table><tr><td>")
         html.write(_("Timeout for responses") + ":</td><td>")
         html.number_input("timeout", settings["timeout"], size=2)
-        html.write(" sec</td></tr><tr><td>")
+        html.write(" %s</td></tr>" % _("sec"))
+        html.write("<tr><td>")
         html.write(_("Number of probes per hop") + ":</td><td>")
         html.number_input("probes", settings["probes"], size=2)
-        html.write('</td></tr></table>')
+        html.write('</td></tr>')
+        html.write("<tr><td>")
+        html.write(_("Maximum distance (TTL) to gateway") + ":</td><td>")
+        html.number_input("max_ttl", settings["max_ttl"], size=2)
+        html.write('</td></tr>')
+        html.write('</table>')
         html.write('</td></tr>')
 
         # Configuring parent
@@ -2952,6 +2959,8 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
     gwcreat = False
 
     if gateway:
+        if len(gateway) != 3:
+            raise Exception("Gateway ist %r" % (gateway,))
         gw_host, gw_ip, dns_name = gateway
         if not gw_host:
             if where == "nowhere":
@@ -3021,7 +3030,8 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
         parents = []
 
     if effective["parents"] == parents:
-        return _("Parents unchanged"), False, gwcreat
+        return _("Parents unchanged at %s") %  \
+                (parents and ",".join(parents) or _("none")), False, gwcreat
 
     if force_explicit:
         host["parents"] = parents

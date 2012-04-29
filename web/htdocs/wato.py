@@ -2817,6 +2817,19 @@ def mode_parentscan(phase):
 
 
     if html.var("_start"):
+        # Persist settings
+        settings = {
+            "where"          : html.var("where"),
+            "alias"          : html.var_utf8("alias").strip() or None,
+            "recurse"        : html.get_checkbox("recurse"),
+            "select"         : html.var("select"),
+            "timeout"        : saveint(html.var("timeout")) or 8,
+            "probes"         : saveint(html.var("probes")) or 2,
+            "force_explicit" : html.get_checkbox("force_explicit"),
+        }
+        config.save_user_file("parentscan", settings)
+
+
         # Start interactive progress
         interactive_progress(
             items,
@@ -2853,7 +2866,7 @@ def mode_parentscan(phase):
          
         html.write("<table class=form>")
 
-        settings = {
+        settings = config.load_user_file("parentscan", {
             "where"          : "subfolder",
             "alias"          : _("Created by parent scan"),
             "recurse"        : True,
@@ -2861,7 +2874,7 @@ def mode_parentscan(phase):
             "timeout"        : 8,
             "probes"         : 2,
             "force_explicit" : False,
-        }
+        })
         
         # Selection
         html.write("<tr><td class=legend>" + _("Selection") + "</td><td class=content>")

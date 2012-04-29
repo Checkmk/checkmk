@@ -55,6 +55,8 @@ def do_automation(cmd, args):
                 result = automation_restart("reload")
             elif cmd == "restart":
                 result = automation_restart("restart")
+            elif cmd == "scan-parents":
+                result = automation_scan_parents(args)
             else:
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
@@ -521,3 +523,17 @@ def automation_get_check_information():
         if check["group"]:
             checks[check_type]["group"] = check["group"]
     return checks
+
+def automation_scan_parents(args):
+    hostnames = args 
+    traceroute_prog = find_bin_in_path('traceroute')
+    if not traceroute_prog:
+        raise MKAutomationError("Cannot find binary <tt>traceroute</tt> in search path.")
+
+    try:
+        gateways = scan_parents_of(hostnames, silent=True)
+        return gateways
+    except Exception, e:
+        raise MKAutomationError(str(e))
+
+

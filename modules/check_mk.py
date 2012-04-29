@@ -3842,7 +3842,7 @@ def do_scan_parents(hosts):
 
         gws = scan_parents_of(chunk)
 
-        for host, gw in zip(chunk, gws):
+        for host, (gw, message) in zip(chunk, gws):
             if gw:
                 gateway, gateway_ip = gw
                 if not gateway: # create artificial host
@@ -3874,7 +3874,7 @@ def do_scan_parents(hosts):
     out.write("parents += %s\n\n" % pprint.pformat(parent_rules))
     sys.stdout.write("\nWrote %s\n" % outfilename)
 
-def scan_parents_of(hosts):
+def scan_parents_of(hosts, silent=False):
     nagios_ip = lookup_ipaddress(monitoring_host)
     os.putenv("LANG", "")
     os.putenv("LC_ALL", "")
@@ -3887,36 +3887,51 @@ def scan_parents_of(hosts):
             sys.stdout.flush()
         try:
             ip = lookup_ipaddress(host)
+            command = "traceroute -m 15 -n -w 3 %s" % ip
+            if opt_debug:
+                sys.stderr.write("Running '%s'\n" % command)
+            procs.append( (host, ip, os.popen(command) ) )
         except:
-            sys.stderr.write("%s: cannot resolve host name\n" % host)
-            ip = None
-        command = "traceroute -m 15 -n -w 3 %s" % ip
-        if opt_debug:
-            sys.stderr.write("Running '%s'\n" % command)
-        procs.append( (host, ip, os.popen(command) ) )
+            procs.append( (host, None, os.popen(
+                "echo 'ERROR: cannot resolve host name'")))
 
-    # Now all run and we begin to read the answers
+    # Output marks with status of each single scan
     def dot(color, dot='o'):
-        sys.stdout.write(tty_bold + color + dot + tty_normal)
-        sys.stdout.flush()
+        if not silent:
+            sys.stdout.write(tty_bold + color + dot + tty_normal)
+            sys.stdout.flush()
 
+    # Now all run and we begin to read the answers. For each host 
+    # we add a pair to gateways: the gateway and a diagnostig output
     gateways = []
     for host, ip, proc in procs:
         lines = [l.strip() for l in proc.readlines()]
         exitstatus = proc.close()
         if exitstatus:
             dot(tty_red, '*')
-            gateways.append(None)
+            gateways.append((None, "Traceroute failed with exit code %d" % (exitstatus & 255)))
             continue
 
-        if len(lines) == 0:
+        if len(lines) == 1 and lines[0].startswith("ERROR:"):
+            message = lines[0][6:].strip()
+            if opt_verbose:
+                sys.stderr.write("%s: %s\n" % (host, message))
+            dot(tty_red, "D")
+            gateways.append((None, message))
+            continue
+
+        elif len(lines) == 0:
             if opt_debug:
                 raise MKGeneralException("Cannot execute %s. Is traceroute installed? Are you root?" % command)
             else:
                 dot(tty_red, '!')
+            continue
+
         elif len(lines) < 2:
-            sys.stderr.write("%s: %s\n" % (host, ' '.join(lines)))
-            gateways.append(None)
+            if not silent:
+                sys.stderr.write("%s: %s\n" % (host, ' '.join(lines)))
+            gateways.append((None, "The output of traceroute seem truncated:\n%s" %
+                    ("".join(lines))))
             dot(tty_blue)
             continue
 
@@ -3943,11 +3958,13 @@ def scan_parents_of(hosts):
             elif route == '*':
                 routes.append(None) # No answer from this router
             else:
-                sys.stderr.write("%s: invalid output line from traceroute: '%s'\n" % (host, line))
+                if not silent:
+                    sys.stderr.write("%s: invalid output line from traceroute: '%s'\n" % (host, line))
 
         if len(routes) == 0:
-            sys.stderr.write("%s: incomplete output from traceroute. No routes found.\n" % host)
-            gateways.append(None)
+            error = "incomplete output from traceroute. No routes found."
+            sys.stderr.write("%s: %s\n" % (host, error))
+            gateways.append((None, error))
             dot(tty_red)
             continue
 
@@ -3957,7 +3974,7 @@ def scan_parents_of(hosts):
         # this in monitoring_host.
         elif len(routes) == 1:
             if ip == nagios_ip:
-                gateways.append(None) # We are the monitoring host
+                gateways.append((None, "")) # We are the monitoring host
                 dot(tty_white, 'N')
             else:
                 gateways.append( (monitoring_host, nagios_ip) )
@@ -3972,8 +3989,10 @@ def scan_parents_of(hosts):
             route = r
             break
         if not route:
-            sys.stderr.write("%s: No usable routing information\n" % host)
-            gateways.append(None)
+            error = "No usable routing information"
+            if not silent:
+                sys.stderr.write("%s: %s\n" % (host, error))
+            gateways.append((None, error))
             dot(tty_blue)
             continue
 
@@ -3982,7 +4001,7 @@ def scan_parents_of(hosts):
         gateway = ip_to_hostname(route)
         if opt_verbose:
             sys.stdout.write("%s(%s) " % (gateway, gateway_ip))
-        gateways.append( (gateway, gateway_ip) )
+        gateways.append( ((gateway, gateway_ip), "") )
         dot(tty_green, 'G')
     return gateways
 

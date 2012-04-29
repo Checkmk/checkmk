@@ -30,6 +30,7 @@
       retry only hosts that have failed in a previous inventory.
     * You can configure parents now (via a host attribute, no rules are
       neccessary).
+    * You can now do an automated scan for parents and layer 3 (IP)
     * FIX: fix page header after confirmation dialogs
     * FIX: Fixed umlaut problem in host aliases and ip addresses created by WATO
     * FIX: Fixed exception caused by validation problems during editing tags in WATO

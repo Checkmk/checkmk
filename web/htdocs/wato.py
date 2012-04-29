@@ -2975,6 +2975,8 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
                     gw_folder = g_folder[".folders"]["parents"]
                     load_hosts(gw_folder)
                 else:
+                    config.need_permission("wato.manage_folders")
+                    check_folder_permissions(g_folder, "write")
                     gw_folder = {
                         ".name"      : "parents",
                         ".parent"    : g_folder,
@@ -2992,6 +2994,8 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
                 load_hosts(gw_folder)
 
             # Create gateway host
+            config.need_permission("wato.manage_hosts")
+            check_folder_permissions(gw_folder, "write")
             if dns_name:
                 gw_host = dns_name
             elif site_id:
@@ -3032,6 +3036,10 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
     if effective["parents"] == parents:
         return _("Parents unchanged at %s") %  \
                 (parents and ",".join(parents) or _("none")), False, gwcreat
+
+
+    config.need_permission("wato.edit_hosts")
+    check_host_permissions(host[".name"], folder=folder)
 
     if force_explicit:
         host["parents"] = parents

@@ -2052,6 +2052,7 @@ def show_service_table(host, firsttime):
         ( _("Obsolete services (being checked, but should be ignored)"), "obsolete", True ),
         ( _("Ignored services (configured away by admin)"), "ignored", False ),
         ( _("Vanished services (checked, but no longer exist)"), "vanished", True ),
+        ( _("Active checks"), "active", None ),
         ( _("Manual services (defined in main.mk)"), "manual", None ),
         ( _("Legacy services (defined in main.mk)"), "legacy", None )
         ]:
@@ -2081,27 +2082,31 @@ def show_service_table(host, firsttime):
 
             # Icon for Rule editor, Check parameters
             html.write("<td>")
+            varname = None
             if checkgroup:
                 varname = "checkgroup_parameters:" + checkgroup
-                if varname in g_rulespecs:
-                    rulespec = g_rulespecs[varname]
-                    url = make_link([("mode", "edit_ruleset"),
-                                     ("varname", varname),
-                                     ("host", hostname),
-                                     ("item", mk_repr(item))])
-                    try:
-                        rulespec["valuespec"].validate_datatype(params, "")
-                        rulespec["valuespec"].validate_value(params, "")
-                        paramtext = rulespec["valuespec"].value_to_text(params)
-                    except Exception, e:
-                        if config.debug:
-                            raise
-                        paramtext = _("Invalid check parameter: %s!") % e
-                        paramtext += _(" The parameter is: %r") % (params,)
+            elif state_type == "active":
+                varname = "active_checks:" + ct
 
-                    title = "Check parameters for this service: " + paramtext
-                    html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
-                       (url, title))
+            if varname and varname in g_rulespecs:
+                rulespec = g_rulespecs[varname]
+                url = make_link([("mode", "edit_ruleset"),
+                                 ("varname", varname),
+                                 ("host", hostname),
+                                 ("item", mk_repr(item))])
+                try:
+                    rulespec["valuespec"].validate_datatype(params, "")
+                    rulespec["valuespec"].validate_value(params, "")
+                    paramtext = rulespec["valuespec"].value_to_text(params)
+                except Exception, e:
+                    if config.debug:
+                        raise
+                    paramtext = _("Invalid check parameter: %s!") % e
+                    paramtext += _(" The parameter is: %r") % (params,)
+
+                title = "Check parameters for this service: " + paramtext
+                html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
+                   (url, title))
 
             html.write("</td>")
 

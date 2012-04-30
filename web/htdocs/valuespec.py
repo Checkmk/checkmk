@@ -717,7 +717,7 @@ class Checkbox(ValueSpec):
 
 # A type-save dropdown choice. Parameters:
 # help_separator: if you set this to a character, e.g. "-", then
-# value_to_text will omit texts from the character up to the end of
+# value_to_texg will omit texts from the character up to the end of
 # a choices name.
 # Note: The list of choices may contain 2-tuples or 3-tuples.
 # The format is (value, text {, icon} )

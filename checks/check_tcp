@@ -1,0 +1,29 @@
+# Formalized parameters:
+# ( port, settings )
+# ( 22, {
+#   "response_time" : ( 0.2, 0.4 )
+# })
+
+
+def check_tcp_arguments(params):
+    port, settings = params
+    args = ' -p %d' % port
+    if "response_time" in settings:
+        args += ' -w %f -c %f' % (
+            settings["response_time"][0]/1000.0,
+            settings["response_time"][1]/1000.0)
+    if settings.get("escape_send_string"):
+        args += ' --escape'
+    if "send_string" in settings:
+        args += ' -s %s' % quote_shell_string(settings["send_string"])
+
+
+    return args
+
+active_check_info['tcp'] = {
+    "command_line"        : '$USER1$/check_tcp -H $HOSTADDRESS$ $ARG1$',
+    "argument_function"   : check_tcp_arguments,
+    "service_description" : lambda args: "TCP Port %d" % args[0],
+    "has_perfdata"        : True,
+}
+

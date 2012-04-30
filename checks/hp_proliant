@@ -1,0 +1,51 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Author: Bastian Kuhn <bk@mathias-kettner.de>
+
+# General Status:
+# '.1.3.6.1.4.1.232.2.2.2.1.0'          => Serial Number of Server
+# '.1.3.6.1.4.1.232.11.2.14.1.1.5.0'    => cpqHoFwVerVersion
+# '.1.3.6.1.4.1.232.11.1.3.0'           => cpqHoMibCondition
+
+hp_proliant_generel_status_map =        { 1: 'Other',    2: 'Ok',     3: 'Degraded', 4: 'Failed' }
+hp_proliant_generel_status2nagios_map = { 'Other':       2, 'Ok':     0, 'Degraded': 1, 'Failed': 2, }
+
+def inventory_proliant_general(info):
+    if len(info) > 0 and len(info[0]) > 1:
+        return [ (None, None) ]
+
+def check_proliant_general(item, no_params, info):
+    snmp_state = hp_proliant_status_map[int(info[0][0])]
+    status     = hp_proliant_status2nagios_map[snmp_state]
+    return (status, "%s - General Status is %s (Firmware: %s, S/N: %s)" %
+                        (nagios_state_names[status], snmp_state, info[0][1], info[0][2]))
+
+
+check_info['hp_proliant'] = (check_proliant_general, "General Status", 0,  inventory_proliant_general)
+snmp_info['hp_proliant']  = ( ".1.3.6.1.4.1.232", [ "11.1.3.0", "11.2.14.1.1.5.0", "2.2.2.1.0" ] )
+snmp_scan_functions['hp_proliant'] = \
+    lambda oid: "8072.3.2.10" in oid(".1.3.6.1.2.1.1.2.0")

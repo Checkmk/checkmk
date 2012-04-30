@@ -10983,17 +10983,13 @@ def validate_all_hosts(hostnames, force_all = False):
 #   | Functions needed at various places                                   |
 #   '----------------------------------------------------------------------'
 
+import base64
+
 def mk_eval(s):
-    if config.debug:
-        return eval(s)
-    else:
-        return pickle.loads(s)
+    return pickle.loads(base64.b64decode(s))
 
 def mk_repr(s):
-    if config.debug:
-        return repr(s)
-    else:
-        return pickle.dumps(s)
+    return base64.b64encode(pickle.dumps(s))
 
 # Returns true when at least one folder is defined in WATO
 def have_folders():

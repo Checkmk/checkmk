@@ -220,7 +220,7 @@ simulation_mode                    = False
 agent_simulator                    = False
 perfdata_format                    = "pnp" # also possible: "standard"
 debug_log                          = None
-monitoring_host                    = "localhost" # your Nagios host
+monitoring_host                    = None # deprecated
 max_num_processes                  = 50
 
 # SNMP communities and encoding
@@ -3854,9 +3854,10 @@ def do_scan_parents(hosts):
                         gateway_hosts.add(gateway)
                         parent_hosts.append("%s|parent|ping" % gateway)
                         parent_ips[gateway] = gateway_ip
-                        parent_rules.append( (monitoring_host, [gateway]) ) # make Nagios a parent of gw
+                        if monitoring_host:
+                            parent_rules.append( (monitoring_host, [gateway]) ) # make Nagios a parent of gw
                 parent_rules.append( (gateway, [host]) )
-            elif host != monitoring_host:
+            elif host != monitoring_host and monitoring_host:
                 # make monitoring host the parent of all hosts without real parent
                 parent_rules.append( (monitoring_host, [host]) )
 
@@ -3878,7 +3879,11 @@ def do_scan_parents(hosts):
     sys.stdout.write("\nWrote %s\n" % outfilename)
 
 def scan_parents_of(hosts, silent=False, settings={}):
-    nagios_ip = lookup_ipaddress(monitoring_host)
+    if monitoring_host:
+        nagios_ip = lookup_ipaddress(monitoring_host)
+    else:
+        nagios_ip = None
+
     os.putenv("LANG", "")
     os.putenv("LC_ALL", "")
 
@@ -3981,11 +3986,13 @@ def scan_parents_of(hosts, silent=False, settings={}):
         # this in monitoring_host.
         elif len(routes) == 1:
             if ip == nagios_ip:
-                gateways.append((None, "root", "")) # We are the root-monitoring host
+                gateways.append( (None, "root", "") ) # We are the root-monitoring host
                 dot(tty_white, 'N')
-            else:
+            elif monitoring_host:
                 gateways.append( ((monitoring_host, nagios_ip, None), "direct", "") )
                 dot(tty_cyan, 'L')
+            else:
+                gateways.append( (None, "direct", "") )
             continue
 
         # Try far most route which is not identical with host itself

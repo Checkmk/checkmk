@@ -16,6 +16,7 @@
     * Filter for times now accept ranges (from ... until)
     * New view setting for page header: repeat. This repeats the
       column headers every 20'th row.
+    * FIX: Fixed problem with new eval/pickle
 
     Checks & Agents:
     * FIX: Made logwatch parsing mechanism a little more robust

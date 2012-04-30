@@ -766,7 +766,7 @@ def ajax_speedometer():
         # Recompute the scheduled_rate only if it is not known (first call)
         # or if one of the sites has been restarted. The computed value cannot
         # change during the monitoring since it just reflects the configuration.
-        # That way we save CPU ressources since the computation of the
+        # That way we save CPU resources since the computation of the
         # scheduled checks rate needs to loop over all hosts and services.
         if last_program_start != program_start:
             scheduled_rate = 0.0

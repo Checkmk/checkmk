@@ -860,7 +860,7 @@ register_rule(group,
              "in order to support as many devices as possible. Please use this ruleset in order "
              "to configure SNMP v2c for as many hosts as possible. That version has two advantages: "
              "it supports 64 bit counters, which avoids problems with wrapping counters at too "
-             "much traffic. And it support bulk walk, which saves much CPU and network ressources. "
+             "much traffic. And it supports bulk walk, which saves much CPU and network resources. "
              "Please be aware, however, that there are some broken devices out there, that support "
              "bulk walk but behave very bad when it is used. When you want to enable v2c while not using "
              "bulk walk, please use the rule set snmpv2c_hosts instead."))

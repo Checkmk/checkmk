@@ -20,6 +20,8 @@
     Checks & Agents:
     * FIX: Made logwatch parsing mechanism a little more robust
       (Had problems with emtpy sections from windows agent)
+    * FIX: brocade_fcport: Configuration of portsates now possible  
+
 
     WATO:
     * Reimplemented folder listing in host/folders module

@@ -247,7 +247,7 @@ def check_brocade_fcport(item, params, info):
     # Port Status (physical layer)
     errorflag = ""
     if params.get("phystate") != None and phystate != params['phystate'] \
-        and not (type(params['phystate']) == list and phystate in params['phystate']):
+        and not (type(params['phystate']) == list and phystate in map(int, params['phystate'])):
         # noCard (1), noTransceiver (2), laserFault (3), noLight (4),
         # noSync (5), inSync (6), portFault (7), diagFault (8), lockRef (9)
         if phystate in [1, 6]:
@@ -261,7 +261,7 @@ def check_brocade_fcport(item, params, info):
     errorflag = ""
     #unknown(0) online(1) offline(2) testing(3) faulty(4) ]
     if params.get("opstate") != None and opstate != params['opstate'] \
-        and not (type(params['opstate']) == list and opstate in params['opstate']):
+        and not (type(params['opstate']) == list and opstate in map(int, params['opstate'])):
         if opstate in [1, 3]:
             errorflag = "(!)"
             summarystate = max(summarystate, 1)
@@ -273,7 +273,7 @@ def check_brocade_fcport(item, params, info):
     errorflag = ""
     # online(1) offline(2) testing(3) faulty(4)
     if params.get("admstate") and admstate != params['admstate'] \
-        and not (type(params['admstate']) == list and admstate in params['admstate']):
+        and not (type(params['admstate']) == list and admstate in map(int, params['admstate'])):
         if admstate not in [2, 4]:
             errorflag = "(!)"
             summarystate = max(summarystate, 1)

@@ -240,15 +240,15 @@ checkgroups.append((
                 Optional(
                     ListChoice(
                         title = _("Allowed states (otherwise check will be critical)"),
-                        choices = [ ("1", _("noCard") ),
-                                    ("2", _("noTransceiver") ),
-                                    ("3", _("laserFault") ),
-                                    ("4", _("noLight") ),
-                                    ("5", _("noSync") ),
-                                    ("6", _("inSync") ),
-                                    ("7", _("portFault") ),
-                                    ("8", _("diagFault") ),
-                                    ("9", _("lockRef") ),
+                        choices = [ (1, _("noCard") ),
+                                    (2, _("noTransceiver") ),
+                                    (3, _("laserFault") ),
+                                    (4, _("noLight") ),
+                                    (5, _("noSync") ),
+                                    (6, _("inSync") ),
+                                    (7, _("portFault") ),
+                                    (8, _("diagFault") ),
+                                    (9, _("lockRef") ),
                                   ]
                     ),
                     title = _("Physical state of port") ,
@@ -260,11 +260,11 @@ checkgroups.append((
                 Optional(
                     ListChoice(
                         title = _("Allowed states (otherwise check will be critical)"),
-                        choices = [ ("0", _("unknown") ),
-                                    ("1", _("online") ),
-                                    ("2", _("offline") ),
-                                    ("3", _("testing") ),
-                                    ("4", _("faulty") ),
+                        choices = [ (0, _("unknown") ),
+                                    (1, _("online") ),
+                                    (2, _("offline") ),
+                                    (3, _("testing") ),
+                                    (4, _("faulty") ),
                                   ]
                     ),
                     title = _("Operational state") ,
@@ -276,10 +276,10 @@ checkgroups.append((
                 Optional(
                     ListChoice(
                         title = _("Allowed states (otherwise check will be critical)"),
-                        choices = [ ("1", _("online") ),
-                                    ("2", _("offline") ),
-                                    ("3", _("testing") ),
-                                    ("4", _("faulty") ),
+                        choices = [ (1, _("online") ),
+                                    (2, _("offline") ),
+                                    (3, _("testing") ),
+                                    (4, _("faulty") ),
                                   ]
                     ),
                     title = _("Administrative state") ,

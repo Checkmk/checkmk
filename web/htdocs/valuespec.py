@@ -143,13 +143,13 @@ class Age(ValueSpec):
 
         html.write("<div>")
         html.number_input(varprefix+'_days', days, 2)
-        html.write(_("days"))
+        html.write(" %s " % _("days"))
         html.number_input(varprefix+'_hour', hours, 2)
-        html.write(_("hours"))
+        html.write(" %s " % _("hours"))
         html.number_input(varprefix+'_minutes', minutes, 2)
-        html.write(_("min"))
+        html.write(" %s " % _("min"))
         html.number_input(varprefix+'_seconds', seconds, 2)
-        html.write(_("sec"))
+        html.write(" %s " % _("sec"))
         html.write("</div>")
 
     def from_html_vars(self, varprefix):
@@ -508,7 +508,7 @@ class ListOfStrings(ValueSpec):
             html.write('</div>')
         html.write('</div>')
 
-        html.javascript("list_of_strings_init('%s');" % vp);
+        html.final_javascript("list_of_strings_init('%s');" % vp);
 
     def canonical_value(self):
         return []
@@ -1367,6 +1367,9 @@ class Tuple(ValueSpec):
     def canonical_value(self):
         return tuple([x.canonical_value() for x in self._elements])
 
+    def default_value(self):
+        return tuple([x.default_value() for x in self._elements])
+
     def render_input(self, varprefix, value):
         html.write('<table class="valuespec_tuple">')
         if not self._vertical:
@@ -1447,18 +1450,19 @@ class Dictionary(ValueSpec):
         html.write("<table class=dictionary>")
         for param, vs in self._elements:
             html.write("<tr><td class=dictleft>")
-            vp = varprefix + "_" + param
-            div_id = vp
+            div_id = varprefix + "_d_" + param
+            vp     = varprefix + "_p_" + param
             if self._optional_keys:
                 visible = html.get_checkbox(vp + "_USE")
                 if visible == None:
                     visible = param in value
                 html.checkbox(vp + "_USE", param in value,
-                              onclick="valuespec_toggle_option(this, %r)" % div_id)
+                              onclick="valuespec_toggle_option(this, %r)" % div_id,
+                              label=vs.title())
             else:
                 visible = True
+                html.write(" %s" % vs.title())
 
-            html.write(" %s" % vs.title())
             if self._columns == 2:
                 html.write(':')
                 if vs.help():

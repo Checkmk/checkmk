@@ -1426,9 +1426,11 @@ function list_of_strings_add_focus(oLastChild) {
         var o = oLastChild.childNodes[j];
         if (o.tagName == "INPUT") {
             o.onfocus = function(e) { return list_of_strings_extend(this); };
+            return;
         }
     }
 }
+
 
 /* Is called when the last input field in a ListOfString gets focus.
    In that case a new input field is being appended. */

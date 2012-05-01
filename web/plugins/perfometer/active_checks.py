@@ -34,3 +34,11 @@ perfometers["check-tcp"]           = perfometer_check_tcp
 perfometers["check_tcp"]           = perfometer_check_tcp
 perfometers["check_mk_active-tcp"] = perfometer_check_tcp
 
+def perfometer_check_http(row, check_command, perfdata):
+    time_ms = float(perfdata[0][1]) * 1000.0
+    return "%.1f ms" % time_ms, \
+        perfometer_logarithmic(time_ms, 1000, 10, "#66ccff")
+
+perfometers["check-http"] = perfometer_check_http
+perfometers["check_http"] = perfometer_check_http
+perfometers["check_mk_active-http"] = perfometer_check_http

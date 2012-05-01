@@ -51,6 +51,9 @@ headrify ()
   elif [ "${headline:0:11}" = "#!/bin/bash" ] ; then
       comment="# "
       bangpath="#!/bin/bash"
+  elif [ "${headline:0:15}" = "#!/usr/bin/bash" ] ; then
+      comment="# "
+      bangpath="#!/usr/bin/bash"
   else
       bangpath=""
       case "${file##*/}" in

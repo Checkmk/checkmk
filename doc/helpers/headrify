@@ -97,11 +97,10 @@ if [ "$#" -gt 0 ] ; then
     headrify "$file"
   done
 else
-  { find -not -type l -and \( \
+  { find -not -type l -and -not -name "jquery*" -and \( \
       -name "Makefile" -or \
       -name "Makefile.am" -or \
       -name "configure.ac" -or \
-      -name "jquery.*" -or \
       -name "*.in" -or \
       -name "*.h" -or \
       -name "*.cc" -or \
@@ -111,7 +110,7 @@ else
       -name "*.php" -or \
       -name "*.sh" -or \
       -name "*.spec" \) ; \
-    rm -f checks/*~ ; ls checks/* ; echo agents/plugins/* agents/* | tr ' ' \\n | grep -vx agents/waitmax | fgrep -v /hpux/ | fgrep -v windows | fgrep -v .exe | fgrep -v /plugins | fgrep -v .hpux ; ls agents/windows/*.cc ; echo agents/windows/Makefile ; } \
+    rm -f checks/*~ ; ls checks/* ; echo agents/plugins/* agents/* | tr ' ' \\n | grep -vx agents/waitmax | fgrep -v hpux/ | fgrep -v windows | fgrep -v .exe | fgrep -v /plugins | fgrep -v .hpux ; ls agents/windows/*.cc ; echo agents/windows/Makefile ; } \
 	| grep -v /Privat/ | grep -v livestatus/nagios/ | grep -vx '' | \
   while read file
   do

@@ -1471,7 +1471,7 @@ class Dictionary(ValueSpec):
                 div_id, not visible and "none" or ""))
             if self._columns == 1 and vs.help():
                 html.write("<ul class=help>%s</ul>" % vs.help())
-            vs.render_input(vp, value.get(param, vs.canonical_value()))
+            vs.render_input(vp, value.get(param, vs.default_value()))
             html.write("</div></td></tr>")
         html.write("</table>")
 

@@ -8,17 +8,55 @@
 def check_tcp_arguments(params):
     port, settings = params
     args = ' -p %d' % port
+
     if "response_time" in settings:
         args += ' -w %f -c %f' % (
             settings["response_time"][0]/1000.0,
             settings["response_time"][1]/1000.0)
-    if settings.get("escape_send_string"):
-        args += ' --escape'
+
+    if "timeout" in settings:
+        args += ' -t %d' % settings["timeout"]
+
+    if "refuse_state" in settings:
+        args += ' -r %s' % settings["refuse_state"]
+        
     if "send_string" in settings:
         args += ' -s %s' % quote_shell_string(settings["send_string"])
 
+    if settings.get("escape_send_string"):
+        args += ' --escape'
+
+    if "expect" in settings:
+        for s in settings["expect"]:
+            args += ' -e %s' % quote_shell_string(s)
+
+    if settings.get("expect_all"):
+        args += ' -A'
+
+    if settings.get("jail"):
+        args += ' --jail'
+
+    if "mismatch_state" in settings:
+        args += ' -M %s' % settings["mismatch_state"]
+
+    if "delay" in settings:
+        args += ' -d %d' % settings["delay"]
+
+    if "maxbytes" in settings:
+        args += ' -m %d' % settings["maxbytes"]
+
+    if settings.get("ssl"):
+        args += ' --ssl'
+
+    if "cert_days" in settings:
+        args += ' -D %d' % settings["cert_days"]
+
+    if "quit_string" in settings:
+        args += ' -q %s' % quote_shell_string(settings["quit_string"])
 
     return args
+
+
 
 active_check_info['tcp'] = {
     "command_line"        : '$USER1$/check_tcp -H $HOSTADDRESS$ $ARG1$',

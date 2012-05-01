@@ -19,9 +19,22 @@ register_rule(group,
                      Tuple(
                          title = _("Expected response time"),
                          elements = [
-                             Float(title = _("Warning at"), unit = "ms"),
-                             Float(title = _("Critical at"), unit = "ms"),
+                             Float(
+                                 title = _("Warning at"), 
+                                 unit = "ms",
+                                 default_value = 100.0),
+                             Float(
+                                 title = _("Critical at"), 
+                                 unit = "ms",
+                                 default_value = 200.0),
                          ])
+                    ),
+                    ( "timeout",
+                      Integer(
+                          title = _("Seconds before connection times out"),
+                          label = _("sec"),
+                          default_value = 10,
+                      )
                     ),
                     ( "refuse_state",
                       DropdownChoice(
@@ -31,19 +44,6 @@ register_rule(group,
                                       ('ok',   _("OK")),
                                     ])
                     ),
-# Das hier fehlt noch:
-#  -m, --maxbytes=INTEGER
-#     Close connection once more than this number of bytes are received
-#  -d, --delay=INTEGER
-#     Seconds to wait between sending string and polling for response
-#  -D, --certificate=INTEGER
-#     Minimum number of days a certificate has to be valid.
-#  -S, --ssl
-#     Use SSL for the connection.
-#  -t, --timeout=INTEGER
-#     Seconds before connection times out (default: 10)
-# Und dann fehlt noch bei den meisten die Umseztung in Parameter
-
 
                     ( "send_string",
                       TextAscii(
@@ -69,12 +69,14 @@ register_rule(group,
                           totext = _("expect all"),
                           title = _("Expect <b>all</b> of those strings in the response"))
                     ),
-                    ( "quit_string",
-                      TextAscii(
-                          title = _("Final string to send"),
-                          help = _("String to send server to initiate a clean close of "
-                                   "the connection"),
-                          size = 30)
+                    ( "jail",
+                      FixedValue(
+                          value = True,
+                          title = _("Hide response from socket"),
+                          help = _("As soon as you configure expected strings in "
+                                   "the response the check will output the response - "
+                                   "as long as you do not hide it with this option"),
+                          totext = _("hide response"))
                     ),
                     ( "mismatch_state",
                       DropdownChoice(
@@ -83,6 +85,47 @@ register_rule(group,
                                       ('warn', _("WARNING")),
                                       ('ok',   _("OK")),
                                     ])
+                    ),
+                    ( "delay",
+                      Integer(
+                          title = _("Seconds to wait before polling"),
+                          help = _("Seconds to wait between sending string and polling for response"),
+                          label = _("sec"),
+                          default_value = 0,
+                      )
+                    ),
+                    ( "maxbytes",
+                      Integer(
+                          title = _("Maximum number of bytes to receive"),
+                          help = _("Close connection once more than this number of "
+                                   "bytes are received. Per default the number of "
+                                   "read bytes is not limited. This setting is only "
+                                   "used if you expect strings in the response."),
+                          default_value = 1024,
+                      ),
+                    ),
+
+                    ( "ssl",
+                      FixedValue(
+                          value = True,
+                          totext = _("use SSL"),
+                          title = _("Use SSL for the connection."))
+                      
+                    ),
+                    ( "cert_days",
+                      Integer(
+                          title = _("SSL certificate validation"),
+                          help = _("Minimum number of days a certificate has to be valid"),
+                          label = _("days"),
+                          default_value = 30)
+                    ),
+
+                    ( "quit_string",
+                      TextAscii(
+                          title = _("Final string to send"),
+                          help = _("String to send server to initiate a clean close of "
+                                   "the connection"),
+                          size = 30)
                     ),
                 ]),
         ]

@@ -110,7 +110,7 @@ else
       -name "*.php" -or \
       -name "*.sh" -or \
       -name "*.spec" \) ; \
-    rm -f checks/*~ ; ls checks/* ; echo agents/plugins/* agents/* | tr ' ' \\n | grep -vx agents/waitmax | fgrep -v hpux/ | fgrep -v windows | fgrep -v .exe | fgrep -v /plugins | fgrep -v .hpux ; ls agents/windows/*.cc ; echo agents/windows/Makefile ; } \
+    rm -f checks/*~ ; ls checks/* ; echo agents/plugins/* agents/* | tr ' ' \\n | grep -vx agents/waitmax | fgrep -v agents/hpux | fgrep -v windows | fgrep -v .exe | fgrep -v /plugins | fgrep -v .hpux ; ls agents/windows/*.cc ; echo agents/windows/Makefile ; } \
 	| grep -v /Privat/ | grep -v livestatus/nagios/ | grep -vx '' | \
   while read file
   do

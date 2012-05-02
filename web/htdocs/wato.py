@@ -8718,7 +8718,7 @@ def mode_edit_hosttag(phase):
 def load_hosttags():
     filename = multisite_dir + "hosttags.mk"
     if not os.path.exists(filename):
-        return []
+        return [], []
     try:
         vars = { 
             "wato_host_tags" : [],

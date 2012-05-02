@@ -1,0 +1,9 @@
+Title: Wato: Berechitungen bei Rulsets
+Component: wato
+State: open
+Date: 2012-04-30 17:05:42
+Targetversion: 1.1.12
+Class: bug
+
+Wird die berechtigung auf eines Ordners / Main Directory auf einen Contact Group eingeschränkt, 
+können user auch ohne in der Gruppe zu sein dort Regel anlegen und löschen

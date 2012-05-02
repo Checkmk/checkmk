@@ -1,0 +1,11 @@
+Title: Actions nach Service search funktionieren nicht
+Component: multisite
+State: open
+Date: 2012-05-02 12:47:15
+Targetversion: 1.1.12
+Class: bug
+
+im aktuellen Multisite gibt es einen Bug im Service Search View wenn man
+von dort aus mit den gefundenen Elementen irgend eine Aktion ausführen
+will passiert einfach nix (es wird einfach ein leerer View nur mit WATO
+Button angezeigt.

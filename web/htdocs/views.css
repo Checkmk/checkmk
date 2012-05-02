@@ -158,8 +158,8 @@ table.navi div.whiteborder table.form {
 
 div.floatfilter {
     margin: 0px 3px 3px 0px;
-    width: 320px;
-    height: 51px;
+    width: 325px;
+    height: 53px;
     /* display: inline-block; */
     float: left;
     border: 1px solid #458;
@@ -167,29 +167,31 @@ div.floatfilter {
     background-image: url("images/form_background.png"); 
     background-repeat: repeat;
     -moz-border-radius: 5px;
+    border-radius: 5px;
 }
 
 div.floatfilter.double {
-    height: 106px;
+    height: 111px;
 }
 
 div.floatfilter input[type=text] {
-    width: 307px;
+    width: 311px;
 }
 
 div.floatfilter .legend {
     color: white;
     margin-bottom: 1px;
-    width: 310px;
+    width: 315px;
     height: 20px;
     background-image: url("images/form_background.png"); 
     background-repeat: repeat;
     padding: 3px 5px 0px 5px;
     -moz-border-radius: 5px 5px 0px 0px;
+    border-radius: 5px 5px 0px 0px;
 }
 
 div.floatfilter .content {
-    width: 316px;
+    width: 321px;
     height: 23px;
     margin-top: 0px;
     margin-left: 0px;

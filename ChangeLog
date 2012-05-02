@@ -17,6 +17,7 @@
     * New view setting for page header: repeat. This repeats the
       column headers every 20'th row.
     * FIX: Fixed problem with new eval/pickle
+    * FIX: Fixed commands in host/service search views
 
     Checks & Agents:
     * FIX: Made logwatch parsing mechanism a little more robust

@@ -5706,7 +5706,7 @@ class MultipleTimeRanges(ValueSpec):
         for c in range(0, self._num_columns):
             if c:
                 html.write(" &nbsp; ")
-            if len(value) >= c:
+            if c < len(value):
                 v = value[c]
             else:
                 v = self._rangevs.canonical_value()
@@ -5750,16 +5750,13 @@ def mode_edit_timeperiod(phase):
     def convert_to_range(value):
         return tuple(map(convert_to_tod, value))
 
-    def timeperiod_ranges(vp, keyname):
+    def timeperiod_ranges(vp, keyname, new):
         ranges = timeperiod.get(keyname, [])
         value = []
         for range in ranges:
             value.append(convert_from_range(range))
-        while len(value) < num_columns:
-            if len(value) == 0 and new:
-                value.append(((0,0),(24,0)))
-            else:
-                value.append(None)
+        if len(value) == 0 and new:
+            value.append(((0,0),(24,0)))
 
         html.write("<td>")
         MultipleTimeRanges().render_input(vp, value)
@@ -5811,6 +5808,8 @@ def mode_edit_timeperiod(phase):
                 ranges = get_ranges(weekday)
                 if ranges:
                     timeperiod[weekday] = ranges
+                elif weekday in timeperiod:
+                    del timeperiod[weekday]
 
             # extract ranges for custom days
             for e in range(0, num_exceptions):
@@ -5883,7 +5882,7 @@ def mode_edit_timeperiod(phase):
     for weekday, weekday_alias in weekdays:
         ranges = timeperiod.get(weekday)
         html.write("<tr><td class=name>%s</td>" % weekday_alias)
-        timeperiod_ranges(weekday, weekday)
+        timeperiod_ranges(weekday, weekday, new)
         html.write("</tr>")
     html.write("</table></td></tr>")
 
@@ -5913,7 +5912,7 @@ def mode_edit_timeperiod(phase):
         html.write("<tr><td class=name>")
         html.text_input(varprefix + "_name", exname)
         html.write("</td>")
-        timeperiod_ranges(varprefix, exname)
+        timeperiod_ranges(varprefix, exname, False)
         html.write("</tr>")
     html.write("</table></td></tr>")
 

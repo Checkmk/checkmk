@@ -6561,7 +6561,8 @@ def update_distributed_wato_file(sites):
     for siteid, site in sites.items():
         if site.get("replication"):
             distributed = True
-        create_distributed_wato_file(siteid, site.get("replication"))
+        if site_is_local(siteid):
+            create_distributed_wato_file(siteid, site.get("replication"))
     if not distributed:
         delete_distributed_wato_file()
 

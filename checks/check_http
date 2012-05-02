@@ -63,6 +63,7 @@ def check_http_arguments(params):
     if "auth" in settings:
         auth = settings["auth"]
         args += ' -a %s:%s' % (quote_shell_string(auth[0]), quote_shell_string(auth[1]))
+
     if "proxy_auth" in settings:
         auth = settings["auth"]
         args += ' -b %s:%s' % (quote_shell_string(auth[0]), quote_shell_string(auth[1]))
@@ -100,7 +101,7 @@ def check_http_arguments(params):
 active_check_info['http'] = {
     "command_line"        : '$USER1$/check_http -I $HOSTADDRESS$ $ARG1$',
     "argument_function"   : check_http_arguments,
-    "service_description" : lambda args: "HTTP %s" % args[0],
+    "service_description" : lambda params: "HTTP %s" % params[0],
     "has_perfdata"        : True,
 }
 

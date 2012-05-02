@@ -39,6 +39,7 @@
     * FIX: fix page header after confirmation dialogs
     * FIX: Fixed umlaut problem in host aliases and ip addresses created by WATO
     * FIX: Fixed exception caused by validation problems during editing tags in WATO
+    * FIX: create sample config only if both rules.mk and hosttags.mk are missing
 
 1.2.0b2:
     Core:

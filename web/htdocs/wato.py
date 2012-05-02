@@ -10375,7 +10375,7 @@ def page_user_profile():
 # or rules have been defined *ever*.
 def create_sample_config():
     if os.path.exists(multisite_dir + "hosttags.mk") \
-        or os.path.exists(multisite_dir + "rules.mk"):
+        or os.path.exists(root_dir + "rules.mk"):
         return
 
     # Example values for host tags

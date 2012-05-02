@@ -8608,7 +8608,8 @@ def mode_edit_hosttag(phase):
                 taggroup = tag_id, title, new_choices
                 hosttags.append(taggroup)
                 save_hosttags(hosttags, auxtags)
-                config.wato_host_tags = hosttags
+                # Make sure, that all tags are active (also manual ones from main.mk)
+                config.load_config()
                 declare_host_tag_attributes()
                 rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts
                 log_pending(SYNCRESTART, None, "edit-hosttags", _("Created new host tag group '%s'") % tag_id)
@@ -8654,7 +8655,7 @@ def mode_edit_hosttag(phase):
                 message = rename_host_tags_after_confirmation(tag_id, operations)
                 if message:
                     save_hosttags(new_hosttags, auxtags)
-                    config.wato_host_tags = new_hosttags
+                    config.load_config()
                     declare_host_tag_attributes()
                     rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts
                     log_pending(SYNCRESTART, None, "edit-hosttags", _("Edited host tag group %s (%s)") % (message, tag_id))

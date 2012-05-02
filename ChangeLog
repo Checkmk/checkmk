@@ -40,6 +40,8 @@
     * FIX: Fixed umlaut problem in host aliases and ip addresses created by WATO
     * FIX: Fixed exception caused by validation problems during editing tags in WATO
     * FIX: create sample config only if both rules.mk and hosttags.mk are missing
+    * FIX: do not loose host tags when both using WATO-configured and 
+      manual ones (via multisite.mk)
 
 1.2.0b2:
     Core:

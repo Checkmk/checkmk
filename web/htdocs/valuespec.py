@@ -1499,7 +1499,7 @@ class Dictionary(ValueSpec):
     def from_html_vars(self, varprefix):
         value = {}
         for param, vs in self._elements:
-            vp = varprefix + "_" + param
+            vp = varprefix + "_p_" + param
             if not self._optional_keys or html.get_checkbox(vp + "_USE"):
                 value[param] = vs.from_html_vars(vp)
         return value
@@ -1510,7 +1510,7 @@ class Dictionary(ValueSpec):
 
         for param, vs in self._elements:
             if param in value:
-                vp = varprefix + "_" + param
+                vp = varprefix + "_p_" + param
                 try:
                     vs.validate_datatype(value[param], vp)
                 except MKUserError, e:
@@ -1528,7 +1528,7 @@ class Dictionary(ValueSpec):
     def validate_value(self, value, varprefix):
         for param, vs in self._elements:
             if param in value:
-                vp = varprefix + "_" + param
+                vp = varprefix + "_p_" + param
                 vs.validate_value(value[param], vp)
             elif not self._optional_keys:
                 raise MKUserError(varprefix, _("The entry %s is missing") % vp.title())

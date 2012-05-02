@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,21 +23,32 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+$desc = str_replace("_", " ", $servicedesc);
+$opt[1] = "-X0 --vertical-label \"Response Time (ms)\"  --title \"$hostname / $desc\" ";
 
-def perfometer_check_tcp(row, check_command, perfdata):
-    time_ms = float(perfdata[0][1]) * 1000.0
-    return "%.3f ms" % time_ms, \
-        perfometer_logarithmic(time_ms, 1000, 10, "#20dd30")
+$def[1] = ""
+ . "DEF:var1=$RRDFILE[1]:$DS[1]:MAX " 
+ . "CDEF:ms=var1,1000,* "
+ . "AREA:ms#66ccff:\"Response Time \" " 
+ . "LINE1:ms#000000:\"\" " 
+ . "GPRINT:ms:LAST:\"%3.3lg ms LAST \" " 
+ . "GPRINT:ms:MAX:\"%3.3lg ms MAX \" " 
+ . "GPRINT:ms:AVERAGE:\"%3.3lg ms AVERAGE \" "
+;
 
-perfometers["check-tcp"]           = perfometer_check_tcp
-perfometers["check_tcp"]           = perfometer_check_tcp
-perfometers["check_mk_active-tcp"] = perfometer_check_tcp
+$opt[2] = "--vertical-label \"Size (Bytes)\" --title \"Size of response\" ";
+$def[2] =  ""
+  . "DEF:size=$RRDFILE[2]:$DS[2]:AVERAGE " ;
+if ($WARN[2] != "")
+    $def[2] .= "HRULE:$WARN[2]#FFFF00 ";
+if ($CRIT[2] != "")
+    $def[2] .= "HRULE:$CRIT[2]#FF0000 ";
+$def[2] .= ""
+ . "AREA:size#cc66ff:\"Response Time \" " 
+ . "LINE1:size#000000:\"\" " 
+ . "GPRINT:size:LAST:\"%3.0lf Bytes LAST \" " 
+ . "GPRINT:size:MAX:\"%3.0lf Bytes MAX \" " 
+ . "GPRINT:size:AVERAGE:\"%3.0lf Bytes AVERAGE \" "
+;
 
-def perfometer_check_http(row, check_command, perfdata):
-    time_ms = float(perfdata[0][1]) * 1000.0
-    return "%.1f ms" % time_ms, \
-        perfometer_logarithmic(time_ms, 1000, 10, "#66ccff")
-
-perfometers["check-http"] = perfometer_check_http
-perfometers["check_http"] = perfometer_check_http
-perfometers["check_mk_active-http"] = perfometer_check_http
+?>

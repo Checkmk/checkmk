@@ -184,7 +184,8 @@ register_rule(group,
                        help = _("Set this in order to specify the name of the "
                         "virtual host for the query (using HTTP/1.1). When you "
                         "leave this empty, then the IP address of the host "
-                        "will be used instead."))
+                        "will be used instead."),
+                       allow_empty = False)
                    ),
                    ( "uri",
                      TextAscii(
@@ -205,7 +206,7 @@ register_rule(group,
                          totext = _("use SSL/HTTPS"),
                          title = _("Use SSL/HTTPS for the connection."))
                    ),
-                   ( "certificate_age",
+                   ( "cert_days",
                      Integer(
                          title = _("Maximum certificate age"),
                          help = _("Minimum number of days a certificate has to be valid. "
@@ -246,6 +247,7 @@ register_rule(group,
                       TextAscii(
                           title = _("User Agent"),
                           help = _("String to be sent in http header as \"User Agent\""),
+                          allow_empty = False,
                       ),
                     ),
                     ( "add_headers",
@@ -311,6 +313,7 @@ register_rule(group,
                     ( "expect_string",
                       TextAscii(
                           title = _("Fixed string to expect in the content"),
+                          allow_empty = False,
                       )
                     ),
                     ( "expect_regex",
@@ -330,8 +333,8 @@ register_rule(group,
                           elements = [
                               TextAscii(
                                   title = _("HTTP POST data"),
-                                  help = _("Data to send via HTTP POST method. This data will be "
-                                    "URL-encoded by us."),
+                                  help = _("Data to send via HTTP POST method. "
+                                           "Please make sure, that the data is URL-encoded."),
                                   size = 40,
                               ),
                               TextAscii(

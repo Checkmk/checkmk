@@ -1273,7 +1273,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     painter_options.sort()
 
     # Fetch data. Some views show data only after pressing [Search]
-    if (only_count or (not view["mustsearch"]) or html.var("filled_in") == "filter"):
+    if (only_count or (not view["mustsearch"]) or html.var("filled_in") in ["filter", 'actions', 'confirm']):
         # names for additional columns (through Stats: headers)
         add_columns = datasource.get("add_columns", [])
 

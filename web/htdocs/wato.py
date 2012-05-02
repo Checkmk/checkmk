@@ -5645,8 +5645,8 @@ def mode_timeperiods(phase):
     html.write("<table class=data>")
     html.write("<tr><th>"
                + _("Actions") + "</th><th>"
-               + _("Name") + "</th><th>"
-               + _("Alias") + "</th></tr>")
+               + _("Name")    + "</th><th>"
+               + _("Alias")   + "</th></tr>")
 
     odd = "even"
     names = timeperiods.keys()
@@ -5694,61 +5694,81 @@ def save_timeperiods(timeperiods):
     out.write("timeperiods.update(%s)\n" % pprint.pformat(timeperiods))
 
 
+class MultipleTimeRanges(ValueSpec):
+    def __init__(self, **kwargs):
+        self._num_columns = kwargs.get("num_columns", 3)
+        self._rangevs = TimeofdayRange()
+
+    def canonical_value(self):
+        return [ ((0,0), (24,0)), None, None ]
+
+    def render_input(self, varprefix, value):
+        for c in range(0, self._num_columns):
+            if c:
+                html.write(" &nbsp; ")
+            if len(value) >= c:
+                v = value[c]
+            else:
+                v = self._rangevs.canonical_value()
+            self._rangevs.render_input(varprefix + "_%d" % c, v)
+
+    def value_to_text(self, value):
+        parts = []
+        for v in value:
+            parts.append(self._rangevs.value_to_text(v))
+        return ", ".join(parts)
+
+    def from_html_vars(self, varprefix):
+        value = []
+        for c in range(0, self._num_columns):
+            v = self._rangevs.from_html_vars(varprefix + "_%d" % c)
+            if v != None:
+                value.append(v)
+        return value
+
+    def validate_value(self, value, varprefix):
+        for c, v in enumerate(value):
+            self._rangevs.validate_value(v, varprefix + "_%d" % c)
+
+
 def mode_edit_timeperiod(phase):
     num_columns = 3
     num_exceptions = 10
 
+    # convert Check_MK representation of range to ValueSpec-representation
+    def convert_from_tod(tod):
+        # "00:30" -> (0, 30)
+        return tuple(map(int, tod.split(":")))
+    
+    def convert_from_range(range):
+        # ("00:30", "10:17") -> ((0,30),(10,17))
+        return tuple(map(convert_from_tod, range))
+
+    def convert_to_tod(value):
+        return "%02d:%02d" % value
+
+    def convert_to_range(value):
+        return tuple(map(convert_to_tod, value))
+
     def timeperiod_ranges(vp, keyname):
         ranges = timeperiod.get(keyname, [])
-        for c in range(num_columns):
-            if c < len(ranges):
-                fromto = ranges[c]
-            elif new and c == 0:
-                fromto = "00:00", "24:00"
+        value = []
+        for range in ranges:
+            value.append(convert_from_range(range))
+        while len(value) < num_columns:
+            if len(value) == 0 and new:
+                value.append(((0,0),(24,0)))
             else:
-                fromto = "", ""
-            html.write("<td>")
-            var_prefix = vp + "_%d_" % c
-            html.text_input(var_prefix + "from", fromto[0], cssclass = "timeperioddate")
-            html.write(" - ")
-            val = c == 0 and "24:00" or ""
-            html.text_input(var_prefix + "to", fromto[1], cssclass = "timeperioddate")
-            if c != num_columns - 1:
-                html.write("&nbsp; &nbsp; &nbsp;")
-            html.write("</td>")
+                value.append(None)
+
+        html.write("<td>")
+        MultipleTimeRanges().render_input(vp, value)
+        html.write("</td>")
 
     def get_ranges(varprefix):
-        ranges = []
-        for c in range(num_columns):
-            vp = "%s_%d_" % (varprefix, c)
-            begin = html.var(vp + "from", "").strip()
-            end  = html.var(vp + "to", "").strip()
-            if not begin and not end:
-                continue
-            if not begin:
-                begin = "00:00"
-            if not end:
-                end = "24:00"
-
-            begin, end = [ parse_bound(varprefix, w, b) for (w,b) in [ ("from", begin), ("to", end) ]]
-            ranges.append((begin, end))
-        return ranges
-
-
-    def parse_bound(vp,  what, bound):
-        # Fully specified
-        if re.match("^(24|[0-1][0-9]|2[0-3]):[0-5][0-9]$", bound):
-            return bound
-        # only hours
-        try:
-            b = int(bound)
-            if b <= 24 and b >= 0:
-                return "%02d:00" % b
-        except:
-            pass
-
-        raise MKUserError(vp + what,
-               _("Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format.") % bound)
+        value = MultipleTimeRanges().from_html_vars(varprefix)
+        MultipleTimeRanges().validate_value(value, varprefix)
+        return map(convert_to_range, value)
 
 
     name = html.var("edit") # missing -> new group

@@ -1200,6 +1200,133 @@ class AbsoluteDate(ValueSpec):
             return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
 
 
+# Valuespec for entering times like 00:35 or 16:17. Currently
+# no seconds are supported. But this could easily be added.
+# The value itself is stored as a pair of integers, a.g.
+# (0, 35) or (16, 17). If the user does not enter a time
+# the vs will return None.
+class Timeofday(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._allow_24_00 = kwargs.get("allow_24_00", False)
+        self._allow_empty = kwargs.get("allow_empty", True)
+
+    def canonical_value(self):
+        if self._allow_empty:
+            return None
+        else:
+            return (0, 0)
+
+    def render_input(self, varprefix, value):
+        text = value and ("%02d:%02d" % value) or ""
+        html.text_input(varprefix, text, size = 5)
+
+    def value_to_text(self, value):
+        if value == None:
+            return ""
+        else:
+            return "%02d:%02d" % value
+
+    def from_html_vars(self, varprefix):
+        # Fully specified
+        text = html.var(varprefix).strip()
+        if not text:
+            return None
+
+        if re.match("^(24|[0-1][0-9]|2[0-3]):[0-5][0-9]$", text):
+            return tuple(map(int, text.split(":")))
+
+        # only hours
+        try:
+            b = int(text)
+            return (b, 0)
+        except:
+            raise MKUserError(varprefix,
+                   _("Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format.") % text)
+
+    def validate_datatype(self, value, varprefix):
+        if self._allow_empty and value == None:
+            return
+
+        if type(value) != tuple:
+            raise MKUserError(varprefix, _("The datatype must be tuple, but ist %s" % type(value)))
+
+        if len(value) != 2:
+            raise MKUserError(varprefix, _("The tuple must contain two elements, but you have %d" % len(value)))
+
+        for x in value:
+            if type(x) != int:
+                raise MKUserError(varprefix, _("All elements of the tuple must be of type int, you have %s" % type(x)))
+
+    def validate_value(self, value, varprefix):
+        if not self._allow_empty and value == None:
+            raise MKUserError(varprefix, _("Please enter a time."))
+        if self._allow_24_00 and value > (24, 0):
+            raise MKUserError(varprefix, _("The time must not be greater than 24:00."))
+        elif not self._allow_empty and value > (23, 59):
+            raise MKUserError(varprefix, _("The time must not be greater than 23:59."))
+        elif value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
+            raise MKUserError(varprefix, _("Hours/Minutes out of range"))
+
+
+# Range like 00:15 - 18:30
+class TimeofdayRange(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._allow_empty = kwargs.get("allow_empty", True)
+        self._bounds = (
+            Timeofday(allow_empty = self._allow_empty, 
+                      allow_24_00 = True),
+            Timeofday(allow_empty = self._allow_empty, 
+                      allow_24_00 = True),
+        )
+
+    def canonical_value(self):
+        if self._allow_empty:
+            return None
+        else:
+            return (0, 0), (24, 0)
+
+    def render_input(self, varprefix, value):
+        if value == None:
+            value = (None, None)
+        self._bounds[0].render_input(varprefix + "_from", value[0])
+        html.write("&nbsp;-&nbsp;")
+        self._bounds[1].render_input(varprefix + "_until", value[1])
+
+    def value_to_text(self, value):
+        return self._bounds[0].value_to_text(value[0]) + "-" + \
+               self._bounds[1].value_to_text(value[1])
+
+    def from_html_vars(self, varprefix):
+        from_value = self._bounds[0].from_html_vars(varprefix + "_from")
+        until_value = self._bounds[1].from_html_vars(varprefix + "_until")
+        if (from_value == None) != (until_value == None):
+            raise MKUserError(varprefix + "_from", _("Please leave either both from and until empty or enter two times."))
+        if from_value == None:
+            return None
+        else:
+            return (from_value, until_value)
+
+    def validate_datatype(self, value, varprefix):
+        if self._allow_empty and value == None:
+            return 
+
+        if type(value) != tuple:
+            raise MKUserError(varprefix, _("The datatype must be tuple, but ist %s" % type(value)))
+
+        if len(value) != 2:
+            raise MKUserError(varprefix, _("The tuple must contain two elements, but you have %d" % len(value)))
+
+        self._bounds[0].validate_datatype(value[0], varprefix + "_from")
+        self._bounds[1].validate_datatype(value[1], varprefix + "_until")
+
+    def validate_value(self, value, varprefix):
+        self._bounds[0].validate_value(value[0], varprefix + "_from")
+        self._bounds[1].validate_value(value[1], varprefix + "_until")
+        if value[0] > value[1]:
+            raise MKUserError(varprefix + "_until", _("The <i>from</i> time must not be greater then the <i>until</i> time."))
+
 
 # Make a configuration value optional, i.e. it may be None.
 # The user has a checkbox for activating the option. Example:

@@ -50,6 +50,7 @@ def check_hr_cpu(item, params, info):
 
 check_info["hr_cpu"] = (check_hr_cpu, "CPU utilization", 1, inventory_hr_cpu)
 snmp_info["hr_cpu"] = ( ".1.3.6.1.2.1.25.3.3.1", [ 2 ] )
+checkgroup_of['hr_cpu'] = "cpu_utilization"
 
 # HOST-RESOURCES-MIB::hrSystemUptime.0
 snmp_scan_functions["hr_cpu"] = lambda oid: \

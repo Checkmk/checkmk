@@ -1426,9 +1426,11 @@ function list_of_strings_add_focus(oLastChild) {
         var o = oLastChild.childNodes[j];
         if (o.tagName == "INPUT") {
             o.onfocus = function(e) { return list_of_strings_extend(this); };
+            return;
         }
     }
 }
+
 
 /* Is called when the last input field in a ListOfString gets focus.
    In that case a new input field is being appended. */
@@ -1541,25 +1543,27 @@ function valuespec_listof_fixarrows(oTbody) {
         var oTd = oTbody.childNodes[i].childNodes[0]; /* TD with buttons */
         var oIndex = oTd.childNodes[0];
         oIndex.value = "" + (parseInt(i) + 1);
-        var oUpTrans = oTd.childNodes[2];
-        var oUp      = oTd.childNodes[3];
-        if (i == 0) {
-            oUpTrans.style.display = "";
-            oUp.style.display = "none";
-        }
-        else {
-            oUpTrans.style.display = "none";
-            oUp.style.display = "";
-        }
-        var oDownTrans = oTd.childNodes[4];
-        var oDown      = oTd.childNodes[5];
-        if (i >= oTbody.childNodes.length - 1) {
-            oDownTrans.style.display = "";
-            oDown.style.display = "none";
-        }
-        else {
-            oDownTrans.style.display = "none";
-            oDown.style.display = "";
+        if (oTd.childNodes.length > 4) { /* movable */
+            var oUpTrans = oTd.childNodes[2];
+            var oUp      = oTd.childNodes[3];
+            if (i == 0) {
+                oUpTrans.style.display = "";
+                oUp.style.display = "none";
+            }
+            else {
+                oUpTrans.style.display = "none";
+                oUp.style.display = "";
+            }
+            var oDownTrans = oTd.childNodes[4];
+            var oDown      = oTd.childNodes[5];
+            if (i >= oTbody.childNodes.length - 1) {
+                oDownTrans.style.display = "";
+                oDown.style.display = "none";
+            }
+            else {
+                oDownTrans.style.display = "none";
+                oDown.style.display = "";
+            }
         }
     }
 }

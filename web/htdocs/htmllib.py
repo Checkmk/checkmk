@@ -175,6 +175,7 @@ class html:
         self.mobile = False
         self.buffering = True
         self.transformations = []
+        self.final_javascript_code = ""
 
     def set_buffering(self, b):
         self.buffering = b
@@ -369,7 +370,7 @@ class html:
             url = "javascript:void(0)"
 
         if style:
-            style = 'style="%s" ' % style
+            style = 'style="%s" ' % style 
 
         if target:
             target = 'target="%s" ' % target
@@ -813,6 +814,8 @@ class html:
                                % (si, corner_text))
 
     def body_end(self):
+        if self.final_javascript_code:
+            self.javascript(self.final_javascript_code);
         self.write("</body></html>\n")
 
     def footer(self):
@@ -927,6 +930,9 @@ class html:
 
     def javascript(self, code):
         self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)
+
+    def final_javascript(self, code):
+        self.final_javascript_code += code + "\n"
 
     def javascript_file(self, name):
         self.write('<script type="text/javascript" src="js/%s.js"></script>\n' % name)

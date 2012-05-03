@@ -258,6 +258,7 @@ static_checks                        = {}
 check_parameters                     = []
 checkgroup_parameters                = {}
 legacy_checks                        = []
+active_checks                        = {}
 all_hosts                            = []
 host_paths                           = {}
 snmp_hosts                           = [ (['snmp'], ALL_HOSTS) ]
@@ -324,6 +325,7 @@ factory_settings                   = {} # factory settings for dictionary-config
 check_config_variables             = [] # variables (names) in checks/* needed for check itself
 snmp_info                          = {} # whichs OIDs to fetch for which check (for tabular information)
 snmp_scan_functions                = {} # SNMP autodetection
+active_check_info                  = {} # definitions of active "legacy" checks
 
 
 # Now include the other modules. They contain everything that is needed
@@ -1402,6 +1404,8 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     contactgroups_to_define = set([])
     global checknames_to_define
     checknames_to_define = set([])
+    global active_checks_to_define
+    active_checks_to_define = set([])
 
     if host_notification_periods != []:
         raise MKGeneralException("host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead.")
@@ -1731,6 +1735,7 @@ define servicedependency {
        extra_service_conf_of(hostname, "Check_MK inventory"),
        service_dependency_template, hostname, hostname))
 
+    # legacy checks via legacy_checks
     legchecks = host_extra_conf(hostname, legacy_checks)
     if len(legchecks) > 0:
         outfile.write("\n\n# Legacy checks\n")
@@ -1761,8 +1766,54 @@ define service {
 %s}
 """ % (template, hostname, description, command, extraconf))
 
+    # legacy checks via active_checks
+    actchecks = []
+    needed_commands = []
+    for acttype, rules in active_checks.items():
+        entries = host_extra_conf(hostname, rules)
+        if entries:
+            active_checks_to_define.add(acttype)
+            act_info = active_check_info[acttype]
+            for params in entries:
+                actchecks.append((acttype, act_info, params))
+
+    if actchecks:
+        outfile.write("\n\n# Active checks\n")
+        for acttype, act_info, params in actchecks:
+            has_perfdata = act_info.get('has_perfdata', False)
+            description = act_info["service_description"](params)
+            args = act_info["argument_function"](params)
+
+            if description in used_descriptions:
+                cn, it = used_descriptions[description]
+                raise MKGeneralException(
+                        "ERROR: Duplicate service description (active check) '%s' for host '%s'!\n"
+                        " - 1st occurrance: checktype = %s, item = %r\n"
+                        " - 2nd occurrance: checktype = active(%s), item = None\n" %
+                        (description, hostname, cn, it, acttype))
+
+            else:
+                used_descriptions[description] = ( "active(" + acttype + ")", description )
+
+            template = has_perfdata and "check_mk_perf," or ""
+
+            extraconf = extra_service_conf_of(hostname, description)
+            if has_perfdata:
+                template = "check_mk_perf,"
+            else:
+                template = ""
+            outfile.write("""
+define service {
+  use\t\t\t\t%scheck_mk_default
+  host_name\t\t\t%s
+  service_description\t\t%s
+  check_command\t\t\tcheck_mk_active-%s!%s
+  active_checks_enabled\t\t1
+%s}
+""" % (template, hostname, description, acttype, args, extraconf))
+
     # No check_mk service, no legacy service -> create PING service
-    if not have_at_least_one_service and len(legchecks) == 0:
+    if not have_at_least_one_service and not legchecks and not actchecks:
         outfile.write("""
 define service {
   use\t\t\t\t%s
@@ -1843,7 +1894,7 @@ def create_nagios_config_contactgroups(outfile):
 def create_nagios_config_commands(outfile):
     if generate_dummy_commands:
         outfile.write("\n# ------------------------------------------------------------\n")
-        outfile.write("# Dummy check commands (controlled by generate_dummy_commands)\n")
+        outfile.write("# Dummy check commands and active check commands\n")
         outfile.write("# ------------------------------------------------------------\n\n")
         for checkname in checknames_to_define:
             outfile.write("""define command {
@@ -1852,6 +1903,15 @@ def create_nagios_config_commands(outfile):
 }
 
 """ % ( checkname, dummy_check_commandline ))
+
+    for acttype in active_checks_to_define:
+        act_info = active_check_info[acttype]
+        outfile.write("""define command {
+  command_name\t\t\tcheck_mk_active-%s
+  command_line\t\t\t%s
+}
+
+""" % ( acttype, act_info["command_line"]))
 
 def create_nagios_config_timeperiods(outfile):
     if len(timeperiods) > 0:
@@ -1866,10 +1926,12 @@ def create_nagios_config_timeperiods(outfile):
             if "alias" in tp:
                 outfile.write("  alias\t\t\t\t%s\n" % tp["alias"].encode("utf-8"))
             for key, value in tp.items():
-                if key != "alias":
+                if key not in [ "alias", "exclude" ]:
                     times = ",".join([ ("%s-%s" % (fr, to)) for (fr, to) in value ])
                     if times:
                         outfile.write("  %-20s\t\t%s\n" % (key, times))
+            if "exclude" in tp:
+                outfile.write("  exclude\t\t\t%s\n" % ",".join(tp["exclude"]))
             outfile.write("}\n\n")
 
 def create_nagios_config_contacts(outfile):

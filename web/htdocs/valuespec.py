@@ -143,13 +143,13 @@ class Age(ValueSpec):
 
         html.write("<div>")
         html.number_input(varprefix+'_days', days, 2)
-        html.write(_("days"))
+        html.write(" %s " % _("days"))
         html.number_input(varprefix+'_hour', hours, 2)
-        html.write(_("hours"))
+        html.write(" %s " % _("hours"))
         html.number_input(varprefix+'_minutes', minutes, 2)
-        html.write(_("min"))
+        html.write(" %s " % _("min"))
         html.number_input(varprefix+'_seconds', seconds, 2)
-        html.write(_("sec"))
+        html.write(" %s " % _("sec"))
         html.write("</div>")
 
     def from_html_vars(self, varprefix):
@@ -508,7 +508,7 @@ class ListOfStrings(ValueSpec):
             html.write('</div>')
         html.write('</div>')
 
-        html.javascript("list_of_strings_init('%s');" % vp);
+        html.final_javascript("list_of_strings_init('%s');" % vp);
 
     def canonical_value(self):
         return []
@@ -546,6 +546,7 @@ class ListOf(ValueSpec):
         self._magic = kwargs.get("magic", "@")
         self._rowlabel = kwargs.get("row_label")
         self._add_label = kwargs.get("add_label", _("Add new element"))
+        self._movable = kwargs.get("movable", True)
 
     def del_button(self, vp, nr):
         js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
@@ -558,8 +559,8 @@ class ListOf(ValueSpec):
             "down" : _("down"),
         }
         html.empty_icon_button() # needed as placeholder
-        html.icon_button("#", _("Move this entry %s") % where_name[where], 
-           where, onclick=js)
+        html.icon_button("#", _("Move this entry %s %s") % (where_name[where],self._movable),  
+           where, onclick=js, style = (not self._movable) and "display: none" or "")
 
     # Implementation idea: we render our element-valuespec
     # once in a hidden div that is not evaluated. All occurances
@@ -576,8 +577,9 @@ class ListOf(ValueSpec):
         html.write('<tr><td class=vlof_buttons>')
         html.hidden_field(varprefix + "_indexof_" + self._magic, "") # reconstruct order after moving stuff
         self.del_button(varprefix, self._magic)
-        self.move_button(varprefix, self._magic, "up")
-        self.move_button(varprefix, self._magic, "down")
+        if self._movable:
+            self.move_button(varprefix, self._magic, "up")
+            self.move_button(varprefix, self._magic, "down")
         html.write('</td><td class=vlof_content>')
         self._valuespec.render_input(
             varprefix + "_" + self._magic, 
@@ -592,8 +594,9 @@ class ListOf(ValueSpec):
             html.write('<tr><td class=vlof_buttons>')
             html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "") # reconstruct order after moving stuff
             self.del_button(varprefix, nr+1)
-            self.move_button(varprefix, self._magic, "up") # visibility fixed by javascript
-            self.move_button(varprefix, self._magic, "down")
+            if self._movable:
+                self.move_button(varprefix, self._magic, "up") # visibility fixed by javascript
+                self.move_button(varprefix, self._magic, "down")
             html.write("</td><td class=vlof_content>")
             self._valuespec.render_input(varprefix + "_%d" % (nr+1), v)
             html.write("</td></tr>")
@@ -717,7 +720,7 @@ class Checkbox(ValueSpec):
 
 # A type-save dropdown choice. Parameters:
 # help_separator: if you set this to a character, e.g. "-", then
-# value_to_text will omit texts from the character up to the end of
+# value_to_texg will omit texts from the character up to the end of
 # a choices name.
 # Note: The list of choices may contain 2-tuples or 3-tuples.
 # The format is (value, text {, icon} )
@@ -939,8 +942,8 @@ class ListChoice(ValueSpec):
                     html.write("</tr>")
                 html.write("<tr>")
             html.write("<td>")
-            html.checkbox("%s_%d" % (varprefix, nr), key in value)
-            html.write("&nbsp;%s</td>\n" % title)
+            html.checkbox("%s_%d" % (varprefix, nr), key in value, label = title)
+            html.write("</td>")
         html.write("</tr></table>")
 
     def value_to_text(self, value):
@@ -1200,6 +1203,133 @@ class AbsoluteDate(ValueSpec):
             return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
 
 
+# Valuespec for entering times like 00:35 or 16:17. Currently
+# no seconds are supported. But this could easily be added.
+# The value itself is stored as a pair of integers, a.g.
+# (0, 35) or (16, 17). If the user does not enter a time
+# the vs will return None.
+class Timeofday(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._allow_24_00 = kwargs.get("allow_24_00", False)
+        self._allow_empty = kwargs.get("allow_empty", True)
+
+    def canonical_value(self):
+        if self._allow_empty:
+            return None
+        else:
+            return (0, 0)
+
+    def render_input(self, varprefix, value):
+        text = value and ("%02d:%02d" % value) or ""
+        html.text_input(varprefix, text, size = 5)
+
+    def value_to_text(self, value):
+        if value == None:
+            return ""
+        else:
+            return "%02d:%02d" % value
+
+    def from_html_vars(self, varprefix):
+        # Fully specified
+        text = html.var(varprefix).strip()
+        if not text:
+            return None
+
+        if re.match("^(24|[0-1][0-9]|2[0-3]):[0-5][0-9]$", text):
+            return tuple(map(int, text.split(":")))
+
+        # only hours
+        try:
+            b = int(text)
+            return (b, 0)
+        except:
+            raise MKUserError(varprefix,
+                   _("Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format.") % text)
+
+    def validate_datatype(self, value, varprefix):
+        if self._allow_empty and value == None:
+            return
+
+        if type(value) != tuple:
+            raise MKUserError(varprefix, _("The datatype must be tuple, but ist %s" % type(value)))
+
+        if len(value) != 2:
+            raise MKUserError(varprefix, _("The tuple must contain two elements, but you have %d" % len(value)))
+
+        for x in value:
+            if type(x) != int:
+                raise MKUserError(varprefix, _("All elements of the tuple must be of type int, you have %s" % type(x)))
+
+    def validate_value(self, value, varprefix):
+        if not self._allow_empty and value == None:
+            raise MKUserError(varprefix, _("Please enter a time."))
+        if self._allow_24_00 and value > (24, 0):
+            raise MKUserError(varprefix, _("The time must not be greater than 24:00."))
+        elif not self._allow_empty and value > (23, 59):
+            raise MKUserError(varprefix, _("The time must not be greater than 23:59."))
+        elif value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
+            raise MKUserError(varprefix, _("Hours/Minutes out of range"))
+
+
+# Range like 00:15 - 18:30
+class TimeofdayRange(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._allow_empty = kwargs.get("allow_empty", True)
+        self._bounds = (
+            Timeofday(allow_empty = self._allow_empty, 
+                      allow_24_00 = True),
+            Timeofday(allow_empty = self._allow_empty, 
+                      allow_24_00 = True),
+        )
+
+    def canonical_value(self):
+        if self._allow_empty:
+            return None
+        else:
+            return (0, 0), (24, 0)
+
+    def render_input(self, varprefix, value):
+        if value == None:
+            value = (None, None)
+        self._bounds[0].render_input(varprefix + "_from", value[0])
+        html.write("&nbsp;-&nbsp;")
+        self._bounds[1].render_input(varprefix + "_until", value[1])
+
+    def value_to_text(self, value):
+        return self._bounds[0].value_to_text(value[0]) + "-" + \
+               self._bounds[1].value_to_text(value[1])
+
+    def from_html_vars(self, varprefix):
+        from_value = self._bounds[0].from_html_vars(varprefix + "_from")
+        until_value = self._bounds[1].from_html_vars(varprefix + "_until")
+        if (from_value == None) != (until_value == None):
+            raise MKUserError(varprefix + "_from", _("Please leave either both from and until empty or enter two times."))
+        if from_value == None:
+            return None
+        else:
+            return (from_value, until_value)
+
+    def validate_datatype(self, value, varprefix):
+        if self._allow_empty and value == None:
+            return 
+
+        if type(value) != tuple:
+            raise MKUserError(varprefix, _("The datatype must be tuple, but ist %s" % type(value)))
+
+        if len(value) != 2:
+            raise MKUserError(varprefix, _("The tuple must contain two elements, but you have %d" % len(value)))
+
+        self._bounds[0].validate_datatype(value[0], varprefix + "_from")
+        self._bounds[1].validate_datatype(value[1], varprefix + "_until")
+
+    def validate_value(self, value, varprefix):
+        self._bounds[0].validate_value(value[0], varprefix + "_from")
+        self._bounds[1].validate_value(value[1], varprefix + "_until")
+        if value[0] > value[1]:
+            raise MKUserError(varprefix + "_until", _("The <i>from</i> time must not be greater then the <i>until</i> time."))
+
 
 # Make a configuration value optional, i.e. it may be None.
 # The user has a checkbox for activating the option. Example:
@@ -1211,19 +1341,20 @@ class Optional(ValueSpec):
         self._label = kwargs.get("label")
         self._negate = kwargs.get("negate", False)
         self._none_label = kwargs.get("none_label", _("(unset)"))
+        self._none_value = kwargs.get("none_value", None)
         self._sameline = kwargs.get("sameline", False)
 
     def canonical_value(self):
-        return None
+        return self._none_value
 
     def render_input(self, varprefix, value):
         div_id = "option_" + varprefix
         checked = html.get_checkbox(varprefix + "_use")
         if checked == None:
             if self._negate:
-                checked = value == None
+                checked = value == self._none_value
             else:
-                checked = value != None
+                checked = value != self._none_value
 
         html.write("<span>")
 
@@ -1252,7 +1383,7 @@ class Optional(ValueSpec):
             display = ""
 
         html.write('<span id="%s" style="display: %s">' % (div_id, display))
-        if value == None:
+        if value == self._none_value:
             value = self._valuespec.default_value()
         if self._valuespec.title():
             html.write(self._valuespec.title() + " ")
@@ -1260,7 +1391,7 @@ class Optional(ValueSpec):
         html.write('</span>\n')
 
     def value_to_text(self, value):
-        if value == None:
+        if value == self._none_value:
             return self._none_label
         else:
             return self._valuespec.value_to_text(value)
@@ -1269,14 +1400,14 @@ class Optional(ValueSpec):
         if html.get_checkbox(varprefix + "_use") != self._negate:
             return self._valuespec.from_html_vars(varprefix + "_value")
         else:
-            return None
+            return self._none_value
 
     def validate_datatype(self, value, varprefix):
-        if value != None:
+        if value != self._none_value:
             self._valuespec.validate_datatype(value, varprefix + "_value")
 
     def validate_value(self, value, varprefix):
-        if value != None:
+        if value != self._none_value:
             self._valuespec.validate_value(value, varprefix + "_value")
 
 # Handle case when there are several possible allowed formats
@@ -1367,6 +1498,9 @@ class Tuple(ValueSpec):
     def canonical_value(self):
         return tuple([x.canonical_value() for x in self._elements])
 
+    def default_value(self):
+        return tuple([x.default_value() for x in self._elements])
+
     def render_input(self, varprefix, value):
         html.write('<table class="valuespec_tuple">')
         if not self._vertical:
@@ -1447,18 +1581,19 @@ class Dictionary(ValueSpec):
         html.write("<table class=dictionary>")
         for param, vs in self._elements:
             html.write("<tr><td class=dictleft>")
-            vp = varprefix + "_" + param
-            div_id = vp
+            div_id = varprefix + "_d_" + param
+            vp     = varprefix + "_p_" + param
             if self._optional_keys:
                 visible = html.get_checkbox(vp + "_USE")
                 if visible == None:
                     visible = param in value
                 html.checkbox(vp + "_USE", param in value,
-                              onclick="valuespec_toggle_option(this, %r)" % div_id)
+                              onclick="valuespec_toggle_option(this, %r)" % div_id,
+                              label=vs.title())
             else:
                 visible = True
+                html.write(" %s" % vs.title())
 
-            html.write(" %s" % vs.title())
             if self._columns == 2:
                 html.write(':')
                 if vs.help():
@@ -1471,7 +1606,7 @@ class Dictionary(ValueSpec):
                 div_id, not visible and "none" or ""))
             if self._columns == 1 and vs.help():
                 html.write("<ul class=help>%s</ul>" % vs.help())
-            vs.render_input(vp, value.get(param, vs.canonical_value()))
+            vs.render_input(vp, value.get(param, vs.default_value()))
             html.write("</div></td></tr>")
         html.write("</table>")
 
@@ -1495,7 +1630,7 @@ class Dictionary(ValueSpec):
     def from_html_vars(self, varprefix):
         value = {}
         for param, vs in self._elements:
-            vp = varprefix + "_" + param
+            vp = varprefix + "_p_" + param
             if not self._optional_keys or html.get_checkbox(vp + "_USE"):
                 value[param] = vs.from_html_vars(vp)
         return value
@@ -1506,7 +1641,7 @@ class Dictionary(ValueSpec):
 
         for param, vs in self._elements:
             if param in value:
-                vp = varprefix + "_" + param
+                vp = varprefix + "_p_" + param
                 try:
                     vs.validate_datatype(value[param], vp)
                 except MKUserError, e:
@@ -1524,7 +1659,7 @@ class Dictionary(ValueSpec):
     def validate_value(self, value, varprefix):
         for param, vs in self._elements:
             if param in value:
-                vp = varprefix + "_" + param
+                vp = varprefix + "_p_" + param
                 vs.validate_value(value[param], vp)
             elif not self._optional_keys:
                 raise MKUserError(varprefix, _("The entry %s is missing") % vp.title())

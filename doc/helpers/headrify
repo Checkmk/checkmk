@@ -51,6 +51,9 @@ headrify ()
   elif [ "${headline:0:11}" = "#!/bin/bash" ] ; then
       comment="# "
       bangpath="#!/bin/bash"
+  elif [ "${headline:0:15}" = "#!/usr/bin/bash" ] ; then
+      comment="# "
+      bangpath="#!/usr/bin/bash"
   else
       bangpath=""
       case "${file##*/}" in
@@ -94,7 +97,7 @@ if [ "$#" -gt 0 ] ; then
     headrify "$file"
   done
 else
-  { find -not -type l -and \( \
+  { find -not -type l -and -not -name "jquery*" -and \( \
       -name "Makefile" -or \
       -name "Makefile.am" -or \
       -name "configure.ac" -or \
@@ -107,7 +110,7 @@ else
       -name "*.php" -or \
       -name "*.sh" -or \
       -name "*.spec" \) ; \
-    rm -f checks/*~ ; ls checks/* ; echo agents/plugins/* agents/* | tr ' ' \\n | grep -vx agents/waitmax | fgrep -v windows | fgrep -v .exe | fgrep -v /plugins | fgrep -v .hpux ; ls agents/windows/*.cc ; echo agents/windows/Makefile ; } \
+    rm -f checks/*~ ; ls checks/* ; echo agents/plugins/* agents/* | tr ' ' \\n | grep -vx agents/waitmax | fgrep -v agents/hpux | fgrep -v windows | fgrep -v .exe | fgrep -v /plugins | fgrep -v .hpux ; ls agents/windows/*.cc ; echo agents/windows/Makefile ; } \
 	| grep -v /Privat/ | grep -v livestatus/nagios/ | grep -vx '' | \
   while read file
   do

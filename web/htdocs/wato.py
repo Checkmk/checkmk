@@ -2052,6 +2052,7 @@ def show_service_table(host, firsttime):
         ( _("Obsolete services (being checked, but should be ignored)"), "obsolete", True ),
         ( _("Ignored services (configured away by admin)"), "ignored", False ),
         ( _("Vanished services (checked, but no longer exist)"), "vanished", True ),
+        ( _("Active checks"), "active", None ),
         ( _("Manual services (defined in main.mk)"), "manual", None ),
         ( _("Legacy services (defined in main.mk)"), "legacy", None )
         ]:
@@ -2081,27 +2082,31 @@ def show_service_table(host, firsttime):
 
             # Icon for Rule editor, Check parameters
             html.write("<td>")
+            varname = None
             if checkgroup:
                 varname = "checkgroup_parameters:" + checkgroup
-                if varname in g_rulespecs:
-                    rulespec = g_rulespecs[varname]
-                    url = make_link([("mode", "edit_ruleset"),
-                                     ("varname", varname),
-                                     ("host", hostname),
-                                     ("item", mk_repr(item))])
-                    try:
-                        rulespec["valuespec"].validate_datatype(params, "")
-                        rulespec["valuespec"].validate_value(params, "")
-                        paramtext = rulespec["valuespec"].value_to_text(params)
-                    except Exception, e:
-                        if config.debug:
-                            raise
-                        paramtext = _("Invalid check parameter: %s!") % e
-                        paramtext += _(" The parameter is: %r") % (params,)
+            elif state_type == "active":
+                varname = "active_checks:" + ct
 
-                    title = "Check parameters for this service: " + paramtext
-                    html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
-                       (url, title))
+            if varname and varname in g_rulespecs:
+                rulespec = g_rulespecs[varname]
+                url = make_link([("mode", "edit_ruleset"),
+                                 ("varname", varname),
+                                 ("host", hostname),
+                                 ("item", mk_repr(item))])
+                try:
+                    rulespec["valuespec"].validate_datatype(params, "")
+                    rulespec["valuespec"].validate_value(params, "")
+                    paramtext = rulespec["valuespec"].value_to_text(params)
+                except Exception, e:
+                    if config.debug:
+                        raise
+                    paramtext = _("Invalid check parameter: %s!") % e
+                    paramtext += _(" The parameter is: %r") % (params,)
+
+                title = "Check parameters for this service: " + paramtext
+                html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
+                   (url, title))
 
             html.write("</td>")
 
@@ -5640,8 +5645,8 @@ def mode_timeperiods(phase):
     html.write("<table class=data>")
     html.write("<tr><th>"
                + _("Actions") + "</th><th>"
-               + _("Name") + "</th><th>"
-               + _("Alias") + "</th></tr>")
+               + _("Name")    + "</th><th>"
+               + _("Alias")   + "</th></tr>")
 
     odd = "even"
     names = timeperiods.keys()
@@ -5688,66 +5693,131 @@ def save_timeperiods(timeperiods):
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("timeperiods.update(%s)\n" % pprint.pformat(timeperiods))
 
+class ExceptionName(TextAscii):
+    def __init__(self, **kwargs):
+        kwargs["regex"] = "^[-a-z0-9A-Z /]*$"
+        kwargs["regex_error"] = _("This is not a valid Nagios timeperiod day specification.")
+        kwargs["allow_empty"] = False
+        TextAscii.__init__(self, **kwargs)
+
+    def validate_value(self, value, varprefix):
+        if value in [ "monday", "tuesday", "wednesday", "thursday",
+                       "friday", "saturday", "sunday" ]:
+            raise MKUserError(varprefix, _("You cannot use weekday names (%s) in exceptions" % value))
+        if value in [ "name", "alias", "timeperiod_name", "register", "use", "exclude" ]:
+            raise MKUserError(varprefix, _("<tt>%s</tt> is a reserved keyword."))
+        TextAscii.validate_value(self, value, varprefix)
+
+class MultipleTimeRanges(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._num_columns = kwargs.get("num_columns", 3)
+        self._rangevs = TimeofdayRange()
+
+    def canonical_value(self):
+        return [ ((0,0), (24,0)), None, None ]
+
+    def render_input(self, varprefix, value):
+        for c in range(0, self._num_columns):
+            if c:
+                html.write(" &nbsp; ")
+            if c < len(value):
+                v = value[c]
+            else:
+                v = self._rangevs.canonical_value()
+            self._rangevs.render_input(varprefix + "_%d" % c, v)
+
+    def value_to_text(self, value):
+        parts = []
+        for v in value:
+            parts.append(self._rangevs.value_to_text(v))
+        return ", ".join(parts)
+
+    def from_html_vars(self, varprefix):
+        value = []
+        for c in range(0, self._num_columns):
+            v = self._rangevs.from_html_vars(varprefix + "_%d" % c)
+            if v != None:
+                value.append(v)
+        return value
+
+    def validate_value(self, value, varprefix):
+        for c, v in enumerate(value):
+            self._rangevs.validate_value(v, varprefix + "_%d" % c)
+
+# Check, if timeperiod tpa excludes or is tpb 
+def timeperiod_excludes(timeperiods, tpa_name, tpb_name):
+    if tpa_name == tpb_name:
+        return True
+
+    tpa = timeperiods[tpa_name]
+    for ex in tpa.get("exclude", []):
+        if ex == tpb_name:
+            return True
+        if timeperiod_excludes(timeperiods, ex, tpb_name):
+            return True
+    return False
+ 
 
 def mode_edit_timeperiod(phase):
     num_columns = 3
-    num_exceptions = 10
-
-    def timeperiod_ranges(vp, keyname):
-        ranges = timeperiod.get(keyname, [])
-        for c in range(num_columns):
-            if c < len(ranges):
-                fromto = ranges[c]
-            elif new and c == 0:
-                fromto = "00:00", "24:00"
-            else:
-                fromto = "", ""
-            html.write("<td>")
-            var_prefix = vp + "_%d_" % c
-            html.text_input(var_prefix + "from", fromto[0], cssclass = "timeperioddate")
-            html.write(" - ")
-            val = c == 0 and "24:00" or ""
-            html.text_input(var_prefix + "to", fromto[1], cssclass = "timeperioddate")
-            if c != num_columns - 1:
-                html.write("&nbsp; &nbsp; &nbsp;")
-            html.write("</td>")
-
-    def get_ranges(varprefix):
-        ranges = []
-        for c in range(num_columns):
-            vp = "%s_%d_" % (varprefix, c)
-            begin = html.var(vp + "from", "").strip()
-            end  = html.var(vp + "to", "").strip()
-            if not begin and not end:
-                continue
-            if not begin:
-                begin = "00:00"
-            if not end:
-                end = "24:00"
-
-            begin, end = [ parse_bound(varprefix, w, b) for (w,b) in [ ("from", begin), ("to", end) ]]
-            ranges.append((begin, end))
-        return ranges
-
-
-    def parse_bound(vp,  what, bound):
-        # Fully specified
-        if re.match("^(24|[0-1][0-9]|2[0-3]):[0-5][0-9]$", bound):
-            return bound
-        # only hours
-        try:
-            b = int(bound)
-            if b <= 24 and b >= 0:
-                return "%02d:00" % b
-        except:
-            pass
-
-        raise MKUserError(vp + what,
-               _("Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format.") % bound)
-
-
+    timeperiods = load_timeperiods()
     name = html.var("edit") # missing -> new group
     new = name == None
+
+    # ValueSpec for the list of Exceptions
+    vs_ex = ListOf(
+        Tuple(
+            orientation = "horizontal",
+            show_titles = False,
+            elements = [
+                ExceptionName(),
+                MultipleTimeRanges()]
+        ),
+        movable = False,
+        add_label = _("Add Exception"))
+
+    # ValueSpec for excluded Timeperiods. We offer the list of
+    # all other timeperiods - but only those that do not 
+    # exclude the current timeperiod (in order to avoid cycles)
+    other_tps = []
+    for tpname, tp in timeperiods.items():
+        if not new and not timeperiod_excludes(timeperiods, tpname, name): 
+            other_tps.append((tpname, tp.get("alias") or name))
+
+    vs_excl = ListChoice(choices = other_tps)
+
+    # convert Check_MK representation of range to ValueSpec-representation
+    def convert_from_tod(tod):
+        # "00:30" -> (0, 30)
+        return tuple(map(int, tod.split(":")))
+    
+    def convert_from_range(range):
+        # ("00:30", "10:17") -> ((0,30),(10,17))
+        return tuple(map(convert_from_tod, range))
+
+    def convert_to_tod(value):
+        return "%02d:%02d" % value
+
+    def convert_to_range(value):
+        return tuple(map(convert_to_tod, value))
+
+    def timeperiod_ranges(vp, keyname, new):
+        ranges = timeperiod.get(keyname, [])
+        value = []
+        for range in ranges:
+            value.append(convert_from_range(range))
+        if len(value) == 0 and new:
+            value.append(((0,0),(24,0)))
+
+        html.write("<td>")
+        MultipleTimeRanges().render_input(vp, value)
+        html.write("</td>")
+
+    def get_ranges(varprefix):
+        value = MultipleTimeRanges().from_html_vars(varprefix)
+        MultipleTimeRanges().validate_value(value, varprefix)
+        return map(convert_to_range, value)
 
     if phase == "title":
         if new:
@@ -5759,7 +5829,6 @@ def mode_edit_timeperiod(phase):
         html.context_button(_("All Timeperiods"), make_link([("mode", "timeperiods")]), "back")
         return
 
-    timeperiods = load_timeperiods()
     if new:
         timeperiod = {}
     else:
@@ -5781,25 +5850,27 @@ def mode_edit_timeperiod(phase):
             if not alias:
                 raise MKUserError("alias", _("Please specify an alias name for your timeperiod."))
 
+            timeperiod.clear()
+
             # extract time ranges of weekdays
             for weekday, weekday_name in weekdays:
                 ranges = get_ranges(weekday)
                 if ranges:
                     timeperiod[weekday] = ranges
+                elif weekday in timeperiod:
+                    del timeperiod[weekday]
 
             # extract ranges for custom days
-            for e in range(0, num_exceptions):
-                varprefix = "ex%d" % e
-                exname = html.var(varprefix + "_name", "").strip()
-                if exname in [ w[0] for w in weekdays ]:
-                    raise MKUserError(varprefix + "_name",
-                           _("You may not specify a weekday's name as an exception."))
-                if exname and exname not in [ "alias", "timeperiod_name" ]:
-                    if not re.match("^[-a-z0-9A-Z /]*$", exname):
-                        raise MKUserError(varprefix + "_name",
-                            _("'%s' is not a valid Nagios timeperiod day specification.") % exname)
-                    ranges = get_ranges(varprefix)
-                    timeperiod[exname] = ranges
+            exceptions = vs_ex.from_html_vars("except")
+            vs_ex.validate_value(exceptions, "except")
+            for exname, ranges in exceptions:
+                timeperiod[exname] = map(convert_to_range, ranges)
+
+            # extract excludes
+            excludes = vs_excl.from_html_vars("exclude")
+            vs_excl.validate_value(excludes, "exclude")
+            if excludes:
+                timeperiod["exclude"] = excludes
 
             if new:
                 name = html.var("name")
@@ -5858,7 +5929,7 @@ def mode_edit_timeperiod(phase):
     for weekday, weekday_alias in weekdays:
         ranges = timeperiod.get(weekday)
         html.write("<tr><td class=name>%s</td>" % weekday_alias)
-        timeperiod_ranges(weekday, weekday)
+        timeperiod_ranges(weekday, weekday, new)
         html.write("</tr>")
     html.write("</table></td></tr>")
 
@@ -5869,28 +5940,23 @@ def mode_edit_timeperiod(phase):
                  "relative or absolute dates. Please consult the <a target='_blank' href='%s'>Nagios documentation about "
                  "timeperiods</a> for examples." % nagurl))
     html.write("</td><td class=content>")
-    html.write("<table class=timeperiod>")
 
-    exnames =  []
+    exceptions = []
     for k in timeperiod:
-        if k not in [ w[0] for w in weekdays ] and k != "alias":
-            exnames.append(k)
-    exnames.sort()
+        if k not in [ w[0] for w in weekdays ] and k not in [ "alias", "exclude" ]:
+            exceptions.append((k, map(convert_from_range, timeperiod[k])))
+    exceptions.sort()
+    vs_ex.render_input("except", exceptions)
 
-    for e in range(num_exceptions):
-        if e < len(exnames):
-            exname = exnames[e]
-            ranges = timeperiod[exname]
-        else:
-            exname = ""
-            ranges = []
-        varprefix = "ex%d" % e
-        html.write("<tr><td class=name>")
-        html.text_input(varprefix + "_name", exname)
-        html.write("</td>")
-        timeperiod_ranges(varprefix, exname)
-        html.write("</tr>")
-    html.write("</table></td></tr>")
+
+    # Excludes
+    if other_tps:
+        html.write("<tr><td class=legend>")
+        html.write(_("Exclude"))
+        html.write("</td><td class=content>")
+        vs_excl.render_input("exclude", timeperiod.get("exclude", []))
+        html.write("</td></tr>")
+
 
     html.write("<tr><td colspan=2 class=buttons>")
     html.button("save", _("Save"))
@@ -5912,8 +5978,9 @@ class TimeperiodSelection(ElementSelection):
 # Check if a timeperiod is currently in use and cannot be deleted
 # Returns a list of occurrances.
 # Possible usages:
-# - user accounts (notification period)
-# - rules: service/host-notification/check-period
+# - 1. rules: service/host-notification/check-period
+# - 2. user accounts (notification period)
+# - 3. excluded by other timeperiods
 def find_usage_of_timeperiod(tpname):
 
     # Part 1: Rules
@@ -5934,6 +6001,13 @@ def find_usage_of_timeperiod(tpname):
         if tp == tpname:
             used_in.append(("%s: %s" % (_("User"), userid),
                 make_link([("mode", "edit_user"), ("edit", userid)])))
+
+    # Part 3: Other Timeperiods
+    for tpn, tp in load_timeperiods().items():
+        if tpname in tp.get("exclude", []):
+            used_in.append(("%s: %s (%s)" % (_("Timeperiod"), tp.get("alias", tpn), 
+                    _("excluded")),
+                    make_link([("mode", "edit_timeperiod"), ("edit", tpn)])))
 
     return used_in
 
@@ -6537,7 +6611,8 @@ def update_distributed_wato_file(sites):
     for siteid, site in sites.items():
         if site.get("replication"):
             distributed = True
-        create_distributed_wato_file(siteid, site.get("replication"))
+        if site_is_local(siteid):
+            create_distributed_wato_file(siteid, site.get("replication"))
     if not distributed:
         delete_distributed_wato_file()
 
@@ -8603,7 +8678,8 @@ def mode_edit_hosttag(phase):
                 taggroup = tag_id, title, new_choices
                 hosttags.append(taggroup)
                 save_hosttags(hosttags, auxtags)
-                config.wato_host_tags = hosttags
+                # Make sure, that all tags are active (also manual ones from main.mk)
+                config.load_config()
                 declare_host_tag_attributes()
                 rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts
                 log_pending(SYNCRESTART, None, "edit-hosttags", _("Created new host tag group '%s'") % tag_id)
@@ -8649,7 +8725,7 @@ def mode_edit_hosttag(phase):
                 message = rename_host_tags_after_confirmation(tag_id, operations)
                 if message:
                     save_hosttags(new_hosttags, auxtags)
-                    config.wato_host_tags = new_hosttags
+                    config.load_config()
                     declare_host_tag_attributes()
                     rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts
                     log_pending(SYNCRESTART, None, "edit-hosttags", _("Edited host tag group %s (%s)") % (message, tag_id))
@@ -8713,7 +8789,7 @@ def mode_edit_hosttag(phase):
 def load_hosttags():
     filename = multisite_dir + "hosttags.mk"
     if not os.path.exists(filename):
-        return []
+        return [], []
     try:
         vars = { 
             "wato_host_tags" : [],
@@ -10370,7 +10446,7 @@ def page_user_profile():
 # or rules have been defined *ever*.
 def create_sample_config():
     if os.path.exists(multisite_dir + "hosttags.mk") \
-        or os.path.exists(multisite_dir + "rules.mk"):
+        or os.path.exists(root_dir + "rules.mk"):
         return
 
     # Example values for host tags

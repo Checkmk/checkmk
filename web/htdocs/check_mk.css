@@ -300,6 +300,9 @@ div.error {
     border-color: #e40;
     color: white;
 }
+div.error a {
+    color: white;
+}
 
 div.warning {
     background-color: #ff4;
@@ -354,7 +357,7 @@ table.valuespec_tuple td.tuple_left {
 table.valuespec_tuple td.tuple_right,
 table.valuespec_tuple td.tuple_left {
     vertical-align: top;
-    padding-bottom: 10px;
+    padding-bottom: 3px;
 }
 
 table.valuespec_tuple span.title {

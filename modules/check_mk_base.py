@@ -1194,4 +1194,7 @@ def get_age_human_readable(secs):
         return "%d days, %d hours" % (days, hours)
     return "%d days" % days
 
-
+# Quote string for use as arguments on the shell (for usage
+# in command definitions as $ARG1$)
+def quote_shell_string(s):
+    return "'" + s.replace("'", "'\"'\"'") + "'"

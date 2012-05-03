@@ -108,7 +108,7 @@ def automation_inventory(args):
     new_items = []
     for entry in table:
         state_type, ct, checkgroup, item, paramstring = entry[:5]
-        if state_type in [ "legacy", "manual", "ignored" ]:
+        if state_type in [ "legacy", "active", "manual", "ignored" ]:
             continue # this is not an autocheck or ignored and currently not checked
 
         if state_type == "new":
@@ -234,16 +234,25 @@ def automation_try_inventory_node(hostname):
         if (ct, item) not in found:
             found[(ct, item)] = ('manual', repr(params) )
 
-    # Add legacy checks with artificial type 'legacy'
+    # Add legacy checks and active checks with artificial type 'legacy'
     legchecks = host_extra_conf(hostname, legacy_checks)
     for cmd, descr, perf in legchecks:
         found[('legacy', descr)] = ( 'legacy', 'None' )
+
+    # Similar for 'active_checks', but here we have parameters
+    for acttype, rules in active_checks.items():
+        act_info = active_check_info[acttype]
+        entries = host_extra_conf(hostname, rules)
+        for params in entries:
+            descr = act_info["service_description"](params)
+            found[(acttype, descr)] = ( 'active', repr(params) )
+
 
     # Collect current status information about all existing checks
     table = []
     for (ct, item), (state_type, paramstring) in found.items():
         params = None
-        if state_type != 'legacy':
+        if state_type not in [ 'legacy', 'active' ]:
             descr = service_description(ct, item)
             infotype = ct.split('.')[0]
             opt_use_cachefile = True
@@ -305,7 +314,10 @@ def automation_try_inventory_node(hostname):
             output = "WAITING - Legacy check, cannot be done offline"
             perfdata = []
 
-        if ct == "legacy":
+        if state_type == "active":
+            params = eval(paramstring)
+
+        if state_type in [ "legacy", "active" ]:
             checkgroup = None
         else:
             checkgroup = check_info[ct]["group"]

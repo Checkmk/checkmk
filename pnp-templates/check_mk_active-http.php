@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,52 +23,32 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
+$desc = str_replace("_", " ", $servicedesc);
+$opt[1] = "-X0 --vertical-label \"Response Time (ms)\"  --title \"$hostname / $desc\" ";
 
-AC_PREREQ(2.61)
-AC_INIT([MK Livestatus], [1.2.0b4], [mk@mathias-kettner.de])
-AM_INIT_AUTOMAKE([-Wall foreign])
-AC_CONFIG_SRCDIR([config.h.in])
-AC_CONFIG_HEADER([config.h])
+$def[1] = ""
+ . "DEF:var1=$RRDFILE[1]:$DS[1]:MAX " 
+ . "CDEF:ms=var1,1000,* "
+ . "AREA:ms#66ccff:\"Response Time \" " 
+ . "LINE1:ms#000000:\"\" " 
+ . "GPRINT:ms:LAST:\"%3.3lg ms LAST \" " 
+ . "GPRINT:ms:MAX:\"%3.3lg ms MAX \" " 
+ . "GPRINT:ms:AVERAGE:\"%3.3lg ms AVERAGE \" "
+;
 
-# Checks for programs.
-AC_PROG_CXX
-AC_PROG_CC
-AC_PROG_RANLIB
-AM_CONDITIONAL([HAVE_DIET], [which diet >/dev/null 2>&1])
+$opt[2] = "--vertical-label \"Size (Bytes)\" --title \"Size of response\" ";
+$def[2] =  ""
+  . "DEF:size=$RRDFILE[2]:$DS[2]:AVERAGE " ;
+if ($WARN[2] != "")
+    $def[2] .= "HRULE:$WARN[2]#FFFF00 ";
+if ($CRIT[2] != "")
+    $def[2] .= "HRULE:$CRIT[2]#FF0000 ";
+$def[2] .= ""
+ . "AREA:size#cc66ff:\"Response Time \" " 
+ . "LINE1:size#000000:\"\" " 
+ . "GPRINT:size:LAST:\"%3.0lf Bytes LAST \" " 
+ . "GPRINT:size:MAX:\"%3.0lf Bytes MAX \" " 
+ . "GPRINT:size:AVERAGE:\"%3.0lf Bytes AVERAGE \" "
+;
 
-# Checks for libraries.
-AC_CHECK_LIB(socket, socket)
-AC_CHECK_LIB(socket, connect)
-AC_CHECK_LIB(socket, shutdown)
-
-# Checks for header files.
-AC_HEADER_DIRENT
-AC_HEADER_STDC
-AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/socket.h sys/time.h sys/timeb.h syslog.h unistd.h])
-
-# Checks for typedefs, structures, and compiler characteristics.
-AC_HEADER_STDBOOL
-AC_C_CONST
-AC_C_INLINE
-AC_TYPE_INT32_T
-AC_TYPE_INT64_T
-AC_TYPE_SIZE_T
-AC_TYPE_SSIZE_T
-AC_HEADER_TIME
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
-
-# Checks for library functions.
-AC_FUNC_MALLOC
-AC_FUNC_REALLOC
-AC_FUNC_SELECT_ARGTYPES
-AC_TYPE_SIGNAL
-AC_FUNC_STAT
-AC_CHECK_FUNCS([bzero gettimeofday memmove regcomp select socket strcasecmp strdup strerror strtoul])
-
-AC_CONFIG_FILES([Makefile
-                 src/Makefile])
-AC_OUTPUT
+?>

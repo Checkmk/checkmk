@@ -670,6 +670,34 @@ register_rule(group,
     itemtype = "service")
 
 register_rule(group,
+    "extra_host_conf:first_notification_delay",
+    Integer(
+        minvalue = 0,
+        default_value = 60,
+        label = _("Delay:"),
+        unit = _("minutes"),
+        title = _("Delay host notifications"),
+        help = _("This setting delays notifications about host problems by the "
+                 "specified amount of time. If the host is up again within that "
+                 "time, no notification will be sent out."),
+        )
+    )
+
+register_rule(group,
+    "extra_service_conf:first_notification_delay",
+    Integer(
+        minvalue = 0,
+        default_value = 60,
+        label = _("Delay:"),
+        unit = _("minutes"),
+        title = _("Delay service notifications"),
+        help = _("This setting delays notifications about service problems by the "
+                 "specified amount of time. If the service is OK again within that "
+                 "time, no notification will be sent out."),
+        )
+    )
+
+register_rule(group,
     "extra_host_conf:notification_interval",
     Optional(
         Integer(
@@ -686,6 +714,8 @@ register_rule(group,
         none_value = 0,
         )
     )
+
+
 
 register_rule(group,
     "extra_service_conf:notification_interval",

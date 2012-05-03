@@ -46,6 +46,7 @@
       manual ones (via multisite.mk)
     * Timeperiods: Make list of exceptions dynamic, not fixed to 10 entries
     * Timeperiods: Configure exclusion of other timeperiods
+    * Configuration of notification_delay and notification_interval
 
 1.2.0b2:
     Core:

@@ -23,8 +23,8 @@ item:
 examples:
 
  fileinfo_groups = [
-     ([("Auth_group","/var/log/auth.*")], ALL_HOSTS),
-     ([("Message_group", "/var/log/messages*")], ['test2'], ALL_HOSTS),
+     ([("Auth_group",r"/var/log/auth.*")], ALL_HOSTS),
+     ([("Message_group", r"/var/log/messages*")], ['test2'], ALL_HOSTS),
  ] 
 
  check_parameters = [

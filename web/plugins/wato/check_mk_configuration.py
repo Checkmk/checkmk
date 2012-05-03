@@ -669,6 +669,42 @@ register_rule(group,
                  "as the 'service time'.")),
     itemtype = "service")
 
+register_rule(group,
+    "extra_host_conf:notification_interval",
+    Optional(
+        Integer(
+            minvalue = 1,
+            default_value = 120,
+            label = _("Interval:"),
+            unit = _("minutes")),
+        title = _("Periodic notifications during host problems"),
+        help = _("If you enable periodic notifications, then during a problem state "
+               "of the host notifications will be sent out in regular intervals "
+               "until the problem is acknowledged."),
+        label = _("Enable periodic notifications"),
+        none_label = _("disabled"),
+        none_value = 0,
+        )
+    )
+
+register_rule(group,
+    "extra_service_conf:notification_interval",
+    Optional(
+        Integer(
+            minvalue = 1,
+            default_value = 120,
+            label = _("Interval:"),
+            unit = _("minutes")),
+        title = _("Periodic notifications during service problems"),
+        help = _("If you enable periodic notifications, then during a problem state "
+               "of the service notifications will be sent out in regular intervals "
+               "until the problem is acknowledged."),
+        label = _("Enable periodic notifications"),
+        none_label = _("disabled"),
+        none_value = 0,
+        ),
+    itemtype = "service")
+
 group = "monconf/Inventory and Check_MK settings"
 
 register_rule(group,

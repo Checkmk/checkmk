@@ -1341,19 +1341,20 @@ class Optional(ValueSpec):
         self._label = kwargs.get("label")
         self._negate = kwargs.get("negate", False)
         self._none_label = kwargs.get("none_label", _("(unset)"))
+        self._none_value = kwargs.get("none_value", None)
         self._sameline = kwargs.get("sameline", False)
 
     def canonical_value(self):
-        return None
+        return self._none_value
 
     def render_input(self, varprefix, value):
         div_id = "option_" + varprefix
         checked = html.get_checkbox(varprefix + "_use")
         if checked == None:
             if self._negate:
-                checked = value == None
+                checked = value == self._none_value
             else:
-                checked = value != None
+                checked = value != self._none_value
 
         html.write("<span>")
 
@@ -1382,7 +1383,7 @@ class Optional(ValueSpec):
             display = ""
 
         html.write('<span id="%s" style="display: %s">' % (div_id, display))
-        if value == None:
+        if value == self._none_value:
             value = self._valuespec.default_value()
         if self._valuespec.title():
             html.write(self._valuespec.title() + " ")
@@ -1390,7 +1391,7 @@ class Optional(ValueSpec):
         html.write('</span>\n')
 
     def value_to_text(self, value):
-        if value == None:
+        if value == self._none_value:
             return self._none_label
         else:
             return self._valuespec.value_to_text(value)
@@ -1399,14 +1400,14 @@ class Optional(ValueSpec):
         if html.get_checkbox(varprefix + "_use") != self._negate:
             return self._valuespec.from_html_vars(varprefix + "_value")
         else:
-            return None
+            return self._none_value
 
     def validate_datatype(self, value, varprefix):
-        if value != None:
+        if value != self._none_value:
             self._valuespec.validate_datatype(value, varprefix + "_value")
 
     def validate_value(self, value, varprefix):
-        if value != None:
+        if value != self._none_value:
             self._valuespec.validate_value(value, varprefix + "_value")
 
 # Handle case when there are several possible allowed formats

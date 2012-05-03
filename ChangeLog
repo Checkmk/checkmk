@@ -44,6 +44,7 @@
     * FIX: create sample config only if both rules.mk and hosttags.mk are missing
     * FIX: do not loose host tags when both using WATO-configured and 
       manual ones (via multisite.mk)
+    * Timeperiods: Make list of exceptions dynamic, not fixed to 10 entries
 
 1.2.0b2:
     Core:

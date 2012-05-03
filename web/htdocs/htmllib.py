@@ -370,7 +370,7 @@ class html:
             url = "javascript:void(0)"
 
         if style:
-            style = 'style="%s" ' % style
+            style = 'style="%s" ' % style 
 
         if target:
             target = 'target="%s" ' % target

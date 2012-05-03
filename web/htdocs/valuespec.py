@@ -546,6 +546,7 @@ class ListOf(ValueSpec):
         self._magic = kwargs.get("magic", "@")
         self._rowlabel = kwargs.get("row_label")
         self._add_label = kwargs.get("add_label", _("Add new element"))
+        self._movable = kwargs.get("movable", True)
 
     def del_button(self, vp, nr):
         js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
@@ -558,8 +559,8 @@ class ListOf(ValueSpec):
             "down" : _("down"),
         }
         html.empty_icon_button() # needed as placeholder
-        html.icon_button("#", _("Move this entry %s") % where_name[where], 
-           where, onclick=js)
+        html.icon_button("#", _("Move this entry %s %s") % (where_name[where],self._movable),  
+           where, onclick=js, style = (not self._movable) and "display: none" or "")
 
     # Implementation idea: we render our element-valuespec
     # once in a hidden div that is not evaluated. All occurances
@@ -576,8 +577,9 @@ class ListOf(ValueSpec):
         html.write('<tr><td class=vlof_buttons>')
         html.hidden_field(varprefix + "_indexof_" + self._magic, "") # reconstruct order after moving stuff
         self.del_button(varprefix, self._magic)
-        self.move_button(varprefix, self._magic, "up")
-        self.move_button(varprefix, self._magic, "down")
+        if self._movable:
+            self.move_button(varprefix, self._magic, "up")
+            self.move_button(varprefix, self._magic, "down")
         html.write('</td><td class=vlof_content>')
         self._valuespec.render_input(
             varprefix + "_" + self._magic, 
@@ -592,8 +594,9 @@ class ListOf(ValueSpec):
             html.write('<tr><td class=vlof_buttons>')
             html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "") # reconstruct order after moving stuff
             self.del_button(varprefix, nr+1)
-            self.move_button(varprefix, self._magic, "up") # visibility fixed by javascript
-            self.move_button(varprefix, self._magic, "down")
+            if self._movable:
+                self.move_button(varprefix, self._magic, "up") # visibility fixed by javascript
+                self.move_button(varprefix, self._magic, "down")
             html.write("</td><td class=vlof_content>")
             self._valuespec.render_input(varprefix + "_%d" % (nr+1), v)
             html.write("</td></tr>")

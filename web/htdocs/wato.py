@@ -5693,9 +5693,24 @@ def save_timeperiods(timeperiods):
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("timeperiods.update(%s)\n" % pprint.pformat(timeperiods))
 
+class ExceptionName(TextAscii):
+    def __init__(self, **kwargs):
+        kwargs["regex"] = "^[-a-z0-9A-Z /]*$"
+        kwargs["regex_error"] = _("This is not a valid Nagios timeperiod day specification.")
+        kwargs["allow_empty"] = False
+        TextAscii.__init__(self, **kwargs)
+
+    def validate_value(self, value, varprefix):
+        if value in [ "monday", "tuesday", "wednesday", "thursday",
+                       "friday", "saturday", "sunday" ]:
+            raise MKUserError(varprefix, _("You cannot use weekday names (%s) in exceptions" % value))
+        if value in [ "name", "alias", "timeperiod_name", "register", "use" ]:
+            raise MKUserError(varprefix, _("<tt>%s</tt> is a reserved keyword."))
+        TextAscii.validate_value(self, value, varprefix)
 
 class MultipleTimeRanges(ValueSpec):
     def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
         self._num_columns = kwargs.get("num_columns", 3)
         self._rangevs = TimeofdayRange()
 
@@ -5733,7 +5748,17 @@ class MultipleTimeRanges(ValueSpec):
 
 def mode_edit_timeperiod(phase):
     num_columns = 3
-    num_exceptions = 10
+
+    vs_ex = ListOf(
+        Tuple(
+            orientation = "horizontal",
+            show_titles = False,
+            elements = [
+                ExceptionName(),
+                MultipleTimeRanges()]
+        ),
+        movable = False,
+        add_label = _("Add Exception"))
 
     # convert Check_MK representation of range to ValueSpec-representation
     def convert_from_tod(tod):
@@ -5803,6 +5828,8 @@ def mode_edit_timeperiod(phase):
             if not alias:
                 raise MKUserError("alias", _("Please specify an alias name for your timeperiod."))
 
+            timeperiod.clear()
+
             # extract time ranges of weekdays
             for weekday, weekday_name in weekdays:
                 ranges = get_ranges(weekday)
@@ -5812,18 +5839,10 @@ def mode_edit_timeperiod(phase):
                     del timeperiod[weekday]
 
             # extract ranges for custom days
-            for e in range(0, num_exceptions):
-                varprefix = "ex%d" % e
-                exname = html.var(varprefix + "_name", "").strip()
-                if exname in [ w[0] for w in weekdays ]:
-                    raise MKUserError(varprefix + "_name",
-                           _("You may not specify a weekday's name as an exception."))
-                if exname and exname not in [ "alias", "timeperiod_name" ]:
-                    if not re.match("^[-a-z0-9A-Z /]*$", exname):
-                        raise MKUserError(varprefix + "_name",
-                            _("'%s' is not a valid Nagios timeperiod day specification.") % exname)
-                    ranges = get_ranges(varprefix)
-                    timeperiod[exname] = ranges
+            exceptions = vs_ex.from_html_vars("except")
+            vs_ex.validate_value(exceptions, "except")
+            for exname, ranges in exceptions:
+                timeperiod[exname] = map(convert_to_range, ranges)
 
             if new:
                 name = html.var("name")
@@ -5893,28 +5912,13 @@ def mode_edit_timeperiod(phase):
                  "relative or absolute dates. Please consult the <a target='_blank' href='%s'>Nagios documentation about "
                  "timeperiods</a> for examples." % nagurl))
     html.write("</td><td class=content>")
-    html.write("<table class=timeperiod>")
 
-    exnames =  []
+    exceptions = []
     for k in timeperiod:
         if k not in [ w[0] for w in weekdays ] and k != "alias":
-            exnames.append(k)
-    exnames.sort()
-
-    for e in range(num_exceptions):
-        if e < len(exnames):
-            exname = exnames[e]
-            ranges = timeperiod[exname]
-        else:
-            exname = ""
-            ranges = []
-        varprefix = "ex%d" % e
-        html.write("<tr><td class=name>")
-        html.text_input(varprefix + "_name", exname)
-        html.write("</td>")
-        timeperiod_ranges(varprefix, exname, False)
-        html.write("</tr>")
-    html.write("</table></td></tr>")
+            exceptions.append((k, map(convert_from_range, timeperiod[k])))
+    exceptions.sort()
+    vs_ex.render_input("except", exceptions)
 
     html.write("<tr><td colspan=2 class=buttons>")
     html.button("save", _("Save"))

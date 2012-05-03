@@ -613,16 +613,19 @@ table.validationerror img {
 /*    vertical-align: top; */
 }
 
+/* Special styling for Timeperiods editor */ 
 .wato table.timeperiod td.name {
-    width: 200px;
+    width: 230px;
 }
-.wato table.timeperiod td {
-    white-space: nowrap;
+
+form#form_timeperiod td.vlof_content input.text:first-child {
+    margin-right: 10px;
+    width: 189px;
 }
-.wato input.timeperioddate {
-    width: 7ex;
-    font-family: monospace;
+form#form_timeperiod td.vlof_content {
+    background-image: none;
 }
+
 
 /* Value editor */
 .wato table.data.globalvars td {

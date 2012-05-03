@@ -300,6 +300,9 @@ div.error {
     border-color: #e40;
     color: white;
 }
+div.error a {
+    color: white;
+}
 
 div.warning {
     background-color: #ff4;

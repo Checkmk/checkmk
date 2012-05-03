@@ -942,8 +942,8 @@ class ListChoice(ValueSpec):
                     html.write("</tr>")
                 html.write("<tr>")
             html.write("<td>")
-            html.checkbox("%s_%d" % (varprefix, nr), key in value)
-            html.write("&nbsp;%s</td>\n" % title)
+            html.checkbox("%s_%d" % (varprefix, nr), key in value, label = title)
+            html.write("</td>")
         html.write("</tr></table>")
 
     def value_to_text(self, value):

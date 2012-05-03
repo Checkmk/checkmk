@@ -5704,7 +5704,7 @@ class ExceptionName(TextAscii):
         if value in [ "monday", "tuesday", "wednesday", "thursday",
                        "friday", "saturday", "sunday" ]:
             raise MKUserError(varprefix, _("You cannot use weekday names (%s) in exceptions" % value))
-        if value in [ "name", "alias", "timeperiod_name", "register", "use" ]:
+        if value in [ "name", "alias", "timeperiod_name", "register", "use", "exclude" ]:
             raise MKUserError(varprefix, _("<tt>%s</tt> is a reserved keyword."))
         TextAscii.validate_value(self, value, varprefix)
 
@@ -5745,10 +5745,27 @@ class MultipleTimeRanges(ValueSpec):
         for c, v in enumerate(value):
             self._rangevs.validate_value(v, varprefix + "_%d" % c)
 
+# Check, if timeperiod tpa excludes or is tpb 
+def timeperiod_excludes(timeperiods, tpa_name, tpb_name):
+    if tpa_name == tpb_name:
+        return True
+
+    tpa = timeperiods[tpa_name]
+    for ex in tpa.get("exclude", []):
+        if ex == tpb_name:
+            return True
+        if timeperiod_excludes(timeperiods, ex, tpb_name):
+            return True
+    return False
+ 
 
 def mode_edit_timeperiod(phase):
     num_columns = 3
+    timeperiods = load_timeperiods()
+    name = html.var("edit") # missing -> new group
+    new = name == None
 
+    # ValueSpec for the list of Exceptions
     vs_ex = ListOf(
         Tuple(
             orientation = "horizontal",
@@ -5759,6 +5776,16 @@ def mode_edit_timeperiod(phase):
         ),
         movable = False,
         add_label = _("Add Exception"))
+
+    # ValueSpec for excluded Timeperiods. We offer the list of
+    # all other timeperiods - but only those that do not 
+    # exclude the current timeperiod (in order to avoid cycles)
+    other_tps = []
+    for tpname, tp in timeperiods.items():
+        if not new and not timeperiod_excludes(timeperiods, tpname, name): 
+            other_tps.append((tpname, tp.get("alias") or name))
+
+    vs_excl = ListChoice(choices = other_tps)
 
     # convert Check_MK representation of range to ValueSpec-representation
     def convert_from_tod(tod):
@@ -5792,10 +5819,6 @@ def mode_edit_timeperiod(phase):
         MultipleTimeRanges().validate_value(value, varprefix)
         return map(convert_to_range, value)
 
-
-    name = html.var("edit") # missing -> new group
-    new = name == None
-
     if phase == "title":
         if new:
             return _("Create new time period")
@@ -5806,7 +5829,6 @@ def mode_edit_timeperiod(phase):
         html.context_button(_("All Timeperiods"), make_link([("mode", "timeperiods")]), "back")
         return
 
-    timeperiods = load_timeperiods()
     if new:
         timeperiod = {}
     else:
@@ -5843,6 +5865,12 @@ def mode_edit_timeperiod(phase):
             vs_ex.validate_value(exceptions, "except")
             for exname, ranges in exceptions:
                 timeperiod[exname] = map(convert_to_range, ranges)
+
+            # extract excludes
+            excludes = vs_excl.from_html_vars("exclude")
+            vs_excl.validate_value(excludes, "exclude")
+            if excludes:
+                timeperiod["exclude"] = excludes
 
             if new:
                 name = html.var("name")
@@ -5915,10 +5943,20 @@ def mode_edit_timeperiod(phase):
 
     exceptions = []
     for k in timeperiod:
-        if k not in [ w[0] for w in weekdays ] and k != "alias":
+        if k not in [ w[0] for w in weekdays ] and k not in [ "alias", "exclude" ]:
             exceptions.append((k, map(convert_from_range, timeperiod[k])))
     exceptions.sort()
     vs_ex.render_input("except", exceptions)
+
+
+    # Excludes
+    if other_tps:
+        html.write("<tr><td class=legend>")
+        html.write(_("Exclude"))
+        html.write("</td><td class=content>")
+        vs_excl.render_input("exclude", timeperiod.get("exclude", []))
+        html.write("</td></tr>")
+
 
     html.write("<tr><td colspan=2 class=buttons>")
     html.button("save", _("Save"))
@@ -5940,8 +5978,9 @@ class TimeperiodSelection(ElementSelection):
 # Check if a timeperiod is currently in use and cannot be deleted
 # Returns a list of occurrances.
 # Possible usages:
-# - user accounts (notification period)
-# - rules: service/host-notification/check-period
+# - 1. rules: service/host-notification/check-period
+# - 2. user accounts (notification period)
+# - 3. excluded by other timeperiods
 def find_usage_of_timeperiod(tpname):
 
     # Part 1: Rules
@@ -5962,6 +6001,13 @@ def find_usage_of_timeperiod(tpname):
         if tp == tpname:
             used_in.append(("%s: %s" % (_("User"), userid),
                 make_link([("mode", "edit_user"), ("edit", userid)])))
+
+    # Part 3: Other Timeperiods
+    for tpn, tp in load_timeperiods().items():
+        if tpname in tp.get("exclude", []):
+            used_in.append(("%s: %s (%s)" % (_("Timeperiod"), tp.get("alias", tpn), 
+                    _("excluded")),
+                    make_link([("mode", "edit_timeperiod"), ("edit", tpn)])))
 
     return used_in
 

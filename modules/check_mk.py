@@ -1926,10 +1926,12 @@ def create_nagios_config_timeperiods(outfile):
             if "alias" in tp:
                 outfile.write("  alias\t\t\t\t%s\n" % tp["alias"].encode("utf-8"))
             for key, value in tp.items():
-                if key != "alias":
+                if key not in [ "alias", "exclude" ]:
                     times = ",".join([ ("%s-%s" % (fr, to)) for (fr, to) in value ])
                     if times:
                         outfile.write("  %-20s\t\t%s\n" % (key, times))
+            if "exclude" in tp:
+                outfile.write("  exclude\t\t\t%s\n" % ",".join(tp["exclude"]))
             outfile.write("}\n\n")
 
 def create_nagios_config_contacts(outfile):

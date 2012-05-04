@@ -885,6 +885,21 @@ checkgroups.append((
 checkgroups.append((
     subgroup_cpumem,
     "cpu_utilization",
+    _("CPU utilization (percentual)"),
+    Optional(
+        Tuple(
+              elements = [
+                  Percentage(title = _("Warning at a utilization of"), label = "%"),
+                  Percentage(title = _("Critical at a utilization of"), label = "%")]),
+        label = _("Alert on too high CPU utilization"),
+        help = _("The CPU utilization sums up the percentages of CPU time that is used "
+                 "for user processes and kernel routines over all available cores within "
+                 "the last check interval. The possible range is from 0% to 100%")),
+    None, None))
+
+checkgroups.append((
+    subgroup_cpumem,
+    "cpu_iowait",
     _("CPU utilization (disk wait)"),
     Optional(
         Tuple(

@@ -36,7 +36,7 @@ def inventory_hp_procurve_cpu(info):
 def check_hp_procurve_cpu(item, params, info):
     if len(info) == 1:
         cpu_util = int(info[0][0])
-        if cpu_util >= 0 <= 100:
+        if cpu_util >= 0 and cpu_util <= 100:
             status = 0
             output = ''
             if cpu_util >= params[1]:

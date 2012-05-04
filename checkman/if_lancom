@@ -1,0 +1,141 @@
+title: Monitor network interfaces of LANCOM devices via standard MIB using 64 Bit counters
+agents: snmp
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check does exactly the same as {if64} but retrieves {ifName} instead
+ of {ifDescr}, because {ifDescr} is not useful in LANCOM devices.
+ 
+ It uses 64 bit counters from the {IF-MIB} below {.1.3.6.1.2.1.31.1.1.1}. This allows to correctly
+ monitor switch ports with a traffic of more then 2GB per check interval.
+
+ Also this check can use {ifAlias} instead if {ifDescr} for retrieving
+ the admin-configured interface description. This is e.g. useful for HP ProCurve
+ switches which do not show that aliasses in {ifDescr}.
+
+ {Note}: This check needs SNMP v2c and thus only works, if you hosts are
+ added to {bulkwalk_hosts}.
+
+ Depending on the check paramters this check can go WARN or CRIT when the
+ port status changes (i.e. is down), when the link speed changes (e.g. a
+ port expected to be set to 1GBit/s operates only at 100MBit/s), when the
+ absolute or procentual traffic of a port exceeds certain levels or if the
+ rate of errors or discards exceeds configurable limits.
+
+ As of Check_MK version 1.1.9i1 this check supports averaging the in- and
+ outgoing traffic over a configurable range of time by using an exponentially
+ weighted moving average - just as Linux does for the CPU load averages.
+ The averaging can be configured on a per host and per port base. This is
+ done by adding a key {"average"} to the parameter dictionary with the number
+ of minutes that the average should cover as its key. Port with averaging
+ turned on output two additional performance values: the averaged traffic
+ in bytes. If you have configured traffic levels, then those levels are
+ applied to the averaged values.
+
+item:
+ There are three allowed ways to specify a port: {1}: the last component of
+ the SNMP OID number (as string), the {ifDescr} of the port or the {ifAlias} of
+ the port. If you are using the alias, you have to make sure that it is unique
+ by configuring useful aliases in the switch. Check_MK does not check for uniqueness.
+
+inventory:
+ The inventory creates one service for each port that fulfills configurable conditions.
+ Per default these are ports which are currently found {up} and are of types {6} (ethernetCsmacd),
+ {32} (frameRelay) or {117} (gigabitEthernet).
+
+perfdata:
+ {in}: The number of bytes received per second.
+ {inucast}: The number of unicast packets received per second.
+ {innucast}: The number of broadcast and multicast packets per second.
+ {indisc}: The number of discarded received packets per second.
+ {inerr}: The number of input errors per second.
+ {out}: The number of bytes sent per second.
+ {outucast}: The number of unicast packets sent per second.
+ {outnucast}: The number of broadcast and multicast packets sent per second.
+ {outdisc}: The number of output packets discarded per second.
+ {outerr}: The number of output errors per second.
+ {outqlen}: The current length of the output queue.
+ {in_avg_?}: optional: The averaged number of received bytes over a longer range of time
+ {out_avg_?}: optional: The averaged number of sent bytes
+
+[parameters]
+parameters (dict): Due to its complexity, this check now uses a dictionary as
+                   parameter. The tuple representation used up to version 1.1.8 are
+                   currently still supported but discouraged. The dictionary can have
+                   the following keys:
+
+                   {"errors"} - a pair of two float values to be used as WARN/CRIT
+                   percentages for errors + discards. The default is {(0.01, 0.1)} - which
+                   means that the services gets WARN if the error rate is at least
+                   0.01 percent. That means that one error per 10,000 packages is seen.
+
+                   {"traffic"} - a pair of two float values to be used as WARN/CRIT
+                   levels for the bandwidth usage of the port. Integer numbers are interpreted
+                   as bytes per seconds. So a value of {(500,1000)} will trigger WARN/CRIT
+                   if either the ingoing or outgoing traffic exceeds 500/1000 bytes per second.
+                   If you use floating point number, those are interpreted as percentages
+                   of the available bandwidth as signalled by the port. A value of {(50.0, 80.0)}
+                   will trigger WARN/CRIT, if at least 50%/80% of the nominal bandwidth is
+                   used. The default is to impose no levels on the traffic.
+
+                   {"average"} - if you set this key to a number, then it is interpreted as
+                   a time in minutes. The check will then compute the averaged used traffic
+                   over approximately that range of time. Note: The algorithm used here is
+                   the same as Linux uses for the CPU load. This means that more recent values
+                   are weighted higher than older values and that even values out of the configured
+                   time range are - to a low degree - represented in the average. If you configure
+                   an average, then the traffic levels are applied to the averaged values.
+
+                   {"state"} - the expected operstatus of the interface (as string or list of strings. If this
+                   is {None} then the state is not checked. Possible values for the
+                   state are {"1"}(up), {"2"}(down), {"3"}(testing), {"4"}(unknown),
+                   {"5"}(dormant), {"6"}(notPresent) and {"7"}(lowerLayerDown). The default is to
+                   remember the state found during inventory and enforce this. It is allowed to
+                   set {"state"} either to a string (one single allowed state) or a list of
+                   strings. For example set this to '{["1", "5"]}' if you want to allow {up}
+                   and {dormant}.
+
+                   {"speed"} - the expected port speed as an integer of the bits per second (not
+                   the bytes!). If you set this to {None}, then the port speed is not checked.
+                   The default is to remember and enforce the port speed found during inventory.
+
+[configuration]
+if_inventory_porttypes (list of strings): List of interface types the inventory should create checks for.
+  Default is {[ '6', '32', '117' ]}, which means that all Ethernet, Frame Relay and Gigabit Ethernet ports
+  will be monitored. Virtual and loopback ports will be ignored. Please look into the check implementation
+  of in the SNMP MIB description of {ifType} for a complete list of port types.
+
+if_inventory_portstates (list of strings): Per default this variable is set to {['1']}, which means that
+  only ports found in the state {up} are being added to the monitoring. If you set this to {['1', '2', '5']} then
+  also ports in state {down} and {dormant} will be monitored.
+
+if_inventory_pad_portnumbers (boolean): If this is set to {True} (the default), then port numbers used as
+  items are padded with zeroes so that all items have the same length and ports will sort correctly in
+  the GUI. You can set this to {False} if you want to keep the same service descriptions as in versions
+  prior to 1.1.13i3.
+
+if_inventory_uses_description (boolean): Whether inventory should use the interface description as item (instead
+  of the interface index). Default is {False}.
+
+if_inventory_uses_alias (boolean): Whether inventory should use the interface alias as item. Please note,
+  that the {if} check uses parts of the MIB which do not support alias and always use the description as
+  alias. This option is only interesting if you are using {if64} checks.
+
+if_inventory_monitor_speed (boolean): Whether inventory should code the current speed setting of the port
+    into the check parameters and thus enforces a static speed setting on this port. Default is {False},
+    which will code {None} as target speed.
+
+if_inventory_monitor_state (boolean): Whether inventory should code the current port status into the
+    check parameters and thus enforces the status of the port not to be changed in future. Default is {True} -
+    so the port states will be monitored. Setting this to {False} will disable status checking of all
+    newly inventorized ports.
+
+if_default_error_levels (float, float): Default levels for errors. The default is {(0.01, 0.1)}, setting
+    the levels to 0.01 and 0.1 percent of total packages.
+
+if_default_traffic_levels (float/int, float/int): Default levels for checking traffic (used bandwitdh). The
+    default is {(None, None)}, which means the the traffic is not being checked - just monitored.
+
+if_default_average (int): Default time range for averaging in minutes. This is preset to {None}, which disables
+    averaging of port traffic.

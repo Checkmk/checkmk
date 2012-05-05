@@ -1,0 +1,30 @@
+Title: Error sending commands in Mobile UI
+Component: mobile
+State: open
+Date: 2012-05-05 13:41:00
+Targetversion: 1.1.12
+Class: bug
+
+I am receiving this error in the Check_MK Mobile interface:
+
+      ERROR showing view: too many values to unpack
+
+I am using Check_MK version 1.2.0b2.  Here are the steps I am taking to
+receive this error:
+
+- Log in to Mobile interface using a Blackberry, Android, or Google Chrome
+- Click on "Hosts > Problems (unhandled)"
+- Click on the hostname of a downed host
+- Click on "context"
+- Click on "Host status"
+- Click "Commands" at the bottom of the page
+- Expand the "Acknowledge" section
+- Enter a comment (Ex. "Known issue")
+- Click the "Acknowledge" button
+- Select yes at the prompt > "Do you really want to acknowledge the
+problems of the 1 hosts?"
+
+After this, the screen just displays the message: "ERROR showing view: too
+many values to unpack".
+
+The alert remains unacknowledged as well.

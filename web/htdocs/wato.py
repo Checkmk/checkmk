@@ -2425,6 +2425,8 @@ def mode_bulk_inventory(phase):
                 entries += recurse_hosts(f, recurse, only_failed)
         return entries
 
+    config.need_permission("wato.services")
+
     # 'all' not set -> only inventorize checked hosts
     if not html.var("all"):
         complete_folder = False
@@ -2436,22 +2438,19 @@ def mode_bulk_inventory(phase):
         hostnames = get_hostnames_from_checkboxes(filterfunc)
         items = [ "%s|%s" % (g_folder[".path"], hostname)
              for hostname in hostnames ]
+        for hostname in hostnames:
+            check_host_permissions(hostname)
 
     # all host in this folder, maybe recursively
     else:
         complete_folder = True
         entries = recurse_hosts(g_folder, html.get_checkbox("recurse"), html.get_checkbox("only_failed"))
         items = []
+        hostnames = []
         for hostname, folder in entries:
             check_host_permissions(hostname, folder=folder)
             items.append("%s|%s" % (folder[".path"], hostname))
-
-
-
-    # check all permissions before beginning inventory
-    config.need_permission("wato.services")
-    for hostname in hostnames:
-        check_host_permissions(hostname)
+            hostnames.append(hostname)
 
 
     if html.var("_start"):

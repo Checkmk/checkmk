@@ -1,0 +1,9 @@
+Title: Events of recent four hours show > 4h
+Component: multisite
+State: open
+Date: 2012-05-04 19:17:36
+Targetversion: 1.2.0
+Class: bug
+
+Due the new filter implementation the filter in this
+view is broken. Seen on Dashboard.

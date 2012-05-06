@@ -6675,6 +6675,10 @@ def get_url(url, insecure, user=None, password=None, params = ''):
     return response_body
 
 def check_mk_remote_automation(siteid, command, args, indata):
+    site = config.site(siteid)
+    if "secret" not in site:
+        raise MKGeneralException(_("Cannot access site %s - you are not logged in.")
+           % site.get("alias", siteid))
     # If the site is not up-to-date, synchronize it first.
     repstatus = load_replication_status()
     if repstatus.get(siteid, {}).get("need_sync"):

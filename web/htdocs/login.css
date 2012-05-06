@@ -114,6 +114,7 @@ label {
     padding: 3px 5px 3px 5px;
     background-image: url("images/login_input_normal.png");
     background-repeat: no-repeat;
+    box-shadow: none;
 }
 
 .inputerror #input_user, .inputerror #input_pass {

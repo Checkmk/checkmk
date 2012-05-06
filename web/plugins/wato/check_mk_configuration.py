@@ -149,6 +149,7 @@ register_configvar(group,
               help = _("When you point your browser to the Multisite GUI, usually the dashboard "
                        "is shown in the main (right) frame. You can replace this with any other "
                        "URL you like here."),
+              size = 80,
               default_value = "dashboard.py"),
     domain = "multisite")
 

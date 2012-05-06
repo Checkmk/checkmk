@@ -451,9 +451,10 @@ class html:
             default_value = ""
         addprops = ""
         add_style = ""
-        if "size" in args:
+        if "size" in args and args["size"]:
             addprops += " size=%d" % (args["size"] + 1)
-            add_style = "width: %dex; " % args["size"]
+            if "width:" not in args.get("style", ""):
+                add_style = "width: %d.5ex; " % args["size"]
 
         if "type" in args:
             mytype = args["type"]

@@ -243,9 +243,9 @@ def normal_login_page(called_directly = True):
     html.hidden_field('_login', '1')
     html.hidden_field('_origtarget', htmllib.attrencode(origtarget))
     html.write("<label id=label_user class=legend for=_username>%s:</label><br />" % _('Username'))
-    html.text_input("_username", size = 50, id="input_user")
+    html.text_input("_username", id="input_user")
     html.write("<label id=label_pass class=legend for=_password>%s:</label><br />" % _('Password'))
-    html.password_input("_password", size = 50, id="input_pass")
+    html.password_input("_password", id="input_pass", size=None)
 
     if html.has_user_errors():
         html.write('<div id=login_error>')

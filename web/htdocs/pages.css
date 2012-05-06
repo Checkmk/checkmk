@@ -474,9 +474,6 @@ input.tab#results, input.tabactive#results { background-color: #fe6; }
 
 /* input elements in forms */
 
-table.form input.text {
-}
-
 table.form input.number {
     text-align: right;
 }

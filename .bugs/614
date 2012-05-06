@@ -1,9 +1,9 @@
 Title: Error sending commands in Mobile UI
 Component: mobile
-State: open
+Class: bug
+State: done
 Date: 2012-05-05 13:41:00
 Targetversion: 1.1.12
-Class: bug
 
 I am receiving this error in the Check_MK Mobile interface:
 
@@ -28,3 +28,6 @@ After this, the screen just displays the message: "ERROR showing view: too
 many values to unpack".
 
 The alert remains unacknowledged as well.
+
+2012-05-06 12:17:19: changed state open -> done
+Should work now.

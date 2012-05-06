@@ -353,7 +353,7 @@ def show_command_form(view, datasource, rows):
 
 def do_commands(view, what, rows):
     command = None
-    title = views.core_command(what, rows[0])[1] # just get the title
+    title, executor = views.core_command(what, rows[0])[1:3] # just get the title
     r = html.confirm(_("Do you really want to %s the %d %ss?") %
                      (title, len(rows), what), action=html.req.myfile + ".py#commands")
     if r != True:
@@ -361,11 +361,11 @@ def do_commands(view, what, rows):
 
     count = 0
     for row in rows:
-        nagios_commands, title = views.core_command(what, row)
+        nagios_commands, title, executor = views.core_command(what, row)
         for command in nagios_commands:
             if type(command) == unicode:
                 command = command.encode("utf-8")
-            html.live.command(command, row["site"])
+            executor(command, row["site"])
             count += 1
 
     if command:

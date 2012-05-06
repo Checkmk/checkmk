@@ -9319,6 +9319,7 @@ def mode_edit_ruleset(phase):
     elif phase == "action":
         # Folder for the rule actions is defined by _folder
         rule_folder = g_folders[html.var("_folder", html.var("folder"))]
+        check_folder_permissions(rule_folder, "write", True)
         rulesets = load_rulesets(rule_folder)
         rules = rulesets.get(varname, [])
 
@@ -9864,6 +9865,10 @@ def mode_edit_rule(phase):
             # CONDITION
             tag_specs, host_list, item_list = get_rule_conditions(rulespec)
             new_rule_folder = g_folders[html.var("new_rule_folder")]
+
+            # Check permissions on folders
+            check_folder_permissions(folder, "write", True)
+            check_folder_permissions(new_rule_folder, "write", True)
 
             # VALUE
             if valuespec:

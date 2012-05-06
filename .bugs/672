@@ -1,9 +1,9 @@
 Title: Hosts with 4.000 services in replicated WATO fail
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-04-06 11:23:12
 Targetversion: 1.2.0
-Class: bug
 
 When a host has many services and you save a manual check
 configuration for a host on a slave site, then the command
@@ -12,3 +12,6 @@ a useful error message.
 
 Solution: put the post data into a tmp file (yurks) - optimally
 only if it is too large.
+
+2012-05-06 20:27:23: changed state open -> done
+Works now (tested) with 10.000 services on one host.

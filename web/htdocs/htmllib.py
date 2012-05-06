@@ -176,6 +176,7 @@ class html:
         self.buffering = True
         self.transformations = []
         self.final_javascript_code = ""
+        self.auto_id = 0
 
     def set_buffering(self, b):
         self.buffering = b
@@ -185,6 +186,10 @@ class html:
 
     def pop_transformation(self):
         del self.transformations[-1]
+
+    def some_id(self):
+        self.auto_id += 1
+        return "id_%d" % self.auto_id
 
     def plugin_stylesheets(self):
         global plugin_stylesheets
@@ -343,8 +348,9 @@ class html:
     def buttonlink(self, href, text, add_transid=False, obj_id='', style='', title='', disabled=''):
         if add_transid:
             href += "&_transid=%s" % self.fresh_transid()
-        if obj_id:
-            obj_id = ' id=%s' % obj_id
+        if not obj_id:
+            obj_id = self.some_id()
+        obj_id = ' id=%s' % obj_id
         if style:
             style = ' style="%s"' % style
         if title:
@@ -352,9 +358,12 @@ class html:
         if disabled:
             title = ' disabled="%s"' % disabled
 
+        if not self.mobile:
+            self.write('<label for="%s" class=image_button>' % obj_id)
         self.write('<input%s%s%s%s value="%s" class=buttonlink type=button onclick="location.href=\'%s\'">' % \
                 (obj_id, style, title, disabled, text, href))
-        # self.write("<a href=\"%s\" class=button%s%s>%s</a>" % (href, obj_id, style, text))
+        if not self.mobile:
+            self.write('</label>')
 
     def icon(self, help, icon):
        self.write('<img align=absmiddle class=icon title="%s" src="images/icon_%s.png">' % (

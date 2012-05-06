@@ -6,6 +6,7 @@
 
     Multisite:
     * FIX: fixed filter of recent event views (4 hours didn't catch)
+    * FIX: convert more buttons to new graphical style
 
     Mobile GUI:
     * FIX: commands can be executed again

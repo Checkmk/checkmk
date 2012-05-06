@@ -2,6 +2,9 @@
     WATO:
     * ps and ps.perf configurable via WATO now (without inventory)
 
+    Multisite:
+    * FIX: fixed filter of recent event views (4 hours didn't catch)
+
     Mobile GUI:
     * FIX: commands can be executed again
     * FIX: fixed styling of buttons

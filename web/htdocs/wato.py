@@ -6657,9 +6657,22 @@ def get_url(url, insecure, user=None, password=None, params = '', post_data = No
     # -s: silent
     # -S: show errors
     # -w '%{http_code}': add the http status code to the end of the output
-    command = 'curl -w "\n%%{http_code}" -s -S%s%s%s "%s" 2>&1' % (insecure, cred, params, url)
+    command = 'curl -w "\n%%{http_code}" -s -S%s%s%s "%s" 2>&1' % (
+              insecure, cred, params, url)
+    tmp_file = None
     if post_data != None:
-        command += ' --data-binary "%s"' % post_data
+        # Put POST data on command line as long as it is not
+        # longer than 50 KB (remember: Linux has an upper limit
+        # of 132 KB for command line plus environment
+        if len(post_data) < 50000:
+            command += ' --data-binary "%s"' % post_data
+        else:
+            import tempfile
+            tmp_file = tempfile.NamedTemporaryFile(dir = defaults.tmp_dir)
+            tmp_file.write(post_data)
+            tmp_file.flush()
+            command += ' --data-binary "@%s"' % tmp_file.name
+
     response = os.popen(command).read().strip()
     try:
         status_code = int(response[-3:])

@@ -324,9 +324,11 @@ class html:
         return self.req.myfile + ".py?" + urlencode_vars(vars)
 
     def image_button(self, varname, title, cssclass = ''):
-        self.write('<label for="%s" class=image_button>' % varname)
+        if not self.mobile:
+            self.write('<label for="%s" class=image_button>' % varname)
         self.raw_button(varname, title, cssclass)
-        self.write('</label>')
+        if not self.mobile:
+            self.write('</label>')
 
     def button(self, *args):
         self.image_button(*args)

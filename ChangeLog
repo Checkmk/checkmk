@@ -1,4 +1,6 @@
 1.2.0b4:
+    WATO:
+    * ps and ps.perf configurable via WATO now (without inventory)
 
 1.2.0b3:
     Core:

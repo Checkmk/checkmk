@@ -9559,7 +9559,7 @@ def create_rule(rulespec, hostname=None, item=NO_ITEM):
     new_rule = []
     valuespec = rulespec["valuespec"]
     if valuespec:
-        new_rule.append(valuespec.canonical_value())
+        new_rule.append(valuespec.default_value())
     if hostname:
         new_rule.append([hostname])
     else:

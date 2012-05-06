@@ -1343,6 +1343,7 @@ class Optional(ValueSpec):
         self._none_label = kwargs.get("none_label", _("(unset)"))
         self._none_value = kwargs.get("none_value", None)
         self._sameline = kwargs.get("sameline", False)
+        self._indent = kwargs.get("indent", True)
 
     def canonical_value(self):
         return self._none_value
@@ -1375,14 +1376,18 @@ class Optional(ValueSpec):
         if self._sameline:
             html.write("&nbsp;")
         else:
-            html.write("<br><br>")
+            html.write("<br>")
         html.write("</span>")
         if checked == self._negate:
             display = "none"
         else:
             display = ""
+        if self._indent:
+            indent = 40
+        else:
+            indent = 0
 
-        html.write('<span id="%s" style="display: %s">' % (div_id, display))
+        html.write('<span id="%s" style="margin-left: %dpx; display: %s">' % (div_id, indent, display))
         if value == self._none_value:
             value = self._valuespec.default_value()
         if self._valuespec.title():
@@ -1418,11 +1423,15 @@ class Alternative(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
+        self._match = kwargs.get("match") # custom match function
 
     # Return the alternative (i.e. valuespec)
     # that matches the datatype of a given value. We assume
     # that always one matches. No error handling here.
     def matching_alternative(self, value):
+        if self._match:
+            return self._elements[self._match(value)]
+
         for vs in self._elements:
             try:
                 vs.validate_datatype(value, "")
@@ -1762,4 +1771,52 @@ class Foldable(ValueSpec):
         self._valuespec.validate_value(value, varprefix)
 
 
+# Transforms the value from one representation to
+# another while being completely transparent to the user.
+# forth: function that converts a value into the representation
+#        needed by the encapsulated vs
+# back:  function that converts a value created by the encapsulated
+#        vs back to the outer representation
 
+class Transform(ValueSpec):
+    def __init__(self, valuespec, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._valuespec = valuespec
+        self._back = kwargs.get("back")
+        self._forth = kwargs.get("forth")
+
+    def forth(self, value):
+        if self._forth:
+            return self._forth(value)
+        else:
+            return value
+
+    def back(self, value):
+        if self._back:
+            return self._back(value)
+        else:
+            return value
+
+    def render_input(self, varprefix, value):
+        self._valuespec.render_input( varprefix, self.forth(value))
+
+    def set_focus(*args):
+        self._valuespec.set_focus(*args)
+
+    def canonical_value(self):
+        return self._valuespec.canonical_value()
+
+    def default_value(self):
+        return self._valuespec.default_value()
+
+    def value_to_text(self, value):
+        return self._valuespec.value_to_text(self.forth(value))
+
+    def from_html_vars(self, varprefix):
+        return self.back(self._valuespec.from_html_vars(varprefix))
+
+    def validate_datatype(self, value, varprefix):
+        self._valuespec.validate_datatype(self.forth(value), varprefix)
+
+    def validate_value(self, value, varprefix):
+        self._valuespec.validate_value(self.forth(value), varprefix)

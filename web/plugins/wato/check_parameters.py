@@ -1151,7 +1151,7 @@ checkgroups.append((
     None,
     TextAscii(
         title = _("Name of the service"),
-        help = _("Pleae Please  note, that the agent replaces spaces in "
+        help = _("Pleae Please note, that the agent replaces spaces in "
          "the service names with underscores. If you are unsure about the "
          "correct spelling of the name then please look at the output of "
          "the agent (cmk -d HOSTNAME). The service names  are in the first "
@@ -1304,6 +1304,72 @@ register_rulegroup("static", _("Manual Checks"),
       "you can manually configure Check_MK based services to monitor "
       "on your hosts."))
 group = "static"
+
+# Add checks that have parameters but are only configured as manual checks
+checkgroups.append((
+    subgroup_ps,
+    "ps",
+    _("State and count of processes"),
+    Tuple(
+        elements = [
+            Alternative(
+                title = _("Name of the process"),
+                elements = [
+                    TextAscii(
+                        title = _("Exact name of the process without argments"),
+                        size = 50,
+                    ),
+                    Transform(
+                        RegExp(size = 50),
+                        title = _("Regular expression matching command line"),
+                        help = _("This regex must match the <i>beginning</i> of the complete "
+                                 "command line of the process including arguments"),
+                        forth = lambda x: x[1:],   # remove ~
+                        back  = lambda x: "~" + x, # prefix ~
+                    ),
+                    FixedValue(
+                        None,
+                        totext = "",
+                        title = _("Match all processes"),
+                    )
+                ],
+                match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
+                ),
+            TextAscii(
+                title = _("Name of operating system user"),
+                help = _("Leave this empty, if the user does not matter"),
+                none_is_empty = True,
+            ),
+            Integer(
+                title = _("Minimum number of matched process for WARNING state"),
+                default_value = 1,
+            ),
+            Integer(
+                title = _("Minimum number of matched process for OK state"),
+                default_value = 1,
+            ),
+            Integer(
+                title = _("Maximum number of matched process for OK state"),
+                default_value = 1,
+            ),
+            Integer(
+                title = _("Maximum number of matched process for WARNING state"),
+                default_value = 1,
+            ),
+        ]),
+    TextAscii(
+        title = _("Name of service"),
+        help = _("This name will be used in the description of the service"),
+        allow_empty = False,
+        regex = "^[a-zA-Z_0-9 _.-]*$",
+        regex_error = _("Please use only a-z, A-Z, 0-9, space, underscore, "
+                        "dot and hyphon for your service description"),
+    ),
+    "first"))
+
+
+
+
 
 for subgroup, checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
     elements = [

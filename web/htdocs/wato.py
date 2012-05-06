@@ -6493,8 +6493,7 @@ def mode_edit_site(phase):
                  "the connection to the remote sites. This brings a great speed up in high-latency "
                  "situations but locks a number of threads in the Livestatus module of the target site. "))
     html.write("</td><td class=content>")
-    html.checkbox("persist", site.get("persist", False))
-    html.write(_("Use persistent connections"))
+    html.checkbox("persist", site.get("persist", False), label=_("Use persistent connections"))
     html.write("</td></tr>")
 
     # URL-Prefix

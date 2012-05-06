@@ -2,6 +2,7 @@
     WATO:
     * ps and ps.perf configurable via WATO now (without inventory)
     * FIX: honor folder-permissions when creating, deleting and modifiying rules
+    * FIX: detect non-local site even if unix: is being used
 
     Multisite:
     * FIX: fixed filter of recent event views (4 hours didn't catch)

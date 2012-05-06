@@ -441,7 +441,7 @@ def site(name):
 def site_is_local(name):
     s = sites.get(name, {})
     sock = s.get("socket")
-    return not sock or sock.startswith("unix:")
+    return not sock or sock == defaults.livestatus_unix_socket
 
 def is_multisite():
     if len(sites) > 1:

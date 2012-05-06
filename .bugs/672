@@ -1,4 +1,4 @@
-Title: Hosts with many services in replicated WATO ->  Request-URI Too Large
+Title: Hosts with 4.000 services in replicated WATO fail
 Component: wato
 State: open
 Date: 2012-04-06 11:23:12
@@ -6,7 +6,9 @@ Targetversion: 1.2.0
 Class: bug
 
 When a host has many services and you save a manual check
-configuration for a host on a slave site, then the internal
-web services the remotely does inventory creates a too large
-URL. Either convert this to POST or send the list of 
-services as a Python object as the body of the request.
+configuration for a host on a slave site, then the command
+line for curl is getting too large. This does not even output
+a useful error message.
+
+Solution: put the post data into a tmp file (yurks) - optimally
+only if it is too large.

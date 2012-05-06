@@ -6,6 +6,8 @@
     * FIX: detect non-local site even if unix: is being used
     * FIX: better error message if not logged into site during 
            action that needs remote access
+    * FIX: send automation data via POST not GET. This fixes inventory
+           on hosts with up to 2000 services
 
     Multisite:
     * FIX: fixed filter of recent event views (4 hours didn't catch)

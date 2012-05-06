@@ -2963,8 +2963,6 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
     gwcreat = False
 
     if gateway:
-        if len(gateway) != 3:
-            raise Exception("Gateway ist %r" % (gateway,))
         gw_host, gw_ip, dns_name = gateway
         if not gw_host:
             if where == "nowhere":
@@ -3853,7 +3851,6 @@ def check_mk_local_automation(command, args=[], indata=""):
             html.show_error("<h3>Cannot activate changes</h3>%s" % e)
             return
 
-
     if config.debug:
         log_audit(None, "automation", "Automation: %s" % " ".join(cmd))
     try:
@@ -3877,6 +3874,7 @@ def check_mk_local_automation(command, args=[], indata=""):
             log_audit(None, "automation", "Automation command %s failed with exit code %d: %s" % (" ".join(cmd), exitcode, outdata))
         raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
               (" ".join(cmd), exitcode, hilite_errors(outdata), outdata.lstrip().startswith('sudo:') and sudo_msg or ''))
+
 
     # On successful "restart" command execute the activate changes hook
     if command == 'restart':
@@ -6649,7 +6647,7 @@ def do_site_login(site_id, name, password):
 def upload_file(url, file_path, insecure):
     return get_url(url, insecure, params = ' -F snapshot=@%s' % file_path)
 
-def get_url(url, insecure, user=None, password=None, params = ''):
+def get_url(url, insecure, user=None, password=None, params = '', post_data = None):
     cred = ''
     if user:
         cred = ' -u "%s:%s"' % (user, password)
@@ -6659,7 +6657,10 @@ def get_url(url, insecure, user=None, password=None, params = ''):
     # -s: silent
     # -S: show errors
     # -w '%{http_code}': add the http status code to the end of the output
-    response = os.popen('curl -w "\n%%{http_code}" -s -S%s%s%s "%s" 2>&1' % (insecure, cred, params, url)).read().strip()
+    command = 'curl -w "\n%%{http_code}" -s -S%s%s%s "%s" 2>&1' % (insecure, cred, params, url)
+    if post_data != None:
+        command += ' --data-binary "%s"' % post_data
+    response = os.popen(command).read().strip()
     try:
         status_code = int(response[-3:])
         response_body = response[:-3]
@@ -6705,8 +6706,10 @@ def do_remote_automation(site, command, vars):
                ("command", command),
                ("secret",  secret),
                ("debug",   config.debug and '1' or '')
-        ] + vars)
-    response = get_url(url, site.get('insecure', False))
+        ])
+    vars_encoded = htmllib.urlencode_vars(vars)
+    response = get_url(url, site.get('insecure', False), 
+                       post_data=vars_encoded)
     if not response:
         raise MKAutomationException("Empty output from remote site.")
     try:
@@ -7124,6 +7127,9 @@ def page_automation():
     if secret != get_login_secret():
         raise MKAuthException(_("Invalid automation secret."))
 
+    # Initialise g_root_folder, load all folder information
+    prepare_folder_info()
+
     command = html.var("command")
     if command == "checkmk-automation":
         cmk_command = html.var("automation")
@@ -7138,9 +7144,6 @@ def page_automation():
 
 def automation_push_snapshot():
     try:
-        # Initialise g_root_folder, load all folder information
-        prepare_folder_info()
-
         site_id = html.var("siteid")
         if not site_id:
             raise MKGeneralException(_("Missing variable siteid"))
@@ -11001,6 +11004,7 @@ def call_hook_pre_activate_changes():
 # the hosts as values.
 def call_hook_activate_changes():
     if hook_registered('activate-changes'):
+        hosts = collect_hosts(g_root_folder)
         call_hooks("activate-changes", collect_hosts(g_root_folder))
 
 # This hook is executed when the save_users() function is called

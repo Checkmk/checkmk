@@ -189,4 +189,6 @@ def create_auth_file(users):
 
 api.register_hook('users-saved',      create_auth_file)
 api.register_hook('roles-saved',      lambda x: create_auth_file(load_users()))
+# TODO: optimize: This hook does not use the list of the collected
+# hosts. And collicting the hosts is a lengthy operation.
 api.register_hook('activate-changes', lambda x: create_auth_file(load_users()))

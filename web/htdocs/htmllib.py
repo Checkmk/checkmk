@@ -450,8 +450,11 @@ class html:
         if default_value == None:
             default_value = ""
         addprops = ""
+        add_style = ""
         if "size" in args:
             addprops += " size=%d" % (args["size"] + 1)
+            add_style = "width: %dex; " % args["size"]
+
         if "type" in args:
             mytype = args["type"]
         else:
@@ -459,7 +462,9 @@ class html:
         if "autocomplete" in args:
             addprops += " autocomplete=\"%s\"" % args["autocomplete"]
         if args.get("style"):
-            addprops += " style=\"%s\"" % args["style"] 
+            addprops += " style=\"%s%s\"" % (add_style, args["style"])
+        elif add_style:
+            addprops += " style=\"%s\"" % add_style
 
         value = self.req.vars.get(varname, default_value)
         error = self.user_errors.get(varname)

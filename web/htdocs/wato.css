@@ -616,7 +616,7 @@ table.validationerror img {
 
 /* Special styling for Timeperiods editor */ 
 .wato table.timeperiod td.name {
-    width: 230px;
+    width: 210px;
 }
 
 form#form_timeperiod td.vlof_content input.text:first-child {

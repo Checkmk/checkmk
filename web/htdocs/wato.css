@@ -250,10 +250,11 @@ table.validationerror img {
 .wato table.data tr.data td.bulksearch {
     text-align right;
     padding-right: 0px;
+    white-space: nowrap;
 }
 
 .wato td.bulksearch input[type=text] {
-    width: 142px;
+    width: 150px;
     margin-right: 5px;
 }
 

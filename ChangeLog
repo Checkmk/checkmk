@@ -2,6 +2,10 @@
     WATO:
     * ps and ps.perf configurable via WATO now (without inventory)
 
+    Mobile GUI:
+    * FIX: commands can be executed again
+    * FIX: fixed styling of buttons
+
 1.2.0b3:
     Core:
     * FIX: fixed SNMP info declaration in checks: could be garbled

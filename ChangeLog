@@ -8,6 +8,8 @@
            action that needs remote access
     * FIX: send automation data via POST not GET. This fixes inventory
            on hosts with more than 500 services.
+    * FIX: make config options directly active after resetting them
+           to their defaults (didn't work for start_url, etc.
 
     Multisite:
     * FIX: fixed filter of recent event views (4 hours didn't catch)

@@ -14,6 +14,7 @@
     Multisite:
     * FIX: fixed filter of recent event views (4 hours didn't catch)
     * FIX: convert more buttons to new graphical style
+    * FIX: Logwatch handles logs with only OK lines in it correctly in logfile list views
 
     Mobile GUI:
     * FIX: commands can be executed again

@@ -939,6 +939,36 @@ register_rule(group,
              "If you want to use SNMP v2c on those devices, nevertheless, then use this rule set. "
              "One reason is enabling 64 bit counters."))
 
+register_rule(group,
+    "snmp_timing",
+    Dictionary(
+        title = _("Timing settings for SNMP access"),
+        help = _("This rule decides about the number of retries and timeout values "
+                 "for the SNMP access to devices."),
+        elements = [
+            ( "timeout",
+              Integer(
+                  title = _("Timeout between retries"),
+                  help = _("The default is 1 sec."),
+                  default_value = 1,
+                  minvalue = 1,
+                  maxvalue = 60, 
+                  unit = _("sec"),
+              ),
+            ),
+            ( "retries",
+              Integer(
+                  title = _("Number of retries"),
+                  help = _("The default is 5."),
+                  default_value = 5,
+                  minvalue = 1,
+                  maxvalue = 50,
+              )
+            ),
+       ]),
+    match = "dict")
+
+
 
 register_rule(group,
     "usewalk_hosts",

@@ -9969,8 +9969,8 @@ def mode_edit_rule(phase):
     div_id = "div_all_hosts"
 
     checked = host_list != ALL_HOSTS
-    html.checkbox("explicit_hosts", checked, onclick="valuespec_toggle_option(this, %r)" % div_id)
-    html.write(" " + _("Specify explicit host names"))
+    html.checkbox("explicit_hosts", checked, onclick="valuespec_toggle_option(this, %r)" % div_id,
+          label = _("Specify explicit host names"))
     html.write('<div id="%s" style="display: %s">' % (
             div_id, not checked and "none" or ""))
     negate_hosts = len(host_list) > 0 and host_list[0].startswith("!")

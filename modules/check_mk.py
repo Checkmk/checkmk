@@ -226,6 +226,7 @@ max_num_processes                  = 50
 # SNMP communities and encoding
 snmp_default_community             = 'public'
 snmp_communities                   = []
+snmp_timing                        = []
 snmp_character_encodings           = []
 
 # Inventory and inventory checks
@@ -611,6 +612,14 @@ def snmp_base_command(what, hostname):
 
     # Do not load *any* MIB files. This save lot's of CPU.
     options += " -m '' -M ''"
+
+    # Configuration of timing and retries
+    settings = snmp_timing_of(hostname)
+    if "timeout" in settings:
+        options += " -t %d" % settings["timeout"] 
+    if "retries" in settings:
+        options += " -r %d" % settings["retries"]
+
     return command + ' ' + options
 
 
@@ -625,6 +634,13 @@ def snmp_credentials_of(hostname):
 
     # nothing configured for this host -> use default
     return snmp_default_community
+
+def snmp_timing_of(hostname):
+    timing = host_extra_conf(hostname, snmp_timing)
+    if len(timing) > 0:
+        return timing[0]
+    else:
+        return {}
 
 def get_snmp_character_encoding(hostname):
     entries = host_extra_conf(hostname, snmp_character_encodings)

@@ -1,4 +1,8 @@
 1.2.0b4:
+    Core:
+    * New configuration variable snmp_timing, allowing to 
+      configure timeout and retries for SNMP requests (also via WATO)
+
     WATO:
     * ps and ps.perf configurable via WATO now (without inventory)
     * FIX: honor folder-permissions when creating, deleting 

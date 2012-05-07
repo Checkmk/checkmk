@@ -18,10 +18,15 @@
     Multisite:
     * FIX: fixed filter of recent event views (4 hours didn't catch)
     * FIX: convert more buttons to new graphical style
+    * FIX: Logwatch handles logs with only OK lines in it correctly in logfile list views
+    * FIX: Fixed syntax error in "Single-Host Problems" view definition
 
     Mobile GUI:
     * FIX: commands can be executed again
     * FIX: fixed styling of buttons
+
+    Checks & Agents:
+    * FIX: Logwatch: fixed missing linebreak during reclassifing lines of logfiles
 
 1.2.0b3:
     Core:

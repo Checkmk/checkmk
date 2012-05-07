@@ -257,7 +257,7 @@ def get_worst_log(logs):
 
     for log in logs:
         for line in log['lines']:
-            if line['level'] > worst_level:
+            if line['level'] >= worst_level:
                 worst_level = line['level']
                 worst_log = log
 

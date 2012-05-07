@@ -322,7 +322,7 @@ def check_logwatch(item, params, info):
 
         # Only rewrite the lines if at least one line has been reclassified
         if reclassified:
-            file(logfile, 'w').write('\n'.join(reclassified_lines))
+            file(logfile, 'w').write('\n'.join(reclassified_lines) + '\n')
 
     #
     # Render output

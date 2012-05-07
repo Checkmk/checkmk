@@ -78,6 +78,12 @@ class FOREACH_HOST: pass
 class FOREACH_SERVICE: pass
 class REMAINING: pass
 
+# Has to be declared here once since the functions can be assigned in
+# bi.py and also in multisite.mk. "Double" declarations are no problem
+# here since this is a dict (List objects have problems with duplicate
+# definitions).
+aggregation_functions = {}
+
 
 #   .----------------------------------------------------------------------.
 #   |             _____                 _   _                              |
@@ -533,7 +539,6 @@ def load_default_values(into):
     #
     into["aggregation_rules"] = {}
     into["aggregations"] = []
-    into["aggregation_functions"] = {}
 
     #    __        ___  _____ ___
     #    \ \      / / \|_   _/ _ \

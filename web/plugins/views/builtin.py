@@ -2389,7 +2389,7 @@ multisite_builtin_views.update({
                                 'hostregex',
                                 'opthostgroup',
                                 'aggr_effective_state'],
-               'sorters': [('aggr_group'), ('site_host', False)],
+               'sorters': [('aggr_group', False), ('site_host', False)],
                'title': 'Single-Host Problems',
                'topic': _('Business Intelligence')},
 

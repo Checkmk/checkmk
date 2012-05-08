@@ -552,7 +552,7 @@ def load_default_values(into):
     into["wato_aux_tags"] = []
     into["wato_hide_filenames"] = True
     into["wato_hide_hosttags"] = False
-    into["wato_hide_varnames"] = False
+    into["wato_hide_varnames"] = True
     into["wato_max_snapshots"] = 50
     into["wato_num_hostspecs"] = 12
     into["wato_num_itemspecs"] = 15

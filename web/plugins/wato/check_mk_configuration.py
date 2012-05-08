@@ -518,9 +518,7 @@ register_configvar(group,
 #   +----------------------------------------------------------------------+
 
 register_rulegroup("grouping", _("Grouping"), 
-   _("Assignment of host and services to host groups, service groups and contacts groups. "
-     "The assignment to contacts groups is neccessary for configuring notifications. "
-     "Before you can assign to groups, you need to create them."))
+   _("Assignment of host &amp; services to host, service and contacts groups. "))
 group = "grouping"
 
 register_rule(group,
@@ -555,8 +553,7 @@ register_rule(group,
 
 
 register_rulegroup("monconf", _("Monitoring Configuration"), 
-    _("General object configuration like timeperiods and intervals for checking and configuration, "
-      "services to be ignored by inventory, and clustering"))
+    _("Intervals for checking, retries, clustering, configuration for inventory and similar"))
 
 group = "monconf/Checking"
 
@@ -865,9 +862,8 @@ register_rule(group,
 
 
 
-register_rulegroup("agent", "Access to Check_MK/SNMP Agents", 
-   _("Settings concerning the connection to the Check_MK and SNMP agents and "
-     "alternative data aquisition methods"))
+register_rulegroup("agent", "Access to Agents", 
+   _("Settings concerning the connection to the Check_MK and SNMP agents"))
 
 group = "agent/General Settings"
 register_rule(group,

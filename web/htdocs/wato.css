@@ -645,36 +645,53 @@ form#form_timeperiod td.vlof_content {
     height: 16px;
 }
 
-/* configuration overview */
-.wato table.configmodules {
-    empty-cells: show;
-    border-spacing: 8px;
-    margin-left: -8px;
+/* main menu */
+.wato div.mainmenu {
+    background-color: red;
 }
-.wato table.configmodules td {
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
-    padding: 6px;
-    -moz-border-radius: 5px;
+.wato div.mainmenu a {
+    width: 317px;
+    height: 76px;
+    display: block;
+    background-image: url("images/wato_mainmenu_button_lo.png");
+    background-repeat: no-repeat;
+    float: left;
+    position: relative;
+    margin: 0px -1px -1px 0px;
+    left: -2px;
 }
-.wato table.configmodules td.text {
-    width: 49%;
+.wato div.mainmenu a:hover {
+    background-image: url("images/wato_mainmenu_button_hi.png");
 }
-.wato table.configmodules td.icon {
-    width: 1%; 
-}
-.wato table.configmodules td.text a {
-    color: #246;
-    font-weight: bold;
-}
-.wato table.configmodules td.text a:hover {
-    color: #579;
+.wato div.mainmenu a:active {
+    background-image: url("images/wato_mainmenu_button_clicked.png");
 }
 
-.wato table.configmodules td.text i {
-    color: black;
-    font-size: 8pt;
+.wato div.mainmenu div {
+    text-decoration: none; 
+    color: white;
 }
+.wato div.mainmenu img {
+    position: absolute;
+    top: 13px;
+    left: 13px;
+}
+.wato div.mainmenu div.title {
+    font-weight: bold;
+    position: absolute;
+    left: 72px;
+    top: 15px;
+}
+.wato div.mainmenu div.help {
+    position: absolute;
+    left: 72px;
+    top: 33px;
+    width: 237px;
+    overflow: hidden;
+}
+
+
+
 
 /* Special styles for roles editor (permissions) */
 .wato table.form table.permissions {

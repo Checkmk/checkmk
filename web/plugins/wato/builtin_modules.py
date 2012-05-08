@@ -33,16 +33,15 @@ modules = [
       _("Manage monitored hosts and services and the hosts' folder structure.")),
 
       ( "hosttags",         _("Host Tags"),          "hosttag", "hosttags",
-      _("Manage your host tags. Tags are used to classify hosts and are the "
-        "fundament of the configuration of hosts and services.")),
+      _("Tags classify hosts and are the "
+        "fundament of configuration of hosts and services.")),
 
       ( "globalvars",        _("Global Settings"),    "configuration", "global",
-      _("Manage global configuration settings for Check_MK, Multisite and the "
+      _("Global settings for Check_MK, Multisite and the monitoring core.")),
 
-        "monitoring core here.")),
       ( "ruleeditor",        _("Host &amp; Service Parameters"), "rulesets", "rulesets",
-      _("Check parameters and other variables that can be set on a per-host "
-        "and per-service basis are managed via rules.") ),
+      _("Check parameters and other configuration variables on "
+        "hosts and services") ),
 
       ( "host_groups",       _("Host Groups"),        "hostgroups", "groups",
       _("Organize your hosts in groups independent of the tree structure.") ),
@@ -53,24 +52,24 @@ modules = [
       ( "users",          _("Users & Contacts"),     "users", "users",
       _("Manage users of Multisite and contacts of the monitoring system.") ),
 
-      ( "roles",            _("Roles"),     "roles", "users",
-      _("Manage user roles and permissions.") ),
+      ( "roles",            _("Roles & Permissions"),     "roles", "users",
+      _("User roles are configurable sets of permissions." ) ),
 
       ( "contact_groups",   _("Contact Groups"),     "contactgroups", "users",
-      _("Manage groups of contacts.") ),
+      _("Contact groups are used to assign persons to hosts and services") ),
 
       ( "timeperiods",      _("Time Periods"),       "timeperiods", "timeperiods",
-      _("Timeperiods define a set of days and hours of a regular week and "
-        "can be used to restrict alert notifications.") ),
+      _("Timeperiods restrict notifications and other things to certain periods of "
+        "the day.") ),
 
       ( "sites",  _("Multisite Connections"), "sites", "sites",
-      _("Configure distributed monitoring via Multsite, manage connections to remote sites.")),
+      _("Distributed monitoring via Multsite, distributed configuration via WATO")),
 
       ( "auditlog", _("Audit Logfile"), "auditlog", "auditlog",
-      _("The audit log keeps track of all modifications and actions of the users in WATO.")),
+      _("Keep track of all modifications and actions of the users in WATO.")),
 
       ( "snapshot", _("Backup & Restore"), "backup", "snapshots",
-        _("Make snapshots of your current configuration, download, upload and restore snapshots.")),
+        _("Make snapshots of your configuration, download, upload and restore snapshots.")),
 
       ( "pattern_editor", _("Logfile Pattern Analyzer"), "analyze", "pattern_editor",
         _("Analyze logfile pattern rules and validate logfile patterns against custom text.")),

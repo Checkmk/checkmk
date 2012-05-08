@@ -899,18 +899,13 @@ def mode_folder(phase):
         if not have_something:
             render_main_menu([
                 ("newhost", _("Create new host"), "new", "hosts",
-                  _("Click here to create a host to be monitored. Please make sure that "
-                    "you first have installed the Check_MK agent on that host. If that "
-                    "host shall be monitored via SNMP, please make sure, that the monitoring "
-                    "system has access and the SNMP community has been set.")),
+                  _("Add a new host to the monitoring (agent must be installed)")),
                 ("newcluster", _("Create new cluster"), "new_cluster", "hosts",
-                  _("Click here to create a high availability cluster to be monitored. You will "
-                    "created a virtual host in the monitoring that is based on the data of two "
-                    "or more physically monitored hosts.")),
+                  _("Use Check_MK clusters if an item can move from one host "
+                    "to another at runtime")),
                 ("newfolder", _("Create new folder"), "newfolder", "hosts",
-                  _("Hosts are organized in folders. The folders construct a tree which can also "
-                    "be used to navigate in the status GUI. Attributes can be inherited along the "
-                    "paths of that tree. The usage of folders is optional."))])
+                  _("Folders group your hosts, can inherit attributes and can have permissions."))
+                ])
 
 def prepare_folder_info():
     load_all_folders()            # load information about all folders
@@ -5085,24 +5080,26 @@ def mode_main(phase):
     render_main_menu(modules)
 
 def render_main_menu(some_modules, columns = 2):
-    html.write("<table class=configmodules>")
+    html.write('<div class="mainmenu">')
     for nr, (mode_or_url, title, icon, permission, help) in enumerate(some_modules):
         if not config.may("wato." + permission) and not config.may("wato.seeall"):
             continue
 
-        if nr % columns == 0:
-            html.write("<tr>")
         if '?' in mode_or_url or '/' in mode_or_url:
             url = mode_or_url
         else:
             url = make_link([("mode", mode_or_url)])
-        html.write('<td class=icon><a href="%s"><img src="images/icon_%s.png"></a></td>' %
-              (url, icon))
-        html.write('</td><td class=text><a href="%s">%s</a><br><i class=help>%s</i></td>' %
-           (url, title, help))
-        if nr % columns == columns - 1:
-            html.write("</tr>")
-    html.write("</table>")
+
+        html.write('<a href="%s" onfocus="if (this.blur) this.blur();"' % url)
+        # html.write(r''' onmouseover='this.style.backgroundImage="url(\"images/wato_mainmenu_button_hi.png\")"; ''')
+        # html.write(r''' onmouseout='this.style.backgroundImage="url(\"images/wato_mainmenu_button_lo.png\")"; ''')
+        html.write(">")
+        html.write('<img src="images/icon_%s.png">' % icon)
+        html.write('<div class=title>%s</div>' % title)
+        html.write('<div class=help>%s</div>' % help)
+        html.write('</a>')
+
+    html.write("</div>")
 
 #.
 #   .-Global-Vars----------------------------------------------------------.
@@ -5401,12 +5398,7 @@ def mode_groups(phase, what):
             render_main_menu([
               ( "edit_contact_group", _("Create new contact group"), "new",
               what == "contact" and "users" or "groups",
-              _("In order to assign objects (hosts and services) to people (contacts), "
-                "you need first to define contact groups. When you put a user into a contact "
-                "group then that user gets a monitoring contact. When you then also assign "
-                "hosts and services to a contact group, all members of that group will be "
-                "responsible for that objects, can receive notification for and see those objects "
-                "in the status GUI."))])
+              _("Contact groups are needed for assigning hosts and services to people (contacts)"))])
         else:
             html.write("<div class=info>" + _("There are not defined any groups yet.") + "</div>")
         return
@@ -8402,13 +8394,9 @@ def mode_hosttags(phase):
     if len(hosttags) + len(auxtags) == 0:
         render_main_menu([
             ("edit_hosttag", _("Create new tag group"), "new", "hosttags",
-            _("Click here to create a first host tag group. For each tag group a dropdown choice or "
-              "checkbox will be added to the folder and host properties. When defining rules, host tags "
-              "are the fundament of the rules' conditions.")),
+                _("Each host tag group will create one dropdown choice in the host configuration.")), 
             ("edit_auxtag", _("Create new auxiliary tag"), "new", "hosttags",
-            _("Auxiliary tags are automatically added if the users selects certain "
-              "configurable primary tags. That way you can for example automatically append "
-              "the tag <tt>snmp</tt> when the user selects a tag for a certain type of hardware.")),
+                _("You can have these tags automatically added if certain primary tags are set.")),
             ])
 
     else:

@@ -26,8 +26,7 @@
 
 register_rulegroup("activechecks",
     _("Active checks (HTTP, TCP, etc.)"),
-    _("These rules are used for configuring agent-less networking checks like "
-      "checking HTTP servers or TCP ports."))
+    _("Configure active networking checks like HTTP and TCP"))
 group = "activechecks"
 
 register_rule(group,

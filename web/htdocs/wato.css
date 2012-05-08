@@ -662,6 +662,7 @@ form#form_timeperiod td.vlof_content {
     position: relative;
     margin: 0px -1px -1px 0px;
     left: -2px;
+    text-decoration: none;
 }
 .wato div.mainmenu a:hover {
     background-image: url("images/wato_mainmenu_button_hi.png");

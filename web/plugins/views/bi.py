@@ -349,10 +349,10 @@ def paint_aggr_tree_foldable(row, boxes=False):
                 mc = ''
             elif is_open:
                 style = ''
-                mc = mousecode + 'src="images/tree_open.png" '
+                mc = mousecode + 'src="images/tree_black_90.png" '
             else:
                 style = 'style="display: none" '
-                mc = mousecode + 'src="images/tree_00.png" '
+                mc = mousecode + 'src="images/tree_black_00.png" '
 
             h += aggr_render_node(tree, tree[2]["title"], mc, show_host)
             if not is_empty:

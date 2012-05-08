@@ -802,7 +802,9 @@ function folding_step(oImg, state, step) {
         else
             step = 8;
 
-    oImg.src = "images/tree_" + step + "0.png";
+    // Relace XX.png at the end of the image with the
+    // current rotating angle
+    oImg.src = oImg.src.substr(0, oImg.src.length - 6) + step + "0.png";
 
     if(state == 1) {
         if(step == 9) {

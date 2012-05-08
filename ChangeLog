@@ -28,6 +28,9 @@
     Checks & Agents:
     * FIX: Logwatch: fixed missing linebreak during reclassifing lines of logfiles
 
+    BI:
+    * FIX: make rotating folding arrows black (white was not visible)
+
 1.2.0b3:
     Core:
     * FIX: fixed SNMP info declaration in checks: could be garbled

@@ -585,17 +585,22 @@ class BIStatusFilter(Filter):
     def filter(self, tablename):
         return ""
 
+    def double_height(self):
+        return self.column == "aggr_assumed_state"
+
     def display(self):
         if html.var("filled_in"):
             defval = ""
         else:
             defval = "on"
-        for varend, text in [('0', 'OK'), ('1', 'WARN'), ('2', 'CRIT'), ('3', 'UNKNOWN'), ('-1', 'PENDING'), ('n', 'unset')]:
+        for varend, text in [('0', 'OK'), ('1', 'WARN'), ('2', 'CRIT'), 
+                             ('3', 'UNKN'), ('-1', 'PENDING'), ('n', _('no assumed state set'))]:
             if self.code != 'a' and varend == 'n':
                 continue # no unset for read and effective state
+            if varend == 'n':
+                html.write("<br>")
             var = self.prefix + varend
-            html.checkbox(var, defval)
-            html.write(" %s " % text)
+            html.checkbox(var, defval, label = text)
 
     def filter_table(self, rows):
         jeaders = []

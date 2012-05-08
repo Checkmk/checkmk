@@ -5035,11 +5035,13 @@ class CheckTypeSelection(ListChoice):
         return elements
 
 
-def edit_value(valuespec, value):
+def edit_value(valuespec, value, title=""):
+    if title: 
+        title = title + "<br>"
     help = valuespec.help() or ""
     html.write('<tr>')
     if help:
-        html.write('<td class=legend><i>%s</i></td>' % help)
+        html.write('<td class=legend>%s<i>%s</i></td>' % (title, help))
         html.write("<td class=content>")
     else:
         html.write('<td colspan=2 class=content>')
@@ -5145,16 +5147,16 @@ def mode_globalvars(phase):
                         return
                 c = True # no confirmation for direct toggle
             if c:
-                if action == "reset":
-                    del current_settings[varname]
-                    msg = _("Resetted configuration variable %s to its default.") % varname
+                # if action == "reset":
+                #     del current_settings[varname]
+                #     msg = _("Resetted configuration variable %s to its default.") % varname
+                # else:
+                if varname in current_settings:
+                    current_settings[varname] = not current_settings[varname]
                 else:
-                    if varname in current_settings:
-                        current_settings[varname] = not current_settings[varname]
-                    else:
-                        current_settings[varname] = not def_value
-                    msg = _("Changed Configuration variable %s to %s." % (varname, 
-                        current_settings[varname] and "on" or "off"))
+                    current_settings[varname] = not def_value
+                msg = _("Changed Configuration variable %s to %s." % (varname, 
+                    current_settings[varname] and "on" or "off"))
                 save_configuration_settings(current_settings)
                 log_pending(need_restart and SYNCRESTART or SYNC, None, "edit-configvar", msg)
                 if action == "_reset":
@@ -5172,17 +5174,12 @@ def mode_globalvars(phase):
     groupnames = g_configvar_groups.keys()
     groupnames.sort()
     for groupname in groupnames:
-        html.begin_foldable_container("globalvars", groupname, False, groupname, indent=False)
-        html.write('<table class="data globalvars">')
-        html.write("<tr><th>" + _("Configuration variable") + "</th>")
-        if not config.wato_hide_varnames:
-            html.write("<th>" +_("Check_MK variable") + "</th>")
-        html.write("<th>" + _("Default") + "</th><th>" + _("Your setting") + "</th><th></th></tr>\n")
-        odd = "even"
+        # html.begin_foldable_container("globalvars", groupname, False, groupname, indent=False)
+        html.write("<h3>%s</h3>" % groupname)
+        html.write('<table class=globalvars>')
 
         for domain, varname, valuespec in g_configvar_groups[groupname]:
-            odd = odd == "odd" and "even" or "odd"
-            html.write('<tr class="data %s0">' % odd)
+            html.write('<tr>')
             if domain == "check_mk" and varname not in default_values:
                 if config.debug:
                     raise MKGeneralException("The configuration variable <tt>%s</tt> is unknown to "
@@ -5194,36 +5191,25 @@ def mode_globalvars(phase):
 
             edit_url = make_link([("mode", "edit_configvar"), ("varname", varname)])
 
-            html.write('<td class=title><a href="%s">%s</a></td>' % (edit_url, valuespec.title()))
-            if not config.wato_hide_varnames:
-                html.write('<td class=varname><tt>%s</tt></td>' % varname)
+            html.write('<td class=left><div class=text>'
+                       '<a href="%s">%s</a><span class=dots>%s</span></div></td>' % (edit_url, valuespec.title(),
+                '.' * 100))
             toggle_url = make_action_link([("mode", "globalvars"), 
                     ("_action", "toggle"), ("_varname", varname)])
+            html.write('<td class=right>')
             if varname in current_settings:
-                html.write('<td class=inherited>%s</td>' % valuespec.value_to_text(defaultvalue))
-                html.write('<td>')
                 if isinstance(valuespec, Checkbox):
                     html.icon_button(toggle_url, _("Immediately toggle this setting"), 
-                        "snapin_switch_" + (current_settings[varname] and "on" or "off"))
+                        "snapin_greyswitch_" + (current_settings[varname] and "on" or "off"))
                 else:
-                    html.write('<b>%s</b>' % valuespec.value_to_text(current_settings[varname]))
-                html.write("</td>")
+                    html.write(valuespec.value_to_text(current_settings[varname]))
             else:
-                html.write('<td><b>%s</b></td>'          % valuespec.value_to_text(defaultvalue))
-                html.write('<td>')
                 if isinstance(valuespec, Checkbox):
                     html.icon_button(toggle_url, _("Immediately toggle this setting"),
-                    "snapin_switch_" + (defaultvalue and "on" or "off"))
-                html.write('</td>')
-
-            html.write("<td class=buttons>")
-            # html.buttonlink(edit_url, _("Edit"))
-            if varname in current_settings:
-                reset_url = make_action_link([("mode", "globalvars"), 
-                        ("_action", "reset"), ("_varname", varname)])
-                html.buttonlink(reset_url, _("Reset"))
+                    "snapin_greyswitch_" + (defaultvalue and "on" or "off"))
+                else:
+                    html.write(valuespec.value_to_text(defaultvalue))
             html.write("</td>")
-
             html.write('</tr>')
         html.write("</table>")
         html.end_foldable_container()
@@ -5240,13 +5226,18 @@ def mode_edit_configvar(phase):
     varname = html.var("varname")
     domain, valuespec, need_restart = g_configvars[varname]
     current_settings = load_configuration_settings()
+    is_on_default = varname not in current_settings
 
     if phase == "action":
-        new_value = get_edited_value(valuespec)
-        current_settings[varname] = new_value
+        if html.var("reset"):
+            del current_settings[varname]
+            msg = _("Resetted configuration variable %s to its default.") % varname
+        else:
+            new_value = get_edited_value(valuespec)
+            current_settings[varname] = new_value
+            msg = _("Changed global configuration variable %s to %s.") \
+                  % (varname, valuespec.value_to_text(new_value))
         save_configuration_settings(current_settings)
-        msg = _("Changed global configuration variable %s to %s.") \
-              % (varname, valuespec.value_to_text(new_value))
         if need_restart:
             status = SYNCRESTART
         else:
@@ -5262,11 +5253,29 @@ def mode_edit_configvar(phase):
 
     html.begin_form("value_editor")
     html.write("<h3>%s</h3>" % valuespec.title())
+    if not config.wato_hide_varnames:
+        html.write('<div class=varname>%s</div>' % varname)
+
     html.write("<table class=form>")
-    edit_value(valuespec, value)
+    edit_value(valuespec, value, _("Current setting"))
     valuespec.set_focus("ve")
+    html.write("<tr><td class=legend>%s</td><td class=content>" % _("Default setting"))
+    defvalue = valuespec.default_value()
+    if is_on_default:
+        html.write(_("This variable is at factory settings."))
+    else:
+        curvalue = current_settings[varname]
+        if curvalue == defvalue:
+            html.write(_("Your setting and factory settings are identical."))
+        else:
+            html.write(valuespec.value_to_text(defvalue))
+    html.write("</td></tr>")
+
     html.write("<tr><td class=buttons colspan=2>")
     html.button("save", _("Save"))
+    if not is_on_default:
+        curvalue = current_settings[varname]
+        html.button("reset", curvalue == defvalue and _("Remove explicit setting") or _("Reset to default"))
     html.write("</td></tr>")
     html.write("</table>")
     html.hidden_fields()

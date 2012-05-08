@@ -968,7 +968,7 @@ register_rule(group,
 
 register_rule(group,
     "usewalk_hosts",
-    title = _("Hosts that simulate SNMP by using a stored SNMP walk"),
+    title = _("Simulating SNMP by using a stored SNMP walk"),
     help = _("This ruleset helps in test and development. You can create stored SNMP "
              "walks on the command line with cmk --snmpwalk HOSTNAME. A host that "
              "is configured with this ruleset will then use the information from that "

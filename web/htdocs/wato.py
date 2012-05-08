@@ -9159,22 +9159,6 @@ def mode_rulesets(phase):
     if help:
         html.write("<div class=info>%s</div>" % help)
 
-    # html.begin_form("local")
-    # html.checkbox("local", False, onclick="form.submit();")
-    # if only_host:
-    #     html.write(" " + _("show only rulesets that contain rules explicitely listing the host <b>%s</b>." %
-    #         only_host))
-    # else:
-    #     html.write(" " + _("Show only rulesets that contain rules in the current folder."))
-    # html.write(' <img align=absbottom class=icon src="images/icon_localrule.png"> ')
-    # html.hidden_fields()
-    # html.end_form()
-    # html.write("<br>")
-
-    # Load all rules from all folders. Hope this doesn't take too much time.
-    # We need this information only for displaying the number of rules in
-    # each set.
-
     if only_local and not only_host:
         all_rulesets = {}
         rs = load_rulesets(g_folder)
@@ -9223,37 +9207,32 @@ def mode_rulesets(phase):
 
             if not title_shown:
                 if something_shown:
-                    html.write("</table>")
-                    if do_folding:
-                        html.end_foldable_container()
+                    html.write("</td></tr></table>")
+                    # if do_folding:
+                    #     html.end_foldable_container()
                 if '/' in groupname:
                     subgroupname = groupname.split("/", 1)[1]
                 else:
                     subgroupname = groupname
-                if do_folding:
-                    html.begin_foldable_container("rulesets", groupname, False, subgroupname, indent=False)
-                html.write('<table class="data rulesets">')
-                html.write("<tr><th>" + _("Rule set") + "</th>")
-                if not config.wato_hide_varnames:
-                    html.write("<th>" + _("Check_MK Variable") + "</th>")
-                html.write("<th>" + _("Rules") + "</th></tr>\n")
-                odd = "even"
+                # if do_folding:
+                #    html.begin_foldable_container("rulesets", groupname, False, subgroupname, indent=False)
+                html.write("<h3>%s</h3>" % subgroupname)
+                html.write('<table class="rulesets"><tr><td>')
                 title_shown = True
 
             something_shown = True
-            odd = odd == "odd" and "even" or "odd"
-            html.write('<tr class="data %s0">' % odd)
 
             url_vars = [("mode", "edit_ruleset"), ("varname", varname)]
             if only_host:
                 url_vars.append(("host", only_host))
             view_url = make_link(url_vars)
 
-            html.write('<td class=title><a href="%s">%s</a></td>' % (view_url, rulespec["title"]))
-            display_varname = ':' in varname and '%s["%s"]' % tuple(varname.split(":")) or varname
-            if not config.wato_hide_varnames:
-                html.write('<td class=varname><tt>%s</tt></td>' % display_varname)
-            html.write('<td class=number>')
+            html.write('<div class=ruleset><div class=text>')
+            html.write('<a class=title><a href="%s">%s</a>' % (view_url, rulespec["title"]))
+            html.write('<span class=dots>%s</span></div>' % ("." * 100))
+            # if not config.wato_hide_varnames:
+            #     display_varname = ':' in varname and '%s["%s"]' % tuple(varname.split(":")) or varname
+            #     html.write('<td class=varname><tt>%s</tt></td>' % display_varname)
             if num_local_rules:
                 if only_host:
                     title = _("There are %d rules explicitely listing this host." % num_local_rules)
@@ -9261,13 +9240,13 @@ def mode_rulesets(phase):
                     title = _("There are %d rules defined in the current folder." % num_local_rules)
                 html.write('<img title="%s" align=absmiddle class=icon src="images/icon_localrule.png"> ' %
                     title)
-            html.write("%d</td>" % num_rules)
-            html.write('</tr>')
+            html.write('<div class=rulecount title="%s">%d</div>' % (title, num_rules))
+            html.write('</div>')
 
     if something_shown:
-        html.write("</table>")
-        if do_folding:
-            html.end_foldable_container()
+        html.write("</td></tr></table>")
+        # if do_folding:
+        #    html.end_foldable_container()
 
     else:
         if only_host:

@@ -6,6 +6,7 @@
     WATO:
     * ps and ps.perf configurable via WATO now (without inventory)
     * New layout of main menu and a couple of other similar menus
+    * New layout of ruleset overviews
     * FIX: honor folder-permissions when creating, deleting 
            and modifiying rules
     * FIX: detect non-local site even if unix: is being used

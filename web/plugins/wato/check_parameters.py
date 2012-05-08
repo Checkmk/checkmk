@@ -1089,7 +1089,7 @@ checkgroups.append((
 checkgroups.append((
     subgroup_hardware,
     "hw_errors",
-    _("Simple checks for BIOS/Hardware errors without parameters"),
+    _("Simple checks for BIOS/Hardware errors"),
     None,
     None, None))
 
@@ -1190,7 +1190,7 @@ checkgroups.append((
 checkgroups.append((
     subgroup_environment,
     "room_temperature",
-    _("Room temperature (e.g. external thermal sensors in datacenters)"),
+    _("Room temperature (external thermal sensors)"),
     Tuple(
         help = _("Temperature levels for external thermometers that are used "
                  "for monitoring the temperature of a datacenter. An example "
@@ -1207,7 +1207,7 @@ checkgroups.append((
 checkgroups.append((
     subgroup_environment,
     "hw_temperature",
-    _("Hardware temperature (CPU, Memory, Mainboard, etc.)"),
+    _("Hardware temperature (CPU, Memory, etc.)"),
     Tuple(
         help = _("Temperature levels for internal sensors found in many appliances, "
                  "switches, routers, mainboards and other devices. "),  
@@ -1235,7 +1235,7 @@ checkgroups.append((
 checkgroups.append((
     subgroup_ps,
     "wmic_process",
-    _("Memory and CPU consumption of processes on Windows (via WMI)"),
+    _("Memory and CPU of processes on Windows"),
     Tuple(
         elements = [
             TextAscii(

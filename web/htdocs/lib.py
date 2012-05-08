@@ -88,7 +88,7 @@ def make_nagios_directories(name):
             # be happy if someone already created the path
             if e.errno != errno.EEXIST:
                 raise
-        if tail == curdir:           # xxx/newdir/. exists if xxx/newdir exists
+        if tail == ".":           # xxx/newdir/. exists if xxx/newdir exists
             return
     make_nagios_directory(name)
 

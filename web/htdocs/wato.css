@@ -760,6 +760,11 @@ form#form_timeperiod td.vlof_content {
     text-align: right;
 }
 
+/* Page edit_ruleset */
+div.varname {
+    color: white;
+    font-family: monospace, sans-serif;
+}
 
 
 

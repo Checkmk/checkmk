@@ -9230,16 +9230,13 @@ def mode_rulesets(phase):
             html.write('<div class=ruleset><div class=text>')
             html.write('<a class=title><a href="%s">%s</a>' % (view_url, rulespec["title"]))
             html.write('<span class=dots>%s</span></div>' % ("." * 100))
-            # if not config.wato_hide_varnames:
-            #     display_varname = ':' in varname and '%s["%s"]' % tuple(varname.split(":")) or varname
-            #     html.write('<td class=varname><tt>%s</tt></td>' % display_varname)
             if num_local_rules:
                 if only_host:
                     title = _("There are %d rules explicitely listing this host." % num_local_rules)
                 else:
                     title = _("There are %d rules defined in the current folder." % num_local_rules)
-                html.write('<img title="%s" align=absmiddle class=icon src="images/icon_localrule.png"> ' %
-                    title)
+                # html.write('<img title="%s" align=absmiddle class=icon src="images/icon_localrule.png"> ' %
+                #    title)
             html.write('<div class=rulecount title="%s">%d</div>' % (title, num_rules))
             html.write('</div>')
 
@@ -9380,6 +9377,9 @@ def mode_edit_ruleset(phase):
         render_folder_path(keepvarnames = ["mode", "varname"])
 
     html.write("<h3>" + rulespec["title"] + "</h3>")
+    if not config.wato_hide_varnames:
+        display_varname = ':' in varname and '%s["%s"]' % tuple(varname.split(":")) or varname
+        html.write('<div class=varname>%s</div>' % display_varname)
     if rulespec["help"]:
         html.write("<div class=info>%s</div>" % rulespec["help"])
 

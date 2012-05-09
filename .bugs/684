@@ -1,0 +1,10 @@
+Title: Host/Service stastics globe: check scale
+Component: multisite
+State: open
+Date: 2012-05-09 15:10:19
+Targetversion: 1.2.0
+Class: nastiness
+
+It seems to me that the sizes of the critical/warning
+spheres are too large. Checks this out and maybe fix
+it.

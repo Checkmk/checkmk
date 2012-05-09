@@ -22,7 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-function toggle_subtree(oImg)
+function bi_toggle_subtree(oImg)
 {
     var oSubtree = oImg.parentNode.childNodes[6];
     var url = "bi_save_treestate.py?path=" + escape(oSubtree.id);
@@ -41,21 +41,24 @@ function toggle_subtree(oImg)
     get_url(url);
 }
 
-function toggle_bi_box(oDiv)
+function bi_toggle_box(oDiv)
 {
-    // oDiv.style.display = "none";
-    if (oDiv.style.borderStyle != "dashed") {
-        oDiv.style.boxShadow = "none";
-        oDiv.style.borderStyle = "dashed";
-        oDiv.style.BiBoxHidden = true;
+    var url = "bi_save_treestate.py?path=" + escape(oDiv.id);
+
+    if (oDiv.className.indexOf("open") >= 0) {
+        oDiv.className = oDiv.className.replace(/open/, "closed");
+        url += "&state=closed";
     }
     else {
-        oDiv.style.boxShadow = "1px 1px 3px #000";
-        oDiv.style.borderStyle = "solid";
-        oDiv.style.BiBoxHidden = false;
+        oDiv.className = oDiv.className.replace(/closed/, "open");
+        url += "&state=open";
     }
 
-    // find child nodes that belong to this node
+    get_url(url); // persist current folding
+
+    // find child nodes that belong to this node and 
+    // control visibility of those. Note: the BI child nodes
+    // are *no* child nodes in HTML but siblings!
     var found = 0;
     for (var i in oDiv.parentNode.childNodes) {
         var onode = oDiv.parentNode.childNodes[i];
@@ -71,6 +74,7 @@ function toggle_bi_box(oDiv)
             return;
         }
     }
+
 }
 
 

@@ -123,15 +123,22 @@ td.aggrtree_box {
 }
 .bibox_box {
     border-width: 1px;
+    border-color: black;
+    border-style: solid;
     margin: 0px 0px 0px 0px;
     padding: 1px 3px;
 }
-.bibox_box.noleaf {
-    border: 1px solid black;
-    box-shadow: 1px 1px 3px #000;
+.bibox_box.open.noleaf {
+    box-shadow: inset 0.5px 0.5px 3px #444;
+}
+.bibox_box.noleaf:hover {
+    border-style: dashed;
+}
+.bibox_box.closed.noleaf {
+    box-shadow: 0.5px 0.5px 3px #000;
 }
 .bibox_box.leaf {
-    border-style: solid;
+    border-color: white;
 }
 .bibox {
     padding: 0px;

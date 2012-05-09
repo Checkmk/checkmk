@@ -275,49 +275,7 @@ def filter_tree_only_problems(tree):
     return state, assumed_state, node, new_subtrees
 
 
-def paint_aggr_tree_boxes(row):
-    mousecode = \
-       'onmouseover="this.style.cursor=\'pointer\';" ' \
-       'onmouseout="this.style.cursor=\'auto\';" ' \
-       'onclick="toggle_bi_box(this);" '
-
-    def render_subtree(tree, open, show_host, level):
-        ret = ""
-        if not open:
-            state = tree[0]
-            if len(tree) == 3:
-                mc = ""
-            else:
-                mc = mousecode
-            if len(tree) == 3:
-                leaf = " leaf"
-            else:
-                leaf = " noleaf"
-            ret = '<span %s class="bibox_box%s state%s">' % (mc, leaf, state["state"])
-            # ret += "&gt;" * (level-1) 
-            if len(tree) == 3:
-                ret += aggr_render_leaf(tree, show_host, bare = True) # .replace(" ", "&nbsp;")
-            else:
-                ret += tree[2]["title"].replace(" ", "&nbsp;")
-            ret += '</span> '
-        if len(tree) >= 4:
-            ret += '<span class="bibox" style="%s">' % (not open and "display: none;" or "")
-            parts = []
-            for node in tree[3]:
-                ret += render_subtree(node, False, show_host, level+1)
-            ret += '</span>'
-        return ret
-
-    tree = row["aggr_treestate"]
-    if get_painter_option("aggr_onlyproblems") == "1":
-        tree = filter_tree_only_problems(tree)
-
-    affected_hosts = row["aggr_hosts"]
-    htmlcode = render_subtree(tree, True, len(affected_hosts) > 1, 0)
-    return "aggrtree_box", htmlcode
-
-
-def paint_aggr_tree_foldable(row, boxes=False):
+def paint_aggr_tree_foldable(row, boxes):
     saved_expansion_level = bi.load_ex_level()
     treestate = weblib.get_tree_states('bi')
     expansion_level = int(get_painter_option("aggr_expand"))
@@ -329,22 +287,52 @@ def paint_aggr_tree_foldable(row, boxes=False):
     mousecode = \
        'onmouseover="this.style.cursor=\'pointer\';" ' \
        'onmouseout="this.style.cursor=\'auto\';" ' \
-       'onclick="toggle_subtree(this);" '
-
+       'onclick="bi_toggle_%s(this);" ' % (boxes and "box" or "subtree")
 
     def render_subtree(tree, path, show_host):
-        if len(tree) == 3: # leaf
-            return aggr_render_leaf(tree, show_host)
+        is_leaf = len(tree) == 3
+        path_id = "/".join(path)
+        is_open = treestate.get(path_id)
+        if is_open == None:
+            is_open = len(path) <= expansion_level
+
+        h = ""
+        
+        state = tree[0]
+
+        # Variant: BI-Boxes
+        if boxes:
+            if is_leaf:
+                leaf = "leaf"
+                mc = ""
+            else:
+                leaf = "noleaf"
+                mc = mousecode
+
+            h += '<span id="%d:%s" %s class="bibox_box %s %s state%s">' % (
+                    expansion_level, path_id, mc, leaf, is_open and "open" or "closed", state["state"])
+            if is_leaf:
+                h += aggr_render_leaf(tree, show_host, bare = True) # .replace(" ", "&nbsp;")
+            else:
+                h += tree[2]["title"].replace(" ", "&nbsp;")
+            h += '</span> '
+
+            if not is_leaf:
+                h += '<span class="bibox" style="%s">' % (not is_open and "display: none;" or "")
+                parts = []
+                for node in tree[3]:
+                    new_path = path + [node[2]["title"]]
+                    h += render_subtree(node, new_path, show_host)
+                h += '</span>'
+            return h
+
+        # Variant: foldable trees
         else:
-            h = '<span class=title>'
+            if is_leaf: # leaf
+                return aggr_render_leaf(tree, show_host, bare = boxes)
 
-            path_id = "/".join(path)
-            is_open = treestate.get(path_id)
-            if is_open == None:
-                is_open = len(path) <= expansion_level
-
+            h += '<span class=title>'
             is_empty = len(tree[3]) == 0
-
             if is_empty:
                 style = ''
                 mc = ''
@@ -374,7 +362,7 @@ def paint_aggr_tree_foldable(row, boxes=False):
 
     affected_hosts = row["aggr_hosts"]
     htmlcode = render_subtree(tree, [tree[2]["title"]], len(affected_hosts) > 1)
-    return "aggrtree", htmlcode
+    return "aggrtree" + (boxes and "_box" or ""), htmlcode
 
 
 def paint_aggr_tree_ltr(row, mirror):
@@ -433,13 +421,13 @@ def paint_aggr_tree_ltr(row, mirror):
 def paint_aggregated_tree_state(row):
     treetype = get_painter_option("aggr_treetype")
     if treetype == "foldable":
-        return paint_aggr_tree_foldable(row)
+        return paint_aggr_tree_foldable(row, boxes = False)
+    elif treetype == "boxes":
+        return paint_aggr_tree_foldable(row, boxes = True)
     elif treetype == "bottom-up":
         return paint_aggr_tree_ltr(row, False)
     elif treetype == "top-down":
         return paint_aggr_tree_ltr(row, True)
-    elif treetype == "boxes":
-        return paint_aggr_tree_boxes(row)
 
 multisite_painters["aggr_treestate"] = {
     "title"   : _("Aggregation: complete tree"),
@@ -453,7 +441,7 @@ multisite_painters["aggr_treestate_boxed"] = {
     "title"   : _("Aggregation: simplistic boxed layout"),
     "short"   : _("Tree"),
     "columns" : [ "aggr_treestate", "aggr_hosts" ],
-    "paint"   : paint_aggr_tree_boxes,
+    "paint"   : lambda row: paint_aggr_tree_foldable(row, boxes=True),
 }
 
 #     _____ _ _ _

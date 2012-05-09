@@ -34,6 +34,7 @@
 
     BI:
     * FIX: make rotating folding arrows black (white was not visible)
+    * Display format 'boxes' now in all BI views available
 
 1.2.0b3:
     Core:

@@ -154,9 +154,10 @@ multisite_painter_options["aggr_treetype"] = {
  "title"   : _("Type of tree layout"),
  "default" : "foldable",
  "values"  : [ 
-    ("foldable",  "foldable"), 
-    ("bottom-up", "bottom up"), 
-    ("top-down",  "top down")]
+    ("foldable",  _("foldable")), 
+    ("boxes",     _("boxes")),
+    ("bottom-up", _("bottom up")), 
+    ("top-down",  _("top down"))]
 }
 
 multisite_painter_options["aggr_wrap"] = {
@@ -437,6 +438,8 @@ def paint_aggregated_tree_state(row):
         return paint_aggr_tree_ltr(row, False)
     elif treetype == "top-down":
         return paint_aggr_tree_ltr(row, True)
+    elif treetype == "boxes":
+        return paint_aggr_tree_boxes(row)
 
 multisite_painters["aggr_treestate"] = {
     "title"   : _("Aggregation: complete tree"),

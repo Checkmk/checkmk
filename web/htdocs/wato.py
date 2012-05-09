@@ -5202,13 +5202,15 @@ def mode_globalvars(phase):
                     html.icon_button(toggle_url, _("Immediately toggle this setting"), 
                         "snapin_greyswitch_" + (current_settings[varname] and "on" or "off"))
                 else:
-                    html.write(valuespec.value_to_text(current_settings[varname]))
+                    html.write('<a href="%s">%s</a>' % 
+                        (edit_url, valuespec.value_to_text(current_settings[varname])))
             else:
                 if isinstance(valuespec, Checkbox):
                     html.icon_button(toggle_url, _("Immediately toggle this setting"),
                     "snapin_greyswitch_" + (defaultvalue and "on" or "off"))
                 else:
-                    html.write(valuespec.value_to_text(defaultvalue))
+                    html.write('<a href="%s">%s</a>' % 
+                        (edit_url, valuespec.value_to_text(defaultvalue)))
             html.write("</td>")
             html.write('</tr>')
         html.write("</table>")

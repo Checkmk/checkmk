@@ -3322,7 +3322,7 @@ def mode_changelog(phase):
             html.write("<h3>%s</h3>" % _("Distributed WATO - replication status"))
             repstatus = load_replication_status()
             sites = config.allsites().items()
-            sites.sort(cmp = lambda a,b: cmp(a[1].get("alias",a[0]), b[1].get("alias", b[0])))
+            sort_sites(sites)
             html.write("<table class=data>")
             html.write("<tr class=dualheader>")
             html.write("<th rowspan=2>%s</th>" % _("ID") +
@@ -6022,6 +6022,23 @@ def find_usage_of_timeperiod(tpname):
 #   | Mode for managing sites.                                             |
 #   '----------------------------------------------------------------------'
 
+# Sort given sites argument by peer/local, followed by slaves
+def sort_sites(sites):
+    def custom_sort(a,b):
+        if a[1].get("replication","") == b[1].get("replication"):
+            # Compare by alias
+            if a[1].get("alias") == b[1].get("alias"):
+                return 0
+            elif a[1].get("alias") > b[1].get("alias"):
+                return 1
+            else:
+                return -1
+        elif a[1].get("replication","") == "slave" and b[1].get("replication") != "slave":
+            return 1
+        elif a[1].get("replication","") != "slave" and b[1].get("replication") == "slave":
+            return -1
+    sites.sort(cmp = custom_sort)
+
 def mode_sites(phase):
     if phase == "title":
         return _("Multisite connections")
@@ -6172,7 +6189,7 @@ def mode_sites(phase):
 
     odd = "even"
     entries = sites.items()
-    entries.sort(cmp = lambda a, b: cmp(a[1].get("alias"), b[1].get("alias")))
+    sort_sites(entries)
     for id, site in entries:
         odd = odd == "odd" and "even" or "odd"
         html.write('<tr class="data %s0">' % odd)
@@ -6219,9 +6236,9 @@ def mode_sites(phase):
         if site.get("replication") == "slave":
             repl = _("Slave")
         elif site.get("replication") == "peer":
-            repl = _("Peer")
+            repl = _("Peer") + _(" - Priority %s") % site.get("repl_priority",0)
         else:
-            repl = ""
+            repl = _("Local - Priority %s") % site.get("repl_priority",0)
         html.write("<td>%s</td>" % repl)
 
         # Login-Button for Replication
@@ -6351,6 +6368,14 @@ def mode_edit_site(phase):
             repl = None
         if repl:
             new_site["replication"] = repl
+
+        # Replication Priority
+        if not repl or repl != "slave":
+            try:
+                new_site["repl_priority"] = int(html.var("repl_priority", 0))
+            except:
+                raise MKUserError("repl_priority", _("Replication Priority '%s' is not a valid number.") % html.var("repl_priority",""))
+
         multisiteurl = html.var("multisiteurl", "").strip()
         if repl:
             if not multisiteurl:
@@ -6549,6 +6574,14 @@ def mode_edit_site(phase):
     html.radiobutton("replication", "peer",  site.get("replication") == "peer", _("Peer: synchronize configuration with this site"))
     html.write("<br>")
     html.radiobutton("replication", "slave", site.get("replication") == "slave", _("Slave: push configuration to this site"))
+
+    html.write("<br><br>")
+    html.write("<b>%s</b><br><i>%s</i><br>" % (
+       _("Peer replication priority"),
+       _("The replication priority is used to determine the master site from the available peers and local sites.<br>"
+         "The site with the highest number takes precedence.")))
+    html.number_input("repl_priority", site.get("repl_priority", 0), size=2)
+
     html.write("<br><br>")
     html.write("<b>%s</b><br><i>%s</i><br>" % (
        _("Multisite-URL of remote site upto and including <tt>/check_mk/</tt>"),
@@ -7007,27 +7040,21 @@ def preferred_peer():
     local_site = None
     best_peer = None
     best_working_peer = None
+    
     for site_id, site in config.allsites().items():
         if site.get("replication") == "slave":
             continue # Ignore slave sites
 
-        if site_is_local(site_id):
-            if best_peer == None or site_id < best_peer["id"]:
-                best_peer = site
-            if best_working_peer == None or site_id < best_working_peer["id"]:
+        if best_peer == None or site.get("repl_priority",0) > best_peer.get("repl_priority",0) or (site_id < best_peer["id"] and site.get("repl_priority",0) == best_peer.get("repl_priority",0)):
+            best_peer = site
+            if site_is_local(site_id):
                 best_working_peer = site
-            local_site = site
-
-        # Is the a member of the peer group?
-        elif site.get("replication") == "peer":
-            if best_peer == None or site_id < best_peer["id"]:
-                best_peer = site
-
-            ss = html.site_status.get(site_id, {})
-            status = ss.get("state", "unknown")
-            if status == "online" and (
-                best_working_peer == None or site_id < best_working_peer):
-                best_working_peer = site
+                local_site = site
+            else:
+                ss = html.site_status.get(site_id, {})
+                status = ss.get("state", "unknown")
+                if status == "online":
+                    best_working_peer = site
 
     if best_working_peer: # Good
         if best_working_peer == local_site:
@@ -7039,6 +7066,8 @@ def preferred_peer():
             return best_working_peer
 
     return None # no peer, not even a local site...
+
+
 
 def do_peer_redirect(peer):
     if is_distributed():

@@ -33,6 +33,8 @@
 
     Checks & Agents:
     * FIX: Logwatch: fixed missing linebreak during reclassifing lines of logfiles
+    * FIX: Logwatch: Logwatch services in rules configured using WATO must be
+      given as item, not as whole service name
 
     BI:
     * FIX: make rotating folding arrows black (white was not visible)

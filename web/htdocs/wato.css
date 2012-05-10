@@ -802,6 +802,7 @@ div.varname {
 .wato .globalvars td.right img.iconbutton {
     width: auto;
     height: auto;
+    margin-left: -3px;
 }
 
 

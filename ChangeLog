@@ -18,6 +18,8 @@
            on hosts with more than 500 services.
     * FIX: make config options directly active after resetting them
            to their defaults (didn't work for start_url, etc.
+    * FIX: Fixed editing of ListOf in valuespec editors (e.g. used in logwatch
+    pattern editor)
 
     Multisite:
     * FIX: fixed filter of recent event views (4 hours didn't catch)

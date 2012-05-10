@@ -1490,17 +1490,20 @@ function valuespec_listof_add(varprefix, magic) {
   var htmlcode = oPrototype.innerHTML;
   htmlcode = replace_all(htmlcode, magic, strcount);
   var oTable = document.getElementById(varprefix + "_table");
-  if (count == 0) {  // first: no <tbody> present!
-      oTable.innerHTML = "<tbody><tr>" + htmlcode + "</tr></tbody>";
-      valuespec_listof_fixarrows(oTable.childNodes[0]);
+
+  var oTbody = oTable.childNodes[0];
+  if(oTbody == undefined) { // no row -> no <tbody> present!
+      oTbody = document.createElement('tbody');
+      oTable.appendChild(oTbody);
   }
-  else {
-      var oTbody = oTable.childNodes[0];
-      var oTr = document.createElement("tr")
-      oTr.innerHTML = htmlcode;
-      oTbody.appendChild(oTr);
-      valuespec_listof_fixarrows(oTbody);
-  }
+
+  // Hack for IE. innerHTML does not work on tbody/tr correctly.
+  var container = document.createElement('div');
+  container.innerHTML = '<table><tbody><tr>' + htmlcode + '</tr></tbody></tr>';
+  var oTr = container.childNodes[0].childNodes[0].childNodes[0] // TR
+  oTbody.appendChild(oTr);
+
+  valuespec_listof_fixarrows(oTbody);
 }
 
 // When deleting we do not fix up indices but simply
@@ -1522,6 +1525,7 @@ function valuespec_listof_delete(oA, varprefix, nr) {
 function valuespec_listof_move(oA, varprefix, nr, where) {
     var oTr = oA.parentNode.parentNode; // TR to move
     var oTbody = oTr.parentNode;
+    var oTable = oTbody.parentNode;
 
     if (where == "up")  {
         var sib = oTr.previousSibling;
@@ -1541,8 +1545,16 @@ function valuespec_listof_move(oA, varprefix, nr, where) {
 
 
 function valuespec_listof_fixarrows(oTbody) {
-    for (var i in oTbody.childNodes) {
-        var oTd = oTbody.childNodes[i].childNodes[0]; /* TD with buttons */
+    if(!oTbody || typeof(oTbody.rows) == undefined) {
+        return;
+    }
+
+    for(var i = 0, row; row = oTbody.rows[i]; i++) {
+        if(row.cells.length == 0)
+            continue;
+        var oTd = row.cells[0]; /* TD with buttons */
+        if(row.cells[0].childNodes.length == 0)
+            continue;
         var oIndex = oTd.childNodes[0];
         oIndex.value = "" + (parseInt(i) + 1);
         if (oTd.childNodes.length > 4) { /* movable */
@@ -1558,7 +1570,7 @@ function valuespec_listof_fixarrows(oTbody) {
             }
             var oDownTrans = oTd.childNodes[4];
             var oDown      = oTd.childNodes[5];
-            if (i >= oTbody.childNodes.length - 1) {
+            if (i >= oTbody.rows.length - 1) {
                 oDownTrans.style.display = "";
                 oDown.style.display = "none";
             }

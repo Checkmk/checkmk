@@ -177,6 +177,7 @@ class html:
         self.transformations = []
         self.final_javascript_code = ""
         self.auto_id = 0
+        self.have_help = False
 
     def set_buffering(self, b):
         self.buffering = b
@@ -792,12 +793,17 @@ class html:
         else:
             login_text = _("not logged in")
         self.write("<table class=header><tr><td class=left>%s</td><td class=right>"
-                   "%s &nbsp; &nbsp; <b id=headertime>%s</b>%s</td></tr></table>" %
-                   (title, login_text, time.strftime("%H:%M"),_("<a href=\"http://mathias-kettner.de\"><img src=\"images/mk_logo_small.gif\"/></a>")))
-        self.write("<hr class=header>\n")
-        if config.debug:
-            self.write("<div class=urldebug>%s</div>" % self.makeuri([]))
-
+                   "%s &nbsp; &nbsp; <b id=headertime>%s</b>" % 
+                   (title, login_text, time.strftime("%H:%M")))
+        self.help_visible = config.load_user_file("help", False)  # cache for later usage
+        cssclass = self.help_visible and "active" or "passive"
+        self.write('<a id=helpbutton class=%s href="#" onclick="help_toggle();" style="display: none"></a>' %
+            cssclass)
+        self.write("%s</td></tr></table>" %
+                   _("<a href=\"http://mathias-kettner.de\"><img src=\"images/mk_logo_small.gif\"/></a>"))
+        self.write("<hr class=header>\n") 
+        if config.debug: 
+            self.write("<div class=urldebug>%s</div>" % self.makeuri([])) 
 
     def body_start(self, title='', **args):
         self.html_head(title, **args)
@@ -831,6 +837,8 @@ class html:
                                % (si, corner_text))
 
     def body_end(self):
+        if self.have_help:
+            self.javascript("help_enable();")
         if self.final_javascript_code:
             self.javascript(self.final_javascript_code);
         self.write("</body></html>\n")
@@ -889,6 +897,13 @@ class html:
             self.write("\n")
         if self.mobile:
             self.write('</center>')
+
+    def help(self, text):
+        self.have_help = True
+        self.write('<div class=help style="display: %s">' % (
+                    not self.help_visible and "none" or ""))
+        self.write(text)
+        self.write('</div>')
 
     def check_limit(self, rows, limit):
         count = len(rows)
@@ -1150,3 +1165,4 @@ class html:
 
     def del_cookie(self, varname):
         self.set_cookie(varname, '', time.time() - 60)
+

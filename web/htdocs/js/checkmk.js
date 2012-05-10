@@ -1569,3 +1569,29 @@ function valuespec_listof_fixarrows(oTbody) {
         }
     }
 }
+
+function help_enable() {
+    var aHelp = document.getElementById('helpbutton');
+    aHelp.style.display = "inline-block";
+}
+
+function help_toggle() {
+    var aHelp = document.getElementById('helpbutton');
+    if (aHelp.className == "active") {
+        aHelp.className = "passive";
+        help_switch(false);
+    }
+    else {
+        aHelp.className = "active";
+        help_switch(true);
+    }
+}
+
+function help_switch(how) {
+    // recursive scan for all div class=help elements
+    var helpdivs = document.getElementsByClassName('help');
+    for (var i=0; i<helpdivs.length; i++) {
+        helpdivs[i].style.display = how ? "" : "none";
+    }
+    get_url("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
+}

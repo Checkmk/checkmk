@@ -3,4 +3,4 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 C=$(sudo cp --preserve=mode -rv * /omd/versions/default/share/check_mk/web/ | wc -l)
 #C=$(sudo cp --preserve=mode -rv htdocs/*.{css,py} /omd/versions/default/share/check_mk/web/htdocs/ | wc -l)
 echo "$C files copied"
-sudo omd restart $SITE apache
+# sudo omd restart $SITE apache

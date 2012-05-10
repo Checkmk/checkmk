@@ -24,6 +24,7 @@
     * FIX: convert more buttons to new graphical style
     * FIX: Logwatch handles logs with only OK lines in it correctly in logfile list views
     * FIX: Fixed syntax error in "Single-Host Problems" view definition
+    * New help button at top right of each page now toggles help texts
 
     Mobile GUI:
     * FIX: commands can be executed again

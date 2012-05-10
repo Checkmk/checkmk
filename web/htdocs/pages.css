@@ -93,6 +93,7 @@ body.main table.header td.right {
     font-size: 10pt;
 }
 
+
 body.main table.header td.right img {
     position: relative;
     top: 5px;
@@ -536,4 +537,44 @@ form.confirm {
     margin-top: 8px;
     position: relative;
     left: -1px;
+}
+
+/*-------------------------------------------------------------------------.
+|                         _   _      _                                     |
+|                        | | | | ___| |_ __                                |
+|                        | |_| |/ _ \ | '_ \                               |
+|                        |  _  |  __/ | |_) |                              |
+|                        |_| |_|\___|_| .__/                               |
+|                                     |_|                                  |
++--------------------------------------------------------------------------+
+|                                                                          |
+'-------------------------------------------------------------------------*/
+
+a#helpbutton {
+    width: 19px;
+    height: 19px;
+    margin: 0px 5px;
+    position: relative;
+    top: 2px;
+    left: 3px;
+}
+a#helpbutton.active:hover {
+    background-image: url("images/helpbutton_active_hi.png");
+}
+a#helpbutton.passive:hover {
+    background-image: url("images/helpbutton_passive_hi.png");
+}
+a#helpbutton.active {
+    background-image: url("images/helpbutton_active.png");
+}
+a#helpbutton.passive {
+    background-image: url("images/helpbutton_passive.png");
+}
+
+div.help {
+    background-color: #FFFFCC;
+    border-radius: 5px 5px 5px 5px;
+    box-shadow: 0 0 19px #fff;
+    margin: 3px 0;
+    padding: 5px;
 }

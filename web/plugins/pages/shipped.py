@@ -34,6 +34,7 @@ import actions
 import weblib
 import dashboard
 import login
+import help
 
 # map URLs to page rendering functions
 
@@ -42,6 +43,7 @@ pagehandlers.update({
    "main"                     : main.page_main,
    "login"                    : login.page_login,
    "logout"                   : login.page_logout,
+   "ajax_switch_help"         : help.ajax_switch_help,
    "switch_site"              : main.ajax_switch_site,
    "edit_views"               : views.page_edit_views,
    "edit_view"                : views.page_edit_view,

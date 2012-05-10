@@ -4627,12 +4627,12 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
 
             # Legend and Help
             html.write('<tr id="attr_%s" %s><td class=legend>' % (attrname, hide_attribute and 'style="display: none"' or ""))
+            html.write("<b>%s</b>" % attr.title())
             if attr.help():
-                html.begin_foldable_container("attribute_help", attrname, True, "<b>%s</b>" % attr.title(), indent=False)
-                html.write("<i>%s</i>" % attr.help())
-                html.end_foldable_container()
-            else:
-                html.write("<b>%s</b>" % attr.title())
+                # html.begin_foldable_container("attribute_help", attrname, True, "<b>%s</b>" % attr.title(), indent=False)
+                # html.write("<i>%s</i>" % attr.help())
+                # html.end_foldable_container()
+                html.help(attr.help())
             html.write("</td>")
 
             # Checkbox for activating this attribute
@@ -5098,7 +5098,7 @@ def render_main_menu(some_modules, columns = 2):
         html.write(">")
         html.write('<img src="images/icon_%s.png">' % icon)
         html.write('<div class=title>%s</div>' % title)
-        html.write('<div class=help>%s</div>' % help)
+        html.write('<div class=subtitle>%s</div>' % help)
         html.write('</a>')
 
     html.write("</div>")

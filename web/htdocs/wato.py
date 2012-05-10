@@ -6186,6 +6186,7 @@ def mode_sites(phase):
                 + "</th><th>" + _("Timeout")
                 + "</th><th>" + _("Pers.")
                 + "</th><th>" + _("Replication")
+                + "</th><th>" + _("Prio")
                 + "</th><th>" + _("Login")
                 + "</th></tr>\n")
 
@@ -6238,10 +6239,13 @@ def mode_sites(phase):
         if site.get("replication") == "slave":
             repl = _("Slave")
         elif site.get("replication") == "peer":
-            repl = _("Peer") + _(" - Priority %s") % site.get("repl_priority",0)
+            repl = _("Peer")
         else:
-            repl = _("Local - Priority %s") % site.get("repl_priority",0)
+            repl = ""
         html.write("<td>%s</td>" % repl)
+
+        html.write("<td class=number>%s</td>" % 
+                ( site.get("replication") != "slave" and str(site.get("repl_priority", 0)) or ""))
 
         # Login-Button for Replication
         html.write("<td>")
@@ -6580,7 +6584,8 @@ def mode_edit_site(phase):
     html.write("<br><br>")
     html.write("<b>%s</b><br><i>%s</i><br>" % (
        _("Peer replication priority"),
-       _("The replication priority is used to determine the master site from the available peers and local sites.<br>"
+       _("The replication priority is used to determine the master site "
+         "from the available peers and local sites. "
          "The site with the highest number takes precedence.")))
     html.number_input("repl_priority", site.get("repl_priority", 0), size=2)
 
@@ -7140,7 +7145,7 @@ def get_login_secret(create_on_demand = False):
         urandom = file("/dev/urandom")
         while len(secret) < 32:
             c = urandom.read(1)
-            if ord(c) >= 33 and ord(c) <= 127:
+            if ord(c) >= 48 and ord(c) <= 90:
                 secret += c
         write_settings_file(path, secret)
         return secret

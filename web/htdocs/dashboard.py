@@ -543,29 +543,36 @@ def render_statistics(pie_id, what, table, filter):
     r = 0.0
     pie_parts = []
     if total > 0:
-        # Counter number of non-zero classes
+        # Count number of non-empty classes
         num_nonzero = 0
         for info, value in pies:
             if value > 0:
                 num_nonzero += 1
 
-        # Each non-zero class gets at least a view pixels of visible thickness
-        separator = 0.05 # 5% of radius
-        rest_radius = 1 - num_nonzero * separator
+        # Each non-zero class gets at least a view pixels of visible thickness.
+        # We reserve that space right now. All computations are done in percent
+        # of the radius.
+        separator = 0.02                                    # 3% of radius
+        remaining_separatorspace = num_nonzero * separator  # space for separators
+        remaining_radius = 1 - remaining_separatorspace     # remaining space
+        remaining_part = 1.0 # keep track of remaining part, 1.0 = 100%
 
-        # Make sure, that each class that is not zero has at least a certain
-        # amount so that it will be visible
-        totalpart = 1
-        # Loop over classes, begin with red (most inner ball)
-        sum_separator = num_nonzero * separator
+        # Loop over classes, begin with most outer sphere. Inner spheres show
+        # worse states and appear larger to the user (which is the reason we 
+        # are doing all this stuff in the first place)
         for (name, color, viewurl, q), value in pies[::1]:
-            part = float(value) / total
-            if value > 0 and totalpart > 0:
-                radius = sum_separator + rest_radius * totalpart ** (1/3.0)
+            if value > 0 and remaining_part > 0: # skip empty classes
+
+                # compute radius of this sphere *including all inner spheres!* The first
+                # sphere always gets a radius of 1.0, of course.
+                radius = remaining_separatorspace + remaining_radius * (remaining_part ** (1/3.0))
                 pie_parts.append('chart_pie("%s", %f, %f, %r);' % (pie_id, pie_right_aspect, radius, color))
                 pie_parts.append('chart_pie("%s", -%f, %f, %r);' % (pie_id, pie_left_aspect, radius, color))
-                totalpart -= part
-                sum_separator -= separator
+
+                # compute relative part of this class
+                part = float(value) / total # ranges from 0 to 1
+                remaining_part           -= part
+                remaining_separatorspace -= separator
 
 
     html.write("</div>")

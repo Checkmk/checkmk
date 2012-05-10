@@ -1,4 +1,4 @@
-Title: Logwatch ruleeditor (or ValueSpec ListOf) breaks on older Iceweasel
+Title: Logwatch ruleeditor (or ValueSpec ListOf) breaks on Iceweasel on Debian 6.0
 Component: multisite
 State: open
 Date: 2012-04-24 12:07:14

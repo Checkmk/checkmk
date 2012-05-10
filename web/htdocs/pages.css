@@ -532,3 +532,8 @@ div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 {
      margin-left: 0px;
 }
 
+form.confirm {
+    margin-top: 8px;
+    position: relative;
+    left: -1px;
+}

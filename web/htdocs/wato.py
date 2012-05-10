@@ -7018,6 +7018,9 @@ def ajax_replication():
     need_sync = srs.get("need_sync", False)
     need_restart = srs.get("need_restart", False)
 
+    # Initialise g_root_folder, load all folder information
+    prepare_folder_info()
+
     site = config.site(site_id)
     try:
         if need_sync:

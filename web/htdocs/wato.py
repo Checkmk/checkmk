@@ -4226,8 +4226,8 @@ class HostTagAttribute(Attribute):
                 value = value + "|" + "|".join(secondary_tags)
 
         if len(choices) == 1:
-            html.checkbox(varname, value != "", cssclass = '', onclick='wato_fix_visibility();', add_attr = ["tags=%s"%choices[0][0]])
-            html.write(" " + choices[0][1])
+            html.checkbox(varname, value != "", cssclass = '', onclick='wato_fix_visibility();', 
+                          add_attr = ["tags=%s"%choices[0][0]], label = choices[0][1])
         else:
             html.select(varname, choices, value, onchange='wato_fix_visibility();')
 
@@ -7702,8 +7702,8 @@ def mode_edit_user(phase):
     html.write(_("Notifications enabled<br><i>Notifications are sent out "
                 "when the status of a host or service changes.</i>"))
     html.write("</td><td class=content>")
-    html.checkbox("notifications_enabled", user.get("notifications_enabled", True))
-    html.write(" " + _("enable notifications"))
+    html.checkbox("notifications_enabled", user.get("notifications_enabled", True), 
+         label = _("enable notifications"))
     html.write("</td></tr>")
 
     # Notification period
@@ -7745,10 +7745,10 @@ def mode_edit_user(phase):
         html.write("%s:<ul>" % title)
         user_opts = user.get(what + "_notification_options", opts)
         for opt in opts:
-            html.checkbox(what + "_" + opt, opt in user_opts)
             opt_name = notification_option_names[what].get(opt,
                    notification_option_names["both"].get(opt))
-            html.write(" %s<br>" % opt_name)
+            html.checkbox(what + "_" + opt, opt in user_opts, label = opt_name)
+            html.write("<br>")
         html.write("</ul>")
     html.write("</td></tr>")
 

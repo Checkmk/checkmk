@@ -355,6 +355,9 @@ table.form {
     empty-cells: show;
     border-spacing: 0px;
     margin: 0px 10px 10px 0px;
+    border-width: 1px;
+    border-style: none none solid solid;
+    border-color: #2f5f74;
 }
 /* Sorry for the mess here. It is due to using foldable_containter
    within a form table (currently only in WATO in the host and
@@ -362,31 +365,27 @@ table.form {
 
 table.form.nomargin {
     margin: 0;
+    border-bottom-style: none;
 }
-table.form.nomargin td.legend,
+/* table.form.nomargin td.legend,
 table.form.nomargin td.content,
 table.form.nomargin td.checkbox,
 table.form.nomargin td.buttons {
     border-top-style: none;
-}
+}*/
+
 table.form.nomargin td.title {
-    border-top-style: none;
     background-image: url("images/form_background.png");
     background-repeat: repeat;
 }
+
 table.form > tbody > tr > td {
     padding: 5px 8px;
     color: #000;
     border-width: 1px;
-    border-style: solid;
     border-color: #2f5f73;
+    border-style: solid solid none none;
 }
-/*table.form > tbody > tr > th {
-    border-width: 1px;
-    border-color: #fff;
-    border-style: solid solid none solid;
-    padding: 4px 4px;
-}*/
 
 table.form img.toggleheader {
     width: 20px;
@@ -399,24 +398,10 @@ table.form img.toggleheader.hover {
     cursor: pointer;
 }
 
-/* Left side where title and help is printed */
-/*table.form td.legend,
-table.form td.title,
-table.form td.content,
-table.form td.checkbox {
-    color: #000;
-    border-width: 1px;
-    border-style: solid;
-    border-color: #2f5f73;
-}*/
 
 /* Bottom row with action buttons, right justified */
 table.form td.buttons {
     color: #274750;
-    border-width: 1px;
-    border-style: solid;
-    border-color: #2f5f73;
-    /* text-align: right; */
 }
 
 /* Inter-heading row over complete width */
@@ -426,7 +411,7 @@ table.form td.title {
 }
 
 table.form td.legend.border {
-    border-right-style: solid;
+/*    border-right-style: solid; */
 }
 table.form td.hilite {
     background-image: url("images/form_background.png");
@@ -436,19 +421,7 @@ table.form td.hilite {
 
 table.form td.lgend.button {
     text-align: right;
-    border-right: 1px solid #fff;
-}
-
-/* table.form td.content {
-    border-width: 1px;
-    border-style: solid;
-    border-color: #2f5f73;
-    border-left-style: none;
-}*/
-
-td.legend, td.content {
-    /* border: 1px solid #884; */
-   /* padding: 2px 0.5ex; */
+/*    border-right: 1px solid #fff; */
 }
 
 td.content hr {

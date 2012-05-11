@@ -4734,7 +4734,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             if topic_is_volatile:
                 volatile_topics.append((topic or _("Basic settings")).encode('utf-8'))
             if topic == topics[-1]:
-                html.write('<table class="form nomargin">')
+                html.write('<table class="form">')
 
     def dump_json(obj):
         return repr(obj).replace('None', 'null')

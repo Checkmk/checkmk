@@ -63,7 +63,8 @@ def link(text, target):
     # [3] relative.py
     if not (":" in target[:10]) and target[0] != '/':
         target = defaults.url_prefix + "check_mk/" + target
-    return "<a target=\"main\" class=link href=\"%s\">%s</a>" % (target, htmllib.attrencode(text))
+    return '<a onfocus="if (this.blur) this.blur();" target="main" ' \
+           'class=link href="%s">%s</a>' % (target, htmllib.attrencode(text))
 
 def simplelink(text, target):
     html.write(link(text, target) + "<br>\n")

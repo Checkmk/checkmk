@@ -56,6 +56,7 @@ sidebar_snapins["admin"] = {
     "description" : _("Direct access to WATO - the web administration GUI of Check_MK"),
     "author" : "Mathias Kettner",
     "render" : render_wato,
+    "refresh" : 60, # refresh pending changes, if other user modifies something
     "allowed" : [ "admin", "user" ],
 }
 

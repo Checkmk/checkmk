@@ -895,7 +895,9 @@ def mode_folder(phase):
     else:
         render_folder_path()
         have_something = show_subfolders(g_folder)
-        have_something = show_hosts(g_folder) or have_something
+        # Show hosts only if we have permission to this folder
+        if True == check_folder_permissions(g_folder, "read", False):
+            have_something = show_hosts(g_folder) or have_something
         if not have_something:
             render_main_menu([
                 ("newhost", _("Create new host"), "new", "hosts",
@@ -1041,64 +1043,83 @@ def show_subfolders(folder):
         edit_url   = make_link_to([("mode", "editfolder"), ("backfolder", g_folder[".path"])], entry)
         delete_url = make_action_link([("mode", "folder"), ("_delete_folder", entry[".name"])])
 
-        # Am I authorized?
-        auth = check_folder_permissions(entry, "write", False)
+        # Am I authorized at least for read access?
+        auth_message = check_folder_permissions(entry, "read", False)
+        auth_read = auth_message == True
+        auth_write = check_folder_permissions(entry, "write", False) == True
 
-        html.write('<div class=floatfolder id="folder_%s" onclick="wato_open_folder(event, \'%s\');">' % (
-            entry[".name"], enter_url))
+        html.write('<div class="floatfolder%s" id="folder_%s"' % (
+            auth_read and " unlocked" or " locked", entry['.name']))
+        if auth_write:
+            html.write(' onclick="wato_open_folder(event, \'%s\');"' % enter_url)
+        html.write('>')
+
         # Only make folder openable when permitted to edit
-        if auth == True:
+        if auth_read:
             html.write(
                 '<div class=hoverarea onmouseover="wato_toggle_folder(event, this, true);" '
                 'onmouseout="wato_toggle_folder(event, this, false)">'
             )
 
-        if auth != True:
+            if auth_read:
+                html.icon_button(
+                    edit_url,
+                    _("Edit the properties of this folder"),
+                    "edit",
+                    id = 'edit_' + entry['.name'],
+                    cssclass = 'edit',
+                    style = 'display:none',
+                )
+
+            if config.may("wato.manage_folders") and auth_write:
+                html.icon_button(
+                    '', # url is replaced by onclick code
+                    _("Move this folder to another place"),
+                    "move",
+                    id = 'move_' + entry['.name'],
+                    cssclass = 'move',
+                    style = 'display:none',
+                    onclick = 'wato_toggle_move_folder(event, this);'
+                )
+                html.write('<div id="move_dialog_%s" class=move_dialog style="display:none">' % entry['.name'])
+                html.write('<span>%s</span>' % _('Move this folder to:'))
+                move_to_folder_combo("folder", entry, False, multiple = True)
+                html.write('</div>')
+
+            if auth_write and config.may("wato.manage_folders"):
+                html.icon_button(
+                    delete_url,
+                    _("Delete this folder"),
+                    "delete",
+                    id = 'delete_' + entry['.name'],
+                    cssclass = 'delete',
+                    style = 'display:none',
+                )
+            html.write('</div>')
+
+        else:
             html.write('<img class="icon autherr" src="images/icon_autherr.png" title="%s">' % \
-                                                                      (htmllib.strip_tags(auth)))
-
-        html.icon_button(
-            edit_url,
-            _("Edit the properties of this folder"),
-            "edit",
-            id = 'edit_' + entry['.name'],
-            cssclass = 'edit',
-            style = 'display:none',
-        )
-
-        may_move_folders = config.may("wato.manage_folders") and \
-                           check_folder_permissions(g_folder, "write", False)
-        if may_move_folders:
-            html.icon_button(
-                '', # url is replaced by onclick code
-                _("Move this folder to another place"),
-                "move",
-                id = 'move_' + entry['.name'],
-                cssclass = 'move',
-                style = 'display:none',
-                onclick = 'wato_toggle_move_folder(event, this);'
-            )
-            html.write('<div id="move_dialog_%s" class=move_dialog style="display:none">' % entry['.name'])
-            html.write('<span>%s</span>' % _('Move this folder to:'))
-            move_to_folder_combo("folder", entry, False, multiple = True)
-            html.write('</div>')
-
-        if config.may("wato.manage_folders"):
-            html.icon_button(
-                delete_url,
-                _("Delete this folder"),
-                "delete",
-                id = 'delete_' + entry['.name'],
-                cssclass = 'delete',
-                style = 'display:none',
-            )
-
-        # Close the eventuall hoverarea
-        if auth == True:
-            html.write('</div>')
-
+                       (htmllib.strip_tags(auth_message)))
         html.write('<div class=infos>')
-        html.write('Hosts: %d' % num_hosts_in(entry, recurse=True))
+        # Show contact groups of the folder
+        effective = effective_attributes(None, entry)
+        use, cgs = effective.get("contactgroups", (None, []))
+        group_info = load_group_information().get("contact", {})
+        for num, cg in enumerate(cgs):
+            cgalias = group_info.get(cg,cg)
+            html.icon(_("Contactgroup assign to this folder"), "contactgroups")
+            html.write(' %s<br>' % cgalias)
+            if num > 1 and len(cgs) > 4:
+                html.write(_('<i>%d more contact groups</i><br>') % (len(cgs) - num - 1))
+                break
+
+        num_hosts = num_hosts_in(entry, recurse=True)
+        if num_hosts == 1:
+            html.write(_("1 Host"))
+        elif num_hosts > 0:
+            html.write("%d %s" % (num_hosts, _("Hosts")))
+        else:
+            html.write("<i>%s</i>" % _("(no hosts)"))
         html.write('</div>')
 
         title = entry['title']
@@ -1107,7 +1128,11 @@ def show_subfolders(folder):
             title += ' (%s)' % entry['.name']
 
         html.write('<div class=title title="%s">' % title)
-        html.write('<a href="%s">%s</a>' % (enter_url, entry['title']))
+        if auth_read:
+            html.write('<a href="%s">' % enter_url)
+        html.write(entry['title'])
+        if auth_read:
+            html.write("</a>")
         html.write('</div>')
         html.write('</div>')
 
@@ -5502,8 +5527,9 @@ def mode_edit_group(phase, what):
     html.begin_form("group")
     html.write("<table class=form>")
     html.write("<tr><td class=legend>")
-    html.write(_("Name<br><i>The name of the group is used as an internal key. It cannot be "
-                 "changed later. It is also visible in the status GUI.</i>"))
+    html.write(_("Name"))
+    html.help(_("The name of the group is used as an internal key. It cannot be "
+                 "changed later. It is also visible in the status GUI."))
     html.write("</td><td class=content>")
     if new:
         html.text_input("name")
@@ -5514,7 +5540,8 @@ def mode_edit_group(phase, what):
     html.write("</td></tr>")
 
     html.write("<tr><td class=legend>")
-    html.write(_("Alias<br><i>An Alias or description of this group.</i>"))
+    html.write(_("Alias"))
+    html.help(_("An Alias or description of this group."))
     html.write("</td><td class=content>")
     html.text_input("alias", name and groups.get(name, "") or "")
     html.write("</td></tr>")

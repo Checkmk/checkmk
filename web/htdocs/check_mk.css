@@ -73,7 +73,10 @@ input, select, textarea {
 }
 
 input[type=text] {
-    box-shadow: 0.5px 0.5px 0.8px 0 #888 inset;
+    box-shadow: 0.1px 1.2px 1.8px 0 #888 inset;
+}
+input[type=password] {
+    box-shadow: 0.1px 1.2px 1.8px 0 #800 inset;
 }
 
 select {

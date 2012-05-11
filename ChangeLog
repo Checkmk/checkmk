@@ -9,6 +9,8 @@
     * New layout of ruleset overviews
     * Hide check_mk variable names per default now (change via global settings)
     * New layout of global settings
+    * Folder layout: show contact groups of folder
+    * FIX: fix folder visibility permission handling
     * FIX: honor folder-permissions when creating, deleting 
            and modifiying rules
     * FIX: detect non-local site even if unix: is being used

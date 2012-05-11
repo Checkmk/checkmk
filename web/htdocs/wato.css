@@ -364,8 +364,15 @@ table.validationerror img {
 
 .wato div.floatfolder .autherr {
     position: absolute;
-    top: 20px;
-    right: 23px;
+    top: 28px;
+    right: 19px;
+}
+
+.wato div.floatfolder div.infos img {
+    width: 14px;
+    height: 14px;
+    position: relative;
+    top: -1px;
 }
 
 .wato div.floatfolder .edit {
@@ -388,7 +395,7 @@ table.validationerror img {
 
 .wato div.floatfolder .infos {
     position: absolute;
-    bottom: 29px;
+    bottom: 23px;
     left: 20px;
     color: #bde;
 }

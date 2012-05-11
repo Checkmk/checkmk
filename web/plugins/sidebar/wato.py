@@ -46,6 +46,10 @@ def render_wato():
         if config.may("wato." + permission) or config.may("wato.seeall"):
             iconlink(title, "wato.py?mode=%s" % mode, icon)
 
+    num_pending = wato.api.num_pending_changes()
+    if num_pending:
+        footnotelinks([(_("%d changes") % num_pending, "wato.py?mode=changelog")])
+
 
 sidebar_snapins["admin"] = {
     "title" : _("WATO &middot; Configuration"),

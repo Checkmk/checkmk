@@ -11,6 +11,7 @@
     * New layout of global settings
     * Folder layout: show contact groups of folder
     * Folder movement: always show complete path to target folder
+    * Sidebar snapin: show pending changes
     * FIX: fix parent scan on single site installations
     * FIX: fix folder visibility permission handling
     * FIX: honor folder-permissions when creating, deleting 

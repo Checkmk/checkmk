@@ -30,7 +30,7 @@ def page_index():
     start_url = html.var("start_url", config.start_url)
     html.req.headers_out.add("Cache-Control", "max-age=7200, public");
     if "%s" in config.page_heading:
-        heading = config.page_heading % (defaults.omd_site or "Multisite")
+        heading = config.page_heading % (defaults.omd_site or _("Multisite"))
     else:
         heading = config.page_heading
 
@@ -47,37 +47,6 @@ def page_index():
 </frameset>
 </html>
 """ % (heading, start_url))
-
-def page_main():
-    html.header("Check_MK Multisite")
-    html.write("""
-<p>Welcome to Check_MK Multisite - a new GUI for viewing status information
-and controlling your monitoring system. Multisite is not just another GUI
-for Nagios - it uses a completely new architecture and design scheme. It's
-key benefits are:</p>
-<ul>
-<li>It is fast.</li>
-<li>it is flexible.</li>
-<li>It supports distributed monitoring.</li>
-</ul>
-
-<p>Multisite is completely based on
-<a href="http://mathias-kettner.de/checkmk_livestatus.html">MK
-Livestatus</a>, which is what makes it fast in the first place - especially
-in huge installations with a large number of hosts and services. </p>
-
-<p>User customizable <b>views</b> is what makes Multisite flexible. Customize
-the builtin views or create completely own views in order to need your
-demands.</p>
-
-<p>Multisite supports distributed monitoring by allowing you to combine an
-arbitrary number of Monitoring servers under a common visualisation layer,
-without the need of a centralized data storage. No SQL database is needed.
-No network traffic is generated due to the monitoring.</p>
-
-<p>Please learn more about Multisite at its <a href="http://mathias-kettner.de/checkmk_multisite.html">Documentation home page</a>.</p>
-""")
-    html.footer()
 
 # This function does nothing. The sites have already
 # been reconfigured according to the variable _site_switch,

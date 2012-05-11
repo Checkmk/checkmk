@@ -40,7 +40,6 @@ import help
 
 pagehandlers.update({
    "index"                    : main.page_index,
-   "main"                     : main.page_main,
    "login"                    : login.page_login,
    "logout"                   : login.page_logout,
    "ajax_switch_help"         : help.ajax_switch_help,

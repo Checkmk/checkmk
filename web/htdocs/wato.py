@@ -3037,7 +3037,7 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
             # only set it explicitely if it differs from the id of the
             # folder.
             e = effective_attributes(new_host, gw_folder)
-            if e["site"] != site_id:
+            if "site" in e and e["site"] != site_id:
                 new_host["site"] = site_id
 
             gw_folder[".hosts"][new_host[".name"]] = new_host

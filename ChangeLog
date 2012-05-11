@@ -18,6 +18,8 @@
            on hosts with more than 500 services.
     * FIX: make config options directly active after resetting them
            to their defaults (didn't work for start_url, etc.
+    * FIX: Fixed editing of ListOf in valuespec editors (e.g. used in logwatch
+    pattern editor)
 
     Multisite:
     * FIX: fixed filter of recent event views (4 hours didn't catch)
@@ -32,6 +34,8 @@
 
     Checks & Agents:
     * FIX: Logwatch: fixed missing linebreak during reclassifing lines of logfiles
+    * FIX: Logwatch: Logwatch services in rules configured using WATO must be
+      given as item, not as whole service name
 
     BI:
     * FIX: make rotating folding arrows black (white was not visible)

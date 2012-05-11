@@ -97,7 +97,9 @@ def logwatch_precompile(hostname, item, _unused):
     # Initialize the patterns list with the logwatch_rules
     params = []
     description = check_info['logwatch']['service_description'] % item
-    rules = service_extra_conf(hostname, description, logwatch_rules)
+
+    # This is the new (-> WATO controlled) variable
+    rules = service_extra_conf(hostname, item, logwatch_rules)
     for rule in rules:
         for pattern in rule:
             params.append((pattern[0], pattern[1]))

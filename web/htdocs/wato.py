@@ -6027,20 +6027,9 @@ def find_usage_of_timeperiod(tpname):
 # Sort given sites argument by peer/local, followed by slaves
 def sort_sites(sites):
     def custom_sort(a,b):
-        if a[1].get("replication","peer") == b[1].get("replication","peer"):
-            # Compare by alias
-            if a[1].get("alias") == b[1].get("alias"):
-                return 0
-            elif a[1].get("alias") > b[1].get("alias"):
-                return 1
-            else:
-                return -1
-        elif a[1].get("replication") == "slave" and b[1].get("replication","peer") != "slave":
-            return 1
-        elif a[1].get("replication","peer") != "slave" and b[1].get("replication") == "slave":
-            return -1
-        else:
-            return 0
+        return cmp(a[1].get("replication","peer"), b[1].get("replication","peer")) or \
+              -cmp(a[1].get("repl_priority",0), b[1].get("repl_priority",0)) or \
+               cmp(a[1].get("alias"), b[1].get("alias"))
     sites.sort(cmp = custom_sort)
 
 def mode_sites(phase):
@@ -7028,6 +7017,9 @@ def ajax_replication():
     srs = repstatus.get(site_id, {})
     need_sync = srs.get("need_sync", False)
     need_restart = srs.get("need_restart", False)
+
+    # Initialise g_root_folder, load all folder information
+    prepare_folder_info()
 
     site = config.site(site_id)
     try:

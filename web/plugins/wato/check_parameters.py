@@ -126,7 +126,8 @@ register_rule(group + '/' + subgroup_applications,
     ),
     itemtype = 'item',
     itemname = 'logfile',
-    itemhelp = _("One or several regular expressions for matching logfile lines."),
+    itemhelp = _("Put the item names of the logfiles here. For example \"System$\" "
+                 "to select the service \"LOG System\"."),
     match = 'list',
 )
 

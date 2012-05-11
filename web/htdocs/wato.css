@@ -377,20 +377,20 @@ table.validationerror img {
 
 .wato div.floatfolder .edit {
     position: absolute;
-    top:20px;
-    right:54px;
+    top: 20px;
+    right: 47px;
 }
 
 .wato div.floatfolder .move {
     position: absolute;
-    top:20px;
-    right:32px;
+    top: 20px;
+    right: 25px;
 }
 
 .wato div.floatfolder .delete {
     position: absolute;
-    top:20px;
-    right:10px;
+    top: 20px;
+    right: 3px;
 }
 
 .wato div.floatfolder .infos {
@@ -448,6 +448,7 @@ table.validationerror img {
 .wato div.move_dialog span {
     display: block;
     margin-bottom: 2px;
+    color: white;
 }
 
 .wato div.hoverarea {

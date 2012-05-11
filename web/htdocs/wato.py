@@ -917,6 +917,18 @@ def prepare_folder_info():
     set_current_folder()          # set g_folder from HTML variable
 
 
+def folder_title_path(path, withlinks = False):
+    folder = g_folders.get(path)
+    titles = []
+    while (folder):
+        title = folder["title"]
+        if withlinks:
+            title = "<a href='wato.py?mode=folder&folder=%s'>%s</a>" % (folder[".path"], title)
+        titles.append(title)
+        folder = folder.get(".parent")
+    return titles[::-1]
+
+
 def check_host_permissions(hostname, exception=True, folder=None):
     if folder == None:
         folder = g_folder
@@ -1370,7 +1382,11 @@ def move_to_folder_combo(what, thing = None, top = False, multiple = False):
                     # avoid naming conflict!
                     or thing[".name"] in afolder[".folders"])):
                 os_path = afolder[".path"]
-                msg = afolder["title"]
+                title_path = folder_title_path(os_path) 
+                if len(title_path) > 1:
+                    del title_path[0] # remove name of main folder
+                msg = " / ".join(title_path)
+                # msg = afolder["title"]
                 if os_path and not config.wato_hide_filenames:
                     msg += " (%s)" % os_path
                 selections.append((os_path, msg))
@@ -10918,16 +10934,7 @@ class API:
     # components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]
     def get_folder_title_path(self, path, withlinks=False):
         load_all_folders() # TODO: speed up!
-        folder = g_folders.get(path)
-        titles = []
-        while (folder):
-            title = folder["title"]
-            if withlinks:
-                title = "<a href='wato.py?mode=folder&folder=%s'>%s</a>" % (folder[".path"], title)
-            titles.append(title)
-            folder = folder.get(".parent")
-        return titles[::-1]
-
+        return folder_title_path(path, withlinks)
 
     # Returns the number of not activated changes.
     def num_pending_changes(self):

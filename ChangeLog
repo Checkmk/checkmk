@@ -10,6 +10,7 @@
     * Hide check_mk variable names per default now (change via global settings)
     * New layout of global settings
     * Folder layout: show contact groups of folder
+    * Folder movement: always show complete path to target folder
     * FIX: fix parent scan on single site installations
     * FIX: fix folder visibility permission handling
     * FIX: honor folder-permissions when creating, deleting 

@@ -111,7 +111,7 @@ def include(filename):
     except Exception, e:
         global user_id
         user_id = "nobody"
-        raise MKConfigError("Cannot read configuration file %s: %s:" % (filename, e))
+        raise MKConfigError(_("Cannot read configuration file %s: %s:") % (filename, e))
 
 # Load multisite.mk and all files in multisite.d/. This will happen
 # for *each* HTTP request.
@@ -330,7 +330,7 @@ def save_user_file(name, content):
     try:
         write_settings_file(path, content)
     except Exception, e:
-        raise MKConfigError("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s" % \
+        raise MKConfigError(_("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s") % \
                 (name, user, path, e))
 
 # -------------------------------------------------------------------
@@ -656,13 +656,13 @@ declare_permission('logout',
 )
 
 declare_permission("ignore_soft_limit",
-     "Ignore soft query limit",
-     "Allows to ignore the soft query limit imposed upon the number of datasets returned by a query",
+     _("Ignore soft query limit"), 
+     _("Allows to ignore the soft query limit imposed upon the number of datasets returned by a query"), 
      [ "admin", "user" ])
 
 declare_permission("ignore_hard_limit",
-     "Ignore hard query limit",
-     "Allows to ignore the hard query limit imposed upon the number of datasets returned by a query",
+     _("Ignore hard query limit"), 
+     _("Allows to ignore the hard query limit imposed upon the number of datasets returned by a query"),
      [ "admin" ])
 
 # Make sure, we have all values set right now - until

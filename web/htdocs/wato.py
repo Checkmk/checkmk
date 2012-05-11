@@ -8666,7 +8666,7 @@ def mode_edit_hosttag(phase):
             elements = [
                 TextAscii(
                     title = _("Tag ID"),
-                    size=10,
+                    size = 16,
                     regex="^[-a-z0-9A-Z_]*$",
                     none_is_empty = True,
                     regex_error = _("Invalid tag ID. Only the characters a-z, A-Z, "
@@ -8674,7 +8674,7 @@ def mode_edit_hosttag(phase):
                 TextUnicode(
                     title = _("Description"),
                     allow_empty = False,
-                    size=20),
+                    size = 40),
 
                 Foldable(
                     ListChoice(

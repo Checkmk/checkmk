@@ -1,0 +1,11 @@
+Title: WATO clustered_services differs from cmk conf docs
+Component: wato
+State: open
+Date: 2012-05-11 17:51:56
+Targetversion: 1.2.0
+Class: cleanup
+
+In WATO you don't see references to PHYSICAL_HOSTS etc. 
+These special flags should either be deprecated / taken out of docs or added
+to WATO. I'm confused if they're needed or not, but WATO and under-the-hood CM
+should match.

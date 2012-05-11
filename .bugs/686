@@ -1,0 +1,12 @@
+Title: Dashboard/Sidebar on Chrome sometimes not sized
+Component: multisite
+State: open
+Date: 2012-05-11 10:46:54
+Targetversion: 1.2.0
+Class: bug
+
+It seems like we miss an initial resize() event on Chrome.
+This affects both the sidebar and the dashboard. Can we
+simulate that event somehow? Currently the dashboard
+and sidebar sometimes only work after a manual resize
+of the browser window.

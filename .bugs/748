@@ -1,0 +1,9 @@
+Title: Document custom_checks
+Component: docu
+State: open
+Date: 2012-05-12 12:56:26
+Targetversion: 1.2.0
+Class: todo
+
+This feature needs to be documented for command line users
+of Check_MK.

@@ -27,7 +27,10 @@
 # Rules for configuring parameters of checks (services)
 
 register_rulegroup("checkparams", _("Parameters for Inventorized Checks"),
-    _("Levels and other parameters for checks found by the Check_MK inventory."))
+    _("Levels and other parameters for checks found by the Check_MK inventory.\n"
+      "Use these rules in order to define parameters like filesystem levels, "
+      "levels for CPU load and other things for services that have been found "
+      "by the automatic service detection (inventory) of Check_MK."))
 group = "checkparams"
 
 subgroup_networking =   _("Networking")
@@ -742,13 +745,13 @@ checkgroups.append((
             ( "errors",
               Tuple(
                   title = _("Levels for error rates"),
-                  help = _("This levels make the check go warning or critical whenever the "
+                  help = _("These levels make the check go warning or critical whenever the "
                            "<b>percentual error rate</b> of the monitored interface reaches "
                            "the given bounds. The error rate is computed by dividing number of "
                            "errors by the total number of packets (successful plus errors)."),
                   elements = [
-                      Percentage(title = _("Warning at"), label = _("% errors")),
-                      Percentage(title = _("Critical at"), label = _("% errors"))
+                      Percentage(title = _("Warning at"), label = _("errors")),
+                      Percentage(title = _("Critical at"), label = _("errors"))
                   ])),
 
              ( "speed",
@@ -975,7 +978,7 @@ checkgroups.append((
     "threads",
     _("Number of threads"),
     Tuple(
-          help = _("This levels check the number of currently existing threads on the system. Each process has at "
+          help = _("These levels check the number of currently existing threads on the system. Each process has at "
                    "least one thread."),
           elements = [
               Integer(title = _("Warning at"), label = _("threads")),

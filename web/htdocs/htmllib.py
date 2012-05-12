@@ -898,12 +898,15 @@ class html:
         if self.mobile:
             self.write('</center>')
 
+    # Embed help box, whose visibility is controlled by a global
+    # button in the page.
     def help(self, text):
-        self.have_help = True
-        self.write('<div class=help style="display: %s">' % (
-                    not self.help_visible and "none" or ""))
-        self.write(text)
-        self.write('</div>')
+        if text and text.strip():
+            self.have_help = True
+            self.write('<div class=help style="display: %s">' % (
+                        not self.help_visible and "none" or ""))
+            self.write(text.strip())
+            self.write('</div>')
 
     def check_limit(self, rows, limit):
         count = len(rows)

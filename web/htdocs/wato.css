@@ -687,18 +687,17 @@ form#form_timeperiod td.vlof_content {
     width: 100%;
 }
 .wato table.form table.permissions td {
-    border-top: 1px dotted white;
+    /* border-top: 1px dotted white; */
     padding-top: 2px;
-    padding-bottom: 8px;
 }
-.wato table.form table.permissions td.left {
-}
-.wato table.form table.permissions td.right {
-    text-align: right;
-    vertical-align: top;
-}
-.wato table.form table.permissions td.right select {
+.wato table.form table.permissions td.select {
     width: 120px;
+}
+.wato table.form table.permissions td.descr {
+    vertical-align: middle;
+}
+.wato table.form table.permissions select {
+    width: 110px;
 }
 
 /* page "Rulesets" */
@@ -978,4 +977,9 @@ table.logwatch span.match {
     border-radius: 4px;
     background-color: #fff;
     padding: 0 2px 2px 2px;
+}
+
+table.multisite_conn_method td {
+    height: 22px;
+    vertical-align: middle;
 }

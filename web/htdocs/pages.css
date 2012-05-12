@@ -547,7 +547,7 @@ a#helpbutton.passive {
 div.help {
     background-color: #FFFFCC;
     border-radius: 5px 5px 5px 5px;
-    box-shadow: 0 0 19px #fff;
-    margin: 3px 0;
+    box-shadow: 0 0 10px #fff;
+    margin: 3px 0px 10px 0px;
     padding: 5px;
 }

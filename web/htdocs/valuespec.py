@@ -1518,10 +1518,6 @@ class Tuple(ValueSpec):
         for no, element in enumerate(self._elements):
             val = value[no]
             vp = varprefix + "_" + str(no)
-            if element.help():
-                help = "<br><i>%s</i>" % element.help()
-            else:
-                help = ""
             if self._vertical:
                 html.write("<tr>")
             if self._show_titles:
@@ -1531,11 +1527,12 @@ class Tuple(ValueSpec):
                 else:
                     title = ""
                 if self._vertical:
-                    html.write("<td class=tuple_left>%s:%s</td>" % (title, help))
+                    html.write("<td class=tuple_left>%s" % title)
+                    html.help(element.help())
+                    html.write("</td>")
                 else:
                     html.write("<td class=tuple_td><span class=title>%s" % title)
-                    if help:
-                        html.write("<br><i>%s</i>" % help)
+                    html.help(element.help())
                     html.write("</span><br>")
             if self._vertical:
                 html.write("<td class=tuple_right>")
@@ -1605,16 +1602,15 @@ class Dictionary(ValueSpec):
 
             if self._columns == 2:
                 html.write(':')
-                if vs.help():
-                    html.write("<ul class=help>%s</ul>" % vs.help())
+                html.help(vs.help())
                 html.write('</td><td class=dictright>')
             else:
                 html.write("<br>")
 
             html.write('<div class=dictelement id="%s" style="display: %s">' % (
                 div_id, not visible and "none" or ""))
-            if self._columns == 1 and vs.help():
-                html.write("<ul class=help>%s</ul>" % vs.help())
+            if self._columns == 1:
+                html.help(vs.help())
             vs.render_input(vp, value.get(param, vs.default_value()))
             html.write("</div></td></tr>")
         html.write("</table>")

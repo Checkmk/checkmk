@@ -1682,10 +1682,10 @@ def mode_editfolder(phase, new):
         if not (not new and g_folder == g_root_folder):
             if not config.wato_hide_filenames:
                 html.write("<tr><td class=legend colspan=2>"
-                    + _("Internal directory name") + "<br><i>"
-                    + _("This is the name of subdirectory where the files and "
-                    "other folders will be created. You cannot change this later.") +
-                    "</i></td><td class=content>")
+                    + _("Internal directory name"))
+                html.help(_("This is the name of subdirectory where the files and "
+                    "other folders will be created. You cannot change this later."))
+                html.write("</td><td class=content>")
 
                 if new:
                     html.text_input("name")
@@ -1926,10 +1926,10 @@ def mode_edithost(phase, new, cluster):
         # Cluster: nodes
         if cluster:
             vs = ListOfStrings(valuespec = TextAscii(size = 19), orientation="horizontal")
-            html.write('<tr><td class=legend>' + _("Nodes") + 
-                       '<br><i>%s</i></td>' % _('Enter the host names of the cluster nodes. These '
+            html.write('<tr><td class=legend>' + _("Nodes"))
+            html.help(_('Enter the host names of the cluster nodes. These '
                        'hosts must be present in WATO. '))
-            html.write('<td class=checkbox></td><td class=content>')
+            html.write('</td><td class=checkbox></td><td class=content>')
             vs.render_input("nodes", host[".nodes"]) 
             html.write('</td></tr>')
 
@@ -2718,8 +2718,7 @@ def bulk_cleanup_attributes(the_file, hosts):
 
         # Legend and Help
         html.write("<tr><td class=legend>%s" % attr.title())
-        if attr.help():
-            html.write("<br><i>%s</i>" % attr.help())
+        html.help(attr.help())
         html.write("</td>")
         html.write("<td class=content>")
 
@@ -4669,11 +4668,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             # Legend and Help
             html.write('<tr id="attr_%s" %s><td class=legend>' % (attrname, hide_attribute and 'style="display: none"' or ""))
             html.write("<b>%s</b>" % attr.title())
-            if attr.help():
-                # html.begin_foldable_container("attribute_help", attrname, True, "<b>%s</b>" % attr.title(), indent=False)
-                # html.write("<i>%s</i>" % attr.help())
-                # html.end_foldable_container()
-                html.help(attr.help())
+            html.help(attr.help())
             html.write("</td>")
 
             # Checkbox for activating this attribute
@@ -5082,8 +5077,9 @@ def edit_value(valuespec, value, title=""):
     help = valuespec.help() or ""
     html.write('<tr>')
     if help:
-        html.write('<td class=legend>%s<i>%s</i></td>' % (title, help))
-        html.write("<td class=content>")
+        html.write('<td class=legend>%s' % title)
+        html.help(help)
+        html.write("</td><td class=content>")
     else:
         html.write('<td colspan=2 class=content>')
 
@@ -5954,7 +5950,8 @@ def mode_edit_timeperiod(phase):
     else:
         alias = ""
     html.write("<tr><td class=legend>")
-    html.write(_("Alias") + "<br><i>" + _("An alias or description of the timeperiod</i>"))
+    html.write(_("Alias"))
+    html.help(_("An alias or description of the timeperiod"))
     html.write("</td><td class=content>")
     html.text_input("alias", alias, size = 50)
     if not new:
@@ -5963,9 +5960,10 @@ def mode_edit_timeperiod(phase):
 
     # Week days
     html.write("<tr><td class=legend>")
-    html.write(_("Weekdays<br><i>For each weekday you can setup no, one or several "
-                 "time ranges in the format <tt>23:39</tt>, in which the time period "
-                 "should be active."))
+    html.write(_("Weekdays"))
+    html.help("For each weekday you can setup no, one or several "
+               "time ranges in the format <tt>23:39</tt>, in which the time period "
+               "should be active.")
     html.write("</td><td class=content>")
     html.write("<table class=timeperiod>")
 
@@ -5979,8 +5977,10 @@ def mode_edit_timeperiod(phase):
     # Exceptions
     html.write("<tr><td class=legend>")
     nagurl = "../nagios/docs/objectdefinitions.html#timeperiod"
-    html.write(_("Exceptions<br><i>Here you can specify exceptional time ranges for certain "
-                 "relative or absolute dates. Please consult the <a target='_blank' href='%s'>Nagios documentation about "
+    html.write(_("Exceptions"))
+    html.help(_("Here you can specify exceptional time ranges for certain "
+                 "relative or absolute dates. Please consult the "
+                 "<a target='_blank' href='%s'>Nagios documentation about "
                  "timeperiods</a> for examples." % nagurl))
     html.write("</td><td class=content>")
 
@@ -6470,7 +6470,8 @@ def mode_edit_site(phase):
 
     # Alias
     html.write("<tr><td class=legend>")
-    html.write(_("Alias") + "<br><i>" + _("An alias or description of the site</i>"))
+    html.write(_("Alias"))
+    html.help(_("An alias or description of the site"))
     html.write("</td><td class=content>")
     html.text_input("alias", site.get("alias", ""), size = 50)
     if not new:
@@ -6479,8 +6480,9 @@ def mode_edit_site(phase):
 
     # Disabled
     html.write("<tr><td class=legend>")
-    html.write(_("<i>If you disable a connection, then it will not be shown in the "
-                 "status display and no replication will be done.</i>"))
+    html.write(_("Disable"))
+    html.help(_("If you disable a connection, then it will not be shown in the "
+                 "status display and no replication will be done."))
     html.write("</td>")
 
     # Disabled
@@ -6491,7 +6493,8 @@ def mode_edit_site(phase):
 
     # Connection
     html.write("<tr><td class=legend>")
-    html.write(_("Connection<br><i>When connecting to remote site please make sure "
+    html.write(_("Connection"))
+    html.help(_("When connecting to remote site please make sure "
                "that Livestatus over TCP is activated there. You can use UNIX sockets "
                "to connect to foreign sites on localhost. Please make sure that this "
                "site has proper read and write permissions to the UNIX socket of the "
@@ -6524,27 +6527,32 @@ def mode_edit_site(phase):
         except:
             method = "local"
 
+    html.write("<table class=multisite_conn_method><tr><td>")
     html.radiobutton("method", "local", method == "local", _("Connect to the local site"))
-    html.write("<p>")
+    html.write("</td></tr><tr><td>")
     html.radiobutton("method", "tcp", method == "tcp", _("Connect via TCP to host: "))
+    html.write("</td><td>")
     html.text_input("conn_host", conn_host, size=20)
     html.write(_(" port: "))
     html.number_input("conn_port", conn_port)
-    html.write("<p>")
+    html.write("</td></tr><tr><td>")
     html.radiobutton("method", "unix",  method == "unix", _("Connect via UNIX socket: "))
-    html.text_input("conn_socket", conn_socket, size=36)
-    html.write("<p>")
+    html.write("</td><td>")
+    html.text_input("conn_socket", conn_socket, size=34)
+    html.write("</td></tr><tr><td>")
     html.radiobutton("method", "disabled",  method == "disabled",
                _("Do not display status information from this site"))
+    html.write("</td></tr></table>")
 
     html.write("</td></tr>")
 
     # Timeout
     html.write("<tr><td class=legend>")
-    html.write(_("Connect Timeout<br><i>This sets the time that Multisite waits for a connection "
+    html.write(_("Connect Timeout"))
+    html.help(_("This sets the time that Multisite waits for a connection "
                  "to the site to be established before the site is considered to be unreachable. "
                  "If not set, the operating system defaults are begin used and just one login attempt is being. "
-                 "performed.</i>"))
+                 "performed."))
     html.write("</td><td class=content>")
     timeout = site.get("timeout", 10)
     html.number_input("timeout", timeout, size=2)
@@ -6553,9 +6561,10 @@ def mode_edit_site(phase):
 
     # Persistent connections
     html.write("<tr><td class=legend>")
-    html.write(_("Persistent Connection<br><i>If you enable persistent connections then Multisite will try to keep open "
-                 "the connection to the remote sites. This brings a great speed up in high-latency "
-                 "situations but locks a number of threads in the Livestatus module of the target site. "))
+    html.write(_("Persistent Connection"))
+    html.help(_("If you enable persistent connections then Multisite will try to keep open "
+              "the connection to the remote sites. This brings a great speed up in high-latency "
+              "situations but locks a number of threads in the Livestatus module of the target site."))
     html.write("</td><td class=content>")
     html.checkbox("persist", site.get("persist", False), label=_("Use persistent connections"))
     html.write("</td></tr>")
@@ -6563,7 +6572,8 @@ def mode_edit_site(phase):
     # URL-Prefix
     html.write("<tr><td class=legend>")
     docu_url = "http://mathias-kettner.de/checkmk_multisite_modproxy.html"
-    html.write(_("URL prefix<br><i>The URL prefix will be prepended to links of addons like PNP4Nagios "
+    html.write(_("URL prefix"))
+    html.help(_("The URL prefix will be prepended to links of addons like PNP4Nagios "
                  "or the classical Nagios GUI when a link to such applications points to a host or "
                  "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
                  "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you needed a mod_proxy "
@@ -6577,7 +6587,8 @@ def mode_edit_site(phase):
     # Status-Host
     html.write("<tr><td class=legend>")
     docu_url = "http://mathias-kettner.de/checkmk_multisite_statushost.html"
-    html.write(_("Status host<br><i>By specifying a status host for each non-local connection "
+    html.write(_("Status host"))
+    html.help(_("By specifying a status host for each non-local connection "
                  "you prevent Multisite from running into timeouts when remote sites do not respond. "
                  "You need to add the remote monitoring servers as hosts into your local monitoring "
                  "site and use their host state as a reachability state of the remote site. Please "
@@ -6599,13 +6610,13 @@ def mode_edit_site(phase):
 
     # Replication
     html.write("<tr><td class=legend>")
-    html.write(_("WATO Replication") + "<br><i>" +
-               _("WATO replication allows you to manage several monitoring sites with a "
-                 "logically centralized WATO. Slave sites receive their configuration "
-                 "from master sites. Several master sites can build a peer-to-peer "
-                 "replication pool for sake of redundancy.<br><br>Note: Slave sites "
-                 "do not need any replication configuration. They will be remote-controlled "
-                 "by the master sites.") + "</i>")
+    html.write(_("WATO Replication"))
+    html.help(_("WATO replication allows you to manage several monitoring sites with a "
+                "logically centralized WATO. Slave sites receive their configuration "
+                "from master sites. Several master sites can build a peer-to-peer "
+                "replication pool for sake of redundancy.<br><br>Note: Slave sites "
+                "do not need any replication configuration. They will be remote-controlled "
+                "by the master sites."))
     html.write("</td><td class=content>")
     html.write("<b>%s</b><br>" % _("Replication method"))
 
@@ -6616,25 +6627,25 @@ def mode_edit_site(phase):
     html.radiobutton("replication", "slave", site.get("replication") == "slave", _("Slave: push configuration to this site"))
 
     html.write("<br><br>")
-    html.write("<b>%s</b><br><i>%s</i><br>" % (
-       _("Peer replication priority"),
-       _("The replication priority is used to determine the master site "
-         "from the available peers and local sites. "
-         "The site with the highest number takes precedence.")))
+    html.write("<b>%s</b>" % _("Peer replication priority"))
+    html.help(_("The replication priority is used to determine the master site "
+                "from the available peers and local sites. "
+                "The site with the highest number takes precedence."))
+    html.write("<br>")
     html.number_input("repl_priority", site.get("repl_priority", 0), size=2)
 
     html.write("<br><br>")
-    html.write("<b>%s</b><br><i>%s</i><br>" % (
-       _("Multisite-URL of remote site upto and including <tt>/check_mk/</tt>"),
-       _("This URL is in many cases the same as the URL-Prefix but with <tt>check_mk/</tt> "
-         "appended, but it must always be an absolute URL. Please note, that "
-         "that URL will be fetched by the Apache server of the local "
-         "site itself, whilst the URL-Prefix is used by your local Browser.")))
+    html.write("<b>%s</b>" % _("Multisite-URL of remote site upto and including <tt>/check_mk/</tt>"))
+    html.help(_("This URL is in many cases the same as the URL-Prefix but with <tt>check_mk/</tt> "
+                "appended, but it must always be an absolute URL. Please note, that "
+                "that URL will be fetched by the Apache server of the local "
+                "site itself, whilst the URL-Prefix is used by your local Browser."))
+    html.write("<br>")
     html.text_input("multisiteurl", site.get("multisiteurl", ""), size=60)
     html.write("<br><br>")
     html.checkbox("insecure", site.get("insecure", False), label = _('Ignore SSL certificate errors'))
-    html.write('<br><i>This might be needed to make the synchronization accept problems with '
-               'SSL certificates when using an SSL secured connection.</i>')
+    html.help(_('This might be needed to make the synchronization accept problems with '
+               'SSL certificates when using an SSL secured connection.'))
     html.write("</td></tr>")
     html.write("<tr><td colspan=2 class=buttons>")
     html.button("save", _("Save"))
@@ -7627,7 +7638,8 @@ def mode_edit_user(phase):
 
     # Full name
     html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Full name") + "<br><i>" + _("Full name or alias of the user</i>"))
+    html.write(_("Full name"))
+    html.help(_("Full name or alias of the user"))
     html.write("</td><td class=content>")
     html.text_input("alias", user.get("alias", userid), size = 50)
     if not new:
@@ -7636,15 +7648,16 @@ def mode_edit_user(phase):
 
     # Authentication
     html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Authentication<br><i>If you want the user to be able to login "
-                 "then specify a password here. Users without a login make sense "
-                 "if they are monitoring contacts that are just used for "
-                 "notifications. The repetition of the password is optional. "
-                 "<br>For accounts used by automation processes (such as fetching "
-                 "data from views for further procession), set the method to "
-                 "<u>secret</u>. The secret will be stored in a local file. Processes "
-                 "with read access to that file will be able to use Multisite as "
-                 "a webservice without any further configuration.</i>"))
+    html.write(_("Authentication"))
+    html.help(_("If you want the user to be able to login "
+                "then specify a password here. Users without a login make sense "
+                "if they are monitoring contacts that are just used for "
+                "notifications. The repetition of the password is optional. "
+                "<br>For accounts used by automation processes (such as fetching "
+                "data from views for further procession), set the method to "
+                "<u>secret</u>. The secret will be stored in a local file. Processes "
+                "with read access to that file will be able to use Multisite as "
+                "a webservice without any further configuration."))
     html.write("</td><td class=content>")
     is_automation = user.get("automation_secret", None) != None
     html.radiobutton("authmethod", "password", not is_automation,
@@ -7671,30 +7684,32 @@ def mode_edit_user(phase):
 
     # Locking
     html.write("<tr><td class=legend colspan=2>")
-    html.write(_("<i>Disabling the password will prevent a user from logging in while "
+    html.write(_("Disable password"))
+    html.help(_("Disabling the password will prevent a user from logging in while "
                  "retaining the original password. Notifications are not affected "
-                 "by this setting.</i>"))
+                 "by this setting."))
     html.write("</td><td class=content>")
-    html.checkbox("locked", user.get("locked", False))
-    html.write(_(" disable the password of this account"))
+    html.checkbox("locked", user.get("locked", False), label = _("disable the password of this account"))
     html.write("</td></tr>")
 
     # Email address
     html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Email address<br><i>The email address is optional and is needed "
-                 "if the user is a monitoring contact and receives notifications "
-                 "via Email."))
+    html.write(_("Email address"))
+    html.help(_("The email address is optional and is needed "
+                "if the user is a monitoring contact and receives notifications "
+                "via Email."))
     html.write("</td><td class=content>")
     html.text_input("email", user.get("email", ""), size = 50)
     html.write("</td></tr>")
 
     # Roles
     html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Roles<br><i>By assigning roles to a user he obtains permissions. "
-                 "If a user has more than one role, he gets the maximum of all "
-                 "permissions of his roles. "
-                 "Users without any role have no permissions to use Multisite at all "
-                 "but still can be monitoring contacts and receive notifications.</i>"))
+    html.write(_("Roles"))
+    html.help(_("By assigning roles to a user he obtains permissions. "
+                "If a user has more than one role, he gets the maximum of all "
+                "permissions of his roles. "
+                "Users without any role have no permissions to use Multisite at all "
+                "but still can be monitoring contacts and receive notifications."))
     html.write("</td><td class=content>")
     entries = roles.items()
     entries.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
@@ -7708,14 +7723,13 @@ def mode_edit_user(phase):
     html.write("<tr><td class=legend colspan=2>")
     url1 = make_link([("mode", "contact_groups")])
     url2 = make_link([("mode", "rulesets"), ("group", "grouping")])
-    html.write(_("Contact groups<br><i>Contact groups are used to assign monitoring "
-                 "objects to users. If you haven't defined any contact groups yet, "
-                 "then first <a href='%s'>do so</a>. Hosts and services can be "
-                 "assigned to contact groups using <a href='%s'>rules</a>.") %
-                 (url1, url2))
-    html.write("<br><br>" + _("If you do not put the user into any contact group "
-               "then no monitoring contact will be created for the user.")
-               + "</i>")
+    html.write(_("Contact groups"))
+    html.help(_("Contact groups are used to assign monitoring "
+                "objects to users. If you haven't defined any contact groups yet, "
+                "then first <a href='%s'>do so</a>. Hosts and services can be "
+                "assigned to contact groups using <a href='%s'>rules</a>.<br><br>"
+                "If you do not put the user into any contact group "
+                "then no monitoring contact will be created for the user.") % (url1, url2))
     html.write("</td><td class=content>")
     if len(contact_groups) == 0:
         html.write(_("Please first create some <a href='%s'>contact groups</a>") %
@@ -7734,8 +7748,9 @@ def mode_edit_user(phase):
 
     # Notifications enabled
     html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Notifications enabled<br><i>Notifications are sent out "
-                "when the status of a host or service changes.</i>"))
+    html.write(_("Notifications enabled"))
+    html.help(_("Notifications are sent out "
+                "when the status of a host or service changes."))
     html.write("</td><td class=content>")
     html.checkbox("notifications_enabled", user.get("notifications_enabled", True), 
          label = _("enable notifications"))
@@ -7743,7 +7758,8 @@ def mode_edit_user(phase):
 
     # Notification period
     html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Notification time period<br><i>Only during this time period the "
+    html.write(_("Notification time period"))
+    html.help(_("Only during this time period the "
                  "user will get notifications about host or service alerts."))
     html.write("</td><td class=content>")
     choices = [ ( "24X7", _("Always")) ] + \
@@ -7771,9 +7787,10 @@ def mode_edit_user(phase):
     }
 
     html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Notification options<br><i>Here you specify which types of alerts "
+    html.write(_("Notification options"))
+    html.help(_("Here you specify which types of alerts "
                "will be notified to this contact. Note: these settings will only be saved "
-               "and used if the user is member of a contact group.</i>"))
+               "and used if the user is member of a contact group."))
     html.write("</td><td class=content>")
     for title, what, opts in [ ( _("Host events"), "host", "durfs"),
                   (_("Service events"), "service", "wucrfs") ]:
@@ -7791,8 +7808,7 @@ def mode_edit_user(phase):
 
     for name, vs in user_attributes:
         html.write("<tr><td colspan=2 class=legend>%s" % vs.title())
-        if vs.help():
-            html.write("<br><i>%s</i>" % vs.help())
+        html.help(vs.help())
         html.write("</td><td class=content>")
         vs.render_input("ua_" + name, user.get(name, vs.default_value()))
         html.write("</td></tr>")
@@ -8219,7 +8235,8 @@ def mode_edit_role(phase):
 
     # Alias
     html.write("<tr><td class=legend>")
-    html.write(_("Alias") + "<br><i>" + _("An alias or description of the role</i>"))
+    html.write(_("Alias"))
+    html.help(_("An alias or description of the role"))
     html.write("</td><td class=content>")
     html.text_input("alias", role.get("alias", ""), size = 50)
     html.write("</td></tr>")
@@ -8227,11 +8244,12 @@ def mode_edit_role(phase):
     # Based on
     if not role.get("builtin"):
         html.write("<tr><td class=legend>")
-        html.write(_("Based on<br><i>Each user defined role is based on one of the builtin roles. "
-                     "When created it will start with all permissions of that role. When due to a software "
-                     "update or installation of an addons new permissions appear, the user role will get or "
-                     "not get those new permissions based on the default settings of the builtin role it's "
-                     "based on.</i>"))
+        html.write(_("Based on role"))
+        html.help(_("Each user defined role is based on one of the builtin roles. "
+                    "When created it will start with all permissions of that role. When due to a software "
+                    "update or installation of an addons new permissions appear, the user role will get or "
+                    "not get those new permissions based on the default settings of the builtin role it's "
+                    "based on."))
         html.write("</td><td class=content>")
         choices = [ (i, r["alias"]) for i, r in roles.items() if r.get("builtin") ]
         html.sorted_select("basedon", choices, role.get("basedon", "user"))
@@ -8243,8 +8261,7 @@ def mode_edit_role(phase):
     def perm_header(section_id, title, is_open, help=None):
         html.write("<tr><td class=legend>")
         html.write(title)
-        if help:
-            html.write("<br><i>%s</i>" % help)
+        html.help(help)
         html.write("</td><td class=content>")
         html.begin_foldable_container('permissions', section_id, is_open, title, indent=False)
         html.write("<table class=permissions>")
@@ -8255,7 +8272,7 @@ def mode_edit_role(phase):
         html.write("</td></tr>")
 
     perm_header("general", _("General permissions"), True,
-       _("When you leave the permissions at <i>default</i> then they get their "
+       _("When you leave the permissions at &quot;default&quot; then they get their "
          "settings from the factory defaults (for builtin roles) or from the "
          "factory default of their base role (for user define roles). Factory defaults "
          "may change due to software updates. When choosing another base role, all "
@@ -8273,15 +8290,19 @@ def mode_edit_role(phase):
 
         pvalue = role["permissions"].get(pname)
         def_value = base_role_id in perm["defaults"]
-        html.write("<tr><td class=left>%s<br><i>%s</i></td>" % (
-	    make_unicode(perm["title"]), make_unicode(perm["description"])))
+        html.write("<tr>")
 
-        html.write("<td class=right>")
+        html.write("<td class=select>")
         choices = [ ( "yes", _("yes")),
                     ( "no", _("no")),
                     ( "default", _("default (%s)") % (def_value and _("yes") or _("no") )) ]
         html.select("perm_" + pname, choices, { True: "yes", False: "no" }.get(pvalue, "default") )
-        html.write("</td></tr>")
+        html.write("</td>")
+
+        html.write("<td class=descr>%s" % perm["title"])
+        html.help(perm["description"])
+        html.write("</td>")
+        html.write("</tr>")
     perm_footer()
 
     # Save button
@@ -8482,8 +8503,15 @@ def mode_hosttags(phase):
             ])
 
     else:
+        html.write("<h3>" + _("Host tag groups") + "</h3>")
+        html.help(_("Host tags are the basis of Check_MK's rule based configuration. "
+                    "If the first step you define arbitrary tag groups. A host "
+                    "has assigned exactly one tag out of each group. These tags can "
+                    "later be used for defining parameters for hosts and services, "
+                    "such as <i>disable notifications for all hosts with the tags "
+                    "<b>Network device</b> and <b>Test</b></i>."))
+
         if hosttags:
-            html.write("<h3>" + _("Host tag groups") + "</h3>")
             html.write("<table class=data>")
             html.write("<tr>" +
                        "<th>" + _("Actions") + "</th>"
@@ -8525,8 +8553,17 @@ def mode_hosttags(phase):
 
                 html.write("</tr>")
             html.write("</table>")
+
+        else:
+            html.write("<div class=info>%s</div>" % _("You haven't defined any tag groups yet."))
+
+        html.write("<h3>" + _("Auxiliary tags") + "</h3>")
+        html.help(_("Auxiliary tags can be attached to other tags. That way "
+                    "you can for example have all hosts with the tag <tt>cmk-agent</tt> "
+                    "get also the tag <tt>tcp</tt>. This makes the configuration of "
+                    "your hosts easier."))
+
         if auxtags:
-            html.write("<h3>" + _("Auxiliary tags") + "</h3>")
             html.write("<table class=data>")
             html.write("<tr>" +
                        "<th>" + _("Actions") + "</th>"
@@ -8547,6 +8584,8 @@ def mode_hosttags(phase):
                 html.write("<td>%s</td>" % title)
                 html.write("</tr>")
             html.write("</table>")
+        else:
+            html.write("<div class=info>%s</div>" % _("You haven't defined any auxiliary tags."))
 
 
 def mode_edit_auxtag(phase):
@@ -8619,11 +8658,11 @@ def mode_edit_auxtag(phase):
 
     # Tag ID
     html.write("<tr><td class=legend>")
-    html.write(_("Tag ID") + "<br><i>")
-    html.write(_("The internal name of the tag. The special tags "
-                 "<tt>snmp</tt>, <tt>tcp</tt> and <tt>ping</tt> can "
-                 "be used here in order to specify the agent type."))
-    html.write("</i></td><td class=content>")
+    html.write(_("Tag ID"))
+    html.help(_("The internal name of the tag. The special tags "
+                "<tt>snmp</tt>, <tt>tcp</tt> and <tt>ping</tt> can "
+                "be used here in order to specify the agent type."))
+    html.write("</td><td class=content>")
     if new:
         html.text_input("tag_id", "")
         html.set_focus("tag_id")
@@ -8633,7 +8672,8 @@ def mode_edit_auxtag(phase):
 
     # Title
     html.write("<tr><td class=legend>")
-    html.write(_("Title") + "<br><i>" + _("An alias or description of this auxiliary tag</i>"))
+    html.write(_("Title"))
+    html.help(_("An alias or description of this auxiliary tag"))
     html.write("</td><td class=content>")
     html.text_input("title", title, size = 30)
     html.write("</td></tr>")
@@ -8828,9 +8868,9 @@ def mode_edit_hosttag(phase):
 
     # Tag ID
     html.write("<tr><td class=legend>")
-    html.write(_("Internal ID") + "<br><i>")
-    html.write(_("The internal ID of the tag group is used to store the tag's "
-                 "value in the host properties. It cannot be changed later.</i>"))
+    html.write(_("Internal ID"))
+    html.help(_("The internal ID of the tag group is used to store the tag's "
+                "value in the host properties. It cannot be changed later."))
     html.write("</td><td class=content>")
     if new:
         html.text_input("tag_id")
@@ -8841,15 +8881,16 @@ def mode_edit_hosttag(phase):
 
     # Title
     html.write("<tr><td class=legend>")
-    html.write(_("Title") + "<br><i>" + _("An alias or description of this tag group</i>"))
+    html.write(_("Title"))
+    html.help(_("An alias or description of this tag group"))
     html.write("</td><td class=content>")
     html.text_input("title", title, size = 30)
     html.write("</td></tr>")
 
     # Choices
     html.write("<tr><td class=legend>")
-    html.write(_("Choices") + "<br><i>" +
-               _("The first choice of a tag group will be its default value. "
+    html.write(_("Choices"))
+    html.help(_("The first choice of a tag group will be its default value. "
                  "If a tag group has only one choice, it will be displayed "
                  "as a checkbox and set or not set the only tag. If it has "
                  "more choices you may leave at most one tag id empty. A host "
@@ -8859,7 +8900,7 @@ def mode_edit_hosttag(phase):
                  "to rename the ID of a tag, then please make sure that you do not "
                  "change its title at the same time! Otherwise WATO will not "
                  "be able to detect the renaming and cannot exchange the tags "
-                 "in all folders, hosts and rules accordingly.</i>"))
+                 "in all folders, hosts and rules accordingly."))
     html.write("</td><td class=content>")
     forms.input(vs_choices, "choices", choices)
     html.write("</td></tr>")
@@ -9202,6 +9243,7 @@ def mode_ruleeditor(phase):
         url = make_link([("mode", "rulesets"), ("group", groupname), 
                          ("host", only_host), ("local", only_local)])
         title, help = g_rulegroups.get(groupname, (groupname, ""))
+        help = help.split('\n')[0] # Take only first line as button text
         menu.append((url, title, "rulesets", "rulesets", help))
     render_main_menu(menu)
 
@@ -9238,8 +9280,9 @@ def mode_rulesets(phase):
     if not only_host:
         render_folder_path(keepvarnames = ["mode", "local", "group"])
 
+    help = "".join(help.split("\n", 1)[1:]).strip()
     if help:
-        html.write("<div class=info>%s</div>" % help)
+        html.help(help)
 
     if only_local and not only_host:
         all_rulesets = {}
@@ -9317,8 +9360,6 @@ def mode_rulesets(phase):
                     title = _("There are %d rules explicitely listing this host." % num_local_rules)
                 else:
                     title = _("There are %d rules defined in the current folder." % num_local_rules)
-                # html.write('<img title="%s" align=absmiddle class=icon src="images/icon_localrule.png"> ' %
-                #    title)
             html.write('<div class=rulecount title="%s">%d</div>' % (title, num_rules))
             html.write('</div>')
 
@@ -9462,8 +9503,8 @@ def mode_edit_ruleset(phase):
     if not config.wato_hide_varnames:
         display_varname = ':' in varname and '%s["%s"]' % tuple(varname.split(":")) or varname
         html.write('<div class=varname>%s</div>' % display_varname)
-    if rulespec["help"]:
-        html.write("<div class=info>%s</div>" % rulespec["help"])
+
+    html.help(rulespec["help"])
 
     # Collect all rulesets
     all_rulesets = load_all_rulesets()
@@ -9965,6 +10006,8 @@ def mode_edit_rule(phase):
 
         return "edit_ruleset"
 
+    html.help(rulespec["help"])
+
     html.begin_form("rule_editor")
     html.write('<table class="form ruleeditor">\n')
 
@@ -9989,19 +10032,19 @@ def mode_edit_rule(phase):
                 _("Conditions"))
 
     # Rule folder
-    html.write("<tr><td class=legend>%s<br><i>%s</i></td>" %
-               (_("Folder"), _("The rule is only applied to hosts directly in or below this folder.")))
-    html.write("<td class=content>")
+    html.write("<tr><td class=legend>%s" % (_("Folder")))
+    html.help(_("The rule is only applied to hosts directly in or below this folder."))
+    html.write("</td><td class=content>")
     html.select("new_rule_folder", folder_selection(g_root_folder), folder[".path"])
     html.write("</td></tr>")
 
     # Host tags
-    html.write("<tr><td class=legend>" + _("Host tags") + "<br><i>")
-    html.write(_("The rule will only be applied to hosts fullfulling all of "
+    html.write("<tr><td class=legend>" + _("Host tags"))
+    html.help(_("The rule will only be applied to hosts fullfulling all of "
                  "of the host tag conditions listed here, even if they appear "
                  "in the list of explicit host names."))
 
-    html.write("</i></td>")
+    html.write("</td>")
     html.write("<td class=content>")
     render_condition_editor(tag_specs)
     html.write("</td></tr>")
@@ -10010,11 +10053,10 @@ def mode_edit_rule(phase):
     # Explicit hosts / ALL_HOSTS
     html.write("<tr><td class=legend>")
     html.write(_("Explicit hosts"))
-    html.write("<br><i>")
-    html.write(_("You can enter a number of explicit host names that rule should or should "
+    html.help(_("You can enter a number of explicit host names that rule should or should "
                  "not apply to here. Leave this option disabled if you want the rule to "
                  "apply for all hosts specified by the given tags."))
-    html.write("</i></td><td class=content>")
+    html.write("</td><td class=content>")
     div_id = "div_all_hosts"
 
     checked = host_list != ALL_HOSTS
@@ -10054,21 +10096,20 @@ def mode_edit_rule(phase):
     if itemtype:
         html.write("<tr><td class=legend>")
         if itemtype == "service":
-            html.write(_("Services") + "<br><i>" +
-                       _("Specify a list of service patterns this rule shall apply to. "
+            html.write(_("Services"))
+            html.help(_("Specify a list of service patterns this rule shall apply to. "
                          "The patterns must match the <b>beginning</b> of the service "
                          "in question. Adding a <tt>$</tt> to the end forces an excact "
                          "match. Pattern use <b>regular expressions</b>. A <tt>.*</tt> will "
-                         "match an arbitrary text.") + "</i>")
+                         "match an arbitrary text."))
         elif itemtype == "checktype":
             html.write(_("Check types"))
         elif itemtype == "item":
             html.write(rulespec["itemname"].title())
-            html.write("<br><i>")
             if rulespec["itemhelp"]:
-                html.write(rulespec["itemhelp"])
+                html.help(rulespec["itemhelp"])
             else:
-                html.write(_("You can make the rule apply only on certain services of the "
+                html.help(_("You can make the rule apply only on certain services of the "
                              "specified hosts. Do this by specifying explicit items to mach "
                              "here. <b>Note:</b> the match is done on the <u>beginning</u> "
                              "of the item in question. Regular expressions are interpreted, "
@@ -10387,8 +10428,14 @@ def select_language(user_language):
 
     if languages:
         html.write("<tr><td class=legend>")
-        html.write(_("Language") + _('<br><i>Configure the default language '
-                           'to be used in the multisite GUI.</i>'))
+        html.write(_("Language"))
+        html.help(_('Configure the default language '
+                    'to be used by the user in the user interface here. If you do not check '
+                    'the checkbox, then the system default will be used.<br><br>'
+                    'Note: currently Multisite is internationalized '
+                    'but comes without any actual localisations (translations). If you want to '
+                    'create you own translation, you find <a href="%s">documentation online</a>.') %
+                    "http://mathias-kettner.de/checkmk_multisite_i18n.html")
         html.write("</td><td class=checkbox>")
         html.checkbox('_set_lang', inactive, onclick = 'wato_toggle_attribute(this, \'language\')')
         html.write("</td><td class=content>")
@@ -10623,13 +10670,9 @@ def mode_pattern_editor(phase):
     if phase == "action":
         return
 
-    html.write(
-        '<div class=info> '
-        + _('On this page you can test the defined logfile patterns against a custom text, '
-            'for example a line from a logfile. Using this dialog it is possible to analyze '
-            'and debug your whole set of logfile patterns.')
-        + '</div>'
-    )
+    html.help(_('On this page you can test the defined logfile patterns against a custom text, '
+                'for example a line from a logfile. Using this dialog it is possible to analyze '
+                'and debug your whole set of logfile patterns.'))
 
     # Render the tryout form
     html.write('<h3>%s</h3>' % _('Try Pattern Match'))
@@ -10646,10 +10689,10 @@ def mode_pattern_editor(phase):
     html.write('</td></tr>')
     html.write('<tr>')
     html.write('<td class=legend>')
-    html.write(_('Text to match<br><i>'
-          'You can insert some text (e.g. a line of the logfile) to test the patterns defined '
+    html.write(_('Text to match'))
+    html.help(_('You can insert some text (e.g. a line of the logfile) to test the patterns defined '
           'for this logfile. All patterns for this logfile are listed below. Matching patterns '
-          'will be highlighted after clicking the "Try out" button.</i>')
+          'will be highlighted after clicking the "Try out" button.')
     )
     html.write('</td><td class=content>')
     html.text_input('match', cssclass = 'match')

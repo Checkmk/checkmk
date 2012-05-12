@@ -545,9 +545,10 @@ a#helpbutton.passive {
 }
 
 div.help {
+    background-image: url("images/helpbackground.jpg");
     background-color: #FFFFCC;
     border-radius: 5px 5px 5px 5px;
     box-shadow: 0 0 10px #fff;
-    margin: 3px 0px 10px 0px;
+    margin: 3px 3px 10px 3px;
     padding: 5px;
 }

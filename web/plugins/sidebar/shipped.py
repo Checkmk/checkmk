@@ -1050,7 +1050,7 @@ def render_bookmarks():
     bookmarks = load_bookmarks()
     n = 0
     for title, href in bookmarks:
-        html.write("<div id=\"bookmark_%d\">" % n)
+        html.write("<div class=bookmark id=\"bookmark_%d\">" % n)
         iconbutton(_("delete"), "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks', css_class = 'bookmark')
         iconbutton(_("edit"), "edit_bookmark.py?num=%d" % n, "main", css_class = 'bookmark')
         html.write(link(title, href))
@@ -1130,6 +1130,17 @@ sidebar_snapins["bookmarks"] = {
     "author" : "Mathias Kettner",
     "render" : render_bookmarks,
     "allowed": [ "user", "admin", "guest" ],
+    "styles" : """
+div.bookmark {
+    width: 230px;
+    max-width: 230px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    white-space: nowrap;
+    color: white;
+}
+"""
 }
 
 

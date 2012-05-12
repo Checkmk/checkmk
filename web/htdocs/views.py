@@ -627,8 +627,7 @@ function toggle_section(nr, oImg) {
     for sortindex, title, fname, filt in s:
         html.write("<tr>")
         html.write("<td class=filtertitle>%s" % title)
-        if filt.comment:
-            html.write("<br><i class=help>%s</i>" % filt.comment)
+        html.help(filt.comment)
         html.write("</td>")
         html.write("<td class=usage>")
         html.sorted_select("filter_%s" % fname,

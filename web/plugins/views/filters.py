@@ -56,20 +56,21 @@ class FilterText(Filter):
 declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    "host_name",      "host",    "~~"),
                           _("Search field allowing regular expressions and partial matches"))
 
-declare_filter(101, FilterText("host",    _("Hostname"),             "host",    "host_name",          "host",    "="),
+declare_filter(101, FilterText("host",    _("Hostname (exact match)"),             "host",    "host_name",          "host",    "="),
                           _("Exact match, used for linking"))
 
 declare_filter(200, FilterText("serviceregex", _("Service"),         "service", "service_description",   "service", "~~"),
                           _("Search field allowing regular expressions and partial matches"))
 
-declare_filter(201, FilterText("service", _("Service"),              "service", "service_description",   "service", "="),
+declare_filter(201, FilterText("service", _("Service (exact match)"),              "service", "service_description",   "service", "="),
                           _("Exact match, used for linking"))
 
-declare_filter(100, FilterText("servicegroupname", _("Servicegroup"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "="),
-                          _("Exact match, used for linking"))
 
 declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "~~"),
                           _("Search field allowing regular expression and partial matches"))
+
+declare_filter(101, FilterText("servicegroupname", _("Servicegroup (enforced)"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "="),
+                          _("Exact match, used for linking"))
 
 declare_filter(202, FilterText("output",  _("Status detail"), "service", "service_plugin_output", "service_output", "~~"))
 
@@ -150,10 +151,10 @@ class FilterGroupCombo(Filter):
             return alias
 
 
-declare_filter(104, FilterGroupCombo("host",            _("Hostgroup"),            True),  _("Dropdown list, selection of host group is <b>enforced</b>"))
-declare_filter(204, FilterGroupCombo("service",         _("Servicegroup"),         True),  _("Dropdown list, selection of service group is <b>enforced</b>"))
-declare_filter(105, FilterGroupCombo("host",            _("Hostgroup"),            False), _("Optional selection of host group"))
-declare_filter(205, FilterGroupCombo("service",         _("Servicegroup"),         False), _("Optional selection of service group"))
+declare_filter(104, FilterGroupCombo("host",            _("Hostgroup"),            False), _("Optional selection of host group"))
+declare_filter(104, FilterGroupCombo("host",            _("Hostgroup (enforced)"),            True),  _("Dropdown list, selection of host group is <b>enforced</b>"))
+declare_filter(204, FilterGroupCombo("service",         _("Servicegroup"),         False), _("Optional selection of service group"))
+declare_filter(205, FilterGroupCombo("service",         _("Servicegroup (enforced)"),         True),  _("Dropdown list, selection of service group is <b>enforced</b>"))
 declare_filter(106, FilterGroupCombo("host_contact",    _("Host Contactgroup"),    False), _("Optional selection of host contact group group"))
 declare_filter(206, FilterGroupCombo("service_contact", _("Service Contactgroup"), False), _("Optional selection of service contact group group"))
 # Livestatus still misses "contact_groups" column.
@@ -323,7 +324,7 @@ declare_filter(232, FilterNagiosExpression("service", "in_downtime",            
 
 class FilterSite(Filter):
     def __init__(self, name, enforce):
-        Filter.__init__(self, name, _("Site"), None, ["site"], [])
+        Filter.__init__(self, name, _("Site") + (enforce and _( " (enforced)") or ""), None, ["site"], [])
         self.enforce = enforce
 
     def visible(self):
@@ -353,8 +354,8 @@ class FilterSite(Filter):
     def variable_settings(self, row):
         return [("site", row["site"])]
 
-declare_filter(500, FilterSite("site",    True),  _("Selection of site is enforced, use this filter for joining"))
-declare_filter(501, FilterSite("siteopt", False), _("Optional selection of a site"))
+declare_filter(500, FilterSite("siteopt", False), _("Optional selection of a site"))
+declare_filter(501, FilterSite("site",    True),  _("Selection of site is enforced, use this filter for joining"))
 
 # Filter for setting time ranges, e.g. on last_state_change and last_check
 # Variante eins:

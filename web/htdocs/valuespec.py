@@ -179,7 +179,8 @@ class Integer(ValueSpec):
         self._display_format = kwargs.get("display_format", "%d")
         
         if "size" not in kwargs and "maxvalue" in kwargs:
-            self._size = 1 + int(math.log10(self._maxvalue))
+            self._size = 1 + int(math.log10(self._maxvalue)) + \
+               (type(self._maxvalue) == float and 3 or 0)
 
     def canonical_value(self):
         if self._minvalue:

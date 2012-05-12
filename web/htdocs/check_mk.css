@@ -78,6 +78,11 @@ input[type=text] {
 input[type=password] {
     box-shadow: 0.1px 1.2px 1.8px 0 #800 inset;
 }
+input[type=text],input[type=text] {
+    height: 15px;
+    padding: 2px 3px;
+    vertical-align: middle;
+}
 
 select {
     padding: 1px 3px;
@@ -355,12 +360,12 @@ div.dictelement {
 }
 
 table.valuespec_tuple td.tuple_left {
-    padding-right: 10px;
+    padding-right: 8px;
 }
 
 table.valuespec_tuple td.tuple_right,
 table.valuespec_tuple td.tuple_left {
-    vertical-align: top;
+    vertical-align: middle;
     padding-bottom: 3px;
 }
 

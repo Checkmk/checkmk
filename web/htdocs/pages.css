@@ -457,7 +457,6 @@ div.textinputlegend {
 }
 
 input.date, input.time {
-    padding: 0ex 0.5ex;
     font-family: monospace;
 }
 

@@ -34,17 +34,15 @@ register_rulegroup("checkparams", _("Parameters for Inventorized Checks"),
 group = "checkparams"
 
 subgroup_networking =   _("Networking")
-subgroup_windows =      _("Windows")
+# subgroup_windows =      _("Windows")
 subgroup_storage =      _("Storage, Filesystems and Files")
-subgroup_cpumem =       _("Memory, CPU, Kernel resources")
-subgroup_time =         _("Time synchronization")
+subgroup_os =           _("Operating System Ressources")
+# subgroup_time =         _("Time synchronization")
 subgroup_printing =     _("Printers")
 subgroup_environment =  _("Temperature, Humidity, etc.")
-subgroup_database =     _("SQL Databases")
-subgroup_applications = _("Various applications")
+subgroup_applications = _("Applications, Processes &amp; Services")
 subgroup_virt =         _("Virtualization")
 subgroup_hardware =     _("Hardware, BIOS")
-subgroup_ps =           _("Processes and Services")
 
 register_rule(group + "/" + subgroup_networking,
     "ping_levels",
@@ -138,7 +136,7 @@ register_rule(group + '/' + subgroup_applications,
 checkgroups = []
 
 checkgroups.append((
-    subgroup_windows,
+    subgroup_applications,
     "ad_replication",
     _("Active Directory Replication"),
     Tuple(
@@ -317,7 +315,7 @@ checkgroups.append((
 
 
 checkgroups.append((
-   subgroup_time,
+   subgroup_os,
     "systemtime",
     _("System time offset"),
     Tuple(
@@ -334,7 +332,7 @@ checkgroups.append((
 checkgroups.append((
     subgroup_storage,
     "fileinfo",
-    _("Fileinfo"),
+    _("Size and age of single files"),
     Dictionary(
         elements = [
             ( "minage",
@@ -411,7 +409,7 @@ register_rule(group + '/' + subgroup_storage,
 checkgroups.append((
     subgroup_storage,
     "fileinfo-groups",
-    _("Fileinfo Groups"),
+    _("Size, age and count of file groups"),
     Dictionary(
         elements = [
             ( "minage_oldest",
@@ -495,7 +493,7 @@ checkgroups.append((
 ))
 
 checkgroups.append((
-    subgroup_cpumem,
+    subgroup_os,
     "memory_pagefile_win",
     _("Memory and pagefile levels for Windows"),
     Dictionary(
@@ -636,7 +634,7 @@ checkgroups.append((
 ))
 
 checkgroups.append((
-    subgroup_windows,
+    subgroup_applications,
     "msx_queues",
     _("MS Exchange message queues"),
     Tuple(
@@ -690,8 +688,8 @@ checkgroups.append((
                   help = _("The filesystem levels will never fall below these values, when using "
                            "the magic factor and the filesystem is very small."),
                   elements = [
-                      Percentage(title = _("Warning at"),  label = _("% usage"), allow_int = True),
-                      Percentage(title = _("Critical at"), label = _("% usage"), allow_int = True)])),
+                      Percentage(title = _("Warning at"),  label = _("usage"), allow_int = True),
+                      Percentage(title = _("Critical at"), label = _("usage"), allow_int = True)])),
             (  "trend_range",
                Optional(
                    Integer(
@@ -831,7 +829,7 @@ checkgroups.append((
 
 
 checkgroups.append((
-    subgroup_cpumem,
+    subgroup_os,
     "memory",
     _("Main memory usage (Linux / UNIX)"),
     Alternative(
@@ -870,7 +868,7 @@ checkgroups.append((
     ))
 
 checkgroups.append((
-    subgroup_cpumem,
+    subgroup_os,
     "cpu_load",
     _("CPU load (not utilization!)"),
     Tuple(
@@ -886,7 +884,7 @@ checkgroups.append((
     None, None))
 
 checkgroups.append((
-    subgroup_cpumem,
+    subgroup_os,
     "cpu_utilization",
     _("CPU utilization (percentual)"),
     Optional(
@@ -901,7 +899,7 @@ checkgroups.append((
     None, None))
 
 checkgroups.append((
-    subgroup_cpumem,
+    subgroup_os,
     "cpu_iowait",
     _("CPU utilization (disk wait)"),
     Optional(
@@ -939,7 +937,7 @@ checkgroups.append((
      None))
 
 checkgroups.append((
-    subgroup_database,
+    subgroup_applications,
     "oracle_logswitches",
     _("Oracle Logswitches"),
     Tuple(
@@ -958,7 +956,7 @@ checkgroups.append((
 
 
 checkgroups.append((
-    subgroup_windows,
+    subgroup_applications,
     "win_dhcp_pools",
     _("Windows DHCP Pool"),
     Tuple(
@@ -974,7 +972,7 @@ checkgroups.append((
      None))
 
 checkgroups.append((
-    subgroup_cpumem,
+    subgroup_os,
     "threads",
     _("Number of threads"),
     Tuple(
@@ -986,7 +984,7 @@ checkgroups.append((
     None, None))
 
 checkgroups.append((
-    subgroup_cpumem,
+    subgroup_os,
     "vm_counter",
     _("Number of kernel events per second"),
     Tuple(
@@ -1070,7 +1068,7 @@ checkgroups.append((
     None, None))
 
 checkgroups.append((
-    subgroup_time,
+    subgroup_os,
     "uptime",
     _("Display the system's uptime as a check"),
     None,
@@ -1148,7 +1146,7 @@ checkgroups.append((
 
 
 checkgroups.append((
-    subgroup_ps,
+    subgroup_applications,
     "services",
     _("Windows services"),
     None,
@@ -1237,7 +1235,7 @@ checkgroups.append((
 
 
 checkgroups.append((
-    subgroup_ps,
+    subgroup_applications,
     "wmic_process",
     _("Memory and CPU of processes on Windows"),
     Tuple(
@@ -1308,7 +1306,7 @@ group = "static"
 
 # Add checks that have parameters but are only configured as manual checks
 checkgroups.append((
-    subgroup_ps,
+    subgroup_applications,
     "ps",
     _("State and count of processes"),
     Tuple(

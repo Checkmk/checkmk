@@ -5076,12 +5076,9 @@ def edit_value(valuespec, value, title=""):
         title = title + "<br>"
     help = valuespec.help() or ""
     html.write('<tr>')
-    if help:
-        html.write('<td class=legend>%s' % title)
-        html.help(help)
-        html.write("</td><td class=content>")
-    else:
-        html.write('<td colspan=2 class=content>')
+    html.write('<td class=legend>%s' % title)
+    html.help(help)
+    html.write("</td><td class=content>")
 
     valuespec.render_input("ve", value)
     html.write("</td></tr>")
@@ -9338,7 +9335,7 @@ def mode_rulesets(phase):
                 if '/' in groupname:
                     subgroupname = groupname.split("/", 1)[1]
                 else:
-                    subgroupname = groupname
+                    subgroupname = title
                 # if do_folding:
                 #    html.begin_foldable_container("rulesets", groupname, False, subgroupname, indent=False)
                 html.write("<h3>%s</h3>" % subgroupname)

@@ -2,6 +2,9 @@
     Core:
     * New configuration variable snmp_timing, allowing to 
       configure timeout and retries for SNMP requests (also via WATO)
+    * New configuration variable custom_checks. This is mainly for
+      WATO but also usable in main.mk It's a variant of legacy_checks that
+      automatically creates the required "define command" sections.
 
     WATO:
     * ps and ps.perf configurable via WATO now (without inventory)
@@ -12,6 +15,8 @@
     * Folder layout: show contact groups of folder
     * Folder movement: always show complete path to target folder
     * Sidebar snapin: show pending changes
+    * New rule for configuring custom_checks - allowing to run arbitrary
+      active checks even if not yet formalized (like HTTP and TCP)
     * FIX: fix parent scan on single site installations
     * FIX: fix folder visibility permission handling
     * FIX: honor folder-permissions when creating, deleting 

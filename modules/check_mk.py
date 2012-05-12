@@ -258,8 +258,9 @@ checks                               = []
 static_checks                        = {}
 check_parameters                     = []
 checkgroup_parameters                = {}
-legacy_checks                        = []
-active_checks                        = {}
+legacy_checks                        = [] # non-WATO variant of legacy checks
+active_checks                        = {} # WATO variant for fully formalized checks
+custom_checks                        = [] # WATO variant for free-form custom checks without formalization
 all_hosts                            = []
 host_paths                           = {}
 snmp_hosts                           = [ (['snmp'], ALL_HOSTS) ]
@@ -1422,6 +1423,8 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     checknames_to_define = set([])
     global active_checks_to_define
     active_checks_to_define = set([])
+    global custom_commands_to_define
+    custom_commands_to_define = set([])
 
     if host_notification_periods != []:
         raise MKGeneralException("host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead.")
@@ -1812,12 +1815,7 @@ define service {
                 used_descriptions[description] = ( "active(" + acttype + ")", description )
 
             template = has_perfdata and "check_mk_perf," or ""
-
             extraconf = extra_service_conf_of(hostname, description)
-            if has_perfdata:
-                template = "check_mk_perf,"
-            else:
-                template = ""
             outfile.write("""
 define service {
   use\t\t\t\t%scheck_mk_default
@@ -1827,6 +1825,61 @@ define service {
   active_checks_enabled\t\t1
 %s}
 """ % (template, hostname, description, acttype, args, extraconf))
+
+
+    # Legacy checks via custom_checks
+    entries = host_extra_conf(hostname, custom_checks)
+    if entries:
+        outfile.write("\n\n# Custom checks\n")
+        for entry in entries:
+            # entries are dicts with the following keys:
+            # "service_description"        Service description to use
+            # "command_line"  (optional)   Unix command line for executing the check
+            #                              If this is missing, we create a passive check
+            # "command_name"  (optional)   Name of Monitoring command to define. If missing,
+            #                              we use "check-mk-custom"
+            # "has_perfdata"  (optional)   If present and True, we activate perf_data
+            description = entry["service_description"]
+            has_perfdata = entry.get("has_perfdata", False)
+            command_name = entry.get("command_name", "check-mk-custom")
+            command_line = entry.get("command_line", "")
+
+            plugin_name = command_line.split()[0]
+            if command_line[0] not in [ '$', '/' ]:
+                try:
+                    for dir in [ "/local", "" ]:
+                        path = omd_root + dir + "/lib/nagios/plugins/"
+                        if os.path.exists(path + plugin_name):
+                            command_line = path + command_line
+                            break
+                except:
+                    pass
+
+            custom_commands_to_define.add(command_name)
+
+            if description in used_descriptions:
+                cn, it = used_descriptions[description]
+                raise MKGeneralException(
+                        "ERROR: Duplicate service description (custom check) '%s' for host '%s'!\n"
+                        " - 1st occurrance: checktype = %s, item = %r\n"
+                        " - 2nd occurrance: checktype = active(%s), item = None\n" %
+                        (description, hostname, cn, it, acttype))
+            else:
+                used_descriptions[description] = ( "custom", description )
+
+            template = has_perfdata and "check_mk_perf," or ""
+            extraconf = extra_service_conf_of(hostname, description)
+            outfile.write("""
+define service {
+  use\t\t\t\t%scheck_mk_default
+  host_name\t\t\t%s
+  service_description\t\t%s
+  check_command\t\t\t%s!%s
+  active_checks_enabled\t\t%d
+%s}
+""" % (template, hostname, description, command_name, command_line, 
+       command_line and 1 or 0, extraconf))
+
 
     # No check_mk service, no legacy service -> create PING service
     if not have_at_least_one_service and not legchecks and not actchecks:
@@ -1920,6 +1973,7 @@ def create_nagios_config_commands(outfile):
 
 """ % ( checkname, dummy_check_commandline ))
 
+    # active_checks
     for acttype in active_checks_to_define:
         act_info = active_check_info[acttype]
         outfile.write("""define command {
@@ -1928,6 +1982,16 @@ def create_nagios_config_commands(outfile):
 }
 
 """ % ( acttype, act_info["command_line"]))
+
+    # custom_checks
+    for command_name in custom_commands_to_define:
+        outfile.write("""define command {
+  command_name\t\t\t%s
+  command_line\t\t\t$ARG1$
+}
+
+""" % command_name)
+
 
 def create_nagios_config_timeperiods(outfile):
     if len(timeperiods) > 0:

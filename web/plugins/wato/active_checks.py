@@ -383,3 +383,65 @@ register_rule(group,
     ),
     match = 'all')
 
+
+register_rule(group,
+    "custom_checks",
+    Dictionary(
+        title = _("Classical active and passive Nagios checks"),
+        help = _("With this ruleset you can configure &quot;classical Nagios checks&quot; "
+                 "to be executed directly on your monitoring server. These checks "
+                 "will not use Check_MK. It is also possible to configure passive "
+                 "checks that are fed with data from external sources via the Nagios "
+                 "command pipe."),
+        elements = [
+            ( "service_description", 
+              TextUnicode(
+                  title = _("Service description"),
+                  help = _("Please make sure that this is unique per host "
+                         "and does not collide with other services."),
+                  allow_empty = False)
+            ),
+            ( "command_line",
+              TextAscii(
+                  title = _("Command line"),
+                  help = _("Please enter the complete shell command including "
+                           "path name and arguments to execute. You can use Nagios "
+                           "macros here. The most important are:<ul>"
+                           "<li><tt>$HOSTADDRESS$</tt>: The IP address of the host</li>"
+                           "<li><tt>$HOSTNAME$</tt>: The name of the host</li>"
+                           "<li><tt>$USER1$</tt>: user macro 1 (usually path to shipped plugins)</li>"
+                           "<li><tt>$USER2$</tt>: user marco 2 (usually path to your own plugins)</li>"
+                           "</ul>"
+                           "If you are using OMD, then you can omit the path and just specify "
+                           "the command (e.g. <tt>check_foobar</tt>). This command will be "
+                           "searched first in the local plugins directory "
+                           "(<tt>~/local/lib/nagios/plugins</tt>) and then in the shipped plugins "
+                           "directory (<tt>~/lib/nagios/plugins</tt>) within your site directory.<br><br>"
+                           "<b>Passive checks</b>: Do no specify a command line if you want "
+                           "to define passive checks."),
+                  size = 80,
+               )
+            ),
+            ( "command_name",
+              TextAscii(
+                  title = _("Internal command name"),
+                  help = _("If you want, then you can specify a name that will be used "
+                           "in the <tt>define command</tt> section for these checks. This "
+                           "allows you to a assign a customer PNP template for the performance "
+                           "data of the checks. If you omit this, then <tt>check-mk-custom</tt> "
+                           "will be used."),
+                  size = 32)
+            ),
+            ( "has_perfdata",
+              FixedValue(
+                  title = _("Performance data"),
+                  value = True,
+                  totext = _("process performance data"),
+              )
+            ),
+        ],
+        required_keys = [ "service_description" ],
+    ),
+    match = 'all'
+)
+

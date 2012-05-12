@@ -1581,6 +1581,7 @@ class Dictionary(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
         self._optional_keys = kwargs.get("optional_keys", True)
+        self._required_keys = kwargs.get("required_keys", []) 
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
 
     def render_input(self, varprefix, value):
@@ -1589,7 +1590,7 @@ class Dictionary(ValueSpec):
             html.write("<tr><td class=dictleft>")
             div_id = varprefix + "_d_" + param
             vp     = varprefix + "_p_" + param
-            if self._optional_keys:
+            if self._optional_keys and param not in self._required_keys:
                 visible = html.get_checkbox(vp + "_USE")
                 if visible == None:
                     visible = param in value
@@ -1619,11 +1620,11 @@ class Dictionary(ValueSpec):
         self._elements[0][1].set_focus(varprefix + self._elements[0][0])
 
     def canonical_value(self):
-        if self._optional_keys:
-            return {}
-        else:
-            return dict([
-                (name, vs.canonical_value()) for (name, vs) in self._elements])
+        return dict([
+            (name, vs.canonical_value()) 
+             for (name, vs) 
+             in self._elements
+             if name in self._required_keys or not self._optional_keys])
 
     def value_to_text(self, value):
         parts = []
@@ -1636,7 +1637,9 @@ class Dictionary(ValueSpec):
         value = {}
         for param, vs in self._elements:
             vp = varprefix + "_p_" + param
-            if not self._optional_keys or html.get_checkbox(vp + "_USE"):
+            if not self._optional_keys \
+                or param in self._required_keys \
+                or html.get_checkbox(vp + "_USE"):
                 value[param] = vs.from_html_vars(vp)
         return value
 
@@ -1651,7 +1654,7 @@ class Dictionary(ValueSpec):
                     vs.validate_datatype(value[param], vp)
                 except MKUserError, e:
                     raise MKUserError(e.varname, _("%s: %s") % (vs.title(), e.message))
-            elif not self._optional_keys:
+            elif not self._optional_keys or param in self._required_keys:
                 raise MKUserError(varprefix, _("The entry %s is missing") % vp.title())
 
         # Check for exceeding keys
@@ -1666,7 +1669,7 @@ class Dictionary(ValueSpec):
             if param in value:
                 vp = varprefix + "_p_" + param
                 vs.validate_value(value[param], vp)
-            elif not self._optional_keys:
+            elif not self._optional_keys or param in self._required_keys:
                 raise MKUserError(varprefix, _("The entry %s is missing") % vp.title())
 
 

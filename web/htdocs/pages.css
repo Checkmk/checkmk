@@ -58,10 +58,37 @@ body.main div.main {
 /* The content page header containing the title, user, date */
 body.main table.header {
     width: 100%;
+    max-width: 100%;
     margin: 0 0 10px 0;
     padding: 0px 0px 10px 0px;
     border-spacing: 0px;
     color: #fff;
+}
+
+body.main table.header td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    vertical-align: bottom;
+    color: #fff;
+}
+body.main table.header td.heading {
+    font-size: 15pt;
+    padding-left: 0px;
+    height: 31px;
+    max-width: 100px;
+}
+
+body.main table.header td.right {
+    text-align: right;
+    font-size: 10pt;
+}
+
+
+body.main table.header td.right img {
+    position: relative;
+    top: 5px;
 }
 
 body.main hr.header {
@@ -76,27 +103,6 @@ body.main hr.header {
     top: 42px;
     /* Needed for older IE versions */
     color: #fff;
-}
-
-body.main table.header td.left {
-    font-size: 15pt;
-    /*font-weight: bold;*/
-    vertical-align: bottom;
-    padding-left: 0px;
-    height: 31px;
-}
-
-body.main table.header td.right {
-    text-align: right;
-    vertical-align: bottom;
-    color: #fff;
-    font-size: 10pt;
-}
-
-
-body.main table.header td.right img {
-    position: relative;
-    top: 5px;
 }
 
 body.main div.urldebug {
@@ -432,8 +438,6 @@ td.content hr {
 }
 
 td.legend {
-    /* padding-top: 3px; */
-    color: #884;
     width: 150px;
 }
 

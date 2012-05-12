@@ -792,9 +792,9 @@ class html:
             login_text += ')'
         else:
             login_text = _("not logged in")
-        self.write("<table class=header><tr><td class=left>%s</td><td class=right>"
-                   "%s &nbsp; &nbsp; <b id=headertime>%s</b>" % 
-                   (title, login_text, time.strftime("%H:%M")))
+        self.write('<table class=header><tr><td width="*" class=heading>%s</td>' % title)
+        self.write('<td width=240 class=right>%s &nbsp; <b id=headertime>%s</b>' % 
+                   (login_text, time.strftime("%H:%M")))
         self.help_visible = config.load_user_file("help", False)  # cache for later usage
         cssclass = self.help_visible and "active" or "passive"
         self.write('<a id=helpbutton class=%s href="#" onclick="help_toggle();" style="display: none"></a>' %

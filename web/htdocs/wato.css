@@ -477,10 +477,8 @@ table.validationerror img {
 .wato div.info {
     margin-top: 10px;
     margin-bottom: 10px;
-    padding: 5px 8px;
-    -moz-border-radius: 3px;
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+    padding-left: 1px;
+    color: white;
 }
 
 /* Controls for the audit log paged mechanism */

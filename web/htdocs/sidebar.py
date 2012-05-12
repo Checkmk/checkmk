@@ -167,7 +167,7 @@ def page_side():
         restart = sidebar_snapins.get(name, {}).get('restart', False)
         if restart:
             restart_snapins.append(name)
-    html.write('</div>')
+    html.write('<br></div>')
     sidebar_foot()
     html.write('</div>')
 

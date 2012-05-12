@@ -397,8 +397,7 @@ function setSidebarHeight() {
   if (height == 0)
     return;
 
-  oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight - 0) + 'px';
-
+  oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight + 0) + 'px';
 
   oFooter = null;
   oContent = null;

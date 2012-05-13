@@ -361,11 +361,11 @@ div.dictelement {
 
 table.valuespec_tuple td.tuple_left {
     padding-right: 8px;
+    padding-top: 5px;
 }
 
 table.valuespec_tuple td.tuple_right,
 table.valuespec_tuple td.tuple_left {
-    vertical-align: middle;
     padding-bottom: 3px;
 }
 

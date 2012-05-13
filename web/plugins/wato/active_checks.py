@@ -391,6 +391,10 @@ register_rule(group,
                 "Nagios plugins in order to try the response of an LDAP "
                 "server."),
         elements = [
+            TextUnicode(
+                title = _("Name"),
+                help = _("The service description will be <b>LDAP</b> plus this name"),
+                allow_empty = False),
             TextAscii(
                 title = _("Base DN"),
                 help = _("LDAP base, e.g. ou=Development, o=Mathias Kettner GmbH, c=de"),

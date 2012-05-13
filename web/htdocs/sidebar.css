@@ -84,8 +84,7 @@ body.side {
     height: 500px;
     overflow: hidden;
     color: #000000;
-    padding-top: 60px;
-    padding-bottom: 8px;
+    padding-top: 55px;
 }
 
 /* The footer of the sidebar */
@@ -293,9 +292,9 @@ div.snapin div.footnotelink a {
     border-style: solid;
     background-color: #497e95;
     border-color: #86a9b8 #22404d #22414d #86a9b8;
-    box-shadow: 0 0 0.5px #444444;
+    box-shadow: 0 0 1.5px #000;
     font-size: 7pt;
-    border-radius: 4px;
+    border-radius: 5px;
     padding: 2px 6px;
     margin-left: 5px;
 }
@@ -333,6 +332,17 @@ div.statebullet {
     border: 1px solid #123a4a;
     float: left;
     box-shadow: 0px 0px 1px #123a4a;
+}
+
+div#snapinDragIndicator {
+  height:            2px;
+  line-height:       1px;
+  font-size:         1px;
+  width:             249px;
+  background-color:  #fff;
+  margin:            0px 0px 0px 10px;
+  border-radius:     3px;
+  box-shadow:        0px 0px 5px #ffffff;
 }
 
 

@@ -172,12 +172,6 @@ function snapinDrag(event) {
 
   var line = document.createElement('div');
   line.setAttribute('id', 'snapinDragIndicator');
-  line.style.height          = '3px';
-  line.style.lineHeight      = '1px';
-  line.style.fontSize        = '1px';
-  line.style.width           = '250px';
-  line.style.backgroundColor = '#fff';
-  line.style.margin          = '1px 0px 0px 5px';
   var o = getSnapinTargetPos();
   if (o != null) {
     snapinAddBefore(o.parentNode, o, line);

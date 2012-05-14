@@ -29,9 +29,6 @@ from lib import *
 from mod_python import apache
 import os, md5, md5crypt, crypt, time
 
-class MKAuthException(MKGeneralException):
-    pass
-
 def site_cookie_name(site_id = None):
     if not site_id:
         url_prefix = defaults.url_prefix
@@ -193,10 +190,12 @@ def do_login():
             html.add_user_error(e.varname, e.message)
             return e.message
 
-def page_login():
+def page_login(no_html_output = False):
     result = do_login()
     if type(result) == tuple:
-        return result # Successfull login
+        return result # Successful login
+    elif no_html_output:
+        raise MKAuthException(_("Invalid login credentials."))
 
     if html.mobile:
         import mobile

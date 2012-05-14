@@ -154,6 +154,17 @@ def strip_tags(ht):
         ht = ht[0:x] + ht[y+1:]
     return ht
 
+def strip_scripts(ht):
+    while True:
+        x = ht.find('<script')
+        if x == -1:
+            break
+        y = ht.find('</script>')
+        if y == -1:
+            break
+        ht = ht[0:x] + ht[y+9:]
+    return ht
+
 
 class html:
     def __init__(self, req):

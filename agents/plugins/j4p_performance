@@ -7,6 +7,7 @@ port     = 8080
 user     = "jmx4perl"
 password = "J4PisOK"
 mode     = "digest"
+suburi   = "j4p"
 instance = None
 
 vars = [
@@ -71,8 +72,8 @@ def init_auth():
         urllib2.install_opener(opener)
 
 
-def fetch_var(server, port, path):
-    url = "http://%s:%d/j4p/read/%s" % (server, port, path)
+def fetch_var(server, port, path, suburi):
+    url = "http://%s:%d/%s/read/%s" % (server, port, suburi, path)
     json = urllib2.urlopen(url).read()
 
     try:
@@ -116,7 +117,7 @@ for var in vars:
         item = [instance]
 
     try:
-        value = fetch_var(server, port, path)
+        value = fetch_var(server, port, path, suburi)
     except IOError:
         sys.exit(1)
     except socket.timeout:

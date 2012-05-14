@@ -45,7 +45,6 @@ def render_bi_groups():
 sidebar_snapins["biaggr_groups"] = {
     "title"       : _("BI Aggregation Groups"),
     "description" : _("A direct link to all groups of BI aggregations"),
-    "author"      : "Mathias Kettner",
     "render"      : render_bi_groups,
     "allowed"     : [ "admin", "user", "guest" ]
 }

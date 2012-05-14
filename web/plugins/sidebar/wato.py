@@ -54,7 +54,6 @@ def render_wato():
 sidebar_snapins["admin"] = {
     "title" : _("WATO &middot; Configuration"),
     "description" : _("Direct access to WATO - the web administration GUI of Check_MK"),
-    "author" : "Mathias Kettner",
     "render" : render_wato,
     "refresh" : 60, # refresh pending changes, if other user modifies something
     "allowed" : [ "admin", "user" ],
@@ -80,7 +79,6 @@ sidebar_snapins["wato"] = {
     "title" : _("Hosts"),
     "description" : _("A foldable tree showing all your WATO folders and files - "
                       "allowing you to navigate in the tree while using views or being in WATO"),
-    "author" : "Mathias Kettner",
     "render" : render_wato_folders,
     "allowed" : [ "admin", "user", "guest" ],
 }
@@ -222,7 +220,6 @@ def render_tree_folder(f):
 sidebar_snapins['wato_foldertree'] = {
     'title'       : _('Foldertree'),
     'description' : _('This snapin shows the folders defined in WATO. It can be used to open views filtered by the WATO folder.'),
-    'author'      : 'Lars Michelsen',
     'render'      : render_wato_foldertree,
     'allowed'     : [ 'admin', 'user', 'guest' ],
     'styles'      : """

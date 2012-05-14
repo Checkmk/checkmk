@@ -55,7 +55,6 @@ def render_about():
 sidebar_snapins["about"] = {
     "title" : _("About Check_MK"),
     "description" : _("Version information and Links to Documentation, Homepage and Download of Check_MK"),
-    "author" : "Mathias Kettner",
     "render" : render_about,
     "allowed" : [ "admin", "user", "guest" ],
 }
@@ -132,7 +131,6 @@ def render_views():
 sidebar_snapins["views"] = {
     "title" : _("Views"),
     "description" : _("Links to all views"),
-    "author" : "Mathias Kettner",
     "render" : render_views,
     "allowed" : [ "user", "admin", "guest" ],
 }
@@ -165,7 +163,6 @@ def render_groups(what):
 sidebar_snapins["hostgroups"] = {
     "title" : _("Hostgroups"),
     "description" : _("Directs links to all host groups"),
-    "author" : "Mathias Kettner",
     "render" : lambda: render_groups("host"),
     "restart":     True,
     "allowed" : [ "user", "admin", "guest" ]
@@ -173,7 +170,6 @@ sidebar_snapins["hostgroups"] = {
 sidebar_snapins["servicegroups"] = {
     "title" : _("Servicegroups"),
     "description" : _("Direct links to all service groups"),
-    "author" : "Mathias Kettner",
     "render" : lambda: render_groups("service"),
     "restart":     True,
     "allowed" : [ "user", "admin", "guest" ]
@@ -251,7 +247,6 @@ snapin_allhosts_styles = """
 sidebar_snapins["hosts"] = {
     "title" : _("All hosts"),
     "description" : _("A summary state of each host with a link to the view showing its services"),
-    "author" : "Mathias Kettner",
     "render" : lambda: render_hosts("hosts"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
@@ -262,7 +257,6 @@ sidebar_snapins["hosts"] = {
 sidebar_snapins["summary_hosts"] = {
     "title" : _("Summary hosts"),
     "description" : _("A summary state of all summary hosts (summary hosts hold aggregated service states and are a feature of Check_MK)"),
-    "author" : "Mathias Kettner",
     "render" : lambda: render_hosts("summary"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
@@ -273,7 +267,6 @@ sidebar_snapins["summary_hosts"] = {
 sidebar_snapins["problem_hosts"] = {
     "title" : _("Problem hosts"),
     "description" : _("A summary state of all hosts that have problem, with links to problems of those hosts"),
-    "author" : "Mathias Kettner",
     "render" : lambda: render_hosts("problems"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
@@ -359,7 +352,6 @@ def render_hostmatrix():
 sidebar_snapins["hostmatrix"] = {
     "title"       : _("Host Matrix"),
     "description" : _("A matrix showing a colored square for each host"),
-    "author"      : "Mathias Kettner",
     "render"      : render_hostmatrix,
     "allowed"     : [ "user", "admin", "guest" ],
     "refresh"     : 10,
@@ -430,7 +422,6 @@ def render_sitestatus():
 sidebar_snapins["sitestatus"] = {
   "title" : _("Site status"),
   "description" : _("Connection state of each site and button for enabling and disabling the site connection"),
-  "author" : "Mathias Kettner",
   "render" : render_sitestatus,
   "allowed" : [ "user", "admin" ],
   "refresh" : 90,
@@ -536,7 +527,6 @@ def render_tactical_overview():
 sidebar_snapins["tactical_overview"] = {
     "title" : _("Tactical Overview"),
     "description" : _("The total number of hosts and service with and without problems"),
-    "author" : "Mathias Kettner",
     "refresh" : 10,
     "render" : render_tactical_overview,
     "allowed" : [ "user", "admin", "guest" ],
@@ -625,7 +615,6 @@ def render_performance():
 sidebar_snapins["performance"] = {
     "title" : _("Server performance"),
     "description" : _("Live monitor of the overall performance of all monitoring servers"),
-    "author" : "Mathias Kettner",
     "refresh" : 15,
     "render" : render_performance,
     "allowed" : [ "admin", ],
@@ -799,7 +788,6 @@ sidebar_snapins["speedometer"] = {
                       "the scheduled check rate. If the Speed-O-Meter shows a speed "
                       "of 100 percent, then all checks are being executed in exactly "
                       "the rate that is configured (via check_interval)"),
-    "author" : "Mathias Kettner",
     "render" : render_speedometer,
     "allowed" : [ "admin", ],
     "styles" : """
@@ -840,7 +828,6 @@ def render_current_time():
 sidebar_snapins["time"] = {
     "title" : _("Server time"),
     "description" : _("A large clock showing the current time of the web server"),
-    "author" : "Mathias Kettner",
     "refresh" : 30,
     "render" : render_current_time,
     "allowed" : [ "user", "admin", "guest", ],
@@ -923,7 +910,6 @@ def render_nagios():
 sidebar_snapins["nagios_legacy"] = {
     "title" : _("Old Nagios GUI"),
     "description" : _("The classical sidebar of Nagios 3.2.0 with links to your local Nagios instance (no multi site support)"),
-    "author" : "Mathias Kettner",
     "render" : render_nagios,
     "allowed" : [ "user", "admin", "guest", ],
 }
@@ -970,7 +956,6 @@ def render_master_control():
 sidebar_snapins["master_control"] = {
     "title" : _("Master control"),
     "description" : _("Buttons for switching globally states such as enabling checks and notifications"),
-    "author" : "Mathias Kettner",
     "render" : render_master_control,
     "allowed" : [ "admin", ],
     "styles" : """
@@ -1130,7 +1115,6 @@ def ajax_add_bookmark():
 sidebar_snapins["bookmarks"] = {
     "title" : _("Bookmarks"),
     "description" : _("A simple and yet practical snapin allowing to create bookmarks to views and other content in the main frame"),
-    "author" : "Mathias Kettner",
     "render" : render_bookmarks,
     "allowed": [ "user", "admin", "guest" ],
     "styles" : """
@@ -1202,7 +1186,6 @@ def render_custom_links():
 sidebar_snapins["custom_links"] = {
     "title" : _("Custom Links"),
     "description" : _("This snapin contains custom links which can be configured via the configuration variable <tt>custom_links</tt> in <tt>multisite.mk</tt>"),
-    "author" : "Mathias Kettner",
     "render" : render_custom_links,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """

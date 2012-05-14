@@ -573,6 +573,9 @@ table.tacticaloverview td {
     height: 14px; 
     /* box-shadow: 1px 0px 1px #386068; */
 }
+table.tacticaloverview td.prob { 
+    box-shadow: 0px 0px 4px #ffd000;
+}
 table.tacticaloverview a { display: block; margin-right: 2px; }
 """ % snapin_width
 }

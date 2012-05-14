@@ -7214,6 +7214,7 @@ def our_site_id():
             return site_id
     return None
 
+automation_commands = {}
 
 def page_automation():
     secret = html.var("secret")
@@ -7232,8 +7233,13 @@ def page_automation():
         indata = mk_eval(html.var("indata"))
         result = check_mk_local_automation(cmk_command, args, indata)
         html.write(repr(result))
+
     elif command == "push-snapshot":
         html.write(repr(automation_push_snapshot()))
+
+    elif command in automation_commands:
+        html.write(repr(automation_commands[command]()))
+
     else:
         raise MKGeneralException(_("Invalid automation command."))
 

@@ -1,0 +1,26 @@
+How to deploy the Jolokia agent on a Weblogic server
+Version here: 12.1.1.0 (12c)
+
+1. Log into the weblogic admin console
+2. Click on "Deployments" and then "Install"
+3. Click on "upload your file(s)" and upload the WAR file 
+   from jolokia.org (e.g. jolokia-war.1.0.3.war)
+4. [Next]
+5. Check and maybe modify the installation path
+6. Install this deployment as an application
+7. Available targets: select Servers where to install and [Next]
+8. Optional settings: leave everything at defaults and hit [Next]
+9. on the next page ("Review"): [Finish]
+10. Now change the context root: Got to "Configuration" and
+   fill in "/j4p" into the field "Context Root" and save
+
+If everything went right, then you should be able to get
+some basic JSON information via the following URL:
+
+http://NAME:PORT/j4p
+
+The output should look like:
+
+{"timestamp":123123123,"status":200, ....}
+
+

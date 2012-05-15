@@ -66,10 +66,10 @@ custom_links['user'] = custom_links['guest'] + [
 # The admins yet get further links
 custom_links['admin'] = custom_links['user'] + [
   ( "Support", False, [
-      ( "Mathias Kettner",              "http://mathias-kettner.de/" ),
-      ( "Check_MK Mailinglists",        "http://mathias-kettner.de/check_mk_lists.html" ),
-      ( "Check_MK Portal (inofficial)", "http://check-mk-portal.org/"),
-      ( "Nagios Portal (German)",       "http://nagios-portal.org"),
+      ( "Mathias Kettner",                "http://mathias-kettner.de/" ),
+      ( "Check_MK Mailinglists",          "http://mathias-kettner.de/check_mk_lists.html" ),
+      ( "Check_MK Exchange (inofficial)", "http://exchange.check-mk.org/" ),
+      ( "Nagios Portal (German)",         "http://nagios-portal.org"),
   ])
 ]
 

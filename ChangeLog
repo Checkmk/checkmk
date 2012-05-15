@@ -38,6 +38,7 @@
     * FIX: Logwatch handles logs with only OK lines in it correctly in logfile list views
     * FIX: Fixed syntax error in "Single-Host Problems" view definition
     * New help button at top right of each page now toggles help texts
+    * Snapin Custom Links allows to specify HTTP link target
 
     Mobile GUI:
     * FIX: commands can be executed again

@@ -53,13 +53,13 @@ custom_links['guest'] = [
 # but some in addition
 custom_links['user'] = custom_links['guest'] + [
   ( "Open Source Components", False, [
-        ( "Multisite",     "http://mathias-kettner.de/checkmk_multisite.html" ),
-        ( "MK Livestatus", "http://mathias-kettner.de/checkmk_livestatus.html" ),
-        ( "Check_MK",      "http://mathias-kettner.de/check_mk.html" ),
-        ( "Nagios",        "http://www.nagios.org/" ), 
-        ( "PNP4Nagios",    "http://pnp4nagios.org/" ),
-        ( "NagVis",        "http://nagvis.org/" ),
-        ( "RRDTool",       "http://oss.oetiker.ch/rrdtool/" ),
+        ( "Multisite",     "http://mathias-kettner.de/checkmk_multisite.html", None, "_blank"),
+        ( "MK Livestatus", "http://mathias-kettner.de/checkmk_livestatus.html", None, "_blank"),
+        ( "Check_MK",      "http://mathias-kettner.de/check_mk.html", None, "_blank"),
+        ( "Nagios",        "http://www.nagios.org/", None, "_blank"), 
+        ( "PNP4Nagios",    "http://pnp4nagios.org/", None, "_blank"),
+        ( "NagVis",        "http://nagvis.org/", None, "_blank"),
+        ( "RRDTool",       "http://oss.oetiker.ch/rrdtool/", None, "_blank"),
    ])
 ]
 
@@ -68,8 +68,8 @@ custom_links['admin'] = custom_links['user'] + [
   ( "Support", False, [
       ( "Mathias Kettner",                "http://mathias-kettner.de/" ),
       ( "Check_MK Mailinglists",          "http://mathias-kettner.de/check_mk_lists.html" ),
-      ( "Check_MK Exchange (inofficial)", "http://exchange.check-mk.org/" ),
-      ( "Nagios Portal (German)",         "http://nagios-portal.org"),
+      ( "Check_MK Exchange (inofficial)", "http://exchange.check-mk.org/", None, "_blank" ),
+      ( "Nagios Portal (German)",         "http://nagios-portal.org", None, "_blank"),
   ])
 ]
 

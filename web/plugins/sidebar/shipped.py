@@ -1171,11 +1171,12 @@ def render_custom_links():
                     render_list(idss, entry[2])
                     html.write('</div>\n')
                 elif type(entry[1]) == str:
-                    if len(entry) > 2:
+                    frame = len(entry) > 3 and entry[3] or "main"
+                    if len(entry) > 2 and entry[2]:
                         html.write('<img src="images/%s">' % entry[2])
                     else:
                         html.write('<img src="images/link_link.gif">')
-                    simplelink(entry[0], entry[1])
+                    simplelink(entry[0], entry[1], frame)
                 else:
                     html.write(_("Second part of tuple must be list or string, not %s\n") % str(entry[1]))
             except Exception, e:

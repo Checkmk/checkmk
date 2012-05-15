@@ -2660,7 +2660,7 @@ def mode_bulk_cleanup(phase):
 
     html.write("<p>" + _("You have selected <b>%d</b> hosts for bulk cleanup. This means removing "
     "explicit attribute values from hosts. The hosts will then inherit attributes "
-    "configured at the host list or folders or simply fall back to the builin "
+    "configured at the host list or folders or simply fall back to the builtin "
     "default values.") % len(hostnames))
     html.write("</p>")
 
@@ -6718,14 +6718,26 @@ def do_site_login(site_id, name, password):
         raise MKUserError("_passwd",
             _("Please specify your password."))
 
-    # Trying basic auth AND form based auth to ensure the site login works
-    response = get_url(site["multisiteurl"] + 'automation_login.py?_login=1'
-                        '&_username=%s&_password=%s&_origtarget=automation_login.py' %
-                                             (name, password), site.get('insecure', False), name, password)
-    try:
-        return eval(response)
-    except:
-        raise MKAutomationException(response)
+    # Trying basic auth AND form based auth to ensure the site login works.
+    # Adding _ajaxid makes the web service fail silently with an HTTP code and
+    # not output HTML code for an error screen.
+    url = site["multisiteurl"] + 'automation_login.py?_login=1' \
+          '&_username=%s&_password=%s&_origtarget=automation_login.py&_plain_error=1' % \
+          (name, password)
+    response = get_url(url, site.get('insecure', False), name, password).strip()
+    if '<html>' in response.lower():
+        message = _("Authentication to web service failed.<br>Message:<br>%s") % \
+            htmllib.strip_tags(htmllib.strip_scripts(response))
+        if config.debug:
+            message += "<br>Automation URL: <tt>%s</tt><br>" % url
+        raise MKAutomationException(message)
+    elif not response:
+        raise MKAutomationException(_("Empty response from web service"))
+    else:
+        try:
+            return eval(response)
+        except:
+            raise MKAutomationException(response)
 
 def upload_file(url, file_path, insecure):
     return get_url(url, insecure, params = ' -F snapshot=@%s' % file_path)

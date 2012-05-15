@@ -1,0 +1,19 @@
+Title: Multisite setup with cookie based login garbles PNP webservice
+Component: multisite
+State: open
+Date: 2012-05-14 19:02:05
+Targetversion: 1.2.0
+Class: bug
+
+If you use cookie based authentication and a multisite setup and if the
+auth.secret is not replicated - so that your login does not automatically
+work for the remote site, then two nasty things happen:
+
+1. If you hover over the PNP icon will show the login screen in place where
+the PNP hover graphs should appear - and also garble styles.
+
+2. If you click on the details of a remote service (i.e. a view with a
+remote PNP graph embedded), then Chrome will go into an endless loop
+again and again loading the page. This must have to do something with
+the PNP webservice returning HTML code that will somehow redirect to
+the login page.

@@ -526,7 +526,7 @@ def render_statistics(pie_id, what, table, filter):
         len(pies) > 1 and " narrow" or ""))
     table_entries = pies
     while len(table_entries) < 6:
-        table_entries = table_entries + [ (("", "#fff", "", ""), "&nbsp;") ]
+        table_entries = table_entries + [ (("", "#95BBCD", "", ""), "&nbsp;") ]
     table_entries.append(((_("Total"), "", "all%s" % what, ""), total))
     for (name, color, viewurl, query), count in table_entries:
         url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder=" \

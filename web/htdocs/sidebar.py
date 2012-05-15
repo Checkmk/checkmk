@@ -55,7 +55,7 @@ def load_plugins():
             snapin["allowed"])
 
 # Helper functions to be used by snapins
-def link(text, target):
+def link(text, target, frame="main"):
     # Convert relative links into absolute links. We have three kinds
     # of possible links and we change only [3]
     # [1] protocol://hostname/url/link.py
@@ -63,14 +63,14 @@ def link(text, target):
     # [3] relative.py
     if not (":" in target[:10]) and target[0] != '/':
         target = defaults.url_prefix + "check_mk/" + target
-    return '<a onfocus="if (this.blur) this.blur();" target="main" ' \
-           'class=link href="%s">%s</a>' % (target, htmllib.attrencode(text))
+    return '<a onfocus="if (this.blur) this.blur();" target="%s" ' \
+           'class=link href="%s">%s</a>' % (frame, target, htmllib.attrencode(text))
 
-def simplelink(text, target):
-    html.write(link(text, target) + "<br>\n")
+def simplelink(text, target, frame="main"):
+    html.write(link(text, target, frame) + "<br>\n")
 
-def bulletlink(text, target):
-    html.write("<li class=sidebar>" + link(text, target) + "</li>\n")
+def bulletlink(text, target, frame="main"):
+    html.write("<li class=sidebar>" + link(text, target, frame) + "</li>\n")
 
 def iconlink(text, target, icon):
     linktext = '<img class=iconlink src="images/icon_%s.png">%s' % \
@@ -346,9 +346,9 @@ def page_add_snapin():
         description = snapin.get("description", "")
         transid = html.fresh_transid()
         url = 'sidebar_add_snapin.py?name=%s&_transid=%s&pos=top' % (name, transid)
-        html.write('<div class=snapinadder onmouseover="this.style.background=\'#cde\'; this.style.cursor=\'pointer\';" '
-                'onmouseout="this.style.background=\'#9bc\' "'
-                'onmousedown="window.location.href=\'%s\';return false;">' % url)
+        html.write('<div class=snapinadder '
+                   'onmouseover="this.style.cursor=\'pointer\';" '
+                   'onmousedown="window.location.href=\'%s\'; return false;">' % url)
 
         html.write("<div class=snapin_preview>")
         html.write("<div class=clickshield></div>")

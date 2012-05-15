@@ -360,8 +360,8 @@ div#snapinDragIndicator {
 
 div.add_snapin div.snapinadder {
     padding: 8px 2px 14px 2px;
-    background-color: #9bc;
-    -moz-border-radius: 8px;
+    background-color: #478;
+    border-radius: 5px;
     border-bottom: 1px solid #9ab;
     border-right: 1px solid #89a;
     height: 220px;
@@ -369,9 +369,20 @@ div.add_snapin div.snapinadder {
     margin-right: 10px;
     margin-bottom: 10px;
     float: left;
+    box-shadow: 1px 1px 5px #000;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #9bc #245 #245 #9bc;
 }
+div.add_snapin div.snapinadder:hover {
+    background-color: #69a;
+    box-shadow: 0px 0px 10px #fff;
+    border-color: #fff; /* #9bc #9bc #fff; */
+    position: relative;
+}
+
 div.add_snapin div.snapinadder div.description {
-    color: #369;
+    color: #fff;
     padding: 10px;
 }
 div.add_snapin div.snapin_preview div.clickshield {

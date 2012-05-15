@@ -2660,7 +2660,7 @@ def mode_bulk_cleanup(phase):
 
     html.write("<p>" + _("You have selected <b>%d</b> hosts for bulk cleanup. This means removing "
     "explicit attribute values from hosts. The hosts will then inherit attributes "
-    "configured at the host list or folders or simply fall back to the builin "
+    "configured at the host list or folders or simply fall back to the builtin "
     "default values.") % len(hostnames))
     html.write("</p>")
 

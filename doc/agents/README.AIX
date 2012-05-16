@@ -1,0 +1,54 @@
+
+
+# Install the Agent
+cp /tmp/check_mk_agent.aix /usr/bin/check_mk_agent
+
+# Agent Config
+Change the defaults from
+export MK_LIBDIR="/to/be/changed"
+export MK_CONFDIR="/to/be/changed"
+
+to 
+export MK_CONFDIR="/etc/check_mk"
+export MK_LIBDIR="/usr/lib/check_mk_agent"
+
+And create the directories
+mkdir /etc/check_mk /usr/lib/check_mk_agent /usr/lib/check_mk_agent/local /usr/lib/check_mk_agent/plugins
+
+
+# INETD SETUP
+/etc/services
+check_mk        6556/tcp
+
+#        WITHOUT TCPWRAPPERS
+/etc/inetd.conf
+check_mk        stream  tcp     nowait  root    /usr/bin/check_mk_agent
+
+#        WITH TCPWRAPPERS
+or, if your system has TCPWrappers
+check_mk        stream  tcp     nowait  root    /path/to/tcpd /usr/bin/check_mk_agent
+Note - in our testing, tcpwrappers only delivered correct example every 2nd call.
+One might be able to use genfilt as an alternate firewall
+
+and add an allow entry in /etc/hosts.allow:
+check_mk: nagioshost, ip_of_nagios_host, 127.0.0.1
+
+
+
+# Extra FEATURES
+If you wish to have more stats,
+there's 3 ways:
+a)
+you need to get a hold of the utilities for perfstat from 
+http://www.ibm.com/developerworks/wikis/display/WikiPtype/ryo
+Do not use the binaries since they do an eternal loop. Instead download 
+adapt.c, cpu.c, memory.c and net.c and remove the loops.
+
+This code seems to be not GPLed, so we cannot include it.
+
+
+b)
+enable SNMP and install the correct bundles for host stats
+
+
+c) compile install libstatgrab (recommended!)

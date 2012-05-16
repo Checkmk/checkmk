@@ -103,6 +103,11 @@ echo '<<<ntp>>>'
 ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 
 
+echo '<<<hpux_tunables>>>'
+if which kcusage > /dev/null ; then
+    kcusage -l
+fi
+
 
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR

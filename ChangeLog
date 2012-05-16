@@ -32,6 +32,8 @@
            to their defaults (didn't work for start_url, etc.
     * FIX: Fixed editing of ListOf in valuespec editors (e.g. used in logwatch
     pattern editor)
+    * FIX: Reimplemented correct behaviour of the logwatch pattern "ignore"
+    state which is used to drop the matching log lines
 
     Multisite:
     * FIX: fixed filter of recent event views (4 hours didn't catch)

@@ -1,0 +1,12 @@
+
+
+copy the agent to /usr/bin/check_mk_agent
+
+mkdir /etc/check_mk /usr/lib/check_mk_agent /usr/lib/check_mk_agent/plugins /usr/lib/check_mk_agent/local
+
+edit MK_LIBDIR to be /usr/lib/check_mk_agent
+edit MK_CONFDIR to be /etc/check_mk
+
+Install libstatgrab or enable SNMP for the statistic-related checks
+
+Enable Agent access via inetd or SNMP

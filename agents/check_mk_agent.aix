@@ -93,6 +93,11 @@ if which ntpq > /dev/null 2>&1 ; then
 fi 
 
 
+echo '<<<aix_multipath>>>'
+# output path status, but remove SAS enclsoure management devices
+    lspath -F"name parent path_status status" | grep -v ses
+
+
 echo '<<<tcp_conn_stats>>>'
 netstat -ntfinet | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
 

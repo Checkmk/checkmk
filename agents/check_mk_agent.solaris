@@ -27,8 +27,8 @@
 export LC_ALL=C
 unset LANG
 
-MK_LIBDIR="/to/be/changed"
-MK_CONFDIR="/to/be/changed"
+MK_LIBDIR="/change/me"
+MK_CONFDIR="/change/me"
 export MK_LIBDIR MK_CONFDIR
 
 # All executables in PLUGINSDIR will simply be executed and their
@@ -62,9 +62,23 @@ ps -A -o user,vsz,rss,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]
 
 # You need statgrab to be installed. You'll find it 
 # here: http://www.i-scream.org/libstatgrab/ 
-if statgrab const. cpu. disk. general. load. mem. net. page. proc. swap. user. > /tmp/statgrab.$$ 2>/dev/null
+
+# Only collect net stats if we are in a global zone
+statgrab_vars="const. cpu. disk. general. load. mem. page. proc. swap. user."
+statgrab_sections="proc cpu load disk page"
+if which zonename > /dev/null; then
+    if [ "`zonename`" = "global" ]; then
+       statgrab_vars="$statgrab_vars .net"
+       statgrab_sections="$statgrab_sections net"
+    fi
+else 
+    statgrab_vars="$statgrab_vars .net"
+    statgrab_sections="$statgrab_sections net"
+fi
+
+if statgrab $stagrab_vars > /tmp/statgrab.$$ 2>/dev/null
     then
-    for s in proc cpu net load disk page
+    for s in $statgrab_sections
     do
         echo "<<<statgrab_$s>>>"
         cat /tmp/statgrab.$$ | grep "^$s\." | cut -d. -f2-99 | sed 's/ *= */ /'
@@ -89,6 +103,18 @@ if [ -x /sbin/zpool ]; then
    echo "<<<zpool_status>>>"
    /sbin/zpool status -x
 fi
+
+
+# NTP 
+# This will only work on Sol10 and above
+if `svcs |grep ntp > /dev/null`; then 
+    echo '<<<ntp>>>'
+    xntpdc -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+fi
+
+# TCP Connection stats
+echo '<<<tcp_conn_stats>>>'
+netstat -nafinet -P tcp | tail  +5 | awk '{ c[$7]++; } END { for (x in c) { print x, c[x];}}'
 
 if cd $PLUGINSDIR 2>/dev/null
 then

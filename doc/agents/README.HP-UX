@@ -46,3 +46,6 @@ inetd -c
 # to verify configuration and / or check for issues, have a look at tcpdchk(1)
 # http://nixdoc.net/man-pages/hp-ux/man1/tcpdchk.1.html 
 # but this might only work if you installed tcpwrappers, which is not commonple.
+
+
+# There's now a plugin for using libstatgrab like on Solaris/FreeBSD

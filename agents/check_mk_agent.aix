@@ -85,13 +85,16 @@ do
 done
 
 
-echo '<<<ntp>>>' 
 if which ntpq > /dev/null 2>&1 ; then 
     if [ $(lssrc -s xntpd|grep -c active) -gt 0 ] ; then 
-    # remote heading, make first column space separated 
+        echo '<<<ntp>>>' 
         ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' 
     fi 
 fi 
+
+
+echo '<<<tcp_conn_stats>>>'
+netstat -ntfinet | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
 
 
 if cd $PLUGINSDIR 2>/dev/null

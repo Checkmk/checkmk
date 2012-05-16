@@ -1,0 +1,11 @@
+Title: CascadingDropdown: visibility broken in case of complain
+Component: multisite
+State: open
+Date: 2012-05-16 05:43:37
+Targetversion: 1.2.0
+Class: bug
+
+If the validate_value raises an exception, the sub-vs will
+not be visible. Try this out: got the the details of one
+multisite connection, select "Connect via TCP", leave the
+host field empty and save.

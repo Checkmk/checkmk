@@ -105,6 +105,7 @@ register_rule(group + '/' + subgroup_applications,
                choices = [
                    ('C', _('CRITICAL')),
                    ('W', _('WARNING')),
+                   ('O', _('OK')),
                    ('I', _('IGNORE')),
                ],
              ),
@@ -117,12 +118,14 @@ register_rule(group + '/' + subgroup_applications,
              ),
           ]
       ),
-      help = _('You can define one or several patterns (regular expressions) in each logfile pattern rule. '
+      help = _('<p>You can define one or several patterns (regular expressions) in each logfile pattern rule. '
                'These patterns are applied to the selected logfiles to reclassify the '
                'matching log messages. The first pattern which matches a line will '
                'be used for reclassifying a message. You can use the '
                '<a href="wato.py?mode=pattern_editor">Logfile Pattern Analyzer</a> '
-               'to test the rules you defined here.'),
+               'to test the rules you defined here.</p>'
+               '<p>Select "Ignore" as state to get the matching logs deleted. Other states will keep the '
+               'log entries but reclassify the state of them.</p>'),
       add_label = _("Add pattern"),
     ),
     itemtype = 'item',

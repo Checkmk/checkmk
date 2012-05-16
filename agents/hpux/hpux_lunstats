@@ -2,6 +2,8 @@
 
 # Put this file into /usr/lib/check_mk_agent/plugins. Then
 # reinventorize your host. 
+# Actually querying these stats is quite slow since they freshly update 
+# on each call. If you have a few 1000 luns then this will not work.
 
 get_stats()
 {

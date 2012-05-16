@@ -18,6 +18,7 @@
     * New rule for configuring custom_checks - allowing to run arbitrary
       active checks even if not yet formalized (like HTTP and TCP)
     * Added automation_commands to make automations pluginable
+    * New layout and new internal implementation of input forms
     * FIX: fix parent scan on single site installations
     * FIX: fix folder visibility permission handling
     * FIX: honor folder-permissions when creating, deleting 

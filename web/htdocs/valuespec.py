@@ -1503,7 +1503,7 @@ class Tuple(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
         self._show_titles = kwargs.get("show_titles", True)
-        self._vertical = kwargs.get("orientation", "vertical") == "vertical"
+        self._orientation = kwargs.get("orientation", "vertical")
 
     def canonical_value(self):
         return tuple([x.canonical_value() for x in self._elements])
@@ -1512,38 +1512,48 @@ class Tuple(ValueSpec):
         return tuple([x.default_value() for x in self._elements])
 
     def render_input(self, varprefix, value):
-        html.write('<table class="valuespec_tuple">')
-        if not self._vertical:
-            html.write("<tr>")
+        if self._orientation != "float":
+            html.write('<table class="valuespec_tuple">')
+            if self._orientation == "horizontal":
+                html.write("<tr>")
 
         for no, element in enumerate(self._elements):
             val = value[no]
             vp = varprefix + "_" + str(no)
-            if self._vertical:
+            if self._orientation == "vertical":
                 html.write("<tr>")
+            elif self._orientation == "float":
+                html.write(" ")
+
             if self._show_titles:
                 elem_title = element.title()
                 if elem_title:
                     title = element.title()[0].upper() + element.title()[1:]
                 else:
                     title = ""
-                if self._vertical:
+                if self._orientation == "vertical":
                     html.write("<td class=tuple_left>%s" % title)
                     html.help(element.help())
                     html.write("</td>")
-                else:
+                elif self._orientation == "horizontal":
                     html.write("<td class=tuple_td><span class=title>%s" % title)
                     html.help(element.help())
                     html.write("</span><br>")
-            if self._vertical:
+                else:
+                    html.write(" ")
+                    html.help(element.help())
+
+            if self._orientation == "vertical":
                 html.write("<td class=tuple_right>")
             element.render_input(vp, val)
-            html.write("</td>")
-            if self._vertical:
-                html.write("</tr>")
-        if not self._vertical:
+            if self._orientation != "float":
+                html.write("</td>")
+                if self._orientation == "vertical":
+                    html.write("</tr>")
+        if self._orientation == "horizontal":
             html.write("</tr>")
-        html.write("</table>")
+        if self._orientation != "float": 
+            html.write("</table>")
 
     def set_focus(self, varprefix):
         self._elements[0].set_focus(varprefix + "_0")

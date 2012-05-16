@@ -483,6 +483,89 @@ span.checkbox {
     white-space: nowrap;
 }
 
+
+/* Next-Generation forms */
+table.nform {
+    border-spacing: 0px;
+    /* border-collapse: collapse; */
+    margin: 0;
+    padding: 0;
+    empty-cells: show;
+    width: 100%;
+    border 1px solid green;
+    border-radius: 5px;
+    box-shadow: 0px 0px 2px #000;
+    margin-bottom: 10px;
+    background-image: url("images/white_30percent.png");
+    background-repeat: repeat;
+    border-color: #86A9B8 #22404D #22414D #86A9B8;
+    border-width: 1px;
+    border-style: solid;
+}
+
+table.nform tr.heading {
+    color: white;
+}
+table.nform tr.heading > td {
+    border-radius: 5px 5px 0px 0px;
+    background-image: url("images/white_10percent.png");
+    background-repeat: repeat;
+    height: 20px;
+    vertical-align: middle;
+    padding-left: 7px;
+}
+table.nform tr.heading > td:hover {
+    background-image: url("images/white_20percent.png");
+}
+
+table.nform > tbody > tr > td {
+   vertical-align: middle;
+   height: 27px;
+}
+
+table.nform td.legend {
+    text-align: left;
+    /* font-weight: bold; */
+    width: 240px;
+    padding-right: 8px;
+    vertical-align: top;
+    padding-top: 11px;
+    padding-left: 10px;
+}
+table.nform td.legend div.title {
+    float: left;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 240px;
+}
+table.nform td.legend div.title.withcheckbox {
+    max-width: 210px;
+    margin-right: 6px;
+}
+table.nform td.legend .dots {
+    color: #367;
+    margin-left: 5px;
+}
+table.nform td.legend div.checkbox {
+    float: left;
+}
+
+table.nform td.content {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+table.nform td.buttons {
+}
+
+table.nform tr.top td {
+    height: 6px;
+}
+
+table.nform tr.bottom td {
+    height: 10px;
+}
+
 /*-------------------------------------------------------------------------.
 |                     _        _   _                                       |
 |                    / \   ___| |_(_) ___  _ __  ___                       |
@@ -552,6 +635,8 @@ div.help {
     background-color: #FFFFCC;
     border-radius: 5px 5px 5px 5px;
     box-shadow: 0 0 10px #fff;
-    margin: 3px 3px 10px 3px;
+    margin: 6px 3px 10px 3px;
     padding: 5px;
+    font-weight: normal;
+    text-align: left;
 }

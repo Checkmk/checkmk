@@ -298,6 +298,7 @@ table.validationerror img {
     position: relative;
     right: -6px;
     z-index: 200;
+    height: 18px;
 }
 
 .wato div.folderpath li:hover select {
@@ -603,7 +604,7 @@ table.validationerror img {
 
 /* Special styling for Timeperiods editor */ 
 .wato table.timeperiod td.name {
-    width: 210px;
+    width: 195px;
 }
 
 form#form_timeperiod td.vlof_content input.text:first-child {
@@ -978,6 +979,10 @@ table.logwatch span.match {
 }
 
 table.multisite_conn_method td {
+    padding: 0px;
     height: 22px;
-    vertical-align: middle;
+    vertical-align: top; 
+}
+table.multisite_conn_method td input {
+    height: 18px;
 }

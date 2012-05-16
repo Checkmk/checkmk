@@ -1100,6 +1100,7 @@ class html:
         return (omd_mode, omd_site)
 
     def begin_foldable_container(self, treename, id, isopen, title, indent = True, first = False):
+        self.folding_indent = indent
         # try to get persisted state of tree
         tree_state = weblib.get_tree_states(treename)
 
@@ -1111,29 +1112,37 @@ class html:
         onclick += ' onmouseover="this.style.cursor=\'pointer\';" '
         onclick += ' onmouseout="this.style.cursor=\'auto\';" '
 
-        if indent == "form":
-            self.write('<table id="topic_%s" style="display:table"  class="form nomargin"><tr%s><td class=title>' % \
-                                  (id.encode("utf-8"), first and ' class="top"' or ''))
-        self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
-                   'src="images/tree_%s.png" %s>' %
-                (treename, id, img_num, onclick))
-        if title.startswith('<'): # custom HTML code
-            self.write(title)
-            if indent != "form":
-                self.write("<br>")
+        if indent == "nform":
+            self.write('<tr class=heading><td id="nform.%s.%s" %s colspan=2>' % (treename, id, onclick))
+            self.write('%s</td></tr>' % title)
         else:
-            self.write('<b class="treeangle title" class=treeangle %s>%s</b><br>' %
-                     (onclick, title))
+            if indent == "form":
+                self.write('<table id="topic_%s" style="display:table"  class="form nomargin"><tr%s><td class=title>' % \
+                                      (id.encode("utf-8"), first and ' class="top"' or ''))
+            self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
+                       'src="images/tree_%s.png" %s>' %
+                    (treename, id, img_num, onclick))
+            if title.startswith('<'): # custom HTML code
+                self.write(title)
+                if indent != "form":
+                    self.write("<br>")
+            else:
+                self.write('<b class="treeangle title" class=treeangle %s>%s</b><br>' %
+                         (onclick, title))
 
-        indent_style = "padding-left: %dpx; " % (indent == True and 15 or 0)
-        if indent == "form":
-            self.write("</td></tr></table>")
-            indent_style += "margin: 0; "
-        self.write('<ul class="treeangle" style="%s display: %s" id="tree.%s.%s">' %
-             (indent_style, (not isopen) and "none" or "block",  treename, id))
+            indent_style = "padding-left: %dpx; " % (indent == True and 15 or 0)
+            if indent == "form":
+                self.write("</td></tr></table>")
+                indent_style += "margin: 0; "
+            self.write('<ul class="treeangle" style="%s display: %s" id="tree.%s.%s">' %
+                 (indent_style, (not isopen) and "none" or "block",  treename, id))
+
+        # give caller information about current toggling state (needed for nform)
+        return isopen
 
     def end_foldable_container(self):
-        self.write("</ul>")
+        if self.folding_indent != "nform":
+            self.write("</ul>")
 
     def debug(self, *x):
         import pprint

@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from lib import *
+import htmllib
 
 # A input function with the same call syntax as htmllib.textinput()
 def input(valuespec, varprefix, defvalue):
@@ -94,4 +95,62 @@ def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None, 
     html.hidden_fields()
     html.end_form()
 
+# New functions for painting forms
+
+def strip_bad_chars(x):
+    return "".join([c for c in x if c > ' ' and c < 'z' and c not in ["'", '"']])
+
+def header(title, isopen = True, table_id = ""):
+    global g_header_open
+    global g_section_open
+    global g_section_isopen
+    try:
+        if g_header_open:
+            end()
+    except:
+        pass
+
+    if table_id:
+        table_id = ' id="%s"' % table_id
+    else:
+        table_id = ''
+    html.write('<table %s class=nform>' % table_id)
+    fold_id = strip_bad_chars(title)
+    g_section_isopen = html.begin_foldable_container(html.form_name, fold_id, isopen, title, indent="nform")
+    html.write('<tr class=top style="display: %s"><td colspan=2></td></tr>' % (not isopen and "none" or ""))
+    g_header_open = True
+    g_section_open = False
+
+def section(title = None, checkbox = None, id = ""): 
+    global g_section_open
+    if g_section_open:
+        html.write('</td></tr>')
+    if id:
+        id = ' id="%s"' % id
+    html.write('<tr style="display: %s"%s><td class=legend>' % (not g_section_isopen and "none" or "", id))
+    if title:
+        html.write('<div class="title%s">%s<span class="dots">%s</span></div>' % 
+                  (checkbox and " withcheckbox" or "", title, "."*100))
+    if checkbox:
+        html.write('<div class=checkbox>')
+        if type(checkbox) == str:
+            html.write(checkbox)
+        else:
+            name, inactive, attrname = checkbox
+            html.checkbox(name, inactive, onclick = 'wato_toggle_attribute(this, \'%s\')' % attrname)
+        html.write('</div>')
+
+    html.write('</td>')
+    html.write('<td class=content>')
+    g_section_open = True
+
+def end():
+    global g_header_open
+    g_header_open = False
+    if g_section_open:
+        html.write('</td></tr>')
+    html.end_foldable_container()
+    html.write('<tr class=bottom style="display: %s"><td colspan=2></td></tr>' 
+            % (not g_section_isopen and "none" or ""))
+    html.write('</table>')
 

@@ -75,7 +75,7 @@ function wato_fix_visibility() {
 
     var oHostTags = document.getElementById("wato_host_tags");
     // Skip this function when no tags defined
-    if(!oHostTags)
+    if (!oHostTags)
         return;
 
     var oTable = oHostTags.childNodes[0]; /* tbody */
@@ -83,9 +83,14 @@ function wato_fix_visibility() {
     for (var i in oTable.childNodes) {
         var oTr = oTable.childNodes[i];
         if (oTr.tagName == 'TR') {
+            var oTdLegend = oTr.childNodes[0];
+            if (oTdLegend.className != "legend") {
+                continue;
+            }
+            var oTdContent = oTr.childNodes[1];
             /* If the Checkbox is unchecked try to get a value from the inherited_tags */
-            var oCheckbox = oTr.childNodes[1].childNodes[0];
-            if( oCheckbox.checked == false ){
+            var oCheckbox = oTdLegend.childNodes[1].childNodes[0];
+            if (oCheckbox.checked == false ){
                 var attrname = oCheckbox.parentNode.parentNode.id;
                 if(attrname in inherited_tags && inherited_tags[attrname] !== null){
                     currentTags = currentTags.concat(inherited_tags[attrname].split("|"));
@@ -93,7 +98,7 @@ function wato_fix_visibility() {
             } else {
                 /* Find the <select>/<checkbox> object in this tr */
                 /*                td.content    div           select/checkbox */
-                var oElement = oTr.childNodes[2].childNodes[0].childNodes[0];
+                var oElement = oTdContent.childNodes[0].childNodes[0];
                 if( oElement.type == 'checkbox' && oElement.checked ){ // <checkbox>
                     currentTags = currentTags.concat(oElement.getAttribute('tags').split("|"));
                 } else if(oElement.tagName == 'SELECT') { // <select>

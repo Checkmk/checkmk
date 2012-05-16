@@ -108,7 +108,7 @@
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
        shutil, tarfile, StringIO, math, fcntl, pickle
-import config, htmllib, multitar
+import config, htmllib,  multitar
 from lib import *
 from valuespec import *
 import forms
@@ -1670,29 +1670,23 @@ def mode_editfolder(phase, new):
         check_folder_permissions(g_folder, "read")
 
         html.begin_form("editfolder")
-        html.write('<table class="form nomargin">\n')
 
         # title
-        html.write("<tr class=top><td class=legend>Title</td><td class=checkbox></td><td class=content>")
+        forms.header(_("Title"))
+        forms.section()
         html.text_input("title", title)
         html.set_focus("title")
-        html.write("</td></tr>\n")
 
         # folder name (omit this for root folder)
         if not (not new and g_folder == g_root_folder):
             if not config.wato_hide_filenames:
-                html.write("<tr><td class=legend colspan=2>"
-                    + _("Internal directory name"))
-                html.help(_("This is the name of subdirectory where the files and "
-                    "other folders will be created. You cannot change this later."))
-                html.write("</td><td class=content>")
-
+                forms.section(_("Internal directory name"))
                 if new:
                     html.text_input("name")
                 else:
                     html.write(name)
-
-                html.write("</td></tr>\n")
+                html.help(_("This is the name of subdirectory where the files and "
+                    "other folders will be created. You cannot change this later."))
 
         # Attributes inherited to hosts
         if have_folder_attributes():
@@ -1707,10 +1701,8 @@ def mode_editfolder(phase, new):
 
             configure_attributes({"folder": attributes}, "folder", parent, myself)
 
-        html.write('<tr><td colspan=3 class="buttons">')
+        forms.end()
         html.button("save", _("Save &amp; Finish"), "submit")
-        html.write("</td></tr>\n")
-        html.write("</table>\n")
         html.hidden_fields()
         html.end_form()
 
@@ -1910,38 +1902,31 @@ def mode_edithost(phase, new, cluster):
             html.write("</td></tr></table></div>")
 
         html.begin_form("edithost")
-        html.write('<table class="form nomargin">\n')
-        # html.write('<table class="form">\n')
 
         # host name
-        html.write("<tr class=top><td class=legend>" + _("Hostname") +
-                   "</td><td class=checkbox></td><td class=content>")
+        forms.header(_("General Properties"))
+        forms.section(_("Hostname"))
         if hostname and mode == "edit":
             html.write(hostname)
         else:
             html.text_input("host")
             html.set_focus("host")
-        html.write("</td></tr>\n")
 
         # Cluster: nodes
         if cluster:
             vs = ListOfStrings(valuespec = TextAscii(size = 19), orientation="horizontal")
-            html.write('<tr><td class=legend>' + _("Nodes"))
+            forms.section(_("Nodes"))
+            vs.render_input("nodes", host[".nodes"]) 
             html.help(_('Enter the host names of the cluster nodes. These '
                        'hosts must be present in WATO. '))
-            html.write('</td><td class=checkbox></td><td class=content>')
-            vs.render_input("nodes", host[".nodes"]) 
-            html.write('</td></tr>')
 
         configure_attributes({hostname: host}, "host", parent = g_folder)
 
-        html.write('<tr><td class="buttons" colspan=3>')
+        forms.end()
         html.image_button("services", _("Save &amp; go to Services"), "submit")
         html.image_button("save", _("Save &amp; Finish"), "submit")
         if not new:
             html.image_button("delete", _("Delete host!"), "submit")
-        html.write("</td></tr>\n")
-        html.write("</table>\n")
         html.hidden_fields()
         html.end_form()
 
@@ -2181,26 +2166,21 @@ def mode_search(phase):
     else:
         render_folder_path()
 
+        html.write("<table><tr><td>")
         ## # Show search form
         html.begin_form("search")
-        html.write("<table class=\"form nomargin\">")
-
-        # host name
-        html.write("<tr class=top><td class=legend colspan=2>" + _("Hostname") + "</td><td class=content>")
+        forms.header(_("General Properties"))
+        forms.section(_("Hostname"))
         html.text_input("host")
         html.set_focus("host")
-        html.write("</td></tr>\n")
 
         # Attributes
         configure_attributes({}, "search", parent = None)
 
         # Button
-        html.write('<tr><td class="buttons" colspan=3>')
+        forms.end()
         html.button("_global", _("Search globally"), "submit")
         html.button("_local", _("Search in %s") % g_folder["title"], "submit")
-        html.write("</td></tr>\n")
-
-        html.write("</table>\n")
         html.hidden_fields()
         html.end_form()
 
@@ -2221,6 +2201,8 @@ def mode_search(phase):
             # html.write("<pre>%s</pre>" % pprint.pformat(crit))
             if not search_hosts_in_folders(folder, crit):
                 html.message(_("No matching hosts found."))
+
+        html.write("</td></tr></table>")
 
 
 
@@ -2514,27 +2496,22 @@ def mode_bulk_inventory(phase):
             html.write(_("You have selected <b>%d</b> hosts for bulk inventory. ") % len(hostnames))
         html.write(_("Check_MK inventory will automatically find and configure "
                      "services to be checked on your hosts.</p>"))
-        html.write("<table class=form>")
-        html.write("<tr><td class=legend>" + _("Mode") + "</td><td class=content>")
+        forms.header(_("Bulk Inventory"))
+        forms.section(_("Mode"))
         html.radiobutton("how", "new",     True,  _("Find only new services") + "<br>")
         html.radiobutton("how", "remove",  False, _("Remove obsolete services") + "<br>")
         html.radiobutton("how", "fixall",  False, _("Find new &amp; remove obsolete") + "<br>")
         html.radiobutton("how", "refresh", False, _("Refresh all services (tabula rasa)") + "<br>")
-        html.write("</td></tr>")
-        html.write('<tr><td class=legend>%s</td>' % _("Selection"))
-        html.write('<td class=content>')
+        
+        forms.section(_("Selection"))
         if complete_folder:
             html.checkbox("recurse", True, label=_("Include all subfolders"))
             html.write("<br>")
         html.checkbox("only_failed", False, label=_("Only include hosts that failed on previous inventory"))
-        html.write('</td></tr>')
-
+        
         # Start button
-        html.write('<tr><td colspan=2 class="buttons">')
+        forms.end()
         html.button("_start", _("Start"))
-        html.write("</tr>")
-
-        html.write("</table>")
 
 #.
 #   .-Bulk-Edit------------------------------------------------------------.
@@ -2594,12 +2571,9 @@ def mode_bulk_edit(phase):
     "will keep their individual settings.") + "</p>")
 
     html.begin_form("bulkedit", None, "POST")
-    html.write("<table class=form>")
     configure_attributes(hosts, "bulk", parent = g_folder)
-    html.write('<tr><td colspan=3 class="buttons">')
+    forms.end()
     html.button("_save", _("Save &amp; Finish"))
-    html.write("</td></tr>")
-    html.write("</table>")
     html.hidden_fields()
     html.end_form()
 
@@ -2665,16 +2639,13 @@ def mode_bulk_cleanup(phase):
     html.write("</p>")
 
     html.begin_form("bulkcleanup", None, "POST")
-    html.write("<table class=form>")
+    forms.header(_("Attributes to remove from hosts"))
     if not bulk_cleanup_attributes(g_folder, hosts):
-        html.write("<tr><td class=buttons>")
+        forms.end()
         html.write(_("The selected hosts have no explicit attributes"))
-        html.write("</td></tr>\n")
     else:
-        html.write('<tr><td colspan=2 class="buttons">')
+        forms.end()
         html.button("_save", _("Save &amp; Finish"))
-        html.write("</td></tr>")
-    html.write("</table>")
     html.hidden_fields()
     html.end_form()
 
@@ -2717,19 +2688,16 @@ def bulk_cleanup_attributes(the_file, hosts):
         num_shown += 1
 
         # Legend and Help
-        html.write("<tr><td class=legend>%s" % attr.title())
-        html.help(attr.help())
-        html.write("</td>")
-        html.write("<td class=content>")
+        forms.section(attr.title())
 
         if attr.is_mandatory() and not is_inherited:
             html.write(_("This attribute is mandatory and there is no value "
                          "defined in the host list or any parent folder."))
         else:
-            html.checkbox("_clean_%s" % attrname, False)
-            html.write(" clean this attribute on <b>%s</b> hosts" %
-                (num_haveit == len(hosts) and "all selected" or str(num_haveit)))
-        html.write("</td></tr>")
+            label = "clean this attribute on <b>%s</b> hosts" % \
+                (num_haveit == len(hosts) and "all selected" or str(num_haveit))
+            html.checkbox("_clean_%s" % attrname, False, label=label)
+        html.help(attr.help())
 
     return num_shown > 0
 
@@ -2903,7 +2871,7 @@ def mode_parentscan(phase):
                    "gateway host will be created if you have not disabled "
                    "this feature.") + "</p>")
          
-        html.write("<table class=form>")
+        forms.header(_("Settings for Parent Scan"))
 
         settings = config.load_user_file("parentscan", {
             "where"          : "subfolder",
@@ -2917,7 +2885,7 @@ def mode_parentscan(phase):
         })
         
         # Selection
-        html.write("<tr><td class=legend>" + _("Selection") + "</td><td class=content>")
+        forms.section(_("Selection"))
         if complete_folder:
             html.checkbox("recurse", settings["recurse"], label=_("Include all subfolders"))
             html.write("<br>")
@@ -2927,11 +2895,9 @@ def mode_parentscan(phase):
                 _("Skip hosts hosts with non-empty parents (also if inherited)") + "<br>")
         html.radiobutton("select", "ignore",  settings["select"] == "ignore", 
                 _("Scan all hosts") + "<br>")
-        html.write("</td></tr>")
 
         # Performance
-        html.write('<tr><td class=legend>%s</td>' % _("Performance"))
-        html.write('<td class=content>')
+        forms.section(_("Performance"))
         html.write("<table><tr><td>")
         html.write(_("Timeout for responses") + ":</td><td>")
         html.number_input("timeout", settings["timeout"], size=2)
@@ -2945,18 +2911,14 @@ def mode_parentscan(phase):
         html.number_input("max_ttl", settings["max_ttl"], size=2)
         html.write('</td></tr>')
         html.write('</table>')
-        html.write('</td></tr>')
 
         # Configuring parent
-        html.write('<tr><td class=legend>%s</td>' % _("Configuration"))
-        html.write('<td class=content>')
+        forms.section(_("Configuration"))
         html.checkbox("force_explicit", 
             settings["force_explicit"], label=_("Force explicit setting for parents even if setting matches that of the folder"))
-        html.write('</td></tr>')
 
         # Gateway creation
-        html.write('<tr><td class=legend>%s</td>' % _("Creation of gateway hosts"))
-        html.write('<td class=content>')
+        forms.section(_("Creation of gateway hosts"))
         html.write(_("Create gateway hosts in<ul>"))
         html.radiobutton("where", "subfolder", settings["where"] == "subfolder", 
                 _("in the subfolder <b>%s/Parents</b>") % g_folder["title"])
@@ -2973,15 +2935,10 @@ def mode_parentscan(phase):
         html.write("</ul>")
         html.write(_("Alias for created gateway hosts") + ": ")
         html.text_input("alias", settings["alias"])
-        html.write('</td></tr>')
-
 
         # Start button
-        html.write('<tr><td colspan=2 class="buttons">')
+        forms.end()
         html.button("_start", _("Start"))
-        html.write("</tr>")
-
-        html.write("</table>")
 
 
 def configure_gateway(state, site_id, folder, host, effective, gateway):
@@ -3130,9 +3087,8 @@ def mode_random_hosts(phase):
             return "folder"
 
     html.begin_form("random")
-    html.write("<table class=form>")
-    html.write("<tr><td class=legend>%s</td>" % _("Number to create"))
-    html.write("</td><td class=content>")
+    forms.header(_("Create Random Hosts"))
+    forms.section(_("Number to create"))
     html.write("%s: " % _("Hosts to create in each folder"))
     html.number_input("count", 10)
     html.set_focus("count")
@@ -3140,11 +3096,9 @@ def mode_random_hosts(phase):
     html.number_input("folders", 10)
     html.write("<br>%s: " % _("Levels of folders to create"))
     html.number_input("levels", 1)
-    html.write("</td></tr>")
 
-    html.write("<tr><td class=buttons colspan=2>")
+    forms.end()
     html.button("start", _("Start!"), "submit")
-    html.write("</tr></table>\n")
     html.hidden_fields()
     html.end_form()
 
@@ -4576,16 +4530,12 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 title = _("Basic settings")
             else:
                 title = topic
-            if topic == topics[0]:
-                html.write("</table>")
 
-            html.begin_foldable_container("wato_attributes", title,
-                                          topic == None, title, indent = "form", first = topic == topics[0])
-            html.write('<table ')
-            # Mark container with host tag attributes with a special ID
             if topic == _("Host tags"):
-                html.write('id="wato_host_tags" ')
-            html.write('class="form nomargin">')
+                topic_id = "wato_host_tags"
+            else:
+                topic_id = None
+            forms.header(title, isopen = topic == topics[0], table_id = topic_id)
 
         for attr, atopic in host_attributes:
             if atopic != topic:
@@ -4665,12 +4615,6 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 if topic == _("Host tags"):
                     inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
 
-            # Legend and Help
-            html.write('<tr id="attr_%s" %s><td class=legend>' % (attrname, hide_attribute and 'style="display: none"' or ""))
-            html.write("<b>%s</b>" % attr.title())
-            html.help(attr.help())
-            html.write("</td>")
-
             # Checkbox for activating this attribute
 
             # Determine current state of visibility: If the form has already been submitted (i.e. search
@@ -4712,18 +4656,27 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             else: # "host"
                 active = attrname in host
 
-            html.write('<td class=checkbox>')
+            # Legend and Help
+            # html.write('<tr id="attr_%s" %s><td class=legend>' % (attrname, hide_attribute and 'style="display: none"' or ""))
+            # html.write("<b>%s</b>" % attr.title())
+            # html.help(attr.help())
+            # html.write("</td>")
+
+
+            # html.write('<td class=checkbox>')
             if force_entry:
-                html.write("<input type=checkbox name=\"ignored_%s\" CHECKED DISABLED></div>" % checkbox_name)
-                html.hidden_field(checkbox_name, "on")
+                checkbox_code = '<input type=checkbox name="ignored_%s" CHECKED DISABLED>' % checkbox_name
+                checkbox_code += '<input type=hidden name="%s" value="on">' % checkbox_name
             else:
-                html.checkbox(checkbox_name, active,
-                    onclick = "wato_fix_visibility(); wato_toggle_attribute(this, '%s');" % attrname) # Only select if value is unique
-            html.write("</td>")
+                onclick = "wato_fix_visibility(); wato_toggle_attribute(this, '%s');" % attrname
+                checkbox_code = '<input type=checkbox name="%s" %s onclick="%s">' % (
+                    checkbox_name, active and "CHECKED" or "", onclick)
+            forms.section(attr.title(), checkbox=checkbox_code, id="attr_" + attrname)
+            # html.write("</td>")
 
             # Now comes the input fields and the inherited / default values
             # as two DIV elements, one of which is visible at one time.
-            html.write('<td class=content>')
+            # html.write('<td class=content>')
 
             # DIV with the input elements
             html.write('<div id="attr_entry_%s" style="%s">'
@@ -4762,15 +4715,16 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
 
             html.write("</div>")
 
-            html.write("</td></tr>\n")
+            # html.write("</td></tr>\n")
 
         if len(topics) > 1:
-            html.write("</table>")
-            html.end_foldable_container() # end of topic
+            # html.write("</table>")
+            # html.end_foldable_container() # end of topic
             if topic_is_volatile:
                 volatile_topics.append((topic or _("Basic settings")).encode('utf-8'))
             if topic == topics[-1]:
-                html.write('<table class="form">')
+                pass
+                # html.write('<table class="form">')
 
     def dump_json(obj):
         return repr(obj).replace('None', 'null')
@@ -5248,7 +5202,6 @@ def mode_globalvars(phase):
             html.write("</td>")
             html.write('</tr>')
         html.write("</table>")
-        html.end_foldable_container()
 
 
 def mode_edit_configvar(phase):
@@ -5288,14 +5241,18 @@ def mode_edit_configvar(phase):
         value = check_mk_vars.get(varname, valuespec.default_value())
 
     html.begin_form("value_editor")
-    html.write("<h3>%s</h3>" % valuespec.title())
+    forms.header(valuespec.title())
     if not config.wato_hide_varnames:
-        html.write('<div class=varname>%s</div>' % varname)
+        forms.section(_("Variable for <tt>%s.mk</tt>" % 
+            { "check_mk" : "main" }.get(domain, domain)))
+        html.write("<tt>%s</tt>" % varname)
 
-    html.write("<table class=form>")
-    edit_value(valuespec, value, _("Current setting"))
+    forms.section(_("Current setting")) 
+    valuespec.render_input("ve", value)
     valuespec.set_focus("ve")
-    html.write("<tr><td class=legend>%s</td><td class=content>" % _("Default setting"))
+    html.help(valuespec.help())
+
+    forms.section(_("Default setting"))
     defvalue = valuespec.default_value()
     if is_on_default:
         html.write(_("This variable is at factory settings."))
@@ -5305,15 +5262,12 @@ def mode_edit_configvar(phase):
             html.write(_("Your setting and factory settings are identical."))
         else:
             html.write(valuespec.value_to_text(defvalue))
-    html.write("</td></tr>")
 
-    html.write("<tr><td class=buttons colspan=2>")
+    forms.end()
     html.button("save", _("Save"))
     if not is_on_default:
         curvalue = current_settings[varname]
         html.button("reset", curvalue == defvalue and _("Remove explicit setting") or _("Reset to default"))
-    html.write("</td></tr>")
-    html.write("</table>")
     html.hidden_fields()
     html.end_form()
 
@@ -5534,29 +5488,22 @@ def mode_edit_group(phase, what):
 
 
     html.begin_form("group")
-    html.write("<table class=form>")
-    html.write("<tr><td class=legend>")
-    html.write(_("Name"))
+    forms.header(_("Properties"))
+    forms.section(_("Name"))
     html.help(_("The name of the group is used as an internal key. It cannot be "
                  "changed later. It is also visible in the status GUI."))
-    html.write("</td><td class=content>")
     if new:
         html.text_input("name")
         html.set_focus("name")
     else:
         html.write(name)
         html.set_focus("alias")
-    html.write("</td></tr>")
 
-    html.write("<tr><td class=legend>")
-    html.write(_("Alias"))
+    forms.section(_("Alias"))
     html.help(_("An Alias or description of this group."))
-    html.write("</td><td class=content>")
     html.text_input("alias", name and groups.get(name, "") or "")
-    html.write("</td></tr>")
-    html.write("<tr><td class=buttons colspan=2>")
+    forms.end()
     html.button("save", _("Save"))
-    html.write("</td></tr></table>")
     html.hidden_fields()
     html.end_form()
 
@@ -5928,40 +5875,33 @@ def mode_edit_timeperiod(phase):
         return
 
     html.begin_form("timeperiod", method="POST")
-    html.write("<table class=form>")
+    forms.header(_("Timeperiod"))
 
     # Name
-    html.write("<tr><td class=legend>")
-    html.write(_("Internal name"))
-    html.write("</td><td class=content>")
+    forms.section(_("Internal name"))
     if new:
         html.text_input("name")
         html.set_focus("name")
     else:
         html.write(name)
-    html.write("</td></tr>")
 
     # Alias
     if not new:
         alias = timeperiods[name].get("alias", "")
     else:
         alias = ""
-    html.write("<tr><td class=legend>")
-    html.write(_("Alias"))
+
+    forms.section(_("Alias"))
     html.help(_("An alias or description of the timeperiod"))
-    html.write("</td><td class=content>")
-    html.text_input("alias", alias, size = 50)
+    html.text_input("alias", alias, size = 81)
     if not new:
         html.set_focus("alias")
-    html.write("</td></tr>")
 
     # Week days
-    html.write("<tr><td class=legend>")
-    html.write(_("Weekdays"))
+    forms.section(_("Weekdays"))
     html.help("For each weekday you can setup no, one or several "
                "time ranges in the format <tt>23:39</tt>, in which the time period "
                "should be active.")
-    html.write("</td><td class=content>")
     html.write("<table class=timeperiod>")
 
     for weekday, weekday_alias in weekdays:
@@ -5969,17 +5909,15 @@ def mode_edit_timeperiod(phase):
         html.write("<tr><td class=name>%s</td>" % weekday_alias)
         timeperiod_ranges(weekday, weekday, new)
         html.write("</tr>")
-    html.write("</table></td></tr>")
+    html.write("</table>")
 
     # Exceptions
-    html.write("<tr><td class=legend>")
     nagurl = "../nagios/docs/objectdefinitions.html#timeperiod"
-    html.write(_("Exceptions"))
+    forms.section(_("Exceptions"))
     html.help(_("Here you can specify exceptional time ranges for certain "
                  "relative or absolute dates. Please consult the "
                  "<a target='_blank' href='%s'>Nagios documentation about "
                  "timeperiods</a> for examples." % nagurl))
-    html.write("</td><td class=content>")
 
     exceptions = []
     for k in timeperiod:
@@ -5988,20 +5926,14 @@ def mode_edit_timeperiod(phase):
     exceptions.sort()
     vs_ex.render_input("except", exceptions)
 
-
     # Excludes
     if other_tps:
-        html.write("<tr><td class=legend>")
-        html.write(_("Exclude"))
-        html.write("</td><td class=content>")
+        forms.section(_("Exclude"))
         vs_excl.render_input("exclude", timeperiod.get("exclude", []))
-        html.write("</td></tr>")
 
 
-    html.write("<tr><td colspan=2 class=buttons>")
+    forms.end()
     html.button("save", _("Save"))
-    html.write("</td></tr>")
-    html.write("</table>")
     html.hidden_fields()
     html.end_form()
 
@@ -6312,6 +6244,25 @@ def mode_edit_site(phase):
     else:
         site = sites.get(siteid, {})
 
+    # ValueSpecs for the more complex input fields
+    vs_conn_method = CascadingDropdown(
+        html_separator = " ",
+        choices = [
+            ( "local", _("Connect to the local site") ),
+            ( "tcp",   _("Connect via TCP"), Tuple(
+                orientation = "float",
+                elements = [
+                    TextAscii(label = _("Host:"), allow_empty = False, size=15),
+                    Integer(label = _("Port:"), minvalue=1, maxvalue=65535, default_value=6557),
+                ])),
+            ( "unix",  _("Connect via UNIX socket"), TextAscii(
+                label = _("Path:"),
+                size = 30,
+                allow_empty = False)),
+            ( "disabled", _("Do not connect")),
+        ])
+
+
     if phase == "action":
         if not html.check_transaction():
             return "sites"
@@ -6346,32 +6297,17 @@ def mode_edit_site(phase):
         new_site["disabled"] = disabled
 
         # Connection
-        method = html.var("method")
-        if method == "unix":
-            socket = html.var("conn_socket").strip()
-            if not socket:
-                raise MKUserError("conn_socket", _("Please specify the path to the UNIX socket to connect to."))
-            # We do not check for the existance of the socket here. The matching
-            # OMD site might be down. The admin might just want to disable the site for
-            # that reason.
-            new_site["socket"] = "unix:" + socket
-
-        elif method == "tcp":
-            host = html.var("conn_host").strip()
-            if not host:
-                raise MKUserError("conn_host", _("Please specify the host or IP address to connect to."))
-            port = html.var("conn_port").strip()
-            try:
-                port = int(port)
-            except:
-                raise MKUserError("conn_port", _("The port '%s' is not a valid number") % port)
-            if port < 1 or port > 65535:
-                raise MKUserError("conn_port{", _("The port number must be between 1 and 65535"))
-            new_site["socket"] = "tcp:%s:%d" % (host, port)
-        elif method == "disabled":
-            new_site["socket"] = "disabled:"
+        method = vs_conn_method.from_html_vars("method")
+        vs_conn_method.validate_value(method, "method")
+        if type(method) == tuple:
+            if method[0] == "unix":
+                new_site["socket"] = "unix:" + method[1]
+            else:
+                new_site["socket"] = "tcp:%s:%d" % method[1]
         else:
-            method = "local"
+            new_site["socket"] = method
+
+        html.debug(new_site)
 
         # Timeout
         timeout = html.var("timeout", "").strip()
@@ -6452,124 +6388,66 @@ def mode_edit_site(phase):
         return "sites"
 
     html.begin_form("site")
-    html.write("<table class=form>")
+
 
     # ID
-    html.write("<tr><td class=legend>")
-    html.write(_("Site ID"))
-    html.write("</td><td class=content>")
+    forms.header(_("Basic settings"))
+    forms.section(_("Site ID"))
     if new:
         html.text_input("id", siteid)
         html.set_focus("id")
     else:
         html.write(siteid)
-    html.write("</td></tr>")
 
     # Alias
-    html.write("<tr><td class=legend>")
-    html.write(_("Alias"))
-    html.help(_("An alias or description of the site"))
-    html.write("</td><td class=content>")
-    html.text_input("alias", site.get("alias", ""), size = 50)
+    forms.section(_("Alias"))
+    html.text_input("alias", site.get("alias", ""), size = 60)
     if not new:
         html.set_focus("alias")
-    html.write("</td></tr>")
+    html.help(_("An alias or description of the site"))
 
     # Disabled
-    html.write("<tr><td class=legend>")
-    html.write(_("Disable"))
-    html.help(_("If you disable a connection, then it will not be shown in the "
+    forms.section(_("Disable"))
+    html.checkbox("disabled", site.get("disabled", False), label = _("Disable this connection"))
+    html.help( _("If you disable a connection, then it will not be shown in the "
                  "status display and no replication will be done."))
-    html.write("</td>")
 
-    # Disabled
-    html.write("<td class=content>")
-    html.checkbox("disabled", site.get("disabled", False))
-    html.write(_("Disable this connection"))
-    html.write("</td></tr>")
+    forms.header(_("Livestatus settings"))
+    forms.section(_("Connection"))
+    method = site.get("socket", "local")
+    if method.startswith("unix:"):
+        method = ('unix', method[5:])
+    elif method.startswith("tcp:"):
+        method = ('tcp', tuple(method.split(":")[1:]))
+    vs_conn_method.render_input("method", method)
 
-    # Connection
-    html.write("<tr><td class=legend>")
-    html.write(_("Connection"))
-    html.help(_("When connecting to remote site please make sure "
+    html.help( _("When connecting to remote site please make sure "
                "that Livestatus over TCP is activated there. You can use UNIX sockets "
                "to connect to foreign sites on localhost. Please make sure that this "
                "site has proper read and write permissions to the UNIX socket of the "
                "foreign site."))
-    html.write("</td><td class=content>")
-    if html.has_var("method"):
-        conn_socket = ""
-        conn_host = ""
-        conn_port = ""
-        method = html.var("method")
-    else:
-        try:
-            conn_socket = ""
-            conn_host = ""
-            conn_port = 6557
-            sock = site.get("socket")
-
-            if not sock:
-                method = "local"
-            elif sock.startswith("unix:"):
-                method = "unix"
-                conn_socket = sock[5:]
-            elif sock.startswith("tcp:"):
-                method = "tcp"
-                parts = sock.split(":")
-                conn_host = parts[1]
-                conn_port = int(parts[2])
-            else:
-                method = "disabled"
-        except:
-            method = "local"
-
-    html.write("<table class=multisite_conn_method><tr><td>")
-    html.radiobutton("method", "local", method == "local", _("Connect to the local site"))
-    html.write("</td></tr><tr><td>")
-    html.radiobutton("method", "tcp", method == "tcp", _("Connect via TCP to host: "))
-    html.write("</td><td>")
-    html.text_input("conn_host", conn_host, size=20)
-    html.write(_(" port: "))
-    html.number_input("conn_port", conn_port)
-    html.write("</td></tr><tr><td>")
-    html.radiobutton("method", "unix",  method == "unix", _("Connect via UNIX socket: "))
-    html.write("</td><td>")
-    html.text_input("conn_socket", conn_socket, size=34)
-    html.write("</td></tr><tr><td>")
-    html.radiobutton("method", "disabled",  method == "disabled",
-               _("Do not display status information from this site"))
-    html.write("</td></tr></table>")
-
-    html.write("</td></tr>")
 
     # Timeout
-    html.write("<tr><td class=legend>")
-    html.write(_("Connect Timeout"))
+    forms.section(_("Connect Timeout"))
+    timeout = site.get("timeout", 10)
+    html.number_input("timeout", timeout, size=2)
+    html.write(_(" seconds"))
     html.help(_("This sets the time that Multisite waits for a connection "
                  "to the site to be established before the site is considered to be unreachable. "
                  "If not set, the operating system defaults are begin used and just one login attempt is being. "
                  "performed."))
-    html.write("</td><td class=content>")
-    timeout = site.get("timeout", 10)
-    html.number_input("timeout", timeout, size=2)
-    html.write(_(" seconds"))
-    html.write("</td></tr>")
 
     # Persistent connections
-    html.write("<tr><td class=legend>")
-    html.write(_("Persistent Connection"))
+    forms.section(_("Persistent Connection"))
+    html.checkbox("persist", site.get("persist", False), label=_("Use persistent connections"))
     html.help(_("If you enable persistent connections then Multisite will try to keep open "
               "the connection to the remote sites. This brings a great speed up in high-latency "
               "situations but locks a number of threads in the Livestatus module of the target site."))
-    html.write("</td><td class=content>")
-    html.checkbox("persist", site.get("persist", False), label=_("Use persistent connections"))
-    html.write("</td></tr>")
 
     # URL-Prefix
-    html.write("<tr><td class=legend>")
     docu_url = "http://mathias-kettner.de/checkmk_multisite_modproxy.html"
-    html.write(_("URL prefix"))
+    forms.section(_("URL prefix"))
+    html.text_input("url_prefix", site.get("url_prefix", ""), size = 60)
     html.help(_("The URL prefix will be prepended to links of addons like PNP4Nagios "
                  "or the classical Nagios GUI when a link to such applications points to a host or "
                  "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
@@ -6577,21 +6455,11 @@ def mode_edit_site(phase):
                  "configuration in your local system apache that proxies such URLs ot the according remote site. "
                  "Please refer to the <a target=_blank href='%s'>online documentation</a> for details. "
                  "The prefix should end with a slash. Omit the <tt>/pnp4nagios/</tt> from the prefix.") % docu_url)
-    html.write("</td><td class=content>")
-    html.text_input("url_prefix", site.get("url_prefix", ""), size = 50)
-    html.write("</td></tr>")
 
     # Status-Host
-    html.write("<tr><td class=legend>")
     docu_url = "http://mathias-kettner.de/checkmk_multisite_statushost.html"
-    html.write(_("Status host"))
-    html.help(_("By specifying a status host for each non-local connection "
-                 "you prevent Multisite from running into timeouts when remote sites do not respond. "
-                 "You need to add the remote monitoring servers as hosts into your local monitoring "
-                 "site and use their host state as a reachability state of the remote site. Please "
-                 "refer to the <a target=_blank href='%s'>online documentation</a> for details.") % docu_url)
+    forms.section(_("Status host"))
 
-    html.write("</td><td class=content>")
     sh = site.get("status_host")
     if sh:
         sh_site, sh_host = sh
@@ -6603,51 +6471,50 @@ def mode_edit_site(phase):
     html.write(_(" on monitoring site: "))
     html.sorted_select("sh_site",
        [ ("", _("(no status host)")) ] + [ (sk, si.get("alias", sk)) for (sk, si) in sites.items() ], sh_site)
-    html.write("</td></tr>")
+    html.help( _("By specifying a status host for each non-local connection "
+                 "you prevent Multisite from running into timeouts when remote sites do not respond. "
+                 "You need to add the remote monitoring servers as hosts into your local monitoring "
+                 "site and use their host state as a reachability state of the remote site. Please "
+                 "refer to the <a target=_blank href='%s'>online documentation</a> for details.") % docu_url)
 
     # Replication
-    html.write("<tr><td class=legend>")
-    html.write(_("WATO Replication"))
-    html.help(_("WATO replication allows you to manage several monitoring sites with a "
+    forms.header(_("Configuration Replication (Distributed WATO)"))
+    forms.section(_("Replication method"))
+    html.select("replication", 
+        [ ("none",  _("No replication with this site")),
+          ("peer",  _("Peer: synchronize configuration with this site")),
+          ("slave", _("Slave: push configuration to this site"))
+        ])
+    html.help( _("WATO replication allows you to manage several monitoring sites with a "
                 "logically centralized WATO. Slave sites receive their configuration "
                 "from master sites. Several master sites can build a peer-to-peer "
                 "replication pool for sake of redundancy.<br><br>Note: Slave sites "
                 "do not need any replication configuration. They will be remote-controlled "
                 "by the master sites."))
-    html.write("</td><td class=content>")
-    html.write("<b>%s</b><br>" % _("Replication method"))
-
-    html.radiobutton("replication", "none",  site.get("replication") == None,  _("No replication with this site"))
-    html.write("<br>")
-    html.radiobutton("replication", "peer",  site.get("replication") == "peer", _("Peer: synchronize configuration with this site"))
-    html.write("<br>")
-    html.radiobutton("replication", "slave", site.get("replication") == "slave", _("Slave: push configuration to this site"))
-
-    html.write("<br><br>")
-    html.write("<b>%s</b>" % _("Peer replication priority"))
+    
+    forms.section(_("Peer replication priority"))
+    html.number_input("repl_priority", site.get("repl_priority", 0), size=2)
     html.help(_("The replication priority is used to determine the master site "
                 "from the available peers and local sites. "
                 "The site with the highest number takes precedence."))
-    html.write("<br>")
-    html.number_input("repl_priority", site.get("repl_priority", 0), size=2)
+    
 
-    html.write("<br><br>")
-    html.write("<b>%s</b>" % _("Multisite-URL of remote site upto and including <tt>/check_mk/</tt>"))
-    html.help(_("This URL is in many cases the same as the URL-Prefix but with <tt>check_mk/</tt> "
-                "appended, but it must always be an absolute URL. Please note, that "
-                "that URL will be fetched by the Apache server of the local "
-                "site itself, whilst the URL-Prefix is used by your local Browser."))
-    html.write("<br>")
+    forms.section(_("Multisite-URL of remote site"))
     html.text_input("multisiteurl", site.get("multisiteurl", ""), size=60)
-    html.write("<br><br>")
+    html.help( _("URL of the remote Check_MK including <tt>/check_mk/</tt>. "
+                   "This URL is in many cases the same as the URL-Prefix but with <tt>check_mk/</tt> "
+                   "appended, but it must always be an absolute URL. Please note, that "
+                   "that URL will be fetched by the Apache server of the local "
+                   "site itself, whilst the URL-Prefix is used by your local Browser."))
+
+    forms.section(_("SSL"))
     html.checkbox("insecure", site.get("insecure", False), label = _('Ignore SSL certificate errors'))
-    html.help(_('This might be needed to make the synchronization accept problems with '
-               'SSL certificates when using an SSL secured connection.'))
-    html.write("</td></tr>")
-    html.write("<tr><td colspan=2 class=buttons>")
+    html.help( _('This might be needed to make the synchronization accept problems with '
+                 'SSL certificates when using an SSL secured connection.'))
+
+    forms.end()
     html.button("save", _("Save"))
-    html.write("</td></tr>")
-    html.write("</table>")
+
     html.hidden_fields()
     html.end_form()
 
@@ -7637,43 +7504,33 @@ def mode_edit_user(phase):
 
 
     html.begin_form("user")
-    html.write("<table class=form>")
+    forms.header(_("Identity"))
 
     # ID
-    html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Username"))
-    html.write("</td><td class=content>")
+    forms.section(_("Username"))
     if new:
         html.text_input("userid", userid)
         html.set_focus("userid")
     else:
         html.write(userid)
         html.hidden_field("userid", userid)
-    html.write("</td></tr>")
 
     # Full name
-    html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Full name"))
-    html.help(_("Full name or alias of the user"))
-    html.write("</td><td class=content>")
+    forms.section(_("Full name"))
     html.text_input("alias", user.get("alias", userid), size = 50)
     if not new:
         html.set_focus("alias")
-    html.write("</td></tr>")
+    html.help(_("Full name or alias of the user"))
 
-    # Authentication
-    html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Authentication"))
-    html.help(_("If you want the user to be able to login "
-                "then specify a password here. Users without a login make sense "
-                "if they are monitoring contacts that are just used for "
-                "notifications. The repetition of the password is optional. "
-                "<br>For accounts used by automation processes (such as fetching "
-                "data from views for further procession), set the method to "
-                "<u>secret</u>. The secret will be stored in a local file. Processes "
-                "with read access to that file will be able to use Multisite as "
-                "a webservice without any further configuration."))
-    html.write("</td><td class=content>")
+    # Email address
+    forms.section(_("Email address"))
+    html.text_input("email", user.get("email", ""), size = 50)
+    html.help(_("The email address is optional and is needed "
+                "if the user is a monitoring contact and receives notifications "
+                "via Email."))
+
+    forms.header(_("Security"))
+    forms.section(_("Authentication"))
     is_automation = user.get("automation_secret", None) != None
     html.radiobutton("authmethod", "password", not is_automation,
                      _("Normal user login with password"))
@@ -7695,57 +7552,42 @@ def mode_edit_user(phase):
     html.write("</b>")
     html.write("</ul>")
 
-    html.write("</td></tr>")
+    html.help(_("If you want the user to be able to login "
+                "then specify a password here. Users without a login make sense "
+                "if they are monitoring contacts that are just used for "
+                "notifications. The repetition of the password is optional. "
+                "<br>For accounts used by automation processes (such as fetching "
+                "data from views for further procession), set the method to "
+                "<u>secret</u>. The secret will be stored in a local file. Processes "
+                "with read access to that file will be able to use Multisite as "
+                "a webservice without any further configuration."))
 
     # Locking
-    html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Disable password"))
+    forms.section(_("Disable password"))
+    html.checkbox("locked", user.get("locked", False), label = _("disable the login to this account"))
     html.help(_("Disabling the password will prevent a user from logging in while "
                  "retaining the original password. Notifications are not affected "
                  "by this setting."))
-    html.write("</td><td class=content>")
-    html.checkbox("locked", user.get("locked", False), label = _("disable the password of this account"))
-    html.write("</td></tr>")
-
-    # Email address
-    html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Email address"))
-    html.help(_("The email address is optional and is needed "
-                "if the user is a monitoring contact and receives notifications "
-                "via Email."))
-    html.write("</td><td class=content>")
-    html.text_input("email", user.get("email", ""), size = 50)
-    html.write("</td></tr>")
 
     # Roles
-    html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Roles"))
-    html.help(_("By assigning roles to a user he obtains permissions. "
-                "If a user has more than one role, he gets the maximum of all "
-                "permissions of his roles. "
-                "Users without any role have no permissions to use Multisite at all "
-                "but still can be monitoring contacts and receive notifications."))
-    html.write("</td><td class=content>")
+    forms.section(_("Roles"))
     entries = roles.items()
     entries.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
     for role_id, role in entries:
         html.checkbox("role_" + role_id, role_id in user.get("roles", []))
         url = make_link([("mode", "edit_role"), ("edit", role_id)])
         html.write("<a href='%s'>%s</a><br>" % (url, role["alias"]))
-    html.write("</td></tr>")
+    html.help(_("By assigning roles to a user he obtains permissions. "
+                "If a user has more than one role, he gets the maximum of all "
+                "permissions of his roles. "
+                "Users without any role have no permissions to use Multisite at all "
+                "but still can be monitoring contacts and receive notifications."))
 
     # Contact groups
-    html.write("<tr><td class=legend colspan=2>")
+    forms.header(_("Contact Groups"), isopen=False)
+    forms.section()
     url1 = make_link([("mode", "contact_groups")])
     url2 = make_link([("mode", "rulesets"), ("group", "grouping")])
-    html.write(_("Contact groups"))
-    html.help(_("Contact groups are used to assign monitoring "
-                "objects to users. If you haven't defined any contact groups yet, "
-                "then first <a href='%s'>do so</a>. Hosts and services can be "
-                "assigned to contact groups using <a href='%s'>rules</a>.<br><br>"
-                "If you do not put the user into any contact group "
-                "then no monitoring contact will be created for the user.") % (url1, url2))
-    html.write("</td><td class=content>")
     if len(contact_groups) == 0:
         html.write(_("Please first create some <a href='%s'>contact groups</a>") %
                 url1)
@@ -7759,28 +7601,28 @@ def mode_edit_user(phase):
             url = make_link([("mode", "edit_contact_group"), ("edit", gid)])
             html.write(" <a href=\"%s\">%s</a><br>" % (url, alias))
 
-    html.write("</td></tr>")
+    html.help(_("Contact groups are used to assign monitoring "
+                "objects to users. If you haven't defined any contact groups yet, "
+                "then first <a href='%s'>do so</a>. Hosts and services can be "
+                "assigned to contact groups using <a href='%s'>rules</a>.<br><br>"
+                "If you do not put the user into any contact group "
+                "then no monitoring contact will be created for the user.") % (url1, url2))
 
-    # Notifications enabled
-    html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Notifications enabled"))
-    html.help(_("Notifications are sent out "
-                "when the status of a host or service changes."))
-    html.write("</td><td class=content>")
+    forms.header(_("Notifications"), isopen=False)
+
+    forms.section(_("Enabling"))
     html.checkbox("notifications_enabled", user.get("notifications_enabled", True), 
          label = _("enable notifications"))
-    html.write("</td></tr>")
+    html.help(_("Notifications are sent out "
+                "when the status of a host or service changes."))
 
     # Notification period
-    html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Notification time period"))
-    html.help(_("Only during this time period the "
-                 "user will get notifications about host or service alerts."))
-    html.write("</td><td class=content>")
+    forms.section(_("Notification time period"))
     choices = [ ( "24X7", _("Always")) ] + \
               [ ( id, "%s" % (tp["alias"])) for (id, tp) in timeperiods.items() ]
     html.sorted_select("notification_period", choices, user.get("notification_period"))
-    html.write("</td></tr>")
+    html.help(_("Only during this time period the "
+                 "user will get notifications about host or service alerts."))
 
     # Notification options
     notification_option_names = { # defined here: _() must be executed always!
@@ -7801,12 +7643,7 @@ def mode_edit_user(phase):
         }
     }
 
-    html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Notification options"))
-    html.help(_("Here you specify which types of alerts "
-               "will be notified to this contact. Note: these settings will only be saved "
-               "and used if the user is member of a contact group."))
-    html.write("</td><td class=content>")
+    forms.section(_("Notification Options"))
     for title, what, opts in [ ( _("Host events"), "host", "durfs"),
                   (_("Service events"), "service", "wucrfs") ]:
         html.write("%s:<ul>" % title)
@@ -7817,27 +7654,24 @@ def mode_edit_user(phase):
             html.checkbox(what + "_" + opt, opt in user_opts, label = opt_name)
             html.write("<br>")
         html.write("</ul>")
-    html.write("</td></tr>")
+    html.help(_("Here you specify which types of alerts "
+               "will be notified to this contact. Note: these settings will only be saved "
+               "and used if the user is member of a contact group."))
 
+    forms.header(_("Personal Settings"), isopen = False)
     select_language(user.get('language', ''))
-
     for name, vs in user_attributes:
-        html.write("<tr><td colspan=2 class=legend>%s" % vs.title())
-        html.help(vs.help())
-        html.write("</td><td class=content>")
+        forms.section(vs.title())
         vs.render_input("ua_" + name, user.get(name, vs.default_value()))
-        html.write("</td></tr>")
+        html.help(vs.help())
 
     # TODO: Later we could add custom macros here, which
     # then could be used for notifications. On the other hand,
     # if we implement some check_mk --notify, we could directly
     # access the data in the account with the need to store
     # values in the monitoring core. We'll see what future brings.
-    html.write("<tr><td class=buttons colspan=3>")
+    forms.end()
     html.button("save", _("Save"))
-    html.write("</tr>")
-
-    html.write("</table>")
     html.hidden_fields()
     html.end_form()
 
@@ -8234,64 +8068,45 @@ def mode_edit_role(phase):
         return "roles"
 
     html.begin_form("role", method="POST")
-    html.write("<table class=form>")
 
     # ID
-    html.write("<tr><td class=legend>")
-    html.write(_("Internal ID"))
-    html.write("</td><td class=content>")
+    forms.header(_("Basic Properties"))
+    forms.section(_("Internal ID"))
     if role.get("builtin"):
         html.write("%s (%s)" % (id, _("builtin role")))
         html.hidden_field("id", id)
     else:
         html.text_input("id", id)
         html.set_focus("id")
-    html.write("</td></tr>")
 
     # Alias
-    html.write("<tr><td class=legend>")
-    html.write(_("Alias"))
+    forms.section(_("Alias"))
     html.help(_("An alias or description of the role"))
-    html.write("</td><td class=content>")
     html.text_input("alias", role.get("alias", ""), size = 50)
-    html.write("</td></tr>")
 
     # Based on
     if not role.get("builtin"):
-        html.write("<tr><td class=legend>")
-        html.write(_("Based on role"))
+        forms.section(_("Based on role"))
         html.help(_("Each user defined role is based on one of the builtin roles. "
                     "When created it will start with all permissions of that role. When due to a software "
                     "update or installation of an addons new permissions appear, the user role will get or "
                     "not get those new permissions based on the default settings of the builtin role it's "
                     "based on."))
-        html.write("</td><td class=content>")
         choices = [ (i, r["alias"]) for i, r in roles.items() if r.get("builtin") ]
         html.sorted_select("basedon", choices, role.get("basedon", "user"))
-        html.write("</td></tr>")
 
 
     # Permissions
     base_role_id = role.get("basedon", id)
-    def perm_header(section_id, title, is_open, help=None):
-        html.write("<tr><td class=legend>")
-        html.write(title)
-        html.help(help)
-        html.write("</td><td class=content>")
-        html.begin_foldable_container('permissions', section_id, is_open, title, indent=False)
-        html.write("<table class=permissions>")
 
-    def perm_footer():
-        html.write("</table>")
-        html.end_foldable_container()
-        html.write("</td></tr>")
-
-    perm_header("general", _("General permissions"), True,
+    forms.header(_("General permissions"))
+    html.help(
        _("When you leave the permissions at &quot;default&quot; then they get their "
          "settings from the factory defaults (for builtin roles) or from the "
          "factory default of their base role (for user define roles). Factory defaults "
          "may change due to software updates. When choosing another base role, all "
          "permissions that are on default will reflect the new base role."))
+
     current_section = None
     for perm in config.permissions_by_order:
         pname = perm["name"]
@@ -8299,32 +8114,22 @@ def mode_edit_role(phase):
             section = pname.split(".")[0]
             section_title = config.permission_sections[section]
             if section != current_section:
-                perm_footer()
-                perm_header(section, section_title, False)
+                forms.header(section_title, False)
                 current_section = section
+        forms.section(perm["title"])
 
         pvalue = role["permissions"].get(pname)
         def_value = base_role_id in perm["defaults"]
-        html.write("<tr>")
 
-        html.write("<td class=select>")
         choices = [ ( "yes", _("yes")),
                     ( "no", _("no")),
                     ( "default", _("default (%s)") % (def_value and _("yes") or _("no") )) ]
-        html.select("perm_" + pname, choices, { True: "yes", False: "no" }.get(pvalue, "default") )
-        html.write("</td>")
+        html.select("perm_" + pname, choices, { True: "yes", False: "no" }.get(pvalue, "default"), attrs={"style": "width: 130px;"} )
 
-        html.write("<td class=descr>%s" % perm["title"])
         html.help(perm["description"])
-        html.write("</td>")
-        html.write("</tr>")
-    perm_footer()
 
-    # Save button
-    html.write("<tr><td colspan=2 class=buttons>")
+    forms.end() 
     html.button("save", _("Save"))
-    html.write("</td></tr>")
-    html.write("</table>")
     html.hidden_fields()
     html.end_form()
 
@@ -8669,35 +8474,27 @@ def mode_edit_auxtag(phase):
         tag_id, title = auxtags[tag_nr]
 
     html.begin_form("auxtag")
-    html.write("<table class=form>")
+    forms.header(_("Auxiliary Tag"))
 
     # Tag ID
-    html.write("<tr><td class=legend>")
-    html.write(_("Tag ID"))
-    html.help(_("The internal name of the tag. The special tags "
-                "<tt>snmp</tt>, <tt>tcp</tt> and <tt>ping</tt> can "
-                "be used here in order to specify the agent type."))
-    html.write("</td><td class=content>")
+    forms.section(_("Tag ID"))
     if new:
         html.text_input("tag_id", "")
         html.set_focus("tag_id")
     else:
         html.write(tag_id)
-    html.write("</td></tr>")
+    html.help(_("The internal name of the tag. The special tags "
+                "<tt>snmp</tt>, <tt>tcp</tt> and <tt>ping</tt> can "
+                "be used here in order to specify the agent type."))
 
     # Title
-    html.write("<tr><td class=legend>")
-    html.write(_("Title"))
-    html.help(_("An alias or description of this auxiliary tag"))
-    html.write("</td><td class=content>")
+    forms.section(_("Title"))
     html.text_input("title", title, size = 30)
-    html.write("</td></tr>")
+    html.help(_("An alias or description of this auxiliary tag"))
 
     # Button and end
-    html.write("<tr><td colspan=2 class=buttons>")
+    forms.end()
     html.button("save", _("Save"))
-    html.write("</td></tr>")
-    html.write("</table>")
     html.hidden_fields()
     html.end_form()
 
@@ -8879,32 +8676,25 @@ def mode_edit_hosttag(phase):
 
 
     html.begin_form("hosttaggroup")
-    html.write("<table class=form>")
+    forms.header(_("Edit group") + (tag_id and " %s" % tag_id or ""))
 
     # Tag ID
-    html.write("<tr><td class=legend>")
-    html.write(_("Internal ID"))
+    forms.section(_("Internal ID"))
     html.help(_("The internal ID of the tag group is used to store the tag's "
                 "value in the host properties. It cannot be changed later."))
-    html.write("</td><td class=content>")
     if new:
         html.text_input("tag_id")
         html.set_focus("tag_id")
     else:
         html.write(tag_id)
-    html.write("</td></tr>")
 
     # Title
-    html.write("<tr><td class=legend>")
-    html.write(_("Title"))
+    forms.section(_("Title"))
     html.help(_("An alias or description of this tag group"))
-    html.write("</td><td class=content>")
     html.text_input("title", title, size = 30)
-    html.write("</td></tr>")
 
     # Choices
-    html.write("<tr><td class=legend>")
-    html.write(_("Choices"))
+    forms.section(_("Choices"))
     html.help(_("The first choice of a tag group will be its default value. "
                  "If a tag group has only one choice, it will be displayed "
                  "as a checkbox and set or not set the only tag. If it has "
@@ -8916,16 +8706,12 @@ def mode_edit_hosttag(phase):
                  "change its title at the same time! Otherwise WATO will not "
                  "be able to detect the renaming and cannot exchange the tags "
                  "in all folders, hosts and rules accordingly."))
-    html.write("</td><td class=content>")
     forms.input(vs_choices, "choices", choices)
-    html.write("</td></tr>")
 
 
     # Button and end
-    html.write("<tr><td colspan=2 class=buttons>")
+    forms.end()
     html.button("save", _("Save"))
-    html.write("</td></tr>")
-    html.write("</table>")
     html.hidden_fields()
     html.end_form()
 
@@ -10024,54 +9810,38 @@ def mode_edit_rule(phase):
     html.help(rulespec["help"])
 
     html.begin_form("rule_editor")
-    html.write('<table class="form ruleeditor">\n')
 
     # Value
-    html.write("<tr><td class=title colspan=2><h3>%s</h3></td></tr>\n" %
-                _("Value"))
+    forms.header(_("Value"))
     if valuespec:
         value = rule[0]
-        edit_value(valuespec, value)
+        forms.section()
+        valuespec.render_input("ve", value)
         valuespec.set_focus("ve")
     else:
-        html.write("<tr><td class=legend></td>\n")
-        html.write("<td class=content>")
+        forms.section("")
         for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
             val = img == "yes"
             html.write('<img align=top src="images/rule_%s.png"> ' % img)
             html.radiobutton("value", img, value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
-        html.write("</td></tr>\n")
 
     # Conditions
-    html.write("<tr><td class=title colspan=2><h3>%s</h3></td></tr>" %
-                _("Conditions"))
+    forms.header(_("Conditions"))
 
     # Rule folder
-    html.write("<tr><td class=legend>%s" % (_("Folder")))
-    html.help(_("The rule is only applied to hosts directly in or below this folder."))
-    html.write("</td><td class=content>")
+    forms.section(_("Folder"))
     html.select("new_rule_folder", folder_selection(g_root_folder), folder[".path"])
-    html.write("</td></tr>")
+    html.help(_("The rule is only applied to hosts directly in or below this folder."))
 
     # Host tags
-    html.write("<tr><td class=legend>" + _("Host tags"))
+    forms.section(_("Host tags"))
+    render_condition_editor(tag_specs)
     html.help(_("The rule will only be applied to hosts fullfulling all of "
                  "of the host tag conditions listed here, even if they appear "
                  "in the list of explicit host names."))
 
-    html.write("</td>")
-    html.write("<td class=content>")
-    render_condition_editor(tag_specs)
-    html.write("</td></tr>")
-
-
     # Explicit hosts / ALL_HOSTS
-    html.write("<tr><td class=legend>")
-    html.write(_("Explicit hosts"))
-    html.help(_("You can enter a number of explicit host names that rule should or should "
-                 "not apply to here. Leave this option disabled if you want the rule to "
-                 "apply for all hosts specified by the given tags."))
-    html.write("</td><td class=content>")
+    forms.section(_("Explicit hosts"))
     div_id = "div_all_hosts"
 
     checked = host_list != ALL_HOSTS
@@ -10104,23 +9874,25 @@ def mode_edit_rule(phase):
     html.write("</table>")
     html.checkbox("negate_hosts", negate_hosts)
     html.write(" " + _("<b>Negate:</b> make Rule apply for <b>all but</b> the above hosts") + "\n")
-    html.write("</div></td></tr>")
+    html.write("</div>")
+    html.help(_("You can enter a number of explicit host names that rule should or should "
+                 "not apply to here. Leave this option disabled if you want the rule to "
+                 "apply for all hosts specified by the given tags."))
 
     # Itemlist
     itemtype = rulespec["itemtype"]
     if itemtype:
-        html.write("<tr><td class=legend>")
         if itemtype == "service":
-            html.write(_("Services"))
+            forms.section(_("Services"))
             html.help(_("Specify a list of service patterns this rule shall apply to. "
                          "The patterns must match the <b>beginning</b> of the service "
                          "in question. Adding a <tt>$</tt> to the end forces an excact "
                          "match. Pattern use <b>regular expressions</b>. A <tt>.*</tt> will "
                          "match an arbitrary text."))
         elif itemtype == "checktype":
-            html.write(_("Check types"))
+            forms.section(_("Check types"))
         elif itemtype == "item":
-            html.write(rulespec["itemname"].title())
+            forms.section(rulespec["itemname"].title())
             if rulespec["itemhelp"]:
                 html.help(rulespec["itemhelp"])
             else:
@@ -10132,7 +9904,6 @@ def mode_edit_rule(phase):
         else:
             raise MKGeneralException("Invalid item type '%s'" % itemtype)
 
-        html.write("</td><td class=content>")
         if itemtype:
             checked = html.get_checkbox("explicit_services")
             if checked == None: # read from rule itself
@@ -10171,10 +9942,8 @@ def mode_edit_rule(phase):
                              "with <tt>.*</tt>"))
                 html.write("</div>")
 
-    html.write("<tr><td class=buttons colspan=2>")
+    forms.end()
     html.button("save", _("Save"))
-    html.write("</td></tr>")
-    html.write("</table>")
     html.hidden_fields()
     html.end_form()
 
@@ -10442,8 +10211,16 @@ def select_language(user_language):
     inactive = user_language != ''
 
     if languages:
-        html.write("<tr><td class=legend>")
-        html.write(_("Language"))
+        forms.section(_("Language"),
+                      checkbox = ('_set_lang', inactive, 'language'))
+        # html.checkbox('_set_lang', inactive, onclick = 'wato_toggle_attribute(this, \'language\')')
+        # html.write(" ")
+        default_label = _('Default: %s') % (get_language_alias(config.default_language) or _('English'))
+        html.write('<div class="inherited" id="attr_default_language" style="%s">%s</div>' %
+                                            (inactive and "display: none" or "", default_label))
+        html.write('<div id="attr_entry_language" style="%s">' % ((not inactive) and "display: none" or ""))
+        html.select("language", languages, user_language)
+        html.write("</div>")
         html.help(_('Configure the default language '
                     'to be used by the user in the user interface here. If you do not check '
                     'the checkbox, then the system default will be used.<br><br>'
@@ -10451,15 +10228,6 @@ def select_language(user_language):
                     'but comes without any actual localisations (translations). If you want to '
                     'create you own translation, you find <a href="%s">documentation online</a>.') %
                     "http://mathias-kettner.de/checkmk_multisite_i18n.html")
-        html.write("</td><td class=checkbox>")
-        html.checkbox('_set_lang', inactive, onclick = 'wato_toggle_attribute(this, \'language\')')
-        html.write("</td><td class=content>")
-        default_label = _('Default: %s') % (get_language_alias(config.default_language) or _('English'))
-        html.write('<div class="inherited" id="attr_default_language" style="%s">%s</div>' %
-                                            (inactive and "display: none" or "", default_label))
-        html.write('<div id="attr_entry_language" style="%s">' % ((not inactive) and "display: none" or ""))
-        html.select("language", languages, user_language)
-        html.write("</div></td></tr>")
 
 def page_user_profile():
     if not config.user_id:
@@ -10529,36 +10297,24 @@ def page_user_profile():
 
     html.begin_form("profile", method="POST")
     html.write('<div class=wato>')
-    html.write("<table class=form>")
-
-    html.write("<tr><td class=legend colspan=2>")
-    html.write(_("Name"))
-    html.write("</td><td class=content>")
+    
+    forms.header(_("Personal Settings"))
+    forms.section(_("Name"))
     html.write(config.user_id)
-    html.write("</td></tr>")
 
     if config.may('edit_profile'):
         select_language(config.get_language(''))
 
     if config.may('change_password'):
-        html.write("<tr><td class=legend colspan=2>")
-        html.write(_("Password"))
-        html.write("</td><td class=content>")
+        forms.section(_("Password"))
         html.password_input('password')
-        html.write("</td></tr>")
 
-        html.write("<tr><td class=legend colspan=2>")
-        html.write(_("Password confirmation"))
-        html.write("</td><td class=content>")
+        forms.section(_("Password confirmation"))
         html.password_input('password2')
-        html.write("</td></tr>")
 
     # Save button
-    html.write("<tr><td colspan=3 class=buttons>")
+    forms.end()
     html.button("_save", _("Save"))
-    html.write("</td></tr>")
-
-    html.write("</table>")
     html.write('</div>')
     html.hidden_fields()
     html.end_form()
@@ -10690,31 +10446,20 @@ def mode_pattern_editor(phase):
                 'and debug your whole set of logfile patterns.'))
 
     # Render the tryout form
-    html.write('<h3>%s</h3>' % _('Try Pattern Match'))
     html.begin_form('try')
-    html.write('<table class="form logwatch_try">')
-    html.write('<tr>')
-    html.write('<td class=legend>%s</td>' % _('Hostname'))
-    html.write('<td class=content>')
+    forms.header(_('Try Pattern Match'))
+    forms.section(_('Hostname'))
     html.text_input('host')
-    html.write('</td></tr><tr>')
-    html.write('<td class=legend>%s</td>' % _('Logfile'))
-    html.write('<td class=content>')
+    forms.section(_('Logfile'))
     html.text_input('file')
-    html.write('</td></tr>')
-    html.write('<tr>')
-    html.write('<td class=legend>')
-    html.write(_('Text to match'))
+    forms.section(_('Text to match'))
     html.help(_('You can insert some text (e.g. a line of the logfile) to test the patterns defined '
           'for this logfile. All patterns for this logfile are listed below. Matching patterns '
           'will be highlighted after clicking the "Try out" button.')
     )
-    html.write('</td><td class=content>')
-    html.text_input('match', cssclass = 'match')
-    html.write('</td></tr><tr>')
-    html.write('<td colspan=2>')
-    html.image_button('_try', _('Try out'))
-    html.write('</td></tr></table>')
+    html.text_input('match', cssclass = 'match', size=100)
+    forms.end()
+    html.button('_try', _('Try out'))
     html.hidden_fields()
     html.end_form()
 
@@ -10729,7 +10474,7 @@ def mode_pattern_editor(phase):
     all_rulesets = load_all_rulesets()
     ruleset = all_rulesets.get(varname)
 
-    html.write('<h3>%s</h3>' % _('Logfile Pattern'))
+    html.write('<h3>%s</h3>' % _('Logfile Patterns'))
     if not ruleset:
         html.write(
             "<div class=info>"

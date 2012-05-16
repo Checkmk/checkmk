@@ -825,12 +825,20 @@ function folding_step(oImg, state, step) {
 
 function toggle_tree_state(tree, name, oContainer) {
     var state;
-    if(oContainer.style.display == 'none') {
+    if (oContainer.style.display == 'none') {
         oContainer.style.display = '';
         state = 'on';
+        if (oContainer.tagName == 'TR') { // handle in-table toggling
+            while (oContainer = oContainer.nextSibling)
+                oContainer.style.display = '';
+        }
     } else {
         oContainer.style.display = 'none';
         state = 'off';
+        if (oContainer.tagName == 'TR') { // handle in-table toggling
+            while (oContainer = oContainer.nextSibling)
+                oContainer.style.display = 'none';
+        }
     }
     get_url('tree_openclose.py?tree=' + escape(tree) + '&name=' + escape(name) + '&state=' + state);
     oContainer = null;
@@ -838,12 +846,20 @@ function toggle_tree_state(tree, name, oContainer) {
 
 
 function toggle_foldable_container(treename, id) {
-    var oImg = document.getElementById('treeimg.' + treename + '.' + id);
-    var oBox = document.getElementById('tree.' + treename + '.' + id);
-    toggle_tree_state(treename, id, oBox);
-    toggle_folding(oImg, oBox.style.display != "none");
-    oImg = null;
-    oBox = null;
+    // Check, if we fold a NG-Norm
+    var oNform = document.getElementById('nform.' + treename + '.' + id);
+    if (oNform) {
+        var oTr = oNform.parentNode.nextSibling;
+        toggle_tree_state(treename, id, oTr);
+    }
+    else {
+        var oImg = document.getElementById('treeimg.' + treename + '.' + id);
+        var oBox = document.getElementById('tree.' + treename + '.' + id);
+        toggle_tree_state(treename, id, oBox);
+        toggle_folding(oImg, oBox.style.display != "none");
+        oImg = null;
+        oBox = null;
+    }
 }
 
 /*

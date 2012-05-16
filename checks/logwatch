@@ -84,10 +84,12 @@ def logwatch_state(state):
 def logwatch_level_name(level):
     if   level == 'W': return 'WARN'
     elif level == 'C': return 'CRIT'
-    else: return 'OK'
+    elif level == 'O': return 'OK'
+    else: return 'IGN'
 
 def logwatch_level_worst(worst, level):
-    if   level == 'W': return max(worst, 1)
+    if   level == 'O': return max(worst, 0)
+    elif level == 'W': return max(worst, 1)
     elif level == 'C': return max(worst, 2)
     else: return worst
 
@@ -223,18 +225,20 @@ def check_logwatch(item, params, info):
     # Write out new log lines (no reclassify here. It is done later in general for all logs)
     #
     if len(loglines) > 0:
-        worst = 0
+        worst = -1
         for line in loglines:
             worst = logwatch_level_worst(worst, logwatch_parse_line(line)[0])
 
-        try:
-            logarch = file(logfile, "a+")
-            logarch.write(time.strftime("<<<%Y-%m-%d %H:%M:%S " + logwatch_state(worst) + ">>>\n"))
-            logarch.write("\n".join(loglines) + "\n")
-            logarch.close()
-        except Exception, e:
-            raise MKGeneralException("User %s cannot create logfile: %s" % \
-                                     (username(), e))
+        # Ignore log lines which result in an "I" -> "Ignore" state
+        if worst > -1:
+            try:
+                logarch = file(logfile, "a+")
+                logarch.write(time.strftime("<<<%Y-%m-%d %H:%M:%S " + logwatch_state(worst) + ">>>\n"))
+                logarch.write("\n".join(loglines) + "\n")
+                logarch.close()
+            except Exception, e:
+                raise MKGeneralException("User %s cannot create logfile: %s" % \
+                                         (username(), e))
 
     # Get the patterns (either compile or reuse the precompiled ones)
     # Check_MK creates an empty string if the precompile function has
@@ -263,7 +267,7 @@ def check_logwatch(item, params, info):
     counts = {} # for counting number of matches of a certain pattern
     state_counts = {} # for counting number of blocks with a certain state
     block_header = None
-    block_worst = 0
+    block_worst = -1
     block_lines = []
     block_last_worst_line = ''
 
@@ -279,15 +283,17 @@ def check_logwatch(item, params, info):
                 continue
             if line.startswith('<<<') and line.endswith('>>>'):
                 if block_header:
-                    # The section is finished here. Add it to the list of reclassified lines
-                    reclassified_lines += finish_block(block_header, block_worst, block_lines)
+                    # The section is finished here. Add it to the list of reclassified lines if the
+                    # state of the block is not "I" -> "ignore"
+                    if block_worst > -1:
+                        reclassified_lines += finish_block(block_header, block_worst, block_lines)
 
-                    if block_worst >= worst:
-                        worst = block_worst
-                        last_worst_line = block_last_worst_line
+                        if block_worst >= worst:
+                            worst = block_worst
+                            last_worst_line = block_last_worst_line
 
                     block_lines = []
-                    block_worst = 0
+                    block_worst = -1
                 block_header = line
                 counts = {}
             else:
@@ -313,8 +319,9 @@ def check_logwatch(item, params, info):
 
                 block_lines.append(level + ' ' + text)
 
-        if block_header:
-            # The last section is finished here.
+        # The last section is finished here. Add it to the list of reclassified lines if the
+        # state of the block is not "I" -> "ignore"
+        if block_header and block_worst > -1:
             reclassified_lines += finish_block(block_header, block_worst, block_lines)
 
             if block_worst >= worst:
@@ -324,7 +331,10 @@ def check_logwatch(item, params, info):
 
         # Only rewrite the lines if at least one line has been reclassified
         if reclassified:
-            file(logfile, 'w').write('\n'.join(reclassified_lines) + '\n')
+            if reclassified_lines:
+                file(logfile, 'w').write('\n'.join(reclassified_lines) + '\n')
+            else:
+                os.unlink(logfile)
 
     #
     # Render output

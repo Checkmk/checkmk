@@ -85,6 +85,14 @@ do
 done
 
 
+echo '<<<ntp>>>' 
+if which ntpq > /dev/null 2>&1 ; then 
+    if [ $(lssrc -s xntpd|grep -c active) -gt 0 ] ; then 
+    # remote heading, make first column space separated 
+        ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' 
+    fi 
+fi 
+
 
 if cd $PLUGINSDIR 2>/dev/null
 then

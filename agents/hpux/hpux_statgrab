@@ -7,9 +7,9 @@
 
 
 if which statgrab > /dev/null ; then
-    if statgrab const. cpu. general. load. mem. net. page. proc. swap. user. > /tmp/statgrab.$$ 2>/dev/null
+    if statgrab const. cpu. general. mem. page. proc. swap. user. > /tmp/statgrab.$$ 2>/dev/null
         then
-        for s in proc cpu net load page
+        for s in proc cpu page
         do
             echo "<<<statgrab_$s>>>"
             cat /tmp/statgrab.$$ | grep "^$s\." | cut -d. -f2-99 | sed 's/ *= */ /'

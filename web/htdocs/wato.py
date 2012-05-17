@@ -4694,37 +4694,33 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
               % (attrname, active and "display: none" or ""))
 
             # in bulk mode we show inheritance only if *all* hosts inherit
+            explanation = ""
             if for_what == "bulk":
                 if num_haveit == 0:
-                    html.write("<h3>" + inherited_from + "</h3>")
+                    explanation = " (" + inherited_from + ")"
                     value = inherited_value
                 elif not unique:
-                    html.write(_("<i>This value differs between the selected hosts.</i>"))
+                    explanation = _("This value differs between the selected hosts.")
                 else:
                     value = values[0]
 
             elif for_what in [ "host", "folder" ]:
-                html.write("<h3>" + inherited_from + "</h3>")
+                explanation = " (" + inherited_from + ")"
                 value = inherited_value
 
             if for_what != "search" and not (for_what == "bulk" and not unique):
                 tdclass, content = attr.paint(value, "")
                 if not content:
-                    content = "<i>" + _("(empty)") + "</i>"
-                html.write(content)
+                    content = _("empty")
+                html.write("<b>" + content + "</b>")
 
+            html.write(explanation)
             html.write("</div>")
 
-            # html.write("</td></tr>\n")
 
         if len(topics) > 1:
-            # html.write("</table>")
-            # html.end_foldable_container() # end of topic
             if topic_is_volatile:
                 volatile_topics.append((topic or _("Basic settings")).encode('utf-8'))
-            if topic == topics[-1]:
-                pass
-                # html.write('<table class="form">')
 
     def dump_json(obj):
         return repr(obj).replace('None', 'null')

@@ -186,26 +186,17 @@ Boston, MA 02110-1301 USA.
 }
 
 .wato div.inherited {
-    color: #000;
-    font-weight: bold;
+    color: #444;
+}
+.wato div.inherited a {
+    color: #444;
+}
+.wato div.inherited b {
+    color: black;
+    font-weight: normal;
 }
 .wato td.inherited {
     color: #666;
-}
-.wato div.inherited h3 {
-    margin: 0px;
-    padding: 0px;
-    font-size: 8pt;
-    color: #468;
-}
-.wato div.inherited h3 a {
-    color: #468;
-}
-.wato h3 {
-    margin-bottom: 2px;
-    color: white;
-    font-size: 13pt;
-    font-weight: normal;
 }
 
 /* host validation error */

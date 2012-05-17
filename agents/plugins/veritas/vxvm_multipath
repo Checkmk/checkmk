@@ -1,0 +1,17 @@
+#!/bin/sh
+# Original output
+# c42t4d7      ENABLED(A)   -          disk2046     emc1         c27      -
+
+# DMPNODENAME ENCLR-NAME STATE[A] PATH-TYPE[M]
+# disk2057 emc1 ENABLED(A) -
+# disk3119 emc_clariion0 ENABLED SECONDARY
+
+   
+
+
+if type vxdmpadm >/dev/null; then
+    echo '<<<vxvm_multipath>>>'
+    # dmpnode storagedevice state attribute
+    vxdmpadm getsubpaths | grep -vw DMPNODENAME | awk '{print $4" "$5" "$2" "$3}'
+
+fi

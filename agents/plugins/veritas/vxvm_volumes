@@ -1,0 +1,23 @@
+#!/bin/sh
+
+
+if type vxdg > /dev/null; then
+   echo '<<<vxvm_volumes>>>'
+   # Get a list of the in-use disk groups.
+   # Deported or otherwise inactive needs no performance monitoring
+   DGS=$(vxdg list | grep enabled | awk '{print $1}')
+   if [ "X${DGS}" != "X"  ]; then
+     for DG in $DGS ; do 
+         vxprint -g $DG -v -F"%dgname %name %state"
+	 # Options: Kilobytes, per Volume
+         vxstat -u k -v -g $DG | egrep -v '(OPERATIONS|TYP)' | sed "s/^vol/$DG/"
+     done
+   fi
+fi
+
+
+# BASIC Output from vxstat
+#		      OPERATIONS          BLOCKS           AVG TIME(ms)
+#		      TYP NAME              READ     WRITE      READ     WRITE   READ  WRITE 
+#		      vol homevol          28987     56780    30873k    28516k   0.78  30.22 
+# (for vxprint... see manual)

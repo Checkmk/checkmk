@@ -29,19 +29,19 @@
 # [2009-11-12 10:40:30.086 'App' 3076453184 info] Current working directory: /usr/lib/check_mk_agent/plugins
 # Found VM:
 # moref:32
-# name:ras-uss
-# uuid:501e8429-18ed-3097-a521-93932203e5db
-# ipaddr:193.18.239.33
+# name:name_of_vm
+# uuid:xxxxxxxxxxxx
+# ipaddr:192.168.1.5
 # Found VM:
 # moref:48
-# name:zmucgw4
-# uuid:564d7c29-a5ed-8dd5-4bae-3e9177d8628d
-# ipaddr:172.19.15.52
+# name:abcdef
+# uuid:xxxxxxxxx
+# ipaddr:12.34.56.78
 # [2009-11-12 10:40:30.215 'vcbVmName' 3076453184 warning] IP address not set.
 # Found VM:
 # moref:80
-# name:zmucfi01
-# uuid:501e70b5-6aa3-25fa-1550-c1cf5f8a2025
+# name:name_of_vm
+# uuid:xxxxxxxxx
 # ipaddr:
 
 def inventory_vmware_state(info):

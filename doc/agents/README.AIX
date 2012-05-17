@@ -34,6 +34,10 @@ and add an allow entry in /etc/hosts.allow:
 check_mk: nagioshost, ip_of_nagios_host, 127.0.0.1
 
 
+# Restart inetd
+refresh -s inetd
+
+
 
 # Extra FEATURES
 If you wish to have more stats,

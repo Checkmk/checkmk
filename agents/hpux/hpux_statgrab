@@ -7,8 +7,6 @@
 
 
 if which statgrab > /dev/null ; then
-    # You need statgrab to be installed. You'll find it 
-    # here: http://www.i-scream.org/libstatgrab/ 
     if statgrab const. cpu. general. load. mem. net. page. proc. swap. user. > /tmp/statgrab.$$ 2>/dev/null
         then
         for s in proc cpu net load page

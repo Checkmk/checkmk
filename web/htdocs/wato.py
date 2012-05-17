@@ -5161,13 +5161,11 @@ def mode_globalvars(phase):
 
     groupnames = g_configvar_groups.keys()
     groupnames.sort()
+    html.write('<div class=globalvars>')
     for groupname in groupnames:
-        # html.begin_foldable_container("globalvars", groupname, False, groupname, indent=False)
-        html.write("<h3>%s</h3>" % groupname)
-        html.write('<table class=globalvars>')
+        forms.header(groupname, isopen=False)
 
         for domain, varname, valuespec in g_configvar_groups[groupname]:
-            html.write('<tr>')
             if domain == "check_mk" and varname not in default_values:
                 if config.debug:
                     raise MKGeneralException("The configuration variable <tt>%s</tt> is unknown to "
@@ -5178,13 +5176,11 @@ def mode_globalvars(phase):
             defaultvalue = default_values.get(varname, valuespec.default_value())
 
             edit_url = make_link([("mode", "edit_configvar"), ("varname", varname)])
+            title = '<a href="%s">%s</a>' % (edit_url, valuespec.title())
+            forms.section(title)
 
-            html.write('<td class=left><div class=text>'
-                       '<a href="%s">%s</a><span class=dots>%s</span></div></td>' % (edit_url, valuespec.title(),
-                '.' * 100))
             toggle_url = make_action_link([("mode", "globalvars"), 
                     ("_action", "toggle"), ("_varname", varname)])
-            html.write('<td class=right>')
             if varname in current_settings:
                 if isinstance(valuespec, Checkbox):
                     html.icon_button(toggle_url, _("Immediately toggle this setting"), 
@@ -5199,9 +5195,8 @@ def mode_globalvars(phase):
                 else:
                     html.write('<a href="%s">%s</a>' % 
                         (edit_url, valuespec.value_to_text(defaultvalue)))
-            html.write("</td>")
-            html.write('</tr>')
-        html.write("</table>")
+    forms.end()
+    html.write('</div>')
 
 
 def mode_edit_configvar(phase):

@@ -116,8 +116,9 @@ def header(title, isopen = True, table_id = ""):
         table_id = ''
     html.write('<table %s class=nform>' % table_id)
     fold_id = strip_bad_chars(title)
-    g_section_isopen = html.begin_foldable_container(html.form_name, fold_id, isopen, title, indent="nform")
-    html.write('<tr class=top style="display: %s"><td colspan=2></td></tr>' % (not isopen and "none" or ""))
+    g_section_isopen = html.begin_foldable_container(
+            html.form_name and html.form_name or "nform", fold_id, isopen, title, indent="nform")
+    html.write('<tr class=top style="display: %s"><td colspan=2></td></tr>' % (not g_section_isopen and "none" or ""))
     g_header_open = True
     g_section_open = False
 

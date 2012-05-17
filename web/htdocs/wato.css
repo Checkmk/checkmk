@@ -751,45 +751,35 @@ div.varname {
 }
 
 /* page "global settings*/
-.wato .globalvars {
-    background-color: #eeeeee;
-    padding: 3px 5px;
-    width: 100%;
+.wato div.globalvars a {
+    text-decoration: none;
+    color: black;
 }
 
-.wato .globalvars a {
-    color: black;
-    text-decoration: none;
-}
-.wato .globalvars a:hover {
+.wato div.globalvars a:hover {
     text-decoration: underline;
 }
 
-.wato .globalvars div.text {
-    width: 335px;
-    padding-right: 3px;
-    overflow: hidden;
-}
-.wato .globalvars td.left {
-    width: 339px;
-    overflow: hidden;
-    white-space: nowrap;
-}
-.wato .globalvars td.right {
-    text-align: left;
-}
-.wato .globalvars div.text .dots {
-    color: #888;
-    overflow: hidden;
-}
-.wato .globalvars td.right img.iconbutton {
-    width: auto;
-    height: auto;
-    margin-left: -3px;
+.wato div.globalvars td.content img.iconbutton {
+    width: 60px;
+    height: 16px;
 }
 
+.wato div.globalvars td.legend {
+    padding-top: 0px;
+}
 
+.wato div.globalvars td.legend {
+    width: 350px;
+}
 
+.wato div.globalvars td.legend div.title {
+    max-width: 350px;
+}
+
+.wato div.globalvars td {
+    height: 20px;
+}
 
 /* Table in page "Global variables" */
 .wato table.data.globalvars {

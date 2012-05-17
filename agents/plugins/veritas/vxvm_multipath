@@ -9,7 +9,7 @@
    
 
 
-if type vxdmpadm ; then
+if type vxdmpadm >/dev/null; then
     echo '<<<vxvm_multipath>>>'
     # dmpnode storagedevice state attribute
     vxdmpadm getsubpaths | grep -vw DMPNODENAME | awk '{print $4" "$5" "$2" "$3}'

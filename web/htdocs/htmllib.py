@@ -282,6 +282,7 @@ class html:
 
     def end_form(self):
         self.write("</form>\n")
+        self.form_name = None
 
     def form_submitted(self):
         return self.has_var("filled_in")

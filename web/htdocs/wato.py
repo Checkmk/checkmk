@@ -9097,6 +9097,7 @@ def mode_rulesets(phase):
     do_folding = len(groupnames) > 1
 
     something_shown = False
+    html.write('<div class=rulesets>')
     # Loop over all ruleset groups
     for groupname in groupnames:
         # Show information about a ruleset
@@ -9129,18 +9130,12 @@ def mode_rulesets(phase):
                 continue
 
             if not title_shown:
-                if something_shown:
-                    html.write("</td></tr></table>")
-                    # if do_folding:
-                    #     html.end_foldable_container()
                 if '/' in groupname:
                     subgroupname = groupname.split("/", 1)[1]
                 else:
                     subgroupname = title
-                # if do_folding:
-                #    html.begin_foldable_container("rulesets", groupname, False, subgroupname, indent=False)
-                html.write("<h3>%s</h3>" % subgroupname)
-                html.write('<table class="rulesets"><tr><td>')
+                forms.header(subgroupname)
+                forms.container()
                 title_shown = True
 
             something_shown = True
@@ -9151,26 +9146,28 @@ def mode_rulesets(phase):
             view_url = make_link(url_vars)
 
             html.write('<div class=ruleset><div class=text>')
-            html.write('<a class=title><a href="%s">%s</a>' % (view_url, rulespec["title"]))
+            html.write('<a class="%s" href="%s">%s</a>' % 
+                      (num_rules and "nonzero" or "zero", view_url, rulespec["title"]))
             html.write('<span class=dots>%s</span></div>' % ("." * 100))
             if num_local_rules:
                 if only_host:
                     title = _("There are %d rules explicitely listing this host." % num_local_rules)
                 else:
                     title = _("There are %d rules defined in the current folder." % num_local_rules)
-            html.write('<div class=rulecount title="%s">%d</div>' % (title, num_rules))
+            html.write('<div class="rulecount %s" title="%s">%d</div>' % 
+                    (num_rules and "nonzero" or "zero", title, num_rules))
             html.write('</div>')
 
     if something_shown:
-        html.write("</td></tr></table>")
-        # if do_folding:
-        #    html.end_foldable_container()
+        forms.end()
 
     else:
         if only_host:
             html.write("<div class=info>" + _("There are no rules with an exception for the host <b>%s</b>.") % only_host + "</div>")
         else:
             html.write("<div class=info>" + _("There are no rules defined in this folder.") + "</div>")
+
+    html.write('</div>')
 
 def create_new_rule_form(rulespec, hostname = None, item = None):
     html.begin_form("new_rule")

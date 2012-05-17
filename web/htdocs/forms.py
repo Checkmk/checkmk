@@ -122,6 +122,15 @@ def header(title, isopen = True, table_id = ""):
     g_header_open = True
     g_section_open = False
 
+# container without legend and content
+def container():
+    global g_section_open
+    if g_section_open:
+        html.write('</td></tr>')
+    html.write('<tr style="display: %s"><td colspan=2 class=container>' % 
+         (not g_section_isopen and "none" or ""))
+    g_section_open = True
+
 def section(title = None, checkbox = None, id = ""): 
     global g_section_open
     if g_section_open:

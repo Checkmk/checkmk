@@ -242,10 +242,11 @@ table.validationerror img {
 
 /* Path to current folder at top of screen */
 .wato div.folderpath {
+    margin-top: -5px;
     margin-bottom: 8px;
     height: 30px;
     position: relative;
-    left: 3px;
+    left: 4px;
 }
 
 .wato div.folderpath ul {
@@ -700,16 +701,20 @@ form#form_timeperiod td.vlof_content {
 }
 
 /* page "Rulesets" */
-.wato .rulesets {
-    background-color: #eeeeee;
-    padding: 3px 5px;
-    width: 100%;
-    /* box-shadow: 0px 0px 2.5px #888; */
+.wato td.rulesets {
+    padding-left: 0px;
+}
+.wato .rulesets table.nform > tbody > tr > td.container {
+    height: auto;
+}
+div.rulesets table.nform tr.bottom td {
+    height: 5px;
 }
 
 .wato .rulesets div.ruleset {
     float: left;
-    margin-right: 20px;
+    margin-left: 10px;
+    margin-right: 10px;
 }
 
 .wato .rulesets div.ruleset div.text {
@@ -728,13 +733,11 @@ form#form_timeperiod td.vlof_content {
     white-space: nowrap;
     margin-right: 3px;
 }
-
 .wato .rulesets div.ruleset a:hover {
     text-decoration: underline;
 }
 
 .wato .rulesets div.ruleset .dots {
-    color: #888;
     overflow: hidden;
 }
 
@@ -742,6 +745,20 @@ form#form_timeperiod td.vlof_content {
     width: 16px;
     float: left;
     text-align: right;
+}
+
+.wato .rulesets div.ruleset a.nonzero {
+    /* font-weight: bold; */
+}
+.wato .rulesets div.ruleset a.zero {
+}
+
+.wato .rulesets div.ruleset div.rulecount.nonzero {
+    /* font-weight: bold; */
+}
+
+.wato .rulesets div.ruleset div.rulecount.zero {
+    /* color: #444; */
 }
 
 /* Page edit_ruleset */

@@ -544,8 +544,8 @@ table.nform td.legend div.title.withcheckbox {
     max-width: 210px;
     margin-right: 6px;
 }
-table.nform td.legend .dots {
-    color: #367;
+table.nform .dots {
+    color: #444;
     margin-left: 5px;
 }
 table.nform td.legend div.checkbox {

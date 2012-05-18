@@ -1,6 +1,4 @@
 #!/bin/sh
-# Original output
-# c42t4d7      ENABLED(A)   -          disk2046     emc1         c27      -
 
 # DMPNODENAME ENCLR-NAME STATE[A] PATH-TYPE[M]
 # disk2057 emc1 ENABLED(A) -
@@ -12,6 +10,10 @@
 if type vxdmpadm >/dev/null; then
     echo '<<<vxvm_multipath>>>'
     # dmpnode storagedevice state attribute
-    vxdmpadm getsubpaths | grep -vw DMPNODENAME | awk '{print $4" "$5" "$2" "$3}'
-
+    #vxdmpadm getsubpaths| grep -vw DMPNODENAME | awk '{print $4" "$5" "$2" "$3}'
+    vxdmpadm listenclosure all | \ 
+           grep -v -w -e ^[dD]isk -e ENCLR_NAME -e ^other_disks -e \^= |  \
+           awk '{print $1}' | while read enc ; do vxdmpadm getdmpnode enclosure=$enc 
+       done
+    done
 fi

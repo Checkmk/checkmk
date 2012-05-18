@@ -2155,54 +2155,59 @@ def show_service_table(host, firsttime):
 
 def mode_search(phase):
     if phase == "title":
-        return _("Search for hosts in %s and below" % (g_folder["title"]))
+        return _("Search for hosts")
 
     elif phase == "buttons":
+        global_buttons()
         html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
+        return
 
     elif phase == "action":
-        pass
+        return "search_results"
 
+    render_folder_path()
+
+    ## # Show search form
+    html.begin_form("search")
+    forms.header(_("General Properties"))
+    forms.section(_("Hostname"))
+    html.text_input("host")
+    html.set_focus("host")
+
+    # Attributes
+    configure_attributes({}, "search", parent = None)
+
+    # Button
+    forms.end()
+    html.button("_global", _("Search globally"), "submit")
+    html.button("_local", _("Search in %s") % g_folder["title"], "submit")
+    html.hidden_fields()
+    html.end_form()
+
+
+def mode_search_results(phase):
+    if phase == "title":
+        return _("Search results")
+
+    elif phase == "buttons":
+        global_buttons()
+        html.context_button(_("New Search"), html.makeuri([("mode", "search")]), "back")
+        return
+
+    elif phase == "action":
+        return
+
+    crit = { ".name" : html.var("host") }
+    crit.update(collect_attributes(do_validate = False))
+
+    if html.has_var("_local"):
+        folder = g_folder
     else:
-        render_folder_path()
+        folder = g_root_folder
 
-        html.write("<table><tr><td>")
-        ## # Show search form
-        html.begin_form("search")
-        forms.header(_("General Properties"))
-        forms.section(_("Hostname"))
-        html.text_input("host")
-        html.set_focus("host")
+    if not search_hosts_in_folders(folder, crit):
+        html.message(_("No matching hosts found."))
 
-        # Attributes
-        configure_attributes({}, "search", parent = None)
-
-        # Button
-        forms.end()
-        html.button("_global", _("Search globally"), "submit")
-        html.button("_local", _("Search in %s") % g_folder["title"], "submit")
-        html.hidden_fields()
-        html.end_form()
-
-        # Show search results
-        if html.transaction_valid():
-            html.write("</td><td>")
-            crit = {
-                ".name" : html.var("host"),
-            }
-            crit.update(collect_attributes(do_validate = False))
-
-            html.write("<h3>" + _("Search results:") + "</h3>")
-            if html.has_var("_local"):
-                folder = g_folder
-            else:
-                folder = g_root_folder
-
-            # html.write("<pre>%s</pre>" % pprint.pformat(crit))
-            if not search_hosts_in_folders(folder, crit):
-                html.message(_("No matching hosts found."))
-
-        html.write("</td></tr></table>")
 
 
 
@@ -11148,6 +11153,7 @@ modes = {
    "firstinventory"     : (["hosts", "services"], lambda phase: mode_inventory(phase, True)),
    "inventory"          : (["hosts"], lambda phase: mode_inventory(phase, False)),
    "search"             : (["hosts"], mode_search),
+   "search_results"     : (["hosts"], mode_search_results),
    "bulkinventory"      : (["hosts", "services"], mode_bulk_inventory),
    "bulkedit"           : (["hosts", "edit_hosts"], mode_bulk_edit),
    "bulkcleanup"        : (["hosts", "edit_hosts"], mode_bulk_cleanup),

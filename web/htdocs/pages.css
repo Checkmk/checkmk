@@ -635,6 +635,7 @@ div.help {
     font-weight: normal;
     text-align: left;
     color: black;
+    display: inline-block;
 }
 
 table.data div.help {

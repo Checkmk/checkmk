@@ -9705,17 +9705,7 @@ def get_rule_conditions(ruleset):
     else:
         negate = html.get_checkbox("negate_hosts")
         nr = 0
-        host_list = []
-        while True:
-            var = "host_%d" % nr
-            host = html.var(var)
-            if nr > config.wato_num_itemspecs and not host:
-                break
-            if host:
-                if negate:
-                    host = "!" + host
-                host_list.append(host)
-            nr += 1
+        host_list = ListOfStrings().from_html_vars("hostlist")
         # append ALL_HOSTS to negated host lists
         if len(host_list) > 0 and host_list[0][0] == '!':
             host_list += ALL_HOSTS
@@ -9734,16 +9724,8 @@ def get_rule_conditions(ruleset):
                 itemspec = ListChoice(choices = itemenum, columns = 3)
                 item_list = [ x+"$" for x in itemspec.from_html_vars("item") ]
             else:
-                nr = 0
-                item_list = []
-                while True:
-                    var = "item_%d" % nr
-                    item = html.var(var, "").strip()
-                    if nr > config.wato_num_itemspecs and not item:
-                        break
-                    if item:
-                        item_list.append(item)
-                    nr += 1
+                item_list = ListOfStrings().from_html_vars("itemlist")
+
             if len(item_list) == 0:
                 raise MKUserError("item_0", _("Please specify at least one %s or "
                     "this rule will never match.") % ruleset["itemname"])
@@ -9857,29 +9839,13 @@ def mode_edit_rule(phase):
             div_id, not checked and "none" or ""))
     negate_hosts = len(host_list) > 0 and host_list[0].startswith("!")
 
-    html.write("<table class=itemlist>")
-    num_cols = 3
-    for nr in range(config.wato_num_itemspecs):
-        x = nr % num_cols
-        if x == 0:
-            html.write("<tr>")
-        if nr < len(host_list) and host_list[nr] != ALL_HOSTS[0]:
-            host_name = host_list[nr].strip("!")
-        else:
-            host_name = ""
-        html.write("<td>")
-        html.text_input("host_%d" % nr, host_name)
-        html.write("</td>")
-        if x == num_cols - 1:
-            html.write("</tr>")
-    while x < num_cols - 1:
-        html.write("<td></td>")
-        if x == num_cols - 1:
-            html.write("</tr>")
-        x += 1
-    html.write("</table>")
-    html.checkbox("negate_hosts", negate_hosts)
-    html.write(" " + _("<b>Negate:</b> make Rule apply for <b>all but</b> the above hosts") + "\n")
+    explicit_hosts = [ h.strip("!") for h in host_list if h != ALL_HOSTS[0] ]
+    ListOfStrings(
+        orientation = "horizontal",
+        valuespec = TextAscii(size = 30)).render_input("hostlist", explicit_hosts)
+
+    html.checkbox("negate_hosts", negate_hosts, label = 
+                 _("<b>Negate:</b> make Rule apply for <b>all but</b> the above hosts"))
     html.write("</div>")
     html.help(_("You can enter a number of explicit host names that rule should or should "
                  "not apply to here. Leave this option disabled if you want the rule to "
@@ -9914,9 +9880,9 @@ def mode_edit_rule(phase):
             checked = html.get_checkbox("explicit_services")
             if checked == None: # read from rule itself
                 checked = len(item_list) == 0 or item_list[0] != ""
-            div_id = "itemlist"
-            html.checkbox("explicit_services", checked, onclick="valuespec_toggle_option(this, %r)" % div_id)
-            html.write(" " + _("Specify explicit values"))
+            div_id = "item_list"
+            html.checkbox("explicit_services", checked, onclick="valuespec_toggle_option(this, %r)" % div_id,
+                         label = _("Specify explicit values"))
             html.write('<div id="%s" style="display: %s; padding: 0px;">' % (
                 div_id, not checked and "none" or ""))
             itemenum = rulespec["itemenum"]
@@ -9925,25 +9891,11 @@ def mode_edit_rule(phase):
                 itemspec = ListChoice(choices = itemenum, columns = 3)
                 itemspec.render_input("item", value)
             else:
-                html.write("<table class=itemlist>")
-                num_cols = 3
-                for nr in range(config.wato_num_itemspecs):
-                    x = nr % num_cols
-                    if x == 0:
-                        html.write("<tr>")
-                    html.write("<td>")
-                    item = nr < len(item_list) and item_list[nr] or ""
-                    html.text_input("item_%d" % nr, item)
-                    html.write("</td>")
-                    if x == num_cols - 1:
-                        html.write("</tr>")
-                while x < num_cols - 1:
-                    html.write("<td></td>")
-                    if x == num_cols - 1:
-                        html.write("</tr>")
-                    x += 1
-                html.write("</table>")
-                html.write(_("The entries here are regular expressions to match the beginning. "
+                ListOfStrings(
+                    orientation = "horizontal",
+                    valuespec = TextAscii(size = 30)).render_input("itemlist", item_list)
+
+                html.help(_("The entries here are regular expressions to match the beginning. "
                              "Add a <tt>$</tt> for an exact match. An arbitrary substring is matched "
                              "with <tt>.*</tt>"))
                 html.write("</div>")

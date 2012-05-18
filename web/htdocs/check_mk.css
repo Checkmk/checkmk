@@ -137,6 +137,28 @@ select.icon option {
 input.buttonlink {
     padding: 1px;
     font-size: 8pt;
+} 
+
+input.button {
+    border-color: #86A9B8 #22404D #22414D #86A9B8;
+    border-radius: 5px 5px 5px 5px;
+    border-style: solid;
+    border-width: 1px;
+    box-shadow: 0 0 1.5px #000000;
+    margin-left: 5px;
+    padding: 2px 6px;
+    background-color: #497E95;
+    color: white;
+}
+
+input.button:hover {
+    background-color: #6da1b8;
+    text-decoration: none;
+}
+input.button:active {
+    border-color:  #22414d #86a9b8 #86a9b8 #22404d;
+    background-color: #3b6678;
+    box-shadow: inset 0 0 0.5px #444444;
 }
 
 a.button {
@@ -442,6 +464,9 @@ div.listofstrings > div {
 div.listofstrings.horizontal > div {
     float: left;
     margin-right: 2px;
+}
+div.listofstrings.horizontal > div:last-child {
+    float: none;
 }
 
 table.listchoice {

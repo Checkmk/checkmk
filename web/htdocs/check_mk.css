@@ -48,12 +48,26 @@ div {
     padding: 0;
 }
 
+h3 {
+    color: white;
+    margin-bottom: 2px;
+    font-size: 12pt;
+    font-weight: normal;
+}
+
 img {
     border-style: none;
 }
 
 th {
     white-space: nowrap;
+}
+
+body {
+    color: white;
+}
+td {
+    color: black;
 }
 
 /* Default font size for the complete Multisite GUI */
@@ -337,18 +351,10 @@ div.warning {
 |           \ \ / / _` | | | | |/ _ \___ \| '_ \ / _ \/ __|                |
 |            \ V / (_| | | |_| |  __/___) | |_) |  __/ (__                 |
 |             \_/ \__,_|_|\__,_|\___|____/| .__/ \___|\___|                |
-|                                         |_|                              | +--------------------------------------------------------------------------+
+|                                         |_|                              | 
++--------------------------------------------------------------------------+
 | Styles needed for HTML code produced by valuespec.py.                    |
 '-------------------------------------------------------------------------*/
-
-td.content ul.help {
-    color: white;
-    font-style: italic;
-    font-size: 8pt;
-    padding: 0;
-    margin: 0 0 5px 0;
-    /* width: 300px; */
-}
 
 table.dictionary {
 }

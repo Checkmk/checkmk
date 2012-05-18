@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults, livestatus, htmllib, time, os, re, pprint, time, copy
-import weblib, traceback
+import weblib, traceback, forms
 from lib import *
 from pagefunctions import *
 
@@ -93,6 +93,18 @@ def toggle_button(id, isopen, text, addclasses=[]):
                'onmouseover="this.style.cursor=\'pointer\'; hover_tab(this);" '
                'onmouseout="this.style.cursor=\'auto\'; unhover_tab(this);">%s</td>\n' % (cssclass, id, text))
 
+def show_filter(f):
+    if not f.visible():
+        html.write('<div style="display:none">')
+        f.display()
+        html.write('</div>')
+    else:
+        html.write('<div class="floatfilter %s">' % (f.double_height() and "double" or "single"))
+        html.write('<div class=legend>%s</div>' % f.title)
+        html.write('<div class=content>')
+        f.display()
+        html.write("</div>")
+        html.write("</div>")
 
 def show_filter_form(is_open, filters):
     # Table muss einen anderen Namen, als das Formular
@@ -102,36 +114,21 @@ def show_filter_form(is_open, filters):
     html.write("<div class=whiteborder>\n")
     html.write("<table><tr><td>")
 
-    ### HIRN html.write("<table class=\"form\">\n")
-
     # sort filters according to title
     s = [(f.sort_index, f.title, f) for f in filters if f.available()]
     s.sort()
     col = 0
 
-    def show_filter(title, f):
-        if not f.visible():
-            html.write('<div style="display:none">')
-            f.display()
-            html.write('</div>')
-        else:
-            html.write('<div class="floatfilter %s">' % (f.double_height() and "double" or "single"))
-            html.write('<div class=legend>%s</div>' % title)
-            html.write('<div class=content>')
-            f.display()
-            html.write("</div>")
-            html.write("</div>")
-
     # First show filters with double height (due to better floating
     # layout)
     for sort_index, title, f in s:
         if f.double_height():
-            show_filter(title, f)
+            show_filter(f)
 
     # Now single height filters
     for sort_index, title, f in s:
         if not f.double_height():
-            show_filter(title, f)
+            show_filter(f)
 
     html.write("</td></tr><tr><td>")
     html.button("search", _("Search"), "submit")
@@ -337,10 +334,10 @@ def page_edit_views(msg=None):
     if not config.may("edit_views"):
         raise MKAuthException(_("You are not allowed to edit views."))
 
-    html.header(_("Edit views"), stylesheets=["pages","views"])
-    html.write(_("<p>Here you can create and edit customizable <b>views</b>. A view "
+    html.header(_("Edit views"), stylesheets=["pages","views","status"])
+    html.help(_("Here you can create and edit customizable <b>views</b>. A view "
             "displays monitoring status or log data by combining filters, sortings, "
-            "groupings and other aspects.</p>"))
+            "groupings and other aspects."))
 
     if msg: # called from page_edit_view() after saving
         html.message(msg)
@@ -355,71 +352,84 @@ def page_edit_views(msg=None):
         html.reload_sidebar();
 
     html.begin_form("create_view", "edit_view.py")
-    html.write("<table class=views>\n")
 
-    html.write("<tr><td class=legend colspan=8>")
-    html.button("create", _("Create new view"))
+    html.button("create", _("Create New View"))
     html.write(_(" for datasource: "))
     html.sorted_select("datasource", [ (k, v["title"]) for k, v in multisite_datasources.items() ])
 
+    html.write('<h3>' + _("Existing Views") + '</h3>')
+    html.write('<table class=data>')
+    html.write("<tr>")
+    html.write("<th>%s</th>" % _("Actions"))
+    html.write("<th>%s</th>" % _("Link Name"))
+    html.write("<th>%s</th>" % _("Title"))
+    html.write("<th>%s</th>" % _("Datasource"))
+    html.write("<th>%s</th>" % _("Owner"))
+    html.write("<th>%s</th>" % _("Public"))
+    html.write("<th>%s</th>" % _("Hidden"))
+    html.write("</tr>")
+
+
     keys_sorted = html.multisite_views.keys()
-    def cmp_viewkey(a, b):
-        if a[0] == b[0]:
-            if a[1] < b[1]:
-                return -1
-            else:
-                return 1
-        elif a[0] == "":
-            return 1
-        elif b[0] == "":
-            return -1
-        elif a[0] < b[0]:
-            return -1
-        else:
-            return 1
-    keys_sorted.sort(cmp_viewkey)
-    first = True
+    keys_sorted.sort(cmp = lambda a,b: -cmp(a[0],b[0]) or cmp(a[1], b[1]))
+
+    odd = "odd"
     for (owner, viewname) in keys_sorted:
         if owner == "" and not config.may("view.%s" % viewname):
             continue
         view = html.multisite_views[(owner, viewname)]
-        if owner == config.user_id or (view["public"] and (owner == "" or config.user_may(owner, "publish_views"))):
-            if first:
-                html.write("<tr><th>"+_('Name')+"</th><th>"+_('Title / Description')+"</th>"
-                           "<th>"+_('Owner')+"</th><th>"+_('Public')+"</th><th>"+_('Hidden')+"</th>"
-                           "<th>"+_('Mobile')+"</th>"
-                           "<th>"+_('Datasource')+"</th><th></th></tr>\n")
-                first = False
-            html.write("<tr><td class=legend>%s</td>" % viewname)
-            html.write("<td class=content>")
-            if not view["hidden"]:
-                html.write("<a href=\"view.py?view_name=%s\">%s</a>" % (viewname, view["title"]))
+        if owner == config.user_id or (view["public"] \
+            and (owner == "" or config.user_may(owner, "publish_views"))):
+
+            odd = odd == "odd" and "even" or "odd"
+            html.write('<tr class="data %s0">' % odd)
+
+            # Actions
+            html.write('<td class=buttons>')
+
+            # Edit
+            if owner == config.user_id:
+                html.icon_button("edit_view.py?load_view=%s" % viewname, _("Edit"), "edit") 
+
+            # Clone / Customize
+            buttontext = not owner and _("Customize this view") \
+                         or _("Create a clone of this view") 
+            backurl = htmllib.urlencode(html.makeuri([]))
+            clone_url = "edit_view.py?clonefrom=%s&load_view=%s&back=%s" \
+                        % (owner, viewname, backurl)
+            html.icon_button(clone_url, buttontext, "clone")
+
+            # Delete
+            if owner == config.user_id:
+                html.icon_button("edit_views.py?_delete=%s" 
+                                 % viewname, _("Delete this view!"), "delete")
+            html.write('</td>')
+
+            # Link name
+            html.write('<td>%s</td>' % viewname) 
+
+            # Title
+            html.write('<td>')
+            if not view["hidden"]: 
+                html.write("<a href=\"view.py?view_name=%s\">%s</a>"
+                           % (viewname, view["title"]))
             else:
                 html.write(view["title"])
-            description = view.get("description")
-            if description:
-                html.write("<br><div class=viewdescription>%s</div>" % htmllib.attrencode(description))
+            html.help(view.get("description"))
             html.write("</td>")
+
+            # Datasource
+            html.write("<td class=content>%s</td>\n" % view["datasource"])
+
+            # Owner
             if owner == "":
                 ownertxt = "<i>builtin</i>"
             else:
                 ownertxt = owner
-            html.write("<td class=content>%s</td>" % ownertxt)
-            html.write("<td class=content>%s</td>" % (view["public"] and "yes" or "no"))
-            html.write("<td class=content>%s</td>" % (view["hidden"] and "yes" or "no"))
-            html.write("<td class=content>%s</td>" % (view.get("mobile") and "yes" or "no"))
-            html.write("<td class=content>%s</td><td class=buttons>\n" % view["datasource"])
-            if owner == "":
-                buttontext = _("Customize")
-            else:
-                buttontext = _("Clone")
-            backurl = htmllib.urlencode(html.makeuri([]))
-            url = "edit_view.py?clonefrom=%s&load_view=%s&back=%s" % (owner, viewname, backurl)
-            html.buttonlink(url, buttontext, True)
-            if owner == config.user_id:
-                html.buttonlink("edit_view.py?load_view=%s" % viewname, _("Edit"))
-                html.buttonlink("edit_views.py?_delete=%s" % viewname, _("Delete!"), True)
-            html.write("</td></tr>\n")
+            html.write("<td>%s</td>" % ownertxt)
+            html.write("<td>%s</td>" % (view["public"] and "yes" or "no"))
+            html.write("<td>%s</td>" % (view["hidden"] and "yes" or "no"))
+            html.write("</tr>\n")
 
     html.write("</table>\n")
     html.end_form()
@@ -512,166 +522,137 @@ def page_edit_view():
             html.write("<div class=error>%s</div>\n" % e.message)
             html.add_user_error(e.varname, e.message)
 
-    html.header(_("Edit view"), stylesheets=["pages", "views", "status"])
-    html.write("<table class=navi><tr>\n")
-    html.write('<td class="left open">%s</td>\n' % _('Edit'))
-    html.write("<td class=gap></td>\n")
-    html.write('<td class="right" onmouseover="hover_tab(this);" onmouseout="unhover_tab(this);">')
-    html.write('<a href="edit_views.py">%s</a>\n' % _('All views'))
-    html.write('</td>\n')
-    html.write("</tr><tr class=form><td class=form colspan=3><div class=whiteborder>\n")
+    html.header(_("Edit view"), stylesheets=["pages", "views", "status", "bi"])
+    html.begin_context_buttons()
+    back_url = html.var("back", "")
+    if back_url:
+        html.context_button(_("Back"), back_url, "back")
+    html.context_button(_("All Views"), "edit_views.py")
+    html.end_context_buttons()
 
     html.begin_form("view")
-    html.hidden_field("back", html.var("back", ""))
+    html.hidden_field("back", back_url)
     html.hidden_field("old_name", viewname) # safe old name in case user changes it
-    html.write("<table class=\"form\">\n")
 
-    html.write("<tr><td class=legend>" + _("Title") + "</td><td class=content>")
+    forms.header(_("Basic Settings"))
+
+    forms.section(_("Title"))
     html.text_input("view_title", size=50)
-    html.write("</td></tr>\n")
 
-    html.write("<tr><td class=legend>" + _("Linkname") + "</td><td class=content>")
+    forms.section(_("Link Name"))
     html.text_input("view_name", size=12)
-    html.write("</td></tr>\n")
+    html.help(_("The link name will be used in URLs that point to a view, e.g. "
+                "<tt>view.py?view_name=<b>myview</b></tt>. It will also be used "
+                "internally for identifying a view. You can create several views "
+                "with the same title but only one per link name. If you create a "
+                "view that has the same link name as a builtin view, then your "
+                "view will override that (shadowing it)."))
 
-    html.write("<tr><td class=legend>" + _("Topic") + "</td><td class=content>")
-    html.text_input("view_topic", "Other", size=50)
-    html.write("</td></tr>\n")
-
-    html.write("<tr><td class=legend>" + _("Buttontext") + "</td><td class=content>")
-    html.text_input("view_linktitle", size=26)
-    html.write("&nbsp; Icon: ")
-    html.text_input("view_icon", size=14)
-    html.write("</td></tr>\n")
-
-    html.write("<tr><td class=legend>" + _("Description") + "</td><td class=content>")
-    html.text_area("view_description", "", rows=4, cols=50)
-    html.write("</td></tr>\n")
-
-    # Larger sections are foldable and closed by default
-    html.javascript("""
-function toggle_section(nr, oImg) {
-  var oContent = document.getElementById("ed_"   + nr);
-  toggle_tree_state('vieweditor', nr, oContent);
-  if (oContent.style.display == "none")
-    toggle_folding(oImg, 0);
-  else
-    toggle_folding(oImg, 1);
-  oContent = null;
-}
-""")
-
-
-    def section_header(sid, title, help=None):
-        html.write("<tr><td class=legend>")
-        html.write("<img src=images/tree_00.png id=img_%d onclick=\"toggle_section('%d', this)\" class=toggleheader "
-                   "title=\"Click to open this section\" "
-                   "onmouseover=\"this.className='toggleheader hover';\" "
-                   "onmouseout=\"this.className='toggleheader';\"><b>%s</b> " % (sid, sid, title))
-        # We cannot show the help yet, since the hiding will not hide it
-        # if help:
-        #    html.write("<br><i class=help>%s</i>" % help)
-        html.write("</td><td class=content>")
-        html.write("<div id=\"ed_%d\" style=\"display: none;\">" % sid)
-
-    def section_footer(sid):
-        html.write("</div></td></tr>\n")
-        # Open the section when the user had it open last time
-        states = weblib.get_tree_states('vieweditor')
-        if states.get(str(sid), 'off') == 'on':
-            html.javascript('toggle_section("%d", document.getElementById("img_%s"))' % (sid, sid))
-
-    # Properties
-    sid = 2
-    section_header(sid, _("Properties"))
+    forms.section(_("Datasource"))
     datasource_title = multisite_datasources[datasourcename]["title"]
     html.write("%s: <b>%s</b><br>\n" % (_('Datasource'), datasource_title))
     html.hidden_field("datasource", datasourcename)
-    if config.may("publish_views"):
-        html.checkbox("public")
-        html.write(" " + _('make this view available for all users'))
-        html.write("<br />\n")
-    html.checkbox("hidden")
-    html.write(" " + _('hide this view from the sidebar'))
-    html.write("<br />\n")
-    html.checkbox("mobile")
-    html.write(" " + _('show this view in the Mobile GUI'))
-    html.write("<br />\n")
-    html.checkbox("mustsearch")
-    html.write(" " + _('show data only on search') + "<br>")
-    html.checkbox("hidebutton")
-    html.write(" " + _('do not show a context button to this view'))
-    section_footer(sid)
+    html.help(_("The datasource of a view cannot be changed."))
 
-    # [3] Filters
-    sid = 3
-    section_header(sid, _("Filters"), help=
-        _("Please configure, which of the available filters will be used in this "
-          "view. <br><br><b>Show to user</b>: the user will be able to see and modify these "
-          "filters. You can define default values. <br><br><b>Hardcode</b>: these filters " 
-          "will be in effect but not visible to the user. <br><br><b>Use for linking</b>: "
-          "These filters (usually site, host name and service) are needed for views "
-          "that have a context (such as a host or a service). Such views can be used "
-          "as targets for columns. Whenever the context is available, a button to that "
-          "view will be displayed in related views."))
-    html.write("<table class=filters>")
-    html.write("<tr><th>")
-    html.write(_("Filter"))
-    html.write("</th><th>"+_('Usage')+"</th><th>"+_('Hardcoded Settings')+"</th></tr>\n")
+    forms.section(_("Topic"))
+    html.text_input("view_topic", "Other", size=50)
+    html.help(_("The view will be sorted under this topic in the Views snapin. "))
+
+    forms.section(_("Buttontext"))
+    html.text_input("view_linktitle", size=26)
+    html.write("&nbsp; Icon: ")
+    html.text_input("view_icon", size=14)
+    html.help(_("If you define a text here, then it will be used in "
+                "buttons to the view instead of of view title."))
+
+    forms.section(_("Description"))
+    html.text_area("view_description", "", rows=4, cols=50)
+
+    forms.section(_("Visibility"))
+    if config.may("publish_views"):
+        html.checkbox("public", label=_('make this view available for all users'))
+        html.write("<br />\n")
+    html.checkbox("hidden", label=_('hide this view from the sidebar'))
+    html.write("<br />\n")
+    html.checkbox("mobile", label=_('show this view in the Mobile GUI'))
+    html.write("<br />\n")
+    html.checkbox("mustsearch", label=_('show data only on search') + "<br>")
+    html.checkbox("hidebutton", label=_('do not show a context button to this view'))
+    
+    forms.section(_("Browser reload"))
+    html.write(_("Reload page every "))
+    html.number_input("browser_reload", 0)
+    html.write(_(" seconds"))
+    html.help(_("Leave this empty or at 0 for now automatic reload."))
+
+    forms.section(_("Audible alarm sounds"))
+    html.checkbox("play_sounds", False, label=_("Play alarm sounds"))
+    html.help(_("If enabled and the view shows at least one host or service problem "
+                "the a sound will be played by the browser. Please consult the %s for details.")
+                % docu_link("multisite_sounds", _("documentation")))
+
+    forms.header(_("Filters"), isopen=False)
     allowed_filters = filters_allowed_for_datasource(datasourcename)
     # sort filters according to title
     s = [(filt.sort_index, filt.title, fname, filt)
           for fname, filt in allowed_filters.items()
           if fname not in ubiquitary_filters ]
     s.sort()
+    shown_help = False
     for sortindex, title, fname, filt in s:
-        html.write("<tr>")
-        html.write("<td class=filtertitle>%s" % title)
-        html.help(filt.comment)
-        html.write("</td>")
-        html.write("<td class=usage>")
+        forms.section(title)
+        if not shown_help:
+            html.help(_("Please configure, which of the available filters will be used in this "
+                  "view. <br><br><b>Show to user</b>: the user will be able to see and modify these "
+                  "filters. You can define default values. <br><br><b>Hardcode</b>: these filters " 
+                  "will be in effect but not visible to the user. <br><br><b>Use for linking</b>: "
+                  "These filters (usually site, host name and service) are needed for views "
+                  "that have a context (such as a host or a service). Such views can be used "
+                  "as targets for columns. Whenever the context is available, a button to that "
+                  "view will be displayed in related views."))
+            show_help = True
+
+        html.write('<div class="filtersetting %s">' % html.var("filter_%s" % fname, "off"))
         html.sorted_select("filter_%s" % fname,
                 [("off", _("Don't use")),
                 ("show", _("Show to user")),
                 ("hide", _("Use for linking")),
                 ("hard", _("Hardcode"))],
-                "", "filter_activation(this.id)")
-        html.write("</td><td class=widget>")
-        filt.display()
-        html.write("</td>")
-        html.write("</tr>\n")
-    html.write("</table>\n")
+                "", "filter_activation(this)")
+        show_filter(filt)
+        html.write('</div>')
+        html.help(filt.comment)
+    
     # Set all filters into the proper display state
     html.write("<script language=\"javascript\">\n")
     for fname, filt in allowed_filters.items():
         if fname not in ubiquitary_filters:
             html.write("filter_activation(\"filter_%s\");\n" % fname)
     html.write("</script>\n")
-    section_footer(sid)
+   
 
-    def sorter_selection(id, title, var_prefix, maxnum, data):
+    def sorter_selection(title, var_prefix, maxnum, data):
         allowed = allowed_for_datasource(data, datasourcename)
-        section_header(id, title)
+        forms.header(title, isopen=False)
         # make sure, at least 3 selection boxes are free for new columns
         while html.has_var("%s%d" % (var_prefix, maxnum - 2)):
             maxnum += 1
         for n in range(1, maxnum + 1):
+            forms.section(_("%d. Column") % n)
             collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
-            html.write("%02d " % n)
             html.sorted_select("%s%d" % (var_prefix, n), collist)
             html.write(" ")
             html.select("%sorder_%d" % (var_prefix, n), [("asc", _("Ascending")), ("dsc", _("Descending"))])
-            html.write("<br>")
-        section_footer(id)
-
-    def column_selection(id, title, var_prefix, data):
+            
+    def column_selection(title, var_prefix, data):
         allowed = allowed_for_datasource(data, datasourcename)
 
         joined = []
         if var_prefix == 'col_':
             joined  = allowed_for_joined_datasource(data, datasourcename)
 
-        section_header(id, title)
+        forms.header(title, isopen=False)
+        forms.section(_("Group columns"))
         # make sure, at least 3 selection boxes are free for new columns
         maxnum = 1
         while html.has_var("%s%d" % (var_prefix, maxnum)):
@@ -680,35 +661,26 @@ function toggle_section(nr, oImg) {
         for n in range(1, maxnum):
             view_edit_column(n, var_prefix, maxnum, allowed, joined)
         html.write('</div>')
-        html.jsbutton('add_column', _("Add Column"), "add_view_column(%d, '%s', '%s')" % (id, datasourcename, var_prefix))
-        section_footer(id)
+        html.jsbutton('add_column', _("Add Column"), "add_view_column(this, '%s', '%s')" % (datasourcename, var_prefix))
 
     # [4] Sorting
-    sorter_selection(4, _("Sorting"), "sort_", max_sort_columns, multisite_sorters)
+    sorter_selection(_("Sorting"), "sort_", max_sort_columns, multisite_sorters)
 
     # [5] Grouping
-    column_selection(5, _("Group by"), "group_", multisite_painters)
+    column_selection(_("Grouping"), "group_", multisite_painters)
 
     # [6] Columns (painters)
-    column_selection(6, _("Columns"), "col_", multisite_painters)
+    column_selection(_("Columns"), "col_", multisite_painters)
 
     # [7] Layout
-    sid = 7
-    section_header(sid, _("Layout"))
-    html.write("<table border=0>")
-    html.write("<tr><td>%s:</td><td>" % _('Basic Layout'))
+    forms.header(_("Layout"), isopen=False)
+    forms.section(_("Basic Layout"))
     html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() if not v.get("hide")])
-    html.write("</td></tr>\n")
-    html.write("<tr><td>%s:</td><td>" % _('Number of columns'))
+    
+    forms.section(_("Number of Columns"))
     html.number_input("num_columns", 1)
-    html.write("</td></tr>\n")
-    html.write("<tr><td>%s:</td><td>" % _('Automatic reload (0 or empty for none)'))
-    html.number_input("browser_reload", 0)
-    html.write("</td></tr>\n")
-    html.write("<tr><td>%s %s:</td><td>" % (_('Play'), docu_link("multisite_sounds", _("alarm sounds"))))
-    html.checkbox("play_sounds", False)
-    html.write("</td></tr>\n")
-    html.write("<tr><td>%s:</td><td>" % _('Column headers'))
+    
+    forms.section(_('Column headers'))
 
     # 1.1.11i3: Fix deprecated column_header option: perpage -> pergroup
     # This should be cleaned up someday
@@ -720,30 +692,26 @@ function toggle_section(nr, oImg) {
         ("pergroup", _("once per group")), 
         ("repeat",   _("repeat every 20'th row")) ])
 
-    html.write("</td><tr>\n")
-    html.write("<tr><td>%s:</td><td>" % _('Sortable by user'))
-    html.checkbox('user_sortable', True)
-    html.write("</td><tr>\n")
-    html.write("<tr><td>%s:</td><td>" % _('Show check boxes'))
-    html.checkbox('show_checkboxes', False)
-    html.write("</td><tr>\n")
-    html.write("</table>\n")
-    section_footer(sid)
+    forms.section(_('Sortable by user'))
+    html.checkbox('user_sortable', True, label=_("Make view sortable by user"))
 
+    forms.section(_('Checkboxes'))
+    html.checkbox('show_checkboxes', False, label=_("Show checkboxes for selecting rows")) 
+    forms.end()
 
-    html.write('<tr><td class="legend button" colspan=2>')
     html.button("save", _("Save"))
     html.write(" ")
     html.button("try", _("Try out"))
-    html.write("</td></tr></table>\n")
     html.end_form()
 
-    html.write("</div></td></tr></table>\n")
+    # html.write("</div></td></tr></table>\n")
 
     if html.has_var("try") or html.has_var("search"):
         html.set_var("search", "on")
         if view:
             show_view(view, False, False)
+            return # avoid second html footer
+
 
     html.footer()
 

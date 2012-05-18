@@ -283,20 +283,12 @@ function makeuri(addvars) {
 // GUI styling
 // ----------------------------------------------------------------------------
 
-function filter_activation(oid)
+function filter_activation(oSelect)
 {
-    var selectobject = document.getElementById(oid);
-    if (!selectobject) {
-        alert("Could not find element " + oid + "!");
-        return;
-    }
-    var usage = selectobject.value;
-    var oTd = selectobject.parentNode.parentNode.childNodes[2];
-    var pTd = selectobject.parentNode;
-    pTd.setAttribute("className", "usage" + usage);
-    pTd.setAttribute("class",     "usage" + usage);
-    oTd.setAttribute("class",     "widget" + usage);
-    oTd.setAttribute("className", "widget" + usage);
+    var usage = oSelect.value;
+    var oDiv = oSelect.parentNode;
+    oDiv.setAttribute("className", "filtersetting " + usage);
+    oDiv.setAttribute("class", "filtersetting " + usage);
 
     var disabled = usage != "hard" && usage != "show";
     for (var i in oTd.childNodes) {
@@ -308,7 +300,7 @@ function filter_activation(oid)
 
     p = null;
     oTd = null;
-    selectobject = null;
+    oSelect = null;
 }
 
 function toggle_tab(linkobject, oid)
@@ -525,7 +517,7 @@ function column_swap_ids(o1, o2) {
     o2 = null;
 }
 
-function add_view_column_handler(id, code) {
+function add_view_column_handler(oContainer, code) {
     // Can not simply add the new code to the innerHTML code of the target
     // container. So first creating a temporary container and fetch the
     // just created DOM node of the editor fields to add it to the real
@@ -534,7 +526,6 @@ function add_view_column_handler(id, code) {
     tmpContainer.innerHTML = code;
     var oNewEditor = tmpContainer.lastChild;
 
-    var oContainer = document.getElementById('ed_'+id).firstChild;
     oContainer.appendChild(oNewEditor);
     tmpContainer = null;
 
@@ -543,10 +534,12 @@ function add_view_column_handler(id, code) {
     oContainer = null;
 }
 
-function add_view_column(id, datasourcename, prefix) {
+function add_view_column(oButton, datasourcename, prefix) {
+    oTd = oButton.parentNode;
+    oContainer = oTd.firstChild;
     get_url('get_edit_column.py?ds=' + datasourcename + '&pre=' + prefix
-          + '&num=' + (document.getElementById('ed_'+id).firstChild.childNodes.length + 1),
-            add_view_column_handler, id);
+          + '&num=' + (oContainer.childNodes.length + 1),
+            add_view_column_handler, oContainer);
 }
 
 function delete_view_column(oImg) {

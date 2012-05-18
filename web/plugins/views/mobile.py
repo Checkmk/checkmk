@@ -337,8 +337,7 @@ multisite_builtin_views.update({
         ],
         'show_filters': [],
         'sorters': [],
-        'linktitle': _('Host status'),
-        'title': '',
+        'title': _('Host status'),
     }),
 
     # Search hosts

@@ -441,13 +441,6 @@ td.legend {
     width: 150px;
 }
 
-td.content i, td.legend i, td.content i a, td.legend i a, i.help, i.help a {
-    /* font-size: 8pt; */
-    font-style: italic;
-    color: #fff;
-    font-weight: normal;
-}
-
 input.tab#results, input.tabactive#results { background-color: #fe6; }
 
 /* input elements in forms */
@@ -505,7 +498,7 @@ table.nform {
     border-style: solid;
 }
 
-table.nform tr.heading {
+table.nform tr.heading td {
     color: white;
 }
 table.nform tr.heading > td {
@@ -641,4 +634,10 @@ div.help {
     padding: 5px;
     font-weight: normal;
     text-align: left;
+    color: black;
 }
+
+table.data div.help {
+    box-shadow: 0 0 3px #000;
+}
+

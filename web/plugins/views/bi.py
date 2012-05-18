@@ -541,6 +541,9 @@ class BIServiceFilter(Filter):
     def __init__(self):
         Filter.__init__(self, "aggr_service", _("Affected by service"), "aggr", ["site", "host", "service"], [])
 
+    def double_height(self):
+        return True
+
     def display(self):
         html.write(_("Host") + ": ")
         html.text_input("host")

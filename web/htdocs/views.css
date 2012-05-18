@@ -191,13 +191,14 @@ div.floatfilter .legend {
 }
 
 div.floatfilter .content {
-    width: 321px;
+    width: 326px;
     height: 23px;
     margin-top: 0px;
     margin-left: 0px;
     vertical-align: middle;
     display: table-cell;
     padding-left: 1px;
+    text-align: center;
 }
 div.floatfilter.double .content {
     height: 72px;
@@ -391,58 +392,19 @@ table.data.single td.perfometer div.title {
 | Styles used while editing a view in the view editor                      |
 '-------------------------------------------------------------------------*/
 
-table.view {
-    width: 100%;
-    border-collapse: collapse;
-    empty-cells: show;
+div.filtersetting > select {
+    float: left;
+    margin-right: 10px;
 }
-div.viewdescription {
-    color: #274750;
-    font-size: 7pt;
-}
-/* Table of filters in edit view page */
-table.filters {
-    border-collapse: collapse;
-    empty-cells: show;
-    margin-bottom: 6px;
-    margin-left: 3px;
-    width: 100%;
-}
-table.filters td.filtertitle {
-    width: 300px;
-}
+div.filtersetting.show > select { border: 3px solid #ff4; }
+div.filtersetting.hide > select { border: 3px solid #f8f; }
+div.filtersetting.off > select { border: 3px solid #444; }
+div.filtersetting.hard > select { border: 3px solid #45f; }
 
-table.filters td {
-    border-style: none;
-    border-bottom: 1px dotted #fff;
-    vertical-align: middle;
-    height: 36px;
-    padding: 4px 8px;
-}
-
-table.filters th {
-    text-align: left;
-    padding-bottom: 3px;
-    padding-left: 8px;
-    font-weight: normal;
-    color: #fff;
-    border-bottom: 1px solid #fff;
-}
-
-table.filters td.widgetoff *,
-table.filters td.widgethide * {
+div.filtersetting.off > div, div.filtersetting.hide > div { 
     display: none;
 }
 
-table.filters td.usageshow select { border: 3px solid #ff4; }
-table.filters td.usagehide select { border: 3px solid #f8f; }
-table.filters td.usageoff select { border: 3px solid #888; }
-table.filters td.usagehard select { border: 3px solid #45f; }
-
-table.filters td.title {
-    padding-right: 1em;
-    width: 300px;
-}
 
 /* The column editor is part of the view editor */
 div.columneditor {

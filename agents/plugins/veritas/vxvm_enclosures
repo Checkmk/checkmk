@@ -11,5 +11,5 @@
 
 if type vxdmpadm > /dev/null ; then
     echo '<<<vxvm_enclosures>>>'
-    vxdmpadm listenclosure all | grep -v -w -e ^[dD]isk -e ^ENCLR_NAME -e \^=
+    vxdmpadm listenclosure all | grep -v -w -e ^[dD]isk -e ^other_disks -e ^ENCLR_NAME -e \^=
 fi

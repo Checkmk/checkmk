@@ -8349,7 +8349,8 @@ def mode_hosttags(phase):
                        "<th>" + _("Demonstration") + "</th>"
                        "</tr>")
             odd = "even"
-            for nr, (tag_id, title, choices) in enumerate(hosttags):
+            for nr, entry in enumerate(hosttags):
+                tag_id, title, choices = entry[:3] # forth: dependency information
                 odd = odd == "odd" and "even" or "odd"
                 html.write('<tr class="data %s0">' % odd)
                 edit_url     = make_link([("mode", "edit_hosttag"), ("edit", tag_id)])
@@ -8530,7 +8531,8 @@ def mode_edit_hosttag(phase):
     title = ""
     choices = []
     if not new:
-        for id, tit, ch in hosttags:
+        for entry in hosttags:
+            id, tit, ch = entry[:3]
             if id == tag_id:
                 title = tit
                 choices = ch

@@ -503,7 +503,7 @@ table.nform tr.heading td {
 }
 table.nform tr.heading > td {
     border-radius: 5px 5px 0px 0px;
-    background-image: url("images/white_10percent.png");
+    background-image: url("images/white_20percent.png");
     background-repeat: repeat;
     height: 20px;
     vertical-align: middle;

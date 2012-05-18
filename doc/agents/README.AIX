@@ -1,58 +1,89 @@
 
 
 # Install the Agent
+To install the agent, simply copy it to a location where it can be executed.
+With inetd, this should be something in the basic system search path like /usr/bin.
 cp /tmp/check_mk_agent.aix /usr/bin/check_mk_agent
 
 # Agent Config
-Change the defaults from
+Inside the Agent you'll find two config settings, which need to be changed from the 
+defaults to a value that is OK on your system.
+Edit /usr/bin/check_mk_agent and change
 export MK_LIBDIR="/to/be/changed"
 export MK_CONFDIR="/to/be/changed"
 
-to 
+for example to these paths.
 export MK_CONFDIR="/etc/check_mk"
 export MK_LIBDIR="/usr/lib/check_mk_agent"
+MK_CONFDIR can hold configuration files and MK_LIBDIR is used for the plugins.
 
-And create the directories
+Then create the directories accordingly:
 mkdir /etc/check_mk /usr/lib/check_mk_agent /usr/lib/check_mk_agent/local /usr/lib/check_mk_agent/plugins
 
-
 # INETD SETUP
-/etc/services
-check_mk        6556/tcp
+In most setups, the agent is called via inetd. To setup inetd for check_mk on AIX,
+start by adding the TCP service name to /etc/services:
+edit it and add the following entry:
+check_mk        6556/tcp    # Check_MK monitoring agent
 
+
+# Access security
+Besides SSH which works anywhere, on AIX you have the choices of using inetd with or 
+without TCPWrappers. TCPWrappers are not available on AIX by default.
+In the following you find instructions for setting up with and without TCPWrappers.
+Note - in our testing, tcpwrappers only delivered correct example every 2nd call, so
+it's not recommended to use.
+The third way is the AIX internal firewall, which is called 'genfilt'.
+
+Inetd is configured with the file /etc/inetd.conf. Add the service to it with correct path.
 #        WITHOUT TCPWRAPPERS
-/etc/inetd.conf
 check_mk        stream  tcp     nowait  root    /usr/bin/check_mk_agent
 
+
+Then enable the service using:
+# Restart inetd
+refresh -s inetd
+
+Alternatively, 
 #        WITH TCPWRAPPERS
-or, if your system has TCPWrappers
+edit /etc/inetd.conf to point to the tcpd daemon.
 check_mk        stream  tcp     nowait  root    /path/to/tcpd /usr/bin/check_mk_agent
-Note - in our testing, tcpwrappers only delivered correct example every 2nd call.
-One might be able to use genfilt as an alternate firewall
 
-and add an allow entry in /etc/hosts.allow:
+
+and add an allow entry in /etc/hosts.allow that restricts the agent access.
 check_mk: nagioshost, ip_of_nagios_host, 127.0.0.1
-
 
 # Restart inetd
 refresh -s inetd
 
 
 
-# Extra FEATURES
-If you wish to have more stats,
-there's 3 ways:
-a)
-you need to get a hold of the utilities for perfstat from 
-http://www.ibm.com/developerworks/wikis/display/WikiPtype/ryo
-Do not use the binaries since they do an eternal loop. Instead download 
-adapt.c, cpu.c, memory.c and net.c and remove the loops.
 
-This code seems to be not GPLed, so we cannot include it.
+
+
+
+# Extra FEATURES
+If you wish to have more stats from the server, there are 3 ways.
+Sort order is by ease of configuration:
+
+a)
+enable SNMP and install the correct bundles for host stats
+This will probably just work[tm] so this is what we recommend you to try first.
+AIX can do SNMPv3 since 5.2 so you can secure the access if needed. See:
+http://pic.dhe.ibm.com/infocenter/aix/v6r1/index.jsp?topic=%2Fcom.ibm.aix.commadmn%2Fdoc%2Fcommadmndita%2Fsnmpv3_intro.htm
 
 
 b)
-enable SNMP and install the correct bundles for host stats
+you need to get a hold of the utilities for perfstat from 
+http://www.ibm.com/developerworks/wikis/display/WikiPtype/ryo
+Do not use the binaries since they do an eternal loop. Instead download 
+adapt.c, cpu.c, memory.c and net.c and remove the loops. 
+
+This code seems to be not GPLed, so we cannot include it. In fact it seems to have no
+license at all.
 
 
-c) compile install libstatgrab (recommended!)
+c) compile install libstatgrab
+Compiling libstatgrab should be OK on 5.3, on 6.x we ran into bigger issues.
+There was some changes in AIX6.1 to make it easier to code for and libstatgrab 
+still has an definition to do complex stuff, if the OS is AIX.

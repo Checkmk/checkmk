@@ -21,6 +21,7 @@
     * New layout and new internal implementation of input forms
     * New layout for view overview and view editor
     * Split up host search in two distinct pages
+    * FIX: audit log was not shown if no entry for today existed
     * FIX: fix parent scan on single site installations
     * FIX: fix folder visibility permission handling
     * FIX: honor folder-permissions when creating, deleting 

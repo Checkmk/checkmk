@@ -3654,11 +3654,20 @@ def fmt_time(t):
     return time.strftime('%H:%M:%S', time.localtime(t))
 
 def paged_log(log):
-    start = html.var('start', None)
+    start = int(html.var('start', 0))
     if not start:
-        start = time.time()
-    start_time, end_time = get_timerange(int(start))
+        start = int(time.time())
 
+    while True:
+        log_today, times = paged_log_from(log, start)
+        if len(log) == 0 or len(log_today) > 0:
+            return log_today, times
+        else: # No entries today, but log not empty -> go back in time
+            start -= 24 * 3600
+
+
+def paged_log_from(log, start):
+    start_time, end_time = get_timerange(start)
     previous_log_time = None
     next_log_time     = None
     first_log_index   = None
@@ -3693,23 +3702,22 @@ def paged_log(log):
 def display_paged((start_time, end_time, previous_log_time, next_log_time)):
     html.write('<div class=paged_controls>')
 
-    html.write(' <b>%s</b> ' % (_('%s to %s') % (fmt_date(start_time),
-                                                 fmt_date(end_time))))
+    if next_log_time is not None:
+        html.icon_button(html.makeuri([('start', get_timerange(int(time.time()))[0])]),
+                        _("Most recent events"), "start")
+        html.icon_button(html.makeuri([('start', next_log_time)]),
+                        '%s: %s' % (_("Newer events"), fmt_date(next_log_time)),
+                        "back")
+    else:
+        html.empty_icon_button()
+        html.empty_icon_button()
 
     if previous_log_time is not None:
-        html.buttonlink(html.makeuri([('start', previous_log_time)]), _("<"),
-                        title = '%s: %s' % (_("Older events"), fmt_date(previous_log_time)))
+        html.icon_button(html.makeuri([('start', previous_log_time)]), 
+                        '%s: %s' % (_("Older events"), fmt_date(previous_log_time)),
+                        "forth")
     else:
-        html.buttonlink(html.makeuri([]), _("<"), disabled = True)
-
-    html.buttonlink(html.makeuri([('start', get_timerange(int(time.time()))[0])]), _("o"),
-                    title = _("Todays events"))
-
-    if next_log_time is not None:
-        html.buttonlink(html.makeuri([('start', next_log_time)]), _(">"),
-                        title = '%s: %s' % (_("Newer events"), fmt_date(next_log_time)))
-    else:
-        html.buttonlink(html.makeuri([]), _(">"), disabled = True)
+        html.empty_icon_button()
     html.write('</div>')
 
 
@@ -3722,10 +3730,12 @@ def render_audit_log(log, what, with_filename = False):
         empty_msg = _("No pending changes, monitoring server is up to date.")
 
     if len(log) == 0:
-        htmlcode += "<div class=info>%s</div>" % empty_msg
+        html.write("<div class=info>%s</div>" % empty_msg)
         return
+
     elif what == 'audit':
-        htmlcode += "<h3>" + _("Audit logfile") + "</h3>"
+        htmlcode += "<h3>" + _("Audit logfile for %s") % fmt_date(times[0]) + "</h3>"
+
     elif what == 'pending':
         if is_distributed():
             htmlcode += "<h3>" + _("Changes that are not activated on all sites:") + "</h3>"
@@ -3752,7 +3762,6 @@ def render_audit_log(log, what, with_filename = False):
         display_paged(times)
     else:
         html.write(htmlcode)
-        # html.show_warning(htmlcode)
 
 def export_audit_log():
     html.req.content_type = "text/csv; charset=UTF-8"

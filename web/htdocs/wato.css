@@ -186,26 +186,17 @@ Boston, MA 02110-1301 USA.
 }
 
 .wato div.inherited {
-    color: #000;
-    font-weight: bold;
+    color: #444;
+}
+.wato div.inherited a {
+    color: #444;
+}
+.wato div.inherited b {
+    color: black;
+    font-weight: normal;
 }
 .wato td.inherited {
     color: #666;
-}
-.wato div.inherited h3 {
-    margin: 0px;
-    padding: 0px;
-    font-size: 8pt;
-    color: #468;
-}
-.wato div.inherited h3 a {
-    color: #468;
-}
-.wato h3 {
-    margin-bottom: 2px;
-    color: white;
-    font-size: 13pt;
-    font-weight: normal;
 }
 
 /* host validation error */
@@ -242,10 +233,11 @@ table.validationerror img {
 
 /* Path to current folder at top of screen */
 .wato div.folderpath {
+    margin-top: -5px;
     margin-bottom: 8px;
     height: 30px;
     position: relative;
-    left: 3px;
+    left: 4px;
 }
 
 .wato div.folderpath ul {
@@ -700,16 +692,20 @@ form#form_timeperiod td.vlof_content {
 }
 
 /* page "Rulesets" */
-.wato .rulesets {
-    background-color: #eeeeee;
-    padding: 3px 5px;
-    width: 100%;
-    /* box-shadow: 0px 0px 2.5px #888; */
+.wato td.rulesets {
+    padding-left: 0px;
+}
+.wato .rulesets table.nform > tbody > tr > td.container {
+    height: auto;
+}
+div.rulesets table.nform tr.bottom td {
+    height: 5px;
 }
 
 .wato .rulesets div.ruleset {
     float: left;
-    margin-right: 20px;
+    margin-left: 10px;
+    margin-right: 10px;
 }
 
 .wato .rulesets div.ruleset div.text {
@@ -728,13 +724,11 @@ form#form_timeperiod td.vlof_content {
     white-space: nowrap;
     margin-right: 3px;
 }
-
 .wato .rulesets div.ruleset a:hover {
     text-decoration: underline;
 }
 
 .wato .rulesets div.ruleset .dots {
-    color: #888;
     overflow: hidden;
 }
 
@@ -744,6 +738,20 @@ form#form_timeperiod td.vlof_content {
     text-align: right;
 }
 
+.wato .rulesets div.ruleset a.nonzero {
+    /* font-weight: bold; */
+}
+.wato .rulesets div.ruleset a.zero {
+}
+
+.wato .rulesets div.ruleset div.rulecount.nonzero {
+    /* font-weight: bold; */
+}
+
+.wato .rulesets div.ruleset div.rulecount.zero {
+    /* color: #444; */
+}
+
 /* Page edit_ruleset */
 div.varname {
     color: white;
@@ -751,45 +759,35 @@ div.varname {
 }
 
 /* page "global settings*/
-.wato .globalvars {
-    background-color: #eeeeee;
-    padding: 3px 5px;
-    width: 100%;
+.wato div.globalvars a {
+    text-decoration: none;
+    color: black;
 }
 
-.wato .globalvars a {
-    color: black;
-    text-decoration: none;
-}
-.wato .globalvars a:hover {
+.wato div.globalvars a:hover {
     text-decoration: underline;
 }
 
-.wato .globalvars div.text {
-    width: 335px;
-    padding-right: 3px;
-    overflow: hidden;
-}
-.wato .globalvars td.left {
-    width: 339px;
-    overflow: hidden;
-    white-space: nowrap;
-}
-.wato .globalvars td.right {
-    text-align: left;
-}
-.wato .globalvars div.text .dots {
-    color: #888;
-    overflow: hidden;
-}
-.wato .globalvars td.right img.iconbutton {
-    width: auto;
-    height: auto;
-    margin-left: -3px;
+.wato div.globalvars td.content img.iconbutton {
+    width: 60px;
+    height: 16px;
 }
 
+.wato div.globalvars td.legend {
+    padding-top: 0px;
+}
 
+.wato div.globalvars td.legend {
+    width: 350px;
+}
 
+.wato div.globalvars td.legend div.title {
+    max-width: 350px;
+}
+
+.wato div.globalvars td {
+    height: 20px;
+}
 
 /* Table in page "Global variables" */
 .wato table.data.globalvars {

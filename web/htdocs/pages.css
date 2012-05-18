@@ -496,7 +496,9 @@ table.nform {
     border-radius: 5px;
     box-shadow: 0px 0px 2px #000;
     margin-bottom: 10px;
-    background-image: url("images/white_30percent.png");
+    /* background-image: url("images/white_30percent.png"); */
+    background-image: url("images/nform_background.png");
+    /* background-color: #7796a3; */
     background-repeat: repeat;
     border-color: #86A9B8 #22404D #22414D #86A9B8;
     border-width: 1px;
@@ -512,7 +514,7 @@ table.nform tr.heading > td {
     background-repeat: repeat;
     height: 20px;
     vertical-align: middle;
-    padding-left: 7px;
+    padding-left: 10px;
 }
 table.nform tr.heading > td:hover {
     background-image: url("images/white_20percent.png");
@@ -542,8 +544,8 @@ table.nform td.legend div.title.withcheckbox {
     max-width: 210px;
     margin-right: 6px;
 }
-table.nform td.legend .dots {
-    color: #367;
+table.nform .dots {
+    color: #444;
     margin-left: 5px;
 }
 table.nform td.legend div.checkbox {

@@ -4694,37 +4694,33 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
               % (attrname, active and "display: none" or ""))
 
             # in bulk mode we show inheritance only if *all* hosts inherit
+            explanation = ""
             if for_what == "bulk":
                 if num_haveit == 0:
-                    html.write("<h3>" + inherited_from + "</h3>")
+                    explanation = " (" + inherited_from + ")"
                     value = inherited_value
                 elif not unique:
-                    html.write(_("<i>This value differs between the selected hosts.</i>"))
+                    explanation = _("This value differs between the selected hosts.")
                 else:
                     value = values[0]
 
             elif for_what in [ "host", "folder" ]:
-                html.write("<h3>" + inherited_from + "</h3>")
+                explanation = " (" + inherited_from + ")"
                 value = inherited_value
 
             if for_what != "search" and not (for_what == "bulk" and not unique):
                 tdclass, content = attr.paint(value, "")
                 if not content:
-                    content = "<i>" + _("(empty)") + "</i>"
-                html.write(content)
+                    content = _("empty")
+                html.write("<b>" + content + "</b>")
 
+            html.write(explanation)
             html.write("</div>")
 
-            # html.write("</td></tr>\n")
 
         if len(topics) > 1:
-            # html.write("</table>")
-            # html.end_foldable_container() # end of topic
             if topic_is_volatile:
                 volatile_topics.append((topic or _("Basic settings")).encode('utf-8'))
-            if topic == topics[-1]:
-                pass
-                # html.write('<table class="form">')
 
     def dump_json(obj):
         return repr(obj).replace('None', 'null')
@@ -5161,13 +5157,11 @@ def mode_globalvars(phase):
 
     groupnames = g_configvar_groups.keys()
     groupnames.sort()
+    html.write('<div class=globalvars>')
     for groupname in groupnames:
-        # html.begin_foldable_container("globalvars", groupname, False, groupname, indent=False)
-        html.write("<h3>%s</h3>" % groupname)
-        html.write('<table class=globalvars>')
+        forms.header(groupname, isopen=False)
 
         for domain, varname, valuespec in g_configvar_groups[groupname]:
-            html.write('<tr>')
             if domain == "check_mk" and varname not in default_values:
                 if config.debug:
                     raise MKGeneralException("The configuration variable <tt>%s</tt> is unknown to "
@@ -5178,30 +5172,29 @@ def mode_globalvars(phase):
             defaultvalue = default_values.get(varname, valuespec.default_value())
 
             edit_url = make_link([("mode", "edit_configvar"), ("varname", varname)])
+            title = '<a href="%s">%s</a>' % (edit_url, valuespec.title())
+            forms.section(title)
 
-            html.write('<td class=left><div class=text>'
-                       '<a href="%s">%s</a><span class=dots>%s</span></div></td>' % (edit_url, valuespec.title(),
-                '.' * 100))
             toggle_url = make_action_link([("mode", "globalvars"), 
                     ("_action", "toggle"), ("_varname", varname)])
-            html.write('<td class=right>')
             if varname in current_settings:
                 if isinstance(valuespec, Checkbox):
                     html.icon_button(toggle_url, _("Immediately toggle this setting"), 
-                        "snapin_greyswitch_" + (current_settings[varname] and "on" or "off"))
+                        # "snapin_greyswitch_" + (current_settings[varname] and "on" or "off"))
+                        "snapin_switch_" + (current_settings[varname] and "on" or "off"))
                 else:
                     html.write('<a href="%s">%s</a>' % 
                         (edit_url, valuespec.value_to_text(current_settings[varname])))
             else:
                 if isinstance(valuespec, Checkbox):
                     html.icon_button(toggle_url, _("Immediately toggle this setting"),
-                    "snapin_greyswitch_" + (defaultvalue and "on" or "off"))
+                    # "snapin_greyswitch_" + (defaultvalue and "on" or "off"))
+                    "snapin_switch_" + (defaultvalue and "on" or "off"))
                 else:
                     html.write('<a href="%s">%s</a>' % 
                         (edit_url, valuespec.value_to_text(defaultvalue)))
-            html.write("</td>")
-            html.write('</tr>')
-        html.write("</table>")
+    forms.end()
+    html.write('</div>')
 
 
 def mode_edit_configvar(phase):
@@ -9100,6 +9093,7 @@ def mode_rulesets(phase):
     do_folding = len(groupnames) > 1
 
     something_shown = False
+    html.write('<div class=rulesets>')
     # Loop over all ruleset groups
     for groupname in groupnames:
         # Show information about a ruleset
@@ -9132,18 +9126,12 @@ def mode_rulesets(phase):
                 continue
 
             if not title_shown:
-                if something_shown:
-                    html.write("</td></tr></table>")
-                    # if do_folding:
-                    #     html.end_foldable_container()
                 if '/' in groupname:
                     subgroupname = groupname.split("/", 1)[1]
                 else:
                     subgroupname = title
-                # if do_folding:
-                #    html.begin_foldable_container("rulesets", groupname, False, subgroupname, indent=False)
-                html.write("<h3>%s</h3>" % subgroupname)
-                html.write('<table class="rulesets"><tr><td>')
+                forms.header(subgroupname)
+                forms.container()
                 title_shown = True
 
             something_shown = True
@@ -9154,26 +9142,28 @@ def mode_rulesets(phase):
             view_url = make_link(url_vars)
 
             html.write('<div class=ruleset><div class=text>')
-            html.write('<a class=title><a href="%s">%s</a>' % (view_url, rulespec["title"]))
+            html.write('<a class="%s" href="%s">%s</a>' % 
+                      (num_rules and "nonzero" or "zero", view_url, rulespec["title"]))
             html.write('<span class=dots>%s</span></div>' % ("." * 100))
             if num_local_rules:
                 if only_host:
                     title = _("There are %d rules explicitely listing this host." % num_local_rules)
                 else:
                     title = _("There are %d rules defined in the current folder." % num_local_rules)
-            html.write('<div class=rulecount title="%s">%d</div>' % (title, num_rules))
+            html.write('<div class="rulecount %s" title="%s">%d</div>' % 
+                    (num_rules and "nonzero" or "zero", title, num_rules))
             html.write('</div>')
 
     if something_shown:
-        html.write("</td></tr></table>")
-        # if do_folding:
-        #    html.end_foldable_container()
+        forms.end()
 
     else:
         if only_host:
             html.write("<div class=info>" + _("There are no rules with an exception for the host <b>%s</b>.") % only_host + "</div>")
         else:
             html.write("<div class=info>" + _("There are no rules defined in this folder.") + "</div>")
+
+    html.write('</div>')
 
 def create_new_rule_form(rulespec, hostname = None, item = None):
     html.begin_form("new_rule")

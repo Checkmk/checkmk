@@ -207,6 +207,31 @@ table.filtertime td {
     vertical-align: middle;
 }
 
+div.columnswitcher {
+    width: 38px;
+    height: 23px;
+    float: left;
+    background-image: url("images/columnswitcher.png");
+    background-repeat: no-repeat;
+    background-position: 1px -1px;
+    margin: 0px;
+    text-align: center;
+    vertical-align: middle;
+    padding-top: 2px;
+    padding-right: 0px;
+    position: relative;
+    top: 2px;
+    left: -5px;
+    color: white;
+}
+div.columnswitcher:hover {
+    background-image: url("images/columnswitcher_hi.png");
+}
+div.columnswitcher:active {
+    background-image: url("images/columnswitcher_down.png");
+}
+    
+
 /*-------------------------------------------------------------------------.
 |                _                            _                            |
 |               | |    __ _ _   _  ___  _   _| |_ ___                      |

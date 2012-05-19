@@ -419,9 +419,10 @@ class html:
                    "class=button%s value=\"%s\" />" % (varname, varname, onclick, style, text))
 
     def begin_context_buttons(self):
-        self.context_button_hidden = False
-        self.write("<table class=contextlinks><tr><td>\n")
-        self.context_buttons_open = True
+        if not self.context_buttons_open:
+            self.context_button_hidden = False
+            self.write("<table class=contextlinks><tr><td>\n")
+            self.context_buttons_open = True
 
     def end_context_buttons(self):
         if self.context_buttons_open:
@@ -838,8 +839,8 @@ class html:
         if self.req.header_sent:
             self.bottom_focuscode()
             corner_text = ""
-            if self.browser_reload:
-                corner_text += _("refresh: %d secs") % self.browser_reload
+            # if self.browser_reload:
+            #     corner_text += _("refresh: %s secs") % self.browser_reload
             if self.render_headfoot:
                 si = self.render_status_icons()
                 self.write("<table class=footer><tr>"

@@ -1355,47 +1355,47 @@ def render_view(view, rows, datasource, group_painters, painters,
             html.write("<td class=minigap></td>\n")
 
         # Buttons for view options
-        if 'O' in display_options:
-            # Link for selecting/deselecting all rows
-            if command_form and layout["checkboxes"]:
-                if show_checkboxes:
-                    addclass = " selected"
-                    title = _("Hide check boxes")
-                    uri = html.makeuri([("show_checkboxes", "")])
-                else:
-                    addclass = ""
-                    title = _("Show check boxes for selecting specific items for the commands")
-                    uri = html.makeuri([("show_checkboxes", "on")])
-                html.write('<td class="left w30%s"><a href="%s" title="%s">%s</a></td>\n' %
-                           (addclass, uri, title, _('X')))
-                html.write("<td class=minigap></td>\n")
+        # if 'O' in display_options:
+            # # Link for selecting/deselecting all rows
+            # if command_form and layout["checkboxes"]:
+            #     if show_checkboxes:
+            #         addclass = " selected"
+            #         title = _("Hide check boxes")
+            #         uri = html.makeuri([("show_checkboxes", "")])
+            #     else:
+            #         addclass = ""
+            #         title = _("Show check boxes for selecting specific items for the commands")
+            #         uri = html.makeuri([("show_checkboxes", "on")])
+            #     html.write('<td class="left w30%s"><a href="%s" title="%s">%s</a></td>\n' %
+            #                (addclass, uri, title, _('X')))
+            #     html.write("<td class=minigap></td>\n")
 
-            if config.may("view_option_columns"):
-                for col in config.view_option_columns:
-                    uri = html.makeuri([("num_columns", col)])
-                    if col == num_columns:
-                        addclass = " selected"
-                    else:
-                        addclass = ""
-                    html.write('<td class="left w30%s"><a href="%s" title="%s">%s</a></td>\n' %
-                                          (addclass, uri, _('%d column layout') % col, col))
-                    html.write("<td class=minigap></td>\n")
+            # if config.may("view_option_columns"):
+            #     for col in config.view_option_columns:
+            #         uri = html.makeuri([("num_columns", col)])
+            #         if col == num_columns:
+            #             addclass = " selected"
+            #         else:
+            #             addclass = ""
+            #         html.write('<td class="left w30%s"><a href="%s" title="%s">%s</a></td>\n' %
+            #                               (addclass, uri, _('%d column layout') % col, col))
+            #         html.write("<td class=minigap></td>\n")
 
-            if 'R' in display_options and config.may("view_option_refresh"):
-                for ref in config.view_option_refreshes:
-                    uri = html.makeuri([("refresh", ref)])
-                    if ref == browser_reload or (not ref and not browser_reload):
-                        addclass = " selected"
-                    else:
-                        addclass = ""
-                    if ref:
-                        reftext = "%d s" % ref
-                    else:
-                        reftext = "&#8734;"
-                    html.write('<td class="left w40%s" id="button-refresh-%s">'
-                               '<a href="%s" title="%s">%s</a></td>\n' %
-                               (addclass, ref, uri, _('refresh every %d seconds') % ref, reftext))
-                    html.write("<td class=minigap></td>\n")
+            # if 'R' in display_options and config.may("view_option_refresh"):
+            #     for ref in config.view_option_refreshes:
+            #         uri = html.makeuri([("refresh", ref)])
+            #         if ref == browser_reload or (not ref and not browser_reload):
+            #             addclass = " selected"
+            #         else:
+            #             addclass = ""
+            #         if ref:
+            #             reftext = "%d s" % ref
+            #         else:
+            #             reftext = "&#8734;"
+            #         html.write('<td class="left w40%s" id="button-refresh-%s">'
+            #                    '<a href="%s" title="%s">%s</a></td>\n' %
+            #                    (addclass, ref, uri, _('refresh every %d seconds') % ref, reftext))
+            #         html.write("<td class=minigap></td>\n")
 
         html.write("<td class=gap>&nbsp;</td>\n")
 
@@ -1490,35 +1490,38 @@ def view_options(viewname):
     v = vo.get(viewname, {})
     must_save = False
 
-    # Refresh rate
-    if config.may("view_option_refresh"):
-        if html.has_var("refresh"):
-            try:
-                v["refresh"] = int(html.var("refresh"))
-            except:
-                v["refresh"] = None
-            must_save = True
-    elif "refresh" in v:
-        del v["refresh"]
+    # NEW IMPLEMENTION: Options for columns, refresh and
+    # checkboxes are switched via JS/AJAX, no longer via
+    # the URL.
+    # # Refresh rate
+    # if config.may("view_option_refresh"):
+    #     if html.has_var("refresh"):
+    #         try:
+    #             v["refresh"] = int(html.var("refresh"))
+    #         except:
+    #             v["refresh"] = None
+    #         must_save = True
+    # elif "refresh" in v:
+    #     del v["refresh"]
 
-    # Number of columns in layout
-    if config.may("view_option_columns"):
-        if html.has_var("num_columns"):
-            try:
-                v["num_columns"] = max(1, int(html.var("num_columns")))
-            except:
-                v["num_columns"] = 1
-            must_save = True
-    elif "num_columns" in v:
-        del v["num_columns"]
+    # # Number of columns in layout
+    # if config.may("view_option_columns"):
+    #     if html.has_var("num_columns"):
+    #         try:
+    #             v["num_columns"] = max(1, int(html.var("num_columns")))
+    #         except:
+    #             v["num_columns"] = 1
+    #         must_save = True
+    # elif "num_columns" in v:
+    #     del v["num_columns"]
 
-    # Show checkboxes for commands
-    if config.may("act"):
-        if html.has_var("show_checkboxes"):
-            v["show_checkboxes"] = html.var("show_checkboxes", "") != ""
-            must_save = True
-    elif "show_checkboxes" in v:
-        del v["show_checkboxes"]
+    # # Show checkboxes for commands
+    # if config.may("act"):
+    #     if html.has_var("show_checkboxes"):
+    #         v["show_checkboxes"] = html.var("show_checkboxes", "") != ""
+    #         must_save = True
+    # elif "show_checkboxes" in v:
+    #     del v["show_checkboxes"]
 
     if config.may("painter_options"):
         for on, opt in multisite_painter_options.items():
@@ -1543,6 +1546,7 @@ def view_options(viewname):
         vo[viewname] = v
         config.save_user_file("viewoptions", vo)
     return v
+
 
 def do_table_join(master_ds, master_rows, master_filters, join_painters, join_columns, only_sites):
     join_table, join_master_column = master_ds["join"]
@@ -1628,11 +1632,53 @@ def view_linktitle(view):
     else:
         return t
 
+def view_option_switcher(view, option, choices):
+    vo = view_options(view["name"])
+    value = vo.get(option, view.get(option, choices[0][0]))
+    title = dict(choices).get(value, value)
+    html.begin_context_buttons() # just to be sure
+    html.write('<div class=columnswitcher '
+       'onmouseover="this.style.cursor=\'pointer\';" '
+       'onmouseout="this.style.cursor=\'auto\';" '
+       'onclick="view_switch_option(this, \'%s\', \'%s\', %r);">%s</div>' % (
+        view["name"], option, choices, title))
+
+# Will be called when the user presses the upper button, in order
+# to persist the new setting - and to make it active before the
+# browser reload of the DIV containing the actual status data is done.
+def ajax_set_viewoption():
+    view_name = html.var("view_name")
+    option = html.var("option")
+    value = html.var("value")
+    value = { 'true' : True, 'false' : False }.get(value, value)
+    if type(value) == str and value[0].isdigit():
+        try:
+            value = int(value)
+        except:
+            pass
+
+    vo = config.load_user_file("viewoptions", {})
+    vo.setdefault(view_name, {})
+    vo[view_name][option] = value
+    config.save_user_file("viewoptions", vo)
 
 def show_context_links(thisview, active_filters, display_options):
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
     execute_hooks('buttons-begin')
+
+    if 'O' in display_options:
+        if config.may("view_option_columns"):
+            choices = [ [x, "| %s |" % x] for x in config.view_option_columns ]
+            view_option_switcher(thisview, "num_columns", choices)
+
+    if 'R' in display_options and config.may("view_option_refresh"):
+        choices = [ [x, {0:_("off")}.get(x,str(x)) + (x and "s" or "")] for x in config.view_option_refreshes ]
+        view_option_switcher(thisview, "refresh", choices) 
+
+    if config.may('act'):
+        choices = [ [ False, 'O' ], [ True, 'X' ] ]
+        view_option_switcher(thisview, "show_checkboxes", choices) 
 
     # WATO: If we have a host context, then show button to WATO, if permissions allow this
     if html.has_var("host") \

@@ -26,6 +26,10 @@
 // general function
 // ----------------------------------------------------------------------------
 
+// Make JS understand Python source code
+var True = true;
+var False = false;
+
 // Some browsers don't support indexOf on arrays. This implements the
 // missing method
 if (!Array.prototype.indexOf)
@@ -1615,4 +1619,26 @@ function help_switch(how) {
         helpdivs[i].style.display = how ? "" : "none";
     }
     get_url("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
+}
+
+/* Switch number of view columns */
+gColumnSwitchTimeout = null;
+function view_switch_option(oDiv, viewname, option, choices) {
+    var current_title = oDiv.innerHTML;
+    var new_choice = choices[0]; // in case not contained in choices
+    for (var c=0; c<choices.length; c++) {
+        choice = choices[c];
+        val = choice[0];
+        title = choice[1];
+        if (current_title == title) {
+            var new_choice = choices[(c+1) % choices.length];
+            break;
+        }
+    }
+    oDiv.innerHTML = "" + new_choice[1];
+    get_url("ajax_set_viewoption.py?view_name=" + viewname + 
+            "&option=" + option + "&value=" + new_choice[0]);
+    if (option == "refresh")
+        setReload(new_choice[0]);
+    handleReload('');
 }

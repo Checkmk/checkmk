@@ -1905,10 +1905,11 @@ def mode_edithost(phase, new, cluster):
 
         # host name
         forms.header(_("General Properties"))
-        forms.section(_("Hostname"))
         if hostname and mode == "edit":
+            forms.section(_("Hostname"), simple=True)
             html.write(hostname)
         else:
+            forms.section(_("Hostname"))
             html.text_input("host")
             html.set_focus("host")
 
@@ -5187,7 +5188,13 @@ def mode_globalvars(phase):
 
             edit_url = make_link([("mode", "edit_configvar"), ("varname", varname)])
             title = '<a href="%s">%s</a>' % (edit_url, valuespec.title())
-            forms.section(title)
+
+            if varname in current_settings:
+                to_text = valuespec.value_to_text(current_settings[varname])
+            else:
+                to_text = valuespec.value_to_text(defaultvalue)
+            simple = isinstance(valuespec, Checkbox) or "\n" not in to_text
+            forms.section(title, simple=simple)
 
             toggle_url = make_action_link([("mode", "globalvars"), 
                     ("_action", "toggle"), ("_varname", varname)])
@@ -5197,16 +5204,14 @@ def mode_globalvars(phase):
                         # "snapin_greyswitch_" + (current_settings[varname] and "on" or "off"))
                         "snapin_switch_" + (current_settings[varname] and "on" or "off"))
                 else:
-                    html.write('<a href="%s">%s</a>' % 
-                        (edit_url, valuespec.value_to_text(current_settings[varname])))
+                    html.write('<a href="%s">%s</a>' % (edit_url, to_text))
             else:
                 if isinstance(valuespec, Checkbox):
                     html.icon_button(toggle_url, _("Immediately toggle this setting"),
                     # "snapin_greyswitch_" + (defaultvalue and "on" or "off"))
                     "snapin_switch_" + (defaultvalue and "on" or "off"))
                 else:
-                    html.write('<a href="%s">%s</a>' % 
-                        (edit_url, valuespec.value_to_text(defaultvalue)))
+                    html.write('<a href="%s">%s</a>' % (edit_url, to_text))
     forms.end()
     html.write('</div>')
 
@@ -5496,7 +5501,7 @@ def mode_edit_group(phase, what):
 
     html.begin_form("group")
     forms.header(_("Properties"))
-    forms.section(_("Name"))
+    forms.section(_("Name"), simple = not new)
     html.help(_("The name of the group is used as an internal key. It cannot be "
                  "changed later. It is also visible in the status GUI."))
     if new:
@@ -5885,7 +5890,7 @@ def mode_edit_timeperiod(phase):
     forms.header(_("Timeperiod"))
 
     # Name
-    forms.section(_("Internal name"))
+    forms.section(_("Internal name"), simple = not new)
     if new:
         html.text_input("name")
         html.set_focus("name")
@@ -6399,7 +6404,7 @@ def mode_edit_site(phase):
 
     # ID
     forms.header(_("Basic settings"))
-    forms.section(_("Site ID"))
+    forms.section(_("Site ID"), simple = not new)
     if new:
         html.text_input("id", siteid)
         html.set_focus("id")
@@ -6414,7 +6419,7 @@ def mode_edit_site(phase):
     html.help(_("An alias or description of the site"))
 
     # Disabled
-    forms.section(_("Disable"))
+    forms.section(_("Disable"), simple=True)
     html.checkbox("disabled", site.get("disabled", False), label = _("Disable this connection"))
     html.help( _("If you disable a connection, then it will not be shown in the "
                  "status display and no replication will be done."))
@@ -6445,7 +6450,7 @@ def mode_edit_site(phase):
                  "performed."))
 
     # Persistent connections
-    forms.section(_("Persistent Connection"))
+    forms.section(_("Persistent Connection"), simple=True)
     html.checkbox("persist", site.get("persist", False), label=_("Use persistent connections"))
     html.help(_("If you enable persistent connections then Multisite will try to keep open "
               "the connection to the remote sites. This brings a great speed up in high-latency "
@@ -6514,7 +6519,7 @@ def mode_edit_site(phase):
                    "that URL will be fetched by the Apache server of the local "
                    "site itself, whilst the URL-Prefix is used by your local Browser."))
 
-    forms.section(_("SSL"))
+    forms.section(_("SSL"), simple=True)
     html.checkbox("insecure", site.get("insecure", False), label = _('Ignore SSL certificate errors'))
     html.help( _('This might be needed to make the synchronization accept problems with '
                  'SSL certificates when using an SSL secured connection.'))
@@ -7514,7 +7519,7 @@ def mode_edit_user(phase):
     forms.header(_("Identity"))
 
     # ID
-    forms.section(_("Username"))
+    forms.section(_("Username"), simple = not new)
     if new:
         html.text_input("userid", userid)
         html.set_focus("userid")
@@ -7570,7 +7575,7 @@ def mode_edit_user(phase):
                 "a webservice without any further configuration."))
 
     # Locking
-    forms.section(_("Disable password"))
+    forms.section(_("Disable password"), simple=True)
     html.checkbox("locked", user.get("locked", False), label = _("disable the login to this account"))
     html.help(_("Disabling the password will prevent a user from logging in while "
                  "retaining the original password. Notifications are not affected "
@@ -7617,7 +7622,7 @@ def mode_edit_user(phase):
 
     forms.header(_("Notifications"), isopen=False)
 
-    forms.section(_("Enabling"))
+    forms.section(_("Enabling"), simple=True)
     html.checkbox("notifications_enabled", user.get("notifications_enabled", True), 
          label = _("enable notifications"))
     html.help(_("Notifications are sent out "
@@ -8078,7 +8083,7 @@ def mode_edit_role(phase):
 
     # ID
     forms.header(_("Basic Properties"))
-    forms.section(_("Internal ID"))
+    forms.section(_("Internal ID"), simple = "builtin" in role)
     if role.get("builtin"):
         html.write("%s (%s)" % (id, _("builtin role")))
         html.hidden_field("id", id)
@@ -10257,7 +10262,7 @@ def page_user_profile():
     html.write('<div class=wato>')
     
     forms.header(_("Personal Settings"))
-    forms.section(_("Name"))
+    forms.section(_("Name"), simple=True)
     html.write(config.user_id)
 
     if config.may('edit_profile'):

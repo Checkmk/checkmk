@@ -776,9 +776,9 @@ div.varname {
     max-width: 350px;
 }
 
-.wato div.globalvars td {
+/*.wato div.globalvars td {
     height: 20px;
-}
+}*/
 
 /* Table in page "Global variables" */
 .wato table.data.globalvars {

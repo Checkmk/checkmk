@@ -518,15 +518,24 @@ table.nform > tbody > tr > td {
    height: 27px;
 }
 
+table.nform > tbody > tr > td.simple {
+   vertical-align: top;
+   height: 18px;
+}
+
 table.nform td.legend {
     text-align: left;
     /* font-weight: bold; */
     width: 240px;
     padding-right: 8px;
     vertical-align: top;
-    padding-top: 11px;
+    padding-top: 8px;
     padding-left: 10px;
 }
+table.nform td.legend.simple {
+    padding-top: 5px;
+}
+
 table.nform td.legend div.title {
     float: left;
     overflow: hidden;
@@ -548,6 +557,10 @@ table.nform td.legend div.checkbox {
 table.nform td.content {
     padding-left: 10px;
     padding-right: 10px;
+    padding-bottom: 10px;
+}
+table.nform td.content.simple {
+    padding-bottom: 0px;
 }
 
 table.nform td.buttons {
@@ -558,7 +571,7 @@ table.nform tr.top td {
 }
 
 table.nform tr.bottom td {
-    height: 10px;
+    height: 5px;
 }
 
 /*-------------------------------------------------------------------------.

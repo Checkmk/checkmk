@@ -131,13 +131,14 @@ def container():
          (not g_section_isopen and "none" or ""))
     g_section_open = True
 
-def section(title = None, checkbox = None, id = ""): 
+def section(title = None, checkbox = None, id = "", simple=False): 
     global g_section_open
     if g_section_open:
         html.write('</td></tr>')
     if id:
         id = ' id="%s"' % id
-    html.write('<tr style="display: %s"%s><td class=legend>' % (not g_section_isopen and "none" or "", id))
+    html.write('<tr style="display: %s"%s><td class="legend%s">' % 
+            (not g_section_isopen and "none" or "", id, simple and " simple" or ""))
     if title:
         html.write('<div class="title%s">%s<span class="dots">%s</span></div>' % 
                   (checkbox and " withcheckbox" or "", title, "."*100))
@@ -151,7 +152,7 @@ def section(title = None, checkbox = None, id = ""):
         html.write('</div>')
 
     html.write('</td>')
-    html.write('<td class=content>')
+    html.write('<td class="content%s">' % (simple and " simple" or ""))
     g_section_open = True
 
 def end():

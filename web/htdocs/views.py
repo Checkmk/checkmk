@@ -548,7 +548,7 @@ def page_edit_view():
                 "view that has the same link name as a builtin view, then your "
                 "view will override that (shadowing it)."))
 
-    forms.section(_("Datasource"))
+    forms.section(_("Datasource"), simple=True)
     datasource_title = multisite_datasources[datasourcename]["title"]
     html.write("%s: <b>%s</b><br>\n" % (_('Datasource'), datasource_title))
     html.hidden_field("datasource", datasourcename)
@@ -585,7 +585,7 @@ def page_edit_view():
     html.write(_(" seconds"))
     html.help(_("Leave this empty or at 0 for now automatic reload."))
 
-    forms.section(_("Audible alarm sounds"))
+    forms.section(_("Audible alarm sounds"), simple=True)
     html.checkbox("play_sounds", False, label=_("Play alarm sounds"))
     html.help(_("If enabled and the view shows at least one host or service problem "
                 "the a sound will be played by the browser. Please consult the %s for details.")
@@ -692,10 +692,10 @@ def page_edit_view():
         ("pergroup", _("once per group")), 
         ("repeat",   _("repeat every 20'th row")) ])
 
-    forms.section(_('Sortable by user'))
+    forms.section(_('Sortable by user'), simple=True)
     html.checkbox('user_sortable', True, label=_("Make view sortable by user"))
 
-    forms.section(_('Checkboxes'))
+    forms.section(_('Checkboxes'), simple=True)
     html.checkbox('show_checkboxes', False, label=_("Show checkboxes for selecting rows")) 
     forms.end()
 
@@ -1314,7 +1314,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     has_done_actions = False
 
     if show_buttons and 'B' in display_options:
-        show_context_links(view, hide_filters)
+        show_context_links(view, hide_filters, display_options)
 
     # User errors in filters
     html.show_user_errors()
@@ -1398,18 +1398,6 @@ def render_view(view, rows, datasource, group_painters, painters,
                     html.write("<td class=minigap></td>\n")
 
         html.write("<td class=gap>&nbsp;</td>\n")
-
-        # Customize/Edit view button
-        if 'E' in display_options and config.may("edit_views"):
-            backurl = htmllib.urlencode(html.makeuri([]))
-            html.write('<td class="right" onmouseover="hover_tab(this);" onmouseout="unhover_tab(this);">')
-            if view["owner"] == config.user_id:
-                html.write('<a href="edit_view.py?load_view=%s&back=%s">%s</a>\n' %
-                                                     (view["name"], backurl, _('Edit')))
-            else:
-                html.write('<a href="edit_view.py?clonefrom=%s&load_view=%s&back=%s">%s</a>\n' %
-                                                  (view["owner"], view["name"], backurl, _('Edit')))
-            html.write('</td>')
 
         html.write("</tr>")
         html.write("</table><table class=navi><tr>\n")
@@ -1641,7 +1629,7 @@ def view_linktitle(view):
         return t
 
 
-def show_context_links(thisview, active_filters):
+def show_context_links(thisview, active_filters, display_options):
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
     execute_hooks('buttons-begin')
@@ -1664,6 +1652,16 @@ def show_context_links(thisview, active_filters):
     for view, linktitle, uri, icon, buttonid in links:
         if not view.get("mobile"):
             html.context_button(linktitle, url=uri, icon=icon, id=buttonid, bestof=config.context_buttons_to_show)
+
+    # Customize/Edit view button
+    if 'E' in display_options and config.may("edit_views"):
+        backurl = htmllib.urlencode(html.makeuri([]))
+        if thisview["owner"] == config.user_id:
+            url = "edit_view.py?load_view=%s&back=%s" % (thisview["name"], backurl)
+        else:
+            url = "edit_view.py?clonefrom=%s&load_view=%s&back=%s" % \
+                  (thisview["owner"], thisview["name"], backurl)
+        html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show) 
 
     execute_hooks('buttons-end')
     html.end_context_buttons()

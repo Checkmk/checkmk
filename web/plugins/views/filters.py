@@ -393,7 +393,7 @@ class FilterTime(Filter):
             varprefix = self.name + "_" + what
             html.write("<tr><td>%s:</td>" % whatname)
             html.write("<td>")
-            html.text_input(varprefix, style="width: 120px;")
+            html.text_input(varprefix, style="width: 116px;")
             html.write("&nbsp;")
             html.select(varprefix + "_range", choices, "3600")
             html.write("</td></tr>")

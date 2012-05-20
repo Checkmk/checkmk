@@ -47,6 +47,7 @@
     * FIX: Fixed syntax error in "Single-Host Problems" view definition
     * New help button at top right of each page now toggles help texts
     * Snapin Custom Links allows to specify HTTP link target
+    * Redesign of bar with Display/Filter/Commands/X/1,2,3,4,6,8/30,60,90/Edit
 
     Mobile GUI:
     * FIX: commands can be executed again

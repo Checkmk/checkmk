@@ -307,32 +307,6 @@ function filter_activation(oSelect)
     oSelect = null;
 }
 
-function toggle_tab(linkobject, oid)
-{
-    var table = document.getElementById(oid);
-    if (table.style.display == "none") {
-        table.style.display = "";
-        linkobject.setAttribute("className", "left open");
-        linkobject.setAttribute("class", "left open");
-    }
-    else {
-        table.style.display = "none";
-        linkobject.setAttribute("className", "left closed");
-        linkobject.setAttribute("class", "left closed");
-    }
-    table = null;
-}
-
-function hover_tab(linkobject)
-{
-    linkobject.style.backgroundImage = "url(images/metanav_button_hi.png)";
-}
-
-function unhover_tab(linkobject)
-{
-    linkobject.style.backgroundImage = "url(images/metanav_button.png)";
-}
-
 // ----------------------------------------------------------------------------
 // PNP graph handling
 // ----------------------------------------------------------------------------
@@ -1621,10 +1595,41 @@ function help_switch(how) {
     get_url("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
 }
 
-/* Switch number of view columns */
+/* Switch filter, commands and painter options */
+function view_toggle_form(oButton, idForm) {
+    var oForm = document.getElementById(idForm);
+    if (oForm.style.display == "none") {
+        var display = "";
+        var down = " down";
+    }
+    else {
+        var display = "none";
+        var down = "";
+    }
+
+    // Close all other view forms
+    var alldivs = document.getElementsByClassName('view_form');
+    for (var i=0; i<alldivs.length; i++) {
+        if (alldivs[i] != oForm) {
+            alldivs[i].style.display = "none";
+        }
+    }
+    oForm.style.display = display;
+
+    // Change button state
+    var allbuttons = document.getElementsByClassName('columnswitcher');
+    for (var i=0; i<allbuttons.length; i++) {
+        if (allbuttons[i] != oButton)
+            allbuttons[i].className = "columnswitcher";
+    }
+    oButton.className = "columnswitcher" + down;
+
+}
+
+/* Switch number of view columns, refresh and checkboxes */
 gColumnSwitchTimeout = null;
 function view_switch_option(oDiv, viewname, option, choices) {
-    var current_title = oDiv.innerHTML;
+    var current_title = oDiv.firstChild.innerHTML;
     var new_choice = choices[0]; // in case not contained in choices
     for (var c=0; c<choices.length; c++) {
         choice = choices[c];
@@ -1635,8 +1640,8 @@ function view_switch_option(oDiv, viewname, option, choices) {
             break;
         }
     }
-    oDiv.innerHTML = "" + new_choice[1];
-    get_url("ajax_set_viewoption.py?view_name=" + viewname + 
+    oDiv.firstChild.innerHTML = "" + new_choice[1];
+    get_url_sync("ajax_set_viewoption.py?view_name=" + viewname + 
             "&option=" + option + "&value=" + new_choice[0]);
     if (option == "refresh")
         setReload(new_choice[0]);

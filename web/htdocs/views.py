@@ -83,15 +83,6 @@ def load_plugins():
 # Layouts
 ##################################################################################
 
-def toggle_button(id, isopen, text, addclasses=[]):
-    if isopen:
-        cssclass = "open"
-    else:
-        cssclass = "closed"
-    classes = " ".join(["navi"] + addclasses)
-    html.write('<td class="left %s" onclick="toggle_tab(this, \'%s\');" '
-               'onmouseover="this.style.cursor=\'pointer\'; hover_tab(this);" '
-               'onmouseout="this.style.cursor=\'auto\'; unhover_tab(this);">%s</td>\n' % (cssclass, id, text))
 
 def show_filter(f):
     if not f.visible():
@@ -108,11 +99,11 @@ def show_filter(f):
 
 def show_filter_form(is_open, filters):
     # Table muss einen anderen Namen, als das Formular
-    html.write("<tr class=form id=table_filter %s>\n" % (not is_open and 'style="display: none"' or '') )
-    html.write("<td>")
+    html.write('<div class="view_form" id="filter" %s>' 
+            % (not is_open and 'style="display: none"' or '') )
+
     html.begin_form("filter")
-    html.write("<div class=whiteborder>\n")
-    html.write("<table><tr><td>")
+    html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
 
     # sort filters according to title
     s = [(f.sort_index, f.title, f) for f in filters if f.available()]
@@ -138,28 +129,19 @@ def show_filter_form(is_open, filters):
     html.end_form()
 
     html.write("</div>")
-    html.write("</td></tr>\n")
 
 def show_painter_options(painter_options):
-    html.write('<tr class=form id=painter_options style="display: none">')
-    html.write("<td>")
+    html.write('<div class="view_form" id="painter_options" style="display: none">')
     html.begin_form("painteroptions")
-    html.write("<div class=whiteborder>\n")
-
-    html.write("<table class=\"form\">\n")
+    forms.header(_("Display Options"))
     for on in painter_options:
         opt = multisite_painter_options[on]
-        html.write("<tr>")
-        html.write("<td class=legend>%s</td>" % opt["title"])
-        html.write("<td class=content>")
+        forms.section(opt["title"])
         html.select(on, opt["values"], get_painter_option(on), "submit();" )
-        html.write("</td></tr>\n")
-    html.write("</table>\n")
-
+    forms.end()
     html.hidden_fields()
     html.end_form()
-    html.write("</div>")
-    html.write("</td></tr>\n")
+    html.write('</div>')
 
 
 ##################################################################################
@@ -1067,11 +1049,11 @@ def prepare_display_options():
     # H  The HTML header and body-tag (containing the tags <HTML> and <BODY>)
     # T  The title line showing the header and the logged in user
     # B  The blue context buttons that link to other views
-    # F  The tab for using filters
-    # C  The tab for using commands and all icons for commands (e.g. the reschedule icon)
+    # F  The button for using filters
+    # C  The button for using commands and all icons for commands (e.g. the reschedule icon)
     # O  The view options number of columns and refresh
-    # D  The Display tab, which contains column specific formatting settings
-    # E  The tab for editing the view
+    # D  The Display button, which contains column specific formatting settings
+    # E  The button for editing the view
     # Z  The footer line, where refresh: 30s is being displayed
     # R  The auto-refreshing in general (browser reload)
     # S  The playing of alarm sounds (on critical and warning services)
@@ -1284,7 +1266,8 @@ def show_view(view, show_heading = False, show_buttons = True,
             layout = multisite_layouts["json"]
 
     # Until now no single byte of HTML code has been output.
-    # Now let's render the view.
+    # Now let's render the view. The render_function will be 
+    # replaced by the mobile interface for an own version.
     if not render_function:
         render_function = render_view
 
@@ -1313,98 +1296,20 @@ def render_view(view, rows, datasource, group_painters, painters,
 
     has_done_actions = False
 
-    if show_buttons and 'B' in display_options:
-        show_context_links(view, hide_filters, display_options)
+    # Show the command form? Are commands possible?
+    command_form = \
+        len(rows) > 0 and \
+        should_show_command_form(display_options, datasource)
+
+    show_context_links(view, hide_filters, show_filters, display_options, painter_options, command_form)
 
     # User errors in filters
     html.show_user_errors()
 
-    # Show the command form? Are commands possible?
-    command_form = len(rows) > 0 and should_show_command_form(display_options, datasource)
-
-    need_navi = show_buttons and \
-        not html.do_actions() and (
-        'D' in display_options or
-        'F' in display_options or
-        'C' in display_options or
-        'O' in display_options or
-        'E' in display_options)
-    if need_navi:
-        html.write("<table class=navi><tr>\n")
-
-        # Painter-Options
-        if 'D' in display_options and len(painter_options) > 0 and config.may("painter_options"):
-            toggle_button("painter_options", False, _("Display"))
-            html.write("<td class=minigap></td>\n")
-
-        # Filter-button
-        if 'F' in display_options and len(show_filters) > 0:
-            filter_isopen = html.var("filled_in") != "filter" and view["mustsearch"]
-            # Show warning-icon if some filter is set
-            label = _("Filter")
-            if html.var("filled_in") == "filter":
-                label = '<img class=tabicon src="images/icon_filter_set.png"> %s' % label
-
-            toggle_button("table_filter", filter_isopen, label, ["filter"])
-            html.write("<td class=minigap></td>\n")
-
-        # Command-button, open command form if checkboxes are currently shown
-        if command_form:
-            toggle_button("table_actions", False, _("Commands"))
-            # toggle_button("table_actions", show_checkboxes, _("Commands"))
-            html.write("<td class=minigap></td>\n")
-
-        # Buttons for view options
-        # if 'O' in display_options:
-            # # Link for selecting/deselecting all rows
-            # if command_form and layout["checkboxes"]:
-            #     if show_checkboxes:
-            #         addclass = " selected"
-            #         title = _("Hide check boxes")
-            #         uri = html.makeuri([("show_checkboxes", "")])
-            #     else:
-            #         addclass = ""
-            #         title = _("Show check boxes for selecting specific items for the commands")
-            #         uri = html.makeuri([("show_checkboxes", "on")])
-            #     html.write('<td class="left w30%s"><a href="%s" title="%s">%s</a></td>\n' %
-            #                (addclass, uri, title, _('X')))
-            #     html.write("<td class=minigap></td>\n")
-
-            # if config.may("view_option_columns"):
-            #     for col in config.view_option_columns:
-            #         uri = html.makeuri([("num_columns", col)])
-            #         if col == num_columns:
-            #             addclass = " selected"
-            #         else:
-            #             addclass = ""
-            #         html.write('<td class="left w30%s"><a href="%s" title="%s">%s</a></td>\n' %
-            #                               (addclass, uri, _('%d column layout') % col, col))
-            #         html.write("<td class=minigap></td>\n")
-
-            # if 'R' in display_options and config.may("view_option_refresh"):
-            #     for ref in config.view_option_refreshes:
-            #         uri = html.makeuri([("refresh", ref)])
-            #         if ref == browser_reload or (not ref and not browser_reload):
-            #             addclass = " selected"
-            #         else:
-            #             addclass = ""
-            #         if ref:
-            #             reftext = "%d s" % ref
-            #         else:
-            #             reftext = "&#8734;"
-            #         html.write('<td class="left w40%s" id="button-refresh-%s">'
-            #                    '<a href="%s" title="%s">%s</a></td>\n' %
-            #                    (addclass, ref, uri, _('refresh every %d seconds') % ref, reftext))
-            #         html.write("<td class=minigap></td>\n")
-
-        html.write("<td class=gap>&nbsp;</td>\n")
-
-        html.write("</tr>")
-        html.write("</table><table class=navi><tr>\n")
-
-        # Filter form
-        if 'F' in display_options and len(show_filters) > 0:
-            show_filter_form(filter_isopen, show_filters)
+    # Filter form
+    filter_isopen = html.var("filled_in") != "filter" and view["mustsearch"]
+    if 'F' in display_options and len(show_filters) > 0:
+        show_filter_form(filter_isopen, show_filters)
 
     # Actions
     if command_form:
@@ -1415,31 +1320,20 @@ def render_view(view, rows, datasource, group_painters, painters,
 
         if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
             try:
-                if 'C' in display_options:
-                    html.write("<tr class=form><td class=whiteborder>")
                 # Create URI with all actions variables removed
                 backurl = html.makeuri([])
                 has_done_actions = do_actions(view, datasource["infos"][0], rows, backurl)
-                if 'C' in display_options:
-                    html.write("</td></tr>")
             except MKUserError, e:
                 html.show_error(e.message)
-                if 'C' in display_options:
-                    html.write("</td></tr>")
                 html.add_user_error(e.varname, e.message)
                 if 'C' in display_options:
                     show_command_form(True, datasource)
 
         elif 'C' in display_options: # (*not* display open, if checkboxes are currently shown)
-            # show_command_form(show_checkboxes, datasource)
             show_command_form(False, datasource)
 
-    if need_navi:
-        if 'O' in display_options and len(painter_options) > 0 and config.may("painter_options"):
-            show_painter_options(painter_options)
-
-        # Ende des Bereichs mit den Tabs
-        html.write("</table>\n") # class=navi
+    if 'O' in display_options and len(painter_options) > 0 and config.may("painter_options"):
+        show_painter_options(painter_options)
 
     # The refreshing content container
     if 'R' in display_options:
@@ -1638,9 +1532,7 @@ def view_option_switcher(view, option, choices):
     title = dict(choices).get(value, value)
     html.begin_context_buttons() # just to be sure
     html.write('<div class=columnswitcher '
-       'onmouseover="this.style.cursor=\'pointer\';" '
-       'onmouseout="this.style.cursor=\'auto\';" '
-       'onclick="view_switch_option(this, \'%s\', \'%s\', %r);">%s</div>' % (
+       'onclick="view_switch_option(this, \'%s\', \'%s\', %r);"><div>%s</div></div>' % (
         view["name"], option, choices, title))
 
 # Will be called when the user presses the upper button, in order
@@ -1662,42 +1554,83 @@ def ajax_set_viewoption():
     vo[view_name][option] = value
     config.save_user_file("viewoptions", vo)
 
-def show_context_links(thisview, active_filters, display_options):
+def empty_toggle_button():
+    html.write('<div class="empty_columnswitcher"></div>')
+
+def toggle_button(id, isopen, icon, help):
+    html.begin_context_buttons()
+    if isopen:
+        cssclass = " down"
+    else:
+        cssclass = ""
+    html.write('<div class="columnswitcher%s" title="%s" '
+               'onclick="view_toggle_form(this, \'%s\');">\n' % (cssclass, help, id))
+    html.write('<img src="images/icon_%s.png"></div>' % icon)
+
+def show_context_links(thisview, active_filters, show_filters, display_options, painter_options, command_form):
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
     execute_hooks('buttons-begin')
 
+    filter_isopen = html.var("filled_in") != "filter" and thisview["mustsearch"]
+    if 'F' in display_options:
+        if len(show_filters) > 0:
+            if html.var("filled_in") == "filter":
+                icon = "filter_set"
+                help = _("The current data is being filtered")
+            else:
+                icon = "filter"
+                help = _("Set a filter for refining the shown data")
+            toggle_button("filter", filter_isopen, icon, help)
+        else:
+            empty_toggle_button()
+
+    if 'D' in display_options:
+        if len(painter_options) > 0 and config.may("painter_options"):
+            toggle_button("painter_options", False, "painteroptions", _("Modify display options"))
+        else:
+            empty_toggle_button()
+
+    if 'C' in display_options:
+        if command_form:
+            toggle_button("commands", False, "commands", _("Execute commands on hosts, services and other objects"))
+            choices = [ [ False, 'O' ], [ True, 'X' ] ]
+            view_option_switcher(thisview, "show_checkboxes", choices) 
+        else:
+            empty_toggle_button()
+            empty_toggle_button()
+
     if 'O' in display_options:
         if config.may("view_option_columns"):
-            choices = [ [x, "| %s |" % x] for x in config.view_option_columns ]
+            choices = [ [x, "%s" % x] for x in config.view_option_columns ]
             view_option_switcher(thisview, "num_columns", choices)
+        else:
+            empty_toggle_button()
 
     if 'R' in display_options and config.may("view_option_refresh"):
-        choices = [ [x, {0:_("off")}.get(x,str(x)) + (x and "s" or "")] for x in config.view_option_refreshes ]
+        choices = [ [x, {0:_("off")}.get(x,str(x)) + (x and "" or "")] for x in config.view_option_refreshes ]
         view_option_switcher(thisview, "refresh", choices) 
 
-    if config.may('act'):
-        choices = [ [ False, 'O' ], [ True, 'X' ] ]
-        view_option_switcher(thisview, "show_checkboxes", choices) 
 
     # WATO: If we have a host context, then show button to WATO, if permissions allow this
-    if html.has_var("host") \
-       and config.wato_enabled \
-       and config.may("wato.use") \
-       and (config.may("wato.hosts") or config.may("wato.seeall")) \
-       and wato.using_wato_hosts():
-        host = html.var("host")
-        if host:
-            url = wato.api.link_to_host(host)
-        else:
-            url = wato.api.link_to_path(html.var("wato_folder", ""))
-        html.context_button(_("WATO"), url, "wato", id="wato",
-            bestof = config.context_buttons_to_show)
+    if 'B' in display_options:
+        if html.has_var("host") \
+           and config.wato_enabled \
+           and config.may("wato.use") \
+           and (config.may("wato.hosts") or config.may("wato.seeall")) \
+           and wato.using_wato_hosts():
+            host = html.var("host")
+            if host:
+                url = wato.api.link_to_host(host)
+            else:
+                url = wato.api.link_to_path(html.var("wato_folder", ""))
+            html.context_button(_("WATO"), url, "wato", id="wato",
+                bestof = config.context_buttons_to_show)
 
-    links = collect_context_links(thisview, active_filters)
-    for view, linktitle, uri, icon, buttonid in links:
-        if not view.get("mobile"):
-            html.context_button(linktitle, url=uri, icon=icon, id=buttonid, bestof=config.context_buttons_to_show)
+        links = collect_context_links(thisview, active_filters)
+        for view, linktitle, uri, icon, buttonid in links:
+            if not view.get("mobile"):
+                html.context_button(linktitle, url=uri, icon=icon, id=buttonid, bestof=config.context_buttons_to_show)
 
     # Customize/Edit view button
     if 'E' in display_options and config.may("edit_views"):
@@ -2019,27 +1952,29 @@ def show_command_form(is_open, datasource):
     # will be one of "host", "service", "command" or "downtime".
     what = datasource["infos"][0]
 
-    html.write("<tr class=form id=table_actions %s><td>" %
+    html.write('<div class="view_form" id="commands" %s>' %
                 (not is_open and 'style="display: none"' or '') )
     html.begin_form("actions", onsubmit = 'add_row_selections(this);')
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
-    html.write("<div class=whiteborder>\n")
-    html.write('<table class="form">\n')
+    # html.write('<table class="form">')
+    forms.header(_("Commands"))
 
     # Commands are defined in plugins/views/commands.py. Iterate
     # over all command definitions and render HTML input fields.
     for command in multisite_commands:
         if what in command["tables"] and config.may(command["permission"]):
-            html.write('<tr><td class=legend>%s</td>\n' % command["title"])
-            html.write('<td class=content>\n')
+            forms.section(command["title"])
+            # html.write('<tr><td class=legend>%s</td>\n' % command["title"])
+            # html.write('<td class=content>')
             command["render"]()
-            html.write('</td></tr>\n')
+            # html.write('</td></tr>')
 
-    html.write("</table></div>\n")
+    # html.write("</table>")
+    forms.end()
     html.end_form()
-    html.write("</td></tr>\n")
+    html.write("</div>")
 
 # Examine the current HTML variables in order determine, which
 # command the user has selected. The fetch ids from a data row

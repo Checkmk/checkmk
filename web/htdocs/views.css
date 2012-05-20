@@ -44,129 +44,26 @@ body.main.dashlet {
 | containing the buttons "filter", "commands", "display" and so on.        |
 '-------------------------------------------------------------------------*/
 
-table.navi {
-    margin: 0px 0px 0px 5px;
-    width: 100%;
-    border-collapse: collapse;
-    border-spacing: 0px;
-    position: relative;
-    left: -5px;
+table.filterform {
+    cell-spacing: 0px;
+    padding: 0px;
+    border-style: none;
 }
-
-table.naviform {
-    margin-bottom: 10px;
-}
-
-table.navi td.gap, table.navi td.minigap {
-    border-bottom: 1px solid #fff;
-}
-
-table.navi td.left, table.navi td.right {
-    vertical-align: middle;
-    text-align: center;
-    width: 155px;
-    height: 21px;
-    background-image: url("images/metanav_button.png");
-    background-repeat: no-repeat;
-    background-position: left;
-    color: #fff;
-    padding: 0;
-    margin: 0;
-    border: 1px dotted transparent;
-}
-
-table.navi td.left.open {
-    border-bottom: none;
-}
-
-table.navi td.left.closed, table.navi td.right, table.navi td.w30, table.navi td.w40 {
-    border-bottom: 1px solid #fff;
-}
-
-table.navi td.left.w30 {
-    width: 30px;
-    background-image: url("images/metanav_30.png");
-}
-table.navi td.left.w30.selected {
-    background-image: url("images/metanav_30_hi.png");
-}
-
-table.navi td.left.w40 {
-    width: 40px;
-    background-image: url("images/metanav_40.png");
-}
-
-table.navi td.left.w40.selected {
-    background-image: url("images/metanav_40_hi.png");
-}
-
-table.navi td.minigap {
-     width: 3px;
-}
-
-table.navi td.left a, table.navi td.right a {
-    vertical-align: middle;
-    text-align: center;
-    font-weight: normal;
-    text-decoration: none;
-    color: #fff;
-    display: block;
-}
-
-table.navi tr.form td.form {
-    margin: 0;
-    padding: 0;
-}
-
-table.navi tr.form td.whiteborder {
-    border-left: 1px solid #fff;
-    border-right: 1px solid #fff;
-    border-bottom: 1px solid #fff;
-}
-
-table.navi tr.form div.whiteborder, 
-table.navi tr.form table.whiteborder {
-    border-left: 1px solid #fff;
-    border-right: 1px solid #fff;
-    margin: 0;
-    padding: 0;
-    border-bottom: 1px solid #fff;
-    /* width: 100%; */
-}
-
-table.navi tr.form div.whiteborder {
-    padding: 5px;
-}
-
-div.whiteborder table.form {
-    margin: 0px;
-    background-image: none;
-}
-form.actions div.whiteborder table.form {
-    background-image: url("images/form_background.png"); 
-    background-repeat: repeat;
-}
-
-table.navi tr.form {
-    /* background-image: url("images/form_background.png"); 
-    background-repeat: repeat; */
-}
-table.navi div.whiteborder table.form {
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+table.filterform td {
+    padding: 0px;
 }
 
 div.floatfilter {
-    margin: 0px 3px 3px 0px;
-    width: 325px;
+    margin: 0px 4px 3px 0px;
+    width: 310px;
     height: 53px;
-    /* display: inline-block; */
     float: left;
-    border: 1px solid #458;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #acc #22404d #22414d #8ab;
     box-shadow: 0.5px 0.5px 1px #444;
-    background-image: url("images/form_background.png"); 
+    background-image: url("images/nform_background.png"); 
     background-repeat: repeat;
-    -moz-border-radius: 5px;
     border-radius: 5px;
 }
 
@@ -175,30 +72,29 @@ div.floatfilter.double {
 }
 
 div.floatfilter input[type=text] {
-    width: 311px;
+    width: 294px;
 }
 
 div.floatfilter .legend {
     color: white;
     margin-bottom: 1px;
-    width: 315px;
-    height: 20px;
+    width: 300px;
+    height: 17px;
     background-image: url("images/form_background.png"); 
     background-repeat: repeat;
     padding: 3px 5px 0px 5px;
-    -moz-border-radius: 5px 5px 0px 0px;
     border-radius: 5px 5px 0px 0px;
 }
 
 div.floatfilter .content {
-    width: 326px;
-    height: 23px;
+    width: 311px;
+    height: 30px;
     margin-top: 0px;
     margin-left: 0px;
     vertical-align: middle;
     display: table-cell;
-    padding-left: 1px;
-    text-align: center;
+    padding-left: 4px;
+    text-align: left;
 }
 div.floatfilter.double .content {
     height: 72px;
@@ -208,7 +104,7 @@ table.filtertime td {
 }
 
 div.columnswitcher {
-    width: 38px;
+    width: 26.33px;
     height: 23px;
     float: left;
     background-image: url("images/columnswitcher.png");
@@ -220,9 +116,15 @@ div.columnswitcher {
     padding-top: 2px;
     padding-right: 0px;
     position: relative;
-    top: 2px;
+    top: 1px;
     left: -5px;
     color: white;
+    cursor: pointer;
+}
+div.columnswitcher div {
+    position: relative;
+    top: 1.5px;
+    left: 0px;
 }
 div.columnswitcher:hover {
     background-image: url("images/columnswitcher_hi.png");
@@ -230,6 +132,19 @@ div.columnswitcher:hover {
 div.columnswitcher:active {
     background-image: url("images/columnswitcher_down.png");
 }
+div.columnswitcher.down {
+    background-image: url("images/columnswitcher_down.png");
+}
+div.columnswitcher img {
+    width: 18px;
+    height: 18px;
+}
+div.empty_columnswitcher {
+    width: 26px;
+    height: 23px;
+    float: left;
+}
+
     
 
 /*-------------------------------------------------------------------------.

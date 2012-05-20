@@ -288,9 +288,9 @@ div.snapin div.footnotelink {
 }
 
 div.snapin div.footnotelink a {
+    background-color: #497e95;
     border-width: 1px;
     border-style: solid;
-    background-color: #497e95;
     border-color: #86a9b8 #22404d #22414d #86a9b8;
     box-shadow: 0 0 1.5px #000;
     font-size: 7pt;

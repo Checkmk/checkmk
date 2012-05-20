@@ -261,7 +261,8 @@ table.data th.tablegap {
 }
 
 table.data tr.data td {
-    border: 1px solid #bbb;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
     padding: 2px 4px;
     height: 22px;
     vertical-align: middle;

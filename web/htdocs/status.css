@@ -225,8 +225,8 @@ tr.even1 { background-color: #ffa; }
 tr.odd2  { background-color: #fcc; }
 tr.even2 { background-color: #faa; }
 
-tr.odd3  { background-color: #fda; }
-tr.even3 { background-color: #fea; }
+tr.odd3  { background-color: #ffe0a0; }
+tr.even3 { background-color: #ffefaf; }
 
 /* Row headers in single dataset layout */
 

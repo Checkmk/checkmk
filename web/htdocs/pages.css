@@ -267,6 +267,14 @@ table.data tr.data td {
     vertical-align: middle;
 }
 
+table.data a {
+    text-decoration: none;
+    color: black;
+}
+table.data tr.data td a:hover {
+    text-decoration: underline;
+}
+
 table.data tr.data td.checkbox {
     width: 20px;
     text-align: center;

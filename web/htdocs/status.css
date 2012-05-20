@@ -286,6 +286,9 @@ table.data td.count {
     font-weight: bold;
     font-family: sans-serif;
 }
+table.data .state0 *, table.data .state2 *, table.data .state3 * {
+    color: white;
+}
 
 table.data td.number {
     text-align: right;

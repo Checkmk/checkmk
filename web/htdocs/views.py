@@ -1535,6 +1535,16 @@ def view_option_switcher(view, option, choices):
        'onclick="view_switch_option(this, \'%s\', \'%s\', %r);"><div>%s</div></div>' % (
         view["name"], option, choices, title))
 
+def view_option_toggler(view, option, title):
+    vo = view_options(view["name"])
+    value = vo.get(option, view.get(option, False))
+    html.begin_context_buttons() # just to be sure
+    html.write('<div class="columnswitcher %s"'
+       'onclick="view_switch_option(this, \'%s\', \'%s\');"><div>%s</div></div>' % (
+        value and "down" or "", view["name"], option, title))
+
+
+
 # Will be called when the user presses the upper button, in order
 # to persist the new setting - and to make it active before the
 # browser reload of the DIV containing the actual status data is done.
@@ -1594,8 +1604,7 @@ def show_context_links(thisview, active_filters, show_filters, display_options, 
     if 'C' in display_options:
         if command_form:
             toggle_button("commands", False, "commands", _("Execute commands on hosts, services and other objects"))
-            choices = [ [ False, 'O' ], [ True, 'X' ] ]
-            view_option_switcher(thisview, "show_checkboxes", choices) 
+            view_option_toggler(thisview, "show_checkboxes", "X")
         else:
             empty_toggle_button()
             empty_toggle_button()

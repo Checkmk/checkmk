@@ -1626,21 +1626,36 @@ function view_toggle_form(oButton, idForm) {
 
 }
 
-/* Switch number of view columns, refresh and checkboxes */
+/* Switch number of view columns, refresh and checkboxes. If the
+   choices are missing, we do a binary toggle. */
 gColumnSwitchTimeout = null;
 function view_switch_option(oDiv, viewname, option, choices) {
     var current_title = oDiv.firstChild.innerHTML;
-    var new_choice = choices[0]; // in case not contained in choices
-    for (var c=0; c<choices.length; c++) {
-        choice = choices[c];
-        val = choice[0];
-        title = choice[1];
-        if (current_title == title) {
-            var new_choice = choices[(c+1) % choices.length];
-            break;
+    if (choices) {
+        var new_choice = choices[0]; // in case not contained in choices
+        for (var c=0; c<choices.length; c++) {
+            choice = choices[c];
+            val = choice[0];
+            title = choice[1];
+            if (current_title == title) {
+                var new_choice = choices[(c+1) % choices.length];
+                break;
+            }
         }
+        oDiv.firstChild.innerHTML = "" + new_choice[1];
     }
-    oDiv.firstChild.innerHTML = "" + new_choice[1];
+    else {
+        if (oDiv.className.indexOf('down') != -1) {
+            new_value = false;
+            oDiv.className = 'columnswitcher'; 
+        }
+        else {
+            new_value = true;
+            oDiv.className = 'columnswitcher down';
+        }
+        new_choice = [ new_value, '' ];
+    }
+
     get_url_sync("ajax_set_viewoption.py?view_name=" + viewname + 
             "&option=" + option + "&value=" + new_choice[0]);
     if (option == "refresh")

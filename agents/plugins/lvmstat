@@ -1,0 +1,60 @@
+#!/usr/bin/python
+
+# Agent plugin to gather io statistics on lvm volumes
+# as tricky as i'd have expected.
+# it seems there is no way to ask devmapper for lvm volumes only.
+# (...major numbers were such an awesome idea)
+
+
+import os
+import subprocess
+
+
+# should be a dict
+# { "dm-1" : (vg01, lvol12)}
+devices = {}
+stats   = {}
+
+
+# grab volume groups and lv's from lvm. Otherwise we might also find devices that
+# are used by "something completely different" - i.e. multipath targets
+lvlist = subprocess.Popen(["lvs", 
+                "--separator", ";", "--noheadings", 
+                "--nosuffix", "-o", "vg_name,lv_name" ], 
+    stdout=subprocess.PIPE)
+
+
+# with this list from lvm we can now find the dm nodes of the volumes
+for line in lvlist.stdout.readlines():
+     line = line.strip()
+     vg_name, lv_name = line.split(";")
+     # Found this in dtc-xen's statistics server. Greetings to Thomas!
+     minor = os.minor(os.stat("/dev/%s/%s" % (vg_name, lv_name)).st_rdev)
+     dmdev = "dm-%s" % minor
+     devices.update( { dmdev : (vg_name, lv_name)})
+
+
+
+# then we can parse our nice new dictionary and grab the stats for each blockdev
+for dmdev in devices.keys():
+        counter      = "/sys/block/%s/stat" % dmdev
+        stats[dmdev] = file(counter).read().rstrip()
+        
+        # read the gathered stats and if they are showing no IO, then 
+        # either there was the counters disabled (and we enable them)
+        # or there was simply no IO to the LVM volume.
+
+        if sum(map(int, stats[dmdev].split()[3-8])) == 0:
+            stats_switch = "/sys/block/%s/queue/iostats" % dmdev
+            if map(int, file(stats_switch).read().rstrip()) == 0:
+                os.system("echo 1 > /sys/block/%s/queue/iostats" % dmdev)
+
+        print ("%s/%s %s") %  (devices[dmdev][0],devices[dmdev][1], stats[dmdev])
+
+
+
+
+
+# BUGS: this script uses stat and open/read/close on each lvm volume.
+# in large-scale systems this is quite inefficient.
+# OTOH systems of that scale typically use VxVM instead of LVM. 

@@ -23,6 +23,8 @@ lvlist = subprocess.Popen(["lvs",
                 "--nosuffix", "-o", "vg_name,lv_name" ], 
     stdout=subprocess.PIPE)
 
+print "<<<lnx_lvmstat>>>"
+
 
 # with this list from lvm we can now find the dm nodes of the volumes
 for line in lvlist.stdout.readlines():

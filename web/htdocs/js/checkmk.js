@@ -659,6 +659,8 @@ function setReload(secs, url) {
 }
 
 function startReloadTimer(url) {
+    if(gReloadTimer)
+        clearTimeout(gReloadTimer);
     gReloadTimer = setTimeout("handleReload('" + url + "')", Math.ceil(parseFloat(gReloadTime) * 1000));
 }
 

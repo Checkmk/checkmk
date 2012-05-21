@@ -60,6 +60,8 @@
     * New active check via WATO: check_ldap
     * printer_alerts: new configuration variable printer_alerts_text_map. Make
       'Energiesparen' on Brother printers an OK state.
+    * services: This check can now be parameterized in a way that it warn if
+      a certain service is running. WATO formalization is available.
 
     BI:
     * FIX: make rotating folding arrows black (white was not visible)

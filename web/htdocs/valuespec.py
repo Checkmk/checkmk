@@ -584,7 +584,7 @@ class ListOf(ValueSpec):
         html.write('</td><td class=vlof_content>')
         self._valuespec.render_input(
             varprefix + "_" + self._magic, 
-            self._valuespec.canonical_value())
+            self._valuespec.default_value())
         html.write('</td></tr></table>')
 
         # Actual table of currently existing entries
@@ -634,8 +634,8 @@ class ListOf(ValueSpec):
         return value
 
     def validate_datatype(self, value, varprefix):
-        if type(self) != list:
-            raise MKUserError(varprefx, _("The type must be list, but is %s") % type(value))
+        if type(value) != list:
+            raise MKUserError(varprefix, _("The type must be list, but is %r") % type(value))
         for n, v in enumerate(value):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n+1))
 
@@ -1578,7 +1578,7 @@ class Tuple(ValueSpec):
     def validate_datatype(self, value, varprefix):
         if type(value) != tuple:
             raise MKUserError(varprefix,
-            _("The datatype must be a tuple, but is %s") % type(value))
+            _("The datatype must be a tuple, but is %r") % type(value))
         if len(value) != len(self._elements):
             raise MKUserError(varprefix,
             _("The number of elements in the tuple must be exactly %d.") % len(self._elements))

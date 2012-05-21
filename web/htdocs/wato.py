@@ -9431,7 +9431,18 @@ def mode_edit_ruleset(phase):
                     img = 'nmatch'
                 html.write('<img align=absmiddle title="%s" class=icon src="images/icon_rule%s.png"> ' % (title, img))
             if rulespec["valuespec"]:
-                value_html = rulespec["valuespec"].value_to_text(value)
+                try:
+                    value_html = rulespec["valuespec"].value_to_text(value)
+                except:
+                    try:
+                        reason = ""
+                        rulespec["valuespec"].validate_datatype(value, "")
+                    except Exception, e:
+                        reason = str(e)
+
+                    value_html = '<img src="images/icon_alert.png" class=icon>' \
+                               + _("The value of this rule is not valid. ") \
+                               + reason
             else:
                 img = value and "yes" or "no"
                 title = value and _("This rule results in a positive outcome.") \
@@ -9809,7 +9820,14 @@ def mode_edit_rule(phase):
     if valuespec:
         value = rule[0]
         forms.section()
-        valuespec.render_input("ve", value)
+        try:
+            valuespec.validate_datatype(value, "ve")
+            valuespec.render_input("ve", value)
+        except:
+            if config.debug:
+                raise
+            valuespec.render_input("ve", valuespec.default_value())
+
         valuespec.set_focus("ve")
     else:
         forms.section("")

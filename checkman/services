@@ -103,13 +103,34 @@ examples:
  checks += [
   # make sure, that service "cimlistener" is running on all hosts
   # with the tag "win"
-  ( [ "win" ], ALL_HOSTS, "services", "cimlistener", None ),
+  ( [ "win" ], ALL_HOSTS, "services", "cimlistener", {} ),
   # The service "Apache" should is monitored only on two specific hosts
-  ( ["websrv01", "websrv02"], "services", "Apache", None ),
+  ( ["websrv01", "websrv02"], "services", "Apache", {} ),
+  # Warn if the service Messenger is running:
+  ( ["somehost"], "services", "Messenger", { 
+      "states" : [ ( "running", None, 1 ) ],
+      "else": 0,
+    }),
  ]
 
 [configuration]
 inventory_services (list of entries): List of service declarations.
  For each matching service found on the target host, one check will
  be added to your monitoring.
+
+[parameters]
+parameters(dict): A dictionary with the following optional keys:
+ {"states"}: A list of triples. Each triple specifies the monitoring
+ state for a service that is in a certain state. The first element
+ is {"running"}, {"stopped"} or {None} (if the state is not relevant).
+ The second element is the start type and can be {"auto"}, {"demand"}, 
+ {"disabled"}, {"unknown"} or {None} (if its not relevant). The third
+ element of the tuple is {0} for OK, {1} for WARN, {2} for CRIT and
+ {3} for UNKNOWN.
+
+ {"else"}: The monitoring state that should be applied if none of
+ the entries in {"states"} matches.
+
+ Per default, the check will get critical if the state is not
+ {"running"}.
 

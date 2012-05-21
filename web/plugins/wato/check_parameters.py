@@ -1152,16 +1152,68 @@ checkgroups.append((
     subgroup_applications,
     "services",
     _("Windows services"),
-    None,
+    Dictionary(
+        elements = [
+            ( "states", 
+              ListOf(
+                Tuple(
+                    orientation = "horizontal",
+                    elements = [
+                        DropdownChoice(
+                            title = _("Expected state"),
+                            default_value = "running",
+                            choices = [
+                                ( None, _("ignore the state") ),
+                                ( "running", _("running") ),
+                                ( "stopped", _("stopped") )]),
+                        DropdownChoice(
+                            title = _("Start type"),
+                            default_value = "auto",
+                            choices = [
+                                ( None, _("ignore the start type") ),
+                                ( "demand", _("demand") ),
+                                ( "disabled", _("disabled") ),
+                                ( "auto", _("auto") ),
+                                ( "unknown", _("unknown (old agent)") ),
+                            ]),
+                        DropdownChoice(
+                            title = _("Resulting state"),
+                            default_value = 0,
+                            choices = [
+                                ( 0, _("OK")),
+                                ( 1, _("WARN")),
+                                ( 2, _("CRIT")),
+                                ( 3, _("UNKNWON")),
+                            ]),
+                        ],
+                    default_value = ( "running", "auto", 0)),
+                title = _("Services states"),
+                help = _("You can specify a separate monitoring state for each possible "
+                         "combination of service state and start type. If you do not use " 
+                         "this parameter, then only running/auto will be assumed to be OK."),
+            )),
+        ( "else",
+           DropdownChoice(
+               title = _("State if no entry matches"),
+               default_value = 2,
+               choices = [
+                   ( 0, _("OK")),
+                   ( 1, _("WARN")),
+                   ( 2, _("CRIT")),
+                   ( 3, _("UNKNWON")),
+               ]),
+        ),]
+    ),
     TextAscii(
         title = _("Name of the service"),
-        help = _("Pleae Please note, that the agent replaces spaces in "
+        help = _("Please Please note, that the agent replaces spaces in "
          "the service names with underscores. If you are unsure about the "
          "correct spelling of the name then please look at the output of "
          "the agent (cmk -d HOSTNAME). The service names  are in the first "
          "column of the section &lt;&lt;&lt;services&gt;&gt;&gt;. Please "
          "do not mix up the service name with the display name of the service."
-         "The latter one is just being displayed as a further information.")),
+         "The latter one is just being displayed as a further information."),
+        allow_empty = False),
     "first"))
 
 checkgroups.append((

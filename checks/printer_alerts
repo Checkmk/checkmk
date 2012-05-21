@@ -70,6 +70,14 @@ printer_alerts_state_map = {
        1503, 1504, 1505, 1506, 1509 ],
 }
 
+# Some printers send a code of -1 but an additional text
+# that allows us to generate a useful state - at the price
+# of providing texts in the native language of the country
+# of the printers user.
+printer_alerts_text_map = {
+    'Energiesparen' : 0,
+}
+
 def inventory_printer_alerts(info):
     return [ (None, None) ]
 
@@ -84,10 +92,16 @@ def check_printer_alerts(_not_used, _not_used1, info):
     for sev, group, group_index, code, desc in info:
 
         state = 3 # UNKNOWN
+        if desc in printer_alerts_text_map:
+            state = printer_alerts_text_map[desc]
+            sum_txt.append("%s - %s" % (nagios_state_names[state], desc))
+            break
+
         for s in [ 2, 1, 0 ]:
             if saveint(code) in printer_alerts_state_map[s]:
                 state = s
                 break
+
 	# Code not found -> take into account severity
 	if state == 3 and sev == '1':
 	    state = 0
@@ -103,8 +117,11 @@ def check_printer_alerts(_not_used, _not_used1, info):
         elif state > sum_state:
             sum_state = state
 
-        sum_txt.append('%s - %s - %s (%s)' % (nagios_state_names[state],
-                                              group_txt, desc, code))
+        info_text = '%s - %s - %s' % (nagios_state_names[state], group_txt, desc)
+        if state == 3 and code != -1:
+            info_text += " (code: %d)" % code
+
+        sum_txt.append(info_text)
 
     return (sum_state, ', '.join(sum_txt))
 
@@ -119,6 +136,7 @@ snmp_info['printer_alerts'] = ( ".1.3.6.1.2.1.43.18.1.1", [
  ] )
 
 check_config_variables.append("printer_alerts_state_map")
+check_config_variables.append("printer_alerts_text_map")
 
 snmp_scan_functions['printer_alerts'] = \
     lambda oid: oid(".1.3.6.1.2.1.43.11.1.1.6.1.1") != None

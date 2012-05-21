@@ -9436,7 +9436,7 @@ def mode_edit_ruleset(phase):
                 except:
                     try:
                         reason = ""
-                        rulespec["valuespec"].validate_datatype(None, value)
+                        rulespec["valuespec"].validate_datatype(value, "")
                     except Exception, e:
                         reason = str(e)
 
@@ -9821,9 +9821,11 @@ def mode_edit_rule(phase):
         value = rule[0]
         forms.section()
         try:
-            valuespec.validate_datatype("ve", value)
+            valuespec.validate_datatype(value, "ve")
             valuespec.render_input("ve", value)
         except:
+            if config.debug:
+                raise
             valuespec.render_input("ve", valuespec.default_value())
 
         valuespec.set_focus("ve")

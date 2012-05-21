@@ -634,8 +634,8 @@ class ListOf(ValueSpec):
         return value
 
     def validate_datatype(self, value, varprefix):
-        if type(self) != list:
-            raise MKUserError(varprefx, _("The type must be list, but is %s") % type(value))
+        if type(value) != list:
+            raise MKUserError(varprefix, _("The type must be list, but is %r") % type(value))
         for n, v in enumerate(value):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n+1))
 

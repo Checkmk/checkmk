@@ -868,6 +868,19 @@ def aggr_best(nodes, n = 1, worst_state = CRIT):
 config.aggregation_functions["worst"] = aggr_worst
 config.aggregation_functions["best"]  = aggr_best
 
+def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
+    states = [ i[0]["state"] for i in nodes ]
+    num_ok = len([s for s in states if s == 0 ])
+    if num_ok >= int(needed_for_ok):
+        return { "state" : 0, "output" : "" }
+    elif num_ok >= int(needed_for_warn):
+        return { "state" : 1, "output" : "" }
+    else:
+        return { "state" : 2, "output" : "%r / %d" % (states, num_ok)  }
+
+config.aggregation_functions["count_ok"] = aggr_countok
+
+
 import re
 
 def aggr_running_on(nodes, regex):

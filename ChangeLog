@@ -7,6 +7,10 @@
     * New display type 'boxes-omit-root' for BI views
     * Hostgroup view BI Boxes omits the root level
 
+    BI:
+    * New aggregation function count_ok, that counts the number
+      of nodes in state OK.
+
 1.2.0b4:
     Core:
     * New configuration variable snmp_timing, allowing to 

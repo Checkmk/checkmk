@@ -1118,9 +1118,6 @@ class html:
             self.write('<tr class=heading><td id="nform.%s.%s" %s colspan=2>' % (treename, id, onclick))
             self.write('%s</td></tr>' % title)
         else:
-            if indent == "form":
-                self.write('<table id="topic_%s" style="display:table"  class="form nomargin"><tr%s><td class=title>' % \
-                                      (id.encode("utf-8"), first and ' class="top"' or ''))
             self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
                        'src="images/tree_%s.png" %s>' %
                     (treename, id, img_num, onclick))
@@ -1136,8 +1133,8 @@ class html:
             if indent == "form":
                 self.write("</td></tr></table>")
                 indent_style += "margin: 0; "
-            self.write('<ul class="treeangle" style="%s display: %s" id="tree.%s.%s">' %
-                 (indent_style, (not isopen) and "none" or "block",  treename, id))
+            self.write('<ul class="treeangle %s" style="%s" id="tree.%s.%s">' %
+                 (isopen and "open" or "closed", indent_style,  treename, id))
 
         # give caller information about current toggling state (needed for nform)
         return isopen

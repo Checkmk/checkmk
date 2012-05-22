@@ -511,6 +511,10 @@ table.nform {
     border-style: solid;
 }
 
+table.nform tr.closed {
+    display: none;
+}
+
 table.nform tr.heading td {
     color: white;
 }

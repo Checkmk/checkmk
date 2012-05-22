@@ -285,6 +285,10 @@ ul.treeangle li {
     margin-left: 16px;
     padding-left: 20px;
     list-style: disc;
+    display: block;
+}
+ul.closed {
+    display: none;
 }
 
 

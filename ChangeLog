@@ -1,4 +1,7 @@
 1.2.0b5:
+    WATO:
+    * FIX: fix folding problems with dependent host tags
+
     Multisite:
     * FIX: remove refresh button from dashboard.
 

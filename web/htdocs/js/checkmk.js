@@ -796,21 +796,51 @@ function folding_step(oImg, state, step) {
     setTimeout(function() { folding_step(oImg, state, step); }, fold_steps[step]);
 }
 
+/* Check if an element has a certain css class. */
+function has_class(o, cn) {
+    var parts = o.className.split(' ');
+    for (x=0; x<parts.length; x++) {
+        if (parts[x] == cn)
+            return true;
+    }
+    return false;
+}
+
+function remove_class(o, cn) {
+    var parts = o.className.split(' ');
+    var new_parts = Array();
+    for (x=0; x<parts.length; x++) {
+        if (parts[x] != cn) 
+            new_parts.push(parts[x]);
+    }
+    o.className = new_parts.join(" ");
+}
+
+function add_class(o, cn) {
+    o.className += " " + cn;
+}
+
+function change_class(o, a, b) {
+    remove_class(o, a);
+    add_class(o, b);
+}
+
+
 function toggle_tree_state(tree, name, oContainer) {
     var state;
-    if (oContainer.style.display == 'none') {
-        oContainer.style.display = '';
+    if (has_class(oContainer, 'closed')) {
+        change_class(oContainer, 'closed', 'open');
         state = 'on';
         if (oContainer.tagName == 'TR') { // handle in-table toggling
             while (oContainer = oContainer.nextSibling)
-                oContainer.style.display = '';
+                change_class(oContainer, 'closed', 'open');
         }
     } else {
-        oContainer.style.display = 'none';
+        change_class(oContainer, 'open', 'closed');
         state = 'off';
         if (oContainer.tagName == 'TR') { // handle in-table toggling
             while (oContainer = oContainer.nextSibling)
-                oContainer.style.display = 'none';
+                change_class(oContainer, 'open', 'closed');
         }
     }
     get_url('tree_openclose.py?tree=' + escape(tree) + '&name=' + escape(name) + '&state=' + state);

@@ -1616,9 +1616,11 @@ def show_context_links(thisview, active_filters, show_filters, display_options, 
         else:
             empty_toggle_button()
 
-    if 'R' in display_options and config.may("view_option_refresh"):
-        choices = [ [x, {0:_("off")}.get(x,str(x)) + (x and "" or "")] for x in config.view_option_refreshes ]
-        view_option_switcher(thisview, "refresh", choices) 
+        if 'R' in display_options and config.may("view_option_refresh"):
+            choices = [ [x, {0:_("off")}.get(x,str(x)) + (x and "" or "")] for x in config.view_option_refreshes ]
+            view_option_switcher(thisview, "refresh", choices) 
+        else:
+            empty_toggle_button()
 
 
     # WATO: If we have a host context, then show button to WATO, if permissions allow this

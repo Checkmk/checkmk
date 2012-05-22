@@ -1,3 +1,7 @@
+1.2.0b5:
+    Multisite:
+    * FIX: remove refresh button from dashboard.
+
 1.2.0b4:
     Core:
     * New configuration variable snmp_timing, allowing to 

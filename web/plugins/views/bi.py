@@ -154,10 +154,11 @@ multisite_painter_options["aggr_treetype"] = {
  "title"   : _("Type of tree layout"),
  "default" : "foldable",
  "values"  : [ 
-    ("foldable",  _("foldable")), 
-    ("boxes",     _("boxes")),
-    ("bottom-up", _("bottom up")), 
-    ("top-down",  _("top down"))]
+    ("foldable",     _("foldable")), 
+    ("boxes",        _("boxes")),
+    ("boxes-omit-root", _("boxes (omit root)")),
+    ("bottom-up",    _("bottom up")), 
+    ("top-down",     _("top down"))]
 }
 
 multisite_painter_options["aggr_wrap"] = {
@@ -275,7 +276,7 @@ def filter_tree_only_problems(tree):
     return state, assumed_state, node, new_subtrees
 
 
-def paint_aggr_tree_foldable(row, boxes):
+def paint_aggr_tree_foldable(row, boxes, omit_root=True):
     saved_expansion_level = bi.load_ex_level()
     treestate = weblib.get_tree_states('bi')
     expansion_level = int(get_painter_option("aggr_expand"))
@@ -309,13 +310,14 @@ def paint_aggr_tree_foldable(row, boxes):
                 leaf = "noleaf"
                 mc = mousecode
 
-            h += '<span id="%d:%s" %s class="bibox_box %s %s state%s">' % (
-                    expansion_level, path_id, mc, leaf, is_open and "open" or "closed", state["state"])
-            if is_leaf:
-                h += aggr_render_leaf(tree, show_host, bare = True) # .replace(" ", "&nbsp;")
-            else:
-                h += tree[2]["title"].replace(" ", "&nbsp;")
-            h += '</span> '
+            if not omit_root or len(path) > 1:
+                h += '<span id="%d:%s" %s class="bibox_box %s %s state%s">' % (
+                        expansion_level, path_id, mc, leaf, is_open and "open" or "closed", state["state"])
+                if is_leaf:
+                    h += aggr_render_leaf(tree, show_host, bare = True) # .replace(" ", "&nbsp;")
+                else:
+                    h += tree[2]["title"].replace(" ", "&nbsp;")
+                h += '</span> '
 
             if not is_leaf:
                 h += '<span class="bibox" style="%s">' % (not is_open and "display: none;" or "")
@@ -421,9 +423,11 @@ def paint_aggr_tree_ltr(row, mirror):
 def paint_aggregated_tree_state(row):
     treetype = get_painter_option("aggr_treetype")
     if treetype == "foldable":
-        return paint_aggr_tree_foldable(row, boxes = False)
+        return paint_aggr_tree_foldable(row, boxes = False, omit_root = False)
     elif treetype == "boxes":
-        return paint_aggr_tree_foldable(row, boxes = True)
+        return paint_aggr_tree_foldable(row, boxes = True, omit_root = False)
+    elif treetype == "boxes-omit-root":
+        return paint_aggr_tree_foldable(row, boxes = True, omit_root = True)
     elif treetype == "bottom-up":
         return paint_aggr_tree_ltr(row, False)
     elif treetype == "top-down":
@@ -441,7 +445,7 @@ multisite_painters["aggr_treestate_boxed"] = {
     "title"   : _("Aggregation: simplistic boxed layout"),
     "short"   : _("Tree"),
     "columns" : [ "aggr_treestate", "aggr_hosts" ],
-    "paint"   : lambda row: paint_aggr_tree_foldable(row, boxes=True),
+    "paint"   : lambda row: paint_aggr_tree_foldable(row, boxes = True, omit_root = True),
 }
 
 #     _____ _ _ _

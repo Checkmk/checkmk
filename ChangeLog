@@ -4,6 +4,8 @@
 
     Multisite:
     * FIX: remove refresh button from dashboard.
+    * New display type 'boxes-omit-root' for BI views
+    * Hostgroup view BI Boxes omits the root level
 
 1.2.0b4:
     Core:

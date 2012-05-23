@@ -817,7 +817,8 @@ function remove_class(o, cn) {
 }
 
 function add_class(o, cn) {
-    o.className += " " + cn;
+    if (!has_class(o, cn))
+        o.className += " " + cn;
 }
 
 function change_class(o, a, b) {
@@ -1632,11 +1633,11 @@ function view_toggle_form(oButton, idForm) {
     var oForm = document.getElementById(idForm);
     if (oForm.style.display == "none") {
         var display = "";
-        var down = " down";
+        var down = "down";
     }
     else {
         var display = "none";
-        var down = "";
+        var down = "up";
     }
 
     // Close all other view forms
@@ -1648,45 +1649,73 @@ function view_toggle_form(oButton, idForm) {
     }
     oForm.style.display = display;
 
-    // Change button state
-    var allbuttons = document.getElementsByClassName('columnswitcher');
+    // Make all other buttons inactive
+    var allbuttons = document.getElementsByClassName('togglebutton');
     for (var i=0; i<allbuttons.length; i++) {
-        if (allbuttons[i] != oButton)
-            allbuttons[i].className = "columnswitcher";
+        var b = allbuttons[i];
+        if (b != oButton && !has_class(b, "empth")) {
+            remove_class(b, "down") 
+            add_class(b, "up") 
+        }
     }
-    oButton.className = "columnswitcher" + down;
+    remove_class(oButton, "down");
+    remove_class(oButton, "up");
+    add_class(oButton, down);
+}
 
+// used for refresh und num_columns
+function view_dial_option(oDiv, viewname, option, choices) {
+    var new_choice = choices[0]; // in case not contained in choices
+    for (var c=0; c<choices.length; c++) {
+        choice = choices[c];
+        val = choice[0];
+        title = choice[1];
+        if (has_class(oDiv, "val_" + val)) {
+            var new_choice = choices[(c+1) % choices.length];
+            change_class(oDiv, "val_" + val, "val_" + new_choice[0]);
+            break; 
+        }
+    }
+
+    // Start animation
+    step = 0;
+    speed = 10;
+    for (var way = 0; way <= 10; way +=1) { 
+        step += speed;
+        setTimeout("turn_dial('" + option + "', '', " + way + ")", step);
+    }
+    for (var way = -10; way <= 0; way +=1) { 
+        step += speed;
+        setTimeout("turn_dial('" + option + "', '" + new_choice[1] + "', " + way + ")", step);
+    }
+    
+    get_url_sync("ajax_set_viewoption.py?view_name=" + viewname + 
+            "&option=" + option + "&value=" + new_choice[0]);
+    if (option == "refresh")
+        setReload(new_choice[0]);
+    handleReload('');
+}
+// way ranges from -10 to 10 means centered (normal place)
+function turn_dial(option, text, way) {
+    var oDiv = document.getElementById("optiondial_" + option).firstChild;
+    if (text && oDiv.innerHTML != text)
+        oDiv.innerHTML = text;
+    oDiv.style.top = (way * 1.3) + "px";
 }
 
 /* Switch number of view columns, refresh and checkboxes. If the
    choices are missing, we do a binary toggle. */
 gColumnSwitchTimeout = null;
 function view_switch_option(oDiv, viewname, option, choices) {
-    var current_title = oDiv.firstChild.innerHTML;
-    if (choices) {
-        var new_choice = choices[0]; // in case not contained in choices
-        for (var c=0; c<choices.length; c++) {
-            choice = choices[c];
-            val = choice[0];
-            title = choice[1];
-            if (current_title == title) {
-                var new_choice = choices[(c+1) % choices.length];
-                break;
-            }
-        }
-        oDiv.firstChild.innerHTML = "" + new_choice[1];
+    if (has_class(oDiv, "down")) {
+        new_value = false;
+        change_class(oDiv, "down", "up");
     }
     else {
-        if (oDiv.className.indexOf('down') != -1) {
-            new_value = false;
-            oDiv.className = 'columnswitcher'; 
-        }
-        else {
-            new_value = true;
-            oDiv.className = 'columnswitcher down';
-        }
-        new_choice = [ new_value, '' ];
+        new_value = true;
+        change_class(oDiv, "up", "down");
     }
+    new_choice = [ new_value, '' ];
 
     get_url_sync("ajax_set_viewoption.py?view_name=" + viewname + 
             "&option=" + option + "&value=" + new_choice[0]);

@@ -1,0 +1,13 @@
+Title: WATO delete host does not trigger replication
+Component: wato
+State: open
+Date: 2012-05-23 12:05:47
+Targetversion: 1.2.0
+Class: bug
+
+Report:
+Eventueller Bug:
+
+Wird auf Kneipix ein Host mit WATO gelöscht, wird diese Änderung nicht auf Gruenix geschrieben. Erst bei einer neuen  Änderungen über Kneipix wie z.B. anlegen eines Hosts auf Site Gruenix wird auch das Löschen des Hosts auf die Site Gruenix synchronisiert.
+
+Probable cause - the object is gone, so there's no changes to an object ;)

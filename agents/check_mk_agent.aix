@@ -69,8 +69,7 @@ echo $load 1/$ps $$ $procs
 
 
 # The following section has been contributed by Joerg Linge
-echo "<<<netctr>>>"
-date +%s
+echo "<<<lnx_if:sep(58)>>>"
 for ent in $(ifconfig -a | grep '^en' | cut -d ":" -f 1)
 do
     bytes=$(entstat $ent | grep ^Bytes: | awk '{printf "%s %s", $2, $4}')
@@ -81,7 +80,7 @@ do
     packets_tx=$(echo $packets | awk '{print $1'})
     errors_tx=$(entstat $ent | grep 'Transmit Errors:' | awk '{print $3'})
     errors_rx=$(entstat $ent | grep 'Receive Errors:'  | awk '{print $6'})
-    echo "$ent $bytes_rx $packets_rx $errors_rx 0 0 0 0 0 $bytes_tx $packets_tx $errors_tx 0 0 0 0 0"
+    echo "$ent: $bytes_rx $packets_rx $errors_rx 0 0 0 0 0 $bytes_tx $packets_tx $errors_tx 0 0 0 0 0"
 done
 
 

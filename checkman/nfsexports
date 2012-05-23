@@ -1,0 +1,24 @@
+title: Check health of NFS mounts
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check validates NFS exports on a NFS file server.
+ It looks at exports defined both in /etc/exports (classic way) or exports
+ that are run-time defined using exportfs by a cluster management software.
+ It uses the native NFS toolset to query this information and should notice
+ errors in the NFS server daemons or portmapper.
+
+ If you want to use this check then you will have to install the appropriate
+ agent plugin.
+
+item:
+ The name of the NFS export, which is the name of the exported filesystem.
+
+perfdata:
+  This check does not provide performance data. 
+
+inventory:
+  All NFS exportss are found automatically. This is done
+  using showmount -e (not /proc)

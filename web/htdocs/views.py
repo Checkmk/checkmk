@@ -1526,26 +1526,26 @@ def view_linktitle(view):
     else:
         return t
 
-def view_optiondial(view, option, choices):
+def view_optiondial(view, option, choices, help):
     vo = view_options(view["name"])
     value = vo.get(option, view.get(option, choices[0][0]))
     title = dict(choices).get(value, value)
     html.begin_context_buttons() # just to be sure
-    html.write('<div id="optiondial_%s" class="optiondial %s val_%s"' 
+    html.write('<div title="%s" id="optiondial_%s" class="optiondial %s val_%s"' 
        'onclick="view_dial_option(this, \'%s\', \'%s\', %r);"><div>%s</div></div>' % (
-        option, option, value, view["name"], option, choices, title))
+        help, option, option, value, view["name"], option, choices, title))
 
 def view_optiondial_off(option):
     html.write('<div class="optiondial off %s"></div>' % option)
 
 
-def view_option_toggler(view, option, icon):
+def view_option_toggler(view, option, icon, help):
     vo = view_options(view["name"])
     value = vo.get(option, view.get(option, False))
     html.begin_context_buttons() # just to be sure
-    html.write('<div class="togglebutton %s %s"'
+    html.write('<div title="%s" class="togglebutton %s %s"'
        'onclick="view_switch_option(this, \'%s\', \'%s\');"></div>' % (
-        icon, value and "down" or "up", view["name"], option)) 
+        help, icon, value and "down" or "up", view["name"], option)) 
 
 
 
@@ -1607,7 +1607,7 @@ def show_context_links(thisview, active_filters, show_filters, display_options, 
     if 'C' in display_options:
         if command_form:
             togglebutton("commands", False, "commands", _("Execute commands on hosts, services and other objects"))
-            view_option_toggler(thisview, "show_checkboxes", "checkbox")
+            view_option_toggler(thisview, "show_checkboxes", "checkbox", _("Enable/Disable checkboxes for selecting rows for commands"))
         else:
             togglebutton_off("commands")
             togglebutton_off("checkboxes")
@@ -1615,13 +1615,13 @@ def show_context_links(thisview, active_filters, show_filters, display_options, 
     if 'O' in display_options:
         if config.may("view_option_columns"):
             choices = [ [x, "%s" % x] for x in config.view_option_columns ]
-            view_optiondial(thisview, "num_columns", choices)
+            view_optiondial(thisview, "num_columns", choices, _("Change the number of display columns"))
         else:
             view_optiondial_off("num_columns")
 
         if 'R' in display_options and config.may("view_option_refresh"):
             choices = [ [x, {0:_("off")}.get(x,str(x) + "s") + (x and "" or "")] for x in config.view_option_refreshes ]
-            view_optiondial(thisview, "refresh", choices) 
+            view_optiondial(thisview, "refresh", choices, _("Change the refresh rate")) 
         else:
             view_optiondial_off("refresh")
 

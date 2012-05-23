@@ -7447,6 +7447,10 @@ def mode_edit_user(phase):
         if email and not re.match(regex_email, email):
             raise MKUserError("email", _("'%s' is not a valid email address." % email))
         new_user["email"] = email
+        
+        # Pager
+        pager = html.var("pager").strip()
+        new_user["pager"] = pager
 
         # Roles
         new_user["roles"] = filter(lambda role: html.get_checkbox("role_" + role),
@@ -7541,6 +7545,9 @@ def mode_edit_user(phase):
                 "if the user is a monitoring contact and receives notifications "
                 "via Email."))
 
+    forms.section(_("Pager address"))
+    html.text_input("pager", user.get("pager", ""), size = 50)
+    html.help(_("The pager address is optional "))
     forms.header(_("Security"))
     forms.section(_("Authentication"))
     is_automation = user.get("automation_secret", None) != None

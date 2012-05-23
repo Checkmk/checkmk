@@ -2037,6 +2037,8 @@ def create_nagios_config_contacts(outfile):
                 outfile.write("  alias\t\t\t\t%s\n" % contact["alias"].encode("utf-8"))
             if "email" in contact:
                 outfile.write("  email\t\t\t\t%s\n" % contact["email"])
+            if "pager" in contact:
+                outfile.write("  pager\t\t\t\t%s\n" % contact["pager"])
             not_enabled = contact.get("notifications_enabled", True)
             for what in [ "host", "service" ]:
                 no = contact.get(what + "_notification_options", "")

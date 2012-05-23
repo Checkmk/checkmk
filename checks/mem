@@ -37,9 +37,6 @@
 #   | used for unixoide operating systems.                                 |
 #   +----------------------------------------------------------------------+
 
-memused_default_levels = (150.0, 200.0)
-mem_extended_perfdata = False
-
 def parse_proc_meminfo(info):
     return dict([ (i[0][:-1], int(i[1])) for i in info ])
 
@@ -49,76 +46,9 @@ def inventory_mem_used(info):
         "PageTotal" not in meminfo: # This case is handled by mem.win
         return [(None, "memused_default_levels")]
 
-def check_mem_used(item, params, info):
-    try:
-        meminfo = parse_proc_meminfo(info)
-        swapused = meminfo['SwapTotal'] - meminfo['SwapFree']
-        memused  = meminfo['MemTotal']  - meminfo['MemFree']
-        # Buffers and Cached are optional (not supported on Windows yet)
-        caches   = meminfo.get('Buffers', 0) + meminfo.get('Cached', 0)
-    except:
-        return (3, "UNKNOWN - invalid output from plugin")
-
-    # Add extended memory performance data, if this is
-    # enabled and the agent provides that information.
-    extended_perf = []
-    extrainfo = ""
-    if mem_extended_perfdata:
-        mapped = meminfo.get('Mapped')
-        if mapped:
-            mapped_mb = int(mapped) / 1024
-            committed_as = meminfo.get('Committed_AS')
-            if committed_as:
-                committed_as_mb = int(committed_as) / 1024
-            else:
-                committed_as = 0
-            extended_perf = [
-                ('mapped',       str(mapped_mb)       + 'MB', '', '', 0, ''),
-                ('committed_as', str(committed_as_mb) + 'MB', '', '', 0, ''),
-            ]
-            extrainfo = ", %.1f GB mapped, %.1f GB committed" % \
-                        (mapped_mb / 1024.0, committed_as_mb / 1024.0)
-
-    totalused_kb = (swapused + memused - caches)
-    totalused_mb = totalused_kb / 1024
-    totalmem_kb = meminfo['MemTotal']
-    totalmem_mb = totalmem_kb / 1024
-    totalused_perc = 100 * (float(totalused_kb) / float(totalmem_kb))
-    totalvirt_mb = (meminfo['SwapTotal'] + meminfo['MemTotal']) / 1024
-    warn, crit = params
-
-    perfdata = [
-        ('ramused', str( (memused - caches) / 1024) + 'MB', '', '', 0, totalmem_mb),
-        ('swapused', str(swapused / 1024) + 'MB', '', '', 0, meminfo['SwapTotal']/1024) ]
-
-    # levels may be given either in int -> MB or in float -> percentages
-
-    infotext = ("%.2f GB used (%.2f GB RAM + %.2f GB SWAP, this is %.1f%% of %.2f GB RAM)" % \
-               (totalused_mb / 1024.0, (memused-caches) / 1024.0 / 1024, swapused / 1024.0 / 1024,
-               totalused_perc, totalmem_mb / 1024.0)) \
-               + extrainfo
-
-    if type(warn) == float:
-        perfdata.append(('memused', str(totalused_mb)+'MB', int(warn/100.0 * totalmem_mb),
-                        int(crit/100.0 * totalmem_mb), 0, totalvirt_mb))
-        perfdata += extended_perf
-        if totalused_perc >= crit:
-            return (2, 'CRIT - %s, critical at %.1f%%' % (infotext, crit), perfdata)
-        elif totalused_perc >= warn:
-            return (1, 'WARN - %s, warning at %.1f%%' % (infotext, warn), perfdata)
-        else:
-            return (0, 'OK - %s' % infotext, perfdata)
-
-    else:
-        perfdata.append(('memused', str(totalused_mb)+'MB', warn, crit, 0, totalvirt_mb))
-        perfdata += extended_perf
-        if totalused_mb >= crit:
-            return (2, 'CRIT - %s, critical at %.2f GB' % (infotext, crit / 1024.0), perfdata)
-        elif totalused_mb >= warn:
-            return (1, 'WARN - %s, warning at %.2f GB' % (infotext, warn / 1024.0), perfdata)
-        else:
-            return (0, 'OK - %s' % infotext, perfdata)
-
+def check_mem_used(_no_item, params, info):
+    meminfo = parse_proc_meminfo(info)
+    return check_memory(params, meminfo)
 
 check_info['mem.used'] = {
     "check_function"         : check_mem_used,
@@ -127,6 +57,7 @@ check_info['mem.used'] = {
     "has_perfdata"           : True,
     "group"                  : "memory",
     "check_config_variables" : [ "mem_extended_perfdata" ],
+    "includes"               : [ "mem.include" ],
 }
 
 

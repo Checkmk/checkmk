@@ -65,6 +65,7 @@ div.floatfilter {
     background-image: url("images/nform_background.png"); 
     background-repeat: repeat;
     border-radius: 5px;
+    color: black;
 }
 
 div.floatfilter.double {

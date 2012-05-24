@@ -136,7 +136,7 @@ div.snapin div.head {
     width: 260px;
     text-align: center;
     color: #fff;
-    height: 25px;
+    height: 26px;
     line-height: 29px;
 }
 
@@ -198,8 +198,8 @@ div.snapin div.foot {
     background-image: url("images/snapin_footer.png");
     background-repeat: no-repeat;
     width: 260px;
-    height: 10px;
-    line-height: 10px;
+    height: 5px;
+    line-height: 5px;
 }
 
 /*

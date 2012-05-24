@@ -84,19 +84,17 @@ function registerEdgeListeners(obj) {
             continue;
 
         if (window.addEventListener)
-            edges[i].addEventListener("mousemove", function(e) {
-                                                       stopDragScroll(e);
-                                                       snapinTerminateDrag(e);
-                                                       return false;
-                                                   }, false);
+            edges[i].addEventListener("mousemove", stop_snapin_dragging, false);
         else
-            edges[i].onmousemove = function(e) {
-                                       stopDragScroll(e);
-                                       snapinTerminateDrag(e);
-                                       return false;
-                                   };
+            edges[i].onmousemove = stop_snapin_dragging;
     }
     edges = null;
+}
+
+function stop_snapin_dragging(e) {
+    stopDragScroll(e);
+    snapinTerminateDrag(e);
+    return false;
 }
 
 /************************************************

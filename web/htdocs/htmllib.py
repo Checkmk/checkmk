@@ -321,8 +321,7 @@ class html:
         else: # add *all* get variables, that are not set by any input!
             for var, value in self.req.vars.items():
                 if var not in self.form_vars and \
-                    (var[0] != "_" or add_action_vars) and \
-                    var != "filled_in":
+                    (var[0] != "_" or add_action_vars): # and var != "filled_in":
                     self.hidden_field(var, value)
 
     def add_global_vars(self, varnames):
@@ -635,7 +634,7 @@ class html:
     def form_filled_in(self):
         return self.has_var("filled_in") and (
             self.form_name == None or \
-            self.var("filled_in") == self.form_name)
+            self.form_name in self.list_var("filled_in"))
 
 
     # Get value of checkbox. Return True, False or None. None means

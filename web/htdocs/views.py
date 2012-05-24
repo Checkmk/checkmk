@@ -1679,6 +1679,8 @@ def collect_context_links(thisview, active_filters):
     for view in sorted_views:
         name = view["name"]
         linktitle = view.get("linktitle")
+        if not linktitle:
+            linktitle = view["title"]
         if view == thisview:
             continue
         if view.get("hidebutton", False):

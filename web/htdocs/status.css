@@ -53,7 +53,7 @@ td.state {
     white-space: nowrap;
 }
 /* WARN */
-.state1, .state1 a {
+.state1, .state1 a, tr.groupheader td.state1 {
     background-color: #ff0; color: #000;
 }
 

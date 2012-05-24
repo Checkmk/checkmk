@@ -5387,10 +5387,32 @@ def mode_groups(phase, what):
 
     if phase == "action":
         delname = html.var("_delete")
-        c = wato_confirm(_("Confirm deletion of group %s" % delname),
-                         _("Do you really want to delete the group %s? If there are still objects "
-                           "assigned to that group, the group will kept up (but without an alias). "
-                           "Removing all objects from the will make the group disappear completely. " % what))
+
+        if what == 'contact':
+            # Is the contactgroup in use?
+            member_links = []
+            users = filter_hidden_users(load_users())
+            entries = users.items()
+            entries.sort(cmp = lambda a, b: cmp(a[1].get("alias"), b[1].get("alias")))
+            for id, user in entries:
+                cgs   = user.get("contactgroups", [])
+                if delname in cgs:
+                    member_links.append('<a href="%s">%s</a>' %
+                        (make_link([('mode', 'edit_user'), ('edit', id)]), user.get('alias')))
+
+            if member_links:
+                raise MKUserError(None,
+                    _('Unable to delete the group %s. It still has the following members: %s. '
+                      ' You must first remove all members from the group to be able to delete the group.') %
+                                                         (delname, ', '.join(member_links)))
+
+            confirm_txt = _('Do you really want to delete the %s group %s?') % (what, delname)
+        else:
+            confirm_txt = _("Do you really want to delete the %s group %s? If there are still objects "
+                            "assigned to that group, the group will kept up (but without an alias). "
+                            "Removing all objects from the will make the group disappear completely. ") % (what, delname)
+
+        c = wato_confirm(_("Confirm deletion of group %s" % delname), confirm_txt)
         if c:
             del groups[delname]
             save_group_information(all_groups)

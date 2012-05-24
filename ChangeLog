@@ -15,6 +15,7 @@
     * FIX: animation of rotation treeangle in trees works again
     * FIX: Logwatch: Changed font color back to black
     * FIX: show toggle button for checkboxes in deactivated state
+    * FIX: fix repeated stacked refresh when toggling columns
 
     Mobile:
     * FIX: Fixed logtime filter settings in all mobile views

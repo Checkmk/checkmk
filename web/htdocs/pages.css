@@ -295,7 +295,7 @@ table.data a {
     text-decoration: none;
     color: black;
 }
-table.data tr.data td a:hover {
+table.data a:hover {
     text-decoration: underline;
 }
 

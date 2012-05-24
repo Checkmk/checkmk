@@ -133,11 +133,13 @@ replication_paths = [
   ( "dir",  "check_mk",   root_dir ),
   ( "dir",  "multisite",  multisite_dir ),
   ( "file", "htpasswd",   defaults.htpasswd_file ),
+  ( "file", "auth.secret", '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file) ),
   # Also replicate the user-settings of Multisite? While the replication
   # as such works pretty well, the count of pending changes will not
   # know.
   ( "dir", "usersettings", defaults.var_dir + "/web" ),
 ]
+
 
 # Directories and files for backup & restore
 backup_paths = replication_paths + [

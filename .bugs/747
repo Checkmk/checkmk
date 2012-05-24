@@ -1,12 +1,15 @@
 Title: Replication must replicate auth.secret
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-05-11 18:00:47
 Targetversion: 1.2.0
-Class: bug
 
 The replication must not only ship htpasswd, but
 also auth.secret. Otherwise a single-singon to the
 remote sites will not work. This is not only needed
 for addons like PNP, but also for internal web
 services like that for L4m.
+
+2012-05-24 19:35:04: changed state open -> done
+Is now replicated.

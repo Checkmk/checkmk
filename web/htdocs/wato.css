@@ -829,6 +829,7 @@ div.varname {
     background-repeat: repeat;
     width: 50%;
     border: 1px solid #000;
+    color: black;
 }
 
 .wato table.progress th {

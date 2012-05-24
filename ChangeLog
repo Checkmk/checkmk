@@ -10,6 +10,9 @@
     * Hostgroup view BI Boxes omits the root level
     * Finalized layout if view options and commands/filters/painteroptions.
 
+    Mobile:
+    * FIX: Fixed logtime filter settings in all mobile views
+
     BI:
     * New aggregation function count_ok, that counts the number
       of nodes in state OK.

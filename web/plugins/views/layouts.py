@@ -67,7 +67,6 @@ def render_single_dataset(rows, view, group_painters, painters, num_columns, _ig
     for row in rows:
         register_events(row) # needed for playing sounds
 
-    # html.write('<div class="tableshadow left">\n')
     html.write('<table class="data single">\n')
     rownum = 0
     odd = "odd"
@@ -171,7 +170,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
             painted = paint(p, rows[0][1])
         html.write("</tr></table>\n")
 
-        html.write("<div class=tableshadow><table class=data>")
+        html.write("<table class=data>")
         trclass = None
 
         def show_header_line():
@@ -211,7 +210,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
                 paint(p, row)
             html.write("</tr>\n")
 
-        html.write("</table></div>\n")
+        html.write("</table>\n")
         init_rowselect()
 
     # render table
@@ -296,7 +295,7 @@ def render_tiled(rows, view, group_painters, painters, _ignore_num_columns, show
 
         html.write("<tr><td class=\"tl %s\">" % (rendered[1][0],))
         if show_checkboxes:
-            render_checkbox(view, row, len(painters) - 1)
+            render_checkbox(view, row, len(painters)-1)
         html.write("%s</td><td class=\"tr %s\">%s</td></tr>\n" % \
                     (rendered[1][1], rendered[2][0], rendered[2][1]))
         html.write("<tr><td colspan=2 class=\"center %s\">%s</td></tr>\n" % \
@@ -332,9 +331,9 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
 
     repeat_heading_every = 20 # in case column_headers is "repeat"
 
-    html.write("<table class=data>\n")
+    html.write("<table class='data table'>\n")
     last_group = None
-    trclass = None
+    odd = "even"
     column = 1
     group_open = False
     num_painters = len(painters)
@@ -352,6 +351,9 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
 
             for p in painters:
                 paint_header(view, p)
+            if n < num_columns:
+                html.write('<td class=gap></td>')
+
         html.write("</tr>\n")
 
     if len(group_painters) == 0 and view.get("column_headers") != "off":
@@ -382,11 +384,8 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
             if this_group != last_group:
                 if column != 1: # not a the beginning of a new line
                     for i in range(column-1, num_columns):
+                        html.write('<td class=gap></td>')
                         html.write("<td class=fillup colspan=%d></td>" % num_painters)
-                    html.write("</tr>\n")
-                    html.write("<tr>\n")
-                    for x in range(0, num_columns):
-                        html.write("<td colspan=%d class=shadowbottom></td>\n" % num_painters)
                     html.write("</tr>\n")
                     column = 1
 
@@ -403,23 +402,6 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
                     painted = paint(p, row)
 
                 html.write("</tr></table></td></tr>\n")
-
-                # paint top, left and right shadows
-                group_rows = count_group_members(row, rows[index:])
-                rowspan = group_rows / num_columns
-                if group_rows % num_columns:
-                    rowspan += 1
-                if view.get("column_headers") == "repeat":
-                    rowspan += rowspan / repeat_heading_every
-                rowspan += 3
-                html.write("<tr>\n")
-                for x in range(0, num_columns):
-                    if x > 0:
-                        html.write("<td rowspan=%d class=tablegap></td>\n" % rowspan)
-                    html.write("<td rowspan=%d class=shadowleft></td>\n" % rowspan)
-                    html.write("<td colspan=%d class=shadowtop></td>\n" % num_painters)
-                    html.write("<td rowspan=%d class=shadowright></td>\n" % rowspan)
-                html.write("</tr>\n")
 
                 # Table headers
                 if view.get("column_headers") != "off":
@@ -450,26 +432,28 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
                     state = row.get("service_state", 0)
             else:
                 state = 0
-            if trclass == "odd":
-                trclass = "even"
-            else:
-                trclass = "odd"
-            html.write('<tr class="data %s%d">' % (trclass, state))
+            
+            odd = odd == "odd" and "even" or "odd"
+            html.write('<tr class="data %s %s%d">' % (num_columns > 1 and "multicolumn" or "", odd, state))
+
+        # Not first columns: Create one empty column as separator
+        else:
+            html.write('<td class=gap></td>')
+
 
         if show_checkboxes:
-            render_checkbox_td(view, row, num_painters - 1)
+            render_checkbox_td(view, row, num_painters)
+
         for p in painters:
             paint(p, row)
+
         column += 1
         index += 1
 
     if group_open:
         for i in range(column-1, num_columns):
+            html.write('<td class=gap></td>')
             html.write("<td class=fillup colspan=%d></td>" % num_painters)
-        html.write("</tr>\n")
-        html.write("<tr>\n")
-        for x in range(0, num_columns):
-            html.write("<td colspan=%d class=shadowbottom></td>\n" % num_painters)
         html.write("</tr>\n")
     html.write("</table>\n")
     init_rowselect()

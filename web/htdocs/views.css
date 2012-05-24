@@ -218,32 +218,6 @@ div.view_form {
 | Styles used by layouts of the views (plugins/views/layouts.py)           |
 '-------------------------------------------------------------------------*/
 
-div.tableshadow {
-    background-image: url("images/tableshadow.png");
-    background-repeat: repeat;
-    padding: 1px 1px 1px 1px;
-    border-style: none;
-}
-
-td.shadowtop, td.shadowbottom {
-    background-image: url("images/tableshadow.png");
-    background-repeat: repeat;
-    height: 1px;
-    border-style: none;
-    border-width: 0px;
-    padding: 0;
-}
-td.shadowleft, td.shadowright {
-    background-image: url("images/tableshadow.png");
-    background-repeat: repeat;
-    width: 1px;
-    border-style: none;
-    border-width: 0px;
-    padding: 0;
-}
-td.shadowright {
-  width: 1px;
-}
 
 td.fillup {
     background-color: #eee;
@@ -251,6 +225,13 @@ td.fillup {
 td.groupheader {
     margin: 0;
     padding: 0;
+}
+
+td.gap {
+    background-image: url("images/contentframe_background.jpg");
+    background-attachment: fixed;
+    background-repeat: repeat;
+    width: 5px;
 }
 
 /* boxed layout */

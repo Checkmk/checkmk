@@ -1,4 +1,7 @@
 1.2.0b5:
+    Core:
+    * FIX: handle UTF-8 encoded binary strings correctly (e.g. in host alias)
+
     WATO:
     * FIX: fix folding problems with dependent host tags
     * FIX: Detecting duplicate tag ids between regular tags and auxtags

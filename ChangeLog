@@ -25,6 +25,7 @@
     * New aggregation function count_ok, that counts the number
       of nodes in state OK.
     * FIX: Removed debug output int count_ok aggregation
+    * FIX: fixed box layout with omitted root (was sometimes invisible)
 
     Checks & Agents:
     * AIX: convert NIC check to lnx_if (now being compatible with if/if64)

@@ -3347,7 +3347,7 @@ def mode_changelog(phase):
                            "<th>%s</th>" % _("Last result"))
             html.write("</tr>")
 
-            odd = "even"
+            odd = "odd"
             num_replsites = 0 # for detecting end of bulk replication
             for site_id, site in sites:
                 is_local = site_is_local(site_id)
@@ -3361,6 +3361,7 @@ def mode_changelog(phase):
 
                 # Make row red, if site status is not online
                 html.write('<tr class="data %s%d">' % (odd, status != "online" and 2 or 0))
+                odd = odd == "odd" and "even" or "odd"
 
                 # ID & Alias
                 html.write("<td><a href='%s'>%s</a></td>" %
@@ -6040,7 +6041,7 @@ def sort_sites(sites):
 
 def mode_sites(phase):
     if phase == "title":
-        return _("Multisite connections")
+        return _("Distributed Monitoring")
 
     elif phase == "buttons":
         global_buttons()
@@ -6172,7 +6173,7 @@ def mode_sites(phase):
         return
 
 
-    html.write("<h3>" + _("Multisite connections") + "</h3>")
+    html.write("<h3>" + _("Connections to local and remote sites") + "</h3>")
     html.write("<table class=data>")
     html.write("<tr><th>" + _("Actions") + "<th>"
                 + _("Site-ID")
@@ -6338,8 +6339,10 @@ def mode_edit_site(phase):
                 new_site["socket"] = "unix:" + method[1]
             else:
                 new_site["socket"] = "tcp:%s:%d" % method[1]
-        else:
+        elif method:
             new_site["socket"] = method
+        elif "socket" in new_site:
+            del new_site["socket"]
 
         # Timeout
         timeout = html.var("timeout", "").strip()
@@ -6352,8 +6355,7 @@ def mode_edit_site(phase):
 
         # Persist
         new_site["persist"] = html.get_checkbox("persist")
-        # Handle the insecure replication flag
-        new_site["insecure"] = html.get_checkbox("insecure")
+
 
         # Status host
         sh_site = html.var("sh_site")
@@ -6384,17 +6386,24 @@ def mode_edit_site(phase):
         multisiteurl = html.var("multisiteurl", "").strip()
         if repl:
             if not multisiteurl:
-                raise MKUserError("multisiteurl", _("Please enter the Multisite URL of the slave/peer site."))
+                raise MKUserError("multisiteurl", 
+                    _("Please enter the Multisite URL of the slave/peer site."))
             if not multisiteurl.endswith("/check_mk/"):
-                raise MKUserError("multisiteurl", _("The Multisite URL must end with /check_mk/"))
+                raise MKUserError("multisiteurl", 
+                    _("The Multisite URL must end with /check_mk/"))
             if not multisiteurl.startswith("http://") and not multisiteurl.startswith("https://"):
-                raise MKUserError("multisiteurl", _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."))
+                raise MKUserError("multisiteurl", 
+                    _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."))
             if "socket" not in new_site:
-                raise MKUserError("replication", _("You cannot do replication with the local site."))
+                raise MKUserError("replication", 
+                    _("You cannot do replication with the local site."))
 
         # Save Multisite-URL even if replication is turned off. That way that
         # setting is not lost if replication is turned off for a while.
         new_site["multisiteurl"] = multisiteurl
+
+        # Handle the insecure replication flag
+        new_site["insecure"] = html.get_checkbox("insecure")
 
         # Secret is not checked here, just kept
         if not new and "secret" in old_site:
@@ -6516,7 +6525,7 @@ def mode_edit_site(phase):
         [ ("none",  _("No replication with this site")),
           ("peer",  _("Peer: synchronize configuration with this site")),
           ("slave", _("Slave: push configuration to this site"))
-        ])
+        ], site.get("replication", "none"))
     html.help( _("WATO replication allows you to manage several monitoring sites with a "
                 "logically centralized WATO. Slave sites receive their configuration "
                 "from master sites. Several master sites can build a peer-to-peer "
@@ -6773,6 +6782,8 @@ class SiteAttribute(Attribute):
         return "", self._choices_dict.get(value, _("(do not monitor)"))
 
     def render_input(self, value):
+        if not value: # convert None to "" for select
+            value = ""
         html.select("site", self._choices, value)
 
     def from_html_vars(self):
@@ -6786,7 +6797,7 @@ class SiteAttribute(Attribute):
         if value:
             return [ "site:" + value ]
         else:
-            return []
+            return [ "site:" ]
 
 # The replication status contains information about each
 # site. It is a dictionary from the site id to a dict with

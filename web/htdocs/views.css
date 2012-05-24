@@ -173,6 +173,7 @@ div.optiondial {
     background-position: 1px -1px;
     overflow: hidden;
     box-shadow: 0px 0px 1px #000;
+    color: #000;
 }
 
 div.optiondial div {

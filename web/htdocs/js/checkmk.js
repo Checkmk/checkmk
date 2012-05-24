@@ -659,9 +659,10 @@ function setReload(secs, url) {
 }
 
 function startReloadTimer(url) {
-    if(gReloadTimer)
+    if (gReloadTimer)
         clearTimeout(gReloadTimer);
-    gReloadTimer = setTimeout("handleReload('" + url + "')", Math.ceil(parseFloat(gReloadTime) * 1000));
+    if (gReloadTime)
+        gReloadTimer = setTimeout("handleReload('" + url + "')", Math.ceil(parseFloat(gReloadTime) * 1000));
 }
 
 function updateHeaderTime() {
@@ -719,17 +720,18 @@ function handleReload(url) {
     // FiXME: Nicht mehr die ganze Seite neu laden, wenn es ein DIV "data_container" gibt.
     // In dem Fall wird die aktuelle URL aus "window.location.href" geholt, für den Refresh
     // modifiziert, der Inhalt neu geholt und in das DIV geschrieben.
-    if(!document.getElementById('data_container') || url !== '') {
+    if (!document.getElementById('data_container') || url !== '') {
         if (url === '')
             window.location.reload(false);
         else
             window.location.href = url;
-    } else {
+    } 
+    else {
         // Enforce specific display_options to get only the content data
         var display_options = getUrlParam('display_options');
         var opts = [ 'h', 't', 'b', 'f', 'c', 'o', 'd', 'e', 'r', 'w' ];
-        for(var i = 0; i < opts.length; i++) {
-            if(display_options.indexOf(opts[i].toUpperCase()) > -1)
+        for (var i = 0; i < opts.length; i++) {
+            if (display_options.indexOf(opts[i].toUpperCase()) > -1)
                 display_options = display_options.replace(opts[i].toUpperCase(), opts[i]);
             else
                 display_options += opts[i];

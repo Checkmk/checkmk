@@ -310,7 +310,8 @@ def paint_aggr_tree_foldable(row, boxes, omit_root=True):
                 leaf = "noleaf"
                 mc = mousecode
 
-            if not omit_root or len(path) > 1:
+            omit = omit_root and len(path) == 1
+            if not omit:
                 h += '<span id="%d:%s" %s class="bibox_box %s %s state%s">' % (
                         expansion_level, path_id, mc, leaf, is_open and "open" or "closed", state["state"])
                 if is_leaf:
@@ -320,7 +321,7 @@ def paint_aggr_tree_foldable(row, boxes, omit_root=True):
                 h += '</span> '
 
             if not is_leaf:
-                h += '<span class="bibox" style="%s">' % (not is_open and "display: none;" or "")
+                h += '<span class="bibox" style="%s">' % ((not is_open and not omit) and "display: none;" or "")
                 parts = []
                 for node in tree[3]:
                     new_path = path + [node[2]["title"]]

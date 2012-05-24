@@ -15,6 +15,9 @@
     * FIX: fix folding in custom links (directories would not open)
     * FIX: animation of rotation treeangle in trees works again
     * FIX: Logwatch: Changed font color back to black
+    * FIX: show toggle button for checkboxes in deactivated state
+    * FIX: fix repeated stacked refresh when toggling columns
+    * FIX: disable checkbox button in non-checkboxable layouts
 
     Mobile:
     * FIX: Fixed logtime filter settings in all mobile views
@@ -23,6 +26,8 @@
     BI:
     * New aggregation function count_ok, that counts the number
       of nodes in state OK.
+    * FIX: Removed debug output int count_ok aggregation
+    * FIX: fixed box layout with omitted root (was sometimes invisible)
 
     Checks & Agents:
     * Linux: Modified cluster section to allow pacemaker/corosync clusters without heartbeat

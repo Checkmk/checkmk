@@ -235,7 +235,7 @@ table.data {
     width: 100%;
 }
 
-table.data td {
+table.data {
     color: black;
 }
 
@@ -347,10 +347,10 @@ tr.groupheader td {
     margin: 0px;
     padding-top: 2px;
     font-weight: bold;
-    color: white;
+    color: #fff;
 }
 tr.groupheader a {
-    color: #000;
+    color: #fff;
     text-decoration: none;
 }
 

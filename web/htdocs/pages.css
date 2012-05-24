@@ -295,7 +295,7 @@ table.data a {
     text-decoration: none;
     color: black;
 }
-table.data tr.data td a:hover {
+table.data a:hover {
     text-decoration: underline;
 }
 
@@ -397,10 +397,9 @@ input[type=text],input[type=text] {
     height: 18px;
     padding: 2px 3px;
     vertical-align: middle;
-/*    top: -2px; */
 }
 select {
-    height: 22px;
+    height: 24px;
 }
 
 input[type=radio] {
@@ -584,8 +583,9 @@ table.nform tr.heading > td:hover {
 }
 
 table.nform > tbody > tr > td {
-   vertical-align: middle;
-   height: 27px;
+    vertical-align: middle;
+    height: 27px;
+    color: black;
 }
 
 table.nform > tbody > tr > td.simple {

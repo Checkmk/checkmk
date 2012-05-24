@@ -1006,33 +1006,34 @@ function real_style(obj, attr, ieAttr) {
     return st;
 }
 
-function find_checkbox(elem) {
-    // Find the checkbox of this element to gather the number of cells
+function find_checkbox(oTd) {
+    // Find the checkbox of this oTdent to gather the number of cells
     // to highlight after the checkbox
     // 1. Go up to the row
     // 2. search backwards for the next checkbox
     // 3. loop the number of columns to highlight
-    var childs = elem.parentNode.childNodes;
+    var allTds = oTd.parentNode.childNodes;
     var found = false;
     var checkbox = null;
-    for(var a = childs.length - 1; a >= 0 && checkbox === null; a--) {
+    for(var a = allTds.length - 1; a >= 0 && checkbox === null; a--) {
         if(found === false) {
-            if(childs[a] == elem) {
+            if(allTds[a] == oTd) { /* that's me */
                 found = true;
             }
-            continue;
+            else 
+                continue;
         }
 
         // Found the clicked column, now walking the cells backward from the
         // current cell searching for the next checkbox
-        var elems = childs[a].childNodes;
-        for(var x = 0; x < elems.length; x++) {
-            if(elems[x].tagName === 'INPUT' && elems[x].type == 'checkbox') {
-                checkbox = elems[x];
+        var oTds = allTds[a].childNodes;
+        for(var x = 0; x < oTds.length; x++) {
+            if(oTds[x].tagName === 'INPUT' && oTds[x].type == 'checkbox') {
+                checkbox = oTds[x];
                 break;
             }
         }
-        elems = null;
+        oTds = null;
     }
     return checkbox;
 }

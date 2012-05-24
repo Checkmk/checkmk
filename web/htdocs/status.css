@@ -219,6 +219,9 @@ td.statex {  /* zero count */
 tr.odd0  { background-color: #eee; }
 tr.even0 { background-color: #ddd; }
 
+tr.odd0  { background-color: #eee; }
+tr.even0 { background-color: #ddd; }
+
 tr.odd1  { background-color: #ffc; }
 tr.even1 { background-color: #ffa; }
 

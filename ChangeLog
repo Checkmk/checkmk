@@ -18,6 +18,7 @@
     * FIX: show toggle button for checkboxes in deactivated state
     * FIX: fix repeated stacked refresh when toggling columns
     * FIX: disable checkbox button in non-checkboxable layouts
+    * FIX: fix table layout for views (gaps where missing sometimes)
 
     Mobile:
     * FIX: Fixed logtime filter settings in all mobile views

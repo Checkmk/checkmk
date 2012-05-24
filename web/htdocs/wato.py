@@ -3746,7 +3746,7 @@ def render_audit_log(log, what, with_filename = False):
     if what == 'audit':
         display_paged(times)
 
-    htmlcode += '<table class="wato auditlog %s">' % what
+    htmlcode += '<table class="data wato auditlog %s">' % what
     even = "even"
     for t, linkinfo, user, action, text in log:
         even = even == "even" and "odd" or "even"

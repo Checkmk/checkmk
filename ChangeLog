@@ -6,6 +6,7 @@
     Multisite:
     * FIX: remove refresh button from dashboard.
     * FIX: remove use of old option defaults.checkmk_web_uri
+    * FIX: fixed outgoing bandwidth in fc port perfometer
     * New display type 'boxes-omit-root' for BI views
     * Hostgroup view BI Boxes omits the root level
     * Finalized layout if view options and commands/filters/painteroptions.

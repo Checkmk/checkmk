@@ -211,15 +211,13 @@ perfometers["check_mk-ipmi_sensors"] = perfometer_check_mk_ipmi_sensors
 perfometers["check_mk-nvidia.temp"] = perfometer_check_mk_ipmi_sensors
 perfometers["check_mk-cisco_temp_sensor"] = perfometer_check_mk_ipmi_sensors
 
-def perfometer_check_mk_if(row, check_command, perf_data):
+def perfometer_bandwidth(in_bytes, out_bytes, in_bw, out_bw):
     txt = []
     have_bw = True
     h = '<table><tr>'
-    for name, perf, color in [
-          ("in", perf_data[0], "#0e6"),
-          ("out", perf_data[5], "#2af") ]:
-        bytes = savefloat(perf[1])
-        bw    = savefloat(perf[6])
+    for name, bytes, bw, color in [
+          ("in",  in_bytes,  in_bw,  "#0e6"),
+          ("out", out_bytes, out_bw, "#2af") ]:
         if bw > 0.0:
             rrate = bytes / bw
         else:
@@ -240,14 +238,28 @@ def perfometer_check_mk_if(row, check_command, perf_data):
         return " &nbsp; ".join(txt), h
 
     # make logarithmic perf-o-meter
-    in_bytes  = savefloat(perf_data[0][1])
-    out_bytes = savefloat(perf_data[5][1])
     MB = 1000000.0
     text = "%s/s&nbsp;&nbsp;&nbsp;%s/s" % (
         number_human_readable(in_bytes), number_human_readable(out_bytes))
 
     return text, perfometer_logarithmic_dual(
                  in_bytes, "#0e6", out_bytes, "#2af", 1000000, 5)
+
+def perfometer_check_mk_if(row, check_command, perf_data):
+    return perfometer_bandwidth(
+        in_bytes  = savefloat(perf_data[0][1]),
+        out_bytes = savefloat(perf_data[5][1]),
+        in_bw     = savefloat(perf_data[0][6]),
+        out_bw    = savefloat(perf_data[5][6]),
+    )
+
+def perfometer_check_mk_brocade_fcport(row, check_command, perf_data):
+    return perfometer_bandwidth(
+        in_bytes  = savefloat(perf_data[0][1]),
+        out_bytes = savefloat(perf_data[1][1]),
+        in_bw     = savefloat(perf_data[0][6]),
+        out_bw    = savefloat(perf_data[1][6]),
+    )
 
 perfometers["check_mk-if"] = perfometer_check_mk_if
 perfometers["check_mk-if64"] = perfometer_check_mk_if

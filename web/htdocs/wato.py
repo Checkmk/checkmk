@@ -6260,7 +6260,7 @@ def mode_edit_site(phase):
     vs_conn_method = CascadingDropdown(
         html_separator = " ",
         choices = [
-            ( "local", _("Connect to the local site") ),
+            ( None, _("Connect to the local site") ),
             ( "tcp",   _("Connect via TCP"), Tuple(
                 orientation = "float",
                 elements = [
@@ -6318,8 +6318,6 @@ def mode_edit_site(phase):
                 new_site["socket"] = "tcp:%s:%d" % method[1]
         else:
             new_site["socket"] = method
-
-        html.debug(new_site)
 
         # Timeout
         timeout = html.var("timeout", "").strip()
@@ -6426,10 +6424,10 @@ def mode_edit_site(phase):
 
     forms.header(_("Livestatus settings"))
     forms.section(_("Connection"))
-    method = site.get("socket", "local")
-    if method.startswith("unix:"):
+    method = site.get("socket", None)
+    if method and method.startswith("unix:"):
         method = ('unix', method[5:])
-    elif method.startswith("tcp:"):
+    elif method and method.startswith("tcp:"):
         method = ('tcp', tuple(method.split(":")[1:]))
     vs_conn_method.render_input("method", method)
 

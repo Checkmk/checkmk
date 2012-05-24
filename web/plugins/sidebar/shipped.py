@@ -508,8 +508,7 @@ def render_tactical_overview():
             (_("Hosts"),    hstdata, 'hostproblems', 'host'),
             (_("Services"), svcdata, 'svcproblems',  'service'),
             ]:
-        html.write("<tr><th><span>%s</span></th><th><span>%s</span></th><th><span>%s</span></th></tr>\n" % \
-                                     (title, _('Problems'), _('Unhandled')))
+        html.write("<tr><th>%s</th><th>%s</th><th>%s</th></tr>\n" % (title, _('Problems'), _('Unhandled')))
         html.write("<tr>")
 
         html.write('<td class=total><a target="main" href="view.py?view_name=all%ss">%d</a></td>' % (what, data[0]))
@@ -539,20 +538,17 @@ table.tacticaloverview {
     * border-spacing: 5px 2px;
     */
    width: %dpx;
-   margin-top: -9px;
+   margin-top: -7px;
 }
 table.tacticaloverview th { 
     font-size: 8pt; 
+    line-height: 7pt;
     text-align: left; 
     color: #123a4a; 
     font-weight: normal; 
     padding: 0; 
     padding-top: 2px; 
     vertical-align: bottom;
-}
-table.tacticaloverview th span {
-    position: relative;
-    top: 2px;
 }
 table.tacticaloverview td { 
     width: 33.3%%; 

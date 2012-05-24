@@ -393,13 +393,16 @@ input[type=text] {
 input[type=password] {
     box-shadow: 0.1px 1.2px 1.8px 0 #800 inset;
 }
-input[type=text],input[type=text] {
+input[type=text], input[type=password] {
     height: 18px;
-    padding: 2px 3px;
+    padding: 3px 3px 1px 3px;
     vertical-align: middle;
 }
 select {
-    height: 24px;
+    height: 20px;
+    border-style: solid none;
+    border-width: 2px;
+    border-color: white;
 }
 
 input[type=radio] {
@@ -658,6 +661,7 @@ div.really, div.success, div.error, div.message, div.warning {
     margin: 2em 0em;
     border-radius: 1ex;
     padding: 1em 2em;
+    box-shadow: 0 0 3px #444;
     /* border-width: 2px; 
     border-style: solid;*/
 }

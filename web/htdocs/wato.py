@@ -3347,7 +3347,7 @@ def mode_changelog(phase):
                            "<th>%s</th>" % _("Last result"))
             html.write("</tr>")
 
-            odd = "even"
+            odd = "odd"
             num_replsites = 0 # for detecting end of bulk replication
             for site_id, site in sites:
                 is_local = site_is_local(site_id)
@@ -3361,6 +3361,7 @@ def mode_changelog(phase):
 
                 # Make row red, if site status is not online
                 html.write('<tr class="data %s%d">' % (odd, status != "online" and 2 or 0))
+                odd = odd == "odd" and "even" or "odd"
 
                 # ID & Alias
                 html.write("<td><a href='%s'>%s</a></td>" %
@@ -6040,7 +6041,7 @@ def sort_sites(sites):
 
 def mode_sites(phase):
     if phase == "title":
-        return _("Multisite connections")
+        return _("Distributed Monitoring")
 
     elif phase == "buttons":
         global_buttons()
@@ -6172,7 +6173,7 @@ def mode_sites(phase):
         return
 
 
-    html.write("<h3>" + _("Multisite connections") + "</h3>")
+    html.write("<h3>" + _("Connections to local and remote sites") + "</h3>")
     html.write("<table class=data>")
     html.write("<tr><th>" + _("Actions") + "<th>"
                 + _("Site-ID")

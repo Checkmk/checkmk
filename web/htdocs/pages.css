@@ -403,6 +403,7 @@ select {
     border-style: solid none;
     border-width: 2px;
     border-color: white;
+    box-shadow: 0.5px 0.5px 1px #CCCCCC;
 }
 
 input[type=radio] {

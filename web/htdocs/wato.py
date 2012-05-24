@@ -1936,11 +1936,12 @@ def delete_host_after_confirm(delname):
     c = wato_confirm(_("Confirm host deletion"),
                      _("Do you really want to delete the host <tt>%s</tt>?") % delname)
     if c:
+        mark_affected_sites_dirty(g_folder, delname)
+        log_pending(AFFECTED, delname, "delete-host", _("Deleted host %s") % delname)
         host = g_folder[".hosts"][delname]
         del g_folder[".hosts"][delname]
         g_folder["num_hosts"] -= 1
         save_folder_and_hosts(g_folder)
-        log_pending(AFFECTED, delname, "delete-host", _("Deleted host %s") % delname)
         check_mk_automation(host[".siteid"], "delete-host", [delname])
         call_hook_hosts_changed(g_folder)
         return "folder"

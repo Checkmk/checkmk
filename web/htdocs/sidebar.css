@@ -265,7 +265,7 @@ div.snapin div.footnote {
 /* Style for exceptions displayed in snapins */
 div.snapin div.snapinexception {
     background-color: #f88;
-    -moz-border-radius: 4px;
+    border-radius: 4px;
     padding: 3px;
     border: 1px solid #f00;
     width: 220px;

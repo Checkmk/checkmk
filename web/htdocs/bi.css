@@ -46,7 +46,7 @@ Boston, MA 02110-1301 USA.
     border-top: 1px solid #aaa;
     border-bottom: 1px solid #aaa;
     border-left: 1px solid #aaa;
-    -moz-border-radius: 3px;
+    border-radius: 3px;
 }
 
 tr.odd0 .aggrtree ul.subtree {
@@ -68,7 +68,7 @@ tr.even0 .aggrtree ul.subtree {
     width: 34px;
     padding: 0;
     text-align: center;
-    -moz-border-radius: 3px;
+    border-radius: 3px;
     border-style: solid;
     border-width: 1px;
     border-color: #eee #888 #999 #ccc;

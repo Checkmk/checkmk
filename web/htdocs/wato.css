@@ -49,7 +49,7 @@ Boston, MA 02110-1301 USA.
 }
 
 .wato table.data th {
-    -moz-border-radius: 0px;
+    border-radius: 0px;
     background-color: #508aa1;
     background-color: #73a1b4;
 }
@@ -58,7 +58,7 @@ Boston, MA 02110-1301 USA.
 
 .wato th.left {
     border-left-style: none;
-    -moz-border-radius: 4px 0px 0px 0px;
+    border-radius: 4px 0px 0px 0px;
 }
 .wato table.data td {
     /* border-style: dashed; */
@@ -71,7 +71,7 @@ Boston, MA 02110-1301 USA.
 
 .wato th.right {
     border-right-style: none;
-    -moz-border-radius: 0px 4px 0px 0px;
+    border-radius: 0px 4px 0px 0px;
 }
 .wato td.right {
     text-align: right;
@@ -126,7 +126,7 @@ Boston, MA 02110-1301 USA.
 .wato div.sitestatus {
     border-style: solid;
     border-width: 1px;
-    -moz-border-radius: 3px;
+    border-radius: 3px;
     vertical-align: middle;
     text-align: center;
     padding: 0px 10px;
@@ -417,7 +417,7 @@ table.validationerror img {
     width: intrinsic;
 
     -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
+    border-radius: 5px;
     border-radius: 5px;
     border: 1px solid #fff;
 }
@@ -477,14 +477,14 @@ table.validationerror img {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
     margin-top: 10px;
-    -moz-border-radius: 4px;
+    border-radius: 4px;
     position: relative;
     top: 0px;
     left: 0px;
 }
 
 .wato div.rule div.nr {
-    -moz-border-radius: 10px;
+    border-radius: 10px;
     border: 1px solid white;
     background-color: #fcd340;
     color: black;
@@ -537,7 +537,7 @@ table.validationerror img {
     border: 1px solid white;
     background-color: #a7bec3;
     padding: 5px;
-    -moz-border-radius: 4px;
+    border-radius: 4px;
     height: 90px;
 }
 

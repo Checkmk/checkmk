@@ -81,7 +81,7 @@ td.state {
 b.stmark {
     margin-left: 4px;
     padding: 1px 3px;
-    -moz-border-radius: 4px;
+    border-radius: 4px;
     font-size: 7pt;
     border: 1px solid #666;
 }
@@ -249,7 +249,7 @@ tr.even3 { background-color: #ffefaf; }
 /* Styles the background of host columns which have a red colored background when critical */
 .data div.hostdown {
     background-color: #f22;
-    -moz-border-radius: 4px;
+    border-radius: 4px;
     border: 2px solid #000;
     padding-left: 3px;
     padding-right: 3px;

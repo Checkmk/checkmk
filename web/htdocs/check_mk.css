@@ -137,7 +137,7 @@ a.button {
     padding: 0.1ex 1ex;
     height: 24px;
     -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
+    border-radius: 4px;
     border-radius: 4px;
     margin: 2px;
 }
@@ -174,7 +174,7 @@ label.image_button input {
     float: left;
     font-size: 8pt;
     margin-left: 3px;
-    -moz-border-radius: 0px;
+    border-radius: 0px;
 }
 label.image_button input:hover {
     background-position: right -65px;

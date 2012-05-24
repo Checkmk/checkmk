@@ -69,13 +69,16 @@ div.dashlet div.title {
     margin: 0px;
     padding-top: 4px;
     font-weight: normal;
+    overflow: hidden;
+    height: 17px;
+    white-space: nowrap;
 }
 div.dashlet div.title a {
     text-decoration: none;
     color: white;
 }
 div.dashlet div.title a:hover {
-    color: #00f;
+    text-decoration: underline;
 }
 
 div.dashlet img.shadow {

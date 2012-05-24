@@ -13,6 +13,7 @@
     * FIX: remove nasty JS error in sidebar
     * FIX: fix folding in custom links (directories would not open)
     * FIX: animation of rotation treeangle in trees works again
+    * FIX: Logwatch: Changed font color back to black
 
     Mobile:
     * FIX: Fixed logtime filter settings in all mobile views

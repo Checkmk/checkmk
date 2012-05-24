@@ -11,6 +11,8 @@
     * FIX: fix site configuration for local site in Multisite environments
     * FIX: "(no not monitor)" setting in distributed WATO now works
     * FIX: Site management: replication setting was lost after re-editing
+    * Site management: "disabled" only applies to Livestatus now
+    * FIX: fixed problems after changing D/WATO-configuration
 
     Multisite:
     * New display type 'boxes-omit-root' for BI views

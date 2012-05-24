@@ -36,6 +36,8 @@
     * FIX: fix sometimes-broken sizing of sidebar and dashboard on Chrome
     * FIX: fix dashboard layout on iPad
     * FIX: Fixed styling issues of sidebar in IE7
+    * FIX: fix problem where filter settings (of checkboxes) are not effective
+           when it comes to executing commands
 
     Mobile:
     * FIX: Fixed logtime filter settings in all mobile views

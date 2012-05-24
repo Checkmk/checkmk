@@ -10419,7 +10419,7 @@ def mode_pattern_editor(phase):
 
             master_url = ''
             if config.is_multisite():
-                master_url = '&master_url=' + defaults.checkmk_web_uri + '/'
+                master_url = '&master_url=' + defaults.url_prefix + 'check_mk/'
             html.context_button(title, "logwatch.py?host=%s&amp;file=%s%s" %
                 (htmllib.urlencode(hostname), htmllib.urlencode(item), master_url), 'logwatch')
 

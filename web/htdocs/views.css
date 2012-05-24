@@ -207,7 +207,15 @@ div.optiondial.refresh.off { background-image: url("images/dial_refresh_off.png"
 div.view_form {
     margin-bottom: 10px;
 }
+
+#commands table.nform td.legend {
+    height: 18px;
+}
     
+#commands table.nform td.content {
+    height: 18px;
+    padding-bottom: 2px;
+}
 
 /*-------------------------------------------------------------------------.
 |                _                            _                            |

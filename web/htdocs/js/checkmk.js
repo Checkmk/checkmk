@@ -860,7 +860,7 @@ function toggle_foldable_container(treename, id) {
         var oImg = document.getElementById('treeimg.' + treename + '.' + id);
         var oBox = document.getElementById('tree.' + treename + '.' + id);
         toggle_tree_state(treename, id, oBox);
-        toggle_folding(oImg, oBox.style.display != "none");
+        toggle_folding(oImg, !has_class(oBox, "closed"));
         oImg = null;
         oBox = null;
     }

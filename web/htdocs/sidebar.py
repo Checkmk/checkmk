@@ -146,7 +146,7 @@ def page_side():
     if not config.may("see_sidebar"):
         return
     html.html_head(_("Check_MK Sidebar"), javascripts=["sidebar"], stylesheets=["sidebar", "status"])
-    html.write('<body class="side" onload="initScrollPos()" onunload="storeScrollPos()">\n')
+    html.write('<body class="side" onload="initScrollPos(); setSidebarHeight();" onunload="storeScrollPos()">\n')
     html.write('<div id="check_mk_sidebar">\n')
 
     views.load_views()
@@ -180,6 +180,7 @@ def page_side():
     html.write("restart_snapins = %r;\n" % restart_snapins)
     html.write("sidebar_scheduler();\n")
     html.write("window.onresize = function() { setSidebarHeight(); }\n")
+    # html.write("window.onload = function() { setSidebarHeight(); }\n")
     html.write("</script>\n")
 
     # html.write("</div>\n")

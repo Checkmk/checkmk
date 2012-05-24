@@ -476,7 +476,7 @@ class html:
         add_style = ""
         if "size" in args and args["size"]:
             addprops += " size=%d" % (args["size"] + 1)
-            if "width:" not in args.get("style", ""):
+            if "width:" not in args.get("style", "") and not self.mobile:
                 add_style = "width: %d.5ex; " % args["size"]
 
         if "type" in args:

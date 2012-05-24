@@ -11,6 +11,7 @@
 
     Mobile:
     * FIX: Fixed logtime filter settings in all mobile views
+    * FIX: fix some layout problems
 
     BI:
     * New aggregation function count_ok, that counts the number

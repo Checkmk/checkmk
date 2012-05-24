@@ -178,6 +178,8 @@ body.mobile table.data td.perfometer td.inner {
 .ui-li-aside.state {
     width: 4.5em;
     text-align: center;
+    border-radius: 5px;
+    box-shadow: 0 0 2px #444444;
 }
 
 td.pnpgraph img {

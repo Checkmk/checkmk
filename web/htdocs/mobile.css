@@ -108,6 +108,20 @@ body.mobile table.form th {
     border-style: none;
 }
 
+body.mobile table.filtertime td {
+    vertical-align: middle;
+}
+body.mobile table.filtertime div {
+}
+body.mobile table.filtertime div.ui-select {
+    width: auto;
+}
+body.mobile table.alertstatefilter td {
+    vertical-align: top;
+}
+body.mobile table.alertstatefilter .ui-checkbox {
+    margin: 0;
+}
 /* Perfometers */
 
 

@@ -25,6 +25,9 @@ Boston, MA 02110-1301 USA.
 
 */
 
+/* Global style used by all HTML pages, even by sidebar and
+   mobile interface */
+
 /*-------------------------------------------------------------------------.
 |                ____        __             _ _                            |
 |               |  _ \  ___ / _| __ _ _   _| | |_ ___                      |
@@ -85,34 +88,6 @@ input, select, textarea {
     font-family: arial, helvetica, sans-serif;
     vertical-align: middle;
     margin-top: 0px;
-}
-
-input[type=text] {
-    box-shadow: 0.1px 1.2px 1.8px 0 #888 inset;
-    position: relative;
-}
-input[type=password] {
-    box-shadow: 0.1px 1.2px 1.8px 0 #800 inset;
-}
-input[type=text],input[type=text] {
-    height: 18px;
-    padding: 2px 3px;
-    vertical-align: middle;
-/*    top: -2px; */
-}
-select {
-    height: 22px;
-}
-
-input[type=radio] {
-    margin-left: 0px;
-}
-input[type=checkbox] {
-    margin-left: 0px; 
-}
-
-select {
-    padding: 1px 3px;
 }
 
 form {

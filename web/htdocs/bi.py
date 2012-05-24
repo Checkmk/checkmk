@@ -876,7 +876,7 @@ def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
     elif num_ok >= int(needed_for_warn):
         return { "state" : 1, "output" : "" }
     else:
-        return { "state" : 2, "output" : "%r / %d" % (states, num_ok)  }
+        return { "state" : 2, "output" : "" }
 
 config.aggregation_functions["count_ok"] = aggr_countok
 

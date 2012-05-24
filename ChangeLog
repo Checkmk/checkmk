@@ -23,6 +23,7 @@
       of nodes in state OK.
 
     Checks & Agents:
+    * Linux: Modified cluster section to allow pacemaker/corosync clusters without heartbeat
     * AIX: convert NIC check to lnx_if (now being compatible with if/if64)
     * AIX: new check for CPU utilization (using section lparstat_aix)
 

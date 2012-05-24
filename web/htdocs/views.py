@@ -1302,7 +1302,7 @@ def render_view(view, rows, datasource, group_painters, painters,
         should_show_command_form(display_options, datasource)
 
     show_context_links(view, hide_filters, show_filters, display_options, 
-                       painter_options, command_form, show_checkboxes)
+                       painter_options, command_form, layout.get('checkboxes', False))
 
     # User errors in filters
     html.show_user_errors()

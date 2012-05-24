@@ -1610,7 +1610,7 @@ def show_context_links(thisview, active_filters, show_filters, display_options, 
             view_option_toggler(thisview, "show_checkboxes", "checkbox", _("Enable/Disable checkboxes for selecting rows for commands"))
         else:
             togglebutton_off("commands")
-            togglebutton_off("checkboxes")
+            togglebutton_off("checkbox")
 
     if 'O' in display_options:
         if config.may("view_option_columns"):

@@ -62,9 +62,6 @@ th {
 body {
     color: white;
 }
-td {
-    color: black;
-}
 
 /* Default font size for the complete Multisite GUI */
 button, input, td, th, select, textarea {

@@ -2,6 +2,7 @@
     WATO:
     * FIX: fix folding problems with dependent host tags
     * FIX: Detecting duplicate tag ids between regular tags and auxtags
+    * FIX: Fixed layout problem of "new special rule" button in rule editor
 
     Multisite:
     * FIX: remove refresh button from dashboard.

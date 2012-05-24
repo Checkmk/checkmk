@@ -235,6 +235,11 @@ table.data {
     width: 100%;
 }
 
+table.data td {
+    color: black;
+}
+
+
 table.data th {
     font-weight: normal;
     border-left: 1px solid #ccc;

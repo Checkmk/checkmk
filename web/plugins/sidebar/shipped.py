@@ -538,7 +538,7 @@ table.tacticaloverview {
     * border-spacing: 5px 2px;
     */
    width: %dpx;
-   margin-top: -9px;
+   margin-top: -7px;
 }
 table.tacticaloverview th { 
     font-size: 8pt; 

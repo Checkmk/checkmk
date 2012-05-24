@@ -1,11 +1,14 @@
 Title: Do no monitor host leads to host monitored on all sites
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-05-10 14:36:38
 Targetversion: 1.2.0
-Class: bug
 
 If you set a host to "do not monitor" in the "monitored on" attribute,
 then that host will be monitored on *all* sites instead of on none.
 Solution: currently no site: tag is set in that case, but we rather
 should set an empty site: tag.
+
+2012-05-24 17:08:45: changed state open -> done
+Instead of removing the site: tag we now add an empty site: tag

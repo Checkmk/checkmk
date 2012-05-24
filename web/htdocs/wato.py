@@ -6790,7 +6790,7 @@ class SiteAttribute(Attribute):
         if value:
             return [ "site:" + value ]
         else:
-            return []
+            return [ "site:" ]
 
 # The replication status contains information about each
 # site. It is a dictionary from the site id to a dict with

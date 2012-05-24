@@ -22,6 +22,7 @@
     * FIX: fix repeated stacked refresh when toggling columns
     * FIX: disable checkbox button in non-checkboxable layouts
     * FIX: fix table layout for views (gaps where missing sometimes)
+    * FIX: Fixed sorting views by perfdata values which contain floats
 
     Mobile:
     * FIX: Fixed logtime filter settings in all mobile views

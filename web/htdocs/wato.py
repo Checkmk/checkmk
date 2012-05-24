@@ -9201,16 +9201,27 @@ def mode_rulesets(phase):
 
 def create_new_rule_form(rulespec, hostname = None, item = None):
     html.begin_form("new_rule")
-    html.write(_("Create a new rule: "))
+
+    html.write('<table>')
     if hostname:
-        title = _("Exception rule for host %s" % hostname)
+        label = _("Host %s" % hostname)
+        ty = _('Host')
         if item != NO_ITEM and rulespec["itemtype"]:
-            title += _(" and %s '%s'") % (rulespec["itemname"], item)
+            label += _(" and %s '%s'") % (rulespec["itemname"], item)
+            ty = rulespec["itemname"]
+
+        title = _("Create %s specific rule for: ") % ty
+        html.write('<tr><td>')
         html.button("_new_host_rule", title)
-        html.write(_("or") + " ")
+        html.write('</td><td style="vertical-align:middle">')
+        html.write(label)
+        html.write('</td></tr>\n')
+
+    html.write('<tr><td>')
     html.button("_new_rule", _("Create rule in folder: "))
+    html.write('</td><td>')
     html.select("folder", folder_selection(g_root_folder))
-    html.write("\n")
+    html.write('</td></tr></table>\n')
     html.hidden_fields()
     html.end_form()
 

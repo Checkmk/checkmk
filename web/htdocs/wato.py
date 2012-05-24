@@ -6355,8 +6355,7 @@ def mode_edit_site(phase):
 
         # Persist
         new_site["persist"] = html.get_checkbox("persist")
-        # Handle the insecure replication flag
-        new_site["insecure"] = html.get_checkbox("insecure")
+
 
         # Status host
         sh_site = html.var("sh_site")
@@ -6387,17 +6386,24 @@ def mode_edit_site(phase):
         multisiteurl = html.var("multisiteurl", "").strip()
         if repl:
             if not multisiteurl:
-                raise MKUserError("multisiteurl", _("Please enter the Multisite URL of the slave/peer site."))
+                raise MKUserError("multisiteurl", 
+                    _("Please enter the Multisite URL of the slave/peer site."))
             if not multisiteurl.endswith("/check_mk/"):
-                raise MKUserError("multisiteurl", _("The Multisite URL must end with /check_mk/"))
+                raise MKUserError("multisiteurl", 
+                    _("The Multisite URL must end with /check_mk/"))
             if not multisiteurl.startswith("http://") and not multisiteurl.startswith("https://"):
-                raise MKUserError("multisiteurl", _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."))
+                raise MKUserError("multisiteurl", 
+                    _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."))
             if "socket" not in new_site:
-                raise MKUserError("replication", _("You cannot do replication with the local site."))
+                raise MKUserError("replication", 
+                    _("You cannot do replication with the local site."))
 
         # Save Multisite-URL even if replication is turned off. That way that
         # setting is not lost if replication is turned off for a while.
         new_site["multisiteurl"] = multisiteurl
+
+        # Handle the insecure replication flag
+        new_site["insecure"] = html.get_checkbox("insecure")
 
         # Secret is not checked here, just kept
         if not new and "secret" in old_site:
@@ -6519,7 +6525,7 @@ def mode_edit_site(phase):
         [ ("none",  _("No replication with this site")),
           ("peer",  _("Peer: synchronize configuration with this site")),
           ("slave", _("Slave: push configuration to this site"))
-        ])
+        ], site.get("replication", "none"))
     html.help( _("WATO replication allows you to manage several monitoring sites with a "
                 "logically centralized WATO. Slave sites receive their configuration "
                 "from master sites. Several master sites can build a peer-to-peer "

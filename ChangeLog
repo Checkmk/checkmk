@@ -10,6 +10,7 @@
     * FIX: Added check if contacts belong to contactgroup before contactgroup deletion
     * FIX: fix site configuration for local site in Multisite environments
     * FIX: "(no not monitor)" setting in distributed WATO now works
+    * FIX: Site management: replication setting was lost after re-editing
 
     Multisite:
     * New display type 'boxes-omit-root' for BI views

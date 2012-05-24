@@ -1936,11 +1936,12 @@ def delete_host_after_confirm(delname):
     c = wato_confirm(_("Confirm host deletion"),
                      _("Do you really want to delete the host <tt>%s</tt>?") % delname)
     if c:
+        mark_affected_sites_dirty(g_folder, delname)
+        log_pending(AFFECTED, delname, "delete-host", _("Deleted host %s") % delname)
         host = g_folder[".hosts"][delname]
         del g_folder[".hosts"][delname]
         g_folder["num_hosts"] -= 1
         save_folder_and_hosts(g_folder)
-        log_pending(AFFECTED, delname, "delete-host", _("Deleted host %s") % delname)
         check_mk_automation(host[".siteid"], "delete-host", [delname])
         call_hook_hosts_changed(g_folder)
         return "folder"
@@ -3319,9 +3320,9 @@ def mode_changelog(phase):
             if sitestatus_do_async_replication:
                 create_sync_snapshot()
 
-            html.write("<h3>%s</h3>" % _("Distributed WATO - replication status"))
+            html.write("<h3>%s</h3>" % _("Distributed WATO - Replication Status"))
             repstatus = load_replication_status()
-            sites = config.allsites().items()
+            sites = [(name, config.site(name)) for name in config.sitenames() ]
             sort_sites(sites)
             html.write("<table class=data>")
             html.write("<tr class=dualheader>")
@@ -3355,12 +3356,16 @@ def mode_changelog(phase):
                 if not is_local and not site.get("replication"):
                     continue
 
-                ss = html.site_status.get(site_id, {})
-                status = ss.get("state", "unknown")
+                if site.get("disabled"):
+                    status = "disabled"
+                else:
+                    ss = html.site_status.get(site_id, {})
+                    status = ss.get("state", "unknown")
+
                 srs = repstatus.get(site_id, {})
 
                 # Make row red, if site status is not online
-                html.write('<tr class="data %s%d">' % (odd, status != "online" and 2 or 0))
+                html.write('<tr class="data %s0">' % odd)
                 odd = odd == "odd" and "even" or "odd"
 
                 # ID & Alias
@@ -3369,7 +3374,7 @@ def mode_changelog(phase):
                 html.write("<td>%s</td>" % site.get("alias", ""))
 
                 # Livestatus
-                html.write('<td><div class="sitestatus %s">%s</div></td>' % (status, status))
+                html.write('<td><img src="images/button_sitestatus_%s_lo.png"></td>' % (status))
 
                 # Livestatus-Version
                 html.write('<td>%s</td>' % ss.get("livestatus_version", ""))
@@ -3413,7 +3418,7 @@ def mode_changelog(phase):
                     # Do only include sites that are known to be up
                     if not site_is_local(site_id) and not "secret" in site:
                         html.write("<b>%s</b>" % _("Not logged in."))
-                    elif status == "online":
+                    else:
                         html.write('<div id="repstate_%s">%s</div>' %
                                 (site_id, uptodate and _("nothing to do") or ""))
                         if not uptodate:
@@ -3427,8 +3432,6 @@ def mode_changelog(phase):
                             html.javascript("wato_do_replication('%s', %d);" %
                               (site_id, int(estimated_duration * 1000.0)))
                             num_replsites += 1
-                    else:
-                        html.write("<b>%s</b>" % _("Skipping this site."))
                     html.write("</td>")
                 else:
                     # State
@@ -6078,7 +6081,7 @@ def mode_sites(phase):
                 if is_distributed() and global_replication_state() == "clean":
                     log_commit_pending()
 
-                log_audit(None, "edit-sites", _("Deleted site %s" % (delid)))
+                log_pending(SYNCRESTART, None, "edit-sites", _("Deleted site %s" % (delid)))
                 return None
             elif c == False:
                 return ""
@@ -6411,18 +6414,14 @@ def mode_edit_site(phase):
 
         save_sites(sites)
         if new:
-            log_audit(None, "edit-sites", _("Create new connection to site %s" % id))
-            if repl and not disabled:
-                # Assume that site needs to be synchronized
-                update_replication_status(id, { "need_sync" : True, "need_restart" : True })
+            log_pending(SYNCRESTART, None, "edit-sites", _("Created new connection to site %s" % id))
         else:
-            log_audit(None, "edit-sites", _("Modified site connection %s" % id))
+            log_pending(SYNCRESTART, None, "edit-sites", _("Modified site connection %s" % id))
             # Replication mode has switched on/off => handle replication state
             repstatus = load_replication_status()
-            make_repl = repl and not disabled
-            if make_repl and id not in repstatus: # Repl switched on
+            if repl and id not in repstatus: # Repl switched on
                 update_replication_status(id, { "need_sync" : True, "need_restart" : True })
-            elif (not make_repl) and id in repstatus:
+            elif (not repl) and id in repstatus:
                 update_replication_status(id, None) # Replication switched off
                 if is_distributed() and global_replication_state() == "clean":
                     log_commit_pending()
@@ -6447,11 +6446,6 @@ def mode_edit_site(phase):
         html.set_focus("alias")
     html.help(_("An alias or description of the site"))
 
-    # Disabled
-    forms.section(_("Disable"), simple=True)
-    html.checkbox("disabled", site.get("disabled", False), label = _("Disable this connection"))
-    html.help( _("If you disable a connection, then it will not be shown in the "
-                 "status display and no replication will be done."))
 
     forms.header(_("Livestatus settings"))
     forms.section(_("Connection"))
@@ -6517,6 +6511,12 @@ def mode_edit_site(phase):
                  "You need to add the remote monitoring servers as hosts into your local monitoring "
                  "site and use their host state as a reachability state of the remote site. Please "
                  "refer to the <a target=_blank href='%s'>online documentation</a> for details.") % docu_url)
+
+    # Disabled
+    forms.section(_("Disable"), simple=True)
+    html.checkbox("disabled", site.get("disabled", False), label = _("Temporarily disable this connection"))
+    html.help( _("If you disable a connection, then no data of this site will be shown in the status GUI. "
+                 "The replication is not affected by this, however."))
 
     # Replication
     forms.header(_("Configuration Replication (Distributed WATO)"))
@@ -6585,6 +6585,9 @@ def save_sites(sites):
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("sites = \\\n%s\n" % pprint.pformat(sites))
     update_distributed_wato_file(sites)
+    config.load_config() # make new site configuration active
+    declare_site_attribute()
+    rewrite_config_files_below(g_root_folder) # fix site attributes
     need_sidebar_reload()
 
 # Makes sure, that in distributed mode we monitor only
@@ -6743,7 +6746,7 @@ def is_distributed(sites = None):
     if sites == None:
         sites = config.sites
     for site in sites.values():
-        if site.get("replication") and not site.get("disabled"):
+        if site.get("replication"):
             return True
     return False
 
@@ -6772,32 +6775,22 @@ class SiteAttribute(Attribute):
             self._choices.append((id, title))
 
         self._choices.sort(cmp=lambda a,b: cmp(a[1], b[1]))
-        self._choices.append(("", _("(do not monitor)")))
         self._choices_dict = dict(self._choices)
         Attribute.__init__(self, "site", _("Monitored on site"),
                     _("Specify the site that should monitor this host."),
                     default_value = default_site())
 
     def paint(self, value, hostname):
-        return "", self._choices_dict.get(value, _("(do not monitor)"))
+        return "", self._choices_dict.get(value, value)
 
     def render_input(self, value):
-        if not value: # convert None to "" for select
-            value = ""
         html.select("site", self._choices, value)
 
     def from_html_vars(self):
-        site = html.var("site")
-        if site and site in self._choices_dict:
-            return site
-        else:
-            return None
+        return html.var("site")
 
     def get_tag_list(self, value):
-        if value:
-            return [ "site:" + value ]
-        else:
-            return [ "site:" ]
+        return [ "site:" + value ]
 
 # The replication status contains information about each
 # site. It is a dictionary from the site id to a dict with
@@ -6839,27 +6832,18 @@ def update_replication_status(site_id, vars, times = {}):
 def global_replication_state():
     repstatus = load_replication_status()
     some_dirty = False
-    some_offline = False
 
-    for site_id, site in config.allsites().items():
+    for site_id in config.sitenames():
+        site = config.site(site_id)
         if not site_is_local(site_id) and not site.get("replication"):
             continue
 
         srs = repstatus.get(site_id, {})
-
         if srs.get("need_sync") or srs.get("need_restart"):
-            ss = html.site_status.get(site_id, {})
-            status = ss.get("state", "unknown") # Skip non-online sites, they cannot be restarted
-            if status != "online" or (
-                  (not site_is_local(site_id) and "secret" not in site)):
-                some_offline = True
-            else:
-                some_dirty = True
+            some_dirty = True
 
     if some_dirty:
         return "dirty"
-    elif some_offline: # dirty but offline
-        return "locked"
     else:
         return "clean"
 
@@ -6909,6 +6893,15 @@ def mark_affected_sites_dirty(folder, hostname=None, sync = True, restart = True
             if restart:
                 changes["need_restart"] = True
             update_replication_status(site_id, changes)
+
+# def mark_all_sites_dirty(sites):
+#     changes = {
+#         "need_sync" : True,
+#         "need_restart" : True,
+#     }
+#     for site_id, site in sites.items():
+#         html.debug("ID: " + site_id)
+#         update_replication_status(site_id, changes)
 
 def remove_sync_snapshot():
     if os.path.exists(sync_snapshot_file):

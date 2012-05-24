@@ -3,6 +3,7 @@
     * FIX: handle UTF-8 encoded binary strings correctly (e.g. in host alias)
 
     WATO:
+    * Site management: "disabled" only applies to Livestatus now
     * FIX: fix folding problems with dependent host tags
     * FIX: Detecting duplicate tag ids between regular tags and auxtags
     * FIX: Fixed layout problem of "new special rule" button in rule editor
@@ -11,6 +12,8 @@
     * FIX: fix site configuration for local site in Multisite environments
     * FIX: "(no not monitor)" setting in distributed WATO now works
     * FIX: Site management: replication setting was lost after re-editing
+    * FIX: fixed problems after changing D/WATO-configuration
+    * FIX: D/WATO: mark site dirty after host deletion
 
     Multisite:
     * New display type 'boxes-omit-root' for BI views

@@ -2,6 +2,7 @@
     WATO:
     * FIX: fix folding problems with dependent host tags
     * FIX: Detecting duplicate tag ids between regular tags and auxtags
+    * FIX: Fixed layout problem of "new special rule" button in rule editor
 
     Multisite:
     * FIX: remove refresh button from dashboard.
@@ -30,6 +31,7 @@
     * FIX: fixed box layout with omitted root (was sometimes invisible)
 
     Checks & Agents:
+    * Linux: Modified cluster section to allow pacemaker/corosync clusters without heartbeat
     * AIX: convert NIC check to lnx_if (now being compatible with if/if64)
     * AIX: new check for CPU utilization (using section lparstat_aix)
 

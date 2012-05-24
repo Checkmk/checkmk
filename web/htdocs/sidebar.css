@@ -136,7 +136,8 @@ div.snapin div.head {
     width: 260px;
     text-align: center;
     color: #fff;
-    padding-top: 8px;
+    height: 25px;
+    line-height: 29px;
 }
 
 div.snapin div.head b {
@@ -146,39 +147,39 @@ div.snapin div.head b {
 
 div.snapin div.head.open {
     background-image: url("images/snapin_header.png");
-    height: 17px;
 }
 
 div.snapin div.head.closed {
     background-image: url("images/snapin_closed.png");
-    height: 23px;
 }
 
 /* close button on header */
 div.snapin div.closesnapin {
     float: right;
     margin-right: 10px;
-    margin-top:   2px;
+    margin-top:   11px;
+    line-height: 0px;
+    height: 8px;
+    width:8px;
+    padding:0;
 }
 
 div.snapin div.closesnapin img {
     width: 8px;
     height: 8px;
-    position: relative;
-    top: 1px;
 }
+
 div.snapin div.minisnapin {
     float: left;
-    margin-top: 2px;
     margin-left: 13px;
-    width: 0px;
-    height: 0px;
+    margin-top:  11px;
+    line-height: 0px;
+    height: 8px;
 }
+
 div.snapin div.minisnapin img {
     width: 8px;
     height: 8px;
-    position: relative;
-    top: 1px;
 }
 
 

@@ -664,39 +664,6 @@ function addBookmark() {
     get_url("add_bookmark.py?title=" + escape(title) + "&href=" + escape(href), updateContents, "snapin_bookmarks");
 }
 
-function toggle_folder(o, folderId) {
-    var par = o.parentNode;
-    var next = null;
-    var one_more = false;
-    var img = null;
-
-    for (var i in par.childNodes) {
-        var child = par.childNodes[i];
-        if (one_more && child.tagName == "DIV") {
-            next = child;
-            break;
-        }
-        if (child == o)
-            one_more = true;
-    }
-
-    for (var i in o.childNodes) {
-        var child = o.childNodes[i];
-        if (child.tagName == "IMG") {
-            img = child;
-            break;
-        }
-    }
-
-    if (next)
-	toggle_tree_state('customlinks', folderId, next);
-
-    child = null;
-    par = null;
-    next = null;
-    img = null;
-}
-
 /************************************************
  * Save/Restore scroll position
  *************************************************/

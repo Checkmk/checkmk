@@ -9,6 +9,7 @@
     * Hostgroup view BI Boxes omits the root level
     * Finalized layout if view options and commands/filters/painteroptions.
     * FIX: remove nasty JS error in sidebar
+    * FIX: fix folding in custom links (directories would not open)
 
     Mobile:
     * FIX: Fixed logtime filter settings in all mobile views

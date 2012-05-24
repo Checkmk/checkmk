@@ -8,6 +8,7 @@
     * FIX: Fixed layout problem of "new special rule" button in rule editor
     * FIX: Fixed layout problem on "activate changes" page
     * FIX: Added check if contacts belong to contactgroup before contactgroup deletion
+    * FIX: fix site configuration for local site in Multisite environments
 
     Multisite:
     * New display type 'boxes-omit-root' for BI views

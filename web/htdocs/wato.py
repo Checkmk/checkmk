@@ -6338,8 +6338,10 @@ def mode_edit_site(phase):
                 new_site["socket"] = "unix:" + method[1]
             else:
                 new_site["socket"] = "tcp:%s:%d" % method[1]
-        else:
+        elif method:
             new_site["socket"] = method
+        elif "socket" in new_site:
+            del new_site["socket"]
 
         # Timeout
         timeout = html.var("timeout", "").strip()
@@ -6773,6 +6775,8 @@ class SiteAttribute(Attribute):
         return "", self._choices_dict.get(value, _("(do not monitor)"))
 
     def render_input(self, value):
+        if not value: # convert None to "" for select
+            value = ""
         html.select("site", self._choices, value)
 
     def from_html_vars(self):

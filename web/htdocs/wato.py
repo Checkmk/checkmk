@@ -8620,6 +8620,7 @@ def mode_edit_hosttag(phase):
                         tgid = entry[0]
                         tit  = entry[1]
                         ch   = entry[2]
+                        # Do not compare the taggroup with itselfs
                         if tgid != tag_id:
                             for e in ch:
                                 # Check primary and secondary tags
@@ -8629,7 +8630,12 @@ def mode_edit_hosttag(phase):
                                         "'%s' in the tag group '%s'.") %
                                         ( id, e[1], tit ))
 
-                
+                    # Also check all defined aux tags even if they are not used anywhere
+                    for tag, descr in auxtags:
+                        if id == tag:
+                            raise MKUserError("choices_id_%d" % (nr+1),
+                              _("The tag ID '%s' is already being used as auxiliary tag.") % id)
+
             if len(new_choices) == 0:
                 raise MKUserError("id_0", _("Please specify at least on tag."))
             if len(new_choices) == 1 and new_choices[0][0] == None:

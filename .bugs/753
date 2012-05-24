@@ -1,11 +1,14 @@
 Title: Table-Layout with multiple columns: gap missing if no grouping
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-05-20 19:05:00
 Targetversion: 1.2.0
-Class: bug
 
 In the table layout if you select more than one column, then
 there should be a small gap between the columns. This is painted,
 but only when there is at least one grouping column - even if it
 is not visible.
+
+2012-05-24 18:46:34: changed state open -> done
+Is fixed now.

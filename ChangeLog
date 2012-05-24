@@ -1,6 +1,7 @@
 1.2.0b5:
     WATO:
     * FIX: fix folding problems with dependent host tags
+    * FIX: Detecting duplicate tag ids between regular tags and auxtags
 
     Multisite:
     * FIX: remove refresh button from dashboard.

@@ -1301,7 +1301,8 @@ def render_view(view, rows, datasource, group_painters, painters,
         len(rows) > 0 and \
         should_show_command_form(display_options, datasource)
 
-    show_context_links(view, hide_filters, show_filters, display_options, painter_options, command_form)
+    show_context_links(view, hide_filters, show_filters, display_options, 
+                       painter_options, command_form, show_checkboxes)
 
     # User errors in filters
     html.show_user_errors()
@@ -1580,7 +1581,8 @@ def togglebutton(id, isopen, icon, help):
     html.write('<div class="togglebutton %s %s" title="%s" '
                'onclick="view_toggle_form(this, \'%s\');"></div>' % (icon, cssclass, help, id))
 
-def show_context_links(thisview, active_filters, show_filters, display_options, painter_options, command_form):
+def show_context_links(thisview, active_filters, show_filters, display_options, 
+                       painter_options, command_form, show_checkboxes):
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
     execute_hooks('buttons-begin')
@@ -1607,7 +1609,10 @@ def show_context_links(thisview, active_filters, show_filters, display_options, 
     if 'C' in display_options:
         if command_form:
             togglebutton("commands", False, "commands", _("Execute commands on hosts, services and other objects"))
-            view_option_toggler(thisview, "show_checkboxes", "checkbox", _("Enable/Disable checkboxes for selecting rows for commands"))
+            if show_checkboxes:
+                view_option_toggler(thisview, "show_checkboxes", "checkbox", _("Enable/Disable checkboxes for selecting rows for commands"))
+            else:
+                togglebutton_off("checkbox")
         else:
             togglebutton_off("commands")
             togglebutton_off("checkbox")

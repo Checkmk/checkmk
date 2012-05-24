@@ -48,7 +48,7 @@ def render_searchform():
     html.write('<div id="mk_side_search" class="content_center" onclick="mkSearchClose();">')
     html.write('<input id="mk_side_search_field" type="text" name="search" autocomplete="off" />')
     html.icon_button("#", _("Search"), "quicksearch", onclick="mkSearchButton();")
-    html.write('</div>')
+    html.write('</div><div id=mk_side_clear></div>')
     html.write("<script type='text/javascript' src='js/search.js'></script>\n")
     html.write("<script type='text/javascript'>\n")
 
@@ -100,16 +100,19 @@ sidebar_snapins["search"] = {
 #mk_side_search {
     width: 225px;
     padding: 0;
-    position: relative;
-    left: -2px;
+}
+
+#mk_side_clear {
+    clear: both;
 }
 
 #mk_side_search img.iconbutton {
     width: 33px;
     height: 26px;
-    position: absolute;
-    top: 0px;
+    margin-top: -25px;
     left: 196px;
+    float:right;
+    z-index:100;
 }
 
 #mk_side_search input {
@@ -122,7 +125,7 @@ sidebar_snapins["search"] = {
     background-repeat: no-repeat;
     -moz-border-radius: 0px;
     border-style: none;
-
+    float: left;
 }
 
 #mk_search_results {

@@ -85,7 +85,7 @@ body.mobile table.dataset tr.header th {
 }
 
 body.mobile table.dataset tr.data td {
-    /* -moz-border-radius: 10px; */
+    /* border-radius: 10px; */
     /* -webkit-border-radius: 10px; */
     border-radius: 5px;
     border: 1px solid #aaa;

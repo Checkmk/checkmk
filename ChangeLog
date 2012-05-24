@@ -10,12 +10,12 @@
     * FIX: Added check if contacts belong to contactgroup before contactgroup deletion
 
     Multisite:
-    * FIX: remove refresh button from dashboard.
-    * FIX: remove use of old option defaults.checkmk_web_uri
-    * FIX: fixed outgoing bandwidth in fc port perfometer
     * New display type 'boxes-omit-root' for BI views
     * Hostgroup view BI Boxes omits the root level
     * Finalized layout if view options and commands/filters/painteroptions.
+    * FIX: remove refresh button from dashboard.
+    * FIX: remove use of old option defaults.checkmk_web_uri
+    * FIX: fixed outgoing bandwidth in fc port perfometer
     * FIX: remove nasty JS error in sidebar
     * FIX: fix folding in custom links (directories would not open)
     * FIX: animation of rotation treeangle in trees works again
@@ -26,6 +26,7 @@
     * FIX: fix table layout for views (gaps where missing sometimes)
     * FIX: Fixed sorting views by perfdata values which contain floats
     * FIX: fix sometimes-broken sizing of sidebar and dashboard on Chrome
+    * FIX: fix dashboard layout on iPad
 
     Mobile:
     * FIX: Fixed logtime filter settings in all mobile views
@@ -35,7 +36,6 @@
     * New aggregation function count_ok, that counts the number
       of nodes in state OK.
     * FIX: Removed debug output int count_ok aggregation
-    * FIX: fixed box layout with omitted root (was sometimes invisible)
 
     Checks & Agents:
     * Linux: Modified cluster section to allow pacemaker/corosync clusters without heartbeat

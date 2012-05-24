@@ -60,7 +60,7 @@ Boston, MA 02110-1301 USA.
     border-style: solid;
     border-color: #ccc #888 #333 #777;
     padding: 0.3ex 1ex;
-    -moz-border-radius: 6px;
+    border-radius: 6px;
 }
 
 #logwatch p {
@@ -138,7 +138,7 @@ Boston, MA 02110-1301 USA.
     border-style: solid;
     border-color: #ddd #888 #333 #ddd;
     padding: 0.1ex 1ex;
-    -moz-border-radius: 4px;
+    border-radius: 4px;
 }
 
 #logwatch td.button a:active {
@@ -148,7 +148,7 @@ Boston, MA 02110-1301 USA.
 /* --- navigation tabs in logwatch ------------------ */
 
 #logwatch a.tab, #logwatch a.tabactive {
-    -moz-border-radius: 12px 12px 0px 0px;
+    border-radius: 12px 12px 0px 0px;
     display: block;
     margin-bottom: 0px;
     color: #000;

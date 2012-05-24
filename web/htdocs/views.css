@@ -253,7 +253,7 @@ table.tiled td {
     width: 160px;
     border: 1px solid #000;
     float: left;
-    -moz-border-radius: 4px;
+    border-radius: 4px;
     margin-right: 3px;
     margin-bottom: 3px;
     border-right: 2px solid #000;

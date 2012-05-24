@@ -656,7 +656,7 @@ table.nform tr.bottom td {
 '-------------------------------------------------------------------------*/
 div.really, div.success, div.error, div.message, div.warning {
     margin: 2em 0em;
-    -moz-border-radius: 1ex;
+    border-radius: 1ex;
     padding: 1em 2em;
     /* border-width: 2px; 
     border-style: solid;*/

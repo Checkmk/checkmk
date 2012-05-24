@@ -197,8 +197,11 @@ def render_dashlet(nr, dashlet, wato_folder):
     if "content" in dashlet: # fixed content
         html.write(dashlet["content"])
     elif "iframe" in dashlet: # fixed content containing iframe
+        # Fix of iPad >:-P
+        html.write('<div style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch; overflow: auto;">')
         html.write('<iframe allowTransparency="true" frameborder="0" width="100%%" height="100%%" src="%s"></iframe>' %
            add_wato_folder_to_url(dashlet["iframe"], wato_folder))
+        html.write('</div>')
     html.write("</div></div>\n")
 
 # Here comes the brain stuff: An intelligent liquid layout algorithm.

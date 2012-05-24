@@ -1,0 +1,21 @@
+Title: Implement locking in WATO
+Component: wato
+State: open
+Date: 2012-05-24 19:49:08
+Targetversion: 1.2.0
+Class: bug
+
+We need to prevent multiple users using WATO at the same time
+getting into conflict. This should be done in the following way:
+
+[1] All action-URLs will do an exclusive locking including a
+    waiting for the lock
+
+[2] When activating changes we have a look into the pending
+    log. When there are changes of another user then we
+    print a warning and confirmation message, that foreign
+    changes are going to be activated.
+
+[3] Activating foreign changes will need a special permission.
+
+Still people need to make sure that the use personalized logins.

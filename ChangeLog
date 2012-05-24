@@ -10,9 +10,12 @@
     * New display type 'boxes-omit-root' for BI views
     * Hostgroup view BI Boxes omits the root level
     * Finalized layout if view options and commands/filters/painteroptions.
+    * FIX: remove nasty JS error in sidebar
+    * FIX: fix folding in custom links (directories would not open)
 
     Mobile:
     * FIX: Fixed logtime filter settings in all mobile views
+    * FIX: fix some layout problems
 
     BI:
     * New aggregation function count_ok, that counts the number

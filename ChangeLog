@@ -6,6 +6,7 @@
     * FIX: fix folding problems with dependent host tags
     * FIX: Detecting duplicate tag ids between regular tags and auxtags
     * FIX: Fixed layout problem of "new special rule" button in rule editor
+    * FIX: Fixed layout problem on "activate changes" page
 
     Multisite:
     * FIX: remove refresh button from dashboard.

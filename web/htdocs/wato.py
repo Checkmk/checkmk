@@ -7354,7 +7354,7 @@ def mode_users(phase):
         # Buttons
         edit_url = make_link([("mode", "edit_user"), ("edit", id)])
         delete_url = html.makeactionuri([("_delete", id)])
-        clone_url = make_link([("mode", "edit_user"), ("hlone", id)])
+        clone_url = make_link([("mode", "edit_user"), ("clone", id)])
         html.write("<td class=buttons>")
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Create a copy of this user"), "clone")

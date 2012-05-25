@@ -20,6 +20,7 @@
     * FIX: implement locking in order to prevent data corruption on
            concurrent changes
     * FIX: Fixed handling of validation errors in cascading dropdown fields
+    * FIX: fix cloning of users
     * Keep track of changes made by other users before activating changes,
       let user confirm this, new permission can be used to prevent a user
       from activating foreign changes.

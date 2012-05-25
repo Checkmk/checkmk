@@ -134,32 +134,36 @@ Boston, MA 02110-1301 USA.
     font-weight: bold;
 }
 
-.wato table.auditlog {
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
-    border-collapse: collapse;
-    margin-top: 3px;
-    margin-bottom: 1em;
-    width: 100%;
-}
-
-.wato table.pending {
-    background-color: #fff;
-}
-
-.wato table.auditlog td {
-    border: 1px solid #fff;
-    padding: 2px 6px;
-}
-
 .wato table.auditlog td.nobreak {
     white-space: nowrap;
 }
 
-.wato .pending td {
-    border: 1px solid #444;
-    padding: 2px 6px;
+.wato table.auditlog img {
+    width: 14px;
+    height: 14px;
+    margin: 0 5px 0 0;
+    padding: 0;
+    border-style; none;
+    float: left;
 }
+
+.wato table.foreignchanges {
+    border-spacing: 3px;
+    margin-left: 20px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+.wato table.foreignchanges td {
+    padding: 2px 8px;
+    background-color: #ff0;
+    margin: 2px;
+}
+
+.wato img.foreignchanges {
+    float: left;
+    margin-right: 10px;
+}
+
 
 .wato td.dns {
     color: #666;

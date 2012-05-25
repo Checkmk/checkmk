@@ -3259,6 +3259,32 @@ def mode_changelog(phase):
                 [ '<a href="%s">%s</a>' % (make_link([("mode", "edithost"), ("host", hn)]), hn)
                   for hn in defective_hosts.keys() ]))
 
+        # If there are changes by other users, we need a confirmation
+        transaction_already_checked = False
+        changes = foreign_changes()
+        if changes:
+            table = "<table class=foreignchanges>"
+            for user_id, count in changes.items():
+                table += '<tr><td>%s: </td><td>%d %s</td></tr>' % \
+                   (config.alias_of_user(user_id), count, _("changes"))
+            table += '</table>'
+            c = wato_confirm(_("Confirm activating foreign changes"),
+              '<img class=foreignchanges src="images/icon_foreign_changes.png">' + 
+              _("There are some changes made by you collegues that you will "
+                "activate if you proceed:") + table + 
+              _("Do you really want to proceed?"))
+            if c == False:
+                return ""
+            elif not c:
+                return None
+            transaction_already_checked = True
+
+        if changes and not config.may("wato.activateforeign"):
+            raise MKAuthException(
+              _("Sorry, you are not allowed to activate "
+              "changes of other users."))
+
+
         # Give hooks chance to do some pre-activation things (and maybe stop
         # the activation)
         try:
@@ -3274,7 +3300,7 @@ def mode_changelog(phase):
             config.need_permission("wato.activate")
             site_id = html.var("_site")
             action = html.var("_siteaction")
-            if html.check_transaction():
+            if transaction_already_checked or html.check_transaction():
                 try:
                     # If the site has no pending changes but just needs restart,
                     # the button text is just "Restart". We do a sync anyway. This
@@ -3301,7 +3327,7 @@ def mode_changelog(phase):
                         raise
                     raise MKUserError(None, _("Remote command on site %s failed: <pre>%s</pre>") % (site_id, e))
 
-        elif html.check_transaction():
+        elif transaction_already_checked or html.check_transaction():
             config.need_permission("wato.activate")
             create_snapshot()
             if is_distributed():
@@ -3502,7 +3528,16 @@ def mode_changelog(phase):
         if len(pending) == 0:
             html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
         else:
-            render_audit_log(pending, "pending")
+            render_audit_log(pending, "pending", hilite_others=True)
+
+# Determine if other users have made pending changes
+def foreign_changes():
+    changes = {}
+    for t, linkinfo, user, action, text in parse_audit_log("pending"):
+        if user != config.user_id:
+            changes.setdefault(user, 0)
+            changes[user] += 1
+    return changes
 
 
 def log_entry(linkinfo, action, message, logfilename):
@@ -3737,7 +3772,7 @@ def display_paged((start_time, end_time, previous_log_time, next_log_time)):
     html.write('</div>')
 
 
-def render_audit_log(log, what, with_filename = False):
+def render_audit_log(log, what, with_filename = False, hilite_others=False):
     htmlcode = ''
     if what == 'audit':
         log, times = paged_log(log)
@@ -3765,12 +3800,18 @@ def render_audit_log(log, what, with_filename = False):
     even = "even"
     for t, linkinfo, user, action, text in log:
         even = even == "even" and "odd" or "even"
-        htmlcode += '<tr class="%s0">' % even
+        hilite = hilite_others and config.user_id != user
+        htmlcode += '<tr class="data %s%d">' % (even, hilite and 2 or 0)
         htmlcode += '<td class=nobreak>%s</td>' % render_linkinfo(linkinfo)
         htmlcode += '<td class=nobreak>%s</td>' % fmt_date(float(t))
         htmlcode += '<td class=nobreak>%s</td>' % fmt_time(float(t))
-        htmlcode += '<td>%s</td><td width="100%%">%s</td></tr>\n' % \
-                  (user, text)
+        htmlcode += '<td class=nobreak>'
+        if hilite:
+            htmlcode += '<img class=icon src="images/icon_foreign_changes.png" title="%s">' \
+                     % _("This change has been made by another user")
+        htmlcode += user + '</td>'
+        
+        htmlcode += '</td><td width="100%%">%s</td></tr>\n' % text
     htmlcode += "</table>"
 
     if what == 'audit':
@@ -11288,6 +11329,15 @@ def load_plugins():
            "current configuration (and thus rewriting the "
            "monitoring configuration and restart the monitoring daemon.)"),
          [ "admin", "user", ])
+    
+    config.declare_permission("wato.activateforeign",
+         _("Activate Foreign Changes"),
+         _("When several users work in parallel with WATO then "
+           "several pending changes of different users might pile up "
+           "before changes are activate. Only with this permission "
+           "a user will be allowed to activate the current configuration "
+           "if this situation appears."),
+         [ "admin", ])
 
     config.declare_permission("wato.auditlog",
          _("Audit log"),

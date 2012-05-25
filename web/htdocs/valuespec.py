@@ -1656,6 +1656,14 @@ class Dictionary(ValueSpec):
              in self._elements
              if name in self._required_keys or not self._optional_keys])
 
+    def default_value(self):
+        def_val = {}
+        for name, vs in self._elements:
+            if name in self._required_keys or not self._optional_keys:
+                def_val[name] = vs.default_value()
+
+        return def_val
+
     def value_to_text(self, value):
         parts = []
         for param, vs in self._elements:

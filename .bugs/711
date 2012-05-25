@@ -1,12 +1,17 @@
 Title: don't replicate to hosts with problematic clock differences
 Component: wato
-State: open
+Class: nastiness
+State: wontfix
 Date: 2012-05-11 17:55:33
 Targetversion: future
-Class: nastiness
 
 If you replicate to a host that has a clock that drifted into future something
 can break.
 We should not replicate to systems that have fundamental problems; the 
 replication may still work, but there may be much larger issues be caused in the
 followup.
+
+2012-05-25 14:18:43: changed state open -> wontfix
+In my opinion enforcing a correct time is not the task
+of Check_MK. And detecting time differences is not easy
+to implement in a clean way.

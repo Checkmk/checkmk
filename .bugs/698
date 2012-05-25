@@ -1,9 +1,9 @@
 Title: View filter box overflow on too long names
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-05-24 20:16:11
 Targetversion: 1.2.0
-Class: bug
 
 When having too long names in 
 
@@ -13,3 +13,6 @@ WATO folder
 hostgroup
 
 filter dropdowns the dropdown gets too large for the filter box
+
+2012-05-25 10:42:31: changed state open -> done
+I just fixed this by defining fixed widths for the dropdown fields.

@@ -44,6 +44,7 @@
     * FIX: Fixed styling issues of sidebar in IE7
     * FIX: fix problem where filter settings (of checkboxes) are not effective
            when it comes to executing commands
+    * FIX: Fixed styling issues of view filters with dropdown fields
 
     Mobile:
     * FIX: Fixed logtime filter settings in all mobile views

@@ -65,11 +65,9 @@
     * Linux: Modified cluster section to allow pacemaker/corosync clusters without heartbeat
     * AIX: convert NIC check to lnx_if (now being compatible with if/if64)
     * AIX: new check for CPU utilization (using section lparstat_aix)
-<<<<<<< HEAD
     * ntp checks: Changed default value of time offsets to be 200ms (WARN) / 500ms (CRIT)
-=======
     * aironet_{errors,clients}: detect new kinds of devices (Thanks to Tiago Sousa)
->>>>>>> aa82b76e17247eb3d5af8167ae7153a232c4a9ee
+    * check_http, check_tcp: allow to omit -I and use dynamic DNS name instead
 
 1.2.0b4:
     Core:

@@ -73,12 +73,16 @@ def check_tcp_arguments(params):
     if "quit_string" in settings:
         args += ' -q %s' % quote_shell_string(settings["quit_string"])
 
+    if "hostname" in settings:
+        args += ' -H %s' % quote_shell_string(settings["hostname"])
+    else:
+        args += ' -H $HOSTADDRESS$'
     return args
 
 
 
 active_check_info['tcp'] = {
-    "command_line"        : '$USER1$/check_tcp -H $HOSTADDRESS$ $ARG1$',
+    "command_line"        : '$USER1$/check_tcp $ARG1$',
     "argument_function"   : check_tcp_arguments,
     "service_description" : lambda args: "TCP Port %d" % args[0],
     "has_perfdata"        : True,

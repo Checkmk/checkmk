@@ -31,6 +31,12 @@ def check_http_arguments(params):
     if "vhost" in settings:
         args += ' -H %s' % quote_shell_string(settings["vhost"])
 
+    if "virthost" in settings:
+        vhost, omit_ip = settings["virthost"]
+        args += ' -H %s' % quote_shell_string(vhost)
+    else:
+        omit_ip = False
+
     if "uri" in settings:
         args += ' -u %s' % quote_shell_string(settings["uri"])
 
@@ -95,11 +101,13 @@ def check_http_arguments(params):
     if "max_age" in settings:
         args += ' -M %d' % settings["max_age"]
 
+    if not omit_ip:
+        args = " -I $HOSTADDRESS$" + args
     return args
 
 
 active_check_info['http'] = {
-    "command_line"        : '$USER1$/check_http -I $HOSTADDRESS$ $ARG1$',
+    "command_line"        : '$USER1$/check_http $ARG1$',
     "argument_function"   : check_http_arguments,
     "service_description" : lambda params: "HTTP %s" % params[0],
     "has_perfdata"        : True,

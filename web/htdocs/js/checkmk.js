@@ -295,15 +295,16 @@ function filter_activation(oSelect)
     oDiv.setAttribute("class", "filtersetting " + usage);
 
     var disabled = usage != "hard" && usage != "show";
-    for (var i in oTd.childNodes) {
-        oNode = oTd.childNodes[i];
+    var oNode;
+    for (var i in oDiv.childNodes) {
+        oNode = oDiv.childNodes[i];
         if (oNode.tagName == "INPUT" || oNode.tagName == "SELECT") {
             oNode.disabled = disabled;
         }
     }
 
     p = null;
-    oTd = null;
+    oDiv = null;
     oSelect = null;
 }
 

@@ -613,7 +613,7 @@ def page_edit_view():
     html.write("<script language=\"javascript\">\n")
     for fname, filt in allowed_filters.items():
         if fname not in ubiquitary_filters:
-            html.write("filter_activation(\"filter_%s\");\n" % fname)
+            html.write("filter_activation(document.getElementById(\"filter_%s\"));\n" % fname)
     html.write("</script>\n")
    
 

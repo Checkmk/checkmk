@@ -358,7 +358,7 @@ sidebar_snapins["hostmatrix"] = {
     "styles"      : """
 table.hostmatrix { border-spacing: 0;  }
 table.hostmatrix tr { padding: 0; border-spacing: 0; }
-table.hostmatrix a { display: block; width: 100%%; height: 100%%; line-height: 100%%; }
+table.hostmatrix a { display: block; width: 100%; height: 100%; line-height: 100%; }
 table.hostmatrix td { border: 1px solid #123a4a; padding: 0; border-spacing: 0; }
     """
 

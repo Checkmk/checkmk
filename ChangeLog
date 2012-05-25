@@ -16,6 +16,8 @@
     * FIX: D/WATO: mark site dirty after host deletion
     * FIX: D/WATO: replicate auth.secret, so that login on one site also
            is valid on the replication slaves
+    * FIX: implement locking in order to prevent data corruption on
+           concurrent changes
 
     Multisite:
     * New display type 'boxes-omit-root' for BI views

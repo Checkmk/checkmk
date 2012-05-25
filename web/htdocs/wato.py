@@ -214,6 +214,11 @@ def page_handler():
 
     current_mode = html.var("mode") or "main"
 
+    # If we do an action, we aquire an exclusive lock on the complete
+    # WATO.
+    if html.is_transaction():
+        lock_exclusive()
+
     try:
         # Make information about current folder and hosts available
         # To be able to perform a "factory reset" or a snapshot restore
@@ -377,6 +382,10 @@ g_need_sidebar_reload = None
 def need_sidebar_reload():
     global g_need_sidebar_reload
     g_need_sidebar_reload = id(html)
+
+def lock_exclusive():
+    aquire_lock(defaults.default_config_dir + "/multisite.mk")
+
 
 #.
 #   .-Load/Save------------------------------------------------------------.

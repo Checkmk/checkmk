@@ -51,7 +51,7 @@ Alias:    $HOSTALIAS$
 Address:  $HOSTADDRESS$
 """
 
-notification_host_body = u"""State:    $LASTHOSTSTATE$ -> $HOSTSTATE$
+notification_host_body = u"""State:    $LASTHOSTSTATE$ -> $HOSTSTATE$ ($NOTIFICATIONTYPE$)
 Command:  $HOSTCHECKCOMMAND$
 Output:   $HOSTOUTPUT$
 Perfdata: $HOSTPERFDATA$
@@ -59,7 +59,7 @@ $LONGHOSTOUTPUT$
 """
 
 notification_service_body = u"""Service:  $SERVICEDESC$
-State:    $LASTSERVICESTATE$ -> $SERVICESTATE$
+State:    $LASTSERVICESTATE$ -> $SERVICESTATE$ ($NOTIFICATIONTYPE$)
 Command:  $SERVICECHECKCOMMAND$
 Output:   $SERVICEOUTPUT$
 Perfdata: $SERVICEPERFDATA$

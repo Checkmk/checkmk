@@ -2,6 +2,7 @@
     Core:
     * FIX: handle UTF-8 encoded binary strings correctly (e.g. in host alias)
     * FIX: fix configuration of passive checks via custom_checks
+    * Added NOTIFICATIONTYPE to host/service mail bodies
 
     WATO:
     * Site management: "disabled" only applies to Livestatus now

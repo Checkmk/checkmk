@@ -22,6 +22,7 @@
     * Keep track of changes made by other users before activating changes,
       let user confirm this, new permission can be used to prevent a user
       from activating foreign changes.
+    * FIX: Allowing german umlauts in users mail addresses
 
     Multisite:
     * New display type 'boxes-omit-root' for BI views

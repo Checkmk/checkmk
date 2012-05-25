@@ -1,11 +1,14 @@
 Title: Change default thresholds of ntp check
 Component: checks
-State: open
+Class: nastiness
+State: done
 Date: 2012-04-02 15:25:35
 Targetversion: future
-Class: nastiness
 
 The default thresholds of the ntp check are too strict for most environments. Thresholds of
 20.0ms and 50.0ms are not realistic for datacenter environments.
 
 We should change the default values to something less strict like around several seconds.
+
+2012-05-25 11:27:54: changed state open -> done
+Increased thresholds by factor 10 to 200ms/500ms

@@ -184,6 +184,8 @@ clean:
 
 mrproper:
 	git clean -xfd .bugs
+	rm -f *.rpm *.tar.gz *.deb *.exe
+
 
 check:
 	@set -e ; for checkfile in *.HS ; do \

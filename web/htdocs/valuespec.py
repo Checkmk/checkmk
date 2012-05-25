@@ -1,4 +1,4 @@
-#!/usr/bin/python
+
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -812,25 +812,30 @@ class CascadingDropdown(ValueSpec):
                 def_val = str(nr)
 
         vp = varprefix + "_sel"
-        onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(self._choices))  
+        onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(self._choices))
         if self._sorted:
             html.select(vp, options, def_val, onchange=onchange)
         else:
             html.sorted_select(vp, options, def_val, onchange=onchange)
 
+        cur_val = html.var(vp)
+
         html.write(self._html_separator)
         for nr, (val, title, vs) in enumerate(self._choices):
             if vs:
                 vp = varprefix + "_%d" % nr
-                if value == val or (
-                    type(value) == tuple and value[0] == val):
-                    def_val = value[1]
+                if value == val \
+                   or (type(value) == tuple and value[0] == val):
+                    def_val_2 = value[1]
+                    disp = ""
+                elif cur_val == str(nr):
+                    def_val_2 = vs.default_value()
                     disp = ""
                 else:
-                    def_val = vs.default_value()
+                    def_val_2 = vs.default_value()
                     disp = "none"
                 html.write('<span id="%s_%s_sub" style="display: %s">' % (varprefix, nr, disp))
-                vs.render_input(vp, def_val)
+                vs.render_input(vp, def_val_2)
                 html.write('</span>')
 
     def value_to_text(self, value):

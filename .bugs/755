@@ -1,9 +1,9 @@
 Title: Implement locking in WATO
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-05-24 19:49:08
 Targetversion: 1.2.0
-Class: bug
 
 We need to prevent multiple users using WATO at the same time
 getting into conflict. This should be done in the following way:
@@ -19,3 +19,6 @@ getting into conflict. This should be done in the following way:
 [3] Activating foreign changes will need a special permission.
 
 Still people need to make sure that the use personalized logins.
+
+2012-05-25 10:21:00: changed state open -> done
+Implemented as described.

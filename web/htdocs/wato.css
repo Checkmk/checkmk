@@ -143,7 +143,7 @@ Boston, MA 02110-1301 USA.
     height: 14px;
     margin: 0 5px 0 0;
     padding: 0;
-    border-style; none;
+    border-style: none;
     float: left;
 }
 
@@ -212,7 +212,7 @@ table.validationerror img {
 }
 
 .wato table.data tr.data td.bulksearch {
-    text-align right;
+    text-align: right;
     padding-right: 0px;
     white-space: nowrap;
 }

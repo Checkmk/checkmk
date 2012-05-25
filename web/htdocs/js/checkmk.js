@@ -1626,7 +1626,7 @@ function help_switch(how) {
     // recursive scan for all div class=help elements
     var helpdivs = document.getElementsByClassName('help');
     for (var i=0; i<helpdivs.length; i++) {
-        helpdivs[i].style.display = how ? "" : "none";
+        helpdivs[i].style.display = how ? "block" : "none";
     }
     get_url("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
 }

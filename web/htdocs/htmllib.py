@@ -619,8 +619,11 @@ class html:
             id = "cb_" + varname
         if id:
             add_attr.append('id="%s"' % id)
+        add_attr_code = ''
+        if add_attr:
+            add_attr_code = ' ' + ' '.join(add_attr)
         self.write("<input type=checkbox name=\"%s\"%s%s%s%s>\n" %
-                        (varname, checked, cssclass, onclick_code, " ".join(add_attr)))
+                        (varname, checked, cssclass, onclick_code, add_attr_code))
         self.form_vars.append(varname)
         if label:
             self.write('<label for="%s">%s</label>\n' % (id, label))
@@ -916,7 +919,7 @@ class html:
         if text and text.strip():
             self.have_help = True
             self.write('<div class=help style="display: %s">' % (
-                        not self.help_visible and "none" or ""))
+                        not self.help_visible and "none" or "block"))
             self.write(text.strip())
             self.write('</div>')
 

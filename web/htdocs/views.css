@@ -45,7 +45,7 @@ body.main.dashlet {
 '-------------------------------------------------------------------------*/
 
 table.filterform {
-    cell-spacing: 0px;
+    border-collapse: collapse;
     padding: 0px;
     border-style: none;
 }
@@ -388,6 +388,7 @@ table.data.single td.perfometer div.title {
 div.filtersetting > select {
     float: left;
     margin-right: 10px;
+    height: 26px;
 }
 div.filtersetting.show > select { border: 3px solid #ff4; }
 div.filtersetting.hide > select { border: 3px solid #f8f; }

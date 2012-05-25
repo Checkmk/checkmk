@@ -596,7 +596,7 @@ def page_edit_view():
                   "that have a context (such as a host or a service). Such views can be used "
                   "as targets for columns. Whenever the context is available, a button to that "
                   "view will be displayed in related views."))
-            show_help = True
+            shown_help = True
 
         html.write('<div class="filtersetting %s">' % html.var("filter_%s" % fname, "off"))
         html.sorted_select("filter_%s" % fname,
@@ -613,7 +613,7 @@ def page_edit_view():
     html.write("<script language=\"javascript\">\n")
     for fname, filt in allowed_filters.items():
         if fname not in ubiquitary_filters:
-            html.write("filter_activation(\"filter_%s\");\n" % fname)
+            html.write("filter_activation(document.getElementById(\"filter_%s\"));\n" % fname)
     html.write("</script>\n")
    
 

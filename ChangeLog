@@ -28,6 +28,7 @@
     * Allow list of aux tags to be missing in host tag definitions. This
       makes migration from older version easier.
     * FIX: user management modules can now deal with empty lines in htpasswd
+    * FIX: Fixed js error on hostlist page with search form
 
     Multisite:
     * New display type 'boxes-omit-root' for BI views
@@ -53,6 +54,7 @@
            when it comes to executing commands
     * FIX: Fixed styling issues of view filters with dropdown fields
     * FIX: multisite login can now deal with empty lines in htpasswd
+    * FIX: Fixed a bunch of js/css errors
 
     Mobile:
     * FIX: Fixed logtime filter settings in all mobile views

@@ -443,7 +443,7 @@ div.listofstrings.horizontal > div:last-child {
 }
 
 table.listchoice {
-    cell-spacing: 0px;
+    border-collapse: collapse;
 }
 table.listchoice td span.checkbox {
     height: 10px;

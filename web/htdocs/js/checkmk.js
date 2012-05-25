@@ -295,15 +295,16 @@ function filter_activation(oSelect)
     oDiv.setAttribute("class", "filtersetting " + usage);
 
     var disabled = usage != "hard" && usage != "show";
-    for (var i in oTd.childNodes) {
-        oNode = oTd.childNodes[i];
+    var oNode;
+    for (var i in oDiv.childNodes) {
+        oNode = oDiv.childNodes[i];
         if (oNode.tagName == "INPUT" || oNode.tagName == "SELECT") {
             oNode.disabled = disabled;
         }
     }
 
     p = null;
-    oTd = null;
+    oDiv = null;
     oSelect = null;
 }
 
@@ -1489,7 +1490,7 @@ function help_switch(how) {
     // recursive scan for all div class=help elements
     var helpdivs = document.getElementsByClassName('help');
     for (var i=0; i<helpdivs.length; i++) {
-        helpdivs[i].style.display = how ? "" : "none";
+        helpdivs[i].style.display = how ? "block" : "none";
     }
     get_url("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
 }

@@ -47,7 +47,6 @@ def load_plugins():
     global loaded_with_language
     if loaded_with_language == current_language:
         return
-    loaded_with_language = current_language
 
     global multisite_datasources     ; multisite_datasources      = {}
     global multisite_filters         ; multisite_filters          = {}
@@ -63,6 +62,11 @@ def load_plugins():
     config.declare_permission_section("action", _("Commands on host and services"))
 
     load_web_plugins("views", globals())
+
+    # This must be set after plugin loading to make broken plugins raise
+    # exceptions all the time and not only the first time (when the plugins
+    # are loaded).
+    loaded_with_language = current_language
 
     # Declare permissions for builtin views
     config.declare_permission_section("view", _("Builtin views"))

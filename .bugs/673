@@ -1,12 +1,15 @@
 Title: Service details view should not show Filter tab
 Component: multisite
-State: open
+Class: nastiness
+State: closed
 Date: 2012-04-08 11:01:32
 Targetversion: 1.2.0
-Class: nastiness
 
 No filter is being shown, but the filter tab is there
 and a search button.
 
 The reason is probably that one filter is there (the
 WATO path filter?) but is not being displayed?
+
+2012-05-25 11:44:59: changed state open -> closed
+Duplicate bug of 624. The source of the problem is the same

@@ -1,9 +1,14 @@
 Title: Acknowledge WATO pending changes when applying config by using cmk
 Component: core
-State: open
+Class: nastiness
+State: wontfix
 Date: 2012-04-25 12:23:47
 Targetversion: future
-Class: nastiness
 
 It confuses users that a manual restart via "cmk" command does not acknowledge the pending
 changes which can be found in the wato changelog.
+
+2012-05-25 11:31:44: changed state open -> wontfix
+Esepcially in distributed wato setups this is not possible since cmk -R does not know anything about the
+other sites. It would acknowledge the pending changes and remove the info that other sites don't have these
+changes yet.

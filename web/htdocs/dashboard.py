@@ -60,7 +60,6 @@ def load_plugins():
     global loaded_with_language
     if loaded_with_language == current_language:
         return
-    loaded_with_language = current_language
 
     # Permissions are currently not being defined. That will be the
     # case as soon as dashboards become editable.
@@ -69,6 +68,11 @@ def load_plugins():
     # Load plugins for dashboards. Currently these files
     # just may add custom dashboards by adding to builtin_dashboards.
     load_web_plugins("dashboard", globals())
+
+    # This must be set after plugin loading to make broken plugins raise
+    # exceptions all the time and not only the first time (when the plugins
+    # are loaded).
+    loaded_with_language = current_language
 
     # In future there will be user editable dashboards just like
     # views which will be loaded. Currently we only use the builtin

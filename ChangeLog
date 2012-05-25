@@ -24,6 +24,7 @@
     * Keep track of changes made by other users before activating changes,
       let user confirm this, new permission can be used to prevent a user
       from activating foreign changes.
+    * FIX: Allowing german umlauts in users mail addresses
     * Allow list of aux tags to be missing in host tag definitions. This
       makes migration from older version easier.
 
@@ -31,6 +32,7 @@
     * New display type 'boxes-omit-root' for BI views
     * Hostgroup view BI Boxes omits the root level
     * Finalized layout if view options and commands/filters/painteroptions.
+    * Broken plugins prevent plugin caching now
     * FIX: remove refresh button from dashboard.
     * FIX: remove use of old option defaults.checkmk_web_uri
     * FIX: fixed outgoing bandwidth in fc port perfometer
@@ -63,7 +65,11 @@
     * Linux: Modified cluster section to allow pacemaker/corosync clusters without heartbeat
     * AIX: convert NIC check to lnx_if (now being compatible with if/if64)
     * AIX: new check for CPU utilization (using section lparstat_aix)
+<<<<<<< HEAD
+    * ntp checks: Changed default value of time offsets to be 200ms (WARN) / 500ms (CRIT)
+=======
     * aironet_{errors,clients}: detect new kinds of devices (Thanks to Tiago Sousa)
+>>>>>>> aa82b76e17247eb3d5af8167ae7153a232c4a9ee
 
 1.2.0b4:
     Core:

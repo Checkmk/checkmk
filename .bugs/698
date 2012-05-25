@@ -1,0 +1,15 @@
+Title: View filter box overflow on too long names
+Component: multisite
+State: open
+Date: 2012-05-24 20:16:11
+Targetversion: 1.2.0
+Class: bug
+
+When having too long names in 
+
+e.g.
+
+WATO folder
+hostgroup
+
+filter dropdowns the dropdown gets too large for the filter box

@@ -882,130 +882,6 @@ function toggle_foldable_container(treename, id) {
 // Holds the row numbers of all selected rows
 var g_selected_rows = [];
 
-//
-function rgbToHsv(r, g, b) {
-    var r = (r / 255),
-        g = (g / 255),
-        b = (b / 255);
-
-    var min = Math.min(Math.min(r, g), b),
-        max = Math.max(Math.max(r, g), b),
-        delta = max - min;
-
-    var value = max, saturation, hue;
-
-    // Hue
-    if (max == min) {
-        hue = 0;
-    } else if (max == r) {
-        hue = (60 * ((g-b) / (max-min))) % 360;
-    } else if (max == g) {
-        hue = 60 * ((b-r) / (max-min)) + 120;
-    } else if (max == b) {
-        hue = 60 * ((r-g) / (max-min)) + 240;
-    }
-
-    if (hue < 0)
-        hue += 360;
-
-    // Saturation
-    if (max == 0) {
-        saturation = 0;
-    } else {
-        saturation = 1 - (min/max);
-    }
-    return [Math.round(hue), Math.round(saturation * 100), Math.round(value * 100)];
-}
-
-function hsvToRgb(h,s,v) {
-
-    var s = s / 100,
-        v = v / 100;
-
-    var hi = Math.floor((h/60) % 6);
-    var f = (h / 60) - hi;
-    var p = v * (1 - s);
-    var q = v * (1 - f * s);
-    var t = v * (1 - (1 - f) * s);
-
-    var rgb = [];
-
-    switch (hi) {
-        case 0: rgb = [v,t,p];break;
-        case 1: rgb = [q,v,p];break;
-        case 2: rgb = [p,v,t];break;
-        case 3: rgb = [p,q,v];break;
-        case 4: rgb = [t,p,v];break;
-        case 5: rgb = [v,p,q];break;
-    }
-
-    var r = Math.min(255, Math.round(rgb[0]*256)),
-        g = Math.min(255, Math.round(rgb[1]*256)),
-        b = Math.min(255, Math.round(rgb[2]*256));
-
-    return [r,g,b];
-}
-
-function lightenColor(color, val) {
-    if(color == 'transparent' || color == 'rgba(0, 0, 0, 0)')
-        return color;
-
-    if(color.charAt(0) === 'r') {
-        var parts = color.substring(color.indexOf('(')+1, color.indexOf(')')).split(',', 3);
-        var r = parseInt(parts[0]);
-        var g = parseInt(parts[1]);
-        var b = parseInt(parts[2]);
-    } else if(color.charAt(0) === '#' && color.length == 7) {
-        var r = parseInt(color.substring(1, 3), 16);
-        var g = parseInt(color.substring(3, 5), 16);
-        var b = parseInt(color.substring(5, 7), 16);
-    } else if(color.charAt(0) === '#' && color.length == 4) {
-        var r = parseInt(color.substring(1, 2) + color.substring(1, 2), 16);
-        var g = parseInt(color.substring(2, 3) + color.substring(2, 3), 16);
-        var b = parseInt(color.substring(3, 4) + color.substring(3, 4), 16);
-    } else {
-        alert('Invalid color definition: ' + color);
-        return color;
-    }
-
-    var hsv = rgbToHsv(r, g, b);
-    hsv[2] -= val;
-    var rgb = hsvToRgb(hsv[0], hsv[1], hsv[2]);
-
-    r = rgb[0];
-    g = rgb[1];
-    b = rgb[2];
-
-    code  = r < 16 ? "0"+r.toString(16) : r.toString(16);
-    code += g < 16 ? "0"+g.toString(16) : g.toString(16);
-    code += b < 16 ? "0"+b.toString(16) : b.toString(16);
-
-    return "#" + code.toUpperCase();
-}
-
-function real_style(obj, attr, ieAttr) {
-    var st;
-    if(document.defaultView && document.defaultView.getComputedStyle) {
-        st = document.defaultView.getComputedStyle(obj, null).getPropertyValue(attr);
-    } else {
-        st = obj.currentStyle[ieAttr];
-    }
-
-    if(typeof(st) == 'undefined') {
-        st = 'transparent';
-    }
-
-    // If elem is a TD and has no background find the backround of the parent
-    // e.g. the TR and then set this color as background for the TD
-    // But only do this when the TR is not in the highlight scope
-    if(obj.tagName == 'TD'
-       && obj.parentNode.row_num === undefined
-       && (st == 'transparent' || st == 'rgba(0, 0, 0, 0)'))
-        st = real_style(obj.parentNode, attr, ieAttr);
-
-    return st;
-}
-
 function find_checkbox(oTd) {
     // Find the checkbox of this oTdent to gather the number of cells
     // to highlight after the checkbox
@@ -1050,23 +926,10 @@ function highlight_row(elem, on) {
 }
 
 function highlight_elem(elem, on) {
-    // Find all elements below "elem" with a defined background-color and change it
-    var bg_color = real_style(elem, 'background-color', 'backgroundColor');
-    if (bg_color == 'white')
-        bg_color = "#ffffff";
-
-    if(on) {
-        elem['hover_orig_bg'] = bg_color;
-        elem.style.backgroundColor = lightenColor(elem['hover_orig_bg'], -20);
-    } else {
-        elem.style.backgroundColor = elem['hover_orig_bg'];
-        elem['hover_orig_bg'] = undefined;
-    }
-
-    var childs = elem.childNodes;
-    for(var i = 0; i < childs.length; i++)
-        if(childs[i].tagName !== undefined && childs[i].tagName !== 'OPTION')
-            highlight_elem(childs[i], on);
+    if (on)
+        add_class(elem, "checkbox_hover");
+    else
+        remove_class(elem, "checkbox_hover");
 }
 
 function select_all_rows(elems, only_failed) {

@@ -244,7 +244,7 @@ td.groupheader {
     padding: 0;
 }
 
-td.gap {
+td.gap, table.data .checkbox_hover.gap {
     background-image: url("images/contentframe_background.jpg");
     background-attachment: fixed;
     background-repeat: repeat;
@@ -335,28 +335,23 @@ table.data.single {
     box-shadow: 1px 1px 3px #000000;
 }
 
-table.data.single tr.data {
-    background-color: #eee;
-}
-
-table.data.single tr.gap {
-    background-color: transparent;
-}
-
-table.data.single td {
+table.data.single tr.data td {
     padding-bottom: 4px;
-    padding: 1px 10px 5px 10px;
+    padding: 2px 5px 2px 5px;
     text-align: left;
     vertical-align: middle;
-    border: 1px solid #bbb;
 }
-table.data.single td.left {
-    padding-right: 10px;
-    color: #fff;
-    background-color: #888;
+table.data.single tr.data td.left {
     width: 10%;
     white-space: nowrap;
     vertical-align: top;
+    padding-right: 20px;
+}
+table.data.single tr.even0 td.left {
+    background-color: #bbb;
+}
+table.data.single tr.odd0 td.left {
+    background-color: #ccc;
 }
 table.data.single td.gap {
     background-color: transparent;

@@ -467,7 +467,7 @@ table.form img.toggleheader {
     height: 20px;
     cursor: auto;
     padding-right: 5px;
-    vertical-align:middle;
+    vertical-align: middle;
 }
 table.form img.toggleheader.hover {
     cursor: pointer;

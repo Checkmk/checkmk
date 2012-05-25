@@ -18,6 +18,9 @@
            is valid on the replication slaves
     * FIX: implement locking in order to prevent data corruption on
            concurrent changes
+    * Keep track of changes made by other users before activating changes,
+      let user confirm this, new permission can be used to prevent a user
+      from activating foreign changes.
 
     Multisite:
     * New display type 'boxes-omit-root' for BI views

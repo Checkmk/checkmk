@@ -1,9 +1,9 @@
 Title: Notification emails do not handle flapping nicely
 Component: core
-State: open
+Class: nastiness
+State: done
 Date: 2012-03-30 08:39:31
 Targetversion: 1.2.0
-Class: nastiness
 
 The notifications that are sent because of flapping
 should better display this. Currently it is like this:
@@ -31,3 +31,6 @@ Output:   CRITICAL: Build problem. State: error, last update: 2012-03-30 02:27:1
 Perfdata: 
 
 
+
+2012-05-25 15:32:42: changed state open -> done
+Added NOTIFICATIONTYPE to mail body.

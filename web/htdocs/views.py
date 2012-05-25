@@ -1536,6 +1536,8 @@ def view_optiondial(view, option, choices, help):
     value = vo.get(option, view.get(option, choices[0][0]))
     title = dict(choices).get(value, value)
     html.begin_context_buttons() # just to be sure
+    # Remove unicode strings
+    choices = [ [c[0], str(c[1])] for c in choices ]
     html.write('<div title="%s" id="optiondial_%s" class="optiondial %s val_%s"' 
        'onclick="view_dial_option(this, \'%s\', \'%s\', %r);"><div>%s</div></div>' % (
         help, option, option, value, view["name"], option, choices, title))

@@ -62,6 +62,7 @@
     * Linux: Modified cluster section to allow pacemaker/corosync clusters without heartbeat
     * AIX: convert NIC check to lnx_if (now being compatible with if/if64)
     * AIX: new check for CPU utilization (using section lparstat_aix)
+    * aironet_{errors,clients}: detect new kinds of devices (Thanks to Tiago Sousa)
 
 1.2.0b4:
     Core:

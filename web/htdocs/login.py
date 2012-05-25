@@ -59,8 +59,9 @@ def load_htpasswd():
     creds = {}
 
     for line in open(defaults.htpasswd_file, 'r'):
-        username, pwhash = line.split(':', 1)
-        creds[username] = pwhash.rstrip('\n')
+        if ':' in line:
+            username, pwhash = line.split(':', 1)
+            creds[username] = pwhash.rstrip('\n')
 
     return creds
 

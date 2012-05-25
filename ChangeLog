@@ -59,6 +59,7 @@
     * Linux: Modified cluster section to allow pacemaker/corosync clusters without heartbeat
     * AIX: convert NIC check to lnx_if (now being compatible with if/if64)
     * AIX: new check for CPU utilization (using section lparstat_aix)
+    * ntp checks: Changed default value of time offsets to be 200ms (WARN) / 500ms (CRIT)
 
 1.2.0b4:
     Core:

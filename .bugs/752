@@ -3,7 +3,7 @@ Component: multisite
 State: open
 Date: 2012-05-20 15:58:01
 Targetversion: 1.2.0
-Class: bug
+Class: nastiness
 
 Only the right half of the actual data is being displayed.
 Maybe Opera has problems with negative values somewhere.

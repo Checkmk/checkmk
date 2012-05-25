@@ -1,9 +1,9 @@
 Title: Logout or password change and relogin leads to side.py
 Component: multisite
-State: open
+Class: bug
+State: works4me
 Date: 2012-05-10 10:33:12
 Targetversion: 1.2.0
-Class: bug
 
 When logging out and in again - or when you are logged out due
 to a password change - then you are not logged into the main
@@ -11,3 +11,9 @@ frameset but into side.py (or whatever frame had done the
 logout int the first place).
 
 Happens with cookie based authentication.
+
+2012-05-25 08:48:10: changed state open -> works4me
+I added some changes several days ago which might have fixed the problem.
+I tested this yesterday and was unable to reproduce these problems. So if
+you experience any problems please provide a reproducable way to get this
+error.

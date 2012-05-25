@@ -97,13 +97,20 @@ div.floatfilter .content {
     padding-left: 4px;
     text-align: left;
 }
-div.floatfilter .content select {
+div.floatfilter .content > select {
     width: 300px;
 }
-div.floatfilter .content select#opthostgroup,
-div.floatfilter .content select#optservicegroup {
+div.floatfilter .content > select#opthostgroup,
+div.floatfilter .content > select#optservice_contactgroup,
+div.floatfilter .content > select#opthost_contactgroup,
+div.floatfilter .content > select#optservicegroup {
     width: 240px;
 }
+
+div.floatfilter .content .filtertime select {
+    width: 136px;
+}
+
 div.floatfilter.double .content {
     height: 72px;
 }

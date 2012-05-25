@@ -239,13 +239,18 @@ table.data {
     color: black;
 }
 
+table.data .checkbox_hover {
+    background-image: url("images/checkbox_hover_bg.png");
+    background-attachment: fixed;
+}
+
 
 table.data th {
     font-weight: normal;
     border-left: 1px solid #ccc;
     border-right: 1px solid #ccc;
-    background-color: #899;
-    padding: 0 4px;
+    background-color: #999;
+    padding: 2px 2px;
     text-align: center;
     color: #fff;
     vertical-align: middle;
@@ -259,11 +264,11 @@ table.data tr.dualheader th {
 
 /* Table header links (For sorting) */
 table.data th.sort {
-    text-decoration: underline;
+    /* text-decoration: underline; */
 }
 
 table.data th.sort:hover {
-    background-color: #A4B2B2;
+    background-color: #B2B2B2;
     cursor: pointer;
 }
 
@@ -272,11 +277,11 @@ table.data th.sort:hover {
 }
 
 table.data th.asc {
-    color: #CBDCF2;
+    /* color: #CBDCF2; */
 }
 
 table.data th.desc {
-    color: #CBDCF2;
+    /* color: #CBDCF2; */
 }
 
 table.data th.tablegap {

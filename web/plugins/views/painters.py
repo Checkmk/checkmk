@@ -966,10 +966,13 @@ def paint_host_with_state(row):
         state = row["host_state"]
     else:
         state = "p"
-    return "state hstate hstate%s" % state, row["host_name"]
+    if state != 0:
+        return "state hstate hstate%s" % state, row["host_name"]
+    else:
+        return "", row["host_name"]
 
 multisite_painters["host_with_state"] = {
-    "title"   : _("Hostname colored with state"),
+    "title"   : _("Hostname, marked red if down"),
     "short"   : _("Host"),
     "columns" : ["site", "host_name", "host_state", "host_has_been_checked" ],
     "paint"   : paint_host_with_state,

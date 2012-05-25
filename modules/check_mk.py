@@ -2011,7 +2011,7 @@ def create_nagios_config_timeperiods(outfile):
             tp = timeperiods[name]
             outfile.write("define timeperiod {\n  timeperiod_name\t\t%s\n" % name)
             if "alias" in tp:
-                outfile.write("  alias\t\t\t\t%s\n" % make_utf(tp["alias"]))
+                outfile.write("  alias\t\t\t\t%s\n" % make_utf8(tp["alias"]))
             for key, value in tp.items():
                 if key not in [ "alias", "exclude" ]:
                     times = ",".join([ ("%s-%s" % (fr, to)) for (fr, to) in value ])

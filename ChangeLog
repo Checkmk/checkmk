@@ -1,3 +1,11 @@
+1.2.0b6
+    Multisite:
+    * FIX: Fixed layout of some dropdown fields in view filters
+
+    Core:
+    * FIX: Fixed "make_utf is not defined" error when having custom
+           timeperiods defined in WATO
+
 1.2.0b5:
     Core:
     * FIX: handle UTF-8 encoded binary strings correctly (e.g. in host alias)

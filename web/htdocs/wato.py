@@ -11279,7 +11279,6 @@ def load_plugins():
     global loaded_with_language
     if loaded_with_language == current_language:
         return
-    loaded_with_language = current_language
 
     # Reset global vars
     global extra_buttons, configured_host_tags, host_attributes, user_attributes, \
@@ -11474,3 +11473,8 @@ def load_plugins():
 
 
     load_web_plugins("wato", globals())
+
+    # This must be set after plugin loading to make broken plugins raise
+    # exceptions all the time and not only the first time (when the plugins
+    # are loaded).
+    loaded_with_language = current_language

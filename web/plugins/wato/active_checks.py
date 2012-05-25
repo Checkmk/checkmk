@@ -503,7 +503,8 @@ register_rule(group,
                   title = _("Service description"),
                   help = _("Please make sure that this is unique per host "
                          "and does not collide with other services."),
-                  allow_empty = False)
+                  allow_empty = False,
+                  default_value = _("Customcheck"))
             ),
             ( "command_line",
               TextAscii(

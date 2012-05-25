@@ -1850,16 +1850,17 @@ define service {
             command_name = entry.get("command_name", "check-mk-custom")
             command_line = entry.get("command_line", "")
 
-            plugin_name = command_line.split()[0]
-            if command_line[0] not in [ '$', '/' ]:
-                try:
-                    for dir in [ "/local", "" ]:
-                        path = omd_root + dir + "/lib/nagios/plugins/"
-                        if os.path.exists(path + plugin_name):
-                            command_line = path + command_line
-                            break
-                except:
-                    pass
+            if command_line:
+                plugin_name = command_line.split()[0]
+                if command_line[0] not in [ '$', '/' ]:
+                    try:
+                        for dir in [ "/local", "" ]:
+                            path = omd_root + dir + "/lib/nagios/plugins/"
+                            if os.path.exists(path + plugin_name):
+                                command_line = path + command_line
+                                break
+                    except:
+                        pass
 
             custom_commands_to_define.add(command_name)
 

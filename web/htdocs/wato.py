@@ -8828,6 +8828,12 @@ def load_hosttags():
             "wato_host_tags" : [],
             "wato_aux_tags" : []}
         execfile(filename, vars, vars)
+        # Convert manually crafted host tags tags WATO-style. This
+        # makes the migration easier
+        for taggroup in vars["wato_host_tags"]:
+            for nr, entry in enumerate(taggroup[2]):
+                if len(entry) <= 2:
+                    taggroup[2][nr] = entry + ([],)
         return vars["wato_host_tags"], vars["wato_aux_tags"]
 
     except Exception, e:

@@ -1,6 +1,7 @@
 1.2.0b5:
     Core:
     * FIX: handle UTF-8 encoded binary strings correctly (e.g. in host alias)
+    * FIX: fix configuration of passive checks via custom_checks
 
     WATO:
     * Site management: "disabled" only applies to Livestatus now
@@ -23,6 +24,8 @@
       let user confirm this, new permission can be used to prevent a user
       from activating foreign changes.
     * FIX: Allowing german umlauts in users mail addresses
+    * Allow list of aux tags to be missing in host tag definitions. This
+      makes migration from older version easier.
 
     Multisite:
     * New display type 'boxes-omit-root' for BI views
@@ -61,7 +64,11 @@
     * Linux: Modified cluster section to allow pacemaker/corosync clusters without heartbeat
     * AIX: convert NIC check to lnx_if (now being compatible with if/if64)
     * AIX: new check for CPU utilization (using section lparstat_aix)
+<<<<<<< HEAD
     * ntp checks: Changed default value of time offsets to be 200ms (WARN) / 500ms (CRIT)
+=======
+    * aironet_{errors,clients}: detect new kinds of devices (Thanks to Tiago Sousa)
+>>>>>>> aa82b76e17247eb3d5af8167ae7153a232c4a9ee
 
 1.2.0b4:
     Core:

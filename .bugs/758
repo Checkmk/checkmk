@@ -1,0 +1,12 @@
+Title: Offer dropdown for standard command comments
+Component: multisite
+State: open
+Date: 2012-05-25 11:22:25
+Targetversion: future
+Class: feature
+
+In the global settings we could have the user configure a list
+of texts. This texts could then be offered as a dropdown in th
+command form. We can implemented this using OptionalDropDown, where
+a text field appears as soon as the first entry "custom text" is
+selected.

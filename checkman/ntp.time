@@ -41,7 +41,7 @@ critical (float): the critical offset in ms
 
 [configuration]
 ntp_default_levels (int, float, float): The global default levels for all checks
- of this type. This is preset to {(10, 20.0, 50.0)} (which means that the check
+ of this type. This is preset to {(10, 200.0, 500.0)} (which means that the check
  gets critical if the stratum is {10} or higher).
 ntp_inventory_mode (string): This variable controls which kind of NTP checks
  are created. A check of this type ({ntp.time}) is only created, if this variable is

@@ -1,0 +1,17 @@
+Title: Filter settings containing checkboxes get unset when issuing commands
+Component: multisite
+Class: bug
+State: done
+Date: 2012-05-24 19:55:24
+Targetversion: 1.2.0
+
+Open a view, open the filter, deselect "OK" state, save -> you
+get less services. No click on commands and issue the command.
+The filter will be ignored.
+
+Reason: the filled_in HTML variable, that is used by get_checkbox()
+is now not longer "filter", but "commands".
+
+2012-05-24 20:13:52: changed state open -> done
+This now works. Hope that my fix didn't break anything else.
+Watch of for dialogs with checkboxes....

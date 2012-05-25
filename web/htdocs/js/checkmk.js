@@ -295,15 +295,16 @@ function filter_activation(oSelect)
     oDiv.setAttribute("class", "filtersetting " + usage);
 
     var disabled = usage != "hard" && usage != "show";
-    for (var i in oTd.childNodes) {
-        oNode = oTd.childNodes[i];
+    var oNode;
+    for (var i in oDiv.childNodes) {
+        oNode = oDiv.childNodes[i];
         if (oNode.tagName == "INPUT" || oNode.tagName == "SELECT") {
             oNode.disabled = disabled;
         }
     }
 
     p = null;
-    oTd = null;
+    oDiv = null;
     oSelect = null;
 }
 
@@ -659,9 +660,10 @@ function setReload(secs, url) {
 }
 
 function startReloadTimer(url) {
-    if(gReloadTimer)
+    if (gReloadTimer)
         clearTimeout(gReloadTimer);
-    gReloadTimer = setTimeout("handleReload('" + url + "')", Math.ceil(parseFloat(gReloadTime) * 1000));
+    if (gReloadTime)
+        gReloadTimer = setTimeout("handleReload('" + url + "')", Math.ceil(parseFloat(gReloadTime) * 1000));
 }
 
 function updateHeaderTime() {
@@ -719,17 +721,18 @@ function handleReload(url) {
     // FiXME: Nicht mehr die ganze Seite neu laden, wenn es ein DIV "data_container" gibt.
     // In dem Fall wird die aktuelle URL aus "window.location.href" geholt, für den Refresh
     // modifiziert, der Inhalt neu geholt und in das DIV geschrieben.
-    if(!document.getElementById('data_container') || url !== '') {
+    if (!document.getElementById('data_container') || url !== '') {
         if (url === '')
             window.location.reload(false);
         else
             window.location.href = url;
-    } else {
+    } 
+    else {
         // Enforce specific display_options to get only the content data
         var display_options = getUrlParam('display_options');
         var opts = [ 'h', 't', 'b', 'f', 'c', 'o', 'd', 'e', 'r', 'w' ];
-        for(var i = 0; i < opts.length; i++) {
-            if(display_options.indexOf(opts[i].toUpperCase()) > -1)
+        for (var i = 0; i < opts.length; i++) {
+            if (display_options.indexOf(opts[i].toUpperCase()) > -1)
                 display_options = display_options.replace(opts[i].toUpperCase(), opts[i]);
             else
                 display_options += opts[i];
@@ -796,21 +799,52 @@ function folding_step(oImg, state, step) {
     setTimeout(function() { folding_step(oImg, state, step); }, fold_steps[step]);
 }
 
+/* Check if an element has a certain css class. */
+function has_class(o, cn) {
+    var parts = o.className.split(' ');
+    for (x=0; x<parts.length; x++) {
+        if (parts[x] == cn)
+            return true;
+    }
+    return false;
+}
+
+function remove_class(o, cn) {
+    var parts = o.className.split(' ');
+    var new_parts = Array();
+    for (x=0; x<parts.length; x++) {
+        if (parts[x] != cn) 
+            new_parts.push(parts[x]);
+    }
+    o.className = new_parts.join(" ");
+}
+
+function add_class(o, cn) {
+    if (!has_class(o, cn))
+        o.className += " " + cn;
+}
+
+function change_class(o, a, b) {
+    remove_class(o, a);
+    add_class(o, b);
+}
+
+
 function toggle_tree_state(tree, name, oContainer) {
     var state;
-    if (oContainer.style.display == 'none') {
-        oContainer.style.display = '';
+    if (has_class(oContainer, 'closed')) {
+        change_class(oContainer, 'closed', 'open');
         state = 'on';
         if (oContainer.tagName == 'TR') { // handle in-table toggling
             while (oContainer = oContainer.nextSibling)
-                oContainer.style.display = '';
+                change_class(oContainer, 'closed', 'open');
         }
     } else {
-        oContainer.style.display = 'none';
+        change_class(oContainer, 'open', 'closed');
         state = 'off';
         if (oContainer.tagName == 'TR') { // handle in-table toggling
             while (oContainer = oContainer.nextSibling)
-                oContainer.style.display = 'none';
+                change_class(oContainer, 'open', 'closed');
         }
     }
     get_url('tree_openclose.py?tree=' + escape(tree) + '&name=' + escape(name) + '&state=' + state);
@@ -829,7 +863,7 @@ function toggle_foldable_container(treename, id) {
         var oImg = document.getElementById('treeimg.' + treename + '.' + id);
         var oBox = document.getElementById('tree.' + treename + '.' + id);
         toggle_tree_state(treename, id, oBox);
-        toggle_folding(oImg, oBox.style.display != "none");
+        toggle_folding(oImg, !has_class(oBox, "closed"));
         oImg = null;
         oBox = null;
     }
@@ -849,157 +883,34 @@ function toggle_foldable_container(treename, id) {
 // Holds the row numbers of all selected rows
 var g_selected_rows = [];
 
-//
-function rgbToHsv(r, g, b) {
-    var r = (r / 255),
-        g = (g / 255),
-        b = (b / 255);
-
-    var min = Math.min(Math.min(r, g), b),
-        max = Math.max(Math.max(r, g), b),
-        delta = max - min;
-
-    var value = max, saturation, hue;
-
-    // Hue
-    if (max == min) {
-        hue = 0;
-    } else if (max == r) {
-        hue = (60 * ((g-b) / (max-min))) % 360;
-    } else if (max == g) {
-        hue = 60 * ((b-r) / (max-min)) + 120;
-    } else if (max == b) {
-        hue = 60 * ((r-g) / (max-min)) + 240;
-    }
-
-    if (hue < 0)
-        hue += 360;
-
-    // Saturation
-    if (max == 0) {
-        saturation = 0;
-    } else {
-        saturation = 1 - (min/max);
-    }
-    return [Math.round(hue), Math.round(saturation * 100), Math.round(value * 100)];
-}
-
-function hsvToRgb(h,s,v) {
-
-    var s = s / 100,
-        v = v / 100;
-
-    var hi = Math.floor((h/60) % 6);
-    var f = (h / 60) - hi;
-    var p = v * (1 - s);
-    var q = v * (1 - f * s);
-    var t = v * (1 - (1 - f) * s);
-
-    var rgb = [];
-
-    switch (hi) {
-        case 0: rgb = [v,t,p];break;
-        case 1: rgb = [q,v,p];break;
-        case 2: rgb = [p,v,t];break;
-        case 3: rgb = [p,q,v];break;
-        case 4: rgb = [t,p,v];break;
-        case 5: rgb = [v,p,q];break;
-    }
-
-    var r = Math.min(255, Math.round(rgb[0]*256)),
-        g = Math.min(255, Math.round(rgb[1]*256)),
-        b = Math.min(255, Math.round(rgb[2]*256));
-
-    return [r,g,b];
-}
-
-function lightenColor(color, val) {
-    if(color == 'transparent' || color == 'rgba(0, 0, 0, 0)')
-        return color;
-
-    if(color.charAt(0) === 'r') {
-        var parts = color.substring(color.indexOf('(')+1, color.indexOf(')')).split(',', 3);
-        var r = parseInt(parts[0]);
-        var g = parseInt(parts[1]);
-        var b = parseInt(parts[2]);
-    } else if(color.charAt(0) === '#' && color.length == 7) {
-        var r = parseInt(color.substring(1, 3), 16);
-        var g = parseInt(color.substring(3, 5), 16);
-        var b = parseInt(color.substring(5, 7), 16);
-    } else if(color.charAt(0) === '#' && color.length == 4) {
-        var r = parseInt(color.substring(1, 2) + color.substring(1, 2), 16);
-        var g = parseInt(color.substring(2, 3) + color.substring(2, 3), 16);
-        var b = parseInt(color.substring(3, 4) + color.substring(3, 4), 16);
-    } else {
-        alert('Invalid color definition: ' + color);
-        return color;
-    }
-
-    var hsv = rgbToHsv(r, g, b);
-    hsv[2] -= val;
-    var rgb = hsvToRgb(hsv[0], hsv[1], hsv[2]);
-
-    r = rgb[0];
-    g = rgb[1];
-    b = rgb[2];
-
-    code  = r < 16 ? "0"+r.toString(16) : r.toString(16);
-    code += g < 16 ? "0"+g.toString(16) : g.toString(16);
-    code += b < 16 ? "0"+b.toString(16) : b.toString(16);
-
-    return "#" + code.toUpperCase();
-}
-
-function real_style(obj, attr, ieAttr) {
-    var st;
-    if(document.defaultView && document.defaultView.getComputedStyle) {
-        st = document.defaultView.getComputedStyle(obj, null).getPropertyValue(attr);
-    } else {
-        st = obj.currentStyle[ieAttr];
-    }
-
-    if(typeof(st) == 'undefined') {
-        st = 'transparent';
-    }
-
-    // If elem is a TD and has no background find the backround of the parent
-    // e.g. the TR and then set this color as background for the TD
-    // But only do this when the TR is not in the highlight scope
-    if(obj.tagName == 'TD'
-       && obj.parentNode.row_num === undefined
-       && (st == 'transparent' || st == 'rgba(0, 0, 0, 0)'))
-        st = real_style(obj.parentNode, attr, ieAttr);
-
-    return st;
-}
-
-function find_checkbox(elem) {
-    // Find the checkbox of this element to gather the number of cells
+function find_checkbox(oTd) {
+    // Find the checkbox of this oTdent to gather the number of cells
     // to highlight after the checkbox
     // 1. Go up to the row
     // 2. search backwards for the next checkbox
     // 3. loop the number of columns to highlight
-    var childs = elem.parentNode.childNodes;
+    var allTds = oTd.parentNode.childNodes;
     var found = false;
     var checkbox = null;
-    for(var a = childs.length - 1; a >= 0 && checkbox === null; a--) {
+    for(var a = allTds.length - 1; a >= 0 && checkbox === null; a--) {
         if(found === false) {
-            if(childs[a] == elem) {
+            if(allTds[a] == oTd) { /* that's me */
                 found = true;
             }
-            continue;
+            else 
+                continue;
         }
 
         // Found the clicked column, now walking the cells backward from the
         // current cell searching for the next checkbox
-        var elems = childs[a].childNodes;
-        for(var x = 0; x < elems.length; x++) {
-            if(elems[x].tagName === 'INPUT' && elems[x].type == 'checkbox') {
-                checkbox = elems[x];
+        var oTds = allTds[a].childNodes;
+        for(var x = 0; x < oTds.length; x++) {
+            if(oTds[x].tagName === 'INPUT' && oTds[x].type == 'checkbox') {
+                checkbox = oTds[x];
                 break;
             }
         }
-        elems = null;
+        oTds = null;
     }
     return checkbox;
 }
@@ -1016,23 +927,10 @@ function highlight_row(elem, on) {
 }
 
 function highlight_elem(elem, on) {
-    // Find all elements below "elem" with a defined background-color and change it
-    var bg_color = real_style(elem, 'background-color', 'backgroundColor');
-    if (bg_color == 'white')
-        bg_color = "#ffffff";
-
-    if(on) {
-        elem['hover_orig_bg'] = bg_color;
-        elem.style.backgroundColor = lightenColor(elem['hover_orig_bg'], -20);
-    } else {
-        elem.style.backgroundColor = elem['hover_orig_bg'];
-        elem['hover_orig_bg'] = undefined;
-    }
-
-    var childs = elem.childNodes;
-    for(var i = 0; i < childs.length; i++)
-        if(childs[i].tagName !== undefined && childs[i].tagName !== 'OPTION')
-            highlight_elem(childs[i], on);
+    if (on)
+        add_class(elem, "checkbox_hover");
+    else
+        remove_class(elem, "checkbox_hover");
 }
 
 function select_all_rows(elems, only_failed) {
@@ -1592,7 +1490,7 @@ function help_switch(how) {
     // recursive scan for all div class=help elements
     var helpdivs = document.getElementsByClassName('help');
     for (var i=0; i<helpdivs.length; i++) {
-        helpdivs[i].style.display = how ? "" : "none";
+        helpdivs[i].style.display = how ? "block" : "none";
     }
     get_url("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
 }
@@ -1602,11 +1500,11 @@ function view_toggle_form(oButton, idForm) {
     var oForm = document.getElementById(idForm);
     if (oForm.style.display == "none") {
         var display = "";
-        var down = " down";
+        var down = "down";
     }
     else {
         var display = "none";
-        var down = "";
+        var down = "up";
     }
 
     // Close all other view forms
@@ -1618,45 +1516,73 @@ function view_toggle_form(oButton, idForm) {
     }
     oForm.style.display = display;
 
-    // Change button state
-    var allbuttons = document.getElementsByClassName('columnswitcher');
+    // Make all other buttons inactive
+    var allbuttons = document.getElementsByClassName('togglebutton');
     for (var i=0; i<allbuttons.length; i++) {
-        if (allbuttons[i] != oButton)
-            allbuttons[i].className = "columnswitcher";
+        var b = allbuttons[i];
+        if (b != oButton && !has_class(b, "empth")) {
+            remove_class(b, "down") 
+            add_class(b, "up") 
+        }
     }
-    oButton.className = "columnswitcher" + down;
+    remove_class(oButton, "down");
+    remove_class(oButton, "up");
+    add_class(oButton, down);
+}
 
+// used for refresh und num_columns
+function view_dial_option(oDiv, viewname, option, choices) {
+    var new_choice = choices[0]; // in case not contained in choices
+    for (var c=0; c<choices.length; c++) {
+        choice = choices[c];
+        val = choice[0];
+        title = choice[1];
+        if (has_class(oDiv, "val_" + val)) {
+            var new_choice = choices[(c+1) % choices.length];
+            change_class(oDiv, "val_" + val, "val_" + new_choice[0]);
+            break; 
+        }
+    }
+
+    // Start animation
+    step = 0;
+    speed = 10;
+    for (var way = 0; way <= 10; way +=1) { 
+        step += speed;
+        setTimeout("turn_dial('" + option + "', '', " + way + ")", step);
+    }
+    for (var way = -10; way <= 0; way +=1) { 
+        step += speed;
+        setTimeout("turn_dial('" + option + "', '" + new_choice[1] + "', " + way + ")", step);
+    }
+    
+    get_url_sync("ajax_set_viewoption.py?view_name=" + viewname + 
+            "&option=" + option + "&value=" + new_choice[0]);
+    if (option == "refresh")
+        setReload(new_choice[0]);
+    handleReload('');
+}
+// way ranges from -10 to 10 means centered (normal place)
+function turn_dial(option, text, way) {
+    var oDiv = document.getElementById("optiondial_" + option).firstChild;
+    if (text && oDiv.innerHTML != text)
+        oDiv.innerHTML = text;
+    oDiv.style.top = (way * 1.3) + "px";
 }
 
 /* Switch number of view columns, refresh and checkboxes. If the
    choices are missing, we do a binary toggle. */
 gColumnSwitchTimeout = null;
 function view_switch_option(oDiv, viewname, option, choices) {
-    var current_title = oDiv.firstChild.innerHTML;
-    if (choices) {
-        var new_choice = choices[0]; // in case not contained in choices
-        for (var c=0; c<choices.length; c++) {
-            choice = choices[c];
-            val = choice[0];
-            title = choice[1];
-            if (current_title == title) {
-                var new_choice = choices[(c+1) % choices.length];
-                break;
-            }
-        }
-        oDiv.firstChild.innerHTML = "" + new_choice[1];
+    if (has_class(oDiv, "down")) {
+        new_value = false;
+        change_class(oDiv, "down", "up");
     }
     else {
-        if (oDiv.className.indexOf('down') != -1) {
-            new_value = false;
-            oDiv.className = 'columnswitcher'; 
-        }
-        else {
-            new_value = true;
-            oDiv.className = 'columnswitcher down';
-        }
-        new_choice = [ new_value, '' ];
+        new_value = true;
+        change_class(oDiv, "up", "down");
     }
+    new_choice = [ new_value, '' ];
 
     get_url_sync("ajax_set_viewoption.py?view_name=" + viewname + 
             "&option=" + option + "&value=" + new_choice[0]);

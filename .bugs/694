@@ -1,9 +1,12 @@
 Title: Allow umlauts in mail addresses
 Component: wato
-State: open
+Class: nastiness
+State: done
 Date: 2012-04-25 12:25:47
 Targetversion: 1.2.0
-Class: nastiness
 
 The mail addresses in contacts deny umlauts. But it is possible to use umlauts as mail prefix
 and also in umlaut domains.
+
+2012-05-25 11:39:42: changed state open -> done
+Has been implemented. At least for the german umlauts

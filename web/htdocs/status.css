@@ -40,7 +40,6 @@ Boston, MA 02110-1301 USA.
 td.state {
     text-align: center;
     font-weight: bold;
-    font-family: sans-serif;
     width: 32px;
 }
 
@@ -53,7 +52,7 @@ td.state {
     white-space: nowrap;
 }
 /* WARN */
-.state1, .state1 a {
+.state1, .state1 a, tr.groupheader td.state1 {
     background-color: #ff0; color: #000;
 }
 
@@ -81,7 +80,7 @@ td.state {
 b.stmark {
     margin-left: 4px;
     padding: 1px 3px;
-    -moz-border-radius: 4px;
+    border-radius: 4px;
     font-size: 7pt;
     border: 1px solid #666;
 }
@@ -219,6 +218,9 @@ td.statex {  /* zero count */
 tr.odd0  { background-color: #eee; }
 tr.even0 { background-color: #ddd; }
 
+tr.odd0  { background-color: #eee; }
+tr.even0 { background-color: #ddd; }
+
 tr.odd1  { background-color: #ffc; }
 tr.even1 { background-color: #ffa; }
 
@@ -246,7 +248,7 @@ tr.even3 { background-color: #ffefaf; }
 /* Styles the background of host columns which have a red colored background when critical */
 .data div.hostdown {
     background-color: #f22;
-    -moz-border-radius: 4px;
+    border-radius: 4px;
     border: 2px solid #000;
     padding-left: 3px;
     padding-right: 3px;

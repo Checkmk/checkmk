@@ -60,7 +60,6 @@ def load_plugins():
     global loaded_with_language
     if loaded_with_language == current_language:
         return
-    loaded_with_language = current_language
 
     # Permissions are currently not being defined. That will be the
     # case as soon as dashboards become editable.
@@ -69,6 +68,11 @@ def load_plugins():
     # Load plugins for dashboards. Currently these files
     # just may add custom dashboards by adding to builtin_dashboards.
     load_web_plugins("dashboard", globals())
+
+    # This must be set after plugin loading to make broken plugins raise
+    # exceptions all the time and not only the first time (when the plugins
+    # are loaded).
+    loaded_with_language = current_language
 
     # In future there will be user editable dashboards just like
     # views which will be loaded. Currently we only use the builtin
@@ -154,6 +158,7 @@ var refresh_dashlets = %r;
 var dashboard_name = '%s';
 set_dashboard_size();
 window.onresize = function () { set_dashboard_size(); }
+window.onload = function () { set_dashboard_size(); }
 dashboard_scheduler(1);
     """ % (header_height, screen_margin, title_height, dashlet_padding, 
            corner_overlap, refresh_dashlets, name))
@@ -196,8 +201,11 @@ def render_dashlet(nr, dashlet, wato_folder):
     if "content" in dashlet: # fixed content
         html.write(dashlet["content"])
     elif "iframe" in dashlet: # fixed content containing iframe
+        # Fix of iPad >:-P
+        html.write('<div style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch; overflow: auto;">')
         html.write('<iframe allowTransparency="true" frameborder="0" width="100%%" height="100%%" src="%s"></iframe>' %
            add_wato_folder_to_url(dashlet["iframe"], wato_folder))
+        html.write('</div>')
     html.write("</div></div>\n")
 
 # Here comes the brain stuff: An intelligent liquid layout algorithm.

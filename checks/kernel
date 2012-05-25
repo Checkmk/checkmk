@@ -135,21 +135,24 @@ def check_cpu_utilization(item, params, info):
           ( "system", "%.3f" % system_perc ),
           ( "wait",   "%.3f" % wait_perc ) ]
 
+    infotext = " - user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user_perc, system_perc, wait_perc)
+
     # You may set a warning/critical level on the io wait
     # percentage. This can be done by setting params to
     # a pair of (warn, crit)
-    result = (0, "OK")
+    result = 0
     try:
         warn, crit = params
         if wait_perc >= crit:
-            result = (2, "CRIT (wait too large)")
+            result = 2
+            infotext += "(!!)"
         elif wait_perc >= warn:
-            result = (1, "WARNING (wait too large)")
+            result = 1
+            infotext += "(!)"
     except:
         pass
 
-    return (result[0], result[1] + " - user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" %
-            (user_perc, system_perc, wait_perc), perfdata)
+    return (result, nagios_state_names[result] + infotext, perfdata)
 
 check_info['kernel.util'] = (check_cpu_utilization, "CPU utilization", 1,  inventory_cpu_utilization)
 checkgroup_of['kernel.util'] = "cpu_iowait"

@@ -1,0 +1,12 @@
+Title: Dashboard is garbled in Safari (iPad)
+Component: multisite
+Class: bug
+State: done
+Date: 2012-05-23 09:22:40
+Targetversion: 1.2.0
+
+On the iPad the dashlets seems to overflow.
+The layout is garbled.
+
+2012-05-24 14:13:10: changed state open -> done
+Works now.

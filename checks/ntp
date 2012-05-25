@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-ntp_default_levels = (10, 20.0, 50.0) # stratum, ms offset
+ntp_default_levels = (10, 200.0, 500.0) # stratum, ms offset
 
 # Example output from agent:
 # <<<ntp>>>

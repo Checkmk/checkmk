@@ -2,7 +2,7 @@ Title: Logwatch ruleeditor (or ValueSpec ListOf) breaks on Iceweasel on Debian 6
 Component: multisite
 State: open
 Date: 2012-04-24 12:07:14
-Targetversion: 1.2.0
+Targetversion: future
 Class: bug
 
 On Iceweasel 3.5.16 the rule editor breaks while editing ListOf()

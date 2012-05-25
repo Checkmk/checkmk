@@ -25,6 +25,9 @@ Boston, MA 02110-1301 USA.
 
 */
 
+/* Global style used by all HTML pages, even by sidebar and
+   mobile interface */
+
 /*-------------------------------------------------------------------------.
 |                ____        __             _ _                            |
 |               |  _ \  ___ / _| __ _ _   _| | |_ ___                      |
@@ -48,13 +51,6 @@ div {
     padding: 0;
 }
 
-h3 {
-    color: white;
-    margin-bottom: 2px;
-    font-size: 12pt;
-    font-weight: normal;
-}
-
 img {
     border-style: none;
 }
@@ -66,8 +62,9 @@ th {
 body {
     color: white;
 }
-td {
-    color: black;
+
+body a {
+    color: white;
 }
 
 /* Default font size for the complete Multisite GUI */
@@ -85,34 +82,6 @@ input, select, textarea {
     font-family: arial, helvetica, sans-serif;
     vertical-align: middle;
     margin-top: 0px;
-}
-
-input[type=text] {
-    box-shadow: 0.1px 1.2px 1.8px 0 #888 inset;
-    position: relative;
-}
-input[type=password] {
-    box-shadow: 0.1px 1.2px 1.8px 0 #800 inset;
-}
-input[type=text],input[type=text] {
-    height: 18px;
-    padding: 2px 3px;
-    vertical-align: middle;
-/*    top: -2px; */
-}
-select {
-    height: 22px;
-}
-
-input[type=radio] {
-    margin-left: 0px;
-}
-input[type=checkbox] {
-    margin-left: 0px; 
-}
-
-select {
-    padding: 1px 3px;
 }
 
 form {
@@ -172,7 +141,7 @@ a.button {
     padding: 0.1ex 1ex;
     height: 24px;
     -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
+    border-radius: 4px;
     border-radius: 4px;
     margin: 2px;
 }
@@ -209,7 +178,7 @@ label.image_button input {
     float: left;
     font-size: 8pt;
     margin-left: 3px;
-    -moz-border-radius: 0px;
+    border-radius: 0px;
 }
 label.image_button input:hover {
     background-position: right -65px;
@@ -285,6 +254,10 @@ ul.treeangle li {
     margin-left: 16px;
     padding-left: 20px;
     list-style: disc;
+    display: block;
+}
+ul.closed {
+    display: none;
 }
 
 
@@ -470,7 +443,7 @@ div.listofstrings.horizontal > div:last-child {
 }
 
 table.listchoice {
-    cell-spacing: 0px;
+    border-collapse: collapse;
 }
 table.listchoice td span.checkbox {
     height: 10px;

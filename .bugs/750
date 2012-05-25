@@ -1,9 +1,12 @@
 Title: IE8: Sidebarscrolling garbles layout
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-05-15 09:16:40
 Targetversion: 1.2.0
-Class: bug
 
 If you scroll the sidebar up and down on IE8 then some
 things do not scroll but seem to be fixed to the screen.
+
+2012-05-24 18:16:35: changed state open -> done
+Has been fixed. Never use position: relative within snapins

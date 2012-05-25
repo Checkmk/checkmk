@@ -1,8 +1,11 @@
 Title: Checkboxes (Multiselect) not working on IE
 Component: multisite
-State: open
+Class: bug
+State: works4me
 Date: 2012-05-08 16:20:24
 Targetversion: 1.2.0
-Class: bug
 
 Seems to be in WATO and also in Multisite views
+
+2012-05-24 18:26:37: changed state open -> works4me
+Works for me in ie7, 8, 9

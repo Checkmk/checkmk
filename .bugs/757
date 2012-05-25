@@ -1,0 +1,47 @@
+Title: Compilation of livecheck with dietlibc broken on SLES11SP1/2
+Component: livecheck
+State: open
+Date: 2012-05-25 10:28:46
+Targetversion: future
+Class: nastiness
+
+Generally we should enable compiling livecheck with dietlibc in
+all of our OMD builds (where diet is available). An then fix
+the compile problem currently arising:
+
+cc -nostdlib -static -L/opt/dietlibc/lib-x86_64
+/opt/dietlibc/lib-x86_64/start.o -g -O2 -I.. -s -o livecheck l
+ivecheck.c strutil.cc check_icmp.c -isystem /opt/dietlibc/include
+-D__dietlibc__ /opt/dietlibc/lib-x86_64/libc.
+a -lgcc
+In file included from check_icmp.c:68:
+/usr/include/netinet/ip_icmp.h:29: warning: ‘u_int8_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:30: warning: ‘u_int8_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:31: warning: ‘u_int16_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:36: warning: ‘u_int16_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:37: warning: ‘u_int16_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:39: warning: ‘u_int32_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:42: warning: ‘u_int16_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:43: warning: ‘u_int16_t’ is deprecated
+In file included from check_icmp.c:68:
+/usr/include/netinet/ip_icmp.h:134: warning: ‘u_int32_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:135: warning: ‘u_int32_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:140: warning: ‘u_int8_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:141: warning: ‘u_int8_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:142: warning: ‘u_int16_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:149: warning: ‘u_int16_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:150: warning: ‘u_int16_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:152: warning: ‘u_int32_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:157: warning: ‘u_int16_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:158: warning: ‘u_int16_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:163: warning: ‘u_int8_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:164: warning: ‘u_int8_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:165: warning: ‘u_int16_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:182: warning: ‘u_int32_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:183: warning: ‘u_int32_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:184: warning: ‘u_int32_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:192: warning: ‘u_int32_t’ is deprecated
+/usr/include/netinet/ip_icmp.h:193: warning: ‘u_int8_t’ is deprecated
+/tmp/cchZoOhZ.o:(.eh_frame+0x12): undefined reference to `__gxx_personality_v0'
+collect2: ld returned 1 exit status
+make[2]: *** [livecheck] Error 1

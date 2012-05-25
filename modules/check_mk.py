@@ -343,7 +343,6 @@ except Exception, e:
     sys.exit(5)
 
 
-
 #   +----------------------------------------------------------------------+
 #   |     ____ _               _      _          _                         |
 #   |    / ___| |__   ___  ___| | __ | |__   ___| |_ __   ___ _ __ ___     |
@@ -1087,6 +1086,12 @@ def service_description(check_type, item):
 #   |                          |___/                  |_|                  |
 #   +----------------------------------------------------------------------+
 
+def make_utf8(x):
+    if type(x) == unicode:
+        return x.encode('utf-8')
+    else:
+        return x
+
 def output_conf_header(outfile):
     outfile.write("""#
 # Created by Check_MK. Do not edit.
@@ -1494,7 +1499,7 @@ def create_nagios_hostdefs(outfile, hostname):
     outfile.write("\ndefine host {\n")
     outfile.write("  host_name\t\t\t%s\n" % hostname)
     outfile.write("  use\t\t\t\t%s\n" % (is_clust and cluster_template or host_template))
-    outfile.write("  address\t\t\t%s\n" % (ip and ip.encode('utf-8') or "0.0.0.0"))
+    outfile.write("  address\t\t\t%s\n" % (ip and make_utf8(ip) or "0.0.0.0"))
     outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
 
     # Levels for host check
@@ -1561,10 +1566,11 @@ def create_nagios_hostdefs(outfile, hostname):
     if len(aliases) == 0:
         outfile.write("  alias\t\t\t\t%s\n" % alias)
     else:
-        alias = aliases[0].encode("utf-8")
+        alias = make_utf8(aliases[0])
+
 
     # Custom configuration last -> user may override all other values
-    outfile.write(extra_host_conf_of(hostname).encode("utf-8"))
+    outfile.write(make_utf8(extra_host_conf_of(hostname)))
 
     outfile.write("}\n")
 
@@ -1844,16 +1850,17 @@ define service {
             command_name = entry.get("command_name", "check-mk-custom")
             command_line = entry.get("command_line", "")
 
-            plugin_name = command_line.split()[0]
-            if command_line[0] not in [ '$', '/' ]:
-                try:
-                    for dir in [ "/local", "" ]:
-                        path = omd_root + dir + "/lib/nagios/plugins/"
-                        if os.path.exists(path + plugin_name):
-                            command_line = path + command_line
-                            break
-                except:
-                    pass
+            if command_line:
+                plugin_name = command_line.split()[0]
+                if command_line[0] not in [ '$', '/' ]:
+                    try:
+                        for dir in [ "/local", "" ]:
+                            path = omd_root + dir + "/lib/nagios/plugins/"
+                            if os.path.exists(path + plugin_name):
+                                command_line = path + command_line
+                                break
+                    except:
+                        pass
 
             custom_commands_to_define.add(command_name)
 
@@ -1910,7 +1917,7 @@ define hostgroup {
   hostgroup_name\t\t%s
   alias\t\t\t\t%s
 }
-""" % (hg, alias.encode('utf-8')))
+""" % (hg, make_utf8(alias)))
 
     # No creation of host groups but we need to define
     # default host group
@@ -1940,7 +1947,7 @@ define servicegroup {
   servicegroup_name\t\t%s
   alias\t\t\t\t%s
 }
-""" % (sg, alias.encode('utf-8')))
+""" % (sg, make_utf8(alias)))
 
 def create_nagios_config_contactgroups(outfile):
     if define_contactgroups:
@@ -1957,7 +1964,7 @@ def create_nagios_config_contactgroups(outfile):
             outfile.write("\ndefine contactgroup {\n"
                     "  contactgroup_name\t\t%s\n"
                     "  alias\t\t\t\t%s\n"
-                    "}\n" % (name, alias.encode('utf-8')))
+                    "}\n" % (name, make_utf8('utf-8')))
 
 
 def create_nagios_config_commands(outfile):
@@ -2004,7 +2011,7 @@ def create_nagios_config_timeperiods(outfile):
             tp = timeperiods[name]
             outfile.write("define timeperiod {\n  timeperiod_name\t\t%s\n" % name)
             if "alias" in tp:
-                outfile.write("  alias\t\t\t\t%s\n" % tp["alias"].encode("utf-8"))
+                outfile.write("  alias\t\t\t\t%s\n" % make_utf(tp["alias"]))
             for key, value in tp.items():
                 if key not in [ "alias", "exclude" ]:
                     times = ",".join([ ("%s-%s" % (fr, to)) for (fr, to) in value ])
@@ -2034,9 +2041,11 @@ def create_nagios_config_contacts(outfile):
 
             outfile.write("define contact {\n  contact_name\t\t\t%s\n" % cname)
             if "alias" in contact:
-                outfile.write("  alias\t\t\t\t%s\n" % contact["alias"].encode("utf-8"))
+                outfile.write("  alias\t\t\t\t%s\n" % make_utf8(contact["alias"]))
             if "email" in contact:
                 outfile.write("  email\t\t\t\t%s\n" % contact["email"])
+            if "pager" in contact:
+                outfile.write("  pager\t\t\t\t%s\n" % contact["pager"])
             not_enabled = contact.get("notifications_enabled", True)
             for what in [ "host", "service" ]:
                 no = contact.get(what + "_notification_options", "")

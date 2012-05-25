@@ -1,4 +1,4 @@
-#!/usr/bin/python
+
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -789,8 +789,8 @@ class CascadingDropdown(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._choices = []
         for entry in kwargs["choices"]:
-            if len(entry) == 2:
-                entry = entry + (None,)
+            if len(entry) == 2: # plain entry with no sub-valuespec
+                entry = entry + (None,) # normlize to three entries
             self._choices.append(entry)
         self._separator = kwargs.get("separator", ", ") 
         self._html_separator = kwargs.get("html_separator", "<br>") 
@@ -803,34 +803,53 @@ class CascadingDropdown(ValueSpec):
             return self._choices[0][0]
 
     def render_input(self, varprefix, value):
-        def_val = 0
+        def_val = '0'
         options = []
         for nr, (val, title, vs) in enumerate(self._choices):
             options.append((str(nr), title))
+            # Determine the default value for the select, so the
+            # the dropdown pre-selects the line corresponding with value.
+            # Note: the html.select with automatically show the modified
+            # selection, if the HTML variable varprefix_sel aleady
+            # exists.
             if value == val or (
                 type(value) == tuple and value[0] == val):
                 def_val = str(nr)
 
         vp = varprefix + "_sel"
-        onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(self._choices))  
+        onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(self._choices))
         if self._sorted:
             html.select(vp, options, def_val, onchange=onchange)
         else:
             html.sorted_select(vp, options, def_val, onchange=onchange)
 
+        # make sure, that the visibility is done correctly, in both
+        # cases:
+        # 1. Form painted for the first time (no submission yet, vp missing in URL
+        # 2. Form already submitted -> honor URL variable vp for visibility
+        cur_val = html.var(vp)
+
         html.write(self._html_separator)
         for nr, (val, title, vs) in enumerate(self._choices):
             if vs:
                 vp = varprefix + "_%d" % nr
-                if value == val or (
-                    type(value) == tuple and value[0] == val):
-                    def_val = value[1]
-                    disp = ""
-                else:
-                    def_val = vs.default_value()
-                    disp = "none"
+                # Form already submitted once (and probably in complain state)
+                if cur_val != None:
+                    def_val_2 = vs.default_value() # not used anyway, form already submitted
+                    if cur_val == str(nr):
+                        disp = ""
+                    else:
+                        disp = "none"
+                else: # form painted the first time
+                    if value == val \
+                       or (type(value) == tuple and value[0] == val):
+                        def_val_2 = value[1]
+                        disp = ""
+                    else:
+                        def_val_2 = vs.default_value()
+                        disp = "none"
                 html.write('<span id="%s_%s_sub" style="display: %s">' % (varprefix, nr, disp))
-                vs.render_input(vp, def_val)
+                vs.render_input(vp, def_val_2)
                 html.write('</span>')
 
     def value_to_text(self, value):
@@ -1636,6 +1655,14 @@ class Dictionary(ValueSpec):
              for (name, vs) 
              in self._elements
              if name in self._required_keys or not self._optional_keys])
+
+    def default_value(self):
+        def_val = {}
+        for name, vs in self._elements:
+            if name in self._required_keys or not self._optional_keys:
+                def_val[name] = vs.default_value()
+
+        return def_val
 
     def value_to_text(self, value):
         parts = []

@@ -379,6 +379,8 @@ def handler(req, profiling = True):
             response_code = apache.HTTP_BAD_GATEWAY
 
     except apache.SERVER_RETURN:
+        release_all_locks()
+        html.live = None
         raise
 
     except Exception, e:

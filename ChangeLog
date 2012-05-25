@@ -1,3 +1,79 @@
+1.2.0b5:
+    Core:
+    * FIX: handle UTF-8 encoded binary strings correctly (e.g. in host alias)
+    * FIX: fix configuration of passive checks via custom_checks
+    * Added NOTIFICATIONTYPE to host/service mail bodies
+
+    WATO:
+    * Site management: "disabled" only applies to Livestatus now
+    * FIX: fix folding problems with dependent host tags
+    * FIX: Detecting duplicate tag ids between regular tags and auxtags
+    * FIX: Fixed layout problem of "new special rule" button in rule editor
+    * FIX: Fixed layout problem on "activate changes" page
+    * FIX: Added check if contacts belong to contactgroup before contactgroup deletion
+    * FIX: fix site configuration for local site in Multisite environments
+    * FIX: "(no not monitor)" setting in distributed WATO now works
+    * FIX: Site management: replication setting was lost after re-editing
+    * FIX: fixed problems after changing D/WATO-configuration
+    * FIX: D/WATO: mark site dirty after host deletion
+    * FIX: D/WATO: replicate auth.secret, so that login on one site also
+           is valid on the replication slaves
+    * FIX: implement locking in order to prevent data corruption on
+           concurrent changes
+    * FIX: Fixed handling of validation errors in cascading dropdown fields
+    * FIX: fix cloning of users
+    * Keep track of changes made by other users before activating changes,
+      let user confirm this, new permission can be used to prevent a user
+      from activating foreign changes.
+    * FIX: Allowing german umlauts in users mail addresses
+    * Allow list of aux tags to be missing in host tag definitions. This
+      makes migration from older version easier.
+    * FIX: user management modules can now deal with empty lines in htpasswd
+    * FIX: Fixed js error on hostlist page with search form
+
+    Multisite:
+    * New display type 'boxes-omit-root' for BI views
+    * Hostgroup view BI Boxes omits the root level
+    * Finalized layout if view options and commands/filters/painteroptions.
+    * Broken plugins prevent plugin caching now
+    * FIX: remove refresh button from dashboard.
+    * FIX: remove use of old option defaults.checkmk_web_uri
+    * FIX: fixed outgoing bandwidth in fc port perfometer
+    * FIX: remove nasty JS error in sidebar
+    * FIX: fix folding in custom links (directories would not open)
+    * FIX: animation of rotation treeangle in trees works again
+    * FIX: Logwatch: Changed font color back to black
+    * FIX: show toggle button for checkboxes in deactivated state
+    * FIX: fix repeated stacked refresh when toggling columns
+    * FIX: disable checkbox button in non-checkboxable layouts
+    * FIX: fix table layout for views (gaps where missing sometimes)
+    * FIX: Fixed sorting views by perfdata values which contain floats
+    * FIX: fix sometimes-broken sizing of sidebar and dashboard on Chrome
+    * FIX: fix dashboard layout on iPad
+    * FIX: Fixed styling issues of sidebar in IE7
+    * FIX: fix problem where filter settings (of checkboxes) are not effective
+           when it comes to executing commands
+    * FIX: Fixed styling issues of view filters with dropdown fields
+    * FIX: multisite login can now deal with empty lines in htpasswd
+    * FIX: Fixed a bunch of js/css errors
+
+    Mobile:
+    * FIX: Fixed logtime filter settings in all mobile views
+    * FIX: fix some layout problems
+
+    BI:
+    * New aggregation function count_ok, that counts the number
+      of nodes in state OK.
+    * FIX: Removed debug output int count_ok aggregation
+
+    Checks & Agents:
+    * Linux: Modified cluster section to allow pacemaker/corosync clusters without heartbeat
+    * AIX: convert NIC check to lnx_if (now being compatible with if/if64)
+    * AIX: new check for CPU utilization (using section lparstat_aix)
+    * ntp checks: Changed default value of time offsets to be 200ms (WARN) / 500ms (CRIT)
+    * aironet_{errors,clients}: detect new kinds of devices (Thanks to Tiago Sousa)
+    * check_http, check_tcp: allow to omit -I and use dynamic DNS name instead
+
 1.2.0b4:
     Core:
     * New configuration variable snmp_timing, allowing to 

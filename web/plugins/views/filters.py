@@ -394,7 +394,7 @@ class FilterTime(Filter):
             html.write("<tr><td>%s:</td>" % whatname)
             html.write("<td>")
             html.text_input(varprefix, style="width: 116px;")
-            html.write("&nbsp;")
+            html.write("</td><td>")
             html.select(varprefix + "_range", choices, "3600")
             html.write("</td></tr>")
         html.write("</table>")
@@ -544,15 +544,18 @@ class FilterLogState(Filter):
         return True
 
     def display(self):
-        html.write("<table><tr><td>")
+        html.write("<table class=alertstatefilter><tr><td>")
+        html.begin_checkbox_group()
         for varsuffix, what, state, text in self._items:
             if state == 0:
                 html.write("<u>%s:</u></td><td>" % (_(what.title())))
             html.write("&nbsp; ")
-            html.checkbox("logst_" + varsuffix, True)
-            html.write(" " + text + "<br>")
+            html.checkbox("logst_" + varsuffix, True, label=text)
+            if not html.mobile:
+                html.write("<br>")
             if varsuffix == "h2":
                 html.write("</td><td>")
+        html.end_checkbox_group()
         html.write("</td></tr></table>")
 
     def filter(self, infoname):

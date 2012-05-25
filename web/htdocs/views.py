@@ -47,7 +47,6 @@ def load_plugins():
     global loaded_with_language
     if loaded_with_language == current_language:
         return
-    loaded_with_language = current_language
 
     global multisite_datasources     ; multisite_datasources      = {}
     global multisite_filters         ; multisite_filters          = {}
@@ -63,6 +62,11 @@ def load_plugins():
     config.declare_permission_section("action", _("Commands on host and services"))
 
     load_web_plugins("views", globals())
+
+    # This must be set after plugin loading to make broken plugins raise
+    # exceptions all the time and not only the first time (when the plugins
+    # are loaded).
+    loaded_with_language = current_language
 
     # Declare permissions for builtin views
     config.declare_permission_section("view", _("Builtin views"))
@@ -99,7 +103,7 @@ def show_filter(f):
 
 def show_filter_form(is_open, filters):
     # Table muss einen anderen Namen, als das Formular
-    html.write('<div class="view_form" id="filter" %s>' 
+    html.write('<div class="view_form" id="filters" %s>' 
             % (not is_open and 'style="display: none"' or '') )
 
     html.begin_form("filter")
@@ -131,7 +135,7 @@ def show_filter_form(is_open, filters):
     html.write("</div>")
 
 def show_painter_options(painter_options):
-    html.write('<div class="view_form" id="painter_options" style="display: none">')
+    html.write('<div class="view_form" id="painteroptions" style="display: none">')
     html.begin_form("painteroptions")
     forms.header(_("Display Options"))
     for on in painter_options:
@@ -592,7 +596,7 @@ def page_edit_view():
                   "that have a context (such as a host or a service). Such views can be used "
                   "as targets for columns. Whenever the context is available, a button to that "
                   "view will be displayed in related views."))
-            show_help = True
+            shown_help = True
 
         html.write('<div class="filtersetting %s">' % html.var("filter_%s" % fname, "off"))
         html.sorted_select("filter_%s" % fname,
@@ -609,7 +613,7 @@ def page_edit_view():
     html.write("<script language=\"javascript\">\n")
     for fname, filt in allowed_filters.items():
         if fname not in ubiquitary_filters:
-            html.write("filter_activation(\"filter_%s\");\n" % fname)
+            html.write("filter_activation(document.getElementById(\"filter_%s\"));\n" % fname)
     html.write("</script>\n")
    
 
@@ -1301,7 +1305,8 @@ def render_view(view, rows, datasource, group_painters, painters,
         len(rows) > 0 and \
         should_show_command_form(display_options, datasource)
 
-    show_context_links(view, hide_filters, show_filters, display_options, painter_options, command_form)
+    show_context_links(view, hide_filters, show_filters, display_options, 
+                       painter_options, command_form, layout.get('checkboxes', False))
 
     # User errors in filters
     html.show_user_errors()
@@ -1526,22 +1531,28 @@ def view_linktitle(view):
     else:
         return t
 
-def view_option_switcher(view, option, choices):
+def view_optiondial(view, option, choices, help):
     vo = view_options(view["name"])
     value = vo.get(option, view.get(option, choices[0][0]))
     title = dict(choices).get(value, value)
     html.begin_context_buttons() # just to be sure
-    html.write('<div class=columnswitcher '
-       'onclick="view_switch_option(this, \'%s\', \'%s\', %r);"><div>%s</div></div>' % (
-        view["name"], option, choices, title))
+    # Remove unicode strings
+    choices = [ [c[0], str(c[1])] for c in choices ]
+    html.write('<div title="%s" id="optiondial_%s" class="optiondial %s val_%s"' 
+       'onclick="view_dial_option(this, \'%s\', \'%s\', %r);"><div>%s</div></div>' % (
+        help, option, option, value, view["name"], option, choices, title))
 
-def view_option_toggler(view, option, title):
+def view_optiondial_off(option):
+    html.write('<div class="optiondial off %s"></div>' % option)
+
+
+def view_option_toggler(view, option, icon, help):
     vo = view_options(view["name"])
     value = vo.get(option, view.get(option, False))
     html.begin_context_buttons() # just to be sure
-    html.write('<div class="columnswitcher %s"'
-       'onclick="view_switch_option(this, \'%s\', \'%s\');"><div>%s</div></div>' % (
-        value and "down" or "", view["name"], option, title))
+    html.write('<div title="%s" class="togglebutton %s %s"'
+       'onclick="view_switch_option(this, \'%s\', \'%s\');"></div>' % (
+        help, icon, value and "down" or "up", view["name"], option)) 
 
 
 
@@ -1564,20 +1575,20 @@ def ajax_set_viewoption():
     vo[view_name][option] = value
     config.save_user_file("viewoptions", vo)
 
-def empty_toggle_button():
-    html.write('<div class="empty_columnswitcher"></div>')
+def togglebutton_off(icon):
+    html.write('<div class="togglebutton off %s"></div>' % icon)
 
-def toggle_button(id, isopen, icon, help):
+def togglebutton(id, isopen, icon, help):
     html.begin_context_buttons()
     if isopen:
-        cssclass = " down"
+        cssclass = "down"
     else:
-        cssclass = ""
-    html.write('<div class="columnswitcher%s" title="%s" '
-               'onclick="view_toggle_form(this, \'%s\');">\n' % (cssclass, help, id))
-    html.write('<img src="images/icon_%s.png"></div>' % icon)
+        cssclass = "up"
+    html.write('<div class="togglebutton %s %s" title="%s" '
+               'onclick="view_toggle_form(this, \'%s\');"></div>' % (icon, cssclass, help, id))
 
-def show_context_links(thisview, active_filters, show_filters, display_options, painter_options, command_form):
+def show_context_links(thisview, active_filters, show_filters, display_options, 
+                       painter_options, command_form, show_checkboxes):
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
     execute_hooks('buttons-begin')
@@ -1586,39 +1597,44 @@ def show_context_links(thisview, active_filters, show_filters, display_options, 
     if 'F' in display_options:
         if len(show_filters) > 0:
             if html.var("filled_in") == "filter":
-                icon = "filter_set"
+                icon = "filters_set"
                 help = _("The current data is being filtered")
             else:
-                icon = "filter"
+                icon = "filters"
                 help = _("Set a filter for refining the shown data")
-            toggle_button("filter", filter_isopen, icon, help)
+            togglebutton("filters", filter_isopen, icon, help)
         else:
-            empty_toggle_button()
+            togglebutton_off("filters")
 
     if 'D' in display_options:
         if len(painter_options) > 0 and config.may("painter_options"):
-            toggle_button("painter_options", False, "painteroptions", _("Modify display options"))
+            togglebutton("painteroptions", False, "painteroptions", _("Modify display options"))
         else:
-            empty_toggle_button()
+            togglebutton_off("painteroptions")
 
     if 'C' in display_options:
         if command_form:
-            toggle_button("commands", False, "commands", _("Execute commands on hosts, services and other objects"))
-            view_option_toggler(thisview, "show_checkboxes", "X")
+            togglebutton("commands", False, "commands", _("Execute commands on hosts, services and other objects"))
+            if show_checkboxes:
+                view_option_toggler(thisview, "show_checkboxes", "checkbox", _("Enable/Disable checkboxes for selecting rows for commands"))
+            else:
+                togglebutton_off("checkbox")
         else:
-            empty_toggle_button()
-            empty_toggle_button()
+            togglebutton_off("commands")
+            togglebutton_off("checkbox")
 
     if 'O' in display_options:
         if config.may("view_option_columns"):
             choices = [ [x, "%s" % x] for x in config.view_option_columns ]
-            view_option_switcher(thisview, "num_columns", choices)
+            view_optiondial(thisview, "num_columns", choices, _("Change the number of display columns"))
         else:
-            empty_toggle_button()
+            view_optiondial_off("num_columns")
 
-    if 'R' in display_options and config.may("view_option_refresh"):
-        choices = [ [x, {0:_("off")}.get(x,str(x)) + (x and "" or "")] for x in config.view_option_refreshes ]
-        view_option_switcher(thisview, "refresh", choices) 
+        if 'R' in display_options and config.may("view_option_refresh"):
+            choices = [ [x, {0:_("off")}.get(x,str(x) + "s") + (x and "" or "")] for x in config.view_option_refreshes ]
+            view_optiondial(thisview, "refresh", choices, _("Change the refresh rate")) 
+        else:
+            view_optiondial_off("refresh")
 
 
     # WATO: If we have a host context, then show button to WATO, if permissions allow this
@@ -1674,6 +1690,8 @@ def collect_context_links(thisview, active_filters):
     for view in sorted_views:
         name = view["name"]
         linktitle = view.get("linktitle")
+        if not linktitle:
+            linktitle = view["title"]
         if view == thisview:
             continue
         if view.get("hidebutton", False):

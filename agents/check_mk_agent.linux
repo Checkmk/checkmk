@@ -53,7 +53,7 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.0b4
+echo Version: 1.2.0b5
 echo AgentOS: linux
 echo PluginsDirectory: $PLUGINSDIR
 echo LocalDirectory: $LOCALDIR
@@ -341,16 +341,15 @@ if which lpstat > /dev/null 2>&1; then
 fi
 
 # Heartbeat monitoring
+# Different handling for heartbeat clusters with and without CRM
+# for the resource state
+if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ]; then
+  echo '<<<heartbeat_crm>>>'
+  crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
+fi
 if which cl_status > /dev/null 2>&1; then
-  # Different handling for heartbeat clusters with and without CRM
-  # for the resource state
-  if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ]; then
-    echo '<<<heartbeat_crm>>>'
-    crm_mon -1 -r | grep -v ^$ | sed '/^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
-  else
-    echo '<<<heartbeat_rscstatus>>>'
-    cl_status rscstatus
-  fi
+  echo '<<<heartbeat_rscstatus>>>'
+  cl_status rscstatus
 
   echo '<<<heartbeat_nodes>>>'
   for NODE in $(cl_status listnodes); do

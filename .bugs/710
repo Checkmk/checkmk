@@ -1,9 +1,12 @@
 Title: Bulk inventory hangs if no hosts selected
 Component: wato
-State: open
+Class: bug
+State: works4me
 Date: 2012-05-11 17:54:23
 Targetversion: 1.2.0
-Class: bug
 
 If bulk inventory is launched and finds no hosts to inventorize, the menu hangs
 forever.
+
+2012-05-24 18:42:20: changed state open -> works4me
+I can not reproduce a problem.

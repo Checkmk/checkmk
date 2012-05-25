@@ -40,6 +40,13 @@ register_rule(group,
            Dictionary(
                title = _("Optional parameters"),
                elements = [
+                   ( "hostname",
+                     TextAscii(
+                         title = _("DNS Hostname"),
+                         allow_empty = False,
+                         help = _("If you specify a hostname here, then a dynamic DNS lookup "
+                                  "will be done instead of using the IP address of the host "
+                                  "as configured in your host properties."))),
                    ( "response_time",
                      Tuple(
                          title = _("Expected response time"),
@@ -177,14 +184,28 @@ register_rule(group,
             Dictionary(
                 title = _("Optional settings"),
                 elements = [
-                   ( "vhost",
-                     TextAscii(
-                       title = _("Name of the virtual host"),
-                       help = _("Set this in order to specify the name of the "
-                        "virtual host for the query (using HTTP/1.1). When you "
-                        "leave this empty, then the IP address of the host "
-                        "will be used instead."),
-                       allow_empty = False)
+                   ( "virthost",
+                     Tuple(
+                       title = _("Virtual host"),
+                       elements = [
+                         TextAscii(
+                           title = _("Name of the virtual host"),
+                           help = _("Set this in order to specify the name of the "
+                            "virtual host for the query (using HTTP/1.1). When you "
+                            "leave this empty, then the IP address of the host "
+                            "will be used instead."),
+                           allow_empty = False),
+                         Checkbox(
+                            label = _("Omit specifying an IP address"),
+                            help = _("Usually Check_MK will nail this check to the "
+                              "IP address of the host it is attached to. With this "
+                              "option you can have the check use the name of the "
+                              "virtual host instead and do a dynamic DNS lookup."),
+                            true_label = _("omit IP address"),
+                            false_label = _("specify IP address"),
+                          ),
+                        ]
+                      )
                    ),
                    ( "uri",
                      TextAscii(
@@ -503,7 +524,8 @@ register_rule(group,
                   title = _("Service description"),
                   help = _("Please make sure that this is unique per host "
                          "and does not collide with other services."),
-                  allow_empty = False)
+                  allow_empty = False,
+                  default_value = _("Customcheck"))
             ),
             ( "command_line",
               TextAscii(

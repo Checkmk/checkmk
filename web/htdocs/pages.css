@@ -30,6 +30,24 @@ Boston, MA 02110-1301 USA.
    styles are not used in the sidebar and in Mobile. */
 
 /*-------------------------------------------------------------------------.
+|                   ____                           _                       |
+|                  / ___| ___ _ __   ___ _ __ __ _| |                      |
+|                 | |  _ / _ \ '_ \ / _ \ '__/ _` | |                      |
+|                 | |_| |  __/ | | |  __/ | | (_| | |                      |
+|                  \____|\___|_| |_|\___|_|  \__,_|_|                      |
+|                                                                          |
++--------------------------------------------------------------------------+
+| General styles used in the pages                                         |
+'-------------------------------------------------------------------------*/
+
+h3 {
+    color: white;
+    margin-bottom: 2px;
+    font-size: 12pt;
+    font-weight: normal;
+}
+
+/*-------------------------------------------------------------------------.
 |                                       _                                  |
 |                       _ __ ___   __ _(_)_ __                             |
 |                      | '_ ` _ \ / _` | | '_ \                            |
@@ -217,15 +235,27 @@ table.data {
     width: 100%;
 }
 
+table.data {
+    color: black;
+}
+
+table.data .checkbox_hover {
+    background-image: url("images/checkbox_hover_bg.png");
+    background-attachment: fixed;
+}
+
+
 table.data th {
     font-weight: normal;
-    border-left: 1px solid #ccc;
     border-right: 1px solid #ccc;
-    background-color: #899;
-    padding: 0 4px;
+    background-color: #999;
+    padding: 2px 2px;
     text-align: center;
     color: #fff;
     vertical-align: middle;
+}
+table.data th:last-child {
+    border-right-style: none;
 }
 
 /* Two-lined header, for example in WATO: ChangeLog->Site Status */
@@ -236,11 +266,11 @@ table.data tr.dualheader th {
 
 /* Table header links (For sorting) */
 table.data th.sort {
-    text-decoration: underline;
+    /* text-decoration: underline; */
 }
 
 table.data th.sort:hover {
-    background-color: #A4B2B2;
+    background-color: #B2B2B2;
     cursor: pointer;
 }
 
@@ -249,11 +279,11 @@ table.data th.sort:hover {
 }
 
 table.data th.asc {
-    color: #CBDCF2;
+    /* color: #CBDCF2; */
 }
 
 table.data th.desc {
-    color: #CBDCF2;
+    /* color: #CBDCF2; */
 }
 
 table.data th.tablegap {
@@ -261,18 +291,20 @@ table.data th.tablegap {
 }
 
 table.data tr.data td {
-    border-left: 1px solid #ccc;
     border-right: 1px solid #ccc;
     padding: 2px 4px;
     height: 22px;
     vertical-align: middle;
+}
+table.data tr.data td:last-child {
+    border-right-style: none;
 }
 
 table.data a {
     text-decoration: none;
     color: black;
 }
-table.data tr.data td a:hover {
+table.data a:hover {
     text-decoration: underline;
 }
 
@@ -316,7 +348,7 @@ table.data td.singleicon {
 table.groupheader {
     margin: 0px;
     border: 0px;
-    padding: 0px;
+    padding: 6px 0px 3px 0px;
 }
 
 tr.groupheader td {
@@ -324,10 +356,10 @@ tr.groupheader td {
     margin: 0px;
     padding-top: 2px;
     font-weight: bold;
-    color: white;
+    color: #fff;
 }
 tr.groupheader a {
-    color: #000;
+    color: #fff;
     text-decoration: none;
 }
 
@@ -337,9 +369,11 @@ tr.groupheader a:hover {
 
 /* state in group header must have fixed width */
 .groupheader td.state {
-    width: 50px;
+    border: 1px solid #000000;
+    border-radius: 5px 5px 5px 5px;
+    box-shadow: 1px 1px 2px #444444;
     padding: 2px 5px;
-    border: 1px solid #fff;
+    width: 50px;
 }
 
 img.iconbutton {
@@ -361,6 +395,39 @@ img.iconbutton.trans {
 +--------------------------------------------------------------------------+
 | Input forms (e.g. Filters, Commands, WATO)                               |
 '-------------------------------------------------------------------------*/
+
+input[type=text] {
+    box-shadow: 0.1px 1.2px 1.8px 0 #888 inset;
+    position: relative;
+}
+
+input[type=password] {
+    box-shadow: 0.1px 1.2px 1.8px 0 #800 inset;
+}
+input[type=text], input[type=password] {
+    height: 18px;
+    padding: 3px 3px 1px 3px;
+    vertical-align: middle;
+}
+select {
+    height: 20px;
+    border-style: solid none;
+    border-width: 2px;
+    border-color: white;
+    box-shadow: 0.5px 0.5px 1px #CCCCCC;
+}
+
+input[type=radio] {
+    margin-left: 0px;
+}
+input[type=checkbox] {
+    margin-left: 0px; 
+}
+
+select {
+    padding: 1px 3px;
+}
+
 
 h2.formcaption {
   font-size: 100%;
@@ -411,7 +478,7 @@ table.form img.toggleheader {
     height: 20px;
     cursor: auto;
     padding-right: 5px;
-    vertical-align:middle;
+    vertical-align: middle;
 }
 table.form img.toggleheader.hover {
     cursor: pointer;
@@ -498,7 +565,7 @@ table.nform {
     padding: 0;
     empty-cells: show;
     width: 100%;
-    border 1px solid green;
+    border: 1px solid green;
     border-radius: 5px;
     box-shadow: 0px 0px 2px #000;
     margin-bottom: 10px;
@@ -509,6 +576,10 @@ table.nform {
     border-color: #86A9B8 #22404D #22414D #86A9B8;
     border-width: 1px;
     border-style: solid;
+}
+
+table.nform tr.closed {
+    display: none;
 }
 
 table.nform tr.heading td {
@@ -527,8 +598,9 @@ table.nform tr.heading > td:hover {
 }
 
 table.nform > tbody > tr > td {
-   vertical-align: middle;
-   height: 27px;
+    vertical-align: middle;
+    height: 27px;
+    color: black;
 }
 
 table.nform > tbody > tr > td.simple {
@@ -599,8 +671,9 @@ table.nform tr.bottom td {
 '-------------------------------------------------------------------------*/
 div.really, div.success, div.error, div.message, div.warning {
     margin: 2em 0em;
-    -moz-border-radius: 1ex;
+    border-radius: 1ex;
     padding: 1em 2em;
+    box-shadow: 0 0 3px #444;
     /* border-width: 2px; 
     border-style: solid;*/
 }

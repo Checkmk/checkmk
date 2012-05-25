@@ -62,7 +62,7 @@ modules = [
       _("Timeperiods restrict notifications and other things to certain periods of "
         "the day.") ),
 
-      ( "sites",  _("Multisite Connections"), "sites", "sites",
+      ( "sites",  _("Distributed Monitoring"), "sites", "sites",
       _("Distributed monitoring via Multsite, distributed configuration via WATO")),
 
       ( "auditlog", _("Audit Logfile"), "auditlog", "auditlog",

@@ -250,7 +250,7 @@ def logwatch_url(sitename, notes_url):
 
     master_url = ''
     if config.is_multisite():
-        master_url = '&master_url=' + defaults.checkmk_web_uri + '/'
+        master_url = '&master_url=' + defaults.url_prefix + 'check_mk/'
 
     return site["url_prefix"] + notes_url[i:] + master_url
 

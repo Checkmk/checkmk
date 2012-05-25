@@ -455,17 +455,15 @@ multisite_builtin_views.update({
                   'title': _('Problems (unhandled)'),
                   'topic': _('Hosts')}),
 
-            #All Nagios Events
+            # All Nagios Events at all
             'mobile_events': mobile_view({
             'datasource': 'log_events',
             'group_painters': [],
             'hard_filters': ['logtime'],
-            'hard_filtervars': [('logtime', 'since'),
-                                ('logtime_sec', '0'),
-                                ('logtime_min', '0'),
-                                ('logtime_hours', '4'),
-                                ('logtime_days', '0'),
-                                ],
+            'hard_filtervars': [
+                                ('logtime_from_range', '3600'),
+                                ('logtime_from', '4'),
+                               ],
             'hide_filters': [],
             'layout': 'mobilelist',
             'linktitle': 'Events',
@@ -474,10 +472,8 @@ multisite_builtin_views.update({
             'num_columns': 1,
             'painters': [('log_icon', None),
                          ('log_time', None),
-                         # ('log_type', None),
                          ('host', 'mobile_hostsvcevents'),
                          ('service_description', 'mobile_svcevents'),
-                         # ('log_state_type', None),
                          ('log_plugin_output', None)],
             'public': True,
             'show_filters': [],
@@ -485,7 +481,7 @@ multisite_builtin_views.update({
             'title': 'Events',
             'topic': _('Events')}),
 
-            #All Notifications
+            # All Notifications at all
             'mobile_notifications': mobile_view({
                    'datasource': 'log',
                    'group_painters': [('log_date', None, '')],
@@ -501,11 +497,9 @@ multisite_builtin_views.update({
                        ('host', ''),
                        ('service', ''),
                        ('log_plugin_output', ''),
-                       ('logtime', 'since'),
-                       ('logtime_sec', '0'),
-                       ('logtime_min', '0'),
-                       ('logtime_hours', '0'),
-                       ('logtime_days', '0')],
+                       ('logtime_from_range', '3600'),
+                       ('logtime_from', '24'),
+                    ],
                    'hide_filters': [],
                    'icon': 'notification',
                    'layout': 'mobilelist',
@@ -530,17 +524,14 @@ multisite_builtin_views.update({
                    'title': _('Notifications'),
                    'topic': _('Events')}),
 
-                   #All events of a Host
+                   # All events of a Host
                    'mobile_hostsvcevents': mobile_view({'browser_reload': 0,
                         'datasource': 'log_events',
                         'group_painters': [('log_date', None)],
                         'hard_filters': [],
                         'hard_filtervars': [
-                            ('logtime', 'since'),
-                            ('logtime_sec', '0'),
-                            ('logtime_min', '0'),
-                            ('logtime_hours', '0'),
-                            ('logtime_days', '31')
+                            ('logtime_from_range', '86400'),
+                            ('logtime_from', '7'),
                          ],
                         'hidden': True,
                         'hide_filters': ['site', 'host'],
@@ -562,16 +553,16 @@ multisite_builtin_views.update({
                         'sorters': [('log_time', False), ('log_lineno', False)],
                         'title': _('Events of host & services')}),
 
-                        #All Service events
-                        'mobile_svcevents': mobile_view({'browser_reload': 0,
+                        # All events of one service
+                        'mobile_svcevents': mobile_view({
+                            'browser_reload': 0,
                             'datasource': 'log_events',
                             'group_painters': [('log_date', None)],
                             'hard_filters': [],
-                            'hard_filtervars': [('logtime', 'since'),
-                                                ('logtime_sec', '0'),
-                                                ('logtime_min', '0'),
-                                                ('logtime_hours', '0'),
-                                                ('logtime_days', '31')],
+                            'hard_filtervars': [
+                               ('logtime_from_range', '86400'),
+                               ('logtime_from', '7'),
+                            ],
                             'hidden': True,
                             'hide_filters': ['site', 'host', 'service'],
                             'icon' : 'history',
@@ -589,7 +580,7 @@ multisite_builtin_views.update({
                             'sorters': [('log_time', False), ('log_lineno', False)],
                             'title': _('Events of service')}),
 
-                        #All Notfications of a contact
+                        # All Notfications of a contact
                         'mobile_contactnotifications': mobile_view({
                              'datasource': 'log',
                              'group_painters': [('log_date', None, '')],
@@ -605,11 +596,9 @@ multisite_builtin_views.update({
                                  ('host', ''),
                                  ('service', ''),
                                  ('log_plugin_output', ''),
-                                 ('logtime', 'since'),
-                                 ('logtime_sec', '0'),
-                                 ('logtime_min', '0'),
-                                 ('logtime_hours', '0'),
-                                 ('logtime_days', '0')],
+                                 ('logtime_from_range', '86400'),
+                                 ('logtime_from', '7'),
+                                ],
                              'hidden': True,
                              'hide_filters': ['log_contact_name'],
                              'hidebutton': False,
@@ -636,7 +625,7 @@ multisite_builtin_views.update({
                              'title': _('Notifications of contact'),
                              'topic': _('Other')}),
 
-                               #All Notfications of a Hosts
+                               # All Notfications of Host
                                'mobile_hostsvcnotifications': mobile_view({
                                    'datasource': 'log',
                                    'group_painters': [('log_date', None, '')],
@@ -651,11 +640,9 @@ multisite_builtin_views.update({
                                        ('logclass6', ''),
                                        ('service', ''),
                                        ('log_plugin_output', ''),
-                                       ('logtime', 'since'),
-                                       ('logtime_sec', '0'),
-                                       ('logtime_min', '0'),
-                                       ('logtime_hours', '0'),
-                                       ('logtime_days', '0')],
+                                       ('logtime_from_range', '86400'),
+                                       ('logtime_from', '7'),
+                                    ],
                                    'hidden': True,
                                    'hide_filters': ['site', 'host'],
                                    'hidebutton': False,
@@ -683,7 +670,7 @@ multisite_builtin_views.update({
                                    'topic': _('Other')}),
 
 
-                           #All Notfications of a service
+                           # All Notfications of a service
                            'mobile_svcnotifications': mobile_view({
                                'datasource': 'log',
                                'group_painters': [('log_date', None, '')],
@@ -697,11 +684,8 @@ multisite_builtin_views.update({
                                    ('logclass5', ''),
                                    ('logclass6', ''),
                                    ('log_plugin_output', ''),
-                                   ('logtime', 'since'),
-                                   ('logtime_sec', '0'),
-                                   ('logtime_min', '0'),
-                                   ('logtime_hours', '0'),
-                                   ('logtime_days', '0')
+                                   ('logtime_from_range', '86400'),
+                                   ('logtime_from', '7'),
                                ],
                                'hidden': True,
                                'hide_filters': ['site', 'service', 'host'],

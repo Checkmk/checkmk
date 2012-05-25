@@ -358,7 +358,7 @@ sidebar_snapins["hostmatrix"] = {
     "styles"      : """
 table.hostmatrix { border-spacing: 0;  }
 table.hostmatrix tr { padding: 0; border-spacing: 0; }
-table.hostmatrix a { display: block; width: 100%%; height: 100%%; line-height: 100%%; }
+table.hostmatrix a { display: block; width: 100%; height: 100%; line-height: 100%; }
 table.hostmatrix td { border: 1px solid #123a4a; padding: 0; border-spacing: 0; }
     """
 
@@ -508,8 +508,7 @@ def render_tactical_overview():
             (_("Hosts"),    hstdata, 'hostproblems', 'host'),
             (_("Services"), svcdata, 'svcproblems',  'service'),
             ]:
-        html.write("<tr><th><span>%s</span></th><th><span>%s</span></th><th><span>%s</span></th></tr>\n" % \
-                                     (title, _('Problems'), _('Unhandled')))
+        html.write("<tr><th>%s</th><th>%s</th><th>%s</th></tr>\n" % (title, _('Problems'), _('Unhandled')))
         html.write("<tr>")
 
         html.write('<td class=total><a target="main" href="view.py?view_name=all%ss">%d</a></td>' % (what, data[0]))
@@ -539,20 +538,17 @@ table.tacticaloverview {
     * border-spacing: 5px 2px;
     */
    width: %dpx;
-   margin-top: -9px;
+   margin-top: -7px;
 }
 table.tacticaloverview th { 
     font-size: 8pt; 
+    line-height: 7pt;
     text-align: left; 
     color: #123a4a; 
     font-weight: normal; 
     padding: 0; 
     padding-top: 2px; 
     vertical-align: bottom;
-}
-table.tacticaloverview th span {
-    position: relative;
-    top: 2px;
 }
 table.tacticaloverview td { 
     width: 33.3%%; 
@@ -1156,20 +1152,11 @@ def render_custom_links():
             try:
                 if type(entry[1]) == type(True):
                     idss = ids + [str(n)]
-                    if states.get(''.join(idss), entry[1] and 'on' or 'off') == 'on': # open
-                        display = "display: block; "
-                        img = "link_folder_open.gif"
-                    else:
-                        display = "display: none; "
-                        img = "link_folder.gif"
-                    html.write('<h3 onclick="toggle_folder(this, \'%s\');" ' % ''.join(idss))
-                    html.write('onmouseover="this.style.cursor=\'pointer\';" ')
-                    html.write('onmouseout="this.style.cursor=\'auto\';">')
-                    html.write('<img src="images/%s" align="center" />' % img)
-                    html.write("%s</h3>\n" % entry[0])
-                    html.write('<div style="%s" class=sublist>' % display)
+                    is_open = entry[1]
+                    id = '/'.join(idss)
+                    html.begin_foldable_container("customlinks", id, isopen=entry[1], title=entry[0])
                     render_list(idss, entry[2])
-                    html.write('</div>\n')
+                    html.end_foldable_container()
                 elif type(entry[1]) == str:
                     frame = len(entry) > 3 and entry[3] or "main"
                     if len(entry) > 2 and entry[2]:

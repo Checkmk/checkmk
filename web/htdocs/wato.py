@@ -133,11 +133,13 @@ replication_paths = [
   ( "dir",  "check_mk",   root_dir ),
   ( "dir",  "multisite",  multisite_dir ),
   ( "file", "htpasswd",   defaults.htpasswd_file ),
+  ( "file", "auth.secret", '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file) ),
   # Also replicate the user-settings of Multisite? While the replication
   # as such works pretty well, the count of pending changes will not
   # know.
   ( "dir", "usersettings", defaults.var_dir + "/web" ),
 ]
+
 
 # Directories and files for backup & restore
 backup_paths = replication_paths + [
@@ -211,6 +213,11 @@ def page_handler():
         raise MKAuthException(_("You are not allowed to use WATO."))
 
     current_mode = html.var("mode") or "main"
+
+    # If we do an action, we aquire an exclusive lock on the complete
+    # WATO.
+    if html.is_transaction():
+        lock_exclusive()
 
     try:
         # Make information about current folder and hosts available
@@ -375,6 +382,10 @@ g_need_sidebar_reload = None
 def need_sidebar_reload():
     global g_need_sidebar_reload
     g_need_sidebar_reload = id(html)
+
+def lock_exclusive():
+    aquire_lock(defaults.default_config_dir + "/multisite.mk")
+
 
 #.
 #   .-Load/Save------------------------------------------------------------.
@@ -1170,12 +1181,9 @@ def show_hosts(folder):
         html.write('<td>')
         html.jsbutton('_markall', _('X'), 'javascript:toggle_all_rows();')
         html.write("</td><td class=bulksearch colspan=2>")
-        html.begin_form("search")
         html.text_input("search")
         html.button("_search", _("Search"))
         html.set_focus("search")
-        html.hidden_fields()
-        html.end_form()
         html.write('</td>')
         html.write("<td class=bulkactions colspan=%d>" % (colspan-3))
         html.write(' ' + _("Selected hosts:\n"))
@@ -1936,11 +1944,12 @@ def delete_host_after_confirm(delname):
     c = wato_confirm(_("Confirm host deletion"),
                      _("Do you really want to delete the host <tt>%s</tt>?") % delname)
     if c:
+        mark_affected_sites_dirty(g_folder, delname)
+        log_pending(AFFECTED, delname, "delete-host", _("Deleted host %s") % delname)
         host = g_folder[".hosts"][delname]
         del g_folder[".hosts"][delname]
         g_folder["num_hosts"] -= 1
         save_folder_and_hosts(g_folder)
-        log_pending(AFFECTED, delname, "delete-host", _("Deleted host %s") % delname)
         check_mk_automation(host[".siteid"], "delete-host", [delname])
         call_hook_hosts_changed(g_folder)
         return "folder"
@@ -3247,6 +3256,32 @@ def mode_changelog(phase):
                 [ '<a href="%s">%s</a>' % (make_link([("mode", "edithost"), ("host", hn)]), hn)
                   for hn in defective_hosts.keys() ]))
 
+        # If there are changes by other users, we need a confirmation
+        transaction_already_checked = False
+        changes = foreign_changes()
+        if changes:
+            table = "<table class=foreignchanges>"
+            for user_id, count in changes.items():
+                table += '<tr><td>%s: </td><td>%d %s</td></tr>' % \
+                   (config.alias_of_user(user_id), count, _("changes"))
+            table += '</table>'
+            c = wato_confirm(_("Confirm activating foreign changes"),
+              '<img class=foreignchanges src="images/icon_foreign_changes.png">' + 
+              _("There are some changes made by you collegues that you will "
+                "activate if you proceed:") + table + 
+              _("Do you really want to proceed?"))
+            if c == False:
+                return ""
+            elif not c:
+                return None
+            transaction_already_checked = True
+
+        if changes and not config.may("wato.activateforeign"):
+            raise MKAuthException(
+              _("Sorry, you are not allowed to activate "
+              "changes of other users."))
+
+
         # Give hooks chance to do some pre-activation things (and maybe stop
         # the activation)
         try:
@@ -3262,7 +3297,7 @@ def mode_changelog(phase):
             config.need_permission("wato.activate")
             site_id = html.var("_site")
             action = html.var("_siteaction")
-            if html.check_transaction():
+            if transaction_already_checked or html.check_transaction():
                 try:
                     # If the site has no pending changes but just needs restart,
                     # the button text is just "Restart". We do a sync anyway. This
@@ -3289,7 +3324,7 @@ def mode_changelog(phase):
                         raise
                     raise MKUserError(None, _("Remote command on site %s failed: <pre>%s</pre>") % (site_id, e))
 
-        elif html.check_transaction():
+        elif transaction_already_checked or html.check_transaction():
             config.need_permission("wato.activate")
             create_snapshot()
             if is_distributed():
@@ -3319,9 +3354,9 @@ def mode_changelog(phase):
             if sitestatus_do_async_replication:
                 create_sync_snapshot()
 
-            html.write("<h3>%s</h3>" % _("Distributed WATO - replication status"))
+            html.write("<h3>%s</h3>" % _("Distributed WATO - Replication Status"))
             repstatus = load_replication_status()
-            sites = config.allsites().items()
+            sites = [(name, config.site(name)) for name in config.sitenames() ]
             sort_sites(sites)
             html.write("<table class=data>")
             html.write("<tr class=dualheader>")
@@ -3347,7 +3382,7 @@ def mode_changelog(phase):
                            "<th>%s</th>" % _("Last result"))
             html.write("</tr>")
 
-            odd = "even"
+            odd = "odd"
             num_replsites = 0 # for detecting end of bulk replication
             for site_id, site in sites:
                 is_local = site_is_local(site_id)
@@ -3355,12 +3390,17 @@ def mode_changelog(phase):
                 if not is_local and not site.get("replication"):
                     continue
 
-                ss = html.site_status.get(site_id, {})
-                status = ss.get("state", "unknown")
+                if site.get("disabled"):
+                    status = "disabled"
+                else:
+                    ss = html.site_status.get(site_id, {})
+                    status = ss.get("state", "unknown")
+
                 srs = repstatus.get(site_id, {})
 
                 # Make row red, if site status is not online
-                html.write('<tr class="data %s%d">' % (odd, status != "online" and 2 or 0))
+                html.write('<tr class="data %s0">' % odd)
+                odd = odd == "odd" and "even" or "odd"
 
                 # ID & Alias
                 html.write("<td><a href='%s'>%s</a></td>" %
@@ -3368,7 +3408,7 @@ def mode_changelog(phase):
                 html.write("<td>%s</td>" % site.get("alias", ""))
 
                 # Livestatus
-                html.write('<td><div class="sitestatus %s">%s</div></td>' % (status, status))
+                html.write('<td><img src="images/button_sitestatus_%s_lo.png"></td>' % (status))
 
                 # Livestatus-Version
                 html.write('<td>%s</td>' % ss.get("livestatus_version", ""))
@@ -3412,7 +3452,7 @@ def mode_changelog(phase):
                     # Do only include sites that are known to be up
                     if not site_is_local(site_id) and not "secret" in site:
                         html.write("<b>%s</b>" % _("Not logged in."))
-                    elif status == "online":
+                    else:
                         html.write('<div id="repstate_%s">%s</div>' %
                                 (site_id, uptodate and _("nothing to do") or ""))
                         if not uptodate:
@@ -3426,8 +3466,6 @@ def mode_changelog(phase):
                             html.javascript("wato_do_replication('%s', %d);" %
                               (site_id, int(estimated_duration * 1000.0)))
                             num_replsites += 1
-                    else:
-                        html.write("<b>%s</b>" % _("Skipping this site."))
                     html.write("</td>")
                 else:
                     # State
@@ -3487,7 +3525,16 @@ def mode_changelog(phase):
         if len(pending) == 0:
             html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
         else:
-            render_audit_log(pending, "pending")
+            render_audit_log(pending, "pending", hilite_others=True)
+
+# Determine if other users have made pending changes
+def foreign_changes():
+    changes = {}
+    for t, linkinfo, user, action, text in parse_audit_log("pending"):
+        if user != config.user_id:
+            changes.setdefault(user, 0)
+            changes[user] += 1
+    return changes
 
 
 def log_entry(linkinfo, action, message, logfilename):
@@ -3722,7 +3769,7 @@ def display_paged((start_time, end_time, previous_log_time, next_log_time)):
     html.write('</div>')
 
 
-def render_audit_log(log, what, with_filename = False):
+def render_audit_log(log, what, with_filename = False, hilite_others=False):
     htmlcode = ''
     if what == 'audit':
         log, times = paged_log(log)
@@ -3746,16 +3793,22 @@ def render_audit_log(log, what, with_filename = False):
     if what == 'audit':
         display_paged(times)
 
-    htmlcode += '<table class="wato auditlog %s">' % what
+    htmlcode += '<table class="data wato auditlog %s">' % what
     even = "even"
     for t, linkinfo, user, action, text in log:
         even = even == "even" and "odd" or "even"
-        htmlcode += '<tr class="%s0">' % even
+        hilite = hilite_others and config.user_id != user
+        htmlcode += '<tr class="data %s%d">' % (even, hilite and 2 or 0)
         htmlcode += '<td class=nobreak>%s</td>' % render_linkinfo(linkinfo)
         htmlcode += '<td class=nobreak>%s</td>' % fmt_date(float(t))
         htmlcode += '<td class=nobreak>%s</td>' % fmt_time(float(t))
-        htmlcode += '<td>%s</td><td width="100%%">%s</td></tr>\n' % \
-                  (user, text)
+        htmlcode += '<td class=nobreak>'
+        if hilite:
+            htmlcode += '<img class=icon src="images/icon_foreign_changes.png" title="%s">' \
+                     % _("This change has been made by another user")
+        htmlcode += user + '</td>'
+        
+        htmlcode += '</td><td width="100%%">%s</td></tr>\n' % text
     htmlcode += "</table>"
 
     if what == 'audit':
@@ -5387,10 +5440,32 @@ def mode_groups(phase, what):
 
     if phase == "action":
         delname = html.var("_delete")
-        c = wato_confirm(_("Confirm deletion of group %s" % delname),
-                         _("Do you really want to delete the group %s? If there are still objects "
-                           "assigned to that group, the group will kept up (but without an alias). "
-                           "Removing all objects from the will make the group disappear completely. " % what))
+
+        if what == 'contact':
+            # Is the contactgroup in use?
+            member_links = []
+            users = filter_hidden_users(load_users())
+            entries = users.items()
+            entries.sort(cmp = lambda a, b: cmp(a[1].get("alias"), b[1].get("alias")))
+            for id, user in entries:
+                cgs   = user.get("contactgroups", [])
+                if delname in cgs:
+                    member_links.append('<a href="%s">%s</a>' %
+                        (make_link([('mode', 'edit_user'), ('edit', id)]), user.get('alias')))
+
+            if member_links:
+                raise MKUserError(None,
+                    _('Unable to delete the group %s. It still has the following members: %s. '
+                      ' You must first remove all members from the group to be able to delete the group.') %
+                                                         (delname, ', '.join(member_links)))
+
+            confirm_txt = _('Do you really want to delete the %s group %s?') % (what, delname)
+        else:
+            confirm_txt = _("Do you really want to delete the %s group %s? If there are still objects "
+                            "assigned to that group, the group will kept up (but without an alias). "
+                            "Removing all objects from the will make the group disappear completely. ") % (what, delname)
+
+        c = wato_confirm(_("Confirm deletion of group %s" % delname), confirm_txt)
         if c:
             del groups[delname]
             save_group_information(all_groups)
@@ -6018,7 +6093,7 @@ def sort_sites(sites):
 
 def mode_sites(phase):
     if phase == "title":
-        return _("Multisite connections")
+        return _("Distributed Monitoring")
 
     elif phase == "buttons":
         global_buttons()
@@ -6055,7 +6130,7 @@ def mode_sites(phase):
                 if is_distributed() and global_replication_state() == "clean":
                     log_commit_pending()
 
-                log_audit(None, "edit-sites", _("Deleted site %s" % (delid)))
+                log_pending(SYNCRESTART, None, "edit-sites", _("Deleted site %s" % (delid)))
                 return None
             elif c == False:
                 return ""
@@ -6150,7 +6225,7 @@ def mode_sites(phase):
         return
 
 
-    html.write("<h3>" + _("Multisite connections") + "</h3>")
+    html.write("<h3>" + _("Connections to local and remote sites") + "</h3>")
     html.write("<table class=data>")
     html.write("<tr><th>" + _("Actions") + "<th>"
                 + _("Site-ID")
@@ -6260,7 +6335,7 @@ def mode_edit_site(phase):
     vs_conn_method = CascadingDropdown(
         html_separator = " ",
         choices = [
-            ( "local", _("Connect to the local site") ),
+            ( None, _("Connect to the local site") ),
             ( "tcp",   _("Connect via TCP"), Tuple(
                 orientation = "float",
                 elements = [
@@ -6316,10 +6391,10 @@ def mode_edit_site(phase):
                 new_site["socket"] = "unix:" + method[1]
             else:
                 new_site["socket"] = "tcp:%s:%d" % method[1]
-        else:
+        elif method:
             new_site["socket"] = method
-
-        html.debug(new_site)
+        elif "socket" in new_site:
+            del new_site["socket"]
 
         # Timeout
         timeout = html.var("timeout", "").strip()
@@ -6332,8 +6407,7 @@ def mode_edit_site(phase):
 
         # Persist
         new_site["persist"] = html.get_checkbox("persist")
-        # Handle the insecure replication flag
-        new_site["insecure"] = html.get_checkbox("insecure")
+
 
         # Status host
         sh_site = html.var("sh_site")
@@ -6364,17 +6438,24 @@ def mode_edit_site(phase):
         multisiteurl = html.var("multisiteurl", "").strip()
         if repl:
             if not multisiteurl:
-                raise MKUserError("multisiteurl", _("Please enter the Multisite URL of the slave/peer site."))
+                raise MKUserError("multisiteurl", 
+                    _("Please enter the Multisite URL of the slave/peer site."))
             if not multisiteurl.endswith("/check_mk/"):
-                raise MKUserError("multisiteurl", _("The Multisite URL must end with /check_mk/"))
+                raise MKUserError("multisiteurl", 
+                    _("The Multisite URL must end with /check_mk/"))
             if not multisiteurl.startswith("http://") and not multisiteurl.startswith("https://"):
-                raise MKUserError("multisiteurl", _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."))
+                raise MKUserError("multisiteurl", 
+                    _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."))
             if "socket" not in new_site:
-                raise MKUserError("replication", _("You cannot do replication with the local site."))
+                raise MKUserError("replication", 
+                    _("You cannot do replication with the local site."))
 
         # Save Multisite-URL even if replication is turned off. That way that
         # setting is not lost if replication is turned off for a while.
         new_site["multisiteurl"] = multisiteurl
+
+        # Handle the insecure replication flag
+        new_site["insecure"] = html.get_checkbox("insecure")
 
         # Secret is not checked here, just kept
         if not new and "secret" in old_site:
@@ -6382,18 +6463,14 @@ def mode_edit_site(phase):
 
         save_sites(sites)
         if new:
-            log_audit(None, "edit-sites", _("Create new connection to site %s" % id))
-            if repl and not disabled:
-                # Assume that site needs to be synchronized
-                update_replication_status(id, { "need_sync" : True, "need_restart" : True })
+            log_pending(SYNCRESTART, None, "edit-sites", _("Created new connection to site %s" % id))
         else:
-            log_audit(None, "edit-sites", _("Modified site connection %s" % id))
+            log_pending(SYNCRESTART, None, "edit-sites", _("Modified site connection %s" % id))
             # Replication mode has switched on/off => handle replication state
             repstatus = load_replication_status()
-            make_repl = repl and not disabled
-            if make_repl and id not in repstatus: # Repl switched on
+            if repl and id not in repstatus: # Repl switched on
                 update_replication_status(id, { "need_sync" : True, "need_restart" : True })
-            elif (not make_repl) and id in repstatus:
+            elif (not repl) and id in repstatus:
                 update_replication_status(id, None) # Replication switched off
                 if is_distributed() and global_replication_state() == "clean":
                     log_commit_pending()
@@ -6418,18 +6495,13 @@ def mode_edit_site(phase):
         html.set_focus("alias")
     html.help(_("An alias or description of the site"))
 
-    # Disabled
-    forms.section(_("Disable"), simple=True)
-    html.checkbox("disabled", site.get("disabled", False), label = _("Disable this connection"))
-    html.help( _("If you disable a connection, then it will not be shown in the "
-                 "status display and no replication will be done."))
 
     forms.header(_("Livestatus settings"))
     forms.section(_("Connection"))
-    method = site.get("socket", "local")
-    if method.startswith("unix:"):
+    method = site.get("socket", None)
+    if method and method.startswith("unix:"):
         method = ('unix', method[5:])
-    elif method.startswith("tcp:"):
+    elif method and method.startswith("tcp:"):
         method = ('tcp', tuple(method.split(":")[1:]))
     vs_conn_method.render_input("method", method)
 
@@ -6489,6 +6561,12 @@ def mode_edit_site(phase):
                  "site and use their host state as a reachability state of the remote site. Please "
                  "refer to the <a target=_blank href='%s'>online documentation</a> for details.") % docu_url)
 
+    # Disabled
+    forms.section(_("Disable"), simple=True)
+    html.checkbox("disabled", site.get("disabled", False), label = _("Temporarily disable this connection"))
+    html.help( _("If you disable a connection, then no data of this site will be shown in the status GUI. "
+                 "The replication is not affected by this, however."))
+
     # Replication
     forms.header(_("Configuration Replication (Distributed WATO)"))
     forms.section(_("Replication method"))
@@ -6496,7 +6574,7 @@ def mode_edit_site(phase):
         [ ("none",  _("No replication with this site")),
           ("peer",  _("Peer: synchronize configuration with this site")),
           ("slave", _("Slave: push configuration to this site"))
-        ])
+        ], site.get("replication", "none"))
     html.help( _("WATO replication allows you to manage several monitoring sites with a "
                 "logically centralized WATO. Slave sites receive their configuration "
                 "from master sites. Several master sites can build a peer-to-peer "
@@ -6556,6 +6634,9 @@ def save_sites(sites):
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("sites = \\\n%s\n" % pprint.pformat(sites))
     update_distributed_wato_file(sites)
+    config.load_config() # make new site configuration active
+    declare_site_attribute()
+    rewrite_config_files_below(g_root_folder) # fix site attributes
     need_sidebar_reload()
 
 # Makes sure, that in distributed mode we monitor only
@@ -6714,7 +6795,7 @@ def is_distributed(sites = None):
     if sites == None:
         sites = config.sites
     for site in sites.values():
-        if site.get("replication") and not site.get("disabled"):
+        if site.get("replication"):
             return True
     return False
 
@@ -6743,30 +6824,22 @@ class SiteAttribute(Attribute):
             self._choices.append((id, title))
 
         self._choices.sort(cmp=lambda a,b: cmp(a[1], b[1]))
-        self._choices.append(("", _("(do not monitor)")))
         self._choices_dict = dict(self._choices)
         Attribute.__init__(self, "site", _("Monitored on site"),
                     _("Specify the site that should monitor this host."),
                     default_value = default_site())
 
     def paint(self, value, hostname):
-        return "", self._choices_dict.get(value, _("(do not monitor)"))
+        return "", self._choices_dict.get(value, value)
 
     def render_input(self, value):
         html.select("site", self._choices, value)
 
     def from_html_vars(self):
-        site = html.var("site")
-        if site and site in self._choices_dict:
-            return site
-        else:
-            return None
+        return html.var("site")
 
     def get_tag_list(self, value):
-        if value:
-            return [ "site:" + value ]
-        else:
-            return []
+        return [ "site:" + value ]
 
 # The replication status contains information about each
 # site. It is a dictionary from the site id to a dict with
@@ -6808,27 +6881,18 @@ def update_replication_status(site_id, vars, times = {}):
 def global_replication_state():
     repstatus = load_replication_status()
     some_dirty = False
-    some_offline = False
 
-    for site_id, site in config.allsites().items():
+    for site_id in config.sitenames():
+        site = config.site(site_id)
         if not site_is_local(site_id) and not site.get("replication"):
             continue
 
         srs = repstatus.get(site_id, {})
-
         if srs.get("need_sync") or srs.get("need_restart"):
-            ss = html.site_status.get(site_id, {})
-            status = ss.get("state", "unknown") # Skip non-online sites, they cannot be restarted
-            if status != "online" or (
-                  (not site_is_local(site_id) and "secret" not in site)):
-                some_offline = True
-            else:
-                some_dirty = True
+            some_dirty = True
 
     if some_dirty:
         return "dirty"
-    elif some_offline: # dirty but offline
-        return "locked"
     else:
         return "clean"
 
@@ -6878,6 +6942,15 @@ def mark_affected_sites_dirty(folder, hostname=None, sync = True, restart = True
             if restart:
                 changes["need_restart"] = True
             update_replication_status(site_id, changes)
+
+# def mark_all_sites_dirty(sites):
+#     changes = {
+#         "need_sync" : True,
+#         "need_restart" : True,
+#     }
+#     for site_id, site in sites.items():
+#         html.debug("ID: " + site_id)
+#         update_replication_status(site_id, changes)
 
 def remove_sync_snapshot():
     if os.path.exists(sync_snapshot_file):
@@ -7278,7 +7351,7 @@ def mode_users(phase):
         # Buttons
         edit_url = make_link([("mode", "edit_user"), ("edit", id)])
         delete_url = html.makeactionuri([("_delete", id)])
-        clone_url = make_link([("mode", "edit_user"), ("hlone", id)])
+        clone_url = make_link([("mode", "edit_user"), ("clone", id)])
         html.write("<td class=buttons>")
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Create a copy of this user"), "clone")
@@ -7443,10 +7516,14 @@ def mode_edit_user(phase):
 
         # Email address
         email = html.var("email").strip()
-        regex_email = '^[-a-zA-Z0-9_.]+@[-a-zA-Z0-9]+(\.[a-zA-Z]+)*$'
+        regex_email = '^[-a-zäöüÄÖÜA-Z0-9_.]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[a-zA-Z]+)*$'
         if email and not re.match(regex_email, email):
             raise MKUserError("email", _("'%s' is not a valid email address." % email))
         new_user["email"] = email
+        
+        # Pager
+        pager = html.var("pager").strip()
+        new_user["pager"] = pager
 
         # Roles
         new_user["roles"] = filter(lambda role: html.get_checkbox("role_" + role),
@@ -7541,6 +7618,9 @@ def mode_edit_user(phase):
                 "if the user is a monitoring contact and receives notifications "
                 "via Email."))
 
+    forms.section(_("Pager address"))
+    html.text_input("pager", user.get("pager", ""), size = 50)
+    html.help(_("The pager address is optional "))
     forms.header(_("Security"))
     forms.section(_("Authentication"))
     is_automation = user.get("automation_secret", None) != None
@@ -7752,23 +7832,25 @@ def load_users():
     filename = defaults.htpasswd_file
     if os.path.exists(filename):
         for line in file(filename):
-            id, password = line.strip().split(":")[:2]
-            if password.startswith("!"):
-                locked = True
-                password = password[1:]
-            else:
-                locked = False
-            if id in result:
-                result[id]["password"] = password
-                result[id]["locked"] = locked
-            else:
-                # Create entry if this is an admin user
-                new_user = {
-                    "roles"    : config.roles_of_user(id),
-                    "password" : password,
-                    "locked"   : False
-                }
-                result[id] = new_user
+            line = line.strip()
+            if ':' in line:
+                id, password = line.strip().split(":")[:2]
+                if password.startswith("!"):
+                    locked = True
+                    password = password[1:]
+                else:
+                    locked = False
+                if id in result:
+                    result[id]["password"] = password
+                    result[id]["locked"] = locked
+                else:
+                    # Create entry if this is an admin user
+                    new_user = {
+                        "roles"    : config.roles_of_user(id),
+                        "password" : password,
+                        "locked"   : False
+                    }
+                    result[id] = new_user
             # Other unknown entries will silently be dropped. Sorry...
 
     # Now read the automation secrets and add them to existing
@@ -8613,6 +8695,7 @@ def mode_edit_hosttag(phase):
                         tgid = entry[0]
                         tit  = entry[1]
                         ch   = entry[2]
+                        # Do not compare the taggroup with itselfs
                         if tgid != tag_id:
                             for e in ch:
                                 # Check primary and secondary tags
@@ -8622,7 +8705,12 @@ def mode_edit_hosttag(phase):
                                         "'%s' in the tag group '%s'.") %
                                         ( id, e[1], tit ))
 
-                
+                    # Also check all defined aux tags even if they are not used anywhere
+                    for tag, descr in auxtags:
+                        if id == tag:
+                            raise MKUserError("choices_id_%d" % (nr+1),
+                              _("The tag ID '%s' is already being used as auxiliary tag.") % id)
+
             if len(new_choices) == 0:
                 raise MKUserError("id_0", _("Please specify at least on tag."))
             if len(new_choices) == 1 and new_choices[0][0] == None:
@@ -8739,6 +8827,12 @@ def load_hosttags():
             "wato_host_tags" : [],
             "wato_aux_tags" : []}
         execfile(filename, vars, vars)
+        # Convert manually crafted host tags tags WATO-style. This
+        # makes the migration easier
+        for taggroup in vars["wato_host_tags"]:
+            for nr, entry in enumerate(taggroup[2]):
+                if len(entry) <= 2:
+                    taggroup[2][nr] = entry + ([],)
         return vars["wato_host_tags"], vars["wato_aux_tags"]
 
     except Exception, e:
@@ -9188,16 +9282,27 @@ def mode_rulesets(phase):
 
 def create_new_rule_form(rulespec, hostname = None, item = None):
     html.begin_form("new_rule")
-    html.write(_("Create a new rule: "))
+
+    html.write('<table>')
     if hostname:
-        title = _("Exception rule for host %s" % hostname)
+        label = _("Host %s" % hostname)
+        ty = _('Host')
         if item != NO_ITEM and rulespec["itemtype"]:
-            title += _(" and %s '%s'") % (rulespec["itemname"], item)
+            label += _(" and %s '%s'") % (rulespec["itemname"], item)
+            ty = rulespec["itemname"]
+
+        title = _("Create %s specific rule for: ") % ty
+        html.write('<tr><td>')
         html.button("_new_host_rule", title)
-        html.write(_("or") + " ")
+        html.write('</td><td style="vertical-align:middle">')
+        html.write(label)
+        html.write('</td></tr>\n')
+
+    html.write('<tr><td>')
     html.button("_new_rule", _("Create rule in folder: "))
+    html.write('</td><td>')
     html.select("folder", folder_selection(g_root_folder))
-    html.write("\n")
+    html.write('</td></tr></table>\n')
     html.hidden_fields()
     html.end_form()
 
@@ -10406,7 +10511,7 @@ def mode_pattern_editor(phase):
 
             master_url = ''
             if config.is_multisite():
-                master_url = '&master_url=' + defaults.checkmk_web_uri + '/'
+                master_url = '&master_url=' + defaults.url_prefix + 'check_mk/'
             html.context_button(title, "logwatch.py?host=%s&amp;file=%s%s" %
                 (htmllib.urlencode(hostname), htmllib.urlencode(item), master_url), 'logwatch')
 
@@ -11179,7 +11284,6 @@ def load_plugins():
     global loaded_with_language
     if loaded_with_language == current_language:
         return
-    loaded_with_language = current_language
 
     # Reset global vars
     global extra_buttons, configured_host_tags, host_attributes, user_attributes, \
@@ -11229,6 +11333,15 @@ def load_plugins():
            "current configuration (and thus rewriting the "
            "monitoring configuration and restart the monitoring daemon.)"),
          [ "admin", "user", ])
+    
+    config.declare_permission("wato.activateforeign",
+         _("Activate Foreign Changes"),
+         _("When several users work in parallel with WATO then "
+           "several pending changes of different users might pile up "
+           "before changes are activate. Only with this permission "
+           "a user will be allowed to activate the current configuration "
+           "if this situation appears."),
+         [ "admin", ])
 
     config.declare_permission("wato.auditlog",
          _("Audit log"),
@@ -11365,3 +11478,8 @@ def load_plugins():
 
 
     load_web_plugins("wato", globals())
+
+    # This must be set after plugin loading to make broken plugins raise
+    # exceptions all the time and not only the first time (when the plugins
+    # are loaded).
+    loaded_with_language = current_language

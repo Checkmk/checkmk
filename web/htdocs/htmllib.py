@@ -321,8 +321,7 @@ class html:
         else: # add *all* get variables, that are not set by any input!
             for var, value in self.req.vars.items():
                 if var not in self.form_vars and \
-                    (var[0] != "_" or add_action_vars) and \
-                    var != "filled_in":
+                    (var[0] != "_" or add_action_vars): # and var != "filled_in":
                     self.hidden_field(var, value)
 
     def add_global_vars(self, varnames):
@@ -476,7 +475,7 @@ class html:
         add_style = ""
         if "size" in args and args["size"]:
             addprops += " size=%d" % (args["size"] + 1)
-            if "width:" not in args.get("style", ""):
+            if "width:" not in args.get("style", "") and not self.mobile:
                 add_style = "width: %d.5ex; " % args["size"]
 
         if "type" in args:
@@ -620,8 +619,11 @@ class html:
             id = "cb_" + varname
         if id:
             add_attr.append('id="%s"' % id)
+        add_attr_code = ''
+        if add_attr:
+            add_attr_code = ' ' + ' '.join(add_attr)
         self.write("<input type=checkbox name=\"%s\"%s%s%s%s>\n" %
-                        (varname, checked, cssclass, onclick_code, " ".join(add_attr)))
+                        (varname, checked, cssclass, onclick_code, add_attr_code))
         self.form_vars.append(varname)
         if label:
             self.write('<label for="%s">%s</label>\n' % (id, label))
@@ -635,7 +637,7 @@ class html:
     def form_filled_in(self):
         return self.has_var("filled_in") and (
             self.form_name == None or \
-            self.var("filled_in") == self.form_name)
+            self.form_name in self.list_var("filled_in"))
 
 
     # Get value of checkbox. Return True, False or None. None means
@@ -917,7 +919,7 @@ class html:
         if text and text.strip():
             self.have_help = True
             self.write('<div class=help style="display: %s">' % (
-                        not self.help_visible and "none" or ""))
+                        not self.help_visible and "none" or "block"))
             self.write(text.strip())
             self.write('</div>')
 
@@ -1118,9 +1120,6 @@ class html:
             self.write('<tr class=heading><td id="nform.%s.%s" %s colspan=2>' % (treename, id, onclick))
             self.write('%s</td></tr>' % title)
         else:
-            if indent == "form":
-                self.write('<table id="topic_%s" style="display:table"  class="form nomargin"><tr%s><td class=title>' % \
-                                      (id.encode("utf-8"), first and ' class="top"' or ''))
             self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
                        'src="images/tree_%s.png" %s>' %
                     (treename, id, img_num, onclick))
@@ -1136,8 +1135,8 @@ class html:
             if indent == "form":
                 self.write("</td></tr></table>")
                 indent_style += "margin: 0; "
-            self.write('<ul class="treeangle" style="%s display: %s" id="tree.%s.%s">' %
-                 (indent_style, (not isopen) and "none" or "block",  treename, id))
+            self.write('<ul class="treeangle %s" style="%s" id="tree.%s.%s">' %
+                 (isopen and "open" or "closed", indent_style,  treename, id))
 
         # give caller information about current toggling state (needed for nform)
         return isopen

@@ -39,12 +39,16 @@ def load_plugins():
     global loaded_with_language
     if loaded_with_language == current_language:
         return
-    loaded_with_language = current_language
 
     # Load all snapins
     global sidebar_snapins
     sidebar_snapins = {}
     load_web_plugins("sidebar", globals())
+
+    # This must be set after plugin loading to make broken plugins raise
+    # exceptions all the time and not only the first time (when the plugins
+    # are loaded).
+    loaded_with_language = current_language
 
     # Declare permissions: each snapin creates one permission
     config.declare_permission_section("sidesnap", _("Sidebar snapins"))
@@ -146,7 +150,7 @@ def page_side():
     if not config.may("see_sidebar"):
         return
     html.html_head(_("Check_MK Sidebar"), javascripts=["sidebar"], stylesheets=["sidebar", "status"])
-    html.write('<body class="side" onload="initScrollPos()" onunload="storeScrollPos()">\n')
+    html.write('<body class="side" onload="initScrollPos(); setSidebarHeight();" onunload="storeScrollPos()">\n')
     html.write('<div id="check_mk_sidebar">\n')
 
     views.load_views()
@@ -180,6 +184,7 @@ def page_side():
     html.write("restart_snapins = %r;\n" % restart_snapins)
     html.write("sidebar_scheduler();\n")
     html.write("window.onresize = function() { setSidebarHeight(); }\n")
+    # html.write("window.onload = function() { setSidebarHeight(); }\n")
     html.write("</script>\n")
 
     # html.write("</div>\n")

@@ -1,9 +1,9 @@
 Title: Multisite setup with cookie based login garbles PNP webservice
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-05-14 19:02:05
 Targetversion: 1.2.0
-Class: bug
 
 If you use cookie based authentication and a multisite setup and if the
 auth.secret is not replicated - so that your login does not automatically
@@ -17,3 +17,7 @@ remote PNP graph embedded), then Chrome will go into an endless loop
 again and again loading the page. This must have to do something with
 the PNP webservice returning HTML code that will somehow redirect to
 the login page.
+
+2012-05-25 09:41:47: changed state open -> done
+Sent patch to be integrated into pnp to fix the problem. PNP module won't
+send any Location-Redirects when calling graph/json/popup controllers.

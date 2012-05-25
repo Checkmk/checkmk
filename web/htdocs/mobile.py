@@ -160,8 +160,8 @@ def page_login():
         origtarget = html.req.uri
     html.hidden_field('_origtarget', htmllib.attrencode(origtarget))
 
-    html.text_input("_username", size = 50, label = _("Username:"))
-    html.password_input("_password", size = 50, label = _("Password:"))
+    html.text_input("_username", label = _("Username:"))
+    html.password_input("_password", size=None, label = _("Password:"))
     html.write("<br>")
     html.button("_login", _('Login'))
     html.set_focus("_username")
@@ -369,7 +369,7 @@ def do_commands(view, what, rows):
             count += 1
 
     if command:
-        html.message(_("Successfully sent %d commands to Nagios.") % count)
+        html.message(_("Successfully sent %d commands.") % count)
     return True # Show commands again
 
 def show_context_links(context_links):

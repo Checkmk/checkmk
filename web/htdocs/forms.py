@@ -118,7 +118,7 @@ def header(title, isopen = True, table_id = ""):
     fold_id = strip_bad_chars(title)
     g_section_isopen = html.begin_foldable_container(
             html.form_name and html.form_name or "nform", fold_id, isopen, title, indent="nform")
-    html.write('<tr class=top style="display: %s"><td colspan=2></td></tr>' % (not g_section_isopen and "none" or ""))
+    html.write('<tr class="top %s"><td colspan=2></td></tr>' % (g_section_isopen and "open" or "closed"))
     g_header_open = True
     g_section_open = False
 
@@ -127,8 +127,8 @@ def container():
     global g_section_open
     if g_section_open:
         html.write('</td></tr>')
-    html.write('<tr style="display: %s"><td colspan=2 class=container>' % 
-         (not g_section_isopen and "none" or ""))
+    html.write('<tr class="%s"><td colspan=2 class=container>' % 
+         (g_section_isopen and "open" or "closed"))
     g_section_open = True
 
 def section(title = None, checkbox = None, id = "", simple=False): 
@@ -137,8 +137,8 @@ def section(title = None, checkbox = None, id = "", simple=False):
         html.write('</td></tr>')
     if id:
         id = ' id="%s"' % id
-    html.write('<tr style="display: %s"%s><td class="legend%s">' % 
-            (not g_section_isopen and "none" or "", id, simple and " simple" or ""))
+    html.write('<tr class="%s"%s><td class="legend%s">' % 
+            (g_section_isopen and "open" or "closed", id, simple and " simple" or ""))
     if title:
         html.write('<div class="title%s">%s<span class="dots">%s</span></div>' % 
                   (checkbox and " withcheckbox" or "", title, "."*100))
@@ -161,7 +161,7 @@ def end():
     if g_section_open:
         html.write('</td></tr>')
     html.end_foldable_container()
-    html.write('<tr class=bottom style="display: %s"><td colspan=2></td></tr>' 
-            % (not g_section_isopen and "none" or ""))
+    html.write('<tr class="bottom %s"><td colspan=2></td></tr>' 
+            % (g_section_isopen and "open" or "closed"))
     html.write('</table>')
 

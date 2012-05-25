@@ -52,7 +52,7 @@ def check_lparstat(item, params, info):
         lbusy = info[0][6]
         app   = info[0][7]
     except:
-        return (3, "Unknown - invalid or incomplete output from plugin")
+        return (3, "UNKNOWN - invalid or incomplete output from plugin")
 
     perfdata = [
                     ('user', str(user) + '%'),
@@ -65,6 +65,49 @@ def check_lparstat(item, params, info):
                     ('app', str(app) + ''),
                     ]
 
-    return (0, "OK: AIX lparstat, user=%s%% sys=%s%% wait=%s%% idle=%s%% physc=%s app=%s" % (user,sys,wait,idle,physc,app),perfdata )
+    return (0, "OK - AIX lparstat, user=%s%% sys=%s%% wait=%s%% idle=%s%% physc=%s app=%s" % (user,sys,wait,idle,physc,app),perfdata )
 
 check_info['lparstat_aix'] = (check_lparstat, "lparstat", 1,  inventory_lparstat )
+
+# Utilization and IO/Wait
+kernel_util_default_levels = None
+
+def inventory_lparstat_aix_cpu(info):
+    if len(info) == 1 and len(info[0]) >= 4:
+        return [(None, "kernel_util_default_levels")]
+
+def check_lparstat_aix_cpu(_no_item, params, info):
+    user, system, wait, idle = map(float, info[0][:4])
+    perfdata = [
+          ( "user",   "%.3f" % user ),
+          ( "system", "%.3f" % system ),
+          ( "wait",   "%.3f" % wait ) ]
+
+    infotext = " - user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user, system, wait)
+
+    # You may set a warning/critical level on the io wait
+    # percentage. This can be done by setting params to
+    # a pair of (warn, crit)
+    result = 0
+    try:
+        warn, crit = params
+        if wait >= crit:
+            result = 2
+            infotext += "(!!)"
+        elif wait >= warn:
+            result = 1
+            infotext += "(!)"
+    except:
+        pass
+
+    return (result, nagios_state_names[result] + infotext, perfdata)
+
+
+
+check_info['lparstat_aix.cpu_util'] = {
+    "check_function"         : check_lparstat_aix_cpu,
+    "inventory_function"     : inventory_lparstat_aix_cpu,
+    "service_description"    : "CPU utilization",
+    "has_perfdata"           : True,
+    "group"                  : "cpu_iowait",
+}

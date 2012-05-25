@@ -339,7 +339,6 @@ table.data.single {
     border-collapse: collapse;
     empty-cells: show;
     width: auto;
-    box-shadow: 1px 1px 3px #000000;
 }
 
 table.data.single tr.data td {

@@ -7835,23 +7835,25 @@ def load_users():
     filename = defaults.htpasswd_file
     if os.path.exists(filename):
         for line in file(filename):
-            id, password = line.strip().split(":")[:2]
-            if password.startswith("!"):
-                locked = True
-                password = password[1:]
-            else:
-                locked = False
-            if id in result:
-                result[id]["password"] = password
-                result[id]["locked"] = locked
-            else:
-                # Create entry if this is an admin user
-                new_user = {
-                    "roles"    : config.roles_of_user(id),
-                    "password" : password,
-                    "locked"   : False
-                }
-                result[id] = new_user
+            line = line.strip()
+            if ':' in line:
+                id, password = line.strip().split(":")[:2]
+                if password.startswith("!"):
+                    locked = True
+                    password = password[1:]
+                else:
+                    locked = False
+                if id in result:
+                    result[id]["password"] = password
+                    result[id]["locked"] = locked
+                else:
+                    # Create entry if this is an admin user
+                    new_user = {
+                        "roles"    : config.roles_of_user(id),
+                        "password" : password,
+                        "locked"   : False
+                    }
+                    result[id] = new_user
             # Other unknown entries will silently be dropped. Sorry...
 
     # Now read the automation secrets and add them to existing

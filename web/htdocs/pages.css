@@ -554,7 +554,7 @@ table.nform {
     padding: 0;
     empty-cells: show;
     width: 100%;
-    border 1px solid green;
+    border: 1px solid green;
     border-radius: 5px;
     box-shadow: 0px 0px 2px #000;
     margin-bottom: 10px;

@@ -45,7 +45,7 @@ body.main.dashlet {
 '-------------------------------------------------------------------------*/
 
 table.filterform {
-    cell-spacing: 0px;
+    border-collapse: collapse;
     padding: 0px;
     border-style: none;
 }

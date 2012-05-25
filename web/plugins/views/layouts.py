@@ -162,7 +162,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
 
     # render one group
     def render_group(header, rows):
-        html.write("<table class=groupheader><tr class=groupheader>")
+        html.write("<table class=groupheader cellspacing=0 cellpadding=0 border=0><tr class=groupheader>")
         painted = False
         for p in group_painters:
             if painted:
@@ -393,7 +393,7 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
                 group_open = True
                 visible_row_number = 0
                 html.write("<tr class=groupheader>")
-                html.write("<td class=groupheader colspan=%d><table class=groupheader><tr>" %
+                html.write("<td class=groupheader colspan=%d><table class=groupheader cellspacing=0 cellpadding=0 border=0><tr>" %
                      (num_painters * (num_columns + 2) + (num_columns - 1)))
                 painted = False
                 for p in group_painters:

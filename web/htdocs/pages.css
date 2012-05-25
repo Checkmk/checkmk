@@ -247,13 +247,15 @@ table.data .checkbox_hover {
 
 table.data th {
     font-weight: normal;
-    border-left: 1px solid #ccc;
     border-right: 1px solid #ccc;
     background-color: #999;
     padding: 2px 2px;
     text-align: center;
     color: #fff;
     vertical-align: middle;
+}
+table.data th:last-child {
+    border-right-style: none;
 }
 
 /* Two-lined header, for example in WATO: ChangeLog->Site Status */
@@ -289,11 +291,13 @@ table.data th.tablegap {
 }
 
 table.data tr.data td {
-    border-left: 1px solid #ccc;
     border-right: 1px solid #ccc;
     padding: 2px 4px;
     height: 22px;
     vertical-align: middle;
+}
+table.data tr.data td:last-child {
+    border-right-style: none;
 }
 
 table.data a {
@@ -344,7 +348,7 @@ table.data td.singleicon {
 table.groupheader {
     margin: 0px;
     border: 0px;
-    padding: 0px;
+    padding: 6px 0px 3px 0px;
 }
 
 tr.groupheader td {
@@ -365,9 +369,11 @@ tr.groupheader a:hover {
 
 /* state in group header must have fixed width */
 .groupheader td.state {
-    width: 50px;
+    border: 1px solid #000000;
+    border-radius: 5px 5px 5px 5px;
+    box-shadow: 1px 1px 2px #444444;
     padding: 2px 5px;
-    border: 1px solid #fff;
+    width: 50px;
 }
 
 img.iconbutton {

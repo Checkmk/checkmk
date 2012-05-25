@@ -130,8 +130,8 @@ sidebar_snapins["search"] = {
 
 #mk_search_results {
     position: relative;
+    float:left;
     border: 1px solid white;
-    top: 1px;
     background-color: #DFDFDF;
     color: #000;
     font-size: 80%;

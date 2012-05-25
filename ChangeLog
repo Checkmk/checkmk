@@ -23,6 +23,8 @@
     * Keep track of changes made by other users before activating changes,
       let user confirm this, new permission can be used to prevent a user
       from activating foreign changes.
+    * Allow list of aux tags to be missing in host tag definitions. This
+      makes migration from older version easier.
 
     Multisite:
     * New display type 'boxes-omit-root' for BI views

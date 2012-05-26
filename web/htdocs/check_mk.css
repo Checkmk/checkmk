@@ -221,6 +221,7 @@ div.livestatus.message {
     left: 10px;
     font-size: 8pt;
     z-index: 20;
+    color: black;
 }
 
 /*-------------------------------------------------------------------------.

@@ -338,6 +338,10 @@ div.error a {
 div.warning {
     background-color: #ff4;
     border-color: #fc0;
+    color: #000;
+}
+div.warning a {
+    color: #000;
 }
 
 /*-ValueSpec---------------------------------------------------------------.

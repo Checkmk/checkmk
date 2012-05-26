@@ -2,6 +2,7 @@
     Multisite:
     * FIX: Fixed layout of some dropdown fields in view filters
     * Make heading in each page clickable -> reload page
+    * FIX: Edit view: couldn't edit filter settings
 
     Core:
     * FIX: Fixed "make_utf is not defined" error when having custom

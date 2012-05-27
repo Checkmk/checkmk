@@ -1,4 +1,4 @@
-
+#!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import math, os, time, re, sre_constants, urlparse
+import math, os, time, re, sre_constants, urlparse, forms
 from lib import *
 
 # Abstract base class of all value declaration classes.
@@ -1613,8 +1613,15 @@ class Dictionary(ValueSpec):
         self._optional_keys = kwargs.get("optional_keys", True)
         self._required_keys = kwargs.get("required_keys", []) 
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
+        self._render = kwargs.get("render", "normal") # also: "form" -> use forms.section()
 
     def render_input(self, varprefix, value):
+        if self._render == "form":
+            self.render_input_form(varprefix, value)
+        else:
+            self.render_input_normal(varprefix, value)
+
+    def render_input_normal(self, varprefix, value):
         html.write("<table class=dictionary>")
         for param, vs in self._elements:
             html.write("<tr><td class=dictleft>")
@@ -1646,8 +1653,31 @@ class Dictionary(ValueSpec):
             html.write("</div></td></tr>")
         html.write("</table>")
 
+    def render_input_form(self, varprefix, value):
+        forms.header(self.title())
+        for param, vs in self._elements:
+            div_id = varprefix + "_d_" + param
+            vp     = varprefix + "_p_" + param
+            if self._optional_keys and param not in self._required_keys:
+                visible = html.get_checkbox(vp + "_USE")
+                if visible == None:
+                    visible = param in value
+                onclick = "valuespec_toggle_option(this, %r)" % div_id
+                checkbox_code = '<input type=checkbox name="%s" %s onclick="%s">' % (
+                    vp + "_USE", visible and "CHECKED" or "", onclick)
+                forms.section(vs.title(), checkbox=checkbox_code)
+            else:
+                visible = True
+                forms.section(vs.title())
+
+            html.write('<div id="%s" style="display: %s">' % (
+                div_id, not visible and "none" or ""))
+            html.help(vs.help())
+            vs.render_input(vp, value.get(param, vs.default_value()))
+            html.write("</div>")
+
     def set_focus(self, varprefix):
-        self._elements[0][1].set_focus(varprefix + self._elements[0][0])
+        self._elements[0][1].set_focus(varprefix + "_p_" + self._elements[0][0])
 
     def canonical_value(self):
         return dict([

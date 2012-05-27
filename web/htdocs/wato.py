@@ -256,7 +256,9 @@ def page_handler():
             # he needs an explicit access permission for doing changes:
             if config.may("wato.seeall"):
                 for pname in modeperms:
-                    config.need_permission("wato." + pname)
+                    if '.' not in pname:
+                        pname = "wato." + pname
+                    config.need_permission(pname)
 
             result = modefunc("action")
             if type(result) == tuple:
@@ -287,7 +289,9 @@ def page_handler():
                 # Check general permissions for the new mode
                 if not config.may("wato.seeall"):
                     for pname in modeperms:
-                        config.need_permission("wato." + pname)
+                        if '.' not in pname:
+                            pname = "wato." + pname
+                        config.need_permission(pname)
 
         except MKUserError, e:
             action_message = e.message
@@ -5136,7 +5140,9 @@ def mode_main(phase):
 def render_main_menu(some_modules, columns = 2):
     html.write('<div class="mainmenu">')
     for nr, (mode_or_url, title, icon, permission, help) in enumerate(some_modules):
-        if not config.may("wato." + permission) and not config.may("wato.seeall"):
+        if "." not in permission:
+            permission = "wato." + permission
+        if not config.may(permission) and not config.may("wato.seeall"):
             continue
 
         if '?' in mode_or_url or '/' in mode_or_url:

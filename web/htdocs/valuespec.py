@@ -730,11 +730,14 @@ class DropdownChoice(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._choices = kwargs["choices"]
         self._help_separator = kwargs.get("help_separator")
+        self._label = kwargs.get("label")
 
     def canonical_value(self):
         return self._choices[0][0]
 
     def render_input(self, varprefix, value):
+        if self._label:
+            html.write("%s " % self._label)
         # Convert values from choices to keys
         defval = "0"
         options = []

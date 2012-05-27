@@ -4987,8 +4987,8 @@ def mode_snapshot(phase):
         if len(snapshots) == 0:
             html.write("<div class=info>" + _("There are no snapshots available.") + "</div>")
         else:
-            html.write('<table class=data>')
             html.write('<h3>' + _("Snapshots") + '</h3>')
+            html.write('<table class=data>')
             html.write("<tr>")
             html.write("<th>%s</th>" % _("Actions"))
             html.write("<th>%s</th>" % _("Filename"))

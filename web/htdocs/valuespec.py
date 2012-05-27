@@ -1620,8 +1620,19 @@ class Dictionary(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
-        self._optional_keys = kwargs.get("optional_keys", True)
-        self._required_keys = kwargs.get("required_keys", []) 
+        if "optional_keys" in kwargs:
+            ok = kwargs["optional_keys"]
+            if type(ok) == list:
+                self._required_keys = \
+                    [ e[0] for e in self._elements if e[0] not in ok ]
+                self._optional_keys = True
+            elif ok:
+                self._optional_keys = True
+            else:
+                self._optional_keys = False
+        else:
+            self._optional_keys = False
+            self._required_keys = kwargs.get("required_keys", []) 
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
         self._render = kwargs.get("render", "normal") # also: "form" -> use forms.section()
 

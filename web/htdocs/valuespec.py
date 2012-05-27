@@ -772,6 +772,16 @@ class DropdownChoice(ValueSpec):
             ", ".join([v for (v,t) in self._choices]))
 
 
+# Special conveniance variant for monitoring states
+class MonitoringState(DropdownChoice):
+    def __init__(self, **kwargs):
+        choices = [ ( 0, _("OK")),
+                    ( 1, _("WARN")),
+                    ( 2, _("CRIT")),
+                    ( 3, _("UNKNOWN")) ]
+        kwargs.setdefault("default_value", 0)
+        DropdownChoice.__init__(self, choices=choices, **kwargs)
+
 # A Dropdown choice where the elements are ValueSpecs.
 # The currently selected ValueSpec will be displayed.
 # The text representations of the ValueSpecs will be used as texts.

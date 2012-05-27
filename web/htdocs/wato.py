@@ -9944,7 +9944,7 @@ def mode_edit_rule(phase):
         forms.section("")
         for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
             val = img == "yes"
-            html.write('<img align=top src="images/rule_%s.png"> ' % img)
+            html.write('<img class=ruleyesno align=top src="images/rule_%s.png"> ' % img)
             html.radiobutton("value", img, value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
 
     # Conditions

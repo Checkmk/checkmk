@@ -5350,6 +5350,19 @@ def register_configvar(group, varname, valuespec, domain="check_mk", need_restar
     g_configvar_groups.setdefault(group, []).append((domain, varname, valuespec))
     g_configvars[varname] = domain, valuespec, need_restart
 
+g_configvar_domains = {
+    "check_mk" : {
+        "configdir" : root_dir,
+    },
+    "multisite" : { 
+        "configdir" : multisite_dir,
+    },
+}
+
+def register_configvar_domain(domain, configdir):
+    g_configvar_domains[domain] = {
+        "configdir" : configdir,
+    }
 
 # Persistenz: Speicherung der Werte
 # - WATO speichert seine Variablen für main.mk in conf.d/wato/global.mk
@@ -5369,8 +5382,8 @@ def register_configvar(group, varname, valuespec, domain="check_mk", need_restar
 
 def load_configuration_settings():
     settings = {}
-    load_configuration_vars(multisite_dir + "global.mk", settings)
-    load_configuration_vars(root_dir      + "global.mk", settings)
+    for domain, domain_info in g_configvar_domains.items():
+        load_configuration_vars(domain_info["configdir"] + "global.mk", settings)
     return settings
 
 
@@ -5397,10 +5410,10 @@ def save_configuration_settings(vars):
             continue
         per_domain.setdefault(domain, {})[varname] = vars[varname]
 
-    make_nagios_directory(root_dir)
-    save_configuration_vars(per_domain.get("check_mk", {}), root_dir + "global.mk")
-    make_nagios_directory(multisite_dir)
-    save_configuration_vars(per_domain.get("multisite", {}), multisite_dir + "global.mk")
+    for domain, domain_info in g_configvar_domains.items():
+        dir = domain_info["configdir"]
+        make_nagios_directory(dir)
+        save_configuration_vars(per_domain.get(domain, {}), dir + "global.mk")
 
 def save_configuration_vars(vars, filename):
     out = create_user_file(filename, 'w')

@@ -1,0 +1,10 @@
+Title: View checkboxes: Request-URI Too Large
+Component: multisite
+State: open
+Date: 2012-05-28 16:16:51
+Targetversion: 1.2.0
+Class: bug
+
+If you select too many checkboxes in a Multisite view
+and execute a command, then you will get a
+"Request-URI Too Large".

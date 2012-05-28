@@ -1634,10 +1634,11 @@ class Dictionary(ValueSpec):
             else:
                 self._optional_keys = False
         else:
-            self._optional_keys = False
+            self._optional_keys = True
             self._required_keys = kwargs.get("required_keys", []) 
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
         self._render = kwargs.get("render", "normal") # also: "form" -> use forms.section()
+        self._headers = kwargs.get("headers")
 
     def render_input(self, varprefix, value):
         if self._render == "form":
@@ -1678,8 +1679,18 @@ class Dictionary(ValueSpec):
         html.write("</table>")
 
     def render_input_form(self, varprefix, value):
-        forms.header(self.title())
+        if self._headers:
+            for header, sections in self._headers:
+                self.render_input_form_header(varprefix, value, header, sections)
+        else:
+            self.render_input_form_header(varprefix, value, self.title(), None)
+
+    def render_input_form_header(self, varprefix, value, title, sections):
+        forms.header(title)
         for param, vs in self._elements:
+            if sections and param not in sections:
+                continue
+
             div_id = varprefix + "_d_" + param
             vp     = varprefix + "_p_" + param
             if self._optional_keys and param not in self._required_keys:

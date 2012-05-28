@@ -1,0 +1,22 @@
+Title: Checkbox handling in views sometimes broken
+Component: multisite
+State: open
+Date: 2012-05-28 16:13:51
+Targetversion: 1.2.0
+Class: bug
+
+The handling of the checkboxes in the views still has
+bad control flows. The following will trigger a bug:
+
+1. Open a view where the checkboxes are currently off
+2. Turn on the checkboxes
+3. Check one of the checkboxes
+4. Open the command tab and select a command
+5. Do *not* confirm the command but press "No"
+
+Now try to turn *off* the checkboxes. This is not
+working!
+
+Furthermore: If you now uncheck the one single
+checkbox and again issue a command: it will still
+think this box is checked.

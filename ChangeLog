@@ -8,6 +8,8 @@
     * FIX: Fixed "make_utf is not defined" error when having custom
            timeperiods defined in WATO
 
+    Checks & Agents: 
+    * MacOS X: Agent for MacOS (Thanks to Christian Zigotzky)
 1.2.0b5:
     Core:
     * FIX: handle UTF-8 encoded binary strings correctly (e.g. in host alias)

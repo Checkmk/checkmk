@@ -64,8 +64,8 @@ ps -A -o user,vsz,rss,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]
 # here: http://www.i-scream.org/libstatgrab/ 
 
 # Only collect net stats if we are in a global zone
-statgrab_vars="const. cpu. disk. general. load. mem. page. proc. swap. user."
-statgrab_sections="proc cpu load disk page"
+statgrab_vars="const. cpu. disk. general. mem. page. proc. swap. user."
+statgrab_sections="proc cpu disk page"
 if which zonename > /dev/null; then
     if [ "`zonename`" = "global" ]; then
        statgrab_vars="$statgrab_vars .net"

@@ -1,0 +1,78 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+#<<<aix_multipath>>>
+#<<<aix_multipath>>>
+#hdisk0 vscsi0 Available Enabled
+#hdisk1 vscsi0 Available Enabled
+#hdisk2 vscsi0 Available Enabled
+
+def inventory_aix_multipath(info):
+    disks = {}
+    for disk, controller, status in info:
+        disks[disk] = disks.get(disk, 0) + 1
+    return [(disk, {'paths' : disks[disk]}) for disk in disks.keys()] 
+
+def check_aix_multipath(item, params, info):
+    path_count = 0
+    state = 0
+    message = []
+    state_count = 0
+
+    #Collecting all paths and there states 
+    for disk, controller, status in info:
+        if disk == item:
+            path_count += 1
+            if status != 'Enabled':
+                state_count += 1
+                
+    #How many Paths are not enabled
+    if state_count != 0 and (100 / path_count *  state_count ) < 50:
+        state = 1
+        message.append('%d paths not enabled (!)' % (state_count))
+    elif state_count != 0:
+        state = 2
+        message.append('%d paths not enabled (!!)' % (state_count))
+
+    #Are some paths missing?             
+    path_message = "%d paths total" % path_count 
+    if path_count != params['paths']: 
+        state = max(state, 1)
+        message.append(path_message + ' (should be: %d (!))' % (params['paths']))
+    else:
+        message.append(path_message)
+    
+    return (state, nagios_state_names[state] + " - " + ", ".join(message))
+
+
+check_info["aix_multipath"] = {
+    "check_function"          : check_aix_multipath,
+    "inventory_function"      : inventory_aix_multipath,
+    "service_description"     : "Multipath %s",
+    "has_perfdata"            : False,
+}
+

@@ -294,13 +294,18 @@ function filter_activation(oSelect)
     oDiv.setAttribute("className", "filtersetting " + usage);
     oDiv.setAttribute("class", "filtersetting " + usage);
 
+    // If the filter is not in state hard or show, disable filter
+    // input
     var disabled = usage != "hard" && usage != "show";
-    var oNode;
-    for (var i in oDiv.childNodes) {
-        oNode = oDiv.childNodes[i];
-        if (oNode.tagName == "INPUT" || oNode.tagName == "SELECT") {
-            oNode.disabled = disabled;
+    var oFloatFilter = oSelect.nextSibling;
+    if (oFloatFilter) {
+        for (var i in oFloatFilter.childNodes) {
+            oNode = oFloatFilter.childNodes[i];
+            if (oNode.tagName == "INPUT" || oNode.tagName == "SELECT") {
+                oNode.disabled = disabled;
+            }
         }
+        oFloatFilter = null;
     }
 
     p = null;

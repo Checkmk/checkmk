@@ -221,6 +221,7 @@ div.livestatus.message {
     left: 10px;
     font-size: 8pt;
     z-index: 20;
+    color: black;
 }
 
 /*-------------------------------------------------------------------------.
@@ -338,6 +339,10 @@ div.error a {
 div.warning {
     background-color: #ff4;
     border-color: #fc0;
+    color: #000;
+}
+div.warning a {
+    color: #000;
 }
 
 /*-ValueSpec---------------------------------------------------------------.

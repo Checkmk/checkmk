@@ -338,14 +338,15 @@ table.data.single {
     padding: 0;
     border-collapse: collapse;
     empty-cells: show;
-    width: auto;
 }
 
 table.data.single tr.data td {
     padding-bottom: 4px;
-    padding: 2px 5px 2px 5px;
+    padding: 4px 5px 2px 5px;
     text-align: left;
-    vertical-align: middle;
+    height: 16px;
+    line-height: 14px;
+    vertical-align: top;
 }
 table.data.single tr.data td.left {
     width: 10%;

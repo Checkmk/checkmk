@@ -2077,15 +2077,15 @@ def do_actions(view, what, action_rows, backurl):
 
     count = 0
     for row in action_rows:
-        nagios_commands, title, executor = core_command(what, row)
-        for command in nagios_commands:
+        core_commands, title, executor = core_command(what, row)
+        for command in core_commands:
             if type(command) == unicode:
                 command = command.encode("utf-8")
             executor(command, row["site"])
             count += 1
 
     if command:
-        message = _("Successfully sent %d commands to Nagios.") % count
+        message = _("Successfully sent %d commands.") % count
         if config.debug:
             message += _("The last one was: <pre>%s</pre>") % command
         if html.output_format == "html": # sorry for this hack

@@ -1176,16 +1176,10 @@ checkgroups.append((
                                 ( "auto", _("auto") ),
                                 ( "unknown", _("unknown (old agent)") ),
                             ]),
-                        DropdownChoice(
+                        MonitoringState(
                             title = _("Resulting state"),
-                            default_value = 0,
-                            choices = [
-                                ( 0, _("OK")),
-                                ( 1, _("WARN")),
-                                ( 2, _("CRIT")),
-                                ( 3, _("UNKNWON")),
-                            ]),
-                        ],
+                        ),
+                    ],
                     default_value = ( "running", "auto", 0)),
                 title = _("Services states"),
                 help = _("You can specify a separate monitoring state for each possible "
@@ -1193,15 +1187,10 @@ checkgroups.append((
                          "this parameter, then only running/auto will be assumed to be OK."),
             )),
         ( "else",
-           DropdownChoice(
+           MonitoringState(
                title = _("State if no entry matches"),
                default_value = 2,
-               choices = [
-                   ( 0, _("OK")),
-                   ( 1, _("WARN")),
-                   ( 2, _("CRIT")),
-                   ( 3, _("UNKNWON")),
-               ]),
+           ),
         ),]
     ),
     TextAscii(

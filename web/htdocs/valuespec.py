@@ -1,4 +1,4 @@
-
+#!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import math, os, time, re, sre_constants, urlparse
+import math, os, time, re, sre_constants, urlparse, forms
 from lib import *
 
 # Abstract base class of all value declaration classes.
@@ -730,11 +730,14 @@ class DropdownChoice(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._choices = kwargs["choices"]
         self._help_separator = kwargs.get("help_separator")
+        self._label = kwargs.get("label")
 
     def canonical_value(self):
         return self._choices[0][0]
 
     def render_input(self, varprefix, value):
+        if self._label:
+            html.write("%s " % self._label)
         # Convert values from choices to keys
         defval = "0"
         options = []
@@ -771,6 +774,16 @@ class DropdownChoice(ValueSpec):
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
             ", ".join([v for (v,t) in self._choices]))
 
+
+# Special conveniance variant for monitoring states
+class MonitoringState(DropdownChoice):
+    def __init__(self, **kwargs):
+        choices = [ ( 0, _("OK")),
+                    ( 1, _("WARN")),
+                    ( 2, _("CRIT")),
+                    ( 3, _("UNKNOWN")) ]
+        kwargs.setdefault("default_value", 0)
+        DropdownChoice.__init__(self, choices=choices, **kwargs)
 
 # A Dropdown choice where the elements are ValueSpecs.
 # The currently selected ValueSpec will be displayed.
@@ -1610,11 +1623,30 @@ class Dictionary(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
-        self._optional_keys = kwargs.get("optional_keys", True)
-        self._required_keys = kwargs.get("required_keys", []) 
+        if "optional_keys" in kwargs:
+            ok = kwargs["optional_keys"]
+            if type(ok) == list:
+                self._required_keys = \
+                    [ e[0] for e in self._elements if e[0] not in ok ]
+                self._optional_keys = True
+            elif ok:
+                self._optional_keys = True
+            else:
+                self._optional_keys = False
+        else:
+            self._optional_keys = True
+            self._required_keys = kwargs.get("required_keys", []) 
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
+        self._render = kwargs.get("render", "normal") # also: "form" -> use forms.section()
+        self._headers = kwargs.get("headers")
 
     def render_input(self, varprefix, value):
+        if self._render == "form":
+            self.render_input_form(varprefix, value)
+        else:
+            self.render_input_normal(varprefix, value)
+
+    def render_input_normal(self, varprefix, value):
         html.write("<table class=dictionary>")
         for param, vs in self._elements:
             html.write("<tr><td class=dictleft>")
@@ -1646,8 +1678,41 @@ class Dictionary(ValueSpec):
             html.write("</div></td></tr>")
         html.write("</table>")
 
+    def render_input_form(self, varprefix, value):
+        if self._headers:
+            for header, sections in self._headers:
+                self.render_input_form_header(varprefix, value, header, sections)
+        else:
+            self.render_input_form_header(varprefix, value, self.title(), None)
+
+    def render_input_form_header(self, varprefix, value, title, sections):
+        forms.header(title)
+        for param, vs in self._elements:
+            if sections and param not in sections:
+                continue
+
+            div_id = varprefix + "_d_" + param
+            vp     = varprefix + "_p_" + param
+            if self._optional_keys and param not in self._required_keys:
+                visible = html.get_checkbox(vp + "_USE")
+                if visible == None:
+                    visible = param in value
+                onclick = "valuespec_toggle_option(this, %r)" % div_id
+                checkbox_code = '<input type=checkbox name="%s" %s onclick="%s">' % (
+                    vp + "_USE", visible and "CHECKED" or "", onclick)
+                forms.section(vs.title(), checkbox=checkbox_code)
+            else:
+                visible = True
+                forms.section(vs.title())
+
+            html.write('<div id="%s" style="display: %s">' % (
+                div_id, not visible and "none" or ""))
+            html.help(vs.help())
+            vs.render_input(vp, value.get(param, vs.default_value()))
+            html.write("</div>")
+
     def set_focus(self, varprefix):
-        self._elements[0][1].set_focus(varprefix + self._elements[0][0])
+        self._elements[0][1].set_focus(varprefix + "_p_" + self._elements[0][0])
 
     def canonical_value(self):
         return dict([

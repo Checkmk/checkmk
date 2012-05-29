@@ -98,7 +98,7 @@ def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None, 
 # New functions for painting forms
 
 def strip_bad_chars(x):
-    return "".join([c for c in x if c > ' ' and c < 'z' and c not in ["'", '"']])
+    return "".join([c for c in x if c > ' ' and c < 'z']).translate(None, "'&;<>\"")
 
 def header(title, isopen = True, table_id = ""):
     global g_header_open

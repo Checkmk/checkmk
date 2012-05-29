@@ -512,7 +512,8 @@ table.validationerror img {
     width: 20px;
     height: 20px;
 }
-.wato table.ruleeditor img {
+.wato table.ruleeditor img,
+.wato img.ruleyesno {
     width: 22px;
     height: 22px;
     position: relative;

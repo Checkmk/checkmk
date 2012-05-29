@@ -256,7 +256,9 @@ def page_handler():
             # he needs an explicit access permission for doing changes:
             if config.may("wato.seeall"):
                 for pname in modeperms:
-                    config.need_permission("wato." + pname)
+                    if '.' not in pname:
+                        pname = "wato." + pname
+                    config.need_permission(pname)
 
             result = modefunc("action")
             if type(result) == tuple:
@@ -287,7 +289,9 @@ def page_handler():
                 # Check general permissions for the new mode
                 if not config.may("wato.seeall"):
                     for pname in modeperms:
-                        config.need_permission("wato." + pname)
+                        if '.' not in pname:
+                            pname = "wato." + pname
+                        config.need_permission(pname)
 
         except MKUserError, e:
             action_message = e.message
@@ -4983,8 +4987,8 @@ def mode_snapshot(phase):
         if len(snapshots) == 0:
             html.write("<div class=info>" + _("There are no snapshots available.") + "</div>")
         else:
-            html.write('<table class=data>')
             html.write('<h3>' + _("Snapshots") + '</h3>')
+            html.write('<table class=data>')
             html.write("<tr>")
             html.write("<th>%s</th>" % _("Actions"))
             html.write("<th>%s</th>" % _("Filename"))
@@ -5136,7 +5140,9 @@ def mode_main(phase):
 def render_main_menu(some_modules, columns = 2):
     html.write('<div class="mainmenu">')
     for nr, (mode_or_url, title, icon, permission, help) in enumerate(some_modules):
-        if not config.may("wato." + permission) and not config.may("wato.seeall"):
+        if "." not in permission:
+            permission = "wato." + permission
+        if not config.may(permission) and not config.may("wato.seeall"):
             continue
 
         if '?' in mode_or_url or '/' in mode_or_url:
@@ -5344,6 +5350,19 @@ def register_configvar(group, varname, valuespec, domain="check_mk", need_restar
     g_configvar_groups.setdefault(group, []).append((domain, varname, valuespec))
     g_configvars[varname] = domain, valuespec, need_restart
 
+g_configvar_domains = {
+    "check_mk" : {
+        "configdir" : root_dir,
+    },
+    "multisite" : { 
+        "configdir" : multisite_dir,
+    },
+}
+
+def register_configvar_domain(domain, configdir):
+    g_configvar_domains[domain] = {
+        "configdir" : configdir,
+    }
 
 # Persistenz: Speicherung der Werte
 # - WATO speichert seine Variablen für main.mk in conf.d/wato/global.mk
@@ -5363,8 +5382,8 @@ def register_configvar(group, varname, valuespec, domain="check_mk", need_restar
 
 def load_configuration_settings():
     settings = {}
-    load_configuration_vars(multisite_dir + "global.mk", settings)
-    load_configuration_vars(root_dir      + "global.mk", settings)
+    for domain, domain_info in g_configvar_domains.items():
+        load_configuration_vars(domain_info["configdir"] + "global.mk", settings)
     return settings
 
 
@@ -5391,10 +5410,10 @@ def save_configuration_settings(vars):
             continue
         per_domain.setdefault(domain, {})[varname] = vars[varname]
 
-    make_nagios_directory(root_dir)
-    save_configuration_vars(per_domain.get("check_mk", {}), root_dir + "global.mk")
-    make_nagios_directory(multisite_dir)
-    save_configuration_vars(per_domain.get("multisite", {}), multisite_dir + "global.mk")
+    for domain, domain_info in g_configvar_domains.items():
+        dir = domain_info["configdir"]
+        make_nagios_directory(dir)
+        save_configuration_vars(per_domain.get(domain, {}), dir + "global.mk")
 
 def save_configuration_vars(vars, filename):
     out = create_user_file(filename, 'w')
@@ -9938,7 +9957,7 @@ def mode_edit_rule(phase):
         forms.section("")
         for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
             val = img == "yes"
-            html.write('<img align=top src="images/rule_%s.png"> ' % img)
+            html.write('<img class=ruleyesno align=top src="images/rule_%s.png"> ' % img)
             html.radiobutton("value", img, value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
 
     # Conditions

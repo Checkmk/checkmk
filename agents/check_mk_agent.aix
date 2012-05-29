@@ -93,8 +93,7 @@ fi
 
 
 echo '<<<aix_multipath>>>'
-# output path status, but remove SAS enclsoure management devices
-    lspath -F"name parent path_status status" | grep -v ses
+    lspath -F"name parent status" 
 
 
 echo '<<<tcp_conn_stats>>>'

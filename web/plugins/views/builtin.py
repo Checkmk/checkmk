@@ -230,7 +230,7 @@ multisite_builtin_views.update({
                         },
  'downtimes': {'column_headers': 'pergroup',
                'datasource': 'downtimes',
-               'description': 'All host- und service-downtimes',
+               'description': 'All host- and service-downtimes',
                'group_painters': [('downtime_what', None)],
                'hard_filters': [],
                'hard_filtervars': [('is_service_scheduled_downtime_depth',

@@ -113,7 +113,7 @@ multisite_datasources["merged_servicegroups"] = {
 }
 
 multisite_datasources["comments"] = {
-    "title"    : _("Host- und Servicecomments"),
+    "title"    : _("Host- and Servicecomments"),
     "table"    : "comments",
     "infos"    : [ "comment", "host", "service" ],
     "keys"     : [ "comment_id", "comment_type" ],

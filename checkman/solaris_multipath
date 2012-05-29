@@ -1,0 +1,23 @@
+title: Check Multipathing on AIX
+agents: solaris
+author: Florian Heigl <fh@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of multipathed SCSI devices on
+ Solaris 10 systems using the {"mpathadm"} utility.
+ It alerts if missing paths are reported by the OS.
+
+ The check will only return a {"WARNING"} if at least 50% of the paths to a
+ LUN are working.
+ The alert will return {"CRITICAL"} if less than 50% of the paths
+ to a LUN are working.
+
+item:
+ A service the WWID of the LUN.
+
+inventory:
+ One service is created for each LUN that is reported by mpathadm
+
+[parameters]
+The check does not support parameters.

@@ -11,7 +11,8 @@
     Checks & Agents: 
     * MacOS X: Agent for MacOS (Thanks to Christian Zigotzky)
     * AIX: New check aix_multipath: Supports checking native AIX multipathing from AIX 5.2 onward
-    * Solaris: New chheck solaris_multipath: Supports checking native Solaris multipath from Solaris10 and up.
+    * Solaris: New check solaris_multipath: Supports checking native Solaris multipath from Solaris10 and up.
+    * Solaris: The ZFS Zpool status check now looks more closely at the reported messages. (It's also tested to work on Linux now)
 1.2.0b5:
     Core:
     * FIX: handle UTF-8 encoded binary strings correctly (e.g. in host alias)

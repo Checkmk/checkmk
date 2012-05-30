@@ -725,6 +725,9 @@ class Checkbox(ValueSpec):
 # a choices name.
 # Note: The list of choices may contain 2-tuples or 3-tuples.
 # The format is (value, text {, icon} )
+# choices may also be a function that returns - when called
+# wihtout arguments - such a tuple list. That way the choices
+# can by dynamically computed
 class DropdownChoice(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
@@ -732,8 +735,14 @@ class DropdownChoice(ValueSpec):
         self._help_separator = kwargs.get("help_separator")
         self._label = kwargs.get("label")
 
+    def choices(self):
+        if type(self._choices) == list:
+            return self._choices
+        else:
+            return self._choices()
+
     def canonical_value(self):
-        return self._choices[0][0]
+        return self.choices()[0][0]
 
     def render_input(self, varprefix, value):
         if self._label:
@@ -741,7 +750,7 @@ class DropdownChoice(ValueSpec):
         # Convert values from choices to keys
         defval = "0"
         options = []
-        for n, entry in enumerate(self._choices):
+        for n, entry in enumerate(self.choices()):
             options.append((str(n),) + entry[1:])
             if entry[0] == value:
                 defval = str(n)
@@ -751,7 +760,7 @@ class DropdownChoice(ValueSpec):
             html.select(varprefix, options, defval)
 
     def value_to_text(self, value):
-        for entry in self._choices:
+        for entry in self.choices():
             val, title = entry[:2]
             if value == val:
                 if self._help_separator:
@@ -761,18 +770,18 @@ class DropdownChoice(ValueSpec):
 
     def from_html_vars(self, varprefix):
         sel = html.var(varprefix)
-        for n, entry in enumerate(self._choices):
+        for n, entry in enumerate(self.choices()):
             val = entry[0]
             if sel == str(n):
                 return val
-        return self._choices[0][0] # can only happen if user garbled URL
+        return self.choices()[0][0] # can only happen if user garbled URL
 
     def validate_datatype(self, value, varprefix):
-        for val, title in self._choices:
+        for val, title in self.choices():
             if val == value:
                 return
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
-            ", ".join([v for (v,t) in self._choices]))
+            ", ".join([v for (v,t) in self.choices()]))
 
 
 # Special conveniance variant for monitoring states

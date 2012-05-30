@@ -6,7 +6,7 @@
 # (...major numbers were such an awesome idea)
 
 
-import os
+import os, time
 import subprocess
 
 
@@ -32,15 +32,16 @@ for line in lvlist.stdout.readlines():
      vg_name, lv_name = line.split(";")
      # Found this in dtc-xen's statistics server. Greetings to Thomas!
      minor = os.minor(os.stat("/dev/%s/%s" % (vg_name, lv_name)).st_rdev)
+     major = os.major(os.stat("/dev/%s/%s" % (vg_name, lv_name)).st_rdev)
      dmdev = "dm-%s" % minor
-     devices.update( { dmdev : (vg_name, lv_name)})
-
+     devices.update( { dmdev : (vg_name, lv_name, (major, minor))})
 
 
 # then we can parse our nice new dictionary and grab the stats for each blockdev
+print time.time()
 for dmdev in devices.keys():
         counter      = "/sys/block/%s/stat" % dmdev
-        stats[dmdev] = file(counter).read().rstrip()
+        stats[dmdev] = " ".join(file(counter).read().split())
         
         # read the gathered stats and if they are showing no IO, then 
         # either there was the counters disabled (and we enable them)
@@ -51,7 +52,7 @@ for dmdev in devices.keys():
             if map(int, file(stats_switch).read().rstrip()) == 0:
                 os.system("echo 1 > /sys/block/%s/queue/iostats" % dmdev)
 
-        print ("%s/%s %s") %  (devices[dmdev][0],devices[dmdev][1], stats[dmdev])
+        print ("%s\t %s %s-%s %s") %  (devices[dmdev][2][0], devices[dmdev][2][1], devices[dmdev][0],devices[dmdev][1], stats[dmdev])
 
 
 

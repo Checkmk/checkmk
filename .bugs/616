@@ -1,0 +1,8 @@
+Title: Serarch for HostTags in Wato Host and Folder view
+Component: wato
+State: open
+Date: 2012-05-30 16:03:37
+Targetversion: future
+Class: feature
+
+It should be possible to filter a Host in the Wato hosts an folder view for Hosttags.

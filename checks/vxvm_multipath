@@ -1,0 +1,54 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+#<<<vxvm_multipath>>>
+#sda                  ENABLED      OTHER_DISKS  1      1     0     other_disks
+#LIO-Sechs_0          ENABLED      aluadisk     1      1     0     LIO-Sechs
+#LIO-Sechs_1          ENABLED      aluadisk     1      1     0     LIO-Sechs
+#LIO-Sechs_2          ENABLED      aluadisk     1      1     0     LIO-Sechs
+#
+
+def check_vxvm_multipath(item, params, info):
+    state = 0
+    for disk, status_txt, enc_type, paths, paths_act, paths_inact, enclosure in info:
+        if disk == item:
+            if paths_act != paths and float(paths_act) >= float(paths) / 2:
+                state = 1
+            elif int(paths_inact) > 0 and float(paths_inact) > float(paths) /2: 
+                state = 2
+            return(state, nagios_state_names[state] + " - " + "Status: %s, (%d/%d) Paths to enclosure %s enabled" % (status_txt, int(paths_act), int(paths), enclosure  )) 
+
+    return(3, "UKN - Item not found")
+
+
+check_info["vxvm_multipath"] = {
+    "check_function"          : check_vxvm_multipath,
+    "inventory_function"      : lambda info: [(item[0], None) for item in info],
+    "service_description"     : "Multipath %s",
+    "has_perfdata"            : False,
+}
+

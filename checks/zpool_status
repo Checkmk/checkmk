@@ -24,11 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# +------------------------------------------------------------------+
-# | This file has been contributed and is copyrighted by:            |
-# |                                                                  |
-# | Darin Perusich <darin@darins.net>   Copyright 2010               |
-# +------------------------------------------------------------------+
+# Based on check from  Darin Perusich <darin@darins.net>
 #
 # /usr/sbin/zpool status -x
 #
@@ -67,30 +63,54 @@
 
 # inventory function
 def inventory_zpool_status(info):
-    if len(info) == 0:
+    if " ".join(info[0]) == "no pools available":
         return []
-    for line in info:
-        l = " ".join(line)
-        if l == "no pools available":
-            return []
-        else:
-            return [ (None, None) ]
-#
+    return [(None, None)]
+
 def check_zpool_status(_no_item, _no_params, info):
-    #print info
+    if " ".join(info[0]) == "all pools are healthy":
+        return(0, "OK - All pools are healthy") 
+    
+    start_pool = False
+    last_pool = None
+    error_pools = {}
+    warning_pools = {}
+    pool_messages = {}
+    state = 0
     for line in info:
-        l = " ".join(line)
-        # all is well
-        if l == "all pools are healthy":
-            return ( 0, "OK - %s" % l )
-        # this only happens if pools have been inventoried and subsequently destroyed!
-        elif l == "no pools available":
-            return ( 2, "CRIT - 1 or more storage pools have been destroyed!" )
-        # problem
-        elif line[0] == "pool:":
-            pool = line[1]
-            return ( 2, "CRIT - storage pool '%s' has an error!" % pool)
-    #
-    return (3, "UNKNOWN - invalid output from plugin")
+        if line[0] == "pool:":
+            last_pool = line[1]
+
+        if line[0] == "NAME":
+            start_pool = True
+            continue
+        
+        if line[0] == "errors:":
+            start_pool = False  
+            pool_messages[last_pool] = " ".join(line[1:])
+            continue
+
+        if start_pool == True: 
+            if line[1] != "ONLINE": 
+                error_pools[line[0]] = tuple(line[1:]) 
+                continue
+
+            if int(line[4]) != 0:
+                warning_pools[line[0]] = tuple(line[1:])
+    message = []
+    for pool in  pool_messages.keys():
+        state = 1
+        message.append("%s: %s" % (pool, pool_messages[pool]))
+
+    for pool in warning_pools.keys():
+        state = 1
+        message.append("%s CKSUM:%d(!)" % (pool, int(warning_pools[pool][3]))) 
+
+    for pool in error_pools.keys():
+        state = 2
+        message.append("%s State:%s(!!)" % (pool, error_pools[pool][0])) 
+    if len(message) == 0:
+        message = ['No critical errors']
+    return (state, nagios_state_names[state] + " - " + ", ".join(message))
 #
 check_info['zpool_status'] = ( check_zpool_status, "zpool status", 0, inventory_zpool_status)

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+
+if type vxdg > /dev/null; then
+   echo '<<<vxvm_objstatus>>>'
+   # Get a list of the in-use disk groups.
+   DGS=$(vxdg list | grep enabled | awk '{print $1}')
+   # Deported or otherwise inactive needs no performance monitoring
+   if [ "X${DGS}" != "X"  ]; then
+     for DG in $DGS ; do 
+         vxprint -g $DG -v -q -Q  -F "%type %dgname %name %admin_state %kstate"
+     done
+   fi
+fi
+
+
+
+# Output examples:
+# A stopped volume
+#v datadg lalavol CLEAN DISABLED
+# An active volume
+#v datadg oravol ACTIVE ENABLE
+# v2 layered volumes on lower level that we might or might not need.
+#v datadg oravol-L01 ACTIVE ENABLED
+#v datadg oravol-L02 ACTIVE ENABLED
+
+
+# Man page
+
+# https://sort.symantec.com/public/documents/sfha/5.1sp1/solaris/manualpages/html/man/volume_manager/html/man4/vxmake.4.html

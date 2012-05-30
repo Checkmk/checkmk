@@ -5216,7 +5216,11 @@ def mode_globalvars(phase):
                 msg = _("Changed Configuration variable %s to %s." % (varname, 
                     current_settings[varname] and "on" or "off"))
                 save_configuration_settings(current_settings)
-                log_pending(need_restart and SYNCRESTART or SYNC, None, "edit-configvar", msg)
+                pending_func  = g_configvar_domains[domain].get("pending")
+                if pending_func:
+                    pending_func(msg)
+                else:
+                    log_pending(need_restart and SYNCRESTART or SYNC, None, "edit-configvar", msg)
                 if action == "_reset":
                     return "globalvars", msg
                 else:
@@ -5302,7 +5306,12 @@ def mode_edit_configvar(phase):
             status = SYNCRESTART
         else:
             status = SYNC
-        log_pending(status, None, "edit-configvar", msg)
+
+        pending_func  = g_configvar_domains[domain].get("pending")
+        if pending_func:
+            pending_func(msg)
+        else:
+            log_pending(status, None, "edit-configvar", msg)
         return "globalvars"
 
     if varname in current_settings:
@@ -5359,10 +5368,12 @@ g_configvar_domains = {
     },
 }
 
-def register_configvar_domain(domain, configdir):
+def register_configvar_domain(domain, configdir, pending = None):
     g_configvar_domains[domain] = {
         "configdir" : configdir,
     }
+    if pending:
+        g_configvar_domains[domain]["pending"] = pending
 
 # Persistenz: Speicherung der Werte
 # - WATO speichert seine Variablen für main.mk in conf.d/wato/global.mk

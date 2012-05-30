@@ -1,19 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
 # DMPNODENAME ENCLR-NAME STATE[A] PATH-TYPE[M]
 # disk2057 emc1 ENABLED(A) -
 # disk3119 emc_clariion0 ENABLED SECONDARY
 
-   
 
-
-if type vxdmpadm >/dev/null; then
+if type vxdmpadm >/dev/null 2>&1 ; then
     echo '<<<vxvm_multipath>>>'
-    # dmpnode storagedevice state attribute
-    #vxdmpadm getsubpaths| grep -vw DMPNODENAME | awk '{print $4" "$5" "$2" "$3}'
-    vxdmpadm listenclosure all | \ 
-           grep -v -w -e ^[dD]isk -e ENCLR_NAME -e ^other_disks -e \^= |  \
-           awk '{print $1}' | while read enc ; do vxdmpadm getdmpnode enclosure=$enc 
-       done
+    ENCS=$( vxdmpadm listenclosure all | grep -v -w -e ^[dD]isk -e ENCLR_NAME -e \^= | awk '{print $1}')
+
+    echo "$ENCS" | while read enc ; do 
+      vxdmpadm getdmpnode enclosure=$enc | grep -v -e \^= -e NAME 
     done
 fi

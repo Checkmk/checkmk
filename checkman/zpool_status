@@ -8,6 +8,8 @@ description:
  is read by the agent from {/usr/sbin/zpool status -x}. If the zpool
  is healthy you're OK. If an inventoried zpool has been destroyed or
  has an error the check goes CRITICAL.
+ If the extend state information from zpool status indicates any CRC or 
+ other errors, the check will go to WARNING.
 
 inventory:
  The inventory will create one service per host if there are any pools.

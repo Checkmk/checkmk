@@ -1243,7 +1243,7 @@ def show_hosts(folder):
         bulk_actions(at_least_one_imported, True, colspan, "even")
 
     # Header line
-    html.write("<tr><th class=left></th><th></th><th>"
+    html.write("<tr><th class=left></th><th>"+_("Actions")+"</th><th>"
                + _("Hostname") + "</th><th>"
                + _("Auth") + "</th>")
     if not config.wato_hide_hosttags:

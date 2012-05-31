@@ -544,7 +544,7 @@ class ListOf(ValueSpec):
     def __init__(self, valuespec, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._valuespec = valuespec
-        self._magic = kwargs.get("magic", "@")
+        self._magic = kwargs.get("magic", "@!@")
         self._rowlabel = kwargs.get("row_label")
         self._add_label = kwargs.get("add_label", _("Add new element"))
         self._movable = kwargs.get("movable", True)
@@ -1639,6 +1639,7 @@ class Dictionary(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
+        self._required_keys = kwargs.get("required_keys", []) 
         if "optional_keys" in kwargs:
             ok = kwargs["optional_keys"]
             if type(ok) == list:
@@ -1652,7 +1653,6 @@ class Dictionary(ValueSpec):
         else:
             self._optional_keys = True
 
-        self._required_keys = kwargs.get("required_keys", []) 
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
         self._render = kwargs.get("render", "normal") # also: "form" -> use forms.section()
         self._headers = kwargs.get("headers")

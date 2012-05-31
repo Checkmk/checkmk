@@ -273,7 +273,7 @@ class TextAscii(ValueSpec):
         self._none_is_empty = kwargs.get("none_is_empty", False)
         self._regex         = kwargs.get("regex")
         self._regex_error   = kwargs.get("regex_error",
-            _("Your input odes not match the required format."))
+            _("Your input does not match the required format."))
         if type(self._regex) == str:
             self._regex = re.compile(self._regex)
 
@@ -315,10 +315,10 @@ class TextAscii(ValueSpec):
         if self._none_is_empty and value == "":
             raise MKUserError(varprefix, _("An empty value must be represented with None here."))
         if not self._allow_empty and value.strip() == "":
-            raise MKUserError(varprefix, _("An empty value is not allowed here."))
+            raise MKUserError(varprefix, self.title() + ": " + _("An empty value is not allowed here."))
         if value and self._regex:
             if not self._regex.match(value):
-                raise MKUserError(varprefix, self._regex_error)
+                raise MKUserError(varprefix, self.title() + ": " + self._regex_error)
 
 class RegExp(TextAscii):
     def __init__(self, **kwargs):
@@ -548,6 +548,7 @@ class ListOf(ValueSpec):
         self._rowlabel = kwargs.get("row_label")
         self._add_label = kwargs.get("add_label", _("Add new element"))
         self._movable = kwargs.get("movable", True)
+        self._totext = kwargs.get("totext")
 
     def del_button(self, vp, nr):
         js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
@@ -612,8 +613,14 @@ class ListOf(ValueSpec):
         return []
 
     def value_to_text(self, value):
-        return ", ".join([
-            self._valuespec.value_to_text(v) for v in value])
+        if self._totext:
+            if "%d" in self._totext:
+                return self._totext % len(value)
+            else:
+                return self._totext
+        else:
+            return ", ".join([
+                self._valuespec.value_to_text(v) for v in value])
 
     def from_html_vars(self, varprefix):
         n = 1
@@ -1644,7 +1651,8 @@ class Dictionary(ValueSpec):
                 self._optional_keys = False
         else:
             self._optional_keys = True
-            self._required_keys = kwargs.get("required_keys", []) 
+
+        self._required_keys = kwargs.get("required_keys", []) 
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
         self._render = kwargs.get("render", "normal") # also: "form" -> use forms.section()
         self._headers = kwargs.get("headers")

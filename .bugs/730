@@ -1,0 +1,9 @@
+Title: Expansion of macros
+Component: livestatus
+State: open
+Date: 2012-05-31 13:25:06
+Targetversion: future
+Class: feature
+
+Commands (Check + Notification) should also be expandet like notes_url.
+This makes it easyer to use livestatus for debugging

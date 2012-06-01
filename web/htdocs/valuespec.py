@@ -972,7 +972,10 @@ class ListChoice(ValueSpec):
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
         if self._choices != None:
-            self._elements = self._choices
+            if type(self._choices) == list:
+                self._elements = self._choices
+            else:
+                self._elements = self._choices()
             return
 
         if self._loaded_at != id(html):

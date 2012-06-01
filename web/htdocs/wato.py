@@ -4595,6 +4595,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
     inherited_tags     = {}
 
     volatile_topics = []
+    hide_attributes = []
     for topic in topics:
         topic_is_volatile = True # assume topic is sometimes hidden due to dependencies
         if len(topics) > 1:
@@ -4638,6 +4639,8 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 if not depends_on_tags and not depends_on_roles:
                     # One attribute is always shown -> topic is always visible 
                     topic_is_volatile = False
+            else:
+                hide_attributes.append(attr.name())
 
             # "bulk": determine, if this attribute has the same setting for all hosts.
             values = []
@@ -4797,6 +4800,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
     def dump_json(obj):
         return repr(obj).replace('None', 'null')
 
+    forms.end()
     # Provide Javascript world with the tag dependency information
     # of all attributes.
     html.javascript("var inherited_tags = %s;\n"\
@@ -4805,13 +4809,15 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                     "var wato_depends_on_roles = %s;\n"\
                     "var volatile_topics = %s;\n"\
                     "var user_roles = %s;\n"\
+                    "var hide_attributes = %s;\n"\
                     "wato_fix_visibility();\n" % (
                        dump_json(inherited_tags),
-                       dump_json(list(set(dependency_mapping_tags.keys()+dependency_mapping_roles.keys()))),
+                       dump_json(list(set(dependency_mapping_tags.keys()+dependency_mapping_roles.keys()+hide_attributes))),
                        dump_json(dependency_mapping_tags),
                        dump_json(dependency_mapping_roles),
                        dump_json(volatile_topics),
-                       dump_json(config.user_role_ids)))
+                       dump_json(config.user_role_ids),
+                       dump_json(hide_attributes)))
 
 
 # Check if at least one host in a folder (or its subfolders)

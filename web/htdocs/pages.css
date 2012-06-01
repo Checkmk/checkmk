@@ -746,6 +746,14 @@ div.help {
     display: inline-block;
 }
 
+div.help a {
+    color: black;
+}
+
+div.help a:hover {
+    text-decoration: none;
+}
+
 table.data div.help {
     box-shadow: 0 0 3px #000;
 }

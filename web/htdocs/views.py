@@ -607,6 +607,7 @@ def page_edit_view():
                 "", "filter_activation(this)")
         show_filter(filt)
         html.write('</div>')
+        html.write('<div class=clear></div>')
         html.help(filt.comment)
     
     # Set all filters into the proper display state

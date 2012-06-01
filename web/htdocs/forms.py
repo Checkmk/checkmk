@@ -100,7 +100,7 @@ def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None, 
 def strip_bad_chars(x):
     s = "".join([c for c in x if c > ' ' and c < 'z'])
 
-    if type(s) == unicode:
+    if type(x) == unicode:
         return s.translate({
             ord(u"'"): None,
             ord(u"&"): None,

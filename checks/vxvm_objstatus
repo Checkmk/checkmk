@@ -1,0 +1,82 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+#<<<vxvm_objstatus>>>
+#v datadg lalavol CLEAN DISABLED
+#v datadg oravol ACTIVE ENABLED
+#v datadg oravol-L01 ACTIVE ENABLED
+#v datadg oravol-L02 ACTIVE ENABLED
+#v testgroup oravol-L02 ACTIVE ENABLED
+
+def vxvm_objstatus_disks(info):
+    groups = {}
+    found_groups = []
+    for dg_type, dg_name, name, admin_state, kernel_state in info: 
+        if dg_type == 'v':
+            if dg_name not in found_groups:
+                groups[dg_name] = [(name, admin_state, kernel_state)]
+                found_groups.append(dg_name)
+            else:
+                groups[dg_name].append((name, admin_state, kernel_state))
+    return groups
+
+def inventory_vxvm_objstatus(info):
+    groups = vxvm_objstatus_disks(info)
+    return [(item, groups[item]) for item in groups.keys()]
+
+def check_vxvm_objstatus(item, params, info):
+    groups = vxvm_objstatus_disks(info)
+    volumes = groups.get(item)
+    if volumes != None: 
+        state = 0
+        messages = []
+        for volume, admin_state, kernel_state in volumes: 
+            text = []
+            error = False
+            if admin_state != "CLEAN" and admin_state != 'ACTIVE':
+                state = 2
+                text.append("%s: Admin state is %s(!!)" % (volume, admin_state))
+                error = True
+            if kernel_state != 'ENABLED' and kernel_state != 'DISABLED':
+                state = 2
+                text.append("%s: Kernel state is %s(!!)" % (volume, kernel_state)) 
+                error = True
+            if error == False:
+                text = ["%s: OK" % volume] 
+            messages.append(", ".join(text))
+        return(state, nagios_state_names[state] + ' - ' + ', '.join(messages))
+
+    return(2, "CRIT - Group not found")
+
+
+check_info["vxvm_objstatus"] = {
+    "check_function"          : check_vxvm_objstatus,
+    "inventory_function"      : inventory_vxvm_objstatus,
+    "service_description"     : "VXVM objstatus %s",
+    "has_perfdata"            : False,
+}
+

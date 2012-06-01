@@ -1,0 +1,24 @@
+title: Check Multipathing on AIX
+agents: aix
+author: Bastian Kuhn <bk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of SCSI devices AIX hosts that are managed
+ by the native multipath manager. The check will alert with a WARNING if the
+ number of paths to a SCSI device changes.
+ The check will alert for any non-enabled paths. It will give a WARNING status 
+ if more than 50% of paths are still enabled, or a CRITICAL status if there is
+ less than this left. 
+ Note that the last path always stays {"Enabled"} on AIX, even if it encounters
+ IO errors.
+
+item:
+ The WWID of the LUN.
+
+inventory:
+ One service is created for each LUN that is reported by
+ the lspath utility.
+
+[parameters]
+The check does not support parameters.

@@ -64,8 +64,8 @@ ps -A -o user,vsz,rss,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]
 # here: http://www.i-scream.org/libstatgrab/ 
 
 # Only collect net stats if we are in a global zone
-statgrab_vars="const. cpu. disk. general. load. mem. page. proc. swap. user."
-statgrab_sections="proc cpu load disk page"
+statgrab_vars="const. cpu. disk. general. mem. page. proc. swap. user."
+statgrab_sections="proc cpu disk page"
 if which zonename > /dev/null; then
     if [ "`zonename`" = "global" ]; then
        statgrab_vars="$statgrab_vars .net"
@@ -109,12 +109,23 @@ fi
 # This will only work on Sol10 and above
 if `svcs |grep ntp > /dev/null`; then 
     echo '<<<ntp>>>'
-    xntpdc -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+    # use ntpq instead, xntpdc gives less info.
+    #xntpdc -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+    ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+
+    
 fi
 
 # TCP Connection stats
 echo '<<<tcp_conn_stats>>>'
 netstat -nafinet -P tcp | tail  +5 | awk '{ c[$7]++; } END { for (x in c) { print x, c[x];}}'
+
+
+# Multipathing on Solaris10+
+if type mpathadm >/dev/null 2>&1 ; then
+    mpathadm list LU | awk '{if(NR%3==1){dev=$1}if(NR%3==2){tc=$NF}if(NR%3==2){printf "%s %s %s\n",dev,tc,$NF}}'
+fi
+
 
 if cd $PLUGINSDIR 2>/dev/null
 then

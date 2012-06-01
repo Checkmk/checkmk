@@ -1101,7 +1101,7 @@ function toggle_all_rows(obj) {
             all_selected = false;
         else
             none_selected = false;
-        if (checkboxes[i].classList.contains('failed'))
+        if (checkboxes[i].classList && checkboxes[i].classList.contains('failed'))
             some_failed = true;
     }
 

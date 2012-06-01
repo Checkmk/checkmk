@@ -1,0 +1,8 @@
+Title: Bulkedit in Wato search results
+Component: wato
+State: open
+Date: 2012-05-30 16:06:28
+Targetversion: future
+Class: feature
+
+It should be possible to make a Bluk Edit for hosts which are a result of Hostsearch in Wato

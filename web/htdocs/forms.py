@@ -110,7 +110,7 @@ def strip_bad_chars(x):
             ord(u"\""): None,
         })
     else:
-        return s.translate(None, u"'&;<>\"")
+        return s.translate(None, "'&;<>\"")
 
 def header(title, isopen = True, table_id = ""):
     global g_header_open

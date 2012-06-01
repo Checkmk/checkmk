@@ -3,6 +3,13 @@
     * FIX: Fixed layout of some dropdown fields in view filters
     * Make heading in each page clickable -> reload page
     * FIX: Edit view: couldn't edit filter settings
+    * FIX: Fixed styling of links in multisite context help
+    * FIX: Fixed "select all" button for IE
+    * FIX: Context links added by hooks are now hidden by the display
+           option "B" again
+
+    WATO:
+    * IX: Fixed "select all" button in hosts & folders for IE
 
     Core:
     * FIX: Fixed "make_utf is not defined" error when having custom
@@ -13,6 +20,7 @@
     * AIX: New check aix_multipath: Supports checking native AIX multipathing from AIX 5.2 onward
     * Solaris: New check solaris_multipath: Supports checking native Solaris multipath from Solaris10 and up.
     * Solaris: The ZFS Zpool status check now looks more closely at the reported messages. (It's also tested to work on Linux now)
+
 1.2.0b5:
     Core:
     * FIX: handle UTF-8 encoded binary strings correctly (e.g. in host alias)

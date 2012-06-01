@@ -392,6 +392,9 @@ table.data.single td.perfometer div.title {
 | Styles used while editing a view in the view editor                      |
 '-------------------------------------------------------------------------*/
 
+div.clear {
+    clear: left;
+}
 div.filtersetting > select {
     float: left;
     margin-right: 10px;

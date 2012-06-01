@@ -1071,13 +1071,15 @@ function toggle_group_rows(checkbox) {
     if(group_start === null)
         group_start = 0;
     if(group_end === null)
-        group_end = rows.length - 1;
+        group_end = rows.length;
 
     // Found the group start and end row of the checkbox!
     var group_rows = [];
-    for(var a = group_start; a < group_end; a++)
-        if(rows[a].tagName === 'TR')
+    for(var a = group_start; a < group_end; a++) {
+        if(rows[a].tagName === 'TR') {
             group_rows.push(rows[a]);
+        }
+    }
     toggle_all_rows(group_rows);
     group_rows = null;
 
@@ -1101,7 +1103,7 @@ function toggle_all_rows(obj) {
             all_selected = false;
         else
             none_selected = false;
-        if (checkboxes[i].classList.contains('failed'))
+        if (checkboxes[i].classList && checkboxes[i].classList.contains('failed'))
             some_failed = true;
     }
 
@@ -1153,9 +1155,12 @@ function get_all_checkboxes(container) {
         for(var i = 0; i < container.length; i++) {
             var childs = container[i].getElementsByTagName('input');
 
-            for(var a = 0; a < childs.length; a++)
-                if(childs[a].type == 'checkbox')
+            for(var a = 0; a < childs.length; a++) {
+                if(childs[a].type == 'checkbox') {
                     checkboxes.push(childs[a]);
+                }
+            }
+
 
             childs = null;
         }

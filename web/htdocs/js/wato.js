@@ -112,12 +112,20 @@ function wato_fix_visibility() {
     /* Now loop over all attributes that have conditions. Those are
        stored in the global variable wato_depends_on_tags, which is filled
        during the creation of the web page. */
+    
     for (var i in wato_check_attributes) {
-        var attrname = wato_check_attributes[i]
+        var attrname = wato_check_attributes[i];
         /* Now comes the tricky part: decide whether that attribute should
            be visible or not: */
         var display = "";
-        if(attrname in wato_depends_on_roles){
+
+        // Always invisible
+        if( hide_attributes.indexOf(attrname) > -1 ){
+            display = "none";
+        }
+
+        // Visibility depends on roles 
+        if( display == "" && attrname in wato_depends_on_roles){
             for (var i in wato_depends_on_roles[attrname]) {
                 var role = wato_depends_on_roles[attrname][i];
                 var negate = role[0] == '!';
@@ -130,6 +138,7 @@ function wato_fix_visibility() {
             }
         }
         
+        // Visibility depends on tags 
         if( display == "" && attrname in wato_depends_on_tags){
             for (var i in wato_depends_on_tags[attrname]) {
                 var tag = wato_depends_on_tags[attrname][i];
@@ -142,6 +151,7 @@ function wato_fix_visibility() {
                 }
             }
         }
+
 
         var oTr = document.getElementById("attr_" + attrname);
         if(oTr) {
@@ -167,7 +177,7 @@ function wato_fix_visibility() {
             oAttrDisp = null;
 
             // There is at least one item in this topic -> show it
-            var topic = oTr.parentNode.parentNode.parentNode.id.substr(21);
+            var topic = oTr.parentNode.childNodes[0].textContent;
             if( display == "" ){
                 var index = hide_topics.indexOf(topic);
                 if( index != -1 )
@@ -175,15 +185,16 @@ function wato_fix_visibility() {
             }
         }
     }
-    for (var item in volatile_topics){
-        var name = volatile_topics[item];
-        var oTr = document.getElementById("topic_" + name);
-        if(oTr) {
-            if(hide_topics.indexOf(name) > -1 )
+
+    var form_edithost = document.getElementById("form_edithost");
+    for (var child in form_edithost.childNodes){
+        oTr = form_edithost.childNodes[child];
+        if (oTr.className == "nform"){
+            if( hide_topics.indexOf(oTr.childNodes[0].childNodes[0].textContent) > -1 )
                 oTr.style.display = "none";
             else
                 oTr.style.display = "";
-        }
+	}
     }
 }
 

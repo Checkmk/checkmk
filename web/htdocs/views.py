@@ -607,6 +607,7 @@ def page_edit_view():
                 "", "filter_activation(this)")
         show_filter(filt)
         html.write('</div>')
+        html.write('<div class=clear></div>')
         html.help(filt.comment)
     
     # Set all filters into the proper display state
@@ -638,7 +639,7 @@ def page_edit_view():
             joined  = allowed_for_joined_datasource(data, datasourcename)
 
         forms.header(title, isopen=False)
-        forms.section(_("Group columns"))
+        forms.section(_('Columns'))
         # make sure, at least 3 selection boxes are free for new columns
         maxnum = 1
         while html.has_var("%s%d" % (var_prefix, maxnum)):
@@ -1591,7 +1592,8 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
                        painter_options, command_form, show_checkboxes):
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
-    execute_hooks('buttons-begin')
+    if 'B' in display_options:
+        execute_hooks('buttons-begin')
 
     filter_isopen = html.var("filled_in") != "filter" and thisview["mustsearch"]
     if 'F' in display_options:
@@ -1667,7 +1669,9 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
                   (thisview["owner"], thisview["name"], backurl)
         html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show) 
 
-    execute_hooks('buttons-end')
+    if 'B' in display_options:
+        execute_hooks('buttons-end')
+
     html.end_context_buttons()
 
 # Collect all views that share a context with thisview. For example

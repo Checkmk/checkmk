@@ -273,7 +273,7 @@ class TextAscii(ValueSpec):
         self._none_is_empty = kwargs.get("none_is_empty", False)
         self._regex         = kwargs.get("regex")
         self._regex_error   = kwargs.get("regex_error",
-            _("Your input odes not match the required format."))
+            _("Your input does not match the required format."))
         if type(self._regex) == str:
             self._regex = re.compile(self._regex)
 
@@ -315,10 +315,18 @@ class TextAscii(ValueSpec):
         if self._none_is_empty and value == "":
             raise MKUserError(varprefix, _("An empty value must be represented with None here."))
         if not self._allow_empty and value.strip() == "":
-            raise MKUserError(varprefix, _("An empty value is not allowed here."))
+            raise MKUserError(varprefix, self.title() + ": " + _("An empty value is not allowed here."))
         if value and self._regex:
             if not self._regex.match(value):
-                raise MKUserError(varprefix, self._regex_error)
+                raise MKUserError(varprefix, self.title() + ": " + self._regex_error)
+
+# Internal ID as used in many places (for contact names, group name,
+# an so on)
+class ID(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+        self._regex = re.compile('^[a-zA-Z_][-a-zA-Z0-9_]*$')
+        self._regex_error = _("An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore.")
 
 class RegExp(TextAscii):
     def __init__(self, **kwargs):
@@ -544,10 +552,11 @@ class ListOf(ValueSpec):
     def __init__(self, valuespec, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._valuespec = valuespec
-        self._magic = kwargs.get("magic", "@")
+        self._magic = kwargs.get("magic", "@!@")
         self._rowlabel = kwargs.get("row_label")
         self._add_label = kwargs.get("add_label", _("Add new element"))
         self._movable = kwargs.get("movable", True)
+        self._totext = kwargs.get("totext")
 
     def del_button(self, vp, nr):
         js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
@@ -612,8 +621,14 @@ class ListOf(ValueSpec):
         return []
 
     def value_to_text(self, value):
-        return ", ".join([
-            self._valuespec.value_to_text(v) for v in value])
+        if self._totext:
+            if "%d" in self._totext:
+                return self._totext % len(value)
+            else:
+                return self._totext
+        else:
+            return ", ".join([
+                self._valuespec.value_to_text(v) for v in value])
 
     def from_html_vars(self, varprefix):
         n = 1
@@ -725,6 +740,9 @@ class Checkbox(ValueSpec):
 # a choices name.
 # Note: The list of choices may contain 2-tuples or 3-tuples.
 # The format is (value, text {, icon} )
+# choices may also be a function that returns - when called
+# wihtout arguments - such a tuple list. That way the choices
+# can by dynamically computed
 class DropdownChoice(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
@@ -732,8 +750,14 @@ class DropdownChoice(ValueSpec):
         self._help_separator = kwargs.get("help_separator")
         self._label = kwargs.get("label")
 
+    def choices(self):
+        if type(self._choices) == list:
+            return self._choices
+        else:
+            return self._choices()
+
     def canonical_value(self):
-        return self._choices[0][0]
+        return self.choices()[0][0]
 
     def render_input(self, varprefix, value):
         if self._label:
@@ -741,7 +765,7 @@ class DropdownChoice(ValueSpec):
         # Convert values from choices to keys
         defval = "0"
         options = []
-        for n, entry in enumerate(self._choices):
+        for n, entry in enumerate(self.choices()):
             options.append((str(n),) + entry[1:])
             if entry[0] == value:
                 defval = str(n)
@@ -751,7 +775,7 @@ class DropdownChoice(ValueSpec):
             html.select(varprefix, options, defval)
 
     def value_to_text(self, value):
-        for entry in self._choices:
+        for entry in self.choices():
             val, title = entry[:2]
             if value == val:
                 if self._help_separator:
@@ -761,18 +785,18 @@ class DropdownChoice(ValueSpec):
 
     def from_html_vars(self, varprefix):
         sel = html.var(varprefix)
-        for n, entry in enumerate(self._choices):
+        for n, entry in enumerate(self.choices()):
             val = entry[0]
             if sel == str(n):
                 return val
-        return self._choices[0][0] # can only happen if user garbled URL
+        return self.choices()[0][0] # can only happen if user garbled URL
 
     def validate_datatype(self, value, varprefix):
-        for val, title in self._choices:
+        for val, title in self.choices():
             if val == value:
                 return
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
-            ", ".join([v for (v,t) in self._choices]))
+            ", ".join([v for (v,t) in self.choices()]))
 
 
 # Special conveniance variant for monitoring states
@@ -956,7 +980,10 @@ class ListChoice(ValueSpec):
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
         if self._choices != None:
-            self._elements = self._choices
+            if type(self._choices) == list:
+                self._elements = self._choices
+            else:
+                self._elements = self._choices()
             return
 
         if self._loaded_at != id(html):
@@ -1623,6 +1650,7 @@ class Dictionary(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
+        self._required_keys = kwargs.get("required_keys", []) 
         if "optional_keys" in kwargs:
             ok = kwargs["optional_keys"]
             if type(ok) == list:
@@ -1635,7 +1663,7 @@ class Dictionary(ValueSpec):
                 self._optional_keys = False
         else:
             self._optional_keys = True
-            self._required_keys = kwargs.get("required_keys", []) 
+
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
         self._render = kwargs.get("render", "normal") # also: "form" -> use forms.section()
         self._headers = kwargs.get("headers")

@@ -1,2 +1,0 @@
-sudo cp -pv *.py /omd/versions/default/share/check_mk/web/plugins/pages
-sudo omd restart wato apache

@@ -320,6 +320,14 @@ class TextAscii(ValueSpec):
             if not self._regex.match(value):
                 raise MKUserError(varprefix, self.title() + ": " + self._regex_error)
 
+# Internal ID as used in many places (for contact names, group name,
+# an so on)
+class ID(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+        self._regex = re.compile('^[a-zA-Z_][-a-zA-Z0-9_]*$')
+        self._regex_error = _("An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore.")
+
 class RegExp(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)

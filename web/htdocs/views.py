@@ -1592,7 +1592,8 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
                        painter_options, command_form, show_checkboxes):
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
-    execute_hooks('buttons-begin')
+    if 'B' in display_options:
+        execute_hooks('buttons-begin')
 
     filter_isopen = html.var("filled_in") != "filter" and thisview["mustsearch"]
     if 'F' in display_options:
@@ -1668,7 +1669,9 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
                   (thisview["owner"], thisview["name"], backurl)
         html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show) 
 
-    execute_hooks('buttons-end')
+    if 'B' in display_options:
+        execute_hooks('buttons-end')
+
     html.end_context_buttons()
 
 # Collect all views that share a context with thisview. For example

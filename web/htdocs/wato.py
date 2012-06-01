@@ -5191,7 +5191,7 @@ def mode_globalvars(phase):
         varname = html.var("_varname")
         action = html.var("_action")
         if varname:
-            domain, valuespec, need_restart = g_configvars[varname]
+            domain, valuespec, need_restart, allow_reset = g_configvars[varname]
             def_value = default_values.get(varname, valuespec.canonical_value())
 
             if action == "reset" and not isinstance(valuespec, Checkbox):
@@ -5216,7 +5216,11 @@ def mode_globalvars(phase):
                 msg = _("Changed Configuration variable %s to %s." % (varname, 
                     current_settings[varname] and "on" or "off"))
                 save_configuration_settings(current_settings)
-                log_pending(need_restart and SYNCRESTART or SYNC, None, "edit-configvar", msg)
+                pending_func  = g_configvar_domains[domain].get("pending")
+                if pending_func:
+                    pending_func(msg)
+                else:
+                    log_pending(need_restart and SYNCRESTART or SYNC, None, "edit-configvar", msg)
                 if action == "_reset":
                     return "globalvars", msg
                 else:
@@ -5284,12 +5288,22 @@ def mode_edit_configvar(phase):
         return
 
     varname = html.var("varname")
-    domain, valuespec, need_restart = g_configvars[varname]
+    domain, valuespec, need_restart, allow_reset = g_configvars[varname]
     current_settings = load_configuration_settings()
     is_on_default = varname not in current_settings
 
     if phase == "action":
         if html.var("reset"):
+            if not isinstance(valuespec, Checkbox):
+                c = wato_confirm(
+                    _("Resetting configuration variable"),
+                    _("Do you really want to reset this configuration variable "
+                      "back to its default value?"))
+                if c == False:
+                    return ""
+                elif c == None:
+                    return None
+
             del current_settings[varname]
             msg = _("Resetted configuration variable %s to its default.") % varname
         else:
@@ -5302,7 +5316,12 @@ def mode_edit_configvar(phase):
             status = SYNCRESTART
         else:
             status = SYNC
-        log_pending(status, None, "edit-configvar", msg)
+
+        pending_func  = g_configvar_domains[domain].get("pending")
+        if pending_func:
+            pending_func(msg)
+        else:
+            log_pending(status, None, "edit-configvar", msg)
         return "globalvars"
 
     if varname in current_settings:
@@ -5336,7 +5355,7 @@ def mode_edit_configvar(phase):
 
     forms.end()
     html.button("save", _("Save"))
-    if not is_on_default:
+    if allow_reset and not is_on_default:
         curvalue = current_settings[varname]
         html.button("reset", curvalue == defvalue and _("Remove explicit setting") or _("Reset to default"))
     html.hidden_fields()
@@ -5346,9 +5365,9 @@ g_configvars = {}
 g_configvar_groups = {}
 
 # domain is one of "check_mk", "multisite" or "nagios"
-def register_configvar(group, varname, valuespec, domain="check_mk", need_restart=False):
+def register_configvar(group, varname, valuespec, domain="check_mk", need_restart=False, allow_reset=True):
     g_configvar_groups.setdefault(group, []).append((domain, varname, valuespec))
-    g_configvars[varname] = domain, valuespec, need_restart
+    g_configvars[varname] = domain, valuespec, need_restart, allow_reset
 
 g_configvar_domains = {
     "check_mk" : {
@@ -5359,10 +5378,12 @@ g_configvar_domains = {
     },
 }
 
-def register_configvar_domain(domain, configdir):
+def register_configvar_domain(domain, configdir, pending = None):
     g_configvar_domains[domain] = {
         "configdir" : configdir,
     }
+    if pending:
+        g_configvar_domains[domain]["pending"] = pending
 
 # Persistenz: Speicherung der Werte
 # - WATO speichert seine Variablen für main.mk in conf.d/wato/global.mk
@@ -5405,7 +5426,7 @@ def load_configuration_vars(filename, settings):
 
 def save_configuration_settings(vars):
     per_domain = {}
-    for varname, (domain, valuespec, need_restart) in g_configvars.items():
+    for varname, (domain, valuespec, need_restart, allow_reset) in g_configvars.items():
         if varname not in vars:
             continue
         per_domain.setdefault(domain, {})[varname] = vars[varname]

@@ -1,0 +1,11 @@
+Title: ValueSpec ListOf breaks during user input error
+Component: multisite
+State: open
+Date: 2012-05-30 10:23:56
+Targetversion: 1.2.0
+Class: bug
+
+When an element of a ListOf() raises a user validation
+error then the total ListOf() seems to fall back to its
+original value - for example I've added a value and then
+changed its position to top and then saved.

@@ -639,7 +639,7 @@ def page_edit_view():
             joined  = allowed_for_joined_datasource(data, datasourcename)
 
         forms.header(title, isopen=False)
-        forms.section(_("Group columns"))
+        forms.section(_('Columns'))
         # make sure, at least 3 selection boxes are free for new columns
         maxnum = 1
         while html.has_var("%s%d" % (var_prefix, maxnum)):

@@ -1534,7 +1534,13 @@ def view_linktitle(view):
 
 def view_optiondial(view, option, choices, help):
     vo = view_options(view["name"])
-    value = vo.get(option, view.get(option, choices[0][0]))
+    # Darn: The option "refresh" has the name "browser_reload" in the
+    # view definition
+    if option == "refresh":
+        von = "browser_reload"
+    else:
+        von = option
+    value = vo.get(option, view.get(von, choices[0][0]))
     title = dict(choices).get(value, value)
     html.begin_context_buttons() # just to be sure
     # Remove unicode strings

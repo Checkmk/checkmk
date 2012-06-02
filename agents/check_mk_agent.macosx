@@ -57,6 +57,25 @@ print $1,$7,$5,$6,"0","0","0","0","0",$10,$8,$9,"0","0",$11,"0","0"; }'
 echo '<<<ps>>>'
 ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
+# NTP seems to be enabled as a default
+echo '<<<ntp>>>'
+    ntpq -pn | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+
+# TCP Conn stats
+echo '<<<tcp_conn_stats>>>'
+    netstat -ntfinet | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
+
+###############################
+# Things up for takers:
+###############################
+# *Add agent debug mode
+# *OSX SW Raid status
+# *launchctl daemon status
+# *hw sensors, how to query them?
+# *OSX Server specific stuff, LDAP, etc...
+# *Rewrite cpu / ps check to be faster - takes >1s on my laptop
+
+
 # MK's Remote Plugin Executor
 if [ -e "/etc/mrpe.cfg" ]
 then

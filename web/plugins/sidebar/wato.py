@@ -34,19 +34,26 @@ import config, wato
 #   |                        \_/\_/_/   \_\_| \___/                        |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-def render_wato():
+def render_wato(mini):
     if not config.wato_enabled:
         html.write(_("WATO is disabled in <tt>multisite.mk</tt>."))
     elif not config.may("wato.use"):
         html.write(_("You are not allowed to use Check_MK's web configuration GUI."))
         return False
 
-    iconlink(_("Main Menu"), "wato.py", "home")
+    if mini:
+        html.icon_button("wato.py", _("Main Menu"), "home", target="main")
+    else:
+        iconlink(_("Main Menu"), "wato.py", "home")
     for mode, title, icon, permission, help in wato.modules:
         if "." not in permission:
             permission = "wato." + permission
         if config.may(permission) or config.may("wato.seeall"):
-            iconlink(title, "wato.py?mode=%s" % mode, icon)
+            url = "wato.py?mode=%s" % mode
+            if mini:
+                html.icon_button(url, title, icon, target="main")
+            else:
+                iconlink(title, url, icon)
 
     num_pending = wato.api.num_pending_changes()
     if num_pending:
@@ -56,9 +63,34 @@ def render_wato():
 sidebar_snapins["admin"] = {
     "title" : _("WATO &middot; Configuration"),
     "description" : _("Direct access to WATO - the web administration GUI of Check_MK"),
-    "render" : render_wato,
+    "render" : lambda: render_wato(False),
     "refresh" : 60, # refresh pending changes, if other user modifies something
     "allowed" : [ "admin", "user" ],
+}
+
+sidebar_snapins["admin_mini"] = {
+    "title" : _("WATO &middot; Quickaccess"),
+    "description" : _("Access to WATO modules with only icons (saves space)"),
+    "render" : lambda: render_wato(True),
+    "refresh" : 60, # refresh pending changes, if other user modifies something
+    "allowed" : [ "admin", "user" ],
+    "styles": """
+#snapin_admin_mini {
+    padding-top: 6px;
+}
+#snapin_admin_mini img { 
+    margin-right: 3.9px; 
+    margin-bottom: 4px;
+    width: 18px; 
+    height: 18px;
+    position: relative;
+    left: 3px;
+}
+
+#snapin_admin_mini div.footnotelink { 
+    margin-top: -14px;
+}
+""",
 }
 
 

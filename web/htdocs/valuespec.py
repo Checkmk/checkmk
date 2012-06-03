@@ -1801,7 +1801,7 @@ class Dictionary(ValueSpec):
                 vp = varprefix + "_p_" + param
                 vs.validate_value(value[param], vp)
             elif not self._optional_keys or param in self._required_keys:
-                raise MKUserError(varprefix, _("The entry %s is missing") % vp.title())
+                raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
 
 # Base class for selection of a Nagios element out

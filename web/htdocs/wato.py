@@ -5680,12 +5680,17 @@ class GroupSelection(ElementSelection):
     def __init__(self, what, **kwargs):
         ElementSelection.__init__(self, **kwargs)
         self._what = what
+        # Allow to have "none" entry with the following title
+        self._no_selection = kwargs.get("no_selection")
 
     def get_elements(self):
         all_groups = load_group_information()
         this_group = all_groups.get(self._what, {})
         # replace the title with the key if the title is empty
-        return dict([ (k, t and t or k) for (k, t) in this_group.items() ])
+        elements = [ (k, t and t or k) for (k, t) in this_group.items() ]
+        if self._no_selection:
+            elements.append((None, self._no_selection))
+        return dict(elements)
 
 
 class CheckTypeGroupSelection(ElementSelection):

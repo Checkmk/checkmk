@@ -1814,6 +1814,7 @@ class ElementSelection(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._loaded_at = None
+        self._label = kwargs.get("label")
 
     def load_elements(self):
         if self._loaded_at != id(html):
@@ -1833,6 +1834,8 @@ class ElementSelection(ValueSpec):
         if len(self._elements) == 0:
             html.write(_("There are not defined any elements for this selection yet."))
         else:
+            if self._label:
+                html.write("%s&nbsp;" % self._label)
             html.sorted_select(varprefix, self._elements.items(), value)
 
     def value_to_text(self, value):

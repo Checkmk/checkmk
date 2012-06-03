@@ -13,6 +13,7 @@
     WATO:
     * FIX: Fixed "select all" button in hosts & folders for IE
     * Optically mark modified variables in global settings
+    * Swapped icons for rule match and previous rule match (makes for sense)
 
     Core:
     * FIX: Fixed "make_utf is not defined" error when having custom

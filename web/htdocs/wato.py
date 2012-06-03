@@ -5689,7 +5689,9 @@ class GroupSelection(ElementSelection):
         # replace the title with the key if the title is empty
         elements = [ (k, t and t or k) for (k, t) in this_group.items() ]
         if self._no_selection:
-            elements.append((None, self._no_selection))
+            # Beware: ElementSelection currently can only handle string
+            # keys, so we cannot take 'None' as a value. 
+            elements.append(('', self._no_selection))
         return dict(elements)
 
 

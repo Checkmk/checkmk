@@ -1678,7 +1678,7 @@ class Dictionary(ValueSpec):
     def render_input_normal(self, varprefix, value):
         html.write("<table class=dictionary>")
         for param, vs in self._elements:
-            html.write("<tr><td class=dictleft>")
+            html.write('<tr><td class=dictleft>')
             div_id = varprefix + "_d_" + param
             vp     = varprefix + "_p_" + param
             if self._optional_keys and param not in self._required_keys:
@@ -1690,10 +1690,12 @@ class Dictionary(ValueSpec):
                               label=vs.title())
             else:
                 visible = True
-                html.write(" %s" % vs.title())
+                if vs.title():
+                    html.write(" %s" % vs.title())
 
             if self._columns == 2:
-                html.write(':')
+                if vs.title():
+                    html.write(':')
                 html.help(vs.help())
                 html.write('</td><td class=dictright>')
             else:

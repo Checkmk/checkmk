@@ -1666,6 +1666,7 @@ class Dictionary(ValueSpec):
 
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
         self._render = kwargs.get("render", "normal") # also: "form" -> use forms.section()
+        self._form_narrow = kwargs.get("form_narrow", False) # used if render == "form"
         self._headers = kwargs.get("headers")
 
     def render_input(self, varprefix, value):
@@ -1714,7 +1715,7 @@ class Dictionary(ValueSpec):
             self.render_input_form_header(varprefix, value, self.title(), None)
 
     def render_input_form_header(self, varprefix, value, title, sections):
-        forms.header(title)
+        forms.header(title, narrow=self._form_narrow)
         for param, vs in self._elements:
             if sections and param not in sections:
                 continue

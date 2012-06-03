@@ -1996,7 +1996,7 @@ def show_command_form(is_open, datasource):
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
     # html.write('<table class="form">')
-    forms.header(_("Commands"))
+    forms.header(_("Commands"), narrow=True)
 
     # Commands are defined in plugins/views/commands.py. Iterate
     # over all command definitions and render HTML input fields.

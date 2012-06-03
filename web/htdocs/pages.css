@@ -626,6 +626,15 @@ table.nform td.legend.simple {
     padding-top: 5px;
 }
 
+table.nform.narrow td.legend {
+    height: 18px;
+}
+    
+table.nform.narrow td.content {
+    height: 18px;
+    padding-bottom: 2px;
+}
+
 table.nform td.legend div.title {
     float: left;
     overflow: hidden;

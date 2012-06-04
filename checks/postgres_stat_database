@@ -1,0 +1,113 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# <<<postgres_stat_database>>>
+# datid datname numbackends xact_commit xact_rollback blks_read blks_hit tup_returned tup_fetched tup_inserted tup_updated tup_deleted
+# 1 template1 0 0 0 0 0 0 0 0 0 0
+# 11563 template0 0 0 0 0 0 0 0 0 0 0
+# 11564 postgres 2 568360 17 811 8855508 157949341 879922 0 0 0
+# 16385 foobardb 7 43619118 262 3589 838098632 854602076 441785363 8298 602481 2806
+
+
+# Create a check for all databases that have seen at least
+# one commit in their live.
+def inventory_postgres_stat_database(info):
+    parsed = parse_postgres_stat(info)
+    return [ (k, {}) for k in parsed.keys() 
+             if parsed[k]["xact_commit"] > 0 ]
+
+def parse_postgres_stat(info):
+    if len(info) == 0:
+        return {}
+
+    def s(x):
+        try:
+            return int(x)
+        except:
+            return x
+
+    parsed = {}
+    headers = info[0]
+    for line in info[1:]:
+        row = dict(zip(headers, map(s, line)))
+        parsed[row["datname"]] = row
+
+    return parsed
+
+
+def check_postgres_stat_database(item, params, info):
+    parsed = parse_postgres_stat(info)
+    if item not in parsed:
+        return (3, "UNKNOWN - Database not found")
+    stats = parsed[item]
+
+    status = 0
+    infos = []
+    perfdata = []
+    this_time = time.time()
+    one_wrapped = False
+    for what, title in [
+        ( "blks_read",    "Blocks Read" ),
+        ( "tup_fetched",  "Fetches" ),
+        ( "xact_commit",  "Commits" ),
+        ( "tup_deleted",  "Deletes" ),
+        ( "tup_updated",  "Updates" ),
+        ( "tup_inserted", "Inserts" ), ]:
+        counter = stats[what]
+        counter_name = "postgres_stat_database.%s.%s" % (item, what)
+        try:
+            timedif, rate = get_counter(counter_name, this_time, counter)
+        except MKCounterWrapped, e:
+            one_wrapped = e
+            continue
+
+        infos.append("%s: %.2f/s" % (title, rate))
+        if what in params:
+            warn, crit = params[what]
+            if rate >= crit:
+                status = 2
+                infos[-1] += '(!!)'
+            elif rate >= warn:
+                status = max(status, 1)
+                infos[-1] += '(!)'
+        else:
+            warn, crit = None, None
+        perfdata.append((what, rate, warn, crit))
+
+    if one_wrapped:
+        raise one_wrapped
+
+    return (status, nagios_state_names[status] + " - " + ", ".join(infos), perfdata)
+
+
+check_info['postgres_stat_database'] = {
+    "check_function"          : check_postgres_stat_database,
+    "inventory_function"      : inventory_postgres_stat_database,
+    "service_description"     : "PostgreSQL Statistics",
+    "has_perfdata"            : True,
+    "group"                   : "postgres_stat_database",
+}

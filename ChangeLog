@@ -1,4 +1,4 @@
-1.2.0:
+1.2.0b6:
     Multisite:
     * FIX: Fixed layout of some dropdown fields in view filters
     * Make heading in each page clickable -> reload page

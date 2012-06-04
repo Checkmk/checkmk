@@ -1,0 +1,18 @@
+title: VxVM Multipath
+agents: hpux, linux
+author: Bastian Kuhn <bk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+  This check verifies status of multipath devices managed using
+  Veritas native multipathing {VxDMP} on a host running Veritas VxVM.
+  It will return {OK} if all configured paths are active.
+  Otherwise, it will decide based on the number of active paths. 
+  If more than 50% of the paths are still active, it will return a
+  {WARN} status, or a {CRIT} if less than 50% - or none - paths are
+  still working.
+
+
+inventory:
+  One item is generated per multipathed LUN. It is named after the
+  volume managers' {access name} for the disk.

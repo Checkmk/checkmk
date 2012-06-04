@@ -1,0 +1,21 @@
+title: VxVM Enclosures
+agents: hpux, linux
+author: Bastian Kuhn <bk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+  This check verifies status of disk enclosures or arrays
+  connected to a host running Veritas VxVM.
+
+  It is in status {OK} an enclosure is in status CONNECTED.
+  Any other status will be reported as a {CRIT} status, assuming
+  the enclosure has lost connectivity or has been removed.
+  Veritas also lists the local disks of a system in a 
+  "pseudo-enclosure" named {OTHER_DISKS}. If you do not run
+  the local disks under Veritas control, you can add these to
+  {ignored_services}.
+
+inventory:
+  One item is generated per VxVM disk enclosure, the naming is
+  inherited from VxVM. See the man page for {vxdmpadm} about 
+  naming enclosures.

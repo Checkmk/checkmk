@@ -24,10 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<aix_perflib_hbastat>>>
-# Convert to generic format needed for diskstat.include. Upper example
-# would look like:
-# [ ( 'sissas0', 204494394, 156524126 ), ('fcs3', 1760, 0), ... ]
 
 def convert_vxvm_volstats(info):
     return [ ( l[0], int(l[1])*2, int(l[2])*2) for l in info[1:] ]

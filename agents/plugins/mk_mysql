@@ -1,22 +1,19 @@
-#!/bin/sh
-# +-----------------------------------------------------------------+
-# |                                                                 |
-# |        (  ___ \     | \    /\|\     /||\     /|( (    /|        |
-# |        | (   ) )    |  \  / /| )   ( || )   ( ||  \  ( |        |
-# |        | (__/ /     |  (_/ / | |   | || (___) ||   \ | |        |
-# |        |  __ (      |   _ (  | |   | ||  ___  || (\ \) |        |
-# |        | (  \ \     |  ( \ \ | |   | || (   ) || | \   |        |
-# |        | )___) )_   |  /  \ \| (___) || )   ( || )  \  |        |
-# |        |/ \___/(_)  |_/    \/(_______)|/     \||/    )_)        |
-# |                                                                 |
-# | Copyright Bastian Kuhn 2011                mail@bastian-kuhn.de | 
-# +-----------------------------------------------------------------+
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
 #
-# This file is a check Script for check_mk
-# Information about me can be found at http://bastian-kuhn.de
-# Information about check_mk at http://mathias-kettner.de/check_mk.
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
 #
-# This is free software;  you can redistribute it and/or modify it
+# check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
@@ -26,11 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-#
-# Hint: You may want to set configure:
-# e.g. --socket='/var/run/mysqld/mysqld.sock'
-# e.g. --user=root 
-# e.g. --password='XYZ'
 
 if which mysqladmin > /dev/null
 then
@@ -39,5 +31,5 @@ then
   mysqladmin --defaults-extra-file=$MK_CONFDIR/mysql.cfg ping 2>&1
 
   mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg -sN \
-     -e "select '<<<mysql_status>>>' ; show global status; select '<<<mysql_capacity>>>' ; SELECT table_schema, sum( data_length + index_length ), sum( data_free )  FROM information_schema.TABLES GROUP BY table_schema;"
+     -e "select '<<<mysql>>>' ; show global status; select '<<<mysql_capacity>>>' ; SELECT table_schema, sum( data_length + index_length ), sum( data_free )  FROM information_schema.TABLES GROUP BY table_schema;"
 fi

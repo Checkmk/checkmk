@@ -1,0 +1,157 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<mysql>>>
+# Aborted_clients 0
+# Aborted_connects        15
+# Binlog_cache_disk_use   0
+# Binlog_cache_use        0
+# Binlog_stmt_cache_disk_use      0
+# Binlog_stmt_cache_use   0
+# Bytes_received  7198841
+# Bytes_sent      19266624
+# Com_admin_commands      200
+# Com_assign_to_keycache  0
+# Com_alter_db    0
+# Com_alter_db_upgrade    0
+
+#   .----------------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   '----------------------------------------------------------------------'
+
+def inventory_mysql(info):
+    if len(info) > 200: # should be at least 321 line
+        return [(None, {})]
+
+def parse_mysql(info):
+    values = {}
+    for line in info:
+        if len(line) == 2:
+            varname, value = line
+            try:
+                value = int(value)
+            except:
+                pass
+        else:
+            varname = line[0]
+            value = None
+
+        values[varname] = value
+    return values
+
+
+#   .----------------------------------------------------------------------.
+#   |                ____                _                                 |
+#   |               / ___|  ___  ___ ___(_) ___  _ __  ___                 |
+#   |               \___ \ / _ \/ __/ __| |/ _ \| '_ \/ __|                |
+#   |                ___) |  __/\__ \__ \ | (_) | | | \__ \                |
+#   |               |____/ \___||___/___/_|\___/|_| |_|___/                |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# params:
+# { "running" : (20, 40),
+#    "total" : (100, 400), 
+#    "connections" : (3, 5 ),
+# }
+
+
+def check_mysql_sessions(_no_item, params, info):
+    values = parse_mysql(info)
+    total_sessions = values["Threads_connected"]
+    running_sessions = values["Threads_running"]
+    print values["Connections"]
+    timedif, connections = get_counter("mysql.sessions", time.time(), values["Connections"])
+
+    infotext = " - %d sessions (%d running), %.2f connections/s" % (
+        total_sessions, running_sessions, connections)
+
+    infos = []
+    perfdata = []
+    status = 0
+    
+    for value, what, format, unit in [
+        ( total_sessions,   "total",       "%d",   "" ),
+        ( running_sessions, "running",     "%d",   "" ),
+        ( connections,      "connections", "%.2f", "/s")]:
+        infos.append((format + " %s%s") % (value, what, unit))
+        if what in params:
+            warn, crit = params[what]
+            if value >= crit:
+                status = 2
+                infos[-1] += "(!!)"
+            elif value >= warn:
+                status = max(status, 1)
+                infos[-1] += "(!)"
+        else:
+            warn, crit = None, None
+        perfdata.append((what, value, warn, crit))
+
+    infotext = " - " + ", ".join(infos)
+    return (status, nagios_state_names[status] + infotext, perfdata) 
+
+
+check_info['mysql.sessions'] = {
+    "check_function"          : check_mysql_sessions,
+    "inventory_function"      : inventory_mysql,
+    "service_description"     : "MYSQL Sessions",
+    "has_perfdata"            : True,
+    "group"                   : "mysql_sessions",
+}
+
+
+#   .----------------------------------------------------------------------.
+#   |           ___                   ____  ____       ___ ___             |
+#   |          |_ _|_ __  _ __   ___ |  _ \| __ )     |_ _/ _ \            |
+#   |           | || '_ \| '_ \ / _ \| | | |  _ \ _____| | | | |           |
+#   |           | || | | | | | | (_) | |_| | |_) |_____| | |_| |           |
+#   |          |___|_| |_|_| |_|\___/|____/|____/     |___\___/            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_mysql_iostat(info):
+    if len(info) > 200:
+        return [(None, {})]
+
+def check_mysql_iostat(item, params, info):
+    values = parse_mysql(info)
+    line = [ None, values["Innodb_data_read"] / 512, values["Innodb_data_written"] / 512]
+    return check_diskstat_line(time.time(), 'innodb_io', params, line)
+
+
+check_info['mysql.innodb_io'] = {
+    "includes"                : [ "diskstat.include" ],
+    "check_function"          : check_mysql_iostat,
+    "inventory_function"      : inventory_mysql_iostat,
+    "service_description"     : "MYSQL InnoDB IO",
+    "has_perfdata"            : True,
+    "group"                   : "mysql_innodb_io",
+}

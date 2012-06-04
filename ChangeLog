@@ -2,6 +2,9 @@
     Checks & Agents: 
     * fileinfo: added this check to Linux agent. Simply put your
       file patterns into /etc/check_mk/fileinfo.cfg for configuration.
+    * mysql.sessions: New check for MySQL sessions (need new plugin mk_mysql)
+    * mysql.innodb_io: New check for Disk-IO of InnoDB
+    * mysql_capacity: New check for used/free capacity of MySQL databases
 
 1.2.0b6:
     Multisite:

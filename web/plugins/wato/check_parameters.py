@@ -957,6 +957,78 @@ checkgroups.append((
         allow_empty = False),
      None))
 
+checkgroups.append((
+    subgroup_applications,
+    "mysql_sessions",
+    _("MySQL Sessions & Connections"),
+    Dictionary(
+         help = _("This check monitors the current number of active sessions to the MySQL "
+                  "database server as well as the connection rate."),
+         elements = [
+             ( "total", 
+               Tuple(
+                   title = _("Number of current sessions"),
+                   elements = [
+                       Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100), 
+                       Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
+                    ],
+               ),
+            ),
+            ( "running",
+               Tuple(
+                   title = _("Number of currently running sessions"),
+                   help = _("Levels for the number of sessions that are currently active"),
+                   elements = [
+                       Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 10), 
+                       Integer(title = _("Critical at"), unit = _("sessions"), default_value = 20),
+                    ],
+               ),
+            ),
+            ( "connections",
+               Tuple(
+                   title = _("Number of new connections per second"),
+                   elements = [
+                       Integer(title = _("Warning at"),  unit = _("connection/sec"), default_value = 20), 
+                       Integer(title = _("Critical at"), unit = _("connection/sec"), default_value = 40),
+                    ],
+               ),
+            ),
+         ]
+    ),
+    None,
+    None))
+
+checkgroups.append((
+    subgroup_applications,
+    "mysql_innodb_io",
+    _("MySQL InnoDB Throughput"),
+    Dictionary(
+        elements = [
+            ( "read",
+              Tuple(
+                  title = _("Read throughput"),
+                  elements = [
+                      Float(title = "warning at", unit = _("MB/s")),
+                      Float(title = "critical at", unit = _("MB/s"))
+                  ])),
+            ( "write",
+              Tuple(
+                  title = _("Write throughput"),
+                  elements = [
+                      Float(title = "warning at", unit = _("MB/s")),
+                      Float(title = "critical at", unit = _("MB/s"))
+                  ])),
+            ( "average",
+              Integer(
+                  title = _("Average"),
+                  help = _("When averaging is set, then an floating average value "
+                           "of the disk throughput is computed and the levels for read "
+                           "and write will be applied to the average instead of the current "
+                           "value."),
+                 unit = "min"))
+        ]),
+    None,
+    "dict"))
 
 checkgroups.append((
     subgroup_applications,
@@ -1024,15 +1096,15 @@ checkgroups.append((
               Tuple(
                   title = _("Read throughput"),
                   elements = [
-                      Integer(title = "warning at", unit = _("MB/s")),
-                      Integer(title = "critical at", unit = _("MB/s"))
+                      Float(title = "warning at", unit = _("MB/s")),
+                      Float(title = "critical at", unit = _("MB/s"))
                   ])),
             ( "write",
               Tuple(
                   title = _("Write throughput"),
                   elements = [
-                      Integer(title = "warning at", unit = _("MB/s")),
-                      Integer(title = "critical at", unit = _("MB/s"))
+                      Float(title = "warning at", unit = _("MB/s")),
+                      Float(title = "critical at", unit = _("MB/s"))
                   ])),
             ( "average",
               Integer(
@@ -1048,7 +1120,7 @@ checkgroups.append((
                     ( "read",    _("Summary of disk input (read)") ),
                     ( "write",   _("Summary of disk output (write)") ),
                   ],
-        otherlabel = _("One explicit devices ->"),
+        otherlabel = _("On explicit devices ->"),
         explicit = TextAscii(allow_empty = False),
         title = _("Device"),
         help = _("For a summarized throughput of all disks, specify <tt>SUMMARY</tt>, for a "

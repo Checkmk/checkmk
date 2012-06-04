@@ -1032,6 +1032,37 @@ checkgroups.append((
 
 checkgroups.append((
     subgroup_applications,
+    "postgres_sessions",
+    _("PostgreSQL Sessions"),
+    Dictionary(
+         help = _("This check monitors the current number of active and idle sessions on PostgreSQL"),
+         elements = [
+             ( "total", 
+               Tuple(
+                   title = _("Number of current sessions"),
+                   elements = [
+                       Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100), 
+                       Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
+                    ],
+               ),
+            ),
+            ( "running",
+               Tuple(
+                   title = _("Number of currently running sessions"),
+                   help = _("Levels for the number of sessions that are currently active"),
+                   elements = [
+                       Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 10), 
+                       Integer(title = _("Critical at"), unit = _("sessions"), default_value = 20),
+                    ],
+               ),
+            ),
+         ]
+    ),
+    None,
+    None))
+
+checkgroups.append((
+    subgroup_applications,
     "win_dhcp_pools",
     _("Windows DHCP Pool"),
     Tuple(

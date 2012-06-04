@@ -1,0 +1,6 @@
+#!/bin/bash
+
+if id postgres >/dev/null ; then
+  echo '<<<postgres_sessions>>>'
+  echo "select current_query = '<IDLE>', count(*) from pg_stat_activity group by (current_query = '<IDLE>');" | su - postgres -c "psql -A -t -F' '"
+fi

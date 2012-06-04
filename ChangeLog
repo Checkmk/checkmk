@@ -5,6 +5,7 @@
     * mysql.sessions: New check for MySQL sessions (need new plugin mk_mysql)
     * mysql.innodb_io: New check for Disk-IO of InnoDB
     * mysql_capacity: New check for used/free capacity of MySQL databases
+    * postgres_sessions: New check for PostgreSQL number of sessions
 
 1.2.0b6:
     Multisite:

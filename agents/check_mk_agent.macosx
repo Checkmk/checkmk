@@ -34,7 +34,7 @@ export MK_LIBDIR="/to/be/changed"
 export MK_CONFDIR="/to/be/changed"
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.0b5
+echo Version: 1.2.0b6
 echo AgentOS: macosx
 
 osver="$(uname -r)"

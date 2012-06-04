@@ -1,0 +1,10 @@
+Title: Move simple agent plugins (Linux) into standard Agent
+Component: checks
+State: open
+Date: 2012-06-04 17:09:32
+Targetversion: future
+Class: todo
+
+Plugins like mk_mysql, dmi_sysinfo and others that run fast
+and do not break anything should be put into the normal
+agent.

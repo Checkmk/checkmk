@@ -1,0 +1,23 @@
+Title: Duplicate Check on Cisco 4500
+Component: checks
+State: open
+Date: 2012-06-04 12:20:55
+Targetversion: future
+Class: nastiness
+
+Generating Nagios configuration...Configuration Error: ERROR: 
+Duplicate service description 'Temperature Chassis Temperature Sensor' 
+for host 'cat_4500_1'!
+
+- 1st occurrance: checktype = cisco_temp_perf, item = 'Chassis 
+Temperature Sensor'
+
+- 2nd occurrance: checktype = cisco_temp_sensor, item = 'Chassis 
+Temperature Sensor'
+
+Can we invent something in Check_MK that automatically drops
+duplicate services? How can a precedence be implemented? Should
+we at least issue a warning? Should this be checked during
+inventory? The service description is known at this point of
+time and a check for duplicates could be done and the new duplicate
+checks ignored.

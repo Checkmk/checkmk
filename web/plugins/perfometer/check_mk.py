@@ -68,6 +68,7 @@ perfometers["check_mk-df_netapp"] = perfometer_check_mk_df
 perfometers["check_mk-df_netapp32"] = perfometer_check_mk_df
 perfometers["check_mk-hr_fs"] = perfometer_check_mk_df
 perfometers["check_mk-oracle_asm_diskgroup"] = perfometer_check_mk_df
+perfometers["check_mk-mysql_capacity"] = perfometer_check_mk_df
 
 
 def perfometer_check_mk_kernel_util(row, check_command, perf_data):

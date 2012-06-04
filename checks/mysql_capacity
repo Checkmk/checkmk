@@ -1,0 +1,61 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<mysql_capacity>>>
+# greendb 163840  1428160512
+# hirn    16384   238026752
+# information_schema  9216    0
+# mysql   650067  0
+# performance_schema  0   0
+# wa-confluence   15499264    13805551616
+
+def inventory_mysql_capacity(info):
+    inventory = []
+    for dbname, used, avail in info:
+        if dbname not in [ "information_schema", "mysql", "performance_schema" ]:
+            inventory.append((dbname, {}))
+    return inventory
+
+def check_mysql_capacity(item, params, info):
+    for dbname, used, avail in info:
+        if item == dbname:
+            used_mb = int(used) / 1048576.0
+            avail_mb = int(avail) / 1048576.0
+            size_mb = used_mb + avail_mb
+            return df_check_filesystem(g_hostname, item, size_mb, avail_mb, params)
+
+    return (3, "UNKNOWN - Database not found")
+
+
+check_info['mysql_capacity'] = {
+    "check_function"          : check_mysql_capacity,
+    "inventory_function"      : inventory_mysql_capacity,
+    "service_description"     : "MYSQL Capacity %s",
+    "has_perfdata"            : True,
+    "group"                   : "filesystem",
+    "default_levels_variable" : "filesystem_default_levels",
+    "includes"                : [ "df.include" ],
+}

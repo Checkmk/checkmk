@@ -1666,6 +1666,7 @@ class Dictionary(ValueSpec):
 
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
         self._render = kwargs.get("render", "normal") # also: "form" -> use forms.section()
+        self._form_narrow = kwargs.get("form_narrow", False) # used if render == "form"
         self._headers = kwargs.get("headers")
 
     def render_input(self, varprefix, value):
@@ -1677,7 +1678,7 @@ class Dictionary(ValueSpec):
     def render_input_normal(self, varprefix, value):
         html.write("<table class=dictionary>")
         for param, vs in self._elements:
-            html.write("<tr><td class=dictleft>")
+            html.write('<tr><td class=dictleft>')
             div_id = varprefix + "_d_" + param
             vp     = varprefix + "_p_" + param
             if self._optional_keys and param not in self._required_keys:
@@ -1689,10 +1690,12 @@ class Dictionary(ValueSpec):
                               label=vs.title())
             else:
                 visible = True
-                html.write(" %s" % vs.title())
+                if vs.title():
+                    html.write(" %s" % vs.title())
 
             if self._columns == 2:
-                html.write(':')
+                if vs.title():
+                    html.write(':')
                 html.help(vs.help())
                 html.write('</td><td class=dictright>')
             else:
@@ -1714,7 +1717,7 @@ class Dictionary(ValueSpec):
             self.render_input_form_header(varprefix, value, self.title(), None)
 
     def render_input_form_header(self, varprefix, value, title, sections):
-        forms.header(title)
+        forms.header(title, narrow=self._form_narrow)
         for param, vs in self._elements:
             if sections and param not in sections:
                 continue
@@ -1801,7 +1804,7 @@ class Dictionary(ValueSpec):
                 vp = varprefix + "_p_" + param
                 vs.validate_value(value[param], vp)
             elif not self._optional_keys or param in self._required_keys:
-                raise MKUserError(varprefix, _("The entry %s is missing") % vp.title())
+                raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
 
 # Base class for selection of a Nagios element out
@@ -1814,6 +1817,7 @@ class ElementSelection(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._loaded_at = None
+        self._label = kwargs.get("label")
 
     def load_elements(self):
         if self._loaded_at != id(html):
@@ -1833,6 +1837,8 @@ class ElementSelection(ValueSpec):
         if len(self._elements) == 0:
             html.write(_("There are not defined any elements for this selection yet."))
         else:
+            if self._label:
+                html.write("%s&nbsp;" % self._label)
             html.sorted_select(varprefix, self._elements.items(), value)
 
     def value_to_text(self, value):

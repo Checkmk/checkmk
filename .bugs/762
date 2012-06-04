@@ -1,0 +1,12 @@
+Title: Command form off at empty table, but that might change
+Component: multisite
+State: open
+Date: 2012-06-03 20:35:28
+Targetversion: future
+Class: nastiness
+
+If a view has no rows then the command form is deactivated.
+But as time goes by the view might have entries. The command
+form is not being activated automtically - nevertheless. Better
+solution: Always have it active. When it comes to executing
+give then a warning if not items for the commands are available.

@@ -254,14 +254,14 @@ def load_views():
                     sourcecode = f.read()
                     t += 1
                     if t > 10:
-                        raise MKGeneralException("Cannot load views from %s/view.mk: file empty or not flushed" % dirpath)
+                        raise MKGeneralException(_("Cannot load views from %s/view.mk: file empty or not flushed") % dirpath)
                 views = eval(sourcecode)
                 for name, view in views.items():
                     view["owner"] = user
                     view["name"] = name
                     html.multisite_views[(user, name)] = view
         except SyntaxError, e:
-            raise MKGeneralException("Cannot load views from %s/views.mk: %s" % (dirpath, e))
+            raise MKGeneralException(_("Cannot load views from %s/views.mk: %s") % (dirpath, e))
 
     html.available_views = available_views()
 
@@ -292,7 +292,10 @@ def available_views():
     for (u, n), view in html.multisite_views.items():
         if n not in views and view["public"] and config.user_may(u, "publish_views"):
             # Is there a builtin view with the same name? If yes, honor permissions.
-            if (u, n) in html.multisite_views and not config.may("view.%s" % n):
+            permname = "view.%s" % n
+            if (u, n) in html.multisite_views \
+                and config.permission_exists(permname) \
+                and not config.may(permname):
                 continue
             views[n] = view
 
@@ -1534,7 +1537,13 @@ def view_linktitle(view):
 
 def view_optiondial(view, option, choices, help):
     vo = view_options(view["name"])
-    value = vo.get(option, view.get(option, choices[0][0]))
+    # Darn: The option "refresh" has the name "browser_reload" in the
+    # view definition
+    if option == "refresh":
+        von = "browser_reload"
+    else:
+        von = option
+    value = vo.get(option, view.get(von, choices[0][0]))
     title = dict(choices).get(value, value)
     html.begin_context_buttons() # just to be sure
     # Remove unicode strings
@@ -1990,7 +1999,7 @@ def show_command_form(is_open, datasource):
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
     # html.write('<table class="form">')
-    forms.header(_("Commands"))
+    forms.header(_("Commands"), narrow=True)
 
     # Commands are defined in plugins/views/commands.py. Iterate
     # over all command definitions and render HTML input fields.

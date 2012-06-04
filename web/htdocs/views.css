@@ -222,15 +222,6 @@ div.view_form {
     margin-bottom: 10px;
 }
 
-#commands table.nform td.legend {
-    height: 18px;
-}
-    
-#commands table.nform td.content {
-    height: 18px;
-    padding-bottom: 2px;
-}
-
 /*-------------------------------------------------------------------------.
 |                _                            _                            |
 |               | |    __ _ _   _  ___  _   _| |_ ___                      |

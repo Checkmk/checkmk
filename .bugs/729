@@ -1,8 +1,10 @@
 Title: Its not no longer possible to modify views
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-05-31 13:15:37
 Targetversion: 1.2.0
-Class: bug
 
  Any view field that is not previously set, IE, any field that is currently set to “Don’t Use” can not be changed.   The drop down menu is disabled….
+
+2012-06-01 21:44:15: changed state open -> done

@@ -1964,7 +1964,7 @@ def create_nagios_config_contactgroups(outfile):
             outfile.write("\ndefine contactgroup {\n"
                     "  contactgroup_name\t\t%s\n"
                     "  alias\t\t\t\t%s\n"
-                    "}\n" % (name, make_utf8('utf-8')))
+                    "}\n" % (name, make_utf8(alias)))
 
 
 def create_nagios_config_commands(outfile):

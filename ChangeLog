@@ -1,4 +1,4 @@
-1.2.0b6
+1.2.0:
     Multisite:
     * FIX: Fixed layout of some dropdown fields in view filters
     * Make heading in each page clickable -> reload page
@@ -7,9 +7,14 @@
     * FIX: Fixed "select all" button for IE
     * FIX: Context links added by hooks are now hidden by the display
            option "B" again
+    * FIX: preselected "refresh" option did not reflect view settings
+           but was simply the first available option - usually 30.
+    * FIX: fixed exception with custom views created by normal users
 
     WATO:
-    * IX: Fixed "select all" button in hosts & folders for IE
+    * FIX: Fixed "select all" button in hosts & folders for IE
+    * Optically mark modified variables in global settings
+    * Swapped icons for rule match and previous rule match (makes for sense)
 
     Core:
     * FIX: Fixed "make_utf is not defined" error when having custom

@@ -365,10 +365,10 @@ table.dictionary td.dictright {
     border-style: none;
 }
 
-div.dictelement * {
+td.dictleft div.dictelement * {
     font-size: 8pt;
 }
-div.dictelement {
+td.dictleft div.dictelement {
     font-size: 8pt;
     padding-left: 10px;
     border-left: 2px solid #ccc;

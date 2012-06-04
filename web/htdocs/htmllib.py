@@ -971,6 +971,12 @@ class html:
         else:
             return []
 
+    # Adds a variable to listvars and also set it
+    def add_var(self, varname, value):
+        self.req.listvars.setdefault(varname, [])
+        self.req.listvars[varname].append(value)
+        self.req.vars[varname] = value
+
     def set_var(self, varname, value):
         if value == None:
             self.del_var(varname)

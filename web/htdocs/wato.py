@@ -1243,7 +1243,7 @@ def show_hosts(folder):
         bulk_actions(at_least_one_imported, True, colspan, "even")
 
     # Header line
-    html.write("<tr><th class=left></th><th></th><th>"
+    html.write("<tr><th class=left></th><th>"+_("Actions")+"</th><th>"
                + _("Hostname") + "</th><th>"
                + _("Auth") + "</th>")
     if not config.wato_hide_hosttags:
@@ -4595,6 +4595,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
     inherited_tags     = {}
 
     volatile_topics = []
+    hide_attributes = []
     for topic in topics:
         topic_is_volatile = True # assume topic is sometimes hidden due to dependencies
         if len(topics) > 1:
@@ -4638,6 +4639,8 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 if not depends_on_tags and not depends_on_roles:
                     # One attribute is always shown -> topic is always visible 
                     topic_is_volatile = False
+            else:
+                hide_attributes.append(attr.name())
 
             # "bulk": determine, if this attribute has the same setting for all hosts.
             values = []
@@ -4797,6 +4800,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
     def dump_json(obj):
         return repr(obj).replace('None', 'null')
 
+    forms.end()
     # Provide Javascript world with the tag dependency information
     # of all attributes.
     html.javascript("var inherited_tags = %s;\n"\
@@ -4805,13 +4809,15 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                     "var wato_depends_on_roles = %s;\n"\
                     "var volatile_topics = %s;\n"\
                     "var user_roles = %s;\n"\
+                    "var hide_attributes = %s;\n"\
                     "wato_fix_visibility();\n" % (
                        dump_json(inherited_tags),
-                       dump_json(list(set(dependency_mapping_tags.keys()+dependency_mapping_roles.keys()))),
+                       dump_json(list(set(dependency_mapping_tags.keys()+dependency_mapping_roles.keys()+hide_attributes))),
                        dump_json(dependency_mapping_tags),
                        dump_json(dependency_mapping_roles),
                        dump_json(volatile_topics),
-                       dump_json(config.user_role_ids)))
+                       dump_json(config.user_role_ids),
+                       dump_json(hide_attributes)))
 
 
 # Check if at least one host in a folder (or its subfolders)
@@ -5264,10 +5270,10 @@ def mode_globalvars(phase):
             if varname in current_settings:
                 if isinstance(valuespec, Checkbox):
                     html.icon_button(toggle_url, _("Immediately toggle this setting"), 
-                        # "snapin_greyswitch_" + (current_settings[varname] and "on" or "off"))
-                        "snapin_switch_" + (current_settings[varname] and "on" or "off"))
+                        "snapin_switch_" + (current_settings[varname] and "on" or "off"),
+                        cssclass="modified")
                 else:
-                    html.write('<a href="%s">%s</a>' % (edit_url, to_text))
+                    html.write('<a class=modified href="%s">%s</a>' % (edit_url, to_text))
             else:
                 if isinstance(valuespec, Checkbox):
                     html.icon_button(toggle_url, _("Immediately toggle this setting"),
@@ -5674,12 +5680,19 @@ class GroupSelection(ElementSelection):
     def __init__(self, what, **kwargs):
         ElementSelection.__init__(self, **kwargs)
         self._what = what
+        # Allow to have "none" entry with the following title
+        self._no_selection = kwargs.get("no_selection")
 
     def get_elements(self):
         all_groups = load_group_information()
         this_group = all_groups.get(self._what, {})
         # replace the title with the key if the title is empty
-        return dict([ (k, t and t or k) for (k, t) in this_group.items() ])
+        elements = [ (k, t and t or k) for (k, t) in this_group.items() ]
+        if self._no_selection:
+            # Beware: ElementSelection currently can only handle string
+            # keys, so we cannot take 'None' as a value. 
+            elements.append(('', self._no_selection))
+        return dict(elements)
 
 
 class CheckTypeGroupSelection(ElementSelection):

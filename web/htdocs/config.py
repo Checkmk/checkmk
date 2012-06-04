@@ -301,6 +301,9 @@ def need_permission(pname):
                               "then please ask you administrator to provide you with "
                               "the following permission: '<b>%s</b>'.") % perm["title"])
 
+def permission_exists(pname):
+    return pname in permissions_by_name
+
 def get_role_permissions():
     role_permissions = {}
     # Loop all permissions

@@ -1,0 +1,20 @@
+title: Capacity check for MySQL tablespaces
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+   This check verifies the space used and available for MySQL databases as 
+   returned from MySQL.
+
+inventory:
+  The check generates one item per Database found.
+  Internal MySQL databases are ignored.
+
+
+[configuration]
+  The check is configured like the {df} check for filesystems including trend reporting.
+   
+
+perfdata:
+  See {df} man page for performance data.

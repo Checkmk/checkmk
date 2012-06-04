@@ -1063,6 +1063,72 @@ checkgroups.append((
 
 checkgroups.append((
     subgroup_applications,
+    "postgres_stat_database"m
+    _("PostgreSQL Database Statistics"),
+    Dictionary(
+        help = _("This check monitors how often database objects in a PostgreSQL Database are accessed"),
+        elements = [ 
+            ( "blocks_read",
+                Tuple(
+                   title = _("disk blocks read"),
+                   elements = [
+                      Float(title = "warning at", unit = _("bytes/s")),
+                      Float(title = "critical at", unit = _("bytes/s")),
+                   ],
+                ),
+            ),
+            ( "xact_commit", 
+                Tuple(
+                   title = _("Commited transactions / subtransactions"),
+                   elements = [
+                      Float(title = "warning at", unit = _("bytes/s")),
+                      Float(title = "critical at", unit = _("bytes/s")),
+                   ],
+                ),
+            ),
+            ( "tup_fetched", 
+                Tuple(
+                   title = _("Database Fetches"),
+                   elements = [
+                      Float(title = "warning at", unit = _("/s")),
+                      Float(title = "critical at", unit = _("/s")),
+                   ],
+                ),
+            ),    
+            ( "tup_deleted", 
+                Tuple(
+                   title = _("Tuple Deletes"),
+                   elements = [
+                      Float(title = "warning at", unit = _("/s")),
+                      Float(title = "critical at", unit = _("/s")),
+                   ],
+                ),
+            ),
+            ( "tup_updated", 
+                Tuple(
+                   title = _("Tuple Updates"),
+                   elements = [
+                      Float(title = "warning at", unit = _("/s")),
+                      Float(title = "critical at", unit = _("/s")),
+                   ],
+                ),
+            ),
+            ( "tup_inserted", 
+                Tuple(
+                   title = _("Tuple Inserts"),
+                   elements = [
+                      Float(title = "warning at", unit = _("/s")),
+                      Float(title = "critical at", unit = _("/s")),
+                   ],
+                ),
+            ),
+        ],
+    ),
+    None,
+    None))
+
+checkgroups.append((
+    subgroup_applications,
     "win_dhcp_pools",
     _("Windows DHCP Pool"),
     Tuple(

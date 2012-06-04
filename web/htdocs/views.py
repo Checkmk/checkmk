@@ -254,14 +254,14 @@ def load_views():
                     sourcecode = f.read()
                     t += 1
                     if t > 10:
-                        raise MKGeneralException("Cannot load views from %s/view.mk: file empty or not flushed" % dirpath)
+                        raise MKGeneralException(_("Cannot load views from %s/view.mk: file empty or not flushed") % dirpath)
                 views = eval(sourcecode)
                 for name, view in views.items():
                     view["owner"] = user
                     view["name"] = name
                     html.multisite_views[(user, name)] = view
         except SyntaxError, e:
-            raise MKGeneralException("Cannot load views from %s/views.mk: %s" % (dirpath, e))
+            raise MKGeneralException(_("Cannot load views from %s/views.mk: %s") % (dirpath, e))
 
     html.available_views = available_views()
 

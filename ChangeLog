@@ -9,6 +9,7 @@
            option "B" again
     * FIX: preselected "refresh" option did not reflect view settings
            but was simply the first available option - usually 30.
+    * FIX: fixed exception with custom views created by normal users
 
     WATO:
     * FIX: Fixed "select all" button in hosts & folders for IE

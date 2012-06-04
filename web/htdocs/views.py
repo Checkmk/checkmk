@@ -292,7 +292,10 @@ def available_views():
     for (u, n), view in html.multisite_views.items():
         if n not in views and view["public"] and config.user_may(u, "publish_views"):
             # Is there a builtin view with the same name? If yes, honor permissions.
-            if (u, n) in html.multisite_views and not config.may("view.%s" % n):
+            permname = "view.%s" % n
+            if (u, n) in html.multisite_views \
+                and config.permission_exists(permname) \
+                and not config.may(permname):
                 continue
             views[n] = view
 

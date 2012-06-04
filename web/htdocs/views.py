@@ -280,6 +280,11 @@ def available_views():
     # 2. views of special users allowed to globally override builtin views
     for (u, n), view in html.multisite_views.items():
         if n not in views and view["public"] and config.user_may(u, "force_views"):
+            # Honor original permissions for the current user
+            permname = "view.%s" % n
+            if config.permission_exists(permname) \
+                and not config.may(permname):
+                continue
             views[n] = view
 
     # 3. Builtin views, if allowed.
@@ -293,8 +298,7 @@ def available_views():
         if n not in views and view["public"] and config.user_may(u, "publish_views"):
             # Is there a builtin view with the same name? If yes, honor permissions.
             permname = "view.%s" % n
-            if (u, n) in html.multisite_views \
-                and config.permission_exists(permname) \
+            if config.permission_exists(permname) \
                 and not config.may(permname):
                 continue
             views[n] = view

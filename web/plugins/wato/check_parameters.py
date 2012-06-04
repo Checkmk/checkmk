@@ -1063,32 +1063,32 @@ checkgroups.append((
 
 checkgroups.append((
     subgroup_applications,
-    "postgres_stat_database"m
+    "postgres_stat_database",
     _("PostgreSQL Database Statistics"),
     Dictionary(
         help = _("This check monitors how often database objects in a PostgreSQL Database are accessed"),
         elements = [ 
             ( "blocks_read",
                 Tuple(
-                   title = _("disk blocks read"),
+                   title = _("Blocks read"),
                    elements = [
-                      Float(title = "warning at", unit = _("bytes/s")),
-                      Float(title = "critical at", unit = _("bytes/s")),
+                      Float(title = "warning at", unit = _("blocks/s")),
+                      Float(title = "critical at", unit = _("blocks/s")),
                    ],
                 ),
             ),
             ( "xact_commit", 
                 Tuple(
-                   title = _("Commited transactions / subtransactions"),
+                   title = _("Commits"),
                    elements = [
-                      Float(title = "warning at", unit = _("bytes/s")),
-                      Float(title = "critical at", unit = _("bytes/s")),
+                      Float(title = "warning at", unit = _("/s")),
+                      Float(title = "critical at", unit = _("/s")),
                    ],
                 ),
             ),
             ( "tup_fetched", 
                 Tuple(
-                   title = _("Database Fetches"),
+                   title = _("Fetches"),
                    elements = [
                       Float(title = "warning at", unit = _("/s")),
                       Float(title = "critical at", unit = _("/s")),
@@ -1097,7 +1097,7 @@ checkgroups.append((
             ),    
             ( "tup_deleted", 
                 Tuple(
-                   title = _("Tuple Deletes"),
+                   title = _("Deletes"),
                    elements = [
                       Float(title = "warning at", unit = _("/s")),
                       Float(title = "critical at", unit = _("/s")),
@@ -1106,7 +1106,7 @@ checkgroups.append((
             ),
             ( "tup_updated", 
                 Tuple(
-                   title = _("Tuple Updates"),
+                   title = _("Updates"),
                    elements = [
                       Float(title = "warning at", unit = _("/s")),
                       Float(title = "critical at", unit = _("/s")),
@@ -1115,7 +1115,7 @@ checkgroups.append((
             ),
             ( "tup_inserted", 
                 Tuple(
-                   title = _("Tuple Inserts"),
+                   title = _("Inserts"),
                    elements = [
                       Float(title = "warning at", unit = _("/s")),
                       Float(title = "critical at", unit = _("/s")),
@@ -1124,7 +1124,9 @@ checkgroups.append((
             ),
         ],
     ),
-    None,
+    TextAscii(
+        title = _("Database name"),
+        allow_empty = False),
     None))
 
 checkgroups.append((

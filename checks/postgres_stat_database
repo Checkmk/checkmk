@@ -103,11 +103,29 @@ def check_postgres_stat_database(item, params, info):
 
     return (status, nagios_state_names[status] + " - " + ", ".join(infos), perfdata)
 
-
 check_info['postgres_stat_database'] = {
     "check_function"          : check_postgres_stat_database,
     "inventory_function"      : inventory_postgres_stat_database,
-    "service_description"     : "PostgreSQL Statistics",
+    "service_description"     : "PostgreSQL Statistics %s",
     "has_perfdata"            : True,
     "group"                   : "postgres_stat_database",
 }
+
+
+def check_postgres_stat_database_size(item, _no_params, info):
+    parsed = parse_postgres_stat(info)
+    if item not in parsed:
+        return (3, "UNKNOWN - Database not found")
+    stats = parsed[item]
+    size = stats["datsize"]
+
+    return (0, "OK - Size is %s" % get_bytes_human_readable(size), [("size", size)]) 
+
+
+check_info['postgres_stat_database.size'] = {
+    "check_function"          : check_postgres_stat_database_size,
+    "inventory_function"      : inventory_postgres_stat_database,
+    "service_description"     : "PostgreSQL Database Size %s",
+    "has_perfdata"            : True,
+}
+

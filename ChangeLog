@@ -7,6 +7,7 @@
     * mysql_capacity: New check for used/free capacity of MySQL databases
     * postgres_sessions: New check for PostgreSQL number of sessions
     * postgres_stat_database: New check for PostgreSQL database statistics
+    * postgres_stat_database.size: New check for PostgreSQL database size
 
 1.2.0b6:
     Multisite:

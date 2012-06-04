@@ -1,3 +1,8 @@
+1.2.0:
+    Checks & Agents: 
+    * fileinfo: added this check to Linux agent. Simply put your
+      file patterns into /etc/check_mk/fileinfo.cfg for configuration.
+
 1.2.0b6:
     Multisite:
     * FIX: Fixed layout of some dropdown fields in view filters

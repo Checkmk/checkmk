@@ -996,5 +996,6 @@ register_rule(group,
                  "the same format the agent would do. This is for example useful for monitoring "
                  "via SSH. The command line may contain the placeholders <tt>&lt;IP&gt;</tt> and "
                  "<tt>&lt;HOST&gt;</tt>."),
-        label = _("Command line to execute")))
+        label = _("Command line to execute"),
+        size = 80))
 

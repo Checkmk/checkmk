@@ -1107,12 +1107,13 @@ def get_regex(pattern):
 # Names of texts usually output by checks
 nagios_state_names = ["OK", "WARN", "CRIT", "UNKNOWN"]
 
-# int() function that return 0 for empty strings
+# int() function that return 0 for strings the
+# cannot be converted to a number
 def saveint(i):
-    if i == '':
-        return 0
-    else:
+    try:
         return int(i)
+    except:
+        return 0
 
 def savefloat(f):
     try:

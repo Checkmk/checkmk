@@ -53,7 +53,7 @@ def check_mysql_capacity(item, params, info):
 check_info['mysql_capacity'] = {
     "check_function"          : check_mysql_capacity,
     "inventory_function"      : inventory_mysql_capacity,
-    "service_description"     : "MySQL Capacity %s",
+    "service_description"     : "MySQL DB %s Capacity",
     "has_perfdata"            : True,
     "group"                   : "filesystem",
     "default_levels_variable" : "filesystem_default_levels",

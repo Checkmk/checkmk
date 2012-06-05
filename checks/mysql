@@ -121,7 +121,7 @@ def check_mysql_sessions(_no_item, params, info):
 check_info['mysql.sessions'] = {
     "check_function"          : check_mysql_sessions,
     "inventory_function"      : inventory_mysql,
-    "service_description"     : "MySQL Sessions",
+    "service_description"     : "MySQL Daemon Sessions",
     "has_perfdata"            : True,
     "group"                   : "mysql_sessions",
 }
@@ -150,7 +150,7 @@ check_info['mysql.innodb_io'] = {
     "includes"                : [ "diskstat.include" ],
     "check_function"          : check_mysql_iostat,
     "inventory_function"      : inventory_mysql_iostat,
-    "service_description"     : "MySQL InnoDB IO",
+    "service_description"     : "MySQL Daemon InnoDB IO",
     "has_perfdata"            : True,
     "group"                   : "mysql_innodb_io",
 }

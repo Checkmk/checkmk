@@ -66,7 +66,7 @@ def check_postgres_sessions(_no_item, params, info):
 check_info['postgres_sessions'] = {
     "check_function"          : check_postgres_sessions,
     "inventory_function"      : inventory_postgres_sessions,
-    "service_description"     : "PostgreSQL Sessions",
+    "service_description"     : "PostgreSQL Daemon Sessions",
     "has_perfdata"            : True,
     "group"                   : "postgres_sessions",
 }

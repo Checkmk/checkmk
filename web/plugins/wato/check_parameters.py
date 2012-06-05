@@ -1199,6 +1199,7 @@ checkgroups.append((
 
 checkgroups.append((
     subgroup_storage,
+    # umbenennen
     "disk_io",
     _("Levels on disk IO (throughput)"),
     Dictionary(
@@ -1224,12 +1225,24 @@ checkgroups.append((
                            "of the disk throughput is computed and the levels for read "
                            "and write will be applied to the average instead of the current "
                            "value."),
-                 unit = "min"))
+                 unit = "min")),
+            ( "latency", 
+              Integer(
+                  title = _("IO latency"),
+                  elements = [
+                      Float(title = "warning at",  unit = _("ms")),
+                      Float(title = "critical at", unit = _("ms")),
+             ])),
         ]),
     OptionalDropdownChoice(
         choices = [ ( "SUMMARY", _("Summary of all disks") ),
                     ( "read",    _("Summary of disk input (read)") ),
                     ( "write",   _("Summary of disk output (write)") ),
+                    ( "latency_perfdata", _("Collect performance data for disk latency") ),
+                    ( "physical", _("Collect performance statistics for physical disks") ),
+                    ( "lvm", _("Collect performance statistics for LVM Volumes") ),
+                    ( "vxvm", _("Collect performance statistics for VxVM Volumes") ),
+#                    ( "latency", _("ms")),
                   ],
         otherlabel = _("On explicit devices ->"),
         explicit = TextAscii(allow_empty = False),

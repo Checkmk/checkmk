@@ -496,6 +496,7 @@ register_configvar(group,
             ('summary', _("one summary check per host")),
             ('single' , _("one check per individual disk/LUN") ),
             ('legacy' , _("one check for read, one for write") ),
+            ('rule'   , _("controlled by ruleset diskio_inventory_mode") ),
             ]),
     )
 

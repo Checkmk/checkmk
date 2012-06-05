@@ -134,7 +134,6 @@ def inventory_if_common(info):
 
     return inventory
 
-
 def check_if_common(item, params, info):
     # Params now must be a dict. Some keys might
     # be set to None
@@ -206,8 +205,8 @@ def check_if_common(item, params, info):
                 ref_speed = None
 
 	    if ifPhysAddress:
-		ifPhysAddress = ':'.join(convert_to_hex(ifPhysAddress).strip().split(' '))
-                infotext += 'MAC: %s, ' % ifPhysAddress
+                mac = ":".join(["%02s" % hex(ord(m))[2:] for m in ifPhysAddress]).replace(' ', '0')
+                infotext += 'MAC: %s, ' % mac
 
             # Check speed settings of interface, but only if speed information
             # is available. This is not always the case.

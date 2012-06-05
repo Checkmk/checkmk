@@ -66,18 +66,6 @@ def convert_from_hex(value):
         r += chr(int(hx, 16))
     return r
 
-# Converts back the values converted by the snmp code of Check_MK.
-# e.g. In case of MAC addresses it is not ok to convert the value.
-# Though we need the original value back.
-def convert_to_hex(value):
-    r = ''
-    for c in value:
-        h = hex(ord(c)).replace('0x', '')
-        if len(h) == 1:
-            h = '0' + h
-        r += h + ' '
-    return r + ' '
-
 def oid_to_bin(oid):
     return u"".join([ unichr(int(p)) for p in oid.strip(".").split(".") ])
 

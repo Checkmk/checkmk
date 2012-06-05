@@ -1,0 +1,19 @@
+title: Database size check for PostgreSQL
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+  This check tracks the space used by a PostgreSQL database
+  The check has no alarm levels since PostgreSQL databasizes don't have a 
+  size limit. (Single table limit is 32TB, too)
+
+inventory:
+  The check generates one item per Database found.
+
+
+[configuration]
+  This check has no configuration. 
+
+perfdata:
+  The check sends performance data for the size of the database.

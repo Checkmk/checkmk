@@ -88,7 +88,6 @@ def check_mysql_sessions(_no_item, params, info):
     values = parse_mysql(info)
     total_sessions = values["Threads_connected"]
     running_sessions = values["Threads_running"]
-    print values["Connections"]
     timedif, connections = get_counter("mysql.sessions", time.time(), values["Connections"])
 
     infotext = " - %d sessions (%d running), %.2f connections/s" % (

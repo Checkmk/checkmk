@@ -1,4 +1,7 @@
 1.2.0:
+    WATO:
+    * FIX: add missing icon on cluster hosts to WATO in Multisite views
+
     Checks & Agents: 
     * fileinfo: added this check to Linux agent. Simply put your
       file patterns into /etc/check_mk/fileinfo.cfg for configuration.

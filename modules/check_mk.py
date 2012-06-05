@@ -4260,6 +4260,7 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
             if opt_debug:
                 sys.stderr.write("Reading config file %s...\n" % _f)
             _old_all_hosts = all_hosts[:]
+            _old_clusters = clusters.keys()
             # Make the config path available as a global variable to
             # be used within the configuration file
             if _f.startswith( check_mk_configdir + "/"):
@@ -4271,6 +4272,7 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
 
             execfile(_f, globals(), globals())
             marks_hosts_with_path(_old_all_hosts, all_hosts, _f)
+            marks_hosts_with_path(_old_clusters, clusters.keys(), _f)
         except Exception, e:
             sys.stderr.write("Cannot read in configuration file %s:\n%s\n" % (_f, e))
             if __name__ == "__main__":

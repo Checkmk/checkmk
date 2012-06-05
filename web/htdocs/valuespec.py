@@ -1650,6 +1650,7 @@ class Dictionary(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
+        self._empty_text = kwargs.get("empty_text", _("(no parameters)"))
         self._required_keys = kwargs.get("required_keys", []) 
         if "optional_keys" in kwargs:
             ok = kwargs["optional_keys"]
@@ -1761,6 +1762,9 @@ class Dictionary(ValueSpec):
         return def_val
 
     def value_to_text(self, value):
+        if not value:
+            return self._empty_text
+
         parts = []
         for param, vs in self._elements:
             if param in value:

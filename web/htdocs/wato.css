@@ -273,7 +273,7 @@ table.validationerror img {
 
 .wato div.folderpath li select {
     padding: 2px 0px 2px 4px;
-    background-color: #7399ba;
+    background-color: #6da1b8;
     margin: 0;
     color: #fff;
     font-weight: normal;
@@ -282,7 +282,7 @@ table.validationerror img {
     position: relative;
     right: -6px;
     z-index: 200;
-    height: 18px;
+    height: 17px;
 }
 
 .wato div.folderpath li:hover select {

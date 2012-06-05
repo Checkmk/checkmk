@@ -10366,8 +10366,8 @@ def select_language(user_language):
                     'the checkbox, then the system default will be used.<br><br>'
                     'Note: currently Multisite is internationalized '
                     'but comes without any actual localisations (translations). If you want to '
-                    'create you own translation, you find <a href="%s">documentation online</a>.') %
-                    "http://mathias-kettner.de/checkmk_multisite_i18n.html")
+                    'create you own translation, you find <a href="%(url)s">documentation online</a>.') %
+                    { "url" : "http://mathias-kettner.de/checkmk_multisite_i18n.html"} )
 
 def page_user_profile():
     if not config.user_id:

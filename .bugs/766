@@ -1,0 +1,9 @@
+Title: Search filed in WATO folder view does not work
+Component: wato
+State: open
+Date: 2012-06-05 18:01:17
+Targetversion: 1.2.0
+Class: bug
+
+It simply does not filter out anything, regardless what one
+types in.

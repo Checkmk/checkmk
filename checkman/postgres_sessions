@@ -6,12 +6,10 @@ distribution: check_mk
 description:
   This check allows tracking of the session parameters for a PostgreSQL 
   database.
-  It reports how many sessions there are in total, how many of them are
-  active, and at what rate new sessions are generated.
+  It reports how many sessions there are in total and how many of them are
+  actively querying something.
 
   It allows to set {WARN} and {CRIT} tresholds on any of these parameters.
-
-  The data is gathered from the {show global status} query.
 
 inventory:
   The check generates one item for the sessions connected to the PostgreSQL
@@ -24,5 +22,4 @@ inventory:
 
 
 perfdata:
-  The check generates perfdata for the total and running sessions, and the
-  connection rate.
+  The check generates perfdata for the total and running sessions.

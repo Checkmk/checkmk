@@ -209,6 +209,9 @@ def page_view():
         return page_index()
 
     view = html.available_views.get(view_name)
+    if not view:
+        raise MKGeneralException("No view defined with the name '%s'." % view_name)
+        
     title = views.view_title(view)
     mobile_html_head(title)
 

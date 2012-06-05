@@ -106,7 +106,7 @@ def check_postgres_stat_database(item, params, info):
 check_info['postgres_stat_database'] = {
     "check_function"          : check_postgres_stat_database,
     "inventory_function"      : inventory_postgres_stat_database,
-    "service_description"     : "PostgreSQL Statistics %s",
+    "service_description"     : "PostgreSQL DB %s Statistics" ,
     "has_perfdata"            : True,
     "group"                   : "postgres_stat_database",
 }
@@ -125,7 +125,7 @@ def check_postgres_stat_database_size(item, _no_params, info):
 check_info['postgres_stat_database.size'] = {
     "check_function"          : check_postgres_stat_database_size,
     "inventory_function"      : inventory_postgres_stat_database,
-    "service_description"     : "PostgreSQL Database Size %s",
+    "service_description"     : "PostgreSQL DB %s Size",
     "has_perfdata"            : True,
 }
 

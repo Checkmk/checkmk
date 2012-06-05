@@ -169,7 +169,16 @@ cat /proc/mdstat
 # Performancecounter Platten
 echo '<<<diskstat>>>'
 date +%s
-egrep ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+) ' < /proc/diskstats
+egrep ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|dm-[0-9]+|VxVM.*) ' < /proc/diskstats
+if which dmsetup >/dev/null ; then
+    echo '[dmsetup_info]'
+    dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
+fi
+if [ -d /dev/vx/dsk ] ; then
+    echo '[vx_dsk]'
+    stat -c "%t %T %n" /dev/vx/dsk/*/*
+fi
+
 
 # Performancecounter Kernel
 echo '<<<kernel>>>'

@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-hr_cpu_default_levels = (80, 90)
+hr_cpu_default_levels = (80.0, 90.0)
 def inventory_hr_cpu(info):
     if len(info) >= 1:
         return [(None, "hr_cpu_default_levels")]

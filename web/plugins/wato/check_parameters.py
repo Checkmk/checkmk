@@ -630,6 +630,18 @@ checkgroups.append((
                   ]
               )
             ),
+            ( "BOUND",
+              Tuple(
+                  title = _("BOUND"),
+                  help = _("the socket has been created and an address assigned "
+                           "to with bind(). The TCP stack is not active yet. "
+                           "This state is only reported on Solaris."),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
         ]
     ),
     None,

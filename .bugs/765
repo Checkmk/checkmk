@@ -1,0 +1,15 @@
+Title: Duplicate Service for Cisco Temp Sensor
+Component: checks
+State: open
+Date: 2012-06-05 17:23:20
+Targetversion: future
+Class: nastiness
+
+found on Cisco C4000:
+
+OMD[walks]:~/tmp/check_mk/cache$ cmk -R
+Generating Nagios configuration...Error creating configuration: ERROR: Duplicate service description 'Temperature Chassis Temperature Sensor' for host 'switch-cisco-c4000'!
+ - 1st occurrance: checktype = cisco_temp_perf, item = 'Chassis Temperature Sensor'
+ - 2nd occurrance: checktype = cisco_temp_sensor, item = 'Chassis Temperature Sensor'
+
+Solution not clear yet.

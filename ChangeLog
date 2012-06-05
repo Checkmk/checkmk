@@ -13,6 +13,7 @@
     * postgres_stat_database.size: New check for PostgreSQL database size
     * FIX: hpux_if: convert_to_hex was missing on non-SNMP-hosts -replace
       with inline implementation
+    * tcp_conn_stats: handle state BOUND (found on Solaris)
 
 1.2.0b6:
     Multisite:

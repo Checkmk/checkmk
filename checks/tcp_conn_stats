@@ -35,6 +35,7 @@ tcp_conn_stats_states = [
 "CLOSING",      # our socket is shut down; remote endpoint is shut down; not all data has been sent
 "FIN_WAIT1",    # our socket has closed; we are in the process of tearing down the connection
 "FIN_WAIT2",    # the connection has been closed; our socket is waiting for the remote endpoint to shut down
+"BOUND",        # Socket did a bound() but TCP stack not yet active (Solaris)
 ]
 
 

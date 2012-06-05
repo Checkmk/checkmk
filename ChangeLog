@@ -14,6 +14,8 @@
     * FIX: hpux_if: convert_to_hex was missing on non-SNMP-hosts -replace
       with inline implementation
     * tcp_conn_stats: handle state BOUND (found on Solaris)
+    * diskstat: support for checking latency, LVM and VxVM on Linux (needs 
+      updated agent)
 
 1.2.0b6:
     Multisite:

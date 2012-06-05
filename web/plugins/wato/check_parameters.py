@@ -1199,7 +1199,6 @@ checkgroups.append((
 
 checkgroups.append((
     subgroup_storage,
-    # umbenennen
     "disk_io",
     _("Levels on disk IO (throughput)"),
     Dictionary(
@@ -1227,22 +1226,25 @@ checkgroups.append((
                            "value."),
                  unit = "min")),
             ( "latency", 
-              Integer(
-                  title = _("IO latency"),
+              Tuple(
+                  title = _("IO Latency"),
                   elements = [
-                      Float(title = "warning at",  unit = _("ms")),
-                      Float(title = "critical at", unit = _("ms")),
+                      Float(title = "warning at",  unit = _("ms"), default_value = 80.0),
+                      Float(title = "critical at", unit = _("ms"), default_value = 160.0),
              ])),
+            ( "latency_perfdata",
+              Checkbox(
+                  title = _("Performance Data"),
+                  label = _("Collect performance data for disk latency"),
+                  help = _("Note: enabling performance data for the latency might "
+                           "cause incompatibilities with existing historical data "
+                           "if you are running PNP4Nagios in SINGLE mode.")),
+            ),
         ]),
     OptionalDropdownChoice(
-        choices = [ ( "SUMMARY", _("Summary of all disks") ),
-                    ( "read",    _("Summary of disk input (read)") ),
-                    ( "write",   _("Summary of disk output (write)") ),
-                    ( "latency_perfdata", _("Collect performance data for disk latency") ),
-                    ( "physical", _("Collect performance statistics for physical disks") ),
-                    ( "lvm", _("Collect performance statistics for LVM Volumes") ),
-                    ( "vxvm", _("Collect performance statistics for VxVM Volumes") ),
-#                    ( "latency", _("ms")),
+        choices = [ ( "SUMMARY",  _("Summary of all disks") ),
+                    ( "read",     _("Summary of disk input (read)") ),
+                    ( "write",    _("Summary of disk output (write)") ),
                   ],
         otherlabel = _("On explicit devices ->"),
         explicit = TextAscii(allow_empty = False),
@@ -1252,6 +1254,25 @@ checkgroups.append((
                  "A per-disk IO is specified by the drive letter and a colon on Windows "
                  "(e.g. <tt>C:</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")),
     "first"))
+
+
+register_rule(
+    group + '/' + subgroup_storage,
+    "diskstat_inventory",
+    ListChoice(
+        title = _("Inventory mode for Disk IO check"),
+        help = _("This rule controls which and how many checks will be created "
+                 "for monitoring individual physical and logical disks."),
+        choices = [ 
+           ( "summary",  _("Create a summary over all physical disks") ),
+           ( "legacy",   _("Create a summary for all read, one for write") ),
+           ( "physical", _("Create a separate check for each physical disk") ),
+           ( "lvm",      _("Create a separate check for each LVM volume (Linux)") ),
+           ( "vxvm",     _("Creata a separate check for each VxVM volume (Linux)") ),
+        ],
+        default_value = [ 'summary' ],
+    ),
+    match="first")
 
 
 checkgroups.append((

@@ -24,22 +24,67 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-diskstat_inventory_mode = "summary" # also possible: "single", "legacy"
+diskstat_inventory_mode = "rule" # "summary", "single", "legacy"
 
 diskstat_default_levels = {
 #    "read" :    (10, 20),   # MB/sec
 #    "write" :   (20, 40),   # MB/sec
 #    "average" : 15,         # min
+#    "latency" : (10, 20), # ms
+#    "latency_perfdata" : True,
 }
 
+# Rule for controlling diskstat inventory more fine grained
+diskstat_inventory = [] 
+
+# Example
+# diskstat_inventory = [
+#  ( [], [ 'linux' ], ALL_HOST ), --> No diskstat on this host
+#  ( [ 'summary', 'physical', 'lvm', 'vxvm' ], ALL_HOSTS ),
+# ]
+
 def inventory_diskstat_generic(info):
-    if diskstat_inventory_mode == "single":
-        return [ (line[0], "diskstat_default_levels") for line in info ]
-    elif len(info) > 0:
-        if diskstat_inventory_mode == "summary":
-            return [ ( "SUMMARY", "diskstat_default_levels") ]
+    print diskstat_inventory_mode
+
+    # New style: use rule based configuration, defaulting to summary mode
+    if diskstat_inventory_mode == "rule":
+        hits = host_extra_conf(g_hostname, diskstat_inventory)
+        if len(hits) > 0:
+            modes = hits[0]
         else:
-            return [ ( "read", None ), ( "write", None ) ]
+            modes = [ "summary" ]
+    
+    elif diskstat_inventory_mode == "single":
+        modes = [ "physical" ]
+    elif diskstat_inventory_mode == "summary":
+        modes = [ "summary" ]
+    else:
+        modes = [ "legacy" ]
+
+    inventory = []
+    if "summary" in modes:
+        inventory.append( ( "SUMMARY", "diskstat_default_levels" ) )
+
+    if "legacy" in modes:
+        inventory += [ ( "read", None ), ( "write", None ) ]
+
+    if "physical" in modes:
+        inventory += [ (line[0], "diskstat_default_levels") 
+                       for line in info 
+                       if not ' ' in line[0] ]
+
+    if "lvm" in modes:
+        inventory += [ (line[0], "diskstat_default_levels") 
+                       for line in info 
+                       if line[0].startswith("LVM ") ]
+
+    if "vxvm" in modes:
+        inventory += [ (line[0], "diskstat_default_levels") 
+                       for line in info 
+                       if line[0].startswith("VxVM ") ]
+
+    return inventory
+
 
 
 def check_diskstat_line(this_time, item, params, line):
@@ -48,7 +93,7 @@ def check_diskstat_line(this_time, item, params, line):
     infos = []
     status = 0
     for what, ctr in [ ("read",  line[1]), ("write", line[2]) ]:
-        countername = "diskstat.%s.%s" % (item, what)
+        countername = "diskstat.%s.%s" % (item, what) 
 
         # unpack levels now, need also for perfdata
         levels = params.get(what)
@@ -79,6 +124,34 @@ def check_diskstat_line(this_time, item, params, line):
                 status = max(status, 1)
                 infos[-1] += "(!)"
 
+    # Do Latency computation if this information is available:
+    if len(line) >= 6:
+        reads, writes, timems = map(int, line[3:])
+        ios = reads + writes 
+        timedif, ios_per_sec = get_counter(countername + ".ios", this_time, ios)
+        timedif, timems_per_sec = get_counter(countername + ".time", this_time, timems)
+        if not ios_per_sec:
+            latency = 0.0
+        else:
+            latency = timems_per_sec / ios_per_sec
+        infos.append("IOs: %.2f/sec, Latency: %.2fms" % (ios_per_sec, latency))
+        if "latency" in params:
+            warn, crit = params["latency"]
+            if latency >= crit:
+                status = 2
+                infos[-1] += "(!!)"
+            elif latency >= warn:
+                status = max(status, 1)
+                infos[-1] += "(!)"
+        else:
+            warn, crit = None, None
+
+        if params.get("latency_perfdata"):
+            perfdata.append(("ios", ios_per_sec))
+            perfdata.append(("latency", latency, warn, crit))
+
+
+
     if average_range != None:
         perfdata = [ perfdata[0], perfdata[2], perfdata[1], perfdata[3] ]
 
@@ -91,9 +164,12 @@ def check_diskstat_generic(item, params, this_time, info):
         return check_diskstat_old(item, params, this_time, info)
 
     # summary mode
-    if item == 'SUMMARY': # summary mode
+    if item == 'SUMMARY': # summary mode (only summarize physical disks!)
         summary_line = [0] * 13
         for line in info:
+            devname = line[0]
+            if ' ' in devname:
+                continue
             summary_line = map(lambda e: e[0] + int(e[1]), zip(summary_line, line[1:]))
         return check_diskstat_line(this_time, "SUMMARY", params, [''] + summary_line)
 
@@ -117,7 +193,7 @@ def check_diskstat_old(item, params, this_time, info):
     else:
         return (3, "UNKNOWN - invalid item %s" % (item,))
 
-    this_val  = sum([int(x[index]) for x in info])
+    this_val  = sum([int(x[index]) for x in info if ' ' not in x[0]])
 
     timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
     mb_per_s = per_sec / 2048.0    # Diskstat output is in sectors a 512 Byte

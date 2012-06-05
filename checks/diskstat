@@ -29,6 +29,31 @@
 #    8       0 sda 691860 951191 13559915 491748 234686 197346 3359512 94944 0 56844 586312
 #    8      32 sdb 791860 91191 23589915 491748 234686 197346 3359512 94944 0 56844 586312
 
+# Newer agent output also dm-* and Veritas devices and if
+# available the following additional information for name rewriting:
+
+# <<<diskstat>>>
+# 1338931242
+#    8       0 sda 6142 327 219612 2244 3190 6233 74075 8206 0 6523 10446
+#  253       0 dm-0 4579 0 181754 2343 9249 0 73960 259491 0 1208 261833
+#  253       1 dm-1 342 0 2736 47 3 0 11796464 5016 0 5063 5063
+#  253       2 dm-2 160 0 1274 27 11 0 56 3 0 27 30
+#    8      16 sdb 464 858 7717 336 1033 0 311454 3899 0 3007 4231
+#    8      32 sdc 855 13352 106777 1172 915 0 154467 2798 0 3012 3967
+#    8      48 sdd 1217 861 109802 1646 118 0 56151 1775 0 2736 3420
+#    8      80 sdf 359 1244 58323 792 66 0 4793 388 0 765 1178
+#    8      64 sde 310 1242 6964 268 118 0 56151 1607 0 1307 1872
+#    8      96 sdg 1393 1242 314835 3759 129 0 56172 1867 0 4027 5619
+#  199   27000 VxVM27000 131 0 990 61 11 0 21 29 0 89 90
+#  199   27001 VxVM27001 0 0 0 0 0 0 0 0 0 0 0
+# [dmsetup_info]
+# vg_zwei-lv_home 253:2 vg_zwei lv_home
+# vg_zwei-lv_swap 253:1 vg_zwei lv_swap
+# vg_zwei-lv_root 253:0 vg_zwei lv_root
+# [vx_dsk]
+# c7 6978 /dev/vx/dsk/datadg/lalavol
+# c7 6979 /dev/vx/dsk/datadg/oravol
+
 # Fields in /proc/diskstats
 #  Index 0 -- major number
 #  Index 1 -- minor number
@@ -52,8 +77,47 @@ check_includes['diskstat'] = [ "diskstat.include" ]
 # [ now, [( disk, readctr, writectr ), ... ]]
 # where counters are in sectors (512 bytes)
 
+def diskstat_parse_info(info):
+    info_plain = []
+    nameinfo = {}
+    phase = 'info'
+    for line in info:
+        if line[0] == '[dmsetup_info]':
+            phase = 'dmsetup_info'
+        elif line[0] == '[vx_dsk]':
+            phase = 'vx_dsk'
+        else:
+            if phase == 'info':
+                info_plain.append(line)
+            elif phase == 'dmsetup_info':
+                majmin = tuple(map(int, line[1].split(':')))
+                if len(line) == 4:
+                    name = "LVM %ss" % line[0]
+                else:
+                    name = "DM %s" % line[0]
+                nameinfo[majmin] = name
+            elif phase == 'vx_dsk':
+                maj = int(line[0], 16)
+                min = int(line[1], 16)
+                group, disk = line[2].split('/')[-2:]
+                name = "VxVM %s-%s" % (group, disk)
+                nameinfo[(maj, min)] = name
+
+    return info_plain, nameinfo
+
+def diskstat_rewrite_device(nameinfo, linestart):
+    major, minor = map(int, linestart[:2])
+    device = linestart[2]
+    return nameinfo.get((major, minor), device)
+
 def linux_diskstat_convert(info):
-    return [ ( l[2], int(l[5]), int(l[9])) for l in info[1:] ]
+    info, nameinfo = diskstat_parse_info(info)
+    rewritten = [ ( diskstat_rewrite_device(nameinfo, l[0:3]), int(l[5]), int(l[9]), 
+               int(l[6]), int(l[10]), int(l[12])) for l in info[1:] 
+               if len(l) >= 13 ]
+
+    # Remove device mapper devices without a translated name
+    return [ line for line in rewritten if not line[0].startswith("dm-") ]
 
 def inventory_diskstat(info):
     return inventory_diskstat_generic(linux_diskstat_convert(info))
@@ -63,3 +127,4 @@ def check_diskstat(item, params, info):
 
 check_info['diskstat'] = (check_diskstat, "Disk IO %s", 1,  inventory_diskstat)
 checkgroup_of["diskstat"] = "disk_io"
+

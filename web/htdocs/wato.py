@@ -9242,9 +9242,10 @@ def mode_rulesets(phase):
     if not only_host:
         render_folder_path(keepvarnames = ["mode", "local", "group"])
 
-    help = "".join(help.split("\n", 1)[1:]).strip()
-    if help:
-        html.help(help)
+    if help != None:
+        help = "".join(help.split("\n", 1)[1:]).strip()
+        if help:
+            html.help(help)
 
     if only_local and not only_host:
         all_rulesets = {}

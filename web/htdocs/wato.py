@@ -1179,15 +1179,17 @@ def show_hosts(folder):
     # Helper function for showing bulk actions. This is needed at the bottom
     # of the table of hosts and - if there are more than just a few - also
     # at the top of the table.
-    def bulk_actions(at_least_one_imported, top, colspan, odd):
+    search_shown = False
+    def bulk_actions(at_least_one_imported, top, withsearch, colspan, odd):
         # bulk actions
         html.write('<tr class="data %s0">' % odd)
         html.write('<td>')
         html.jsbutton('_markall', _('X'), 'javascript:toggle_all_rows();')
         html.write("</td><td class=bulksearch colspan=2>")
-        html.text_input("search")
-        html.button("_search", _("Search"))
-        html.set_focus("search")
+        if withsearch:
+            html.text_input(top and "search" or "search")
+            html.button("_search", _("Search"))
+            html.set_focus("search")
         html.write('</td>')
         html.write("<td class=bulkactions colspan=%d>" % (colspan-3))
         html.write(' ' + _("Selected hosts:\n"))
@@ -1240,7 +1242,8 @@ def show_hosts(folder):
     # list shows more than 10 rows
     if more_than_ten_items and \
         (config.may("wato.edit_hosts") or config.may("wato.manage_hosts")):
-        bulk_actions(at_least_one_imported, True, colspan, "even")
+        bulk_actions(at_least_one_imported, True, True, colspan, "even")
+        search_shown = True
 
     # Header line
     html.write("<tr><th class=left></th><th>"+_("Actions")+"</th><th>"
@@ -1361,7 +1364,7 @@ def show_hosts(folder):
         html.write("</tr>\n")
 
     if config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
-        bulk_actions(at_least_one_imported, False, colspan, odd)
+        bulk_actions(at_least_one_imported, False, not search_shown, colspan, odd)
     html.write("</table>\n")
 
     html.hidden_fields() 
@@ -1681,7 +1684,7 @@ def mode_editfolder(phase, new):
         render_folder_path()
         check_folder_permissions(g_folder, "read")
 
-        html.begin_form("editfolder")
+        html.begin_form("edithost")
 
         # title
         forms.header(_("Title"))
@@ -2182,7 +2185,7 @@ def mode_search(phase):
     render_folder_path()
 
     ## # Show search form
-    html.begin_form("search")
+    html.begin_form("edithost")
     forms.header(_("General Properties"))
     forms.section(_("Hostname"))
     html.text_input("host")
@@ -2589,7 +2592,7 @@ def mode_bulk_edit(phase):
     "hosts share the same setting for this attribute. If you leave that selection, all hosts "
     "will keep their individual settings.") + "</p>")
 
-    html.begin_form("bulkedit", None, "POST")
+    html.begin_form("edithost", None, "POST")
     configure_attributes(hosts, "bulk", parent = g_folder)
     forms.end()
     html.button("_save", _("Save &amp; Finish"))
@@ -4615,13 +4618,14 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 continue
             attrname = attr.name()
             if attrname in without_attributes:
+                html.debug(without_attributes)
                 continue # e.g. needed to skip ipaddress in CSV-Import
 
             # Hide invisible attributes 
             hide_attribute = False
-            if for_what == "host" and not attr.show_in_form():
+            if for_what in [ "host", "bulk" ] and not attr.show_in_form():
                 hide_attribute = True
-            elif (for_what == "folder" or for_what == "bulk") and not attr.show_in_folder():
+            elif (for_what == "folder") and not attr.show_in_folder():
                 hide_attribute = True
 
             # Determine visibility information if this attribute is not always hidden

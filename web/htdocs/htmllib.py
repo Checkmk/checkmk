@@ -986,6 +986,8 @@ class html:
     def del_var(self, varname):
         if varname in self.req.vars:
             del self.req.vars[varname]
+        if varname in self.req.listvars:
+            del self.req.listvars[varname]
 
     def javascript(self, code):
         self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)

@@ -1,6 +1,7 @@
 1.2.0:
     WATO:
     * FIX: add missing icon on cluster hosts to WATO in Multisite views
+    * FIX: fix search field in host table if more than 10 hosts are shown
 
     Checks & Agents: 
     * fileinfo: added this check to Linux agent. Simply put your

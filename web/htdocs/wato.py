@@ -1179,15 +1179,17 @@ def show_hosts(folder):
     # Helper function for showing bulk actions. This is needed at the bottom
     # of the table of hosts and - if there are more than just a few - also
     # at the top of the table.
-    def bulk_actions(at_least_one_imported, top, colspan, odd):
+    search_shown = False
+    def bulk_actions(at_least_one_imported, top, withsearch, colspan, odd):
         # bulk actions
         html.write('<tr class="data %s0">' % odd)
         html.write('<td>')
         html.jsbutton('_markall', _('X'), 'javascript:toggle_all_rows();')
         html.write("</td><td class=bulksearch colspan=2>")
-        html.text_input("search")
-        html.button("_search", _("Search"))
-        html.set_focus("search")
+        if withsearch:
+            html.text_input(top and "search" or "search")
+            html.button("_search", _("Search"))
+            html.set_focus("search")
         html.write('</td>')
         html.write("<td class=bulkactions colspan=%d>" % (colspan-3))
         html.write(' ' + _("Selected hosts:\n"))
@@ -1240,7 +1242,8 @@ def show_hosts(folder):
     # list shows more than 10 rows
     if more_than_ten_items and \
         (config.may("wato.edit_hosts") or config.may("wato.manage_hosts")):
-        bulk_actions(at_least_one_imported, True, colspan, "even")
+        bulk_actions(at_least_one_imported, True, True, colspan, "even")
+        search_shown = True
 
     # Header line
     html.write("<tr><th class=left></th><th>"+_("Actions")+"</th><th>"
@@ -1361,7 +1364,7 @@ def show_hosts(folder):
         html.write("</tr>\n")
 
     if config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
-        bulk_actions(at_least_one_imported, False, colspan, odd)
+        bulk_actions(at_least_one_imported, False, not search_shown, colspan, odd)
     html.write("</table>\n")
 
     html.hidden_fields() 

@@ -1869,10 +1869,10 @@ define service {
                 raise MKGeneralException(
                         "ERROR: Duplicate service description (custom check) '%s' for host '%s'!\n"
                         " - 1st occurrance: checktype = %s, item = %r\n"
-                        " - 2nd occurrance: checktype = active(%s), item = None\n" %
-                        (description, hostname, cn, it, acttype))
+                        " - 2nd occurrance: checktype = custom(%s), item = %r\n" %
+                        (description, hostname, cn, it, command_name, description))
             else:
-                used_descriptions[description] = ( "custom", description )
+                used_descriptions[description] = ( "custom(%s)" % command_name, description )
 
             template = has_perfdata and "check_mk_perf," or ""
             extraconf = extra_service_conf_of(hostname, description)

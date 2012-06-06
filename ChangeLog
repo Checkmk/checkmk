@@ -1,4 +1,7 @@
 1.2.0:
+    Core:
+    * FIX: fix error message in case of duplicate custom check
+
     WATO:
     * FIX: add missing icon on cluster hosts to WATO in Multisite views
     * FIX: fix search field in host table if more than 10 hosts are shown

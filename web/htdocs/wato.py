@@ -9885,6 +9885,8 @@ def get_rule_conditions(ruleset):
         negate = html.get_checkbox("negate_hosts")
         nr = 0
         host_list = ListOfStrings().from_html_vars("hostlist")
+        if negate:
+            host_list = [ "!" + h for h in host_list ]
         # append ALL_HOSTS to negated host lists
         if len(host_list) > 0 and host_list[0][0] == '!':
             host_list += ALL_HOSTS
@@ -10031,7 +10033,7 @@ def mode_edit_rule(phase):
         valuespec = TextAscii(size = 30)).render_input("hostlist", explicit_hosts)
 
     html.checkbox("negate_hosts", negate_hosts, label = 
-                 _("<b>Negate:</b> make Rule apply for <b>all but</b> the above hosts"))
+                 _("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"))
     html.write("</div>")
     html.help(_("You can enter a number of explicit host names that rule should or should "
                  "not apply to here. Leave this option disabled if you want the rule to "

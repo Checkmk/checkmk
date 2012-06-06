@@ -124,7 +124,8 @@ mkdir -p $R/usr/lib/check_mk_agent/plugins
 mkdir -p $R/usr/lib/check_mk_agent/local
 
 # logwatch and oracle extension
-install -m 755 $R/usr/share/check_mk/agents/plugins/mk_* $R/usr/lib/check_mk_agent/plugins
+install -m 755 $R/usr/share/check_mk/agents/plugins/mk_logwatch $R/usr/lib/check_mk_agent/plugins
+install -m 755 $R/usr/share/check_mk/agents/plugins/mk_oracle $R/usr/lib/check_mk_agent/plugins
 install -m 755 $R/usr/share/check_mk/agents/logwatch.cfg $R/etc/check_mk
 install -m 644 $R/usr/share/check_mk/agents/sqlplus.sh   $R/etc/check_mk
 

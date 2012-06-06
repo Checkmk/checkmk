@@ -1,4 +1,7 @@
 1.2.0:
+    Setup:
+    * FIX: fix building of RPM packages (due to mk_mysql, mk_postgres)
+
     Core:
     * FIX: fix error message in case of duplicate custom check
 

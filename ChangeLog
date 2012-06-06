@@ -25,6 +25,7 @@
     * tcp_conn_stats: handle state BOUND (found on Solaris)
     * diskstat: support for checking latency, LVM and VxVM on Linux (needs 
       updated agent)
+    * avoid duplicate checks cisco_temp_perf and cisco_sensor_temp
 
 1.2.0b6:
     Multisite:

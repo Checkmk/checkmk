@@ -1684,7 +1684,7 @@ def mode_editfolder(phase, new):
         render_folder_path()
         check_folder_permissions(g_folder, "read")
 
-        html.begin_form("editfolder")
+        html.begin_form("edithost")
 
         # title
         forms.header(_("Title"))
@@ -2185,7 +2185,7 @@ def mode_search(phase):
     render_folder_path()
 
     ## # Show search form
-    html.begin_form("search")
+    html.begin_form("edithost")
     forms.header(_("General Properties"))
     forms.section(_("Hostname"))
     html.text_input("host")
@@ -2592,7 +2592,7 @@ def mode_bulk_edit(phase):
     "hosts share the same setting for this attribute. If you leave that selection, all hosts "
     "will keep their individual settings.") + "</p>")
 
-    html.begin_form("bulkedit", None, "POST")
+    html.begin_form("edithost", None, "POST")
     configure_attributes(hosts, "bulk", parent = g_folder)
     forms.end()
     html.button("_save", _("Save &amp; Finish"))
@@ -4618,13 +4618,14 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 continue
             attrname = attr.name()
             if attrname in without_attributes:
+                html.debug(without_attributes)
                 continue # e.g. needed to skip ipaddress in CSV-Import
 
             # Hide invisible attributes 
             hide_attribute = False
-            if for_what == "host" and not attr.show_in_form():
+            if for_what in [ "host", "bulk" ] and not attr.show_in_form():
                 hide_attribute = True
-            elif (for_what == "folder" or for_what == "bulk") and not attr.show_in_folder():
+            elif (for_what == "folder") and not attr.show_in_folder():
                 hide_attribute = True
 
             # Determine visibility information if this attribute is not always hidden

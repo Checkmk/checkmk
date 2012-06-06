@@ -1,9 +1,12 @@
 Title: Schlechter Kontrast bei der Liste von Regeln in Wato
 Component: wato
-State: open
+Class: nastiness
+State: done
 Date: 2012-05-30 16:08:34
 Targetversion: 1.2.0
-Class: nastiness
 
 Der farbliche Kontrast zwischen dem schwarzen Text und dunkeln Hintergrund sorgt 
 bei manchen Monitoren für schlecht lesbare Texte in der Liste von Regeln in Wato
+
+2012-06-06 13:38:32: changed state open -> done
+Hintergrund etwas heller gemacht.

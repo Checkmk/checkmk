@@ -10,6 +10,10 @@
     * FIX: fix severe exception in all views on older Python versions
       (like RedHat 5.5).
 
+    WATO:
+    * FIX: fix order of rule execution: subfolders now take precedence
+      as they should.
+
 1.2.0:
     Setup:
     * FIX: fix building of RPM packages (due to mk_mysql, mk_postgres)

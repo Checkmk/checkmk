@@ -10203,15 +10203,16 @@ def save_rulesets(folder, rulesets):
 
         if ':' in varname:
             dictname, subkey = varname.split(':')
+            varname = '%s[%r]' % (dictname, subkey)
             out.write("\n%s.setdefault(%r, [])\n" % (dictname, subkey))
-            out.write("%s[%r] += [\n" % (dictname, subkey))
         else:
             if rulespec["optional"]:
                 out.write("\nif %s == None:\n    %s = []\n" % (varname, varname))
-            out.write("\n%s += [\n" % varname)
+
+        out.write("\n%s = [\n" % varname)
         for rule in ruleset:
             save_rule(out, folder, rulespec, rule)
-        out.write("]\n\n")
+        out.write("] + %s\n\n" % varname)
 
 def save_rule(out, folder, rulespec, rule):
     out.write("  ( ")

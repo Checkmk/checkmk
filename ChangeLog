@@ -1,3 +1,7 @@
+1.2.0p1:
+    Checks & Agents:
+    * diskstat: handle output 'No Devices Found' - avoiding exception
+
 1.2.0:
     Setup:
     * FIX: fix building of RPM packages (due to mk_mysql, mk_postgres)

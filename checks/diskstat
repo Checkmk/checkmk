@@ -90,12 +90,15 @@ def diskstat_parse_info(info):
             if phase == 'info':
                 info_plain.append(line)
             elif phase == 'dmsetup_info':
-                majmin = tuple(map(int, line[1].split(':')))
-                if len(line) == 4:
-                    name = "LVM %s" % line[0]
-                else:
-                    name = "DM %s" % line[0]
-                nameinfo[majmin] = name
+                try:
+                    majmin = tuple(map(int, line[1].split(':')))
+                    if len(line) == 4:
+                        name = "LVM %s" % line[0]
+                    else:
+                        name = "DM %s" % line[0]
+                    nameinfo[majmin] = name
+                except:
+                    pass # ignore such crap as "No Devices Found"
             elif phase == 'vx_dsk':
                 maj = int(line[0], 16)
                 min = int(line[1], 16)

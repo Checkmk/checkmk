@@ -97,6 +97,7 @@ def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None, 
 
 # New functions for painting forms
 
+twofivesix = "".join(map(chr, range(0,256)))
 def strip_bad_chars(x):
     s = "".join([c for c in x if c > ' ' and c < 'z'])
 
@@ -110,7 +111,7 @@ def strip_bad_chars(x):
             ord(u"\""): None,
         })
     else:
-        return s.translate(None, "'&;<>\"")
+        return s.translate(twofivesix, "'&;<>\"")
 
 def header(title, isopen = True, table_id = "", narrow = False):
     global g_header_open

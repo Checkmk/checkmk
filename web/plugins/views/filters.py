@@ -383,7 +383,7 @@ class FilterTime(Filter):
         return True
 
     def display(self):
-        choices = [ (str(sec), title + " ago") for sec, title in self.ranges ] + \
+        choices = [ (str(sec), title + " " + _("ago")) for sec, title in self.ranges ] + \
                   [ ("abs", _("Date (YYYY-MM-DD)")) ]
 
         html.write("<table class=filtertime>")

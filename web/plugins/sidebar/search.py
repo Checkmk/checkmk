@@ -98,7 +98,7 @@ sidebar_snapins["search"] = {
     "styles":      """
 
 #mk_side_search {
-    width: 225px;
+    width: 232px;
     padding: 0;
 }
 

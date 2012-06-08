@@ -45,7 +45,10 @@ factory_settings["tsm_stgpools_default_levels"] = {
 def inventory_tsm_stgpools(info):
     items = set([])
     for inst, pool, util in info:
-        items.add(inst + " / " + pool)
+        if inst == "default":
+            items.add(pool)
+        else:
+            items.add(inst + " / " + pool)
     return [ (item, "tsm_stgpools_default_levels") for item in items ]
 
 def check_tsm_stgpools(item, params, info):
@@ -53,7 +56,7 @@ def check_tsm_stgpools(item, params, info):
     num_free_tapes = 0
     utilization = 0.0 # in relation to one tape size
     for inst, pool, util in info:
-        if inst + " / " + pool == item:
+        if inst + " / " + pool == item or pool == item:
             util = float(util) / 100.0
             utilization += util
             num_tapes += 1

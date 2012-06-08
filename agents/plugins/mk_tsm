@@ -1,9 +1,14 @@
 #!/usr/bin/ksh
 
+# Agent for Linux/UNIX for Tivoli Storage Manager (TSM)
+
 # Configuration is needed for username and password for dsmadmc
-# Example
+# You need to create a configuration file /etc/check_mk/tsm.cfg
+# with the following two lines:
 # TSM_USER=foo
 # TSM_PASSWORD=bar
+# If you have more than once instance, make sure that the upper
+# login works on all of them.
 
 . $MK_CONFDIR/tsm.cfg || exit 1
 

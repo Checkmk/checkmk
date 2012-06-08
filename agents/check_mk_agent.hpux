@@ -111,6 +111,16 @@ then
 fi
 
 
+# State of FC HBAs
+fcms_util=/opt/fcms/bin/fcdutil
+echo '<<<hpux_hbahealth:sep(61)>>>'
+for hba in /dev/fcd* ; do
+    echo "$hba"
+    $fcms_util $hba | grep -e "Driver state" -e "Topology" -e "Dump Available"\
+                      -e "Code version" -e "Hardware Path" -e "Port World"
+done
+
+
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR
 then

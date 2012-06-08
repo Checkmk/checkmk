@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<tsm_stgpools>>>
+# <<<tsm_stagingpools>>>
 # tsmfarm2       SL8500_STGPOOL_05       99.9
 # tsmfarm2       SL8500_STGPOOL_05       97.9
 # tsmfarm2       SL8500_LTO4_STGPOOL_01  48.6
@@ -38,20 +38,20 @@
 #    "levels" : (5, 2), # warn/crit if less then that many free tapes
 # }
 
-factory_settings["tsm_stgpools_default_levels"] = {
+factory_settings["tsm_stagingpools_default_levels"] = {
     "free_below" : 70,
 }
 
-def inventory_tsm_stgpools(info):
+def inventory_tsm_stagingpools(info):
     items = set([])
     for inst, pool, util in info:
         if inst == "default":
             items.add(pool)
         else:
             items.add(inst + " / " + pool)
-    return [ (item, "tsm_stgpools_default_levels") for item in items ]
+    return [ (item, "tsm_stagingpools_default_levels") for item in items ]
 
-def check_tsm_stgpools(item, params, info):
+def check_tsm_stagingpools(item, params, info):
     num_tapes = 0
     num_free_tapes = 0
     utilization = 0.0 # in relation to one tape size
@@ -90,12 +90,12 @@ def check_tsm_stgpools(item, params, info):
     return (state, nagios_state_names[state] + " - " + infotext, perfdata)
 
 
-check_info['tsm_stgpools'] = {
-    "check_function"          : check_tsm_stgpools,
-    "inventory_function"      : inventory_tsm_stgpools,
-    "service_description"     : "TSM Storagepool %s",
+check_info['tsm_stagingpools'] = {
+    "check_function"          : check_tsm_stagingpools,
+    "inventory_function"      : inventory_tsm_stagingpools,
+    "service_description"     : "TSM Stagingpool %s",
     "has_perfdata"            : True,
-    "group"                   : "tsm_stgpools",
-    "default_levels_variable" : "tsm_stgpools_default_levels",
+    "group"                   : "tsm_stagingpools",
+    "default_levels_variable" : "tsm_stagingpools_default_levels",
 }
 

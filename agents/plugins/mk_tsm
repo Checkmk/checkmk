@@ -26,7 +26,7 @@ do_tsm_checks ()
     dsmcmd="dsmadmc -id=$TSM_USER -pass=$TSM_PASSWORD -tab"
 
     # Staging Pools
-    echo '<<<tsm_stgpools>>>'
+    echo '<<<tsm_stagingpools>>>'
     $dsmcmd <<EOF | sed -n "/^FOO/s//$INST/p"
 select 'FOO',stgpool_name,pct_utilized from volumes where access='READWRITE' and devclass_name<>'DISK'
 EOF
@@ -38,7 +38,7 @@ SELECT 'FOO', library_name, drive_name, drive_state, online, drive_serial FROM d
 EOF
 
     # Occupancy
-    echo '<<<tsm_occupancy>>>'
+    echo '<<<tsm_storagepools>>>'
     $dsmcmd <<EOF | sed -n "/^FOO/s//$INST/p"
 SELECT 'FOO', type, stgpool_name, sum(logical_mb) from occupancy group by type, stgpool_name
 EOF

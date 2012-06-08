@@ -20,13 +20,7 @@
 # There might be different hbas in the system.
 # add your code if you need that. remember to use the right "util" for the type.
 
-hbas=$( ls /dev/fcd* )
-if [ $? = 0 ]; then
-    echo '<<<hpux_hbahealth>>>'
-else
-    exit 0
-fi
-
+echo '<<<hpux_hbahealth>>>'
 for hba in /dev/fcd* ; do
     util=/opt/fcms/bin/fcdutil
     echo "$hba"

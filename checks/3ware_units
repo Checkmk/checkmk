@@ -68,7 +68,7 @@ def check_3ware_units(item, _no_params, info):
 
             if status == "OK":
                 return (0, "OK - unit status is " + infotext)
-            elif status == "INITIALIZING":
+            elif status in [ "INITIALIZING", "VERIFY-PAUSED", "VERIFYING", "REBUILDING" ]:
                 return (1, "WARN - unit status is " + infotext)
             else:
                 return (2, "CRIT - unit status is " + infotext)

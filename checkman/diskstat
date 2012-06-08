@@ -14,6 +14,9 @@ description:
  summarized but with a separate check for read and write (this is how this
  check worked up to version 1.1.10).
 
+ The check also gives info on the IO latency and IOPS (unmerged) aquired
+ from the kernels information in /proc.
+
  You can apply separate warning and critical levels for the read
  and write throughput. Optionally you can have the check compute
  average values on a configurable time period and have the levels
@@ -21,10 +24,20 @@ description:
  it possible to ignore short "peaks" and only trigger and longer
  phases of high disk activity.
 
+ Averaging is not applied to IO latency calculations.
+
+ The check has to provide many ways of configuration for legacy reasons.
+ We strongly recommend you switch to the rule-based configuration, which
+ handles anything you want it to.
+
 item:
- Either {"SUMMARY"} for a summarized check of alls disks or the
- name of the disk device, e.g. {"sda"}. In order to support configurations
+ Either {"SUMMARY"} for a summarized check of all disks or the
+ name of the disk device, e.g. {"sda"}. Additionally also one service
+ per logical volume defined in Linux LVM and Veritas VxVM on Linux.
+
+ In order to support configurations
  up to version 1.1.10 also the items {"read"} and {"write"} are supported.
+ 
 
 examples:
  # switch inventory behaviour to 1.1.10 mode
@@ -51,10 +64,29 @@ examples:
    ( {"write" : (20, 50), "average" : 10 }, [ "oracle" ], ALL_HOSTS, [ "Disk IO" ])
  ]
 
+ # New way:
+ 
+ # Enable and configure the inventory behaviour based with rule-based settings
+ diskstat_inventory_mode = "rule"
+ diskstat_inventory += [
+  ( ['summary', 'lvm', 'vxvm'], [], ALL_HOSTS ),
+ ]
+
+ # Then configure levels for 50/90MB/s read IO over 10 Minutes and a bit less for 
+ # writes. Next put levels on IO latency exceeding 80ms / 160ms.
+ checkgroup_parameters['disk_io'] += [
+   ( {'read': (50.0, 90.0), 'write': (40.0, 60.0), 'average': 10, 'latency_perfdata': True, 'latency': (80.0, 160.0)}, [], ALL_HOSTS, ALL_SERVICES ),
+ ]
+
+
+
+
 perfdata:
   The disk throughput for read and write in bytes per second. If averaging
   is turned on, then two additional values are sent: the averaged read and
   write throughput.
+
+  The IO latency is returned if {"latency_perfdata"} is set to True
 
   In the legacy mode only one variable: the throughput since the last check
   in in bytes(!) per second, either for read or for write.
@@ -89,7 +121,22 @@ diskstat_defaul_levels(dict): The default parameter used for inventorized
                               That means that no averaging is done and no
                               levels are applied.
 
-diskstat_inventory_mode(string): Either {"single"} for one service per disk
+diskstat_inventory_mode(string): By default this is now set to {"rule"} for
+ fine-grained configuration of blockdevices to monitor.
+ The actual rule is defined in {"diststat_inventory"}.
+
+ The following older style parameters are also still available and mapped
+ to rules internally. Either {"single"} for one service per disk
  or {"summary"} for the throughput of all disks summed up in one service.
  Also possible is {"legacy"} for the old style mode (see above). Default
  is {"single"}.
+
+
+diskstat_inventory(list): This is a list of block device types to track.
+ Possible values are {"summary"}, which creates a summary item showing the IO 
+ rate of all disks, but not other block devices.
+ If you want statistics for every single disk, you can use {"phyiscal"}.
+ Enabling {"lvm"} will generate one item for each LVM volume, including snapshot 
+ volumes.
+ Enabling {"vxvm"} will generate one item for each volume managed by VxVM, 
+ including layered volumes.

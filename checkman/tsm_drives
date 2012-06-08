@@ -1,0 +1,28 @@
+title: Check the status of backup drives in Tivoli TSM
+agents: aix, linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check is used on servers running Tivoli storage manager to 
+ monitor the state of the backup drives.
+ It goes to {"CRIT"} if a drive is in non-OK state.
+ This will be if the drive is not online, unavailable or unknown.
+
+ The check reports status information and serial number info for the drives.
+
+item:
+ The name of the tape drive.
+
+
+inventory:
+ The check inventorizes all tape drives as reported by TSM.
+
+
+[parameters]
+ There are no check parameters
+
+
+[perfdata]
+  No perfdata is returned by the check.
+ 

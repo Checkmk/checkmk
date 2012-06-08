@@ -1,0 +1,11 @@
+Title: Remove all downtimes does not work
+Component: multisite
+State: open
+Date: 2012-06-08 16:02:53
+Targetversion: 1.2.0
+Class: bug
+
+The button "Remove all downtimes" in the host/services
+commands dialog is not yet implemented. One can remove 
+downtimes in the downtimes table - but nicer would be
+to do it here - or remove the button.

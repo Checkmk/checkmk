@@ -981,11 +981,14 @@ group = "agent/Check_MK Agent"
 
 register_rule(group,
     "agent_ports",
-    Integer(title = _("TCP port for connection to Check_MK agent"),
+    Integer(
             help = _("This variable allows to specify the TCP port to "
                      "be used to connect to the agent on a per-host-basis. "),
             minvalue = 1,
-            maxvalue = 65535))
+            maxvalue = 65535,
+            default_value = 6556),
+    title = _("TCP port for connection to Check_MK agent")
+)
 
 
 

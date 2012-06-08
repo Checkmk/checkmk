@@ -23,6 +23,18 @@ description:
  
 
 item:
- The name of the staging pool 
+ The name of the staging pool.
 
 
+inventory:
+ The check creates one item per staging pool found.
+
+
+[parameters]
+tsm_stagingpools_default_levels (dict):
+   "free_below"  - maximum usage of a tape drive to be considered as free
+(warn, crit) = Number of free tapes
+
+
+[perfdata]
+  The check returns the number of tapes that are considered free, the average utilization  and the levels for alerting

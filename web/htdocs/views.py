@@ -2088,8 +2088,8 @@ def do_actions(view, what, action_rows, backurl):
 
     command = None
     title, executor = core_command(what, action_rows[0])[1:3] # just get the title and executor
-    if not html.confirm(_("Do you really want to %s the following %d %ss?") %
-                                               (title, len(action_rows), what)):
+    if not html.confirm(_("Do you really want to %(title)s the following %(count)d %(what)s?") %
+            { "title" : title, "count" : len(action_rows), "what" : _(what + "s"), }):
         return False
 
     count = 0

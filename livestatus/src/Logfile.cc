@@ -34,13 +34,13 @@
 extern int num_cached_log_messages;
 extern int g_debug_level;
 
-    Logfile::Logfile(const char *path, bool watch)
-    : _path(strdup(path))
-    , _since(0)
-    , _watch(watch)
-    , _inode(0)
-    , _lineno(0)
-      , _logclasses_read(0)
+Logfile::Logfile(const char *path, bool watch)
+  : _path(strdup(path))
+  , _since(0)
+  , _watch(watch)
+  , _inode(0)
+  , _lineno(0)
+  , _logclasses_read(0)
 {
     int fd = open(path, O_RDONLY);
     if (fd < 0) {

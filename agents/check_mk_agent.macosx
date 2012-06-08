@@ -6,7 +6,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -22,7 +22,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-#
+
 # NOTE: This agent has beed adapted from the Check_MK linux agent.
 
 # Remove locale settings to eliminate localized outputs where possible
@@ -34,7 +34,7 @@ export MK_LIBDIR="/to/be/changed"
 export MK_CONFDIR="/to/be/changed"
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.0
+echo Version: 1.2.0p1
 echo AgentOS: macosx
 
 osver="$(uname -r)"

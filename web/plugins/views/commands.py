@@ -414,7 +414,7 @@ multisite_commands.append({
     "action"      : lambda cmdtag, spec, row: \
       html.has_var("_remove_downtimes") and \
       ( "DEL_%s_DOWNTIME;%d" % (cmdtag, spec),
-        _("remove the following"))
+        _("remove"))
 })
 
 # REMOVE COMMENTS (table comments)
@@ -427,5 +427,5 @@ multisite_commands.append({
     "action"      : lambda cmdtag, spec, row: \
       html.has_var("_remove_comments") and \
       ( "DEL_%s_COMMENT;%d" % (cmdtag, spec),
-        _("remove the following"))
+        _("remove"))
 })

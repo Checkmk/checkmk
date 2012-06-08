@@ -1,3 +1,21 @@
+1.2.0p1:
+    Core:
+    * Added macros $DATE$, $SHORTDATETIME$ and $LONGDATETIME$' to
+      notification macros
+
+    Checks & Agents:
+    * FIX: diskstat: handle output 'No Devices Found' - avoiding exception
+    * 3ware_units: Following states now lead to WARNING state instead of
+    CRITICAL: "VERIFY-PAUSED", "VERIFYING", "REBUILDING"
+
+    Multisite:
+    * FIX: fix severe exception in all views on older Python versions
+      (like RedHat 5.5).
+
+    WATO:
+    * FIX: fix order of rule execution: subfolders now take precedence
+      as they should.
+
 1.2.0:
     Setup:
     * FIX: fix building of RPM packages (due to mk_mysql, mk_postgres)

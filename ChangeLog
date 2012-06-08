@@ -6,7 +6,8 @@
     Checks & Agents:
     * FIX: diskstat: handle output 'No Devices Found' - avoiding exception
     * 3ware_units: Following states now lead to WARNING state instead of
-    CRITICAL: "VERIFY-PAUSED", "VERIFYING", "REBUILDING"
+      CRITICAL: "VERIFY-PAUSED", "VERIFYING", "REBUILDING"
+    * New checks tsm_stgpools and tsm_drives for Linux/UNIX
 
     Multisite:
     * FIX: fix severe exception in all views on older Python versions

@@ -1,0 +1,102 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<tsm_drives>>>
+# tsmfarm3   LIBRARY3           DRIVE01        LOADED             YES            000782XXXX
+# tsmfarm3   LIBRARY3           DRIVE02        LOADED             YES            002348XXXX
+# tsmfarm3   LIBRARY3           DRIVE03        EMPTY              YES            000783XXXX
+# tsmfarm3   LIBRARY3           DRIVE04        EMPTY              NO            000784XXXX
+# tsmfarm3   LIBRARY3           DRIVE05        LOADED             YES            000785XXXX
+
+# <<<tsm_drives>>>
+# default        GPFSFILE        GPFSFILE1       UNKNOWN YES
+# default        GPFSFILE        GPFSFILE10      UNKNOWN YES
+# default        GPFSFILE        GPFSFILE11      UNKNOWN YES
+# default        GPFSFILE        GPFSFILE12      UNKNOWN YES
+# default        GPFSFILE        GPFSFILE13      UNKNOWN YES
+
+# Possible values for state:
+# LOADED
+# EMPTY
+# UNAVAILABLE  -> crit
+# UNLOADED
+# RESERVED
+# UNKNOWN      -> crit
+
+# Possible values for loaded:
+# YES          -> OK
+# NO
+# UNAVAILABLE_SINCE?
+# POLLING?
+
+def inventory_tsm_drives(info):
+    inventory = []
+    for line in info:
+        if len(line) == 6:
+            inst, library, drive, state, online = line[:5]
+            item = "%s / %s" % (library, drive)
+            if inst != "default":
+                item = inst + " / " + item
+            inventory.append((item, None))
+
+    return inventory
+
+def check_tsm_drives(item, params, info):
+    for line in info:
+        if len(line) >= 5:
+            inst, library, drive, state, online = line[:5]
+            libdev = "%s / %s" % (library, drive)
+            if item == libdev or item == inst + " / " + libdev:
+                if len(line) >= 6:
+                    serial = line[5]
+                    infotext = "[%s] " % serial
+                else:
+                    serial = None
+                    infotext = ""
+                
+                monstate = 0
+                infotext += "state: %s" % state
+                if state in [ "UNAVAILABLE", "UNKNOWN" ]:
+                    monstate = 2
+                    infotext += "(!!)"
+
+                infotext += ", online: %s" % online
+                if online != "YES":
+                    monstate = 2
+                    infotext += "(!!)"
+
+                return (monstate, nagios_state_names[monstate] + " - " + infotext)
+    return (3, "UNKNOWN - drive not found")
+
+
+
+check_info['tsm_drives'] = {
+    "check_function"          : check_tsm_drives,
+    "inventory_function"      : inventory_tsm_drives,
+    "service_description"     : "TSM Drive %s",
+    "has_perfdata"            : False,
+}
+

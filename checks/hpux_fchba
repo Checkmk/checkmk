@@ -1,0 +1,101 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<hpux_fchba>>>
+# /dev/fcd0
+#                        ISP Code version = 4.4.4
+#                                Topology = PTTOPT_FABRIC
+#             N_Port Port World Wide Name = 0x500143800252658a
+#             Switch Port World Wide Name = 0x200400051e6302d7
+#                            Driver state = ONLINE
+#                        Hardware Path is = 0/0/1/1/0
+#          Driver-Firmware Dump Available = NO
+# /dev/fcd1
+#                        ISP Code version = 4.4.4
+#                                Topology = PTTOPT_FABRIC
+#             N_Port Port World Wide Name = 0x500143800252658c
+#             Switch Port World Wide Name = 0x200400051e5d1942
+#                            Driver state = ONLINE
+#                        Hardware Path is = 1/0/12/1/0
+#          Driver-Firmware Dump Available = NO
+
+
+def parse_hpux_fchba(info):
+    hbas = {}
+    for line in info:
+        if line[0].startswith("/dev/"):
+            name = line[0][5:]
+            hba = { "name": name }
+            hbas[name] = hba
+        elif len(line) == 2:
+            hba[line[0].strip()] = line[1].strip()
+    return hbas
+
+def inventory_hpux_fchba(info):
+    parsed = parse_hpux_fchba(info)
+    return [ (name, None) for name, hba in parsed.items()
+             if hba["Driver state"] == "ONLINE" ] 
+
+def check_hpux_fchba(item, _no_params, info):
+    parsed = parse_hpux_fchba(info)
+    if item not in parsed:
+        return (3, "UNKNOWN - HBA noch found")
+
+    hba = parsed[item]
+
+    state = 0
+    infos = []
+
+    infos.append("Hardware Path: %s" % hba["Hardware Path is"])
+
+    infos.append("Driver State: %s" % hba["Driver state"])
+    if hba["Driver state"] != "ONLINE":
+        state = 2
+        infos[-1] += "(!!)"
+
+    infos.append("Topology: %s" % hba.get("Topology", "(none)"))
+    if hba.get("Topology") not in [ 
+            "PTTOPT_FABRIC", "PRIVATE_LOOP", "PUBLIC_LOOP", ]:
+        state = 2
+        infos[-1] += "(!!)"
+
+    if hba.get("Driver-Firmware Dump Available", "NO") != "NO":
+        infos.append("Driver-Firmware Dump Available(!!)")
+        state = 2
+
+            
+
+    infotext = ", ".join(infos)
+    return state, nagios_state_names[state] + " - " + infotext
+
+
+check_info['hpux_fchba'] = {
+    "check_function"          : check_hpux_fchba,
+    "inventory_function"      : inventory_hpux_fchba,
+    "service_description"     : "FC HBA %s",
+    "has_perfdata"            : False,
+}
+

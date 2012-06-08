@@ -1,6 +1,8 @@
 #!/usr/bin/ksh
 
 # Agent for Linux/UNIX for Tivoli Storage Manager (TSM)
+
+# Configuration is needed for username and password for dsmadmc
 # You need to create a configuration file /etc/check_mk/tsm.cfg
 # with the following two lines:
 # TSM_USER=foo
@@ -23,22 +25,22 @@ do_tsm_checks ()
     # If we have no instance name, we take 'default'
     if [ -z "$INST" ] ; then INST=default ; fi
 
-    dsmcmd="dsmadmc -id=$TSM_USER -pass=$TSM_PASSWORD -tab"
+    dsmcmd="dsmadmc -id=$TSM_USER -pass=$TSM_PASSWORD -dataonly=yes -tab"
 
     # Staging Pools
-    echo '<<<tsm_stagingpools>>>'
+    echo '<<<tsm_stagingpools:sep(9)>>>'
     $dsmcmd <<EOF | sed -n "/^FOO/s//$INST/p"
 select 'FOO',stgpool_name,pct_utilized from volumes where access='READWRITE' and devclass_name<>'DISK'
 EOF
 
     # Drive Status
-    echo '<<<tsm_drives>>>'
+    echo '<<<tsm_drives:sep(9)>>>'
     $dsmcmd <<EOF | sed -n "/^FOO/s//$INST/p"
 SELECT 'FOO', library_name, drive_name, drive_state, online, drive_serial FROM drives
 EOF
 
     # Occupancy
-    echo '<<<tsm_storagepools>>>'
+    echo '<<<tsm_storagepools:sep(9)>>>'
     $dsmcmd <<EOF | sed -n "/^FOO/s//$INST/p"
 SELECT 'FOO', type, stgpool_name, sum(logical_mb) from occupancy group by type, stgpool_name
 EOF

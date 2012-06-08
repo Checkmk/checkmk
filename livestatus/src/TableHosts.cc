@@ -63,8 +63,8 @@ bool TableHosts::isAuthorized(contact *ctc, void *data)
 }
 
 
-    TableHosts::TableHosts(bool by_group)
-: _by_group(by_group)
+TableHosts::TableHosts(bool by_group)
+    : _by_group(by_group)
 {
     struct hostbygroup ref;
     addColumns(this, "", -1);

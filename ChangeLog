@@ -9,6 +9,7 @@
       CRITICAL: "VERIFY-PAUSED", "VERIFYING", "REBUILDING"
     * New checks tsm_stagingpools, tsm_drive and tsm_storagepools
       Linux/UNIX
+    * hpux_fchba: new check for monitoring FibreChannel HBAs und HP-UX
 
     Multisite:
     * FIX: fix severe exception in all views on older Python versions

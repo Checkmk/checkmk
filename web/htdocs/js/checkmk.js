@@ -287,6 +287,15 @@ function makeuri(addvars) {
 // GUI styling
 // ----------------------------------------------------------------------------
 
+function update_headinfo(text)
+{
+    oDiv = document.getElementById("headinfo");
+    if (oDiv) {
+        oDiv.innerHTML = text;
+    }
+}
+
+
 function filter_activation(oSelect)
 {
     var usage = oSelect.value;
@@ -938,6 +947,19 @@ function highlight_elem(elem, on) {
         remove_class(elem, "checkbox_hover");
 }
 
+function update_row_selection_information() {
+    var count = g_selected_rows.length;
+    var oDiv = document.getElementById("headinfo");
+    if (oDiv) {
+        var current_text = oDiv.innerHTML;
+        if (current_text.indexOf('/') != -1) {
+            var parts = current_text.split('/');
+            current_text = parts[1];
+        }
+        oDiv.innerHTML = count + "/" + current_text;
+    }
+}
+
 function select_all_rows(elems, only_failed) {
     if (typeof only_failed === 'undefined') {
         only_failed = false;
@@ -949,6 +971,7 @@ function select_all_rows(elems, only_failed) {
                 g_selected_rows.push(elems[i].name);
         }
     }
+    update_row_selection_information();
 }
 
 function remove_selected_rows(elems) {
@@ -959,6 +982,7 @@ function remove_selected_rows(elems) {
             g_selected_rows.splice(row_pos, 1);
         row_pos = null;
     }
+    update_row_selection_information();
 }
 
 function toggle_box(e, elem) {
@@ -968,6 +992,7 @@ function toggle_box(e, elem) {
     } else {
         g_selected_rows.push(elem.name);
     }
+    update_row_selection_information();
 }
 
 function toggle_row(e, elem) {
@@ -1003,6 +1028,7 @@ function toggle_row(e, elem) {
         checkbox.checked = true;
         g_selected_rows.push(checkbox.name);
     }
+    update_row_selection_information();
 
     if(e.stopPropagation)
         e.stopPropagation();
@@ -1212,6 +1238,8 @@ function table_init_rowselect(oTable) {
         });
     }
     childs = null;
+
+    update_row_selection_information();
 }
 
 function init_rowselect() {

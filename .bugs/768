@@ -1,0 +1,9 @@
+Title: Login dialog - layout broken on failed login
+Component: multisite
+State: open
+Date: 2012-06-11 09:17:50
+Targetversion: 1.2.0
+Class: nastiness
+
+When you login with a wrong password, then the layout
+of the error field text is garbled (at least on Chrome).

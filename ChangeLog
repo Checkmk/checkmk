@@ -1,3 +1,8 @@
+1.2.0p2:
+    Multisite:
+    * Show number of rows and number of selected rows in header line
+      (also for WATO hosts table)
+
 1.2.0p1:
     Core:
     * Added macros $DATE$, $SHORTDATETIME$ and $LONGDATETIME$' to

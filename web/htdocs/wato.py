@@ -1263,11 +1263,13 @@ def show_hosts(folder):
     odd = "odd"
 
     host_errors = validate_all_hosts(hostnames) 
+    rendered_hosts = []
     # Now loop again over all hosts and display them
     for hostname in hostnames:
         if search_text and (search_text.lower() not in hostname.lower()):
             continue
 
+        rendered_hosts.append(hostname)
         host = g_folder[".hosts"][hostname]
         effective = effective_attributes(host, g_folder)
 
@@ -1370,8 +1372,11 @@ def show_hosts(folder):
     html.hidden_fields() 
     html.end_form()
 
+    row_count = len(rendered_hosts)
+    headinfo = "%d %s" % (row_count, row_count == 1 and _("host") or _("hosts"))
+    html.javascript("update_headinfo('%s');" % headinfo)
     html.javascript('g_selected_rows = %s;\n'
-                    'init_rowselect();' % repr(["_c_%s" % h for h in hostnames]))
+                    'init_rowselect();' % repr(["_c_%s" % h for h in rendered_hosts]))
     return True
 
 move_to_folder_combo_cache_id = None

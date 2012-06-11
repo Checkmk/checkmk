@@ -128,6 +128,10 @@ body.main hr.header {
     color: #fff;
 }
 
+#headinfo {
+  margin-right: 10px;
+}
+
 body.main div.urldebug {
     color: white;
     width: 100%;

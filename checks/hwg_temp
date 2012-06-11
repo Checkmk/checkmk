@@ -46,7 +46,7 @@ def check_hwg_temp(item, params, info):
     for line in info: 
         if line[0] == item:
             descr, status, current, current_m, unit = line[1:]
-            current_state = saveint(current_m)/10
+            current_state = savefloat(current_m)/10
             
             state = 0
             if current_state >= crit:

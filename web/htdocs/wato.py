@@ -9210,19 +9210,32 @@ def mode_ruleeditor(phase):
         if main_group not in groupnames:
             groupnames.append(main_group)
     menu = []
-    for groupname in groupnames:
+    for groupname in groupnames + ["used"]:
         url = make_link([("mode", "rulesets"), ("group", groupname), 
                          ("host", only_host), ("local", only_local)])
-        title, help = g_rulegroups.get(groupname, (groupname, ""))
+        if groupname == "used":
+            title = _("Used Rulesets")
+            help = _("Show only modified rulesets<br>(all rulesets with at least one rule)")
+            icon = "usedrulesets"
+        else:
+            title, help = g_rulegroups.get(groupname, (groupname, ""))
+            icon = "rulesets"
         help = help.split('\n')[0] # Take only first line as button text
-        menu.append((url, title, "rulesets", "rulesets", help))
+        menu.append((url, title, icon, "rulesets", help))
     render_main_menu(menu)
 
 
 
 def mode_rulesets(phase):
     group = html.var("group") # obligatory
-    title, help = g_rulegroups.get(group, (group, None))
+    if group == "used":
+        title = _("Used Rulesets")
+        help = _("Non-empty rulesets")
+        only_used = True
+    else:
+        title, help = g_rulegroups.get(group, (group, None))
+        only_used = False
+
     only_host = html.var("host", "")
     only_local = "" # html.var("local")
 
@@ -9264,18 +9277,20 @@ def mode_rulesets(phase):
             all_rulesets[varname] += [ (g_folder, rule) for rule in rules ]
     else:
         all_rulesets = load_all_rulesets()
+        if only_used:
+            all_rulesets = dict([ r for r in all_rulesets.items() if len(r[1]) > 0 ])
 
     # Select matching rule groups while keeping their configured order
     groupnames = [ gn for gn, rulesets in g_rulespec_groups
-                   if gn == group or gn.startswith(group + "/") ]
+                   if only_used or gn == group or gn.startswith(group + "/") ]
     do_folding = len(groupnames) > 1
 
     something_shown = False
     html.write('<div class=rulesets>')
     # Loop over all ruleset groups
+    title_shown = False
     for groupname in groupnames:
         # Show information about a ruleset
-        title_shown = False
         # Sort rulesets according to their title
         g_rulespec_group[groupname].sort(
             cmp = lambda a, b: cmp(a["title"], b["title"]))
@@ -9285,7 +9300,7 @@ def mode_rulesets(phase):
             valuespec = rulespec["valuespec"]
             rules = all_rulesets.get(varname, [])
             num_rules = len(rules)
-            if num_rules == 0 and only_local:
+            if num_rules == 0 and (only_used or only_local):
                 continue
 
             # Handle case where a host is specified
@@ -9303,14 +9318,18 @@ def mode_rulesets(phase):
             if only_local and num_local_rules == 0:
                 continue
 
-            if not title_shown:
+            if only_used:
+                titlename = g_rulegroups[groupname.split("/")[0]][0]
+            else:
                 if '/' in groupname:
-                    subgroupname = groupname.split("/", 1)[1]
+                    titlename = groupname.split("/", 1)[1]
                 else:
-                    subgroupname = title
-                forms.header(subgroupname)
+                    titlename = title
+
+            if title_shown != titlename:
+                forms.header(titlename)
                 forms.container()
-                title_shown = True
+                title_shown = titlename
 
             something_shown = True
 
@@ -9395,8 +9414,11 @@ def mode_edit_ruleset(phase):
     elif phase == "buttons":
         global_buttons()
         group = rulespec["group"].split("/")[0]
-        html.context_button(_("All rulesets"),
+        groupname = g_rulegroups[group][0]
+        html.context_button(groupname,
               make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
+        html.context_button(_("Used Rulesets"),
+              make_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
         if hostname:
             html.context_button(_("Services"),
                  make_link([("mode", "inventory"), ("host", hostname)]), "back")

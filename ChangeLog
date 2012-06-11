@@ -3,6 +3,11 @@
     * Show number of rows and number of selected rows in header line
       (also for WATO hosts table)
 
+    WATO: 
+    * Main menu of ruleeditor (Host & Service Parameters) now has
+      a topic for "Used rules" - a short overview of all non-empty
+      rulesets.
+
 1.2.0p1:
     Core:
     * Added macros $DATE$, $SHORTDATETIME$ and $LONGDATETIME$' to

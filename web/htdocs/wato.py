@@ -4740,14 +4740,6 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             else: # "host"
                 active = attrname in host
 
-            # Legend and Help
-            # html.write('<tr id="attr_%s" %s><td class=legend>' % (attrname, hide_attribute and 'style="display: none"' or ""))
-            # html.write("<b>%s</b>" % attr.title())
-            # html.help(attr.help())
-            # html.write("</td>")
-
-
-            # html.write('<td class=checkbox>')
             if force_entry:
                 checkbox_code = '<input type=checkbox name="ignored_%s" CHECKED DISABLED>' % checkbox_name
                 checkbox_code += '<input type=hidden name="%s" value="on">' % checkbox_name
@@ -4756,7 +4748,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 checkbox_code = '<input type=checkbox name="%s" %s onclick="%s">' % (
                     checkbox_name, active and "CHECKED" or "", onclick)
             forms.section(attr.title(), checkbox=checkbox_code, id="attr_" + attrname)
-            # html.write("</td>")
+            html.help(attr.help())
 
             # Now comes the input fields and the inherited / default values
             # as two DIV elements, one of which is visible at one time.

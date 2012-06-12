@@ -43,6 +43,15 @@ def make_item_list(path, value, itemspec):
     else:
         result = []
         for key, subvalue in value.items():
+            # Handle filtering via itemspec
+            miss = False
+            while itemspec and '=' in itemspec[0]:
+                if itemspec[0] not in key:
+                    miss = True
+                    break
+                itemspec = itemspec[1:]
+            if miss:
+                continue
             item = extract_item(key, itemspec)
             if not item:
                 item = (key,)
@@ -142,7 +151,7 @@ global_vars = [
   ( "*:*/QueueLength",                                   None,                      [ "ServerRuntime" ] ),
   ( "*:*/StandbyThreadCount",                            None,                      [ "ServerRuntime" ] ),
   ( "*:*/PendingUserRequestCount",                       None,                      [ "ServerRuntime" ] ),
-  ( "*:*/ExecuteThreadTotalCount",                       None,                      [ "ServerRuntime" ] ),
+  ( "*:*/ExecuteThreadTotalCount",                       None,                      [ "Name=ThreadPoolRuntime", "ServerRuntime" ] ),
   ( "*:*/ExecuteThreadIdleCount",                        None,                      [ "ServerRuntime" ] ),
   ( "*:*/HoggingThreadCount",                            None,                      [ "ServerRuntime" ] ),
 #   ( '*:j2eeType=WebModule,name=/--/localhost/-/%(app)s,*/state', None, [ "name" ]),

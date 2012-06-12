@@ -26,10 +26,13 @@
 
 # MB warn, crit
 j4p_performance_mem_default_levels      = (1000, 2000)
+
 # Number of threads warn, crit
-j4p_performance_threads_default_levels  = (80, 100)
+j4p_performance_threads_default_levels  = (80, 100) 
+
 # Number of sessions low crit, low warn, high warn, high crit
-j4p_performance_app_sess_default_levels = (-1, -1, 800, 1000)
+j4p_performance_app_sess_default_levels = (-1, -1, 800, 1000) 
+
 # Number of requests low crit, low warn, high warn, high crit
 j4p_performance_serv_req_default_levels = (-1, -1, 5000, 6000)
 
@@ -48,6 +51,7 @@ def j4p_performance_parse(info):
         parsed.setdefault(inst, {})
         if servlet:
             parsed[inst].setdefault('apps', {})
+            parsed[inst]['apps'].setdefault(app, {})
             parsed[inst]['apps'][app].setdefault('servlets', {})
             parsed[inst]['apps'][app]['servlets'].setdefault(servlet, {})
             parsed[inst]['apps'][app]['servlets'][servlet][var] = value
@@ -91,9 +95,15 @@ def inventory_j4p_performance_apps(info, what):
     levels = None
     if what == 'app_sess':
         levels = 'j4p_performance_app_sess_default_levels'
+        needed_key = [ "Sessions", "activeSessions" ]
+    else:
+        needed_key = [ "Running" ]
     for inst, vals in parsed.iteritems():
-        for app in vals.get('apps', {}).keys():
-            inv.append(('%s %s' % (inst, app), levels))
+        for app, appstate in vals.get('apps', {}).items():
+            for nk in needed_key:
+                if nk in appstate:
+                    inv.append(('%s %s' % (inst, app), levels))
+                    continue
     return inv
 
 
@@ -103,10 +113,12 @@ def inventory_j4p_performance_serv(info, what):
     levels = None
     if what == 'serv_req':
         levels = 'j4p_performance_serv_req_default_levels'
+        needed_key = "Requests"
     for inst, vals in parsed.iteritems():
         for app, val in vals.get('apps', {}).iteritems():
-            for serv in val.get('servlets', {}).keys():
-                inv.append(('%s %s %s' % (inst, app, serv), levels))
+            for serv, servinfo in val.get('servlets', {}).items():
+                if needed_key in servinfo:
+                    inv.append(('%s %s %s' % (inst, app, serv), levels))
     return inv
 
 
@@ -198,9 +210,12 @@ def check_j4p_performance_app_state(item, _unused, info):
 def check_j4p_performance_app_sess(item, params, info):
     lo_crit, lo_warn, hi_warn, hi_crit = params
     app = j4p_performance_app(info, item.split())
-    if not app or not 'Sessions' in app:
+    if not app: 
+        return (3, "UNKNOWN - application not found")
+    sessions = app.get('Sessions', app.get('activeSessions'))
+    if sessions == None:
         return (3, "UNKNOWN - data not found in agent output")
-    sess = saveint(app['Sessions'])
+    sess = saveint(sessions)
 
     status = 0
     status_txt = ''

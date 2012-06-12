@@ -1,0 +1,196 @@
+#!/usr/bin/python
+
+import urllib2, sys, os, socket, pprint
+
+opt_debug = '--debug' in sys.argv
+
+def fetch_var(server, port, path, suburi, itemspec):
+    url = "http://%s:%d/%s/read/%s" % (server, port, suburi, path)
+    json = urllib2.urlopen(url).read()
+
+    try:
+        true = True
+        false = False
+        nil = None
+        obj = eval(json)
+    except Exception, e:
+        sys.stderr.write('ERROR: Invalid json code (%s)\n' % e)
+        sys.stderr.write('       Response %s\n' % json)
+        return []
+
+    if obj.get('status', 200) == 404:
+        sys.stderr.write('ERROR: Invalid response when fetching url %s\n' % url)
+        sys.stderr.write('       Response: %s\n' % json)
+        return []
+
+    # Only take the value of the object. If the value is an object
+    # take the first items first value.
+    # {'Catalina:host=localhost,path=\\/test,type=Manager': {'activeSessions': 0}}
+    if 'value' not in obj: 
+        if opt_debug:
+            sys.stderr.write("ERROR: not found: %s\n" % path)
+        return []
+    val = obj.get('value', None)
+    return make_item_list((), val, itemspec)
+
+# convert single values into lists of items in
+# case value is a 1-levelled or 2-levelled dict
+def make_item_list(path, value, itemspec):
+    if type(value) != dict:
+        if type(value) == str:
+            value = value.replace(r'\/', '/')
+        return [(path, value)]
+    else:
+        result = []
+        for key, subvalue in value.items():
+            item = extract_item(key, itemspec)
+            if not item:
+                item = (key,)
+            result += make_item_list(path + item, subvalue, [])
+        return result
+
+# Example:
+# key = 'Catalina:host=localhost,path=\\/,type=Manager'
+# itemsepc = [ "path" ]
+# --> "/"
+
+def extract_item(key, itemspec):
+    path = key.split(":", 1)[-1]
+    components = path.split(",")
+    item = ()
+    for comp in components:
+        parts = comp.split("=")
+        if len(parts) == 2:
+            left, right = parts
+            if left in itemspec:
+                right = right.replace(r'\/', '/')
+                if '/' in right:
+                    right = '/' + right.split('/')[-1]
+                item = item + (right,)
+    return item
+
+
+def query_instance(inst):
+    # Prepare user/password authentication via HTTP Auth
+    if inst.get("password"):
+        passwdmngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        passwdmngr.add_password(None, "http://%s:%d/" % 
+                (inst["server"], inst["port"]), inst["user"], inst["password"])
+        if inst["mode"] == 'digest':
+            authhandler = urllib2.HTTPDigestAuthHandler(passwdmngr)
+        else:
+            authhandler = urllib2.HTTPBasicAuthHandler(passwdmngr)
+        opener = urllib2.build_opener(authhandler)
+        urllib2.install_opener(opener)
+
+    # Fetch the general information first
+    for path, title, itemspec in global_vars:
+    
+        try:
+            values = fetch_var(inst["server"], inst["port"], path, inst["suburi"], itemspec)
+
+        # In case of network errors skip this server
+        except IOError:
+            return
+        except socket.timeout:
+            return
+        except:
+            if opt_debug:
+                raise
+            # Simply ignore exceptions. Need to be removed for debugging
+            continue
+    
+        for subinstance, value in values:
+            if not subinstance and not title:
+                print "FUCK: %s" % value
+                continue
+
+            if len(subinstance) > 1:
+                item = ",".join((inst["instance"],) + subinstance[:-1])
+            else:
+                item = inst["instance"]
+            if title:
+                if subinstance:
+                    tit = title + "." + subinstance[-1]
+                else:
+                    tit = title
+            else:
+                tit = subinstance[-1]
+
+            sys.stdout.write("%s %s %s\n" % (item, tit, value))
+
+
+# Default configuration for all instances
+server   = "localhost"
+port     = 8080
+user     = "jmx4perl"
+password = "J4PisOK"
+mode     = "digest"
+suburi   = "j4p"
+instance = None
+
+global_vars = [
+  ( "java.lang:type=Memory/NonHeapMemoryUsage/used",     "NonHeapMemoryUsage",      [] ),
+  ( "java.lang:type=Memory/HeapMemoryUsage/used",        "HeapMemoryUsage",         [] ),
+  ( "java.lang:type=Threading/ThreadCount",              "ThreadCount",             [] ),
+  ( "java.lang:type=Threading/DaemonThreadCount",        "DeamonThreadCount",       [] ),
+  ( "java.lang:type=Threading/PeakThreadCount",          "PeakThreadCount",         [] ),
+  ( "java.lang:type=Threading/TotalStartedThreadCount",  "TotalStartedThreadCount", [] ),
+  ( "java.lang:type=Runtime/Uptime",                     "Uptime",                  [] ),
+  ( "Catalina:host=*,path=*,type=Manager",               None,                      [ "path" ] ),
+  ( "*:*/CompletedRequestCount",                         None,                      [ "ServerRuntime" ] ),
+  ( "*:*/QueueLength",                                   None,                      [ "ServerRuntime" ] ),
+  ( "*:*/StandbyThreadCount",                            None,                      [ "ServerRuntime" ] ),
+  ( "*:*/PendingUserRequestCount",                       None,                      [ "ServerRuntime" ] ),
+  ( "*:*/ExecuteThreadTotalCount",                       None,                      [ "ServerRuntime" ] ),
+  ( "*:*/ExecuteThreadIdleCount",                        None,                      [ "ServerRuntime" ] ),
+  ( "*:*/HoggingThreadCount",                            None,                      [ "ServerRuntime" ] ),
+#   ( '*:j2eeType=WebModule,name=/--/localhost/-/%(app)s,*/state', None, [ "name" ]),
+#   ( '*:j2eeType=Servlet,WebModule=/--/localhost/-/%(app)s,name=%(servlet)s,*/requestCount', None, [ "WebModule", "name" ]),
+#   ( "Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*,j2eeType=Servlet,name=*", None, [ "WebModule", "name" ]),
+]
+
+
+# List of instances to monitor. Each instance is a dict where
+# the global configuration values can be overridden.
+instances = [{}]
+
+conffile = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/j4p.conf"
+
+if instance == None:
+    instance = str(port)
+
+if os.path.exists(conffile):
+    execfile(conffile)
+
+
+# We have to deal with socket timeouts. Python > 2.6
+# supports timeout parameter for the urllib2.urlopen method
+# but we are on a python 2.5 system here which seem to use the
+# default socket timeout. We are local here so  set it to 1 second.
+socket.setdefaulttimeout(1.0)
+
+# Compute list of instances to monitor. If the user has defined
+# instances in his configuration, we will use this (a list
+# of dicts).
+if instances:
+    sys.stdout.write("<<<j4p_performance>>>\n")
+
+for inst in instances:
+    for varname, value in [
+        ( "server", server ),
+        ( "port", port ),
+        ( "user", user ),
+        ( "password", password ),
+        ( "mode", mode ),
+        ( "suburi", suburi ),
+        ( "instance", instance )]:
+        if varname not in inst:
+            inst[varname] = value
+    if not inst["instance"]:
+        inst["instance"] = str(inst["port"])
+    inst["instance"] = inst["instance"].replace(" ", "_")
+
+    query_instance(inst)
+
+

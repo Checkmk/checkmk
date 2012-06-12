@@ -1,0 +1,286 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# MB warn, crit
+j4p_performance_mem_default_levels      = (1000, 2000)
+
+# Number of threads warn, crit
+j4p_performance_threads_default_levels  = (80, 100) 
+
+# Number of sessions low crit, low warn, high warn, high crit
+j4p_performance_app_sess_default_levels = (-1, -1, 800, 1000) 
+
+# Number of requests low crit, low warn, high warn, high crit
+j4p_performance_serv_req_default_levels = (-1, -1, 5000, 6000)
+
+
+def j4p_performance_parse(info):
+    parsed = {}
+    for inst, var, value in info:
+        app, servlet = None, None
+        if ',' in inst:
+            parts = inst.split(',')
+            if len(parts) == 3:
+                inst, app, servlet = parts
+            else:
+                inst, app = parts
+
+        parsed.setdefault(inst, {})
+        if servlet:
+            parsed[inst].setdefault('apps', {})
+            parsed[inst]['apps'].setdefault(app, {})
+            parsed[inst]['apps'][app].setdefault('servlets', {})
+            parsed[inst]['apps'][app]['servlets'].setdefault(servlet, {})
+            parsed[inst]['apps'][app]['servlets'][servlet][var] = value
+        elif app:
+            parsed[inst].setdefault('apps', {})
+            parsed[inst]['apps'].setdefault(app, {})
+            parsed[inst]['apps'][app][var] = value
+        else:
+            parsed[inst][var] = value
+    return parsed
+
+
+def j4p_performance_app(info, (inst, app)):
+    parsed = j4p_performance_parse(info)
+    if not inst in parsed \
+       or not app in parsed[inst].get('apps', {}):
+        return None
+    return parsed[inst]['apps'][app]
+
+
+def j4p_performance_serv(info, (inst, app, serv)):
+    app = j4p_performance_app(info, (inst, app))
+    if not app or not serv in app.get('servlets', {}):
+        return None
+    return app['servlets'][serv]
+
+
+def inventory_j4p_performance(info, what):
+    parsed = j4p_performance_parse(info)
+    levels = None
+    if what == 'mem':
+        levels = 'j4p_performance_mem_default_levels'
+    elif what == 'threads':
+        levels = 'j4p_performance_threads_default_levels'
+    return [ (k, levels) for k in parsed ]
+
+
+def inventory_j4p_performance_apps(info, what):
+    inv = []
+    parsed = j4p_performance_parse(info)
+    levels = None
+    if what == 'app_sess':
+        levels = 'j4p_performance_app_sess_default_levels'
+        needed_key = [ "Sessions", "activeSessions" ]
+    else:
+        needed_key = [ "Running" ]
+    for inst, vals in parsed.iteritems():
+        for app, appstate in vals.get('apps', {}).items():
+            for nk in needed_key:
+                if nk in appstate:
+                    inv.append(('%s %s' % (inst, app), levels))
+                    continue
+    return inv
+
+
+def inventory_j4p_performance_serv(info, what):
+    inv = []
+    parsed = j4p_performance_parse(info)
+    levels = None
+    if what == 'serv_req':
+        levels = 'j4p_performance_serv_req_default_levels'
+        needed_key = "Requests"
+    for inst, vals in parsed.iteritems():
+        for app, val in vals.get('apps', {}).iteritems():
+            for serv, servinfo in val.get('servlets', {}).items():
+                if needed_key in servinfo:
+                    inv.append(('%s %s %s' % (inst, app, serv), levels))
+    return inv
+
+
+def check_j4p_performance_mem(item, params, info):
+    warn, crit = params
+    parsed = j4p_performance_parse(info)
+    if item not in parsed:
+        return (3, "UNKNOWN - data not found in agent output")
+    d = parsed[item]
+    mb = 1024 * 1024.0
+    heap = saveint(d["HeapMemoryUsage"]) / mb
+    non_heap = saveint(d["NonHeapMemoryUsage"]) / mb
+    total = heap + non_heap
+    perfdata = [ ("heap",    heap,     warn, crit),
+                 ("nonheap", non_heap, warn, crit) ]
+    infotext = "%.0f MB total (%.0f MB heap, %.0f MB non-heap), levels at %.0f/%.0f" % (total, heap, non_heap, warn, crit)
+    if total >= crit:
+        return (2, "CRIT - " + infotext, perfdata)
+    elif total >= warn:
+        return (1, "WARN - " + infotext, perfdata)
+    else:
+        return (0, "OK - " + infotext, perfdata)
+
+
+def check_j4p_performance_threads(item, params, info):
+    warn, crit = params
+    parsed = j4p_performance_parse(info)
+    if item not in parsed:
+        return (3, "UNKNOWN - data not found in agent output")
+    d = parsed[item]
+
+    this_time = time.time()
+    wrapped = False
+    perfdata = []
+    output   = []
+    status   = 0
+    for key in [ 'ThreadCount', 'DeamonThreadCount', 'PeakThreadCount', 'TotalStartedThreadCount' ]:
+        val = saveint(d[key])
+        if key == 'ThreadCount':
+            # Thread count might lead to a warn/crit state
+            if val >= crit:
+                status = 2
+            elif val >= warn:
+                status = 1
+
+            # Calculate the thread increase rate
+            try:
+                timedif, rate = get_counter("j4p_performance.threads.%s" % item, this_time, val)
+                output.append('ThreadRate: %0.2f' % rate)
+                perfdata.append(('ThreadRate', rate))
+            except MKCounterWrapped:
+                wrapped = True
+
+        perfdata.append((key, val))
+        output.append('%s: %d' % (key, val))
+    # Only process the perfdata when no wrap occured
+    if wrapped:
+        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)))
+    else:
+        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
+
+def check_j4p_performance_uptime(item, _unused, info):
+    parsed = j4p_performance_parse(info)
+    if item not in parsed:
+        return (3, "UNKNOWN - data not found in agent output")
+    uptime = saveint(parsed[item]['Uptime']) / 1000
+
+    seconds = uptime % 60
+    rem = uptime / 60
+    minutes = rem % 60
+    hours = (rem % 1440) / 60
+    days = rem / 1440
+    now = int(time.time())
+    since = time.strftime("%c", time.localtime(now - uptime))
+    return (0, "OK - up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
+
+
+def check_j4p_performance_app_state(item, _unused, info):
+    app = j4p_performance_app(info, item.split())
+    if not app or not 'Running' in app:
+        return (3, "UNKNOWN - data not found in agent output")
+
+    if app['Running'] == '1':
+        return (0, 'OK - application is running')
+    else:
+        return (2, 'CRIT - application is not running (Running: %s)')
+
+
+def check_j4p_performance_app_sess(item, params, info):
+    lo_crit, lo_warn, hi_warn, hi_crit = params
+    app = j4p_performance_app(info, item.split())
+    if not app: 
+        return (3, "UNKNOWN - application not found")
+    sessions = app.get('Sessions', app.get('activeSessions'))
+    if sessions == None:
+        return (3, "UNKNOWN - data not found in agent output")
+    sess = saveint(sessions)
+
+    status = 0
+    status_txt = ''
+    if lo_crit is not None and sess <= lo_crit:
+        status = 2
+        status_txt = ' (Below or equal %d)' % lo_crit
+    elif lo_warn is not None and sess <= lo_warn:
+        status = 1
+        status_txt = ' (Below or equal %d)' % lo_warn
+    elif hi_crit is not None and sess >= hi_crit:
+        status = 2
+        status_txt = ' (Above or equal %d)' % lo_warn
+    elif hi_warn is not None and sess >= hi_warn:
+        status = 1
+        status_txt = ' (Above or equal %d)' % lo_crit
+
+    return (status, '%s - %d Sessions%s' % (nagios_state_names[status], sess, status_txt),
+            [('sessions', sess, hi_warn, hi_crit)])
+
+
+def check_j4p_performance_serv_req(item, params, info):
+    lo_crit, lo_warn, hi_warn, hi_crit = params
+    serv = j4p_performance_serv(info, item.split())
+    if not serv or not 'Requests' in serv:
+        return (3, "UNKNOWN - data not found in agent output")
+    req = saveint(serv['Requests'])
+
+    status    = 0
+    status_txt = ''
+    if lo_crit is not None and req <= lo_crit:
+        status = 2
+        status_txt = ' (Below or equal %d)' % lo_crit
+    elif lo_warn is not None and req <= lo_warn:
+        status = 1
+        status_txt = ' (Below or equal %d)' % lo_warn
+    elif hi_crit is not None and req >= hi_crit:
+        status = 2
+        status_txt = ' (Above or equal %d)' % lo_warn
+    elif hi_warn is not None and req >= hi_warn:
+        status = 1
+        status_txt = ' (Above or equal %d)' % lo_crit
+
+    output    = ['Requests: %d%s' % (req, status_txt)]
+    perfdata  = [('Requests', req, hi_warn, hi_crit)]
+    wrapped   = False
+    this_time = time.time()
+    try:
+        timedif, rate = get_counter("j4p_performance.serv_req.%s" % item, this_time, req)
+        output.append('RequestRate: %0.2f' % rate)
+        perfdata.append(('RequestRate', rate))
+    except MKCounterWrapped:
+        wrapped = True
+
+    if wrapped:
+        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)))
+    else:
+        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
+
+
+# General JVM checks
+check_info["j4p_performance.mem"]       = ( check_j4p_performance_mem,       "JMX %s Memory",   1, lambda i: inventory_j4p_performance(i, "mem"))
+check_info["j4p_performance.threads"]   = ( check_j4p_performance_threads,   "JMX %s Threads",  1, lambda i: inventory_j4p_performance(i, "threads"))
+check_info["j4p_performance.uptime"]    = ( check_j4p_performance_uptime,    "JMX %s Uptime",   1, lambda i: inventory_j4p_performance(i, "uptime"))
+# App specific checks
+check_info["j4p_performance.app_state"] = ( check_j4p_performance_app_state, "JMX %s State",    0, lambda i: inventory_j4p_performance_apps(i, "app_state"))
+check_info["j4p_performance.app_sess"]  = ( check_j4p_performance_app_sess,  "JMX %s Sessions", 1, lambda i: inventory_j4p_performance_apps(i, "app_sess"))
+# Servlet specific checks
+check_info["j4p_performance.serv_req"]  = ( check_j4p_performance_serv_req,  "JMX %s Requests", 1, lambda i: inventory_j4p_performance_serv(i, "serv_req"))

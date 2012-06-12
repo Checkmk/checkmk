@@ -1,4 +1,7 @@
 1.2.0p2:
+    Checks & Agents:
+    * if_lancom: silently ignore Logical and Point-To-Point interfaces
+
     Multisite:
     * Show number of rows and number of selected rows in header line
       (also for WATO hosts table)

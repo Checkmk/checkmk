@@ -122,7 +122,7 @@ def check_j4p_performance_mem(item, params, info):
     total = heap + non_heap
     perfdata = [ ("heap",    heap,     warn, crit),
                  ("nonheap", non_heap, warn, crit) ]
-    infotext = "%.0f MB total (%.0f heap, %.0f MB non-heap), levels at %.0f/%.0f" % (total, heap, non_heap, warn, crit)
+    infotext = "%.0f MB total (%.0f MB heap, %.0f MB non-heap), levels at %.0f/%.0f" % (total, heap, non_heap, warn, crit)
     if total >= crit:
         return (2, "CRIT - " + infotext, perfdata)
     elif total >= warn:

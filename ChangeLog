@@ -1,7 +1,16 @@
 1.2.0p2:
+    Checks & Agents:
+    * if_lancom: silently ignore Logical and Point-To-Point interfaces
+
     Multisite:
     * Show number of rows and number of selected rows in header line
       (also for WATO hosts table)
+
+    WATO: 
+    * Main menu of ruleeditor (Host & Service Parameters) now has
+      a topic for "Used rules" - a short overview of all non-empty
+      rulesets.
+    * FIX: add missing context help to host details dialog
 
 1.2.0p1:
     Core:

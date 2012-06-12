@@ -211,6 +211,9 @@ div.contextlink a {
     display: block;
     width: 158px;
     height: 25px;
+    text-overflow: ellipsis;
+    max-width: 158px;
+    overflow: hidden;
 }
 
 /* Icon image in a context button */

@@ -621,8 +621,10 @@ form#form_timeperiod td.vlof_content {
 
 /* main menu */
 .wato div.mainmenu {
-    background-color: red;
+    display: table-cell;
+    margin-bottom: 10px;
 }
+
 .wato div.mainmenu a {
     width: 317px;
     height: 76px;

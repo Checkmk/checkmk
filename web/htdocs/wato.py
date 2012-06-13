@@ -496,7 +496,7 @@ def load_folder(dir, name="", path="", parent=None, childs = True):
 # so that subsequent code has access to the correct folder
 # meta data (such as .siteid)
 def reload_folder(folder):
-    load_folder(folder_dir(folder), folder[".name"], folder[".path"], folder.get(".parent"))
+    return load_folder(folder_dir(folder), folder[".name"], folder[".path"], folder.get(".parent"))
 
 # Load the information about all folders - except the hosts
 def load_all_folders():
@@ -1664,13 +1664,15 @@ def mode_editfolder(phase, new):
             if attributes_changed:
                 mark_affected_sites_dirty(g_folder)
                 g_folder["attributes"] = attributes
-                mark_affected_sites_dirty(g_folder)
 
                 # Due to changes in folder/file attributes, host files
                 # might need to be rewritten in order to reflect Changes
                 # in Nagios-relevant attributes.
                 rewrite_config_files_below(g_folder) # due to inherited attributes
-                reload_folder(g_folder)
+                save_folder(g_folder)
+                g_folder = reload_folder(g_folder)
+                mark_affected_sites_dirty(g_folder)
+
                 log_pending(AFFECTED, g_folder, "edit-folder",
                        _("Changed attributes of folder %s") % title)
                 call_hook_hosts_changed(g_folder)
@@ -4623,7 +4625,6 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 continue
             attrname = attr.name()
             if attrname in without_attributes:
-                html.debug(without_attributes)
                 continue # e.g. needed to skip ipaddress in CSV-Import
 
             # Hide invisible attributes 
@@ -7003,7 +7004,6 @@ def mark_affected_sites_dirty(folder, hostname=None, sync = True, restart = True
 #         "need_restart" : True,
 #     }
 #     for site_id, site in sites.items():
-#         html.debug("ID: " + site_id)
 #         update_replication_status(site_id, changes)
 
 def remove_sync_snapshot():

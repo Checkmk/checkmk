@@ -1325,6 +1325,7 @@ def render_view(view, rows, datasource, group_painters, painters,
         show_filter_form(filter_isopen, show_filters)
 
     # Actions
+    row_count = len(rows)
     if command_form:
         # If we are currently within an action (confirming or executing), then
         # we display only the selected rows (if checkbox mode is active)
@@ -1358,6 +1359,11 @@ def render_view(view, rows, datasource, group_painters, painters,
             html.check_limit(rows, get_limit())
         layout["render"](rows, view, group_painters, painters, num_columns,
                          show_checkboxes and not html.do_actions())
+        headinfo = "%d %s" % (row_count, row_count == 1 and _("row") or _("rows"))
+        if show_checkboxes and html.var("selected_rows"):
+            selected = get_selected_rows(view, rows, html.var("selected_rows"))
+            headinfo = "%d/%s" % (len(selected), headinfo)
+        html.javascript("update_headinfo('%s');" % headinfo)
 
         # Play alarm sounds, if critical events have been displayed
         if 'S' in display_options and view.get("play_sounds"):

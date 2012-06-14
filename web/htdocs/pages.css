@@ -128,6 +128,10 @@ body.main hr.header {
     color: #fff;
 }
 
+#headinfo {
+  margin-right: 10px;
+}
+
 body.main div.urldebug {
     color: white;
     width: 100%;
@@ -207,6 +211,9 @@ div.contextlink a {
     display: block;
     width: 158px;
     height: 25px;
+    text-overflow: ellipsis;
+    max-width: 158px;
+    overflow: hidden;
 }
 
 /* Icon image in a context button */

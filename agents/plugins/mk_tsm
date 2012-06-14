@@ -1,0 +1,59 @@
+#!/usr/bin/ksh
+
+# Agent for Linux/UNIX for Tivoli Storage Manager (TSM)
+
+# Configuration is needed for username and password for dsmadmc
+# You need to create a configuration file /etc/check_mk/tsm.cfg
+# with the following two lines:
+# TSM_USER=foo
+# TSM_PASSWORD=bar
+# If you have more than once instance, make sure that the upper
+# login works on all of them.
+
+. $MK_CONFDIR/tsm.cfg || exit 1
+
+if [ -z "$TSM_USER" -o -z "$TSM_PASSWORD" ]
+then
+    echo "Please set TSM_USER and TSM_PASSWORD in $MK_CONFDIR/tsm.cfg" >&2
+    exit 1
+fi
+
+do_tsm_checks ()
+{
+    INST=${DSMSERV_DIR##*/} 
+
+    # If we have no instance name, we take 'default'
+    if [ -z "$INST" ] ; then INST=default ; fi
+
+    dsmcmd="dsmadmc -id=$TSM_USER -pass=$TSM_PASSWORD -dataonly=yes -tab"
+
+    # Staging Pools
+    echo '<<<tsm_stagingpools:sep(9)>>>'
+    $dsmcmd <<EOF | sed -n "/^FOO/s//$INST/p"
+select 'FOO',stgpool_name,pct_utilized from volumes where access='READWRITE' and devclass_name<>'DISK'
+EOF
+
+    # Drive Status
+    echo '<<<tsm_drives:sep(9)>>>'
+    $dsmcmd <<EOF | sed -n "/^FOO/s//$INST/p"
+SELECT 'FOO', library_name, drive_name, drive_state, online, drive_serial FROM drives
+EOF
+
+    # Occupancy
+    echo '<<<tsm_storagepools:sep(9)>>>'
+    $dsmcmd <<EOF | sed -n "/^FOO/s//$INST/p"
+SELECT 'FOO', type, stgpool_name, sum(logical_mb) from occupancy group by type, stgpool_name
+EOF
+    
+}
+
+# Find in the list of processes TSM daemons. Example output of 'ps xewwg'
+# 8781984      - A    127:26 dsmserv _=/usr/bin/dsmserv LANG=en_US LOGIN=root PATH=/usr/bin:/etc:/usr/sbin:/usr/ucb:/usr/bin/X11:/sbin:/usr/java5/jre/bin:/usr/java5/bin LC_ALL=en_US DSMSERV_CONFIG=/foobar_17g/dsmserv.opt LC__FASTMSG=true LOGNAME=root MAIL=/var/spool/mail/root LOCPATH=/usr/lib/nls/loc DSMSERV_DIR=/foobar_17g USER=root AUTHSTATE=compat AIXTHREAD_MNRATIO=1:1 SHELL=/usr/bin/ksh ODMDIR=/etc/objrepos HOME=/ SSH_CLIENT=192.168.21.199 37725 22 SSH_CONNECTION=192.168.21.199 37725 192.168.21.214 22 PWD=/foobar_17g TZ=Europe/Bucharest AIXTHREAD_SCOPE=S DSMSERV_ACCOUNTING_DIR=/foobar_17g/acc NLSPATH=/usr/lib/nls/msg/%L/%N:/usr/lib/nls/msg/%L/%N.cat LIBPATH=/usr/local/Centera_SDK/lib/64/ 
+
+ps xewwg | sed -n '/ dsmserv .* DSMSERV_CONFIG=/s/^.* dsmserv //p' | \
+while read line
+do
+    # Take over all relevant environment into our own
+    eval "$(echo "$line" | tr ' ' '\n' | sed -n '/^DSMSERV_/s/^/export /p')"
+    do_tsm_checks
+done

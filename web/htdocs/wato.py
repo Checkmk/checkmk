@@ -1263,11 +1263,13 @@ def show_hosts(folder):
     odd = "odd"
 
     host_errors = validate_all_hosts(hostnames) 
+    rendered_hosts = []
     # Now loop again over all hosts and display them
     for hostname in hostnames:
         if search_text and (search_text.lower() not in hostname.lower()):
             continue
 
+        rendered_hosts.append(hostname)
         host = g_folder[".hosts"][hostname]
         effective = effective_attributes(host, g_folder)
 
@@ -1370,8 +1372,11 @@ def show_hosts(folder):
     html.hidden_fields() 
     html.end_form()
 
+    row_count = len(rendered_hosts)
+    headinfo = "%d %s" % (row_count, row_count == 1 and _("host") or _("hosts"))
+    html.javascript("update_headinfo('%s');" % headinfo)
     html.javascript('g_selected_rows = %s;\n'
-                    'init_rowselect();' % repr(["_c_%s" % h for h in hostnames]))
+                    'init_rowselect();' % repr(["_c_%s" % h for h in rendered_hosts]))
     return True
 
 move_to_folder_combo_cache_id = None
@@ -4735,14 +4740,6 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             else: # "host"
                 active = attrname in host
 
-            # Legend and Help
-            # html.write('<tr id="attr_%s" %s><td class=legend>' % (attrname, hide_attribute and 'style="display: none"' or ""))
-            # html.write("<b>%s</b>" % attr.title())
-            # html.help(attr.help())
-            # html.write("</td>")
-
-
-            # html.write('<td class=checkbox>')
             if force_entry:
                 checkbox_code = '<input type=checkbox name="ignored_%s" CHECKED DISABLED>' % checkbox_name
                 checkbox_code += '<input type=hidden name="%s" value="on">' % checkbox_name
@@ -4751,7 +4748,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 checkbox_code = '<input type=checkbox name="%s" %s onclick="%s">' % (
                     checkbox_name, active and "CHECKED" or "", onclick)
             forms.section(attr.title(), checkbox=checkbox_code, id="attr_" + attrname)
-            # html.write("</td>")
+            html.help(attr.help())
 
             # Now comes the input fields and the inherited / default values
             # as two DIV elements, one of which is visible at one time.
@@ -9205,19 +9202,32 @@ def mode_ruleeditor(phase):
         if main_group not in groupnames:
             groupnames.append(main_group)
     menu = []
-    for groupname in groupnames:
+    for groupname in groupnames + ["used"]:
         url = make_link([("mode", "rulesets"), ("group", groupname), 
                          ("host", only_host), ("local", only_local)])
-        title, help = g_rulegroups.get(groupname, (groupname, ""))
+        if groupname == "used":
+            title = _("Used Rulesets")
+            help = _("Show only modified rulesets<br>(all rulesets with at least one rule)")
+            icon = "usedrulesets"
+        else:
+            title, help = g_rulegroups.get(groupname, (groupname, ""))
+            icon = "rulesets"
         help = help.split('\n')[0] # Take only first line as button text
-        menu.append((url, title, "rulesets", "rulesets", help))
+        menu.append((url, title, icon, "rulesets", help))
     render_main_menu(menu)
 
 
 
 def mode_rulesets(phase):
     group = html.var("group") # obligatory
-    title, help = g_rulegroups.get(group, (group, None))
+    if group == "used":
+        title = _("Used Rulesets")
+        help = _("Non-empty rulesets")
+        only_used = True
+    else:
+        title, help = g_rulegroups.get(group, (group, None))
+        only_used = False
+
     only_host = html.var("host", "")
     only_local = "" # html.var("local")
 
@@ -9259,18 +9269,20 @@ def mode_rulesets(phase):
             all_rulesets[varname] += [ (g_folder, rule) for rule in rules ]
     else:
         all_rulesets = load_all_rulesets()
+        if only_used:
+            all_rulesets = dict([ r for r in all_rulesets.items() if len(r[1]) > 0 ])
 
     # Select matching rule groups while keeping their configured order
     groupnames = [ gn for gn, rulesets in g_rulespec_groups
-                   if gn == group or gn.startswith(group + "/") ]
+                   if only_used or gn == group or gn.startswith(group + "/") ]
     do_folding = len(groupnames) > 1
 
     something_shown = False
     html.write('<div class=rulesets>')
     # Loop over all ruleset groups
+    title_shown = False
     for groupname in groupnames:
         # Show information about a ruleset
-        title_shown = False
         # Sort rulesets according to their title
         g_rulespec_group[groupname].sort(
             cmp = lambda a, b: cmp(a["title"], b["title"]))
@@ -9280,7 +9292,7 @@ def mode_rulesets(phase):
             valuespec = rulespec["valuespec"]
             rules = all_rulesets.get(varname, [])
             num_rules = len(rules)
-            if num_rules == 0 and only_local:
+            if num_rules == 0 and (only_used or only_local):
                 continue
 
             # Handle case where a host is specified
@@ -9298,14 +9310,18 @@ def mode_rulesets(phase):
             if only_local and num_local_rules == 0:
                 continue
 
-            if not title_shown:
+            if only_used:
+                titlename = g_rulegroups[groupname.split("/")[0]][0]
+            else:
                 if '/' in groupname:
-                    subgroupname = groupname.split("/", 1)[1]
+                    titlename = groupname.split("/", 1)[1]
                 else:
-                    subgroupname = title
-                forms.header(subgroupname)
+                    titlename = title
+
+            if title_shown != titlename:
+                forms.header(titlename)
                 forms.container()
-                title_shown = True
+                title_shown = titlename
 
             something_shown = True
 
@@ -9390,8 +9406,11 @@ def mode_edit_ruleset(phase):
     elif phase == "buttons":
         global_buttons()
         group = rulespec["group"].split("/")[0]
-        html.context_button(_("All rulesets"),
+        groupname = g_rulegroups[group][0]
+        html.context_button(groupname,
               make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
+        html.context_button(_("Used Rulesets"),
+              make_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
         if hostname:
             html.context_button(_("Services"),
                  make_link([("mode", "inventory"), ("host", hostname)]), "back")

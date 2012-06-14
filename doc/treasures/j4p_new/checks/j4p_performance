@@ -26,12 +26,17 @@
 
 # MB warn, crit
 j4p_performance_mem_default_levels      = (1000, 2000)
+
 # Number of threads warn, crit
-j4p_performance_threads_default_levels  = (80, 100)
+j4p_performance_threads_default_levels  = (80, 100) 
+
 # Number of sessions low crit, low warn, high warn, high crit
-j4p_performance_app_sess_default_levels = (-1, -1, 800, 1000)
+j4p_performance_app_sess_default_levels = (-1, -1, 800, 1000) 
+
 # Number of requests low crit, low warn, high warn, high crit
 j4p_performance_serv_req_default_levels = (-1, -1, 5000, 6000)
+
+j4p_performance_queue_default_levels = ( 20, 50 )
 
 
 def j4p_performance_parse(info):
@@ -48,6 +53,7 @@ def j4p_performance_parse(info):
         parsed.setdefault(inst, {})
         if servlet:
             parsed[inst].setdefault('apps', {})
+            parsed[inst]['apps'].setdefault(app, {})
             parsed[inst]['apps'][app].setdefault('servlets', {})
             parsed[inst]['apps'][app]['servlets'].setdefault(servlet, {})
             parsed[inst]['apps'][app]['servlets'][servlet][var] = value
@@ -88,12 +94,27 @@ def inventory_j4p_performance(info, what):
 def inventory_j4p_performance_apps(info, what):
     inv = []
     parsed = j4p_performance_parse(info)
-    levels = None
     if what == 'app_sess':
         levels = 'j4p_performance_app_sess_default_levels'
+        needed_key = [ "Sessions", "activeSessions" ]
+    elif what == 'queue':
+        needed_key = [ "QueueLength" ]
+        levels = "j4p_performance_queue_default_levels"
+    elif what == 'requests':
+        needed_key = [ "CompletedRequestCount" ]
+        levels = None
+    elif what == 'threads':
+        needed_key = [ "StandbyThreadCount" ]
+        levels = None
+    else:
+        needed_key = [ "Running" ]
+        levels = None
     for inst, vals in parsed.iteritems():
-        for app in vals.get('apps', {}).keys():
-            inv.append(('%s %s' % (inst, app), levels))
+        for app, appstate in vals.get('apps', {}).items():
+            for nk in needed_key:
+                if nk in appstate:
+                    inv.append(('%s %s' % (inst, app), levels))
+                    continue
     return inv
 
 
@@ -103,10 +124,12 @@ def inventory_j4p_performance_serv(info, what):
     levels = None
     if what == 'serv_req':
         levels = 'j4p_performance_serv_req_default_levels'
+        needed_key = "Requests"
     for inst, vals in parsed.iteritems():
         for app, val in vals.get('apps', {}).iteritems():
-            for serv in val.get('servlets', {}).keys():
-                inv.append(('%s %s %s' % (inst, app, serv), levels))
+            for serv, servinfo in val.get('servlets', {}).items():
+                if needed_key in servinfo:
+                    inv.append(('%s %s %s' % (inst, app, serv), levels))
     return inv
 
 
@@ -198,9 +221,12 @@ def check_j4p_performance_app_state(item, _unused, info):
 def check_j4p_performance_app_sess(item, params, info):
     lo_crit, lo_warn, hi_warn, hi_crit = params
     app = j4p_performance_app(info, item.split())
-    if not app or not 'Sessions' in app:
+    if not app: 
+        return (3, "UNKNOWN - application not found")
+    sessions = app.get('Sessions', app.get('activeSessions'))
+    if sessions == None:
         return (3, "UNKNOWN - data not found in agent output")
-    sess = saveint(app['Sessions'])
+    sess = saveint(sessions)
 
     status = 0
     status_txt = ''
@@ -260,12 +286,117 @@ def check_j4p_performance_serv_req(item, params, info):
         return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
 
 
+def check_j4p_performance_bea_queue(item, params, info):
+    app = j4p_performance_app(info, item.split())
+    if not app: 
+        return (3, "UNKNOWN - application not found")
+    if "QueueLength" not in app:
+        return (3, "UNKNOWN - data not found in agent output")
+    queuelength = int(app['QueueLength'])
+
+    status = 0
+    warn, crit = params
+    if queuelength >= crit:
+        status = 2
+    elif queuelength >= warn:
+        status = 1
+    return (status, nagios_state_names[status] + ' - queue length is %d' % queuelength, 
+             [("length", queuelength, warn, crit)])
+
+def check_j4p_performance_bea_requests(item, _no_params, info):
+    app = j4p_performance_app(info, item.split())
+    if not app: 
+        return (3, "UNKNOWN - application not found")
+    if "CompletedRequestCount" not in app:
+        return (3, "UNKNOWN - data not found in agent output")
+    requests = int(app['CompletedRequestCount'])
+    timedif, rate = get_counter("j4p.bea.requests.%s" % item, time.time(), requests)
+    return (0, "OK - %.2f requests/sec" % rate, [("rate", rate)])
+
+def check_j4p_performance_bea_threads(item, _no_params, info):
+    app = j4p_performance_app(info, item.split())
+    if not app: 
+        return (3, "UNKNOWN - application not found")
+
+    perfdata = []
+    infos = []
+    for varname, title in [ 
+        ( "ExecuteThreadTotalCount", "total" ),
+        ( "ExecuteThreadIdleCount", "idle" ),
+        ( "StandbyThreadCount", "standby" ),
+        ( "HoggingThreadCount", "hogging" ) ]:
+        value = int(app[varname])
+        perfdata.append((varname, value))
+        infos.append("%s: %d" % (title, value))
+
+    return (0, "OK - " + ", ".join(infos), perfdata)
+
+
+
 # General JVM checks
-check_info["j4p_performance.mem"]       = ( check_j4p_performance_mem,       "JMX %s Memory",   1, lambda i: inventory_j4p_performance(i, "mem"))
-check_info["j4p_performance.threads"]   = ( check_j4p_performance_threads,   "JMX %s Threads",  1, lambda i: inventory_j4p_performance(i, "threads"))
-check_info["j4p_performance.uptime"]    = ( check_j4p_performance_uptime,    "JMX %s Uptime",   1, lambda i: inventory_j4p_performance(i, "uptime"))
-# App specific checks
-check_info["j4p_performance.app_state"] = ( check_j4p_performance_app_state, "JMX %s State",    0, lambda i: inventory_j4p_performance_apps(i, "app_state"))
-check_info["j4p_performance.app_sess"]  = ( check_j4p_performance_app_sess,  "JMX %s Sessions", 1, lambda i: inventory_j4p_performance_apps(i, "app_sess"))
+check_info["j4p_performance.mem"] = {
+    "service_description" : "JMX %s Memory",
+    "check_function"      : check_j4p_performance_mem,
+    "inventory_function"  : lambda i: inventory_j4p_performance(i, "mem"),
+    "has_perfdata"        : True,
+}
+
+check_info["j4p_performance.threads"] = {
+    "service_description" : "JMX %s Threads",
+    "check_function"      : check_j4p_performance_threads,
+    "inventory_function"  : lambda i: inventory_j4p_performance(i, "threads"),
+    "has_perfdata"        : True,
+}
+
+check_info["j4p_performance.uptime"] = {
+    "service_description" : "JMX %s Uptime",
+    "check_function"      : check_j4p_performance_uptime,
+    "inventory_function"  : lambda i: inventory_j4p_performance(i, "uptime"),
+    "has_perfdata"        : True,
+}
+
+# Application specific checks
+check_info["j4p_performance.app_state"] = {
+    "service_description" : "JMX %s State",
+    "check_function"      : check_j4p_performance_app_state,
+    "inventory_function"  : lambda i: inventory_j4p_performance_apps(i, "app_state"),
+    "has_perfdata"        : False,
+}
+
+check_info["j4p_performance.app_sess"] = {
+    "service_description" : "JMX %s Sessions",
+    "check_function"      : check_j4p_performance_app_sess,
+    "inventory_function"  : lambda i: inventory_j4p_performance_apps(i, "app_sess"),
+    "has_perfdata"        : True,
+}
+
 # Servlet specific checks
-check_info["j4p_performance.serv_req"]  = ( check_j4p_performance_serv_req,  "JMX %s Requests", 1, lambda i: inventory_j4p_performance_serv(i, "serv_req"))
+check_info["j4p_performance.serv_req"] = {
+    "service_description" : "JMX %s Requests",
+    "check_function"      : check_j4p_performance_serv_req,
+    "inventory_function"  : lambda i: inventory_j4p_performance_serv(i, "serv_req"),
+    "has_perfdata"        : True,
+}
+
+# Stuff found on BEA Weblogic
+check_info["j4p_performance.bea_queue"] = {
+    "service_description" : "JMX %s Queue",
+    "check_function"      : check_j4p_performance_bea_queue,
+    "inventory_function"  : lambda i: inventory_j4p_performance_apps(i, "queue"),
+    "has_perfdata"        : True,
+}
+
+check_info["j4p_performance.bea_requests"] = {
+    "service_description" : "JMX %s Requests",
+    "check_function"      : check_j4p_performance_bea_requests,
+    "inventory_function"  : lambda i: inventory_j4p_performance_apps(i, "requests"),
+    "has_perfdata"        : True,
+}
+
+check_info["j4p_performance.bea_threads"] = {
+    "service_description" : "JMX %s Threads",
+    "check_function"      : check_j4p_performance_bea_threads,
+    "inventory_function"  : lambda i: inventory_j4p_performance_apps(i, "threads"),
+    "has_perfdata"        : True,
+}
+

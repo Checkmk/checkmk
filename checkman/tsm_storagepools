@@ -1,0 +1,28 @@
+title: Report usage of storage pools in Tivoli TSM
+agents: aix, linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check is used on servers running Tivoli storage manager to 
+ get and track information about the capacity stored in storage pools.
+ It reports based on the LOGICAL_MB used field of the TSM database, but converts it to human-readable units.
+
+ Since this check is mostly informational it always returns an OK state.
+
+
+item:
+ The name of the storage pool.
+
+
+inventory:
+ The check inventorizes all storage pools on the server, independent of their type.
+
+
+[parameters]
+ There are no check parameters
+
+
+[perfdata]
+  The used capacity in Megabytes.
+ 

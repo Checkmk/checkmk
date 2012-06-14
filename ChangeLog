@@ -1,3 +1,17 @@
+1.2.0p2:
+    Checks & Agents:
+    * if_lancom: silently ignore Logical and Point-To-Point interfaces
+
+    Multisite:
+    * Show number of rows and number of selected rows in header line
+      (also for WATO hosts table)
+
+    WATO: 
+    * Main menu of ruleeditor (Host & Service Parameters) now has
+      a topic for "Used rules" - a short overview of all non-empty
+      rulesets.
+    * FIX: add missing context help to host details dialog
+
 1.2.0p1:
     Core:
     * Added macros $DATE$, $SHORTDATETIME$ and $LONGDATETIME$' to
@@ -6,7 +20,10 @@
     Checks & Agents:
     * FIX: diskstat: handle output 'No Devices Found' - avoiding exception
     * 3ware_units: Following states now lead to WARNING state instead of
-    CRITICAL: "VERIFY-PAUSED", "VERIFYING", "REBUILDING"
+      CRITICAL: "VERIFY-PAUSED", "VERIFYING", "REBUILDING"
+    * New checks tsm_stagingpools, tsm_drive and tsm_storagepools
+      Linux/UNIX
+    * hpux_fchba: new check for monitoring FibreChannel HBAs und HP-UX
 
     Multisite:
     * FIX: fix severe exception in all views on older Python versions

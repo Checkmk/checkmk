@@ -68,10 +68,10 @@ void debug(const char *loginfo, ...)
 }
 
 
-    TableLog::TableLog(unsigned long max_cached_messages)
-    : _num_cached_messages(0)
-    , _max_cached_messages(max_cached_messages)
-      , _num_at_last_check(0)
+TableLog::TableLog(unsigned long max_cached_messages)
+  : _num_cached_messages(0)
+  , _max_cached_messages(max_cached_messages)
+  , _num_at_last_check(0)
 {
     pthread_mutex_init(&_lock, 0);
 
@@ -187,23 +187,6 @@ void TableLog::answerQuery(Query *query)
     /* This code start with the oldest log entries. I'm going
        to change this and start with the newest. That way,
        the Limit: header produces more reasonable results. */
-
-    /* OLD CODE - OLDEST FIRST
-       _logfiles_t::iterator it;
-       if (since == 0)
-       it = _logfiles.begin();
-       else { // find oldest relevant logfile
-       it = _logfiles.end();
-       while (it != _logfiles.begin() &&
-       (it == _logfiles.end() || it->first >= since))
-       --it;
-       }
-       while (it != _logfiles.end()) {
-       Logfile *log = it->second;
-       if (!log->answerQuery(query, this, since, until, classmask))
-       break; // end of time range in this logfile
-       ++it;
-       } */
 
     /* NEW CODE - NEWEST FIRST */
     _logfiles_t::iterator it;

@@ -257,7 +257,7 @@ int LogEntry::serviceStateToInt(char *s)
     if (*last == ')')
         last--;
 
-    // WARN, CRIT, OK, UNKNOWN, RECOVERY
+    // WARN, CRITICAL, OK, UNKNOWN, RECOVERY
     switch (*last) {
         case 'K': return 0;
         case 'Y': return 0;

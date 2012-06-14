@@ -1130,9 +1130,11 @@ def get_bytes_human_readable(b, base=1024.0, bytefrac=True):
         prefix = '-'
         b *= -1
 
-    if b >= base * base * base:
+    if b >= base * base * base * base:
+        return '%s%.2fTB' % (prefix, b / base / base / base / base)
+    elif b >= base * base * base:
         return '%s%.2fGB' % (prefix, b / base / base / base)
-    if b >= base * base:
+    elif b >= base * base:
         return '%s%.2fMB' % (prefix, b / base / base)
     elif b >= base:
         return '%s%.2fKB' % (prefix, b / base)

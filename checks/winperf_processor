@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-winperf_cpu_default_levels = ( 101, 101 )
+winperf_cpu_default_levels = ( 101.0, 101.0 )
 
 def inventory_winperf_util(info):
     if len(info) <= 1:
@@ -77,3 +77,4 @@ def check_winperf_util(item, params, info):
     return (3, "UNKNOWN - counter for CPU (6) not found")
 
 check_info['winperf_processor.util'] = (check_winperf_util, "CPU utilization", 1, inventory_winperf_util)
+checkgroup_of['winperf_processor.util'] = "cpu_utilization"

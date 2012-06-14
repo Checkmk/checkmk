@@ -1,0 +1,101 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<tsm_stagingpools>>>
+# tsmfarm2       SL8500_STGPOOL_05       99.9
+# tsmfarm2       SL8500_STGPOOL_05       97.9
+# tsmfarm2       SL8500_LTO4_STGPOOL_01  48.6
+# tsmfarm2       SL8500_LTO4_STGPOOL_01  35.9
+# tsmfarm2       SL8500_LTO4_STGPOOL_01  58.9
+# tsmfarm2       SL8500_LTO4_STGPOOL_01  61.6
+#
+# Example for params
+# params = {
+#    "free_below" : 30.0, # consider as free if utilized <= this
+#    "levels" : (5, 2), # warn/crit if less then that many free tapes
+# }
+
+factory_settings["tsm_stagingpools_default_levels"] = {
+    "free_below" : 70,
+}
+
+def inventory_tsm_stagingpools(info):
+    items = set([])
+    for inst, pool, util in info:
+        if inst == "default":
+            items.add(pool)
+        else:
+            items.add(inst + " / " + pool)
+    return [ (item, "tsm_stagingpools_default_levels") for item in items ]
+
+def check_tsm_stagingpools(item, params, info):
+    num_tapes = 0
+    num_free_tapes = 0
+    utilization = 0.0 # in relation to one tape size
+    for inst, pool, util in info:
+        if inst + " / " + pool == item or pool == item:
+            util = float(util) / 100.0
+            utilization += util
+            num_tapes += 1
+            if util <= params["free_below"] / 100.0:
+                num_free_tapes += 1
+
+    state = 0
+    infotext = "total tapes: %d, tapes less then %d%% full: %d" % \
+               (num_tapes, params["free_below"], num_free_tapes)
+    infotext += ', utilization: %.1f tapes' % utilization 
+    if "levels" in params:
+        warn, crit = params["levels"]
+        if num_free_tapes < crit:
+            state = 2
+            infotext += "(!!)"
+        elif num_free_tapes < warn:
+            state = 1
+            infotext += "(!)"
+    else:
+        warn, crit = None, None
+
+    if state == 0 and num_tapes == 0:
+        state = 3
+        infotext = "no tapes in this pool or pool not existant"
+
+    perfdata = [ 
+           ("tapes", num_tapes), 
+           ("free", num_free_tapes, warn, crit), 
+           ("util", utilization) ]
+
+    return (state, nagios_state_names[state] + " - " + infotext, perfdata)
+
+
+check_info['tsm_stagingpools'] = {
+    "check_function"          : check_tsm_stagingpools,
+    "inventory_function"      : inventory_tsm_stagingpools,
+    "service_description"     : "TSM Stagingpool %s",
+    "has_perfdata"            : True,
+    "group"                   : "tsm_stagingpools",
+    "default_levels_variable" : "tsm_stagingpools_default_levels",
+}
+

@@ -1,0 +1,8 @@
+Title: View editor: view shown at "Link:" are duplicate
+Component: multisite
+State: open
+Date: 2012-06-14 13:21:44
+Targetversion: 1.2.0
+Class: bug
+
+The list of views selectable when linking contains duplicates.

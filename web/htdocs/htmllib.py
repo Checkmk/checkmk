@@ -433,7 +433,7 @@ class html:
             self.write("</td></tr></table>\n")
         self.context_buttons_open = False
 
-    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None):
+    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=''):
         display = "block"
         if bestof:
             counts = config.load_user_file("buttoncounts", {})
@@ -457,6 +457,8 @@ class html:
         self.context_button_hover_code(hot and "_hot" or "")
         self.write('>')
         self.write('<a href="%s"' % url)
+        if hover_title:
+            self.write(' title="%s"' % hover_title)
         if bestof:
             self.write(' onmousedown="count_context_button(this); document.location=this.href; " ')
         self.write('>%s</a></div>\n' % title)

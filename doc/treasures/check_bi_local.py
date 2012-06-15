@@ -38,6 +38,8 @@ url_prefix = "" # non-OMD installations
 # HTTP Basic Auth
 user = "omdadmin"
 password = "omd"
+cookie = None
+
 # Alternatively: Multisite Cookie authentication:
 # If you are using Cookie base authentication, then
 # login with your browser and get the cookie content

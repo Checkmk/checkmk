@@ -11,6 +11,8 @@
       a topic for "Used rules" - a short overview of all non-empty
       rulesets.
     * FIX: add missing context help to host details dialog
+    * FIX: set new site dirty is host move due to change of
+      folder attributes
 
 1.2.0p1:
     Core:

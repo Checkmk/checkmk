@@ -795,7 +795,7 @@ class DropdownChoice(ValueSpec):
             val = entry[0]
             if sel == str(n):
                 return val
-        return self.choices()[0][0] # can only happen if user garbled URL
+        return self.default_value() # can only happen if user garbled URL or len(choices) == 0
 
     def validate_datatype(self, value, varprefix):
         for val, title in self.choices():

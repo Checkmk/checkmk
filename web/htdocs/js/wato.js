@@ -186,15 +186,22 @@ function wato_fix_visibility() {
         }
     }
 
-    var form_edithost = document.getElementById("form_edithost");
-    for (var child in form_edithost.childNodes){
-        oTr = form_edithost.childNodes[child];
-        if (oTr.className == "nform"){
-            if( hide_topics.indexOf(oTr.childNodes[0].childNodes[0].textContent) > -1 )
-                oTr.style.display = "none";
-            else
-                oTr.style.display = "";
-	}
+    // FIXME: use generic identifier for each form
+    var available_forms = [ "form_edithost", "form_editfolder", "form_bulkedit" ];
+    for ( var try_form in available_forms ){
+            var my_form = document.getElementById(available_forms[try_form]);
+            if (my_form != null) {
+            for (var child in my_form.childNodes){
+                oTr = my_form.childNodes[child];
+                if (oTr.className == "nform"){
+                    if( hide_topics.indexOf(oTr.childNodes[0].childNodes[0].textContent) > -1 )
+                        oTr.style.display = "none";
+                    else
+                        oTr.style.display = "";
+                }
+            }
+            break;
+        }
     }
 }
 

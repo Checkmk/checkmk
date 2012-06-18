@@ -21,9 +21,6 @@ description:
 inventory:
   One item is generated per database.
 
-
-[configuration]
-
 perfdata:
   The numbers for disk blocks read, and the number of transactions per 
   transaction type.

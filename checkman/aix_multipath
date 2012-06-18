@@ -20,5 +20,3 @@ inventory:
  One service is created for each LUN that is reported by
  the lspath utility.
 
-[parameters]
-The check does not support parameters.

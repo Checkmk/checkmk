@@ -14,14 +14,11 @@ description:
   The configuration of this check is internally done as a "disk check" but
   presented in as an application monitoring in WATO.
 
+  The check is configured like the {diskstat} check for block devices.
+
 inventory:
   The check generates one item, representing the InnoDB writers for a MySQL
   Daemon.
-
-
-[configuration]
-  The check is configured like the {diskstat} check for block devices.
-   
 
 perfdata:
   The bytes read and written via InnoDB, along with the levels.

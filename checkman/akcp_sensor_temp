@@ -26,4 +26,4 @@ critical (int): level for critical temperature
 
 [configuration]
 akcp_sensor_temp_defaultlevels (int, int): Default levels. This is
-preset to {(28, 32)}.
+ preset to {(28, 32)}.

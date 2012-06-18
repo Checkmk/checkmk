@@ -14,6 +14,9 @@
     * FIX: set new site dirty is host move due to change of
       folder attributes
 
+    BI:
+    * New iterators FOREACH_CHILD and FOREACH_PARENT
+
 1.2.0p1:
     Core:
     * Added macros $DATE$, $SHORTDATETIME$ and $LONGDATETIME$' to

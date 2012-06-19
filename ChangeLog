@@ -1,5 +1,6 @@
 1.2.0p2:
     Checks & Agents:
+    * FIX: Fixed syntax errors in a bunch of man pages
     * if_lancom: silently ignore Logical and Point-To-Point interfaces
 
     Multisite:

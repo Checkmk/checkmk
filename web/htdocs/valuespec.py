@@ -757,7 +757,11 @@ class DropdownChoice(ValueSpec):
             return self._choices()
 
     def canonical_value(self):
-        return self.choices()[0][0]
+        choices = self.choices()
+        if len(choices) > 0:
+            return choices[0][0]
+        else:
+            return None
 
     def render_input(self, varprefix, value):
         if self._label:
@@ -769,7 +773,9 @@ class DropdownChoice(ValueSpec):
             options.append((str(n),) + entry[1:])
             if entry[0] == value:
                 defval = str(n)
-        if len(options[0]) == 3:
+        if len(options) == 0:
+            html.write(_("There are no options to select from"))
+        elif len(options[0]) == 3:
             html.icon_select(varprefix, options, defval)
         else:
             html.select(varprefix, options, defval)
@@ -789,7 +795,7 @@ class DropdownChoice(ValueSpec):
             val = entry[0]
             if sel == str(n):
                 return val
-        return self.choices()[0][0] # can only happen if user garbled URL
+        return self.default_value() # can only happen if user garbled URL or len(choices) == 0
 
     def validate_datatype(self, value, varprefix):
         for val, title in self.choices():

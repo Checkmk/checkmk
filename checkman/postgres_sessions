@@ -9,17 +9,15 @@ description:
   It reports how many sessions there are in total and how many of them are
   actively querying something.
 
-  It allows to set {WARN} and {CRIT} tresholds on any of these parameters.
-
 inventory:
   The check generates one item for the sessions connected to the PostgreSQL
   daemon.
 
-
-[configuration]
-  There is no preset level for this service, as the thresholds are dependant
-  on the application and usage of the PostgreSQL databases.
-
-
 perfdata:
   The check generates perfdata for the total and running sessions.
+
+[configuration]
+warn(int): number of sessions at which the check goes warn
+crit(int): number of sessions for a critical state
+
+

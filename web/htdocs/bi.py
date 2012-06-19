@@ -109,14 +109,15 @@ def load_services():
     services = {}
     html.live.set_prepend_site(True)
     html.live.set_auth_domain('bi')
-    data = html.live.query("GET hosts\nColumns: name custom_variable_names custom_variable_values services\n")
+    data = html.live.query("GET hosts\n"
+                           "Columns: name custom_variable_names custom_variable_values services childs parents\n") 
     html.live.set_prepend_site(False)
     html.live.set_auth_domain('read')
 
-    for site, host, varnames, values, svcs in data:
+    for site, host, varnames, values, svcs, childs, parents in data:
         vars = dict(zip(varnames, values))
         tags = vars.get("TAGS", "").split(" ")
-        services[(site, host)] = (tags, svcs)
+        services[(site, host)] = (tags, svcs, childs, parents)
 
     return services
 
@@ -242,7 +243,11 @@ def compile_rule_node(calllist, lvl):
     # Execute FOREACH: iterate over matching hosts/services and
     # for each hit create an argument list where $1$, $2$, ... are
     # substituted with matched strings.
-    if calllist[0] in [ config.FOREACH_HOST, config.FOREACH_SERVICE ]:
+    if calllist[0] in [ 
+            config.FOREACH_HOST, 
+            config.FOREACH_CHILD, 
+            config.FOREACH_PARENT, 
+            config.FOREACH_SERVICE ]:
         matches = find_matching_services(calllist[0], calllist[1:])
         new_elements = []
 	handled_args = set([]) # avoid duplicate rule incarnations
@@ -266,7 +271,7 @@ def find_matching_services(what, calllist):
         required_tags = []
 
     host_re = calllist[0]
-    if what == config.FOREACH_HOST:
+    if what in [ config.FOREACH_HOST, config.FOREACH_CHILD, config.FOREACH_PARENT ]:
         service_re = config.HOST_STATE
     else:
         service_re = calllist[1]
@@ -277,7 +282,7 @@ def find_matching_services(what, calllist):
 
     # TODO: Hier könnte man - wenn der Host bekannt ist, effektiver arbeiten, als
     # komplett alles durchzugehen.
-    for (site, hostname), (tags, services) in g_user_cache["services"].items():
+    for (site, hostname), (tags, services, childs, parents) in g_user_cache["services"].items():
         host_matches = None
         if not match_host_tags(tags, required_tags):
             continue
@@ -300,13 +305,23 @@ def find_matching_services(what, calllist):
             host_matches = do_match(anchored, hostname)
 
         if host_matches != None:
-            if service_re == config.HOST_STATE:
-                matches.add(host_matches)
+            if what == config.FOREACH_CHILD:
+                html.debug((site, hostname, host_matches, childs))
+                list_of_matches  = [ host_matches + (child,) for child in childs ]
+            if what == config.FOREACH_PARENT:
+                html.debug((site, hostname, host_matches, parents))
+                list_of_matches  = [ host_matches + (parent,) for parent in parents ]
             else:
-                for service in services:
-                    svc_matches = do_match(service_re, service)
-                    if svc_matches != None:
-                        matches.add(host_matches + svc_matches)
+                list_of_matches = [ host_matches ]
+
+            for host_matches in list_of_matches:
+                if service_re == config.HOST_STATE:
+                    matches.add(host_matches)
+                else:
+                    for service in services:
+                        svc_matches = do_match(service_re, service)
+                        if svc_matches != None:
+                            matches.add(host_matches + svc_matches)
 
     matches = list(matches)
     matches.sort()
@@ -471,11 +486,11 @@ def compile_aggregation_rule(rule, args, lvl = 0):
             new_elements = new_new_elements
 
         elif type(node[-1]) != list:
-            if node[0] == config.FOREACH_HOST:
+            if node[0] in [ config.FOREACH_HOST, config.FOREACH_CHILD, config.FOREACH_PARENT ]:
                 # Handle case that leaf elements also need to be iterable via FOREACH_HOST
                 # 1: config.FOREACH_HOST
                 # 2: (['waage'], '(.*)')
-                matches = find_matching_services(config.FOREACH_HOST, node[1:-2])
+                matches = find_matching_services(node[0], node[1:-2])
                 new_elements = []
 		handled_args = set([]) # avoid duplicate rule incarnations
                 for match in matches:
@@ -525,7 +540,7 @@ def compile_aggregation_rule(rule, args, lvl = 0):
 
 
 def find_remaining_services(hostspec, aggregation):
-    tags, all_services = g_user_cache["services"][hostspec]
+    tags, all_services, childs, parents = g_user_cache["services"][hostspec]
     all_services = set(all_services)
     for site, host, service in find_all_leaves(aggregation):
         if (site, host) == hostspec:
@@ -578,7 +593,7 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
     honor_site = SITE_SEP in host_re
 
     # TODO: If we already know the host we deal with, we could avoid this loop
-    for (site, hostname), (tags, services) in g_user_cache["services"].items():
+    for (site, hostname), (tags, services, childs, parents) in g_user_cache["services"].items():
         # If host ends with '|@all', we need to check host tags instead
         # of regexes.
         if host_re.endswith('|@all'):

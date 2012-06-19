@@ -1,5 +1,6 @@
 1.2.0p2:
     Checks & Agents:
+    * FIX: Fixed syntax errors in a bunch of man pages
     * if_lancom: silently ignore Logical and Point-To-Point interfaces
 
     Multisite:
@@ -13,6 +14,9 @@
     * FIX: add missing context help to host details dialog
     * FIX: set new site dirty is host move due to change of
       folder attributes
+
+    BI:
+    * New iterators FOREACH_CHILD and FOREACH_PARENT
 
 1.2.0p1:
     Core:

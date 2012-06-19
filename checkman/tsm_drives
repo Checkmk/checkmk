@@ -14,15 +14,5 @@ description:
 item:
  The name of the tape drive.
 
-
 inventory:
  The check inventorizes all tape drives as reported by TSM.
-
-
-[parameters]
- There are no check parameters
-
-
-[perfdata]
-  No perfdata is returned by the check.
- 

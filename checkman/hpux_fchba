@@ -26,11 +26,3 @@ inventory:
  Older {"td"} / {"fcms"} based HBAs are not reported from the 
  agent per default.
 
-
-[parameters]
- There are no check parameters
-
-
-[perfdata]
-  No perfdata is returned by the check.
- 

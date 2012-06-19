@@ -19,5 +19,3 @@ item:
 inventory:
  One service is created for each LUN that is reported by mpathadm
 
-[parameters]
-The check does not support parameters.

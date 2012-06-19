@@ -75,6 +75,8 @@ ALL_HOSTS = '(.*)'
 HOST_STATE = ('__HOST_STATE__',)
 HIDDEN = ('__HIDDEN__',)
 class FOREACH_HOST: pass
+class FOREACH_CHILD: pass
+class FOREACH_PARENT: pass
 class FOREACH_SERVICE: pass
 class REMAINING: pass
 

@@ -11,9 +11,5 @@ description:
 inventory:
   The check generates one item per Database found.
 
-
-[configuration]
-  This check has no configuration. 
-
 perfdata:
-  The check sends performance data for the size of the database.
+  The the size of the database.

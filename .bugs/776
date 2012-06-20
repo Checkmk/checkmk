@@ -1,0 +1,16 @@
+Title: Link for Column in view editor shows duplicate views
+Component: multisite
+State: open
+Date: 2012-06-20 14:07:19
+Targetversion: 1.2.0
+Class: nastiness
+
+When selecting the View to link to in the view editor then
+the mobile views are very irritating. 
+
+We could show those only if the current view is a mobile
+view. Or better: Prefix all mobile views with "Mobile: "
+and put those at the bottom of the ist.
+
+Also Only show view that have at least on "hide"-Filter.
+Views without a context are not useful for linking.

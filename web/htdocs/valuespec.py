@@ -788,6 +788,7 @@ class DropdownChoice(ValueSpec):
                     return title.split(self._help_separator, 1)[0].strip()
                 else:
                     return title
+        return _("(other: %s)" % value)
 
     def from_html_vars(self, varprefix):
         sel = html.var(varprefix)

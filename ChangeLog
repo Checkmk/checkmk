@@ -16,6 +16,7 @@
     * FIX: add missing context help to host details dialog
     * FIX: set new site dirty is host move due to change of
       folder attributes
+    * FIX: fix exception on unknown value in DropdownChoice
 
     BI:
     * New iterators FOREACH_CHILD and FOREACH_PARENT

@@ -20,6 +20,8 @@
 
     BI:
     * New iterators FOREACH_CHILD and FOREACH_PARENT
+    * FIX: fix handling of FOREACH_ in leaf nodes (remove hard coded
+      $HOST$, replace with $1$, $2$, ..., apply argument substitution)
 
 1.2.0p1:
     Core:

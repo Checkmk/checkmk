@@ -270,6 +270,9 @@ def find_matching_services(what, calllist):
     else:
         required_tags = []
 
+    if len(calllist) == 0:
+        raise MKConfigError("Invalid syntax in FOREACH_...")
+
     host_re = calllist[0]
     if what in [ config.FOREACH_HOST, config.FOREACH_CHILD, config.FOREACH_PARENT ]:
         service_re = config.HOST_STATE
@@ -306,10 +309,8 @@ def find_matching_services(what, calllist):
 
         if host_matches != None:
             if what == config.FOREACH_CHILD:
-                html.debug((site, hostname, host_matches, childs))
                 list_of_matches  = [ host_matches + (child,) for child in childs ]
             if what == config.FOREACH_PARENT:
-                html.debug((site, hostname, host_matches, parents))
                 list_of_matches  = [ host_matches + (parent,) for parent in parents ]
             else:
                 list_of_matches = [ host_matches ]
@@ -490,18 +491,23 @@ def compile_aggregation_rule(rule, args, lvl = 0):
                 # Handle case that leaf elements also need to be iterable via FOREACH_HOST
                 # 1: config.FOREACH_HOST
                 # 2: (['waage'], '(.*)')
-                matches = find_matching_services(node[0], node[1:-2])
+                calllist = []
+                for n in node[1:-2]:
+                    if type(n) in [ str, unicode ]:
+                        n = subst_vars(n, arginfo)
+                    calllist.append(n)
+                matches = find_matching_services(node[0], calllist)
                 new_elements = []
 		handled_args = set([]) # avoid duplicate rule incarnations
                 for match in matches:
-                    arginfo = {'HOST': match[0]}
-		    if tuple(args) not in handled_args:
-                        new_elements += compile_leaf_node(subst_vars(node[-2], arginfo), subst_vars(node[-1], arginfo))
-		        handled_args.add(tuple(args))
+                    sub_arginfo = dict([(str(n+1), x) for (n,x) in enumerate(match)])
+		    if tuple(args) + match not in handled_args:
+                        new_elements += compile_leaf_node(subst_vars(node[-2], sub_arginfo), subst_vars(node[-1], sub_arginfo))
+		        handled_args.add(tuple(args) + match)
 
                 host_name, service_description = node[-2:]
             else:
-                # This is a final leaf node
+                # This is a plain leaf node with just host/service
                 new_elements = compile_leaf_node(subst_vars(node[0], arginfo), subst_vars(node[1], arginfo))
         else:
             # substitute our arguments in rule arguments

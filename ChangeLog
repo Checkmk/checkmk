@@ -6,6 +6,7 @@
     Multisite:
     * Show number of rows and number of selected rows in header line
       (also for WATO hosts table)
+    * FIX: fix problem in showing exceptions (due to help function)
 
     WATO: 
     * Main menu of ruleeditor (Host & Service Parameters) now has

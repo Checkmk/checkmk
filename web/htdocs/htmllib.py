@@ -815,7 +815,11 @@ class html:
                    (_("Reloading..."), title))
         self.write('<td width=240 class=right><span id=headinfo></span>%s &nbsp; <b id=headertime>%s</b>' % 
                    (login_text, time.strftime("%H:%M")))
-        self.help_visible = config.load_user_file("help", False)  # cache for later usage
+        try:
+            self.help_visible = config.load_user_file("help", False)  # cache for later usage 
+        except:
+            self.help_visible = False
+
         cssclass = self.help_visible and "active" or "passive"
         self.write('<a id=helpbutton class=%s href="#" onclick="help_toggle();" style="display: none"></a>' %
             cssclass)

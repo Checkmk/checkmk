@@ -1,7 +1,8 @@
 1.2.0p2:
     Checks & Agents:
     * FIX: Fixed syntax errors in a bunch of man pages
-    * if_lancom: silently ignore Logical and Point-To-Point interfaces
+    * if_lancom: silently ignore Point-To-Point interfaces
+    * if_lancom: add SSID to logical WLAN interface names
 
     Multisite:
     * Show number of rows and number of selected rows in header line

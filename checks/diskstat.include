@@ -124,7 +124,7 @@ def check_diskstat_line(this_time, item, params, line):
 
     # Do Latency computation if this information is available:
     if len(line) >= 6:
-        reads, writes, timems = map(int, line[3:])
+        reads, writes, timems = map(int, line[3:6])
         ios = reads + writes 
         timedif, ios_per_sec = get_counter(countername + ".ios", this_time, ios)
         timedif, timems_per_sec = get_counter(countername + ".time", this_time, timems)

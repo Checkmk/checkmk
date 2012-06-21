@@ -1072,7 +1072,7 @@ def page_edit_bookmark():
     html.write("<table class=edit_bookmarks>")
     html.write("<tr><td>%s</td><td>" % _('Title:'))
     html.text_input("title", size = 50)
-    html.write("</td></tr><tr><td>%s:</td><td>" % _('URL:'))
+    html.write("</td></tr><tr><td>%s:</td><td>" % _('URL'))
     html.text_input("url", size = 50)
     html.write("</td></tr><tr><td></td><td>")
     html.button("save", _("Save"))

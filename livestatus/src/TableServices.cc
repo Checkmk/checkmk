@@ -164,9 +164,10 @@ bool TableServices::isAuthorized(contact *ctc, void *data)
     return is_authorized_for(ctc, svc->host_ptr, svc);
 }
 
-    TableServices::TableServices(bool by_group, bool by_hostgroup)
-    : _by_group(by_group)
-      , _by_hostgroup(by_hostgroup)
+
+TableServices::TableServices(bool by_group, bool by_hostgroup)
+  : _by_group(by_group)
+  , _by_hostgroup(by_hostgroup)
 {
     struct servicebygroup     sgref;
     struct servicebyhostgroup hgref;

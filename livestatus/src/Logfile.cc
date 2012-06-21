@@ -110,13 +110,13 @@ void Logfile::load(TableLog *tablelog, time_t since, time_t until, unsigned logc
         // have read to the end of the file
         if (_logclasses_read) {
             fsetpos(file, &_read_pos); // continue at previous end
-            load(file, _logclasses_read, tablelog, since, until, logclasses);
+            loadRange(file, _logclasses_read, tablelog, since, until, logclasses);
             fgetpos(file, &_read_pos);
         }
         if (missing_types) {
             fseek(file, 0, SEEK_SET);
             _lineno = 0;
-            load(file, missing_types, tablelog, since, until, logclasses);
+            loadRange(file, missing_types, tablelog, since, until, logclasses);
             _logclasses_read |= missing_types;
             fgetpos(file, &_read_pos); // remember current end of file
         }
@@ -133,13 +133,13 @@ void Logfile::load(TableLog *tablelog, time_t since, time_t until, unsigned logc
             return;
         }
 
-        load(file, missing_types, tablelog, since, until, logclasses);
+        loadRange(file, missing_types, tablelog, since, until, logclasses);
         fclose(file);
         _logclasses_read |= missing_types;
     }
 }
 
-void Logfile::load(FILE *file, unsigned missing_types,
+void Logfile::loadRange(FILE *file, unsigned missing_types,
         TableLog *tablelog, time_t since, time_t until, unsigned logclasses)
 {
     while (fgets(_linebuffer, MAX_LOGLINE, file))

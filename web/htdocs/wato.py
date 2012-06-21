@@ -2154,7 +2154,7 @@ def show_service_table(host, firsttime):
                     paramtext = _("Invalid check parameter: %s!") % e
                     paramtext += _(" The parameter is: %r") % (params,)
 
-                title = "Check parameters for this service: " + paramtext
+                title = _("Check parameters for this service") + ": " + paramtext
                 html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
                    (url, title))
 

@@ -116,7 +116,7 @@ void count_hosts()
 void count_services()
 {
     g_num_services = 0;
-    service *s = (service *)(service *)(service *)(service *)(service *)(service *)(service *)(service *)(service *)service_list;
+    service *s = (service *)service_list;
     while (s) {
         g_num_services ++;
         s = s->next;

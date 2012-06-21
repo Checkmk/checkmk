@@ -19,6 +19,7 @@
     * FIX: set new site dirty is host move due to change of
       folder attributes
     * FIX: fix exception on unknown value in DropdownChoice
+    * FIX: add service specification to ruleset Delay service notifications
 
     BI:
     * New iterators FOREACH_CHILD and FOREACH_PARENT

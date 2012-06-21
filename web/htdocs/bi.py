@@ -110,6 +110,7 @@ def load_services():
     html.live.set_prepend_site(True)
     html.live.set_auth_domain('bi')
     data = html.live.query("GET hosts\n"
+                           "Filter: custom_variable_names < _REALNAME\n" # drop summary hosts
                            "Columns: name custom_variable_names custom_variable_values services childs parents\n") 
     html.live.set_prepend_site(False)
     html.live.set_auth_domain('read')

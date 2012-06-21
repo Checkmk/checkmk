@@ -496,7 +496,11 @@ def load_folder(dir, name="", path="", parent=None, childs = True):
 # so that subsequent code has access to the correct folder
 # meta data (such as .siteid)
 def reload_folder(folder):
-    return load_folder(folder_dir(folder), folder[".name"], folder[".path"], folder.get(".parent"))
+    have_hosts = ".hosts" in folder
+    new_folder = load_folder(folder_dir(folder), folder[".name"], folder[".path"], folder.get(".parent"))
+    if have_hosts: # hosts were loaded in old folder -> do this again
+        load_hosts(new_folder)
+    return new_folder
 
 # Load the information about all folders - except the hosts
 def load_all_folders():
@@ -1671,6 +1675,7 @@ def mode_editfolder(phase, new):
                 rewrite_config_files_below(g_folder) # due to inherited attributes
                 save_folder(g_folder)
                 g_folder = reload_folder(g_folder)
+
                 mark_affected_sites_dirty(g_folder)
 
                 log_pending(AFFECTED, g_folder, "edit-folder",

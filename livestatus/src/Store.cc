@@ -39,14 +39,14 @@ extern int g_debug_level;
 extern unsigned long g_max_cached_messages;
 
 Store::Store()
-    :_table_hosts(false)
-    , _table_hostsbygroup(true)
-    , _table_services(false, false)
-    , _table_servicesbygroup(true, false)
-    , _table_servicesbyhostgroup(false, true)
-    , _table_downtimes(true)
-    , _table_comments(false)
-    , _table_log(g_max_cached_messages)
+  :_table_hosts(false)
+  , _table_hostsbygroup(true)
+  , _table_services(false, false)
+  , _table_servicesbygroup(true, false)
+  , _table_servicesbyhostgroup(false, true)
+  , _table_downtimes(true)
+  , _table_comments(false)
+  , _table_log(g_max_cached_messages)
 {
     _tables.insert(make_pair("hosts", &_table_hosts));
     _tables.insert(make_pair("hostsbygroup", &_table_hostsbygroup));
@@ -115,7 +115,8 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
     int r = input->readRequest();
     if (r != IB_REQUEST_READ) {
         if (r != IB_END_OF_FILE)
-            output->setError(RESPONSE_CODE_INCOMPLETE_REQUEST, "Client connection terminated while request still incomplete");
+            output->setError(RESPONSE_CODE_INCOMPLETE_REQUEST, 
+                "Client connection terminated while request still incomplete");
         return false;
     }
     string l = input->nextLine();

@@ -1,0 +1,88 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#<<<mssql_tablespaces>>>
+#MSSQL_SQLEXPRESS master 5.25 MB 1.59 MB 2464 KB 1096 KB 1024 KB 344 KB
+#MSSQL_SQLEXPRESS model 3.00 MB 1.13 MB 1152 KB 472 KB 632 KB 48 KB
+#MSSQL_SQLEXPRESS msdb 18.13 MB 4.05 MB 10960 KB 8336 KB 2080 KB 544 KB
+#MSSQL_SQLEXPRESS tempdb 2.75 MB 1.08 MB 1200 KB 480 KB 672 KB 48 KB
+#MSSQL_SQLEXPRESS test123 4.00 MB 1.78 MB 1248 KB 528 KB 648 KB 72 KB
+
+#  0: process instance
+#  1: tablespace name
+#  2: db size (Size of the current database in megabytes. database_size includes both data and log files.))
+#  3: uom
+#  4: unallocated space (Space in the database that has not been reserved for database objects.)
+#  5: uom
+#  6: reserved space (Total amount of space allocated by objects in the database.)
+#  7: uom
+#  8: Total amount of space used by data.
+#  9: uom
+# 10: Total amount of space used by indexes.
+# 11: uom
+# 12: Total amount of space reserved for objects in the database, but not yet used.
+# 13: uom
+
+def inventory_mssql_tablespaces(info):
+    return [ (line[0] + ' ' + line[1], None) for line in info ]
+
+def check_mssql_tablespaces(item, params, info):
+    for line in info:
+        if item != line[0] + ' ' + line[1]:
+            continue
+
+        output   = []
+        perfdata = []
+        for key, label, value, uom in [
+                ('size',        'Size',              float(line[2]), line[3]),
+                ('unallocated', 'Unallocated Space', float(line[4]), line[5]),
+                ('reserved',    'Reserved Space',    float(line[6]), line[7]),
+                ('data',        'Data',              float(line[8]), line[9]),
+                ('indexes',     'Indexes',           float(line[10]), line[11]),
+                ('unused',      'Unused',            float(line[12]), line[13]),
+            ]:
+            if uom == 'KB':
+                val_bytes = value * 1024
+            elif uom == 'MB':
+                val_bytes = value * 1024 * 1024
+            elif uom == 'GB':
+                val_bytes = value * 1024 * 1024 * 1024
+            elif uom == 'TB':
+                val_bytes = value * 1024 * 1024 * 1024 * 1024
+
+            output.append('%s: %s' % (label, get_bytes_human_readable(val_bytes)))
+            perfdata.append((key, val_bytes))
+
+        return (0, 'OK - %s' % ', '.join(output), perfdata)
+
+    return (3, 'UNKNOWN - Tablespace %s could not be found' % item)
+
+check_info['mssql_tablespaces'] = {
+    'check_function':      check_mssql_tablespaces,
+    'inventory_function':  inventory_mssql_tablespaces,
+    'service_description': '%s Sizes',
+    'has_perfdata':        True,
+}

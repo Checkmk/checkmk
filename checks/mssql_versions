@@ -25,15 +25,15 @@
 # Boston, MA 02110-1301 USA.
 
 # <<<mssql_versions>>>
-# MSSQL$SQLEXPRESS  10.50.1600.1
+# MSSQL_SQLEXPRESS  10.50.1600.1
 
 def inventory_mssql_versions(info):
-    return [ (line[0].replace('$', '_'), None) for line in info if len(line) >= 2 ]
+    return [ (line[0], None) for line in info if len(line) >= 2 ]
 
 def check_mssql_versions(item, _unused, info):
     for line in info:
-        if line[0].replace('$', '_') == item:
+        if line[0] == item:
             return (0, 'OK - Server is running Version %s' % line[1])
-    return (2, "UNKNOWN - Server instance not existing or not running")
+    return (2, "UNKNOWN - Server objance not existing or not running")
 
-check_info['mssql_versions'] = (check_mssql_versions, "MSSQL %s Version", 0,  inventory_mssql_versions )
+check_info['mssql_versions'] = (check_mssql_versions, "%s Version", 0,  inventory_mssql_versions )

@@ -969,6 +969,37 @@ checkgroups.append((
         allow_empty = False),
      None))
 
+
+checkgroups.append((
+    subgroup_applications,
+    "mssql_backup",
+    _("MSSQL Backups"),
+    Alternative(
+        help = _("The levels for memory usage on Linux and UNIX systems take into account the "
+               "currently used memory (RAM or SWAP) by all processes and sets this in relation "
+               "to the total RAM of the system. This means that the memory usage can exceed 100%. "
+               "A usage of 200% means that the total size of all processes is twice as large as "
+               "the main memory, so <b>at least</b> the half of it is currently swapped out."),
+        elements = [
+            FixedValue(
+                None,
+                totext = '',
+                title = _("Don't use any threshold. Just collect the information.")),
+            Tuple(
+                title = _("Specify time since last successful backup"),
+                elements = [
+                  Integer(title = _("Warning if more than"), unit = _("seconds")),
+                  Integer(title = _("Critical if more than"), unit = _("seconds"))
+                ]
+            )
+        ]
+    ),
+    TextAscii(
+        title = _("Service descriptions"),
+        allow_empty = False),
+     None))
+
+
 checkgroups.append((
     subgroup_applications,
     "mysql_sessions",
@@ -1626,8 +1657,6 @@ checkgroups.append((
                         "dot and hyphon for your service description"),
     ),
     "first"))
-
-
 
 
 

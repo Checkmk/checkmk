@@ -1,0 +1,20 @@
+title: Display versions of MSSQL server processes
+agents: windows
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the version of MSSQL server processes.
+
+ The check has been developed with MSSQL Server 2008 R2 but should
+ work with other versions too.
+
+ This check needs the Check_MK mssql.vbs -plugin installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+item:
+ The name of the MSSQL server process instance.
+
+inventory:
+ One separate check for each server process will be created.

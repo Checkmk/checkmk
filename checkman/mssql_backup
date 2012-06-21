@@ -1,0 +1,40 @@
+title: Check last successful backup of MSSQL tablespaces
+agents: windows
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the time of the last successful backup
+ of MSSQL tablespaces reported by MSSQL.
+
+ You can set levels to raise alerts if the last successful backup
+ is too long ago.
+
+ The check has been developed with MSSQL Server 2008 R2 but should
+ work with other versions too.
+
+ This check needs the Check_MK mssql.vbs -plugin installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+item:
+ The MSSQL instance name and the tablespace name separated by a space.
+
+examples:
+ # Set global default values. Raise critical if last successful
+ # backup is older than 1 hour (3600 seconds) and warning if it
+ # is older than 30 minutes.
+ mssql_backup_default_levels = (1800, 3600)
+
+perfdata:
+ One value: the number of seconds since the last backup.
+
+inventory:
+ One separate check for each tablespace will be created.
+
+[parameters]
+warn_seconds(int): Check will raise a warning state if last backup is older than this value.
+crit_seconds(int): Check will raise a critical state if last backup is older than this value.
+
+[configuration]
+mssql_backup_default_levels(int, int): Global default level. This is preset to {None}, which dsiables the thresholds.

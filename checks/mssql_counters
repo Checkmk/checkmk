@@ -72,7 +72,7 @@ def inventory_mssql_counters(info, want_counters, perc_w_base, add_counter_name)
 # Percentage based values
 #
 
-def check_mssql_counters_perc(item, params, info, perc_w_base = False):
+def check_mssql_counters_perc(item, params, info, perc_w_base = True):
     counter_name = None
     value = None
     base  = None

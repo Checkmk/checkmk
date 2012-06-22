@@ -26,10 +26,9 @@ bin_PROGRAMS = unixcat
 unixcat_SOURCES = unixcat.c
 unixcat_LDADD = -lpthread
 
-pkglib_PROGRAMS = livecheck
 livecheck_SOURCES = livecheck.c strutil.cc check_icmp.c
 
-pkglib_LIBRARIES = livestatus.so
+pkglib_LIBRARIES = livestatus.so livecheck
 livestatus_so_SOURCES = \
 	AndingFilter.cc ClientQueue.cc Column.cc ColumnsColumn.cc CustomVarsExplicitColumn.cc \
 	ContactsColumn.cc CustomVarsColumn.cc CustomVarsFilter.cc DoubleColumn.cc \

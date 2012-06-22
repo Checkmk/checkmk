@@ -454,3 +454,14 @@ def perfometer_mssql_tablespaces(row, check_command, perf_data):
     return "%.1f%%" % (data_perc + indexes_perc), h
 
 perfometers["check_mk-mssql_tablespaces"] = perfometer_mssql_tablespaces
+
+def perfometer_mssql_counters_cache_hits(row, check_command, perf_data):
+    perc = float(perf_data[0][1])
+
+    h = '<table><tr>'
+    h += perfometer_td(perc, "#69EA96");
+    h += perfometer_td(100 - perc, "#ffffff");
+    h += '</tr></table>'
+    return "%.1f%%" % perc, h
+
+perfometers["check_mk-mssql_counters.cache_hits"] = perfometer_mssql_counters_cache_hits

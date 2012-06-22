@@ -433,3 +433,24 @@ def perfometer_fileinfo_groups(row, check_command, perf_data):
 
 perfometers["check_mk-fileinfo"] = perfometer_fileinfo
 perfometers["check_mk-fileinfo.groups"] = perfometer_fileinfo_groups
+
+def perfometer_mssql_tablespaces(row, check_command, perf_data):
+    size        = float(perf_data[0][1])
+    unallocated = float(perf_data[1][1])
+    reserved    = float(perf_data[2][1])
+    data        = float(perf_data[3][1])
+    indexes     = float(perf_data[4][1])
+    unused      = float(perf_data[5][1])
+
+    data_perc    = data / reserved * 100
+    indexes_perc = indexes / reserved * 100
+    unused_perc  = unused / reserved * 100
+
+    h = '<table><tr>'
+    h += perfometer_td(data_perc, "#80c0ff");
+    h += perfometer_td(indexes_perc, "#00ff80");
+    h += perfometer_td(unused_perc, "#f0b000");
+    h += '</tr></table>'
+    return "%.1f%%" % (data_perc + indexes_perc), h
+
+perfometers["check_mk-mssql_tablespaces"] = perfometer_mssql_tablespaces

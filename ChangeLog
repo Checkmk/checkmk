@@ -5,6 +5,8 @@
     * if_lancom: add SSID to logical WLAN interface names
     * Added a collection of MSSQL checks for monitoring MSSQL servers
       (backups, tablespaces, counters)
+    * New check wut_webio_io: Monitor the IO input channels on W&T Web-IO 
+      devices
 
     Multisite:
     * Show number of rows and number of selected rows in header line

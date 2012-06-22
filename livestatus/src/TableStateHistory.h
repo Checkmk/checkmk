@@ -22,42 +22,32 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef tables_h
-#define tables_h
+#ifndef TableStateHistory_h
+#define TableStateHistory_h
 
-#ifndef EXTERN
-#define EXTERN extern
-#endif
+#include <map>
+#include <time.h>
+#include "config.h"
+#include "Table.h"
 
-class TableContacts;
-EXTERN TableContacts      *g_table_contacts;
-class TableCommands;
-EXTERN TableCommands      *g_table_commands;
-class TableHosts;
-EXTERN TableHosts         *g_table_hosts;
-EXTERN TableHosts         *g_table_hostsbygroup;
-class TableServices;
-EXTERN TableServices      *g_table_services;
-EXTERN TableServices      *g_table_servicesbygroup;
-EXTERN TableServices      *g_table_servicesbyhostgroup;
-class TableHostgroups;
-EXTERN TableHostgroups    *g_table_hostgroups;
-class TableServicegroups;
-EXTERN TableServicegroups *g_table_servicegroups;
-class TableDownComm;
-EXTERN TableDownComm      *g_table_downtimes;
-EXTERN TableDownComm      *g_table_comments;
-class TableTimeperiods;
-EXTERN TableTimeperiods   *g_table_timeperiods;
-class TableContactgroups;
-EXTERN TableContactgroups *g_table_contactgroups;
-class TableStatus;
-EXTERN TableStatus        *g_table_status;
-class TableLog;
-EXTERN TableLog           *g_table_log;
-class TableColumns;
-EXTERN TableColumns       *g_table_columns;
-//class TableStateHistory;
-//EXTERN TableStateHistory  *g_table_statehistory;
-#endif // tables_h
+class Logfile;
 
+class TableStateHistory : public Table
+{
+    typedef map<time_t, Logfile *> _logfiles_t;
+    _logfiles_t _logfiles;
+
+public:
+    TableStateHistory();
+    ~TableStateHistory(){};
+    const char *name() { return "log"; }
+    const char *prefixname() { return "logs"; }
+    bool isAuthorized(contact *ctc, void *data);
+    void answerQuery(Query *query);
+    Column *column(const char *colname); // override in order to handle current_
+
+private:
+    bool answerQuery(Query *, Logfile *, time_t, time_t);
+};
+
+#endif // TableStateHistory_h

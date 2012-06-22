@@ -41,7 +41,7 @@ check_info['wut_webio_io.inputs'] = {
     "check_function"     : check_wut_webio_io_inputs,
     "inventory_function" : inventory_wut_webio_io_inputs,
     "service_description": "IO INPUT %s", 
-    "has_perfdata"       : True,
+    "has_perfdata"       : False,
    # "group"              : "",
    # "default_levels_variable" : "services_default_levels",
     "snmp_scan_function" : lambda oid: oid(".1.3.6.1.4.1.5040.1.2.4.3.3.5").lower().startswith("web-io"),

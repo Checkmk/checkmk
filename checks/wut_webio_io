@@ -1,0 +1,51 @@
+#!/usr/bin/python
+
+# snmpwalk fehlt
+
+webio_state_names = {
+   0 : "Off",
+   1 : "On",
+}
+
+
+def parse_webio_io_inputs(inputdesc):
+    if inputdesc.startswith("Input"):
+        inputdesc = inputdesc.split(" ")[1]
+    return inputdesc
+
+
+def inventory_wut_webio_io_inputs(info):
+    inventory = []
+    for line in info:
+        inputdesc, state = line
+        inventory.append((parse_webio_io_inputs(inputdesc), int(state)))
+    return inventory
+
+
+def check_wut_webio_io_inputs(item, params, info):
+    for line in info:
+        inputdesc, state = line
+        if parse_webio_io_inputs(inputdesc) == item:
+            state = saveint(state)
+            if state != params:
+                return (2, "CRITICAL - state should be %s but is %s (!!)" % (webio_state_names[params], webio_state_names[state]))
+            else:
+                return (0, "OK - state is %s" % webio_state_names[state])
+ 
+            return (3, "UNKNOWN - Check not implemented")
+
+    return (3, "UNKNOWN - Item not found in agent output")
+
+
+check_info['wut_webio_io.inputs'] = {
+    "check_function"     : check_wut_webio_io_inputs,
+    "inventory_function" : inventory_wut_webio_io_inputs,
+    "service_description": "IO INPUT %s", 
+    "has_perfdata"       : True,
+   # "group"              : "",
+   # "default_levels_variable" : "services_default_levels",
+    "snmp_scan_function" : lambda oid: oid(".1.3.6.1.4.1.5040.1.2.4.3.3.5").lower().startswith("web-io"),
+    "snmp_info"          : (".1.3.6.1.4.1.5040.1.2.4", [
+         "3.2.1.1.1",
+         "1.3.1.4", ]),
+}

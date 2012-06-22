@@ -61,7 +61,11 @@ CONN.Properties("Integrated Security").Value = "SSPI"
 ' Loop all found server instances and connect to them
 ' In my tests only the connect using the "named instance" string worked
 For Each instId In instIds.Keys
-    instName = Split(instId, "_")(1)
+    If InStr(instId, "_") <> 0 Then
+        instName = Split(instId, "_")(1)
+    Else
+        instName = instId
+    End If
     CONN.Properties("Data Source").Value = hostname & "\" & instName
     CONN.Open
     

@@ -59,9 +59,9 @@ class Store
     TableDownComm      _table_downtimes;
     TableDownComm      _table_comments;
     TableStatus        _table_status;
-    //TableLog           _table_log;
+    TableLog           _table_log;
     TableColumns       _table_columns;
-    //TableStateHistory  _table_statehistory;
+//    TableStateHistory  _table_statehistory;
 
     typedef map<string, Table *> _tables_t;
     _tables_t _tables;

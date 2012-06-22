@@ -38,8 +38,8 @@ extern int g_idle_timeout_msec;
 
 bool timeout_reached(const struct timeval *, int);
 
-    InputBuffer::InputBuffer(int *termination_flag)
-: _termination_flag(termination_flag)
+InputBuffer::InputBuffer(int *termination_flag)
+  : _termination_flag(termination_flag)
 {
     _read_pointer = &_readahead_buffer[0];         // points to data not yet processed
     _write_pointer = _read_pointer;                // points to end of data in buffer

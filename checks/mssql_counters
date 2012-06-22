@@ -1,0 +1,189 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# There are different types of information. Can we handle them in a
+# general way? There are:
+#  - Percentage values
+#  - Size values in KB
+#  - Counters
+#  - Rate counters (per second)
+
+# <<<mssql_counters>>>
+# MSSQL_SQLEXPRESS:Buffer_Manager Buffer_cache_hit_ratio 12
+# MSSQL_SQLEXPRESS:Databases master Data_File(s)_Size_(KB) 2304
+# MSSQL_SQLEXPRESS:Databases master Transactions/sec 13733
+# MSSQL_SQLEXPRESS:Databases master Percent_Log_Used 57
+# MSSQL_SQLEXPRESS:Databases master Log_File(s)_Size_(KB)
+
+def mssql_counters_item(line, add_counter_name):
+    obj, counter, instance, value = line
+
+    if obj.endswith(':Databases'):
+        obj = obj[:-10]
+
+    if add_counter_name:
+        return obj + ' ' + instance + ' ' + counter
+    else:
+        return obj + ' ' + instance
+
+def inventory_mssql_counters(info, want_counters, perc_w_base, add_counter_name):
+    inventory = []
+    for line in info:
+        if line[1] in want_counters:
+            this_counter = line[1]
+
+            # Get the base value for perc values
+            if perc_w_base:
+                base = 0.0
+                for line2 in info:
+                    if line2[1] == this_counter + '_base':
+                        base = float(line2[-1])
+                        break
+                if base == 0.0:
+                    continue # Skip counters where base is "0"
+
+            inventory.append((mssql_counters_item(line, add_counter_name), None))
+    return inventory
+
+#
+# Percentage based values
+#
+
+def check_mssql_counters_perc(item, params, info, perc_w_base = False):
+    counter_name = None
+    value = None
+    base  = None
+    for line in info:
+        if mssql_counters_item(line, True) == item:
+            value        = float(line[-1])
+            counter_name = line[1]
+        elif mssql_counters_item(line, True) == item + '_base':
+            base = float(line[-1])
+
+    if value is None or (perc_w_base and base is None):
+        return (3, 'UNKNOWN - Counter %s could not be found in agent output' % (item))
+
+    if perc_w_base:
+        if base == 0:
+            return (3, 'UNKNOWN - Base is 0 (Value: %.2f)' % value)
+        perc = value / base * 100.0
+    else:
+        perc = value
+
+    state = 0
+    if params:
+        if perc <= params[1]:
+            state = 2
+        elif perc <= params[0]:
+            state = 1
+
+    return (state, '%s - %d%%' % (nagios_state_names[state], perc), [(counter_name, perc)])
+
+check_info['mssql_counters.cache_hits'] = {
+    'check_function':      check_mssql_counters_perc,
+    'inventory_function':  lambda info: inventory_mssql_counters(info,
+        ['cache_hit_ratio', 'log_cache_hit_ratio', 'buffer_cache_hit_ratio'], True, True),
+    'service_description': "%s",
+    'has_perfdata':        True,
+    'includes':            [ 'mssql.include' ],
+}
+
+#
+# Rates
+#
+
+def check_mssql_counters_transactions(item, params, info):
+    output   = []
+    perfdata = []
+    for line in info:
+        if mssql_counters_item(line, False) != item:
+            continue
+
+        for counter, label in [
+            ('transactions/sec', 'Transactions'),
+            ('write_transactions/sec', 'Write Transactions'),
+            ('tracked_transactions/sec', 'Tracked Transactions'),
+            ]:
+            if line[1] == counter:
+                value = int(line[-1])
+                output.append('%s: %d/s' % (label, value))
+                perfdata.append((counter, value))
+
+    if output:
+        return (0, 'OK - %s' % ', '.join(output), perfdata)
+    else:
+        return (3, 'UNKNOWN - Counters %s could not be found in agent output' % (item))
+
+check_info['mssql_counters.transactions'] = {
+    'check_function':      check_mssql_counters_transactions,
+    'inventory_function':  lambda info: inventory_mssql_counters(info,
+        [ 'transactions/sec', 'write_transactions/sec', 'tracked_transactions/sec' ], False, False),
+    'service_description': "%s Transactions",
+    'has_perfdata':        True,
+    'includes':            [ 'mssql.include' ],
+}
+
+#
+# File Sizes
+#
+
+def check_mssql_file_sizes(item, params, info):
+    data_file_bytes, log_file_bytes, log_file_used_bytes = None, None, None
+    for line in info:
+        if mssql_counters_item(line, False) == item:
+            if line[1] == 'data_file(s)_size_(kb)':
+                data_file_bytes = int(line[-1]) * 1024
+            elif line[1] == 'log_file(s)_size_(kb)':
+                log_file_bytes = int(line[-1]) * 1024
+            elif line[1] == 'log_file(s)_used_size_(kb)':
+                log_file_used_bytes = int(line[-1]) * 1024
+
+    if data_file_bytes is None and log_file_bytes is None and log_file_used_bytes is None:
+        return (3, 'UNKNOWN - Counters %s could not be found in agent output' % (item))
+
+    output   = []
+    perfdata = []
+
+    output.append('Data Files: %s' % get_bytes_human_readable(data_file_bytes))
+    perfdata.append(('data_files', data_file_bytes))
+
+    output.append('Log Files: %s (Used: %s)' %
+        (get_bytes_human_readable(data_file_bytes), get_bytes_human_readable(log_file_used_bytes)))
+
+    perfdata.append(('log_files', log_file_bytes))
+    perfdata.append(('log_files_used', log_file_used_bytes))
+
+    return (0, 'OK - %s' % ', '.join(output), perfdata)
+
+
+check_info['mssql_counters.file_sizes'] = {
+    'check_function':      check_mssql_file_sizes,
+    'inventory_function':  lambda info: inventory_mssql_counters(info,
+        [ 'data_file(s)_size_(kb)', 'log_file(s)_size_(kb)', 'log_file(s)_used_size_(kb)' ], False, False),
+    'service_description': "%s File Sizes",
+    'has_perfdata':        True,
+    'includes':            [ 'mssql.include' ],
+}

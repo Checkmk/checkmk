@@ -1,16 +1,30 @@
 1.2.0p2:
     Checks & Agents:
-    * if_lancom: silently ignore Logical and Point-To-Point interfaces
+    * FIX: Fixed syntax errors in a bunch of man pages
+    * if_lancom: silently ignore Point-To-Point interfaces
+    * if_lancom: add SSID to logical WLAN interface names
+    * Added a collection of MSSQL checks for monitoring MSSQL servers
+      (backups, tablespaces, counters)
 
     Multisite:
     * Show number of rows and number of selected rows in header line
       (also for WATO hosts table)
+    * FIX: fix problem in showing exceptions (due to help function)
 
     WATO: 
     * Main menu of ruleeditor (Host & Service Parameters) now has
       a topic for "Used rules" - a short overview of all non-empty
       rulesets.
     * FIX: add missing context help to host details dialog
+    * FIX: set new site dirty is host move due to change of
+      folder attributes
+    * FIX: fix exception on unknown value in DropdownChoice
+    * FIX: add service specification to ruleset Delay service notifications
+
+    BI:
+    * New iterators FOREACH_CHILD and FOREACH_PARENT
+    * FIX: fix handling of FOREACH_ in leaf nodes (remove hard coded
+      $HOST$, replace with $1$, $2$, ..., apply argument substitution)
 
 1.2.0p1:
     Core:

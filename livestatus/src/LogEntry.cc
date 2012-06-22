@@ -66,9 +66,9 @@ LogEntry::LogEntry(unsigned lineno, char *line)
     // now classify the log message. Some messages
     // refer to other table, some do not.
     if (handleStatusEntry() ||
-            handleNotificationEntry() ||
-            handlePassiveCheckEntry() ||
-            handleExternalCommandEntry())
+        handleNotificationEntry() ||
+        handlePassiveCheckEntry() ||
+        handleExternalCommandEntry())
     {
         if (_host_name)
             _host = find_host(_host_name);

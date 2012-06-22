@@ -1,0 +1,71 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+import datetime
+
+#<<<mssql_backup>>>
+#MSSQL_SQLEXPRESS test123 1331207325
+
+# Might be None to have no thresholds or a tuple of two ints
+# (<warn age in seconds>, <crit age in seconds>)
+mssql_backup_default_levels = None
+
+def inventory_mssql_backup(info):
+    return [ (line[0] + ' ' + line[1], 'mssql_backup_default_levels') for line in info ]
+
+def check_mssql_backup(item, params, info):
+    for line in info:
+        inst, tablespace, last_backup_timestamp = line
+        if item == inst + ' ' + tablespace:
+            last_backup_timestamp = int(last_backup_timestamp)
+            dt = datetime.datetime.fromtimestamp(last_backup_timestamp)
+
+            state = 0
+            now = datetime.datetime.now()
+            sec_ago = int(now.strftime('%s')) - last_backup_timestamp
+
+            if params is not None:
+                if sec_ago >= params[1]:
+                    state = 2
+                elif sec_ago >= params[0]:
+                    state = 1
+                perfdata = [('seconds', sec_ago, params[0], params[1])]
+            else:
+                perfdata = [('seconds', sec_ago)]
+
+            return (state, '%s - Last backup was at %s (%ds ago)' %
+                (nagios_state_names[state], dt.strftime('%Y-%m-%d %H:%M:%S'), sec_ago),
+                perfdata)
+
+    return (3, 'UNKNOWN - Tablespace %s could not be found' % item)
+
+check_info['mssql_backup'] = {
+    'check_function':      check_mssql_backup,
+    'inventory_function':  inventory_mssql_backup,
+    'service_description': '%s Backup',
+    'has_perfdata':        True,
+    'group':               'mssql_backup',
+}

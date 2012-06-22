@@ -433,7 +433,7 @@ class html:
             self.write("</td></tr></table>\n")
         self.context_buttons_open = False
 
-    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None):
+    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=''):
         display = "block"
         if bestof:
             counts = config.load_user_file("buttoncounts", {})
@@ -457,6 +457,8 @@ class html:
         self.context_button_hover_code(hot and "_hot" or "")
         self.write('>')
         self.write('<a href="%s"' % url)
+        if hover_title:
+            self.write(' title="%s"' % hover_title)
         if bestof:
             self.write(' onmousedown="count_context_button(this); document.location=this.href; " ')
         self.write('>%s</a></div>\n' % title)
@@ -813,7 +815,11 @@ class html:
                    (_("Reloading..."), title))
         self.write('<td width=240 class=right><span id=headinfo></span>%s &nbsp; <b id=headertime>%s</b>' % 
                    (login_text, time.strftime("%H:%M")))
-        self.help_visible = config.load_user_file("help", False)  # cache for later usage
+        try:
+            self.help_visible = config.load_user_file("help", False)  # cache for later usage 
+        except:
+            self.help_visible = False
+
         cssclass = self.help_visible and "active" or "passive"
         self.write('<a id=helpbutton class=%s href="#" onclick="help_toggle();" style="display: none"></a>' %
             cssclass)

@@ -31,7 +31,7 @@ Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement10"
 For Each prop In WMI.ExecQuery("SELECT * FROM SqlServiceAdvancedProperty WHERE " & _
                                "SQLServiceType = 1 AND PropertyName = 'VERSION'")
     
-    instId      = prop.ServiceName
+    instId      = Replace(prop.ServiceName, "$", "_")
     instVersion = prop.PropertyStrValue
     
     WScript.echo "<<<mssql_versions>>>"
@@ -61,20 +61,25 @@ CONN.Properties("Integrated Security").Value = "SSPI"
 ' Loop all found server instances and connect to them
 ' In my tests only the connect using the "named instance" string worked
 For Each instId In instIds.Keys
-    instName = Split(instId, "$")(1)
+    instName = Split(instId, "_")(1)
     CONN.Properties("Data Source").Value = hostname & "\" & instName
     CONN.Open
     
     ' Get counter data for the whole instance
-    RS.Open "SELECT counter_name, object_name, cntr_value FROM sys.dm_os_performance_counters " & _
+    RS.Open "SELECT counter_name, object_name, instance_name, cntr_value " & _
+            "FROM sys.dm_os_performance_counters " & _
             "WHERE object_name NOT LIKE '%Deprecated%'", CONN
     wscript.echo "<<<mssql_counters>>>"
-    Dim objectName, counterName, value
+    Dim objectName, counterName, instanceName, value
     Do While NOT RS.Eof
-        objectName  = Replace(Trim(RS("object_name")), " ", "_")
-        counterName = Replace(Trim(RS("counter_name")), " ", "_")
-        value       = Trim(RS("cntr_value"))
-        wscript.echo objectName & " " & counterName & " " & value
+        objectName   = Replace(Replace(Trim(RS("object_name")), " ", "_"), "$", "_")
+        counterName  = LCase(Replace(Trim(RS("counter_name")), " ", "_"))
+        instanceName = Replace(Trim(RS("instance_name")), " ", "_")
+        If instanceName = "" Then
+            instanceName = "None"
+        End If
+        value        = Trim(RS("cntr_value"))
+        wscript.echo objectName & " " & counterName & " " & instanceName & " " & value
         RS.MoveNext
     Loop
     RS.Close

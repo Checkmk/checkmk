@@ -116,11 +116,15 @@ multisite_icons = []
 
 load_web_plugins('icons', globals())
 
+# Paint column with various icons. The icons use
+# a plugin based mechanism so it is possible to
+# register own icon "handlers".
+# what: either "host" or "service"
+# row: the data row of the host or service
 def paint_icons(what, row):
-    """
-    what: "host" or "service"
-    row:  The livestatus row of the current object
-    """
+    if not row["host_name"]:
+        return "", ""# Host probably does not exist
+
     custom_vars = dict(zip(row["host_custom_variable_names"],
                            row["host_custom_variable_values"]))
 

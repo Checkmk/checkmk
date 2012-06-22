@@ -17,8 +17,8 @@ inventory:
 
 
 [configuration]
-  There is no preset level for this service, as the thresholds are dependant
-  on the application and usage of the MySQL databases.
+warn(int): number of sessions at which the check goes warn
+crit(int): number of sessions for a critical state
 
 
 perfdata:

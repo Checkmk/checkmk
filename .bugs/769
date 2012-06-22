@@ -1,0 +1,22 @@
+Title: Editing folder information does not set site dirty
+Component: wato
+Class: bug
+State: done
+Date: 2012-06-13 11:43:11
+Targetversion: 1.2.0
+
+I did the following:
+
+1. create a site master and slvae
+2. create two hosts and the master
+3. restart
+
+--> works
+
+4. now change the folder properties to "monitored on slave"
+
+--> Slave site is not being set to dirty. Activate changes
+leaves you with zero hosts.
+
+2012-06-13 12:06:34: changed state open -> done
+Fixed.

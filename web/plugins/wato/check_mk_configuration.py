@@ -695,8 +695,8 @@ register_rule(group,
         help = _("This setting delays notifications about service problems by the "
                  "specified amount of time. If the service is OK again within that "
                  "time, no notification will be sent out."),
-        )
-    )
+        ),
+    itemtype = "service")
 
 register_rule(group,
     "extra_host_conf:notification_interval",

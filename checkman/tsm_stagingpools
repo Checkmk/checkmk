@@ -21,7 +21,6 @@ description:
  tapes that still have enough capacity reserve to be considered
  as free.
  
-
 item:
  The name of the staging pool.
 
@@ -29,12 +28,15 @@ item:
 inventory:
  The check creates one item per staging pool found.
 
+perfdata:
+  The number of tapes that are considered free, 
+  the average utilization  and the levels for alerting
 
 [parameters]
 tsm_stagingpools_default_levels (dict):
-   "free_below"  - maximum usage of a tape drive to be considered as free
-(warn, crit) = Number of free tapes
+   {"free_below"}: A percentage (float) for the usage below which a tape is considered
+                    to be free.
 
+   {"levels"}     A pair of integers of levels for warning and critical for the number
+                  of required free tapes
 
-[perfdata]
-  The check returns the number of tapes that are considered free, the average utilization  and the levels for alerting

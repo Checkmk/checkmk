@@ -66,7 +66,8 @@ public:
     long freeMessages(unsigned logclasses);
 
 private:
-    void load(FILE *file, unsigned missing_types, TableLog *, time_t since, time_t until, unsigned logclasses);
+    void loadRange(FILE *file, unsigned missing_types, TableLog *, 
+                   time_t since, time_t until, unsigned logclasses);
     bool processLogLine(uint32_t, unsigned);
     uint64_t makeKey(time_t, unsigned);
 };

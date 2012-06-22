@@ -10,3 +10,4 @@ config.status
 src/Makefile
 src/unixcat
 stamp-h1
+.project

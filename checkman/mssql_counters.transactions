@@ -1,0 +1,26 @@
+title: Checks transactions per second in MSSQL tablespaces
+agents: windows
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the transactions, write transactions and
+ tracked transactions of MSSQL tablespaces.
+
+ The check has been developed with MSSQL Server 2008 R2 but should
+ work with other versions too.
+
+ This check needs the Check_MK mssql.vbs -plugin installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+item:
+ The MSSQL instance name and the tablespace name separated by a space.
+
+perfdata:
+ transactions/sec(int): Number of transactions per second.
+ write_transactions/sec(int): Number of write transactions per second.
+ tracked_transactions/sec(int): Number of tracked transactions per second.
+
+inventory:
+ One separate check for each tablespace will be created.

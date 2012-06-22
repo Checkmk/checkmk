@@ -1,0 +1,31 @@
+title: Checks MSSQL cache hit ratio
+agents: windows
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the cache hit ratio counters as reported by
+ the MSSQL server.
+
+ The check has been developed with MSSQL Server 2008 R2 but should
+ work with other versions too.
+
+ This check needs the Check_MK mssql.vbs -plugin installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+item:
+ The MSSQL instance name, counter name and object name (like the tablespace
+ name) are used for the item.
+
+perfdata:
+ One value(float): The percentage of queries which hit the cache.
+
+inventory:
+ One separate check for each available cache hit counter will be created.
+ This might be dedicated to tablespaces but also MSSQL server internal parts
+ like the "Buffer Manager".
+
+[parameters]
+warn_percent(int): Check will raise a warning state if ratio is below or equal this value.
+crit_percent(int): Check will raise a critical state if ratio is below or equal this value.

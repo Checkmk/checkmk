@@ -1216,6 +1216,7 @@ class AbsoluteDate(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._default_value = today()
+        self._show_titles = kwargs.get("show_titles", True)
 
     def canonical_value(self):
         return self._default_value
@@ -1226,8 +1227,9 @@ class AbsoluteDate(ValueSpec):
 
     def render_input(self, varprefix, value):
         html.write('<table class=vs_date>')
-        html.write('<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
-                _("Year"), _("Month"), _("Day")))
+        if self._show_titles:
+            html.write('<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
+                    _("Year"), _("Month"), _("Day")))
         html.write('<tr><td>')
         year, month, day = self.split_date(value)
         html.number_input(varprefix + "_year", year, size=4)

@@ -1217,6 +1217,7 @@ class AbsoluteDate(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._default_value = today()
         self._show_titles = kwargs.get("show_titles", True)
+        self._label = kwargs.get("label")
 
     def canonical_value(self):
         return self._default_value
@@ -1226,6 +1227,9 @@ class AbsoluteDate(ValueSpec):
         return lt.tm_year, lt.tm_mon, lt.tm_mday
 
     def render_input(self, varprefix, value):
+        if self._label:
+            html.write("%s&nbsp;" % self._label)
+
         html.write('<table class=vs_date>')
         if self._show_titles:
             html.write('<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (

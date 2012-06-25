@@ -7,6 +7,7 @@
       (backups, tablespaces, counters)
     * New check wut_webio_io: Monitor the IO input channels on W&T Web-IO 
       devices
+    * nfsmounts: reclassify "Stale NFS handle" from WARN to CRIT
 
     Multisite:
     * Show number of rows and number of selected rows in header line

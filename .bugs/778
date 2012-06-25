@@ -1,0 +1,10 @@
+Title: Button "Remove all" Downtimes not working
+Component: multisite
+State: open
+Date: 2012-06-25 13:04:59
+Targetversion: 1.2.0
+Class: bug
+
+In the Multisite views of hosts and services one cannot remove
+downtimes. The button is there, seems to work, but the downtimes
+are not being removed.

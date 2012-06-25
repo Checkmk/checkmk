@@ -38,7 +38,7 @@ def check_solaris_multipath(item, params, info):
             else:
                 return(1, "WARN - only %d/%d paths up" % (ok, total))
 
-        return(2, "UKN - Path not found")
+    return(2, "UKN - Path not found")
 
 check_info["solaris_multipath"] =  {
     "check_function" :  check_solaris_multipath,

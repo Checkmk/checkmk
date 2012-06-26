@@ -35,6 +35,9 @@
     * New iterators FOREACH_CHILD and FOREACH_PARENT
     * FIX: fix handling of FOREACH_ in leaf nodes (remove hard coded
       $HOST$, replace with $1$, $2$, ..., apply argument substitution)
+    * New logical datatable for aggregations that have the same name
+      as a host. Converted view "BI Boxes" to this new table. This allows
+      for Host-Aggregations containing data of other hosts as well.
 
 1.2.0p1:
     Core:

@@ -86,7 +86,7 @@ tr.even0 .aggrtree ul.subtree {
     vertical-align: middle;
 }
 
-.aggrtree b.bullet {
+b.bullet {
     color: #aaa;
     margin: 0px 5px;
 }

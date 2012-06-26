@@ -174,12 +174,13 @@ def compile_forest(user):
     did_compilation = True
 
     cache = {
-        "forest" :            {},
-        "host_aggregations" : {},
-        "affected_hosts" :    {},
-        "affected_services":  {},
-        "services" : load_services(),
-        "see_all" : config.may("bi.see_all"),
+        "forest" :               {},
+        "aggregations_by_hostname" : {},
+        "host_aggregations" :    {},
+        "affected_hosts" :       {},
+        "affected_services":     {},
+        "services" :             load_services(),
+        "see_all" :              config.may("bi.see_all"),
     }
     g_user_cache = cache
 
@@ -197,33 +198,30 @@ def compile_forest(user):
         new_entries = [ e for e in new_entries if len(e["nodes"]) > 0 ]
 
         # enter new aggregations into dictionary for that group
-        entries = cache["forest"].get(group, [])
+        entries = cache["forest"].setdefault(group, [])
         entries += new_entries
-        cache["forest"][group] = entries
 
         # Update several global speed-up indices
         for aggr in new_entries:
             req_hosts = aggr["reqhosts"]
 
+            # Aggregations by last part of title (assumed to be host name)
+            name = aggr["title"].split()[-1]
+            cache["aggregations_by_hostname"].setdefault(name, []).append((group, aggr))
+            
             # All single-host aggregations looked up per host
             if len(req_hosts) == 1:
                 host = req_hosts[0] # pair of (site, host)
-                entries = cache["host_aggregations"].get(host, [])
-                entries.append((group, aggr))
-                cache["host_aggregations"][host] = entries
+                cache["host_aggregations"].setdefault(host, []).append((group, aggr))
 
             # All aggregations containing a specific host
             for h in req_hosts:
-                entries = cache["affected_hosts"].get(h, [])
-                entries.append((group, aggr))
-                cache["affected_hosts"][h] = entries
+                cache["affected_hosts"].setdefault(h, []).append((group, aggr))
 
             # All aggregations containing a specific service
             services = find_all_leaves(aggr)
             for s in services: # triples of site, host, service
-                entries = cache["affected_services"].get(s, [])
-                entries.append((group, aggr))
-                cache["affected_services"][s] = entries
+                cache["affected_services"].setdefault(s, []).append((group, aggr))
 
     # Remember successful compile in cache
     g_cache[user] = cache
@@ -706,7 +704,7 @@ def execute_leaf_node(node, status_info):
     # Get current state of host and services
     status = status_info.get((site, host))
     if status == None:
-        return ({ "state" : MISSING, "output" : "Host %s not found" % host}, None, node)
+        return ({ "state" : MISSING, "output" : _("Host %s not found") % host}, None, node)
     host_state, host_output, service_state = status
 
     # Get state assumption from user
@@ -722,7 +720,7 @@ def execute_leaf_node(node, status_info):
             if entry[0] == service:
                 state, has_been_checked, output = entry[1:]
                 if has_been_checked == 0:
-                    output = "This service has not been checked yet"
+                    output = _("This service has not been checked yet")
                     state = PENDING
                 state = {"state":state, "output":output}
                 if state_assumption != None:
@@ -1066,7 +1064,13 @@ def table(columns, add_headers, only_sites, limit, filters):
 
 
 # Table of all host aggregations, i.e. aggregations using data from exactly one host
+def hostname_table(columns, add_headers, only_sites, limit, filters):
+    return singlehost_table(columns, add_headers, only_sites, limit, filters, True)
+
 def host_table(columns, add_headers, only_sites, limit, filters):
+    return singlehost_table(columns, add_headers, only_sites, limit, filters, False)
+
+def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbyname):
     compile_forest(config.user_id)
     load_assumptions() # user specific, always loaded
 
@@ -1089,14 +1093,24 @@ def host_table(columns, add_headers, only_sites, limit, filters):
     for hostrow in hostrows:
         site = hostrow["site"]
         host = hostrow["name"]
-        status_info = { (site, host) : [ hostrow["state"], hostrow["plugin_output"], hostrow["services_with_info"] ] }
-        for group, aggregation in g_user_cache["host_aggregations"].get((site, host), []):
+        if joinbyname:
+            aggrs = g_user_cache["aggregations_by_hostname"].get(host, [])
+            status_info = None
+        else:
+            aggrs = g_user_cache["host_aggregations"].get((site, host), [])
+            status_info = { (site, host) : [ 
+                hostrow["state"], 
+                hostrow["plugin_output"], 
+                hostrow["services_with_info"] ] }
+
+        for group, aggregation in aggrs:
             row = hostrow.copy()
             row.update(create_aggregation_row(aggregation, status_info))
             row["aggr_group"] = group
             rows.append(row)
             if not html.check_limit(rows, limit):
                 return rows
+
 
     return rows
 

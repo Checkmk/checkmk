@@ -888,12 +888,23 @@ def aggr_best(nodes, n = 1, worst_state = CRIT):
 config.aggregation_functions["worst"] = aggr_worst
 config.aggregation_functions["best"]  = aggr_best
 
+def aggr_countok_convert(num, count):
+    if num.endswith('%'):
+        return int(num[:-1]) / 100.0 * count
+    else:
+        return int(num)
+
 def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
     states = [ i[0]["state"] for i in nodes ]
     num_ok = len([s for s in states if s == 0 ])
-    if num_ok >= int(needed_for_ok):
+
+    # counts can be specified as integer (e.g. '2') or
+    # as percentages (e.g. '70%').
+
+
+    if num_ok >= aggr_countok_convert(needed_for_ok, len(states)):
         return { "state" : 0, "output" : "" }
-    elif num_ok >= int(needed_for_warn):
+    elif num_ok >= aggr_countok_convert(needed_for_warn, len(states)):
         return { "state" : 1, "output" : "" }
     else:
         return { "state" : 2, "output" : "" }

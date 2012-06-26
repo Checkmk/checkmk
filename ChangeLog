@@ -44,6 +44,7 @@
     * New logical datatable for aggregations that have the same name
       as a host. Converted view "BI Boxes" to this new table. This allows
       for Host-Aggregations containing data of other hosts as well.
+    * count_ok: allow percentages, e.g. "count_ok!70%!50%"
 
 1.2.0p1:
     Core:

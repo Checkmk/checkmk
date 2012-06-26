@@ -240,6 +240,8 @@ for filenames, patterns in config:
     # Initialize options with default values
     opt_maxlines = None
     opt_maxtime = None
+    opt_regex = None
+    opt_iregex = None
     opt_overflow = 'C'
     opt_overflow_level = 2
     try:
@@ -254,6 +256,10 @@ for filenames, patterns in config:
                     raise Exception("Invalid value %s for overflow. Allowed are C, I and W" % value)
                 opt_overflow = value
                 opt_overflow_level = {'C':2, 'W':1, 'I':0}[value]
+            elif key == 'regex':
+                opt_regex = re.compile(value)
+            elif key == 'iregex':
+                opt_iregex = re.compile(value, re.I)
             else:
                 raise Exception("Invalid option %s" % key)
     except Exception, e:
@@ -265,6 +271,8 @@ for filenames, patterns in config:
         if '=' in glob:
             continue
         logfiles = [ l.strip() for l in os.popen("ls %s 2>/dev/null" % glob).readlines() ]
+        if opt_regex:
+            logfiles = [ f for f in logfiles if opt_regex.search(f) ]
         if len(logfiles) == 0:
             print '[[[%s:missing]]]' % glob
         else:

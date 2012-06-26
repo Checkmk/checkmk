@@ -1,4 +1,8 @@
 1.2.0p2:
+    Core:
+    * simulation_mode: legacy_checks, custom_checks and active_checks
+      are replaced with dummy checks always being OK
+
     Checks & Agents:
     * FIX: Fixed syntax errors in a bunch of man pages
     * if_lancom: silently ignore Point-To-Point interfaces
@@ -35,6 +39,9 @@
     * New iterators FOREACH_CHILD and FOREACH_PARENT
     * FIX: fix handling of FOREACH_ in leaf nodes (remove hard coded
       $HOST$, replace with $1$, $2$, ..., apply argument substitution)
+    * New logical datatable for aggregations that have the same name
+      as a host. Converted view "BI Boxes" to this new table. This allows
+      for Host-Aggregations containing data of other hosts as well.
 
 1.2.0p1:
     Core:

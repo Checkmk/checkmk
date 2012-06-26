@@ -1789,7 +1789,7 @@ define service {
   check_command\t\t\t%s
   active_checks_enabled\t\t1
 %s}
-""" % (template, hostname, description, command, extraconf))
+""" % (template, hostname, description, simulate_command(command), extraconf))
 
     # legacy checks via active_checks
     actchecks = []
@@ -1822,15 +1822,16 @@ define service {
 
             template = has_perfdata and "check_mk_perf," or ""
             extraconf = extra_service_conf_of(hostname, description)
+            command = "check_mk_active-%s!%s" % (acttype, args)
             outfile.write("""
 define service {
   use\t\t\t\t%scheck_mk_default
   host_name\t\t\t%s
   service_description\t\t%s
-  check_command\t\t\tcheck_mk_active-%s!%s
+  check_command\t\t\t%s
   active_checks_enabled\t\t1
 %s}
-""" % (template, hostname, description, acttype, args, extraconf))
+""" % (template, hostname, description, simulate_command(command), extraconf))
 
 
     # Legacy checks via custom_checks
@@ -1876,15 +1877,16 @@ define service {
 
             template = has_perfdata and "check_mk_perf," or ""
             extraconf = extra_service_conf_of(hostname, description)
+            command = "%s!%s" % (command_name, command_line)
             outfile.write("""
 define service {
   use\t\t\t\t%scheck_mk_default
   host_name\t\t\t%s
   service_description\t\t%s
-  check_command\t\t\t%s!%s
+  check_command\t\t\t%s
   active_checks_enabled\t\t%d
 %s}
-""" % (template, hostname, description, command_name, command_line, 
+""" % (template, hostname, description, simulate_command(command),
        command_line and 1 or 0, extraconf))
 
 
@@ -1899,6 +1901,12 @@ define service {
 
 """ % (pingonly_template, check_icmp_arguments(hostname), extra_service_conf_of(hostname, "PING"), hostname))
 
+def simulate_command(command):
+    if simulation_mode:
+        custom_commands_to_define.add("check-mk-simulation")
+        return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
+    else:
+        return command
 
 def create_nagios_config_hostgroups(outfile):
     if define_hostgroups:

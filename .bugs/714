@@ -1,0 +1,40 @@
+Title: PostgreSQL check breaks on version 9 output
+Component: checks
+State: open
+Date: 2012-06-26 14:14:46
+Targetversion: 1.2.0
+Class: bug
+
+Currently we do not support output from version 9 PostgreSQL. 
+They send one more data field and our agent sends with " " as separator
+Fix should detect output format and then also handle postgresql 9
+
+>>     On 06/15/2012 04:41 PM,alex@rar.gi  <mailto:alex@rar.gi>  wrote:
+>>       >  File "/var/lib/check_mk/precompiled/XXXX", line 901, in
+>>       >  get_bytes_human_readable
+>>       >
+>>     ^@|^L^@^Wf^B^@Sn^A^@^Ad^K^@d^L^@|^L^@^Wf^B^@Sq^G^@^Aq^G^@Wd^P^@S(^Q^@^@^@NR^D^B^@^@s^G^@^@^@commit=i^@^@^@^@s&^@^@^@OK
+>>
+>>       >  - mount options exactly as e
+>>       >  xpecteds^K^@^@^@missing: %ss
+>>       >  TypeError: unsupported operand type(s) for /: 'str' and 'float'
+>>
+
+
+
+
+Fix suggested by user:
+
+> Sorry that should be
+> 
+> echo 'select datid, datname, numbackends, xact_commit, xact_rollback, 
+> blks_read, blks_hit, tup_returned, tup_fetched, tup_inserted, 
+> tup_updated, tup_deleted, conflicts, 'stats_reset::timestamp::date', 
+> pg_database_size(datname) "datsize" from pg_stat_database;' \
+> | su - postgres -c "psql -A -F' '" | sed '$d'
+> 
+
+
+Methinks (flo) that we should 
+ - not fetch the stats_reset timestamp at all since we dont need it
+ - not use -F' ' but -F'somethingelse'

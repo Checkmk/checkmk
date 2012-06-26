@@ -16,7 +16,7 @@ perfdata:
  This check currently has no performance data.
 
 inventory:
- All channels are automatically inventorized.
+ All channels are automatically inventorized with their state.
 
 
 [parameters]

@@ -13,6 +13,8 @@
       is running.
     * oracle_version: new check outputting the version of an ORACLE
       database - and using uncached direct SQL output.
+    * ORACLE agent: fix handling of EXCLUDE, new variable ONLY_SIDS
+      for explicitely listing SIDs to monitor
 
     Multisite:
     * Show number of rows and number of selected rows in header line

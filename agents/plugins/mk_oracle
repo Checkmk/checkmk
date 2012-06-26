@@ -52,7 +52,12 @@ then
     . $MK_CONFDIR/mk_oracle.cfg
 fi
 
-# It is possible to filter SIDS totally. Just add the following to
+# You can specify a list of SIDs to monitor. Those databases will
+# only be handled, if they are found running, though! 
+#
+#   ONLY_SIDS="XE HIRN SEPP"
+#
+# It is possible to filter SIDS negatively. Just add the following to
 # the mk_oracle.cfg file:
 #
 #   EXCLUDE_<sid>="ALL"
@@ -66,7 +71,7 @@ fi
 # For example skip oracle_sessions and oracle_logswitches checks
 # for the instance "mysid".
 #
-#   EXCLUDE_mysid="oracle_sessions oracle_logswitches"
+#   EXCLUDE_mysid="sessions logswitches"
 #
 #
 # This check uses a cache file to prevent problems with long running
@@ -88,6 +93,18 @@ function sqlplus ()
 
 
 for SID in $SIDS; do
+    # Check if SID is listed in ONLY_SIDS if this is used
+    if [ "$ONLY_SIDS" ] ; then
+        SKIP=yes
+        for S in $ONLY_SIDS ; do
+	    if  [ "$S" = "$SID" ] ; then
+	        SKIP=
+		break
+            fi 
+        done
+	if [ "$SKIP" ] ; then continue ; fi
+    fi
+        
     EXCLUDE=EXCLUDE_$SID
     EXCLUDE=${!EXCLUDE}
     # SID filtered totally?
@@ -96,7 +113,7 @@ for SID in $SIDS; do
     fi
 
     # Do Version-Check (use as a general login check) without caching
-    if [ "$EXCLUDE" = "${EXCLUDE/oracle_version/}" ]; then
+    if [ "$EXCLUDE" = "${EXCLUDE/version/}" ]; then
         echo '<<<oracle_version>>>'
         echo "select banner from v\$version where banner like 'Oracle%';" | sqlplus "$SID"
     fi
@@ -139,17 +156,17 @@ for SID in $SIDS; do
 
             {
             # Only execute checks when not filtered
-            if [ "$EXCLUDE" = "${EXCLUDE/oracle_sessions/}" ]; then
+            if [ '$EXCLUDE' = '${EXCLUDE/sessions/}' ]; then
                 echo '<<<oracle_sessions>>>'
                 echo \"select count(1) from v\\\$session where status = 'ACTIVE';\" | sqlplus \"$SID\"
             fi
 
-            if [ "$EXCLUDE" = "${EXCLUDE/oracle_logswitches/}" ]; then
+            if [ '$EXCLUDE' = '${EXCLUDE/logswitches/}' ]; then
                 echo '<<<oracle_logswitches>>>'
                 echo \"select count(1) from v\\\$loghist where first_time > sysdate - 1/24;\" | sqlplus \"$SID\"
             fi
 
-            if [ "$EXCLUDE" = "${EXCLUDE/oracle_tablespaces/}" ]; then
+            if [ '$EXCLUDE' = '${EXCLUDE/tablespaces/}' ]; then
                 echo '<<<oracle_tablespaces>>>'
                 sqlplus "$SID" <<EOF | sed 's/READ ONLY/READONLY/g'
                 select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE,

@@ -1,0 +1,19 @@
+title: Check login into ORACLE database, output version
+agents: linux, hpux, windows
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check does a login into an ORACLE database and executes
+ a simple query outputting the version of the database. In contrary
+ to the other ORACLE checks this check is not cached and produces
+ an immediate error if the database login is not successfull.
+
+item:
+ The SID of the database (as appearing in the process
+ name of the pmon_... process).
+
+inventory:
+ One separate check for each database found running will
+ be created.
+

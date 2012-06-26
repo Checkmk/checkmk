@@ -24,16 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<oracle_logswitches>>>
-# pengt  15
-# hirni  22
+# <<<oracle_version>>>
+# XE Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production
 
-oracle_logswitches_default_levels = (-1, -1, 50, 100)
+def inventory_oracle_version(info):
+    return [ (line[0], None) for line in info if len(line) >= 2 ]
 
-def inventory_oracle_logswitches(info):
-    return [ (line[0], "oracle_logswitches_default_levels") for line in info if len(line) >= 2 ]
-
-def check_oracle_logswitches(item, params, info):
+def check_oracle_version(item, _no_params, info):
     for line in info:
         if line[0] == item:
             err = oracle_handle_ora_errors(line)
@@ -42,19 +39,11 @@ def check_oracle_logswitches(item, params, info):
             elif isinstance(err, tuple):
                 return err
 
-            locrit, lowarn, warn, crit = params
-            logswitches = int(line[1])
-            infotext = " - %d log switches in the last 60 minutes (levels at %d/%d .. %d/%d)" \
-                % (logswitches, locrit, lowarn, warn, crit)
-            perfdata = [("logswitches", logswitches, warn, crit)]
-            if logswitches >= crit or logswitches <= locrit:
-                return (2, "CRIT" + infotext, perfdata)
-            elif logswitches >= warn or logswitches <= lowarn:
-                return (1, "WARN" + infotext, perfdata)
-            else:
-                return (0, "OK" + infotext, perfdata)
-    return (3, "UNKNOWN - Database not existing or not running")
+            return (0, 'OK - Version: ' + " ".join(line[1:]))
 
-check_info['oracle_logswitches'] = (check_oracle_logswitches, "ORA %s Logswitches", 1,  inventory_oracle_logswitches )
-checkgroup_of['oracle_logswitches'] = "oracle_logswitches" 
-check_includes['oracle_logswitches'] = [ "oracle.include" ]
+check_info['oracle_version'] = {
+    "check_function"      : check_oracle_version,
+    "inventory_function"  : inventory_oracle_version,
+    "service_description" : "ORA Version %s",
+    "includes"            : [ "oracle.include" ],
+}

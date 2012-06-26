@@ -52,7 +52,7 @@ def check_oracle_sessions(item, params, info):
                 return (1, "WARN" + infotext, perfdata)
             else:
                 return (0, "OK" + infotext, perfdata)
-    return (2, "UNKNOWN - Database not existing or not running")
+    return (3, "UNKNOWN - Database not existing or not running")
 
 check_info['oracle_sessions'] = (check_oracle_sessions, "ORA %s Sessions", 1,  inventory_oracle_sessions )
 check_includes['oracle_sessions'] = [ "oracle.include" ]

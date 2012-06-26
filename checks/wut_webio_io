@@ -1,6 +1,37 @@
 #!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
-# snmpwalk fehlt
+
+
+#SNMP Data for the port that is labeled as "0" on the device and
+# in the web interface, but "1" in the tables.
+#  .1.3.6.1.4.1.5040.1.2.4.1.3.1.4.1  1                << this is the index
+#  .1.3.6.1.4.1.5040.1.2.4.3.1.5.2.1.1.1  1            << this is the state
+#  .1.3.6.1.4.1.5040.1.2.4.3.2.1.1.1.1  "Stoerung USV" << this is the user descr.
+
 
 webio_state_names = {
    0 : "Off",
@@ -10,15 +41,18 @@ webio_state_names = {
 
 # Parser for the snmp data, hands back a dict with fugded
 # item name and the state of all ports.
+# fix the port index. it is off by one. alternatively you could just
+# fix the nagios state text at check time.
+# Also do padding with 0, this means we need to handle it as "str"
+# tbh, there is a way in if.include but it is beyond me how that works.
+# The max model has 24 ports, so this will work for the current product
+# range.
 def parse_webio_io_inputs(info):
     wut_info = {}
     for line in info:
         input_index, input_desc, state = line
         state = int(state)
-        # fix the port index. it is off by one.
         input_index = str(int(input_index) - 1)
-        # Do padding with 0, this means we need to handle it as "str"
-        # tbh, there is a way in if.include but it is beyond me how that works.
         if len(input_index) < 2:
             input_index  = "0" + input_index 
 
@@ -34,7 +68,7 @@ def parse_webio_io_inputs(info):
 def inventory_wut_webio_io_inputs(info):
     inventory = []
     wut_info = parse_webio_io_inputs(info)
-    # inventorize the err, things.
+    # inventorize the err, things as the parser returned them.
     for index in wut_info.keys():
         inventory.append((wut_info[index][0], wut_info[index][1]))
     return inventory
@@ -48,7 +82,7 @@ def check_wut_webio_io_inputs(item, params, info):
             oldstate = params
             state    = wut_info[index][1]
 
-            # Compare to the last state of the IO port.
+            # Compare to the state of the IO port at inventory.
             if state != params:
                 return (2, "CRITICAL - state should be %s but is %s (!!)" % (
                            webio_state_names[params], 

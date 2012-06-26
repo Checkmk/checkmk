@@ -8,6 +8,13 @@
     * New check wut_webio_io: Monitor the IO input channels on W&T Web-IO 
       devices
     * nfsmounts: reclassify "Stale NFS handle" from WARN to CRIT
+    * ORACLE agent/checks: better error handling. Let SQL errors get
+      through into check output, output sections even if no database
+      is running.
+    * oracle_version: new check outputting the version of an ORACLE
+      database - and using uncached direct SQL output.
+    * ORACLE agent: fix handling of EXCLUDE, new variable ONLY_SIDS
+      for explicitely listing SIDs to monitor
 
     Multisite:
     * Show number of rows and number of selected rows in header line

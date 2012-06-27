@@ -23,6 +23,7 @@
     * remove obsolete ORACLE checks where no agent plugins where available
     * printer_supply: Fix problem on DELL printers with "S/N" in output
       (thanks to Sebastian Talmon)
+    * winperf_phydisk: Fix typo (lead to WATO rule not being applied)
 
     Multisite:
     * Show number of rows and number of selected rows in header line

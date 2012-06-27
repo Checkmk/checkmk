@@ -21,6 +21,8 @@
       for explicitely listing SIDs to monitor
     * mk_logwatch on Linux: new options regex and iregex for file selection
     * remove obsolete ORACLE checks where no agent plugins where available
+    * printer_supply: Fix problem on DELL printers with "S/N" in output
+      (thanks to Sebastian Talmon)
 
     Multisite:
     * Show number of rows and number of selected rows in header line

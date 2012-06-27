@@ -19,6 +19,11 @@
       database - and using uncached direct SQL output.
     * ORACLE agent: fix handling of EXCLUDE, new variable ONLY_SIDS
       for explicitely listing SIDs to monitor
+    * mk_logwatch on Linux: new options regex and iregex for file selection
+    * remove obsolete ORACLE checks where no agent plugins where available
+    * FIX: printer_supply: Fix problem on DELL printers with "S/N" in output
+      (thanks to Sebastian Talmon)
+    * FIX: winperf_phydisk: Fix typo (lead to WATO rule not being applied)
 
     Multisite:
     * Show number of rows and number of selected rows in header line
@@ -42,6 +47,7 @@
     * New logical datatable for aggregations that have the same name
       as a host. Converted view "BI Boxes" to this new table. This allows
       for Host-Aggregations containing data of other hosts as well.
+    * count_ok: allow percentages, e.g. "count_ok!70%!50%"
 
 1.2.0p1:
     Core:

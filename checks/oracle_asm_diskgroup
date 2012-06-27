@@ -24,34 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Example output from asmcmd lsdg:
+# State    Type    Rebal  Sector  Block       AU  Total_MB  Free_MB  Req_mir_free_MB  Usable_file_MB  Offline_disks  Voting_files  Name
+# MOUNTED  NORMAL  N         512   4096  1048576    512000    92888                0           46444              0             N  DATA/
+# MOUNTED  NORMAL  N         512   4096  1048576      3072     2146              309             918              0             Y  OCR_VOTE/
+# The agent section <<<oracle_asm_diskgroup>>> does not output the header line
 
-def inventory_nfsmounts(info):
-    return [ (line[0], None) for line in info ]
+check_includes['oracle_asm_diskgroup'] = [ "df.include" ]
 
-def check_nfsmounts(item, _no_params, info):
-    for line in info:
-        mountpoint = line[0]
-        if mountpoint == item:
-            size_blocks = int(line[2])
-            free_blocks = int(line[4]) # for non-root user
-            blocksize = int(line[5])
+def inventory_oracle_asm_diskgroup(info):
+    return [ (line[-1].rstrip("/"), {}) for line in info ]
 
-            if size_blocks < 0 or free_blocks < 0 or blocksize > 1024*1024:
-                return (2, "CRIT - Stale NFS handle")
+def check_oracle_asm_diskgroup(item, params, info):
 
-            if line[1] == 'ok':
-                gb = 1024 * 1024 * 1024.0
-                size_gb = (size_blocks * blocksize) / gb
-                if size_gb == 0:
-                    return (0, "OK - server is responding")
+    for state, typ, rebal, sector, block, au, total_mb,  \
+        free_mb, req_mir_free_mb, usable_file_mb, offline_disks, \
+        voting_files, name in info:
+        if name.rstrip('/') == item:
+            return df_check_filesystem(g_hostname, item, int(total_mb),
+                                       int(free_mb), params)
+    return (3, "UNKNOWN - Disk group not found")
 
-                free_gb = (free_blocks * blocksize) / gb
-                used_gb = size_gb - free_gb
-                used_perc = 100.0 * used_gb / size_gb
-                return (0, "OK - %.1f%% used (%.1f of %.1f GB)" % (used_perc, used_gb, size_gb))
-            else:
-                return (2, "CRIT - server not responding")
-    return (3, "UNKNOWN - not mounted")
-
-check_info['nfsmounts'] = (check_nfsmounts, "NFS mount %s", 0, inventory_nfsmounts)
-checkgroup_of['nfsmounts'] = 'network_fs'
+check_info["oracle_asm_diskgroup"] = (check_oracle_asm_diskgroup, "ASM Diskgroup %s", 1, inventory_oracle_asm_diskgroup)
+checkgroup_of['oracle_asm_diskgroup']        = "fs"
+check_default_levels["oracle_asm_diskgroup"] = "filesystem_default_levels"

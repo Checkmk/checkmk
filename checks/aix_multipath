@@ -38,7 +38,6 @@ def inventory_aix_multipath(info):
         # too, but those have incomplete status => false positives
         if disk.startswith("hdisk"):
             disks[disk] = disks.get(disk, 0) + 1
-        print disks
     return [(disk, {'paths' : disks[disk]}) for disk in disks.keys()] 
 
 def check_aix_multipath(item, params, info):

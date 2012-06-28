@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This checks uses the JSON HTTP service of j4p (from jmx4perl) to
  monitor the current memory usage of a Java application server like
- Tomcat or JBoss. You can define levels agains the total memory
+ Tomcat or JBoss. You can define levels against the total memory
  usage of the Java machine (heap + non heap).
 
  In order for the check to work, you need to load the j4p.war into your

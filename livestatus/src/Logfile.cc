@@ -29,7 +29,7 @@
 #include "logger.h"
 #include "LogEntry.h"
 #include "Query.h"
-#include "TableLog.h"
+#include "LogCache.h"
 
 extern int num_cached_log_messages;
 extern int g_debug_level;
@@ -86,7 +86,7 @@ void Logfile::flush()
 }
 
 
-void Logfile::load(TableLog *tablelog, time_t since, time_t until, unsigned logclasses)
+void Logfile::load(LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
     unsigned missing_types = logclasses & ~_logclasses_read;
 
@@ -110,13 +110,13 @@ void Logfile::load(TableLog *tablelog, time_t since, time_t until, unsigned logc
         // have read to the end of the file
         if (_logclasses_read) {
             fsetpos(file, &_read_pos); // continue at previous end
-            loadRange(file, _logclasses_read, tablelog, since, until, logclasses);
+            loadRange(file, _logclasses_read, logcache, since, until, logclasses);
             fgetpos(file, &_read_pos);
         }
         if (missing_types) {
             fseek(file, 0, SEEK_SET);
             _lineno = 0;
-            loadRange(file, missing_types, tablelog, since, until, logclasses);
+            loadRange(file, missing_types, logcache, since, until, logclasses);
             _logclasses_read |= missing_types;
             fgetpos(file, &_read_pos); // remember current end of file
         }
@@ -133,21 +133,21 @@ void Logfile::load(TableLog *tablelog, time_t since, time_t until, unsigned logc
             return;
         }
 
-        loadRange(file, missing_types, tablelog, since, until, logclasses);
+        loadRange(file, missing_types, logcache, since, until, logclasses);
         fclose(file);
         _logclasses_read |= missing_types;
     }
 }
 
 void Logfile::loadRange(FILE *file, unsigned missing_types,
-        TableLog *tablelog, time_t since, time_t until, unsigned logclasses)
+        LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
     while (fgets(_linebuffer, MAX_LOGLINE, file))
     {
         _lineno++;
         if (processLogLine(_lineno, missing_types)) {
             num_cached_log_messages ++;
-            tablelog->handleNewMessage(this, since, until, logclasses); // memory management
+            logcache->handleNewMessage(this, since, until, logclasses); // memory management
         }
     }
 }
@@ -199,9 +199,9 @@ bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
 }
 
 
-bool Logfile::answerQuery(Query *query, TableLog *tablelog, time_t since, time_t until, unsigned logclasses)
+bool Logfile::answerQuery(Query *query, LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
-    load(tablelog, since, until, logclasses); // make sure all messages are present
+    load(logcache, since, until, logclasses); // make sure all messages are present
     uint64_t sincekey = makeKey(since, 0);
     _entries_t::iterator it = _entries.lower_bound(sincekey);
     while (it != _entries.end())
@@ -216,9 +216,9 @@ bool Logfile::answerQuery(Query *query, TableLog *tablelog, time_t since, time_t
     return true;
 }
 
-bool Logfile::answerQueryReverse(Query *query, TableLog *tablelog, time_t since, time_t until, unsigned logclasses)
+bool Logfile::answerQueryReverse(Query *query, LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
-    load(tablelog, since, until, logclasses); // make sure all messages are present
+    load(logcache, since, until, logclasses); // make sure all messages are present
     uint64_t untilkey = makeKey(until, 999999999);
     _entries_t::iterator it = _entries.upper_bound(untilkey);
     while (it != _entries.begin())

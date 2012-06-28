@@ -172,7 +172,7 @@ void TableLog::answerQuery(Query *query)
     while (true) {
         Logfile *log = it->second;
         debug("Query is now at logfile %s, needing classes 0x%x", log->path(), classmask);
-        if (!log->answerQueryReverse(query, this, since, until, classmask))
+        if (!log->answerQueryReverse(query, LogCache::handle, since, until, classmask))
             break; // end of time range found
         if (it == LogCache::handle->_logfiles.begin())
             break; // this was the oldest one

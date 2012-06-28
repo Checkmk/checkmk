@@ -45,8 +45,6 @@
 
 class Store
 {
-
-    LogCache           _logcache;
     TableContacts      _table_contacts;
     TableCommands      _table_commands;
     TableHostgroups    _table_hostgroups;
@@ -79,6 +77,7 @@ private:
     void answerGetRequest(InputBuffer *, OutputBuffer *, const char *);
     void answerCommandRequest(const char *);
 };
+
 
 #endif // Store_h
 

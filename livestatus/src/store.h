@@ -48,6 +48,7 @@ extern "C"
     void queue_wakeup_all();
     void update_timeperiods_cache(time_t);
 
+
 #ifdef __cplusplus
 }
 #endif

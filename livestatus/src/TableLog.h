@@ -34,10 +34,6 @@ class Logfile;
 
 class TableLog : public Table
 {
-    typedef map<time_t, Logfile *> _logfiles_t;
-    _logfiles_t _logfiles;
-    pthread_mutex_t _lock;
-    time_t _last_index_update;
     unsigned long _num_cached_messages;
     unsigned long _max_cached_messages;
     unsigned long _num_at_last_check;
@@ -53,12 +49,7 @@ public:
     Column *column(const char *colname); // override in order to handle current_
 
 private:
-    void forgetLogfiles();
-    void updateLogfileIndex();
-    void scanLogfile(char *path, bool watch);
-    bool answerQuery(Query *, Logfile *, time_t, time_t);
-    _logfiles_t::iterator findLogfileStartingBefore(time_t);
-    void dumpLogfiles();
+   bool answerQuery(Query *, Logfile *, time_t, time_t);
 };
 
 #endif // TableLog_h

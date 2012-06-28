@@ -67,4 +67,5 @@ private:
 };
 
 
+
 #endif // LogCache_h

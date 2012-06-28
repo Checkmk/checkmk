@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TableStateHistory_h
-#define TableStateHistory_h
+#ifndef TableStatehistory_h
+#define TableStatehistory_h
 
 #include <map>
 #include <time.h>
@@ -32,22 +32,24 @@
 
 class Logfile;
 
-class TableStateHistory : public Table
+class TableStatehistory : public Table
 {
-    typedef map<time_t, Logfile *> _logfiles_t;
-    _logfiles_t _logfiles;
+    unsigned long _num_cached_messages;
+    unsigned long _max_cached_messages;
+    unsigned long _num_at_last_check;
 
 public:
-    TableStateHistory();
-    ~TableStateHistory(){};
+    TableStatehistory(unsigned long max_cached_messages);
+    ~TableStatehistory();
     const char *name() { return "log"; }
     const char *prefixname() { return "logs"; }
     bool isAuthorized(contact *ctc, void *data);
+    void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
     void answerQuery(Query *query);
     Column *column(const char *colname); // override in order to handle current_
 
 private:
-    bool answerQuery(Query *, Logfile *, time_t, time_t);
+   bool answerQuery(Query *, Logfile *, time_t, time_t);
 };
 
-#endif // TableStateHistory_h
+#endif // TableStatehistory_h

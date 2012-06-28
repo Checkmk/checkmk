@@ -30,30 +30,34 @@
 
 #include "nagios.h"
 #include "logger.h"
-#include "LogCache.h"
 #include "TableStateHistory.h"
 #include "LogEntry.h"
 #include "OffsetIntColumn.h"
 #include "OffsetTimeColumn.h"
 #include "OffsetStringColumn.h"
-#include "Logfile.h"
 #include "Query.h"
+#include "Logfile.h"
 #include "tables.h"
 #include "TableServices.h"
 #include "TableHosts.h"
 #include "TableCommands.h"
 #include "TableContacts.h"
 #include "auth.h"
+#include "LogCache.h"
+
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 
 // watch nagios' logfile rotation
 extern time_t last_log_rotation;
 extern int g_debug_level;
+
+int num_cached_log_messages = 0;
+
 extern LogCache* g_logcache;
 
 // Debugging logging is hard if debug messages are logged themselves...
-void statehist_debug(const char *loginfo, ...)
+void debug(const char *loginfo, ...)
 {
     if (g_debug_level < 2)
         return;
@@ -67,35 +71,69 @@ void statehist_debug(const char *loginfo, ...)
     fclose(x);
 }
 
-TableStateHistory::TableStateHistory()
-{
 
+TableStatehistory::TableStatehistory(unsigned long max_cached_messages)
+  : _num_cached_messages(0)
+  , _max_cached_messages(max_cached_messages)
+  , _num_at_last_check(0)
+{
+	debug("INIT TABLE LOG");
+    LogEntry *ref = 0;
+    addColumn(new OffsetTimeColumn("time",
+                "Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));
+    addColumn(new OffsetIntColumn("lineno",
+                "The number of the line in the log file", (char *)&(ref->_lineno) - (char *)ref, -1));
+    addColumn(new OffsetIntColumn("class",
+                "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)", (char *)&(ref->_logclass) - (char *)ref, -1));
+
+    addColumn(new OffsetStringColumn("message",
+                "The complete message line including the timestamp", (char *)&(ref->_complete) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("type",
+                "The type of the message (text before the colon), the message itself for info messages", (char *)&(ref->_text) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("options",
+                "The part of the message after the ':'", (char *)&(ref->_options) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("comment",
+                "A comment field used in various message types", (char *)&(ref->_comment) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("plugin_output",
+                "The output of the check, if any is associated with the message", (char *)&(ref->_check_output) - (char *)ref, -1));
+    addColumn(new OffsetIntColumn("state",
+                "The state of the host or service in question", (char *)&(ref->_state) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("state_type",
+                "The type of the state (varies on different log classes)", (char *)&(ref->_state_type) - (char *)ref, -1));
+    addColumn(new OffsetIntColumn("attempt",
+                "The number of the check attempt", (char *)&(ref->_attempt) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("service_description",
+                "The description of the service log entry is about (might be empty)",
+                (char *)&(ref->_svc_desc) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("host_name",
+                "The name of the host the log entry is about (might be empty)",
+                (char *)&(ref->_host_name) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("contact_name",
+                "The name of the contact the log entry is about (might be empty)",
+                (char *)&(ref->_contact_name) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("command_name",
+                "The name of the command of the log entry (e.g. for notifications)",
+                (char *)&(ref->_command_name) - (char *)ref, -1));
+
+    // join host and service tables
+    g_table_hosts->addColumns(this, "current_host_",    (char *)&(ref->_host)    - (char *)ref);
+    g_table_services->addColumns(this, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
+    g_table_contacts->addColumns(this, "current_contact_", (char *)&(ref->_contact) - (char *)ref);
+    g_table_commands->addColumns(this, "current_command_", (char *)&(ref->_command) - (char *)ref);
 }
 
-void TableStateHistory::answerQuery(Query *query)
+
+TableStatehistory::~TableStatehistory()
 {
-	g_logcache->lockLogCache();
-	if ( g_logcache->logCachePreChecks() == false ){
-		g_logcache->unlockLogCache();
-		return;
-	}
+}
 
-    // Do we have any logfiles (should always be the case,
-    // but we don't want to crash...
-    if (g_logcache->_logfiles.size() == 0) {
-        g_logcache->unlockLogCache();
-        logger(LOG_INFO, "Warning: no logfile found, not even nagios.log");
-        return;
-    }
 
-    // Has Nagios rotated logfiles? => Update
-    // our file index. And delete all memorized
-    // log messages.
-    if (last_log_rotation > g_logcache->_last_index_update) {
-        logger(LG_INFO, "Nagios has rotated logfiles. Rebuilding logfile index");
-        g_logcache->forgetLogfiles();
-        g_logcache->updateLogfileIndex();
-    }
+void TableStatehistory::answerQuery(Query *query)
+{
+    // since logfiles are loaded on demand, we need
+    // to lock out concurrent threads.
+    g_logcache->lockLogCache();
+    g_logcache->logCachePreChecks();
 
     int since = 0;
     int until = time(0) + 1;
@@ -111,51 +149,47 @@ void TableStateHistory::answerQuery(Query *query)
     uint32_t classmask = LOGCLASS_ALL;
     query->optimizeBitmask("class", &classmask);
     if (classmask == 0) {
-        g_logcache->unlockLogCache();
+    	g_logcache->unlockLogCache();
         return;
+        LogCache* g_logcache;
     }
 
 
     /* This code start with the oldest log entries. I'm going
        to change this and start with the newest. That way,
        the Limit: header produces more reasonable results. */
+//
+//    /* NEW CODE - NEWEST FIRST */
+//      _logfiles_t::iterator it;
+//      it = g_logcache->_logfiles.end(); // it now points beyond last log file
+//    --it; // switch to last logfile (we have at least one)
+//
+//    // Now find newest log where 'until' is contained. The problem
+//    // here: For each logfile we only know the time of the *first* entry,
+//    // not that of the last.
+//    while (it != g_logcache->_logfiles.begin() && it->first > until) // while logfiles are too new...
+//        --it; // go back in history
+//    if (it->first > until)  { // all logfiles are too new
+//    	g_logcache->unlockLogCache();
+//        return;
+//    }
+//
+//    while (true) {
+//        Logfile *log = it->second;
+//        debug("Query is now at logfile %s, needing classes 0x%x", log->path(), classmask);
+//        if (!log->answerQueryReverse(query, this, since, until, classmask))
+//            break; // end of time range found
+//        if (it == g_logcache->_logfiles.begin())
+//            break; // this was the oldest one
+//        --it;
+//    }
 
-    /* NEW CODE - NEWEST FIRST */
-    _logfiles_t::iterator it;
-
-
-    // FIXME: DEN BLOCK EVTL NOCH IN DEN LOGCACHE UMZIEHEN
-    logger(LOG_INFO, "### STATEHIST HOLE VOM LOGCACHE");
-
-    it = g_logcache->_logfiles.end(); // it now points beyond last log file
-    --it; // switch to last logfile (we have at least one)
-
-    // Now find newest log where 'until' is contained. The problem
-    // here: For each logfile we only know the time of the *first* entry,
-    // not that of the last.
-    while (it != g_logcache->_logfiles.begin() && it->first > until) // while logfiles are too new...
-        --it; // go back in history
-    if (it->first > until)  { // all logfiles are too new
-        g_logcache->unlockLogCache();
-        return;
-    }
-
-    while (true) {
-        Logfile *log = it->second;
-        statehist_debug("Query is now at logfile %s, needing classes 0x%x", log->path(), classmask);
-        if (!log->answerQueryReverse(query, g_logcache, since, until, classmask))
-            break; // end of time range found
-        if (it == g_logcache->_logfiles.begin())
-            break; // this was the oldest one
-        --it;
-    }
-
-	g_logcache->unlockLogCache();
+    // dumpLogfiles();
+    g_logcache->unlockLogCache();
 }
 
 
-
-bool TableStateHistory::isAuthorized(contact *ctc, void *data)
+bool TableStatehistory::isAuthorized(contact *ctc, void *data)
 {
     LogEntry *entry = (LogEntry *)data;
     service *svc = entry->_service;
@@ -174,7 +208,7 @@ bool TableStateHistory::isAuthorized(contact *ctc, void *data)
         return true;
 }
 
-Column *TableStateHistory::column(const char *colname)
+Column *TableStatehistory::column(const char *colname)
 {
     // First try to find column in the usual way
     Column *col = Table::column(colname);

@@ -65,6 +65,8 @@ LogCache::LogCache(unsigned long max_cached_messages)
   : _num_cached_messages(0)
   , _max_cached_messages(max_cached_messages)
   , _num_at_last_check(0){
+
+	logcache_debug("## Initialisiere LOGCACHE");
     pthread_mutex_init(&_lock, 0);
     updateLogfileIndex();
     g_logcache = this;
@@ -87,6 +89,7 @@ void LogCache::unlockLogCache(){
 bool LogCache::logCachePreChecks(){
     // Do we have any logfiles (should always be the case,
     // but we don't want to crash...
+	logcache_debug("## LOGCACHE PRE CHECKS");
     if (_logfiles.size() == 0) {
         logger(LOG_INFO, "Warning: no logfile found, not even nagios.log");
         return false;

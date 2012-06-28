@@ -32,9 +32,10 @@
 
 class Logfile;
 
+typedef map<time_t, Logfile *> _logfiles_t;
 class LogCache
 {
-    typedef map<time_t, Logfile *> _logfiles_t;
+
     pthread_mutex_t _lock;
     unsigned long _num_cached_messages;
     unsigned long _max_cached_messages;

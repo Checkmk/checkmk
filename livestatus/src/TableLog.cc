@@ -77,6 +77,7 @@ TableLog::TableLog(unsigned long max_cached_messages)
   , _max_cached_messages(max_cached_messages)
   , _num_at_last_check(0)
 {
+	debug("INIT TABLE LOG");
     LogEntry *ref = 0;
     addColumn(new OffsetTimeColumn("time",
                 "Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));
@@ -159,17 +160,17 @@ void TableLog::answerQuery(Query *query)
        the Limit: header produces more reasonable results. */
 //
 //    /* NEW CODE - NEWEST FIRST */
-//     _logfiles_t::iterator it;
-//      it = _logfiles.end(); // it now points beyond last log file
+//      _logfiles_t::iterator it;
+//      it = g_logcache->_logfiles.end(); // it now points beyond last log file
 //    --it; // switch to last logfile (we have at least one)
 //
 //    // Now find newest log where 'until' is contained. The problem
 //    // here: For each logfile we only know the time of the *first* entry,
 //    // not that of the last.
-//    while (it != _logfiles.begin() && it->first > until) // while logfiles are too new...
+//    while (it != g_logcache->_logfiles.begin() && it->first > until) // while logfiles are too new...
 //        --it; // go back in history
 //    if (it->first > until)  { // all logfiles are too new
-//        pthread_mutex_unlock(&_lock);
+//    	g_logcache->unlockLogCache();
 //        return;
 //    }
 //
@@ -178,7 +179,7 @@ void TableLog::answerQuery(Query *query)
 //        debug("Query is now at logfile %s, needing classes 0x%x", log->path(), classmask);
 //        if (!log->answerQueryReverse(query, this, since, until, classmask))
 //            break; // end of time range found
-//        if (it == _logfiles.begin())
+//        if (it == g_logcache->_logfiles.begin())
 //            break; // this was the oldest one
 //        --it;
 //    }

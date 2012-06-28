@@ -46,6 +46,7 @@ public:
     time_t _last_index_update;
     _logfiles_t _logfiles;
 
+    static LogCache* handle;
     const char *name() { return "log"; }
     const char *prefixname() { return "logs"; }
     bool isAuthorized(contact *ctc, void *data);

@@ -42,9 +42,8 @@
 extern time_t last_log_rotation;
 extern int g_debug_level;
 
-int logcache_logcache_num_cached_log_messages = 0;
+int num_cached_log_messages = 0;
 
-LogCache* g_logcache;
 
 // Debugging logging is hard if debug messages are logged themselves...
 void logcache_debug(const char *loginfo, ...)
@@ -61,6 +60,7 @@ void logcache_debug(const char *loginfo, ...)
     fclose(x);
 }
 
+LogCache* LogCache::handle;
 LogCache::LogCache(unsigned long max_cached_messages)
   : _num_cached_messages(0)
   , _max_cached_messages(max_cached_messages)
@@ -69,7 +69,7 @@ LogCache::LogCache(unsigned long max_cached_messages)
 	logcache_debug("## Initialisiere LOGCACHE");
     pthread_mutex_init(&_lock, 0);
     updateLogfileIndex();
-    g_logcache = this;
+    handle = this;
 }
 
 LogCache::~LogCache()

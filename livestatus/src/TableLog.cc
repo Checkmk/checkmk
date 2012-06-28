@@ -49,12 +49,8 @@
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 
 // watch nagios' logfile rotation
-extern time_t last_log_rotation;
 extern int g_debug_level;
 
-int num_cached_log_messages = 0;
-
-extern LogCache* g_logcache;
 
 // Debugging logging is hard if debug messages are logged themselves...
 void debug(const char *loginfo, ...)
@@ -132,8 +128,8 @@ void TableLog::answerQuery(Query *query)
 {
     // since logfiles are loaded on demand, we need
     // to lock out concurrent threads.
-    g_logcache->lockLogCache();
-    g_logcache->logCachePreChecks();
+	LogCache::handle->lockLogCache();
+	LogCache::handle->logCachePreChecks();
 
     int since = 0;
     int until = time(0) + 1;
@@ -149,43 +145,42 @@ void TableLog::answerQuery(Query *query)
     uint32_t classmask = LOGCLASS_ALL;
     query->optimizeBitmask("class", &classmask);
     if (classmask == 0) {
-    	g_logcache->unlockLogCache();
+    	LogCache::handle->unlockLogCache();
         return;
-        LogCache* g_logcache;
     }
 
 
     /* This code start with the oldest log entries. I'm going
        to change this and start with the newest. That way,
        the Limit: header produces more reasonable results. */
-//
-//    /* NEW CODE - NEWEST FIRST */
-//      _logfiles_t::iterator it;
-//      it = g_logcache->_logfiles.end(); // it now points beyond last log file
-//    --it; // switch to last logfile (we have at least one)
-//
-//    // Now find newest log where 'until' is contained. The problem
-//    // here: For each logfile we only know the time of the *first* entry,
-//    // not that of the last.
-//    while (it != g_logcache->_logfiles.begin() && it->first > until) // while logfiles are too new...
-//        --it; // go back in history
-//    if (it->first > until)  { // all logfiles are too new
-//    	g_logcache->unlockLogCache();
-//        return;
-//    }
-//
-//    while (true) {
-//        Logfile *log = it->second;
-//        debug("Query is now at logfile %s, needing classes 0x%x", log->path(), classmask);
-//        if (!log->answerQueryReverse(query, this, since, until, classmask))
-//            break; // end of time range found
-//        if (it == g_logcache->_logfiles.begin())
-//            break; // this was the oldest one
-//        --it;
-//    }
+
+    /* NEW CODE - NEWEST FIRST */
+      _logfiles_t::iterator it;
+      it = LogCache::handle->_logfiles.end(); // it now points beyond last log file
+    --it; // switch to last logfile (we have at least one)
+
+    // Now find newest log where 'until' is contained. The problem
+    // here: For each logfile we only know the time of the *first* entry,
+    // not that of the last.
+    while (it != LogCache::handle->_logfiles.begin() && it->first > until) // while logfiles are too new...
+        --it; // go back in history
+    if (it->first > until)  { // all logfiles are too new
+    	LogCache::handle->unlockLogCache();
+        return;
+    }
+
+    while (true) {
+        Logfile *log = it->second;
+        debug("Query is now at logfile %s, needing classes 0x%x", log->path(), classmask);
+        if (!log->answerQueryReverse(query, this, since, until, classmask))
+            break; // end of time range found
+        if (it == LogCache::handle->_logfiles.begin())
+            break; // this was the oldest one
+        --it;
+    }
 
     // dumpLogfiles();
-    g_logcache->unlockLogCache();
+    LogCache::handle->unlockLogCache();
 }
 
 

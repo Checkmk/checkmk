@@ -41,9 +41,12 @@
 #include "TableColumns.h"
 #include "OutputBuffer.h"
 #include "InputBuffer.h"
+#include "LogCache.h"
 
 class Store
 {
+
+    LogCache           _logcache;
     TableContacts      _table_contacts;
     TableCommands      _table_commands;
     TableHostgroups    _table_hostgroups;

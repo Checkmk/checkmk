@@ -5,20 +5,20 @@ import urllib2, sys, os, socket, pprint
 opt_debug = '--debug' in sys.argv
 
 def fetch_var(server, port, path, suburi, itemspec):
-    url = "http://%s:%d/%s/read/%s" % (server, port, suburi, path)
+    url = "http://%s:%d/%s/%s" % (server, port, suburi, path)
     json = urllib2.urlopen(url).read()
 
     try:
         true = True
         false = False
-        nil = None
+        null = None
         obj = eval(json)
     except Exception, e:
         sys.stderr.write('ERROR: Invalid json code (%s)\n' % e)
         sys.stderr.write('       Response %s\n' % json)
         return []
 
-    if obj.get('status', 200) == 404:
+    if obj.get('status', 200) != 200:
         sys.stderr.write('ERROR: Invalid response when fetching url %s\n' % url)
         sys.stderr.write('       Response: %s\n' % json)
         return []
@@ -67,15 +67,19 @@ def extract_item(key, itemspec):
     path = key.split(":", 1)[-1]
     components = path.split(",")
     item = ()
+    comp_dict = {}
     for comp in components:
         parts = comp.split("=")
         if len(parts) == 2:
             left, right = parts
-            if left in itemspec:
-                right = right.replace(r'\/', '/')
-                if '/' in right:
-                    right = '/' + right.split('/')[-1]
-                item = item + (right,)
+            comp_dict[left] = right
+    for pathkey in itemspec:
+        if pathkey in comp_dict:
+            right = comp_dict[pathkey]
+            right = right.replace(r'\/', '/')
+            if '/' in right:
+                right = '/' + right.split('/')[-1]
+            item = item + (right,)
     return item
 
 
@@ -92,11 +96,25 @@ def query_instance(inst):
         opener = urllib2.build_opener(authhandler)
         urllib2.install_opener(opener)
 
+    # Determine type of server
+    server_info = fetch_var(inst["server"], inst["port"], "", inst["suburi"], "")
+    sys.stdout.write('<<<jolokia_info>>>\n')
+    if server_info:
+       d = dict(server_info)
+       version = d.get(('info', 'version'), "unknown")
+       product = d.get(('info', 'product'), "unknown")
+       agentversion = d.get(('agent',), "unknown")
+       sys.stdout.write("%s %s %s %s\n" % (inst["instance"], product, version, agentversion))
+    else:
+       sys.stdout.write("%s ERROR\n" % (inst["instance"],))
+       return
+
+    sys.stdout.write('<<<jolokia_metrics>>>\n')
     # Fetch the general information first
-    for path, title, itemspec in global_vars:
+    for path, title, itemspec in global_vars + specific_vars.get(product, []):
     
         try:
-            values = fetch_var(inst["server"], inst["port"], path, inst["suburi"], itemspec)
+            values = fetch_var(inst["server"], inst["port"], "read/" + path, inst["suburi"], itemspec)
 
         # In case of network errors skip this server
         except IOError:
@@ -111,7 +129,7 @@ def query_instance(inst):
     
         for subinstance, value in values:
             if not subinstance and not title:
-                print "FUCK: %s" % value
+                print "INTERNAL ERROR: %s" % value
                 continue
 
             if len(subinstance) > 1:
@@ -132,39 +150,52 @@ def query_instance(inst):
 # Default configuration for all instances
 server   = "localhost"
 port     = 8080
-user     = "jmx4perl"
-password = "J4PisOK"
+user     = "monitoring"
+password = None
 mode     = "digest"
-suburi   = "j4p"
+suburi   = "jolokia"
 instance = None
 
 global_vars = [
-  ( "java.lang:type=Memory/NonHeapMemoryUsage/used",     "NonHeapMemoryUsage",      [] ),
-  ( "java.lang:type=Memory/HeapMemoryUsage/used",        "HeapMemoryUsage",         [] ),
-  ( "java.lang:type=Threading/ThreadCount",              "ThreadCount",             [] ),
-  ( "java.lang:type=Threading/DaemonThreadCount",        "DeamonThreadCount",       [] ),
-  ( "java.lang:type=Threading/PeakThreadCount",          "PeakThreadCount",         [] ),
-  ( "java.lang:type=Threading/TotalStartedThreadCount",  "TotalStartedThreadCount", [] ),
-  ( "java.lang:type=Runtime/Uptime",                     "Uptime",                  [] ),
-  ( "Catalina:host=*,path=*,type=Manager",               None,                      [ "path" ] ),
-  ( "*:*/CompletedRequestCount",                         None,                      [ "ServerRuntime" ] ),
-  ( "*:*/QueueLength",                                   None,                      [ "ServerRuntime" ] ),
-  ( "*:*/StandbyThreadCount",                            None,                      [ "ServerRuntime" ] ),
-  ( "*:*/PendingUserRequestCount",                       None,                      [ "ServerRuntime" ] ),
-  ( "*:*/ExecuteThreadTotalCount",                       None,                      [ "Name=ThreadPoolRuntime", "ServerRuntime" ] ),
-  ( "*:*/ExecuteThreadIdleCount",                        None,                      [ "ServerRuntime" ] ),
-  ( "*:*/HoggingThreadCount",                            None,                      [ "ServerRuntime" ] ),
+  ( "java.lang:type=Memory/NonHeapMemoryUsage/used",      "NonHeapMemoryUsage",      [] ),
+  ( "java.lang:type=Memory/HeapMemoryUsage/used",         "HeapMemoryUsage",         [] ),
+  ( "java.lang:type=Threading/ThreadCount",               "ThreadCount",             [] ),
+  ( "java.lang:type=Threading/DaemonThreadCount",         "DeamonThreadCount",       [] ),
+  ( "java.lang:type=Threading/PeakThreadCount",           "PeakThreadCount",         [] ),
+  ( "java.lang:type=Threading/TotalStartedThreadCount",   "TotalStartedThreadCount", [] ),
+  ( "java.lang:type=Runtime/Uptime",                      "Uptime",                  [] ),
+]
+
+specific_vars = {
+  "weblogic" : [
+      ( "*:*/CompletedRequestCount",                          None,                      [ "ServerRuntime" ] ),
+      ( "*:*/QueueLength",                                    None,                      [ "ServerRuntime" ] ),
+      ( "*:*/StandbyThreadCount",                             None,                      [ "ServerRuntime" ] ),
+      ( "*:*/PendingUserRequestCount",                        None,                      [ "ServerRuntime" ] ),
+      ( "*:Name=ThreadPoolRuntime,*/ExecuteThreadTotalCount", None,                      [ "ServerRuntime" ] ),
+      ( "*:*/ExecuteThreadIdleCount",                         None,                      [ "ServerRuntime" ] ),
+      ( "*:*/HoggingThreadCount",                             None,                      [ "ServerRuntime" ] ),
+      ( "*:Type=WebAppComponentRuntime,*/OpenSessionsCurrentCount", None,                [ "ServerRuntime", "ApplicationRuntime" ] ),
+  ],
+  "tomcat" : [
+      ( "*:type=Manager,*/activeSessions,maxActiveSessions",  None,                      [ "path", "context" ] ),
+  ],
+  "jboss" : [
+      ( "*:type=Manager,*/activeSessions,maxActiveSessions",  None,                      [ "path", "context" ] ),
+  ],
+}
+
+
 #   ( '*:j2eeType=WebModule,name=/--/localhost/-/%(app)s,*/state', None, [ "name" ]),
 #   ( '*:j2eeType=Servlet,WebModule=/--/localhost/-/%(app)s,name=%(servlet)s,*/requestCount', None, [ "WebModule", "name" ]),
 #   ( "Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*,j2eeType=Servlet,name=*", None, [ "WebModule", "name" ]),
-]
 
 
 # List of instances to monitor. Each instance is a dict where
 # the global configuration values can be overridden.
 instances = [{}]
 
-conffile = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/j4p.conf"
+conffile = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/jolokia.cfg"
 
 if instance == None:
     instance = str(port)
@@ -182,9 +213,6 @@ socket.setdefaulttimeout(1.0)
 # Compute list of instances to monitor. If the user has defined
 # instances in his configuration, we will use this (a list
 # of dicts).
-if instances:
-    sys.stdout.write("<<<j4p_performance>>>\n")
-
 for inst in instances:
     for varname, value in [
         ( "server", server ),
@@ -201,5 +229,6 @@ for inst in instances:
     inst["instance"] = inst["instance"].replace(" ", "_")
 
     query_instance(inst)
+
 
 

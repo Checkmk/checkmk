@@ -865,7 +865,7 @@ register_rule(group,
 
 
 
-register_rulegroup("agent", "Access to Agents", 
+register_rulegroup("agent", _("Access to Agents"),
    _("Settings concerning the connection to the Check_MK and SNMP agents"))
 
 group = "agent/General Settings"

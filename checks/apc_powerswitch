@@ -26,7 +26,7 @@
 
 
 def inventory_apc_powerswitch(info):
-    return [(x[0],saveint(line[2])) for x in info]
+    return [(x[0],saveint(x[2])) for x in info]
 
 def check_apc_powerswitch(item, params, info):
     state = { 

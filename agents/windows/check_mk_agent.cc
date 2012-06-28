@@ -60,6 +60,8 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <ctype.h> // isspace()
+#include <sys/stat.h> // stat()
+#include <sys/time.h> // gettimeofday()
 
 
 //  .----------------------------------------------------------------------.
@@ -135,6 +137,9 @@ void output(SOCKET &out, const char *format, ...);
 char *ipv4_to_text(uint32_t ip);
 void output_data(SOCKET &out);
 double file_time(const FILETIME *filetime);
+void open_crash_log();
+void close_crash_log();
+void crash_log(const char *format, ...);
 
 //  .----------------------------------------------------------------------.
 //  |                    ____ _       _           _                        |
@@ -148,6 +153,7 @@ double file_time(const FILETIME *filetime);
 //  '----------------------------------------------------------------------'
 
 bool verbose_mode = false;
+bool g_crash_debug = false;
 bool do_tcp = false;
 bool should_terminate = false;
 char g_hostname[256];
@@ -179,6 +185,9 @@ char     g_current_directory[256];
 char     g_plugins_dir[256];
 char     g_local_dir[256];
 char     g_config_file[256];
+char     g_crash_log[256];
+char     g_connection_log[256];
+char     g_success_log[256];
 
 // Configuration of eventlog monitoring (see config parser)
 int num_eventlog_configs = 0;
@@ -202,6 +211,11 @@ char *g_execute_suffixes[MAX_EXECUTE_SUFFIXES];
 // Array of file patterns for fileinfo
 unsigned g_num_fileinfo_paths = 0;
 char *g_fileinfo_path[MAX_FILEINFO_ENTRIES];
+
+// Pointer to open crash log file, if crash_debug = on
+FILE *g_connectionlog_file = 0;
+struct timeval g_crashlog_start;
+bool g_found_crash = false;
 
 //  .----------------------------------------------------------------------.
 //  |                  _   _      _                                        |
@@ -341,6 +355,7 @@ void char_replace(char what, char into, char *in)
 
 void section_systemtime(SOCKET &out)
 {
+    crash_log("<<<systemtime>>>");
     output(out, "<<<systemtime>>>\n");
     output(out, "%.0f\n", current_time());
 }
@@ -356,6 +371,7 @@ void section_systemtime(SOCKET &out)
 
 void section_uptime(SOCKET &out)
 {
+    crash_log("<<<uptime>>>");
     output(out, "<<<uptime>>>\n");
     static LARGE_INTEGER Frequency,Ticks;
     QueryPerformanceFrequency (&Frequency);
@@ -426,6 +442,7 @@ void df_output_mountpoints(SOCKET &out, char *volid)
 
 void section_df(SOCKET &out)
 {
+    crash_log("<<<df>>>");
     output(out, "<<<df>>>\n");
     TCHAR buffer[4096];
     DWORD len = GetLogicalDriveStrings(sizeof(buffer), buffer);
@@ -473,6 +490,7 @@ void section_df(SOCKET &out)
 
 void section_ps(SOCKET &out)
 {
+    crash_log("<<<ps>>>");
     output(out, "<<<ps>>>\n");
     HANDLE hProcessSnap;
     PROCESSENTRY32 pe32;
@@ -540,6 +558,7 @@ const char *service_start_type(SC_HANDLE scm, LPCTSTR service_name)
 
 void section_services(SOCKET &out)
 {
+    crash_log("<<<services>>>");
     output(out, "<<<services>>>\n");
     SC_HANDLE scm = OpenSCManager(0, 0, SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);
     if (scm != INVALID_HANDLE_VALUE) {
@@ -633,6 +652,7 @@ void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_C
 
 void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const char *countername)
 {
+    crash_log("<<<winperf_%s>>>", countername);
     output(out, "<<<winperf_%s>>>\n", countername);
     output(out, "%.2f %u\n", current_time(), counter_base_number);
 
@@ -667,6 +687,7 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
 	    return;
 	}
     }
+    crash_log(" - read performance data, buffer size %d", size);
 
     PERF_DATA_BLOCK *dataBlockPtr = (PERF_DATA_BLOCK *)data;
 
@@ -878,6 +899,7 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
 	// it's correct for all windows versions
 	dll =  LoadLibrary(dll_realpath);
 	if (!dll) {
+            crash_log("     --> failed to load %s", dll_realpath);
 	    return false;
 	}
     }
@@ -1045,6 +1067,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 	        memset(dllpath, 0, sizeof(dllpath));
 		if (ERROR_SUCCESS == RegQueryValueEx(key, "EventMessageFile", NULL, NULL, dllpath, &size))
 		{
+                    crash_log("     - record %d: DLLs to load: %s", *record_number, dllpath);
 		    // Answer may contain more than one DLL. They are separated
 		    // by semicola. Not knowing which one is the correct one, I have to try
 		    // all...
@@ -1059,9 +1082,15 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 		}
 		RegCloseKey(key);
 	    }
+            else {
+                crash_log("     - record %d: no DLLs listed in registry", *record_number);
+            }
+
 	    // No text conversion succeeded. Output without text anyway
-	    if (!success)
-	       output_eventlog_entry(out, NULL, event, type_char, logname, source_name, strings);
+	    if (!success) {
+                crash_log("     - record %d: translation failed", *record_number);
+                output_eventlog_entry(out, NULL, event, type_char, logname, source_name, strings);
+            }
 
 	} // type_char != '.'
 
@@ -1074,6 +1103,8 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 void output_eventlog(SOCKET &out, const char *logname,
 		     DWORD *record_number, bool just_find_end, int level)
 {
+    crash_log(" - event log \"%s\":", logname);
+
     if (eventlog_buffer_size == 0) {
 	const int initial_size = 65536;
 	eventlog_buffer = new char[initial_size];
@@ -1084,6 +1115,7 @@ void output_eventlog(SOCKET &out, const char *logname,
     DWORD bytesread = 0;
     DWORD bytesneeded = 0;
     if (hEventlog) {
+        crash_log("   . successfully opened event log");
 	output(out, "[[[%s]]]\n", logname);
 	int worst_state = 0;
 	DWORD old_record_number = *record_number;
@@ -1107,6 +1139,7 @@ void output_eventlog(SOCKET &out, const char *logname,
 			    verbose("Failed to reopen event log. Bailing out.");
 			    return;
 			}
+                        crash_log("   . reopened log");
 		    }
 		    flags = EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ;
 		}
@@ -1123,6 +1156,7 @@ void output_eventlog(SOCKET &out, const char *logname,
 				 &bytesread,
 				 &bytesneeded))
 		{
+                    crash_log("   . got entries starting at %d (%d bytes)", *record_number + 1, bytesread);
 		    process_eventlog_entries(out, logname, eventlog_buffer,
                              bytesread, record_number, just_find_end || t==0, &worst_state, level);
 		}
@@ -1130,6 +1164,7 @@ void output_eventlog(SOCKET &out, const char *logname,
 		    DWORD error = GetLastError();
 		    if (error == ERROR_INSUFFICIENT_BUFFER) {
 			grow_eventlog_buffer(bytesneeded);
+                        crash_log("   . needed to grow buffer to %d bytes", bytesneeded);
 		    }
 		    // found current end of log
 		    else if (error == ERROR_HANDLE_EOF) {
@@ -1239,6 +1274,8 @@ bool find_eventlogs(SOCKET &out)
 // the logwatch agent for Linux and UNIX
 void section_eventlog(SOCKET &out)
 {
+    crash_log("<<<logwatch>>>");
+
     // This agent remembers the record numbers
     // of the event logs up to which messages have
     // been processed. When started, the eventlog
@@ -1294,6 +1331,7 @@ void section_eventlog(SOCKET &out)
 
 void section_mem(SOCKET &out)
 {
+    crash_log("<<<mem>>>");
     output(out, "<<<mem>>>\n");
 
     MEMORYSTATUSEX statex;
@@ -1322,6 +1360,7 @@ void output_fileinfo(SOCKET &out, const char *basename, WIN32_FIND_DATA *data);
 
 void section_fileinfo(SOCKET &out)
 {
+    crash_log("<<<fileinfo>>>");
     output(out, "<<<fileinfo:sep(124)>>>\n");
     output(out, "%.0f\n", current_time());
     for (unsigned i=0; i<g_num_fileinfo_paths; i++) {
@@ -1441,6 +1480,7 @@ bool banned_exec_name(char *name)
 
 void run_plugin(SOCKET &out, char *path)
 {
+    crash_log("Running program %s", path);
     char newpath[256];
     char *execpath = add_interpreter(path, newpath);
 
@@ -1482,6 +1522,7 @@ void run_external_programs(SOCKET &out, char *dirname)
 
 void section_mrpe(SOCKET &out)
 {
+    crash_log("<<<mrpe>>>");
     output(out, "<<<mrpe>>>\n"); 
     for (unsigned i=0; i<g_num_mrpe_entries; i++)
     {
@@ -1526,6 +1567,7 @@ void section_mrpe(SOCKET &out)
 
 void section_local(SOCKET &out)
 {
+    crash_log("<<<local>>>");
     output(out, "<<<local>>>\n");
     run_external_programs(out, g_local_dir);
 }
@@ -1560,6 +1602,7 @@ void section_plugins(SOCKET &out)
 
 void section_check_mk(SOCKET &out)
 {
+    crash_log("<<<check_mk>>>");
     output(out, "<<<check_mk>>>\n");
     output(out, "Version: %s\n", CHECK_MK_VERSION);
     output(out, "AgentOS: windows\n");
@@ -1569,6 +1612,12 @@ void section_check_mk(SOCKET &out)
     output(out, "AgentDirectory: %s\n",   g_agent_directory);
     output(out, "PluginsDirectory: %s\n", g_plugins_dir);
     output(out, "LocalDirectory: %s\n",   g_local_dir);
+    if (g_crash_debug) {
+        output(out, "ConnectionLog: %s\n", g_connection_log);
+        output(out, "CrashLog: %s\n",      g_crash_log);
+        output(out, "SuccessLog: %s\n",    g_success_log);
+    }
+
     output(out, "OnlyFrom:");
     if (g_num_only_from == 0)
         output(out, " 0.0.0.0/0\n");
@@ -1765,6 +1814,104 @@ void do_remove()
     UninstallService();
 }
 
+// .-----------------------------------------------------------------------.
+// |       ____               _       ____       _                         |
+// |      / ___|_ __ __ _ ___| |__   |  _ \  ___| |__  _   _  __ _         |
+// |     | |   | '__/ _` / __| '_ \  | | | |/ _ \ '_ \| | | |/ _` |        |
+// |     | |___| | | (_| \__ \ | | | | |_| |  __/ |_) | |_| | (_| |        |
+// |      \____|_|  \__,_|___/_| |_| |____/ \___|_.__/ \__,_|\__, |        |
+// |                                                         |___/         |
+// '-----------------------------------------------------------------------'
+
+void open_crash_log()
+{
+    struct stat buf;
+
+    if (g_crash_debug) {
+        snprintf(g_crash_log, sizeof(g_crash_log), "%s\\crash.log", g_agent_directory);
+        snprintf(g_connection_log, sizeof(g_connection_log), "%s\\connection.log", g_agent_directory);
+        snprintf(g_success_log, sizeof(g_success_log), "%s\\success.log", g_agent_directory);
+
+        // rename left over log if exists (means crash found)
+        if (0 == stat(g_connection_log, &buf)) {
+            // rotate to up to 9 crash log files
+            char rotate_path_from[256];
+            char rotate_path_to[256];
+            for (int i=9; i>=1; i--) {
+                snprintf(rotate_path_to, sizeof(rotate_path_to),  
+                    "%s\\crash-%d.log", g_agent_directory, i);
+                if (i>1) 
+                    snprintf(rotate_path_from, sizeof(rotate_path_from), 
+                        "%s\\crash-%d.log", g_agent_directory, i-1);
+                else
+                    snprintf(rotate_path_from, sizeof(rotate_path_from), 
+                        "%s\\crash.log", g_agent_directory);
+                unlink(rotate_path_to);
+                rename(rotate_path_from, rotate_path_to);
+            }
+            rename(g_connection_log, g_crash_log);
+            g_found_crash = true;
+        }
+
+        g_connectionlog_file = fopen(g_connection_log, "w");
+        gettimeofday(&g_crashlog_start, 0);
+        time_t now = time(0);
+        struct tm *t = localtime(&now);
+        char timestamp[64];
+        strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
+        crash_log("Opened crash log at %s.", timestamp);
+    }
+}
+
+void close_crash_log()
+{
+    if (g_crash_debug) {
+        crash_log("Closing crash log (no crash this time)");
+        fclose(g_connectionlog_file);
+        unlink(g_success_log);
+        rename(g_connection_log, g_success_log);
+    }
+}
+
+void crash_log(const char *format, ...)
+{
+    struct timeval tv;
+
+    if (g_connectionlog_file) {
+        gettimeofday(&tv, 0);
+        long int ellapsed_usec = tv.tv_usec - g_crashlog_start.tv_usec;
+        long int ellapsed_sec  = tv.tv_sec - g_crashlog_start.tv_sec;
+        if (ellapsed_usec < 0) {
+            ellapsed_usec += 1000000;
+            ellapsed_sec --;
+        }
+
+        va_list ap;
+        va_start(ap, format);
+        fprintf(g_connectionlog_file, "%ld.%06ld ", ellapsed_sec, ellapsed_usec);
+        vfprintf(g_connectionlog_file, format, ap);
+        fputs("\n", g_connectionlog_file);
+        fflush(g_connectionlog_file);
+    }
+}
+
+void output_crash_log(SOCKET &out)
+{
+    output(out, "<<<logwatch>>>\n");
+    output(out, "[[[Check_MK Agent]]]\n");
+    if (g_found_crash) {
+        output(out, "C Check_MK Agent crashed\n");
+        FILE *f = fopen(g_crash_log, "r");
+        char line[1024];
+        while (0 != fgets(line, sizeof(line), f)) {
+            output(out, "W ");
+            output(out, line);
+        }
+        fclose(f);
+        g_found_crash = false;
+    }
+}
+
 
 
 //  .----------------------------------------------------------------------.
@@ -1775,6 +1922,17 @@ void do_remove()
 //  |   \____\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|    |
 //  |                          |___/                                       |
 //  '----------------------------------------------------------------------'
+
+int parse_boolean(char *value)
+{
+    if (!strcmp(value, "yes"))
+        return 1;
+    else if (!strcmp(value, "no"))
+        return 0;
+    else
+        fprintf(stderr, "Invalid boolean value. Only yes and no are allowed.\r\n");
+        return -1;
+}
 
 void lowercase(char *s)
 {
@@ -1924,6 +2082,17 @@ void parse_execute(char *value)
     }
 }
 
+
+bool parse_crash_debug(char *value)
+{
+    int s = parse_boolean(value);
+    if (s == -1)
+        return false;
+    g_crash_debug = s;
+    return true;
+}
+
+
 bool handle_global_config_variable(char *var, char *value)
 {
     if (!strcmp(var, "only_from")) {
@@ -1933,6 +2102,9 @@ bool handle_global_config_variable(char *var, char *value)
     else if (!strcmp(var, "execute")) {
         parse_execute(value);
         return true;
+    }
+    else if (!strcmp(var, "crash_debug")) {
+        return parse_crash_debug(value);
     }
     else if (!strcmp(var, "sections")) {
         enabled_sections = 0;
@@ -1997,17 +2169,6 @@ bool handle_winperf_config_variable(char *var, char *value)
         return true;
     }
     return false;
-}
-
-int parse_boolean(char *value)
-{
-    if (!strcmp(value, "yes"))
-        return 1;
-    else if (!strcmp(value, "no"))
-        return 0;
-    else
-        fprintf(stderr, "Invalid boolean value. Only yes and no are allowed.\r\n");
-        return -1;
 }
 
 bool handle_logwatch_config_variable(char *var, char *value)
@@ -2109,6 +2270,9 @@ bool handle_mrpe_config_variable(char *var, char *value)
 
     # Restrict access to certain IP addresses
     only_from = 127.0.0.1 192.168.56.0/24
+
+    # Enable crash debugging
+    crash_debug = on
 
 
 [winperf]
@@ -2319,8 +2483,13 @@ void listen_tcp_loop()
                 uint32_t ip = 0;
                 if (remote_addr.sin_family == AF_INET)
                     ip = remote_addr.sin_addr.s_addr;
-                if (check_only_from(ip))
+                if (check_only_from(ip)) {
+                    open_crash_log();
+                    crash_log("Accepted client connection from %u.%u.%u.%u.",
+                            ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff);
                     output_data(connection);
+                    close_crash_log();
+                }
 		closesocket(connection);
 	    }
 	}
@@ -2431,6 +2600,8 @@ void output_data(SOCKET &out)
     // make sure, output of numbers is not localized
     setlocale(LC_ALL, "C");
 
+    if (g_crash_debug)
+        output_crash_log(out);
     if (enabled_sections & SECTION_CHECK_MK)
         section_check_mk(out);
     if (enabled_sections & SECTION_UPTIME)

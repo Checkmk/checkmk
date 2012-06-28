@@ -24,6 +24,7 @@
     * FIX: printer_supply: Fix problem on DELL printers with "S/N" in output
       (thanks to Sebastian Talmon)
     * FIX: winperf_phydisk: Fix typo (lead to WATO rule not being applied)
+    * Windows agent: new [global] option crash_debug (see online docu)
 
     Multisite:
     * Show number of rows and number of selected rows in header line

@@ -53,7 +53,7 @@ extern unsigned long g_max_cached_messages;
 
 void store_init()
 {
-//	g_logcache = new LogCache(g_max_cached_messages);
+	new LogCache(g_max_cached_messages);
     g_store = new Store();
     g_client_queue = new ClientQueue();
     g_timeperiods_cache = new TimeperiodsCache();

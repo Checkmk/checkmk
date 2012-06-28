@@ -4,10 +4,10 @@ import urllib2, sys, os
 
 server   = "localhost"
 port     = 8080
-user     = "jmx4perl"
-password = "J4PisOK"
+user     = "monitoring"
+password = "foobar"
 mode     = "digest"
-suburi   = "j4p"
+suburi   = "jolokia"
 instance = None
 
 vars = [

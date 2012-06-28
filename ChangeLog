@@ -29,6 +29,8 @@
     * Show number of rows and number of selected rows in header line
       (also for WATO hosts table)
     * FIX: fix problem in showing exceptions (due to help function)
+    * FIX: fixed several localization problems in view/command processing
+    * FIX: fixed duplicated settings in WATO when using localisation
 
     WATO: 
     * Main menu of ruleeditor (Host & Service Parameters) now has

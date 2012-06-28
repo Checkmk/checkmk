@@ -68,10 +68,7 @@ void debug(const char *loginfo, ...)
 }
 
 
-TableLog::TableLog(unsigned long max_cached_messages)
-  : _num_cached_messages(0)
-  , _max_cached_messages(max_cached_messages)
-  , _num_at_last_check(0)
+TableLog::TableLog()
 {
 	debug("INIT TABLE LOG");
     LogEntry *ref = 0;
@@ -131,53 +128,6 @@ void TableLog::answerQuery(Query *query)
 	LogCache::handle->lockLogCache();
 	LogCache::handle->logCachePreChecks();
 
-    int since = 0;
-    int until = time(0) + 1;
-    // Optimize time interval for the query. In log querys
-    // there should always be a time range in form of one
-    // or two filter expressions over time. We use that
-    // to limit the number of logfiles we need to scan and
-    // to find the optimal entry point into the logfile
-    query->findIntLimits("time", &since, &until);
-
-    // The second optimization is for log message types.
-    // We want to load only those log type that are queried.
-    uint32_t classmask = LOGCLASS_ALL;
-    query->optimizeBitmask("class", &classmask);
-    if (classmask == 0) {
-    	LogCache::handle->unlockLogCache();
-        return;
-    }
-
-
-    /* This code start with the oldest log entries. I'm going
-       to change this and start with the newest. That way,
-       the Limit: header produces more reasonable results. */
-
-    /* NEW CODE - NEWEST FIRST */
-      _logfiles_t::iterator it;
-      it = LogCache::handle->_logfiles.end(); // it now points beyond last log file
-    --it; // switch to last logfile (we have at least one)
-
-    // Now find newest log where 'until' is contained. The problem
-    // here: For each logfile we only know the time of the *first* entry,
-    // not that of the last.
-    while (it != LogCache::handle->_logfiles.begin() && it->first > until) // while logfiles are too new...
-        --it; // go back in history
-    if (it->first > until)  { // all logfiles are too new
-    	LogCache::handle->unlockLogCache();
-        return;
-    }
-
-    while (true) {
-        Logfile *log = it->second;
-        debug("Query is now at logfile %s, needing classes 0x%x", log->path(), classmask);
-        if (!log->answerQueryReverse(query, LogCache::handle, since, until, classmask))
-            break; // end of time range found
-        if (it == LogCache::handle->_logfiles.begin())
-            break; // this was the oldest one
-        --it;
-    }
 
     // dumpLogfiles();
     LogCache::handle->unlockLogCache();

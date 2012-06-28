@@ -34,12 +34,9 @@ class Logfile;
 
 class TableLog : public Table
 {
-    unsigned long _num_cached_messages;
-    unsigned long _max_cached_messages;
-    unsigned long _num_at_last_check;
 
 public:
-    TableLog(unsigned long max_cached_messages);
+    TableLog();
     ~TableLog();
     const char *name() { return "log"; }
     const char *prefixname() { return "logs"; }

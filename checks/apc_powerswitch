@@ -24,18 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+apc_powerswitch_warning_states = (2,)
+apc_powerswitch_critical_states  = ()
+
 
 def inventory_apc_powerswitch(info):
     return [(x[0],saveint(x[2])) for x in info]
 
 def check_apc_powerswitch(item, params, info):
-    state = { 
+    state_name = { 
         1 : 'on',
         2 : 'off',
     }
+    r_state = 0
     for line in info:
         if line[0] == item: 
-            return(0, 'OK - Port %s has status %s' % (line[1], state[saveint(line[2])]))
+            state = saveint(line[2])
+            if state in apc_powerswitch_warning_states:
+                r_state = 1
+            if state in apc_powerswitch_critical_states:
+                r_state = 2
+            return(r_state, nagios_state_names[r_state] + '- Port %s has status %s' % (line[1], state_name[state]))
 
     return False
  

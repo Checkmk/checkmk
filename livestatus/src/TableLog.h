@@ -36,18 +36,29 @@ class TableLog : public Table
 {
     typedef map<time_t, Logfile *> _logfiles_t;
     _logfiles_t _logfiles;
+    pthread_mutex_t _lock;
+    time_t _last_index_update;
+    unsigned long _num_cached_messages;
+    unsigned long _max_cached_messages;
+    unsigned long _num_at_last_check;
 
 public:
-    TableLog();
-    ~TableLog(){};
+    TableLog(unsigned long max_cached_messages);
+    ~TableLog();
     const char *name() { return "log"; }
     const char *prefixname() { return "logs"; }
     bool isAuthorized(contact *ctc, void *data);
+    void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
     void answerQuery(Query *query);
     Column *column(const char *colname); // override in order to handle current_
 
 private:
+    void forgetLogfiles();
+    void updateLogfileIndex();
+    void scanLogfile(char *path, bool watch);
     bool answerQuery(Query *, Logfile *, time_t, time_t);
+    _logfiles_t::iterator findLogfileStartingBefore(time_t);
+    void dumpLogfiles();
 };
 
 #endif // TableLog_h

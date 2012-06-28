@@ -41,11 +41,10 @@
 #include "TableColumns.h"
 #include "OutputBuffer.h"
 #include "InputBuffer.h"
-#include "LogCache.h"
 
 class Store
 {
-	TableContacts      _table_contacts;
+    TableContacts      _table_contacts;
     TableCommands      _table_commands;
     TableHostgroups    _table_hostgroups;
     TableHosts         _table_hosts;
@@ -61,11 +60,9 @@ class Store
     TableStatus        _table_status;
     TableLog           _table_log;
     TableColumns       _table_columns;
-//    TableStateHistory  _table_statehistory;
 
     typedef map<string, Table *> _tables_t;
     _tables_t _tables;
-
 
 public:
     Store();

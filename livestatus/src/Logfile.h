@@ -29,7 +29,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <map>
-#include "LogCache.h"
 
 using namespace std;
 
@@ -37,6 +36,7 @@ using namespace std;
 
 class LogEntry;
 class Query;
+class TableLog;
 
 class Logfile
 {
@@ -56,17 +56,17 @@ public:
     ~Logfile();
 
     char *path() { return _path; }
-    void load(LogCache *logcache, time_t since, time_t until, unsigned logclasses);
+    void load(TableLog *tablelog, time_t since, time_t until, unsigned logclasses);
     void flush();
     time_t since() { return _since; }
     unsigned classesRead() { return _logclasses_read; }
     long numEntries() { return _entries.size(); }
-    bool answerQuery(Query *query, LogCache *lc, time_t since, time_t until, unsigned);
-    bool answerQueryReverse(Query *query, LogCache *lc, time_t since, time_t until, unsigned);
+    bool answerQuery(Query *query, TableLog *tl, time_t since, time_t until, unsigned);
+    bool answerQueryReverse(Query *query, TableLog *tl, time_t since, time_t until, unsigned);
     long freeMessages(unsigned logclasses);
 
 private:
-    void loadRange(FILE *file, unsigned missing_types, LogCache *,
+    void loadRange(FILE *file, unsigned missing_types, TableLog *, 
                    time_t since, time_t until, unsigned logclasses);
     bool processLogLine(uint32_t, unsigned);
     uint64_t makeKey(time_t, unsigned);

@@ -39,22 +39,17 @@
 #include "OutputBuffer.h"
 #include "logger.h"
 #include "TimeperiodsCache.h"
-#include "LogCache.h"
 
 using namespace std;
 
-LogCache* g_logcache;
 Store *g_store = 0;
 ClientQueue *g_client_queue = 0;
 TimeperiodsCache *g_timeperiods_cache = 0;
-
-extern unsigned long g_max_cached_messages;
 
 /* API functions for event broker module (with C linkage) */
 
 void store_init()
 {
-	g_logcache = new LogCache(g_max_cached_messages);
     g_store = new Store();
     g_client_queue = new ClientQueue();
     g_timeperiods_cache = new TimeperiodsCache();

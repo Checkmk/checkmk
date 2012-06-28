@@ -30,14 +30,13 @@
 
 #include "nagios.h"
 #include "logger.h"
-#include "LogCache.h"
 #include "TableLog.h"
 #include "LogEntry.h"
 #include "OffsetIntColumn.h"
 #include "OffsetTimeColumn.h"
 #include "OffsetStringColumn.h"
-#include "Logfile.h"
 #include "Query.h"
+#include "Logfile.h"
 #include "tables.h"
 #include "TableServices.h"
 #include "TableHosts.h"
@@ -48,8 +47,10 @@
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 
 // watch nagios' logfile rotation
+extern time_t last_log_rotation;
 extern int g_debug_level;
-extern LogCache* g_logcache;
+
+int num_cached_log_messages = 0;
 
 // Debugging logging is hard if debug messages are logged themselves...
 void debug(const char *loginfo, ...)
@@ -66,8 +67,14 @@ void debug(const char *loginfo, ...)
     fclose(x);
 }
 
-TableLog::TableLog()
+
+TableLog::TableLog(unsigned long max_cached_messages)
+  : _num_cached_messages(0)
+  , _max_cached_messages(max_cached_messages)
+  , _num_at_last_check(0)
 {
+    pthread_mutex_init(&_lock, 0);
+
     LogEntry *ref = 0;
     addColumn(new OffsetTimeColumn("time",
                 "Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));
@@ -110,15 +117,53 @@ TableLog::TableLog()
     g_table_services->addColumns(this, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
     g_table_contacts->addColumns(this, "current_contact_", (char *)&(ref->_contact) - (char *)ref);
     g_table_commands->addColumns(this, "current_command_", (char *)&(ref->_command) - (char *)ref);
+
+    updateLogfileIndex();
 }
+
+
+TableLog::~TableLog()
+{
+    forgetLogfiles();
+    pthread_mutex_destroy(&_lock);
+}
+
+
+void TableLog::forgetLogfiles()
+{
+    for (_logfiles_t::iterator it = _logfiles.begin();
+            it != _logfiles.end();
+            ++it)
+    {
+        delete it->second;
+    }
+    _logfiles.clear();
+    _num_cached_messages = 0;
+}
+
 
 void TableLog::answerQuery(Query *query)
 {
-	g_logcache->lockLogCache();
-	if ( g_logcache->logCachePreChecks() == false ){
-		g_logcache->unlockLogCache();
-		return;
-	}
+    // since logfiles are loaded on demand, we need
+    // to lock out concurrent threads.
+    pthread_mutex_lock(&_lock);
+
+    // Do we have any logfiles (should always be the case,
+    // but we don't want to crash...
+    if (_logfiles.size() == 0) {
+        pthread_mutex_unlock(&_lock);
+        logger(LOG_INFO, "Warning: no logfile found, not even nagios.log");
+        return;
+    }
+
+    // Has Nagios rotated logfiles? => Update
+    // our file index. And delete all memorized
+    // log messages.
+    if (last_log_rotation > _last_index_update) {
+        logger(LG_INFO, "Nagios has rotated logfiles. Rebuilding logfile index");
+        forgetLogfiles();
+        updateLogfileIndex();
+    }
 
     int since = 0;
     int until = time(0) + 1;
@@ -134,7 +179,7 @@ void TableLog::answerQuery(Query *query)
     uint32_t classmask = LOGCLASS_ALL;
     query->optimizeBitmask("class", &classmask);
     if (classmask == 0) {
-        g_logcache->unlockLogCache();
+        pthread_mutex_unlock(&_lock);
         return;
     }
 
@@ -145,37 +190,192 @@ void TableLog::answerQuery(Query *query)
 
     /* NEW CODE - NEWEST FIRST */
     _logfiles_t::iterator it;
-
-
-    // FIXME: DEN BLOCK EVTL NOCH IN DEN LOGCACHE UMZIEHEN
-    logger(LOG_INFO, "### TABLELOG VOM LOGCACHE");
-
-    it = g_logcache->_logfiles.end(); // it now points beyond last log file
+    it = _logfiles.end(); // it now points beyond last log file
     --it; // switch to last logfile (we have at least one)
 
     // Now find newest log where 'until' is contained. The problem
     // here: For each logfile we only know the time of the *first* entry,
     // not that of the last.
-    while (it != g_logcache->_logfiles.begin() && it->first > until) // while logfiles are too new...
+    while (it != _logfiles.begin() && it->first > until) // while logfiles are too new...
         --it; // go back in history
     if (it->first > until)  { // all logfiles are too new
-        g_logcache->unlockLogCache();
+        pthread_mutex_unlock(&_lock);
         return;
     }
 
     while (true) {
         Logfile *log = it->second;
         debug("Query is now at logfile %s, needing classes 0x%x", log->path(), classmask);
-        if (!log->answerQueryReverse(query, g_logcache, since, until, classmask))
+        if (!log->answerQueryReverse(query, this, since, until, classmask))
             break; // end of time range found
-        if (it == g_logcache->_logfiles.begin())
+        if (it == _logfiles.begin())
             break; // this was the oldest one
         --it;
     }
 
-	g_logcache->unlockLogCache();
+    // dumpLogfiles();
+    pthread_mutex_unlock(&_lock);
 }
 
+
+extern char *log_file;
+extern char *log_archive_path;
+
+void TableLog::updateLogfileIndex()
+{
+    _last_index_update = time(0);
+
+    // We need to find all relevant logfiles. This includes
+    // the current nagios.log and all files in the archive
+    // directory.
+    scanLogfile(log_file, true);
+    DIR *dir = opendir(log_archive_path);
+    if (dir) {
+        char abspath[4096];
+        struct dirent *ent, *result;
+        int len = offsetof(struct dirent, d_name)
+            + pathconf(log_archive_path, _PC_NAME_MAX) + 1;
+        ent = (struct dirent *)malloc(len);
+        while (0 == readdir_r(dir, ent, &result) && result != 0)
+        {
+            if (ent->d_name[0] != '.') {
+                snprintf(abspath, sizeof(abspath), "%s/%s", log_archive_path, ent->d_name);
+                scanLogfile(abspath, false);
+            }
+            // ent = result;
+        }
+        free(ent);
+        closedir(dir);
+    }
+    else
+        logger(LG_INFO, "Cannot open log archive '%s'", log_archive_path);
+}
+
+void TableLog::scanLogfile(char *path, bool watch)
+{
+    Logfile *logfile = new Logfile(path, watch);
+    time_t since = logfile->since();
+    if (since) {
+        // make sure that no entry with that 'since' is existing yet.
+        // under normal circumstances this never happens. But the
+        // user might have copied files around.
+        if (_logfiles.find(since) == _logfiles.end())
+            _logfiles.insert(make_pair(since, logfile));
+        else {
+            logger(LG_WARN, "Ignoring duplicate logfile %s", path);
+            delete logfile;
+        }
+    }
+    else
+        delete logfile;
+}
+
+void TableLog::dumpLogfiles()
+{
+    for (_logfiles_t::iterator it = _logfiles.begin();
+            it != _logfiles.end();
+            ++it)
+    {
+        Logfile *log = it->second;
+        debug("LOG %s from %d, %u messages, classes: 0x%04x", log->path(), log->since(), log->numEntries(), log->classesRead());
+    }
+}
+
+/* This method is called each time a log message is loaded
+   into memory. If the number of messages loaded in memory
+   is to large, memory will be freed by flushing logfiles
+   and message not needed by the current query.
+
+   The parameters to this method reflect the current query,
+   not the messages that just has been loaded.
+ */
+void TableLog::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((__unused__)), time_t until __attribute__ ((__unused__)), unsigned logclasses)
+{
+    if (++_num_cached_messages <= _max_cached_messages)
+        return; // current message count still allowed, everything ok
+
+    /* Memory checking an freeing consumes CPU ressources. We save
+       ressources, by avoiding to make the memory check each time
+       a new message is loaded when being in a sitation where no
+       memory can be freed. We do this by suppressing the check when
+       the number of messages loaded into memory has not grown
+       by at least CHECK_MEM_CYCLE messages */
+    if (_num_cached_messages < _num_at_last_check + CHECK_MEM_CYCLE)
+        return; // Do not check this time
+
+    // [1] Begin by deleting old logfiles
+    // Begin deleting with the oldest logfile available
+    _logfiles_t::iterator it;
+    for (it = _logfiles.begin(); it != _logfiles.end(); ++it)
+    {
+        Logfile *log = it->second;
+        ///if (g_debug_level > 2)
+        //    debug("Logfile %s (%s, %d entries)", log->path(), log == logfile ? "current" : "other", log->numEntries());
+        if (log == logfile) {
+            // Do not touch the logfile the Query is currently accessing
+            // and
+            break;
+        }
+        if (log->numEntries() > 0) {
+            _num_cached_messages -= log->numEntries();
+            log->flush(); // drop all messages of that file
+            if (_num_cached_messages <= _max_cached_messages) {
+                // remember the number of log messages in cache when
+                // the last memory-release was done. No further
+                // release-check shall be done until that number changes.
+                _num_at_last_check = _num_cached_messages;
+                return;
+            }
+        }
+    }
+    // The end of this loop must be reached by 'break'. At least one logfile
+    // must be the current logfile. So now 'it' points to the current logfile.
+    // We save that pointer for later.
+    _logfiles_t::iterator queryit = it;
+
+    // [2] Delete message classes irrelevent to current query
+    // Starting from the current logfile (wo broke out of the
+    // previous loop just when 'it' pointed to that)
+    for (; it != _logfiles.end(); ++it)
+    {
+        Logfile *log = it->second;
+        if (log->numEntries() > 0 && (log->classesRead() & ~logclasses) != 0) {
+            if (g_debug_level > 2)
+                debug("Freeing classes 0x%02x of file %s", ~logclasses, log->path());
+            long freed = log->freeMessages(~logclasses); // flush only messages not needed for current query
+            _num_cached_messages -= freed;
+            if (_num_cached_messages <= _max_cached_messages) {
+                _num_at_last_check = _num_cached_messages;
+                return;
+            }
+        }
+    }
+
+    // [3] Flush newest logfiles
+    // If there are still too many messages loaded, continue
+    // flushing logfiles from the oldest to the newest starting
+    // at the file just after (i.e. newer than) the current logfile
+    for (it = ++queryit; it != _logfiles.end(); ++it)
+    {
+        Logfile *log = it->second;
+
+        if (log->numEntries() > 0) {
+            _num_cached_messages -= log->numEntries();
+            log->flush();
+            if (_num_cached_messages <= _max_cached_messages) {
+                _num_at_last_check = _num_cached_messages;
+                return;
+            }
+        }
+    }
+    _num_at_last_check = _num_cached_messages;
+    // If we reach this point, no more logfiles can be unloaded,
+    // despite the fact that there are still too many messages
+    // loaded.
+    if (g_debug_level > 2)
+        debug("Cannot unload more messages. Still %d loaded (max is %d)",
+                _num_cached_messages, _max_cached_messages);
+}
 
 bool TableLog::isAuthorized(contact *ctc, void *data)
 {

@@ -57,7 +57,6 @@ class TableLog;
 EXTERN TableLog           *g_table_log;
 class TableColumns;
 EXTERN TableColumns       *g_table_columns;
-//class TableStateHistory;
-//EXTERN TableStateHistory  *g_table_statehistory;
+
 #endif // tables_h
 

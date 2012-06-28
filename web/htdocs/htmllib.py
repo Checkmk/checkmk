@@ -948,7 +948,7 @@ class html:
         return True
 
     def do_actions(self):
-        return self.var("_do_actions") not in [ "", None, "No" ]
+        return self.var("_do_actions") not in [ "", None, _("No") ]
 
     def set_focus(self, varname):
         self.focus_object = (self.form_name, varname)
@@ -1070,7 +1070,7 @@ class html:
             return False
 
     def confirm(self, msg, method="POST", action=None):
-        if self.var("_do_actions") == "No":
+        if self.var("_do_actions") == _("No"):
             return # user has pressed "No"               # None --> "No"
         if not self.has_var("_do_confirm"):
             if self.mobile:

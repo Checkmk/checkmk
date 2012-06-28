@@ -157,10 +157,10 @@ void TableLog::answerQuery(Query *query)
     /* This code start with the oldest log entries. I'm going
        to change this and start with the newest. That way,
        the Limit: header produces more reasonable results. */
-
-    /* NEW CODE - NEWEST FIRST */
-//    _logfiles_t::iterator it;
-//    it = _logfiles.end(); // it now points beyond last log file
+//
+//    /* NEW CODE - NEWEST FIRST */
+//     _logfiles_t::iterator it;
+//      it = _logfiles.end(); // it now points beyond last log file
 //    --it; // switch to last logfile (we have at least one)
 //
 //    // Now find newest log where 'until' is contained. The problem

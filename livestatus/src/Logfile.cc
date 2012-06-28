@@ -75,7 +75,7 @@ Logfile::~Logfile()
 
 void Logfile::flush()
 {
-    for (_entries_t::iterator it = _entries.begin();
+    for (entries_t::iterator it = _entries.begin();
             it != _entries.end();
             ++it)
     {
@@ -156,7 +156,7 @@ void Logfile::loadRange(FILE *file, unsigned missing_types,
 long Logfile::freeMessages(unsigned logclasses)
 {
     long freed = 0;
-    for (_entries_t::iterator it = _entries.begin();
+    for (entries_t::iterator it = _entries.begin();
             it != _entries.end();
             ++it)
     {
@@ -199,11 +199,17 @@ bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
 }
 
 
+entries_t* Logfile::getEntriesFromQuery(Query *query, LogCache *logcache, time_t since, time_t until, unsigned logclasses)
+{
+	 load(logcache, since, until, logclasses); // make sure all messages are present
+	 return &_entries;
+}
+
 bool Logfile::answerQuery(Query *query, LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
     load(logcache, since, until, logclasses); // make sure all messages are present
     uint64_t sincekey = makeKey(since, 0);
-    _entries_t::iterator it = _entries.lower_bound(sincekey);
+    entries_t::iterator it = _entries.lower_bound(sincekey);
     while (it != _entries.end())
     {
         LogEntry *entry = it->second;
@@ -220,7 +226,7 @@ bool Logfile::answerQueryReverse(Query *query, LogCache *logcache, time_t since,
 {
     load(logcache, since, until, logclasses); // make sure all messages are present
     uint64_t untilkey = makeKey(until, 999999999);
-    _entries_t::iterator it = _entries.upper_bound(untilkey);
+    entries_t::iterator it = _entries.upper_bound(untilkey);
     while (it != _entries.begin())
     {
         --it;

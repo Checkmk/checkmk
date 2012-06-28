@@ -38,21 +38,12 @@ class LogEntry;
 class Query;
 class LogCache;
 
+typedef map<uint64_t, LogEntry *> entries_t; // key is time_t . lineno
+
 class Logfile
 {
-    char      *_path;
-    time_t     _since;         // time of first entry
-    bool       _watch;         // true only for current logfile
-    ino_t      _inode;         // needed to detect switching
-    fpos_t     _read_pos;      // read until this position
-    uint32_t   _lineno;        // read until this line
-    unsigned   _logclasses_read; // only these types have been read
-    typedef map<uint64_t, LogEntry *> _entries_t; // key is time_t . lineno
-    _entries_t _entries;
-    char       _linebuffer[MAX_LOGLINE];
-
 public:
-    Logfile(const char *path, bool watch);
+	Logfile(const char *path, bool watch);
     ~Logfile();
 
     char *path() { return _path; }
@@ -61,9 +52,23 @@ public:
     time_t since() { return _since; }
     unsigned classesRead() { return _logclasses_read; }
     long numEntries() { return _entries.size(); }
+    entries_t* getEntriesFromQuery(Query *query, LogCache *lc, time_t since, time_t until, unsigned);
     bool answerQuery(Query *query, LogCache *lc, time_t since, time_t until, unsigned);
     bool answerQueryReverse(Query *query, LogCache *lc, time_t since, time_t until, unsigned);
+
     long freeMessages(unsigned logclasses);
+
+private:
+    char      *_path;
+    time_t     _since;         // time of first entry
+    bool       _watch;         // true only for current logfile
+    ino_t      _inode;         // needed to detect switching
+    fpos_t     _read_pos;      // read until this position
+    uint32_t   _lineno;        // read until this line
+    unsigned   _logclasses_read; // only these types have been read
+    entries_t  _entries;
+    char       _linebuffer[MAX_LOGLINE];
+
 
 private:
     void loadRange(FILE *file, unsigned missing_types, LogCache *,

@@ -43,18 +43,23 @@ public:
 	std::string host_name;
 	std::string service_name;
 	bool operator<(const HostServiceKey& other) const{
-		return strcmp(other.host_name.c_str(), host_name.c_str());
+		return (strcmp(other.host_name.c_str(), host_name.c_str()) < 0);
 	}
 };
 
 class HostServiceState{
+public:
+	time_t  from;
+	time_t  until;
+	time_t  duration;
 	int     attempt;
 	bool    hard_state; // true: hard, false: soft
 	char    state;
-    bool    in_downtime;
-    bool    in_notification_period;
-    // int tp_state
-    // bool acknowledged
+	bool    in_downtime;
+	bool    in_notification_period;
+	//int*    log_ptr;
+	// int tp_state
+	// bool acknowledged
 };
 
 typedef map<HostServiceKey, HostServiceState> SLA_Info;
@@ -74,6 +79,7 @@ public:
 
 private:
    bool answerQuery(Query *, Logfile *, time_t, time_t);
+   SLA_Info* sla_info;
 };
 
 #endif // TableStateHistory_h

@@ -5374,9 +5374,6 @@ def mode_edit_configvar(phase):
     html.hidden_fields()
     html.end_form()
 
-g_configvars = {}
-g_configvar_groups = {}
-
 # domain is one of "check_mk", "multisite" or "nagios"
 def register_configvar(group, varname, valuespec, domain="check_mk", need_restart=False, allow_reset=True):
     g_configvar_groups.setdefault(group, []).append((domain, varname, valuespec))
@@ -11378,6 +11375,10 @@ def load_plugins():
     host_attributes = []
     user_attributes = []
     user_attribute = {}
+
+    global g_configvars, g_configvar_groups
+    g_configvars = {}
+    g_configvar_groups = {}
 
     global g_rulegroups, g_rulespecs, g_rulespec_group, g_rulespec_groups
     g_rulegroups = {}

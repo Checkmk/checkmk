@@ -416,12 +416,12 @@ def page_edit_views(msg=None):
 
             # Owner
             if owner == "":
-                ownertxt = "<i>builtin</i>"
+                ownertxt = "<i>" + _("builtin") + "</i>"
             else:
                 ownertxt = owner
             html.write("<td>%s</td>" % ownertxt)
-            html.write("<td>%s</td>" % (view["public"] and "yes" or "no"))
-            html.write("<td>%s</td>" % (view["hidden"] and "yes" or "no"))
+            html.write("<td>%s</td>" % (view["public"] and _("yes") or _("no")))
+            html.write("<td>%s</td>" % (view["hidden"] and _("yes") or _("no")))
             html.write("</tr>\n")
 
     html.write("</table>\n")

@@ -3410,6 +3410,7 @@ def mode_changelog(phase):
                     continue
 
                 if site.get("disabled"):
+                    ss = {}
                     status = "disabled"
                 else:
                     ss = html.site_status.get(site_id, {})
@@ -7261,7 +7262,7 @@ def page_automation():
         html.write(repr(automation_commands[command]()))
 
     else:
-        raise MKGeneralException(_("Invalid automation command."))
+        raise MKGeneralException(_("Invalid automation command: %s.") % command)
 
 def automation_push_snapshot():
     try:

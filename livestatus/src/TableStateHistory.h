@@ -30,25 +30,29 @@
 #include "config.h"
 #include "Table.h"
 #include "string.h"
+#include "LogEntry.h"
 
 class Logfile;
 
+typedef int Value;
+typedef pair<string, string> HostServiceKey;
 
-class HostServiceKey{
+class LessThan
+{
 public:
-	HostServiceKey(const std::string &host, const std::string &service){
-		host_name = host;
-		service_name = service;
-	}
-	std::string host_name;
-	std::string service_name;
-	bool operator<(const HostServiceKey& other) const{
-		return (strcmp(other.host_name.c_str(), host_name.c_str()) < 0);
-	}
+    bool operator()(const HostServiceKey& lhs, const HostServiceKey& rhs)
+    {
+        if (lhs.first < rhs.first)
+            return true;
+        if (lhs.first > rhs.first)
+            return false;
+        return lhs.second < rhs.second;
+    }
 };
 
 class HostServiceState{
 public:
+	time_t  time;
 	time_t  from;
 	time_t  until;
 	time_t  duration;
@@ -62,7 +66,7 @@ public:
 	// bool acknowledged
 };
 
-typedef map<HostServiceKey, HostServiceState> SLA_Info;
+typedef map<HostServiceKey, HostServiceState, LessThan> SLA_Info;
 
 class TableStateHistory : public Table
 {
@@ -70,12 +74,13 @@ class TableStateHistory : public Table
 public:
     TableStateHistory();
     ~TableStateHistory();
-    const char *name() { return "log"; }
-    const char *prefixname() { return "logs"; }
+    const char *name() { return "statehist"; }
+    const char *prefixname() { return "statehist"; }
     bool isAuthorized(contact *ctc, void *data);
     void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
     void answerQuery(Query *query);
     Column *column(const char *colname); // override in order to handle current_
+    void updateHostServiceState(LogEntry &entry, HostServiceState &state);
 
 private:
    bool answerQuery(Query *, Logfile *, time_t, time_t);

@@ -72,6 +72,8 @@ TableStateHistory::TableStateHistory()
 {
 	debug_statehist("INIT STATE HIST");
     HostServiceState *ref = 0;
+    addColumn(new OffsetTimeColumn("time",
+                "Time of the log event (UNIX timestamp)", (char *)&(ref->time) - (char *)ref, -1));
     addColumn(new OffsetTimeColumn("from",
                 "Time of state Start (UNIX timestamp)", (char *)&(ref->from) - (char *)ref, -1));
     addColumn(new OffsetTimeColumn("until",
@@ -138,7 +140,7 @@ TableStateHistory::~TableStateHistory()
 void TableStateHistory::answerQuery(Query *query)
 {
 
-	debug_statehist("ANSWER STATE HIST QUERY");
+	debug_statehist("ANSWER STATE HIST QUERY ");
     // since logfiles are loaded on demand, we need
     // to lock out concurrent threads.
 	LogCache::handle->lockLogCache();
@@ -153,18 +155,16 @@ void TableStateHistory::answerQuery(Query *query)
     // to find the optimal entry point into the logfile
     query->findIntLimits("time", &since, &until);
 
-
-    debug_statehist("ANSWER STATE HIST QUERY limits %d %d", since, until);
     // The second optimization is for log message types.
     // We want to load only those log type that are queried.
     uint32_t classmask = LOGCLASS_ALL;
     query->optimizeBitmask("class", &classmask);
     if (classmask == 0) {
+        debug_statehist("Classmask == 0");
     	LogCache::handle->unlockLogCache();
         return;
     }
 
-    /* NEW CODE - NEWEST FIRST */
       _logfiles_t::iterator it;
       it = LogCache::handle->_logfiles.end(); // it now points beyond last log file
     --it; // switch to last logfile (we have at least one)
@@ -174,7 +174,9 @@ void TableStateHistory::answerQuery(Query *query)
     // not that of the last.
     while (it != LogCache::handle->_logfiles.begin() && it->first > until) // while logfiles are too new...
         --it; // go back in history
+
     if (it->first > until)  { // all logfiles are too new
+        debug_statehist("Alle logs zu neu");
     	LogCache::handle->unlockLogCache();
         return;
     }
@@ -190,60 +192,56 @@ void TableStateHistory::answerQuery(Query *query)
 
     // Logfile Start: Anfangsstati ermitteln und in Map eintragen
     LogEntry *entry;
+
+    debug_statehist("query since %d , until %d", since, until);
+
+
+    // PHASE: pre-since
+    // Collect and Update HostServiceState
     while (it_entries != entries->end())
     {
-       debug_statehist("CHECKE ENTRY");
-       debug_statehist("# DEN KEY GIBTS %d %d", entry->_time, since) ;
        entry = it_entries->second;
        if (entry->_time >= since)
-    	   	  break; // Fertig - Abschliessende Zeilen schreiben
+    	   	  break; // Fertig - Nächste Phase
 
-       HostServiceKey current_key(entry->_host_name, entry->_svc_desc);
-       if ( sla_info->find(current_key) != sla_info->end() ){
-    	   debug_statehist("# DEN KEY GIBTS %s %s", entry->_host_name, entry->_svc_desc) ;
-       }else{
-    	   HostServiceState state;
-    	   sla_info->insert(std::make_pair(current_key, state));
-    	   debug_statehist("# NEUER KEY");
+       // Host entry
+       if (entry->_host_name != NULL){
+           HostServiceKey key;
+    	   key.first = entry->_host_name;
+           if (entry->_svc_desc != NULL){
+        	   key.second = entry->_svc_desc;
+           }
+           if ( sla_info->find(key) == sla_info->end() ){
+        	   HostServiceState state;
+        	   sla_info->insert(std::make_pair(key, state));
+           }
+    	   updateHostServiceState(*entry, sla_info->find(key)->second);
        }
 
-       //    HostServiceKey key1("hostA","serviceA");
-       //    HostServiceKey key2("hostB","serviceB");
-       //    HostServiceKey key3("hostC","serviceB");
-       //
-       //    HostServiceState state;
-       //
-       //    sla_info.insert(std::make_pair(key1, state));
-       //    sla_info.insert(std::make_pair(key2, state));
-       //
-       //    if ( sla_info.find(key3) != sla_info.end() ){
-       //    	debug_statehist("DEN KEY GIBTS");
-       //    }
+       // Downtime entry
+       debug_statehist("entry info  %s" , entry->_text);
 
-       ++it;
-   }
-        // Logfile Start+: Stati anpassen
+
+
+
+
+       ++it_entries;
+    }
 
     // Zeitpunkt since: Ab sofort Aenderungen ans Query senden
 
 
 
 
-    while (true) {
-        Logfile *log = it->second;
-        debug_statehist("Query is now at logfile %s, needing classes 0x%x", log->path(), classmask);
-        if (!log->answerQueryReverse(query, LogCache::handle, since, until, classmask))
-            break; // end of time range found
-        if (it == LogCache::handle->_logfiles.begin())
-            break; // this was the oldest one
-        --it;
-    }
 
-    // dumpLogfiles();
+
     LogCache::handle->unlockLogCache();
+    sla_info->clear();
 }
 
+void updateHostServiceState(LogEntry &entry, HostServiceState &state){
 
+}
 
 bool TableStateHistory::isAuthorized(contact *ctc, void *data)
 {

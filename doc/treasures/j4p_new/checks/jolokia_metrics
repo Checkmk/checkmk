@@ -25,21 +25,21 @@
 # Boston, MA 02110-1301 USA.
 
 # MB warn, crit
-j4p_performance_mem_default_levels      = (1000, 2000)
+jolokia_metrics_mem_default_levels      = (1000, 2000)
 
 # Number of threads warn, crit
-j4p_performance_threads_default_levels  = (80, 100) 
+jolokia_metrics_threads_default_levels  = (80, 100) 
 
 # Number of sessions low crit, low warn, high warn, high crit
-j4p_performance_app_sess_default_levels = (-1, -1, 800, 1000) 
+jolokia_metrics_app_sess_default_levels = (-1, -1, 800, 1000) 
 
 # Number of requests low crit, low warn, high warn, high crit
-j4p_performance_serv_req_default_levels = (-1, -1, 5000, 6000)
+jolokia_metrics_serv_req_default_levels = (-1, -1, 5000, 6000)
 
-j4p_performance_queue_default_levels = ( 20, 50 )
+jolokia_metrics_queue_default_levels = ( 20, 50 )
 
 
-def j4p_performance_parse(info):
+def jolokia_metrics_parse(info):
     parsed = {}
     for inst, var, value in info:
         app, servlet = None, None
@@ -66,40 +66,40 @@ def j4p_performance_parse(info):
     return parsed
 
 
-def j4p_performance_app(info, (inst, app)):
-    parsed = j4p_performance_parse(info)
+def jolokia_metrics_app(info, (inst, app)):
+    parsed = jolokia_metrics_parse(info)
     if not inst in parsed \
        or not app in parsed[inst].get('apps', {}):
         return None
     return parsed[inst]['apps'][app]
 
 
-def j4p_performance_serv(info, (inst, app, serv)):
-    app = j4p_performance_app(info, (inst, app))
+def jolokia_metrics_serv(info, (inst, app, serv)):
+    app = jolokia_metrics_app(info, (inst, app))
     if not app or not serv in app.get('servlets', {}):
         return None
     return app['servlets'][serv]
 
 
-def inventory_j4p_performance(info, what):
-    parsed = j4p_performance_parse(info)
+def inventory_jolokia_metrics(info, what):
+    parsed = jolokia_metrics_parse(info)
     levels = None
     if what == 'mem':
-        levels = 'j4p_performance_mem_default_levels'
+        levels = 'jolokia_metrics_mem_default_levels'
     elif what == 'threads':
-        levels = 'j4p_performance_threads_default_levels'
+        levels = 'jolokia_metrics_threads_default_levels'
     return [ (k, levels) for k in parsed ]
 
 
-def inventory_j4p_performance_apps(info, what):
+def inventory_jolokia_metrics_apps(info, what):
     inv = []
-    parsed = j4p_performance_parse(info)
+    parsed = jolokia_metrics_parse(info)
     if what == 'app_sess':
-        levels = 'j4p_performance_app_sess_default_levels'
+        levels = 'jolokia_metrics_app_sess_default_levels'
         needed_key = [ "Sessions", "activeSessions" ]
     elif what == 'queue':
         needed_key = [ "QueueLength" ]
-        levels = "j4p_performance_queue_default_levels"
+        levels = "jolokia_metrics_queue_default_levels"
     elif what == 'requests':
         needed_key = [ "CompletedRequestCount" ]
         levels = None
@@ -118,12 +118,12 @@ def inventory_j4p_performance_apps(info, what):
     return inv
 
 
-def inventory_j4p_performance_serv(info, what):
+def inventory_jolokia_metrics_serv(info, what):
     inv = []
-    parsed = j4p_performance_parse(info)
+    parsed = jolokia_metrics_parse(info)
     levels = None
     if what == 'serv_req':
-        levels = 'j4p_performance_serv_req_default_levels'
+        levels = 'jolokia_metrics_serv_req_default_levels'
         needed_key = "Requests"
     for inst, vals in parsed.iteritems():
         for app, val in vals.get('apps', {}).iteritems():
@@ -133,9 +133,9 @@ def inventory_j4p_performance_serv(info, what):
     return inv
 
 
-def check_j4p_performance_mem(item, params, info):
+def check_jolokia_metrics_mem(item, params, info):
     warn, crit = params
-    parsed = j4p_performance_parse(info)
+    parsed = jolokia_metrics_parse(info)
     if item not in parsed:
         return (3, "UNKNOWN - data not found in agent output")
     d = parsed[item]
@@ -154,9 +154,9 @@ def check_j4p_performance_mem(item, params, info):
         return (0, "OK - " + infotext, perfdata)
 
 
-def check_j4p_performance_threads(item, params, info):
+def check_jolokia_metrics_threads(item, params, info):
     warn, crit = params
-    parsed = j4p_performance_parse(info)
+    parsed = jolokia_metrics_parse(info)
     if item not in parsed:
         return (3, "UNKNOWN - data not found in agent output")
     d = parsed[item]
@@ -177,7 +177,7 @@ def check_j4p_performance_threads(item, params, info):
 
             # Calculate the thread increase rate
             try:
-                timedif, rate = get_counter("j4p_performance.threads.%s" % item, this_time, val)
+                timedif, rate = get_counter("jolokia_metrics.threads.%s" % item, this_time, val)
                 output.append('ThreadRate: %0.2f' % rate)
                 perfdata.append(('ThreadRate', rate))
             except MKCounterWrapped:
@@ -191,8 +191,8 @@ def check_j4p_performance_threads(item, params, info):
     else:
         return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
 
-def check_j4p_performance_uptime(item, _unused, info):
-    parsed = j4p_performance_parse(info)
+def check_jolokia_metrics_uptime(item, _unused, info):
+    parsed = jolokia_metrics_parse(info)
     if item not in parsed:
         return (3, "UNKNOWN - data not found in agent output")
     uptime = saveint(parsed[item]['Uptime']) / 1000
@@ -207,8 +207,8 @@ def check_j4p_performance_uptime(item, _unused, info):
     return (0, "OK - up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
 
 
-def check_j4p_performance_app_state(item, _unused, info):
-    app = j4p_performance_app(info, item.split())
+def check_jolokia_metrics_app_state(item, _unused, info):
+    app = jolokia_metrics_app(info, item.split())
     if not app or not 'Running' in app:
         return (3, "UNKNOWN - data not found in agent output")
 
@@ -218,15 +218,16 @@ def check_j4p_performance_app_state(item, _unused, info):
         return (2, 'CRIT - application is not running (Running: %s)')
 
 
-def check_j4p_performance_app_sess(item, params, info):
+def check_jolokia_metrics_app_sess(item, params, info):
     lo_crit, lo_warn, hi_warn, hi_crit = params
-    app = j4p_performance_app(info, item.split())
+    app = jolokia_metrics_app(info, item.split())
     if not app: 
         return (3, "UNKNOWN - application not found")
     sessions = app.get('Sessions', app.get('activeSessions'))
     if sessions == None:
         return (3, "UNKNOWN - data not found in agent output")
     sess = saveint(sessions)
+    maxActive = saveint(app.get('Sessions', app.get('maxActiveSessions')))
 
     status = 0
     status_txt = ''
@@ -243,13 +244,16 @@ def check_j4p_performance_app_sess(item, params, info):
         status = 1
         status_txt = ' (Above or equal %d)' % lo_crit
 
+    if maxActive and maxActive > 0:
+        status_txt += " (max active sessions: %d)" % maxActive	
+
     return (status, '%s - %d Sessions%s' % (nagios_state_names[status], sess, status_txt),
             [('sessions', sess, hi_warn, hi_crit)])
 
 
-def check_j4p_performance_serv_req(item, params, info):
+def check_jolokia_metrics_serv_req(item, params, info):
     lo_crit, lo_warn, hi_warn, hi_crit = params
-    serv = j4p_performance_serv(info, item.split())
+    serv = jolokia_metrics_serv(info, item.split())
     if not serv or not 'Requests' in serv:
         return (3, "UNKNOWN - data not found in agent output")
     req = saveint(serv['Requests'])
@@ -274,7 +278,7 @@ def check_j4p_performance_serv_req(item, params, info):
     wrapped   = False
     this_time = time.time()
     try:
-        timedif, rate = get_counter("j4p_performance.serv_req.%s" % item, this_time, req)
+        timedif, rate = get_counter("jolokia_metrics.serv_req.%s" % item, this_time, req)
         output.append('RequestRate: %0.2f' % rate)
         perfdata.append(('RequestRate', rate))
     except MKCounterWrapped:
@@ -286,8 +290,8 @@ def check_j4p_performance_serv_req(item, params, info):
         return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
 
 
-def check_j4p_performance_bea_queue(item, params, info):
-    app = j4p_performance_app(info, item.split())
+def check_jolokia_metrics_bea_queue(item, params, info):
+    app = jolokia_metrics_app(info, item.split())
     if not app: 
         return (3, "UNKNOWN - application not found")
     if "QueueLength" not in app:
@@ -303,8 +307,8 @@ def check_j4p_performance_bea_queue(item, params, info):
     return (status, nagios_state_names[status] + ' - queue length is %d' % queuelength, 
              [("length", queuelength, warn, crit)])
 
-def check_j4p_performance_bea_requests(item, _no_params, info):
-    app = j4p_performance_app(info, item.split())
+def check_jolokia_metrics_bea_requests(item, _no_params, info):
+    app = jolokia_metrics_app(info, item.split())
     if not app: 
         return (3, "UNKNOWN - application not found")
     if "CompletedRequestCount" not in app:
@@ -313,8 +317,8 @@ def check_j4p_performance_bea_requests(item, _no_params, info):
     timedif, rate = get_counter("j4p.bea.requests.%s" % item, time.time(), requests)
     return (0, "OK - %.2f requests/sec" % rate, [("rate", rate)])
 
-def check_j4p_performance_bea_threads(item, _no_params, info):
-    app = j4p_performance_app(info, item.split())
+def check_jolokia_metrics_bea_threads(item, _no_params, info):
+    app = jolokia_metrics_app(info, item.split())
     if not app: 
         return (3, "UNKNOWN - application not found")
 
@@ -334,69 +338,69 @@ def check_j4p_performance_bea_threads(item, _no_params, info):
 
 
 # General JVM checks
-check_info["j4p_performance.mem"] = {
-    "service_description" : "JMX %s Memory",
-    "check_function"      : check_j4p_performance_mem,
-    "inventory_function"  : lambda i: inventory_j4p_performance(i, "mem"),
+check_info["jolokia_metrics.mem"] = {
+    "service_description" : "JVM %s Memory",
+    "check_function"      : check_jolokia_metrics_mem,
+    "inventory_function"  : lambda i: inventory_jolokia_metrics(i, "mem"),
     "has_perfdata"        : True,
 }
 
-check_info["j4p_performance.threads"] = {
-    "service_description" : "JMX %s Threads",
-    "check_function"      : check_j4p_performance_threads,
-    "inventory_function"  : lambda i: inventory_j4p_performance(i, "threads"),
+check_info["jolokia_metrics.threads"] = {
+    "service_description" : "JVM %s Threads",
+    "check_function"      : check_jolokia_metrics_threads,
+    "inventory_function"  : lambda i: inventory_jolokia_metrics(i, "threads"),
     "has_perfdata"        : True,
 }
 
-check_info["j4p_performance.uptime"] = {
-    "service_description" : "JMX %s Uptime",
-    "check_function"      : check_j4p_performance_uptime,
-    "inventory_function"  : lambda i: inventory_j4p_performance(i, "uptime"),
+check_info["jolokia_metrics.uptime"] = {
+    "service_description" : "JVM %s Uptime",
+    "check_function"      : check_jolokia_metrics_uptime,
+    "inventory_function"  : lambda i: inventory_jolokia_metrics(i, "uptime"),
     "has_perfdata"        : True,
 }
 
 # Application specific checks
-check_info["j4p_performance.app_state"] = {
-    "service_description" : "JMX %s State",
-    "check_function"      : check_j4p_performance_app_state,
-    "inventory_function"  : lambda i: inventory_j4p_performance_apps(i, "app_state"),
+check_info["jolokia_metrics.app_state"] = {
+    "service_description" : "JVM %s State",
+    "check_function"      : check_jolokia_metrics_app_state,
+    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "app_state"),
     "has_perfdata"        : False,
 }
 
-check_info["j4p_performance.app_sess"] = {
-    "service_description" : "JMX %s Sessions",
-    "check_function"      : check_j4p_performance_app_sess,
-    "inventory_function"  : lambda i: inventory_j4p_performance_apps(i, "app_sess"),
+check_info["jolokia_metrics.app_sess"] = {
+    "service_description" : "JVM %s Sessions",
+    "check_function"      : check_jolokia_metrics_app_sess,
+    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "app_sess"),
     "has_perfdata"        : True,
 }
 
 # Servlet specific checks
-check_info["j4p_performance.serv_req"] = {
-    "service_description" : "JMX %s Requests",
-    "check_function"      : check_j4p_performance_serv_req,
-    "inventory_function"  : lambda i: inventory_j4p_performance_serv(i, "serv_req"),
+check_info["jolokia_metrics.serv_req"] = {
+    "service_description" : "JVM %s Requests",
+    "check_function"      : check_jolokia_metrics_serv_req,
+    "inventory_function"  : lambda i: inventory_jolokia_metrics_serv(i, "serv_req"),
     "has_perfdata"        : True,
 }
 
 # Stuff found on BEA Weblogic
-check_info["j4p_performance.bea_queue"] = {
-    "service_description" : "JMX %s Queue",
-    "check_function"      : check_j4p_performance_bea_queue,
-    "inventory_function"  : lambda i: inventory_j4p_performance_apps(i, "queue"),
+check_info["jolokia_metrics.bea_queue"] = {
+    "service_description" : "JVM %s Queue",
+    "check_function"      : check_jolokia_metrics_bea_queue,
+    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "queue"),
     "has_perfdata"        : True,
 }
 
-check_info["j4p_performance.bea_requests"] = {
-    "service_description" : "JMX %s Requests",
-    "check_function"      : check_j4p_performance_bea_requests,
-    "inventory_function"  : lambda i: inventory_j4p_performance_apps(i, "requests"),
+check_info["jolokia_metrics.bea_requests"] = {
+    "service_description" : "JVM %s Requests",
+    "check_function"      : check_jolokia_metrics_bea_requests,
+    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "requests"),
     "has_perfdata"        : True,
 }
 
-check_info["j4p_performance.bea_threads"] = {
-    "service_description" : "JMX %s Threads",
-    "check_function"      : check_j4p_performance_bea_threads,
-    "inventory_function"  : lambda i: inventory_j4p_performance_apps(i, "threads"),
+check_info["jolokia_metrics.bea_threads"] = {
+    "service_description" : "JVM %s Threads",
+    "check_function"      : check_jolokia_metrics_bea_threads,
+    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "threads"),
     "has_perfdata"        : True,
 }
 

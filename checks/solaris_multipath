@@ -31,14 +31,14 @@ def check_solaris_multipath(item, params, info):
     for line in info:
         if line[0].split('/')[-1] == item: 
             total, ok = map(int, line[1:3])
-            if total > ok  and (100 / total) * ok <= 50:
-                return(2, "CRIT - only %d/%d paths up" % (ok, total))
-            elif total == ok:
+            if total == ok:
                 return(0, "OK - %d paths up" % total)
+            elif total > ok  and (100 / total) * ok <= 50:
+                return(2, "CRIT - only %d/%d paths up" % (ok, total))
             else:
                 return(1, "WARN - only %d/%d paths up" % (ok, total))
 
-    return(2, "UKN - Path not found")
+    return(2, "UNKNOWN - Path not found")
 
 check_info["solaris_multipath"] =  {
     "check_function" :  check_solaris_multipath,

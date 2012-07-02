@@ -25,6 +25,7 @@
       (thanks to Sebastian Talmon)
     * FIX: winperf_phydisk: Fix typo (lead to WATO rule not being applied)
     * Windows agent: new [global] option crash_debug (see online docu)
+    * AIX agent: new check for LVM volume status in rootvg.
 
     Multisite:
     * Show number of rows and number of selected rows in header line

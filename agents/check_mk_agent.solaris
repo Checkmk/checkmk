@@ -27,9 +27,8 @@
 export LC_ALL=C
 unset LANG
 
-MK_LIBDIR="/change/me"
-MK_CONFDIR="/change/me"
-export MK_LIBDIR MK_CONFDIR
+export MK_LIBDIR="/change/me"
+export MK_CONFDIR="/change/me"
 
 # All executables in PLUGINSDIR will simply be executed and their
 # ouput appended to the output of the agent. Plugins define their own
@@ -44,6 +43,20 @@ LOCALDIR=$MK_LIBDIR/local
 echo '<<<check_mk>>>'
 echo Version: 1.2.0p2
 echo AgentOS: solaris
+
+
+# Find out what type of system we run.
+# A standard Zone that will not have hardware of any kind?
+# A Global Zone with hardware?
+if type zonename > /dev/null 2>&1 ; then
+  if [ `zonename` = "global" ]; then
+      platform="global_zone"
+  else
+      platform="zone"
+else
+# Otherwise we have a normal or hard-partitioned system
+  platform="hardware"
+fi
 
 echo '<<<df>>>'
 for fs in ufs zfs vxfs
@@ -63,15 +76,10 @@ ps -A -o user,vsz,rss,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]
 # You need statgrab to be installed. You'll find it 
 # here: http://www.i-scream.org/libstatgrab/ 
 
-# Only collect net stats if we are in a global zone
 statgrab_vars="const. cpu. disk. general. mem. page. proc. swap. user."
 statgrab_sections="proc cpu disk page"
-if which zonename > /dev/null; then
-    if [ "`zonename`" = "global" ]; then
-       statgrab_vars="$statgrab_vars .net"
-       statgrab_sections="$statgrab_sections net"
-    fi
-else 
+# Only collect net stats if we aren't in a unpriv. zone.
+if [ "$platform" != "zone" ]; then
     statgrab_vars="$statgrab_vars .net"
     statgrab_sections="$statgrab_sections net"
 fi
@@ -118,13 +126,16 @@ fi
 
 # TCP Connection stats
 echo '<<<tcp_conn_stats>>>'
-netstat -nafinet -P tcp | tail  +5 | awk '{ c[$7]++; } END { for (x in c) { print x, c[x];}}'
+netstat -nafinet -P tcp | tail  +5 | \
+awk '{ c[$7]++; } END { for (x in c) { print x, c[x];}}'
 
 
 # Multipathing on Solaris10+
-if type mpathadm >/dev/null 2>&1 ; then
+if [ "$platform" != "zone" ]; then
     echo '<<<solaris_multipath>>>'
-    mpathadm list LU | awk '{if(NR%3==1){dev=$1}if(NR%3==2){tc=$NF}if(NR%3==2){printf "%s %s %s\n",dev,tc,$NF}}'
+    mpathadm list LU | awk '{if(NR%3==1){dev=$1}
+                             if(NR%3==2){tc=$NF}
+                             if(NR%3==0){printf "%s %s %s\n",dev,tc,$NF}}'
 fi
 
 

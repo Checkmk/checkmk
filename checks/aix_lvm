@@ -1,0 +1,152 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Agent output and things to know:
+
+# hd5                 boot       1       2       2    closed/syncd  N/A
+# hd6                 paging     65      130     2    open/syncd    N/A
+# hd8                 jfs2log    1       2       2    open/syncd    N/A
+# hd4                 jfs2       1       2       2    open/syncd    /
+# hd2                 jfs2       5       10      2    open/syncd    /usr
+# hd9var              jfs2       3       6       2    open/syncd    /var
+# hd3                 jfs2       2       4       2    open/syncd    /tmp
+# hd1                 jfs2       1       2       2    open/syncd    /home
+# hd10opt             jfs2       3       6       2    open/syncd    /opt
+# hd11admin           jfs2       1       2       2    open/syncd    /admin
+# lg_dumplv           sysdump    6       6       1    open/syncd    N/A
+# livedump            jfs2       1       2       2    open/syncd    /var/adm/ras/livedump
+# lvwork              jfs2       1       2       2    open/syncd    /work
+# lvbackup            jfs2       200     200     1    open/syncd    /backup
+# fwdump              jfs2       5       5       1    open/syncd    /var/adm/ras/platform
+# lvoracle            jfs2       30      30      1    open/syncd    /oracle
+
+# hd5 which contains the boot kernel is normally always closed (but it doesn't
+# matter IF it's closed.
+
+# row3: 1 means it alloceted one lvm logical extent (called partition on AIX), so 
+# it's likely 256MB in size. 
+# row4: 2 means it uses two physical extents. So if it uses two physical for
+# one logical ... yeah, a mirror
+
+# row5: 2 means that the volume uses two physical volumes to store those 
+# extents. So the mirror isn't on the same disk if it dies.
+
+# row6: here open/syncd is OK for every active volume
+
+#lvmconf = {
+#    rootvg : {
+#         hd5 : ("boot", 1, 2, 2, "closed/syncd", None)
+#         hd4 : ("/",    1, 2, 2, "open/syncd",   "/")
+#    }
+#}
+
+def parse_aix_lvm(info):
+    lvmconf = {} 
+    for line in info:
+       if len(line) == 1:
+           vgname = line[0][:-1]
+           lvmconf.update({ vgname : {} })
+       else:
+           lv, lvtype, num_lp, num_pp, num_pv, act_state, mountpoint = line
+           # split lv state into two relevant values
+           activation, mirror = act_state.split("/")
+           if mountpoint == "N/A":
+               mountpoint = None
+           lvmconf[vgname].update( { 
+                   lv : (lvtype, int(num_lp), int(num_pp), int(num_pv), 
+                         activation, mirror, mountpoint)
+                   })
+    return lvmconf
+
+
+def inventory_aix_lvm(info):
+    inventory = []
+    lvmconf = parse_aix_lvm(info)
+    for vg in lvmconf.keys():
+        for lv in lvmconf[vg].keys():
+            #inventory.append(("%s/%s" % (vg, lv), ('%s' % lvmconf[vg][lv][4],)))
+            inventory.append(("%s/%s" % (vg, lv), None))
+    return inventory
+
+
+def check_aix_lvm(item, _no_params, info):
+
+    # Get ready to find our item and settings.
+    #target_activation = params
+    target_vg, target_lv = item.split("/")
+
+    # Get structured LVM info
+    lvmconf = parse_aix_lvm(info)
+
+    if target_lv in lvmconf[target_vg].keys():
+        msgtxt = []
+        state  = 0
+
+        lvtype, num_lp, num_pp, num_pv, activation, mirror, mountpoint = lvmconf[target_vg][target_lv]
+
+        # Test if the volume is mirrored.
+        # Yes? Test for an even distribution of PP's over volumes.
+        # This is cannot detect crossover misaligns and other bad practices.
+        if num_pp / num_lp > 1:
+               if not num_pp / num_pv == num_lp:
+                   msgtxt.append( "LV Mirrors are misaligned between physical volumes(!)" )
+                   state = max(state, 1)
+
+        # If it's not the boot volume I suspect it should be open.
+        # This may need to be changed for some scenarios
+        if lvtype != "boot":
+            if activation != "open": # and activation != target_activation:
+                msgtxt.append("LV is not opened(!)")
+                state = max(state, 1)
+        
+        # Detect any, not just mirrored, volumes, that have stale PPs.
+        # This means either a disk write failure causing a mirror to go stale
+        # or some kind of split mirror backup.
+        if mirror != "syncd":
+            
+            msgtxt.append("LV is not in sync state(!!)")
+            state = max(state, 2)
+            
+        if state == 0:
+            msgtxt = "LV is open/syncd"
+        else:
+            msgtxt = ", ".join(msgtxt)
+        return (state, nagios_state_names[state] + " - " + msgtxt)
+    
+    
+    return (3, "UNKNOWN - no such volume found")
+
+
+check_info['aix_lvm'] = {
+    "check_function"     : check_aix_lvm,
+    "inventory_function" : inventory_aix_lvm,
+    "service_description": "Logical Volume %s", 
+    "has_perfdata"       : False,
+   # "group"              : "",
+   # "default_levels_variable" : "services_default_levels",
+    # first check we have a vendor mib from W&T, then check for the model in their MIB.
+}
+

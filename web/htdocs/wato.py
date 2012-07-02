@@ -992,12 +992,12 @@ def get_folder_permissions_of_users(users):
         permissions[username] = {}
         for folder_path, folder in folders.iteritems():
             permissions[username][folder_path] = {
-                'read':  check_folder_permissions(folder, 'read', False, username) == True,
-                'write': check_folder_permissions(folder, 'write', False, username) == True,
+                'read':  check_folder_permissions(folder, 'read', False, username, users) == True,
+                'write': check_folder_permissions(folder, 'write', False, username, users) == True,
             }
     return permissions
 
-def check_folder_permissions(folder, how, exception=True, user = None):
+def check_folder_permissions(folder, how, exception=True, user = None, users = None):
     if not user:
         if config.may("wato.all_folders"):
             return True
@@ -1017,7 +1017,8 @@ def check_folder_permissions(folder, how, exception=True, user = None):
         user = config.user_id
 
     # Get contact groups of user
-    users = load_users()
+    if users == None:
+        users = load_users()
     if user not in users:
         user_cgs = []
     else:

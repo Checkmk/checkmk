@@ -44,6 +44,8 @@
     * FIX: fix exception on unknown value in DropdownChoice
     * FIX: add service specification to ruleset Delay service notifications
     * FIX: fixed problem with disabled sites in WATO
+    * FIX: massive speedup when changing roles/users and activing changes
+      (especially when you have a larger number of users and folders)
 
     BI:
     * New iterators FOREACH_CHILD and FOREACH_PARENT

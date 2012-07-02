@@ -2,6 +2,8 @@
     Core:
     * simulation_mode: legacy_checks, custom_checks and active_checks
       are replaced with dummy checks always being OK
+    * FIX: Precisely define order of reading of configuration files. This
+      fixes a WATO rule precedence problem
 
     Checks & Agents:
     * FIX: Fixed syntax errors in a bunch of man pages

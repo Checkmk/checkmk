@@ -4229,6 +4229,22 @@ def marks_hosts_with_path(old, all, filename):
         if host not in old:
             host_paths[host] = path
 
+# Helper functions that determines the sort order of the
+# configuration files. The following two rules are implemented:
+# 1. *.mk files in the same directory will be read
+#    according to their lexical order.
+# 2. subdirectories in the same directory will be 
+#    scanned according to their lexical order.
+# 3. subdirectories of a directory will always be read *after*
+#    the *.mk files in that directory.
+def cmp_config_paths(a, b):
+    pa = a.split('/')
+    pb = b.split('/')
+    return cmp(pa[:-1], pb[:-1]) or \
+           cmp(len(pa), len(pb)) or \
+           cmp(pa, pb)
+
+
 def read_config_files(with_autochecks=True, with_conf_d=True):
     global vars_before_config, final_mk, local_mk, checks
 
@@ -4243,7 +4259,8 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
         list_of_files = reduce(lambda a,b: a+b,
            [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")]
              for d, sb, fs in os.walk(check_mk_configdir) ], [])
-        list_of_files.sort()
+        # list_of_files.sort()
+        list_of_files.sort(cmp = cmp_config_paths)
         list_of_files = [ check_mk_configfile ] + list_of_files
     else:
         list_of_files = [ check_mk_configfile ]

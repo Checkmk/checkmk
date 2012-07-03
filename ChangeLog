@@ -35,6 +35,7 @@
     * FIX: fix problem in showing exceptions (due to help function)
     * FIX: fixed several localization problems in view/command processing
     * FIX: fixed duplicated settings in WATO when using localisation
+    * FIX: fixed exception when refering to a language which does not exist
 
     WATO: 
     * Main menu of ruleeditor (Host & Service Parameters) now has

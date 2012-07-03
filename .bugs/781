@@ -1,9 +1,9 @@
 Title: Setting default_language = "de" in multisite.mk breaks all
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-07-02 13:55:03
 Targetversion: 1.2.0
-Class: bug
 
 Try: set default_language = "de" in multisite.mk. But do not 
 provide a language file. The result is an exception:
@@ -20,3 +20,6 @@ Traceback (most recent call last):
 NameError: global name 'config' is not defined
 
 [URL to this frame] [URL to this page including sidebar] 		
+
+2012-07-03 12:57:56: changed state open -> done
+The inline comment was correct, but the code was wrong. Fixed it.

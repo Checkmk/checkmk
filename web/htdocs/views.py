@@ -2469,5 +2469,5 @@ def declare_1to1_sorter(painter_name, func, col_num = 0, reverse = False):
     return painter_name
 
 
-load_plugins()
+# load_plugins()
 

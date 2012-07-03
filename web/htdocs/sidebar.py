@@ -366,4 +366,138 @@ def page_add_snapin():
     html.write("</div>\n")
     html.footer()
 
-load_plugins()
+
+def ajax_speedometer():
+    try:
+        # Try to get values from last call in order to compute
+        # driftig speedometer-needle and to reuse the scheduled
+        # check reate.
+        last_perc          = float(html.var("last_perc"))
+        scheduled_rate     = float(html.var("scheduled_rate"))
+        last_program_start = int(html.var("program_start"))
+
+        # Get the current rates and the program start time. If there
+        # are more than one site, we simply add the start times.
+        data = html.live.query_summed_stats("GET status\n"
+               "Columns: service_checks_rate host_checks_rate program_start")
+        current_rate = data[0] + data[1]
+        program_start = data[2]
+
+        # Recompute the scheduled_rate only if it is not known (first call)
+        # or if one of the sites has been restarted. The computed value cannot
+        # change during the monitoring since it just reflects the configuration.
+        # That way we save CPU resources since the computation of the
+        # scheduled checks rate needs to loop over all hosts and services.
+        if last_program_start != program_start:
+            scheduled_rate = 0.0
+            for what in [ "host", "service" ]:
+                data = html.live.query_summed_stats(
+                        "GET %ss\nStats: suminv check_interval" % what)
+                scheduled_rate += data[0] / 60.0
+
+        percentage = 100.0 * current_rate / scheduled_rate;
+        title = _("Scheduled check rate: %.1f/s, current rate: %.1f/s, that is "
+                  "%.0f%% of the scheduled rate" %
+                  (scheduled_rate, current_rate, percentage))
+
+    except Exception, e:
+        scheduled_rate = 0
+        program_start = 0
+        percentage = 0
+        last_perc = 0
+        title = _("No performance data: ") + str(e)
+
+    html.write(repr([scheduled_rate, program_start, percentage, last_perc, str(title)]))
+
+def ajax_switch_masterstate():
+    site = html.var("site")
+    column = html.var("switch")
+    state = int(html.var("state"))
+    commands = {
+        ( "enable_notifications",     1) : "ENABLE_NOTIFICATIONS",
+        ( "enable_notifications",     0) : "DISABLE_NOTIFICATIONS",
+        ( "execute_service_checks",   1) : "START_EXECUTING_SVC_CHECKS",
+        ( "execute_service_checks",   0) : "STOP_EXECUTING_SVC_CHECKS",
+        ( "execute_host_checks",      1) : "START_EXECUTING_HOST_CHECKS",
+        ( "execute_host_checks",      0) : "STOP_EXECUTING_HOST_CHECKS",
+        ( "process_performance_data", 1) : "ENABLE_PERFORMANCE_DATA",
+        ( "process_performance_data", 0) : "DISABLE_PERFORMANCE_DATA",
+        ( "enable_event_handlers",    1) : "ENABLE_EVENT_HANDLERS",
+        ( "enable_event_handlers",    0) : "DISABLE_EVENT_HANDLERS",
+    }
+
+    command = commands.get((column, state))
+    if command:
+        html.live.command("[%d] %s" % (int(time.time()), command), site)
+        html.live.set_only_sites([site])
+        html.live.query("GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n" % \
+               (column, state, column))
+        html.live.set_only_sites()
+        render_master_control()
+    else:
+        html.write(_("Command %s/%d not found") % (column, state))
+
+def ajax_del_bookmark():
+    num = int(html.var("num"))
+    bookmarks = load_bookmarks()
+    del bookmarks[num]
+    save_bookmarks(bookmarks)
+    render_bookmarks()
+
+def ajax_add_bookmark():
+    title = html.var("title")
+    href = html.var("href")
+    if title and href:
+        bookmarks = load_bookmarks()
+        # We try to remove http://hostname/some/path/check_mk from the
+        # URI. That keeps the configuration files (bookmarks) portable.
+        # Problem here: We have not access to our own URL, only to the
+        # path part. The trick: we use the Referrer-field from our
+        # request. That points to the sidebar.
+        referer = html.req.headers_in.get("Referer")
+        if referer:
+            while '/' in referer and referer.split('/')[0] == href.split('/')[0]:
+                referer = referer.split('/', 1)[1]
+                href = href.split('/', 1)[1]
+        bookmarks.append((title, href))
+        save_bookmarks(bookmarks)
+    render_bookmarks()
+
+def page_edit_bookmark():
+    html.header(_("Edit Bookmark"))
+    n = int(html.var("num"))
+    bookmarks = load_bookmarks()
+    if n >= len(bookmarks):
+        raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % n)
+
+    if html.var("save") and html.check_transaction():
+        title = html.var("title")
+        url = html.var("url")
+        bookmarks[n] = (title, url)
+        save_bookmarks(bookmarks)
+        html.reload_sidebar()
+
+    html.begin_form("edit_bookmark")
+    if html.var("save"):
+        title = html.var("title")
+        url = html.var("url")
+        bookmarks[n] = (title, url)
+        save_bookmarks(bookmarks)
+        html.reload_sidebar()
+    else:
+        title, url = bookmarks[n]
+        html.set_var("title", title)
+        html.set_var("url", url)
+
+    html.write("<table class=edit_bookmarks>")
+    html.write("<tr><td>%s</td><td>" % _('Title:'))
+    html.text_input("title", size = 50)
+    html.write("</td></tr><tr><td>%s:</td><td>" % _('URL'))
+    html.text_input("url", size = 50)
+    html.write("</td></tr><tr><td></td><td>")
+    html.button("save", _("Save"))
+    html.write("</td></tr></table>\n")
+    html.hidden_field("num", str(n))
+    html.end_form()
+
+    html.footer()

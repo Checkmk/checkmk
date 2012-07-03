@@ -1776,6 +1776,9 @@ def convert_title_to_filename(title):
             converted += "_"
     return str(converted)
 
+def ajax_set_foldertree():
+    config.save_user_file("foldertree", (html.var('topic'), html.var('target')))
+
 
 #.
 #   .-Edit-Host------------------------------------------------------------.
@@ -1979,7 +1982,7 @@ def delete_host_after_confirm(delname):
         return None # browser reload
 
 #.
-#   .-Inventory & Servicis-------------------------------------------------.
+#   .-Inventory & Services-------------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|  ___ _ ____   _(_) ___ ___  ___                 |
 #   |               \___ \ / _ \ '__\ \ / / |/ __/ _ \/ __|                |

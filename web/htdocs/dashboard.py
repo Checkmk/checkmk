@@ -638,4 +638,4 @@ def render_pnpgraph(site, host, service=None, source=0):
     img_url = base_url + "image" + var_part
     html.write('<a href="%s"><img border=0 src="%s"></a>' % (pnp_url, img_url))
 
-load_plugins()
+# load_plugins()

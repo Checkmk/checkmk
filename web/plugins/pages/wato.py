@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import wato
-import sidebar
 
 pagehandlers.update({
     "wato"                  : wato.page_handler,
@@ -33,5 +32,5 @@ pagehandlers.update({
     "automation_login"      : wato.page_automation_login,
     "automation"            : wato.page_automation,
     "user_profile"          : wato.page_user_profile,
-    "ajax_set_foldertree"   : sidebar.ajax_set_foldertree,
+    "ajax_set_foldertree"   : wato.ajax_set_foldertree,
 })

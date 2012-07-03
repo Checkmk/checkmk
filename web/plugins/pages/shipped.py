@@ -26,6 +26,7 @@
 
 # Import modules that contain the page functions
 
+import config
 import main
 import logwatch
 import views

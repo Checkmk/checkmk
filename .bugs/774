@@ -1,11 +1,14 @@
 Title: Option "hide names of configuration variables" works only after switching
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-06-15 13:53:06
 Targetversion: 1.2.0
-Class: bug
 
 The configuration variable is - per WATO - default off. But
 in fact the real default value seems to be True. So 
 in order to see the variable names you need to toggle
 once on and off again.
+
+2012-07-03 13:58:51: changed state open -> done
+Fixed WATO option definition

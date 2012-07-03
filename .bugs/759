@@ -20,3 +20,15 @@ working!
 Furthermore: If you now uncheck the one single
 checkbox and again issue a command: it will still
 think this box is checked.
+
+----
+
+This is related to the URL parsing code in javascript.
+The "no" link destroys the url because it issues a POST
+request. We need to make the POST vars available in js
+to make this code work again. Maybe we add a general code
+which makes all variables available as json construct in JS.
+
+But this does not resolve the problem completely. Once we
+have too many vars we need to make POST requests for reloading
+views.

@@ -52,6 +52,8 @@
     * FIX: massive speedup when changing roles/users and activing changes
       (especially when you have a larger number of users and folders)
     * Add variable CONTACTPAGER to allowed macros in notifications
+    * FIX: fixed default setting if "Hide names of configuration variables"
+      in WATO
 
     BI:
     * New iterators FOREACH_CHILD and FOREACH_PARENT

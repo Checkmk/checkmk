@@ -2067,8 +2067,8 @@ def core_command(what, row):
     if not commands:
         raise MKUserError(None, _("Sorry. This command is not implemented."))
 
-    # Some commands return lists of complete command lines, others
-    # just return one basic command without timestamp. Convert those
+    # Some commands return lists of commands, others
+    # just return one basic command. Convert those
     if type(commands) != list:
         commands = [commands]
 

@@ -357,7 +357,7 @@ def command_downtime(cmdtag, spec, row):
                 downtime_ids.append(int(id))
         commands = []
         for dtid in downtime_ids:
-            commands.append("[%d] DEL_%s_DOWNTIME;%d\n" % (int(time.time()), cmdtag, dtid))
+            commands.append("DEL_%s_DOWNTIME;%d\n" % (cmdtag, dtid))
         title = _("<b>remove all scheduled downtimes</b> of ")
         return commands, title
 

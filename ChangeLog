@@ -36,6 +36,8 @@
     * FIX: fixed several localization problems in view/command processing
     * FIX: fixed duplicated settings in WATO when using localisation
     * FIX: fixed exception when refering to a language which does not exist
+    * FIX: Removing all downtimes of a host/service is now possible again
+    * FIX: The refresh time in footer is updated now when changing the value
 
     WATO: 
     * Main menu of ruleeditor (Host & Service Parameters) now has

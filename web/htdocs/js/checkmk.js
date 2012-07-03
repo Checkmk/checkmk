@@ -651,6 +651,21 @@ function toggleRefreshButton(s, enable) {
     o = null;
 }
 
+function toggleRefreshFooter(s) {
+    var o = document.getElementById('foot_refresh');
+    var o2 = document.getElementById('foot_refresh_time');
+    if(o) {
+        if(s == 0) {
+            o.style.display = 'none';
+        } else {
+            o.style.display = 'inline-block';
+            if(o2) {
+                o2.innerHTML = s;
+            }
+        }
+    }
+    o = null;
+}
 
 // When called with one or more parameters parameters it reschedules the
 // timer to the given interval. If the parameter is 0 the reload is stopped.
@@ -666,6 +681,7 @@ function setReload(secs, url) {
     }
 
     toggleRefreshButton(secs, true);
+    toggleRefreshFooter(secs);
 
     if (secs !== 0) {
         gReloadTime  = secs;

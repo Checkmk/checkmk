@@ -32,6 +32,10 @@ body.main.dashlet {
     padding: 0px;
 }
 
+div#foot_refresh, div#foot_refresh_time {
+    display: inline-block;
+}
+
 /*-------------------------------------------------------------------------.
 |  _____     _            ___      ___        _   _                        |
 | |_   _|_ _| |__  ___   ( _ )    / _ \ _ __ | |_(_) ___  _ __  ___        |
@@ -491,5 +495,3 @@ table.views td.buttons {
     vertical-align: middle;
     background-color: #8EAEB8;
 }
-
-

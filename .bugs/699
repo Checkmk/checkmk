@@ -1,8 +1,11 @@
 Title: "refresh: 30 secs" footer in views does not change on changed refreshed
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-06-19 15:28:47
 Targetversion: future
-Class: bug
 
 The code is only rendered once and not changed/updated when changing the update interval.
+
+2012-07-03 13:32:46: changed state open -> done
+Added javascript code to update the value in footer

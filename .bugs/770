@@ -6,3 +6,6 @@ Targetversion: 1.2.0
 Class: bug
 
 The list of views selectable when linking contains duplicates.
+
+LM: The duplicate titles are in fact different views. The second
+views are the mobile views.

@@ -1,9 +1,9 @@
 Title: Error when removing downtimes
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-06-28 12:22:44
 Targetversion: 1.2.0
-Class: bug
 
 [1340871811] Warning: Unrecognized external command -> [1340871810] 
 DEL_SVC_DOWNTIME;1
@@ -33,3 +33,6 @@ DEL_SVC_DOWNTIME;26
 DEL_SVC_DOWNTIME;27
 [1340871811] Warning: Unrecognized external command -> [1340871810] 
 DEL_SVC_DOWNTIME;28
+
+2012-07-03 13:12:34: changed state open -> done
+Duplicate of 778. Has been fixed.

@@ -2,7 +2,7 @@ Title: Checkbox handling in views sometimes broken
 Component: multisite
 State: open
 Date: 2012-05-28 16:13:51
-Targetversion: 1.2.0
+Targetversion: future
 Class: bug
 
 The handling of the checkboxes in the views still has

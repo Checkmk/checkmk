@@ -433,7 +433,11 @@ def select_view(varname, only_with_hidden = False):
     choices = [("", "")]
     for name, view in html.available_views.items():
         if not only_with_hidden or len(view["hide_filters"]) > 0:
-            choices.append(("%s" % name, view["title"]))
+            if view.get('mobile', False):
+                title = _('Mobile: ') + view["title"]
+            else:
+                title = view["title"]
+            choices.append(("%s" % name, title))
     html.sorted_select(varname, choices, "")
 
 # -------------------------------------------------------------------------

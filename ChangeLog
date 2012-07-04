@@ -40,6 +40,7 @@
     * FIX: fixed exception when refering to a language which does not exist
     * FIX: Removing all downtimes of a host/service is now possible again
     * FIX: The refresh time in footer is updated now when changing the value
+    * FIX: view editor shows "(Mobile)" hint in view titles when linking to views
 
     WATO: 
     * Main menu of ruleeditor (Host & Service Parameters) now has
@@ -56,6 +57,7 @@
     * Add variable CONTACTPAGER to allowed macros in notifications
     * FIX: fixed default setting if "Hide names of configuration variables"
       in WATO
+    * FIX: ListOfString Textboxes (e.g. parents of folders) do now extend in IE
 
     BI:
     * New iterators FOREACH_CHILD and FOREACH_PARENT

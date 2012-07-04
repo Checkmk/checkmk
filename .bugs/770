@@ -1,11 +1,14 @@
 Title: View editor: view shown at "Link:" are duplicate
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-06-14 13:21:44
 Targetversion: 1.2.0
-Class: bug
 
 The list of views selectable when linking contains duplicates.
 
 LM: The duplicate titles are in fact different views. The second
 views are the mobile views.
+
+2012-07-04 10:59:44: changed state open -> done
+Added "(Mobile)" text to all mobile views to prevent duplicated entries

@@ -1394,7 +1394,7 @@ function list_of_strings_extend(oInput, j) {
        one exceeding empty element. */
 
     var oDiv = oInput.parentNode;
-    while (!oDiv.parentNode.classList.contains("listofstrings"))
+    while (oDiv.parentNode.classList && !oDiv.parentNode.classList.contains("listofstrings"))
         oDiv = oDiv.parentNode;
     var oContainer = oDiv.parentNode;
 

@@ -54,6 +54,7 @@
     * Add variable CONTACTPAGER to allowed macros in notifications
     * FIX: fixed default setting if "Hide names of configuration variables"
       in WATO
+    * FIX: ListOfString Textboxes (e.g. parents of folders) do now extend in IE
 
     BI:
     * New iterators FOREACH_CHILD and FOREACH_PARENT

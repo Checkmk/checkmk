@@ -434,7 +434,7 @@ def select_view(varname, only_with_hidden = False):
     for name, view in html.available_views.items():
         if not only_with_hidden or len(view["hide_filters"]) > 0:
             if view.get('mobile', False):
-                title = view["title"] + _(' (Mobile)')
+                title = _('Mobile: ') + view["title"]
             else:
                 title = view["title"]
             choices.append(("%s" % name, title))

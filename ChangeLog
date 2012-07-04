@@ -38,6 +38,7 @@
     * FIX: fixed exception when refering to a language which does not exist
     * FIX: Removing all downtimes of a host/service is now possible again
     * FIX: The refresh time in footer is updated now when changing the value
+    * FIX: view editor shows "(Mobile)" hint in view titles when linking to views
 
     WATO: 
     * Main menu of ruleeditor (Host & Service Parameters) now has

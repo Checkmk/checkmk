@@ -28,6 +28,8 @@
     * FIX: winperf_phydisk: Fix typo (lead to WATO rule not being applied)
     * Windows agent: new [global] option crash_debug (see online docu)
     * AIX agent: new check for LVM volume status in rootvg.
+    * PostgreSQL plugin: agent is now modified to work with PostgreSQL 
+      versions newer than 8.1. (multiple reports, thanks!)
 
     Multisite:
     * Show number of rows and number of selected rows in header line

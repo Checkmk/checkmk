@@ -1,11 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
-if id postgres >/dev/null ; then
+if id pgsql >/dev/null  ; then
   echo '<<<postgres_sessions>>>'
-  echo "select current_query = '<IDLE>', count(*) from pg_stat_activity group by (current_query = '<IDLE>');" | su - postgres -c "psql -A -t -F' '"
-  echo '<<<postgres_stat_database>>>'
-  # The following statement might change in future for better cross-version
-  # compatibility.
-  echo 'select *, pg_database_size(datname) as "datsize" from pg_stat_database;' \
-     | su - postgres -c "psql -A -F' '" | sed '$d'
+  echo "select current_query = '<IDLE>', count(*) from pg_stat_activity group by (current_query = '<IDLE>');" | su - pgsql -c "psql -d postgres -A -t -F' '"
+
+  echo '<<<postgres_stat_database:sep(59)>>>'
+  echo 'select datid,datname,numbackends,xact_commit,xact_rollback,blks_read,blks_hit,tup_returned,tup_fetched,tup_inserted,tup_updated,tup_deleted,conflicts, pg_database_size(datname) as "datsize" from pg_stat_database;' \
+     | su - pgsql -c "psql -d postgres -A -F';'" | sed '$d'
 fi

@@ -1,0 +1,9 @@
+Title: WATO Homescreen has "refresh: 0 secs" in bottom line
+Component: wato
+State: open
+Date: 2012-07-04 08:27:52
+Targetversion: 1.2.0
+Class: nastiness
+
+In htmllib.py we need to suppress this message if the refresh
+is 0.

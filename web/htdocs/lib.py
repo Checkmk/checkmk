@@ -63,6 +63,8 @@ class MKInternalError(Exception):
 # and make it writable for the group
 def make_nagios_directory(path):
     if not os.path.exists(path):
+        parent_dir, lastpart = path.rsplit('/', 1)
+        make_nagios_directory(parent_dir)
         try:
             os.mkdir(path)
             gid = grp.getgrnam(defaults.www_group).gr_gid

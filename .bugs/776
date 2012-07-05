@@ -1,6 +1,6 @@
 Title: Link for Column in view editor shows duplicate views
 Component: multisite
-State: open
+State: done
 Date: 2012-06-20 14:07:19
 Targetversion: 1.2.0
 Class: nastiness
@@ -14,3 +14,9 @@ and put those at the bottom of the ist.
 
 Also Only show view that have at least on "hide"-Filter.
 Views without a context are not useful for linking.
+
+2012-07-04 11:06:55: changed state open -> done
+has just been fixed
+
+2012-07-04 11:07:03: changed state done -> done
+has just been fixed

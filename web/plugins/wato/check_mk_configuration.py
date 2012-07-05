@@ -179,7 +179,7 @@ register_configvar(group,
              label = _("hide variable names"),
              help = _("When enabled, internal configuration variable names of Check_MK are hidded "
                       "from the user (for example in the rule editor)"),
-             default_value = False),
+             default_value = True),
     domain = "multisite")
 
 register_configvar(group,

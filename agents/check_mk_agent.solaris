@@ -53,6 +53,7 @@ if type zonename > /dev/null 2>&1 ; then
       platform="global_zone"
   else
       platform="zone"
+  fi
 else
 # Otherwise we have a normal or hard-partitioned system
   platform="hardware"

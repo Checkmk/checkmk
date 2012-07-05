@@ -32,6 +32,8 @@
     * FIX: winperf_phydisk: Fix typo (lead to WATO rule not being applied)
     * Windows agent: new [global] option crash_debug (see online docu)
     * AIX agent: new check for LVM volume status in rootvg.
+    * PostgreSQL plugin: agent is now modified to work with PostgreSQL 
+      versions newer than 8.1. (multiple reports, thanks!)
 
     Multisite:
     * Show number of rows and number of selected rows in header line
@@ -39,6 +41,10 @@
     * FIX: fix problem in showing exceptions (due to help function)
     * FIX: fixed several localization problems in view/command processing
     * FIX: fixed duplicated settings in WATO when using localisation
+    * FIX: fixed exception when refering to a language which does not exist
+    * FIX: Removing all downtimes of a host/service is now possible again
+    * FIX: The refresh time in footer is updated now when changing the value
+    * FIX: view editor shows "(Mobile)" hint in view titles when linking to views
 
     WATO: 
     * Main menu of ruleeditor (Host & Service Parameters) now has
@@ -53,6 +59,9 @@
     * FIX: massive speedup when changing roles/users and activing changes
       (especially when you have a larger number of users and folders)
     * Add variable CONTACTPAGER to allowed macros in notifications
+    * FIX: fixed default setting if "Hide names of configuration variables"
+      in WATO
+    * FIX: ListOfString Textboxes (e.g. parents of folders) do now extend in IE
 
     BI:
     * New iterators FOREACH_CHILD and FOREACH_PARENT

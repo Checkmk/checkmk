@@ -154,11 +154,11 @@ echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr 
 
 
 # Multipathing is supported in FreeBSD by now
-# see "gmultipath" or 
 # http://www.mywushublog.com/2010/06/freebsd-and-multipath/
-# it's queried using "gmultipath status" and seems to the 2nd-most 
-# straightforward multipath implementation since AIX
-
+if kldstat -v | grep g_multipath > /dev/null ; then
+    echo '<<<freebsd_multipath>>>'
+    gmultipath status | grep -v ^Name
+fi
 
 
 # Soft-RAID

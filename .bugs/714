@@ -1,9 +1,9 @@
 Title: PostgreSQL check breaks on version 9 output
 Component: checks
-State: open
+Class: bug
+State: closed
 Date: 2012-06-26 14:14:46
 Targetversion: 1.2.0
-Class: bug
 
 Currently we do not support output from version 9 PostgreSQL. 
 They send one more data field and our agent sends with " " as separator
@@ -38,3 +38,8 @@ Fix suggested by user:
 Methinks (flo) that we should 
  - not fetch the stats_reset timestamp at all since we dont need it
  - not use -F' ' but -F'somethingelse'
+
+2012-07-04 17:02:48: changed state open -> closed
+Bug should be fixed now. 
+They added a field for last stats reset which we don't need but still fetched.
+Agent now selects only defined fields and uses sep:() in case we run into this situation again.

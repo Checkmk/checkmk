@@ -7,3 +7,8 @@ Class: bug
 
 In the role editor the section with the WATO permissions
 is displayed twice.
+
+LM: This does only happen when one defines a permission
+for a section, e.g. wato.*, which has already been followed
+by another section.
+I have a fix for this but this is too big for a fix release.

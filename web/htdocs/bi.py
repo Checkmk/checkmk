@@ -107,6 +107,7 @@ g_config_information = None # for invalidating cache after config change
 # without state.
 def load_services():
     services = {}
+    services_by_hostname = {}
     html.live.set_prepend_site(True)
     html.live.set_auth_domain('bi')
     data = html.live.query("GET hosts\n"
@@ -118,9 +119,11 @@ def load_services():
     for site, host, varnames, values, svcs, childs, parents in data:
         vars = dict(zip(varnames, values))
         tags = vars.get("TAGS", "").split(" ")
-        services[(site, host)] = (tags, svcs, childs, parents)
+        entry = (tags, svcs, childs, parents)
+        services[(site, host)] = entry
+        services_by_hostname.setdefault(host, []).append(entry)
 
-    return services
+    return services, services_by_hostname
 
 # Keep complete list of time stamps of configuration
 # and start of each site. Unreachable sites are registered
@@ -173,13 +176,15 @@ def compile_forest(user):
     global did_compilation
     did_compilation = True
 
+    services, services_by_hostname = load_services()
     cache = {
         "forest" :               {},
         "aggregations_by_hostname" : {},
         "host_aggregations" :    {},
         "affected_hosts" :       {},
         "affected_services":     {},
-        "services" :             load_services(),
+        "services" :             services,
+        "services_by_hostname" : services_by_hostname,
         "see_all" :              config.may("bi.see_all"),
     }
     g_user_cache = cache
@@ -225,7 +230,6 @@ def compile_forest(user):
 
     # Remember successful compile in cache
     g_cache[user] = cache
-
 
 
 # Execute an aggregation rule, but prepare arguments
@@ -278,33 +282,47 @@ def find_matching_services(what, calllist):
     else:
         service_re = calllist[1]
 
+    matches = set([])
     honor_site = SITE_SEP in host_re
 
-    matches = set([])
+    if host_re.startswith("^(") and host_re.endswith(")$"):
+        middle = host_re[2:-2]
+        if middle in g_user_cache["services_by_hostname"]:
+            entries = [ (("", host_re), entry) for entry in g_user_cache["services_by_hostname"][middle] ]
+            host_re = "(.*)"
+    elif not honor_site and not '*' in host_re and not '$' in host_re and not '|' in host_re:
+        entries = [ (("", host_re), entry) for entry in g_user_cache["services_by_hostname"][host_re] ]
+    else:
+        entries = g_user_cache["services"].items()
 
     # TODO: Hier könnte man - wenn der Host bekannt ist, effektiver arbeiten, als
     # komplett alles durchzugehen.
-    for (site, hostname), (tags, services, childs, parents) in g_user_cache["services"].items():
+    for (site, hostname), (tags, services, childs, parents) in entries:
         host_matches = None
         if not match_host_tags(tags, required_tags):
             continue
 
-        # For regex to have '$' anchor for end. Users might be surprised
-        # to get a prefix match on host names. This is almost never what
-        # they want. For services this is useful, however.
-        if host_re.endswith("$"):
-            anchored = host_re
-        else:
-            anchored = host_re + "$"
+        host_matches = None
 
-        # In order to distinguish hosts with the same name on different
-        # sites we prepend the site to the host name. If the host specification
-        # does not contain the site separator - though - we ignore the site
-        # an match the rule for all sites.
-        if honor_site:
-            host_matches = do_match(anchored, "%s%s%s" % (site, SITE_SEP, hostname))
+        if host_re == '(.*)':
+            host_matches = (hostname, )
         else:
-            host_matches = do_match(anchored, hostname)
+            # For regex to have '$' anchor for end. Users might be surprised
+            # to get a prefix match on host names. This is almost never what
+            # they want. For services this is useful, however.
+            if host_re.endswith("$"):
+                anchored = host_re
+            else:
+                anchored = host_re + "$"
+
+            # In order to distinguish hosts with the same name on different
+            # sites we prepend the site to the host name. If the host specification
+            # does not contain the site separator - though - we ignore the site
+            # an match the rule for all sites.
+            if honor_site:
+                host_matches = do_match(anchored, "%s%s%s" % (site, SITE_SEP, hostname))
+            else:
+                host_matches = do_match(anchored, hostname)
 
         if host_matches != None:
             if what == config.FOREACH_CHILD:
@@ -319,9 +337,14 @@ def find_matching_services(what, calllist):
                     matches.add(host_matches)
                 else:
                     for service in services:
-                        svc_matches = do_match(service_re, service)
-                        if svc_matches != None:
+                        mo = (service_re, service)
+                        if mo in service_nomatch_cache:
+                            continue
+                        m = regex(service_re).match(service)
+                        if m:
                             matches.add(host_matches + svc_matches)
+                        else:
+                            service_nomatch_cache.add(mo)
 
     matches = list(matches)
     matches.sort()
@@ -596,12 +619,16 @@ def match_host_tags(have_tags, required_tags):
 def compile_leaf_node(host_re, service_re = config.HOST_STATE):
     found = []
     honor_site = SITE_SEP in host_re
+    if not honor_site and not '*' in host_re and not '$' in host_re and not '|' in host_re:
+        entries = [ (("", host_re), entry) for entry in g_user_cache["services_by_hostname"][host_re] ]
+    else:
+        entries = g_user_cache["services"].items()
 
     # TODO: If we already know the host we deal with, we could avoid this loop
-    for (site, hostname), (tags, services, childs, parents) in g_user_cache["services"].items():
+    for (site, hostname), (tags, services, childs, parents) in entries:
         # If host ends with '|@all', we need to check host tags instead
         # of regexes.
-        if host_re.endswith('|@all'):
+        if False and host_re.endswith('|@all'):
             if not match_host_tags(host_re[:-5], tags):
                 continue
         elif host_re != '@all':
@@ -636,16 +663,24 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
 
             else:
                 for service in services:
-                    if regex(service_re).match(service):
+                    mo = (service_re, service)
+                    if mo in service_nomatch_cache:
+                        continue
+                    m = regex(service_re).match(service)
+                    if m:
                         found.append({"type"     : NT_LEAF,
                                       "reqhosts" : [(site, hostname)],
                                       "host"     : (site, hostname),
                                       "service"  : service,
                                       "title"    : "%s - %s" % (hostname, service)} )
+                    else:
+                        service_nomatch_cache.add(mo)
 
     found.sort()
     return found
 
+
+service_nomatch_cache = set([])
 
 regex_cache = {}
 def regex(r):
@@ -658,6 +693,7 @@ def regex(r):
         raise MKConfigError("Invalid regular expression '%s': %s" % (r, e))
     regex_cache[r] = rx
     return rx
+
 
 
 

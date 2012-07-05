@@ -1,0 +1,141 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# These are default levels for the most critical limits.
+# If they trigger, the admin SHOULD act.
+hpux_tunables_nproc_default_levels = (90.0, 96.0)
+hpux_tunables_nkthread_default_levels = (80.0, 85.0)
+
+# Example output:
+# <<<hpux_tunables:sep(58)>>>
+# Tunable:        dbc_max_pct
+# Usage:          0
+# Setting:        1
+# Percentage:     0.0
+# 
+# Tunable:        maxdsiz
+# Usage:          176676864
+# Setting:        1073741824
+# Percentage:     16.5
+
+
+
+def parse_hpux_tunables(info):
+    parsed = {}
+    for line in info:
+        if   "Tunable" in line[0]:
+            key       = line[1].strip()
+        elif "Usage"   in line[0]:
+            usage     = saveint(line[1])
+        elif "Setting" in line[0]:
+            threshold = saveint(line[1])
+            parsed[key] = (usage, threshold)
+    return parsed
+        
+
+def inventory_hpux_tunables(info, hpux_tunable):
+    if hpux_tunable in parse_hpux_tunables(info):
+        if   hpux_tunable == "nproc":
+            return [( None,    "hpux_tunables_nproc_default_levels")]
+        elif hpux_tunable == "nkthread":
+            return [( None, "hpux_tunables_nkthread_default_levels")]
+        else:
+            return [(None, None)]
+
+
+def check_hpux_tunables(item, params, info, hpux_tunable, thingname):
+
+    parsed = parse_hpux_tunables(info)
+
+    if hpux_tunable not in parsed:
+        return (3, "UNKNOWN - tunable not found in agent output")
+
+    usage, threshold =  parsed[hpux_tunable]
+    mimi = float(threshold) / 100
+    pct = float(usage) / mimi
+
+    state = 0
+
+    if params:
+        warn, crit = params
+        if   float(crit) < pct:
+            state = 2
+        elif float(warn) < pct:
+            state = 1
+        perfdata = [ (thingname, usage, threshold, warn * mimi, crit * mimi) ]
+    else:
+        perfdata = [ (thingname, usage, threshold, '', '') ]
+
+    return (state, nagios_state_names[state] + \
+         " - %.2f%% used" % pct + state * "!" + " (%d/%d %s) " % (usage, threshold, thingname), perfdata)
+    
+
+
+check_info["hpux_tunables.nkthread"] = {
+    "check_function"       : lambda i, p, o: check_hpux_tunables(i, p, o, "nkthread", "threads"),
+    "inventory_function"   : lambda i: inventory_hpux_tunables(i, "nkthread"),
+    "service_description"  : "Number of threads",
+    "has_perfdata"         : True,
+}
+
+check_info["hpux_tunables.nproc"] = {
+    "check_function"       : lambda i, p, o: check_hpux_tunables(i, p, o, "nproc", "processes"),
+    "inventory_function"   : lambda i: inventory_hpux_tunables(i, "nproc"),
+    "service_description"  : "Number of processes",
+    "has_perfdata"         : True,
+}
+
+check_info["hpux_tunables.maxfiles_lim"] = {
+    "check_function"       : lambda i, p, o: check_hpux_tunables(i, p, o, "maxfiles_lim", "files"),
+    "inventory_function"   : lambda i: inventory_hpux_tunables(i, "maxfiles_lim"),
+    "service_description"  : "Number of open files",
+    "has_perfdata"         : True,
+}
+
+check_info["hpux_tunables.semmni"] = {
+    "check_function"       : lambda i, p, o: check_hpux_tunables(i, p, o, "semmni", "semaphore ids"),
+    "inventory_function"   : lambda i: inventory_hpux_tunables(i, "semmni"),
+    "service_description"  : "Number of IPC Semaphore IDs",
+    "has_perfdata"         : True,
+}
+
+check_info["hpux_tunables.shmseg"] = {
+    "check_function"       : lambda i, p, o: check_hpux_tunables(i, p, o, "shmseg", "segments"),
+    "inventory_function"   : lambda i: inventory_hpux_tunables(i, "shmseg"),
+    "service_description"  : "Number of shared memory segments",
+    "has_perfdata"         : True,
+}
+
+check_info["hpux_tunables.semmns"] = {
+    "check_function"       : lambda i, p, o: check_hpux_tunables(i, p, o, "semmns", "entries"),
+    "inventory_function"   : lambda i: inventory_hpux_tunables(i, "semmns"),
+    "service_description"  : "Number of IPC Semaphores",
+    "has_perfdata"         : True,
+}
+
+# There is no check for nfile, systems that support kcusage don't have the
+# limit anymore (AFAIR)

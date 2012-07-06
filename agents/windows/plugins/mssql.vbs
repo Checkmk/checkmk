@@ -144,7 +144,7 @@ For Each instId In instIds.Keys
     Dim lastBackupDate
     wscript.echo "<<<mssql_backup>>>"
     For Each dbName in dbNames.Keys
-        RS.open "SELECT DATEDIFF(s, '19700101', MAX(backup_finish_date)) AS last_backup_date " & _
+        RS.open "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(backup_finish_date)), '19700101'), 120) AS last_backup_date " & _
                 "FROM msdb.dbo.backupset " & _
                 "WHERE database_name = '" & dbName & "'", CONN
         Do While Not RS.Eof

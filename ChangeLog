@@ -1,4 +1,6 @@
 1.2.0p3:
+    Checks & Agents:
+    * mssql_backup: Fixed problems with datetime/timezone calculations
     BI:
     * Great speed up of rule compilation in large environments
 

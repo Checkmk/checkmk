@@ -850,8 +850,9 @@ class html:
         if self.req.header_sent:
             self.bottom_focuscode()
             corner_text = ""
-            corner_text += '<div id=foot_refresh>%s</div>' % \
-                    _("refresh: <div id=foot_refresh_time>%s</div> secs") % self.browser_reload
+            corner_text += '<div style="display: %s" id=foot_refresh>%s</div>' % (
+                (self.browser_reload and "inline-block" or "none",
+                 _("refresh: <div id=foot_refresh_time>%s</div> secs") % self.browser_reload)) 
             if self.render_headfoot:
                 si = self.render_status_icons()
                 self.write("<table class=footer><tr>"

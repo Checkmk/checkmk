@@ -161,6 +161,11 @@ body.main table.footer img.statusicon {
     top: -3px;
 }
 
+div#foot_refresh, div#foot_refresh_time {
+    display: inline-block;
+}
+
+
 /*-------------------------------------------------------------------------.
 |         ____            _            _   _ _       _                     |
 |        / ___|___  _ __ | |_ _____  _| |_| (_)_ __ | | _____              |

@@ -342,6 +342,7 @@ def find_matching_services(what, calllist):
                             continue
                         m = regex(service_re).match(service)
                         if m:
+                            svc_matches = tuple(m.groups())
                             matches.add(host_matches + svc_matches)
                         else:
                             service_nomatch_cache.add(mo)

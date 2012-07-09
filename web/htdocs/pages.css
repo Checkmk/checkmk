@@ -779,3 +779,16 @@ table.data div.help {
     box-shadow: 0 0 3px #000;
 }
 
+div.help table.help {
+    border-collapse: collapse;
+    empty-cells: show;
+}
+
+div.help table.help td {
+    border: 1px solid black;
+    vertical-align: top;
+}
+
+div.help table.help td.tt {
+    font-family: courier, monospace;
+}

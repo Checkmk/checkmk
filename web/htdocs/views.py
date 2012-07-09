@@ -1390,9 +1390,9 @@ def render_view(view, rows, datasource, group_painters, painters,
     if show_footer:
         pid = os.getpid()
         if html.live.successfully_persisted():
-            html.add_status_icon("persist", "Reused persistent livestatus connection from earlier request (PID %d)" % pid)
+            html.add_status_icon("persist", _("Reused persistent livestatus connection from earlier request (PID %d)") % pid) 
         if bi.reused_compilation():
-            html.add_status_icon("aggrcomp", "Reused cached compiled BI aggregations (PID %d)" % pid)
+            html.add_status_icon("aggrcomp", _("Reused cached compiled BI aggregations (PID %d)") % pid)
 
         html.bottom_focuscode()
         if 'Z' in display_options:

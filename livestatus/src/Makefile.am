@@ -28,7 +28,8 @@ unixcat_LDADD = -lpthread
 
 livecheck_SOURCES = livecheck.c strutil.cc check_icmp.c
 
-pkglib_LIBRARIES = livestatus.so livecheck
+pkglib_LIBRARIES = livestatus.so 
+pkglib_PROGRAMS = livecheck
 livestatus_so_SOURCES = \
 	AndingFilter.cc ClientQueue.cc Column.cc ColumnsColumn.cc CustomVarsExplicitColumn.cc \
 	ContactsColumn.cc CustomVarsColumn.cc CustomVarsFilter.cc DoubleColumn.cc \
@@ -51,7 +52,7 @@ livestatus_so_SOURCES = \
 	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc pnp4nagios.cc \
 	ContactgroupsColumn.cc opids.cc auth.cc livechecking.c
 
-livecheck: livecheck.c strutil.cc check_icmp.c 
+livecheck$(EXEEXT): livecheck.c strutil.cc check_icmp.c 
 if HAVE_DIET
 	diet -v $(CC) -Wno-deprecated-declarations $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
 else

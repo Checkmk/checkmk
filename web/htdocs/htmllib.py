@@ -879,10 +879,10 @@ class html:
     def render_status_icons(self):
         h = ""
         if True: # self.req.method == "GET":
-            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="URL to this frame"></a>\n' % \
-                 self.makeuri([])
-            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="URL to this page including sidebar"></a>\n' % \
-                 ("index.py?" + urlencode_vars([("start_url", self.makeuri([]))]))
+            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \ 
+                 (self.makeuri([]), _("URL to this frame")) 
+            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="%s"></a>\n' % \
+                 ("index.py?" + urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar"))
         for img, tooltip in self.status_icons.items():
             h += '<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip)
         return h

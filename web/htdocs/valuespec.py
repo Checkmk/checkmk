@@ -557,6 +557,7 @@ class ListOf(ValueSpec):
         self._add_label = kwargs.get("add_label", _("Add new element"))
         self._movable = kwargs.get("movable", True)
         self._totext = kwargs.get("totext")
+        self._allow_empty = kwargs.get("allow_empty", True)
 
     def del_button(self, vp, nr):
         js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
@@ -655,6 +656,8 @@ class ListOf(ValueSpec):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n+1))
 
     def validate_value(self, value, varprefix):
+        if not self._allow_empty and len(value) == 0:
+            raise MKUserError(varprefix, _("Please specify at least on entry"))
         for n, v in enumerate(value):
             self._valuespec.validate_value(v, varprefix + "_%d" % (n+1))
 

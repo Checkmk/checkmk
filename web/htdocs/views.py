@@ -2082,6 +2082,12 @@ def core_command(what, row):
 def command_executor_livestatus(command, site):
     html.live.command("[%d] %s" % (int(time.time()), command), site)
 
+# make gettext localize some magic texts
+_("services")
+_("hosts")
+_("commands")
+_("downtimes")
+
 # Returns:
 # True -> Actions have been done
 # False -> No actions done because now rows selected

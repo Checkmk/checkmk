@@ -54,9 +54,9 @@ livestatus_so_SOURCES = \
 
 livecheck$(EXEEXT): livecheck.c strutil.cc check_icmp.c 
 if HAVE_DIET
-	diet -v $(CC) -Wno-deprecated-declarations $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
+	diet -v $(CC) -x c -Wno-deprecated-declarations $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
 else
-	$(CC) -Wno-deprecated-declarations $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
+	$(CC) -x c -Wno-deprecated-declarations $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
 endif
 
 livestatus_so_CXXFLAGS = -I$(top_srcdir)/nagios -fPIC

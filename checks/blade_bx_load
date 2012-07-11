@@ -24,29 +24,33 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_blade_bx_blades(item, no_params, info):
-    blade_status_codes = { 1 : "Unknown", 2 : "OK", 3 : "not-present", 4 : "Error", 5 : "Critical", 6 : "Standby" }
-    for blade_id, blade_status, blade_serial, blade_name  in info:
-        state = 0 
-        blade_status = saveint(blade_status)
-        if blade_id == item:
-            if blade_status == 4  or blade_status == 5:
-                state = 2
-            
-            return (state, nagios_state_names[state] + " - Blade %s %s %s Status %s " % (blade_id, blade_name, blade_serial, blade_status_codes.get(blade_status, 1)))  
+blade_bx_cpuload_default_levels = ( 5, 20 )
 
-    return (3, "UNKNOWN - no data for '%s' in SNMP info" % item)
+def check_blade_bx_load(item, params, info):
+    try:
+        load = []
+        for i in [ 0, 1, 2 ]:
+            load.append(float(info[i][2]))
+    except:
+        return (3, "Unknown - invalid or incomplete output from plugin %s - %s - %s " % (float(info[0][2]), float(info[1][2]), float(info[2][2]) ) )
 
-check_info['blade_bx_blades'] = {
-    "check_function" : check_blade_bx_blades,
-    "inventory_function" : lambda info: [ (line[0], None) for line in info if int(line[1]) != 3] ,
-    "service_description" : "Blade %s",
-    "has_perfdata" : False,
-    "snmp_info" : (".1.3.6.1.4.1.7244.1.1.1.4.2.1.1", [
-                                                      1, # bladeId
-                                                      2, # bladestatus
-                                                      5, # Serialnumber 
-                                                      21, # Name
-   ]),
-   "snmp_scan_function" : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0"),
+    warn, crit = params
+
+    perfdata = [ ('load' + str(z), l, warn, crit, 0 ) for (z,l) in [ (1,load[0]), (5,load[1]), (15, load[2]) ] ]
+
+    if load[2] >= crit:
+        return (2, "CRIT - 15min Load %.2f (critical at %.2f)" % (load[2], crit), perfdata)
+    elif load[2] >= warn:
+        return (1, "WARN - 15min Load %.2f (warning at %.2f)" % (load[2], warn), perfdata)
+    else:
+        return (0, "OK - 15min Load %.2f " % (load[2]), perfdata)
+
+check_info['blade_bx_load'] = {
+    "check_function" : check_blade_bx_load,
+    "inventory_function" : lambda info: [ (None, "blade_bx_cpuload_default_levels")] ,
+    "service_description" : "Load",
+    "has_perfdata" : True,
+    "snmp_info" : (".1.3.6.1.4.1.2021.10.1", [ 1, 2, 6 ]),
+    "snmp_scan_function" : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0"),
+    "group" : "cpu_utilization",
 }

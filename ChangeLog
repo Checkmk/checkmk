@@ -1,6 +1,7 @@
 1.2.0p3:
     Checks & Agents:
     * mssql_backup: Fixed problems with datetime/timezone calculations
+    * New Checks for Siemens Blades (BX600)
 
     WATO:
     * FIX: remove line about number of rules in rule set overview

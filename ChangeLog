@@ -3,6 +3,10 @@
     * mssql_backup: Fixed problems with datetime/timezone calculations
     * New Checks for Siemens Blades (BX600)
 
+    WATO:
+    * FIX: remove line about number of rules in rule set overview
+      (that garbled the logical layout)
+
     BI:
     * Great speed up of rule compilation in large environments
 

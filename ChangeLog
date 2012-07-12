@@ -13,6 +13,9 @@
     Livecheck:
     * FIX: Compile livecheck also if diet libc is missing
 
+    Multisite:
+    * FIX: fix bug in Age ValueSpec: days had been ignored
+
 1.2.0p2:
     Core:
     * simulation_mode: legacy_checks, custom_checks and active_checks

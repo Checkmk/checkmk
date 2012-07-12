@@ -36,12 +36,15 @@ def check_blade_bx_temp(item, params, info):
     unit = "°C"
     for index, status, descr, level_warn, level_crit, temp, crit_react in info:
         status = saveint(status)
+        level_crit = saveint(level_crit)
+        level_warn = saveint(level_warn)
+        temp = saveint(temp)
         if descr != item: continue
-        max_temp = int(level_crit) + (int(level_crit) * 15 /100)                # critical + 15%
-        perfdata=[ ('temp', temp, level_warn, level_crit, "0", max_temp ) ]
-        
         if params != None:
             level_warn, level_crit = params
+
+        max_temp = level_crit + (level_crit * 15 /100)                # critical + 15%
+        perfdata=[ ('temp', temp, level_warn, level_crit, "0", max_temp ) ]
 
         if crit_react != "2":
             return (2, "CRIT - Temperature not present or poweroff", perfdata)

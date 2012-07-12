@@ -157,7 +157,7 @@ def check_windows_services(item, params, info):
             best_info = state, start_type
             best_running_on = running_on
 
-    infotext = nagios_state_names[best_state] + " - %s (start type is %s): %s" % (best_info , item)
+    infotext = nagios_state_names[best_state] + " - " + item + ": %s (start type is %s)" % best_info
     if best_running_on:
         infotext += " (running on: %s)" % best_running_on
 

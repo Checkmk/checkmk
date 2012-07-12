@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def check_blade_bx_temp(item, no_params, info):
+def check_blade_bx_temp(item, params, info):
     blade_bx_status = { 1 : "unknow", 
                         2 : "sensor-disabled", 
                         3 : "ok", 
@@ -36,8 +36,14 @@ def check_blade_bx_temp(item, no_params, info):
     unit = "°C"
     for index, status, descr, level_warn, level_crit, temp, crit_react in info:
         status = saveint(status)
+        level_crit = saveint(level_crit)
+        level_warn = saveint(level_warn)
+        temp = saveint(temp)
         if descr != item: continue
-        max_temp = int(level_crit) + (int(level_crit) * 15 /100)                # critical + 15%
+        if params != None:
+            level_warn, level_crit = params
+
+        max_temp = level_crit + (level_crit * 15 /100)                # critical + 15%
         perfdata=[ ('temp', temp, level_warn, level_crit, "0", max_temp ) ]
 
         if crit_react != "2":
@@ -69,5 +75,6 @@ check_info['blade_bx_temp'] = {
                                                       7, # crit react
    ]),
    "snmp_scan_function" : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0"),
+   "group" : "hw_temperature",
 }
 

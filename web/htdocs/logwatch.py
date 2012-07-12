@@ -174,7 +174,7 @@ def show_file(host, filename):
         html.footer()
         return
 
-    if config.may("act") and may_see(host):
+    if config.may("general.act") and may_see(host):
         html.context_button(_("Clear Log"), "logwatch.py?host=%s&amp;file=%s&amp;ack=1" % \
                    (htmllib.urlencode(host), htmllib.urlencode(filename) ), 'delete')
 
@@ -226,7 +226,7 @@ def do_log_ack(host, filename):
         html.footer()
         return
 
-    if not (config.may("act") and may_see(host)):
+    if not (config.may("general.act") and may_see(host)):
         html.write("<h1 class=error>"+_('Permission denied')+"</h1>\n")
         html.write("<div class=error>" + _('You are not allowed to acknowledge the logs of the host %s</div>') % htmllib.attrencode(host))
         html.footer()
@@ -357,7 +357,7 @@ def all_logs():
     return logs
 
 def may_see(host):
-    if config.may("see_all"):
+    if config.may("general.see_all"):
         return True
 
     # FIXME: Or maybe make completely transparent and add pseudo local_connection() to Single livestatus clas?

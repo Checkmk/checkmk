@@ -121,7 +121,7 @@ def load_services():
         tags = vars.get("TAGS", "").split(" ")
         entry = (tags, svcs, childs, parents)
         services[(site, host)] = entry
-        services_by_hostname.setdefault(host, []).append(entry)
+        services_by_hostname.setdefault(host, []).append((site, entry))
 
     return services, services_by_hostname
 
@@ -288,10 +288,10 @@ def find_matching_services(what, calllist):
     if host_re.startswith("^(") and host_re.endswith(")$"):
         middle = host_re[2:-2]
         if middle in g_user_cache["services_by_hostname"]:
-            entries = [ (("", host_re), entry) for entry in g_user_cache["services_by_hostname"][middle] ]
+            entries = [ ((e[0], host_re), e[1]) for e in g_user_cache["services_by_hostname"][middle] ]
             host_re = "(.*)"
     elif not honor_site and not '*' in host_re and not '$' in host_re and not '|' in host_re:
-        entries = [ (("", host_re), entry) for entry in g_user_cache["services_by_hostname"][host_re] ]
+        entries = [ ((e[0], host_re), e[1]) for e in g_user_cache["services_by_hostname"][host_re] ]
     else:
         entries = g_user_cache["services"].items()
 
@@ -621,7 +621,7 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
     found = []
     honor_site = SITE_SEP in host_re
     if not honor_site and not '*' in host_re and not '$' in host_re and not '|' in host_re:
-        entries = [ (("", host_re), entry) for entry in g_user_cache["services_by_hostname"][host_re] ]
+        entries = [ ((e[0], host_re), e[1]) for e in g_user_cache["services_by_hostname"][host_re] ]
     else:
         entries = g_user_cache["services"].items()
 

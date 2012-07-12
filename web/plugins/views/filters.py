@@ -337,11 +337,11 @@ class FilterSite(Filter):
         if config.is_multisite():
             site = html.var("site")
             if site:
-                return "%s: %s\n" % (_('Sites'), html.var("site", ""))
+                return "Sites: %s\n" % (html.var("site", ""))
             elif not self.enforce:
                 return ""
             else:
-                return "%s:\n" % _('Sites') # no site at all
+                return "Sites:\n" # no site at all
         else:
             return ""
 

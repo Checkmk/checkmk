@@ -937,10 +937,10 @@ class html:
         count = len(rows)
         if limit != None and count >= limit + 1:
             text = _("Your query produced more than %d results. ") % limit
-            if self.var("limit", "soft") == "soft" and config.may("ignore_soft_limit"):
+            if self.var("limit", "soft") == "soft" and config.may("general.ignore_soft_limit"):
                 text += '<a href="%s">%s</a>' % \
                              (self.makeuri([("limit", "hard")]), _('Repeat query and allow more results.'))
-            elif self.var("limit") == "hard" and config.may("ignore_hard_limit"):
+            elif self.var("limit") == "hard" and config.may("general.ignore_hard_limit"):
                 text += '<a href="%s">%s</a>' % \
                              (self.makeuri([("limit", "none")]), _('Repeat query without limit.'))
             self.show_warning(text)

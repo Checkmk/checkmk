@@ -122,7 +122,7 @@ def render_views():
         render_topic(topic, s)
 
     links = []
-    if config.may("edit_views"):
+    if config.may("general.edit_views"):
         if config.debug:
             links.append((_("EXPORT"), "export_views.py"))
         links.append((_("EDIT"), "edit_views.py"))

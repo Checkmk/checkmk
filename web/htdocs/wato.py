@@ -8254,7 +8254,6 @@ def mode_edit_role(phase):
     # Permissions
     base_role_id = role.get("basedon", id)
 
-    forms.header(_("General permissions"))
     html.help(
        _("When you leave the permissions at &quot;default&quot; then they get their "
          "settings from the factory defaults (for builtin roles) or from the "
@@ -8262,26 +8261,29 @@ def mode_edit_role(phase):
          "may change due to software updates. When choosing another base role, all "
          "permissions that are on default will reflect the new base role."))
 
-    current_section = None
-    for perm in config.permissions_by_order:
-        pname = perm["name"]
-        if "." in pname:
-            section = pname.split(".")[0]
-            section_title = config.permission_sections[section]
-            if section != current_section:
-                forms.header(section_title, False)
-                current_section = section
-        forms.section(perm["title"])
+    # Loop all permission sections, but sorted plz
+    for section, (prio, section_title) in sorted(config.permission_sections.iteritems(),
+                                                 key = lambda x: x[1][0], reverse = True):
+        forms.header(section_title, False)
 
-        pvalue = role["permissions"].get(pname)
-        def_value = base_role_id in perm["defaults"]
+        # Loop all permissions
+        for perm in config.permissions_by_order:
+            pname = perm["name"]
+            this_section = pname.split(".")[0]
+            if section != this_section:
+                continue # Skip permissions of other sections
 
-        choices = [ ( "yes", _("yes")),
-                    ( "no", _("no")),
-                    ( "default", _("default (%s)") % (def_value and _("yes") or _("no") )) ]
-        html.select("perm_" + pname, choices, { True: "yes", False: "no" }.get(pvalue, "default"), attrs={"style": "width: 130px;"} )
+            forms.section(perm["title"])
 
-        html.help(perm["description"])
+            pvalue = role["permissions"].get(pname)
+            def_value = base_role_id in perm["defaults"]
+
+            choices = [ ( "yes", _("yes")),
+                        ( "no", _("no")),
+                        ( "default", _("default (%s)") % (def_value and _("yes") or _("no") )) ]
+            html.select("perm_" + pname, choices, { True: "yes", False: "no" }.get(pvalue, "default"), attrs={"style": "width: 130px;"} )
+
+            html.help(perm["description"])
 
     forms.end() 
     html.button("save", _("Save"))
@@ -8315,11 +8317,20 @@ def load_roles():
     try:
         vars = { "roles" : roles }
         execfile(filename, vars, vars)
-        # Reflect the data in the roles dict kept in the config module Needed
+        # Make sure that "general." is prefixed to the general permissions
+        # (due to a code change that converted "use" into "general.use", etc.
+        for role in roles.values():
+            for pname, pvalue in role["permissions"].items():
+                if "." not in pname:
+                    del role["permissions"][pname]
+                    role["permissions"]["general." + pname] = pvalue
+
+        # Reflect the data in the roles dict kept in the config module needed
         # for instant changes in current page while saving modified roles.
         # Otherwise the hooks would work with old data when using helper
         # functions from the config module
         config.roles.update(vars['roles'])
+
         return vars["roles"]
 
     except Exception, e:
@@ -10406,7 +10417,7 @@ def page_user_profile():
     if not config.user_id:
         raise MKUserError(None, _('Not logged in.'))
 
-    if not config.may('edit_profile') and not config.may('change_password'):
+    if not config.may('general.edit_profile') and not config.may('general.change_password'):
         raise MKAuthException(_("You are not allowed to edit your user profile."))
 
     success = None
@@ -10415,7 +10426,7 @@ def page_user_profile():
             users = load_users()
 
             # Profile edit (user options like language etc.)
-            if config.may('edit_profile'):
+            if config.may('general.edit_profile'):
                 set_lang = html.var('_set_lang')
                 language = html.var('language')
                 # Set the users language if requested
@@ -10437,7 +10448,7 @@ def page_user_profile():
                 load_language(config.get_language())
 
             # Change the password if requested
-            if config.may('change_password'):
+            if config.may('general.change_password'):
                 password  = html.var('password')
                 password2 = html.var('password2', '')
                 if password:
@@ -10475,10 +10486,10 @@ def page_user_profile():
     forms.section(_("Name"), simple=True)
     html.write(config.user_id)
 
-    if config.may('edit_profile'):
+    if config.may('general.edit_profile'):
         select_language(config.get_language(''))
 
-    if config.may('change_password'):
+    if config.may('general.change_password'):
         forms.section(_("Password"))
         html.password_input('password')
 

@@ -156,7 +156,7 @@ def connect_to_livestatus(html):
 
     # If Multisite is retricted to data user is a nagios contact for,
     # we need to set an AuthUser: header for livestatus
-    if not config.may("see_all"):
+    if not config.may("general.see_all"):
         html.live.set_auth_user('read',   config.user_id)
         html.live.set_auth_user('action', config.user_id)
 
@@ -293,8 +293,10 @@ def handler(req, profiling = True):
         # All plugins might have to be reloaded due to a language change
         load_all_plugins()
 
+        import default_permissions
+
         # User allowed to login at all?
-        if not config.may("use"):
+        if not config.may("general.use"):
             reason = _("You are not authorized to use Check_MK Multisite. Sorry. "
                        "You are logged in as <b>%s</b>.") % config.user_id
             if len(config.user_role_ids):

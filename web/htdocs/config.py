@@ -163,8 +163,10 @@ def declare_permission(name, title, description, defaults):
 
     permissions_by_name[name] = perm
 
-def declare_permission_section(name, title):
-    permission_sections[name] = title
+def declare_permission_section(name, title, prio = 0):
+    # Prio can be a number which is used for sorting. Higher numbers will
+    # be listed first, e.g. in the edit dialogs
+    permission_sections[name] = (prio, title)
 
 # Compute permissions for HTTP user and set in
 # global variables. Also store user.
@@ -209,10 +211,10 @@ def login(u):
 
     # Make sure, admin can restore permissions in any case!
     if user_id in admin_users:
-        user_permissions["use"] = True        # use Multisite
-        user_permissions["wato.use"] = True   # enter WATO
-        user_permissions["wato.edit"] = True  # make changes in WATO...
-        user_permissions["wato.users"] = True # ... with access to user management
+        user_permissions["general.use"] = True # use Multisite
+        user_permissions["wato.use"]    = True # enter WATO
+        user_permissions["wato.edit"]   = True # make changes in WATO...
+        user_permissions["wato.users"]  = True # ... with access to user management
 
     # Prepare users' own configuration directory
     global user_confdir
@@ -272,6 +274,11 @@ def may_with_roles(some_role_ids, pname):
         role = roles[role_id]
 
         he_may = role.get("permissions", {}).get(pname)
+        # Handle compatibility with permissions without "general." that
+        # users might have saved in their own custom roles.
+        if he_may == None and pname.startswith("general."):
+            he_may = role.get("permissions", {}).get(pname[8:])
+
         if he_may == None: # not explicitely listed -> take defaults
             if "basedon" in role:
                 base_role_id = role["basedon"]
@@ -564,111 +571,6 @@ def load_default_values(into):
     into["wato_activation_method"] = 'restart'
     into["wato_write_nagvis_auth"] = False
     into["wato_hidden_users"] = []
-
-
-#   .----------------------------------------------------------------------.
-#   |        ____                     _         _                          |
-#   |       |  _ \ ___ _ __ _ __ ___ (_)___ ___(_) ___  _ __  ___          |
-#   |       | |_) / _ \ '__| '_ ` _ \| / __/ __| |/ _ \| '_ \/ __|         |
-#   |       |  __/  __/ |  | | | | | | \__ \__ \ | (_) | | | \__ \         |
-#   |       |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   | Declare general permissions for Multisite                            |
-#   '----------------------------------------------------------------------'
-
-declare_permission("use",
-     _("Use Multisite at all"),
-     _("Users without this permission are not let in at all"),
-     [ "admin", "user", "guest" ])
-
-declare_permission("edit_permissions",
-     _("Configure permissions"),
-     _("Configure, which user role has which permissions"),
-     [ "admin" ])
-
-declare_permission("see_all",
-     _("See all Nagios objects"),
-     _("See all objects regardless of contacts and contact groups. "
-       "If combined with 'perform commands' then commands may be done on all objects."),
-     [ "admin", "guest" ])
-
-declare_permission("edit_views",
-     _("Edit views"),
-     _("Create own views and customize builtin views"),
-     [ "admin", "user" ])
-
-declare_permission("publish_views",
-     _("Publish views"),
-     _("Make views visible and usable for other users"),
-     [ "admin", "user" ])
-
-declare_permission("force_views",
-     _("Modify builtin views"),
-     _("Make own published views override builtin views for all users"),
-     [ "admin" ])
-
-declare_permission("view_option_columns",
-     _("Change view display columns"),
-     _("Interactively change the number of columns being displayed by a view (does not edit or customize the view)"),
-     [ "admin", "user", "guest" ])
-
-declare_permission("view_option_refresh",
-     _("Change view display refresh"),
-     _("Interactively change the automatic browser reload of a view being displayed (does not edit or customize the view)"),
-     [ "admin", "user" ])
-
-declare_permission("painter_options",
-     _("Change column display options"),
-     _("Some of the display columns offer options for customizing their output. "
-     "For example time stamp columns can be displayed absolute, relative or "
-     "in a mixed style. This permission allows the user to modify display options"),
-     [ "admin", "user", "guest" ])
-
-declare_permission("act",
-     _("Perform commands"),
-     _("Allows users to perform Nagios commands. If no further permissions "
-       "are granted, actions can only be done on objects one is a contact for"),
-     [ "admin", "user" ])
-
-declare_permission("see_sidebar",
-     _("Use Check_MK sidebar"),
-     _("Without this permission the Check_MK sidebar will be invisible"),
-     [ "admin", "user", "guest" ])
-
-declare_permission("configure_sidebar",
-     _("Configure sidebar"),
-     _("This allows the user to add, move and remove sidebar snapins."),
-     [ "admin", "user" ])
-
-declare_permission('edit_profile',
-    _('Edit the user profile'),
-    _('Permits the user to change the user profile settings.'),
-    [ 'admin', 'user' ]
-)
-
-declare_permission('change_password',
-    _('Edit the user password'),
-    _('Permits the user to change the password.'),
-    [ 'admin', 'user' ]
-)
-
-declare_permission('logout',
-    _('Logout'),
-    _('Permits the user to logout.'),
-    [ 'admin', 'user', 'guest' ]
-)
-
-declare_permission("ignore_soft_limit",
-     _("Ignore soft query limit"), 
-     _("Allows to ignore the soft query limit imposed upon the number of datasets returned by a query"), 
-     [ "admin", "user" ])
-
-declare_permission("ignore_hard_limit",
-     _("Ignore hard query limit"), 
-     _("Allows to ignore the hard query limit imposed upon the number of datasets returned by a query"),
-     [ "admin" ])
 
 # Make sure, we have all values set right now - until
 # the configuration will be loaded

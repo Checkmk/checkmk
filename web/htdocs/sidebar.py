@@ -119,7 +119,7 @@ def load_user_config():
     return [ entry for entry in user_config if entry[1] != "off" and config.may("sidesnap." + entry[0])]
 
 def save_user_config(user_config):
-    if config.may("configure_sidebar"):
+    if config.may("general.configure_sidebar"):
         config.save_user_file("sidebar", user_config)
 
 def sidebar_head():
@@ -131,14 +131,14 @@ def sidebar_head():
 
 def sidebar_foot():
     html.write('<div id="side_footer">')
-    if config.may("configure_sidebar"):
+    if config.may("general.configure_sidebar"):
         html.icon_button("sidebar_add_snapin.py", _("Add snapin to the sidebar"), "sidebar_addsnapin", 
                          target="main")
-    if config.may("edit_profile") or config.may("change_password"):
+    if config.may("general.edit_profile") or config.may("general.change_password"):
         html.icon_button("user_profile.py", _("Edit your personal settings, change your password"), "sidebar_settings",
                          target="main")
         # html.write('<li><a class=profile target="main" href="user_profile.py" title="%s"></a></li>' % _('Edit user profile'))
-    if config.may("logout"):
+    if config.may("general.logout"):
         html.icon_button("logout.py", _("Log out"), "sidebar_logout", target="_top")
         # html.write('<li><a class=logout target="_top" href="logout.py" title="%s"></a></li>' % _('Logout'))
     html.write('</ul>')
@@ -147,7 +147,7 @@ def sidebar_foot():
 
 # Standalone sidebar
 def page_side():
-    if not config.may("see_sidebar"):
+    if not config.may("general.see_sidebar"):
         return
     html.html_head(_("Check_MK Sidebar"), javascripts=["sidebar"], stylesheets=["sidebar", "status"])
     html.write('<body class="side" onload="initScrollPos(); setSidebarHeight();" onunload="storeScrollPos()">\n')
@@ -210,7 +210,7 @@ def render_snapin(name, state):
     html.write('<div class="head %s" ' % headclass)
 
     # If the user may modify the sidebar then add code for dragging the snapin
-    if config.may("configure_sidebar"):
+    if config.may("general.configure_sidebar"):
         html.write("onmouseover=\"document.body.style.cursor='move';\" "
                    "onmouseout=\"document.body.style.cursor='';\" "
                    "onmousedown=\"snapinStartDrag(event)\" onmouseup=\"snapinStopDrag(event)\">")
@@ -224,7 +224,7 @@ def render_snapin(name, state):
                "side", "toggle_sidebar_snapin(this, '%s')" % toggle_url, 'snapin_'+name)
     html.write('</div>')
 
-    if config.may("configure_sidebar"):
+    if config.may("general.configure_sidebar"):
         # Button for closing (removing) a snapin
         html.write('<div class="closesnapin">')
         iconbutton("closesnapin", "sidebar_openclose.py?name=%s&state=off" % name, 
@@ -294,7 +294,7 @@ def ajax_snapin():
         snapin_exception(e)
 
 def move_snapin():
-    if not config.may("configure_sidebar"):
+    if not config.may("general.configure_sidebar"):
         return
 
     snapname_to_move = html.var("name")
@@ -324,7 +324,7 @@ def move_snapin():
     save_user_config(new_config)
 
 def page_add_snapin():
-    if not config.may("configure_sidebar"):
+    if not config.may("general.configure_sidebar"):
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
     html.header(_("Available snapins"), stylesheets=["pages", "sidebar", "status"])

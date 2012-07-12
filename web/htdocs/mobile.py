@@ -244,7 +244,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     title = views.view_title(view)
     navbar = [ ( "data",     _("Results"), "grid", 'results_button'),
                ( "filter",   _("Filter"),   "search", False )]
-    if config.may("act"):
+    if config.may("general.act"):
         navbar.append(( "commands", _("Commands"), "gear", False ))
 
     # Should we show a page with context links?
@@ -264,7 +264,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 
     elif page == "commands":
             # Page: Commands
-	    if config.may("act"):
+	    if config.may("general.act"):
 		jqm_page_header(_("Commands"), left_button=home, id="commands")
 		show_commands = True
 		if html.has_var("_do_actions"):

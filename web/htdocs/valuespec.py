@@ -144,7 +144,7 @@ class Age(ValueSpec):
         html.write("<div>")
         html.number_input(varprefix+'_days', days, 2)
         html.write(" %s " % _("days"))
-        html.number_input(varprefix+'_hour', hours, 2)
+        html.number_input(varprefix+'_hours', hours, 2)
         html.write(" %s " % _("hours"))
         html.number_input(varprefix+'_minutes', minutes, 2)
         html.write(" %s " % _("min"))
@@ -153,7 +153,12 @@ class Age(ValueSpec):
         html.write("</div>")
 
     def from_html_vars(self, varprefix):
-            return (saveint(html.var(varprefix+'_hour'))*3600) + (saveint(html.var(varprefix+'_minutes'))*60) + saveint(html.var(varprefix+'_seconds'))
+            return (
+                   saveint(html.var(varprefix+'_days')) * 3600 * 24
+                 + saveint(html.var(varprefix+'_hours')) * 3600
+                 + saveint(html.var(varprefix+'_minutes')) * 60 
+                 + saveint(html.var(varprefix+'_seconds'))
+            )
 
     def value_to_text(self, value):
         days,    rest    = divmod(value, 60*60*24)

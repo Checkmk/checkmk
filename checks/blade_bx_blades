@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -22,32 +24,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# logwatch.cfg
-# This file configures mk_logwatch. Define your logfiles
-# and patterns to be looked for here.
+def check_blade_bx_blades(item, no_params, info):
+    blade_status_codes = { 1 : "Unknown", 2 : "OK", 3 : "not-present", 4 : "Error", 5 : "Critical", 6 : "Standby" }
+    for blade_id, blade_status, blade_serial, blade_name  in info:
+        state = 0 
+        blade_status = saveint(blade_status)
+        if blade_id == item:
+            if blade_status == 4  or blade_status == 5:
+                state = 2
+            
+            return (state, nagios_state_names[state] + " - Blade %s %s %s Status %s " % (blade_id, blade_name, blade_serial, blade_status_codes.get(blade_status, 1)))  
 
-# Name one or more logfiles
-/var/log/messages
-# Patterns are indented with one space are prefixed with:
-# C: Critical messages
-# W: Warning messages 
-# I: ignore these lines (OK)
-# The first match decided. Lines that do not match any pattern
-# are ignored
- C Fail event detected on md device
- I mdadm.*: Rebuild.*event detected
- W mdadm\[
- W ata.*hard resetting link
- W ata.*soft reset failed (.*FIS failed)
+    return (3, "UNKNOWN - no data for '%s' in SNMP info" % item)
 
-/var/log/auth.log
- W sshd.*Corrupted MAC on input
-
-/var/log/syslog /var/log/kern.log
- C panic
- C Oops
- W .*Unrecovered read error - auto reallocate failed
-
-# Globbing patterns are allowed:
-# /sapdata/*/saptrans.log
-#  C ORA-
+check_info['blade_bx_blades'] = {
+    "check_function" : check_blade_bx_blades,
+    "inventory_function" : lambda info: [ (line[0], None) for line in info if int(line[1]) != 3] ,
+    "service_description" : "Blade %s",
+    "has_perfdata" : False,
+    "snmp_info" : (".1.3.6.1.4.1.7244.1.1.1.4.2.1.1", [
+                                                      1, # bladeId
+                                                      2, # bladestatus
+                                                      5, # Serialnumber 
+                                                      21, # Name
+   ]),
+   "snmp_scan_function" : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0"),
+}

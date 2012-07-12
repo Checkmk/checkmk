@@ -850,8 +850,9 @@ class html:
         if self.req.header_sent:
             self.bottom_focuscode()
             corner_text = ""
-            corner_text += '<div id=foot_refresh>%s</div>' % \
-                    _("refresh: <div id=foot_refresh_time>%s</div> secs") % self.browser_reload
+            corner_text += '<div style="display: %s" id=foot_refresh>%s</div>' % (
+                (self.browser_reload and "inline-block" or "none",
+                 _("refresh: <div id=foot_refresh_time>%s</div> secs") % self.browser_reload)) 
             if self.render_headfoot:
                 si = self.render_status_icons()
                 self.write("<table class=footer><tr>"
@@ -878,10 +879,10 @@ class html:
     def render_status_icons(self):
         h = ""
         if True: # self.req.method == "GET":
-            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="URL to this frame"></a>\n' % \
-                 self.makeuri([])
-            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="URL to this page including sidebar"></a>\n' % \
-                 ("index.py?" + urlencode_vars([("start_url", self.makeuri([]))]))
+            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
+                 (self.makeuri([]), _("URL to this frame")) 
+            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="%s"></a>\n' % \
+                 ("index.py?" + urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar"))
         for img, tooltip in self.status_icons.items():
             h += '<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip)
         return h

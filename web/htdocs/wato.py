@@ -9352,11 +9352,6 @@ def mode_rulesets(phase):
             html.write('<a class="%s" href="%s">%s</a>' % 
                       (num_rules and "nonzero" or "zero", view_url, rulespec["title"]))
             html.write('<span class=dots>%s</span></div>' % ("." * 100))
-            if num_local_rules:
-                if only_host:
-                    title = _("There are %d rules explicitely listing this host." % num_local_rules)
-                else:
-                    title = _("There are %d rules defined in the current folder." % num_local_rules)
             html.write('<div class="rulecount %s" title="%s">%d</div>' % 
                     (num_rules and "nonzero" or "zero", title, num_rules))
             html.write('</div>')

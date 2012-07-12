@@ -1,12 +1,20 @@
 1.2.0p3:
     Checks & Agents:
     * mssql_backup: Fixed problems with datetime/timezone calculations
+    * New Checks for Siemens Blades (BX600)
+
+    WATO:
+    * FIX: remove line about number of rules in rule set overview
+      (that garbled the logical layout)
 
     BI:
     * Great speed up of rule compilation in large environments
 
     Multisite:
     * FIX: fixed localization of general permissions
+
+    Livecheck:
+    * FIX: Compile livecheck also if diet libc is missing
 
 1.2.0p2:
     Core:

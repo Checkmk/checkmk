@@ -161,6 +161,11 @@ body.main table.footer img.statusicon {
     top: -3px;
 }
 
+div#foot_refresh, div#foot_refresh_time {
+    display: inline-block;
+}
+
+
 /*-------------------------------------------------------------------------.
 |         ____            _            _   _ _       _                     |
 |        / ___|___  _ __ | |_ _____  _| |_| (_)_ __ | | _____              |
@@ -774,3 +779,16 @@ table.data div.help {
     box-shadow: 0 0 3px #000;
 }
 
+div.help table.help {
+    border-collapse: collapse;
+    empty-cells: show;
+}
+
+div.help table.help td {
+    border: 1px solid black;
+    vertical-align: top;
+}
+
+div.help table.help td.tt {
+    font-family: courier, monospace;
+}

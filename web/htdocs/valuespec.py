@@ -557,6 +557,7 @@ class ListOf(ValueSpec):
         self._add_label = kwargs.get("add_label", _("Add new element"))
         self._movable = kwargs.get("movable", True)
         self._totext = kwargs.get("totext")
+        self._allow_empty = kwargs.get("allow_empty", True)
 
     def del_button(self, vp, nr):
         js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
@@ -655,6 +656,8 @@ class ListOf(ValueSpec):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n+1))
 
     def validate_value(self, value, varprefix):
+        if not self._allow_empty and len(value) == 0:
+            raise MKUserError(varprefix, _("Please specify at least on entry"))
         for n, v in enumerate(value):
             self._valuespec.validate_value(v, varprefix + "_%d" % (n+1))
 
@@ -1044,9 +1047,7 @@ class MultiSelect(ListChoice):
 
     def render_input(self, varprefix, value):
         self.load_elements()
-        # background_css_hack = 'onChange="this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor"'
-        background_css_hack = ""
-        html.write("<select %s multiple name='%s'>" % (background_css_hack, varprefix))
+        html.write("<select multiple name='%s'>" % varprefix)
         for nr, (key, title) in enumerate(self._elements):
             if key in value:
                 sel = " selected"
@@ -1521,6 +1522,9 @@ class Alternative(ValueSpec):
                 checked = vs == mvs
 
             title = vs.title()
+            if not title and nr:
+                html.write("&nbsp;&nbsp;")
+
             html.radiobutton(varprefix + "_use", str(nr), checked, title)
             if title:
                 html.write("<ul>")

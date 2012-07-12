@@ -760,7 +760,10 @@ function handleReload(url) {
     else {
         // Enforce specific display_options to get only the content data
         var display_options = getUrlParam('display_options');
-        var opts = [ 'h', 't', 'b', 'f', 'c', 'o', 'd', 'e', 'r', 'w' ];
+        // Removed 'w' to reflect original rengering mechanism during reload
+        // For example show the "Your query produced more than 1000 results." message
+        // in views even during reload.
+        var opts = [ 'h', 't', 'b', 'f', 'c', 'o', 'd', 'e', 'r' ];
         for (var i = 0; i < opts.length; i++) {
             if (display_options.indexOf(opts[i].toUpperCase()) > -1)
                 display_options = display_options.replace(opts[i].toUpperCase(), opts[i]);

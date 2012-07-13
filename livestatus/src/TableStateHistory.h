@@ -31,6 +31,9 @@
 #include "Table.h"
 #include "string.h"
 #include "LogEntry.h"
+#include "TableStateHistory.h"
+#include "Query.h"
+#include "logger.h"
 
 class Logfile;
 
@@ -57,12 +60,19 @@ public:
 	time_t  until;
 	time_t  duration;
 	int     attempt;
-	bool    hard_state; // true: hard, false: soft
-	char    state;
-	bool    in_downtime;
-	bool    in_notification_period;
+	int     hard_state; // true: hard, false: soft
+	int     state;
+	char*   state_type;
+	int     in_downtime;
+	int     in_notification_period;
+//
+//    host      *host;
+//    service   *service;
+
+	HostServiceState()
+	: state_type(""){};
 	//int*    log_ptr;
-	// int tp_state
+	// int  tp_state
 	// bool acknowledged
 };
 
@@ -80,11 +90,42 @@ public:
     void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
     void answerQuery(Query *query);
     Column *column(const char *colname); // override in order to handle current_
-    void updateHostServiceState(LogEntry &entry, HostServiceState &state);
+    void updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &state, bool only_update);
 
 private:
    bool answerQuery(Query *, Logfile *, time_t, time_t);
    SLA_Info* sla_info;
 };
+
+
+class ProcessDataSet{
+private:
+	bool   _do_nothing;
+	bool   _already_sent;
+	Query* _query;
+
+	HostServiceState* _hs_state;
+public:
+	ProcessDataSet(Query *query, HostServiceState *hs_state, bool do_nothing)
+	{
+		_query = query;
+		_hs_state = hs_state;
+		_do_nothing = do_nothing;
+		_already_sent = false;
+	}
+	bool tryProcess(){
+		if( _do_nothing )
+			return false;
+		if( _already_sent == true )
+			return false;
+		else{
+			_query->processDataset(_hs_state);
+			_hs_state->from = _hs_state->until + 1;
+			_already_sent = true;
+			return true;
+		}
+	};
+};
+
 
 #endif // TableStateHistory_h

@@ -59,7 +59,6 @@ typedef struct scheduled_downtime_struct{
 	}scheduled_downtime;
 
 
-
 #ifdef NSCORE
 int initialize_downtime_data(char *);                                /* initializes scheduled downtime data */
 int cleanup_downtime_data(char *);                                   /* cleans up scheduled downtime data */

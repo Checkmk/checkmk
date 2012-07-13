@@ -75,57 +75,25 @@ TableStateHistory::TableStateHistory()
     addColumn(new OffsetTimeColumn("time",
                 "Time of the log event (UNIX timestamp)", (char *)&(ref->time) - (char *)ref, -1));
     addColumn(new OffsetTimeColumn("from",
-                "Time of state Start (UNIX timestamp)", (char *)&(ref->from) - (char *)ref, -1));
+                "Time of HostServiceState Start (UNIX timestamp)", (char *)&(ref->from) - (char *)ref, -1));
     addColumn(new OffsetTimeColumn("until",
-                "Time at current state (UNIX timestamp)", (char *)&(ref->until) - (char *)ref, -1));
+                "Time at HostServiceState End (UNIX timestamp)", (char *)&(ref->until) - (char *)ref, -1));
     addColumn(new OffsetTimeColumn("duration",
-                 "State duration (UNIX timestamp)", (char *)&(ref->duration) - (char *)ref, -1));
+                 "HostServiceState duration (UNIX timestamp)", (char *)&(ref->duration) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("attempt",
                 "The number of the check attempt", (char *)&(ref->attempt) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("hard_state",
                  "Hard State", (char *)&(ref->state) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("in_downtime",
                  "In downtime", (char *)&(ref->in_downtime) - (char *)ref, -1));
-    addColumn(new OffsetIntColumn("hard_state",
-                 "In notifcation period", (char *)&(ref->in_notification_period) - (char *)ref, -1));
+    addColumn(new OffsetIntColumn("state",
+    		"The state of the host or service in question", (char *)&(ref->state) - (char *)ref, -1));
+
 
     sla_info = new SLA_Info();
 
-
-//    addColumn(new OffsetIntColumn("class",
-//                "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)", (char *)&(ref->_logclass) - (char *)ref, -1));
-//
-//    addColumn(new OffsetStringColumn("message",
-//                "The complete message line including the timestamp", (char *)&(ref->_complete) - (char *)ref, -1));
-//    addColumn(new OffsetStringColumn("type",
-//                "The type of the message (text before the colon), the message itself for info messages", (char *)&(ref->_text) - (char *)ref, -1));
-//    addColumn(new OffsetStringColumn("options",
-//                "The part of the message after the ':'", (char *)&(ref->_options) - (char *)ref, -1));
-//    addColumn(new OffsetStringColumn("comment",
-//                "A comment field used in various message types", (char *)&(ref->_comment) - (char *)ref, -1));
-//    addColumn(new OffsetStringColumn("plugin_output",
-//                "The output of the check, if any is associated with the message", (char *)&(ref->_check_output) - (char *)ref, -1));
-//    addColumn(new OffsetIntColumn("state",
-//                "The state of the host or service in question", (char *)&(ref->_state) - (char *)ref, -1));
-//    addColumn(new OffsetStringColumn("state_type",
-//                "The type of the state (varies on different log classes)", (char *)&(ref->_state_type) - (char *)ref, -1));
-//    addColumn(new OffsetIntColumn("attempt",
-//                "The number of the check attempt", (char *)&(ref->_attempt) - (char *)ref, -1));
-//    addColumn(new OffsetStringColumn("service_description",
-//                "The description of the service log entry is about (might be empty)",
-//                (char *)&(ref->_svc_desc) - (char *)ref, -1));
-//    addColumn(new OffsetStringColumn("host_name",
-//                "The name of the host the log entry is about (might be empty)",
-//                (char *)&(ref->_host_name) - (char *)ref, -1));
-//    addColumn(new OffsetStringColumn("contact_name",
-//                "The name of the contact the log entry is about (might be empty)",
-//                (char *)&(ref->_contact_name) - (char *)ref, -1));
-//    addColumn(new OffsetStringColumn("command_name",
-//                "The name of the command of the log entry (e.g. for notifications)",
-//                (char *)&(ref->_command_name) - (char *)ref, -1));
-
     // join host and service tables
-//    g_table_hosts->addColumns(this, "current_host_",    (char *)&(ref->_host)    - (char *)ref);
+//    g_table_hosts->addColumns(this, "current_host_",    (char *)&(ref->host)    - (char *)ref);
 //    g_table_services->addColumns(this, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
 //    g_table_contacts->addColumns(this, "current_contact_", (char *)&(ref->_contact) - (char *)ref);
 //    g_table_commands->addColumns(this, "current_command_", (char *)&(ref->_command) - (char *)ref);
@@ -139,7 +107,6 @@ TableStateHistory::~TableStateHistory()
 
 void TableStateHistory::answerQuery(Query *query)
 {
-
 	debug_statehist("ANSWER STATE HIST QUERY ");
     // since logfiles are loaded on demand, we need
     // to lock out concurrent threads.
@@ -160,20 +127,20 @@ void TableStateHistory::answerQuery(Query *query)
     uint32_t classmask = LOGCLASS_ALL;
     query->optimizeBitmask("class", &classmask);
     if (classmask == 0) {
-        debug_statehist("Classmask == 0");
+    	debug_statehist("Classmask == 0");
     	LogCache::handle->unlockLogCache();
-        return;
+    	return;
     }
 
-      _logfiles_t::iterator it;
-      it = LogCache::handle->_logfiles.end(); // it now points beyond last log file
+    _logfiles_t::iterator it;
+    it = LogCache::handle->_logfiles.end(); // it now points beyond last log file
     --it; // switch to last logfile (we have at least one)
 
     // Now find newest log where 'until' is contained. The problem
     // here: For each logfile we only know the time of the *first* entry,
     // not that of the last.
     while (it != LogCache::handle->_logfiles.begin() && it->first > until) // while logfiles are too new...
-        --it; // go back in history
+    	--it; // go back in history
 
     if (it->first > until)  { // all logfiles are too new
         debug_statehist("Alle logs zu neu");
@@ -181,29 +148,25 @@ void TableStateHistory::answerQuery(Query *query)
         return;
     }
 
-    //////////////////////////////
-    debug_statehist("CHECKE ENTRIES");
-
-    // Entries vom Logfile handle holen
+    // Get entries from Logfile handle
     Logfile *log = it->second;
-
     entries_t* entries = log->getEntriesFromQuery(query, LogCache::handle, since, until, classmask);
     entries_t::iterator it_entries = entries->begin();
 
     // Logfile Start: Anfangsstati ermitteln und in Map eintragen
     LogEntry *entry;
 
-    debug_statehist("query since %d , until %d", since, until);
 
+    // TODO: cycle through all logfiles
 
     // PHASE: pre-since
     // Collect and Update HostServiceState
     while (it_entries != entries->end())
     {
        entry = it_entries->second;
-       if (entry->_time >= since)
-    	   	  break; // Fertig - Nächste Phase
-
+       if (entry->_time >= since){
+    	   break;
+       }
        // Host entry
        if (entry->_host_name != NULL){
            HostServiceKey key;
@@ -211,36 +174,61 @@ void TableStateHistory::answerQuery(Query *query)
            if (entry->_svc_desc != NULL){
         	   key.second = entry->_svc_desc;
            }
+           // Create HostServiceState if none exists
            if ( sla_info->find(key) == sla_info->end() ){
         	   HostServiceState state;
+        	   state.from = since;
+        	   state.state = entry->_state;
+        	   state.attempt = entry->_attempt;
         	   sla_info->insert(std::make_pair(key, state));
            }
-    	   updateHostServiceState(*entry, sla_info->find(key)->second);
+           // TODO: doppeltes find entfernenl, wieder auf only_update umschalten
+    	   updateHostServiceState(*query, *entry, sla_info->find(key)->second, true);
        }
 
-       // Downtime entry
-       debug_statehist("entry info  %s" , entry->_text);
-
-
-
-
-
+       // TODO:
+       // Timeperiod Transition
+       // Update all host entries
        ++it_entries;
     }
-
-    // Zeitpunkt since: Ab sofort Aenderungen ans Query senden
-
-
-
-
-
 
     LogCache::handle->unlockLogCache();
     sla_info->clear();
 }
 
-void updateHostServiceState(LogEntry &entry, HostServiceState &state){
+void TableStateHistory::updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &hs_state, bool only_update){
+	// Update duration
 
+	hs_state.until    = entry._time;
+	hs_state.duration = hs_state.until - hs_state.from;
+	ProcessDataSet dataset(&query, &hs_state, only_update);
+
+	if( entry._logclass == LOGCLASS_ALERT ){
+		// TODO: strncmp entfernen, das wird im Logentry.cc bereits ermittelt. Hier wird dann nur noch die enum/etc. ausgewertet
+		debug_statehist("process entry %s",entry._text);
+
+		// Check DOWNTIME changes
+		if( !strncmp(entry._text, "HOST DOWNTIME ALERT: ", 19) || !strncmp(entry._text, "SERVICE DOWNTIME ALERT: ", 22)){
+			debug_statehist("DER DOWNTIME ALARM. hs_state time %d from %d until %d duration %d",entry._time,  hs_state.from, hs_state.until, hs_state.duration);
+
+			if( strcmp( hs_state.state_type, entry._state_type ) != 0 ){
+				debug_statehist("DOWNTIME STATE CHANGE: %s %s <%s> <%s>", entry._host_name, entry._svc_desc, hs_state.state_type, entry._state_type);
+				dataset.tryProcess();
+				hs_state.state_type = strdup(entry._state_type);
+			}
+		}
+
+		// Check State changes
+		if( !strncmp(entry._text, "SERVICE ALERT", 13) ){
+			debug_statehist("DER SERVICE ALARM. hs_state time %d from %d until %d duration %d",entry._time,  hs_state.from, hs_state.until, hs_state.duration);
+
+			if( hs_state.state != entry._state ){
+				debug_statehist("STATE CHANGE:  %s %s <%d> <%d>", entry._host_name, entry._svc_desc, hs_state.state, entry._state);
+				debug_statehist("processed %d", dataset.tryProcess());
+				hs_state.state_type = strdup(entry._state_type);
+			}
+		}
+	}
 }
 
 bool TableStateHistory::isAuthorized(contact *ctc, void *data)

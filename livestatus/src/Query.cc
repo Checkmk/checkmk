@@ -771,7 +771,6 @@ bool Query::processDataset(void *data)
         return false;
     }
 
-
     if (_filter.accepts(data) && (!_auth_user || _table->isAuthorized(_auth_user, data))) {
         _current_line++;
         if (_limit >= 0 && (int)_current_line > _limit)
@@ -779,6 +778,7 @@ bool Query::processDataset(void *data)
 
         if (doStats())
         {
+        	logger(LG_INFO, "in stats");
             Aggregator **aggr;
             // When doing grouped stats, we need to fetch/create a row
             // of aggregators for the current group

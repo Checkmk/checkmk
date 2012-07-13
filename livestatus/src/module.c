@@ -41,6 +41,7 @@
 
 #include "nagios.h"
 #include "livestatus.h"
+#include "downtime.h"
 #include "store.h"
 #include "logger.h"
 #include "config.h"
@@ -434,10 +435,40 @@ int broker_program(int event_type __attribute__ ((__unused__)), void *data __att
     return 0;
 }
 
+extern scheduled_downtime *scheduled_downtime_list;
 int broker_event(int event_type __attribute__ ((__unused__)), void *data)
 {
     g_counters[COUNTER_NEB_CALLBACKS]++;
     struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
+    logger( LG_CRIT, "##### timed event %d", ts->event_type );
+
+    if( ts->event_type == EVENT_LOG_ROTATION){
+        logger( LG_CRIT, "##### DAS LOGROTATE EVENT" );
+
+    	scheduled_downtime *this_downtime;
+    	for(this_downtime=scheduled_downtime_list;this_downtime!=NULL;this_downtime=this_downtime->next){
+    		logger( LG_CRIT, "##### DOWNTIME EINTRAG %s %d effect %d depth %d",
+    							this_downtime->host_name,
+    							this_downtime->type,
+    							this_downtime->is_in_effect
+    							);
+    	}
+    }
+
+    if( ts->event_type ==  EVENT_CHECK_PROGRAM_UPDATE){
+        logger( LG_CRIT, "##### PROGRAM UPDATE CHECK EVENT" );
+
+    	scheduled_downtime *this_downtime;
+    	for(this_downtime=scheduled_downtime_list;this_downtime!=NULL;this_downtime=this_downtime->next){
+    		logger( LG_CRIT, "##### DOWNTIME EINTRAG %s %d effect %d depth %d",
+    							this_downtime->host_name,
+    							this_downtime->type,
+    							this_downtime->is_in_effect
+    							);
+    	}
+    }
+
+
     update_timeperiods_cache(ts->timestamp.tv_sec);
     return 0;
 }

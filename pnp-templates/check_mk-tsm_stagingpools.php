@@ -23,25 +23,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# bisect the pool name from service description, this didn't work
-#$parts = explode(" ", $servicedesc);
-#$pool = $parts[1];
-
-$opt[1] = "-l0 --vertical-label \"Tapes\" --title \"Occupancy of pool\" ";
 
 
-
-$def[1]  = "DEF:tapes=$RRDFILE[1]:$DS[1]:MAX ";
-$def[1] .= "DEF:free=$RRDFILE[2]:$DS[1]:MAX ";
-$def[1] .= "DEF:util=$RRDFILE[3]:$DS[1]:MAX ";
-
-
-$def[1] .= "AREA:tapes#cd853f:\"Tapes in Pool   \" ";
-$def[1] .= "AREA:free#a000ff:\"Free Tapes   \" ";
-$def[1] .= "LINE:util#000000:\"Utilization   \" ";
-# FIXME:
-# add warn/crit lines
+# cut TSM part from service description
+$item = substr($servicedesc, 16);
+# if ___ is in the item, then we have info on the TSM farm and the Poolname
+# split it. otherwise, keep the item name unchanged.
+$parts    = explode("___", $item);
+$info = (isset($parts[1])) ? $parts[1] . " (".$parts[0].")" : $item;
 
 
+$opt[1] = "-l0 --vertical-label \"Tapes\" --title \"Occupancy of $info\" ";
+
+
+$def[1]  = "DEF:tapes=$RRDFILE[1]:$DS[1]:MAX ".
+           "DEF:free=$RRDFILE[2]:$DS[1]:MAX ".
+           "DEF:util=$RRDFILE[3]:$DS[1]:MAX ".
+           "AREA:tapes#cd853f:\"Tapes in Pool   \" ".
+           "AREA:free#a000ff:\"Free Tapes   \" ".
+           "LINE3:util#5f1010:\"Utilization   \" ".
+           "";
 
 ?>

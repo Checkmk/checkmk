@@ -465,3 +465,45 @@ def perfometer_mssql_counters_cache_hits(row, check_command, perf_data):
     return "%.1f%%" % perc, h
 
 perfometers["check_mk-mssql_counters.cache_hits"] = perfometer_mssql_counters_cache_hits
+
+
+
+def perfometer_hpux_tunables(row, check_command, perf_data):
+
+    varname, value, unit, warn, crit, minival, threshold = perf_data[0]
+    value       = float(value)
+    threshold   = float(threshold)
+
+
+    if warn != "" or crit != "":
+        warn = saveint(warn)
+        crit = saveint(crit)
+
+        # go red if we're over crit
+        if value > crit:
+           color = "#f44"
+        # yellow
+        elif value > warn:
+           color = "#f84"
+        else:
+           # all green lights
+           color = "#2d3"
+    else:
+        # use a brown-ish color if we have no levels.
+        # otherwise it could be "green" all the way to 100%
+        color = "#f4a460"
+
+    used = value / threshold * 100
+
+    return "%.0f%%" % (used), perfometer_linear(used, color)
+
+perfometers["check_mk-hpux_tunables.nproc"]        = perfometer_hpux_tunables
+perfometers["check_mk-hpux_tunables.nkthread"]     = perfometer_hpux_tunables
+perfometers["check_mk-hpux_tunables.maxfiles_lim"] = perfometer_hpux_tunables
+# this one still doesn't load. I need more test data to find out why.
+perfometers["check_mk-hpux_tunables.semmni"]       = perfometer_hpux_tunables
+perfometers["check_mk-hpux_tunables.semmns"]       = perfometer_hpux_tunables
+perfometers["check_mk-hpux_tunables.shmseg"]       = perfometer_hpux_tunables
+perfometers["check_mk-hpux_tunables.nkthread"]     = perfometer_hpux_tunables
+perfometers["check_mk-hpux_tunables.nkthread"]     = perfometer_hpux_tunables
+

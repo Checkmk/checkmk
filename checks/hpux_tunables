@@ -86,9 +86,10 @@ def check_hpux_tunables(item, params, info, hpux_tunable, thingname):
             state = 2
         elif float(warn) < pct:
             state = 1
-        perfdata = [ (thingname, usage, threshold, warn * mimi, crit * mimi) ]
+# name = current , warn , crit , min , max
+        perfdata = [ (thingname, usage, warn * mimi, crit * mimi, 0, threshold) ]
     else:
-        perfdata = [ (thingname, usage, threshold, '', '') ]
+        perfdata = [ (thingname, usage, None, None, 0, threshold) ]
 
     return (state, nagios_state_names[state] + \
          " - %.2f%% used" % pct + state * "!" + " (%d/%d %s) " % (usage, threshold, thingname), perfdata)

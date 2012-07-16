@@ -8071,6 +8071,7 @@ def mode_roles(phase):
 
     elif phase == "buttons":
         global_buttons()
+        html.context_button(_("Matrix"), make_link([("mode", "role_matrix")]), "matrix")
         return
 
     roles = load_roles()
@@ -8171,7 +8172,6 @@ def mode_roles(phase):
     # - number of set permissions (needs loading users)
     # - number of users with this role
     html.write("</table>")
-
 
 def mode_edit_role(phase):
     id = html.var("edit")
@@ -8371,6 +8371,63 @@ def rename_user_role(id, new_id):
             if new_id:
                 user["roles"].append(new_id)
     save_users(users)
+
+def mode_role_matrix(phase):
+    if phase == "title":
+        return _("Role & Permission Matrix")
+
+    elif phase == "buttons":
+        global_buttons()
+        return
+
+    elif phase == "action":
+        return
+
+    # Show table of builtin and user defined roles, sorted by alias
+    roles = load_roles()
+    role_list = roles.items()
+    role_list.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
+
+    html.write("<table class=data>")
+    html.write("<tr class=dualheader><th></th>")
+    num_roles = 1
+    for id, role in role_list:
+        html.write('<th>%s</th>' % role['alias'])
+        num_roles += 1
+    html.write("</tr>\n")
+
+    # Loop all permission sections, but sorted plz
+    odd = "even"
+    for section, (prio, section_title) in sorted(config.permission_sections.iteritems(),
+                                                 key = lambda x: x[1][0], reverse = True):
+
+        html.write('<tr>')
+        html.write('<th colspan=%d>%s</th>' % (num_roles, section_title))
+        html.write('</tr>')
+
+        # Loop all permissions
+        for perm in config.permissions_by_order:
+            pname = perm["name"]
+            this_section = pname.split(".")[0]
+            if section != this_section:
+                continue # Skip permissions of other sections
+
+            odd = odd == "odd" and "even" or "odd"
+
+            html.write('<tr class="data %s0">' % odd)
+            html.write('<td class=title>%s</td>' % perm["title"])
+
+            for id, role in role_list:
+                base_on_id = role.get('basedon', id)
+                pvalue = role["permissions"].get(pname)
+                if pvalue is None:
+                    pvalue = base_on_id in perm["defaults"]
+
+                html.write('<td>%s</td>' % (pvalue and 'X' or ''))
+
+            html.write('</tr>')
+
+    html.write("</table>")
 
 #.
 #   .-Host-Tags------------------------------------------------------------.
@@ -11368,6 +11425,7 @@ modes = {
    "users"              : (["users"], mode_users),
    "edit_user"          : (["users"], mode_edit_user),
    "roles"              : (["users"], mode_roles),
+   "role_matrix"        : (["users"], mode_role_matrix),
    "edit_role"          : (["users"], mode_edit_role),
    "hosttags"           : (["hosttags"], mode_hosttags),
    "edit_hosttag"       : (["hosttags"], mode_edit_hosttag),

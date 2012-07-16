@@ -1309,7 +1309,8 @@ def show_hosts(folder):
                 msg += ". " + _("The inventory of this host failed during a previous bulk inventory.")
             html.icon_button(services_url, msg, image)
         if config.may("wato.manage_hosts"):
-            html.icon_button(clone_url, _("Create a clone of this host"), "insert")
+            if config.may("wato.clone_hosts"):
+                html.icon_button(clone_url, _("Create a clone of this host"), "insert")
             html.icon_button(delete_url, _("Delete this host"), "delete")
         html.write("</td>\n")
 
@@ -1798,6 +1799,9 @@ def mode_edithost(phase, new, cluster):
     clonename = html.var("clone")
     if clonename and clonename not in g_folder[".hosts"]:
         raise MKGeneralException(_("You called this page with an invalid host name."))
+
+    if clonename and not config.may("wato.clone_hosts"):
+        raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
 
     if clonename:
         title = _("Create clone of %s") % clonename
@@ -11481,6 +11485,12 @@ def load_plugins():
          _("Add hosts to the monitoring and remove hosts "
            "from the monitoring. Please also add the permission "
            "<i>Modify existing hosts</i>."),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.clone_hosts",
+         _("Clone hosts"),
+         _("Clone existing hosts to create new ones from the existing one."
+           "Please also add the permission <i>Add & remove hosts</i>."),
          [ "admin", "user" ])
 
     config.declare_permission("wato.random_hosts",

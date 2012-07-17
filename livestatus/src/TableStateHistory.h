@@ -34,6 +34,7 @@
 #include "TableStateHistory.h"
 #include "Query.h"
 #include "logger.h"
+#include "nagios.h"
 
 class Logfile;
 
@@ -55,25 +56,27 @@ public:
 
 class HostServiceState{
 public:
-	time_t  time;
-	time_t  from;
-	time_t  until;
-	time_t  duration;
-	int     attempt;
-	int     hard_state; // true: hard, false: soft
-	int     state;
-	char*   state_type;
-	int     in_downtime;
-	int     in_notification_period;
-//
-//    host      *host;
-//    service   *service;
+	time_t  _time;
+	time_t  _from;
+	time_t  _until;
+	time_t  _duration;
+	int     _attempt;
+	int     _hard_state; // true: hard, false: soft
+	int     _state;
+	char*   _state_type;
+	char*   _downtime_state;
+	int     _in_downtime;
+	char*   _notification_period;
+	int     _in_notification_period;
+
+	LogEntry* _log_ptr;
+	char*   _debug_info;
+
+    host      *_host;
+    service   *_service;
 
 	HostServiceState()
-	: state_type(""){};
-	//int*    log_ptr;
-	// int  tp_state
-	// bool acknowledged
+	: _state_type(""){};
 };
 
 typedef map<HostServiceKey, HostServiceState, LessThan> SLA_Info;
@@ -90,7 +93,7 @@ public:
     void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
     void answerQuery(Query *query);
     Column *column(const char *colname); // override in order to handle current_
-    void updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &state, bool only_update);
+    void updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &state, bool only_update, bool force_process);
 
 private:
    bool answerQuery(Query *, Logfile *, time_t, time_t);
@@ -113,14 +116,14 @@ public:
 		_do_nothing = do_nothing;
 		_already_sent = false;
 	}
-	bool tryProcess(){
+	bool process(){
 		if( _do_nothing )
 			return false;
 		if( _already_sent == true )
 			return false;
 		else{
 			_query->processDataset(_hs_state);
-			_hs_state->from = _hs_state->until + 1;
+			_hs_state->_from = _hs_state->_until;
 			_already_sent = true;
 			return true;
 		}

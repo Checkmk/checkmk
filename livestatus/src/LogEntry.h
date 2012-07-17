@@ -37,30 +37,40 @@
 
 #include "nagios.h"
 
+enum LogEntryType {	NONE,
+					ALERT_HOST,
+					ALERT_SERVICE,
+					DOWNTIME_ALERT_HOST,
+					DOWNTIME_ALERT_SERVICE,
+					STATE_HOST,
+					STATE_SERVICE,
+					TIMEPERIOD_TRANSITION};
+
 struct LogEntry
 {
-    unsigned   _lineno;      // line number in file
-    time_t     _time;
-    unsigned   _logclass;
-    char      *_complete;  // copy of complete unsplit message
-    char      *_options;   // points into _complete after ':'
-    char      *_msg;       // split up with binary zeroes
-    unsigned   _msglen;    // size of _msg
-    char      *_text;      // points into msg
-    char      *_host_name; // points into msg or is 0
-    char      *_svc_desc;  // points into msg or is 0
-    char      *_command_name;
-    char      *_contact_name;
-    int       _state;
-    char      *_state_type;
-    int       _attempt;
-    char      *_check_output;
-    char      *_comment;
+    unsigned     _lineno;      // line number in file
+    time_t       _time;
+    unsigned     _logclass;
+    LogEntryType _type;
+    char        *_complete;  // copy of complete unsplit message
+    char        *_options;   // points into _complete after ':'
+    char        *_msg;       // split up with binary zeroes
+    unsigned     _msglen;    // size of _msg
+    char        *_text;      // points into msg
+    char        *_host_name; // points into msg or is 0
+    char        *_svc_desc;  // points into msg or is 0
+    char        *_command_name;
+    char        *_contact_name;
+    int         _state;
+    char        *_state_type;
+    int         _attempt;
+    char        *_check_output;
+    char        *_comment;
 
-    host      *_host;
-    service   *_service;
-    contact   *_contact;
-    command   *_command;
+    host        *_host;
+    service     *_service;
+    contact     *_contact;
+    command     *_command;
 
     LogEntry(unsigned lineno, char *line);
     ~LogEntry();

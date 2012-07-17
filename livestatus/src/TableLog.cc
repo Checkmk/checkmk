@@ -117,8 +117,7 @@ TableLog::TableLog()
 
 
 TableLog::~TableLog()
-{
-}
+{}
 
 
 void TableLog::answerQuery(Query *query)
@@ -174,7 +173,6 @@ void TableLog::answerQuery(Query *query)
             break; // this was the oldest one
         --it;
     }
-
 
     // dumpLogfiles();
     LogCache::handle->unlockLogCache();

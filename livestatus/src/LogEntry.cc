@@ -98,10 +98,14 @@ bool LogEntry::handleStatusEntry()
             || !strncmp(_text, "CURRENT HOST STATE: ", 20)
             || !strncmp(_text, "HOST ALERT: ", 12))
     {
-        if (_text[0] == 'H')
-            _logclass = LOGCLASS_ALERT;
-        else
-            _logclass = LOGCLASS_STATE;
+        if (_text[0] == 'H'){
+        	_logclass = LOGCLASS_ALERT;
+        	_type     = ALERT_HOST;
+        }
+        else{
+        	_logclass = LOGCLASS_STATE;
+        	_type     = STATE_HOST;
+        }
 
         char *scan = _text;
         _text = next_token(&scan, ':');
@@ -118,6 +122,7 @@ bool LogEntry::handleStatusEntry()
             || !strncmp(_text, "HOST FLAPPING ALERT: ", 21))
     {
         _logclass = LOGCLASS_ALERT;
+        _type     = DOWNTIME_ALERT_HOST;
         char *scan = _text;
         _text = next_token(&scan, ':');
         scan++;
@@ -133,10 +138,14 @@ bool LogEntry::handleStatusEntry()
             || !strncmp(_text, "CURRENT SERVICE STATE: ", 23)
             || !strncmp(_text, "SERVICE ALERT: ", 15))
     {
-        if (_text[0] == 'S')
-            _logclass = LOGCLASS_ALERT;
-        else
+        if (_text[0] == 'S'){
+        	_logclass = LOGCLASS_ALERT;
+        	_type     = ALERT_SERVICE;
+        }
+        else{
             _logclass = LOGCLASS_STATE;
+            _type     = STATE_SERVICE;
+        }
         char *scan = _text;
         _text = next_token(&scan, ':');
         scan++;
@@ -153,6 +162,7 @@ bool LogEntry::handleStatusEntry()
             || !strncmp(_text, "SERVICE FLAPPING ALERT: ", 24))
     {
         _logclass = LOGCLASS_ALERT;
+        _type     = DOWNTIME_ALERT_SERVICE;
         char *scan = _text;
         _text = next_token(&scan, ':');
         scan++;
@@ -163,6 +173,7 @@ bool LogEntry::handleStatusEntry()
         _comment      = next_token(&scan, ';') + 1;
         return true;
     }
+
     return false;
 
 }
@@ -192,6 +203,19 @@ bool LogEntry::handleNotificationEntry()
 
         _command_name  = next_token(&scan, ';');
         _check_output  = next_token(&scan, ';');
+        return true;
+    }
+    else if (!strncmp(_text, "TIMEPERIOD TRANSITION: ", 23))
+    {
+        _logclass = LOGCLASS_NOTIFICATION;
+        _type     = TIMEPERIOD_TRANSITION;
+        char *scan = _text;
+        _text = next_token(&scan, ':');
+        scan++;
+
+        _command_name  = next_token(&scan, ';');
+        _check_output  = next_token(&scan, ';');
+        _state_type    = next_token(&scan, ';');
         return true;
     }
     return false;

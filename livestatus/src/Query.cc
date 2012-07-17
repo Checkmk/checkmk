@@ -778,7 +778,6 @@ bool Query::processDataset(void *data)
 
         if (doStats())
         {
-        	logger(LG_INFO, "in stats");
             Aggregator **aggr;
             // When doing grouped stats, we need to fetch/create a row
             // of aggregators for the current group

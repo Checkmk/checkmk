@@ -400,6 +400,7 @@ int broker_downtime(int event_type __attribute__ ((__unused__)), void *data)
 
 int broker_log(int event_type __attribute__ ((__unused__)), void *data __attribute__ ((__unused__)))
 {
+
     g_counters[COUNTER_NEB_CALLBACKS]++;
     g_counters[COUNTER_LOG_MESSAGES]++;
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
@@ -421,6 +422,7 @@ int broker_command(int event_type __attribute__ ((__unused__)), void *data)
 
 int broker_state(int event_type __attribute__ ((__unused__)), void *data __attribute__ ((__unused__)))
 {
+	logger( LG_CRIT, "##### BROKER STATE" );
     g_counters[COUNTER_NEB_CALLBACKS]++;
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
     pthread_cond_broadcast(&g_wait_cond[WT_STATE]);
@@ -435,51 +437,67 @@ int broker_program(int event_type __attribute__ ((__unused__)), void *data __att
     return 0;
 }
 
+
 extern scheduled_downtime *scheduled_downtime_list;
+int livestatus_threads_running = 0;
+
 int broker_event(int event_type __attribute__ ((__unused__)), void *data)
 {
     g_counters[COUNTER_NEB_CALLBACKS]++;
     struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
-    logger( LG_CRIT, "##### timed event %d", ts->event_type );
-
+  //  logger( LG_CRIT, "##### timed event %d", ts->event_type );
+//    logger( LG_CRIT, "##### BROKER EVENT" );
     if( ts->event_type == EVENT_LOG_ROTATION){
-        logger( LG_CRIT, "##### DAS LOGROTATE EVENT" );
-
-    	scheduled_downtime *this_downtime;
-    	for(this_downtime=scheduled_downtime_list;this_downtime!=NULL;this_downtime=this_downtime->next){
-    		logger( LG_CRIT, "##### DOWNTIME EINTRAG %s %d effect %d depth %d",
-    							this_downtime->host_name,
-    							this_downtime->type,
-    							this_downtime->is_in_effect
-    							);
+    	if( g_thread_running == 0 )
+    		logger( LG_CRIT, "##### DAS LOGROTATE EVENT BEIM STARTUP" );
+    	else{
+    	    logger( LG_CRIT, "##### DAS LOGROTATE EVENT - DIESMAL DAS RICHTIGE" );
+    	    livestatus_log_initial_states();
     	}
     }
-
-    if( ts->event_type ==  EVENT_CHECK_PROGRAM_UPDATE){
-        logger( LG_CRIT, "##### PROGRAM UPDATE CHECK EVENT" );
-
-    	scheduled_downtime *this_downtime;
-    	for(this_downtime=scheduled_downtime_list;this_downtime!=NULL;this_downtime=this_downtime->next){
-    		logger( LG_CRIT, "##### DOWNTIME EINTRAG %s %d effect %d depth %d",
-    							this_downtime->host_name,
-    							this_downtime->type,
-    							this_downtime->is_in_effect
-    							);
-    	}
-    }
-
 
     update_timeperiods_cache(ts->timestamp.tv_sec);
     return 0;
 }
 
+void livestatus_log_initial_states(){
+	// Log DOWNTIME depth hosts
+	host *h = (host *)host_list;
+	logger( LG_CRIT, "LIVESTATUS INITIAL STATE");
+	while (h) {
+		if( h->scheduled_downtime_depth > 0 ){
+			char buffer[8192];
+			// TODO: description aufbohren
+			sprintf(buffer,"HOST DOWNTIME ALERT: %s;STARTED; Host has entered a period of scheduled downtime", h->name);
+			write_to_all_logs(buffer, LG_INFO);
+		}
+		h = h->next;
+	}
+	// Log DOWNTIME depth services
+	service *s = (service *)service_list;
+	while (s) {
+		if( s->scheduled_downtime_depth > 0 ){
+			char buffer[8192];
+			// TODO: description aufbohren
+			sprintf(buffer,"SERVICE DOWNTIME ALERT: %s;%s;STARTED; Service has entered a period of scheduled downtime", s->host_name, s->description);
+			write_to_all_logs(buffer, LG_INFO);
+		}
+		s = s->next;
+	}
+	// TODO: Log TIMEPERIODS
+}
+
 int broker_process(int event_type __attribute__ ((__unused__)), void *data)
 {
     struct nebstruct_process_struct *ps = (struct nebstruct_process_struct *)data;
+//    logger( LG_CRIT, "BROKER PROCESS");
     if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART) {
         update_timeperiods_cache(time(0));
+        logger( LG_CRIT, "NEBTYPE_PROCESS_EVENTLOOPSTART");
+        livestatus_log_initial_states();
         init_livecheck();
         start_threads();
+        livestatus_threads_running = 1;
     }
     return 0;
 }

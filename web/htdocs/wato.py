@@ -6110,7 +6110,7 @@ def find_usage_of_timeperiod(tpname):
         rulespec = g_rulespecs[varname]
         if isinstance(rulespec.get("valuespec"), TimeperiodSelection):
             for folder, rule in ruleset:
-                value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+                value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
                 if value == tpname:
                     used_in.append(("%s: %s" % (_("Ruleset"), g_rulespecs[varname]["title"]),
                                    make_link([("mode", "edit_ruleset"), ("varname", varname)])))
@@ -9114,7 +9114,7 @@ def change_host_tags_in_rules(folder, operations, mode):
         rules_to_delete = set([])
         for nr, rule in enumerate(ruleset):
             modified = False
-            value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+            value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
 
             # Handle deletion of complete tag group
             if type(operations) == list: # this list of tags to remove
@@ -9159,7 +9159,7 @@ def change_host_tags_in_rules(folder, operations, mode):
                                 # tags can always be removed without changing the rule's
                                 # behaviour.
             if modified:
-                ruleset[nr] = construct_rule(rulespec, value, tag_specs, host_list, item_list)
+                ruleset[nr] = construct_rule(rulespec, value, tag_specs, host_list, item_list, rule_options)
                 need_save = True
 
         rules_to_delete = list(rules_to_delete)
@@ -9182,9 +9182,32 @@ def change_host_tags_in_rules(folder, operations, mode):
 #   |          |_| \_\\__,_|_|\___| |_____\__,_|_|\__\___/|_|              |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | WATO's awesome rule editor: Let's user edit rule based parameters    |
+#   | WATO's awesome rule editor: Lets the user edit rule based parameters |
 #   | from main.mk.                                                        |
 #   '----------------------------------------------------------------------'
+
+vs_rule_options = Dictionary(
+    title = _("General options"),
+    optional_keys = False,
+    render = "form",
+    elements = [
+        ( "comment",
+          TextUnicode(
+            title = _("Comment"),
+            help = _("An optional comment that helps you documenting the purpose of  "
+                     "this rule"),
+            size = 64,
+          )
+        ),
+        ( "disabled",
+          Checkbox(
+              title = _("Rule activation"),
+              help = _("Disabled rules are kept in the configuration but are not applied."),
+              label = _("do not apply this rule"),
+          )
+        ),
+    ]
+)
 
 def mode_ruleeditor(phase):
     only_host = html.var("host", "")
@@ -9319,7 +9342,7 @@ def mode_rulesets(phase):
             if only_host:
                 num_local_rules = 0
                 for f, rule in rules:
-                    value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+                    value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
                     if only_host and only_host in host_list:
                         num_local_rules += 1
             else:
@@ -9524,6 +9547,8 @@ def mode_edit_ruleset(phase):
         html.write("<tr>"
                    "<th>" + _("#") + "</th>"
                    "<th>" + _("Actions") + "</th>"
+                   "<th>" + _("Act.") + "</th>"
+                   "<th>" + _("Comment") + "</th>"
                    "<th>" + _("Folder") + "</th>"
                    "<th>" + _("Value") + "</th>"
                    "<th>" + _("Conditions") + "</th>"
@@ -9550,7 +9575,7 @@ def mode_edit_ruleset(phase):
             last_in_group = rulenr == len(ruleset) - 1 or ruleset[rulenr+1][0] != folder
 
             odd = odd == "odd" and "even" or "odd"
-            value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+            value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
             html.write('<tr class="data %s0">' % odd)
 
             # Rule number
@@ -9579,15 +9604,11 @@ def mode_edit_ruleset(phase):
             rule_button("delete", _("Delete this rule"), folder, rel_rulenr)
             html.write("</td>")
 
-
-            # Folder
-            if first_in_group:
-                alias_path = get_folder_aliaspath(folder, show_main = False)
-                html.write('<td rowspan=%d>%s</td>' % (row_span, alias_path))
-
-            # Value
-            html.write('<td class=value>\n')
-            if hostname:
+            # Disabling and rule matching 
+            html.write("<td class=buttons>")
+            if rule_options.get("disabled"):
+                html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
+            elif hostname:
                 reason = rule_matches_host_and_item(
                     rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, item)
 
@@ -9625,6 +9646,20 @@ def mode_edit_ruleset(phase):
                     title = _("This rule does not match: %s") % reason
                     img = 'nmatch'
                 html.write('<img align=absmiddle title="%s" class=icon src="images/icon_rule%s.png"> ' % (title, img))
+            html.write("</td>")
+
+            # Comment
+            html.write('<td>%s</td>' % rule_options.get("comment", ""))
+
+
+            # Folder
+            if first_in_group:
+                alias_path = get_folder_aliaspath(folder, show_main = False)
+                html.write('<td rowspan=%d>%s</td>' % (row_span, alias_path))
+
+            # Value
+            html.write('<td class=value>\n')
+
             if rulespec["valuespec"]:
                 try:
                     value_html = rulespec["valuespec"].value_to_text(value)
@@ -9716,6 +9751,12 @@ def rule_button(action, help=None, folder=None, rulenr=0):
 def parse_rule(ruleset, orig_rule):
     rule = orig_rule
     try:
+        if type(rule[-1]) == dict:
+            rule_options = rule[-1]
+            rule = rule[:-1]
+        else:
+            rule_options = {}
+
         # Extract value from front, if rule has a value
         if ruleset["valuespec"]:
             value = rule[0]
@@ -9745,7 +9786,7 @@ def parse_rule(ruleset, orig_rule):
         # Remove folder tag from tag list
         tag_specs = filter(lambda t: not t.startswith("/"), tag_specs)
 
-        return value, tag_specs, host_list, item_list # (item_list currently not supported)
+        return value, tag_specs, host_list, item_list, rule_options # (item_list currently not supported)
 
     except Exception, e:
         raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (orig_rule,))
@@ -9796,7 +9837,7 @@ def is_indirect_parent_of(pfolder, sfolder):
       is_indirect_parent_of(pfolder[".parent"], sfolder))
 
 
-def construct_rule(ruleset, value, tag_specs, host_list, item_list):
+def construct_rule(ruleset, value, tag_specs, host_list, item_list, rule_options):
     if ruleset["valuespec"]:
         rule = [ value ]
     elif not value:
@@ -9808,6 +9849,21 @@ def construct_rule(ruleset, value, tag_specs, host_list, item_list):
     rule.append(host_list)
     if item_list != None:
         rule.append(item_list)
+
+    # Append rule options, but only if they are not trivial
+    ro = {}
+    if rule_options.get("disabled"):
+        ro["disabled"] = True
+    if rule_options.get("comment"):
+        ro["comment"] = rule_options["comment"]
+
+    # Preserve other keys that we do not know of
+    for k,v in rule_options.items():
+        if k not in [ "disabled", "comment"] :
+            ro[k] = v
+    if ro:
+        rule.append(ro)
+
     return tuple(rule)
 
 
@@ -9969,10 +10025,14 @@ def mode_edit_rule(phase):
     rules = rulesets[varname]
     rule = rules[rulenr]
     valuespec = rulespec.get("valuespec")
-    value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+    value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
 
     if phase == "action":
         if html.check_transaction():
+            # General options
+            rule_options = vs_rule_options.from_html_vars("options")
+            vs_rule_options.validate_value(rule_options, "options")
+
             # CONDITION
             tag_specs, host_list, item_list = get_rule_conditions(rulespec)
             new_rule_folder = g_folders[html.var("new_rule_folder")]
@@ -9986,7 +10046,7 @@ def mode_edit_rule(phase):
                 value = get_edited_value(valuespec)
             else:
                 value = html.var("value") == "yes"
-            rule = construct_rule(rulespec, value, tag_specs, host_list, item_list)
+            rule = construct_rule(rulespec, value, tag_specs, host_list, item_list, rule_options)
             if new_rule_folder == folder:
                 rules[rulenr] = rule
                 save_rulesets(folder, rulesets)
@@ -10011,6 +10071,9 @@ def mode_edit_rule(phase):
     html.help(rulespec["help"])
 
     html.begin_form("rule_editor")
+
+    # Rule Options
+    vs_rule_options.render_input("options", rule_options)
 
     # Value
     forms.header(_("Value"))
@@ -10123,6 +10186,7 @@ def mode_edit_rule(phase):
     forms.end()
     html.button("save", _("Save"))
     html.hidden_fields()
+    vs_rule_options.set_focus("options")
     html.end_form()
 
 # Render HTML input fields for editing a tag based condition
@@ -10248,7 +10312,7 @@ def save_rulesets(folder, rulesets):
 
 def save_rule(out, folder, rulespec, rule):
     out.write("  ( ")
-    value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+    value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
     if rulespec["valuespec"]:
         out.write(repr(value) + ", ")
     elif not value:
@@ -10276,6 +10340,9 @@ def save_rule(out, folder, rulespec, rule):
             out.write("ALL_SERVICES")
         else:
             out.write(repr(item_list))
+
+    if rule_options:
+        out.write(", %r" % rule_options)
 
     out.write(" ),\n")
 

@@ -7,6 +7,7 @@
     Checks & Agents:
     * mssql_backup: Fixed problems with datetime/timezone calculations
     * New Checks for Siemens Blades (BX600)
+    * FIX: megaraid_pdisks: handle case where no enclosure device exists
 
     WATO:
     * FIX: remove line about number of rules in rule set overview

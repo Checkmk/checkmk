@@ -1349,6 +1349,15 @@ def render_view(view, rows, datasource, group_painters, painters,
 
         elif 'C' in display_options: # (*not* display open, if checkboxes are currently shown)
             show_command_form(False, datasource)
+    
+    # Also execute commands in cases without command form (needed for Python-
+    # web service e.g. for NagStaMon)
+    elif len(rows) > 0 and config.may("general.act") \
+         and html.do_actions() and html.transaction_valid():
+        try:
+            do_actions(view, datasource["infos"][0], rows, '')
+        except:
+            pass # currently no feed back on webservice
 
     if 'O' in display_options and len(painter_options) > 0 and config.may("general.painter_options"):
         show_painter_options(painter_options)

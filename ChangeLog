@@ -1,4 +1,9 @@
 1.2.0p3:
+    Core:
+    * Allow to add options to rules. Currently the options "disabled" and
+      "comment" are allowed. Options are kept in an optional dict at the
+      end of each rule.
+
     Checks & Agents:
     * mssql_backup: Fixed problems with datetime/timezone calculations
     * New Checks for Siemens Blades (BX600)
@@ -9,6 +14,8 @@
       permissions of roles
     * FIX: remove line about number of rules in rule set overview
       (that garbled the logical layout)
+    * Rules now have an optional comment and can be disabled without
+      deleting them.
 
     BI:
     * Great speed up of rule compilation in large environments
@@ -16,12 +23,10 @@
     Multisite:
     * FIX: fixed localization of general permissions
     * FIX: show multisite warning messages even after page reload
+    * FIX: fix bug in Age ValueSpec: days had been ignored
 
     Livecheck:
     * FIX: Compile livecheck also if diet libc is missing
-
-    Multisite:
-    * FIX: fix bug in Age ValueSpec: days had been ignored
 
 1.2.0p2:
     Core:

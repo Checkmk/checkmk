@@ -266,6 +266,7 @@ def perfometer_check_mk_brocade_fcport(row, check_command, perf_data):
 
 perfometers["check_mk-if"] = perfometer_check_mk_if
 perfometers["check_mk-if64"] = perfometer_check_mk_if
+perfometers["check_mk-vms_if"] = perfometer_check_mk_if
 perfometers["check_mk-if_lancom"] = perfometer_check_mk_if
 perfometers["check_mk-lnx_if"] = perfometer_check_mk_if
 perfometers["check_mk-hpux_if"] = perfometer_check_mk_if

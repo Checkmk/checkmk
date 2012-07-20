@@ -15,6 +15,7 @@
       come shortly after)
     * vms_users: new check for number of interactive sessions on OpenVMS
     * vms_cpu: new check for CPU utilization on OpenVMS
+    * vms_if: new check for network interfaces on OpenVMS
 
     WATO:
     * Added permission to control the "clone host" feature in WATO

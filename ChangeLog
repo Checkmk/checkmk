@@ -22,7 +22,11 @@
       (that garbled the logical layout)
     * Rules now have an optional comment and can be disabled without
       deleting them.
+    * Added new hook "sites-saved"
     * Allow @ in user names (needed for some Kerberos setups)
+    * Implemented new option in WATO attributes: editable
+      When set to False the attribute can only be changed during creation
+      of a new object. When editing an object this attribute is only displayed.
 
     BI:
     * Great speed up of rule compilation in large environments

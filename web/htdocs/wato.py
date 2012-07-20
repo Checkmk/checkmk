@@ -1728,7 +1728,7 @@ def mode_editfolder(phase, new):
                 parent = g_folder.get(".parent")
                 myself = g_folder
 
-            configure_attributes({"folder": attributes}, "folder", parent, myself)
+            configure_attributes(new, {"folder": attributes}, "folder", parent, myself)
 
         forms.end()
         html.button("save", _("Save &amp; Finish"), "submit")
@@ -1956,7 +1956,7 @@ def mode_edithost(phase, new, cluster):
             html.help(_('Enter the host names of the cluster nodes. These '
                        'hosts must be present in WATO. '))
 
-        configure_attributes({hostname: host}, "host", parent = g_folder)
+        configure_attributes(new, {hostname: host}, "host", parent = g_folder)
 
         forms.end()
         html.image_button("services", _("Save &amp; go to Services"), "submit")
@@ -2212,7 +2212,7 @@ def mode_search(phase):
     html.set_focus("host")
 
     # Attributes
-    configure_attributes({}, "search", parent = None)
+    configure_attributes(False, {}, "search", parent = None)
 
     # Button
     forms.end()
@@ -2613,7 +2613,7 @@ def mode_bulk_edit(phase):
     "will keep their individual settings.") + "</p>")
 
     html.begin_form("edithost", None, "POST")
-    configure_attributes(hosts, "bulk", parent = g_folder)
+    configure_attributes(False, hosts, "bulk", parent = g_folder)
     forms.end()
     html.button("_save", _("Save &amp; Finish"))
     html.hidden_fields()
@@ -4100,6 +4100,11 @@ class Attribute:
     def show_in_folder(self):
         return self._show_in_folder
 
+    # Wether or not this attribute can be edited after creation
+    # of the object
+    def editable(self):
+        return self._editable
+
     # Wether it is allowed that a host has no explicit
     # value here (inherited or direct value). An mandatory
     # has *no* default value.
@@ -4138,7 +4143,7 @@ class Attribute:
 
     # Check whether this attribute needs to be validated at all
     # Attributes might be permanently hidden (show_in_form = False)
-    # or dynamically hidden by the depends_on_tags feature
+    # or dynamically hidden by the depends_on_tags, editable features
     def needs_validation(self):
         if not self._show_in_form:
             return False
@@ -4551,14 +4556,15 @@ host_attribute = {}
 
 # Declare attributes with this method
 def declare_host_attribute(a, show_in_table = True, show_in_folder = True,
-       topic = None, show_in_form = True, depends_on_tags = [],depends_on_roles = []):
+       topic = None, show_in_form = True, depends_on_tags = [], depends_on_roles = [], editable = True):
     host_attributes.append((a, topic))
     host_attribute[a.name()] = a
-    a._show_in_table   = show_in_table
-    a._show_in_folder  = show_in_folder
-    a._show_in_form    = show_in_form
-    a._depends_on_tags = depends_on_tags
+    a._show_in_table    = show_in_table
+    a._show_in_folder   = show_in_folder
+    a._show_in_form     = show_in_form
+    a._depends_on_tags  = depends_on_tags
     a._depends_on_roles = depends_on_roles
+    a._editable         = editable
 
 
 def undeclare_host_attribute(attrname):
@@ -4589,15 +4595,18 @@ def have_folder_attributes():
             return True
     return False
 
-# Show HTML form for editing attributes. for_what can be:
-# "host"   -> normal host edit dialog
-# "folder" -> properies of folder or file
-# "search" -> search dialog
-# "bulk"   -> bulk change
+# Show HTML form for editing attributes.
+#
+# new: Boolean flag if this is a creation step or editing
+# for_what can be:
+#   "host"   -> normal host edit dialog
+#   "folder" -> properies of folder or file
+#   "search" -> search dialog
+#   "bulk"   -> bulk change
 # parent: The parent folder of the objects to configure
 # myself: For mode "folder" the folder itself or None, if we edit a new folder
 #         This is needed for handling mandatory attributes.
-def configure_attributes(hosts, for_what, parent, myself=None, without_attributes = []):
+def configure_attributes(new, hosts, for_what, parent, myself=None, without_attributes = []):
     # show attributes grouped by topics, in order of their
     # appearance. If only one topic exists, do not show topics
     # Make sure, that the topics "Basic settings" and host tags
@@ -4741,6 +4750,8 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 and not has_inherited:
                 force_entry = True
                 active = True
+            elif not new and not attr.editable():
+                force_entry = True
             elif for_what == "host" and attr.is_mandatory() and not has_inherited:
                     force_entry = True
                     active = True
@@ -4765,48 +4776,63 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             forms.section(attr.title(), checkbox=checkbox_code, id="attr_" + attrname)
             html.help(attr.help())
 
-            # Now comes the input fields and the inherited / default values
-            # as two DIV elements, one of which is visible at one time.
-            # html.write('<td class=content>')
-
-            # DIV with the input elements
-            html.write('<div id="attr_entry_%s" style="%s">'
-              % (attrname, (not active) and "display: none" or ""))
             if len(values) == 1:
                 defvalue = values[0]
             else:
                 defvalue = attr.default_value()
 
-            attr.render_input(defvalue)
-            html.write("</div>")
+            if not new and not attr.editable():
+                # In edit mode only display non editable values, don't show the
+                # input fields
+                html.write('<div id="attr_hidden_%s" style="display:none">')
+                attr.render_input(defvalue)
+                html.write('</div>')
 
-            # DIV with actual / inherited / default value
-            html.write('<div class="inherited" id="attr_default_%s" style="%s">'
-              % (attrname, active and "display: none" or ""))
-
-            # in bulk mode we show inheritance only if *all* hosts inherit
-            explanation = ""
-            if for_what == "bulk":
-                if num_haveit == 0:
-                    explanation = " (" + inherited_from + ")"
-                    value = inherited_value
-                elif not unique:
-                    explanation = _("This value differs between the selected hosts.")
-                else:
-                    value = values[0]
-
-            elif for_what in [ "host", "folder" ]:
-                explanation = " (" + inherited_from + ")"
-                value = inherited_value
-
-            if for_what != "search" and not (for_what == "bulk" and not unique):
-                tdclass, content = attr.paint(value, "")
+                tdclass, content = attr.paint(defvalue, "")
                 if not content:
                     content = _("empty")
-                html.write("<b>" + content + "</b>")
+                html.write(content)
 
-            html.write(explanation)
-            html.write("</div>")
+            else:
+                # Regular rendering
+
+                # Now comes the input fields and the inherited / default values
+                # as two DIV elements, one of which is visible at one time.
+
+                # DIV with the input elements
+                html.write('<div id="attr_entry_%s" style="%s">'
+                  % (attrname, (not active) and "display: none" or ""))
+
+                attr.render_input(defvalue)
+                html.write("</div>")
+
+                # DIV with actual / inherited / default value
+                html.write('<div class="inherited" id="attr_default_%s" style="%s">'
+                  % (attrname, active and "display: none" or ""))
+
+                # in bulk mode we show inheritance only if *all* hosts inherit
+                explanation = ""
+                if for_what == "bulk":
+                    if num_haveit == 0:
+                        explanation = " (" + inherited_from + ")"
+                        value = inherited_value
+                    elif not unique:
+                        explanation = _("This value differs between the selected hosts.")
+                    else:
+                        value = values[0]
+
+                elif for_what in [ "host", "folder" ]:
+                    explanation = " (" + inherited_from + ")"
+                    value = inherited_value
+
+                if for_what != "search" and not (for_what == "bulk" and not unique):
+                    tdclass, content = attr.paint(value, "")
+                    if not content:
+                        content = _("empty")
+                    html.write("<b>" + content + "</b>")
+
+                html.write(explanation)
+                html.write("</div>")
 
 
         if len(topics) > 1:
@@ -6704,6 +6730,9 @@ def save_sites(sites):
     declare_site_attribute()
     rewrite_config_files_below(g_root_folder) # fix site attributes
     need_sidebar_reload()
+
+    # Call the sites saved hook
+    call_hook_sites_saved(sites)
 
 # Makes sure, that in distributed mode we monitor only
 # the hosts that are directly assigned to our (the local)
@@ -11179,6 +11208,11 @@ def call_hook_users_saved(users):
 def call_hook_roles_saved(roles):
     if hook_registered('roles-saved'):
         call_hooks("roles-saved", roles)
+
+# This hook is executed when the save_sites() function is called
+def call_hook_sites_saved(sites):
+    if hook_registered('sites-saved'):
+        call_hooks("sites-saved", sites)
 
 # This hook is called in order to determine if a host has a 'valid'
 # configuration. It used for displaying warning symbols in the

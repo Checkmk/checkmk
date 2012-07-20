@@ -26,12 +26,10 @@
 
 # Cut the relevant bits from the Nagios Service Description.
 # This is a little complicated.
-$item = substr($servicedesc, 14);
-$item = str_replace("_Size", "",  $item);
-$dbname = $item;
+$servicedesc = str_replace("_", " ", $servicedesc);
 
 
-$opt[1]     = "--lower=0 --upper=".($CRIT[1]+10)." --vertical-label \"Bytes\" --title \"MySQL DB $dbname Size\" ";
+$opt[1]     = "--lower=0 --upper=".($CRIT[1]+10)." --vertical-label \"Bytes\" --title \"$servicedesc\" ";
 # Paint nice gradient using MySQLs colours.
 $def[1]     = rrd::def("var1", $RRDFILE[1], $DS[1], "MAX")
            . rrd::gradient('var1', '015a84', 'e97b00', 'Database Size', 50)

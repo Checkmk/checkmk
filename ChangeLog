@@ -9,6 +9,8 @@
     * New Checks for Siemens Blades (BX600)
     * FIX: megaraid_pdisks: handle case where no enclosure device exists
     * mysql_capacity: cleaned up check, levels are in MB now
+    * jolokia_info, jolokia_metrics: new rewritten checks for jolokia (formerly
+      jmx4perl). You need the new plugin mk_jokokia for using them
 
     WATO:
     * Added permission to control the "clone host" feature in WATO

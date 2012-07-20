@@ -41,7 +41,7 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 LOCALDIR=$MK_LIBDIR/local
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.0p2
+echo Version: 1.2.0p3
 echo AgentOS: solaris
 
 

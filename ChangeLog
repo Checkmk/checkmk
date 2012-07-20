@@ -14,6 +14,7 @@
     * vms_diskstat.df: new check file usage of OpenVMS disks (agent will
       come shortly after)
     * vms_users: new check for number of interactive sessions on OpenVMS
+    * vms_cpu: new check for CPU utilization on OpenVMS
 
     WATO:
     * Added permission to control the "clone host" feature in WATO

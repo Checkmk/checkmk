@@ -1,0 +1,15 @@
+title: Monitor number total IOs of a node on OpenVMS
+agents: openvms
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This checks measures the number of total direct and buffered IOs
+ on an OpenVMS host. The check is always OK.
+
+perfdata:
+ Two values: the number of direct and bufferd IOs per second.
+
+inventory:
+ One check per OpenVMS host will be created.
+

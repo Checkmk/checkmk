@@ -524,3 +524,16 @@ def perfometer_mysql_capacity(row, check_command, perf_data):
     return "%s" % number_human_readable(size), perfometer_logarithmic(size, median, 10, color)
 
 perfometers['check_mk-mysql_capacity'] = perfometer_mysql_capacity
+
+def perfometer_vms_system_ios(row, check_command, perf_data):
+    h = '<div class="stacked">'
+    direct = float(perf_data[0][1])
+    buffered = float(perf_data[1][1])
+    h += perfometer_logarithmic(buffered, 10000, 3, "#38b0cf")
+    h += perfometer_logarithmic(direct, 10000, 3, "#38808f")
+    h += '</div>'
+    return "%.0f / %.0f" % (direct, buffered), h #  perfometer_logarithmic(100, 200, 2, "#883875")
+
+perfometers["check_mk-vms_system.ios"] = perfometer_vms_system_ios
+
+

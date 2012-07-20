@@ -1051,15 +1051,15 @@ checkgroups.append((
               Tuple(
                   title = _("Read throughput"),
                   elements = [
-                      Float(title = "warning at", unit = _("MB/s")),
-                      Float(title = "critical at", unit = _("MB/s"))
+                      Float(title = _("warning at"), unit = _("MB/s")),
+                      Float(title = _("critical at"), unit = _("MB/s"))
                   ])),
             ( "write",
               Tuple(
                   title = _("Write throughput"),
                   elements = [
-                      Float(title = "warning at", unit = _("MB/s")),
-                      Float(title = "critical at", unit = _("MB/s"))
+                      Float(title = _("warning at"), unit = _("MB/s")),
+                      Float(title = _("critical at"), unit = _("MB/s"))
                   ])),
             ( "average",
               Integer(
@@ -1072,6 +1072,25 @@ checkgroups.append((
         ]),
     None,
     "dict"))
+
+checkgroups.append((
+    subgroup_applications,
+    "dbsize",
+    _("Size of MySQL/PostgresQL databases"),
+    Optional(
+        Tuple(
+            elements = [
+                Integer(title = _("warning at"), unit = _("MB")),
+                Integer(title = _("critical at"), unit = _("MB")),
+            ]),
+        help = _("The check will trigger a warning or critical state if the size of the "
+                 "database exceeds these levels."),
+        title = _("Impose limits on the size of the database"),
+    ),
+    TextAscii(
+        title = _("Name of the database"),
+    ),
+    "first"))
 
 checkgroups.append((
     subgroup_applications,

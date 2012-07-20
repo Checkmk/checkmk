@@ -7560,8 +7560,8 @@ def mode_edit_user(phase):
         id = html.var("userid").strip()
         if new and id in users:
             raise MKUserError("userid", _("This username is already being used by another user."))
-        if not re.match("^[-a-z0-9A-Z_\.]+$", id):
-            raise MKUserError("userid", _("The username must consist only of letters, digit and the underscore."))
+        if not re.match("^[-a-z0-9A-Z_\.@]+$", id):
+            raise MKUserError("userid", _("The username must consist only of letters, digits, <tt>@</tt>, <tt>_</tt> or colon."))
 
         if new:
             new_user = {}

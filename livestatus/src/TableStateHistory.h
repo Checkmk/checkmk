@@ -73,7 +73,9 @@ public:
 	char*   _debug_info;
 
     host      *_host;
+    char*     _host_name;
     service   *_service;
+    char*     _svc_desc;
 
 	HostServiceState()
 	: _state_type(""){};
@@ -93,7 +95,7 @@ public:
     void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
     void answerQuery(Query *query);
     Column *column(const char *colname); // override in order to handle current_
-    void updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &state, bool only_update, bool force_process);
+    void updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &state, bool only_update);
 
 private:
    bool answerQuery(Query *, Logfile *, time_t, time_t);

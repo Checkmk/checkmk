@@ -55,6 +55,7 @@ void store_init()
 {
 	new LogCache(g_max_cached_messages);
 	g_store = new Store();
+    logger(LG_CRIT, "g_store done");
     g_client_queue = new ClientQueue();
     g_timeperiods_cache = new TimeperiodsCache();
 }

@@ -65,8 +65,6 @@ LogCache::LogCache(unsigned long max_cached_messages)
   : _num_cached_messages(0)
   , _max_cached_messages(max_cached_messages)
   , _num_at_last_check(0){
-
-	logcache_debug("## Initialisiere LOGCACHE");
     pthread_mutex_init(&_lock, 0);
     updateLogfileIndex();
     handle = this;
@@ -89,7 +87,6 @@ void LogCache::unlockLogCache(){
 bool LogCache::logCachePreChecks(){
     // Do we have any logfiles (should always be the case,
     // but we don't want to crash...
-	logcache_debug("## LOGCACHE PRE CHECKS");
     if (_logfiles.size() == 0) {
         logger(LOG_INFO, "Warning: no logfile found, not even nagios.log");
         return false;
@@ -124,17 +121,22 @@ void LogCache::updateLogfileIndex()
 {
     _last_index_update = time(0);
 
+
     // We need to find all relevant logfiles. This includes
-    // the current nagios.log and all files in the archive
     // directory.
+    // the current nagios.log and all files in the archive
     scanLogfile(log_file, true);
+
+    logger(LG_CRIT, "archive path %s", log_archive_path );
     DIR *dir = opendir(log_archive_path);
+
     if (dir) {
         char abspath[4096];
         struct dirent *ent, *result;
         int len = offsetof(struct dirent, d_name)
             + pathconf(log_archive_path, _PC_NAME_MAX) + 1;
         ent = (struct dirent *)malloc(len);
+
         while (0 == readdir_r(dir, ent, &result) && result != 0)
         {
             if (ent->d_name[0] != '.') {

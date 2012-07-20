@@ -422,7 +422,6 @@ int broker_command(int event_type __attribute__ ((__unused__)), void *data)
 
 int broker_state(int event_type __attribute__ ((__unused__)), void *data __attribute__ ((__unused__)))
 {
-	logger( LG_CRIT, "##### BROKER STATE" );
     g_counters[COUNTER_NEB_CALLBACKS]++;
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
     pthread_cond_broadcast(&g_wait_cond[WT_STATE]);
@@ -437,19 +436,15 @@ int broker_program(int event_type __attribute__ ((__unused__)), void *data __att
     return 0;
 }
 
-
-extern scheduled_downtime *scheduled_downtime_list;
-int livestatus_threads_running = 0;
-
 int broker_event(int event_type __attribute__ ((__unused__)), void *data)
 {
     g_counters[COUNTER_NEB_CALLBACKS]++;
     struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
-  //  logger( LG_CRIT, "##### timed event %d", ts->event_type );
-//    logger( LG_CRIT, "##### BROKER EVENT" );
     if( ts->event_type == EVENT_LOG_ROTATION){
-    	if( g_thread_running == 0 )
+    	if( g_thread_running == 0 ){
     		logger( LG_CRIT, "##### DAS LOGROTATE EVENT BEIM STARTUP" );
+    		livestatus_log_initial_states();
+    	}
     	else{
     	    logger( LG_CRIT, "##### DAS LOGROTATE EVENT - DIESMAL DAS RICHTIGE" );
     	    livestatus_log_initial_states();
@@ -460,16 +455,47 @@ int broker_event(int event_type __attribute__ ((__unused__)), void *data)
     return 0;
 }
 
+extern scheduled_downtime *scheduled_downtime_list;
+
+
+#define NO_DOWNTIME_INFO "No Info"
+#define MULTIPLE_DOWNTIMES_COMMENT "Multiple Downtime Comments"
+char* get_downtime_comment(char* host_name, char* svc_desc){
+	char* comment;
+	int matches = 0;
+	scheduled_downtime* dt_list = scheduled_downtime_list;
+	while (dt_list != NULL){
+		logger( LG_CRIT, "dt type %d", dt_list->type);
+		if( dt_list->type == HOST_DOWNTIME ){
+			if( strcmp(dt_list->host_name, host_name) == 0 ) {
+				matches++;
+				comment = dt_list->comment;
+			}
+		}
+		if( svc_desc != NULL && dt_list->type == SERVICE_DOWNTIME ){
+			if( strcmp(dt_list->host_name, host_name) == 0 &&
+		        strcmp(dt_list->service_description, svc_desc) == 0
+			){
+				matches++;
+				comment = dt_list->comment;
+			}
+		}
+		dt_list = dt_list->next;
+	}
+	return matches == 0 ? NO_DOWNTIME_INFO : matches > 1 ? MULTIPLE_DOWNTIMES_COMMENT : comment;
+}
+
 void livestatus_log_initial_states(){
 	// Log DOWNTIME depth hosts
 	host *h = (host *)host_list;
-	logger( LG_CRIT, "LIVESTATUS INITIAL STATE");
 	while (h) {
 		if( h->scheduled_downtime_depth > 0 ){
 			char buffer[8192];
-			// TODO: description aufbohren
-			sprintf(buffer,"HOST DOWNTIME ALERT: %s;STARTED; Host has entered a period of scheduled downtime", h->name);
+			sprintf(buffer,"HOST NOTIFCATION PERIOD: %s;;%s;", h->name, h->notification_period);
 			write_to_all_logs(buffer, LG_INFO);
+			sprintf(buffer,"HOST DOWNTIME ALERT: %s;STARTED;%s", h->name, get_downtime_comment(h->name, NULL));
+			write_to_all_logs(buffer, LG_INFO);
+
 		}
 		h = h->next;
 	}
@@ -478,26 +504,23 @@ void livestatus_log_initial_states(){
 	while (s) {
 		if( s->scheduled_downtime_depth > 0 ){
 			char buffer[8192];
-			// TODO: description aufbohren
-			sprintf(buffer,"SERVICE DOWNTIME ALERT: %s;%s;STARTED; Service has entered a period of scheduled downtime", s->host_name, s->description);
+			sprintf(buffer,"SERVICE NOTIFCATION PERIOD: %s;%s;%s;", s->host_name, s->description, s->notification_period);
+			write_to_all_logs(buffer, LG_INFO);
+			sprintf(buffer,"SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name, s->description, get_downtime_comment(s->host_name, s->description));
 			write_to_all_logs(buffer, LG_INFO);
 		}
 		s = s->next;
 	}
-	// TODO: Log TIMEPERIODS
 }
 
 int broker_process(int event_type __attribute__ ((__unused__)), void *data)
 {
     struct nebstruct_process_struct *ps = (struct nebstruct_process_struct *)data;
-//    logger( LG_CRIT, "BROKER PROCESS");
     if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART) {
         update_timeperiods_cache(time(0));
-        logger( LG_CRIT, "NEBTYPE_PROCESS_EVENTLOOPSTART");
         livestatus_log_initial_states();
         init_livecheck();
         start_threads();
-        livestatus_threads_running = 1;
     }
     return 0;
 }
@@ -559,6 +582,8 @@ int verify_event_broker_options()
 
 void register_callbacks()
 {
+	logger( LG_CRIT, "##### REGISTER CALLBACKS" );
+
     neb_register_callback(NEBCALLBACK_HOST_STATUS_DATA,      g_nagios_handle, 0, broker_host); // Needed to start threads
     neb_register_callback(NEBCALLBACK_COMMENT_DATA,          g_nagios_handle, 0, broker_comment); // dynamic data
     neb_register_callback(NEBCALLBACK_DOWNTIME_DATA,         g_nagios_handle, 0, broker_downtime); // dynamic data
@@ -780,7 +805,7 @@ int nebmodule_init(int flags __attribute__ ((__unused__)), char *args, void *han
         return 1;
     }
     else if (g_debug_level > 0)
-        logger(LG_INFO, "Your event_broker_options are sufficient for livestatus.");
+        logger(LG_INFO, "Your event_broker_options are sufficient for livestatus..");
 
     store_init();
     register_callbacks();

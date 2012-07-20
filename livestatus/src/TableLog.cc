@@ -70,7 +70,6 @@ void debug(const char *loginfo, ...)
 
 TableLog::TableLog()
 {
-	debug("INIT TABLE LOG");
     LogEntry *ref = 0;
     addColumn(new OffsetTimeColumn("time",
                 "Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));

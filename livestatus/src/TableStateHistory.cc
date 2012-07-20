@@ -57,7 +57,7 @@ void debug_statehist(const char *loginfo, ...)
     if (g_debug_level < 2)
         return;
 
-    FILE *x = fopen("/tmp/livestatus.log", "a+");
+    FILE *x = fopen("/tmp/livestatus_state.log", "a+");
     va_list ap;
     va_start(ap, loginfo);
     vfprintf(x, loginfo, ap);
@@ -69,7 +69,8 @@ void debug_statehist(const char *loginfo, ...)
 
 TableStateHistory::TableStateHistory()
 {
-	debug_statehist("INIT STATE HIST");
+	logger(LG_CRIT, "INIT STATE HIST");
+
     HostServiceState *ref = 0;
     addColumn(new OffsetTimeColumn("time",
                 "Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));
@@ -95,6 +96,10 @@ TableStateHistory::TableStateHistory()
                  "The type of the state (varies on different log classes)", (char *)&(ref->_state_type) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("debug_info",
                  "The type of the state (varies on different log classes)", (char *)&(ref->_debug_info) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("host_name",
+                 "Host name", (char *)&(ref->_host_name) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("svc_description",
+                 "Service description", (char *)&(ref->_svc_desc) - (char *)ref, -1));
 
 
 
@@ -103,8 +108,6 @@ TableStateHistory::TableStateHistory()
     // join host and service tables
     g_table_hosts->addColumns(this, "current_host_",    (char *)&(ref->_host)    - (char *)ref);
     g_table_services->addColumns(this, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
-//    g_table_contacts->addColumns(this, "current_contact_", (char *)&(ref->_contact) - (char *)ref);
-//    g_table_commands->addColumns(this, "current_command_", (char *)&(ref->_command) - (char *)ref);
 }
 
 
@@ -154,12 +157,14 @@ void TableStateHistory::answerQuery(Query *query)
     if (it_logs->first > until)  { // all logfiles are too new
         debug_statehist("Alle logs zu neu");
     	LogCache::handle->unlockLogCache();
-        return;
+    	return;
     }
 
     LogEntry *entry;
 	HostServiceKey key;
 	bool only_update = true;
+
+
 
 	while( it_logs != LogCache::handle->_logfiles.end() ){
 		Logfile *log = it_logs->second;
@@ -170,9 +175,7 @@ void TableStateHistory::answerQuery(Query *query)
 
 		while (it_entries != entries->end())
 		{
-
 			entry = it_entries->second;
-			debug_statehist("Entry %s" , entry->_complete);
 			if(entry->_time > until)
 				break;
 			if(only_update && entry->_time >= since){
@@ -182,6 +185,8 @@ void TableStateHistory::answerQuery(Query *query)
 			switch( entry->_type){
 			case DOWNTIME_ALERT_SERVICE:
 			case DOWNTIME_ALERT_HOST:
+			case STATE_SERVICE:
+			case STATE_HOST:
 			case ALERT_SERVICE:
 			case ALERT_HOST:
 			{
@@ -196,27 +201,34 @@ void TableStateHistory::answerQuery(Query *query)
 					state._from = since;
 					state._state = entry->_state;
 					state._attempt = entry->_attempt;
-					state._host = find_host(entry->_host_name);
+					state._host = entry->_host;
+					state._host_name = entry->_host_name; // Used if state._host is unavailable
+					state._service = entry->_service;
+					state._svc_desc = entry->_svc_desc;
+
+					if( state._service != NULL ){
+						state._notification_period = state._service->notification_period;
+					}else if (state._host != NULL ){
+						state._notification_period = entry->_host->notification_period;
+					}else
+						state._notification_period = "24x7"; // TODO: pruefen
+
 					// TODO: weg damit
 					state._downtime_state = "";
+					state._in_notification_period = 1;
+
 					state._log_ptr = entry;
-					if( entry->_svc_desc != NULL ){
-						debug_statehist("FIND SERVICE %s %s", entry->_host_name, entry->_service->description);
-						state._service = find_service(entry->_host_name, entry->_service->description);
-						state._notification_period = state._service->notification_period;
-					}
-					else
-						state._notification_period = entry->_host->notification_period;
-					debug_statehist("NEW KEY");
+
+					debug_statehist("NEW KEY %s %s", state._host_name, state._svc_desc);
 					sla_info->insert(std::make_pair(key, state));
 				}
-				updateHostServiceState(*query, *entry, sla_info->find(key)->second, only_update, false);
+				updateHostServiceState(*query, *entry, sla_info->find(key)->second, only_update);
 				break;
 			}
 			case TIMEPERIOD_TRANSITION:{
 				SLA_Info::iterator it_sla = sla_info->begin();
 				while( it_sla != sla_info->end() ){
-					updateHostServiceState(*query, *entry, it_sla->second, only_update, false);
+					updateHostServiceState(*query, *entry, it_sla->second, only_update);
 					it_sla++;
 				}
 				break;
@@ -229,11 +241,14 @@ void TableStateHistory::answerQuery(Query *query)
 
     // Create final reports
     SLA_Info::iterator it_sla = sla_info->begin();
-    entry->_time = until - 1;
-
     while( it_sla != sla_info->end() ){
-    	it_sla->second._debug_info = "LOG FINAL LINE    ";
-    	updateHostServiceState(*query, *entry, it_sla->second, false, true);
+    	HostServiceState* hst = &it_sla->second;
+    	hst->_debug_info = "LOG FINAL LINE    ";
+    	hst->_time       = until - 1;
+    	hst->_until      = hst->_time;
+    	hst->_duration   = hst->_until - hst->_from;
+    	ProcessDataSet dataset(query, &it_sla->second, false);
+    	dataset.process();
     	it_sla++;
     }
 
@@ -243,28 +258,27 @@ void TableStateHistory::answerQuery(Query *query)
 
 void print_hsstate(HostServiceState &hs_state){
 	if( hs_state._service != NULL && hs_state._service->description != NULL )
-		debug_statehist("HS STATE: \nhost %s\nservice %s \nduration %d", hs_state._host->name, hs_state._service->description, hs_state._duration);
+		debug_statehist("HS STATE: \nhost %s\nservice %s", hs_state._host->name, hs_state._service->description);
 	else
-		debug_statehist("HS STATE: \nhost %s\nduration %d", hs_state._host->name, hs_state._duration);
+		debug_statehist("HS STATE: \nhost %s\n", hs_state._host->name);
+	debug_statehist("from  %d\nuntil %d\nduration %d", hs_state._from, hs_state._until, hs_state._duration);
+	debug_statehist("timeperiod %s", hs_state._notification_period);
 	if( hs_state._state_type != NULL )
-		debug_statehist("state_type %s\n", hs_state._state_type);
+		debug_statehist("state_type %s\n\n", hs_state._state_type);
 }
 
-void TableStateHistory::updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &hs_state, bool only_update, bool force_process){
-	// Update duration
+void TableStateHistory::updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &hs_state, bool only_update){
+	// Update time/until/duration
 	hs_state._time     = entry._time;
 	hs_state._until    = entry._time;
 	hs_state._duration = hs_state._until - hs_state._from;
 	ProcessDataSet dataset(&query, &hs_state, only_update);
 
-	if( force_process ){
-		dataset.process();
-		return;
-	}
-
 	switch( entry._type ){
 		case ALERT_HOST:
 		case ALERT_SERVICE:{
+			debug_statehist("entry time %d\n%s", entry._time, entry._complete);
+			print_hsstate(hs_state);
 			if( hs_state._state != entry._state ){
 				hs_state._debug_info = "ALERT    TRIGGERED";
 				dataset.process();

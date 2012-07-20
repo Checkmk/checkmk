@@ -106,14 +106,14 @@ if (isset($DS[2])) {
 
     # IOs per second
     if (isset($RRD["ios"])) {
-        $opt[2] = "--vertical-label 'IO Operations / sec' -X0  --title \"IOs / sec $hostname / $disk\" ";
-        $def[2] = ""
-                . "DEF:latency=$RRD[latency] "
-                . "AREA:latency#aaccdd:\"Latency\" "
-                . "LINE:latency#7799aa "
-                . "GPRINT:latency:LAST:\"%6.1lf ms last\" "
-                . "GPRINT:latency:AVERAGE:\"%6.1lf ms avg\" "
-                . "GPRINT:latency:MAX:\"%6.1lf ms max\\n\" "
+        $opt[3] = "--vertical-label 'IO Operations / sec' -X0  --title \"IOs/sec $hostname / $disk\" ";
+        $def[3] = ""
+                . "DEF:ios=$RRD[ios] "
+                . "AREA:ios#ddccaa:\"ios\" "
+                . "LINE:ios#aa9977 "
+                . "GPRINT:ios:LAST:\"%6.1lf/sec last\" "
+                . "GPRINT:ios:AVERAGE:\"%6.1lf/sec avg\" "
+                . "GPRINT:ios:MAX:\"%6.1lf/sec max\\n\" "
                 ;
     }
 

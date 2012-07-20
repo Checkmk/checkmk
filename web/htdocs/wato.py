@@ -6705,6 +6705,9 @@ def save_sites(sites):
     rewrite_config_files_below(g_root_folder) # fix site attributes
     need_sidebar_reload()
 
+    # Call the sites saved hook
+    call_hook_sites_saved(sites)
+
 # Makes sure, that in distributed mode we monitor only
 # the hosts that are directly assigned to our (the local)
 # site.
@@ -11179,6 +11182,11 @@ def call_hook_users_saved(users):
 def call_hook_roles_saved(roles):
     if hook_registered('roles-saved'):
         call_hooks("roles-saved", roles)
+
+# This hook is executed when the save_sites() function is called
+def call_hook_sites_saved(sites):
+    if hook_registered('sites-saved'):
+        call_hooks("sites-saved", sites)
 
 # This hook is called in order to determine if a host has a 'valid'
 # configuration. It used for displaying warning symbols in the

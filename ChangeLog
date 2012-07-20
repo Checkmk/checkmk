@@ -17,6 +17,7 @@
       (that garbled the logical layout)
     * Rules now have an optional comment and can be disabled without
       deleting them.
+    * Added new hook "sites-saved"
 
     BI:
     * Great speed up of rule compilation in large environments

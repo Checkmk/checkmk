@@ -48,3 +48,25 @@ check_info["vms_system.ios"] = {
     "service_description" :   "IOs",
     "has_perfdata" :          True,
 }
+
+def check_vms_system_procs(_no_item, params, info):
+    procs = int(float(info[0][2]))
+    if params:
+        warn, crit = params
+    perfdata = [('procs', procs, warn, crit, 0 )]
+    if procs >= crit:
+        return (2, "CRIT - %d processes (critical at %d)" % (procs, crit), perfdata)
+    elif procs >= warn:
+        return (1, "WARN - %d processes (warning at %d)" % (procs, warn), perfdata)
+    else:
+        return (0, "OK - %d processes" % (procs,), perfdata)
+
+
+check_info["vms_system.procs"] = {
+    "check_function"        : check_vms_system_procs,
+    "inventory_function"    : inventory_vms_system,
+    "service_description"   : "Number of processes",
+    "has_perfdata"          : True,
+    "group"                 : "vms_procs",
+}
+

@@ -8,6 +8,7 @@
     * mssql_backup: Fixed problems with datetime/timezone calculations
     * New Checks for Siemens Blades (BX600)
     * FIX: megaraid_pdisks: handle case where no enclosure device exists
+    * mysql_capacity: cleaned up check, levels are in MB now
 
     WATO:
     * Added permission to control the "clone host" feature in WATO
@@ -17,6 +18,7 @@
       (that garbled the logical layout)
     * Rules now have an optional comment and can be disabled without
       deleting them.
+    * Allow @ in user names (needed for some Kerberos setups)
 
     BI:
     * Great speed up of rule compilation in large environments

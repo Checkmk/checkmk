@@ -507,3 +507,17 @@ perfometers["check_mk-hpux_tunables.shmseg"]       = perfometer_hpux_tunables
 perfometers["check_mk-hpux_tunables.nkthread"]     = perfometer_hpux_tunables
 perfometers["check_mk-hpux_tunables.nkthread"]     = perfometer_hpux_tunables
 
+
+
+# This will probably move to a generic DB one
+def perfometer_mysql_capacity(row, check_command, perf_data):
+    color = { 0: "#68f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]
+
+    size = float(perf_data[0][1])
+    # put the vertical middle at 40GB DB size, this makes small databases look small
+    # and big ones big. raise every 18 months by Moore's law :)
+    median = 40 * 1024 * 1024 * 1024
+    
+    return "%s" % number_human_readable(size), perfometer_logarithmic(size, median, 10, color)
+
+perfometers['check_mk-mysql_capacity'] = perfometer_mysql_capacity

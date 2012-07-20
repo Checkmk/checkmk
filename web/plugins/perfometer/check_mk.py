@@ -63,6 +63,7 @@ def perfometer_check_mk_df(row, check_command, perf_data):
 
 perfometers["check_mk-df"] = perfometer_check_mk_df
 perfometers["check_mk-vms_df"] = perfometer_check_mk_df
+perfometers["check_mk-vms_diskstat.df"] = perfometer_check_mk_df
 perfometers["check_disk"] = perfometer_check_mk_df
 perfometers["check_mk-df_netapp"] = perfometer_check_mk_df
 perfometers["check_mk-df_netapp32"] = perfometer_check_mk_df

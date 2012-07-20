@@ -11,8 +11,8 @@
     * mysql_capacity: cleaned up check, levels are in MB now
     * jolokia_info, jolokia_metrics: new rewritten checks for jolokia (formerly
       jmx4perl). You need the new plugin mk_jokokia for using them
-    * vms_diskstat.df: new check file usage of OpenVMS disks (agent will
-      come shortly after)
+    * added preliminary agent for OpenVMS (refer to agents/README.OpenVMS) 
+    * vms_diskstat.df: new check file usage of OpenVMS disks
     * vms_users: new check for number of interactive sessions on OpenVMS
     * vms_cpu: new check for CPU utilization on OpenVMS
     * vms_if: new check for network interfaces on OpenVMS

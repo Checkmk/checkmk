@@ -3062,7 +3062,8 @@ def show_check_manual(checkname):
         for agent in header['agents'].split(","):
             agent = agent.strip()
             ags.append({ "vms" : "VMS", "linux":"Linux", "aix": "AIX",
-                         "solaris":"Solaris", "windows":"Windows", "snmp":"SNMP"}
+                         "solaris":"Solaris", "windows":"Windows", "snmp":"SNMP",
+                         "openvms" : "OpenVMS" }
                          .get(agent, agent.upper()))
         print_splitline(header_color_left, "Supported Agents:  ", header_color_right, ", ".join(ags))
 

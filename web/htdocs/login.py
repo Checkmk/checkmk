@@ -214,7 +214,6 @@ def normal_login_page(called_directly = True):
     auth_php = defaults.var_dir + '/wato/auth/auth.php'
     if not os.path.exists(auth_php) or os.path.getsize(auth_php) == 0:
         import wato
-        wato.load_plugins()
         wato.create_auth_file(wato.load_users())
 
     html.set_render_headfoot(False)

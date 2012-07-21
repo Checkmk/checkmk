@@ -1,11 +1,37 @@
 1.2.0p3:
+    Core:
+    * Allow to add options to rules. Currently the options "disabled" and
+      "comment" are allowed. Options are kept in an optional dict at the
+      end of each rule.
+
     Checks & Agents:
     * mssql_backup: Fixed problems with datetime/timezone calculations
     * New Checks for Siemens Blades (BX600)
+    * FIX: megaraid_pdisks: handle case where no enclosure device exists
+    * mysql_capacity: cleaned up check, levels are in MB now
+    * jolokia_info, jolokia_metrics: new rewritten checks for jolokia (formerly
+      jmx4perl). You need the new plugin mk_jokokia for using them
+    * added preliminary agent for OpenVMS (refer to agents/README.OpenVMS) 
+    * vms_diskstat.df: new check file usage of OpenVMS disks
+    * vms_users: new check for number of interactive sessions on OpenVMS
+    * vms_cpu: new check for CPU utilization on OpenVMS
+    * vms_if: new check for network interfaces on OpenVMS
+    * vms_system.ios: new check for total direct/buffered IOs on OpenVMS
+    * vms_system.procs: new check for number of processes on OpenVMS
 
     WATO:
+    * Added permission to control the "clone host" feature in WATO
+    * Added new role/permission matrix page in WATO to compare
+      permissions of roles
     * FIX: remove line about number of rules in rule set overview
       (that garbled the logical layout)
+    * Rules now have an optional comment and can be disabled without
+      deleting them.
+    * Added new hook "sites-saved"
+    * Allow @ in user names (needed for some Kerberos setups)
+    * Implemented new option in WATO attributes: editable
+      When set to False the attribute can only be changed during creation
+      of a new object. When editing an object this attribute is only displayed.
 
     BI:
     * Great speed up of rule compilation in large environments
@@ -13,12 +39,10 @@
     Multisite:
     * FIX: fixed localization of general permissions
     * FIX: show multisite warning messages even after page reload
+    * FIX: fix bug in Age ValueSpec: days had been ignored
 
     Livecheck:
     * FIX: Compile livecheck also if diet libc is missing
-
-    Multisite:
-    * FIX: fix bug in Age ValueSpec: days had been ignored
 
 1.2.0p2:
     Core:

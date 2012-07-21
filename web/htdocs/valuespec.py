@@ -757,6 +757,7 @@ class DropdownChoice(ValueSpec):
         self._choices = kwargs["choices"]
         self._help_separator = kwargs.get("help_separator")
         self._label = kwargs.get("label")
+        self._prefix_values = kwargs.get("prefix_values", False)
 
     def choices(self):
         if type(self._choices) == list:
@@ -778,6 +779,8 @@ class DropdownChoice(ValueSpec):
         defval = "0"
         options = []
         for n, entry in enumerate(self.choices()):
+            if self._prefix_values:
+                entry = (entry[0], "%s - %s" % entry)
             options.append((str(n),) + entry[1:])
             if entry[0] == value:
                 defval = str(n)

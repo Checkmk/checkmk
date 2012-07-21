@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.2.0p2
+VERSION        	= 1.2.0p3
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -116,6 +116,7 @@ setversion:
 	        sed -i 's/echo Version: [0-9.a-z]*/'"echo Version: $(NEW_VERSION)/g" $$agent; \
 	    fi ; \
 	done ; \
+        sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' agents/check_mk_agent.openvms
 	sed -i 's/#define CHECK_MK_VERSION .*/#define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' agents/windows/check_mk_agent.cc ; \
 	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' agents/windows/installer.nsi ; \
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \

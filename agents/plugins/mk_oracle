@@ -121,12 +121,12 @@ for SID in $SIDS; do
     CACHE_FILE=$MK_CONFDIR/oracle_$SID.cache
 
     # Check if file exists and recent enough
-    USE_CACHE_FILE=
+    CACHE_FILE_UPTODATE=
     if [ -s $CACHE_FILE ]; then
         NOW=$(date +%s)
         MTIME=$(stat -c %Y $CACHE_FILE)
         if [ $(($NOW - $MTIME)) -le $CACHE_MAXAGE ]; then
-            USE_CACHE_FILE=1
+            CACHE_FILE_UPTODATE=1
         fi
     fi
 
@@ -140,7 +140,7 @@ for SID in $SIDS; do
     # because of the existance of the .new file
     # When the cache is old and there is no *new file present, then start a query
     # to update the information for this instance.
-    if [ -z "$USE_CACHE_FILE" -a ! -e "$CACHE_FILE.new" ]
+    if [ -z "$CACHE_FILE_UPTODATE" -a ! -e "$CACHE_FILE.new" ]
     then
         setsid bash -c "
             set -o noclobber

@@ -1,0 +1,28 @@
+title: Check CPU utilization (usage) and IO-Wait
+agents: openvms
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ Check CPU utilization (user, system, idle) and IO-Wait on an
+ OpenVMS system. The number of CPUs is taken into account so that
+ maximum percentage is 100% is refers to the total CPUs available.
+
+ A level can be set only on {wait} (disk wait). 
+
+perfdata:
+ Three variables: The percentage of time spent in {user}, {system} and {wait}
+ (disk wait). The idle time can be computed by substracting those three values
+ from 100%. The user value contains also {nice}.
+
+inventory:
+ One check per host is created for OpenVMS systems.
+
+[parameters]
+warning (int): The percentage of {wait} that triggers a warning level.
+critical (int): The percentage of {wait} that triggers a critical level
+ The parameters may also be set to {None}, which makes the check alwas {OK}.
+
+[configuration]
+vms_cpu_default_levels (int, int): Default levels used by inventorized
+  checks. This is present to {None}, which disables the levels.

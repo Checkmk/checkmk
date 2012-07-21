@@ -32,30 +32,43 @@
 # performance_schema  0   0
 # wa-confluence   15499264    13805551616
 
-def inventory_mysql_capacity(info):
+def inventory_mysql_size(info):
     inventory = []
     for dbname, used, avail in info:
         if dbname not in [ "information_schema", "mysql", "performance_schema" ]:
-            inventory.append((dbname, {}))
+            inventory.append((dbname, None))
     return inventory
 
-def check_mysql_capacity(item, params, info):
-    for dbname, used, avail in info:
+def check_mysql_size(item, params, info):
+    for dbname, size, avail in info:
         if item == dbname:
-            used_mb = int(used) / 1048576.0
-            avail_mb = int(avail) / 1048576.0
-            size_mb = used_mb + avail_mb
-            return df_check_filesystem(g_hostname, item, size_mb, avail_mb, params)
-
-    return (3, "UNKNOWN - Database not found")
+            size = int(size)
+            infotext = " - Size is %s" % get_bytes_human_readable(size)
+            if params:
+                state = 0
+                warn, crit = params # in MB
+                warn_b = warn * 1048576
+                crit_b = crit * 1048576
+                perfdata = [("size", size, warn, crit)]
+		if size > crit:
+                   state = 2
+                   infotext += " (critical at %s)" % get_bytes_human_readable(crit)
+                elif size > warn:
+                   state = 1
+                   infotext += " (warning at %s)" % get_bytes_human_readable(crit)
+            else:
+                state = 0
+                perfdata = [("size", size)]
+            return (state, nagios_state_names[state] + infotext, perfdata)
+    return (3, "UNKNOWN - Database not found in Agent output")
 
 
 check_info['mysql_capacity'] = {
-    "check_function"          : check_mysql_capacity,
-    "inventory_function"      : inventory_mysql_capacity,
-    "service_description"     : "MySQL DB %s Capacity",
+    "check_function"          : check_mysql_size,
+    "inventory_function"      : inventory_mysql_size,
+    "service_description"     : "MySQL DB %s Size",
     "has_perfdata"            : True,
-    "group"                   : "filesystem",
-    "default_levels_variable" : "filesystem_default_levels",
-    "includes"                : [ "df.include" ],
+    "group"                   : "dbsize",
+#    "default_levels_variable" : "filesystem_default_levels",
+#    "includes"                : [ "dbsize.include" ],
 }

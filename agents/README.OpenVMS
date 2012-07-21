@@ -1,0 +1,87 @@
+OpenVMS Agent for Check_MK
+--------------------------
+
+*** current status:  BETA ***
+
+1. Prerequisites
+    - An OpenVMS account with enhanced privileges:
+      CMKRNL must be enabled per default (for network counters)
+    - Make sure that you do not use the SYSTEM account! Rather create a new
+      account with the name 'check_mk' with enabled privileges (TMPMBX, NETMBX, CMKRNL)
+    - It is a good idea to create the login directory for the
+      user who invokes the agent outside of the system disk
+      (SYS$SYSDEVICE)
+    - Preferrable create a subdirectory [.bin] for using this
+      agent
+
+2. Using the agent
+    - Copy the file check_mk_agent.openvms to your OpenVMS system
+      and rename it to check_mk_agent.com.
+    - For direct testing purposes you can invoke this procedure
+      from the command line (@check_mk_agent)
+    - If you configure the TCPIP settings (refer to PROXY) you
+      can test the agent from an 'external box' using rsh
+      (rsh <IP_of_OpenVMS_host> -l <VMSuser> @[.bin]check_mk_agent)
+    - Hint:
+      If you are playing with rsh from an other host dont't forget to
+      have a look on the login directory of the VMSuser - every rsh call
+      produces a logFile!
+
+3. Information
+    - As this is a quite preliminary agent the sample period is set to
+      only 14 seconds (will be 60 seconds at least in a stable version)
+      You can change this value for you testing purpose.
+      Please keep in mind that the agent currently runs (and 'holds'
+      for the specified sample period)
+    - In a future version of the agent we will replace external 'calls'
+      (rsh) with a tcp service as known from other existing checks
+    - The agent is tested on OpenVMS Version 7.3-2 and later (currently
+      only on Alpha)
+
+4. Integration into Check_MK via RSH
+
+    - The current version of the OpenVMS does not support communication
+      via TCP port 6556 yet (will come in future). Currently you have
+      to access it via rsh. First make sure that a rsh-call of the agent
+      from your monitoring system is possible without password.
+    - Now configure the access via "datasource_programs". The following
+      example for main.mk assumes, that your OpenVMS hosts have the
+      host tag "vms" and that your OpenVMS user is 'check_mk':
+
+main.mk:
+
+datasource_programs = [
+  ( "rsh -l check_mk <IP> '@[.bin]check_mk_agent'", ['vms'], ALL_HOSTS ),
+]
+
+
+Now you can run Check_MK inventory as usually and should find a couple
+of new checks. Here is an example output from the VMS agent on a small
+virtualized test machine:
+
+<<<check_mk>>>
+Version: 1.2.0p2
+AgentOS: openvms
+Nodename: VALPH2
+Architecture: Alpha
+SWversion: V8.4
+<<<vms_cpu>>>
+1 99.47 0.07 0.42 0.00
+<<<mem>>>
+MemTotal: 131072
+MemFree: 68544
+SwapTotal: 0
+SwapFree: 0
+<<<vms_system>>>
+0.00 0.00 15.00
+<<<vms_diskstat>>>
+OVMS084 8380080 6429712 0.00
+DATA 4110480 4090976 0.00
+<<<vms_if>>>
+SE0 26660 0 15634 0 0
+<<<vms_queuejobs>>>
+DUMMY: Missing test possibilites - to be done!
+<<<vms_users>>>
+AEP 2 - - 1
+SYSTEM 1      
+TCPIP$FTP - - - 1

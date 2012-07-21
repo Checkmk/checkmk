@@ -228,6 +228,11 @@ def handler(req, profiling = True):
             os.chmod(profilefile + ".py", 0755)
             return apache.OK
 
+        # Make sure all plugins are avaiable as early as possible. At least
+        # we need the plugins (i.e. the permissions declared in these) at the
+        # time before the first login for generating auth.php.
+        load_all_plugins()
+
         # Detect mobile devices
         if html.has_var("mobile"):
             html.mobile = not not html.var("mobile")
@@ -247,7 +252,6 @@ def handler(req, profiling = True):
         # here. Automation calls bybass the normal authentication stuff
         if req.myfile == "automation":
             try:
-                load_all_plugins()
                 handler()
             except Exception, e:
                 html.write(str(e))

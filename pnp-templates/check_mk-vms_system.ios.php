@@ -23,25 +23,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+$opt[1] = "--vertical-label 'IOs per second' -l0 --title \"IOs on $hostname\" ";
+$def[1] = ""
+          . "DEF:direct=$RRDFILE[1]:$DS[1]:MAX "
+          . "AREA:direct#38808f:\"Direct IOs/sec  \" "
+          . "GPRINT:direct:LAST:\"last\: %8.0lf/s\" "
+          . "GPRINT:direct:AVERAGE:\"avg\: %8.0lf/s\" "
+          . "GPRINT:direct:MAX:\"max\: %8.0lf/s\\n\" "
 
-# Cut the relevant bits from the Nagios Service Description.
-# This is a little complicated.
-$servicedesc = str_replace("_", " ", $servicedesc);
-
-
-$opt[1]     = "--lower=0 --upper=".($CRIT[1]+10)." --vertical-label \"Bytes\" --title \"$servicedesc\" ";
-# Paint nice gradient using MySQLs colours.
-$def[1]     = rrd::def("var1", $RRDFILE[1], $DS[1], "MAX")
-           . rrd::gradient('var1', '015a84', 'e97b00', 'Database Size', 50)
-           . rrd::gprint("var1", array("LAST", "MAX", "AVERAGE"), "%6.2lf%sB")
-           # paint a little line on top of it for visibility.
-           . "LINE2:var1#e57900 ";
-
-# Draw vertical line with the current warn/crit levels.
-if (isset($WARN[1]) and $WARN[1] != "") {
-    $def[1] .= "HRULE:$WARN[1]#FFFF00:\"\" ".
-               "HRULE:$CRIT[1]#FF0000:\"\" ".
-               "";
-    }
-
+          . "DEF:buffered=$RRDFILE[2]:$DS[2]:MAX "
+          . "AREA:buffered#38b0cf:\"Buffered IOs/sec\":STACK "
+          . "GPRINT:buffered:LAST:\"last\: %8.0lf/s\" "
+          . "GPRINT:buffered:AVERAGE:\"avg\: %8.0lf/s\" "
+          . "GPRINT:buffered:MAX:\"max\: %8.0lf/s\\n\" "
+          ;
 ?>

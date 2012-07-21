@@ -1261,6 +1261,10 @@ def check_icmp_arguments(hostname):
 def service_deps(hostname, servicedesc):
     deps = []
     for entry in service_dependencies:
+        entry, rule_options = get_rule_options(entry)
+        if rule_options.get("disabled"):
+            continue
+
         if len(entry) == 3:
             depname, hostlist, patternlist = entry
             tags = []
@@ -1292,6 +1296,10 @@ def host_extra_conf(hostname, conf):
         sys.stderr.write('WARNING: deprecated entry [ "" ] in host configuration list\n')
 
     for entry in conf:
+        entry, rule_options = get_rule_options(entry)
+        if rule_options.get("disabled"):
+            continue
+
         if len(entry) == 2:
             item, hostlist = entry
             tags = []
@@ -1311,6 +1319,10 @@ def in_binary_hostlist(hostname, conf):
         return hostname in strip_tags(conf)
 
     for entry in conf:
+        entry, rule_options = get_rule_options(entry)
+        if rule_options.get("disabled"):
+            continue
+
         try:
             # Negation via 'NEGATE'
             if entry[0] == NEGATE:
@@ -1340,12 +1352,26 @@ def in_binary_hostlist(hostname, conf):
 
     return False
 
+# Pick out the last element of an entry if it is a dictionary.
+# This is a new feature (1.2.0p3) that allows to add options
+# to rules. Currently only the option "disabled" is being
+# honored. WATO also uses the option "comment".
+def get_rule_options(entry):
+    if type(entry[-1]) == dict:
+        return entry[:-1], entry[-1]
+    else:
+        return entry, {}
+
 
 # Compute list of service_groups or contact_groups of service
 # conf is either service_groups or service_contactgroups
 def service_extra_conf(hostname, service, conf):
     entries = []
     for entry in conf:
+        entry, rule_options = get_rule_options(entry)
+        if rule_options.get("disabled"):
+            continue
+
         if len(entry) == 3:
             item, hostlist, servlist = entry
             tags = []
@@ -2383,6 +2409,10 @@ def service_ignored(hostname, checktype, service_description):
 
 def in_boolean_serviceconf_list(hostname, service_description, conflist):
     for entry in conflist:
+        entry, rule_options = get_rule_options(entry)
+        if rule_options.get("disabled"):
+            continue
+
         if entry[0] == NEGATE: # this entry is logically negated
             negate = True
             entry = entry[1:]
@@ -3032,7 +3062,8 @@ def show_check_manual(checkname):
         for agent in header['agents'].split(","):
             agent = agent.strip()
             ags.append({ "vms" : "VMS", "linux":"Linux", "aix": "AIX",
-                         "solaris":"Solaris", "windows":"Windows", "snmp":"SNMP"}
+                         "solaris":"Solaris", "windows":"Windows", "snmp":"SNMP",
+                         "openvms" : "OpenVMS" }
                          .get(agent, agent.upper()))
         print_splitline(header_color_left, "Supported Agents:  ", header_color_right, ", ".join(ags))
 
@@ -4329,6 +4360,10 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
     static = []
     for entries in static_checks.values():
         for entry in entries:
+            entry, rule_options = get_rule_options(entry)
+            if rule_options.get("disabled"):
+                continue
+
             # Parameters are optional
             if len(entry[0]) == 2:
                 checktype, item = entry[0]

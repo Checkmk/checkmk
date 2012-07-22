@@ -184,8 +184,7 @@ if [ "$(echo $osver | cut -f1 -d\. )" -gt "8" ]; then
     netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$8" "$5" "$6" "$7" 0 0 0 0 "$11" "$9" "$10" 0 0 0 0 0"}'
 else 
     # pad output for freebsd 7 and before
-    netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$7"
-"$5" "$6" 0 0 0 0 0 "$10" "$8" "$9" 0 0 "$11" 0 0"}'
+    netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$7" "$5" "$6" 0 0 0 0 0 "$10" "$8" "$9" 0 0 "$11" 0 0"}'
 fi
 
 

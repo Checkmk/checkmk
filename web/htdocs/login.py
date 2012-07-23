@@ -223,6 +223,13 @@ def normal_login_page(called_directly = True):
     if not origtarget and not html.req.myfile == 'login':
         origtarget = html.makeuri([])
 
+    # When e.g. the password of a user is changed and the first frame that recognizes the
+    # non matching cookies is the sidebar it redirects the user to side.py while removing
+    # the frameset. This is not good. Instead of this redirect the user to the index page.
+    if html.req.myfile == 'side':
+        html.immediate_browser_redirect(0.1, 'index.py')
+        return apache.OK
+
     # Never allow the login page to be opened in a frameset. Redirect top page to login page.
     # This will result in a full screen login page.
     html.javascript('''if(top != self) {
@@ -232,7 +239,7 @@ def normal_login_page(called_directly = True):
     # When someone calls the login page directly and is already authed redirect to main page
     if html.req.myfile == 'login' and check_auth() != '':
         html.immediate_browser_redirect(0.5, origtarget and origtarget or 'index.py')
-        return
+        return apache.OK
 
     html.write("<div id=login>")
     html.write("<img id=login_window src=\"images/login_window.png\">")

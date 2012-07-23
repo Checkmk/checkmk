@@ -41,6 +41,7 @@
     * FIX: fixed localization of general permissions
     * FIX: show multisite warning messages even after page reload
     * FIX: fix bug in Age ValueSpec: days had been ignored
+    * FIX: fixed bug showing only sidebar after re-login in multisite
 
     Livecheck:
     * FIX: Compile livecheck also if diet libc is missing

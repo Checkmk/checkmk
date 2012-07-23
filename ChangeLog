@@ -26,8 +26,9 @@
       permissions of roles
     * FIX: remove line about number of rules in rule set overview
       (that garbled the logical layout)
-    * Rules now have an optional comment and can be disabled without
-      deleting them.
+    * Rules now have an optional comment and an URL for linking to 
+      documntation
+    * Rule now can be disabled without deleting them.
     * Added new hook "sites-saved"
     * Allow @ in user names (needed for some Kerberos setups)
     * Implemented new option in WATO attributes: editable

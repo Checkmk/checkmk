@@ -1215,8 +1215,21 @@ checkgroups.append((
           help = _("These levels check the number of currently existing threads on the system. Each process has at "
                    "least one thread."),
           elements = [
-              Integer(title = _("Warning at"), label = _("threads")),
-              Integer(title = _("Critical at"), label = _("threads"))]),
+              Integer(title = _("Warning at"), unit = _("threads"), default_value = 1000),
+              Integer(title = _("Critical at"), unit = _("threads"), default_value = 2000)]),
+    None, None))
+
+checkgroups.append((
+    subgroup_applications,
+    "vms_procs",
+    _("Number of processes on OpenVMS"),
+    Optional(
+        Tuple(
+              elements = [
+                  Integer(title = _("Warning at"), unit = _("processes"), default_value = 100), 
+                  Integer(title = _("Critical at"), unit = _("processes"), default_value = 200)]),
+        title = _("Impose levels on number of processes"),
+    ),
     None, None))
 
 checkgroups.append((

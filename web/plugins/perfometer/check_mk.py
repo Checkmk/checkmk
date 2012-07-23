@@ -63,6 +63,7 @@ def perfometer_check_mk_df(row, check_command, perf_data):
 
 perfometers["check_mk-df"] = perfometer_check_mk_df
 perfometers["check_mk-vms_df"] = perfometer_check_mk_df
+perfometers["check_mk-vms_diskstat.df"] = perfometer_check_mk_df
 perfometers["check_disk"] = perfometer_check_mk_df
 perfometers["check_mk-df_netapp"] = perfometer_check_mk_df
 perfometers["check_mk-df_netapp32"] = perfometer_check_mk_df
@@ -83,6 +84,7 @@ def perfometer_check_mk_kernel_util(row, check_command, perf_data):
 
 perfometers["check_mk-kernel.util"] = perfometer_check_mk_kernel_util
 perfometers["check_mk-vms_sys.util"] = perfometer_check_mk_kernel_util
+perfometers["check_mk-vms_cpu"] = perfometer_check_mk_kernel_util
 perfometers["check_mk-ucd_cpu_util"] = perfometer_check_mk_kernel_util
 perfometers["check_mk-lparstat_aix.cpu_util"] = perfometer_check_mk_kernel_util
 
@@ -264,6 +266,7 @@ def perfometer_check_mk_brocade_fcport(row, check_command, perf_data):
 
 perfometers["check_mk-if"] = perfometer_check_mk_if
 perfometers["check_mk-if64"] = perfometer_check_mk_if
+perfometers["check_mk-vms_if"] = perfometer_check_mk_if
 perfometers["check_mk-if_lancom"] = perfometer_check_mk_if
 perfometers["check_mk-lnx_if"] = perfometer_check_mk_if
 perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
@@ -521,3 +524,21 @@ def perfometer_mysql_capacity(row, check_command, perf_data):
     return "%s" % number_human_readable(size), perfometer_logarithmic(size, median, 10, color)
 
 perfometers['check_mk-mysql_capacity'] = perfometer_mysql_capacity
+
+def perfometer_vms_system_ios(row, check_command, perf_data):
+    h = '<div class="stacked">'
+    direct = float(perf_data[0][1])
+    buffered = float(perf_data[1][1])
+    h += perfometer_logarithmic(buffered, 10000, 3, "#38b0cf")
+    h += perfometer_logarithmic(direct, 10000, 3, "#38808f")
+    h += '</div>'
+    return "%.0f / %.0f" % (direct, buffered), h #  perfometer_logarithmic(100, 200, 2, "#883875")
+
+perfometers["check_mk-vms_system.ios"] = perfometer_vms_system_ios
+
+
+def perfometer_check_mk_vms_system_procs(row, check_command, perf_data):
+    color = { 0: "#a4f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]
+    return "%d" % int(perf_data[0][1]), perfometer_logarithmic(perf_data[0][1], 100, 2, color)
+
+perfometers["check_mk-vms_system.procs"] = perfometer_check_mk_vms_system_procs

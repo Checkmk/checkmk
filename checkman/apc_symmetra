@@ -12,7 +12,7 @@ description:
  a level but just being displayed.
 
 examples:
- # Set the critical levels for all ACP checks to:
+ # Set the critical levels for all APC checks to:
  # - battery capacity at 90% or lower
  # - battery temperature to 38C or higher
  # - battery current to 10A or higher

@@ -857,6 +857,15 @@ class CascadingDropdown(ValueSpec):
         else:
             return self._choices[0][0]
 
+    def default_value(self):
+        try:
+            return self._default_value
+        except:
+            if self._choices[0][2]:
+                return (self._choices[0][0], self._choices[0][2].default_value())
+            else:
+                return self._choices[0][0]
+
     def render_input(self, varprefix, value):
         def_val = '0'
         options = []

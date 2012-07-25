@@ -1757,6 +1757,7 @@ class Dictionary(ValueSpec):
                 onclick = "valuespec_toggle_option(this, %r)" % div_id
                 checkbox_code = '<input type=checkbox name="%s" %s onclick="%s">' % (
                     vp + "_USE", visible and "CHECKED" or "", onclick)
+                html.add_form_var(vp + "_USE")
                 forms.section(vs.title(), checkbox=checkbox_code)
             else:
                 visible = True

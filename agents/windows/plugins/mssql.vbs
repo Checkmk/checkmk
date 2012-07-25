@@ -27,7 +27,23 @@ Dim WMI, prop, instId, instVersion, instIds, instName
 Set instIds = CreateObject("Scripting.Dictionary")
 
 ' Loop all found local MSSQL server instances
+' Try different trees to handle different versions of MSSQL
+On Error Resume Next
+' MSSQL >= 10
 Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement10")
+If Err.Number <> 0 Then
+    Err.Clear()
+    
+    ' MSSQL < 10
+    Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement")
+    If Err.Number <> 0 Then
+        wscript.echo "Error: " & Err.Number & " " & Err.Description
+        Err.Clear()
+        wscript.quit()
+    End If
+End If
+On Error Goto 0 
+
 For Each prop In WMI.ExecQuery("SELECT * FROM SqlServiceAdvancedProperty WHERE " & _
                                "SQLServiceType = 1 AND PropertyName = 'VERSION'")
     

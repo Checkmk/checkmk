@@ -63,6 +63,7 @@ def perfometer_check_mk_df(row, check_command, perf_data):
 
 perfometers["check_mk-df"] = perfometer_check_mk_df
 perfometers["check_mk-vms_df"] = perfometer_check_mk_df
+perfometers["check_mk-vms_diskstat.df"] = perfometer_check_mk_df
 perfometers["check_disk"] = perfometer_check_mk_df
 perfometers["check_mk-df_netapp"] = perfometer_check_mk_df
 perfometers["check_mk-df_netapp32"] = perfometer_check_mk_df
@@ -83,6 +84,7 @@ def perfometer_check_mk_kernel_util(row, check_command, perf_data):
 
 perfometers["check_mk-kernel.util"] = perfometer_check_mk_kernel_util
 perfometers["check_mk-vms_sys.util"] = perfometer_check_mk_kernel_util
+perfometers["check_mk-vms_cpu"] = perfometer_check_mk_kernel_util
 perfometers["check_mk-ucd_cpu_util"] = perfometer_check_mk_kernel_util
 perfometers["check_mk-lparstat_aix.cpu_util"] = perfometer_check_mk_kernel_util
 
@@ -264,6 +266,7 @@ def perfometer_check_mk_brocade_fcport(row, check_command, perf_data):
 
 perfometers["check_mk-if"] = perfometer_check_mk_if
 perfometers["check_mk-if64"] = perfometer_check_mk_if
+perfometers["check_mk-vms_if"] = perfometer_check_mk_if
 perfometers["check_mk-if_lancom"] = perfometer_check_mk_if
 perfometers["check_mk-lnx_if"] = perfometer_check_mk_if
 perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
@@ -465,3 +468,77 @@ def perfometer_mssql_counters_cache_hits(row, check_command, perf_data):
     return "%.1f%%" % perc, h
 
 perfometers["check_mk-mssql_counters.cache_hits"] = perfometer_mssql_counters_cache_hits
+
+
+
+def perfometer_hpux_tunables(row, check_command, perf_data):
+
+    varname, value, unit, warn, crit, minival, threshold = perf_data[0]
+    value       = float(value)
+    threshold   = float(threshold)
+
+
+    if warn != "" or crit != "":
+        warn = saveint(warn)
+        crit = saveint(crit)
+
+        # go red if we're over crit
+        if value > crit:
+           color = "#f44"
+        # yellow
+        elif value > warn:
+           color = "#f84"
+        else:
+           # all green lights
+           color = "#2d3"
+    else:
+        # use a brown-ish color if we have no levels.
+        # otherwise it could be "green" all the way to 100%
+        color = "#f4a460"
+
+    used = value / threshold * 100
+
+    return "%.0f%%" % (used), perfometer_linear(used, color)
+
+perfometers["check_mk-hpux_tunables.nproc"]        = perfometer_hpux_tunables
+perfometers["check_mk-hpux_tunables.nkthread"]     = perfometer_hpux_tunables
+perfometers["check_mk-hpux_tunables.maxfiles_lim"] = perfometer_hpux_tunables
+# this one still doesn't load. I need more test data to find out why.
+perfometers["check_mk-hpux_tunables.semmni"]       = perfometer_hpux_tunables
+perfometers["check_mk-hpux_tunables.semmns"]       = perfometer_hpux_tunables
+perfometers["check_mk-hpux_tunables.shmseg"]       = perfometer_hpux_tunables
+perfometers["check_mk-hpux_tunables.nkthread"]     = perfometer_hpux_tunables
+perfometers["check_mk-hpux_tunables.nkthread"]     = perfometer_hpux_tunables
+
+
+
+# This will probably move to a generic DB one
+def perfometer_mysql_capacity(row, check_command, perf_data):
+    color = { 0: "#68f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]
+
+    size = float(perf_data[0][1])
+    # put the vertical middle at 40GB DB size, this makes small databases look small
+    # and big ones big. raise every 18 months by Moore's law :)
+    median = 40 * 1024 * 1024 * 1024
+    
+    return "%s" % number_human_readable(size), perfometer_logarithmic(size, median, 10, color)
+
+perfometers['check_mk-mysql_capacity'] = perfometer_mysql_capacity
+
+def perfometer_vms_system_ios(row, check_command, perf_data):
+    h = '<div class="stacked">'
+    direct = float(perf_data[0][1])
+    buffered = float(perf_data[1][1])
+    h += perfometer_logarithmic(buffered, 10000, 3, "#38b0cf")
+    h += perfometer_logarithmic(direct, 10000, 3, "#38808f")
+    h += '</div>'
+    return "%.0f / %.0f" % (direct, buffered), h #  perfometer_logarithmic(100, 200, 2, "#883875")
+
+perfometers["check_mk-vms_system.ios"] = perfometer_vms_system_ios
+
+
+def perfometer_check_mk_vms_system_procs(row, check_command, perf_data):
+    color = { 0: "#a4f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]
+    return "%d" % int(perf_data[0][1]), perfometer_logarithmic(perf_data[0][1], 100, 2, color)
+
+perfometers["check_mk-vms_system.procs"] = perfometer_check_mk_vms_system_procs

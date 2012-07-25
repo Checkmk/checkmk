@@ -41,7 +41,7 @@ LOCALDIR=$MK_LIBDIR/local
 exec <&- 2>/dev/null
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.0p2
+echo Version: 1.2.0p3
 echo AgentOS: hpux
 echo PluginsDirectory: $PLUGINSDIR
 echo LocalDirectory: $LOCALDIR

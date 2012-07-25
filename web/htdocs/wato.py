@@ -1309,7 +1309,8 @@ def show_hosts(folder):
                 msg += ". " + _("The inventory of this host failed during a previous bulk inventory.")
             html.icon_button(services_url, msg, image)
         if config.may("wato.manage_hosts"):
-            html.icon_button(clone_url, _("Create a clone of this host"), "insert")
+            if config.may("wato.clone_hosts"):
+                html.icon_button(clone_url, _("Create a clone of this host"), "insert")
             html.icon_button(delete_url, _("Delete this host"), "delete")
         html.write("</td>\n")
 
@@ -1727,7 +1728,7 @@ def mode_editfolder(phase, new):
                 parent = g_folder.get(".parent")
                 myself = g_folder
 
-            configure_attributes({"folder": attributes}, "folder", parent, myself)
+            configure_attributes(new, {"folder": attributes}, "folder", parent, myself)
 
         forms.end()
         html.button("save", _("Save &amp; Finish"), "submit")
@@ -1798,6 +1799,9 @@ def mode_edithost(phase, new, cluster):
     clonename = html.var("clone")
     if clonename and clonename not in g_folder[".hosts"]:
         raise MKGeneralException(_("You called this page with an invalid host name."))
+
+    if clonename and not config.may("wato.clone_hosts"):
+        raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
 
     if clonename:
         title = _("Create clone of %s") % clonename
@@ -1952,7 +1956,7 @@ def mode_edithost(phase, new, cluster):
             html.help(_('Enter the host names of the cluster nodes. These '
                        'hosts must be present in WATO. '))
 
-        configure_attributes({hostname: host}, "host", parent = g_folder)
+        configure_attributes(new, {hostname: host}, "host", parent = g_folder)
 
         forms.end()
         html.image_button("services", _("Save &amp; go to Services"), "submit")
@@ -2208,7 +2212,7 @@ def mode_search(phase):
     html.set_focus("host")
 
     # Attributes
-    configure_attributes({}, "search", parent = None)
+    configure_attributes(False, {}, "search", parent = None)
 
     # Button
     forms.end()
@@ -2609,7 +2613,7 @@ def mode_bulk_edit(phase):
     "will keep their individual settings.") + "</p>")
 
     html.begin_form("edithost", None, "POST")
-    configure_attributes(hosts, "bulk", parent = g_folder)
+    configure_attributes(False, hosts, "bulk", parent = g_folder)
     forms.end()
     html.button("_save", _("Save &amp; Finish"))
     html.hidden_fields()
@@ -4096,6 +4100,11 @@ class Attribute:
     def show_in_folder(self):
         return self._show_in_folder
 
+    # Wether or not this attribute can be edited after creation
+    # of the object
+    def editable(self):
+        return self._editable
+
     # Wether it is allowed that a host has no explicit
     # value here (inherited or direct value). An mandatory
     # has *no* default value.
@@ -4134,7 +4143,7 @@ class Attribute:
 
     # Check whether this attribute needs to be validated at all
     # Attributes might be permanently hidden (show_in_form = False)
-    # or dynamically hidden by the depends_on_tags feature
+    # or dynamically hidden by the depends_on_tags, editable features
     def needs_validation(self):
         if not self._show_in_form:
             return False
@@ -4547,14 +4556,15 @@ host_attribute = {}
 
 # Declare attributes with this method
 def declare_host_attribute(a, show_in_table = True, show_in_folder = True,
-       topic = None, show_in_form = True, depends_on_tags = [],depends_on_roles = []):
+       topic = None, show_in_form = True, depends_on_tags = [], depends_on_roles = [], editable = True):
     host_attributes.append((a, topic))
     host_attribute[a.name()] = a
-    a._show_in_table   = show_in_table
-    a._show_in_folder  = show_in_folder
-    a._show_in_form    = show_in_form
-    a._depends_on_tags = depends_on_tags
+    a._show_in_table    = show_in_table
+    a._show_in_folder   = show_in_folder
+    a._show_in_form     = show_in_form
+    a._depends_on_tags  = depends_on_tags
     a._depends_on_roles = depends_on_roles
+    a._editable         = editable
 
 
 def undeclare_host_attribute(attrname):
@@ -4585,15 +4595,18 @@ def have_folder_attributes():
             return True
     return False
 
-# Show HTML form for editing attributes. for_what can be:
-# "host"   -> normal host edit dialog
-# "folder" -> properies of folder or file
-# "search" -> search dialog
-# "bulk"   -> bulk change
+# Show HTML form for editing attributes.
+#
+# new: Boolean flag if this is a creation step or editing
+# for_what can be:
+#   "host"   -> normal host edit dialog
+#   "folder" -> properies of folder or file
+#   "search" -> search dialog
+#   "bulk"   -> bulk change
 # parent: The parent folder of the objects to configure
 # myself: For mode "folder" the folder itself or None, if we edit a new folder
 #         This is needed for handling mandatory attributes.
-def configure_attributes(hosts, for_what, parent, myself=None, without_attributes = []):
+def configure_attributes(new, hosts, for_what, parent, myself=None, without_attributes = []):
     # show attributes grouped by topics, in order of their
     # appearance. If only one topic exists, do not show topics
     # Make sure, that the topics "Basic settings" and host tags
@@ -4737,6 +4750,8 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 and not has_inherited:
                 force_entry = True
                 active = True
+            elif not new and not attr.editable():
+                force_entry = True
             elif for_what == "host" and attr.is_mandatory() and not has_inherited:
                     force_entry = True
                     active = True
@@ -4761,48 +4776,63 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             forms.section(attr.title(), checkbox=checkbox_code, id="attr_" + attrname)
             html.help(attr.help())
 
-            # Now comes the input fields and the inherited / default values
-            # as two DIV elements, one of which is visible at one time.
-            # html.write('<td class=content>')
-
-            # DIV with the input elements
-            html.write('<div id="attr_entry_%s" style="%s">'
-              % (attrname, (not active) and "display: none" or ""))
             if len(values) == 1:
                 defvalue = values[0]
             else:
                 defvalue = attr.default_value()
 
-            attr.render_input(defvalue)
-            html.write("</div>")
+            if not new and not attr.editable():
+                # In edit mode only display non editable values, don't show the
+                # input fields
+                html.write('<div id="attr_hidden_%s" style="display:none">')
+                attr.render_input(defvalue)
+                html.write('</div>')
 
-            # DIV with actual / inherited / default value
-            html.write('<div class="inherited" id="attr_default_%s" style="%s">'
-              % (attrname, active and "display: none" or ""))
-
-            # in bulk mode we show inheritance only if *all* hosts inherit
-            explanation = ""
-            if for_what == "bulk":
-                if num_haveit == 0:
-                    explanation = " (" + inherited_from + ")"
-                    value = inherited_value
-                elif not unique:
-                    explanation = _("This value differs between the selected hosts.")
-                else:
-                    value = values[0]
-
-            elif for_what in [ "host", "folder" ]:
-                explanation = " (" + inherited_from + ")"
-                value = inherited_value
-
-            if for_what != "search" and not (for_what == "bulk" and not unique):
-                tdclass, content = attr.paint(value, "")
+                tdclass, content = attr.paint(defvalue, "")
                 if not content:
                     content = _("empty")
-                html.write("<b>" + content + "</b>")
+                html.write(content)
 
-            html.write(explanation)
-            html.write("</div>")
+            else:
+                # Regular rendering
+
+                # Now comes the input fields and the inherited / default values
+                # as two DIV elements, one of which is visible at one time.
+
+                # DIV with the input elements
+                html.write('<div id="attr_entry_%s" style="%s">'
+                  % (attrname, (not active) and "display: none" or ""))
+
+                attr.render_input(defvalue)
+                html.write("</div>")
+
+                # DIV with actual / inherited / default value
+                html.write('<div class="inherited" id="attr_default_%s" style="%s">'
+                  % (attrname, active and "display: none" or ""))
+
+                # in bulk mode we show inheritance only if *all* hosts inherit
+                explanation = ""
+                if for_what == "bulk":
+                    if num_haveit == 0:
+                        explanation = " (" + inherited_from + ")"
+                        value = inherited_value
+                    elif not unique:
+                        explanation = _("This value differs between the selected hosts.")
+                    else:
+                        value = values[0]
+
+                elif for_what in [ "host", "folder" ]:
+                    explanation = " (" + inherited_from + ")"
+                    value = inherited_value
+
+                if for_what != "search" and not (for_what == "bulk" and not unique):
+                    tdclass, content = attr.paint(value, "")
+                    if not content:
+                        content = _("empty")
+                    html.write("<b>" + content + "</b>")
+
+                html.write(explanation)
+                html.write("</div>")
 
 
         if len(topics) > 1:
@@ -6110,7 +6140,7 @@ def find_usage_of_timeperiod(tpname):
         rulespec = g_rulespecs[varname]
         if isinstance(rulespec.get("valuespec"), TimeperiodSelection):
             for folder, rule in ruleset:
-                value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+                value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
                 if value == tpname:
                     used_in.append(("%s: %s" % (_("Ruleset"), g_rulespecs[varname]["title"]),
                                    make_link([("mode", "edit_ruleset"), ("varname", varname)])))
@@ -6700,6 +6730,9 @@ def save_sites(sites):
     declare_site_attribute()
     rewrite_config_files_below(g_root_folder) # fix site attributes
     need_sidebar_reload()
+
+    # Call the sites saved hook
+    call_hook_sites_saved(sites)
 
 # Makes sure, that in distributed mode we monitor only
 # the hosts that are directly assigned to our (the local)
@@ -7527,8 +7560,8 @@ def mode_edit_user(phase):
         id = html.var("userid").strip()
         if new and id in users:
             raise MKUserError("userid", _("This username is already being used by another user."))
-        if not re.match("^[-a-z0-9A-Z_\.]+$", id):
-            raise MKUserError("userid", _("The username must consist only of letters, digit and the underscore."))
+        if not re.match("^[-a-z0-9A-Z_\.@]+$", id):
+            raise MKUserError("userid", _("The username must consist only of letters, digits, <tt>@</tt>, <tt>_</tt> or colon."))
 
         if new:
             new_user = {}
@@ -8067,6 +8100,7 @@ def mode_roles(phase):
 
     elif phase == "buttons":
         global_buttons()
+        html.context_button(_("Matrix"), make_link([("mode", "role_matrix")]), "matrix")
         return
 
     roles = load_roles()
@@ -8167,7 +8201,6 @@ def mode_roles(phase):
     # - number of set permissions (needs loading users)
     # - number of users with this role
     html.write("</table>")
-
 
 def mode_edit_role(phase):
     id = html.var("edit")
@@ -8367,6 +8400,63 @@ def rename_user_role(id, new_id):
             if new_id:
                 user["roles"].append(new_id)
     save_users(users)
+
+def mode_role_matrix(phase):
+    if phase == "title":
+        return _("Role & Permission Matrix")
+
+    elif phase == "buttons":
+        global_buttons()
+        return
+
+    elif phase == "action":
+        return
+
+    # Show table of builtin and user defined roles, sorted by alias
+    roles = load_roles()
+    role_list = roles.items()
+    role_list.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
+
+    html.write("<table class=data>")
+    html.write("<tr class=dualheader><th></th>")
+    num_roles = 1
+    for id, role in role_list:
+        html.write('<th>%s</th>' % role['alias'])
+        num_roles += 1
+    html.write("</tr>\n")
+
+    # Loop all permission sections, but sorted plz
+    odd = "even"
+    for section, (prio, section_title) in sorted(config.permission_sections.iteritems(),
+                                                 key = lambda x: x[1][0], reverse = True):
+
+        html.write('<tr>')
+        html.write('<th colspan=%d>%s</th>' % (num_roles, section_title))
+        html.write('</tr>')
+
+        # Loop all permissions
+        for perm in config.permissions_by_order:
+            pname = perm["name"]
+            this_section = pname.split(".")[0]
+            if section != this_section:
+                continue # Skip permissions of other sections
+
+            odd = odd == "odd" and "even" or "odd"
+
+            html.write('<tr class="data %s0">' % odd)
+            html.write('<td class=title>%s</td>' % perm["title"])
+
+            for id, role in role_list:
+                base_on_id = role.get('basedon', id)
+                pvalue = role["permissions"].get(pname)
+                if pvalue is None:
+                    pvalue = base_on_id in perm["defaults"]
+
+                html.write('<td>%s</td>' % (pvalue and 'X' or ''))
+
+            html.write('</tr>')
+
+    html.write("</table>")
 
 #.
 #   .-Host-Tags------------------------------------------------------------.
@@ -9114,7 +9204,7 @@ def change_host_tags_in_rules(folder, operations, mode):
         rules_to_delete = set([])
         for nr, rule in enumerate(ruleset):
             modified = False
-            value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+            value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
 
             # Handle deletion of complete tag group
             if type(operations) == list: # this list of tags to remove
@@ -9159,7 +9249,7 @@ def change_host_tags_in_rules(folder, operations, mode):
                                 # tags can always be removed without changing the rule's
                                 # behaviour.
             if modified:
-                ruleset[nr] = construct_rule(rulespec, value, tag_specs, host_list, item_list)
+                ruleset[nr] = construct_rule(rulespec, value, tag_specs, host_list, item_list, rule_options)
                 need_save = True
 
         rules_to_delete = list(rules_to_delete)
@@ -9182,9 +9272,42 @@ def change_host_tags_in_rules(folder, operations, mode):
 #   |          |_| \_\\__,_|_|\___| |_____\__,_|_|\__\___/|_|              |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | WATO's awesome rule editor: Let's user edit rule based parameters    |
+#   | WATO's awesome rule editor: Lets the user edit rule based parameters |
 #   | from main.mk.                                                        |
 #   '----------------------------------------------------------------------'
+
+vs_rule_options = Dictionary(
+    title = _("General options"),
+    optional_keys = False,
+    render = "form",
+    elements = [
+        ( "comment",
+          TextUnicode(
+            title = _("Comment"),
+            help = _("An optional comment that helps you documenting the purpose of  "
+                     "this rule"),
+            size = 80,
+          )
+        ),
+        ( "docu_url",
+          TextAscii(
+            title = _("Docu-URL"),
+            help = _("An optional URL pointing to documentation or any other page. This will be displayed "
+                     "as an icon <img class=icon src='images/icon_url.png'> and open a new page when clicked. "
+                     "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
+                     "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."),
+            size = 80,
+          ),
+        ),
+        ( "disabled",
+          Checkbox(
+              title = _("Rule activation"),
+              help = _("Disabled rules are kept in the configuration but are not applied."),
+              label = _("do not apply this rule"),
+          )
+        ),
+    ]
+)
 
 def mode_ruleeditor(phase):
     only_host = html.var("host", "")
@@ -9319,7 +9442,7 @@ def mode_rulesets(phase):
             if only_host:
                 num_local_rules = 0
                 for f, rule in rules:
-                    value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+                    value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
                     if only_host and only_host in host_list:
                         num_local_rules += 1
             else:
@@ -9524,6 +9647,8 @@ def mode_edit_ruleset(phase):
         html.write("<tr>"
                    "<th>" + _("#") + "</th>"
                    "<th>" + _("Actions") + "</th>"
+                   "<th>" + _("Act.") + "</th>"
+                   "<th>" + _("Comment") + "</th>"
                    "<th>" + _("Folder") + "</th>"
                    "<th>" + _("Value") + "</th>"
                    "<th>" + _("Conditions") + "</th>"
@@ -9550,7 +9675,7 @@ def mode_edit_ruleset(phase):
             last_in_group = rulenr == len(ruleset) - 1 or ruleset[rulenr+1][0] != folder
 
             odd = odd == "odd" and "even" or "odd"
-            value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+            value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
             html.write('<tr class="data %s0">' % odd)
 
             # Rule number
@@ -9579,15 +9704,11 @@ def mode_edit_ruleset(phase):
             rule_button("delete", _("Delete this rule"), folder, rel_rulenr)
             html.write("</td>")
 
-
-            # Folder
-            if first_in_group:
-                alias_path = get_folder_aliaspath(folder, show_main = False)
-                html.write('<td rowspan=%d>%s</td>' % (row_span, alias_path))
-
-            # Value
-            html.write('<td class=value>\n')
-            if hostname:
+            # Disabling and rule matching 
+            html.write("<td class=buttons>")
+            if rule_options.get("disabled"):
+                html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
+            elif hostname:
                 reason = rule_matches_host_and_item(
                     rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, item)
 
@@ -9625,6 +9746,25 @@ def mode_edit_ruleset(phase):
                     title = _("This rule does not match: %s") % reason
                     img = 'nmatch'
                 html.write('<img align=absmiddle title="%s" class=icon src="images/icon_rule%s.png"> ' % (title, img))
+            html.write("</td>")
+
+            # Comment
+            html.write('<td>')
+            url = rule_options.get("docu_url")
+            if url:
+                html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
+            html.write(rule_options.get("comment", ""))
+            html.write('</td>')
+
+
+            # Folder
+            if first_in_group:
+                alias_path = get_folder_aliaspath(folder, show_main = False)
+                html.write('<td rowspan=%d>%s</td>' % (row_span, alias_path))
+
+            # Value
+            html.write('<td class=value>\n')
+
             if rulespec["valuespec"]:
                 try:
                     value_html = rulespec["valuespec"].value_to_text(value)
@@ -9716,6 +9856,12 @@ def rule_button(action, help=None, folder=None, rulenr=0):
 def parse_rule(ruleset, orig_rule):
     rule = orig_rule
     try:
+        if type(rule[-1]) == dict:
+            rule_options = rule[-1]
+            rule = rule[:-1]
+        else:
+            rule_options = {}
+
         # Extract value from front, if rule has a value
         if ruleset["valuespec"]:
             value = rule[0]
@@ -9745,7 +9891,7 @@ def parse_rule(ruleset, orig_rule):
         # Remove folder tag from tag list
         tag_specs = filter(lambda t: not t.startswith("/"), tag_specs)
 
-        return value, tag_specs, host_list, item_list # (item_list currently not supported)
+        return value, tag_specs, host_list, item_list, rule_options # (item_list currently not supported)
 
     except Exception, e:
         raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (orig_rule,))
@@ -9796,7 +9942,7 @@ def is_indirect_parent_of(pfolder, sfolder):
       is_indirect_parent_of(pfolder[".parent"], sfolder))
 
 
-def construct_rule(ruleset, value, tag_specs, host_list, item_list):
+def construct_rule(ruleset, value, tag_specs, host_list, item_list, rule_options):
     if ruleset["valuespec"]:
         rule = [ value ]
     elif not value:
@@ -9808,6 +9954,21 @@ def construct_rule(ruleset, value, tag_specs, host_list, item_list):
     rule.append(host_list)
     if item_list != None:
         rule.append(item_list)
+
+    # Append rule options, but only if they are not trivial
+    ro = {}
+    if rule_options.get("disabled"):
+        ro["disabled"] = True
+    if rule_options.get("comment"):
+        ro["comment"] = rule_options["comment"]
+
+    # Preserve other keys that we do not know of
+    for k,v in rule_options.items():
+        if k not in [ "disabled", "comment"] :
+            ro[k] = v
+    if ro:
+        rule.append(ro)
+
     return tuple(rule)
 
 
@@ -9969,10 +10130,14 @@ def mode_edit_rule(phase):
     rules = rulesets[varname]
     rule = rules[rulenr]
     valuespec = rulespec.get("valuespec")
-    value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+    value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
 
     if phase == "action":
         if html.check_transaction():
+            # General options
+            rule_options = vs_rule_options.from_html_vars("options")
+            vs_rule_options.validate_value(rule_options, "options")
+
             # CONDITION
             tag_specs, host_list, item_list = get_rule_conditions(rulespec)
             new_rule_folder = g_folders[html.var("new_rule_folder")]
@@ -9986,7 +10151,7 @@ def mode_edit_rule(phase):
                 value = get_edited_value(valuespec)
             else:
                 value = html.var("value") == "yes"
-            rule = construct_rule(rulespec, value, tag_specs, host_list, item_list)
+            rule = construct_rule(rulespec, value, tag_specs, host_list, item_list, rule_options)
             if new_rule_folder == folder:
                 rules[rulenr] = rule
                 save_rulesets(folder, rulesets)
@@ -10011,6 +10176,9 @@ def mode_edit_rule(phase):
     html.help(rulespec["help"])
 
     html.begin_form("rule_editor")
+
+    # Rule Options
+    vs_rule_options.render_input("options", rule_options)
 
     # Value
     forms.header(_("Value"))
@@ -10123,6 +10291,7 @@ def mode_edit_rule(phase):
     forms.end()
     html.button("save", _("Save"))
     html.hidden_fields()
+    vs_rule_options.set_focus("options")
     html.end_form()
 
 # Render HTML input fields for editing a tag based condition
@@ -10248,7 +10417,7 @@ def save_rulesets(folder, rulesets):
 
 def save_rule(out, folder, rulespec, rule):
     out.write("  ( ")
-    value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+    value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
     if rulespec["valuespec"]:
         out.write(repr(value) + ", ")
     elif not value:
@@ -10276,6 +10445,9 @@ def save_rule(out, folder, rulespec, rule):
             out.write("ALL_SERVICES")
         else:
             out.write(repr(item_list))
+
+    if rule_options:
+        out.write(", %r" % rule_options)
 
     out.write(" ),\n")
 
@@ -11052,6 +11224,11 @@ def call_hook_roles_saved(roles):
     if hook_registered('roles-saved'):
         call_hooks("roles-saved", roles)
 
+# This hook is executed when the save_sites() function is called
+def call_hook_sites_saved(sites):
+    if hook_registered('sites-saved'):
+        call_hooks("sites-saved", sites)
+
 # This hook is called in order to determine if a host has a 'valid'
 # configuration. It used for displaying warning symbols in the
 # host list and in the host detail view.
@@ -11364,6 +11541,7 @@ modes = {
    "users"              : (["users"], mode_users),
    "edit_user"          : (["users"], mode_edit_user),
    "roles"              : (["users"], mode_roles),
+   "role_matrix"        : (["users"], mode_role_matrix),
    "edit_role"          : (["users"], mode_edit_role),
    "hosttags"           : (["hosttags"], mode_hosttags),
    "edit_hosttag"       : (["hosttags"], mode_edit_hosttag),
@@ -11481,6 +11659,12 @@ def load_plugins():
          _("Add hosts to the monitoring and remove hosts "
            "from the monitoring. Please also add the permission "
            "<i>Modify existing hosts</i>."),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.clone_hosts",
+         _("Clone hosts"),
+         _("Clone existing hosts to create new ones from the existing one."
+           "Please also add the permission <i>Add & remove hosts</i>."),
          [ "admin", "user" ])
 
     config.declare_permission("wato.random_hosts",

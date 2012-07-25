@@ -1,0 +1,236 @@
+$!# +------------------------------------------------------------------+
+$!# |             ____ _               _        __  __ _  __           |
+$!# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+$!# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+$!# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+$!# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+$!# |                                                                  |
+$!# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+$!# +------------------------------------------------------------------+
+$!#
+$!# This file is part of Check_MK.
+$!# The official homepage is at http://mathias-kettner.de/check_mk.
+$!#
+$!# check_mk is free software;  you can redistribute it and/or modify it
+$!# under the  terms of the  GNU General Public License  as published by
+$!# the Free Software Foundation in version 2.  check_mk is  distributed
+$!# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+$!# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+$!# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+$!# ails.  You should have  received  a copy of the  GNU  General Public
+$!# License along with GNU Make; see the file  COPYING.  If  not,  write
+$!# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+$!# Boston, MA 02110-1301 USA.
+$!#
+$!# Author:     Paul Aebersold, netPuls
+$!
+$!set verify
+$ set noOn
+$ !
+$ samplePeriod   = 14           ! only during tests!
+$ sampleInterval = 2            ! only during tests!
+$ !
+$ cmdDirectory   = f$environment("default")
+$ cmdProcedure   = f$environment("procedure")
+$ errFile        = "''cmdDirectory'VMSagent.err"
+$ outFile        = "''cmdDirectory'VMSagent.out"
+$ sampleFile     = "''cmdDirectory'myMon.lis"
+$ tempFile       = "''cmdDirectory'outFile.tmp"
+$ tmpCMS         = "''cmdDirectory'tmp.CMS"
+$ tmpDisksm      = "''cmdDirectory'tmp.mDk"
+$ tmpDisks       = "''cmdDirectory'tmp.Dsk"
+$ tmpNetif       = "''cmdDirectory'tmp.nif"
+$ tmpQueues      = "''cmdDirectory'tmp.Que"
+$ tmpUsr         = "''cmdDirectory'tmp.Usr"
+$ !
+$ HWinfo         = f$edit(f$getsyi("arch_name"),"trim")
+$ numCPU         = f$getsyi("activecpu_cnt")
+$ MEMtotal       = f$getsyi("memsize")
+$ PGinfo         = f$getsyi("page_size")
+$ SWinfo         = f$edit(f$getsyi("version"),"trim")
+$ !
+$ say            = "write sys$output"
+$ !
+$ define/nolog  sys$error  'errFile'
+$ !
+$ monitor/nodisplay/interval='sampleInterval'/summary='sampleFile' -
+    /ending="+0-0:0:''samplePeriod'" system/all, -
+    disk/all/item=operation_rate
+$ !
+$ wait 0:0:0.50                 ! let monitor close the file...
+$ !
+$ gosub create_tmpFiles
+$ !
+$ gosub create_output
+$ !
+$ gosub do_output
+$ !
+$ deassign  sys$error
+$ !
+$ ! cleanup...
+$    purge/nolog 'cmdDirectory'tmp.*
+$    purge/nolog/keep=2 'errFile'
+$    purge/nolog 'sampleFile'
+$    if f$search("''cmdDirectory'*.%%%_old") .nes. "" then -
+        delete/noconfirm/nolog 'cmdDirectory'*.%%%_old;*
+$    rename/nolog 'tmpCMS' 'tmpCMS'_old
+$    rename/nolog 'tmpDisks' 'tmpDisks'_old
+$    rename/nolog 'tmpNetif' 'tmpNetif'_old
+$    rename/nolog 'tmpQueues' 'tmpQueues'_old
+$    rename/nolog 'tmpUsr' 'tmpUsr'_old
+$ !
+$!
+$!---------------------------------------------------------------------------
+$!
+$ exit
+$!
+$!=============================================================================
+$! Subroutines
+$!---------------------------------------------------------------------------
+$!
+$ create_tmpFiles:
+$   !
+$   search/nowarnings/noheading/format=nonull/exact/output='tmpCMS' -
+      'sampleFile' "Interrupt State","MP Synchronization","User Mode", -
+      "Idle Time","Free List Size","Process Count","Direct I/O Rate", -
+      "Buffered I/O Rate"
+$   !
+$   search/nowarnings/noheading/format=nonull/exact/output='tmpDisks' -
+      'sampleFile' "$DK","DSA","$1$DG"
+$   !
+$   pipe tcpip netstat -ind | search/wild/output='tmpNetif' -
+      sys$pipe *.*.*.*,127.0.0./match=xor
+$   !
+$   show queue/batch/by_job=executing/output='tmpQueues'
+$   !
+$   show users/interactive/subprocess/batch/network/nohead/output='tmpUsr'
+$   !
+$ return
+$ !
+$!
+$!---------------------------------------------------------------------------
+$!
+$ create_output:
+$   !
+$   open/read  inFile  'tmpCMS'
+$    CMSline:
+$     read/end_of_file=CMSdone/error=CMSdone  inFile  line
+$     cLine = f$edit(line,"compress,trim")
+$!say f$element(0," ",cLine)
+$!wait 0:0:1
+$     if f$element(0," ",cLine) .eqs. "Interrupt" then -
+         wt0 = f$element(3," ",cLine)
+$     if f$element(1," ",cLine) .eqs. "Synchronization" then -
+         wt1 = f$element(3," ",cLine)
+$     if f$element(0," ",cLine) .eqs. "User" then -
+         cpu3 = f$element(3," ",cLine)
+$     if f$element(0," ",cLine) .eqs. "Idle" then -
+         cpu2 = f$element(3," ",cLine)
+$     if f$element(0," ",cLine) .eqs. "Free" then -
+         freeMem = f$element(0,".",f$element(4," ",cLine))
+$     if f$element(0," ",cLine) .eqs. "Process" then -
+         sys3 = f$element(3," ",cLine)
+$     if f$element(0," ",cLine) .eqs. "Direct" then
+         sys1 = f$element(4," ",cLine)
+$     if f$element(0," ",cLine) .eqs. "Buffered" then -
+         sys2 = f$element(4," ",cLine)
+$     goto CMSline
+$    CMSdone:
+$   close  inFile
+$   !
+$ return
+$ !
+$!
+$!---------------------------------------------------------------------------
+$!
+$ do_output:
+$   !
+$   say "<<<check_mk>>>"
+$   say "Version: 1.2.0p3"
+$   say "AgentOS: openvms"
+$   say "Nodename: ",f$getsyi("nodename")
+$   say "Architecture: ''HWinfo'"
+$   say "SWversion: ''SWinfo'"
+$   !
+$   say "<<<vms_cpu>>>"
+$   say "''numCPU' ''cpu2' ''cpu3' ''wt0' ''wt1'"
+$   !
+$   say "<<<mem>>>"
+$   say "MemTotal: ",'MEMtotal'/1024*'PGinfo'
+$   say "MemFree: ",f$int("''freeMem'")*'PGinfo'/1024
+$   say "SwapTotal: ",0
+$   say "SwapFree: ",0
+$   !
+$   say "<<<vms_system>>>"
+$   say "''sys1' ''sys2' ''sys3'"
+$   !
+$   say "<<<vms_diskstat>>>"
+$   gosub DSKloop
+$   !
+$   say "<<<vms_if>>>"
+$   gosub NIFloop
+$   !
+$   say "<<<vms_queuejobs>>>"
+$   say "DUMMY: Missing test possibilites - to be done!"
+$   !
+$   say "<<<vms_users>>>"
+$   gosub USRloop
+$   !
+$ return
+$ !
+$!
+$!---------------------------------------------------------------------------
+$!
+$ DSKloop:
+$   !
+$   open/read  inFile  'tmpDisks'
+$    DSKline:
+$     read/end_of_file=DSKdone/error=DSKdone  inFile  line
+$     cLine = f$edit(line,"compress,trim")
+$     Dname = f$element(0," ",cLine)
+$     say f$element(1," ",cLine)," ",f$getdvi("''Dname'","maxblock")," ", -
+        f$getdvi("''Dname'","freeblocks")," ",f$element(3," ",cLine)
+$     goto DSKline
+$    DSKdone:
+$   close  inFile
+$   !
+$ return
+$ !
+$!
+$!---------------------------------------------------------------------------
+$!
+$ NIFloop:
+$   !
+$   open/read  inFile  'tmpNetif'
+$    NIFline:
+$     read/end_of_file=NIFdone/error=NIFdone  inFile  line
+$     cLine = f$edit(line,"compress,trim")
+$     say f$element(0," ",cLine)," ",f$element(4," ",cLine)," ", -
+        f$element(5," ",cLine)," ",f$element(6," ",cLine)," ", -
+        f$element(7," ",cLine)," ",f$element(9," ",cLine)
+$     goto NIFline
+$    NIFdone:
+$   close  inFile
+$   !
+$ return
+$ !
+$!
+$!---------------------------------------------------------------------------
+$!
+$ USRloop:
+$   !
+$   open/read  inFile  'tmpUsr'
+$    USRline:
+$     read/end_of_file=USRdone/error=USRdone  inFile  line
+$     cLine = f$edit(line,"compress,trim")
+$     say f$element(0," ",cLine)," ",f$element(1," ",cLine)," ", -
+        f$element(2," ",cLine)," ",f$element(3," ",cLine)," ", -
+        f$element(4," ",cLine)
+$     goto USRline
+$    USRdone:
+$   close  inFile
+$   !
+$ return
+$ !
+$!
+$!=============================================================================

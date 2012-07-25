@@ -70,7 +70,7 @@ def check_cpu_threads(item, params, info):
     if nthreads >= crit:
         return (2, "CRIT - %d threads (critical at %d)" % (nthreads, crit), perfdata)
     elif nthreads >= warn:
-        return (1, "WARN - %d threads (warning %d)" % (nthreads, warn), perfdata)
+        return (1, "WARN - %d threads (warning at %d)" % (nthreads, warn), perfdata)
     else:
         return (0, "OK - %d threads" % (nthreads,), perfdata)
 

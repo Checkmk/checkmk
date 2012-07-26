@@ -470,6 +470,12 @@ class html:
     def number_input(self, varname, deflt = "", size=8, style=""):
         self.text_input(varname, str(deflt), "number", size=size, style=style)
 
+
+    # Needed if input elements are put into forms without the helper
+    # functions of us.
+    def add_form_var(self, varname):
+        self.form_vars.append(varname)
+
     def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None, **args):
         if default_value == None:
             default_value = ""

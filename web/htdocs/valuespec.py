@@ -857,6 +857,15 @@ class CascadingDropdown(ValueSpec):
         else:
             return self._choices[0][0]
 
+    def default_value(self):
+        try:
+            return self._default_value
+        except:
+            if self._choices[0][2]:
+                return (self._choices[0][0], self._choices[0][2].default_value())
+            else:
+                return self._choices[0][0]
+
     def render_input(self, varprefix, value):
         def_val = '0'
         options = []
@@ -1757,6 +1766,7 @@ class Dictionary(ValueSpec):
                 onclick = "valuespec_toggle_option(this, %r)" % div_id
                 checkbox_code = '<input type=checkbox name="%s" %s onclick="%s">' % (
                     vp + "_USE", visible and "CHECKED" or "", onclick)
+                html.add_form_var(vp + "_USE")
                 forms.section(vs.title(), checkbox=checkbox_code)
             else:
                 visible = True

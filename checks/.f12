@@ -1,2 +1,2 @@
-sudo cp -v * /omd/versions/default/share/check_mk/checks
+sudo install -m 644 * /omd/versions/default/share/check_mk/checks
 

@@ -1522,8 +1522,8 @@ checkgroups.append((
                  "for monitoring the temperature of a datacenter. An example "
                  "is the webthem from W&amp;T."),
         elements = [
-            Integer(title = "warning at", unit = u"°C"),
-            Integer(title = "critical at", unit = u"°C"),
+            Integer(title = "warning at", unit = u"°C", default_value = 26),
+            Integer(title = "critical at", unit = u"°C", default_value = 30),
         ]),
     TextAscii(
         title = _("Sensor ID"),

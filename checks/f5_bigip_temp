@@ -69,12 +69,13 @@ def check_f5_bigip_temp(item, params, info):
         if item == sensor[0]:
             tmpdiff = sensor[1] - sensor[2]
             msgtxt = " - Temperature is %dC" % (sensor[1])
+            perfdata = [ ("temp", sensor[1]) ]
             if 5 >= tmpdiff:
-                return (0, "OK" + msgtxt)
+                return (0, "OK" + msgtxt, perfdata)
             elif tmpdiff > 15:
-                return (2, "CRIT" + msgtxt + "(!!)")
+                return (2, "CRIT" + msgtxt + "(!!)", perfdata)
             elif tmpdiff > 10:
-                return (1, "WARN" + msgtxt + "(!)")
+                return (1, "WARN" + msgtxt + "(!)", perfdata)
             else:
                 return (3, "UNKNOWN - unable to read temperature")
 

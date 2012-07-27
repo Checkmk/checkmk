@@ -1,0 +1,10 @@
+Title: mkp install should fix file permissions
+Component: core
+State: open
+Date: 2012-07-25 17:42:13
+Targetversion: future
+Class: nastiness
+
+When installing the cmc_lcp checks from Bastian from the Exchange
+into GIT, then all files are not group/world readable. The
+MKP installer should automatically fix file permissions.

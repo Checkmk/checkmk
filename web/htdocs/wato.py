@@ -9286,8 +9286,18 @@ vs_rule_options = Dictionary(
             title = _("Comment"),
             help = _("An optional comment that helps you documenting the purpose of  "
                      "this rule"),
-            size = 64,
+            size = 80,
           )
+        ),
+        ( "docu_url",
+          TextAscii(
+            title = _("Docu-URL"),
+            help = _("An optional URL pointing to documentation or any other page. This will be displayed "
+                     "as an icon <img class=icon src='images/icon_url.png'> and open a new page when clicked. "
+                     "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
+                     "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."),
+            size = 80,
+          ),
         ),
         ( "disabled",
           Checkbox(
@@ -9739,7 +9749,12 @@ def mode_edit_ruleset(phase):
             html.write("</td>")
 
             # Comment
-            html.write('<td>%s</td>' % rule_options.get("comment", ""))
+            html.write('<td>')
+            url = rule_options.get("docu_url")
+            if url:
+                html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
+            html.write(rule_options.get("comment", ""))
+            html.write('</td>')
 
 
             # Folder

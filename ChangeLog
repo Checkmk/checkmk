@@ -7,6 +7,7 @@
     Checks & Agents:
     * mssql_backup: Fixed problems with datetime/timezone calculations
     * New Checks for Siemens Blades (BX600)
+    * New Checks for Fortigate Firewalls
     * FIX: megaraid_pdisks: handle case where no enclosure device exists
     * mysql_capacity: cleaned up check, levels are in MB now
     * jolokia_info, jolokia_metrics: new rewritten checks for jolokia (formerly
@@ -27,8 +28,9 @@
       permissions of roles
     * FIX: remove line about number of rules in rule set overview
       (that garbled the logical layout)
-    * Rules now have an optional comment and can be disabled without
-      deleting them.
+    * Rules now have an optional comment and an URL for linking to 
+      documntation
+    * Rule now can be disabled without deleting them.
     * Added new hook "sites-saved"
     * Allow @ in user names (needed for some Kerberos setups)
     * Implemented new option in WATO attributes: editable

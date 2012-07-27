@@ -41,6 +41,7 @@
     * Implemented new option in WATO attributes: editable
       When set to False the attribute can only be changed during creation
       of a new object. When editing an object this attribute is only displayed.
+    * new: search for rules in "Host & Service Configuration"
 
     BI:
     * Great speed up of rule compilation in large environments

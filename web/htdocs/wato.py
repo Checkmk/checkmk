@@ -9356,15 +9356,39 @@ def mode_ruleeditor(phase):
         help = help.split('\n')[0] # Take only first line as button text
         menu.append((url, title, icon, "rulesets", help))
     render_main_menu(menu)
+    
+    html.write("<BR>")
+    rule_search_form()
 
+
+
+def rule_search_form():
+    html.begin_form("search")
+    html.write(_("Search for rules: "))
+    html.text_input("search", size=32)
+    html.hidden_fields()
+    html.hidden_field("mode", "rulesets")
+    html.set_focus("search")
+    html.write(" ")
+    html.button("_do_seach", _("Search"))
+    html.end_form()
+    html.write("<br>")
 
 
 def mode_rulesets(phase):
     group = html.var("group") # obligatory
+    search = html.var("search")
+    if search != None:
+        search = search.strip().lower()
+
     if group == "used":
         title = _("Used Rulesets")
         help = _("Non-empty rulesets")
         only_used = True
+    elif search != None:
+        title = _("Rules matching ") + search
+        help = _("All rules that contain '%s' in their name of help") % search
+        only_used = False
     else:
         title, help = g_rulegroups.get(group, (group, None))
         only_used = False
@@ -9397,6 +9421,9 @@ def mode_rulesets(phase):
     if not only_host:
         render_folder_path(keepvarnames = ["mode", "local", "group"])
 
+    if search != None:
+        rule_search_form()
+
     if help != None:
         help = "".join(help.split("\n", 1)[1:]).strip()
         if help:
@@ -9415,8 +9442,7 @@ def mode_rulesets(phase):
 
     # Select matching rule groups while keeping their configured order
     groupnames = [ gn for gn, rulesets in g_rulespec_groups
-                   if only_used or gn == group or gn.startswith(group + "/") ]
-    do_folding = len(groupnames) > 1
+                   if only_used or search != None or gn == group or gn.startswith(group + "/") ]
 
     something_shown = False
     html.write('<div class=rulesets>')
@@ -9431,10 +9457,20 @@ def mode_rulesets(phase):
 
             varname = rulespec["varname"]
             valuespec = rulespec["valuespec"]
+
+            # handle only_used
             rules = all_rulesets.get(varname, [])
             num_rules = len(rules)
             if num_rules == 0 and (only_used or only_local):
                 continue
+
+            # handle search
+            if search != None \
+                and not (rulespec["help"] and search in rulespec["help"].lower()) \
+                and search not in rulespec["title"].lower() \
+                and search not in varname:
+                continue
+
 
             # Handle case where a host is specified
             rulespec = g_rulespecs[varname]
@@ -9451,7 +9487,7 @@ def mode_rulesets(phase):
             if only_local and num_local_rules == 0:
                 continue
 
-            if only_used:
+            if only_used or search != None:
                 titlename = g_rulegroups[groupname.split("/")[0]][0]
             else:
                 if '/' in groupname:

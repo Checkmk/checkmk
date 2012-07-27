@@ -21,6 +21,7 @@
     * vms_system.procs: new check for number of processes on OpenVMS
     * FIX: mssql agent: Added compatibility code for MSSQL 9
     * f5_bigip_temp: add performance data
+    * added perf-o-meters for a lot of temperature checks
 
     WATO:
     * Added permission to control the "clone host" feature in WATO

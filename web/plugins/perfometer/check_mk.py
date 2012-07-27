@@ -184,7 +184,7 @@ perfometers["check_mk-ntp"]        = perfometer_check_mk_ntp
 perfometers["check_mk-ntp.time"]   = perfometer_check_mk_ntp
 perfometers["check_mk-systemtime"] = lambda r, c, p: perfometer_check_mk_ntp(r, c, p, "s")
 
-def perfometer_temperature(row, check_command, perf_data):
+def perfometer_ipmi_sensors(row, check_command, perf_data):
     state = row["service_state"]
     color = { 0: "#39f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[state]
     value = float(perf_data[0][1])
@@ -213,7 +213,7 @@ def perfometer_temperature(row, check_command, perf_data):
         unit = ""
     return (u"%d%s" % (int(value), unit)), h 
 
-perfometers["check_mk-ipmi_sensors"] = perfometer_temperature
+perfometers["check_mk-ipmi_sensors"] = perfometer_ipmi_sensors
 
 def perfometer_temperature(row, check_command, perf_data):
     state = row["service_state"]
@@ -222,8 +222,6 @@ def perfometer_temperature(row, check_command, perf_data):
     crit = savefloat(perf_data[0][4])
     return "%d°C" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
 
-
-# Also all checks dealing with temperature can use this perfometer
 perfometers["check_mk-nvidia.temp"] = perfometer_temperature
 perfometers["check_mk-cisco_temp_sensor"] = perfometer_temperature
 perfometers["check_mk-cisco_temp_perf"] = perfometer_temperature
@@ -234,6 +232,19 @@ perfometers["check_mk-f5_bigip_temp"] = perfometer_temperature
 perfometers["check_mk-hp_proliant_temp"] = perfometer_temperature
 perfometers["check_mk-akcp_sensor_temp"] = perfometer_temperature
 perfometers["check_mk-fsc_temp"] = perfometer_temperature
+
+def perfometer_blower(row, check_command, perf_data):
+    rpm = saveint(perf_data[0][1])
+    perc = rpm / 10000.0 * 100.0
+    return "%d RPM" % rpm, perfometer_logarithmic(rpm, 2000, 1.5, "#88c")
+
+perfometers["check_mk-cmctc_lcp.blower"] = perfometer_blower
+
+def perfometer_lcp_regulator(row, check_command, perf_data):
+    value = saveint(perf_data[0][1])
+    return "%d%%" % value, perfometer_linear(value, "#8c8")
+
+perfometers["check_mk-cmctc_lcp.regulator"] = perfometer_lcp_regulator
 
 def perfometer_bandwidth(in_bytes, out_bytes, in_bw, out_bw):
     txt = []

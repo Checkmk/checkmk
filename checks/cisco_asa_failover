@@ -1,0 +1,94 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+
+
+
+# .1.3.6.1.4.1.9.9.147.1.2.1.1.1.2.4  "Failover LAN Interface"
+# .1.3.6.1.4.1.9.9.147.1.2.1.1.1.2.6  "Primary unit (this device)"
+# .1.3.6.1.4.1.9.9.147.1.2.1.1.1.2.7  "Secondary unit"
+# .1.3.6.1.4.1.9.9.147.1.2.1.1.1.3.4  2
+# .1.3.6.1.4.1.9.9.147.1.2.1.1.1.3.6  9     < These two values flip during 
+# .1.3.6.1.4.1.9.9.147.1.2.1.1.1.3.7  10    < failover
+# .1.3.6.1.4.1.9.9.147.1.2.1.1.1.4.4  "LAN_FO GigabitEthernet0/0.777"
+# .1.3.6.1.4.1.9.9.147.1.2.1.1.1.4.6  "Active unit"
+# .1.3.6.1.4.1.9.9.147.1.2.1.1.1.4.7  "Standby unit"
+
+# [['Failover LAN Interface', '2', 'LAN_FO GigabitEthernet0/0.777'], ['Primary unit', '9', 'Active unit'], ['Secondary unit (this device)', '10', 'Standby unit']]
+
+def inventory_cisco_asa_failover(info):
+
+    for deviceentry in info[-2:]:
+        if "this device" in deviceentry[0]:
+            # Return the Cluster role ID of the device.
+            return [ (None, int(info[1][1])) ]
+    return []
+
+
+def check_cisco_asa_failover(item, params, info):
+
+    asa_state_names = { 9: "active", 10 : "standby" }
+
+
+    for deviceentry in info[-2:]:
+        if "this device" in deviceentry[0]:
+
+            msgtxt = ""
+            errtxt = ""
+            state  = 3
+
+            def_role = params
+            cur_role = saveint(info[1][1])
+
+            if   def_role == cur_role:
+                state = 0
+            elif cur_role not in asa_state_names.keys():
+                state = 3
+                errtxt = ", Unknown cluster status received"
+            else:
+                state  = 1
+                errtxt = " expecting to be %s" % asa_state_names[def_role]
+
+            msgtxt = nagios_state_names[state] + " - Device is the %s" % deviceentry[2] + errtxt + state * "!"
+            return (state, msgtxt)
+
+    
+    return (3, "UNKNOWN - Data not in SNMP output")
+
+
+check_info["cisco_asa_failover"]  = {
+    "check_function"     : check_cisco_asa_failover,
+    "inventory_function" : inventory_cisco_asa_failover,
+    "service_description": "Cluster Status",
+    "has_perfdata"       : False,
+    "snmp_scan_function" : lambda oid: oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco adaptive security"),
+    "snmp_info"          : (".1.3.6.1.4.1.9.9.147.1.2.1.1.1", [
+         "2", # The failover nic status
+         "3", # The primary unit info
+         "4", # The secondary unit info
+        ]),
+}

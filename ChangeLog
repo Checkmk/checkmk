@@ -20,6 +20,12 @@
     * vms_system.ios: new check for total direct/buffered IOs on OpenVMS
     * vms_system.procs: new check for number of processes on OpenVMS
     * FIX: mssql agent: Added compatibility code for MSSQL 9
+    * f5_bigip_temp: add performance data
+    * added perf-o-meters for a lot of temperature checks
+    * cmctc_lcp.*: added new checks for Rittal CMC-TC LCP
+    * FIX: diskstat (linux): Don't inventorize check when data empty
+    * cmctc.temp: added parameters for warn/crit, use now WATO rule
+      "Room temperature (external thermal sensors)"
     * cisco_asa_failover: New Check for clustered Cisco ASA Firewalls 
     * cbl_airlaser.status: New Check for CBL Airlaser IP1000 laser bridge.
 
@@ -37,11 +43,14 @@
     * Implemented new option in WATO attributes: editable
       When set to False the attribute can only be changed during creation
       of a new object. When editing an object this attribute is only displayed.
+    * new: search for rules in "Host & Service Configuration"
 
     BI:
     * Great speed up of rule compilation in large environments
 
     Multisite:
+    * Added css class="dashboard_<name>" to the dashboard div for easier
+    customization of the dashboard style of a special dashboard
     * FIX: fixed localization of general permissions
     * FIX: show multisite warning messages even after page reload
     * FIX: fix bug in Age ValueSpec: days had been ignored

@@ -44,6 +44,10 @@ diskstat_inventory = []
 # ]
 
 def inventory_diskstat_generic(info):
+    # Skip over on empty data
+    if not info:
+        return
+
     # New style: use rule based configuration, defaulting to summary mode
     if diskstat_inventory_mode == "rule":
         hits = host_extra_conf(g_hostname, diskstat_inventory)

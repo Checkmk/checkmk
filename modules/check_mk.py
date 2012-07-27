@@ -4447,6 +4447,9 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
 # default settings of user in main.mk, check_parameters[] and
 # the values code in autochecks (given as parameter params)
 def compute_check_parameters(host, checktype, item, params):
+    if checktype not in check_info: # handle vanished checktype
+        return None
+
     # Handle dictionary based checks
     def_levels_varname = check_info[checktype].get("default_levels_variable")
     if def_levels_varname:

@@ -4742,6 +4742,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             checkbox_name = "_change_%s" % attrname
             cb = html.get_checkbox(checkbox_name)
             force_entry = False
+            disabled = False
 
             # first handle mandatory cases
             if for_what == "folder" and attr.is_mandatory() \
@@ -4750,11 +4751,9 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 and not has_inherited:
                 force_entry = True
                 active = True
-            elif not new and not attr.editable():
-                force_entry = True
             elif for_what == "host" and attr.is_mandatory() and not has_inherited:
-                    force_entry = True
-                    active = True
+                force_entry = True
+                active = True
             elif cb != None:
                 active = cb # get previous state of checkbox
             elif for_what == "search":
@@ -4766,13 +4765,19 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             else: # "host"
                 active = attrname in host
 
+            if not new and not attr.editable():
+                if active:
+                    force_entry = True
+                else:
+                    disabled = True
+
             if force_entry:
                 checkbox_code = '<input type=checkbox name="ignored_%s" CHECKED DISABLED>' % checkbox_name
                 checkbox_code += '<input type=hidden name="%s" value="on">' % checkbox_name
             else:
                 onclick = "wato_fix_visibility(); wato_toggle_attribute(this, '%s');" % attrname
-                checkbox_code = '<input type=checkbox name="%s" %s onclick="%s">' % (
-                    checkbox_name, active and "CHECKED" or "", onclick)
+                checkbox_code = '<input type=checkbox name="%s" %s %s onclick="%s">' % (
+                    checkbox_name, active and "CHECKED" or "", disabled and "DISABLED" or "", onclick)
             forms.section(attr.title(), checkbox=checkbox_code, id="attr_" + attrname)
             html.help(attr.help())
 
@@ -4784,18 +4789,13 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             if not new and not attr.editable():
                 # In edit mode only display non editable values, don't show the
                 # input fields
-                html.write('<div id="attr_hidden_%s" style="display:none">')
+                html.write('<div id="attr_hidden_%s" style="display:none">' % attrname)
                 attr.render_input(defvalue)
                 html.write('</div>')
 
-                tdclass, content = attr.paint(defvalue, "")
-                if not content:
-                    content = _("empty")
-                html.write(content)
+                html.write('<div class="inherited" id="attr_visible_%s">' % (attrname))
 
             else:
-                # Regular rendering
-
                 # Now comes the input fields and the inherited / default values
                 # as two DIV elements, one of which is visible at one time.
 
@@ -4806,33 +4806,39 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 attr.render_input(defvalue)
                 html.write("</div>")
 
-                # DIV with actual / inherited / default value
                 html.write('<div class="inherited" id="attr_default_%s" style="%s">'
-                  % (attrname, active and "display: none" or ""))
+                   % (attrname, active and "display: none" or ""))
 
-                # in bulk mode we show inheritance only if *all* hosts inherit
-                explanation = ""
-                if for_what == "bulk":
-                    if num_haveit == 0:
-                        explanation = " (" + inherited_from + ")"
-                        value = inherited_value
-                    elif not unique:
-                        explanation = _("This value differs between the selected hosts.")
-                    else:
-                        value = values[0]
+            #
+            # DIV with actual / inherited / default value
+            #
 
-                elif for_what in [ "host", "folder" ]:
+            # in bulk mode we show inheritance only if *all* hosts inherit
+            explanation = ""
+            if for_what == "bulk":
+                if num_haveit == 0:
+                    explanation = " (" + inherited_from + ")"
+                    value = inherited_value
+                elif not unique:
+                    explanation = _("This value differs between the selected hosts.")
+                else:
+                    value = values[0]
+
+            elif for_what in [ "host", "folder" ]:
+                if not new and not attr.editable() and active:
+                    value = values[0]
+                else:
                     explanation = " (" + inherited_from + ")"
                     value = inherited_value
 
-                if for_what != "search" and not (for_what == "bulk" and not unique):
-                    tdclass, content = attr.paint(value, "")
-                    if not content:
-                        content = _("empty")
-                    html.write("<b>" + content + "</b>")
+            if for_what != "search" and not (for_what == "bulk" and not unique):
+                tdclass, content = attr.paint(value, "")
+                if not content:
+                    content = _("empty")
+                html.write("<b>" + content + "</b>")
 
-                html.write(explanation)
-                html.write("</div>")
+            html.write(explanation)
+            html.write("</div>")
 
 
         if len(topics) > 1:
@@ -9356,15 +9362,39 @@ def mode_ruleeditor(phase):
         help = help.split('\n')[0] # Take only first line as button text
         menu.append((url, title, icon, "rulesets", help))
     render_main_menu(menu)
+    
+    html.write("<BR>")
+    rule_search_form()
 
+
+
+def rule_search_form():
+    html.begin_form("search")
+    html.write(_("Search for rules: "))
+    html.text_input("search", size=32)
+    html.hidden_fields()
+    html.hidden_field("mode", "rulesets")
+    html.set_focus("search")
+    html.write(" ")
+    html.button("_do_seach", _("Search"))
+    html.end_form()
+    html.write("<br>")
 
 
 def mode_rulesets(phase):
     group = html.var("group") # obligatory
+    search = html.var("search")
+    if search != None:
+        search = search.strip().lower()
+
     if group == "used":
         title = _("Used Rulesets")
         help = _("Non-empty rulesets")
         only_used = True
+    elif search != None:
+        title = _("Rules matching ") + search
+        help = _("All rules that contain '%s' in their name of help") % search
+        only_used = False
     else:
         title, help = g_rulegroups.get(group, (group, None))
         only_used = False
@@ -9397,6 +9427,9 @@ def mode_rulesets(phase):
     if not only_host:
         render_folder_path(keepvarnames = ["mode", "local", "group"])
 
+    if search != None:
+        rule_search_form()
+
     if help != None:
         help = "".join(help.split("\n", 1)[1:]).strip()
         if help:
@@ -9415,8 +9448,7 @@ def mode_rulesets(phase):
 
     # Select matching rule groups while keeping their configured order
     groupnames = [ gn for gn, rulesets in g_rulespec_groups
-                   if only_used or gn == group or gn.startswith(group + "/") ]
-    do_folding = len(groupnames) > 1
+                   if only_used or search != None or gn == group or gn.startswith(group + "/") ]
 
     something_shown = False
     html.write('<div class=rulesets>')
@@ -9431,10 +9463,20 @@ def mode_rulesets(phase):
 
             varname = rulespec["varname"]
             valuespec = rulespec["valuespec"]
+
+            # handle only_used
             rules = all_rulesets.get(varname, [])
             num_rules = len(rules)
             if num_rules == 0 and (only_used or only_local):
                 continue
+
+            # handle search
+            if search != None \
+                and not (rulespec["help"] and search in rulespec["help"].lower()) \
+                and search not in rulespec["title"].lower() \
+                and search not in varname:
+                continue
+
 
             # Handle case where a host is specified
             rulespec = g_rulespecs[varname]
@@ -9451,7 +9493,7 @@ def mode_rulesets(phase):
             if only_local and num_local_rules == 0:
                 continue
 
-            if only_used:
+            if only_used or search != None:
                 titlename = g_rulegroups[groupname.split("/")[0]][0]
             else:
                 if '/' in groupname:

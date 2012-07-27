@@ -1,0 +1,11 @@
+Title: PING check for clusters without services UNKNOWN
+Component: core
+State: open
+Date: 2012-07-26 16:29:56
+Targetversion: future
+Class: nastiness
+
+If you have a cluster without any services, then Check_MK will
+create a PING services. This will be UNKNOWN. Couldn't we doe
+it like the host check, rather? That we call check_icmp with
+the both node IP addresses?

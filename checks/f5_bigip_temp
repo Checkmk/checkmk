@@ -69,12 +69,13 @@ def check_f5_bigip_temp(item, params, info):
         if item == sensor[0]:
             tmpdiff = sensor[1] - sensor[2]
             msgtxt = " - Temperature is %dC" % (sensor[1])
+            perf = [ ('temp', sensor[1])]
             if 5 >= tmpdiff:
-                return (0, "OK" + msgtxt)
+                return (0, "OK" + msgtxt, perf)
             elif tmpdiff > 15:
-                return (2, "CRIT" + msgtxt + "(!!)")
+                return (2, "CRIT" + msgtxt + "(!!)", perf)
             elif tmpdiff > 10:
-                return (1, "WARN" + msgtxt + "(!)")
+                return (1, "WARN" + msgtxt + "(!)", perf)
             else:
                 return (3, "UNKNOWN - unable to read temperature")
 
@@ -88,7 +89,7 @@ snmp_info["f5_bigip_temp"] = \
       (".1.3.6.1.4.1.3375.2.1.3.1.2.1",   [ 1, 2 ]), ]
 
 
-check_info["f5_bigip_temp"] = (check_f5_bigip_temp, "Temperature %s", 0, inventory_f5_bigip_temp )
+check_info["f5_bigip_temp"] = (check_f5_bigip_temp, "Temperature %s", 1, inventory_f5_bigip_temp )
 
 
 # Get ID and Speed from the CPU and chassis fan tables

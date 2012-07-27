@@ -166,7 +166,7 @@ cmctc_lcp_sensortypes = {
 def inventory_cmctc_lcp(info, sensortype): 
     inventory = []
     for index, typeid, status, value, description in info:
-        typeid = int(typeid)
+        typeid = saveint(typeid)
         if typeid in cmctc_lcp_sensors: 
             item, st = cmctc_lcp_sensors[typeid]
             if st == sensortype: 

@@ -6,9 +6,11 @@ distribution: check_mk
 description:
  This check polls the state of temperature sensors
  attached to a ComputerMultiControl-TopConcept unit.
- Warning and critical levels are read via SNMP and
- need to be configured in Nagios. Configure them
- in your CMC unit.
+ Per default warning and critical levels are read via SNMP and
+ need to be configured in Check_Mk. Configure them 
+ in your CMC unit. It is also possible to configure
+ levels. That way the state and levels from the SNMP
+ output are being ignored.
 
 item:
  Combination of IO unit number (3-6) and sensors index (1-4).
@@ -19,3 +21,9 @@ perfdata:
 
 inventory:
  All available temperature sensors are automatically inventorized.
+
+[parameters]
+warn(int): Optional warning level for the temperature. If you use no
+ parameters, then the builtin state will be used (this is the default).
+crit(int): Critical level for the temperature.
+

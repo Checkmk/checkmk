@@ -32,7 +32,7 @@
 # /dev/mapper/mirrored-database ext3  20642428   1027112  19405604       6% /mirrored/database
 
 def inventory_df(info):
-    inventory = []
+    mplist = []
     for line in info:
         if line[1] in inventory_df_exclude_fs:
             continue # ignore this filesystem type
@@ -45,39 +45,29 @@ def inventory_df(info):
         if mountpoint in inventory_df_exclude_mountpoints:
             continue # exclude this mount point (/tmp, /proc, whatever user wants)
 
-        inventory.append((mountpoint, {}))
+        mplist.append(mountpoint)
 
-    return inventory
+    return df_inventory(mplist)
 
 
-def check_df(mountpoint, params, info):
-    # df outputs seven columns:
-    # DEVICE FS-TYPE SIZE(KB) USED(KB) AVAIL(KB) USED(%) MOUNTPOINT
-    # The mount point may contain spaces (seen on VMWare volumes)
+def check_df(item, params, info):
+    fslist = []
+    for line in info:
+        # df outputs seven columns:
+        # DEVICE FS-TYPE SIZE(KB) USED(KB) AVAIL(KB) USED(%) MOUNTPOINT
+        # The mount point may contain spaces (seen on VMWare volumes and on ESX)
+        mountpoint = " ".join(line[6:]).replace('\\', '/')
+        if "patterns" in params or item == mountpoint:
+            # Beware: the 6th column of df ("used perc") may includes 5% which are reserved
+            # for the superuser, whereas the 4th colum ("used MB") does *not* include that.
+            # Beware(2): the column used_mb does not account for the reserved space for
+            # superusers. So we rather use the column 'avail' and subtract that from total
+            # to compute the used space.
+            size_mb    = int(line[2]) / 1024.0
+            avail_mb   = int(line[4]) / 1024.0
+            fslist.append((mountpoint, size_mb, avail_mb))
 
-    used_list = [ l for l in info if " ".join(l[6:]).replace('\\','/') == mountpoint ]
-
-    if len(used_list) == 0:
-        return (3, "UNKNOWN - %s missing or not a partition" % mountpoint )
-    used = used_list[0] # might be listed twice. We take the first occurance
-
-    # In some rare cases the mountpoint may contain a space (happened on ESX).
-    if len(used) > 7:
-        used = used[0:6] + [ " ".join(used[6:]) ]
-
-    if len(used) != 7 or used[5][-1] != '%':
-        return (3, "UNKNOWN - Invalid output from agent (%s)" % (' '.join(used),))
-
-    # Beware: the 6th column of df ("used perc") may includes 5% which are reserved
-    # for the superuser, whereas the 4th colum ("used MB") does *not* include that.
-    # Beware(2): the column used_mb does not account for the reserved space for
-    # superusers. So we rather use the column 'avail' and subtract that from total
-    # to compute the used space.
-
-    size_mb    = int(used[2]) / 1024.0
-    avail_mb   = int(used[4]) / 1024.0
-
-    return df_check_filesystem(g_hostname, mountpoint, size_mb, avail_mb, params)
+    return df_check_filesystem_list(item, params, fslist)
 
 check_info['df'] = {
     "check_function"          : check_df,

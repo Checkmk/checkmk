@@ -31,7 +31,7 @@
 
 
 def inventory_vms_diskstat_fs(info):
-    return [ (line[0], {}) for line in info ]
+    return df_inventory([ line[0] for line in info ])
 
 def check_vms_diskstat_fs(item, params, info):
     for line in info:

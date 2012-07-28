@@ -27,12 +27,21 @@
 # Common include file for all filesystem checks (df, df_netapp, hr_fs, ...)
 
 # Settings for filesystem checks (df, df_vms, df_netapp and maybe others)
-filesystem_levels                  = [] # obsolete. Just here to check config and warn if changed
+filesystem_levels         = [] # obsolete. Just here to check config and warn if changed
 filesystem_default_levels = {} # can also be dropped some day in future
 
 # Filesystems to ignore (shouldn't be sent by agent anyway)
 inventory_df_exclude_fs            = [ 'nfs', 'smbfs', 'cifs', 'iso9660' ]
 inventory_df_exclude_mountpoints   = [ '/dev' ]
+
+# Grouping of filesystems into groups that are monitored as one entity
+# Example:
+# filesystem_groups = [
+#     ( [ ( "Storage pool", "/data/pool*" ) ], [ 'linux', 'prod' ], ALL_HOSTS ),
+#     ( [ ( "Backup space 1", "/usr/backup/*.xyz" ), 
+#         ( "Backup space 2", "/usr/backup2/*.xyz" ) ], ALL_HOSTS ),
+# ]
+filesystem_groups = []
 
 # Alternative syntax for parameters:
 # {  "levels"         : (80, 90),  # levels in percent
@@ -52,6 +61,35 @@ factory_settings["filesystem_default_levels"] = {
     "trend_range"     : 24,
     "trend_perfdata"  : True,    # do send performance data for trends
 }
+
+def df_inventory(mplist):
+    import fnmatch
+    group_patterns = {}
+    for line in host_extra_conf(g_hostname, filesystem_groups):
+        for group_name, pattern in line:
+            group_patterns.setdefault(group_name, []).append(pattern)
+
+    # Create one service for each mount point that is not contained
+    # in a filesystem group. And create one service for each non-empty
+    # filesystem group.
+    inventory = []
+    have_groups = set([])
+    for mp in mplist:
+        in_group = False
+        for group_name, patterns in group_patterns.items():
+            for pattern in patterns:
+                if fnmatch.fnmatch(mp, pattern):
+                    have_groups.add(group_name)
+                    in_group = True
+                    break
+        if not in_group:
+            inventory.append((mp, {}))
+    
+    for group_name in have_groups:
+        inventory.append((group_name, { "patterns" : group_patterns[group_name] }))
+
+    return inventory
+
 
 # Users might have set filesystem_default_levels to old format like (80, 90)
 
@@ -117,7 +155,42 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
     levels["levels_text"] = "(levels at %.1f/%.1f%%)" % (warn_scaled, crit_scaled)
     return levels
 
+# Legacy function for checks that do not support groups yet
 def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
+    return df_check_filesystem_list(mountpoint, params, [(mountpoint, size_mb, avail_mb)])
+
+# New function for checks that support groups.
+def df_check_filesystem_list(item, params, fslist):
+    if "patterns" in params:
+        import fnmatch
+
+        patterns = params["patterns"]
+        count = 0
+        total_size = 0
+        total_avail = 0
+        for mp, size_mb, avail_mb in fslist:
+            for pattern in patterns:
+                if fnmatch.fnmatch(mp, pattern):
+                    count += 1
+                    total_size += size_mb
+                    total_avail += avail_mb
+                    break
+        # If no filesystem has been found we cannot do the
+        # actual check since the size is zero.
+        if count == 0:
+            return (3, "UKNOWN - No filesystem matching the patterns")
+        else:
+            status, infotext, perfdata = df_check_filesystem_single(g_hostname, item, total_size, total_avail, params)
+            infotext += " (%d filesystems)" % count
+            return status, infotext, perfdata
+    else:
+        for mp, size_mb, avail_mb in fslist:
+            if mp == item:
+                return df_check_filesystem_single(g_hostname, mp, size_mb, avail_mb, params)
+        return (3, "UNKNOWN - filesystem not found")
+    
+
+def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
     if size_mb == 0:
         return (1, "WARN - size of filesystem is 0 MB")
 
@@ -135,7 +208,9 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
     # bigger than 100 GB and lowers it for file systems smaller than 100 GB.
     # Please run df_magic_factor.py to understand how it works.
 
-    perfdata = [(mountpoint, str(used_mb) + 'MB', warn_mb, crit_mb, 0, size_mb)]
+    # TODO: In some future version use a fixed name as perf variable
+    perf_var = mountpoint.replace(" ", "_")
+    perfdata = [(perf_var, str(used_mb) + 'MB', warn_mb, crit_mb, 0, size_mb)]
     infotext = "%.1f%% used (%.2f of %.1f GB), %s" % \
                 (used_perc, used_mb / 1024.0, size_gb, levels["levels_text"])
 

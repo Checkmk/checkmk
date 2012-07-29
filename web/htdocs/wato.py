@@ -2774,6 +2774,7 @@ def mode_parentscan(phase):
         "probes"         : saveint(html.var("probes")) or 2,
         "max_ttl"        : saveint(html.var("max_ttl")) or 10,
         "force_explicit" : html.get_checkbox("force_explicit"),
+        "ping_probes"    : saveint(html.var("ping_probes")) or 0,
     }
 
     if phase == "action":
@@ -2788,9 +2789,9 @@ def mode_parentscan(phase):
                 host = folder[".hosts"][hostname]
                 eff = effective_attributes(host, folder)
                 site_id = eff.get("site")
-                params = map(str, [ settings["timeout"], settings["probes"], settings["max_ttl"] ])
+                params = map(str, [ settings["timeout"], settings["probes"], settings["max_ttl"], settings["ping_probes"] ])
                 gateways = check_mk_automation(site_id, "scan-parents", params + [hostname])
-                gateway, state, error = gateways[0]
+                gateway, state, skipped_gateways, error = gateways[0]
 
                 if state in [ "direct", "root", "gateway" ]:
                     message, pconf, gwcreat = \
@@ -2806,6 +2807,7 @@ def mode_parentscan(phase):
                     1,                                           # Total hosts
                     gateway and 1 or 0,                          # Gateways found
                     state in [ "direct", "root" ] and 1 or 0,    # Directly reachable hosts
+                    skipped_gateways,                            # number of failed PING probes
                     state == "notfound" and 1 or 0,              # No gateway found
                     pconf and 1 or 0,                            # New parents configured
                     gwcreat and 1 or 0,                          # Gateway hosts created 
@@ -2886,6 +2888,7 @@ def mode_parentscan(phase):
             [ (_("Total hosts"),               0),
               (_("Gateways found"),            0),
               (_("Directly reachable hosts"),  0),
+              (_("Unreachable gateways"),      0),
               (_("No gateway found"),          0),
               (_("New parents configured"),    0),
               (_("Gateway hosts created"),     0),
@@ -2922,6 +2925,7 @@ def mode_parentscan(phase):
             "select"         : "noexplicit",
             "timeout"        : 8,
             "probes"         : 2,
+            "ping_probes"    : 5,
             "max_ttl"        : 10,
             "force_explicit" : False,
         })
@@ -2952,6 +2956,15 @@ def mode_parentscan(phase):
         html.write(_("Maximum distance (TTL) to gateway") + ":</td><td>")
         html.number_input("max_ttl", settings["max_ttl"], size=2)
         html.write('</td></tr>')
+        html.write('<tr><td>')
+        html.write(_("Number of PING probes") + ":")
+        html.help(_("After a gateway has been found, Check_MK checks if it is reachable "
+                    "via PING. If not, it is skipped and the next gateway nearer to the "
+                    "monitoring core is being tried. You can disable this check by setting "
+                    "the number of PING probes to 0."))
+        html.write("</td><td>")
+        html.number_input("ping_probes", settings.get("ping_probes", 5), size=2)
+        html.write('</td></tr>')
         html.write('</table>')
 
         # Configuring parent
@@ -2964,7 +2977,6 @@ def mode_parentscan(phase):
         html.write(_("Create gateway hosts in<ul>"))
         html.radiobutton("where", "subfolder", settings["where"] == "subfolder", 
                 _("in the subfolder <b>%s/Parents</b>") % g_folder["title"])
-        # html.hidden_field("rootfolder", g_folder[".path"])
         html.write("<br>")
         html.radiobutton("where", "here", settings["where"] == "here", 
                 _("directly in the folder <b>%s</b>") % g_folder["title"])
@@ -3004,13 +3016,16 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
                     False, False
             
             # Determine folder where to create the host.
-            elif where == "here":
+            elif where == "here": # directly in current folder
                 gw_folder = g_folder
             elif where == "subfolder":
+                # Put new gateways in subfolder "Parents" of current
+                # folder. Does this folder already exist?
                 if "parents" in g_folder[".folders"]:
                     gw_folder = g_folder[".folders"]["parents"]
                     load_hosts(gw_folder)
                 else:
+                    # Create new gateway folder
                     config.need_permission("wato.manage_folders")
                     check_folder_permissions(g_folder, "write")
                     gw_folder = {
@@ -3025,7 +3040,12 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
                     }
                     g_folders[gw_folder[".path"]] = gw_folder
                     g_folder[".folders"]["parent"] = gw_folder
-            elif where == "there":
+                    save_folder(gw_folder)
+                    call_hook_folder_created(gw_folder)
+                    log_pending(AFFECTED, gw_folder, "new-folder", 
+                               _("Created new folder %s during parent scant") 
+                                 % gw_folder[".path"])
+            elif where == "there": # In same folder as host
                 gw_folder = folder
                 load_hosts(gw_folder)
 
@@ -3055,13 +3075,14 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
                 new_host["site"] = site_id
 
             gw_folder[".hosts"][new_host[".name"]] = new_host
-            save_folder(gw_folder)
             save_hosts(gw_folder)
+            reload_hosts(gw_folder)
+            save_folder(gw_folder)
             mark_affected_sites_dirty(gw_folder, gw_host)
+            log_pending(AFFECTED, gw_host, "new-host",
+                        _("Created new host %s during parent scan") % gw_host)
 
             reload_folder(gw_folder)
-            call_hook_folder_created(gw_folder)
-            log_pending(AFFECTED, gw_folder, "new-folder", _("Created new folder %s") % gw_folder[".path"])
             gwcreat = True
 
         parents = [ gw_host ]
@@ -3094,7 +3115,7 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
 
     mark_affected_sites_dirty(folder, host[".name"])
     save_hosts(folder)
-    log_pending(AFFECTED, folder, "set-gateway", message)
+    log_pending(AFFECTED, host[".name"], "set-gateway", message)
     return message, True, gwcreat
 
 

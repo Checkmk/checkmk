@@ -4032,7 +4032,7 @@ def do_scan_parents(hosts):
 
         gws = scan_parents_of(chunk)
 
-        for host, (gw, state, message) in zip(chunk, gws):
+        for host, (gw, state, ping_fails, message) in zip(chunk, gws):
             if gw:
                 gateway, gateway_ip, dns_name = gw
                 if not gateway: # create artificial host
@@ -4067,6 +4067,10 @@ def do_scan_parents(hosts):
     out.write("# Parent definitions\n")
     out.write("parents += %s\n\n" % pprint.pformat(parent_rules))
     sys.stdout.write("\nWrote %s\n" % outfilename)
+
+def gateway_reachable_via_ping(ip, probes):
+    return 0 == os.system("ping -q -i 0.2 -l 3 -c %d -W 5 '%s' >/dev/null 2>&1" % 
+      (probes, ip)) >> 8
 
 def scan_parents_of(hosts, silent=False, settings={}):
     if monitoring_host:
@@ -4111,7 +4115,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
         exitstatus = proc.close()
         if exitstatus:
             dot(tty_red, '*')
-            gateways.append((None, "failed", "Traceroute failed with exit code %d" % (exitstatus & 255)))
+            gateways.append((None, "failed", 0, "Traceroute failed with exit code %d" % (exitstatus & 255)))
             continue
 
         if len(lines) == 1 and lines[0].startswith("ERROR:"):
@@ -4119,7 +4123,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
             if opt_verbose:
                 sys.stderr.write("%s: %s\n" % (host, message))
             dot(tty_red, "D")
-            gateways.append((None, "dnserror", message))
+            gateways.append((None, "dnserror", 0, message))
             continue
 
         elif len(lines) == 0:
@@ -4132,7 +4136,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
         elif len(lines) < 2:
             if not silent:
                 sys.stderr.write("%s: %s\n" % (host, ' '.join(lines)))
-            gateways.append((None, "garbled", "The output of traceroute seem truncated:\n%s" %
+            gateways.append((None, "garbled", 0, "The output of traceroute seem truncated:\n%s" %
                     ("".join(lines))))
             dot(tty_blue)
             continue
@@ -4166,7 +4170,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
         if len(routes) == 0:
             error = "incomplete output from traceroute. No routes found."
             sys.stderr.write("%s: %s\n" % (host, error))
-            gateways.append((None, "garbled", error))
+            gateways.append((None, "garbled", 0, error))
             dot(tty_red)
             continue
 
@@ -4176,27 +4180,37 @@ def scan_parents_of(hosts, silent=False, settings={}):
         # this in monitoring_host.
         elif len(routes) == 1:
             if ip == nagios_ip:
-                gateways.append( (None, "root", "") ) # We are the root-monitoring host
+                gateways.append( (None, "root", 0, "") ) # We are the root-monitoring host
                 dot(tty_white, 'N')
             elif monitoring_host:
-                gateways.append( ((monitoring_host, nagios_ip, None), "direct", "") )
+                gateways.append( ((monitoring_host, nagios_ip, None), "direct", 0, "") )
                 dot(tty_cyan, 'L')
             else:
-                gateways.append( (None, "direct", "") )
+                gateways.append( (None, "direct", 0, "") )
             continue
 
         # Try far most route which is not identical with host itself
+        ping_probes = settings.get("ping_probes", 5)
+        skipped_gateways = 0
         route = None
         for r in routes[::-1]:
             if not r or (r == ip):
                 continue
+            # Do (optional) PING check in order to determine if that
+            # gateway can be monitored via the standard host check
+            if ping_probes:            
+                if not gateway_reachable_via_ping(r, ping_probes):
+                    if opt_verbose:
+                        sys.stderr.write("(not using %s, not reachable)\n" % r)
+                    skipped_gateways += 1
+                    continue
             route = r
             break
         if not route:
             error = "No usable routing information"
             if not silent:
                 sys.stderr.write("%s: %s\n" % (host, error))
-            gateways.append((None, "notfound", error))
+            gateways.append((None, "notfound", 0, error))
             dot(tty_blue)
             continue
 
@@ -4204,11 +4218,14 @@ def scan_parents_of(hosts, silent=False, settings={}):
         gateway_ip = route
         gateway = ip_to_hostname(route)
         if opt_verbose:
-            sys.stdout.write("%s(%s) " % (gateway, gateway_ip))
+            if gateway:
+                sys.stdout.write("%s(%s) " % (gateway, gateway_ip))
+            else:
+                sys.stdout.write("%s " % gateway_ip)
 
         # Try to find DNS name of host via reverse DNS lookup
         dns_name = ip_to_dnsname(gateway_ip)
-        gateways.append( ((gateway, gateway_ip, dns_name), "gateway", "") )
+        gateways.append( ((gateway, gateway_ip, dns_name), "gateway", skipped_gateways, "") )
         dot(tty_green, 'G')
     return gateways
 

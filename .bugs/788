@@ -1,0 +1,12 @@
+Title: Command and now row selected garbles things up
+Component: multisite
+State: open
+Date: 2012-07-29 23:00:06
+Targetversion: future
+Class: bug
+
+If you enablec checkboxes and then issue a command with now
+rows selected, then an error message appears. This is nice.
+But at the same time you see an empty view with now chance to
+come back to normal mode other then opening the view from
+fresh.

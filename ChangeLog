@@ -20,6 +20,7 @@
     * vms_if: new check for network interfaces on OpenVMS
     * vms_system.ios: new check for total direct/buffered IOs on OpenVMS
     * vms_system.procs: new check for number of processes on OpenVMS
+    * vms_queuejobs: new check for monitoring current VMS queue jobs
     * FIX: mssql agent: Added compatibility code for MSSQL 9
     * f5_bigip_temp: add performance data
     * added perf-o-meters for a lot of temperature checks

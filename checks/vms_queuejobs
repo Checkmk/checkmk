@@ -25,36 +25,39 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output from agent:
-# <<<vms_diskstat>>>
-# $1$DGA1122: TEST_WORK 1171743836 1102431184 0.00 
-# DSA1: SHAD_1 66048000 58815666 0.00
-# DSA2: SHAD_2 66048000 47101824 0.07
-# DSA3: SHAD_3 66048000 46137546 1.57
-# DSA4: SHAD_4 66048000 36087093 0.00
-# DSA5: SHAD_5 66048000 32449914 0.00
-# $1$DGA1123: TEST_WORK 2171743836 1102431184 0.00 
-# $1$DGA1124: TEMP_02 3171743836 102431184 1.10 
-# $1$DGA1125: DATA_01 1171743836 202431184 0.20 
+# <<<vms_queuejobs>>>
+# 2036F23D SRV_WATCHPROD LEF 0 05:10:00.39 945007498 7721395
+# 20201AF1 DRS_WATCHDOG_22 LEF 0 00:01:39.97 284611 2030
 
-def inventory_vms_diskstat_fs(info):
-    return df_inventory([ line[1] for line in info ])
+def inventory_vms_queuejobs(info):
+    return [(None, {})]
 
-def check_vms_diskstat_fs(item, params, info):
-    for line in info:
-        if line[1] == item:
-            device, label, size, used, ios = line
-            size_mb = int(size) * 512 / (1024.0 * 1024.0)
-            avail_mb = int(used) * 512 / (1024.0 * 1024.0)
-            return df_check_filesystem(g_hostname, item, size_mb, avail_mb, params)
+def check_vms_queuejobs(_no_item, params, info):
+    names = []
+    max_cpu_secs = 0
+    max_cpu_job = None
+    for id, name, state, cpu_days, cpu_time, ios, pgfaults in info:
+        names.append(name)
+        hours, minutes, seconds = map(float, cpu_time.split(":"))
+        cpu_secs = int(cpu_days) * 86400 + hours * 3600 + minutes * 60 + seconds
+        if cpu_secs > max_cpu_secs:
+            max_cpu_secs = cpu_secs
+            max_cpu_job = name
 
-    return (3, "UNKNOWN - no such disk")
+    infotext = " - %d jobs" % len(info)
+    if max_cpu_job:
+        minutes, seconds = divmod(max_cpu_secs, 60)
+        hours, minutes = divmod(minutes, 60)
+        days, hours = divmod(hours, 24)
+        infotext += ', most CPU used by %s (%d days, %02d:%02d:%02d.%02d)' % \
+                (max_cpu_job, days, hours, minutes, int(seconds), int(seconds * 100))
+
+    return 0, "OK" + infotext
 
 
-check_info['vms_diskstat.df'] = {
-    "check_function" :      check_vms_diskstat_fs,
-    "inventory_function" :  inventory_vms_diskstat_fs,
-    "service_description" : "fs_%s",
-    "has_perfdata" :        True,
-    "group" :               "filesystem",
-    "includes" :            [ "df.include" ],
+check_info['vms_queuejobs'] = {
+    "check_function" :      check_vms_queuejobs,
+    "inventory_function" :  inventory_vms_queuejobs,
+    "service_description" : "Queue Jobs",
+    "has_perfdata" :        False,
 }

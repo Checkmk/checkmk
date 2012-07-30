@@ -37,7 +37,10 @@ def convert_vms_if(info):
     ifIndex = 0
     for line in info:
         ifDescr = line[0]
-        ifInOctets, ifInErrors, ifOutOctets, ifOutErrors, ifInDiscards = map(wrap_negative, line[1:6])
+        ifInOctets, ifInUcastPkts, ifInMulticastPkts, ifInBroadcastPkts, \
+        ifInDiscards, ifInErrors, ifOutOctets, ifOutUcastPkts, \
+        ifOutMulticastPkts, ifOutBroadcastPkts, ifOutDiscards, ifOutErrors = \
+          map(wrap_negative, line[1:13])
 
         ifIndex += 1
         new_info.append((
@@ -47,16 +50,16 @@ def convert_vms_if(info):
             '1000000000',# ifHighSpeed
             '1',         # ifOperStatus
             ifInOctets,
-            '0',         # ifHCInUcastPkts
-            '0',         # ifHCInMulticastPkts
-            '0',         # ifHCInBroadcastPkts
+            ifInUcastPkts,
+            ifInMulticastPkts,
+            ifInBroadcastPkts,
             ifInDiscards,
             ifInErrors,
             ifOutOctets, 
-            '0',         # ifHCOutUcastPkts
-            '0',         # ifHCOutMulticastPkts
-            '0',         # ifHCOutBroadcastPkts
-            '0',         # ifOutDiscards
+            ifOutUcastPkts, 
+            ifOutMulticastPkts,
+            ifOutBroadcastPkts,
+            ifOutDiscards,
             ifOutErrors,
             '0',         # ifOutQLen
             ifDescr,

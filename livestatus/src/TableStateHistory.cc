@@ -240,7 +240,7 @@ void TableStateHistory::answerQuery(Query *query)
     SLA_Info::iterator it_sla = sla_info->begin();
     while( it_sla != sla_info->end() ){
     	HostServiceState* hst = &it_sla->second;
-    	hst->_debug_info = "LOG FINAL LINE    ";
+    	hst->_debug_info = "LOG FINAL";
     	hst->_time       = until - 1;
     	hst->_until      = hst->_time;
     	hst->_duration   = hst->_until - hst->_from;

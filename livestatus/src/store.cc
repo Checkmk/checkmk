@@ -60,7 +60,6 @@ void store_init()
     g_timeperiods_cache = new TimeperiodsCache();
 }
 
-
 void store_deinit()
 {
     if (g_store) {
@@ -142,4 +141,9 @@ void update_timeperiods_cache(time_t now)
 {
     g_timeperiods_cache->update(now);
 }
+
+void log_timeperiods_cache(){
+	g_timeperiods_cache->logCurrentTimeperiods();
+}
+
 

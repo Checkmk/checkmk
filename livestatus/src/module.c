@@ -52,6 +52,7 @@
 #include "waittriggers.h"
 #include "livechecking.h"
 
+
 #ifndef AF_LOCAL
 #define   AF_LOCAL AF_UNIX
 #endif
@@ -440,17 +441,10 @@ int broker_event(int event_type __attribute__ ((__unused__)), void *data)
 {
 	g_counters[COUNTER_NEB_CALLBACKS]++;
     struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
-//    if ( ts->event_type != 5 &&ts->event_type != 98)
-//	logger( LG_CRIT, "##### GOT EVENT %d", ts->event_type );
     if( ts->event_type == EVENT_LOG_ROTATION){
     	if( g_thread_running == 1 ){
     		logger( LG_CRIT, "##### DAS LOGROTATE EVENT - DIESMAL DAS RICHTIGE" );
     		livestatus_log_initial_states();
-    	//	logger( LG_CRIT, "##### DAS LOGROTATE EVENT BEIM STARTUP" );
-    	//	livestatus_log_initial_states();
-    	}
-    	else{
-
     	}
     }
 
@@ -484,7 +478,7 @@ char* get_downtime_comment(char* host_name, char* svc_desc){
 }
 
 void livestatus_log_initial_states(){
-	// Log DOWNTIME depth hosts
+	// Log DOWNTIME hosts
 	host *h = (host *)host_list;
 	while (h) {
 		if( h->scheduled_downtime_depth > 0 ){
@@ -495,7 +489,7 @@ void livestatus_log_initial_states(){
 		}
 		h = h->next;
 	}
-	// Log DOWNTIME depth services
+	// Log DOWNTIME services
 	service *s = (service *)service_list;
 	while (s) {
 		if( s->scheduled_downtime_depth > 0 ){
@@ -505,6 +499,8 @@ void livestatus_log_initial_states(){
 		}
 		s = s->next;
 	}
+	// Log TIMERPERIODS
+	log_timeperiods_cache();
 }
 
 int broker_process(int event_type __attribute__ ((__unused__)), void *data)
@@ -512,14 +508,11 @@ int broker_process(int event_type __attribute__ ((__unused__)), void *data)
     struct nebstruct_process_struct *ps = (struct nebstruct_process_struct *)data;
     if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART) {
         update_timeperiods_cache(time(0));
-        livestatus_log_initial_states();
         init_livecheck();
         start_threads();
     }
     return 0;
 }
-
-
 
 
 int verify_event_broker_options()

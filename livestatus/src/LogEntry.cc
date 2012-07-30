@@ -118,8 +118,7 @@ bool LogEntry::handleStatusEntry()
         _check_output = next_token(&scan, ';');
         return true;
     }
-    else if (!strncmp(_text, "HOST DOWNTIME ALERT: ", 21)
-            || !strncmp(_text, "HOST FLAPPING ALERT: ", 21))
+    else if (!strncmp(_text, "HOST DOWNTIME ALERT: ", 21))
     {
         _logclass = LOGCLASS_ALERT;
         _type     = DOWNTIME_ALERT_HOST;
@@ -132,6 +131,20 @@ bool LogEntry::handleStatusEntry()
         _comment      = next_token(&scan, ';') + 1;
         return true;
     }
+    else if (!strncmp(_text, "HOST FLAPPING ALERT: ", 21))
+    {
+        _logclass = LOGCLASS_ALERT;
+        _type     = FLAPPING_HOST;
+        char *scan = _text;
+        _text = next_token(&scan, ':');
+        scan++;
+
+        _host_name    = next_token(&scan, ';');
+        _state_type   = next_token(&scan, ';');
+        _comment      = next_token(&scan, ';') + 1;
+        return true;
+    }
+
 
     // SERVICE states
     else if (!strncmp(_text, "INITIAL SERVICE STATE: ", 23)
@@ -158,8 +171,7 @@ bool LogEntry::handleStatusEntry()
         _check_output = next_token(&scan, ';');
         return true;
     }
-    else if (!strncmp(_text, "SERVICE DOWNTIME ALERT: ", 24)
-            || !strncmp(_text, "SERVICE FLAPPING ALERT: ", 24))
+    else if (!strncmp(_text, "SERVICE DOWNTIME ALERT: ", 24))
     {
         _logclass = LOGCLASS_ALERT;
         _type     = DOWNTIME_ALERT_SERVICE;
@@ -173,9 +185,22 @@ bool LogEntry::handleStatusEntry()
         _comment      = next_token(&scan, ';') + 1;
         return true;
     }
+    else if (!strncmp(_text, "SERVICE FLAPPING ALERT: ", 24))
+        {
+            _logclass = LOGCLASS_ALERT;
+            _type     = FLAPPING_SERVICE;
+            char *scan = _text;
+            _text = next_token(&scan, ':');
+            scan++;
+
+            _host_name    = next_token(&scan, ';');
+            _svc_desc     = next_token(&scan, ';');
+            _state_type   = next_token(&scan, ';');
+            _comment      = next_token(&scan, ';') + 1;
+            return true;
+        }
 
     return false;
-
 }
 
 bool LogEntry::handleNotificationEntry()

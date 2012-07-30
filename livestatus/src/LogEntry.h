@@ -44,6 +44,8 @@ enum LogEntryType {	NONE,
 					DOWNTIME_ALERT_SERVICE,
 					STATE_HOST,
 					STATE_SERVICE,
+					FLAPPING_HOST,
+					FLAPPING_SERVICE,
 					TIMEPERIOD_TRANSITION};
 
 struct LogEntry

@@ -438,16 +438,19 @@ int broker_program(int event_type __attribute__ ((__unused__)), void *data __att
 
 int broker_event(int event_type __attribute__ ((__unused__)), void *data)
 {
-    g_counters[COUNTER_NEB_CALLBACKS]++;
+	g_counters[COUNTER_NEB_CALLBACKS]++;
     struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
+//    if ( ts->event_type != 5 &&ts->event_type != 98)
+//	logger( LG_CRIT, "##### GOT EVENT %d", ts->event_type );
     if( ts->event_type == EVENT_LOG_ROTATION){
-    	if( g_thread_running == 0 ){
-    		logger( LG_CRIT, "##### DAS LOGROTATE EVENT BEIM STARTUP" );
+    	if( g_thread_running == 1 ){
+    		logger( LG_CRIT, "##### DAS LOGROTATE EVENT - DIESMAL DAS RICHTIGE" );
     		livestatus_log_initial_states();
+    	//	logger( LG_CRIT, "##### DAS LOGROTATE EVENT BEIM STARTUP" );
+    	//	livestatus_log_initial_states();
     	}
     	else{
-    	    logger( LG_CRIT, "##### DAS LOGROTATE EVENT - DIESMAL DAS RICHTIGE" );
-    	    livestatus_log_initial_states();
+
     	}
     }
 
@@ -456,16 +459,11 @@ int broker_event(int event_type __attribute__ ((__unused__)), void *data)
 }
 
 extern scheduled_downtime *scheduled_downtime_list;
-
-
-#define NO_DOWNTIME_INFO "No Info"
-#define MULTIPLE_DOWNTIMES_COMMENT "Multiple Downtime Comments"
 char* get_downtime_comment(char* host_name, char* svc_desc){
 	char* comment;
 	int matches = 0;
 	scheduled_downtime* dt_list = scheduled_downtime_list;
 	while (dt_list != NULL){
-		logger( LG_CRIT, "dt type %d", dt_list->type);
 		if( dt_list->type == HOST_DOWNTIME ){
 			if( strcmp(dt_list->host_name, host_name) == 0 ) {
 				matches++;
@@ -482,7 +480,7 @@ char* get_downtime_comment(char* host_name, char* svc_desc){
 		}
 		dt_list = dt_list->next;
 	}
-	return matches == 0 ? NO_DOWNTIME_INFO : matches > 1 ? MULTIPLE_DOWNTIMES_COMMENT : comment;
+	return matches == 0 ? "No comment" : matches > 1 ? "Multiple Downtime Comments" : comment;
 }
 
 void livestatus_log_initial_states(){
@@ -491,8 +489,6 @@ void livestatus_log_initial_states(){
 	while (h) {
 		if( h->scheduled_downtime_depth > 0 ){
 			char buffer[8192];
-			sprintf(buffer,"HOST NOTIFCATION PERIOD: %s;;%s;", h->name, h->notification_period);
-			write_to_all_logs(buffer, LG_INFO);
 			sprintf(buffer,"HOST DOWNTIME ALERT: %s;STARTED;%s", h->name, get_downtime_comment(h->name, NULL));
 			write_to_all_logs(buffer, LG_INFO);
 
@@ -504,8 +500,6 @@ void livestatus_log_initial_states(){
 	while (s) {
 		if( s->scheduled_downtime_depth > 0 ){
 			char buffer[8192];
-			sprintf(buffer,"SERVICE NOTIFCATION PERIOD: %s;%s;%s;", s->host_name, s->description, s->notification_period);
-			write_to_all_logs(buffer, LG_INFO);
 			sprintf(buffer,"SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name, s->description, get_downtime_comment(s->host_name, s->description));
 			write_to_all_logs(buffer, LG_INFO);
 		}
@@ -582,8 +576,6 @@ int verify_event_broker_options()
 
 void register_callbacks()
 {
-	logger( LG_CRIT, "##### REGISTER CALLBACKS" );
-
     neb_register_callback(NEBCALLBACK_HOST_STATUS_DATA,      g_nagios_handle, 0, broker_host); // Needed to start threads
     neb_register_callback(NEBCALLBACK_COMMENT_DATA,          g_nagios_handle, 0, broker_comment); // dynamic data
     neb_register_callback(NEBCALLBACK_DOWNTIME_DATA,         g_nagios_handle, 0, broker_downtime); // dynamic data

@@ -69,8 +69,6 @@ void debug_statehist(const char *loginfo, ...)
 
 TableStateHistory::TableStateHistory()
 {
-	logger(LG_CRIT, "INIT STATE HIST");
-
     HostServiceState *ref = 0;
     addColumn(new OffsetTimeColumn("time",
                 "Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));
@@ -82,18 +80,18 @@ TableStateHistory::TableStateHistory()
                  "HostServiceState duration (UNIX timestamp)", (char *)&(ref->_duration) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("attempt",
                 "The number of the check attempt", (char *)&(ref->_attempt) - (char *)ref, -1));
-    addColumn(new OffsetIntColumn("hard_state",
-                 "Hard State", (char *)&(ref->_state) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("state",
     		"The state of the host or service in question", (char *)&(ref->_state) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("state_type",
+    		"The type of the state (varies on different log classes)", (char *)&(ref->_state_alert) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("in_downtime",
-        		"Shows if the host/service is in downtime", (char *)&(ref->_in_downtime) - (char *)ref, -1));
-    addColumn(new OffsetStringColumn("notification_period",
-        		"Shows if the host/service notification period", (char *)&(ref->_notification_period) - (char *)ref, -1));
+    		"Shows if the host/service is in downtime", (char *)&(ref->_in_downtime) - (char *)ref, -1));
+    addColumn(new OffsetIntColumn("is_flapping",
+    		"Shows if the host/service is flapping", (char *)&(ref->_is_flapping) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("in_notification_period",
         		"Shows if the host/service is within its notification period", (char *)&(ref->_in_notification_period) - (char *)ref, -1));
-    addColumn(new OffsetStringColumn("state_type",
-                 "The type of the state (varies on different log classes)", (char *)&(ref->_state_type) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("notification_period",
+        		"Shows if the host/service notification period", (char *)&(ref->_notification_period) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("debug_info",
                  "The type of the state (varies on different log classes)", (char *)&(ref->_debug_info) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("host_name",
@@ -101,13 +99,16 @@ TableStateHistory::TableStateHistory()
     addColumn(new OffsetStringColumn("svc_description",
                  "Service description", (char *)&(ref->_svc_desc) - (char *)ref, -1));
 
-
+    // FIXME: test
+    addColumn(new OffsetStringColumn("log_text",
+    			  "Complete Text of Log", (char *)&(ref->_log_text) - (char *)ref, -1));
 
     sla_info = new SLA_Info();
 
     // join host and service tables
     g_table_hosts->addColumns(this, "current_host_",    (char *)&(ref->_host)    - (char *)ref);
     g_table_services->addColumns(this, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
+
 }
 
 
@@ -118,8 +119,6 @@ TableStateHistory::~TableStateHistory()
 
 void TableStateHistory::answerQuery(Query *query)
 {
-	debug_statehist("ANSWER STATE HIST QUERY ");
-
     // since logfiles are loaded on demand, we need
     // to lock out concurrent threads.
 	LogCache::handle->lockLogCache();
@@ -163,9 +162,6 @@ void TableStateHistory::answerQuery(Query *query)
     LogEntry *entry;
 	HostServiceKey key;
 	bool only_update = true;
-
-
-
 	while( it_logs != LogCache::handle->_logfiles.end() ){
 		Logfile *log = it_logs->second;
 		debug_statehist("Parse log %s", log->path());
@@ -189,6 +185,8 @@ void TableStateHistory::answerQuery(Query *query)
 			case STATE_HOST:
 			case ALERT_SERVICE:
 			case ALERT_HOST:
+			case FLAPPING_HOST:
+			case FLAPPING_SERVICE:
 			{
 				key.first = entry->_host_name;
 				if ( entry->_svc_desc != NULL )
@@ -211,13 +209,12 @@ void TableStateHistory::answerQuery(Query *query)
 					}else if (state._host != NULL ){
 						state._notification_period = entry->_host->notification_period;
 					}else
-						state._notification_period = "24x7"; // TODO: pruefen
+						state._notification_period = "24x7";
 
-					// TODO: weg damit
-					state._downtime_state = "";
+					// intitial states - will be overridden soon
 					state._in_notification_period = 1;
-
-					state._log_ptr = entry;
+					state._log_ptr = entry; // unused
+					state._log_text = entry->_complete;
 
 					debug_statehist("NEW KEY %s %s", state._host_name, state._svc_desc);
 					sla_info->insert(std::make_pair(key, state));
@@ -247,8 +244,7 @@ void TableStateHistory::answerQuery(Query *query)
     	hst->_time       = until - 1;
     	hst->_until      = hst->_time;
     	hst->_duration   = hst->_until - hst->_from;
-    	ProcessDataSet dataset(query, &it_sla->second, false);
-    	dataset.process();
+		process(query, hst, false);
     	it_sla++;
     }
 
@@ -263,46 +259,56 @@ void print_hsstate(HostServiceState &hs_state){
 		debug_statehist("HS STATE: \nhost %s\n", hs_state._host->name);
 	debug_statehist("from  %d\nuntil %d\nduration %d", hs_state._from, hs_state._until, hs_state._duration);
 	debug_statehist("timeperiod %s", hs_state._notification_period);
-	if( hs_state._state_type != NULL )
-		debug_statehist("state_type %s\n\n", hs_state._state_type);
+	if( hs_state._state_alert != NULL )
+		debug_statehist("state_type %s\n\n", hs_state._state_alert);
 }
+
 
 void TableStateHistory::updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &hs_state, bool only_update){
 	// Update time/until/duration
 	hs_state._time     = entry._time;
 	hs_state._until    = entry._time;
 	hs_state._duration = hs_state._until - hs_state._from;
-	ProcessDataSet dataset(&query, &hs_state, only_update);
+
 
 	switch( entry._type ){
 		case ALERT_HOST:
 		case ALERT_SERVICE:{
-			debug_statehist("entry time %d\n%s", entry._time, entry._complete);
-			print_hsstate(hs_state);
 			if( hs_state._state != entry._state ){
-				hs_state._debug_info = "ALERT    TRIGGERED";
-				dataset.process();
-				hs_state._state_type = entry._state_type;
+				hs_state._debug_info = "ALERT    ";
+				process(&query, &hs_state, only_update);
+				hs_state._state_alert = entry._state_type;
 				hs_state._state = entry._state;
 			}
 			break;
 		}
-		case DOWNTIME_ALERT_SERVICE:
-		case DOWNTIME_ALERT_HOST:{
-			if( strcmp( hs_state._downtime_state, entry._state_type ) ){
-				hs_state._debug_info = "DOWNTIME TRIGGERED";
-				dataset.process();
-				hs_state._downtime_state = entry._state_type;
-				hs_state._in_downtime = strncmp(hs_state._downtime_state,"STARTED",7) ? 1 : 0;
+		case DOWNTIME_ALERT_HOST:
+		case DOWNTIME_ALERT_SERVICE:{
+			if( hs_state._state_downtime == NULL || strcmp( hs_state._state_downtime, entry._state_type ) ){
+				hs_state._debug_info = "DOWNTIME ";
+				process(&query, &hs_state, only_update);
+				hs_state._state_downtime = entry._state_type;
+				hs_state._in_downtime = !strncmp(hs_state._state_downtime,"STARTED",7) ? 1 : 0;
+			}
+			break;
+		}
+		case FLAPPING_HOST:
+		case FLAPPING_SERVICE:{
+			if( hs_state._is_flapping == NULL || strcmp( hs_state._state_flapping, entry._state_type ) ){
+				hs_state._debug_info = "FLAPPING ";
+				process(&query, &hs_state, only_update);
+				hs_state._state_flapping= entry._state_type;
+				hs_state._is_flapping = !strncmp(hs_state._state_flapping,"STARTED",7) ? 1 : 0;
 			}
 			break;
 		}
 		case TIMEPERIOD_TRANSITION:{
-			if( !strcmp(entry._command_name, hs_state._notification_period) ){
+			// if no _host pointer is available the initial state(1) of _in_notification_period never changes
+			if( hs_state._host && !strcmp(entry._command_name, hs_state._notification_period) ){
 				int new_status = atoi(entry._state_type);
 				if( new_status != hs_state._in_notification_period ){
-					hs_state._debug_info = "TIMEPERIOD TRIGGER";
-					dataset.process();
+					hs_state._debug_info = "TIMEPERI ";
+					process(&query, &hs_state, only_update);
 					hs_state._in_notification_period = new_status;
 				}
 			}

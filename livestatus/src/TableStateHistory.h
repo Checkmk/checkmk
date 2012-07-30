@@ -61,24 +61,25 @@ public:
 	time_t  _until;
 	time_t  _duration;
 	int     _attempt;
-	int     _hard_state; // true: hard, false: soft
-	int     _state;
-	char*   _state_type;
-	char*   _downtime_state;
-	int     _in_downtime;
+	int     _state;			 // 0/1/2/3
+	char*   _state_alert;    // STARTED/STOPPED
+	char*   _state_flapping; // STARTED/STOPPED
+	char*   _state_downtime; // STARTED/STOPPED/CANCELED
 	char*   _notification_period;
 	int     _in_notification_period;
+	int     _in_downtime;
+	int     _is_flapping;
 
-	LogEntry* _log_ptr;
+	LogEntry* _log_ptr; // unused
+	char*     _log_text;
 	char*   _debug_info;
 
     host      *_host;
-    char*     _host_name;
+    char*     _host_name; // Fallback if host no longer exists
     service   *_service;
-    char*     _svc_desc;
+    char*     _svc_desc;  // Fallback if service no longer exists
 
-	HostServiceState()
-	: _state_type(""){};
+	HostServiceState(){};
 };
 
 typedef map<HostServiceKey, HostServiceState, LessThan> SLA_Info;
@@ -98,38 +99,14 @@ public:
     void updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &state, bool only_update);
 
 private:
-   bool answerQuery(Query *, Logfile *, time_t, time_t);
+    bool answerQuery(Query *, Logfile *, time_t, time_t);
+    inline void process(Query *query, HostServiceState *hs_state, bool do_nothing){
+    	if( do_nothing )
+    		return;
+    	query->processDataset(hs_state);
+    	hs_state->_from = hs_state->_until;
+    };
    SLA_Info* sla_info;
-};
-
-
-class ProcessDataSet{
-private:
-	bool   _do_nothing;
-	bool   _already_sent;
-	Query* _query;
-
-	HostServiceState* _hs_state;
-public:
-	ProcessDataSet(Query *query, HostServiceState *hs_state, bool do_nothing)
-	{
-		_query = query;
-		_hs_state = hs_state;
-		_do_nothing = do_nothing;
-		_already_sent = false;
-	}
-	bool process(){
-		if( _do_nothing )
-			return false;
-		if( _already_sent == true )
-			return false;
-		else{
-			_query->processDataset(_hs_state);
-			_hs_state->_from = _hs_state->_until;
-			_already_sent = true;
-			return true;
-		}
-	};
 };
 
 

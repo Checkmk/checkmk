@@ -1,0 +1,71 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# .1.3.6.1.4.1.9.9.48.1.1.1.7.1 ciscoMemoryPoolLargestFree CPU Pool
+# .1.3.6.1.4.1.9.9.48.1.1.1.7.2 ciscoMemoryPoolLargestFree I/O Pool
+# .1.3.6.1.4.1.9.9.48.1.1.1.6.1 ciscoMemoryPoolUsed CPU Pool
+# .1.3.6.1.4.1.9.9.48.1.1.1.6.2 ciscoMemoryPoolUsed I/0 Pool
+
+cisco_mem_default_levels = (80.0, 90.0)
+
+def check_cisco_mem(item, params, info):
+    mem_free = saveint(info[0][0]) + saveint(info[0][1]) 
+    mem_used = saveint(info[0][2]) + saveint(info[0][3])
+    mem_total = mem_free + mem_used
+    perc_used =  100 * (float(mem_used) / float(mem_total))
+    warn, crit = params
+    perfdata = [("mem_used", perc_used, warn, crit, 0, 100)]
+
+    if type(warn) == float:
+        infotext = " - %2.1f%% (%s) of %s used" % \
+        (perc_used, get_filesize_human_readable(mem_used), get_filesize_human_readable(mem_total))
+        if perc_used >= crit:
+            return (2, "CRIT" + infotext + " (critical at %d%%)" % crit, perfdata)
+        elif perc_used >= warn:
+            return (1, "WARN" + infotext + " (warning at %d%%)" % warn, perfdata)
+        else:
+            return (0, "OK" + infotext, perfdata)
+    else:
+        infotext = " - %s (%2.1f%%) of %s used" % \
+        (get_filesize_human_readable(mem_used), perc_used, get_filesize_human_readable(mem_total))
+        if mem_used >= crit:
+            return (2, "CRIT" + infotext + " (critical at %s MB)" % crit, perfdata)
+        elif mem_used >= warn:
+            return (1, "WARN" + infotext + " (warning at %s MB)" % warn, perfdata)
+        else:
+            return (0, "OK" + infotext, perfdata)
+
+
+check_info["cisco_mem"] = {
+    "check_function"        : check_cisco_mem,
+    "inventory_function"    : lambda info: [(None, "cisco_mem_default_levels")],
+    "service_description"   : "Mem used",
+    "has_perfdata"          : True,
+    "group"                 : "memory",
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.4.1.9.9.48.1.1.1.6.1"),
+    "snmp_info"		    : ( ".1.3.6.1.4.1.9.9.48.1.1.1", [ 6.1, 6.2, 7.1, 7.2 ]),
+}
+

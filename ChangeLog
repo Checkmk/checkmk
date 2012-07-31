@@ -35,6 +35,7 @@
     * FIX: windows agent: try to fix crash in event log handling
     * FreeBSD Agent: Added swapinfo call to mem section to make mem check work again
     * windows_multipath: Added the missing check for multipath.vbs (Please test)
+    * carel_uniflair_cooling: new check for monitoring datacenter air conditioning by "CAREL"
 
     WATO:
     * Added permission to control the "clone host" feature in WATO

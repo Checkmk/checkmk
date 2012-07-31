@@ -582,3 +582,11 @@ def perfometer_cmc_lcp(row, check_command, perf_data):
     return "%.1f %s" % (val,unit), perfometer_logarithmic(val, 4, 2, color)
 
 perfometers["check_mk-cmc_lcp"] = perfometer_cmc_lcp
+
+
+def perfometer_carel_uniflair_cooling(row, check_command, perf_data):
+    humidity = float(perf_data[0][1])
+    return "%3.1f%%" % humidity, perfometer_linear(humidity, '#6f2')
+
+perfometers['check_mk-carel_uniflair_cooling'] = perfometer_carel_uniflair_cooling
+

@@ -23,18 +23,6 @@ $!# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 $!# Boston, MA 02110-1301 USA.
 $!#
 $!# Author:     Paul Aebersold, netPuls          info@netpuls.info
-$!/<snip>
-$!#############################################################################
-$!# File:       check_mk.openvms
-$!#
-$!# Created:     7-Jul-2012
-$!# Modified:   31-Jul-2012
-$!# Version:    RC2 (2.5-6)
-$!#
-$!# Parameter:  none
-$!# Abstract:   New version intended for use with check_MK
-$!#############################################################################
-$!<snip>/
 $if p1 .nes. "" then set verify
 $msgOff := set message/nofacility/noseverity/noidentification/notext
 $msgOn := set message/facility/severity/identification/text

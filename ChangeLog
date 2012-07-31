@@ -22,6 +22,7 @@
     * FIX: mssql agent: Added compatibility code for MSSQL 9
     * FIX: diskstat (linux): Don't inventorize check when data empty
     * Cisco: Added Check for mem an cpu util
+    * New check for f5 bigip network interfaces
 
     WATO:
     * Added permission to control the "clone host" feature in WATO

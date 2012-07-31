@@ -124,6 +124,7 @@ if [ -x /usr/local/bin/muse ]
 	echo '<<<mem>>>'
 # 					yes, i don't know sed well.
 	muse -k 2>/dev/null | sed 's/Total/MemTotal/' | sed 's/Free/MemFree/'
+        swapinfo -k 1K | tail -n 1 | awk '{ print "SwapTotal: "$2" kB\nSwapFree: "$4" kB" }'
 fi
 
 

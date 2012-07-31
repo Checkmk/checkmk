@@ -147,8 +147,8 @@ $if f$element(0," ",cLine) .eqs. "Free" then -
 freeMem = f$element(0,".",f$element(4," ",cLine))
 $if f$element(0," ",cLine) .eqs. "Process" then -
 sys3 = f$element(3," ",cLine)
-$if f$element(0," ",cLine) .eqs. "Direct" then
-         sys1 = f$element(4," ",cLine)
+$if f$element(0," ",cLine) .eqs. "Direct" then -
+sys1 = f$element(4," ",cLine)
 $if f$element(0," ",cLine) .eqs. "Buffered" then -
 sys2 = f$element(4," ",cLine)
 $goto CMSline

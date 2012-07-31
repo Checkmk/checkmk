@@ -17,10 +17,3 @@ perfdata:
 
 inventory:
  All channels are automatically inventorized with their state.
-
-
-[parameters]
- This check has no user-configurable parameters.
-
-[configuration]
- This check has no user-configurable parameters.

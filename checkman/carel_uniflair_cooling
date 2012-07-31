@@ -1,0 +1,37 @@
+title: Check Carel Uniflair Cooling devices
+agents: snmp
+author: Andreas Boesl <ab@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors parameters of datacenter cooling devices
+ using a SNMP interface made by CAREL, which is i.e. used in the
+ Uniflair series of ACs.
+
+ The check only monitors part of the data supported by the MIB
+ since the MIB does not give info about potential values in
+ some OIDs.
+
+ The check queries and goes to {CRIT} for any of these values:
+ the global status (this should catch any error)
+ water loss (one of multiple water-related values),
+ emergency operation mode (this is triggered following a
+ failure, running at maximum performance)
+
+ The check also queries the air humidity level, but currently
+ does not allow setting a level on this.
+ 
+
+item:
+ This check generates no item.
+
+perfdata:
+ None
+
+inventory:
+ The check first looks for a cooling device vendor (this 
+ is where it needs to be extended to cover other Carel devices), 
+ then for the SNMP management device, and then for the MIB region
+ for cooling devices. 
+ If all of these are found, the inventory creates a single service.
+

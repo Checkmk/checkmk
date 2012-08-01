@@ -1,19 +1,14 @@
-title: Rittal CMC TC Temperature sensors
+title: Rittal CMC-TC LCP Temperature sensors
 agents: snmp
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check polls the state of temperature sensors
- attached to a ComputerMultiControl-TopConcept unit.
- Per default warning and critical levels are read via SNMP and
- need to be configured in Check_Mk. Configure them 
- in your CMC unit. It is also possible to configure
- levels. That way the state and levels from the SNMP
- output are being ignored.
+ This check polls the state of temperature sensors of a Rittal LCP.
 
 item:
- Combination of IO unit number (3-6) and sensors index (1-4).
+ A descriptive name of the sensor, followed by " - ", followed by 
+ the combination of IO unit number (3-6) and sensors index (1-4).
  Example: {"3.2"} for first IO unit and second sensor.
 
 perfdata:
@@ -26,4 +21,3 @@ inventory:
 warn(int): Optional warning level for the temperature. If you use no
  parameters, then the builtin state will be used (this is the default).
 crit(int): Critical level for the temperature.
-

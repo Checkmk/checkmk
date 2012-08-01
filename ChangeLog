@@ -3,6 +3,7 @@
     * Allow to add options to rules. Currently the options "disabled" and
       "comment" are allowed. Options are kept in an optional dict at the
       end of each rule.
+    * parent scan: skip gateways that are reachable via PING
 
     Checks & Agents:
     * mssql_backup: Fixed problems with datetime/timezone calculations
@@ -19,10 +20,24 @@
     * vms_if: new check for network interfaces on OpenVMS
     * vms_system.ios: new check for total direct/buffered IOs on OpenVMS
     * vms_system.procs: new check for number of processes on OpenVMS
+    * vms_queuejobs: new check for monitoring current VMS queue jobs
     * FIX: mssql agent: Added compatibility code for MSSQL 9
+    * f5_bigip_temp: add performance data
+    * added perf-o-meters for a lot of temperature checks
+    * cmctc_lcp.*: added new checks for Rittal CMC-TC LCP
     * FIX: diskstat (linux): Don't inventorize check when data empty
     * Cisco: Added Check for mem an cpu util
     * New check for f5 bigip network interfaces
+    * cmctc.temp: added parameters for warn/crit, use now WATO rule
+      "Room temperature (external thermal sensors)"
+    * cisco_asa_failover: New Check for clustered Cisco ASA Firewalls 
+    * cbl_airlaser.status: New Check for CBL Airlaser IP1000 laser bridge.
+    * df, hr_fs, etc.: Filesystem checks now support grouping (pools)
+      Please refer to the check manpage of df for details
+    * FIX: windows agent: try to fix crash in event log handling
+    * FreeBSD Agent: Added swapinfo call to mem section to make mem check work again
+    * windows_multipath: Added the missing check for multipath.vbs (Please test)
+    * carel_uniflair_cooling: new check for monitoring datacenter air conditioning by "CAREL"
 
     WATO:
     * Added permission to control the "clone host" feature in WATO
@@ -38,6 +53,9 @@
     * Implemented new option in WATO attributes: editable
       When set to False the attribute can only be changed during creation
       of a new object. When editing an object this attribute is only displayed.
+    * new: search for rules in "Host & Service Configuration"
+    * parent scan: new option "ping probes", that allows skipping 
+      unreachable gateways.
 
     BI:
     * Great speed up of rule compilation in large environments

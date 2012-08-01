@@ -27,28 +27,27 @@
 check_includes['hr_fs'] = [ "df.include" ]
 
 def inventory_hr_fs(info):
-    inventory = []
+    mplist = []
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
         if hrtype in [ ".1.3.6.1.2.1.25.2.1.4" ] and \
                 hrdescr not in inventory_df_exclude_mountpoints and \
                 saveint(hrsize) != 0:
-            inventory.append((hrdescr, {}))
-    return inventory
+            mplist.append(hrdescr)
+    return df_inventory(mplist)
 
 def check_hr_fs(item, params, info):
+    fslist = []
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
-        if item == hrdescr:
+        if "patterns" in params or item == hrdescr:
             unit_size = saveint(hrunits)
             size      = saveint(hrsize) * unit_size
-            if size == 0:
-                return (0, "OK - mounted, but size is zero")
             used      = saveint(hrused) * unit_size
             size_mb   = size / 1048576.0
             used_mb   = used / 1048576.0
             avail_mb  = size_mb - used_mb
+            fslist.append((hrdescr, size_mb, avail_mb))
 
-            return df_check_filesystem(g_hostname, item, size_mb, avail_mb, params)
-    return (3, "UNKNOWN - Filesystem not found")
+    return df_check_filesystem_list(item, params, fslist)
 
 
 check_info["hr_fs"] = (check_hr_fs, "fs_%s", 1, inventory_hr_fs)

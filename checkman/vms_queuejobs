@@ -1,0 +1,14 @@
+title: Monitor OpenVMS Queue Jobs
+agents: openvms
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the current state of the queue jobs
+ on OpenVMS. Currently the check is always OK and just
+ prints the number of jobs in the queue and the total
+ CPU usage of the jobs that consumed the most CPU since.
+
+inventory:
+ One check per OpenVMS host will be created.
+

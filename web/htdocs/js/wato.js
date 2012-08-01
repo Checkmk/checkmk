@@ -54,6 +54,12 @@ function wato_check_all(css_class) {
 function wato_toggle_attribute(oCheckbox, attrname) {
     var oEntry =   document.getElementById("attr_entry_" + attrname);
     var oDefault = document.getElementById("attr_default_" + attrname);
+
+    // Permanent invisible attributes do 
+    // not have attr_entry / attr_default
+    if( !oEntry ){
+       return;
+    }
     if (oCheckbox.checked) {
         oEntry.style.display = "";
         oDefault.style.display = "none";
@@ -170,6 +176,11 @@ function wato_fix_visibility() {
                 oTr.appendChild(oAttrDisp);
             }
             if ( display == "none" ) {
+                // Uncheck checkboxes of hidden fields
+                var chkbox = oAttrDisp.parentNode.childNodes[0].childNodes[1].childNodes[0];
+                chkbox.checked = false;
+                wato_toggle_attribute(chkbox, attrname);
+
                 oAttrDisp.value = "0";
             } else {
                 oAttrDisp.value = "1";

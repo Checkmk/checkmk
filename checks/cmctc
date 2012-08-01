@@ -37,7 +37,7 @@
 def inventory_cmctc_temp(info):
     return [ (line[0], None) for line in info if saveint(line[1]) == 10 ]
 
-def check_cmctc_temp(item, _no_params, info):
+def check_cmctc_temp(item, params, info):
     for line in info: # , value1, value2 in info:
         if line[0] != item:
             continue
@@ -53,50 +53,59 @@ def check_cmctc_temp(item, _no_params, info):
            "8" : "tooLow",
            "9" : "tooHigh",
            }
-        status, current, crit, low, warn, descr = line[2:8]
-
-        info_text = " - %s at %sC" % (descr, current)
+        status, current, crit, low, warn = map(int, line[2:7])
+        descr = line[7]
+        info_text = " - %s at %d°C" % (descr, current)
+        if params:
+            warn, crit = params
+            if current >= crit:
+                status = 2
+            elif current >= warn:
+                status = 7
         levels_text = " (warn/crit at %sC/%sC)" % (warn, crit)
         status_is = ", status is %s" % status_text.get(status, "UNKNOWN")
         perfdata = [ ("temp", current, warn, crit, 0 ) ]
-        if status == "7":
+        if status == 7:
             return (1, "WARNING" + info_text + levels_text, perfdata)
-        elif status == "8":
+        elif status == 8:
             return (1, "WARNING" + info_text + ": too low (below %sC)" % low, perfdata)
-        elif status == "4":
+        elif status == 4:
             return (0, "OK" + info_text, perfdata)
         else:
             return (2, "CRIT" + info_text + levels_text + status_is, perfdata)
 
     return (3, "UNKNOWN - Sensor %s not found in SNMP data" % item)
 
-check_info['cmctc.temp'] = (check_cmctc_temp, "Temperature %s", 1,  inventory_cmctc_temp)
-snmp_info['cmctc'] = (
-   # Base to all IO units
-   ".1.3.6.1.4.1.2606.4.2",
-   # Each of the up to 4 units has its own subtree
-   ["3", "4", "5", "6"],
-   [
-     # sensors index (1-4)
-     "5.2.1.1",
-     # sensor type (10 = temperature)
-     "5.2.1.2",
-     # unit status: notAvail(1), lost(2), changed(3), ok(4), off(5), on(6), warning(7), tooLow(8), tooHigh(9)
-     "5.2.1.4",
-     # current value
-     "5.2.1.5",
-     # high value (used for critical state)
-     "5.2.1.6",
-     # low value (used for warning, if temp falls below this value)
-     "5.2.1.7",
-     # warn value (used for warning state)
-     "5.2.1.8",
-     # description (configured by user via admin interface)
-     "7.2.1.2"
-   ]
-   )
+check_info['cmctc.temp'] = {
+    "check_function"      : check_cmctc_temp,
+    "inventory_function"  : inventory_cmctc_temp,
+    "has_perfdata"        : True,
+    "service_description" : "Temperature %s",
+    "group"               : "room_temperature",
+    "snmp_scan_function"  : lambda oid: "CMC-TC" in oid(".1.3.6.1.2.1.1.1.0"),
+    "snmp_info"           : (
+       # Base to all IO units
+       ".1.3.6.1.4.1.2606.4.2",
+       # Each of the up to 4 units has its own subtree
+       ["3", "4", "5", "6"],
+       [
+         # sensors index (1-4)
+         "5.2.1.1",
+         # sensor type (10 = temperature)
+         "5.2.1.2",
+         # unit status: notAvail(1), lost(2), changed(3), ok(4), off(5), on(6), warning(7), tooLow(8), tooHigh(9)
+         "5.2.1.4",
+         # current value
+         "5.2.1.5",
+         # high value (used for critical state)
+         "5.2.1.6",
+         # low value (used for warning, if temp falls below this value)
+         "5.2.1.7",
+         # warn value (used for warning state)
+         "5.2.1.8",
+         # description (configured by user via admin interface)
+         "7.2.1.2",
+       ]
+   ),
+}
 
-snmp_scan_functions["cmctc.temp"] = \
-        lambda oid: "CMC-TC" in oid(".1.3.6.1.2.1.1.1.0")
-
-checkgroup_of["cmctc.temp"] = "temperature_auto"

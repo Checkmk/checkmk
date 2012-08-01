@@ -24,12 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# +------------------------------------------------------------------+
-# | This file has been contributed by:                               |
-# |                                                                  |
-# | Peter Lauk <lauk@stuttgart-airport.com>           Copyright 2010 |
-# +------------------------------------------------------------------+
-
 # In some cases the name of the part is not uniq. e.g. for c5900
 # devices. In this cases add the color from the dedicated OID to
 # the item name.

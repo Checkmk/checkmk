@@ -24,23 +24,40 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_df_netapp(info):
-    mplist = []
-    for volume, size_kb, used_kb in info:
-        if saveint(size_kb) > 0: # Exclude filesystems with zero size (some snapshots)
-            mplist.append(volume)
-    return df_inventory(mplist)
+# Example output from agent:
+# <<<vms_queuejobs>>>
+# 2036F23D SRV_WATCHPROD LEF 0 05:10:00.39 945007498 7721395
+# 20201AF1 DRS_WATCHDOG_22 LEF 0 00:01:39.97 284611 2030
 
-def check_df_netapp(item, params, info):
-    fslist = []
-    for mp, size_kb, used_kb in info:
-        if "patterns" in params or item == mp:
-            size_mb = int(size_kb) / 1024
-            used_mb = int(used_kb) / 1024
-            avail_mb = size_mb - used_mb
-            fslist.append((mp, size_mb, avail_mb))
-    return df_check_filesystem_list(item, params, fslist)
+def inventory_vms_queuejobs(info):
+    return [(None, {})]
 
-def is_netapp_filer(oid):
-    return "ontap" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
-           oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.789")
+def check_vms_queuejobs(_no_item, params, info):
+    names = []
+    max_cpu_secs = 0
+    max_cpu_job = None
+    for id, name, state, cpu_days, cpu_time, ios, pgfaults in info:
+        names.append(name)
+        hours, minutes, seconds = map(float, cpu_time.split(":"))
+        cpu_secs = int(cpu_days) * 86400 + hours * 3600 + minutes * 60 + seconds
+        if cpu_secs > max_cpu_secs:
+            max_cpu_secs = cpu_secs
+            max_cpu_job = name
+
+    infotext = " - %d jobs" % len(info)
+    if max_cpu_job:
+        minutes, seconds = divmod(max_cpu_secs, 60)
+        hours, minutes = divmod(minutes, 60)
+        days, hours = divmod(hours, 24)
+        infotext += ', most CPU used by %s (%d days, %02d:%02d:%02d.%02d)' % \
+                (max_cpu_job, days, hours, minutes, int(seconds), int(seconds * 100))
+
+    return 0, "OK" + infotext
+
+
+check_info['vms_queuejobs'] = {
+    "check_function" :      check_vms_queuejobs,
+    "inventory_function" :  inventory_vms_queuejobs,
+    "service_description" : "Queue Jobs",
+    "has_perfdata" :        False,
+}

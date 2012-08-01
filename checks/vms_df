@@ -31,7 +31,7 @@ check_includes['vms_df'] = [ "df.include" ]
 # DSA103  0.00 400.00 0.00 0.00 97962784.00 106669167
 # DSA104  0.30 400.00 0.00 0.00 75934488.00 106669167
 def inventory_vms_df(info):
-    return [ ( line[0], {} ) for line in info ]
+    return df_inventory([ line[0] for line in info ])
 
 def check_vms_df(item, params, info):
     for line in info:

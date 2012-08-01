@@ -383,9 +383,49 @@ checkgroups.append((
     "first"
 ))
 
+
+register_rule(group + '/' + subgroup_storage,
+    varname   = "filesystem_groups",
+    title     = _('Filesystem grouping patterns'),
+    help      = _('Normally the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) '
+                  'will create a single service for each filesystem. '
+                  'By defining grouping '
+                  'patterns you can handle groups of filesystems like one filesystem. '
+                  'For each group you can define one or several patterns containing '
+                  '<tt>*</tt> and <tt>?</tt>, for example '
+                  '<tt>/spool/tmpspace*</tt>. The filesystems matching one of the patterns '
+                  'will be monitored like one big filesystem in a single service.'),
+    valuespec = ListOf(
+      Tuple(
+          show_titles = True,
+          orientation = "horizontal",
+          elements = [
+             TextAscii(
+                 title = _("Name of group"),
+             ),
+             TextAscii(
+                 title = _("File pattern (using * and ?)"),
+             ),
+          ]
+      ),
+      add_label = _("Add pattern"),
+    ),
+    match = 'list',
+)
 register_rule(group + '/' + subgroup_storage,
     varname   = "fileinfo_groups",
-    title     = _('Fileinfo Grouping patterns'),
+    title     = _('Fileinfo grouping patterns'),
+    help      = _('The check <tt>fileinfo</tt> monitors the age and size of '
+                  'a single file. Each file information that is sent '
+                  'by the agent will create one service. By defining grouping '
+                  'patterns you can switch to the check <tt>fileinfo.groups</tt>. '
+                  'That check monitors a list of files at once. You can set levels '
+                  'not only for the total size and the age of the oldest/youngest '
+                  'file but also on the count. You can define one or several '
+                  'patterns containing <tt>*</tt> and <tt>?</tt>, for example '
+                  '<tt>/var/log/apache/*.log</tt>. For files contained in a group '
+                  'the inventory will automatically create a group service and '
+                  'no single service.'),
     valuespec = ListOf(
       Tuple(
           help = _("This defines one fileinfo grouping pattern"),
@@ -396,13 +436,10 @@ register_rule(group + '/' + subgroup_storage,
                  title = _("Name of group"),
              ),
              TextAscii(
-                 title = _("File pattern (UNIX style)"),
+                 title = _("Pattern for mount point (using * and ?)"),
              ),
           ]
       ),
-      help = _('You can define one or several patterns in Unix Style.'
-               'Example: /var/log/apache/*.log. All matching files'
-               'will automatically be grouped'),
       add_label = _("Add pattern"),
     ),
     match = 'list',
@@ -1522,8 +1559,8 @@ checkgroups.append((
                  "for monitoring the temperature of a datacenter. An example "
                  "is the webthem from W&amp;T."),
         elements = [
-            Integer(title = "warning at", unit = u"°C"),
-            Integer(title = "critical at", unit = u"°C"),
+            Integer(title = "warning at", unit = u"°C", default_value = 26),
+            Integer(title = "critical at", unit = u"°C", default_value = 30),
         ]),
     TextAscii(
         title = _("Sensor ID"),

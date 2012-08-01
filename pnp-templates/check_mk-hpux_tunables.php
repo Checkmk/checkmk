@@ -42,9 +42,8 @@ $def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ".
 
 # Add in warning / crit if they're passed to us.
 if (isset($WARN[1]) and $WARN[1] != "") {
-    $def[1] .= "";
-          "HRULE:$WARN[1]#FFFF00:\"Warning at $WARN[1]\" ".
-          "HRULE:$CRIT[1]#FF0000:\"Critical at $CRIT[1]\" ";
+    $def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning at $WARN[1]\" ".
+               "HRULE:$CRIT[1]#FF0000:\"Critical at $CRIT[1]\" ";
     }
 
 ?>

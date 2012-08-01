@@ -25,10 +25,23 @@
 # Boston, MA 02110-1301 USA.
 
 def convert_vms_if(info):
+    # Due to signed 32-bit arithmetics we sometimes get negative values. Those 
+    # must be converted to positive ones.
+    def wrap_negative(c):
+        if c < 0:
+            return c + 2**32
+        else:
+            return c
+
     new_info = []
     ifIndex = 0
     for line in info:
-        ifDescr, ifInOctets, ifInErrors, ifOutOctets, ifOutErrors, ifInDiscards = line[:6]
+        ifDescr = line[0]
+        ifInOctets, ifInUcastPkts, ifInMulticastPkts, ifInBroadcastPkts, \
+        ifInDiscards, ifInErrors, ifOutOctets, ifOutUcastPkts, \
+        ifOutMulticastPkts, ifOutBroadcastPkts, ifOutDiscards, ifOutErrors = \
+          map(wrap_negative, line[1:13])
+
         ifIndex += 1
         new_info.append((
             str(ifIndex),
@@ -37,16 +50,16 @@ def convert_vms_if(info):
             '1000000000',# ifHighSpeed
             '1',         # ifOperStatus
             ifInOctets,
-            '0',         # ifHCInUcastPkts
-            '0',         # ifHCInMulticastPkts
-            '0',         # ifHCInBroadcastPkts
+            ifInUcastPkts,
+            ifInMulticastPkts,
+            ifInBroadcastPkts,
             ifInDiscards,
             ifInErrors,
             ifOutOctets, 
-            '0',         # ifHCOutUcastPkts
-            '0',         # ifHCOutMulticastPkts
-            '0',         # ifHCOutBroadcastPkts
-            '0',         # ifOutDiscards
+            ifOutUcastPkts, 
+            ifOutMulticastPkts,
+            ifOutBroadcastPkts,
+            ifOutDiscards,
             ifOutErrors,
             '0',         # ifOutQLen
             ifDescr,

@@ -907,11 +907,13 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
 	dll = NULL;
 
     WCHAR wmsgbuffer[2048];
+    DWORD dwFlags = FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_SYSTEM;
+    if (dll)
+        dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
+
     DWORD len = FormatMessageW(
     // DWORD len = FormatMessage(
-	FORMAT_MESSAGE_ARGUMENT_ARRAY |
-	FORMAT_MESSAGE_FROM_HMODULE |
-	FORMAT_MESSAGE_FROM_SYSTEM,
+        dwFlags,
 	dll,
 	event->EventID,
 	0, // accept any language

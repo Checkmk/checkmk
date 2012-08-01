@@ -35,6 +35,7 @@
 #include "OffsetIntColumn.h"
 #include "OffsetTimeColumn.h"
 #include "OffsetStringColumn.h"
+#include "OffsetDoubleColumn.h"
 #include "Query.h"
 #include "Logfile.h"
 #include "tables.h"
@@ -44,7 +45,7 @@
 #include "TableContacts.h"
 #include "auth.h"
 #include "LogCache.h"
-
+#include "OutputBuffer.h"
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 
@@ -78,6 +79,8 @@ TableStateHistory::TableStateHistory()
                 "Time at HostServiceState End (UNIX timestamp)", (char *)&(ref->_until) - (char *)ref, -1));
     addColumn(new OffsetTimeColumn("duration",
                  "HostServiceState duration (UNIX timestamp)", (char *)&(ref->_duration) - (char *)ref, -1));
+    addColumn(new OffsetDoubleColumn("duration_perc",
+                "Duration percentage of query timeframe", (char *)(&ref->_duration_perc) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("attempt",
                 "The number of the check attempt", (char *)&(ref->_attempt) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("state",
@@ -96,7 +99,7 @@ TableStateHistory::TableStateHistory()
                  "The type of the state (varies on different log classes)", (char *)&(ref->_debug_info) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("host_name",
                  "Host name", (char *)&(ref->_host_name) - (char *)ref, -1));
-    addColumn(new OffsetStringColumn("svc_description",
+    addColumn(new OffsetStringColumn("svc_name",
                  "Service description", (char *)&(ref->_svc_desc) - (char *)ref, -1));
 
     // FIXME: test
@@ -111,7 +114,6 @@ TableStateHistory::TableStateHistory()
 
 }
 
-
 TableStateHistory::~TableStateHistory()
 {
 }
@@ -119,9 +121,9 @@ TableStateHistory::~TableStateHistory()
 
 void TableStateHistory::answerQuery(Query *query)
 {
-    // since logfiles are loaded on demand, we need
+	// since logfiles are loaded on demand, we need
     // to lock out concurrent threads.
-	LogCache::handle->lockLogCache();
+	LogCache::Locker locker;
 	LogCache::handle->logCachePreChecks();
 
     int since = 0;
@@ -131,15 +133,20 @@ void TableStateHistory::answerQuery(Query *query)
     // or two filter expressions over time. We use that
     // to limit the number of logfiles we need to scan and
     // to find the optimal entry point into the logfile
-    query->findIntLimits("time", &since, &until);
 
+    query->findIntLimits("time", &since, &until);
+    if (since == 0) {
+    	query->setError(RESPONSE_CODE_INVALID_REQUEST, "Starttime filter required");
+    	return;
+    }
+    _query_timeframe = until - 1 - since;
+    debug_statehist("Timeframe %d", _query_timeframe);
     // The second optimization is for log message types.
     // We want to load only those log type that are queried.
     uint32_t classmask = LOGCLASS_ALL;
     query->optimizeBitmask("class", &classmask);
     if (classmask == 0) {
     	debug_statehist("Classmask == 0");
-    	LogCache::handle->unlockLogCache();
     	return;
     }
 
@@ -155,14 +162,13 @@ void TableStateHistory::answerQuery(Query *query)
 
     if (it_logs->first > until)  { // all logfiles are too new
         debug_statehist("Alle logs zu neu");
-    	LogCache::handle->unlockLogCache();
     	return;
     }
 
     LogEntry *entry;
 	HostServiceKey key;
 	bool only_update = true;
-	while( it_logs != LogCache::handle->_logfiles.end() ){
+	while (it_logs != LogCache::handle->_logfiles.end() ){
 		Logfile *log = it_logs->second;
 		debug_statehist("Parse log %s", log->path());
 
@@ -172,7 +178,7 @@ void TableStateHistory::answerQuery(Query *query)
 		while (it_entries != entries->end())
 		{
 			entry = it_entries->second;
-			if(entry->_time > until)
+			if(entry->_time >= until)
 				break;
 			if(only_update && entry->_time >= since){
 				only_update = false;
@@ -189,11 +195,11 @@ void TableStateHistory::answerQuery(Query *query)
 			case FLAPPING_SERVICE:
 			{
 				key.first = entry->_host_name;
-				if ( entry->_svc_desc != NULL )
+				if (entry->_svc_desc != NULL)
 					key.second = entry->_svc_desc;
 				else
 					key.second = "";
-				if ( sla_info->find(key) == sla_info->end() ){
+				if (sla_info->find(key) == sla_info->end()) {
 					HostServiceState state;
 					bzero(&state, sizeof(HostServiceState));
 					state._from = since;
@@ -204,7 +210,7 @@ void TableStateHistory::answerQuery(Query *query)
 					state._service = entry->_service;
 					state._svc_desc = entry->_svc_desc;
 
-					if( state._service != NULL ){
+					if ( state._service != NULL ){
 						state._notification_period = state._service->notification_period;
 					}else if (state._host != NULL ){
 						state._notification_period = entry->_host->notification_period;
@@ -238,9 +244,13 @@ void TableStateHistory::answerQuery(Query *query)
 
     // Create final reports
     SLA_Info::iterator it_sla = sla_info->begin();
+    char final_buffer[1024];
+    sprintf(final_buffer,"Final log entry at %d", until-1);
+
     while( it_sla != sla_info->end() ){
     	HostServiceState* hst = &it_sla->second;
     	hst->_debug_info = "LOG FINAL";
+    	hst->_log_text   = final_buffer;
     	hst->_time       = until - 1;
     	hst->_until      = hst->_time;
     	hst->_duration   = hst->_until - hst->_from;
@@ -248,7 +258,6 @@ void TableStateHistory::answerQuery(Query *query)
     	it_sla++;
     }
 
-    LogCache::handle->unlockLogCache();
     sla_info->clear();
 }
 
@@ -268,8 +277,7 @@ void TableStateHistory::updateHostServiceState(Query &query, LogEntry &entry, Ho
 	// Update time/until/duration
 	hs_state._time     = entry._time;
 	hs_state._until    = entry._time;
-	hs_state._duration = hs_state._until - hs_state._from;
-
+	hs_state._log_text = entry._complete;
 
 	switch( entry._type ){
 		case ALERT_HOST:

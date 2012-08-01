@@ -60,6 +60,7 @@ public:
 	time_t  _from;
 	time_t  _until;
 	time_t  _duration;
+	double  _duration_perc;
 	int     _attempt;
 	int     _state;			 // 0/1/2/3
 	char*   _state_alert;    // STARTED/STOPPED
@@ -99,10 +100,13 @@ public:
     void updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &state, bool only_update);
 
 private:
+    int  _query_timeframe;
     bool answerQuery(Query *, Logfile *, time_t, time_t);
     inline void process(Query *query, HostServiceState *hs_state, bool do_nothing){
     	if( do_nothing )
     		return;
+    	hs_state->_duration = hs_state->_until - hs_state->_from;
+    	hs_state->_duration_perc = (double)hs_state->_duration / (double)_query_timeframe;
     	query->processDataset(hs_state);
     	hs_state->_from = hs_state->_until;
     };

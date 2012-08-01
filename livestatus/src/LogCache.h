@@ -33,12 +33,15 @@
 class Logfile;
 
 typedef map<time_t, Logfile *> _logfiles_t;
+
+
 class LogCache
 {
     pthread_mutex_t _lock;
     unsigned long _num_cached_messages;
     unsigned long _max_cached_messages;
     unsigned long _num_at_last_check;
+    int           _cleanup_enabled;
 public:
     LogCache(unsigned long max_cached_messages);
     ~LogCache();
@@ -57,6 +60,13 @@ public:
     bool logCachePreChecks();
     void lockLogCache();
     void unlockLogCache();
+
+    class Locker
+    {
+    public:
+        Locker();
+        ~Locker();
+    };
 
 
 private:

@@ -76,8 +76,16 @@ LogCache::~LogCache()
     pthread_mutex_destroy(&_lock);
 }
 
+LogCache::Locker::Locker(){
+	LogCache::handle->lockLogCache();
+}
+
+LogCache::Locker::~Locker(){
+	LogCache::handle->unlockLogCache();
+}
+
 void LogCache::lockLogCache(){
-    pthread_mutex_lock(&_lock);
+	pthread_mutex_lock(&_lock);
 }
 
 void LogCache::unlockLogCache(){
@@ -192,7 +200,7 @@ void LogCache::dumpLogfiles()
  */
 void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((__unused__)), time_t until __attribute__ ((__unused__)), unsigned logclasses)
 {
-    if (++_num_cached_messages <= _max_cached_messages)
+    if ( _cleanup_enabled && ++_num_cached_messages <= _max_cached_messages)
         return; // current message count still allowed, everything ok
 
     /* Memory checking an freeing consumes CPU ressources. We save

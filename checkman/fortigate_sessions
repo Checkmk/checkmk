@@ -1,0 +1,19 @@
+title: Fortigate sessions Checks
+agents: snmp
+author: Bastian Kuhn <bk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the current amount of sessions on an Fortigate Firewall device
+inventory:
+ One service will be created
+
+[parameters]
+warning (int): Minimum seesion count for warning level
+crit (int): Minimum session count for critical level
+
+[configuration]
+fortigate_sessions_default_levels = (int, int): The default levels for all checks of this kind.
+
+perfdata:
+ current amount of sessions on the device

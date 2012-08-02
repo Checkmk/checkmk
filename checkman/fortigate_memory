@@ -1,0 +1,19 @@
+title: Fortigate memory levels 
+agents: snmp
+author: Bastian Kuhn <bk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the used memory on fortigate firewalls
+inventory:
+ One service will be created
+
+[parameters]
+warning (int): Minimum memory usage for warning level
+crit (int): Minimum memory usage for critical level
+
+[configuration]
+fortigate_memory_default_levels = (int, int): The default levels for all checks of this kind.
+
+perfdata:
+ current memory usage

@@ -82,7 +82,14 @@ For Each instId In instIds.Keys
     Else
         instName = instId
     End If
-    CONN.Properties("Data Source").Value = hostname & "\" & instName
+
+    ' In case of instance name "MSSQLSERVER" always use (local) as connect string
+    If instName = "MSSQLSERVER" Then
+        CONN.Properties("Data Source").Value = "(local)"
+    Else
+        CONN.Properties("Data Source").Value = hostname & "\" & instName
+    End If
+
     CONN.Open
     
     ' Get counter data for the whole instance
@@ -120,7 +127,7 @@ For Each instId In instIds.Keys
     Dim i, dbSize, unallocated, reserved, data, indexSize, unused
     For Each dbName in dbNames.Keys
         ' Switch to other database and then ask for stats
-        RS.Open "USE " & dbName, CONN
+        RS.Open "USE [" & dbName & "]", CONN
         ' sp_spaceused is a stored procedure which returns two selects
         ' which need to be looped
         RS.Open "EXEC sp_spaceused", CONN

@@ -22,6 +22,8 @@
     * vms_system.procs: new check for number of processes on OpenVMS
     * vms_queuejobs: new check for monitoring current VMS queue jobs
     * FIX: mssql agent: Added compatibility code for MSSQL 9
+    * FIX: mssql agent: Fixed connection to default instances ("MSSQLSERVER")
+    * FIX: mssql agent: Fixed check of databases with names starting with numbers
     * f5_bigip_temp: add performance data
     * added perf-o-meters for a lot of temperature checks
     * cmctc_lcp.*: added new checks for Rittal CMC-TC LCP

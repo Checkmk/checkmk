@@ -64,7 +64,7 @@ public:
     class Locker
     {
     public:
-        Locker();
+        Locker(int disable_cleanup);
         ~Locker();
     };
 

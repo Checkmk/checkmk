@@ -64,7 +64,9 @@ LogCache* LogCache::handle;
 LogCache::LogCache(unsigned long max_cached_messages)
   : _num_cached_messages(0)
   , _max_cached_messages(max_cached_messages)
-  , _num_at_last_check(0){
+  , _num_at_last_check(0)
+  , _cleanup_enabled(1)
+{
     pthread_mutex_init(&_lock, 0);
     updateLogfileIndex();
     handle = this;
@@ -76,12 +78,14 @@ LogCache::~LogCache()
     pthread_mutex_destroy(&_lock);
 }
 
-LogCache::Locker::Locker(){
+LogCache::Locker::Locker(int use_log_cleanup){
 	LogCache::handle->lockLogCache();
+	LogCache::handle->_cleanup_enabled = use_log_cleanup;
 }
 
 LogCache::Locker::~Locker(){
 	LogCache::handle->unlockLogCache();
+	LogCache::handle->_cleanup_enabled = 1;
 }
 
 void LogCache::lockLogCache(){

@@ -123,7 +123,7 @@ void TableLog::answerQuery(Query *query)
 {
     // since logfiles are loaded on demand, we need
     // to lock out concurrent threads.
-	LogCache::handle->lockLogCache();
+	LogCache::Locker locker(1);
 	LogCache::handle->logCachePreChecks();
 
     int since = 0;
@@ -140,7 +140,6 @@ void TableLog::answerQuery(Query *query)
     uint32_t classmask = LOGCLASS_ALL;
     query->optimizeBitmask("class", &classmask);
     if (classmask == 0) {
-        LogCache::handle->unlockLogCache();
         return;
     }
 
@@ -159,7 +158,6 @@ void TableLog::answerQuery(Query *query)
     while (it != LogCache::handle->_logfiles.begin() && it->first > until) // while logfiles are too new...
         --it; // go back in history
     if (it->first > until)  { // all logfiles are too new
-        LogCache::handle->unlockLogCache();
         return;
     }
 
@@ -172,9 +170,6 @@ void TableLog::answerQuery(Query *query)
             break; // this was the oldest one
         --it;
     }
-
-    // dumpLogfiles();
-    LogCache::handle->unlockLogCache();
 }
 
 

@@ -118,12 +118,11 @@ TableStateHistory::~TableStateHistory()
 {
 }
 
-
 void TableStateHistory::answerQuery(Query *query)
 {
 	// since logfiles are loaded on demand, we need
     // to lock out concurrent threads.
-	LogCache::Locker locker;
+	LogCache::Locker locker(0); // Lock Logcache and disable logfile cleanup
 	LogCache::handle->logCachePreChecks();
 
     int since = 0;
@@ -140,7 +139,7 @@ void TableStateHistory::answerQuery(Query *query)
     	return;
     }
     _query_timeframe = until - 1 - since;
-    debug_statehist("Timeframe %d", _query_timeframe);
+
     // The second optimization is for log message types.
     // We want to load only those log type that are queried.
     uint32_t classmask = LOGCLASS_ALL;
@@ -161,7 +160,6 @@ void TableStateHistory::answerQuery(Query *query)
     	--it_logs; // go back in history
 
     if (it_logs->first > until)  { // all logfiles are too new
-        debug_statehist("Alle logs zu neu");
     	return;
     }
 
@@ -222,10 +220,16 @@ void TableStateHistory::answerQuery(Query *query)
 					state._log_ptr = entry; // unused
 					state._log_text = entry->_complete;
 
-					debug_statehist("NEW KEY %s %s", state._host_name, state._svc_desc);
+					// log nonexistant state if this host/service
+					// just appeared within the timeframe
+					state._state = -1;
+					state._time = entry->_time;
+					process(query, &state, false);
+					state._state = entry->_state;
+
 					sla_info->insert(std::make_pair(key, state));
 				}
-				updateHostServiceState(*query, *entry, sla_info->find(key)->second, only_update);
+				//updateHostServiceState(*query, *entry, sla_info->find(key)->second, only_update);
 				break;
 			}
 			case TIMEPERIOD_TRANSITION:{
@@ -271,7 +275,6 @@ void print_hsstate(HostServiceState &hs_state){
 	if( hs_state._state_alert != NULL )
 		debug_statehist("state_type %s\n\n", hs_state._state_alert);
 }
-
 
 void TableStateHistory::updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &hs_state, bool only_update){
 	// Update time/until/duration

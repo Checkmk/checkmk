@@ -4543,6 +4543,9 @@ def declare_host_tag_attributes():
             # the tag dependency defintion.
             depends_on_tags = []
             depends_on_roles = []
+            attr_editable = True
+            if len(entry) >= 6:
+                attr_editable = entry[5]
             if len(entry) >= 5:
                 depends_on_roles = entry[4]
             if len(entry) >= 4:
@@ -4552,6 +4555,7 @@ def declare_host_tag_attributes():
                 HostTagAttribute(entry[:3]),
                     show_in_table = False,
                     show_in_folder = True,
+                    editable = attr_editable,
                     depends_on_tags = depends_on_tags,
                     depends_on_roles = depends_on_roles,
                     topic = _("Host tags"))

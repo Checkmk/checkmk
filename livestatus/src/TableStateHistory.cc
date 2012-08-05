@@ -74,11 +74,11 @@ TableStateHistory::TableStateHistory()
     addColumn(new OffsetTimeColumn("time",
                 "Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));
     addColumn(new OffsetTimeColumn("from",
-                "Time of HostServiceState Start (UNIX timestamp)", (char *)&(ref->_from) - (char *)ref, -1));
+                "Start time of state (UNIX timestamp)", (char *)&(ref->_from) - (char *)ref, -1));
     addColumn(new OffsetTimeColumn("until",
-                "Time at HostServiceState End (UNIX timestamp)", (char *)&(ref->_until) - (char *)ref, -1));
+                "End time of state (UNIX timestamp)", (char *)&(ref->_until) - (char *)ref, -1));
     addColumn(new OffsetTimeColumn("duration",
-                 "HostServiceState duration (UNIX timestamp)", (char *)&(ref->_duration) - (char *)ref, -1));
+                 "Duration of state ( until - from ) (UNIX timestamp)", (char *)&(ref->_duration) - (char *)ref, -1));
     addColumn(new OffsetDoubleColumn("duration_perc",
                 "Duration percentage of query timeframe", (char *)(&ref->_duration_perc) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("attempt",
@@ -96,21 +96,21 @@ TableStateHistory::TableStateHistory()
     addColumn(new OffsetStringColumn("notification_period",
         		"Shows if the host/service notification period", (char *)&(ref->_notification_period) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("debug_info",
-                 "The type of the state (varies on different log classes)", (char *)&(ref->_debug_info) - (char *)ref, -1));
+                 "The type of the state (varies on different log classes)", (char *)&(ref->_prev_debug_info) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("host_name",
                  "Host name", (char *)&(ref->_host_name) - (char *)ref, -1));
-    addColumn(new OffsetStringColumn("svc_name",
-                 "Service description", (char *)&(ref->_svc_desc) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("service_description",
+                 "Service description", (char *)&(ref->_service_description) - (char *)ref, -1));
 
     // FIXME: test
     addColumn(new OffsetStringColumn("log_text",
-    			  "Complete Text of Log", (char *)&(ref->_log_text) - (char *)ref, -1));
+    			  "Complete Text of Logentry", (char *)&(ref->_prev_log_text) - (char *)ref, -1));
 
     sla_info = new SLA_Info();
 
     // join host and service tables
-    g_table_hosts->addColumns(this, "current_host_",    (char *)&(ref->_host)    - (char *)ref);
-    g_table_services->addColumns(this, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
+    //g_table_hosts->addColumns(this, "current_host_",    (char *)&(ref->_host)    - (char *)ref);
+    //g_table_services->addColumns(this, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
 
 }
 
@@ -153,25 +153,49 @@ void TableStateHistory::answerQuery(Query *query)
     it_logs = LogCache::handle->_logfiles.end(); // it now points beyond last log file
     --it_logs; // switch to last logfile (we have at least one)
 
-    // Now find newest log where 'until' is contained. The problem
-    // here: For each logfile we only know the time of the *first* entry,
-    // not that of the last.
-    while (it_logs != LogCache::handle->_logfiles.begin() && it_logs->first > since) // while logfiles are too new...
+    // Now find log where 'since' is contained.
+    while (it_logs != LogCache::handle->_logfiles.begin() && it_logs->first > since)
     	--it_logs; // go back in history
 
-    if (it_logs->first > until)  { // all logfiles are too new
+    if (it_logs->first > until)  { // all logfiles are too new, invalid timeframe
+    	query->setError(RESPONSE_CODE_INVALID_REQUEST, "Invalid timeframe, logfiles too new");
     	return;
     }
 
     LogEntry *entry;
+    entries_t* entries;
+    entries_t::iterator it_entries;
+    Logfile *log;
+    // Find the logentry LOG VERSION: 2.0 just before the since timestamp
+    // This indicates a fresh nagios startup containing all host/service initial states logged
+	while (it_logs != LogCache::handle->_logfiles.begin()) {
+		log = it_logs->second;
+		bool version_found = false;
+		entries = log->getEntriesFromQuery(query, LogCache::handle, since, until, classmask);
+		it_entries = entries->end();
+		while (it_entries != entries->begin())
+		{
+			--it_entries;
+			if( it_entries->second->_time > since )
+				break;
+			if( it_entries->second->_logclass == LOGCLASS_LOG_VERSION){
+				version_found = true;
+				break;
+			}
+		}
+		if (version_found)
+			break;
+		--it_logs;
+	}
+
 	HostServiceKey key;
 	bool only_update = true;
 	while (it_logs != LogCache::handle->_logfiles.end() ){
-		Logfile *log = it_logs->second;
+		log = it_logs->second;
 		debug_statehist("Parse log %s", log->path());
 
-		entries_t* entries = log->getEntriesFromQuery(query, LogCache::handle, since, until, classmask);
-		entries_t::iterator it_entries = entries->begin();
+		entries = log->getEntriesFromQuery(query, LogCache::handle, since, until, classmask);
+		it_entries = entries->begin();
 
 		while (it_entries != entries->end())
 		{
@@ -206,7 +230,7 @@ void TableStateHistory::answerQuery(Query *query)
 					state._host = entry->_host;
 					state._host_name = entry->_host_name; // Used if state._host is unavailable
 					state._service = entry->_service;
-					state._svc_desc = entry->_svc_desc;
+					state._service_description = entry->_svc_desc;
 
 					if ( state._service != NULL ){
 						state._notification_period = state._service->notification_period;
@@ -221,15 +245,18 @@ void TableStateHistory::answerQuery(Query *query)
 					state._log_text = entry->_complete;
 
 					// log nonexistant state if this host/service
-					// just appeared within the timeframe
-					state._state = -1;
-					state._time = entry->_time;
-					process(query, &state, false);
-					state._state = entry->_state;
-
+					// just appeared within the query timeframe
+					if( ! only_update && entry->_time != since ){
+						state._debug_info = "UNKNOWN ";
+						state._state = -1;
+						state._time  = entry->_time;
+						state._until = entry->_time;
+						process(query, &state, false);
+						state._state = entry->_state;
+					}
 					sla_info->insert(std::make_pair(key, state));
 				}
-				//updateHostServiceState(*query, *entry, sla_info->find(key)->second, only_update);
+				updateHostServiceState(*query, *entry, sla_info->find(key)->second, only_update);
 				break;
 			}
 			case TIMEPERIOD_TRANSITION:{
@@ -254,7 +281,7 @@ void TableStateHistory::answerQuery(Query *query)
     while( it_sla != sla_info->end() ){
     	HostServiceState* hst = &it_sla->second;
     	hst->_debug_info = "LOG FINAL";
-    	hst->_log_text   = final_buffer;
+    	hst->_prev_log_text = hst->_log_text;
     	hst->_time       = until - 1;
     	hst->_until      = hst->_time;
     	hst->_duration   = hst->_until - hst->_from;
@@ -265,22 +292,14 @@ void TableStateHistory::answerQuery(Query *query)
     sla_info->clear();
 }
 
-void print_hsstate(HostServiceState &hs_state){
-	if( hs_state._service != NULL && hs_state._service->description != NULL )
-		debug_statehist("HS STATE: \nhost %s\nservice %s", hs_state._host->name, hs_state._service->description);
-	else
-		debug_statehist("HS STATE: \nhost %s\n", hs_state._host->name);
-	debug_statehist("from  %d\nuntil %d\nduration %d", hs_state._from, hs_state._until, hs_state._duration);
-	debug_statehist("timeperiod %s", hs_state._notification_period);
-	if( hs_state._state_alert != NULL )
-		debug_statehist("state_type %s\n\n", hs_state._state_alert);
-}
 
 void TableStateHistory::updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &hs_state, bool only_update){
 	// Update time/until/duration
 	hs_state._time     = entry._time;
 	hs_state._until    = entry._time;
+	hs_state._prev_log_text = hs_state._log_text;
 	hs_state._log_text = entry._complete;
+	hs_state._prev_debug_info = hs_state._debug_info;
 
 	switch( entry._type ){
 		case ALERT_HOST:
@@ -305,7 +324,7 @@ void TableStateHistory::updateHostServiceState(Query &query, LogEntry &entry, Ho
 		}
 		case FLAPPING_HOST:
 		case FLAPPING_SERVICE:{
-			if( hs_state._is_flapping == NULL || strcmp( hs_state._state_flapping, entry._state_type ) ){
+			if( hs_state._is_flapping == 0 || strcmp( hs_state._state_flapping, entry._state_type ) ){
 				hs_state._debug_info = "FLAPPING ";
 				process(&query, &hs_state, only_update);
 				hs_state._state_flapping= entry._state_type;

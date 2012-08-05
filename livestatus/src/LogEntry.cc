@@ -79,8 +79,8 @@ LogEntry::LogEntry(unsigned lineno, char *line)
         if (_command_name)
             _command = find_command(_command_name);
     }
-    else
-        handleProgrammEntry();
+    else if (handleLogversionEntry()) {
+    }else handleProgrammEntry();
     // rest is LOGCLASS_INFO
 }
 
@@ -294,6 +294,16 @@ bool LogEntry::handleProgrammEntry()
             strstr(_text, "standby mode..."))
     {
         _logclass = LOGCLASS_PROGRAM;
+        return true;
+    }
+    return false;
+}
+
+bool LogEntry::handleLogversionEntry()
+{
+    if (strstr(_text, "LOG VERSION: 2.0"))
+    {
+        _logclass = LOGCLASS_LOG_VERSION;
         return true;
     }
     return false;

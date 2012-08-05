@@ -72,13 +72,16 @@ public:
 	int     _is_flapping;
 
 	LogEntry* _log_ptr; // unused
+	LogEntry* _prev_log_ptr; // unused
 	char*     _log_text;
+	char*     _prev_log_text;
 	char*   _debug_info;
+	char*   _prev_debug_info;
 
     host      *_host;
     char*     _host_name; // Fallback if host no longer exists
     service   *_service;
-    char*     _svc_desc;  // Fallback if service no longer exists
+    char*     _service_description;  // Fallback if service no longer exists
 
 	HostServiceState(){};
 };

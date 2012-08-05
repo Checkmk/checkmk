@@ -32,6 +32,7 @@
 #define LOGCLASS_PASSIVECHECK      4 // passive checks
 #define LOGCLASS_COMMAND           5 // external commands
 #define LOGCLASS_STATE             6 // initial or current states
+#define LOGCLASS_LOG_VERSION       7 // version entry
 #define LOGCLASS_INVALID          -1 // never stored
 #define LOGCLASS_ALL          0xffff
 
@@ -83,6 +84,7 @@ private:
     bool handlePassiveCheckEntry();
     bool handleExternalCommandEntry();
     bool handleProgrammEntry();
+    bool handleLogversionEntry();
     bool handleInfoEntry();
     int serviceStateToInt(char *s);
     int hostStateToInt(char *s);

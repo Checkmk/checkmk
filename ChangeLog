@@ -6,7 +6,6 @@
     * parent scan: skip gateways that are reachable via PING
 
     Checks & Agents:
-    * mssql_backup: Fixed problems with datetime/timezone calculations
     * New Checks for Siemens Blades (BX600)
     * New Checks for Fortigate Firewalls
     * FIX: megaraid_pdisks: handle case where no enclosure device exists
@@ -21,9 +20,11 @@
     * vms_system.ios: new check for total direct/buffered IOs on OpenVMS
     * vms_system.procs: new check for number of processes on OpenVMS
     * vms_queuejobs: new check for monitoring current VMS queue jobs
+    * FIX: mssql_backup: Fixed problems with datetime/timezone calculations
     * FIX: mssql agent: Added compatibility code for MSSQL 9
     * FIX: mssql agent: Fixed connection to default instances ("MSSQLSERVER")
     * FIX: mssql agent: Fixed check of databases with names starting with numbers
+    * FIX: mssql agent: Fixed handling of databases with spaces in names
     * f5_bigip_temp: add performance data
     * added perf-o-meters for a lot of temperature checks
     * cmctc_lcp.*: added new checks for Rittal CMC-TC LCP

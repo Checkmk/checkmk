@@ -157,7 +157,7 @@ For Each instId In instIds.Keys
             Set RS = RS.NextRecordset
             i = i + 1
         Loop
-        wscript.echo instId & " " & dbName & " " & dbSize & " " & unallocated & " " & reserved & " " & _
+        wscript.echo instId & " " & Replace(dbName, " ", "_") & " " & dbSize & " " & unallocated & " " & reserved & " " & _
                      data & " " & indexSize & " " & unused
         Set RS = CreateObject("ADODB.Recordset")
     Next
@@ -173,7 +173,7 @@ For Each instId In instIds.Keys
         Do While Not RS.Eof
             lastBackupDate = Trim(RS("last_backup_date"))
             If lastBackupDate <> "" Then
-                wscript.echo instId & " " & dbName  & " " & lastBackupDate
+                wscript.echo instId & " " & Replace(dbName, " ", "_") & " " & lastBackupDate
             End If
             RS.MoveNext
         Loop

@@ -409,6 +409,9 @@ def handler(req, profiling = True):
     return response_code
 
 def page_not_found():
-    html.header(_("Page not found"))
-    html.show_error(_("This page was not found. Sorry."))
+    if html.has_var("_plain_error"):
+        html.write(_("Page not found"))
+    else:
+        html.header(_("Page not found"))
+        html.show_error(_("This page was not found. Sorry."))
     html.footer()

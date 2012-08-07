@@ -103,6 +103,16 @@ multisite_painter_options["ts_date"] = {
               ("%m/%d",    "12/18") ]
 }
 
+# This helper function returns the value of the given custom var 
+def paint_custom_host_var(what, row):
+    custom_vars = dict(zip(row["host_custom_variable_names"],
+                           row["host_custom_variable_values"]))
+
+    if what in custom_vars:
+        return what, custom_vars[what]
+    return what,  "" 
+
+
 #    ___
 #   |_ _|___ ___  _ __  ___
 #    | |/ __/ _ \| '_ \/ __|
@@ -144,7 +154,6 @@ def paint_icons(what, row):
             output += 'Exception in icon plugin!<br />' + traceback.format_exc()
 
     return "icons", output
-
 
 def iconpainter_columns(what):
     cols = set(['site',

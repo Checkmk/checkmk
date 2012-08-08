@@ -1,0 +1,11 @@
+Title: Get Services, comments with info always empty
+Component: livestatus
+State: open
+Date: 2012-08-08 12:00:25
+Targetversion: future
+Class: bug
+
+GET servicesbyhostgroup\nColumns: host_name comments_with_info\n
+ony retruns hostname, the comments with info are always empty.
+
+Refernce in Ticket System: #608092

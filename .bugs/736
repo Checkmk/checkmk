@@ -1,0 +1,46 @@
+Title: Livechecks goes zoombie
+Component: livecheck
+State: open
+Date: 2012-08-08 11:32:12
+Targetversion: future
+Class: bug
+
+Have been using livecheck and came across this rather nasty bug. We
+use livecheck for a whole bunch of http checks (check_http) and after
+a while, one of the checks will "hang" and the livecheck process
+becomes a "Zombie" process.
+
+# ps faux
+nagios 10880 12.4 2.0 573000 12380 ? Ssl 12:16 16:19
+/usr/bin/nagios -d /etc/nagios/nagios.cfg
+nagios 10889 0.0 0.1 11848 1036 ? S 12:16 0:00 \_
+livecheck /var/spool/nagios/checkresults 30 60
+nagios 4100 0.0 0.0 0 0 ? Z 13:44 0:00 |
+\_ [livecheck] 
+nagios 4120 0.0 0.5 138664 3504 ? S 13:44 0:01
+/usr/lib64/nagios/plugins/check_http -H xxx -t 15 -f follow -S
+
+# strace -p 10880
+Process 10880 attached - interrupt to quit
+read(15,
+
+# strace -p 10889
+Process 10889 attached - interrupt to quit
+read(4,
+
+# strace -p 4120
+Process 4120 attached - interrupt to quit
+futex(0x7f996e8bde80, FUTEX_WAIT_PRIVATE, 2, NULL
+
+Nagios completely stops doing anything, when you kill the check_http
+process, Nagios comes back to life:
+
+nagios.log:
+[1343918059] Warning: A system time change of 0d 0h 47m 11s (forwards
+in time) has been detected. Compensating...
+
+
+
+
+
+Reference in Ticket System: #110644

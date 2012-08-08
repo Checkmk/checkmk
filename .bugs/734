@@ -1,0 +1,45 @@
+Title: Logwatch, logfile names with date
+Component: checks
+State: open
+Date: 2012-08-08 11:15:14
+Targetversion: future
+Class: feature
+
+We have a requirement from our developers to monitor log files in the format: /path/logfile.20120719 with the date changing every day.
+To do this, we added code to the parse and change the name in the config file:
+
+# cat /etc/check_mk/logwatch.cfg
+/var/log/test.DATE
+C test
+
+Now to interpret it, we changed the mk_logwatch
+
+[root@temolate2 ~]# diff mk_logwatch.newest /usr/lib/check_mk_agent/plugins/mk_logwatch
+30,35d29
+< from datetime import date
+< dd=date.today().strftime("%Y%m%d")
+< yyear = date.today().strftime("%Y")
+< year = date.today().strftime("%y")
+< month = date.today().strftime("%m")
+< day = date.today().strftime("%d")
+278,284d270
+< gsave = glob
+< glob=glob.replace('DATE',dd)
+< glob=glob.replace('YYYY',yyear)
+< glob=glob.replace('YY',year)
+< glob=glob.replace('MM',month)
+< glob=glob.replace('DD',day)
+<
+294c280
+< process_logfile(logfile, patterns, gsave)
+---
+> process_logfile(logfile, patterns)
+
+Could you please add this feature to the next version of the logwatch plugin.
+
+Thanks!
+
+Best Regards,
+
+Roman Lazarev
+Information Technology Division

@@ -1,0 +1,10 @@
+Title: Notes field for Activate Changes in Wato
+Component: wato
+State: open
+Date: 2012-08-08 11:18:29
+Targetversion: future
+Class: feature
+
+* Add a notes field associated with an activate changes (auditing) - we would like to be able to say such and such a change was related to our ticketing system ticket xxxx, for instance
+
+o Optional - make it a choice to make the field required

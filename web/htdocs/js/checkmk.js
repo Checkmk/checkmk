@@ -161,9 +161,14 @@ function get_url_sync(url) {
         var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
     }
 
-    AJAX.open("GET", url, false);
-    AJAX.send(null);
-    return AJAX.responseText;
+    try 
+    {
+        AJAX.open("GET", url, false);
+        AJAX.send(null);
+        return AJAX.responseText; 
+    } catch(err) { 
+        return false;
+    }
 }
 
 

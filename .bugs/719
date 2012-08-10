@@ -1,0 +1,11 @@
+Title: if Check should track separate levels for in and out traffic bytes / levels
+Component: checks
+State: open
+Date: 2012-08-10 16:44:48
+Targetversion: future
+Class: feature
+
+Certain customers (ISP, or people with asymetric speeds on an inteface) put different focus
+on interface monitoring - they don't need to detect the 1 out of 10000 clients that has heavy 
+traffic, but they need to detect bw excess in either of two directions.
+The check already tracks rx and tx but doesn't allow separate alerting like disk io would.

@@ -1,0 +1,13 @@
+Title: WATO tags menue has issues when deleting tags
+Component: wato
+State: open
+Date: 2012-08-10 16:42:19
+Targetversion: future
+Class: bug
+
+If you create an empty tag (desc. and tag id) and then another one the empty tag will 
+corrupt the tag id's.
+It seems this faulty state is also saved: 
+If you delete another tag later on, all tags below the tag you're deleting are also lost.
+
+It's already verified to be a bug ;)

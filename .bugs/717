@@ -1,0 +1,135 @@
+Title: MegaRaid BBU check should handle learning state
+Component: checks
+State: open
+Date: 2012-08-10 16:35:33
+Targetversion: 1.2.0
+Class: feature
+
+Most MegaRAID controllers come with a rechargable Li battery for the backup voltage.
+This voltage is used to sustain power to the cache ram should the power fail or the OS crash.
+Once the system comes up, the outstanding writes are flushed to disk before OS boot starts.
+
+The newest models use a flash memory bank instead that is fed using a supercap that lasts 
+long enough to copy the ram onto flash.
+
+All non-flash models need to do maintenance on their batteries to avoid gas buildup and 
+to test remaining capacity. This is called a learn cycle and occurs roughly once a month
+,but the controller does not support setting a schedule.
+
+During the learn cycle, the controller is set to write-through and then the battery is 
+discharged a few times, and our check starts to look like a christmas tree.
+
+We need to handle the learn cycle which is detectable.
+If the agent reports "learn cycle requested: yes" then it will sstart at some time, 
+and if it says "learn cycle active: yes" then it is running already.
+
+
+Output 1:
+BBU status for Adapter: 0
+
+BatteryType: iBBU
+Voltage: 3251 mV
+Current: -375 mA
+Temperature: 30 C
+
+Battery State     : Operational
+
+BBU Firmware Status:
+
+   Charging Status              : Discharging
+   Voltage                                 : Low
+   Temperature                             : OK
+   Learn Cycle Requested	                  : Yes
+   Learn Cycle Active                      : Yes
+   Learn Cycle Status                      : OK
+   Learn Cycle Timeout                     : No
+   I2c Errors Detected                     : No
+   Battery Pack Missing                    : No
+   Battery Replacement required            : No
+   Remaining Capacity Low                  : No
+   Periodic Learn Required                 : No
+   Transparent Learn                       : No
+   No space to cache offload               : No
+   Pack is about to fail & should be replaced : No
+   Cache Offload premium feature required  : No
+   Module microcode update required        : No
+
+
+
+GasGuageStatus:
+   Fully Discharged        : Yes
+   Fully Charged           : No
+   Discharging             : Yes
+   Initialized             : Yes
+   Remaining Time Alarm    : Yes
+   Remaining Capacity Alarm: Yes
+   Discharge Terminated    : Yes
+   Over Temperature        : No
+   Charging Terminated     : No
+   Over Charged            : No
+
+Relative State of Charge: 0 %
+Charger System State: 49169
+Charger System Ctrl: 0
+Charging current: 100 mA
+Absolute state of charge: 0 %
+Max Error: 8 %
+
+Exit Code: 0x00
+
+
+
+Output 2:
+
+
+BBU status for Adapter: 0
+
+BatteryType: iBBU
+Voltage: 4048 mV
+Current: 139 mA
+Temperature: 27 C
+
+Battery State     : Operational
+
+BBU Firmware Status:
+
+   Charging Status              : Charging
+   Voltage                                 : OK
+   Temperature                             : OK
+   Learn Cycle Requested	                  : Yes
+   Learn Cycle Active                      : No
+   Learn Cycle Status                      : OK
+   Learn Cycle Timeout                     : No
+   I2c Errors Detected                     : No
+   Battery Pack Missing                    : No
+   Battery Replacement required            : No
+   Remaining Capacity Low                  : No
+   Periodic Learn Required                 : No
+   Transparent Learn                       : No
+   No space to cache offload               : No
+   Pack is about to fail & should be replaced : No
+   Cache Offload premium feature required  : No
+   Module microcode update required        : No
+
+
+
+GasGuageStatus:
+   Fully Discharged        : No
+   Fully Charged           : No
+   Discharging             : No
+   Initialized             : Yes
+   Remaining Time Alarm    : No
+   Remaining Capacity Alarm: No
+   Discharge Terminated    : No
+   Over Temperature        : No
+   Charging Terminated     : No
+   Over Charged            : No
+
+Relative State of Charge: 1 %
+Charger System State: 49168
+Charger System Ctrl: 0
+Charging current: 512 mA
+Absolute state of charge: 25 %
+Max Error: 8 %
+
+Exit Code: 0x00

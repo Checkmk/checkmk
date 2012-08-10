@@ -42,6 +42,7 @@
     * windows_multipath: Added the missing check for multipath.vbs (Please test)
     * carel_uniflair_cooling: new check for monitoring datacenter air conditioning by "CAREL"
     * Added Agent for OpenBSD
+    * Added Checks for MasterGuard UPS devices
 
     WATO:
     * Added permission to control the "clone host" feature in WATO

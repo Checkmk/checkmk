@@ -1,4 +1,4 @@
-title: Check temperature sensor on a Mastergurad UPS Device
+title: Check temperature sensor on a Masterguard UPS Device
 agents: snmp
 author: Bastian Kuhn <bk@mathias-kettner.de>
 license: GPL

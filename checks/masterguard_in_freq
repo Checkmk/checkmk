@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-#
+# 
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-#
+# 
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -25,28 +25,32 @@
 # Boston, MA 02110-1301 USA.
 
 
-# ==> Remaining capacity in estimated minutes
-# SNMPv2-SMI::mib-2.33.1.2.3.0 = INTEGER: 150
+masterguard_in_freq_default_levels = (45,40) # warning / critical *below* those levels (Watt)  
 
-masterguard_capacity_default_levels = (20, 10)
-
-def check_masterguard_capacity(item, params, info):
+def check_masterguard_in_freq(item, params, info):
     warn, crit = params
-    minutes = int(info[0][0])
-    message = " - remaining capacity is estimated %d minutes" % minutes 
-    state = 0
-    if minutes <= warn:
-        state = 1
-    if minutes <= crit:
-        state = 2
-    perf = [("capacity", minutes, warn, crit)]
-    return (state, nagios_state_names[state] + message, perf )
+    for line in info:
+	if line[0] == item:
+	    power = int(line[1]) / 10 
+	    perfdata = [ ( "in_freq", power, warn, crit, 30, 70 ) ]
+	    infotext = " - current in freq: %dHz (warn/crit at %d/%d Hz)" % \
+	 	(power, warn, crit)	
 
-check_info['masterguard_capacity'] = {
-  "inventory_function"  : lambda info: [( None, "masterguard_capacity_default_levels")],
-  "check_function"      : check_masterguard_capacity,
-  "service_description" : "Battery capacity",
+	    if power <= crit:
+		return (2, "CRIT" + infotext, perfdata)
+	    elif power <= warn:
+		return (1, "WARN" + infotext, perfdata)
+	    else:
+		return (0, "OK" + infotext, perfdata)
+	    
+    return (3, "UNKNOWN - Phase %s not found in SNMP output" % item)
+
+
+check_info['masterguard_in_freq'] = {
+  "inventory_function"  : lambda info: [ ( x[0], "masterguard_in_freq_default_levels") for x in info ],
+  "check_function"      : check_masterguard_in_freq,
+  "service_description" : "In freqenz phase %s",
   "has_perfdata"        : True,
-  "snmp_info"           : ( ".1.3.6.1.2.1.33.1.2", [ "3.0" ] ),
+  "snmp_info"           : ( ".1.3.6.1.2.1.33.1.3.3.1", [ 0, 2 ] ),
   "snmp_scan_function"  : lambda oid: "masterguard" in oid('.1.3.6.1.2.1.1.1.0').lower(),
 }

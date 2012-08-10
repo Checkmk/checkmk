@@ -52,5 +52,6 @@ check_info['masterguard_bat_temp'] = {
   "service_description" : "Battery Temp",
   "has_perfdata"        : True,
   "group"               : "hw_temperature",
-  "snmp_info"           : ( ".1.3.6.1.2.1.33.1", ["1.5", "2.7" ] )
+  "snmp_info"           : ( ".1.3.6.1.2.1.33.1", ["1.5", "2.7" ] ),
+  "snmp_scan_function"  : lambda oid: "masterguard" in oid('.1.3.6.1.2.1.1.1.0').lower(),
 }

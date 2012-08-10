@@ -1,0 +1,164 @@
+#!/bin/sh
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+#         Florian Heigl <florian.heigl@gmail.com>
+#	  Christian Zigotzky <chzigotzky@xenosoft.de>
+
+# NOTE: This agent has been adapted from the Check_MK FreeBSD agent.
+
+# Remove locale settings to eliminate localized outputs where possible
+export LC_ALL=C
+unset LANG
+
+export MK_LIBDIR="/usr/lib/check_mk_agent"
+export MK_CONFDIR="/etc"
+
+# Make sure, locally installed binaries are found
+PATH=$PATH:/usr/local/bin
+
+# All executables in PLUGINSDIR will simply be executed and their
+# ouput appended to the output of the agent. Plugins define their own
+# sections and must output headers with '<<<' and '>>>'
+PLUGINSDIR=$MK_LIBDIR/plugins
+
+# All executables in LOCALDIR will by executabled and their
+# output inserted into the section <<<local>>>. Please refer
+# to online documentation for details.
+LOCALDIR=$MK_LIBDIR/local
+
+
+# close standard input (for security reasons) and stderr
+if [ "$1" = -d ]
+then
+    set -xv
+else
+    exec <&- 2>/dev/null
+fi
+
+echo '<<<check_mk>>>'
+echo Version: 1.2.0p2
+echo AgentOS: openbsd
+
+osver="$(uname -r)"
+
+echo '<<<df>>>'
+df -kPt ffs | sed -e 's/^\([^ ][^ ]*\) \(.*\)$/\1 ffs \2/' | sed 1d 
+
+# processes including username, without kernel processes
+echo '<<<ps>>>'
+COLUMNS=10000
+ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
+
+echo '<<<cpu>>>'
+echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}'` `sysctl -n hw.ncpu`
+
+echo '<<<uptime>>>'
+echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' '` | bc
+
+echo '<<<netctr>>>'
+# BI= Bytes in
+# PI= Packets in
+# EI= Errors in
+# EO= Errors out
+# BO= Bytes out
+# PO= Packets out
+# CO= Colls
+
+Z1=1
+Z2=p
+
+date +%s
+while [ $Z1 -lt 15 ]
+  do
+  BI=$( netstat -inb | egrep -v Name | grep Link | awk '{print $1" "$5}' | sed -ne $Z1$Z2 )
+  PI=$( netstat -in | egrep -v Name | grep Link | awk '{print $5}' | sed -ne $Z1$Z2 )
+  EI=$( netstat -in | egrep -v Name | grep Link | awk '{print $6}' | sed -ne $Z1$Z2 )	
+  FF1="0 0 0 0 0"
+  BO=$( netstat -inb | egrep -v Name | grep Link | awk '{print $6}' | sed -ne $Z1$Z2 )
+  PO=$( netstat -in | egrep -v Name | grep Link | awk '{print $7}' | sed -ne $Z1$Z2 )
+  EO=$( netstat -in | egrep -v Name | grep Link | awk '{print $8}' | sed -ne $Z1$Z2 )
+  CO=$( netstat -in | egrep -v Name | grep Link | awk '{print $9}' | sed -ne $Z1$Z2 )
+  FF2="0 0"
+    if [ "$PI" -gt "0" ]
+      then
+	echo $BI $PI $EI $FF1 $BO $PO $EO $FF2 $CO $FF2
+    fi
+  Z1=$(($Z1+1))
+done
+
+# IPMI-Data (Fans, CPU, temperature, etc)
+# needs the sysutils/ipmitool and kldload ipmi.ko
+if which ipmitool >/dev/null ; then
+    echo '<<<ipmi>>>'
+    ipmitool sensor list \
+        | grep -v 'command failed' \
+        | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
+        | egrep -v '^[^ ]+ na ' \
+        | grep -v ' discrete '
+fi
+
+if which mailq >/dev/null 2>&1 && getent passwd postfix >/dev/null 2>&1; then
+  echo '<<<postfix_mailq>>>'
+  mailq | tail -n 6
+fi
+
+
+# Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
+if cd $PLUGINSDIR
+then
+  for skript in $(ls)
+  do
+    if [ -x "$skript" ] ; then
+        ./$skript
+    fi
+  done
+fi
+
+# Lokale Einzelchecks
+echo '<<<local>>>'
+if cd $LOCALDIR
+then
+  for skript in $(ls)
+  do
+    if [ -x "$skript" ] ; then
+        ./$skript
+    fi
+  done
+fi
+
+# MK's Remote Plugin Executor
+if [ -e "$MK_CONFDIR/mrpe.cfg" ]
+then
+    echo '<<<mrpe>>>'
+    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
+    while read descr cmdline
+    do
+        PLUGIN=${cmdline%% *}
+        OUTPUT=$(eval "$cmdline")
+        echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+        echo
+    done
+fi

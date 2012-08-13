@@ -1,0 +1,13 @@
+Title: ps and ps.perf output would be much improved if it contained the search filter
+Component: checks
+State: open
+Date: 2012-08-13 12:38:53
+Targetversion: future
+Class: feature
+
+joerg suggested that ps and ps.perf could add another line of output containing the 
+the search filter used for finding the process.
+That way a unix admin can immediately determine what process to fix, look for
+and if the monitoring config is correct.
+
+sounds like a great feature.

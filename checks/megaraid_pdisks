@@ -47,6 +47,9 @@
 # On new inventory runs the enclosure number is used as
 # index and item part.
 megaraid_pdisks_legacy_mode = False
+# This makes service descriptions backward compatible to match
+# inventory made by older versions that didn't support multiple 
+# controllers
 megaraid_pdisks_adapterstr  = ['e','f','g','h','i','j','k','l']
 
 def megaraid_pdisks_parse(info): 
@@ -68,6 +71,9 @@ def megaraid_pdisks_parse(info):
         elif line[0] == "Enclosure" and line[1] == "Device":
             try:    
 	        enclosure_devid = int(line[-1])
+                # this should fix inventory problems.
+                #adapters[adapter][enclosure_devid] = enclosure_devid
+
 	    except: # no enclosure device
 	 	enclosure_devid = 0
 		adapters[adapter][0] = 0

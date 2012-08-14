@@ -1,0 +1,14 @@
+Title: Megaraid pdisks/ldisks naming scheme makeover
+Component: checks
+State: open
+Date: 2012-08-14 11:57:03
+Targetversion: future
+Class: cleanup
+
+after the 1.2 series we should redo the item names for the megaraid devices.
+currently we have not something sane like c0e0s0 (controller, enclosure, slot)
+but instead inject the controller id into a letter that prefixes the enclosure id.
+this is undocumented and not helpful for the end-user - but needed to stay compatible.
+We should just stop being compatible at some point.
+
+If in doubt, see megaraid_pdisks_adapterstr in megaraid_pdisks ;)

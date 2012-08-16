@@ -1,0 +1,37 @@
+title: Cisco HSRP group status
+agents: snmp
+author: Florian Heigl <fh@mathias-kettner.de>
+license: GPLv3
+distribution: check_mk
+description:
+  Cisco routers support virtual redundant interfaces by using HSRP 
+  (Hot Standby Router Protocol).
+  HSRP is configured by assigning IP interfaces to a group that has a 
+  "floating" virtual IP.
+  If, for example, a router has an interface failure on either of the routed 
+  interfaces, the protocol lowers the routers priority, and if that priority
+  drops too low, it will fail over the virtual IP.
+
+
+  The check returns {OK} if the HSRP status is a good one ("active", 
+  "standby") and the same as during inventory.
+  If the states flip from "active" to "standby" or vice-versa, the check goes
+  to {WARN}, assuming that HSRP is doing it's job.
+
+  Should the status ever be a different one that for example points to HSRP
+  still initializing, the check will return {CRIT} as HSRP is assumet to be
+  inoperable in these states.
+
+perfdata:
+  none
+
+
+item:
+  The Virtual IP of the failover group.
+
+inventory:
+  The check reads the HSRP MIB and creates one service per virtual IP. It also 
+  stores the HSRP state of
+  the IP as seen by the monitored device, normally either standby or active. 
+  It also stores the ID of 
+  the failover group. (For future use)

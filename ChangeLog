@@ -35,6 +35,8 @@
       "Room temperature (external thermal sensors)"
     * cisco_asa_failover: New Check for clustered Cisco ASA Firewalls 
     * cbl_airlaser.status: New Check for CBL Airlaser IP1000 laser bridge.
+    * cbl_airlaser.hardware: New Check for CBL Airlaser IP1000 laser bridge.
+      Check monitors the status info and allows alerting based on temperature.
     * df, hr_fs, etc.: Filesystem checks now support grouping (pools)
       Please refer to the check manpage of df for details
     * FIX: windows agent: try to fix crash in event log handling

@@ -32,6 +32,15 @@
 # .1.3.6.1.4.1.2800.2.1.3                 < AirLaser Status
 
 
+# Migrate to factory settings?
+airlaser_default_levels = { 
+     "opttxTempValue"   : (60, 80),
+     "chassisTempValue" : (60, 70),
+     "chassisFrontScreenTempValue" : (40, 55),
+     "optrxTempValue"   : (50, 60),
+     "apmodTempValue"   : (60, 70),  }
+
+
 def parse_cbl_airlaser(info):
     
     airlaser_status_names = { 0: 'undefined', 1: 'active', 2: 'standby', 
@@ -90,67 +99,71 @@ def parse_cbl_airlaser(info):
 
     # update values from one dict into the other by picking the "offsetted" values
     # (optimize at will, if we can make it one-dict-for-all then we 100% sanitized their MIB)
-    for section in airlaser_sensors.keys():
-        for sensor in airlaser_sensors[section].keys():
+    for hwclass in airlaser_sensors.keys():
+        for sensor in airlaser_sensors[hwclass].keys():
             # we could remove the offset hack by parsing our OID
-            sub_oid   = airlaser_sensors[section][sensor][1]
-            offset    = airlaser_sensors[section][sensor][2]
+            sub_oid   = airlaser_sensors[hwclass][sensor][1]
+            offset    = airlaser_sensors[hwclass][sensor][2]
             
             
             if "Status" in sensor:
-                value = airlaser_status_names[int(data[section][offset][0])]
+                value = airlaser_status_names[int(data[hwclass][offset][0])]
             else:
-                value = saveint(data[section][offset][0])
-            airlaser_sensors[section][sensor] = ( value, sub_oid, offset)
+                value = saveint(data[hwclass][offset][0])
+            airlaser_sensors[hwclass][sensor] = ( value, sub_oid, offset)
 
     return airlaser_sensors
 
 
-    
 
-def check_cbl_airlaser_hw(item, _no_params, info):
+def check_cbl_airlaser_hw(item, params, info):
 
-    #import pprint
-    #pprint.pprint(parse_cbl_airlaser(info))
+
+    airlaser_info = parse_cbl_airlaser(info)
+
     state  = 0
     msgtxt = ""
+    perfdata = []
 
+    for hwclass in airlaser_info.keys():
+        for sensor in airlaser_info[hwclass].keys():
+            val = airlaser_info[hwclass][sensor][0]
+            if sensor.lower().endswith("value"):
+                val = saveint(val)
+                if sensor in params.keys():
+                    warn, crit = params[sensor]
+                    perfdata.append(("%s" % sensor, "%d" % val, warn, crit, 0, 90)),
+                    if   val > crit:
+                        state = max(state, 2)
+                    elif val > warn:
+                        state = max(state, 1)
+                else:
+                    # if this sensor wasn't in the params, then we don't alert on it.
+                    perfdata.append(("%s" % sensor, "%d" % val, '', '', 0, 90)),
 
-    return (3, "UNKNOWN")
-
-    for sensor in airlaser_info.keys():
-        #print sensor
-        #print "1"
-        if sensor.lower().endswith("value"):
-            #print "1a"
-            # das geht noch nicht.
-            #perfdata += [ sensor, saveint(airlaser_info[sensor]), 
-            #print saveint(airlaser_info[sensor])
-            continue
-
-        #print "2"
-        #print airlaser_info[sensor]
-        if   airlaser_info[sensor] == "failure":
-            #print "2a"
-            state = 2
-        elif airlaser_info[sensor] == "warning":
-            #print "2b"
-            state = max(state, 1)
-        # go here if no explicit error occured,
-        # no handling undefined and not_installed
-        else:
-            print "2c"
-            continue
-        msgtxt = msgtxt + "%s is %s" + state * "!" + " "
+            else:
+                if val == "failure":
+                    state = 2
+                elif val == "warning":
+                    state = max(state, 1)
+                # go here if no explicit error occured,
+                # no handling undefined and not_installed
+                else:
+                    continue
+            if state > 0:
+                msgtxt = msgtxt + "Sensor %s %s" % (sensor, val) + state * "!" + " "
 
     if state == 0:
         msgtxt = "All sensors OK"
 
-    return (state, nagios_state_names[state] + " - " + msgtxt)
+    return (state, nagios_state_names[state] + " - " + msgtxt, perfdata)
 
 
 def inventory_cbl_airlaser(info):
-    return [ (None, None) ]
+    # start passing parameters, but since we might also need some for optics
+    # this may change to using factory settings.
+    # Or we just hardcode the margins we got from the vendor.
+    return [ (None, "airlaser_default_levels") ]
 
 
 def check_cbl_airlaser_status(item, _no_params, info):
@@ -186,12 +199,10 @@ check_info["cbl_airlaser.status"]  = {
 
 }
 
-def inventory_cbl_airlaser_off():
-    return []
 
 check_info["cbl_airlaser.hardware"]  = {
     "check_function"       : check_cbl_airlaser_hw,
-    "inventory_function"   : inventory_cbl_airlaser_off,
+    "inventory_function"   : inventory_cbl_airlaser,
     "service_description"  : "CBL Airlaser Hardware",
     "has_perfdata"         : True,
 }

@@ -17,7 +17,7 @@ Disadvantages:
 
 How to setup livedump
 ---------------------
-Copy the file livedump to a conveniant place. Make sure that
+Copy the file livedump to a convenient place. Make sure that
 ../livestatus/api/python/livestatus.py is either in the same
 directory as livedump or somewhere in the Python path.
 
@@ -41,14 +41,15 @@ and be in pending state.
 
 Now create a cronjob that does the following every 1 or 5 minutes:
 
-1. ./livedump > cgagaga
+1. ./livedump > ca1b2c3
 2. copy that file to the target system into the checkresults directory
    (in OMD this is ~/tmp/nagios/checkresults)
-3. After a correct copy touch the file cgagaga.ok in that
+3. After a correct copy touch the file ca1b2c3.ok in that
    directory
 
 Nagios will now read in that file (which is containing all current
-host and service states).
+host and service states). The filename is arbitrary, but has to be 
+7 characters in length, starting with a "c".
 
 Filtering
 ---------
@@ -63,3 +64,6 @@ all hosts that are needed by the dumped services are also dumped:
 Note: The -H headers will also be added to the service queries.
 Make sure that all columns are prefixed with host_ in these.
 
+If you are using this is in conjunction with NSCA transport and do not
+wish to transfer the templated configuration, you can use the filter 
+to only export services that have "obsess_over_service = 1" set.

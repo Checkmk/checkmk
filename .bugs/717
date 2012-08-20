@@ -1,6 +1,6 @@
 Title: MegaRaid BBU check should handle learning state
 Component: checks
-State: open
+State: done
 Date: 2012-08-10 16:35:33
 Targetversion: 1.2.0
 Class: feature
@@ -133,3 +133,9 @@ Absolute state of charge: 25 %
 Max Error: 8 %
 
 Exit Code: 0x00
+
+2012-08-20 17:32:02: changed state open -> closed
+Added a fix that suppresses all errors during the learn cycle.
+This is not the complete-est solution, but the cleanest one.
+
+2012-08-20 17:32:16: changed state closed -> done

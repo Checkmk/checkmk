@@ -1,0 +1,20 @@
+Title: WATO Users & Contacts misses sorting
+Component: wato
+State: open
+Date: 2012-08-21 17:26:38
+Targetversion: 1.2.0
+Class: cleanup
+
+The users & contacts page seems to not sort the displayed users alphabetically
+(or by any other visible pattern)
+
+It should offer some sorting, we have users with 800+ live contacts in there.
+And it's not practical with many less.
+
+Example order:
+list all admin accounts
+list all user accounts
+list all guest accounts
+
+oh, that seems like saying "list be role" - yes, maybe.
+per group they should really be sorted a-z

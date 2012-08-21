@@ -30,6 +30,64 @@ register_rulegroup("activechecks",
 group = "activechecks"
 
 register_rule(group,
+    "active_checks:dns",
+    Tuple(
+        title = _("Check DNS service"),
+        help = _("Check optain an IP address for a host or domain"
+                 "It uses <tt>check_dns</tt> from standard plugins."),
+        elements = [
+           TextAscii(title = _("Hostname"), allow_empty = False,
+                     help = _('The name or address you want to query')),
+           Dictionary(
+               title = _("Optional parameters"),
+               elements = [
+                   ( "server",
+                     TextAscii(
+                         title = _("DNS Server"),
+                         allow_empty = False,
+                         help = _("Optional DNS server you want to use for the lookup"))),
+                   ( "expected_address",
+                     TextAscii(
+                         title = _("Expected Address"),
+                         allow_empty = False,
+                         help = _("Optional IP-ADDRESS you expect the DNS server to return. HOST"
+                                  "must end with a dot (.) " )),
+                   ),
+                   ( "expected_authority",
+                     TextAscii(
+                         title = _("Expected Authority"),
+                         allow_empty = False,
+                         help = _("Optional expect the DNS server to be authoriative"
+                                  "for the lookup ")),
+                   ),
+                   ( "response_time",
+                     Tuple(
+                         title = _("Expected response time"),
+                         elements = [
+                             Float(
+                                 title = _("Warning at"), 
+                                 unit = "sec",
+                                 default_value = 1),
+                             Float(
+                                 title = _("Critical at"), 
+                                 unit = "sec",
+                                 default_value = 2),
+                         ])
+                    ),
+                   ( "timeout",
+                      Integer(
+                          title = _("Seconds before connection times out"),
+                          unit = _("sec"),
+                          default_value = 10,
+                      )
+                    ),
+                ]),
+        ]
+    ),
+    match = 'all')
+
+
+register_rule(group,
     "active_checks:tcp",
     Tuple(
         title = _("Check connecting to a TCP port"),
@@ -163,7 +221,6 @@ register_rule(group,
         ]
     ),
     match = 'all')
-
 
 
 register_rule(group,

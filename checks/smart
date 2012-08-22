@@ -86,7 +86,7 @@ def check_smart_stats(item, params, info):
         if len(line) != 13 or line[0] != item:
             continue
 
-        value = int(line[12])
+        value = int(line[12].split("/", 1)[0])
         for val, uom, lab, txt, thresh in [
                       (value, ' hours', 'Power_On_Hours',          'Powered on',           None),
                       (value, '',       'Power_Cycle_Count',       'Power cycles',         None),

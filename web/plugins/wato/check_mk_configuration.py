@@ -620,6 +620,16 @@ register_rule(group,
                  "rule. You can use the rule for the active Check_MK check, however.")),
     itemtype = "service")
 
+register_rule(group,
+    "extra_service_conf:process_perf_data",
+    DropdownChoice(
+        title = _("Enable/disable processing of perfdata for services"),
+        help = _("This setting allows you to disable the processing of perfdata for a "
+                 "service completely."),
+        choices = [ ("1", _("Enable processing of perfdata")),
+                    ("0", _("Disable processing of perfdata")) ],
+        ),
+        itemtype = "service")
 
 group = "monconf/Notifications"
 register_rule(group,

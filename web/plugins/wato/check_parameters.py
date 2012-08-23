@@ -539,17 +539,43 @@ checkgroups.append((
     Dictionary(
         elements = [
             ( "memory",
-              Tuple(
-                  title = _("Memory levels"),
-                  elements = [
-                      Percentage(title = _("Warning at"),  label = _("% usage"), allow_int = True),
-                      Percentage(title = _("Critical at"), label = _("% usage"), allow_int = True)])),
+               Alternative(
+                   title = _("Memory Levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Levels in percent"),
+                           elements = [
+                               Percentage(title = _("Warning at"), label = _("% usage")),
+                               Percentage(title = _("Critical at"), label = _("% usage")),
+                           ]
+                       ),
+                       Tuple(
+                           title = _("Absolute levels"),
+                           elements = [
+                                Filesize(title = _("Warning higher as")), 
+                                Filesize(title = _("Critical higher as")), 
+                           ]
+                        )
+                   ])),
             ( "pagefile",
-              Tuple(
-                  title = _("Pagefile levels"),
-                  elements = [
-                      Percentage(title = _("Warning at"),  label = _("% usage"), allow_int = True),
-                      Percentage(title = _("Critical at"), label = _("% usage"), allow_int = True)])),
+               Alternative(
+                   title = _("Pagefile Levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Levels in percent"),
+                           elements = [
+                               Percentage(title = _("Warning at"), label = _("% usage")),
+                               Percentage(title = _("Critical at"), label = _("% usage")),
+                           ]
+                       ),
+                       Tuple(
+                           title = _("Absolute levels"),
+                           elements = [
+                                Filesize(title = _("Warning higher as")), 
+                                Filesize(title = _("Critical higher as")), 
+                           ]
+                        )
+                   ])),
         ]),
     None,
     "dict"

@@ -503,6 +503,39 @@ register_configvar(group,
     )
 
 
+register_configvar(group,
+    "printer_supply_some_remaining_status",
+    DropdownChoice(
+        title = _("Printer supply some ramaining status"),
+        help = _("Set the reported nagios state when the fill state "
+                 "is something between empty and small "
+                 "remaining capacity"),
+        choices = [
+            ( 0, _("OK") ),
+            ( 1, _("Warning")),
+            ( 2, _("Critical")),
+            ],
+        default_value = 2,
+        ),
+    )
+
+register_configvar(group,
+    "printer_supply_default_levels",
+    Tuple(
+        title = _("Printer supply default levels"),
+        help = _("Set global default levels for warning and critical. "),
+        elements = [
+           Integer(
+                title = _("Warning at"),
+                minvalue = 1,
+           ),
+           Integer(
+                 title = _("Critical at"),
+                 minvalue = 1,
+           ),
+         ],
+        ))
+
 #   +----------------------------------------------------------------------+
 #   |                         ____        _                                |
 #   |                        |  _ \ _   _| | ___                           |

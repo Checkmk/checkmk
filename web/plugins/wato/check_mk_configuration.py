@@ -736,6 +736,17 @@ register_rule(group,
         ),
     itemtype = "service")
 
+register_rule(group,
+    "extra_service_conf:flap_detection_enabled",
+    DropdownChoice(
+        title = _("Enable/disable flapping detection for services"),
+        help = _("This setting allows you to disable the flapping detection for a "
+                 "service completely."),
+        choices = [ ("1", _("Enable flap detection")),
+                    ("0", _("Disable flap detection")) ],
+        ),
+        itemtype = "service")
+
 group = "monconf/Inventory and Check_MK settings"
 
 register_rule(group,

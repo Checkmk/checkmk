@@ -1,0 +1,10 @@
+Title: Error sending commands in Mobile UI
+Component: wato
+State: open
+Date: 2012-08-23 15:02:33
+Targetversion: 1.2.0
+Class: bug
+
+The bugfix for #0614 did not make commands work.
+It now says:
+ERROR showing view: format requires a mapping.

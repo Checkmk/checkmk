@@ -642,6 +642,17 @@ register_rule(group,
         ),
         itemtype = "service")
 
+register_rule(group,
+    "extra_service_conf:active_checks_enabled",
+    DropdownChoice(
+        title = _("Enable/disable active checks for services"),
+        help = _("This setting allows you to disable or enable "
+                 "active checks for a service."),
+        choices = [ ("1", _("Enable active checks")),
+                    ("0", _("Disable active checks")) ],
+        ),
+        itemtype = "service")
+
 group = "monconf/Notifications"
 register_rule(group,
     "extra_host_conf:notifications_enabled",

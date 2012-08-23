@@ -631,6 +631,17 @@ register_rule(group,
         ),
         itemtype = "service")
 
+register_rule(group,
+    "extra_service_conf:passive_checks_enabled",
+    DropdownChoice(
+        title = _("Enable/disable proccessing of passiv check results for services"),
+        help = _("This setting allows you to disable the processing of passiv check results for a "
+                 "service."),
+        choices = [ ("1", _("Enable processing of passiv check results")),
+                    ("0", _("Disable processing of passiv check results")) ],
+        ),
+        itemtype = "service")
+
 group = "monconf/Notifications"
 register_rule(group,
     "extra_host_conf:notifications_enabled",

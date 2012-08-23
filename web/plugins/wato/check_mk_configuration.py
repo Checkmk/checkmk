@@ -963,6 +963,19 @@ register_rule(group,
         title = _("SNMP communities of monitored hosts")))
 
 register_rule(group,
+    "snmp_character_encodings",
+    DropdownChoice(
+        title = _("Output text coding settings for SNMP devices"),
+        help = _("Some devices send texts in non-ASCII characters. Check_MK"
+                 " always assumes UTF-8 encoding. You can declare other "
+                 " other encodings here"),
+        choices = [ 
+           ("utf-8", _("UTF-8 (default)") ),
+           ("latin1" ,_("latin1")),
+           ]
+        )),
+
+register_rule(group,
     "bulkwalk_hosts",
     title = _("Hosts using bulk walk (and SNMP v2c)"),
     help = _("Most SNMP hosts support SNMP version 2c. However, Check_MK defaults to version 1, "

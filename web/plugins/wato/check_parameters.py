@@ -1186,6 +1186,21 @@ checkgroups.append((
     None,
     None))
 
+
+checkgroups.append((
+    subgroup_applications,
+    "oracle_sessions",
+    _("Oracle Sessions"),
+    Tuple(
+         title = _("Number of active sessions"),
+         help = _("This check monitors the current number of active sessions on Oracle"),
+         elements = [
+             Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100), 
+             Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
+          ],
+     ),
+      None, None))
+
 checkgroups.append((
     subgroup_applications,
     "postgres_stat_database",

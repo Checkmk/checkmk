@@ -539,17 +539,43 @@ checkgroups.append((
     Dictionary(
         elements = [
             ( "memory",
-              Tuple(
-                  title = _("Memory levels"),
-                  elements = [
-                      Percentage(title = _("Warning at"),  label = _("% usage"), allow_int = True),
-                      Percentage(title = _("Critical at"), label = _("% usage"), allow_int = True)])),
+               Alternative(
+                   title = _("Memory Levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Levels in percent"),
+                           elements = [
+                               Percentage(title = _("Warning at"), label = _("% usage")),
+                               Percentage(title = _("Critical at"), label = _("% usage")),
+                           ]
+                       ),
+                       Tuple(
+                           title = _("Absolute levels"),
+                           elements = [
+                                Filesize(title = _("Warning higher as")), 
+                                Filesize(title = _("Critical higher as")), 
+                           ]
+                        )
+                   ])),
             ( "pagefile",
-              Tuple(
-                  title = _("Pagefile levels"),
-                  elements = [
-                      Percentage(title = _("Warning at"),  label = _("% usage"), allow_int = True),
-                      Percentage(title = _("Critical at"), label = _("% usage"), allow_int = True)])),
+               Alternative(
+                   title = _("Pagefile Levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Levels in percent"),
+                           elements = [
+                               Percentage(title = _("Warning at"), label = _("% usage")),
+                               Percentage(title = _("Critical at"), label = _("% usage")),
+                           ]
+                       ),
+                       Tuple(
+                           title = _("Absolute levels"),
+                           elements = [
+                                Filesize(title = _("Warning higher as")), 
+                                Filesize(title = _("Critical higher as")), 
+                           ]
+                        )
+                   ])),
         ]),
     None,
     "dict"
@@ -1159,6 +1185,21 @@ checkgroups.append((
     ),
     None,
     None))
+
+
+checkgroups.append((
+    subgroup_applications,
+    "oracle_sessions",
+    _("Oracle Sessions"),
+    Tuple(
+         title = _("Number of active sessions"),
+         help = _("This check monitors the current number of active sessions on Oracle"),
+         elements = [
+             Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100), 
+             Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
+          ],
+     ),
+      None, None))
 
 checkgroups.append((
     subgroup_applications,

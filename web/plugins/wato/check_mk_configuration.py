@@ -503,6 +503,39 @@ register_configvar(group,
     )
 
 
+register_configvar(group,
+    "printer_supply_some_remaining_status",
+    DropdownChoice(
+        title = _("Printer supply some ramaining status"),
+        help = _("Set the reported nagios state when the fill state "
+                 "is something between empty and small "
+                 "remaining capacity"),
+        choices = [
+            ( 0, _("OK") ),
+            ( 1, _("Warning")),
+            ( 2, _("Critical")),
+            ],
+        default_value = 2,
+        ),
+    )
+
+register_configvar(group,
+    "printer_supply_default_levels",
+    Tuple(
+        title = _("Printer supply default levels"),
+        help = _("Set global default levels for warning and critical. "),
+        elements = [
+           Integer(
+                title = _("Warning at"),
+                minvalue = 1,
+           ),
+           Integer(
+                 title = _("Critical at"),
+                 minvalue = 1,
+           ),
+         ],
+        ))
+
 #   +----------------------------------------------------------------------+
 #   |                         ____        _                                |
 #   |                        |  _ \ _   _| | ___                           |
@@ -620,6 +653,38 @@ register_rule(group,
                  "rule. You can use the rule for the active Check_MK check, however.")),
     itemtype = "service")
 
+register_rule(group,
+    "extra_service_conf:process_perf_data",
+    DropdownChoice(
+        title = _("Enable/disable processing of perfdata for services"),
+        help = _("This setting allows you to disable the processing of perfdata for a "
+                 "service completely."),
+        choices = [ ("1", _("Enable processing of perfdata")),
+                    ("0", _("Disable processing of perfdata")) ],
+        ),
+        itemtype = "service")
+
+register_rule(group,
+    "extra_service_conf:passive_checks_enabled",
+    DropdownChoice(
+        title = _("Enable/disable proccessing of passiv check results for services"),
+        help = _("This setting allows you to disable the processing of passiv check results for a "
+                 "service."),
+        choices = [ ("1", _("Enable processing of passiv check results")),
+                    ("0", _("Disable processing of passiv check results")) ],
+        ),
+        itemtype = "service")
+
+register_rule(group,
+    "extra_service_conf:active_checks_enabled",
+    DropdownChoice(
+        title = _("Enable/disable active checks for services"),
+        help = _("This setting allows you to disable or enable "
+                 "active checks for a service."),
+        choices = [ ("1", _("Enable active checks")),
+                    ("0", _("Disable active checks")) ],
+        ),
+        itemtype = "service")
 
 group = "monconf/Notifications"
 register_rule(group,
@@ -735,6 +800,17 @@ register_rule(group,
         none_value = 0,
         ),
     itemtype = "service")
+
+register_rule(group,
+    "extra_service_conf:flap_detection_enabled",
+    DropdownChoice(
+        title = _("Enable/disable flapping detection for services"),
+        help = _("This setting allows you to disable the flapping detection for a "
+                 "service completely."),
+        choices = [ ("1", _("Enable flap detection")),
+                    ("0", _("Disable flap detection")) ],
+        ),
+        itemtype = "service")
 
 group = "monconf/Inventory and Check_MK settings"
 
@@ -918,6 +994,19 @@ register_rule(group,
                  TextAscii(title = _("Privacy pass phrase")),
                    ])],
         title = _("SNMP communities of monitored hosts")))
+
+register_rule(group,
+    "snmp_character_encodings",
+    DropdownChoice(
+        title = _("Output text coding settings for SNMP devices"),
+        help = _("Some devices send texts in non-ASCII characters. Check_MK"
+                 " always assumes UTF-8 encoding. You can declare other "
+                 " other encodings here"),
+        choices = [ 
+           ("utf-8", _("UTF-8 (default)") ),
+           ("latin1" ,_("latin1")),
+           ]
+        )),
 
 register_rule(group,
     "bulkwalk_hosts",

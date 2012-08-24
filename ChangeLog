@@ -8,6 +8,7 @@
     Checks & Agents:
     * New Checks for Siemens Blades (BX600)
     * New Checks for Fortigate Firewalls
+    * Netapp Checks for CPU Util an FC Port throughput
     * FIX: megaraid_pdisks: handle case where no enclosure device exists
     * FIX: megaraid_bbu: handle the controller's learn cycle. No errors in that period.
     * mysql_capacity: cleaned up check, levels are in MB now

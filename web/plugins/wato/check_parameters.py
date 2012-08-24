@@ -533,6 +533,38 @@ checkgroups.append((
 ))
 
 checkgroups.append((
+    subgroup_storage,
+    "netapp_fcprtio",
+    _("Netapp FC Port throughput"),
+    Dictionary(
+        elements = [
+            ("read",
+                Tuple( 
+                    title = _("Read"),
+                    elements = [ 
+                      Filesize(title = _("Warning lower as")), 
+                      Filesize(title = _("Critical lower as")), 
+                    ]
+                )
+            ),
+            ("write",
+                Tuple( 
+                    title = _("Write"),
+                    elements = [ 
+                      Filesize(title = _("Warning higher as")), 
+                      Filesize(title = _("Critical higher as")), 
+                    ]
+                )
+            )
+
+        ]
+    ),
+    TextAscii(
+        title = _("File name"),
+        allow_empty = True),
+    "first"
+))
+checkgroups.append((
     subgroup_os,
     "memory_pagefile_win",
     _("Memory and pagefile levels for Windows"),

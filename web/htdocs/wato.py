@@ -10915,7 +10915,7 @@ def mode_pattern_editor(phase):
         else:
             rel_rulenr += 1
         last_in_group = rulenr == len(ruleset) - 1 or ruleset[rulenr+1][0] != folder
-        pattern_list, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+        pattern_list, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
 
         # Check if this rule applies to the given host/service
         if hostname:

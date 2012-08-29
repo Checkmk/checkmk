@@ -66,6 +66,7 @@
     * new: search for rules in "Host & Service Configuration"
     * parent scan: new option "ping probes", that allows skipping 
       unreachable gateways.
+    * FIX: Removed double collect_hosts() call in activate changes hook
 
     BI:
     * Great speed up of rule compilation in large environments

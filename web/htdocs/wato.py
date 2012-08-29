@@ -11279,7 +11279,7 @@ def call_hook_pre_activate_changes():
 def call_hook_activate_changes():
     if hook_registered('activate-changes'):
         hosts = collect_hosts(g_root_folder)
-        call_hooks("activate-changes", collect_hosts(g_root_folder))
+        call_hooks("activate-changes", hosts)
 
 # This hook is executed when the save_users() function is called
 def call_hook_users_saved(users):

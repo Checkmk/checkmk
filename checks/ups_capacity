@@ -43,6 +43,11 @@
 # SNMPv2-SMI::mib-2.33.1.3.2.0 = INTEGER: 3
 
 ups_capacity_defaul_levels = (0, 0) 
+
+def inventory_ups_capacity(info):
+    if len(info) > 0:
+        return [(None, 'ups_capacity_defaul_levels')]
+
 def check_ups_capacity(item, params, info):
     #To support inventorys with the old version
     if params != None:
@@ -64,7 +69,7 @@ def check_ups_capacity(item, params, info):
 
 check_info["ups_capacity"] = {
     "check_function"        : check_ups_capacity,
-    "inventory_function"    : lambda info: [(None, 'ups_capacity_defaul_levels')],
+    "inventory_function"    : inventory_ups_capacity,
     "service_description"   : "Battery capacity",
     "has_perfdata"          : True,
     "snmp_scan_function"    : lambda oid: (".1.3.6.1.2.1.33.1.2.3.0"),

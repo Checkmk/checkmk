@@ -67,6 +67,7 @@
     * parent scan: new option "ping probes", that allows skipping 
       unreachable gateways.
     * FIX: Removed double collect_hosts() call in activate changes hook
+    * FIX: Fixed double hook execution when using localized multisite
 
     BI:
     * Great speed up of rule compilation in large environments

@@ -11034,8 +11034,6 @@ def mode_pattern_editor(phase):
 # Inform plugins about changes of hosts. the_thing can be:
 # a folder, a file or a host
 
-g_hooks = {}
-
 class API:
     def register_hook(self, name, func):
         g_hooks.setdefault(name, []).append(func)
@@ -11641,6 +11639,9 @@ def load_plugins():
     g_rulespecs = {}
     g_rulespec_group = {}
     g_rulespec_groups = []
+
+    global g_hooks
+    g_hooks = {}
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))

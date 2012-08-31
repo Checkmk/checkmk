@@ -239,7 +239,7 @@ $QUEline:
 $read/end_of_file=QUEdone/error=QUEdone inFile cLine
 $say f$extract(0,8,cLine)," ", -
 f$edit(f$extract(9,15,cLine),"trim")," ", -
-f$edit(f$extract(25,7,cLine),"trim")," ", -
+f$edit(f$extract(25,4,cLine),"trim")," ", -
 f$edit(f$extract(45,15,cLine),"trim")," ", -
 f$edit(f$extract(35,10,cLine),"trim")," ", -
 f$edit(f$extract(60,10,cLine),"trim")

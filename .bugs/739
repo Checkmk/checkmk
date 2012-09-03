@@ -1,0 +1,19 @@
+Title: KeyError in check_info when check is removed
+Component: core
+State: open
+Date: 2012-09-03 12:07:34
+Targetversion: 1.1.12
+Class: bug
+
+If a check is removed witch used default_levels, cmk breaks on each action with an key error:
+cmk --flush apc-ap7930
+Traceback (most recent call last):
+  File "/omd/sites/aaa/share/check_mk/modules/check_mk.py", line 4595, in <module>
+    read_config_files()
+  File "/omd/sites/aaa/share/check_mk/modules/check_mk.py", line 4393, in read_config_files
+    read_all_autochecks()
+  File "/omd/sites/aaa/share/check_mk/modules/check_mk.py", line 4542, in read_all_autochecks
+    for (host, ct, it, par) in autochecks ]
+  File "/omd/sites/aaa/share/check_mk/modules/check_mk.py", line 4451, in compute_check_parameters
+    def_levels_varname = check_info[checktype].get("default_levels_variable")
+KeyError: 'apc_battery_status'

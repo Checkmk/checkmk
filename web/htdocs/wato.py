@@ -5360,7 +5360,7 @@ def mode_globalvars(phase):
 
 def mode_edit_configvar(phase):
     if phase == "title":
-        return "Global configuration settings for Check_MK"
+        return _("Global configuration settings for Check_MK")
 
     elif phase == "buttons":
         html.context_button(_("Abort"), make_link([("mode", "globalvars")]), "abort")

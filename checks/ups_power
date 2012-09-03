@@ -24,61 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-# SNMPv2-SMI::mib-2.33.1.1.1.0 = STRING: "GE"
-# SNMPv2-SMI::mib-2.33.1.1.2.0 = STRING: "SitePro"
-# SNMPv2-SMI::mib-2.33.1.1.3.0 = STRING: "2.12"
-# SNMPv2-SMI::mib-2.33.1.1.4.0 = STRING: "GEDE CP5 SNMP/Web Interface Ver.1.0 (2008/05/09)"
-# SNMPv2-SMI::mib-2.33.1.1.5.0 = STRING: "GEDE_SNMP_UPS_Interface"
-# SNMPv2-SMI::mib-2.33.1.1.6.0 = STRING: "UPS attached device"
-# SNMPv2-SMI::mib-2.33.1.2.1.0 = INTEGER: 2
-# SNMPv2-SMI::mib-2.33.1.2.2.0 = INTEGER: 0
-# SNMPv2-SMI::mib-2.33.1.2.3.0 = INTEGER: 150
-# SNMPv2-SMI::mib-2.33.1.2.4.0 = INTEGER: 100
-# SNMPv2-SMI::mib-2.33.1.2.5.0 = INTEGER: 4080
-# SNMPv2-SMI::mib-2.33.1.2.6.0 = INTEGER: 0
-# SNMPv2-SMI::mib-2.33.1.2.7.0 = INTEGER: 23
-# SNMPv2-SMI::mib-2.33.1.3.1.0 = Counter32: 13
-# SNMPv2-SMI::mib-2.33.1.3.2.0 = INTEGER: 3
-# SNMPv2-SMI::mib-2.33.1.3.3.1.2.1 = INTEGER: 499
-# SNMPv2-SMI::mib-2.33.1.3.3.1.3.1 = INTEGER: 377
-# SNMPv2-SMI::mib-2.33.1.3.3.1.3.2 = INTEGER: 378
-# SNMPv2-SMI::mib-2.33.1.3.3.1.3.3 = INTEGER: 378
-# SNMPv2-SMI::mib-2.33.1.4.1.0 = INTEGER: 3
-# SNMPv2-SMI::mib-2.33.1.4.2.0 = INTEGER: 500
-# SNMPv2-SMI::mib-2.33.1.4.3.0 = INTEGER: 3
-# SNMPv2-SMI::mib-2.33.1.4.4.1.2.1 = INTEGER: 232
-# SNMPv2-SMI::mib-2.33.1.4.4.1.2.2 = INTEGER: 232
-# SNMPv2-SMI::mib-2.33.1.4.4.1.2.3 = INTEGER: 232
-# SNMPv2-SMI::mib-2.33.1.4.4.1.3.1 = INTEGER: 440
-# SNMPv2-SMI::mib-2.33.1.4.4.1.3.2 = INTEGER: 420
-# SNMPv2-SMI::mib-2.33.1.4.4.1.3.3 = INTEGER: 360
-
-# ==> Here is the current power of the phases
-# SNMPv2-SMI::mib-2.33.1.4.4.1.4.1 = INTEGER: 9508
-# SNMPv2-SMI::mib-2.33.1.4.4.1.4.2 = INTEGER: 9040
-# SNMPv2-SMI::mib-2.33.1.4.4.1.4.3 = INTEGER: 8128
-
-# SNMPv2-SMI::mib-2.33.1.4.4.1.5.1 = INTEGER: 34
-# SNMPv2-SMI::mib-2.33.1.4.4.1.5.2 = INTEGER: 32
-# SNMPv2-SMI::mib-2.33.1.4.4.1.5.3 = INTEGER: 27
-# SNMPv2-SMI::mib-2.33.1.5.1.0 = INTEGER: 500
-# SNMPv2-SMI::mib-2.33.1.5.2.0 = INTEGER: 3
-# SNMPv2-SMI::mib-2.33.1.5.3.1.2.1 = INTEGER: 220
-# SNMPv2-SMI::mib-2.33.1.5.3.1.2.2 = INTEGER: 221
-# SNMPv2-SMI::mib-2.33.1.5.3.1.2.3 = INTEGER: 221
-# SNMPv2-SMI::mib-2.33.1.6.1.0 = Gauge32: 0
-# SNMPv2-SMI::mib-2.33.1.9.2.0 = INTEGER: 500
-# SNMPv2-SMI::mib-2.33.1.9.3.0 = INTEGER: 230
-# SNMPv2-SMI::mib-2.33.1.9.4.0 = INTEGER: 500
-# SNMPv2-SMI::mib-2.33.1.9.5.0 = INTEGER: 90000
-# SNMPv2-SMI::mib-2.33.1.9.7.0 = INTEGER: 3
-# SNMPv2-SMI::mib-2.33.1.9.8.0 = INTEGER: 2
-
-ups_power_default_levels = (20, 1) # warning / critical *below* those levels (Watt)
-
-def inventory_ups_power(info):
-    return [ (line[0], "", "ups_power_default_levels") for line in info ]
+ups_power_default_levels = (20, 1) # warning / critical 
 
 def check_ups_power(item, params, info):
     warn, crit = params
@@ -90,7 +36,7 @@ def check_ups_power(item, params, info):
             if power < 0:
                 power *= -1
             perfdata = [ ( "power", power, warn, crit, 0 ) ]
-            infotext = " - current power: %dW, (levels at %dW/%dW)" % \
+            infotext = " - current power: %dW (warn/crit at %dW/%dW)" % \
                 (power, warn, crit)
 
             if power <= crit:
@@ -102,11 +48,14 @@ def check_ups_power(item, params, info):
 
     return (3, "UNKNOWN - Phase %s not found in SNMP output" % item)
 
-check_info['ups_power'] = ( check_ups_power, "Power phase %s", 1, inventory_ups_power )
-snmp_info['ups_power'] = ( ".1.3.6.1.2.1.33.1.4.4.1", [ 0, 4 ] )
-# also on some devices on: enterprises.818.1.1.10.4.4.1
-# .1.3.6.1.2.1.33.1.1.1.0 "RPS SpA": Some usvs only support the UPS-MIB
-snmp_scan_functions['ups_power'] = \
-   lambda oid: oid(".1.3.6.1.2.1.1.2.0") in \
-    [ ".1.3.6.1.4.1.818.1.100.1.1", ".1.3.6.1.2.1.33.2", ".1.3.6.1.2.1.33" ] \
-    or oid('.1.3.6.1.2.1.33.1.1.1.0').startswith('RPS')
+check_info['ups_power'] = {
+  "inventory_function"  : lambda info: [ ( x[0], "ups_power_default_levels") for x in info ],
+  "check_function"      : check_ups_power,
+  "service_description" : "Power phase %s",
+  "has_perfdata"        : True,
+  "group"               : "hw_temperature",
+  "snmp_info"           : ( ".1.3.6.1.2.1.33.1.4.4.1", [ 0, 4 ] ),
+  "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in \
+                          [ ".1.3.6.1.4.1.818.1.100.1.1", ".1.3.6.1.2.1.33.2", ".1.3.6.1.2.1.33" ] \
+                          or oid('.1.3.6.1.2.1.33.1.1.1.0').startswith('RPS'),
+}

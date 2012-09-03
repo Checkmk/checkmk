@@ -358,7 +358,7 @@ def do_commands(view, what, rows):
     command = None
     title, executor = views.core_command(what, rows[0])[1:3] # just get the title
     r = html.confirm(_("Do you really want to %(title)s the %(count)d %(what)ss?") %
-                     (title, len(rows), what), action=html.req.myfile + ".py#commands")
+            { "title" : title, "count" : len(rows), "what" : _(what + "s"), })
     if r != True:
         return r == None # Show commands on negative answer
 

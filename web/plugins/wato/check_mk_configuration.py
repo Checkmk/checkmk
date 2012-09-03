@@ -802,6 +802,16 @@ register_rule(group,
     itemtype = "service")
 
 register_rule(group,
+    "extra_host_conf:flap_detection_enabled",
+    DropdownChoice(
+        title = _("Enable/disable flapping detection for hosts"),
+        help = _("This setting allows you to disable the flapping detection for a "
+                 "host completely."),
+        choices = [ ("1", _("Enable flap detection")),
+                    ("0", _("Disable flap detection")) ],
+        ))
+
+register_rule(group,
     "extra_service_conf:flap_detection_enabled",
     DropdownChoice(
         title = _("Enable/disable flapping detection for services"),

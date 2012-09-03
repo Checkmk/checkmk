@@ -1,4 +1,4 @@
-title: Show the in voltage of masterguard ups devices 
+title: Show the in voltage of devices 
 agents: snmp
 author: Bastian Kuhn <bk@mathias-kettner.de>
 license: GPL
@@ -23,4 +23,4 @@ parameters (tuple): A pair of numbers for warning and critical level
  critical (int): The lower limit which triggers an CRITICAL state
 
 [configuration]
-masterguard_in_voltage_default_levels (tuple): Default warning and critical level
+ups_in_voltage_default_levels (tuple): Default warning and critical level

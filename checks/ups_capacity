@@ -73,9 +73,6 @@ check_info["ups_capacity"] = {
     "service_description"   : "Battery capacity",
     "has_perfdata"          : True,
     "snmp_info"             : ( ".1.3.6.1.2.1.33.1.2", [ "2.0" , "3.0" ,"4.0" ] ),
-    "snmp_scan_function"    : lambda oid:"masterguard" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
-                              "CS121" in oid(".1.3.6.1.2.1.1.1.0") or \
-                              oid(".1.3.6.1.2.1.1.2.0") in \
-                              [ ".1.3.6.1.4.1.818.1.100.1.1", ".1.3.6.1.2.1.33.2" ] \
-                              or oid('.1.3.6.1.2.1.33.1.1.1.0').startswith('RPS')
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in \
+                            [ ".1.3.6.1.4.1.818.1.100.1.1", ".1.3.6.1.2.1.33" ]
 }

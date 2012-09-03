@@ -1,16 +1,16 @@
-title: Show the OUT load masterguard ups devices 
+title: Show the In frequenz of ups devices 
 agents: snmp
 author: Bastian Kuhn <bk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- OUT load
+ In Frequenz in Hz
 
 item:
  ID of the phase
 
 perfdata:
- The current Load
+ The current frequenz
 
 inventory:
  One service per phase will be created
@@ -23,4 +23,4 @@ parameters (tuple): A pair of numbers for warning and critical level
  critical (int): The lower limit which triggers an CRITICAL state
 
 [configuration]
-masterguard_out_load_default_levels (tuple): Default warning and critical level
+ups_in_freq_default_levels (tuple): Default warning and critical level

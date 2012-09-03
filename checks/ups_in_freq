@@ -25,9 +25,13 @@
 # Boston, MA 02110-1301 USA.
 
 
-masterguard_in_freq_default_levels = (45, 40) # warning / critical 
+ups_in_freq_default_levels = (45, 40) # warning / critical 
 
-def check_masterguard_in_freq(item, params, info):
+def inventory_ups_in_freq(info):
+    if len(info) > 0:
+        return [ ( x[0], "ups_in_freq_default_levels") for x in info ]
+
+def check_ups_in_freq(item, params, info):
     warn, crit = params
     for line in info:
 	if line[0] == item:
@@ -46,11 +50,12 @@ def check_masterguard_in_freq(item, params, info):
     return (3, "UNKNOWN - Phase %s not found in SNMP output" % item)
 
 
-check_info['masterguard_in_freq'] = {
-  "inventory_function"  : lambda info: [ ( x[0], "masterguard_in_freq_default_levels") for x in info ],
-  "check_function"      : check_masterguard_in_freq,
+check_info['ups_in_freq'] = {
+  "inventory_function"  : inventory_ups_in_freq,
+  "check_function"      : check_ups_in_freq,
   "service_description" : "IN frequenz phase %s",
   "has_perfdata"        : True,
   "snmp_info"           : ( ".1.3.6.1.2.1.33.1.3.3.1", [ 0, 2 ] ),
-  "snmp_scan_function"  : lambda oid: "masterguard" in oid('.1.3.6.1.2.1.1.1.0').lower(),
+  "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in \
+                         [ ".1.3.6.1.4.1.818.1.100.1.1", ".1.3.6.1.2.1.33" ] \
 }

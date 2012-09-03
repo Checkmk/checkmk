@@ -9418,7 +9418,7 @@ def mode_rulesets(phase):
         only_used = True
     elif search != None:
         title = _("Rules matching ") + search
-        help = _("All rules that contain '%s' in their name of help") % search
+        help = _("All rules that contain '%s' in their name") % search
         only_used = False
     else:
         title, help = g_rulegroups.get(group, (group, None))

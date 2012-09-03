@@ -46,7 +46,7 @@
     * windows_multipath: Added the missing check for multipath.vbs (Please test)
     * carel_uniflair_cooling: new check for monitoring datacenter air conditioning by "CAREL"
     * Added Agent for OpenBSD
-    * Added Checks for MasterGuard UPS devices
+    * Added Checks for UPS devices
     * cisco_hsrp: New Check for monitoring HSRP groups on Cisco Routers. (SMIv2 version)
 
     WATO:

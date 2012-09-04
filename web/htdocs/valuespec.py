@@ -1903,10 +1903,19 @@ class ElementSelection(ValueSpec):
 class AutoTimestamp(FixedValue):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._value = time.time()
+
+    def canonical_value(self):
+        return time.time()
+
+    def from_html_vars(self, varprefix):
+        return time.time()
 
     def value_to_text(self, value):
         return time.strftime("%F %T", time.localtime(value))
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) not in [ int, float ]:
+            return MKUserError(varprefix, _("Invalid datatype of timestamp: must be int or float."))
 
 # Fully transparant VS encapsulating a vs in a foldable
 # container.

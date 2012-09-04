@@ -96,9 +96,9 @@ def check_printer_alerts(_not_used, _not_used1, info):
             state = printer_alerts_text_map[desc]
             sum_txt.append("%s - %s" % (nagios_state_names[state], desc))
             break
-
+        code = saveint(code)
         for s in [ 2, 1, 0 ]:
-            if saveint(code) in printer_alerts_state_map[s]:
+            if code in printer_alerts_state_map[s]:
                 state = s
                 break
 

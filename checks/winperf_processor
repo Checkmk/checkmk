@@ -49,7 +49,6 @@ def check_winperf_util(item, params, info):
             # sums up to total (called _Total). We only need that last value.
             ticks = int(line[-2])
             num_cpus = len(line) - 3
-            counter_wrapped = False
             timedif, ticks_per_sec = get_counter("winperf_util", this_time, ticks)
             secs_per_sec = ticks_per_sec / 10000000.0;
             used_perc = 100 * (1 - secs_per_sec)

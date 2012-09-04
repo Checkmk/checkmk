@@ -2493,12 +2493,29 @@ def reread_autochecks():
 #   |                                            |_|                       |
 #   +----------------------------------------------------------------------+
 
-def find_check_plugin(checktype):
-    if local_checks_dir and os.path.exists(local_checks_dir + "/" + checktype):
-        return local_checks_dir + "/" + checktype
-    filename = checks_dir + "/" + checktype
-    if os.path.exists(filename):
-        return filename
+# Find files to be included in precompile host check for a certain
+# check (for example df or mem.used). In case of checks with a period
+# (subchecks) we might have to include both "mem" and "mem.used". The 
+# subcheck *may* be implemented in a separate file.
+def find_check_plugins(checktype):
+    if '.' in checktype:
+        candidates = [ checktype.split('.')[0], checktype ]
+    else:
+        candidates = [ checktype ]
+
+    paths = []
+    for candidate in candidates:
+        if local_checks_dir:
+            filename = local_checks_dir + "/" + candidate
+            if os.path.exists(filename):
+                paths.append(filename)
+                continue
+
+        filename = checks_dir + "/" + candidate
+        if os.path.exists(filename):
+            paths.append(filename)
+
+    return paths
 
 def get_precompiled_check_table(hostname):
     host_checks = get_sorted_check_table(hostname)
@@ -2637,15 +2654,15 @@ no_inventory_possible = None
             if to_add not in filenames:
                 filenames.append(to_add)
 
-        # Now add check file itself (convert check_type to section)
-        section = check_type.split(".")[0]
-        path = find_check_plugin(section)
-        if not path:
+        # Now add check file(s) itself
+        paths = find_check_plugins(check_type)
+        if not paths:
             raise MKGeneralException("Cannot find check file %s needed for check type %s" % \
-                                     (section, check_type))
+                                     (basename, check_type))
 
-        if path not in filenames:
-            filenames.append(path)
+        for path in paths:
+            if path not in filenames:
+                filenames.append(path)
 
 
     output.write("check_info = {}\n" +

@@ -4,6 +4,7 @@
       "comment" are allowed. Options are kept in an optional dict at the
       end of each rule.
     * parent scan: skip gateways that are reachable via PING
+    * Allow subcheck to be in a separate file (e.g. foo.bar)
 
     Checks & Agents:
     * New Checks for Siemens Blades (BX600)

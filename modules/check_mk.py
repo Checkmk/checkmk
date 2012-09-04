@@ -251,7 +251,7 @@ default_host_group                 = 'check_mk'
 generate_hostconf                  = True
 generate_dummy_commands            = True
 dummy_check_commandline            = 'echo "ERROR - you did an active check on this service - please disable active checks" && exit 1'
-nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
+nagios_illegal_chars               = '`;~!$%^&*|\'"<>?,()='
 
 # Data to be defined in main.mk
 checks                               = []

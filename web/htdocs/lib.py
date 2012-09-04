@@ -142,8 +142,13 @@ def load_web_plugins(forwhat, globalvars):
                 fns = os.listdir(local_plugins_path)
                 fns.sort()
                 for fn in fns:
+                    file_path = local_plugins_path + "/" + fn
                     if fn.endswith(".py"):
-                        execfile(local_plugins_path + "/" + fn, globalvars)
+                        execfile(file_path, globalvars)
+                    elif fn.endswith(".pyc"):
+                        code_bytes = file(file_path).read()[8:]
+                        code = marshal.loads(code_bytes)
+                        exec code in globalvars
 
 def get_language_dirs():
     dirs = [ defaults.locale_dir ]

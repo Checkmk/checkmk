@@ -182,6 +182,7 @@ class Integer(ValueSpec):
         self._unit           = kwargs.get("unit", "")
         self._thousand_sep   = kwargs.get("thousand_sep")
         self._display_format = kwargs.get("display_format", "%d")
+        self._align          = kwargs.get("align", "left")
         
         if "size" not in kwargs and "maxvalue" in kwargs:
             self._size = 1 + int(math.log10(self._maxvalue)) + \
@@ -197,7 +198,11 @@ class Integer(ValueSpec):
         if self._label:
             html.write(self._label)
             html.write("&nbsp;")
-        html.number_input(varprefix, str(value), size = self._size)
+        if self._align == "right":
+            style = "text-align: right;"
+        else:
+            style = ""
+        html.number_input(varprefix, str(value), size = self._size, style = style)
         if self._unit:
             html.write("&nbsp;")
             html.write(self._unit)

@@ -69,6 +69,7 @@
     * new: search for rules in "Host & Service Configuration"
     * parent scan: new option "ping probes", that allows skipping 
       unreachable gateways.
+    * User managament: Added fields for editing host/service notification commands
     * FIX: Removed double collect_hosts() call in activate changes hook
     * FIX: Fixed double hook execution when using localized multisite
 

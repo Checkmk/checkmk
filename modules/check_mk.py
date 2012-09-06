@@ -2087,7 +2087,7 @@ def create_nagios_config_contacts(outfile):
                     no = "n"
                 outfile.write("  %s_notification_options\t%s\n" % (what, ",".join(list(no))))
                 outfile.write("  %s_notification_period\t%s\n" % (what, contact.get("notification_period", "24X7")))
-                outfile.write("  %s_notification_commands\tcheck-mk-notify\n" % what)
+                outfile.write("  %s_notification_commands\t%s\n" % (what, contact.get("%s_notification_commands" % what, "check-mk-notify")))
 
             outfile.write("  contactgroups\t\t\t%s\n" % ", ".join(cgrs))
             outfile.write("}\n\n")

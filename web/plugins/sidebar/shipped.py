@@ -381,7 +381,7 @@ def render_sitestatus():
         sitenames = []
         for sitename, site in config.allsites().iteritems():
             sitenames.append((sitename, site['alias']))
-        sitenames = sorted(sitenames, key=lambda k: k[1])
+        sitenames = sorted(sitenames, key=lambda k: k[1], cmp = lambda a,b: cmp(a.lower(), b.lower()))
 
         for sitename, sitealias in sitenames:
             site = config.site(sitename)

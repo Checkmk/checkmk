@@ -82,6 +82,7 @@
     * FIX: show multisite warning messages even after page reload
     * FIX: fix bug in Age ValueSpec: days had been ignored
     * FIX: fixed bug showing only sidebar after re-login in multisite
+    * FIX: fixed logwatch loosing the master_url parameter in distributed setups
 
     Livecheck:
     * FIX: Compile livecheck also if diet libc is missing

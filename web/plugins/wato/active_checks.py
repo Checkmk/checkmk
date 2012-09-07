@@ -578,7 +578,143 @@ register_rule(group,
     match = 'all'
 )
 
-
+register_rule(group,
+    "active_checks:smtp",
+    Tuple(
+        title = _("Check access to SMTP services"),
+        help = _("This check uses <tt>check_smtp</tt> from the standard "
+                "Nagios plugins in order to try the response of an SMTP "
+                "server."),
+        elements = [
+            TextUnicode(
+                title = _("Name"),
+                help = _("The service description will be <b>SMTP</b> plus this name"),
+                allow_empty = False),
+            Dictionary(
+               title = _("Optional parameters"),
+               elements = [
+                   ( "port",
+                     TextAscii(
+                         title = _("TCP Port to connect to"),
+                         help = _("The TCP Port the SMTP server is listening on. "
+                                  "The default is <tt>25</tt>."),
+                         size = 5,
+                         allow_empty = False,
+                         default_value = "25",
+                     )
+                   ),
+                   ( "ip_version",
+                     Alternative(
+                         title = _("IP-Version"),
+                         elements = [
+                            FixedValue(
+                                "ipv4",
+                                totext = "",
+                                title = _("IPv4")
+                            ),
+                            FixedValue(
+                                "ipv6",
+                                totext = "",
+                                title = _("IPv6")
+                            ),
+                         ],
+                     ),
+                   ),
+                   ( "expect",
+                     TextAscii(
+                         title = _("Expected String"),
+                         help = _("String to expect in first line of server response. "
+                                  "The default is <tt>220</tt>."),
+                         size = 8,
+                         allow_empty = False,
+                         default_value = "220",
+                     )
+                   ),
+                   ('commands',
+                     ListOfStrings(
+                         title = _("SMTP Commands"),
+                         help = _("SMTP commands to execute."),
+                     )
+                   ),
+                   ('command_responses',
+                     ListOfStrings(
+                         title = _("SMTP Responses"),
+                         help = _("Expected responses to the given SMTP commands."),
+                     )
+                   ),
+                   ("from",
+                     TextAscii(
+                         title = _("FROM-Address"),
+                         help = _("FROM-address to include in MAIL command, required by Exchange 2000"),
+                         size = 20,
+                         allow_empty = True,
+                         default_value = "",
+                     )
+                   ),
+                   ("fqdn",
+                     TextAscii(
+                         title = _("FQDN"),
+                         help = _("FQDN used for HELO"),
+                         size = 20,
+                         allow_empty = True,
+                         default_value = "",
+                     )
+                   ),
+                   ("cert_days",
+                      Integer(
+                          title = _("Minimum Certificate Age"),
+                          help = _("Minimum number of days a certificate has to be valid."),
+                          unit = _("days"),
+                      )
+                   ),
+                   ("starttls",
+                      FixedValue(
+                          True,
+                          totext = "STARTTLS enabled.",
+                          title = _("Use STARTTLS for the connection.")
+                      )
+                   ),
+                   ( "auth",
+                     Tuple(
+                         title = _("Enable SMTP AUTH (LOGIN)"),
+                         help = _("SMTP AUTH type to check (default none, only LOGIN supported)"),
+                         elements = [
+                             TextAscii(
+                                 title = _("Username"),
+                                 size = 12,
+                                 allow_empty = False),
+                             TextAscii(
+                                 title = _("Password"),
+                                 size = 12,
+                                 allow_empty = False),
+                         ]
+                     )
+                   ),
+                   ("response_time",
+                     Tuple(
+                         title = _("Expected response time"),
+                         elements = [
+                             Integer(
+                                 title = _("Warning at"),
+                                 unit = "sec"
+                             ),
+                             Integer(
+                                 title = _("Critical at"),
+                                 unit = "sec"
+                             ),
+                         ])
+                    ),
+                    ( "timeout",
+                      Integer(
+                          title = _("Seconds before connection times out"),
+                          unit = _("sec"),
+                          default_value = 10,
+                      )
+                    ),
+                ])
+        ]),
+    match = 'all'
+)
 
 register_rule(group,
     "custom_checks",

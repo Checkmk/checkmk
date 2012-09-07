@@ -70,6 +70,7 @@
     * parent scan: new option "ping probes", that allows skipping 
       unreachable gateways.
     * User managament: Added fields for editing host/service notification commands
+    * Added new active check configuration for check_smtp
     * FIX: Removed double collect_hosts() call in activate changes hook
     * FIX: Fixed double hook execution when using localized multisite
     * FIX: User list shows names of contactgroups when no alias given

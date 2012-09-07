@@ -1,0 +1,84 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def check_smtp_arguments(params):
+    description, settings = params
+    args = ''
+
+    if "expect" in settings:
+        args += ' -e %s' % quote_shell_string(settings["expect"])
+
+    if "port" in settings:
+        args += ' -p %s' % quote_shell_string(settings["port"])
+
+    if "ip_version" in settings:
+        if settings['ip_version'] == 'ipv4':
+            args += ' -4'
+        else:
+            args += ' -6'
+
+    for s in settings.get("commands", []):
+        args += ' -C %s' % quote_shell_string(s)
+
+    for s in settings.get("command_responses", []):
+        args += ' -R %s' % quote_shell_string(s)
+
+    if settings.get('from'):
+        args += ' -f %s' % quote_shell_string(settings["from"])
+
+    if "response_time" in settings:
+        args += ' -w %d -c %d' % (
+            settings["response_time"][0],
+            settings["response_time"][1])
+
+    if "timeout" in settings:
+        args += ' -t %d' % settings["timeout"]
+
+    if "auth" in settings:
+        auth = settings["auth"]
+        args += ' -A LOGIN -U %s -P %s' % (quote_shell_string(auth[0]), quote_shell_string(auth[1]))
+
+    if settings.get('starttls', False):
+        args += ' -S'
+
+    if 'fqdn' in settings:
+        args += ' -F %s' % quote_shell_string(settings['fqdn'])
+
+    if 'cert_days' in settings:
+        args += ' -D %d' % settings['cert_days']
+
+    print args
+
+    return args
+
+
+active_check_info['smtp'] = {
+    "command_line"        : '$USER1$/check_smtp $ARG1$',
+    "argument_function"   : check_smtp_arguments,
+    "service_description" : lambda params: "SMTP %s" % params[0],
+    "has_perfdata"        : True,
+}
+

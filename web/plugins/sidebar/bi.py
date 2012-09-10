@@ -36,10 +36,11 @@ except NameError:
 def render_bi_groups():
     bi.compile_forest(config.user_id)
     html.write("<ul>")
-    for group, trees in bi.g_user_cache["forest"].items():
-        if len(trees) > 0:
-            bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" %
-                    htmllib.urlencode(group))
+    group_names = [ group for group, trees in bi.g_user_cache["forest"].items() if trees ]
+    group_names = sorted(group_names, cmp = lambda a,b: cmp(a.lower(), b.lower()))
+    for group in group_names:
+        bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" %
+              htmllib.urlencode(group))
     html.write("</ul>")
 
 sidebar_snapins["biaggr_groups"] = {

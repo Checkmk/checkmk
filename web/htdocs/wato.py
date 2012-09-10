@@ -7517,7 +7517,8 @@ def mode_users(phase):
         cgs = user.get("contactgroups", [])
         if cgs:
             html.write(", ".join(
-               [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_contact_group"), ("edit", c)]), contact_groups[c]) for c in cgs]))
+               [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_contact_group"), ("edit", c)]),
+                                          contact_groups[c] and contact_groups[c] or c) for c in cgs]))
         else:
             html.write("<i>" + _("none") + "</i>")
         html.write("</td>")
@@ -7701,6 +7702,8 @@ def mode_edit_user(phase):
         for what, opts in [ ( "host", "durfs"), ("service", "wucrfs") ]:
             new_user[what + "_notification_options"] = "".join(
               [ opt for opt in opts if html.get_checkbox(what + "_" + opt) ])
+            # FIXME: Validate notification commands. Do they really exist?
+            new_user[what + "_notification_commands"] = html.var(what + "_notification_commands")
 
         # Custom attributes
         for name, vs in user_attributes:
@@ -7874,6 +7877,15 @@ def mode_edit_user(phase):
     html.help(_("Here you specify which types of alerts "
                "will be notified to this contact. Note: these settings will only be saved "
                "and used if the user is member of a contact group."))
+
+    # Notification commands
+    # FIXME: Add dropdown. But where to get a list of notification commands?
+    forms.section(_("Notification Command for Hosts"))
+    html.text_input("host_notification_commands", user.get("host_notification_commands", "check-mk-notify"))
+    html.help(_("Use this Nagios command for sending host notifications."))
+    forms.section(_("Notification Command for Services"))
+    html.text_input("service_notification_commands", user.get("service_notification_commands", "check-mk-notify"))
+    html.help(_("Use this Nagios command for sending service notifications."))
 
     forms.header(_("Personal Settings"), isopen = False)
     select_language(user.get('language', ''))

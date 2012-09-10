@@ -5,6 +5,8 @@
       end of each rule.
     * parent scan: skip gateways that are reachable via PING
     * Allow subcheck to be in a separate file (e.g. foo.bar)
+    * Contacts can now define *_notification_commands attributes which can now
+      override the default notification command check-mk-notify
 
     Checks & Agents:
     * New Checks for Siemens Blades (BX600)
@@ -68,8 +70,10 @@
     * new: search for rules in "Host & Service Configuration"
     * parent scan: new option "ping probes", that allows skipping 
       unreachable gateways.
+    * User managament: Added fields for editing host/service notification commands
     * FIX: Removed double collect_hosts() call in activate changes hook
     * FIX: Fixed double hook execution when using localized multisite
+    * FIX: User list shows names of contactgroups when no alias given
 
     BI:
     * Great speed up of rule compilation in large environments
@@ -77,10 +81,14 @@
     Multisite:
     * Added css class="dashboard_<name>" to the dashboard div for easier
     customization of the dashboard style of a special dashboard
+    * Sidebar: Sorting aggregation groups in BI snapin now
+    * Sidebar: Sorting sites in master control snapin case insensitive
     * FIX: fixed localization of general permissions
     * FIX: show multisite warning messages even after page reload
     * FIX: fix bug in Age ValueSpec: days had been ignored
     * FIX: fixed bug showing only sidebar after re-login in multisite
+    * FIX: fixed logwatch loosing the master_url parameter in distributed setups
+    * FIX: Fixed doubled var "site" in view editor (site and siteopt filter)
 
     Livecheck:
     * FIX: Compile livecheck also if diet libc is missing

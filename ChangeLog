@@ -74,6 +74,7 @@
     * FIX: Removed double collect_hosts() call in activate changes hook
     * FIX: Fixed double hook execution when using localized multisite
     * FIX: User list shows names of contactgroups when no alias given
+    * FIX: Remove also user settings and event console rule on factory reset
 
     BI:
     * Great speed up of rule compilation in large environments

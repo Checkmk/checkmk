@@ -5135,14 +5135,20 @@ def factory_reset():
     for id in users.keys():
         if id != config.user_id:
             del users[id]
-    save_users(users) # this will cleanup htpasswd
 
-    for path in [ root_dir, multisite_dir, sites_mk, log_dir ]:
+    to_delete = [ path for c,n,path 
+                  in backup_paths 
+                  if n != "auth.secret" ] + [ log_dir ]
+    for path in to_delete:
         if os.path.isdir(path):
             shutil.rmtree(path)
         elif os.path.exists(path):
             os.remove(path)
 
+    make_nagios_directory(multisite_dir)
+    make_nagios_directory(root_dir)
+
+    save_users(users) # make sure, omdadmin is present after this
     log_pending(SYNCRESTART, None, "factory-reset", _("Complete reset to factory settings."))
 
 

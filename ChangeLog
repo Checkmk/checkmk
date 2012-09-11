@@ -7,6 +7,7 @@
     * Allow subcheck to be in a separate file (e.g. foo.bar)
     * Contacts can now define *_notification_commands attributes which can now
       override the default notification command check-mk-notify
+    * SNMP scan: fixed case where = was contained in SNMP info
 
     Checks & Agents:
     * New Checks for Siemens Blades (BX600)

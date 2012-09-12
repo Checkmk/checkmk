@@ -476,6 +476,8 @@ class TextAreaUnicode(TextUnicode):
 class Filename(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
+        if "size" not in kwargs:
+            self._size = 60
         if "default" in kwargs:
             self._default_path = kwargs["default"]
         else:

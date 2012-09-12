@@ -76,6 +76,8 @@
     * FIX: Fixed double hook execution when using localized multisite
     * FIX: User list shows names of contactgroups when no alias given
     * FIX: Remove also user settings and event console rule on factory reset
+    * FIX: complex list widgets (ListOf) failed back to old value when
+           complaining
 
     BI:
     * Great speed up of rule compilation in large environments

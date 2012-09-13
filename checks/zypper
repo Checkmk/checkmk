@@ -56,7 +56,7 @@ def check_zypper(_no_item, _no_params, info):
 
     state = 0
 
-    infotext = nagios_state_names[state] + " - %d updates" % updates
+    infotext = " - %d updates" % updates
     if updates:
         patch_items = patch_types.items()
         patch_items.sort()
@@ -77,11 +77,8 @@ def check_zypper(_no_item, _no_params, info):
         state = max(1, state)
         infotext += ", %d locks(!)" % len(locks)
 
-    return state, infotext 
+    return state, nagios_state_names[state] + infotext 
 
-
-
-    return 3, "Hirni"
 
 check_info['zypper'] = {
     "check_function"          : check_zypper,

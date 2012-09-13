@@ -6762,8 +6762,8 @@ def save_sites(sites):
     out = create_user_file(sites_mk, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("sites = \\\n%s\n" % pprint.pformat(sites))
-    update_distributed_wato_file(sites)
     config.load_config() # make new site configuration active
+    update_distributed_wato_file(sites)
     declare_site_attribute()
     rewrite_config_files_below(g_root_folder) # fix site attributes
     need_sidebar_reload()
@@ -6779,12 +6779,18 @@ def update_distributed_wato_file(sites):
     # are currently in the process of saving the new
     # site configuration.
     distributed = False
+    found_local = False
     for siteid, site in sites.items():
         if site.get("replication"):
             distributed = True
         if site_is_local(siteid):
+            found_local = True
             create_distributed_wato_file(siteid, site.get("replication"))
-    if not distributed:
+
+    # Remove the distributed wato file
+    # a) If there is no distributed WATO setup
+    # b) If the local site could not be gathered
+    if not distributed: # or not found_local:
         delete_distributed_wato_file()
 
 #.

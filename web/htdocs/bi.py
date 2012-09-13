@@ -167,6 +167,11 @@ def compile_forest(user):
         global g_config_information
         g_config_information = new_config_information
 
+    # OPTIMIZE: All users that have the permissing bi.see_all
+    # can use the same cache.
+    if config.may("bi.see_all"):
+        user = '<<<see_all>>>'
+
     # Try to get data from per-user cache:
     cache = g_cache.get(user)
     if cache:

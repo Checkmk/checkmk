@@ -83,14 +83,18 @@ SITE_SEP = '#'
 
 # format of a node
 # {
-#     "type" : NT_LEAF, NT_RULE, NT_REMAINING,
+#     "type"     : NT_LEAF, NT_RULE, NT_REMAINING,
 #     "reqhosts" : [ list of required hosts ],
-#     "host" : host spec for leaf node,
-#     "service" : service name for leaf node, missing if HOST_STATE
-#     "title" : title in case of rule nodes
-#     "hidden" : True if hidden
-#     "func" : Name of aggregation function for rule nodes
-#     "nodes" : List of subnodes for rule nodes
+#     "hidden"   : True if hidden
+#
+#     SPECIAL KEYS FOR NT_LEAF:
+#     "host"     : host specification,
+#     "service"  : service name, missing for leaf type HOST_STATE
+#
+#     SPECIAL KEYS FOR NT_RULE:
+#     "title"    : title
+#     "func"     : Name of aggregation function, e.g. "count!2!1"
+#     "nodes"    : List of subnodes
 # }
 
 NT_LEAF = 1

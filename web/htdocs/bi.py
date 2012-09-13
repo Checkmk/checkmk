@@ -198,6 +198,8 @@ def compile_forest(user):
     }
     g_user_cache = cache
 
+    # before = time.time()
+
     for entry in config.aggregations:
         if len(entry) < 3:
             raise MKConfigError("<h1>Invalid aggregation <tt>%s</tt></h1>"
@@ -239,6 +241,9 @@ def compile_forest(user):
 
     # Remember successful compile in cache
     g_cache[user] = cache
+
+    # after = time.time()
+    # file("/tmp/bi.perf", "a").write("Dauer: %.3f sec\n" % (after - before))
 
 
 # Execute an aggregation rule, but prepare arguments
@@ -672,6 +677,15 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
                               "host"  : (site, hostname)})
 
             else:
+                # found.append({"type" : NT_LEAF,
+                #               "reqhosts" : [(site, hostname)],
+                #               "host" : (site, hostname),
+                #               "service" : "FOO",
+                #               "title" : "Foo bar",
+                #               })
+                # continue
+
+
                 for service in services:
                     mo = (service_re, service)
                     if mo in service_nomatch_cache:

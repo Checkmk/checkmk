@@ -7,6 +7,7 @@
     * Allow subcheck to be in a separate file (e.g. foo.bar)
     * Contacts can now define *_notification_commands attributes which can now
       override the default notification command check-mk-notify
+    * SNMP scan: fixed case where = was contained in SNMP info
 
     Checks & Agents:
     * New Checks for Siemens Blades (BX600)
@@ -51,6 +52,9 @@
     * Added Agent for OpenBSD
     * Added Checks for UPS devices
     * cisco_hsrp: New Check for monitoring HSRP groups on Cisco Routers. (SMIv2 version)
+    * zypper: new check and plugin mk_zypper for checking zypper updates.
+    * aironet_clients: Added support for further Cisco WLAN APs (Thanks to Stefan Eriksson for OIDs)
+    * aironet_errors: Added support for further Cisco WLAN APs
 
     WATO:
     * Added permission to control the "clone host" feature in WATO
@@ -78,6 +82,9 @@
     age) in WATO rule editor
     * FIX: Fixed monitoring of slave hosts in master site in case of special
       distributed wato configurations
+    * FIX: Remove also user settings and event console rule on factory reset
+    * FIX: complex list widgets (ListOf) failed back to old value when
+           complaining
 
     BI:
     * Great speed up of rule compilation in large environments

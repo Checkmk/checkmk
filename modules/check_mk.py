@@ -710,7 +710,7 @@ def get_single_oid(hostname, ipaddress, oid):
 
         snmp_process = os.popen(command, "r")
         line = snmp_process.readline().strip()
-        item, value = line.split("=")
+        item, value = line.split("=", 1)
         value = value.strip()
         if opt_debug:
             sys.stdout.write("SNMP answer: ==> [%s]\n" % value)

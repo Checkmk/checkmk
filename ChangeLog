@@ -76,6 +76,8 @@
     * FIX: User list shows names of contactgroups when no alias given
     * FIX: Reflecting alternative mode of check_http (check ssl certificate
     age) in WATO rule editor
+    * FIX: Fixed monitoring of slave hosts in master site in case of special
+      distributed wato configurations
 
     BI:
     * Great speed up of rule compilation in large environments
@@ -91,6 +93,7 @@
     * FIX: fixed bug showing only sidebar after re-login in multisite
     * FIX: fixed logwatch loosing the master_url parameter in distributed setups
     * FIX: Fixed doubled var "site" in view editor (site and siteopt filter)
+    * FIX: Don't crash on requests without User-Agent HTTP header
 
     Livecheck:
     * FIX: Compile livecheck also if diet libc is missing
@@ -148,7 +151,6 @@
       folder attributes
     * FIX: fix exception on unknown value in DropdownChoice
     * FIX: add service specification to ruleset Delay service notifications
-<<<<<<< Updated upstream
     * FIX: fixed problem with disabled sites in WATO
     * FIX: massive speedup when changing roles/users and activing changes
       (especially when you have a larger number of users and folders)
@@ -156,9 +158,7 @@
     * FIX: fixed default setting if "Hide names of configuration variables"
       in WATO
     * FIX: ListOfString Textboxes (e.g. parents of folders) do now extend in IE
-=======
     * FIX: fixed duplicated sections of permissions in rule editor
->>>>>>> Stashed changes
 
     BI:
     * New iterators FOREACH_CHILD and FOREACH_PARENT

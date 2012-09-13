@@ -476,6 +476,8 @@ class TextAreaUnicode(TextUnicode):
 class Filename(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
+        if "size" not in kwargs:
+            self._size = 60
         if "default" in kwargs:
             self._default_path = kwargs["default"]
         else:
@@ -590,6 +592,13 @@ class ListOf(ValueSpec):
     # numbering in labels, etc. possible). The current number
     # of entries is stored in the hidden variable 'varprefix'
     def render_input(self, varprefix, value):
+
+        # In the 'complain' phase, where the user already saved the
+        # form but the validation failed, we must not display the
+        # original 'value' but take the value from the HTML variables.
+        if html.has_var("%s_count" % varprefix):
+            value = self.from_html_vars(varprefix)
+
         html.write('<input type=hidden name="%s_count" value="%d" id="%s_count">\n' % 
             (varprefix, len(value), varprefix))
 

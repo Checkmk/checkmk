@@ -6773,12 +6773,18 @@ def update_distributed_wato_file(sites):
     # are currently in the process of saving the new
     # site configuration.
     distributed = False
+    found_local = False
     for siteid, site in sites.items():
         if site.get("replication"):
             distributed = True
         if site_is_local(siteid):
+            found_local = True
             create_distributed_wato_file(siteid, site.get("replication"))
-    if not distributed:
+
+    # Remove the distributed wato file
+    # a) If there is no distributed WATO setup
+    # b) If the local site could not be gathered
+    if not distributed or not found_local:
         delete_distributed_wato_file()
 
 #.

@@ -638,7 +638,7 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
     for (site, hostname), (tags, services, childs, parents) in entries:
         # If host ends with '|@all', we need to check host tags instead
         # of regexes.
-        if False and host_re.endswith('|@all'):
+        if host_re.endswith('|@all'):
             if not match_host_tags(host_re[:-5], tags):
                 continue
         elif host_re != '@all':

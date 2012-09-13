@@ -178,14 +178,14 @@ def compile_forest(user):
 
     services, services_by_hostname = load_services()
     cache = {
-        "forest" :               {},
+        "forest" :                   {},
         "aggregations_by_hostname" : {},
-        "host_aggregations" :    {},
-        "affected_hosts" :       {},
-        "affected_services":     {},
-        "services" :             services,
-        "services_by_hostname" : services_by_hostname,
-        "see_all" :              config.may("bi.see_all"),
+        "host_aggregations" :        {},
+        "affected_hosts" :           {},
+        "affected_services":         {},
+        "services" :                 services,
+        "services_by_hostname" :     services_by_hostname,
+        "see_all" :                  config.may("bi.see_all"),
     }
     g_user_cache = cache
 

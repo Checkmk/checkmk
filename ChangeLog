@@ -52,6 +52,8 @@
     * Added Checks for UPS devices
     * cisco_hsrp: New Check for monitoring HSRP groups on Cisco Routers. (SMIv2 version)
     * zypper: new check and plugin mk_zypper for checking zypper updates.
+    * aironet_clients: Added support for further Cisco WLAN APs (Thanks to Stefan Eriksson for OIDs)
+    * aironet_errors: Added support for further Cisco WLAN APs
 
     WATO:
     * Added permission to control the "clone host" feature in WATO

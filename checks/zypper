@@ -46,7 +46,7 @@ def check_zypper(_no_item, _no_params, info):
     locks = []
     for line in info:
         # 5 patches needed (2 security patches)
-        if len(line) >= 6 and line[4].strip() == 'needed':
+        if len(line) >= 5 and line[4].strip() == 'needed':
             patch_type = line[3].strip()
             patch_types.setdefault(patch_type, 0)
             patch_types[patch_type] += 1
@@ -54,31 +54,31 @@ def check_zypper(_no_item, _no_params, info):
         elif len(line) == 4:
             locks.append(line[1])
 
-    if patch_types.get('security'):
-        state = 2
-    elif updates:
-        state = 1
-    else:
-        state = 0
+    state = 0
 
-    infotext = nagios_state_names[state] + " - %d updates" % updates
+    infotext = " - %d updates" % updates
     if updates:
         patch_items = patch_types.items()
         patch_items.sort()
         infos = []
         for t,c in patch_items:
-            infos.append("%s: %d(%s)" % (t, c, t == "security" and '!!' or '!'))
+            if t == "security":
+                marker = '(!!)'
+                state = 2
+            elif t == "recommended":
+                marker = '(!)'
+                state = max(state, 1)
+            else:
+                marker = ''
+            infos.append("%s: %d%s" % (t, c, marker))
         infotext += " (" + ", ".join(infos) + ")"
 
     if locks:
         state = max(1, state)
         infotext += ", %d locks(!)" % len(locks)
 
-    return state, infotext 
+    return state, nagios_state_names[state] + infotext 
 
-
-
-    return 3, "Hirni"
 
 check_info['zypper'] = {
     "check_function"          : check_zypper,

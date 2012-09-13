@@ -1,9 +1,9 @@
 Title: Role-Editor Permission view: WATO chapter duplicate
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-06-21 10:49:06
 Targetversion: 1.2.0
-Class: bug
 
 In the role editor the section with the WATO permissions
 is displayed twice.
@@ -12,3 +12,6 @@ LM: This does only happen when one defines a permission
 for a section, e.g. wato.*, which has already been followed
 by another section.
 I have a fix for this but this is too big for a fix release.
+
+2012-09-07 11:33:14: changed state open -> done
+Has already been fixed.

@@ -9,3 +9,5 @@ If you make a area selection on a pnp graphs displayed in multisite you end up
 at a different position in the graph than you expected
 If you try to view the right-most position, it will not be possible because you
 always get something else.
+
+LM: Where can PNP graphs be zoomed while being displayed in multisite?

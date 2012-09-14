@@ -78,6 +78,7 @@
     * Improved visualization of ruleset lists/dictionaries
     * Encoding special chars in RegExp valuespec (e.g. logwatch patterns)
     * Added check_interval and retry_interval rules for host checks
+    * Removed wmic_process rule from "inventory services" as the check does not support inventory
     * FIX: Removed double collect_hosts() call in activate changes hook
     * FIX: Fixed double hook execution when using localized multisite
     * FIX: User list shows names of contactgroups when no alias given

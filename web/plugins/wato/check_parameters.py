@@ -1667,36 +1667,6 @@ checkgroups.append((
         help = _("The identificator of the themal sensor.")),
     "first"))
 
-
-
-checkgroups.append((
-    subgroup_applications,
-    "wmic_process",
-    _("Memory and CPU of processes on Windows"),
-    Tuple(
-        elements = [
-            TextAscii(
-                title = _("Name of the process"),
-                allow_empty = False,
-            ),
-            Integer(title = _("Memory waring at"), unit = "MB"),
-            Integer(title = _("Memory critical at"), unit = "MB"),
-            Integer(title = _("Pagefile warning at"), unit = "MB"),
-            Integer(title = _("Pagefile critical at"), unit = "MB"), 
-            Percentage(title = _("CPU usage warning at")),
-            Percentage(title = _("CPU usage critical at")),
-        ],
-    ),
-    TextAscii(
-        title = _("Process name for usage in the Nagios service description"),
-        allow_empty = False),
-    "first"))
-
-
-
-            
-
-
 # Create rules for check parameters of inventorized checks
 for subgroup, checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
     if not valuespec:
@@ -1738,6 +1708,30 @@ register_rule(
 register_rulegroup("static", _("Manual Checks"),
     _("Statically configured Check_MK checks that do not rely on the inventory"))
 group = "static"
+
+# wmic_process does not support inventory at the moment
+checkgroups.append((
+    subgroup_applications,
+    "wmic_process",
+    _("Memory and CPU of processes on Windows"),
+    Tuple(
+        elements = [
+            TextAscii(
+                title = _("Name of the process"),
+                allow_empty = False,
+            ),
+            Integer(title = _("Memory waring at"), unit = "MB"),
+            Integer(title = _("Memory critical at"), unit = "MB"),
+            Integer(title = _("Pagefile warning at"), unit = "MB"),
+            Integer(title = _("Pagefile critical at"), unit = "MB"), 
+            Percentage(title = _("CPU usage warning at")),
+            Percentage(title = _("CPU usage critical at")),
+        ],
+    ),
+    TextAscii(
+        title = _("Process name for usage in the Nagios service description"),
+        allow_empty = False),
+    "first"))
 
 # Add checks that have parameters but are only configured as manual checks
 checkgroups.append((

@@ -8,6 +8,7 @@
     * Contacts can now define *_notification_commands attributes which can now
       override the default notification command check-mk-notify
     * SNMP scan: fixed case where = was contained in SNMP info
+    * cmk -D shows multiple agent types e.g. when using SNMP and TCP on one host
 
     Checks & Agents:
     * New Checks for Siemens Blades (BX600)

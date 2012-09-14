@@ -75,6 +75,8 @@
       unreachable gateways.
     * User managament: Added fields for editing host/service notification commands
     * Added new active check configuration for check_smtp
+    * Improved visualization of ruleset lists/dictionaries
+    * Encoding special chars in RegExp valuespec (e.g. logwatch patterns)
     * FIX: Removed double collect_hosts() call in activate changes hook
     * FIX: Fixed double hook execution when using localized multisite
     * FIX: User list shows names of contactgroups when no alias given

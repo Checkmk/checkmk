@@ -26,12 +26,14 @@
 
 import math, os, time, re, sre_constants, urlparse, forms
 from lib import *
+from htmllib import attrencode
 
 # Abstract base class of all value declaration classes.
 class ValueSpec:
     def __init__(self, **kwargs):
         self._title         = kwargs.get("title")
         self._help          = kwargs.get("help")
+        self._attrencode    = kwargs.get("attrencode", False)
         if "default_value" in kwargs:
             self._default_value = kwargs.get("default_value")
 
@@ -74,6 +76,10 @@ class ValueSpec:
     # used in tables and other contextes. It is to be read
     # by the user and need not to be parsable.
     # The function may assume that the type of the value is valid.
+    #
+    # In the current implementation this function is only used to
+    # render the object for html code. So it is allowed to add
+    # html code for better layout in the GUI.
     def value_to_text(self, value):
         return repr(value)
 
@@ -303,7 +309,10 @@ class TextAscii(ValueSpec):
         if value == None:
             return _("none")
         else:
-            return value
+            if self._attrencode:
+                return attrencode(value)
+            else:
+                return value
 
     def from_html_vars(self, varprefix):
         value = html.var(varprefix, "")
@@ -340,7 +349,7 @@ class ID(TextAscii):
 
 class RegExp(TextAscii):
     def __init__(self, **kwargs):
-        TextAscii.__init__(self, **kwargs)
+        TextAscii.__init__(self, attrencode = True, **kwargs)
 
     def validate_value(self, value, varprefix):
         TextAscii.validate_value(self, value, varprefix)
@@ -535,7 +544,10 @@ class ListOfStrings(ValueSpec):
         return []
 
     def value_to_text(self, value):
-        return ", ".join([self._valuespec.value_to_text(v) for v in value])
+        s = '<table>'
+        for v in value:
+            s += '<tr><td>%s</td></tr>' % self._valuespec.value_to_text(v)
+        return s + '</table>'
 
     def from_html_vars(self, vp):
         value = []
@@ -647,8 +659,10 @@ class ListOf(ValueSpec):
             else:
                 return self._totext
         else:
-            return ", ".join([
-                self._valuespec.value_to_text(v) for v in value])
+            s = '<table>'
+            for v in value:
+                s += '<tr><td>%s</td></tr>' % self._valuespec.value_to_text(v)
+            return s + '</table>'
 
     def from_html_vars(self, varprefix):
         n = 1
@@ -1814,11 +1828,11 @@ class Dictionary(ValueSpec):
         if not value:
             return self._empty_text
 
-        parts = []
+        s = '<table>'
         for param, vs in self._elements:
             if param in value:
-                parts.append("%s: %s" % (vs.title(), vs.value_to_text(value[param])))
-        return ", ".join(parts)
+                s += "<tr><td>%s</td><td>%s</td></tr>" % (vs.title(), vs.value_to_text(value[param]))
+        return s + '</table>'
 
     def from_html_vars(self, varprefix):
         value = {}

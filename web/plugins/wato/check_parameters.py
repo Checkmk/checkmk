@@ -111,10 +111,11 @@ register_rule(group + '/' + subgroup_applications,
              ),
              RegExp(
                  title = _("Pattern (Regex)"),
-                 size  = 20,
+                 size  = 40,
              ),
              TextAscii(
                  title = _("Comment"),
+                 size  = 40,
              ),
           ]
       ),

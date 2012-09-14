@@ -1,0 +1,138 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+apache_status_fields = {
+    # key           sort  convert-func
+    'Uptime':         (0,  int),
+    'IdleWorkers':    (5,  int),
+    'BusyWorkers':    (6,  int),
+    'OpenSlots':      (7,  int),
+    'TotalSlots':     (8,  int),
+    'Total Accesses': (9,  int),
+    'CPULoad':        (10,  float),
+    'Total kBytes':   (11,  float),
+    'ReqPerSec':      (12, float),
+    'BytesPerReq':    (13, float),
+    'BytesPerSec':    (14, float),
+    'Scoreboard':     (15,  str),
+}
+
+apache_status_stats = {
+    'Waiting':        '_',
+    'StartingUp':     'S',
+    'ReadingRequest': 'R',
+    'SendingReply':   'W',
+    'Keepalive':      'K',
+    'DNS':            'D',
+    'Closing':        'C',
+    'Logging':        'L',
+    'Finishing':      'G',
+    'IdleCleanup':    'O',
+}
+
+def apache_status_parse(info):
+    data = {}
+    for line in info:
+        address, port = line[:2]
+        label = (' '.join(line[2:-1])).rstrip(':')
+        value = apache_status_fields[label][1](line[-1])
+        item = '%s:%s' % (address, port)
+
+        if item not in data:
+            data[item] = {}
+
+        # Get statistics from scoreboard
+        if label == 'Scoreboard':
+            for stat_label, key in apache_status_stats.items():
+                data[item]['State_' + stat_label] = value.count(key)
+            data[item]['OpenSlots'] = value.count('.')
+
+        data[item][label] = value
+
+        # Count number of total slots after all needed infos are present
+        if 'OpenSlots' in data[item] and 'IdleWorkers' in data[item] \
+           and 'BusyWorkers' in data[item]:
+            data[item]['TotalSlots'] = data[item]['OpenSlots'] \
+                                       + data[item]['IdleWorkers'] \
+                                       + data[item]['BusyWorkers']
+
+    return data
+
+def inventory_apache_status(info):
+    data = apache_status_parse(info)
+    inv = []
+    for item in data.keys():
+        inv.append((item, None))
+    return inv
+
+def check_apache_status(item, params, info):
+    all_data = apache_status_parse(info)
+    if item not in all_data:
+        return (3, 'UNKNOWN - Unable to find instance in agent output')
+    data_dict = all_data[item]
+    data = data_dict.items()
+
+    status    = 0
+    output    = []
+    perfdata  = []
+
+    # Sort keys
+    data.sort(cmp = lambda x, y: cmp(apache_status_fields.get(x[0], (0, None))[0],
+                                     apache_status_fields.get(y[0], (0, None))[0]))
+
+    for key, value in data:
+        if key not in apache_status_fields.keys():
+            continue
+
+        # Don't process the scoreboard data directly. Print states instead
+        if key == 'Scoreboard':
+            states = []
+            for stat_label, key in apache_status_stats.items():
+                val = data_dict.get('State_' + stat_label, 0)
+                if val > 0:
+                    states.append('%s: %d' % (stat_label, val))
+                perfdata.append(('State_' + stat_label, val))
+            output.append('States: (%s)' % ', '.join(states))
+            continue
+
+        if key == 'Uptime':
+            display_value = get_age_human_readable(value)
+        elif type(value) == float:
+            display_value = '%0.2f' % value
+        else:
+            display_value = '%d' % value
+
+        output.append('%s: %s' % (key, display_value))
+        perfdata.append((key.replace(' ', '_'), value))
+
+    return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
+
+check_info['apache_status'] = {
+    "check_function" :      check_apache_status,
+    "inventory_function" :  inventory_apache_status,
+    "service_description" : "Apache %s Status",
+    "has_perfdata" :        True,
+}

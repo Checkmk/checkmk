@@ -166,6 +166,7 @@ global_vars = [
   ( "java.lang:type=Runtime/Uptime",                      "Uptime",                  [] ),
 ]
 
+
 specific_vars = {
   "weblogic" : [
       ( "*:*/CompletedRequestCount",                          None,                      [ "ServerRuntime" ] ),
@@ -179,6 +180,9 @@ specific_vars = {
   ],
   "tomcat" : [
       ( "*:type=Manager,*/activeSessions,maxActiveSessions",  None,                      [ "path", "context" ] ),
+      ( "*:type=Manager,*/stateName", None, [ "path", "context" ] ),
+#      ( "*:J2EEApplication=none,J2EEServer=none,WebModule=*,j2eeType=Servlet,name=jsp/stateName", None, [ "path", "context" ] ),
+#      ( "Catalina:J2EEApplication=none,J2EEServer=none,j2eeType=WebModule=,name=*,stateName", None, [ "path", "context" ] ),
   ],
   "jboss" : [
       ( "*:type=Manager,*/activeSessions,maxActiveSessions",  None,                      [ "path", "context" ] ),

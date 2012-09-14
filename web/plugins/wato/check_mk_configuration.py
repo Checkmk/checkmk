@@ -1102,5 +1102,6 @@ register_rule(group,
                  "via SSH. The command line may contain the placeholders <tt>&lt;IP&gt;</tt> and "
                  "<tt>&lt;HOST&gt;</tt>."),
         label = _("Command line to execute"),
-        size = 80))
+        size = 80,
+        attrencode = True))
 

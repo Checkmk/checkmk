@@ -9342,6 +9342,7 @@ vs_rule_options = Dictionary(
             help = _("An optional comment that helps you documenting the purpose of  "
                      "this rule"),
             size = 80,
+            attrencode = True,
           )
         ),
         ( "docu_url",
@@ -9844,7 +9845,7 @@ def mode_edit_ruleset(phase):
             url = rule_options.get("docu_url")
             if url:
                 html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
-            html.write(rule_options.get("comment", ""))
+            html.write(htmllib.attrencode(rule_options.get("comment", "")))
             html.write('</td>')
 
 

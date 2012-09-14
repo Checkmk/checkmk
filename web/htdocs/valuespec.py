@@ -1250,6 +1250,7 @@ class AbsoluteDate(ValueSpec):
         self._default_value = today()
         self._show_titles = kwargs.get("show_titles", True)
         self._label = kwargs.get("label")
+        self._format = kwargs.get("format", "%F")
 
     def canonical_value(self):
         return self._default_value
@@ -1279,7 +1280,7 @@ class AbsoluteDate(ValueSpec):
         html.set_focus(varprefix + "_year")
 
     def value_to_text(self, value):
-        return time.strftime("%F", time.localtime(value))
+        return time.strftime(self._format, time.localtime(value))
 
     def from_html_vars(self, varprefix):
         parts = []

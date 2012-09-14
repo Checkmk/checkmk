@@ -1,0 +1,89 @@
+#!/usr/bin/python
+# encoding: utf-8
+
+# Check_MK-Agent-Plugin - Apache Server Status
+#
+# Fetches the server-status page from detected or configured apache
+# processes to gather status information about this apache process.
+#
+# To make this agent plugin work you have to load the status_module
+# into your apache process. It is also needed to enable the "server-status"
+# handler below the URL "/server-status".
+#
+# By default this plugin tries to detect all locally running apache processes
+# and to monitor them. If this is not good for your environment you might
+# create an apache_status.conf file in MK_CONFDIR and populate the servers
+# list to prevent executing the detection mechanism.
+#
+# It is also possible to override or extend the ssl_ports variable to make the
+# check contact other ports than 443 with HTTPS requests.
+
+import os, sys, urllib
+
+config_file = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/apache_status.conf"
+
+# None or list of (ipaddress, port) tuples
+servers = None
+ssl_ports = [ 443, ]
+
+if os.path.exists(config_file):
+    execfile(config_file)
+
+def try_detect_servers():
+    pids    = []
+    results = []
+    for line in os.popen('netstat -tlnp 2>/dev/null').readlines():
+        parts = line.split()
+        # Skip lines with wrong format
+        if len(parts) < 7 or '/' not in parts[6]:
+            continue
+
+        pid, proc = parts[6].split('/')
+
+        # Skip unwanted processes
+        if proc not in [ 'apache2', 'httpd', 'httpd2-prefork', 'httpd2-worker' ]:
+            continue
+
+        # Add only the first found port of a single server process
+        if pid in pids:
+            continue
+        pids.append(pid)
+
+        proto = 'http'
+        address, port = parts[3].rsplit(':', 1)
+        port = int(port)
+
+        # Use localhost when listening globally
+        if address == '0.0.0.0':
+            address = '127.0.0.1'
+        elif address == '::':
+            address = '::1'
+
+        # Switch protocol if port is SSL port. In case you use SSL on another
+        # port you would have to change/extend the ssl_port list
+        if port in ssl_ports:
+            proto = 'https'
+
+        results.append((proto, address, port))
+
+    return results
+
+if servers is None:
+    servers = try_detect_servers()
+
+if not servers:
+    sys.exit(0)
+
+print '<<<apache_status>>>'
+for proto, address, port in servers:
+    try:
+        # Try to fetch the status page for each server
+        url = '%s://%s:%s/server-status?auto' % (proto, address, port)
+        fd = urllib.urlopen(url)
+        if fd.getcode() == 200:
+            for line in fd.read().split('\n'):
+                if not line.strip():
+                    continue
+                print address, port, line
+    except Exception, e:
+        sys.stderr.write('Exception (%s:%d): %s' % (address, port, e))

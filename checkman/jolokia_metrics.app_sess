@@ -1,0 +1,39 @@
+title: Number of JVM sessions
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check allows to monitor the number of current connections to
+ a JVM application (i.e. /host-manager or /my-web-app)
+ 
+ To use this plugin, Jolokia and the agent plugin need to be installed
+ on the monitored server.
+
+ The check can alert if the {WARN}/{CRIT} thresholds for a configurable total
+ is exceeded.
+
+item:
+ The name of the application server instance as configured by the agent
+ followed by the name of the application. I.e. tomcat7 /examples
+
+perfdata:
+ The number of sessions along with the upper (high) alert levels.
+
+inventory:
+ One check is created for each application running inside an Jolokia 
+ instance sent by the agent.
+
+
+[parameters]
+low_crit (int): If the number of sessions falls to this level,
+ a CRITICAL state is triggered
+low_warn (int): If the number of sessions falls to this level,
+ a WARNING state is triggered
+high_warn (int): If the number of sessions climbs to this level,
+ a WARNING state is triggered
+high_crit (int): If the number of sessions climbs to this level,
+ a CRITICAL state is triggered
+
+[configuration]
+jolokia_metrics_app_sess_default_levels (int, int, int, int): Default levels warning and critical

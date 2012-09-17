@@ -134,9 +134,8 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
     }
     else if (!strncmp(line, "LOGROTATE", 9)) {
     	logger(LG_INFO, "Forcing logfile rotation");
-		schedule_new_event(EVENT_LOG_ROTATION,TRUE,get_next_log_rotation_time(),FALSE,0,(void *)get_next_log_rotation_time,TRUE,NULL,NULL,0);
-
-      //  rotate_log_file(time(0));
+		rotate_log_file(time(0));
+        schedule_new_event(EVENT_LOG_ROTATION,TRUE,get_next_log_rotation_time(),FALSE,0,(void *)get_next_log_rotation_time,TRUE,NULL,NULL,0);
     }
     else {
         logger(LG_INFO, "Invalid request '%s'", line);

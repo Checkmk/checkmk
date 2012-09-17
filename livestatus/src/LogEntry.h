@@ -32,7 +32,6 @@
 #define LOGCLASS_PASSIVECHECK      4 // passive checks
 #define LOGCLASS_COMMAND           5 // external commands
 #define LOGCLASS_STATE             6 // initial or current states
-#define LOGCLASS_LOG_VERSION       7 // version entry
 #define LOGCLASS_INVALID          -1 // never stored
 #define LOGCLASS_ALL          0xffff
 
@@ -47,7 +46,9 @@ enum LogEntryType {	NONE,
 					STATE_SERVICE,
 					FLAPPING_HOST,
 					FLAPPING_SERVICE,
-					TIMEPERIOD_TRANSITION};
+					TIMEPERIOD_TRANSITION,
+					NAGIOS_STARTING,
+					LOG_VERSION};
 
 struct LogEntry
 {

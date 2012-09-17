@@ -78,8 +78,6 @@ LogEntry::LogEntry(unsigned lineno, char *line)
             _contact = find_contact(_contact_name);
         if (_command_name)
             _command = find_command(_command_name);
-    }
-    else if (handleLogversionEntry()) {
     }else handleProgrammEntry();
     // rest is LOGCLASS_INFO
 }
@@ -286,24 +284,21 @@ bool LogEntry::handleExternalCommandEntry()
 
 bool LogEntry::handleProgrammEntry()
 {
-    if (strstr(_text, "restarting...") ||
-            strstr(_text, "starting...") ||
+	if (strstr(_text, "starting...")){
+		_logclass = LOGCLASS_PROGRAM;
+		_type     = NAGIOS_STARTING;
+		return true;
+	}else if (strstr(_text, "LOG VERSION: 2.0")){
+			_logclass = LOGCLASS_PROGRAM;
+			_type     = LOG_VERSION;
+			return true;
+	}else if (strstr(_text, "restarting...") ||
             strstr(_text, "shutting down...") ||
             strstr(_text, "Bailing out") ||
             strstr(_text, "active mode...") ||
             strstr(_text, "standby mode..."))
     {
         _logclass = LOGCLASS_PROGRAM;
-        return true;
-    }
-    return false;
-}
-
-bool LogEntry::handleLogversionEntry()
-{
-    if (strstr(_text, "LOG VERSION: 2.0"))
-    {
-        _logclass = LOGCLASS_LOG_VERSION;
         return true;
     }
     return false;

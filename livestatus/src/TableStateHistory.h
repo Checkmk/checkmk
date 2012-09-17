@@ -28,19 +28,15 @@
 #include <map>
 #include <time.h>
 #include "config.h"
-#include "Table.h"
 #include "string.h"
-#include "LogEntry.h"
-#include "TableStateHistory.h"
-#include "Query.h"
 #include "logger.h"
 #include "nagios.h"
+#include "Logfile.h"
+#include "LogCache.h"
+#include "Query.h"
 
-class Logfile;
 
-typedef int Value;
 typedef pair<string, string> HostServiceKey;
-
 class LessThan
 {
 public:
@@ -60,28 +56,40 @@ public:
 	time_t  _from;
 	time_t  _until;
 	time_t  _duration;
-	double  _duration_perc;
+	double  _duration_part;
 	int     _attempt;
-	int     _state;			 // 0/1/2/3
+	int     _state;			 // -1/0/1/2/3
 	char*   _state_alert;    // STARTED/STOPPED
 	char*   _state_flapping; // STARTED/STOPPED
 	char*   _state_downtime; // STARTED/STOPPED/CANCELED
+	int		_no_longer_exists;   // 0/1
 	char*   _notification_period;
 	int     _in_notification_period;
 	int     _in_downtime;
 	int     _is_flapping;
 
-	LogEntry* _log_ptr; // unused
-	LogEntry* _prev_log_ptr; // unused
-	char*     _log_text;
-	char*     _prev_log_text;
+	LogEntry* _log_ptr;
+	LogEntry* _prev_log_ptr;
 	char*   _debug_info;
 	char*   _prev_debug_info;
+
+	time_t  _duration_state_ABSENT;
+	double  _duration_part_ABSENT;
+	time_t  _duration_state_OK;
+	double  _duration_part_OK;
+	time_t  _duration_state_WARNING;
+	double  _duration_part_WARNING;
+	time_t  _duration_state_CRITICAL;
+	double  _duration_part_CRITICAL;
+	time_t  _duration_state_UNKNOWN;
+	double  _duration_part_UNKNOWN;
 
     host      *_host;
     char*     _host_name; // Fallback if host no longer exists
     service   *_service;
     char*     _service_description;  // Fallback if service no longer exists
+
+
 
 	HostServiceState(){};
 };
@@ -105,11 +113,53 @@ public:
 private:
     int  _query_timeframe;
     bool answerQuery(Query *, Logfile *, time_t, time_t);
+    Query*   _query;
+    int      _since;
+    int      _until;
+    uint32_t _classmask;
+
+    // Helper functions to traverse through logfiles
+    _logfiles_t::iterator _it_logs;
+    entries_t*            _entries;
+    entries_t::iterator   _it_entries;
+    LogEntry*             _current_entry;
+    LogEntry* getPreviousLogentry();
+    LogEntry* getNextLogentry();
+
     inline void process(Query *query, HostServiceState *hs_state, bool do_nothing){
     	if( do_nothing )
     		return;
     	hs_state->_duration = hs_state->_until - hs_state->_from;
-    	hs_state->_duration_perc = (double)hs_state->_duration / (double)_query_timeframe;
+    	hs_state->_duration_part = (double)hs_state->_duration / (double)_query_timeframe;
+
+
+    	bzero(&hs_state->_duration_state_ABSENT, sizeof(time_t) * 5 + sizeof(double) * 5);
+
+    	switch (hs_state->_state) {
+    	case -1:
+    		hs_state->_duration_state_ABSENT = hs_state->_duration;
+    		hs_state->_duration_part_ABSENT  = hs_state->_duration_part;
+    		break;
+    	case STATE_OK:
+    		hs_state->_duration_state_OK       = hs_state->_duration;
+    		hs_state->_duration_part_OK        = hs_state->_duration_part;
+    		break;
+    	case STATE_WARNING:
+    		hs_state->_duration_state_WARNING  = hs_state->_duration;
+    		hs_state->_duration_part_WARNING   = hs_state->_duration_part;
+    		break;
+    	case STATE_CRITICAL:
+    		hs_state->_duration_state_CRITICAL = hs_state->_duration;
+    		hs_state->_duration_part_CRITICAL  = hs_state->_duration_part;
+    		break;
+    	case STATE_UNKNOWN:
+    		hs_state->_duration_state_UNKNOWN  = hs_state->_duration;
+    		hs_state->_duration_part_UNKNOWN   = hs_state->_duration_part;
+    		break;
+    	default:
+    		break;
+    	}
+
     	query->processDataset(hs_state);
     	hs_state->_from = hs_state->_until;
     };

@@ -440,7 +440,9 @@ int broker_program(int event_type __attribute__ ((__unused__)), void *data __att
 int broker_event(int event_type __attribute__ ((__unused__)), void *data)
 {
 	g_counters[COUNTER_NEB_CALLBACKS]++;
-    struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
+	struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
+	if( ts->event_type != 98 && ts->event_type != 5)
+		logger( LG_CRIT, "##### EIN EVENT - %d", ts->event_type );
     if( ts->event_type == EVENT_LOG_ROTATION){
     	if( g_thread_running == 1 ){
     		logger( LG_CRIT, "##### DAS LOGROTATE EVENT - DIESMAL DAS RICHTIGE" );
@@ -480,9 +482,9 @@ char* get_downtime_comment(char* host_name, char* svc_desc){
 void livestatus_log_initial_states(){
 	// Log DOWNTIME hosts
 	host *h = (host *)host_list;
+	char buffer[8192];
 	while (h) {
 		if( h->scheduled_downtime_depth > 0 ){
-			char buffer[8192];
 			sprintf(buffer,"HOST DOWNTIME ALERT: %s;STARTED;%s", h->name, get_downtime_comment(h->name, NULL));
 			write_to_all_logs(buffer, LG_INFO);
 
@@ -493,7 +495,6 @@ void livestatus_log_initial_states(){
 	service *s = (service *)service_list;
 	while (s) {
 		if( s->scheduled_downtime_depth > 0 ){
-			char buffer[8192];
 			sprintf(buffer,"SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name, s->description, get_downtime_comment(s->host_name, s->description));
 			write_to_all_logs(buffer, LG_INFO);
 		}

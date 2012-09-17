@@ -204,7 +204,7 @@ void LogCache::dumpLogfiles()
  */
 void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((__unused__)), time_t until __attribute__ ((__unused__)), unsigned logclasses)
 {
-    if ( _cleanup_enabled && ++_num_cached_messages <= _max_cached_messages)
+    if ( _cleanup_enabled == 0 || ++_num_cached_messages <= _max_cached_messages)
         return; // current message count still allowed, everything ok
 
     /* Memory checking an freeing consumes CPU ressources. We save

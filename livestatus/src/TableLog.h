@@ -42,6 +42,7 @@ public:
     const char *prefixname() { return "logs"; }
     bool isAuthorized(contact *ctc, void *data);
     void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
+    void addColumns(Table *, string prefix, int indirect_offset, bool add_host = true, bool add_service = true);
     void answerQuery(Query *query);
     Column *column(const char *colname); // override in order to handle current_
 

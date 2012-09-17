@@ -404,6 +404,16 @@ then
    omd status --bare --auto
 fi
 
+
+# Welcome the ZFS check on Linux
+# We do not endorse running ZFS on linux if your vendor doesnt support it ;)
+# check zpool status
+if [ -x /usr/sbin/zpool ]; then
+   echo "<<<zpool_status>>>"
+   /usr/sbin/zpool status -x
+fi
+
+
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
 if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
     echo '<<<fileinfo:sep(124)>>>'

@@ -8,6 +8,8 @@
     * Contacts can now define *_notification_commands attributes which can now
       override the default notification command check-mk-notify
     * SNMP scan: fixed case where = was contained in SNMP info
+    * check_imap_folder: new active check for searching for certain subjects
+      in an IMAP folder
 
     Checks & Agents:
     * New Checks for Siemens Blades (BX600)

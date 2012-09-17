@@ -24,12 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# +------------------------------------------------------------------+
-# | This file has been contributed by:                               |
-# |                                                                  |
-# | Peter Lauk <lauk@stuttgart-airport.com>           Copyright 2010 |
-# +------------------------------------------------------------------+
-
 # In some cases the name of the part is not uniq. e.g. for c5900
 # devices. In this cases add the color from the dedicated OID to
 # the item name.
@@ -59,6 +53,8 @@ printer_supply_some_remaining_status = 1
 # Workaround for toners and drum units in c5900 devices
 # which have equal names for the single parts.
 # Add the color description to that item
+# Fix name for toners in DELL devices that have serial
+# numbers in item name
 def printer_supply_fix_infos(info):
     colors = []
     new_info = []
@@ -72,6 +68,8 @@ def printer_supply_fix_infos(info):
             elif line[3] == '':
                 color = colors[index - len(colors)]
             line_0 = '%s %s' % (color.title(), line_0)
+        if " S/N:" in line_0:
+            line_0 = line_0[:line_0.find(" S/N:")]
         new_info.append([line_0] + line[1:])
     return new_info
 

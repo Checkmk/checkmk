@@ -54,6 +54,7 @@ def megaraid_pdisks_parse(info):
     current_adapter = adapters[0] 
     return_var = []
     adapter = 0
+    enclosure_devid = 0
     for line in  info:
         if line[0] == 'adapter':
             current_adapter = {}
@@ -65,7 +66,12 @@ def megaraid_pdisks_parse(info):
             current_adapter = adapters[int(line[1][1:])] # Raute weglassen
             adapter = int(line[1][1:])
         elif line[0] == "Enclosure" and line[1] == "Device":
-            enclosure_devid   = int(line[-1])
+            try:    
+	        enclosure_devid = int(line[-1])
+	    except: # no enclosure device
+	 	enclosure_devid = 0
+		adapters[adapter][0] = 0
+                
         elif line[0] == "Slot":
             slot = int(line[-1])
         elif line[0] == "Firmware" and line[1] == "state:":

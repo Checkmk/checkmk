@@ -1261,6 +1261,10 @@ def check_icmp_arguments(hostname):
 def service_deps(hostname, servicedesc):
     deps = []
     for entry in service_dependencies:
+        entry, rule_options = get_rule_options(entry)
+        if rule_options.get("disabled"):
+            continue
+
         if len(entry) == 3:
             depname, hostlist, patternlist = entry
             tags = []
@@ -1292,6 +1296,10 @@ def host_extra_conf(hostname, conf):
         sys.stderr.write('WARNING: deprecated entry [ "" ] in host configuration list\n')
 
     for entry in conf:
+        entry, rule_options = get_rule_options(entry)
+        if rule_options.get("disabled"):
+            continue
+
         if len(entry) == 2:
             item, hostlist = entry
             tags = []
@@ -1311,6 +1319,10 @@ def in_binary_hostlist(hostname, conf):
         return hostname in strip_tags(conf)
 
     for entry in conf:
+        entry, rule_options = get_rule_options(entry)
+        if rule_options.get("disabled"):
+            continue
+
         try:
             # Negation via 'NEGATE'
             if entry[0] == NEGATE:
@@ -1340,12 +1352,26 @@ def in_binary_hostlist(hostname, conf):
 
     return False
 
+# Pick out the last element of an entry if it is a dictionary.
+# This is a new feature (1.2.0p3) that allows to add options
+# to rules. Currently only the option "disabled" is being
+# honored. WATO also uses the option "comment".
+def get_rule_options(entry):
+    if type(entry[-1]) == dict:
+        return entry[:-1], entry[-1]
+    else:
+        return entry, {}
+
 
 # Compute list of service_groups or contact_groups of service
 # conf is either service_groups or service_contactgroups
 def service_extra_conf(hostname, service, conf):
     entries = []
     for entry in conf:
+        entry, rule_options = get_rule_options(entry)
+        if rule_options.get("disabled"):
+            continue
+
         if len(entry) == 3:
             item, hostlist, servlist = entry
             tags = []
@@ -1789,7 +1815,7 @@ define service {
   check_command\t\t\t%s
   active_checks_enabled\t\t1
 %s}
-""" % (template, hostname, description, command, extraconf))
+""" % (template, hostname, description, simulate_command(command), extraconf))
 
     # legacy checks via active_checks
     actchecks = []
@@ -1822,15 +1848,16 @@ define service {
 
             template = has_perfdata and "check_mk_perf," or ""
             extraconf = extra_service_conf_of(hostname, description)
+            command = "check_mk_active-%s!%s" % (acttype, args)
             outfile.write("""
 define service {
   use\t\t\t\t%scheck_mk_default
   host_name\t\t\t%s
   service_description\t\t%s
-  check_command\t\t\tcheck_mk_active-%s!%s
+  check_command\t\t\t%s
   active_checks_enabled\t\t1
 %s}
-""" % (template, hostname, description, acttype, args, extraconf))
+""" % (template, hostname, description, simulate_command(command), extraconf))
 
 
     # Legacy checks via custom_checks
@@ -1876,15 +1903,16 @@ define service {
 
             template = has_perfdata and "check_mk_perf," or ""
             extraconf = extra_service_conf_of(hostname, description)
+            command = "%s!%s" % (command_name, command_line)
             outfile.write("""
 define service {
   use\t\t\t\t%scheck_mk_default
   host_name\t\t\t%s
   service_description\t\t%s
-  check_command\t\t\t%s!%s
+  check_command\t\t\t%s
   active_checks_enabled\t\t%d
 %s}
-""" % (template, hostname, description, command_name, command_line, 
+""" % (template, hostname, description, simulate_command(command),
        command_line and 1 or 0, extraconf))
 
 
@@ -1899,6 +1927,12 @@ define service {
 
 """ % (pingonly_template, check_icmp_arguments(hostname), extra_service_conf_of(hostname, "PING"), hostname))
 
+def simulate_command(command):
+    if simulation_mode:
+        custom_commands_to_define.add("check-mk-simulation")
+        return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
+    else:
+        return command
 
 def create_nagios_config_hostgroups(outfile):
     if define_hostgroups:
@@ -2375,6 +2409,10 @@ def service_ignored(hostname, checktype, service_description):
 
 def in_boolean_serviceconf_list(hostname, service_description, conflist):
     for entry in conflist:
+        entry, rule_options = get_rule_options(entry)
+        if rule_options.get("disabled"):
+            continue
+
         if entry[0] == NEGATE: # this entry is logically negated
             negate = True
             entry = entry[1:]
@@ -3024,7 +3062,8 @@ def show_check_manual(checkname):
         for agent in header['agents'].split(","):
             agent = agent.strip()
             ags.append({ "vms" : "VMS", "linux":"Linux", "aix": "AIX",
-                         "solaris":"Solaris", "windows":"Windows", "snmp":"SNMP"}
+                         "solaris":"Solaris", "windows":"Windows", "snmp":"SNMP",
+                         "openvms" : "OpenVMS" }
                          .get(agent, agent.upper()))
         print_splitline(header_color_left, "Supported Agents:  ", header_color_right, ", ".join(ags))
 
@@ -3993,7 +4032,7 @@ def do_scan_parents(hosts):
 
         gws = scan_parents_of(chunk)
 
-        for host, (gw, state, message) in zip(chunk, gws):
+        for host, (gw, state, ping_fails, message) in zip(chunk, gws):
             if gw:
                 gateway, gateway_ip, dns_name = gw
                 if not gateway: # create artificial host
@@ -4028,6 +4067,10 @@ def do_scan_parents(hosts):
     out.write("# Parent definitions\n")
     out.write("parents += %s\n\n" % pprint.pformat(parent_rules))
     sys.stdout.write("\nWrote %s\n" % outfilename)
+
+def gateway_reachable_via_ping(ip, probes):
+    return 0 == os.system("ping -q -i 0.2 -l 3 -c %d -W 5 '%s' >/dev/null 2>&1" % 
+      (probes, ip)) >> 8
 
 def scan_parents_of(hosts, silent=False, settings={}):
     if monitoring_host:
@@ -4072,7 +4115,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
         exitstatus = proc.close()
         if exitstatus:
             dot(tty_red, '*')
-            gateways.append((None, "failed", "Traceroute failed with exit code %d" % (exitstatus & 255)))
+            gateways.append((None, "failed", 0, "Traceroute failed with exit code %d" % (exitstatus & 255)))
             continue
 
         if len(lines) == 1 and lines[0].startswith("ERROR:"):
@@ -4080,7 +4123,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
             if opt_verbose:
                 sys.stderr.write("%s: %s\n" % (host, message))
             dot(tty_red, "D")
-            gateways.append((None, "dnserror", message))
+            gateways.append((None, "dnserror", 0, message))
             continue
 
         elif len(lines) == 0:
@@ -4093,7 +4136,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
         elif len(lines) < 2:
             if not silent:
                 sys.stderr.write("%s: %s\n" % (host, ' '.join(lines)))
-            gateways.append((None, "garbled", "The output of traceroute seem truncated:\n%s" %
+            gateways.append((None, "garbled", 0, "The output of traceroute seem truncated:\n%s" %
                     ("".join(lines))))
             dot(tty_blue)
             continue
@@ -4127,7 +4170,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
         if len(routes) == 0:
             error = "incomplete output from traceroute. No routes found."
             sys.stderr.write("%s: %s\n" % (host, error))
-            gateways.append((None, "garbled", error))
+            gateways.append((None, "garbled", 0, error))
             dot(tty_red)
             continue
 
@@ -4137,27 +4180,37 @@ def scan_parents_of(hosts, silent=False, settings={}):
         # this in monitoring_host.
         elif len(routes) == 1:
             if ip == nagios_ip:
-                gateways.append( (None, "root", "") ) # We are the root-monitoring host
+                gateways.append( (None, "root", 0, "") ) # We are the root-monitoring host
                 dot(tty_white, 'N')
             elif monitoring_host:
-                gateways.append( ((monitoring_host, nagios_ip, None), "direct", "") )
+                gateways.append( ((monitoring_host, nagios_ip, None), "direct", 0, "") )
                 dot(tty_cyan, 'L')
             else:
-                gateways.append( (None, "direct", "") )
+                gateways.append( (None, "direct", 0, "") )
             continue
 
         # Try far most route which is not identical with host itself
+        ping_probes = settings.get("ping_probes", 5)
+        skipped_gateways = 0
         route = None
         for r in routes[::-1]:
             if not r or (r == ip):
                 continue
+            # Do (optional) PING check in order to determine if that
+            # gateway can be monitored via the standard host check
+            if ping_probes:            
+                if not gateway_reachable_via_ping(r, ping_probes):
+                    if opt_verbose:
+                        sys.stderr.write("(not using %s, not reachable)\n" % r)
+                    skipped_gateways += 1
+                    continue
             route = r
             break
         if not route:
             error = "No usable routing information"
             if not silent:
                 sys.stderr.write("%s: %s\n" % (host, error))
-            gateways.append((None, "notfound", error))
+            gateways.append((None, "notfound", 0, error))
             dot(tty_blue)
             continue
 
@@ -4165,11 +4218,14 @@ def scan_parents_of(hosts, silent=False, settings={}):
         gateway_ip = route
         gateway = ip_to_hostname(route)
         if opt_verbose:
-            sys.stdout.write("%s(%s) " % (gateway, gateway_ip))
+            if gateway:
+                sys.stdout.write("%s(%s) " % (gateway, gateway_ip))
+            else:
+                sys.stdout.write("%s " % gateway_ip)
 
         # Try to find DNS name of host via reverse DNS lookup
         dns_name = ip_to_dnsname(gateway_ip)
-        gateways.append( ((gateway, gateway_ip, dns_name), "gateway", "") )
+        gateways.append( ((gateway, gateway_ip, dns_name), "gateway", skipped_gateways, "") )
         dot(tty_green, 'G')
     return gateways
 
@@ -4221,6 +4277,22 @@ def marks_hosts_with_path(old, all, filename):
         if host not in old:
             host_paths[host] = path
 
+# Helper functions that determines the sort order of the
+# configuration files. The following two rules are implemented:
+# 1. *.mk files in the same directory will be read
+#    according to their lexical order.
+# 2. subdirectories in the same directory will be 
+#    scanned according to their lexical order.
+# 3. subdirectories of a directory will always be read *after*
+#    the *.mk files in that directory.
+def cmp_config_paths(a, b):
+    pa = a.split('/')
+    pb = b.split('/')
+    return cmp(pa[:-1], pb[:-1]) or \
+           cmp(len(pa), len(pb)) or \
+           cmp(pa, pb)
+
+
 def read_config_files(with_autochecks=True, with_conf_d=True):
     global vars_before_config, final_mk, local_mk, checks
 
@@ -4235,7 +4307,8 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
         list_of_files = reduce(lambda a,b: a+b,
            [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")]
              for d, sb, fs in os.walk(check_mk_configdir) ], [])
-        list_of_files.sort()
+        # list_of_files.sort()
+        list_of_files.sort(cmp = cmp_config_paths)
         list_of_files = [ check_mk_configfile ] + list_of_files
     else:
         list_of_files = [ check_mk_configfile ]
@@ -4304,6 +4377,10 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
     static = []
     for entries in static_checks.values():
         for entry in entries:
+            entry, rule_options = get_rule_options(entry)
+            if rule_options.get("disabled"):
+                continue
+
             # Parameters are optional
             if len(entry[0]) == 2:
                 checktype, item = entry[0]
@@ -4387,6 +4464,9 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
 # default settings of user in main.mk, check_parameters[] and
 # the values code in autochecks (given as parameter params)
 def compute_check_parameters(host, checktype, item, params):
+    if checktype not in check_info: # handle vanished checktype
+        return None
+
     # Handle dictionary based checks
     def_levels_varname = check_info[checktype].get("default_levels_variable")
     if def_levels_varname:

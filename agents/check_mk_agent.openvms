@@ -1,0 +1,250 @@
+$!# +------------------------------------------------------------------+
+$!# |             ____ _               _        __  __ _  __           |
+$!# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+$!# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+$!# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+$!# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+$!# |                                                                  |
+$!# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+$!# +------------------------------------------------------------------+
+$!#
+$!# This file is part of Check_MK.
+$!# The official homepage is at http://mathias-kettner.de/check_mk.
+$!#
+$!# check_mk is free software;  you can redistribute it and/or modify it
+$!# under the  terms of the  GNU General Public License  as published by
+$!# the Free Software Foundation in version 2.  check_mk is  distributed
+$!# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+$!# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+$!# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+$!# ails.  You should have  received  a copy of the  GNU  General Public
+$!# License along with GNU Make; see the file  COPYING.  If  not,  write
+$!# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+$!# Boston, MA 02110-1301 USA.
+$!#
+$!# Author:     Paul Aebersold, netPuls          info@netpuls.info
+$if p1 .nes. "" then set verify
+$msgOff := set message/nofacility/noseverity/noidentification/notext
+$msgOn := set message/facility/severity/identification/text
+$set noOn
+$'msgOff'
+$samplePeriod = 90
+$sampleInterval = 3
+$cmdProcedure = f$environment("procedure")
+$actlDirectory = f$parse(cmdProcedure,,,"device") + -
+f$parse(cmdProcedure,,,"directory")
+$if f$search("''f$trnlnm("sys$scratch")'tmp.dir") .eqs. ""
+$then
+$tmpDirectory = f$trnlnm("sys$scratch")
+$else
+$tmpDirectory = f$trnlnm("sys$scratch")-"]"+".tmp]"
+$endif
+$errFile = "''tmpDirectory'VMSagent.err"
+$cacheFile = "''actlDirectory'VMSagent.cache"
+$cacheMaxAge = 120
+$sampleFile = "''actlDirectory'myMon.lis"
+$tempFile = "''tmpDirectory'outFile.tmp"
+$tmpCMS = "''tmpDirectory'tmp.CMS"
+$tmpDisksm = "''tmpDirectory'tmp.mDk"
+$tmpDisks = "''tmpDirectory'tmp.Dsk"
+$tmpNetif = "''tmpDirectory'tmp.nif"
+$tmpQueues = "''tmpDirectory'tmp.Que"
+$tmpUsr = "''tmpDirectory'tmp.Usr"
+$say = "write sys$output"
+$modeNet = f$edit(f$mode(),"lowercase,trim") .eqs. "network"
+$modeDirect = f$environment("interactive") .and. "true"
+$if .not. modeNet then define/nolog sys$error 'errFile'
+$if modeDirect
+$then
+$samplePeriod = 10
+$sampleInterval = 1
+$cacheMaxAge = 45
+$'msgOn'
+$endif
+$useCacheFile="false"
+$if f$search("''cacheFile'") .nes. ""
+$then
+$if (f$cvtime(f$time(),,"secondofyear")-f$cvtime( -
+f$file("''cacheFile'","rdt"),,"secondofyear") -
+) .le. 'cacheMaxAge' then useCacheFile="true"
+$if f$getjpi("","prcnam") .nes. "VMSagnt$collect"
+$then
+$type/nohead 'cacheFile'
+$else
+$goto collectStart
+$endif
+$endif
+$if (.not. useCacheFile) .and. (f$search("''cacheFile'_new") .eqs. "")
+$then
+$run sys$system:loginout.exe /detached/noswap/authorize -
+/input='cmdProcedure'/process_name="VMSagnt$collect" -
+/uic='f$getjpi("","uic")'/output=nl:/error='errFile'
+$endif
+$exit
+$collectStart:
+$'msgOff'
+$set noVerify
+$create/protection=(g:r,w) 'cacheFile'_new
+$HWinfo = f$edit(f$getsyi("arch_name"),"trim")
+$numCPU = f$getsyi("activecpu_cnt")
+$MEMtotal = f$getsyi("memsize")
+$PGinfo = f$getsyi("page_size")
+$SWinfo = f$edit(f$getsyi("version"),"trim")
+$if sampleInterval .gt. samplePeriod then sampleInterval=samplePeriod/5
+$if (samplePeriod .gt. 600) .or. (samplePeriod .lt. 10) then -
+samplePeriod=60
+$if (sampleInterval .gt. 60) .or. (sampleInterval .lt. 1) then -
+sampleInterval=10
+$sMin=samplePeriod/60
+$sSec=samplePeriod-sMin*60
+$monitor/nodisplay/interval='sampleInterval'/summary='sampleFile' -
+/ending="+0-0:''sMin':''sSec'" system/all, -
+disk/all/item=operation_rate
+$wait 0:0:0.50
+$gosub create_tmpFiles
+$gosub create_output
+$gosub do_output
+$if .not. modeNet then deassign sys$error
+$if f$search("''errFile'") .nes. "" then purge/nolog/keep=2 'errFile'
+$if f$search("''sampleFile'") .nes. "" then -
+delete/noconfirm/nolog 'sampleFile';*
+$if f$search("''tmpDirectory'tmp.*") .nes. "" then -
+delete/noconfirm/nolog 'tmpDirectory'tmp.*;*
+$pipe delete/noconfirm/nolog 'cacheFile';* && -
+rename/nolog/noconfirm 'cacheFile'_new 'cacheFile' || -
+rename/nolog/noconfirm 'cacheFile'_new 'cacheFile'
+$exit
+$create_tmpFiles:
+$search/nowarnings/noheading/format=nonull/exact/output='tmpCMS' -
+'sampleFile' "Interrupt State","MP Synchronization","User Mode", -
+"Idle Time","Free List Size","Process Count","Direct I/O Rate", -
+"Buffered I/O Rate"
+$search/nowarnings/noheading/format=nonull/exact/output='tmpDisks' -
+'sampleFile' "$DK","DSA","$1$DG"
+$if f$extract(1,1,"''SWinfo'") .ge. 8
+$then
+$pipe tcpip netstat -in | search/wild/output='tmpNetif' -
+sys$pipe *.*.*.*,127.0.0./match=xor
+$else
+$endif
+$show system/batch/noheading/output='tmpQueues'
+$show users/interactive/subprocess/batch/network/nohead/output='tmpUsr'
+$return
+$create_output:
+$open/read inFile 'tmpCMS'
+$CMSline:
+$read/end_of_file=CMSdone/error=CMSdone inFile line
+$cLine = f$edit(line,"compress,trim")
+$if f$element(0," ",cLine) .eqs. "Interrupt" then -
+wt0 = f$element(3," ",cLine)
+$if f$element(1," ",cLine) .eqs. "Synchronization" then -
+wt1 = f$element(3," ",cLine)
+$if f$element(0," ",cLine) .eqs. "User" then -
+cpu3 = f$element(3," ",cLine)
+$if f$element(0," ",cLine) .eqs. "Idle" then -
+cpu2 = f$element(3," ",cLine)
+$if f$element(0," ",cLine) .eqs. "Free" then -
+freeMem = f$element(0,".",f$element(4," ",cLine))
+$if f$element(0," ",cLine) .eqs. "Process" then -
+sys3 = f$element(3," ",cLine)
+$if f$element(0," ",cLine) .eqs. "Direct" then -
+sys1 = f$element(4," ",cLine)
+$if f$element(0," ",cLine) .eqs. "Buffered" then -
+sys2 = f$element(4," ",cLine)
+$goto CMSline
+$CMSdone:
+$close inFile
+$return
+$do_output:
+$if f$search("''cacheFile'_new") .nes. "" then -
+delete/noconfirm/nolog 'cacheFile'_new;*
+$set noVerify
+$define sys$output "''cacheFile'_new"
+$on error then goto WCFdone
+$say "<<<check_mk>>>"
+$say "Version: 1.2.0p3"
+$say "AgentOS: openvms"
+$say "Nodename: ",f$getsyi("nodename")
+$say "Architecture: ''HWinfo'"
+$say "SWversion: ''SWinfo'"
+$say "<<<vms_cpu>>>"
+$say "''numCPU' ''cpu2' ''cpu3' ''wt0' ''wt1'"
+$say "<<<mem>>>"
+$say "MemTotal: ",'MEMtotal'*('PGinfo'/1024)
+$say "MemFree: ",'freeMem'*('PGinfo'/1024)
+$say "SwapTotal: ",f$getsyi("swapfile_page")*('PGinfo'/1024)
+$say "SwapFree: ",f$getsyi("swapfile_free")*('PGinfo'/1024)
+$say "<<<vms_system>>>"
+$say "''sys1' ''sys2' ''sys3'"
+$say "<<<vms_diskstat>>>"
+$gosub DSKloop
+$say "<<<vms_if>>>"
+$gosub NIFloop
+$say "<<<vms_queuejobs>>>"
+$gosub QUEloop
+$say "<<<vms_users>>>"
+$gosub USRloop
+$WCFdone:
+$set noOn
+$deassign sys$output
+$return
+$DSKloop:
+$open/read inFile 'tmpDisks'
+$DSKline:
+$read/end_of_file=DSKdone/error=DSKdone inFile line
+$cLine = f$edit(line,"compress,trim")
+$Dname = f$element(0," ",cLine)
+$if f$extract(0,1,f$element(1," ",cLine)) .nes. "("
+$then
+$say f$element(0," ",cLine)," ",f$element(1," ",cLine)," ", -
+f$getdvi("''Dname'","maxblock")," ", -
+f$getdvi("''Dname'","freeblocks")," ",f$element(5," ",cLine)
+$else
+$say f$element(0," ",cLine)," ",f$element(2," ",cLine)," ", -
+f$getdvi("''Dname'","maxblock")," ", -
+f$getdvi("''Dname'","freeblocks")," ",f$element(6," ",cLine)
+$endif
+$goto DSKline
+$DSKdone:
+$close inFile
+$return
+$NIFloop:
+$if f$extract(1,1,"''SWinfo'") .lt. 8 then return
+$open/read inFile 'tmpNetif'
+$NIFline:
+$read/end_of_file=NIFdone/error=NIFdone inFile line
+$cLine = f$edit(line,"compress,trim")
+$say f$element(0," ",cLine)," ",0," ",f$element(4," ",cLine)," ", -
+0," ",0," ",0," ",f$element(5," ",cLine)," ",0," ", -
+f$element(6," ",cLine)," ",0," ",0," ",0," ",f$element(7," ",cLine)
+$goto NIFline
+$NIFdone:
+$close inFile
+$return
+$USRloop:
+$open/read inFile 'tmpUsr'
+$USRline:
+$read/end_of_file=USRdone/error=USRdone inFile line
+$cLine = f$edit(line,"compress,trim")
+$say f$element(0," ",cLine)," ",f$element(1," ",cLine)," ", -
+f$element(2," ",cLine)," ",f$element(3," ",cLine)," ", -
+f$element(4," ",cLine)
+$goto USRline
+$USRdone:
+$close inFile
+$return
+$QUEloop:
+$open/read inFile 'tmpQueues'
+$QUEline:
+$read/end_of_file=QUEdone/error=QUEdone inFile cLine
+$say f$extract(0,8,cLine)," ", -
+f$edit(f$extract(9,15,cLine),"trim")," ", -
+f$edit(f$extract(25,7,cLine),"trim")," ", -
+f$edit(f$extract(45,15,cLine),"trim")," ", -
+f$edit(f$extract(35,10,cLine),"trim")," ", -
+f$edit(f$extract(60,10,cLine),"trim")
+$goto QUEline
+$QUEdone:
+$close inFile
+$return
+$!######################[:END:  check_mk_agent.com  :END:]######################

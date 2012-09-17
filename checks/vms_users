@@ -1,0 +1,63 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<vms_users>>>
+# AEP 2 - - 1
+# SYSTEM 1      
+# TCPIP$FTP - - - 1
+
+
+def inventory_vms_users(info):
+    if len(info) > 0:
+        return [(None, {})]
+
+def check_vms_users(item, params, info):
+
+    infos = []
+    num_sessions = 0
+    for line in info:
+        # complete missing columns
+        line += ['-'] * (5-len(line))
+        interactive, subproc, batch, network = map(saveint, line[1:])
+        if interactive:
+            num_sessions += interactive
+            infos.append(("%s: %d" % (line[0], interactive)))
+
+    perfdata = [("sessions", num_sessions)]
+
+    if num_sessions:
+        return (0, "OK - Interactive users: " + ", ".join(infos), perfdata)
+    else:
+        return (0, "OK - No interactive users", perfdata)
+
+
+check_info['vms_users'] = {
+    "check_function" :      check_vms_users,
+    "inventory_function" :  inventory_vms_users,
+    "service_description" : "VMS Users",
+    "has_perfdata" :        True,
+}

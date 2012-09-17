@@ -272,14 +272,14 @@ def available_views():
     views = {}
 
     # 1. user's own views, if allowed to edit views
-    if config.may("edit_views"):
+    if config.may("general.edit_views"):
         for (u, n), view in html.multisite_views.items():
             if u == user:
                 views[n] = view
 
     # 2. views of special users allowed to globally override builtin views
     for (u, n), view in html.multisite_views.items():
-        if n not in views and view["public"] and config.user_may(u, "force_views"):
+        if n not in views and view["public"] and config.user_may(u, "general.force_views"):
             # Honor original permissions for the current user
             permname = "view.%s" % n
             if config.permission_exists(permname) \
@@ -295,7 +295,7 @@ def available_views():
     # 4. other users views, if public. Sill make sure we honor permission
     #    for builtin views
     for (u, n), view in html.multisite_views.items():
-        if n not in views and view["public"] and config.user_may(u, "publish_views"):
+        if n not in views and view["public"] and config.user_may(u, "general.publish_views"):
             # Is there a builtin view with the same name? If yes, honor permissions.
             permname = "view.%s" % n
             if config.permission_exists(permname) \
@@ -324,7 +324,7 @@ def save_views(us):
 # ----------------------------------------------------------------------
 # Show list of all views with buttons for editing
 def page_edit_views(msg=None):
-    if not config.may("edit_views"):
+    if not config.may("general.edit_views"):
         raise MKAuthException(_("You are not allowed to edit views."))
 
     html.header(_("Edit views"), stylesheets=["pages","views","status"])
@@ -372,7 +372,7 @@ def page_edit_views(msg=None):
             continue
         view = html.multisite_views[(owner, viewname)]
         if owner == config.user_id or (view["public"] \
-            and (owner == "" or config.user_may(owner, "publish_views"))):
+            and (owner == "" or config.user_may(owner, "general.publish_views"))):
 
             odd = odd == "odd" and "even" or "odd"
             html.write('<tr class="data %s0">' % odd)
@@ -416,12 +416,12 @@ def page_edit_views(msg=None):
 
             # Owner
             if owner == "":
-                ownertxt = "<i>builtin</i>"
+                ownertxt = "<i>" + _("builtin") + "</i>"
             else:
                 ownertxt = owner
             html.write("<td>%s</td>" % ownertxt)
-            html.write("<td>%s</td>" % (view["public"] and "yes" or "no"))
-            html.write("<td>%s</td>" % (view["hidden"] and "yes" or "no"))
+            html.write("<td>%s</td>" % (view["public"] and _("yes") or _("no")))
+            html.write("<td>%s</td>" % (view["hidden"] and _("yes") or _("no")))
             html.write("</tr>\n")
 
     html.write("</table>\n")
@@ -433,7 +433,11 @@ def select_view(varname, only_with_hidden = False):
     choices = [("", "")]
     for name, view in html.available_views.items():
         if not only_with_hidden or len(view["hide_filters"]) > 0:
-            choices.append(("%s" % name, view["title"]))
+            if view.get('mobile', False):
+                title = _('Mobile: ') + view["title"]
+            else:
+                title = view["title"]
+            choices.append(("%s" % name, title))
     html.sorted_select(varname, choices, "")
 
 # -------------------------------------------------------------------------
@@ -445,7 +449,7 @@ def select_view(varname, only_with_hidden = False):
 #  Edit one view
 # -------------------------------------------------------------------------
 def page_edit_view():
-    if not config.may("edit_views"):
+    if not config.may("general.edit_views"):
         raise MKAuthException(_("You are not allowed to edit views."))
 
     load_views()
@@ -562,7 +566,7 @@ def page_edit_view():
     html.text_area("view_description", "", rows=4, cols=50)
 
     forms.section(_("Visibility"))
-    if config.may("publish_views"):
+    if config.may("general.publish_views"):
         html.checkbox("public", label=_('make this view available for all users'))
         html.write("<br />\n")
     html.checkbox("hidden", label=_('hide this view from the sidebar'))
@@ -749,7 +753,7 @@ def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
     html.write("</div>")
 
 def ajax_get_edit_column():
-    if not config.may("edit_views"):
+    if not config.may("general.edit_views"):
         raise MKAuthException(_("You are not allowed to edit views."))
 
     if not html.has_var('ds') or not html.has_var('num') or not html.has_var('pre'):
@@ -891,7 +895,7 @@ def create_view():
         browser_reload = 0
 
     play_sounds      = html.var("play_sounds", "") != ""
-    public           = html.var("public", "") != "" and config.may("publish_views")
+    public           = html.var("public", "") != "" and config.may("general.publish_views")
     hidden           = html.var("hidden", "") != ""
     mobile           = html.var("mobile", "") != ""
     mustsearch       = html.var("mustsearch", "") != ""
@@ -1345,8 +1349,17 @@ def render_view(view, rows, datasource, group_painters, painters,
 
         elif 'C' in display_options: # (*not* display open, if checkboxes are currently shown)
             show_command_form(False, datasource)
+    
+    # Also execute commands in cases without command form (needed for Python-
+    # web service e.g. for NagStaMon)
+    elif len(rows) > 0 and config.may("general.act") \
+         and html.do_actions() and html.transaction_valid():
+        try:
+            do_actions(view, datasource["infos"][0], rows, '')
+        except:
+            pass # currently no feed back on webservice
 
-    if 'O' in display_options and len(painter_options) > 0 and config.may("painter_options"):
+    if 'O' in display_options and len(painter_options) > 0 and config.may("general.painter_options"):
         show_painter_options(painter_options)
 
     # The refreshing content container
@@ -1363,7 +1376,8 @@ def render_view(view, rows, datasource, group_painters, painters,
         if show_checkboxes and html.var("selected_rows"):
             selected = get_selected_rows(view, rows, html.var("selected_rows"))
             headinfo = "%d/%s" % (len(selected), headinfo)
-        html.javascript("update_headinfo('%s');" % headinfo)
+        if 'T' in display_options:
+            html.javascript("update_headinfo('%s');" % headinfo)
 
         # Play alarm sounds, if critical events have been displayed
         if 'S' in display_options and view.get("play_sounds"):
@@ -1385,9 +1399,9 @@ def render_view(view, rows, datasource, group_painters, painters,
     if show_footer:
         pid = os.getpid()
         if html.live.successfully_persisted():
-            html.add_status_icon("persist", "Reused persistent livestatus connection from earlier request (PID %d)" % pid)
+            html.add_status_icon("persist", _("Reused persistent livestatus connection from earlier request (PID %d)") % pid) 
         if bi.reused_compilation():
-            html.add_status_icon("aggrcomp", "Reused cached compiled BI aggregations (PID %d)" % pid)
+            html.add_status_icon("aggrcomp", _("Reused cached compiled BI aggregations (PID %d)") % pid)
 
         html.bottom_focuscode()
         if 'Z' in display_options:
@@ -1407,7 +1421,7 @@ def view_options(viewname):
     # checkboxes are switched via JS/AJAX, no longer via
     # the URL.
     # # Refresh rate
-    # if config.may("view_option_refresh"):
+    # if config.may("general.view_option_refresh"):
     #     if html.has_var("refresh"):
     #         try:
     #             v["refresh"] = int(html.var("refresh"))
@@ -1418,7 +1432,7 @@ def view_options(viewname):
     #     del v["refresh"]
 
     # # Number of columns in layout
-    # if config.may("view_option_columns"):
+    # if config.may("general.view_option_columns"):
     #     if html.has_var("num_columns"):
     #         try:
     #             v["num_columns"] = max(1, int(html.var("num_columns")))
@@ -1429,14 +1443,14 @@ def view_options(viewname):
     #     del v["num_columns"]
 
     # # Show checkboxes for commands
-    # if config.may("act"):
+    # if config.may("general.act"):
     #     if html.has_var("show_checkboxes"):
     #         v["show_checkboxes"] = html.var("show_checkboxes", "") != ""
     #         must_save = True
     # elif "show_checkboxes" in v:
     #     del v["show_checkboxes"]
 
-    if config.may("painter_options"):
+    if config.may("general.painter_options"):
         for on, opt in multisite_painter_options.items():
             if html.has_var(on):
                 must_save = True
@@ -1507,9 +1521,9 @@ def play_alarm_sounds():
 # How many data rows may the user query?
 def get_limit():
     limitvar = html.var("limit", "soft")
-    if limitvar == "hard" and config.may("ignore_soft_limit"):
+    if limitvar == "hard" and config.may("general.ignore_soft_limit"):
         return config.hard_query_limit
-    elif limitvar == "none" and config.may("ignore_hard_limit"):
+    elif limitvar == "none" and config.may("general.ignore_hard_limit"):
         return None
     else:
         return config.soft_query_limit
@@ -1628,7 +1642,7 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
             togglebutton_off("filters")
 
     if 'D' in display_options:
-        if len(painter_options) > 0 and config.may("painter_options"):
+        if len(painter_options) > 0 and config.may("general.painter_options"):
             togglebutton("painteroptions", False, "painteroptions", _("Modify display options"))
         else:
             togglebutton_off("painteroptions")
@@ -1645,13 +1659,13 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
             togglebutton_off("checkbox")
 
     if 'O' in display_options:
-        if config.may("view_option_columns"):
+        if config.may("general.view_option_columns"):
             choices = [ [x, "%s" % x] for x in config.view_option_columns ]
             view_optiondial(thisview, "num_columns", choices, _("Change the number of display columns"))
         else:
             view_optiondial_off("num_columns")
 
-        if 'R' in display_options and config.may("view_option_refresh"):
+        if 'R' in display_options and config.may("general.view_option_refresh"):
             choices = [ [x, {0:_("off")}.get(x,str(x) + "s") + (x and "" or "")] for x in config.view_option_refreshes ]
             view_optiondial(thisview, "refresh", choices, _("Change the refresh rate")) 
         else:
@@ -1679,7 +1693,7 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
                 html.context_button(linktitle, url=uri, icon=icon, id=buttonid, bestof=config.context_buttons_to_show)
 
     # Customize/Edit view button
-    if 'E' in display_options and config.may("edit_views"):
+    if 'E' in display_options and config.may("general.edit_views"):
         backurl = htmllib.urlencode(html.makeuri([]))
         if thisview["owner"] == config.user_id:
             url = "edit_view.py?load_view=%s&back=%s" % (thisview["name"], backurl)
@@ -1979,7 +1993,7 @@ def collist_of_collection(collection, join_target = []):
 def should_show_command_form(display_options, datasource):
     if not 'C' in display_options:
         return False
-    if not config.may("act"):
+    if not config.may("general.act"):
         return False
     if html.has_var("try"):
         return False
@@ -2066,8 +2080,8 @@ def core_command(what, row):
     if not commands:
         raise MKUserError(None, _("Sorry. This command is not implemented."))
 
-    # Some commands return lists of complete command lines, others
-    # just return one basic command without timestamp. Convert those
+    # Some commands return lists of commands, others
+    # just return one basic command. Convert those
     if type(commands) != list:
         commands = [commands]
 
@@ -2077,12 +2091,18 @@ def core_command(what, row):
 def command_executor_livestatus(command, site):
     html.live.command("[%d] %s" % (int(time.time()), command), site)
 
+# make gettext localize some magic texts
+_("services")
+_("hosts")
+_("commands")
+_("downtimes")
+
 # Returns:
 # True -> Actions have been done
 # False -> No actions done because now rows selected
 # [...] new rows -> Rows actions (shall/have) be performed on
 def do_actions(view, what, action_rows, backurl):
-    if not config.may("act"):
+    if not config.may("general.act"):
         html.show_error(_("You are not allowed to perform actions. "
                           "If you think this is an error, please ask "
                           "your administrator grant you the permission to do so."))
@@ -2417,7 +2437,7 @@ def group_value(row, group_painters):
 
 def get_painter_option(name):
     opt = multisite_painter_options[name]
-    if not config.may("painter_options"):
+    if not config.may("general.painter_options"):
         return opt["default"]
     return opt.get("value", opt["default"])
 
@@ -2468,5 +2488,5 @@ def declare_1to1_sorter(painter_name, func, col_num = 0, reverse = False):
     return painter_name
 
 
-load_plugins()
+# load_plugins()
 

@@ -1,0 +1,64 @@
+title: Check kernel tunables on HP-UX
+agents: hpux
+author: Florian Heigl <fh@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check allows for monitoring of admin-tunable kernel limits on HP-UX
+ systems that support the {"kcusage"} command. The command should be available
+ from HP-UX 11.20 to the current 11.31.
+
+ Typical tunables are the number of running processes or the number of 
+ semaphores for applications using IPC.
+ The check can alert you if the usage of a certain tunable element exceeds
+ a configurable threshold, which is set as a percentage.
+
+ The supported tunables are:
+   Number of processes               (npoc)
+   Number of threads                 (nkthread)
+   Number of open files              (maxfiles_lim)
+   Number of IPC Semaphore IDs       (semmni)
+   Number of IPC Semaphores          (semmns)
+   Number of shared memory segments  (semmns)
+
+
+item:
+ {None}
+
+inventory:
+ {hpux_tunables} generates one check per host for each of the supported 
+ tunables.
+
+examples:
+ # Set the alert levels for the process table to 50% WARN, 60% CRIT:
+ hpux_tunables_nproc_default_levels = (50.0, 60.0)
+
+ checks = [
+    # Enforce a check on all HP-UX machines for an alert at 16000 open
+    # processes
+    (["hp"], ALL_HOSTS, "hpux_tunables.maxfiles_lim", (16000, 20000)),
+ ]
+
+perfdata:
+  The name of the tunable along with it's usage, threshold and warning / 
+  crit levels.
+
+[parameters]
+warn(float): Warning percentage for the tunables allocation
+crit(float): Critical percentage for the  tunables allocation
+
+
+[configuration]:
+ Generally the checks only track the usage and a limit has to be defined
+ using check_parameters.
+ The checks {nproc} and {nkthread} come with pre-configured default levels:
+
+hpux_tunables_nproc_default_levels (float, float):
+  The percentage of running processes compared to the kernel limit for running
+  processes.
+
+hpux_tunables_nkthread_default_levels (float, float):
+  The percentage of threads of running processes compared to the kernel limit 
+  for running threads.
+
+

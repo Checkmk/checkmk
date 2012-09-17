@@ -1,0 +1,25 @@
+Title: Setting default_language = "de" in multisite.mk breaks all
+Component: multisite
+Class: bug
+State: done
+Date: 2012-07-02 13:55:03
+Targetversion: 1.2.0
+
+Try: set default_language = "de" in multisite.mk. But do not 
+provide a language file. The result is an exception:
+
+Internal error	None (/de)   13:54
+index.py?debug=1
+Internal error:: global name 'config' is not defined
+
+Traceback (most recent call last):
+  File "/omd/sites/opf/share/check_mk/web/htdocs/index.py", line 272, in handler
+    load_language(html.var("lang", config.get_language()))
+  File "/omd/sites/opf/share/check_mk/web/htdocs/lib.py", line 197, in load_language
+    __builtin__.current_language = config.default_language
+NameError: global name 'config' is not defined
+
+[URL to this frame] [URL to this page including sidebar] 		
+
+2012-07-03 12:57:56: changed state open -> done
+The inline comment was correct, but the code was wrong. Fixed it.

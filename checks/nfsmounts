@@ -37,7 +37,7 @@ def check_nfsmounts(item, _no_params, info):
             blocksize = int(line[5])
 
             if size_blocks < 0 or free_blocks < 0 or blocksize > 1024*1024:
-                return (1, "WARN - Stale NFS handle")
+                return (2, "CRIT - Stale NFS handle")
 
             if line[1] == 'ok':
                 gb = 1024 * 1024 * 1024.0

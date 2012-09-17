@@ -538,11 +538,12 @@ def automation_get_check_information():
 
 def automation_scan_parents(args):
     settings = {
-        "timeout" : int(args[0]),
-        "probes"  : int(args[1]),
-        "max_ttl" : int(args[2]),
+        "timeout"     : int(args[0]),
+        "probes"      : int(args[1]),
+        "max_ttl"     : int(args[2]),
+        "ping_probes" : int(args[3]),
     }
-    hostnames = args[3:] 
+    hostnames = args[4:] 
     traceroute_prog = find_bin_in_path('traceroute')
     if not traceroute_prog:
         raise MKAutomationError("Cannot find binary <tt>traceroute</tt> in search path.")

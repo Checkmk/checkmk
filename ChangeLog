@@ -1,15 +1,119 @@
+1.2.0p3:
+    Core:
+    * Allow to add options to rules. Currently the options "disabled" and
+      "comment" are allowed. Options are kept in an optional dict at the
+      end of each rule.
+    * parent scan: skip gateways that are reachable via PING
+
+    Checks & Agents:
+    * mssql_backup: Fixed problems with datetime/timezone calculations
+    * New Checks for Siemens Blades (BX600)
+    * New Checks for Fortigate Firewalls
+    * FIX: megaraid_pdisks: handle case where no enclosure device exists
+    * mysql_capacity: cleaned up check, levels are in MB now
+    * jolokia_info, jolokia_metrics: new rewritten checks for jolokia (formerly
+      jmx4perl). You need the new plugin mk_jokokia for using them
+    * added preliminary agent for OpenVMS (refer to agents/README.OpenVMS) 
+    * vms_diskstat.df: new check file usage of OpenVMS disks
+    * vms_users: new check for number of interactive sessions on OpenVMS
+    * vms_cpu: new check for CPU utilization on OpenVMS
+    * vms_if: new check for network interfaces on OpenVMS
+    * vms_system.ios: new check for total direct/buffered IOs on OpenVMS
+    * vms_system.procs: new check for number of processes on OpenVMS
+    * vms_queuejobs: new check for monitoring current VMS queue jobs
+    * FIX: mssql agent: Added compatibility code for MSSQL 9
+    * f5_bigip_temp: add performance data
+    * added perf-o-meters for a lot of temperature checks
+    * cmctc_lcp.*: added new checks for Rittal CMC-TC LCP
+    * FIX: diskstat (linux): Don't inventorize check when data empty
+    * Cisco: Added Check for mem an cpu util
+    * New check for f5 bigip network interfaces
+    * cmctc.temp: added parameters for warn/crit, use now WATO rule
+      "Room temperature (external thermal sensors)"
+    * cisco_asa_failover: New Check for clustered Cisco ASA Firewalls 
+    * cbl_airlaser.status: New Check for CBL Airlaser IP1000 laser bridge.
+    * df, hr_fs, etc.: Filesystem checks now support grouping (pools)
+      Please refer to the check manpage of df for details
+    * FIX: windows agent: try to fix crash in event log handling
+    * FreeBSD Agent: Added swapinfo call to mem section to make mem check work again
+    * windows_multipath: Added the missing check for multipath.vbs (Please test)
+    * carel_uniflair_cooling: new check for monitoring datacenter air conditioning by "CAREL"
+
+    WATO:
+    * Added permission to control the "clone host" feature in WATO
+    * Added new role/permission matrix page in WATO to compare
+      permissions of roles
+    * FIX: remove line about number of rules in rule set overview
+      (that garbled the logical layout)
+    * Rules now have an optional comment and an URL for linking to 
+      documntation
+    * Rule now can be disabled without deleting them.
+    * Added new hook "sites-saved"
+    * Allow @ in user names (needed for some Kerberos setups)
+    * Implemented new option in WATO attributes: editable
+      When set to False the attribute can only be changed during creation
+      of a new object. When editing an object this attribute is only displayed.
+    * new: search for rules in "Host & Service Configuration"
+    * parent scan: new option "ping probes", that allows skipping 
+      unreachable gateways.
+
+    BI:
+    * Great speed up of rule compilation in large environments
+
+    Multisite:
+    * Added css class="dashboard_<name>" to the dashboard div for easier
+    customization of the dashboard style of a special dashboard
+    * FIX: fixed localization of general permissions
+    * FIX: show multisite warning messages even after page reload
+    * FIX: fix bug in Age ValueSpec: days had been ignored
+    * FIX: fixed bug showing only sidebar after re-login in multisite
+
+    Livecheck:
+    * FIX: Compile livecheck also if diet libc is missing
+
 1.2.0p2:
+    Core:
+    * simulation_mode: legacy_checks, custom_checks and active_checks
+      are replaced with dummy checks always being OK
+    * FIX: Precisely define order of reading of configuration files. This
+      fixes a WATO rule precedence problem
+
     Checks & Agents:
     * FIX: Fixed syntax errors in a bunch of man pages
     * if_lancom: silently ignore Point-To-Point interfaces
     * if_lancom: add SSID to logical WLAN interface names
     * Added a collection of MSSQL checks for monitoring MSSQL servers
       (backups, tablespaces, counters)
+    * New check wut_webio_io: Monitor the IO input channels on W&T Web-IO 
+      devices
+    * nfsmounts: reclassify "Stale NFS handle" from WARN to CRIT
+    * ORACLE agent/checks: better error handling. Let SQL errors get
+      through into check output, output sections even if no database
+      is running.
+    * oracle_version: new check outputting the version of an ORACLE
+      database - and using uncached direct SQL output.
+    * ORACLE agent: fix handling of EXCLUDE, new variable ONLY_SIDS
+      for explicitely listing SIDs to monitor
+    * mk_logwatch on Linux: new options regex and iregex for file selection
+    * remove obsolete ORACLE checks where no agent plugins where available
+    * FIX: printer_supply: Fix problem on DELL printers with "S/N" in output
+      (thanks to Sebastian Talmon)
+    * FIX: winperf_phydisk: Fix typo (lead to WATO rule not being applied)
+    * Windows agent: new [global] option crash_debug (see online docu)
+    * AIX agent: new check for LVM volume status in rootvg.
+    * PostgreSQL plugin: agent is now modified to work with PostgreSQL 
+      versions newer than 8.1. (multiple reports, thanks!)
 
     Multisite:
     * Show number of rows and number of selected rows in header line
       (also for WATO hosts table)
     * FIX: fix problem in showing exceptions (due to help function)
+    * FIX: fixed several localization problems in view/command processing
+    * FIX: fixed duplicated settings in WATO when using localisation
+    * FIX: fixed exception when refering to a language which does not exist
+    * FIX: Removing all downtimes of a host/service is now possible again
+    * FIX: The refresh time in footer is updated now when changing the value
+    * FIX: view editor shows "(Mobile)" hint in view titles when linking to views
 
     WATO: 
     * Main menu of ruleeditor (Host & Service Parameters) now has
@@ -20,11 +124,26 @@
       folder attributes
     * FIX: fix exception on unknown value in DropdownChoice
     * FIX: add service specification to ruleset Delay service notifications
+<<<<<<< Updated upstream
+    * FIX: fixed problem with disabled sites in WATO
+    * FIX: massive speedup when changing roles/users and activing changes
+      (especially when you have a larger number of users and folders)
+    * Add variable CONTACTPAGER to allowed macros in notifications
+    * FIX: fixed default setting if "Hide names of configuration variables"
+      in WATO
+    * FIX: ListOfString Textboxes (e.g. parents of folders) do now extend in IE
+=======
+    * FIX: fixed duplicated sections of permissions in rule editor
+>>>>>>> Stashed changes
 
     BI:
     * New iterators FOREACH_CHILD and FOREACH_PARENT
     * FIX: fix handling of FOREACH_ in leaf nodes (remove hard coded
       $HOST$, replace with $1$, $2$, ..., apply argument substitution)
+    * New logical datatable for aggregations that have the same name
+      as a host. Converted view "BI Boxes" to this new table. This allows
+      for Host-Aggregations containing data of other hosts as well.
+    * count_ok: allow percentages, e.g. "count_ok!70%!50%"
 
 1.2.0p1:
     Core:

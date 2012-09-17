@@ -43,12 +43,23 @@ multisite_datasources["bi_aggregations"] = {
 }
 
 multisite_datasources["bi_host_aggregations"] = {
-    "title"       : _("BI Host Aggregations"),
+    "title"       : _("BI Aggregations affected by one host"),
     "table"       : bi.host_table,
     "infos"       : [ "host", "aggr" ],
     "keys"        : [],
     "idkeys"      : [ 'aggr_name' ],
 }
+
+# Similar to host aggregations, but the name of the aggregation
+# is used to join the host table rather then the affected host
+multisite_datasources["bi_hostname_aggregations"] = {
+    "title"       : _("BI Hostname Aggregations"),
+    "table"       : bi.hostname_table,
+    "infos"       : [ "host", "aggr" ],
+    "keys"        : [],
+    "idkeys"      : [ 'aggr_name' ],
+}
+
 
 #     ____       _       _
 #    |  _ \ __ _(_)_ __ | |_ ___ _ __ ___

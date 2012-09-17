@@ -41,7 +41,7 @@ def get_input(valuespec, varprefix):
     return value
 
 
-def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None, buttontext = None):
+def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None, buttontext = None, title = None):
     new_value = value.copy()
     if html.var("filled_in") == "form" and html.check_transaction():
         messages = []
@@ -67,17 +67,11 @@ def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None, 
             return new_value
 
     html.begin_form("form")
-    html.write("<table class=form>\n")
+    header(title and title or _("Properties"))
     first = True
     for name, vs in entries:
-
-        html.write("<tr><td ")
-        if vs.help() and hover_help:
-            html.write('title="%s" ' % vs.help().replace('"', "&quot;"))
-        html.write("class=legend>%s" % (vs.title() or "")) 
-        if vs.help() and not hover_help:
-            html.write("<br><i>%s</i>" % vs.help())
-        html.write("</td><td class=content>")
+        section(vs.title())
+        html.help(vs.help())
         if name in value:
             v = value[name]
         else:
@@ -86,12 +80,11 @@ def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None, 
         if (not focus and first) or (name == focus):
             vs.set_focus(name)
             first = False 
-    html.write("<tr><td class=buttons colspan=2>")
+
+    end()
     if buttontext == None:
         buttontext = _("Save")
     html.button("save", buttontext)
-    html.write("</td></tr>\n")
-    html.write("</table>\n")
     html.hidden_fields()
     html.end_form()
 

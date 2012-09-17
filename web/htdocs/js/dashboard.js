@@ -44,6 +44,10 @@ function resize_dashlets(id, code)
         // check if dashlet has title and resize its width
         oDash = document.getElementById("dashlet_title_" + d_number);
         if (oDash) {
+            //if browser window to small prevent js error
+            if(d_width <= 20){ 
+                d_width = 21;
+            }
             oDash.style.width  = d_width - 20 + "px";
             /* oDash.style.top    = "-" + title_height + "px";
             oDash.style.height = title_height + "px"; */

@@ -135,7 +135,7 @@ def check_windows_services(item, params, info):
             else:
                 state = line[2]
                 start_type = "unknown"
-            found.append((line[0], state, start_type))
+            found.append((line[0], state, start_type, " ".join(line[3:])))
 
     if len(found) == 0:
         return (3, "UNKNOWN - service not found")
@@ -143,7 +143,7 @@ def check_windows_services(item, params, info):
 
     # We take the best found state (neccessary for clusters)
     best_state = None
-    for running_on, state, start_type in found:
+    for running_on, state, start_type, desc in found:
         for t_state, t_start_type, mon_state in params["states"]:
             if (t_state == None or t_state == state) \
              and (t_start_type == None or t_start_type == start_type): 
@@ -156,8 +156,7 @@ def check_windows_services(item, params, info):
             best_state = this_state
             best_info = state, start_type
             best_running_on = running_on
-
-    infotext = nagios_state_names[best_state] + " - %s (start type is %s)" % best_info
+    infotext = nagios_state_names[best_state] + " - " + desc + ": %s (start type is %s)" % best_info
     if best_running_on:
         infotext += " (running on: %s)" % best_running_on
 

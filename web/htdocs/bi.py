@@ -107,6 +107,7 @@ g_config_information = None # for invalidating cache after config change
 # without state.
 def load_services():
     services = {}
+    services_by_hostname = {}
     html.live.set_prepend_site(True)
     html.live.set_auth_domain('bi')
     data = html.live.query("GET hosts\n"
@@ -118,9 +119,11 @@ def load_services():
     for site, host, varnames, values, svcs, childs, parents in data:
         vars = dict(zip(varnames, values))
         tags = vars.get("TAGS", "").split(" ")
-        services[(site, host)] = (tags, svcs, childs, parents)
+        entry = (tags, svcs, childs, parents)
+        services[(site, host)] = entry
+        services_by_hostname.setdefault(host, []).append((site, entry))
 
-    return services
+    return services, services_by_hostname
 
 # Keep complete list of time stamps of configuration
 # and start of each site. Unreachable sites are registered
@@ -173,13 +176,16 @@ def compile_forest(user):
     global did_compilation
     did_compilation = True
 
+    services, services_by_hostname = load_services()
     cache = {
-        "forest" :            {},
-        "host_aggregations" : {},
-        "affected_hosts" :    {},
-        "affected_services":  {},
-        "services" : load_services(),
-        "see_all" : config.may("bi.see_all"),
+        "forest" :               {},
+        "aggregations_by_hostname" : {},
+        "host_aggregations" :    {},
+        "affected_hosts" :       {},
+        "affected_services":     {},
+        "services" :             services,
+        "services_by_hostname" : services_by_hostname,
+        "see_all" :              config.may("bi.see_all"),
     }
     g_user_cache = cache
 
@@ -197,37 +203,33 @@ def compile_forest(user):
         new_entries = [ e for e in new_entries if len(e["nodes"]) > 0 ]
 
         # enter new aggregations into dictionary for that group
-        entries = cache["forest"].get(group, [])
+        entries = cache["forest"].setdefault(group, [])
         entries += new_entries
-        cache["forest"][group] = entries
 
         # Update several global speed-up indices
         for aggr in new_entries:
             req_hosts = aggr["reqhosts"]
 
+            # Aggregations by last part of title (assumed to be host name)
+            name = aggr["title"].split()[-1]
+            cache["aggregations_by_hostname"].setdefault(name, []).append((group, aggr))
+            
             # All single-host aggregations looked up per host
             if len(req_hosts) == 1:
                 host = req_hosts[0] # pair of (site, host)
-                entries = cache["host_aggregations"].get(host, [])
-                entries.append((group, aggr))
-                cache["host_aggregations"][host] = entries
+                cache["host_aggregations"].setdefault(host, []).append((group, aggr))
 
             # All aggregations containing a specific host
             for h in req_hosts:
-                entries = cache["affected_hosts"].get(h, [])
-                entries.append((group, aggr))
-                cache["affected_hosts"][h] = entries
+                cache["affected_hosts"].setdefault(h, []).append((group, aggr))
 
             # All aggregations containing a specific service
             services = find_all_leaves(aggr)
             for s in services: # triples of site, host, service
-                entries = cache["affected_services"].get(s, [])
-                entries.append((group, aggr))
-                cache["affected_services"][s] = entries
+                cache["affected_services"].setdefault(s, []).append((group, aggr))
 
     # Remember successful compile in cache
     g_cache[user] = cache
-
 
 
 # Execute an aggregation rule, but prepare arguments
@@ -280,33 +282,47 @@ def find_matching_services(what, calllist):
     else:
         service_re = calllist[1]
 
+    matches = set([])
     honor_site = SITE_SEP in host_re
 
-    matches = set([])
+    if host_re.startswith("^(") and host_re.endswith(")$"):
+        middle = host_re[2:-2]
+        if middle in g_user_cache["services_by_hostname"]:
+            entries = [ ((e[0], host_re), e[1]) for e in g_user_cache["services_by_hostname"][middle] ]
+            host_re = "(.*)"
+    elif not honor_site and not '*' in host_re and not '$' in host_re and not '|' in host_re:
+        entries = [ ((e[0], host_re), e[1]) for e in g_user_cache["services_by_hostname"][host_re] ]
+    else:
+        entries = g_user_cache["services"].items()
 
     # TODO: Hier könnte man - wenn der Host bekannt ist, effektiver arbeiten, als
     # komplett alles durchzugehen.
-    for (site, hostname), (tags, services, childs, parents) in g_user_cache["services"].items():
+    for (site, hostname), (tags, services, childs, parents) in entries:
         host_matches = None
         if not match_host_tags(tags, required_tags):
             continue
 
-        # For regex to have '$' anchor for end. Users might be surprised
-        # to get a prefix match on host names. This is almost never what
-        # they want. For services this is useful, however.
-        if host_re.endswith("$"):
-            anchored = host_re
-        else:
-            anchored = host_re + "$"
+        host_matches = None
 
-        # In order to distinguish hosts with the same name on different
-        # sites we prepend the site to the host name. If the host specification
-        # does not contain the site separator - though - we ignore the site
-        # an match the rule for all sites.
-        if honor_site:
-            host_matches = do_match(anchored, "%s%s%s" % (site, SITE_SEP, hostname))
+        if host_re == '(.*)':
+            host_matches = (hostname, )
         else:
-            host_matches = do_match(anchored, hostname)
+            # For regex to have '$' anchor for end. Users might be surprised
+            # to get a prefix match on host names. This is almost never what
+            # they want. For services this is useful, however.
+            if host_re.endswith("$"):
+                anchored = host_re
+            else:
+                anchored = host_re + "$"
+
+            # In order to distinguish hosts with the same name on different
+            # sites we prepend the site to the host name. If the host specification
+            # does not contain the site separator - though - we ignore the site
+            # an match the rule for all sites.
+            if honor_site:
+                host_matches = do_match(anchored, "%s%s%s" % (site, SITE_SEP, hostname))
+            else:
+                host_matches = do_match(anchored, hostname)
 
         if host_matches != None:
             if what == config.FOREACH_CHILD:
@@ -321,9 +337,15 @@ def find_matching_services(what, calllist):
                     matches.add(host_matches)
                 else:
                     for service in services:
-                        svc_matches = do_match(service_re, service)
-                        if svc_matches != None:
+                        mo = (service_re, service)
+                        if mo in service_nomatch_cache:
+                            continue
+                        m = regex(service_re).match(service)
+                        if m:
+                            svc_matches = tuple(m.groups())
                             matches.add(host_matches + svc_matches)
+                        else:
+                            service_nomatch_cache.add(mo)
 
     matches = list(matches)
     matches.sort()
@@ -598,12 +620,16 @@ def match_host_tags(have_tags, required_tags):
 def compile_leaf_node(host_re, service_re = config.HOST_STATE):
     found = []
     honor_site = SITE_SEP in host_re
+    if not honor_site and not '*' in host_re and not '$' in host_re and not '|' in host_re:
+        entries = [ ((e[0], host_re), e[1]) for e in g_user_cache["services_by_hostname"][host_re] ]
+    else:
+        entries = g_user_cache["services"].items()
 
     # TODO: If we already know the host we deal with, we could avoid this loop
-    for (site, hostname), (tags, services, childs, parents) in g_user_cache["services"].items():
+    for (site, hostname), (tags, services, childs, parents) in entries:
         # If host ends with '|@all', we need to check host tags instead
         # of regexes.
-        if host_re.endswith('|@all'):
+        if False and host_re.endswith('|@all'):
             if not match_host_tags(host_re[:-5], tags):
                 continue
         elif host_re != '@all':
@@ -638,16 +664,24 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
 
             else:
                 for service in services:
-                    if regex(service_re).match(service):
+                    mo = (service_re, service)
+                    if mo in service_nomatch_cache:
+                        continue
+                    m = regex(service_re).match(service)
+                    if m:
                         found.append({"type"     : NT_LEAF,
                                       "reqhosts" : [(site, hostname)],
                                       "host"     : (site, hostname),
                                       "service"  : service,
                                       "title"    : "%s - %s" % (hostname, service)} )
+                    else:
+                        service_nomatch_cache.add(mo)
 
     found.sort()
     return found
 
+
+service_nomatch_cache = set([])
 
 regex_cache = {}
 def regex(r):
@@ -660,6 +694,7 @@ def regex(r):
         raise MKConfigError("Invalid regular expression '%s': %s" % (r, e))
     regex_cache[r] = rx
     return rx
+
 
 
 
@@ -706,7 +741,7 @@ def execute_leaf_node(node, status_info):
     # Get current state of host and services
     status = status_info.get((site, host))
     if status == None:
-        return ({ "state" : MISSING, "output" : "Host %s not found" % host}, None, node)
+        return ({ "state" : MISSING, "output" : _("Host %s not found") % host}, None, node)
     host_state, host_output, service_state = status
 
     # Get state assumption from user
@@ -722,7 +757,7 @@ def execute_leaf_node(node, status_info):
             if entry[0] == service:
                 state, has_been_checked, output = entry[1:]
                 if has_been_checked == 0:
-                    output = "This service has not been checked yet"
+                    output = _("This service has not been checked yet")
                     state = PENDING
                 state = {"state":state, "output":output}
                 if state_assumption != None:
@@ -890,12 +925,23 @@ def aggr_best(nodes, n = 1, worst_state = CRIT):
 config.aggregation_functions["worst"] = aggr_worst
 config.aggregation_functions["best"]  = aggr_best
 
+def aggr_countok_convert(num, count):
+    if num.endswith('%'):
+        return int(num[:-1]) / 100.0 * count
+    else:
+        return int(num)
+
 def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
     states = [ i[0]["state"] for i in nodes ]
     num_ok = len([s for s in states if s == 0 ])
-    if num_ok >= int(needed_for_ok):
+
+    # counts can be specified as integer (e.g. '2') or
+    # as percentages (e.g. '70%').
+
+
+    if num_ok >= aggr_countok_convert(needed_for_ok, len(states)):
         return { "state" : 0, "output" : "" }
-    elif num_ok >= int(needed_for_warn):
+    elif num_ok >= aggr_countok_convert(needed_for_warn, len(states)):
         return { "state" : 1, "output" : "" }
     else:
         return { "state" : 2, "output" : "" }
@@ -1066,7 +1112,13 @@ def table(columns, add_headers, only_sites, limit, filters):
 
 
 # Table of all host aggregations, i.e. aggregations using data from exactly one host
+def hostname_table(columns, add_headers, only_sites, limit, filters):
+    return singlehost_table(columns, add_headers, only_sites, limit, filters, True)
+
 def host_table(columns, add_headers, only_sites, limit, filters):
+    return singlehost_table(columns, add_headers, only_sites, limit, filters, False)
+
+def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbyname):
     compile_forest(config.user_id)
     load_assumptions() # user specific, always loaded
 
@@ -1089,14 +1141,24 @@ def host_table(columns, add_headers, only_sites, limit, filters):
     for hostrow in hostrows:
         site = hostrow["site"]
         host = hostrow["name"]
-        status_info = { (site, host) : [ hostrow["state"], hostrow["plugin_output"], hostrow["services_with_info"] ] }
-        for group, aggregation in g_user_cache["host_aggregations"].get((site, host), []):
+        if joinbyname:
+            aggrs = g_user_cache["aggregations_by_hostname"].get(host, [])
+            status_info = None
+        else:
+            aggrs = g_user_cache["host_aggregations"].get((site, host), [])
+            status_info = { (site, host) : [ 
+                hostrow["state"], 
+                hostrow["plugin_output"], 
+                hostrow["services_with_info"] ] }
+
+        for group, aggregation in aggrs:
             row = hostrow.copy()
             row.update(create_aggregation_row(aggregation, status_info))
             row["aggr_group"] = group
             rows.append(row)
             if not html.check_limit(rows, limit):
                 return rows
+
 
     return rows
 

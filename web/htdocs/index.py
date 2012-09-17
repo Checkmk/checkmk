@@ -156,7 +156,7 @@ def connect_to_livestatus(html):
 
     # If Multisite is retricted to data user is a nagios contact for,
     # we need to set an AuthUser: header for livestatus
-    if not config.may("see_all"):
+    if not config.may("general.see_all"):
         html.live.set_auth_user('read',   config.user_id)
         html.live.set_auth_user('action', config.user_id)
 
@@ -228,6 +228,11 @@ def handler(req, profiling = True):
             os.chmod(profilefile + ".py", 0755)
             return apache.OK
 
+        # Make sure all plugins are avaiable as early as possible. At least
+        # we need the plugins (i.e. the permissions declared in these) at the
+        # time before the first login for generating auth.php.
+        load_all_plugins()
+
         # Detect mobile devices
         if html.has_var("mobile"):
             html.mobile = not not html.var("mobile")
@@ -247,7 +252,6 @@ def handler(req, profiling = True):
         # here. Automation calls bybass the normal authentication stuff
         if req.myfile == "automation":
             try:
-                load_all_plugins()
                 handler()
             except Exception, e:
                 html.write(str(e))
@@ -293,8 +297,10 @@ def handler(req, profiling = True):
         # All plugins might have to be reloaded due to a language change
         load_all_plugins()
 
+        import default_permissions
+
         # User allowed to login at all?
-        if not config.may("use"):
+        if not config.may("general.use"):
             reason = _("You are not authorized to use Check_MK Multisite. Sorry. "
                        "You are logged in as <b>%s</b>.") % config.user_id
             if len(config.user_role_ids):

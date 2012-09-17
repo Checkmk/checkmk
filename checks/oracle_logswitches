@@ -53,7 +53,7 @@ def check_oracle_logswitches(item, params, info):
                 return (1, "WARN" + infotext, perfdata)
             else:
                 return (0, "OK" + infotext, perfdata)
-    return (2, "UNKNOWN - Database not existing or not running")
+    return (3, "UNKNOWN - Database not existing or not running")
 
 check_info['oracle_logswitches'] = (check_oracle_logswitches, "ORA %s Logswitches", 1,  inventory_oracle_logswitches )
 checkgroup_of['oracle_logswitches'] = "oracle_logswitches" 

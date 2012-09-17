@@ -1,0 +1,63 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<vms_queuejobs>>>
+# 2036F23D SRV_WATCHPROD LEF 0 05:10:00.39 945007498 7721395
+# 20201AF1 DRS_WATCHDOG_22 LEF 0 00:01:39.97 284611 2030
+
+def inventory_vms_queuejobs(info):
+    return [(None, {})]
+
+def check_vms_queuejobs(_no_item, params, info):
+    names = []
+    max_cpu_secs = 0
+    max_cpu_job = None
+    for id, name, state, cpu_days, cpu_time, ios, pgfaults in info:
+        names.append(name)
+        hours, minutes, seconds = map(float, cpu_time.split(":"))
+        cpu_secs = int(cpu_days) * 86400 + hours * 3600 + minutes * 60 + seconds
+        if cpu_secs > max_cpu_secs:
+            max_cpu_secs = cpu_secs
+            max_cpu_job = name
+
+    infotext = " - %d jobs" % len(info)
+    if max_cpu_job:
+        minutes, seconds = divmod(max_cpu_secs, 60)
+        hours, minutes = divmod(minutes, 60)
+        days, hours = divmod(hours, 24)
+        infotext += ', most CPU used by %s (%d days, %02d:%02d:%02d.%02d)' % \
+                (max_cpu_job, days, hours, minutes, int(seconds), int(seconds * 100))
+
+    return 0, "OK" + infotext
+
+
+check_info['vms_queuejobs'] = {
+    "check_function" :      check_vms_queuejobs,
+    "inventory_function" :  inventory_vms_queuejobs,
+    "service_description" : "Queue Jobs",
+    "has_perfdata" :        False,
+}

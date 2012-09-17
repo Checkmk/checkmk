@@ -44,6 +44,10 @@ diskstat_inventory = []
 # ]
 
 def inventory_diskstat_generic(info):
+    # Skip over on empty data
+    if not info:
+        return
+
     # New style: use rule based configuration, defaulting to summary mode
     if diskstat_inventory_mode == "rule":
         hits = host_extra_conf(g_hostname, diskstat_inventory)
@@ -122,6 +126,10 @@ def check_diskstat_line(this_time, item, params, line):
                 status = max(status, 1)
                 infos[-1] += "(!)"
 
+    # Add performance data for averaged IO
+    if average_range != None:
+        perfdata = [ perfdata[0], perfdata[2], perfdata[1], perfdata[3] ]
+
     # Do Latency computation if this information is available:
     if len(line) >= 6:
         reads, writes, timems = map(int, line[3:6])
@@ -147,11 +155,6 @@ def check_diskstat_line(this_time, item, params, line):
         if params.get("latency_perfdata"):
             perfdata.append(("ios", ios_per_sec))
             perfdata.append(("latency", latency, warn, crit))
-
-
-
-    if average_range != None:
-        perfdata = [ perfdata[0], perfdata[2], perfdata[1], perfdata[3] ]
 
     return (status, nagios_state_names[status] + " - " + ", ".join(infos) , perfdata)
 

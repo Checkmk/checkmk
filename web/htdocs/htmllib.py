@@ -470,6 +470,12 @@ class html:
     def number_input(self, varname, deflt = "", size=8, style=""):
         self.text_input(varname, str(deflt), "number", size=size, style=style)
 
+
+    # Needed if input elements are put into forms without the helper
+    # functions of us.
+    def add_form_var(self, varname):
+        self.form_vars.append(varname)
+
     def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None, **args):
         if default_value == None:
             default_value = ""
@@ -850,8 +856,9 @@ class html:
         if self.req.header_sent:
             self.bottom_focuscode()
             corner_text = ""
-            if self.browser_reload:
-                corner_text += _("refresh: %s secs") % self.browser_reload
+            corner_text += '<div style="display: %s" id=foot_refresh>%s</div>' % (
+                (self.browser_reload and "inline-block" or "none",
+                 _("refresh: <div id=foot_refresh_time>%s</div> secs") % self.browser_reload)) 
             if self.render_headfoot:
                 si = self.render_status_icons()
                 self.write("<table class=footer><tr>"
@@ -878,10 +885,10 @@ class html:
     def render_status_icons(self):
         h = ""
         if True: # self.req.method == "GET":
-            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="URL to this frame"></a>\n' % \
-                 self.makeuri([])
-            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="URL to this page including sidebar"></a>\n' % \
-                 ("index.py?" + urlencode_vars([("start_url", self.makeuri([]))]))
+            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
+                 (self.makeuri([]), _("URL to this frame")) 
+            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="%s"></a>\n' % \
+                 ("index.py?" + urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar"))
         for img, tooltip in self.status_icons.items():
             h += '<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip)
         return h
@@ -936,10 +943,10 @@ class html:
         count = len(rows)
         if limit != None and count >= limit + 1:
             text = _("Your query produced more than %d results. ") % limit
-            if self.var("limit", "soft") == "soft" and config.may("ignore_soft_limit"):
+            if self.var("limit", "soft") == "soft" and config.may("general.ignore_soft_limit"):
                 text += '<a href="%s">%s</a>' % \
                              (self.makeuri([("limit", "hard")]), _('Repeat query and allow more results.'))
-            elif self.var("limit") == "hard" and config.may("ignore_hard_limit"):
+            elif self.var("limit") == "hard" and config.may("general.ignore_hard_limit"):
                 text += '<a href="%s">%s</a>' % \
                              (self.makeuri([("limit", "none")]), _('Repeat query without limit.'))
             self.show_warning(text)
@@ -948,7 +955,7 @@ class html:
         return True
 
     def do_actions(self):
-        return self.var("_do_actions") not in [ "", None, "No" ]
+        return self.var("_do_actions") not in [ "", None, _("No") ]
 
     def set_focus(self, varname):
         self.focus_object = (self.form_name, varname)
@@ -1070,7 +1077,7 @@ class html:
             return False
 
     def confirm(self, msg, method="POST", action=None):
-        if self.var("_do_actions") == "No":
+        if self.var("_do_actions") == _("No"):
             return # user has pressed "No"               # None --> "No"
         if not self.has_var("_do_confirm"):
             if self.mobile:

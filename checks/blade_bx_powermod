@@ -1,0 +1,64 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+
+
+def check_blade_bx_powermod(item, _no_param, info):
+    power_status = {
+        1 : "unknow", 
+        2 : "ok",  
+        3 : "not-present", 
+        4 : "error",  
+        5 : "critical", 
+        6 : "off", 
+        7 : "dummy"
+        } 
+
+    for index, status, product_name in info:
+        status = saveint(status)
+        if index != item: continue
+        state = 0
+        if status != 2:
+            state = 2
+
+        return (state, nagios_state_names[state] + " - %s Status is %s" % (product_name, power_status[status]) ) 
+
+    return (3, "Module %s not found in SNMP info" % index)
+
+check_info['blade_bx_powermod'] = {
+    "check_function" : check_blade_bx_powermod,
+    "inventory_function" : lambda info: [ (line[0], None) for line in info ],
+    "service_description" : "Power Module %s",
+    "has_perfdata" : False,
+    "snmp_info" : (".1.3.6.1.4.1.7244.1.1.1.3.2.4.1", [
+                                                      1, # index 
+                                                      2, # status
+                                                      4, # product name 
+   ]),
+   "snmp_scan_function" : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0"),
+}
+

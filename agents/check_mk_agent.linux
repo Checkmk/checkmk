@@ -53,7 +53,7 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.0p2
+echo Version: 1.2.0p3
 echo AgentOS: linux
 echo PluginsDirectory: $PLUGINSDIR
 echo LocalDirectory: $LOCALDIR
@@ -66,12 +66,19 @@ then
     echo $(sed -n '/^service[[:space:]]*check_mk/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1)
 fi
 
-# Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
-# Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um
-# Haenger zu vermeiden. Diese sollten ohnehin besser auf dem
-# Server, als auf dem Client ueberwacht werden.
+# Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)
+# Heads up: NFS-mounts are generally supressed to avoid agent hangs. 
+# If hard NFS mounts are configured or you have too large nfs retry/timeout
+# settings, accessing those mounts from the agent would leave you with 
+# thousands of agent processes and, ultimately, a dead monitored system.
+# These should generally be monitored on the NFS server, not on the clients.
+
 echo '<<<df>>>'
-df -PTlk -x smbfs -x tmpfs -x cifs -x iso9660 -x udf -x nfsv4 | sed 1d
+# The exclusion list is getting a bit of a problem. -l should hide any remote FS but seems 
+# to be all but working.
+excludefs="-x smbfs -x tmpfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs"
+df -PTlk $excludefs | sed 1d
+
 # VMWare shows its own filesystems with 'vdf'. Just one
 # problem: it outputs not 7 but only 6 columns
 if which vdf > /dev/null
@@ -111,11 +118,11 @@ echo '<<<ps>>>'
 ps ax -o user,vsz,rss,pcpu,command --columns 10000 | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
 
-# Speicherauslastung
+# Memory usage
 echo '<<<mem>>>'
 egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
 
-# Load und Anzahl Prozesse
+# Load and number of processes
 echo '<<<cpu>>>'
 echo "$(cat /proc/loadavg) $(grep -E '^CPU|^processor' < /proc/cpuinfo | wc -l)"
 

@@ -123,7 +123,7 @@ def render_dashboard(name):
         title = wato.api.get_folder_title(wato_folder) + " - " + title
     html.header(title, javascripts=["dashboard"], stylesheets=["pages", "dashboard", "status", "views"])
 
-    html.write("<div id=dashboard>\n") # Container of all dashlets
+    html.write("<div id=dashboard class=\"dashboard_%s\">\n" % name) # Container of all dashlets
 
     refresh_dashlets = [] # Dashlets with automatic refresh, for Javascript
     for nr, dashlet in enumerate(board["dashlets"]):
@@ -638,4 +638,4 @@ def render_pnpgraph(site, host, service=None, source=0):
     img_url = base_url + "image" + var_part
     html.write('<a href="%s"><img border=0 src="%s"></a>' % (pnp_url, img_url))
 
-load_plugins()
+# load_plugins()

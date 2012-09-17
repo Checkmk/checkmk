@@ -1,0 +1,35 @@
+title: Check of Powerup Status CBL Airlaser
+agents: snmp
+author: Andreas Boesl <ab@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ The check can be used to monitor the CBL AirLaser Powerup status.
+
+ The CBL Airlaser is a device to transparently transport Gigabit Ethernet
+ over an optical link with optional microwave fallback.
+
+ The status of the AirLaser should usually be normal. 
+ After power up the system performs some self-tests. 
+ This check aquires the results from the sysStatus OID in the 
+ {CBL-AIRLASOR-IP1000-MIB}
+
+ Minor airlaser problems are reported as a warning condition, major failures 
+ as "anything failed"
+
+ snmp-Status    to     nagios-status:
+
+ (1)normal operation:  {OK}
+
+ (2)testing mode:      {WARNING}
+
+ (3)warning condition: {WARNING}
+
+ (4)anything failed:   {CRIT}
+
+
+inventory:
+ A service will be generated if the CBL-AIRLASOR-IP1000 MIB is supported by 
+ the remote device.
+ 
+ 

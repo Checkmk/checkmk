@@ -1,0 +1,12 @@
+Title: IE 9.0.8.112... 64bit doesnt autoadd textboxes (i.e. for parents on folder)
+Component: wato
+Class: bug
+State: done
+Date: 2012-06-19 12:03:32
+Targetversion: 1.2.0
+
+IE 9 seems to have problems with auto-adding new textboxes once you filled one.
+Same thing works on Chrome / FF
+
+2012-07-04 10:48:37: changed state open -> done
+Fixed error in JS.

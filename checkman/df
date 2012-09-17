@@ -8,14 +8,14 @@ description:
  is checked against a warning and a critical level, which
  can be specified in numerous ways. Beware: on Linux and UNIX systems
  the filesystem might reserve a certain amount for root (typical is 5%).
- The reserved space is accounted for as used. This is consistant with
+ This checks considers that reserved space as used. This is consistant with
  the percentage-column in the output of {df}. So your filesystem might
  be at 100% in a situation where root still has 5% free space available.
 
- As of version {1.1.9i9} Check_MK supports {trends}. This means that
- the {df} check is now able to compute the {change} of the used space
- over the time and can make a forecast into the future. It can estimate
- the point of time where the filesystem will be full.
+ {Trends:} This checks supports filesystem {trends}. This means that the {df} check
+ is able to compute the {change} of the used space over the time and can
+ make a forecast into the future. It can estimate the point of time where
+ the filesystem will be full.
 
  In the default configuration the check will compute the trend based on the
  data of the last 24 hours. Similar like the CPU load this is done with
@@ -26,13 +26,27 @@ description:
  access to any RRDs or similar storage.
 
  Please note, that when a filesystem is started being monitored, then
- the trend of the past is unknown and will be assumed to be {zero}. That means
- that it will take at least one trend range of time until the trend approximately
- reflects the reality.
+ the trend of the past is unknown and will be assumed to be {zero}. That
+ means that it will take at least one trend range of time until the trend
+ approximately reflects the reality.
+
+ {Grouping:} In some situations you do not want to monitor a single
+ filesystem but a group of filesystems that together form a pool.
+ It is not relevant if some filesystems of the pool are 
+ full but only the total usage of the pool as whole. The {df} check supports such pools
+ by defining groups. For each group you specify a name and a list
+ of globbing patterns (path patterns containing {*} and {?}). The name
+ is being used as the check item. All filesystems that match one of
+ the patterns are part of the pool.
+
+ When using inventory then you specify the groups with the ruleset
+ {filesystem_groups}. When configuring manual checks, you specify
+ the list of patterns in the check parameter {"patterns"}.
 
 item:
  The mount point of the filesystem (UNIX) or the drive
- letter in upper case followed by a colon (Windows).
+ letter in upper case followed by a colon (Windows). For groups
+ the item is the name of the group.
 
 examples:
  # Set default levels for all filesystems to 90/95 (simple way)
@@ -56,7 +70,6 @@ examples:
 
  # Disable trend performance data (beware of exsting RRDs)
  filesystem_default_levels["trend_perfdata"] = False
-
 
  # Override warning/critical levels for all checks where
  # levels are "filesystem_default_levels"
@@ -82,6 +95,23 @@ examples:
  # Exclude certain filesystems from being inventorized at all
  inventory_df_exclude_fs = [ "iso9660", "romfs" ]
 
+ # Define filesystem groups that should be monitored like
+ # one big filesystem
+ filesystem_groups = [
+   # The group Proxypool contains filesystems beginning with /var/cache
+   ( [ ('Proxypool', '/var/cache/*') ],                [], ALL_HOSTS),
+
+   # The group GOA/MUMU contains all filesystems beginning with either
+   # /goa or /mumu
+   ( [ ('GOA/MUMU', '/goa*'), ('GOA/MUMU', '/mumu*')], [], ALL_HOSTS),
+
+   # The group SAP contains filesystems containing SAP or sap, but only
+   # on hosts with the tags "sap" and "linux":
+   ( [('SAP', '*SAP*'), ('SAP', '*sap*')], [ 'sap', 'linux' ], ALL_HOSTS),
+ ] 
+
+
+
 perfdata:
  One or three values: The first value is the used space of the filesystem
  in MB. Also the minimum (0 MB), maximum (size of the filesystem) and the warning and critical
@@ -104,6 +134,12 @@ inventory:
  listed in {inventory_df_exclude_fs}. The Windows agent
  only reports fixed disks. The Linux agent reports filesystems
  that have a size and are not of type smbfs, tmpfs, cifs or nfs.
+
+ When {filesystem_groups} is defined and a found filesystem
+ is matching one of the patterns of a group then instead of a
+ service of the single filesystem a check for the group is being
+ created. The check item is the name of that group in that
+ case.
 
 [parameters]
 parameters (dict): This check supports two types of parameters. The
@@ -151,6 +187,12 @@ parameters (dict): This check supports two types of parameters. The
  output two further performance data values: the current growth
  and the trend.
 
+ {"patterns"}: If this is contained in the dictionary then it
+ must be a list of path patterns (using * and ?).  Instead of a 
+ single filesystem all filesystems matching one of the patterns
+ are taken into consideration and their sizes and usages are
+ summed up.
+
  It is still possible to specify a pair or triple of numbers
  {instead} of a dictionary:
 
@@ -171,3 +213,7 @@ inventory_df_exclude_mountpoints (list of strings): List of mount points to excl
 filesystem_default_levels: Default levels for filesystem detected by inventory.
  This variable is preset to {{ "levels" : (80, 90), "magic_normsize"  : 20,
  "levels_low" : (50, 60), "trend_range" : 24 }}
+filesystem_groups (ruleset): A ruleset for defining filesystem groups. The value of each
+ rule is a pair of (groupname, patterns), where patterns is a list of strings (path
+ patterns). During inventory filesystems that match one of the patterns are handled
+ as member of the group.

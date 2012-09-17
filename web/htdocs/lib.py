@@ -63,6 +63,8 @@ class MKInternalError(Exception):
 # and make it writable for the group
 def make_nagios_directory(path):
     if not os.path.exists(path):
+        parent_dir, lastpart = path.rstrip('/').rsplit('/', 1)
+        make_nagios_directory(parent_dir)
         try:
             os.mkdir(path)
             gid = grp.getgrnam(defaults.www_group).gr_gid
@@ -193,7 +195,7 @@ def load_language(lang):
         except IOError, e:
             # Fallback to non localized multisite
             # I'd prefer to fallback to multisite default language but can not import config module here
-            __builtin__.current_language = config.default_language
+            __builtin__.current_language = None
     else:
         # Replace the _() function to disable i18n again
         __builtin__._ = lambda x: x

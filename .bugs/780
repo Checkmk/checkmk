@@ -1,0 +1,38 @@
+Title: Error when removing downtimes
+Component: multisite
+Class: bug
+State: done
+Date: 2012-06-28 12:22:44
+Targetversion: 1.2.0
+
+[1340871811] Warning: Unrecognized external command -> [1340871810] 
+DEL_SVC_DOWNTIME;1
+[1340871811] Warning: Unrecognized external command -> [1340871810] 
+DEL_SVC_DOWNTIME;2
+[1340871811] Warning: Unrecognized external command -> [1340871810] 
+DEL_SVC_DOWNTIME;3
+[1340871811] Warning: Unrecognized external command -> [1340871810] 
+DEL_SVC_DOWNTIME;4
+[1340871811] Warning: Unrecognized external command -> [1340871810] 
+DEL_SVC_DOWNTIME;5
+[1340871811] Warning: Unrecognized external command -> [1340871810] 
+DEL_SVC_DOWNTIME;6
+[1340871811] Warning: Unrecognized external command -> [1340871810] 
+DEL_SVC_DOWNTIME;21
+[1340871811] Warning: Unrecognized external command -> [1340871810] 
+DEL_SVC_DOWNTIME;22
+[1340871811] Warning: Unrecognized external command -> [1340871810] 
+DEL_SVC_DOWNTIME;23
+[1340871811] Warning: Unrecognized external command -> [1340871810] 
+DEL_SVC_DOWNTIME;24
+[1340871811] Warning: Unrecognized external command -> [1340871810] 
+DEL_SVC_DOWNTIME;25
+[1340871811] Warning: Unrecognized external command -> [1340871810] 
+DEL_SVC_DOWNTIME;26
+[1340871811] Warning: Unrecognized external command -> [1340871810] 
+DEL_SVC_DOWNTIME;27
+[1340871811] Warning: Unrecognized external command -> [1340871810] 
+DEL_SVC_DOWNTIME;28
+
+2012-07-03 13:12:34: changed state open -> done
+Duplicate of 778. Has been fixed.

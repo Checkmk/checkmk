@@ -69,7 +69,7 @@ custom_links['admin'] = custom_links['user'] + [
       ( "Mathias Kettner",                "http://mathias-kettner.de/" ),
       ( "Check_MK Mailinglists",          "http://mathias-kettner.de/check_mk_lists.html" ),
       ( "Check_MK Exchange (inofficial)", "http://exchange.check-mk.org/", None, "_blank" ),
-      ( "Nagios Portal (German)",         "http://nagios-portal.org", None, "_blank"),
+      ( "Monitoring Portal (German)",     "http://monitoring-portal.org", None, "_blank"),
   ])
 ]
 

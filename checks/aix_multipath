@@ -34,7 +34,10 @@
 def inventory_aix_multipath(info):
     disks = {}
     for disk, controller, status in info:
-        disks[disk] = disks.get(disk, 0) + 1
+        # filtering here to only see disks. there are other multipath devices,
+        # too, but those have incomplete status => false positives
+        if disk.startswith("hdisk"):
+            disks[disk] = disks.get(disk, 0) + 1
     return [(disk, {'paths' : disks[disk]}) for disk in disks.keys()] 
 
 def check_aix_multipath(item, params, info):

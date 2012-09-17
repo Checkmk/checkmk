@@ -66,7 +66,7 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.0p2
+echo Version: 1.2.0p3
 echo AgentOS: freebsd
 
 
@@ -124,6 +124,7 @@ if [ -x /usr/local/bin/muse ]
 	echo '<<<mem>>>'
 # 					yes, i don't know sed well.
 	muse -k 2>/dev/null | sed 's/Total/MemTotal/' | sed 's/Free/MemFree/'
+        swapinfo -k 1K | tail -n 1 | awk '{ print "SwapTotal: "$2" kB\nSwapFree: "$4" kB" }'
 fi
 
 
@@ -154,11 +155,11 @@ echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr 
 
 
 # Multipathing is supported in FreeBSD by now
-# see "gmultipath" or 
 # http://www.mywushublog.com/2010/06/freebsd-and-multipath/
-# it's queried using "gmultipath status" and seems to the 2nd-most 
-# straightforward multipath implementation since AIX
-
+if kldstat -v | grep g_multipath > /dev/null ; then
+    echo '<<<freebsd_multipath>>>'
+    gmultipath status | grep -v ^Name
+fi
 
 
 # Soft-RAID
@@ -184,8 +185,7 @@ if [ "$(echo $osver | cut -f1 -d\. )" -gt "8" ]; then
     netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$8" "$5" "$6" "$7" 0 0 0 0 "$11" "$9" "$10" 0 0 0 0 0"}'
 else 
     # pad output for freebsd 7 and before
-    netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$7"
-"$5" "$6" 0 0 0 0 0 "$10" "$8" "$9" 0 0 "$11" 0 0"}'
+    netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$7" "$5" "$6" 0 0 0 0 0 "$10" "$8" "$9" 0 0 "$11" 0 0"}'
 fi
 
 

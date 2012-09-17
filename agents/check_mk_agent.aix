@@ -38,7 +38,7 @@ LOCALDIR=$MK_LIBDIR/local
 
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.0p2
+echo Version: 1.2.0p3
 echo AgentOS: aix
 
 echo '<<<df>>>'
@@ -94,6 +94,11 @@ fi
 
 echo '<<<aix_multipath>>>'
     lspath -F"name parent status" 
+
+echo '<<<aix_lvm>>>'
+    # -L disables LVM lock for the query. Avoids blocking while LVM is
+    # doing changes. For rootvg that is fine.
+    lsvg -L -l rootvg
 
 
 echo '<<<tcp_conn_stats>>>'

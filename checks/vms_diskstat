@@ -1,0 +1,60 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<vms_diskstat>>>
+# $1$DGA1122: TEST_WORK 1171743836 1102431184 0.00 
+# DSA1: SHAD_1 66048000 58815666 0.00
+# DSA2: SHAD_2 66048000 47101824 0.07
+# DSA3: SHAD_3 66048000 46137546 1.57
+# DSA4: SHAD_4 66048000 36087093 0.00
+# DSA5: SHAD_5 66048000 32449914 0.00
+# $1$DGA1123: TEST_WORK 2171743836 1102431184 0.00 
+# $1$DGA1124: TEMP_02 3171743836 102431184 1.10 
+# $1$DGA1125: DATA_01 1171743836 202431184 0.20 
+
+def inventory_vms_diskstat_fs(info):
+    return df_inventory([ line[1] for line in info ])
+
+def check_vms_diskstat_fs(item, params, info):
+    for line in info:
+        if line[1] == item:
+            device, label, size, used, ios = line
+            size_mb = int(size) * 512 / (1024.0 * 1024.0)
+            avail_mb = int(used) * 512 / (1024.0 * 1024.0)
+            return df_check_filesystem(g_hostname, item, size_mb, avail_mb, params)
+
+    return (3, "UNKNOWN - no such disk")
+
+
+check_info['vms_diskstat.df'] = {
+    "check_function" :      check_vms_diskstat_fs,
+    "inventory_function" :  inventory_vms_diskstat_fs,
+    "service_description" : "fs_%s",
+    "has_perfdata" :        True,
+    "group" :               "filesystem",
+    "includes" :            [ "df.include" ],
+}

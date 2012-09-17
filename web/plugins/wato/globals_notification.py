@@ -98,6 +98,7 @@ register_configvar(group,
                   "The following macros are available in all templates:<br><br>"
                   "<tt><b>$CONTACTNAME$</b></tt>: login name of the contact person, "
                   "<tt><b>$CONTACTEMAIL$</b></tt>: email address of the contact person, "
+                  "<tt><b>$CONTACTPAGER$</b></tt>: pager address of the contact person, "
                   "<tt><b>$NOTIFICATIONTYPE$</b></tt>: one of PROBLEM, RECOVERY, ACKNOWLEDGEMENT, FLAPPINGSTART, FLAPPINGSTOP, FLAPPINGDISABLED, DOWNTIMESTART, DOWNTIMEEND, or DOWNTIMECANCELLED, "
                   "<tt><b>$HOSTNAME$</b></tt>: the name of the host, "
                   "<tt><b>$HOSTALIAS$</b></tt>: the alias of the host, "

@@ -144,7 +144,7 @@ class Age(ValueSpec):
         html.write("<div>")
         html.number_input(varprefix+'_days', days, 2)
         html.write(" %s " % _("days"))
-        html.number_input(varprefix+'_hour', hours, 2)
+        html.number_input(varprefix+'_hours', hours, 2)
         html.write(" %s " % _("hours"))
         html.number_input(varprefix+'_minutes', minutes, 2)
         html.write(" %s " % _("min"))
@@ -153,7 +153,12 @@ class Age(ValueSpec):
         html.write("</div>")
 
     def from_html_vars(self, varprefix):
-            return (saveint(html.var(varprefix+'_hour'))*3600) + (saveint(html.var(varprefix+'_minutes'))*60) + saveint(html.var(varprefix+'_seconds'))
+            return (
+                   saveint(html.var(varprefix+'_days')) * 3600 * 24
+                 + saveint(html.var(varprefix+'_hours')) * 3600
+                 + saveint(html.var(varprefix+'_minutes')) * 60 
+                 + saveint(html.var(varprefix+'_seconds'))
+            )
 
     def value_to_text(self, value):
         days,    rest    = divmod(value, 60*60*24)
@@ -557,6 +562,7 @@ class ListOf(ValueSpec):
         self._add_label = kwargs.get("add_label", _("Add new element"))
         self._movable = kwargs.get("movable", True)
         self._totext = kwargs.get("totext")
+        self._allow_empty = kwargs.get("allow_empty", True)
 
     def del_button(self, vp, nr):
         js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
@@ -655,6 +661,8 @@ class ListOf(ValueSpec):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n+1))
 
     def validate_value(self, value, varprefix):
+        if not self._allow_empty and len(value) == 0:
+            raise MKUserError(varprefix, _("Please specify at least on entry"))
         for n, v in enumerate(value):
             self._valuespec.validate_value(v, varprefix + "_%d" % (n+1))
 
@@ -749,6 +757,7 @@ class DropdownChoice(ValueSpec):
         self._choices = kwargs["choices"]
         self._help_separator = kwargs.get("help_separator")
         self._label = kwargs.get("label")
+        self._prefix_values = kwargs.get("prefix_values", False)
 
     def choices(self):
         if type(self._choices) == list:
@@ -770,6 +779,8 @@ class DropdownChoice(ValueSpec):
         defval = "0"
         options = []
         for n, entry in enumerate(self.choices()):
+            if self._prefix_values:
+                entry = (entry[0], "%s - %s" % entry)
             options.append((str(n),) + entry[1:])
             if entry[0] == value:
                 defval = str(n)
@@ -845,6 +856,15 @@ class CascadingDropdown(ValueSpec):
             return (self._choices[0][0], self._choices[0][2].canonical_value())
         else:
             return self._choices[0][0]
+
+    def default_value(self):
+        try:
+            return self._default_value
+        except:
+            if self._choices[0][2]:
+                return (self._choices[0][0], self._choices[0][2].default_value())
+            else:
+                return self._choices[0][0]
 
     def render_input(self, varprefix, value):
         def_val = '0'
@@ -1044,9 +1064,7 @@ class MultiSelect(ListChoice):
 
     def render_input(self, varprefix, value):
         self.load_elements()
-        # background_css_hack = 'onChange="this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor"'
-        background_css_hack = ""
-        html.write("<select %s multiple name='%s'>" % (background_css_hack, varprefix))
+        html.write("<select multiple name='%s'>" % varprefix)
         for nr, (key, title) in enumerate(self._elements):
             if key in value:
                 sel = " selected"
@@ -1216,6 +1234,8 @@ class AbsoluteDate(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._default_value = today()
+        self._show_titles = kwargs.get("show_titles", True)
+        self._label = kwargs.get("label")
 
     def canonical_value(self):
         return self._default_value
@@ -1225,9 +1245,13 @@ class AbsoluteDate(ValueSpec):
         return lt.tm_year, lt.tm_mon, lt.tm_mday
 
     def render_input(self, varprefix, value):
+        if self._label:
+            html.write("%s&nbsp;" % self._label)
+
         html.write('<table class=vs_date>')
-        html.write('<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
-                _("Year"), _("Month"), _("Day")))
+        if self._show_titles:
+            html.write('<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
+                    _("Year"), _("Month"), _("Day")))
         html.write('<tr><td>')
         year, month, day = self.split_date(value)
         html.number_input(varprefix + "_year", year, size=4)
@@ -1515,6 +1539,9 @@ class Alternative(ValueSpec):
                 checked = vs == mvs
 
             title = vs.title()
+            if not title and nr:
+                html.write("&nbsp;&nbsp;")
+
             html.radiobutton(varprefix + "_use", str(nr), checked, title)
             if title:
                 html.write("<ul>")
@@ -1739,6 +1766,7 @@ class Dictionary(ValueSpec):
                 onclick = "valuespec_toggle_option(this, %r)" % div_id
                 checkbox_code = '<input type=checkbox name="%s" %s onclick="%s">' % (
                     vp + "_USE", visible and "CHECKED" or "", onclick)
+                html.add_form_var(vp + "_USE")
                 forms.section(vs.title(), checkbox=checkbox_code)
             else:
                 visible = True

@@ -179,7 +179,7 @@ register_configvar(group,
              label = _("hide variable names"),
              help = _("When enabled, internal configuration variable names of Check_MK are hidded "
                       "from the user (for example in the rule editor)"),
-             default_value = False),
+             default_value = True),
     domain = "multisite")
 
 register_configvar(group,
@@ -865,7 +865,7 @@ register_rule(group,
 
 
 
-register_rulegroup("agent", "Access to Agents", 
+register_rulegroup("agent", _("Access to Agents"),
    _("Settings concerning the connection to the Check_MK and SNMP agents"))
 
 group = "agent/General Settings"

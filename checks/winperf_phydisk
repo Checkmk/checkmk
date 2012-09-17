@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output from agent
-# <<<winperf_pydisk>>>
+# <<<winperf_phydisk>>>
 # 12947256139.12
 # 2 instances: 0_C: _Total
 # 198 0 0 rawcount
@@ -71,4 +71,4 @@ def check_winperf_phydisk(item, params, info):
     return check_diskstat_generic(item, params, this_time, winperf_phydisk_convert(info))
 
 check_info['winperf_phydisk'] = (check_winperf_phydisk, "Disk IO %s", 1,  inventory_winperf_phydisk)
-checkgroup_of["winperf_pydisk"] = "disk_io"
+checkgroup_of["winperf_phydisk"] = "disk_io"

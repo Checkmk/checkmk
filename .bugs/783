@@ -1,0 +1,9 @@
+Title: Plugin output in BI does not honor (!) and (!!)
+Component: bi
+State: open
+Date: 2012-07-05 16:13:24
+Targetversion: 1.2.0
+Class: nastiness
+
+In the normal views we see a nice [WARN] or [CRIT] here.
+In BI there is missing this markup.

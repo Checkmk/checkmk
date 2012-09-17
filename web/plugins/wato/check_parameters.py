@@ -383,9 +383,49 @@ checkgroups.append((
     "first"
 ))
 
+
+register_rule(group + '/' + subgroup_storage,
+    varname   = "filesystem_groups",
+    title     = _('Filesystem grouping patterns'),
+    help      = _('Normally the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) '
+                  'will create a single service for each filesystem. '
+                  'By defining grouping '
+                  'patterns you can handle groups of filesystems like one filesystem. '
+                  'For each group you can define one or several patterns containing '
+                  '<tt>*</tt> and <tt>?</tt>, for example '
+                  '<tt>/spool/tmpspace*</tt>. The filesystems matching one of the patterns '
+                  'will be monitored like one big filesystem in a single service.'),
+    valuespec = ListOf(
+      Tuple(
+          show_titles = True,
+          orientation = "horizontal",
+          elements = [
+             TextAscii(
+                 title = _("Name of group"),
+             ),
+             TextAscii(
+                 title = _("File pattern (using * and ?)"),
+             ),
+          ]
+      ),
+      add_label = _("Add pattern"),
+    ),
+    match = 'list',
+)
 register_rule(group + '/' + subgroup_storage,
     varname   = "fileinfo_groups",
-    title     = _('Fileinfo Grouping patterns'),
+    title     = _('Fileinfo grouping patterns'),
+    help      = _('The check <tt>fileinfo</tt> monitors the age and size of '
+                  'a single file. Each file information that is sent '
+                  'by the agent will create one service. By defining grouping '
+                  'patterns you can switch to the check <tt>fileinfo.groups</tt>. '
+                  'That check monitors a list of files at once. You can set levels '
+                  'not only for the total size and the age of the oldest/youngest '
+                  'file but also on the count. You can define one or several '
+                  'patterns containing <tt>*</tt> and <tt>?</tt>, for example '
+                  '<tt>/var/log/apache/*.log</tt>. For files contained in a group '
+                  'the inventory will automatically create a group service and '
+                  'no single service.'),
     valuespec = ListOf(
       Tuple(
           help = _("This defines one fileinfo grouping pattern"),
@@ -396,13 +436,10 @@ register_rule(group + '/' + subgroup_storage,
                  title = _("Name of group"),
              ),
              TextAscii(
-                 title = _("File pattern (UNIX style)"),
+                 title = _("Pattern for mount point (using * and ?)"),
              ),
           ]
       ),
-      help = _('You can define one or several patterns in Unix Style.'
-               'Example: /var/log/apache/*.log. All matching files'
-               'will automatically be grouped'),
       add_label = _("Add pattern"),
     ),
     match = 'list',
@@ -1051,15 +1088,15 @@ checkgroups.append((
               Tuple(
                   title = _("Read throughput"),
                   elements = [
-                      Float(title = "warning at", unit = _("MB/s")),
-                      Float(title = "critical at", unit = _("MB/s"))
+                      Float(title = _("warning at"), unit = _("MB/s")),
+                      Float(title = _("critical at"), unit = _("MB/s"))
                   ])),
             ( "write",
               Tuple(
                   title = _("Write throughput"),
                   elements = [
-                      Float(title = "warning at", unit = _("MB/s")),
-                      Float(title = "critical at", unit = _("MB/s"))
+                      Float(title = _("warning at"), unit = _("MB/s")),
+                      Float(title = _("critical at"), unit = _("MB/s"))
                   ])),
             ( "average",
               Integer(
@@ -1072,6 +1109,25 @@ checkgroups.append((
         ]),
     None,
     "dict"))
+
+checkgroups.append((
+    subgroup_applications,
+    "dbsize",
+    _("Size of MySQL/PostgresQL databases"),
+    Optional(
+        Tuple(
+            elements = [
+                Integer(title = _("warning at"), unit = _("MB")),
+                Integer(title = _("critical at"), unit = _("MB")),
+            ]),
+        help = _("The check will trigger a warning or critical state if the size of the "
+                 "database exceeds these levels."),
+        title = _("Impose limits on the size of the database"),
+    ),
+    TextAscii(
+        title = _("Name of the database"),
+    ),
+    "first"))
 
 checkgroups.append((
     subgroup_applications,
@@ -1196,8 +1252,21 @@ checkgroups.append((
           help = _("These levels check the number of currently existing threads on the system. Each process has at "
                    "least one thread."),
           elements = [
-              Integer(title = _("Warning at"), label = _("threads")),
-              Integer(title = _("Critical at"), label = _("threads"))]),
+              Integer(title = _("Warning at"), unit = _("threads"), default_value = 1000),
+              Integer(title = _("Critical at"), unit = _("threads"), default_value = 2000)]),
+    None, None))
+
+checkgroups.append((
+    subgroup_applications,
+    "vms_procs",
+    _("Number of processes on OpenVMS"),
+    Optional(
+        Tuple(
+              elements = [
+                  Integer(title = _("Warning at"), unit = _("processes"), default_value = 100), 
+                  Integer(title = _("Critical at"), unit = _("processes"), default_value = 200)]),
+        title = _("Impose levels on number of processes"),
+    ),
     None, None))
 
 checkgroups.append((
@@ -1490,8 +1559,8 @@ checkgroups.append((
                  "for monitoring the temperature of a datacenter. An example "
                  "is the webthem from W&amp;T."),
         elements = [
-            Integer(title = "warning at", unit = u"°C"),
-            Integer(title = "critical at", unit = u"°C"),
+            Integer(title = "warning at", unit = u"°C", default_value = 26),
+            Integer(title = "critical at", unit = u"°C", default_value = 30),
         ]),
     TextAscii(
         title = _("Sensor ID"),

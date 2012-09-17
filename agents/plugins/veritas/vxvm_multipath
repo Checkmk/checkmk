@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # DMPNODENAME ENCLR-NAME STATE[A] PATH-TYPE[M]
 # disk2057 emc1 ENABLED(A) -

@@ -1,0 +1,8 @@
+Title: dashlet_pnpgraph is missing parameter "view"
+Component: multisite
+State: open
+Date: 2012-07-27 10:26:30
+Targetversion: 1.2.0
+Class: bug
+
+The view parameter is always set to 0.

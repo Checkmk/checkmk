@@ -225,9 +225,6 @@ def render_wato_foldertree():
     if user_folders:
         render_tree_folder(user_folders[''])
 
-def ajax_set_foldertree():
-    config.save_user_file("foldertree", (html.var('topic'), html.var('target')))
-
 def render_tree_folder(f):
     subfolders = f.get(".folders", {})
     is_leaf = len(subfolders) == 0

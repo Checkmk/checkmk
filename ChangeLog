@@ -105,6 +105,8 @@
     * FIX: fixed logwatch loosing the master_url parameter in distributed setups
     * FIX: Fixed doubled var "site" in view editor (site and siteopt filter)
     * FIX: Don't crash on requests without User-Agent HTTP header
+    * Downtimes: new conveniance function for downtime from now for ___ minutes.
+      This is especially conveniant for scripting.
 
     Livecheck:
     * FIX: Compile livecheck also if diet libc is missing

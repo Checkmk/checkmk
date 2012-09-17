@@ -441,8 +441,6 @@ int broker_event(int event_type __attribute__ ((__unused__)), void *data)
 {
 	g_counters[COUNTER_NEB_CALLBACKS]++;
 	struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
-	if( ts->event_type != 98 && ts->event_type != 5)
-		logger( LG_CRIT, "##### EIN EVENT - %d", ts->event_type );
     if( ts->event_type == EVENT_LOG_ROTATION){
     	if( g_thread_running == 1 ){
     		logger( LG_CRIT, "##### DAS LOGROTATE EVENT - DIESMAL DAS RICHTIGE" );

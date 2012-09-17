@@ -28,7 +28,7 @@ else
   CXX = mingw32-g++
 endif
 
-install_agent.exe: check_mk_agent.exe crash.exe
+install_agent.exe: check_mk_agent.exe crash.exe nowin.exe
 	if ! which makensis; then \
 	    echo "ERROR: makensis missing. Please install the nsis package." ; \
 	    exit 1 ; \
@@ -40,6 +40,9 @@ check_mk_agent.exe: check_mk_agent.cc Makefile
 	$(CXX) -s -O2 -Wall -Werror -o $@ $< -lwsock32
 
 crash.exe: crash.cc Makefile
+	$(CXX) -o $@ $<
+
+nowin.exe: nowin.cc Makefile
 	$(CXX) -o $@ $<
 
 clean:

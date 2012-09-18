@@ -30,8 +30,8 @@ item:
   The Virtual IP of the failover group.
 
 inventory:
-  The check reads the HSRP MIB and creates one service per virtual IP. It also 
-  stores the HSRP state of
-  the IP as seen by the monitored device, normally either standby or active. 
-  It also stores the ID of 
-  the failover group. (For future use)
+  The check reads the HSRP MIB and creates one service per virtual IP.
+  If the HSRP state of the group is either active or standby, a service
+  will be created. It also stores this HSRP state of
+  the IP as seen by the monitored device.
+  It also stores the ID of the failover group. (For future use)

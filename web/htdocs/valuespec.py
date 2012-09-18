@@ -665,13 +665,13 @@ class ListOf(ValueSpec):
             return s + '</table>'
 
     def from_html_vars(self, varprefix):
+        count = int(html.var(varprefix + "_count"))
         n = 1
         indexes = {}
-        while True:
+        while n <= count:
             indexof = html.var(varprefix + "_indexof_%d" % n)
-            if indexof == None:
-                break
-            indexes[int(indexof)] = n
+            if indexof != None: # deleted entry
+                indexes[int(indexof)] = n
             n += 1
 
         value = []

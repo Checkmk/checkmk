@@ -94,6 +94,7 @@
     * FIX: Remove also user settings and event console rule on factory reset
     * FIX: complex list widgets (ListOf) failed back to old value when
            complaining
+    * FIX: complex list widgets (ListOf) lost remaining entries after deleting one
 
     BI:
     * Great speed up of rule compilation in large environments

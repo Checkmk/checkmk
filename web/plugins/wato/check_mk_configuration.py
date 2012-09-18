@@ -799,6 +799,7 @@ register_rule(group,
         none_label = _("disabled"),
         none_value = 0,
         ),
+
     itemtype = "service")
 
 register_rule(group,
@@ -821,6 +822,27 @@ register_rule(group,
                     ("0", _("Disable flap detection")) ],
         ),
         itemtype = "service")
+
+
+register_rule(group,
+    "extra_service_conf:notes_url",
+    TextAscii(
+        label = _("Url:"),
+        title = _("Notes url for Services"),
+        help = _("With this setting you can set links to documentations "
+                 "for each service"),
+        ),
+    itemtype = "service")
+
+register_rule(group,
+    "extra_host_conf:notes_url",
+    TextAscii(
+        label = _("Url:"),
+        title = _("Notes url for Hosts"),
+        help = _("With this setting you can set links to documentations "
+                 "for Hosts"),
+        ),
+    )
 
 group = "monconf/Inventory and Check_MK settings"
 

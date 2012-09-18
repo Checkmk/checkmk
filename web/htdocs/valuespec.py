@@ -1953,10 +1953,15 @@ class Foldable(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._valuespec = valuespec
         self._open = kwargs.get("open", False)
+        self._title_function = kwargs.get("title_function", None)
 
     def render_input(self, varprefix, value):
+        if self._title_function:
+            title = self._title_function(value)
+        else:
+            title = self._valuespec.title()
         html.begin_foldable_container("valuespec_foldable", varprefix, self._open, 
-                        self._valuespec.title(), False)
+                        title, False)
         html.help(self._valuespec.help())
         self._valuespec.render_input(varprefix, value)
         html.end_foldable_container()

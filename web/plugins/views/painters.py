@@ -1502,21 +1502,21 @@ multisite_painters["downtime_fixed"] = {
     "title"   : _("Downtime is fixed"),
     "short"   : _("Fixed"),
     "columns" : ["downtime_fixed"],
-    "paint"   : lambda row: (None, row["downtime_fixed"] == 0 and "flexible" or "fixed"),
+    "paint"   : lambda row: (None, row["downtime_fixed"] == 0 and _("flexible") or _("fixed")),
 }
 
 multisite_painters["downtime_what"] = {
     "title"   : _("Downtime type (host/service)"),
     "short"   : _("Type"),
     "columns" : ["is_service"],
-    "paint"   : lambda row: (None, row["is_service"] and "Service" or "Host"),
+    "paint"   : lambda row: (None, row["is_service"] and _("Service") or _("Host")),
 }
 
 multisite_painters["downtime_type"] = {
     "title"   : _("Downtime active or pending"),
     "short"   : _("act/pend"),
     "columns" : ["downtime_type"],
-    "paint"   : lambda row: (None, row["downtime_type"] == 0 and "active" or "pending"),
+    "paint"   : lambda row: (None, row["downtime_type"] == 0 and _("active") or _("pending")),
 }
 
 multisite_painters["downtime_entry_time"] = {

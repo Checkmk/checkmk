@@ -21,6 +21,9 @@ if which smartctl > /dev/null 2>&1 ; then
         else
             MODEL=$(smartctl -a $D | grep -i "device model" | sed -e "s/.*:[ ]*//g" -e "s/\ /_/g")
         fi
+        if [ "$MODEL" = "iSCSI_Disk" ]; then
+            continue
+        fi
         smartctl $SPECOPS -v 9,raw48 -A $D | grep Always  | egrep -v '^190(.*)Temperature(.*)' | sed "s|^|$D $VEND $MODEL |"
     done 2>/dev/null
 fi

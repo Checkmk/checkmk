@@ -107,7 +107,7 @@ def inventory_jolokia_metrics_apps(info, what):
         needed_key = [ "StandbyThreadCount" ]
         levels = None
     else:
-        needed_key = [ "Running" ]
+        needed_key = [ "Running", "stateName" ]
         levels = None
     for inst, vals in parsed.iteritems():
         for app, appstate in vals.get('apps', {}).items():
@@ -209,12 +209,24 @@ def check_jolokia_metrics_uptime(item, _unused, info):
 
 def check_jolokia_metrics_app_state(item, _unused, info):
     app = jolokia_metrics_app(info, item.split())
-    if not app or not 'Running' in app:
+    app_state=3
+    # FIXME: this could be nicer.
+    if   app and "Running" in app:
+        if app['Running']   == '1':
+            app_state = 0
+        else:
+            app_state = 2
+    # wenn in app statename steht
+    elif app and "stateName" in app:
+        if app['stateName'] == 'STARTED':
+            app_state = 0
+        else:
+            app_state = 2
+    if   app_state == 3:
         return (3, "UNKNOWN - data not found in agent output")
-
-    if app['Running'] == '1':
+    elif app_state == 0:
         return (0, 'OK - application is running')
-    else:
+    elif app_state == 2:
         return (2, 'CRIT - application is not running (Running: %s)')
 
 

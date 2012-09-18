@@ -3581,14 +3581,18 @@ def dump_host(hostname):
         print tty_yellow + "Parents:                " + tty_normal + ", ".join(parents_list)
     print tty_yellow + "Host groups:            " + tty_normal + ", ".join(hostgroups_of(hostname))
     print tty_yellow + "Contact groups:         " + tty_normal + ", ".join(host_contactgroups_of([hostname]))
-    agenttype = "TCP (port: %d)" % agent_port_of(hostname)
-    dapg = get_datasource_program(hostname, ipaddress)
-    if dapg:
-        agenttype = "Datasource program: %s" % dapg
+
+    agenttypes = []
+    if is_tcp_host(hostname):
+        agenttypes.append("TCP (port: %d)" % agent_port_of(hostname))
+    else:
+        dapg = get_datasource_program(hostname, ipaddress)
+        if dapg:
+            agenttypes.append("Datasource program: %s" % dapg)
 
     if is_snmp_host(hostname):
         if is_usewalk_host(hostname):
-            agenttype = "SNMP (use stored walk)"
+            agenttypes.append("SNMP (use stored walk)")
         else:
             credentials = snmp_credentials_of(hostname)
             if is_bulkwalk_host(hostname):
@@ -3598,8 +3602,12 @@ def dump_host(hostname):
             portinfo = snmp_port_of(hostname)
             if portinfo == None:
                 portinfo = 'default'
-            agenttype = "SNMP (community: '%s', bulk walk: %s, port: %s)" % (credentials, bulk, portinfo)
-    print tty_yellow + "Type of agent:          " + tty_normal + agenttype
+            agenttypes.append("SNMP (community: '%s', bulk walk: %s, port: %s)" % (credentials, bulk, portinfo))
+
+    if is_ping_host(hostname):
+        agenttypes.append('PING only')
+
+    print tty_yellow + "Type of agent:          " + tty_normal + '\n                        '.join(agenttypes)
     is_aggregated = host_is_aggregated(hostname)
     if is_aggregated:
         print tty_yellow + "Is aggregated:          " + tty_normal + "yes"

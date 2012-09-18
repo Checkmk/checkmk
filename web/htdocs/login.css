@@ -165,6 +165,8 @@ label {
     margin: 0px;
     padding: 8px 0px 0px 0px;
     color: black;
+    border-radius: 0;
+    box-shadow: 0 0 0;
 }
 
 #foot {

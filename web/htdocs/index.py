@@ -297,7 +297,9 @@ def handler(req, profiling = True):
         # All plugins might have to be reloaded due to a language change
         load_all_plugins()
 
+        # Initialize default permissions (maybe reload due to language change)
         import default_permissions
+        default_permissions.load()
 
         # User allowed to login at all?
         if not config.may("general.use"):

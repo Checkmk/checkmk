@@ -108,6 +108,7 @@
       display the title of this folder
     * Sidebar: Sorting aggregation groups in BI snapin now
     * Sidebar: Sorting sites in master control snapin case insensitive
+    * Added some missing localizations (error messages, view editor)
     * FIX: fixed localization of general permissions
     * FIX: show multisite warning messages even after page reload
     * FIX: fix bug in Age ValueSpec: days had been ignored

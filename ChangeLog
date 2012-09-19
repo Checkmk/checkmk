@@ -122,6 +122,7 @@
     * Downtimes: new conveniance function for downtime from now for ___ minutes.
       This is especially conveniant for scripting.
     * FIX: fixed layout of login dialog when showing up error messages
+    * FIX: Fixed styling of wato quickaccess snapin preview
 
     Livecheck:
     * FIX: Compile livecheck also if diet libc is missing

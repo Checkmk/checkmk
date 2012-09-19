@@ -66,6 +66,7 @@ def jolokia_metrics_parse(info):
     return parsed
 
 
+# This bisects the app server and its values
 def jolokia_metrics_app(info, (inst, app)):
     parsed = jolokia_metrics_parse(info)
     if not inst in parsed \
@@ -74,6 +75,7 @@ def jolokia_metrics_app(info, (inst, app)):
     return parsed[inst]['apps'][app]
 
 
+# This bisects info from BEA and passes on to jolokia_metrics_app
 def jolokia_metrics_serv(info, (inst, app, serv)):
     app = jolokia_metrics_app(info, (inst, app))
     if not app or not serv in app.get('servlets', {}):
@@ -94,14 +96,22 @@ def inventory_jolokia_metrics(info, what):
 def inventory_jolokia_metrics_apps(info, what):
     inv = []
     parsed = jolokia_metrics_parse(info)
+
     if what == 'app_sess':
         levels = 'jolokia_metrics_app_sess_default_levels'
         needed_key = [ "Sessions", "activeSessions" ]
+    elif what  == 'bea_app_sess':
+        levels = 'jolokia_metrics_app_sess_default_levels'
+        needed_key = [ "OpenSessionsCurrentCount" ]
     elif what == 'queue':
         needed_key = [ "QueueLength" ]
         levels = "jolokia_metrics_queue_default_levels"
-    elif what == 'requests':
+    # Only works on BEA
+    elif what == 'bea_requests':
         needed_key = [ "CompletedRequestCount" ]
+        levels = None
+    elif what == 'requests':
+        needed_key = [ "requestCount" ]
         levels = None
     elif what == 'threads':
         needed_key = [ "StandbyThreadCount" ]
@@ -109,6 +119,19 @@ def inventory_jolokia_metrics_apps(info, what):
     else:
         needed_key = [ "Running", "stateName" ]
         levels = None
+
+    # this handles information from BEA, they stack one level
+    # higher than the rest.
+    if what == 'bea_app_sess':
+        for inst, vals in parsed.iteritems():
+            for app, appstate in vals.get('apps', {}).items():
+                if 'servlets' in appstate:
+                    for nk in needed_key:
+                        for servlet in appstate['servlets']:
+                            if nk in appstate['servlets'][servlet]:
+                                inv.append(('%s %s %s' % (inst, app, servlet), levels))
+                                continue
+    # This does the same for tomcat
     for inst, vals in parsed.iteritems():
         for app, appstate in vals.get('apps', {}).items():
             for nk in needed_key:
@@ -208,8 +231,10 @@ def check_jolokia_metrics_uptime(item, _unused, info):
 
 
 def check_jolokia_metrics_app_state(item, _unused, info):
-    app = jolokia_metrics_app(info, item.split())
     app_state=3
+    app = jolokia_metrics_app(info, item.split())
+
+    #print app
     # FIXME: this could be nicer.
     if   app and "Running" in app:
         if app['Running']   == '1':
@@ -230,16 +255,23 @@ def check_jolokia_metrics_app_state(item, _unused, info):
         return (2, 'CRIT - application is not running (Running: %s)')
 
 
+    return (3, 'UNKNOWN - error in agent output')
+
+
+
 def check_jolokia_metrics_app_sess(item, params, info):
     lo_crit, lo_warn, hi_warn, hi_crit = params
-    app = jolokia_metrics_app(info, item.split())
+    if   len(item.split()) == 3:
+        app = jolokia_metrics_serv(info, item.split())
+    elif len (item.split()) == 2:
+        app = jolokia_metrics_app(info, item.split())
     if not app: 
         return (3, "UNKNOWN - application not found")
-    sessions = app.get('Sessions', app.get('activeSessions'))
+    sessions = app.get('Sessions', app.get('activeSessions', app.get('OpenSessionsCurrentCount')))
     if sessions == None:
         return (3, "UNKNOWN - data not found in agent output")
     sess = saveint(sessions)
-    maxActive = saveint(app.get('Sessions', app.get('maxActiveSessions')))
+    maxActive = saveint(app.get('Sessions', app.get('maxActiveSessions', app.get('OpenSessionsCurrentCount'))))
 
     status = 0
     status_txt = ''
@@ -319,15 +351,23 @@ def check_jolokia_metrics_bea_queue(item, params, info):
     return (status, nagios_state_names[status] + ' - queue length is %d' % queuelength, 
              [("length", queuelength, warn, crit)])
 
+
+# FIXME: This check could work with any JVM
+# It has no levels
+# A candidate for 1.2.1 overhaul
 def check_jolokia_metrics_bea_requests(item, _no_params, info):
     app = jolokia_metrics_app(info, item.split())
     if not app: 
         return (3, "UNKNOWN - application not found")
-    if "CompletedRequestCount" not in app:
-        return (3, "UNKNOWN - data not found in agent output")
-    requests = int(app['CompletedRequestCount'])
-    timedif, rate = get_counter("j4p.bea.requests.%s" % item, time.time(), requests)
-    return (0, "OK - %.2f requests/sec" % rate, [("rate", rate)])
+
+    for nk in [ "CompletedRequestCount", "requestCount" ]:
+       if nk in app:
+           requests = int(app[nk])
+           timedif, rate = get_counter("j4p.bea.requests.%s" % item, time.time(), requests)
+           return (0, "OK - %.2f requests/sec" % rate, [("rate", rate)])
+
+    return (3, "UNKNOWN - data not found in agent output")
+
 
 def check_jolokia_metrics_bea_threads(item, _no_params, info):
     app = jolokia_metrics_app(info, item.split())
@@ -372,6 +412,8 @@ check_info["jolokia_metrics.uptime"] = {
 }
 
 # Application specific checks
+# Note: we could simply pass in "nk" as "what".
+# Not changing since there might be something smarter.
 check_info["jolokia_metrics.app_state"] = {
     "service_description" : "JVM %s State",
     "check_function"      : check_jolokia_metrics_app_state,
@@ -383,6 +425,13 @@ check_info["jolokia_metrics.app_sess"] = {
     "service_description" : "JVM %s Sessions",
     "check_function"      : check_jolokia_metrics_app_sess,
     "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "app_sess"),
+    "has_perfdata"        : True,
+}
+
+check_info["jolokia_metrics.requests"] = {
+    "service_description" : "JVM %s Requests",
+    "check_function"      : check_jolokia_metrics_bea_requests,
+    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "requests"),
     "has_perfdata"        : True,
 }
 
@@ -405,7 +454,7 @@ check_info["jolokia_metrics.bea_queue"] = {
 check_info["jolokia_metrics.bea_requests"] = {
     "service_description" : "JVM %s Requests",
     "check_function"      : check_jolokia_metrics_bea_requests,
-    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "requests"),
+    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "bea_requests"),
     "has_perfdata"        : True,
 }
 
@@ -413,6 +462,13 @@ check_info["jolokia_metrics.bea_threads"] = {
     "service_description" : "JVM %s Threads",
     "check_function"      : check_jolokia_metrics_bea_threads,
     "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "threads"),
+    "has_perfdata"        : True,
+}
+
+check_info["jolokia_metrics.bea_sess"] = {
+    "service_description" : "JVM %s Sessions",
+    "check_function"      : check_jolokia_metrics_app_sess,
+    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "bea_app_sess"),
     "has_perfdata"        : True,
 }
 

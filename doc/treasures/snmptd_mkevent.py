@@ -20,4 +20,3 @@ out = open(deamon_path, "w")
 timestamp = time.strftime("%b %d %H:%M:%S", time.localtime(time.time()))
 out.write("<5>%s %s trap: %s" % (timestamp, host, msg))
 out.close()
-~            

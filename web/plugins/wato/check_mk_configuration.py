@@ -591,7 +591,7 @@ register_rule(group,
 register_rulegroup("monconf", _("Monitoring Configuration"), 
     _("Intervals for checking, retries, clustering, configuration for inventory and similar"))
 
-group = "monconf/Service Checks"
+group = "monconf/" + _("Service Checks")
 
 register_rule(group,
     "extra_service_conf:max_check_attempts",
@@ -670,7 +670,7 @@ register_rule(group,
         ),
         itemtype = "service")
 
-group = "monconf/Host Checks"
+group = "monconf/" + _("Host Checks")
 
 register_rule(group,
     "extra_host_conf:max_check_attempts",
@@ -714,7 +714,7 @@ register_rule(group,
                  "the state of the host will stay at its last status.")),
     )
 
-group = "monconf/Notifications"
+group = "monconf/" + _("Notifications")
 register_rule(group,
     "extra_host_conf:notifications_enabled",
     DropdownChoice(
@@ -872,7 +872,7 @@ register_rule(group,
         ),
     )
 
-group = "monconf/Inventory and Check_MK settings"
+group = "monconf/" + _("Inventory and Check_MK settings")
 
 register_rule(group,
     "only_hosts",
@@ -913,7 +913,7 @@ register_rule(group,
              "to the cluster.<br><br>Please make sure that you re-inventorize the " 
              "cluster and the physical nodes after changing this ruleset."),
     itemtype = "service")
-group = "monconf/Various"
+group = "monconf/" + _("Various")
 
 class MonitoringIcon(ValueSpec):
     def __init__(self, **kwargs):
@@ -1004,7 +1004,7 @@ register_rule(group,
 register_rulegroup("agent", _("Access to Agents"),
    _("Settings concerning the connection to the Check_MK and SNMP agents"))
 
-group = "agent/General Settings"
+group = "agent/" + _("General Settings")
 register_rule(group,
     "dyndns_hosts",
     title = _("Hosts with dynamic DNS lookup during monitoring"),
@@ -1013,7 +1013,7 @@ register_rule(group,
              "activate the changes. In some rare cases DNS lookups must be done each time "
              "a host is connected to, e.g. when the IP address of the host is dynamic "
              "and can change."))
-group = "agent/SNMP"
+group = "agent/" + _("SNMP")
 
 _snmpv3_basic_elements = [
      DropdownChoice(
@@ -1126,7 +1126,7 @@ register_rule(group,
              "is configured with this ruleset will then use the information from that "
              "file instead of using real SNMP. "))
 
-group = "agent/Check_MK Agent"
+group = "agent/" + _("Check_MK Agent")
 
 register_rule(group,
     "agent_ports",

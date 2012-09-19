@@ -270,7 +270,9 @@ function makeuri(addvars) {
     // Skip unwanted parmas
     for(var i = 0; i < tmp.length; i++) {
         pair = tmp[i].split('=');
-        if(pair[0][0] == '_')
+        if(pair[0][0] == '_') // Skip _<vars>
+            continue;
+        if(addvars.hasOwnProperty(pair[0])) // Skip vars present in addvars
             continue;
         params.push(tmp[i]);
     }
@@ -758,7 +760,8 @@ function handleReload(url) {
             window.location.href = url;
     } 
     else {
-        // Enforce specific display_options to get only the content data
+        // Enforce specific display_options to get only the content data.
+        // All options in "opts" will be forced. Existing upper-case options will be switched.
         var display_options = getUrlParam('display_options');
         // Removed 'w' to reflect original rengering mechanism during reload
         // For example show the "Your query produced more than 1000 results." message
@@ -768,6 +771,14 @@ function handleReload(url) {
             if (display_options.indexOf(opts[i].toUpperCase()) > -1)
                 display_options = display_options.replace(opts[i].toUpperCase(), opts[i]);
             else
+                display_options += opts[i];
+        }
+        opts = null;
+
+        // Add optional display_options if not defined in original display_options
+        var opts = [ 'w' ];
+        for (var i = 0; i < opts.length; i++) {
+            if (display_options.indexOf(opts[i].toUpperCase()) == -1)
                 display_options += opts[i];
         }
         opts = null;

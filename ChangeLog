@@ -124,6 +124,9 @@
     * FIX: fixed layout of login dialog when showing up error messages
     * FIX: Fixed styling of wato quickaccess snapin preview
     * FIX: Made printer_supply perfometer a bit more robust against bad perfdata
+    * FIX: Removed duplicate url parameters e.g. in dashboard (display_options)
+    * FIX: Dashboard: If original request showed no "max rows"-message, the
+           page rendered during reload does not show the message anymore
 
     Livecheck:
     * FIX: Compile livecheck also if diet libc is missing

@@ -26,12 +26,14 @@
 
 import math, os, time, re, sre_constants, urlparse, forms
 from lib import *
+from htmllib import attrencode
 
 # Abstract base class of all value declaration classes.
 class ValueSpec:
     def __init__(self, **kwargs):
         self._title         = kwargs.get("title")
         self._help          = kwargs.get("help")
+        self._attrencode    = kwargs.get("attrencode", False)
         if "default_value" in kwargs:
             self._default_value = kwargs.get("default_value")
 
@@ -74,6 +76,10 @@ class ValueSpec:
     # used in tables and other contextes. It is to be read
     # by the user and need not to be parsable.
     # The function may assume that the type of the value is valid.
+    #
+    # In the current implementation this function is only used to
+    # render the object for html code. So it is allowed to add
+    # html code for better layout in the GUI.
     def value_to_text(self, value):
         return repr(value)
 
@@ -182,6 +188,7 @@ class Integer(ValueSpec):
         self._unit           = kwargs.get("unit", "")
         self._thousand_sep   = kwargs.get("thousand_sep")
         self._display_format = kwargs.get("display_format", "%d")
+        self._align          = kwargs.get("align", "left")
         
         if "size" not in kwargs and "maxvalue" in kwargs:
             self._size = 1 + int(math.log10(self._maxvalue)) + \
@@ -197,7 +204,11 @@ class Integer(ValueSpec):
         if self._label:
             html.write(self._label)
             html.write("&nbsp;")
-        html.number_input(varprefix, str(value), size = self._size)
+        if self._align == "right":
+            style = "text-align: right;"
+        else:
+            style = ""
+        html.number_input(varprefix, str(value), size = self._size, style = style)
         if self._unit:
             html.write("&nbsp;")
             html.write(self._unit)
@@ -298,7 +309,10 @@ class TextAscii(ValueSpec):
         if value == None:
             return _("none")
         else:
-            return value
+            if self._attrencode:
+                return attrencode(value)
+            else:
+                return value
 
     def from_html_vars(self, varprefix):
         value = html.var(varprefix, "")
@@ -335,7 +349,7 @@ class ID(TextAscii):
 
 class RegExp(TextAscii):
     def __init__(self, **kwargs):
-        TextAscii.__init__(self, **kwargs)
+        TextAscii.__init__(self, attrencode = True, **kwargs)
 
     def validate_value(self, value, varprefix):
         TextAscii.validate_value(self, value, varprefix)
@@ -471,6 +485,8 @@ class TextAreaUnicode(TextUnicode):
 class Filename(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
+        if "size" not in kwargs:
+            self._size = 60
         if "default" in kwargs:
             self._default_path = kwargs["default"]
         else:
@@ -528,7 +544,10 @@ class ListOfStrings(ValueSpec):
         return []
 
     def value_to_text(self, value):
-        return ", ".join([self._valuespec.value_to_text(v) for v in value])
+        s = '<table>'
+        for v in value:
+            s += '<tr><td>%s</td></tr>' % self._valuespec.value_to_text(v)
+        return s + '</table>'
 
     def from_html_vars(self, vp):
         value = []
@@ -585,6 +604,13 @@ class ListOf(ValueSpec):
     # numbering in labels, etc. possible). The current number
     # of entries is stored in the hidden variable 'varprefix'
     def render_input(self, varprefix, value):
+
+        # In the 'complain' phase, where the user already saved the
+        # form but the validation failed, we must not display the
+        # original 'value' but take the value from the HTML variables.
+        if html.has_var("%s_count" % varprefix):
+            value = self.from_html_vars(varprefix)
+
         html.write('<input type=hidden name="%s_count" value="%d" id="%s_count">\n' % 
             (varprefix, len(value), varprefix))
 
@@ -633,17 +659,19 @@ class ListOf(ValueSpec):
             else:
                 return self._totext
         else:
-            return ", ".join([
-                self._valuespec.value_to_text(v) for v in value])
+            s = '<table>'
+            for v in value:
+                s += '<tr><td>%s</td></tr>' % self._valuespec.value_to_text(v)
+            return s + '</table>'
 
     def from_html_vars(self, varprefix):
+        count = int(html.var(varprefix + "_count"))
         n = 1
         indexes = {}
-        while True:
+        while n <= count:
             indexof = html.var(varprefix + "_indexof_%d" % n)
-            if indexof == None:
-                break
-            indexes[int(indexof)] = n
+            if indexof != None: # deleted entry
+                indexes[int(indexof)] = n
             n += 1
 
         value = []
@@ -1236,6 +1264,7 @@ class AbsoluteDate(ValueSpec):
         self._default_value = today()
         self._show_titles = kwargs.get("show_titles", True)
         self._label = kwargs.get("label")
+        self._format = kwargs.get("format", "%F")
 
     def canonical_value(self):
         return self._default_value
@@ -1265,7 +1294,7 @@ class AbsoluteDate(ValueSpec):
         html.set_focus(varprefix + "_year")
 
     def value_to_text(self, value):
-        return time.strftime("%F", time.localtime(value))
+        return time.strftime(self._format, time.localtime(value))
 
     def from_html_vars(self, varprefix):
         parts = []
@@ -1800,11 +1829,11 @@ class Dictionary(ValueSpec):
         if not value:
             return self._empty_text
 
-        parts = []
+        s = '<table>'
         for param, vs in self._elements:
             if param in value:
-                parts.append("%s: %s" % (vs.title(), vs.value_to_text(value[param])))
-        return ", ".join(parts)
+                s += "<tr><td>%s</td><td>%s</td></tr>" % (vs.title(), vs.value_to_text(value[param]))
+        return s + '</table>'
 
     def from_html_vars(self, varprefix):
         value = {}
@@ -1903,10 +1932,19 @@ class ElementSelection(ValueSpec):
 class AutoTimestamp(FixedValue):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._value = time.time()
+
+    def canonical_value(self):
+        return time.time()
+
+    def from_html_vars(self, varprefix):
+        return time.time()
 
     def value_to_text(self, value):
         return time.strftime("%F %T", time.localtime(value))
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) not in [ int, float ]:
+            return MKUserError(varprefix, _("Invalid datatype of timestamp: must be int or float."))
 
 # Fully transparant VS encapsulating a vs in a foldable
 # container.
@@ -1915,10 +1953,15 @@ class Foldable(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._valuespec = valuespec
         self._open = kwargs.get("open", False)
+        self._title_function = kwargs.get("title_function", None)
 
     def render_input(self, varprefix, value):
+        if self._title_function:
+            title = self._title_function(value)
+        else:
+            title = self._valuespec.title()
         html.begin_foldable_container("valuespec_foldable", varprefix, self._open, 
-                        self._valuespec.title(), False)
+                        title, False)
         html.help(self._valuespec.help())
         self._valuespec.render_input(varprefix, value)
         html.end_foldable_container()

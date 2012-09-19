@@ -335,6 +335,18 @@ def command_downtime(cmdtag, spec, row):
         down_to = time.mktime((br.tm_year, 12, 31, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
         title = _("<b>schedule an immediate downtime until end of %d</b> on") % br.tm_year
 
+    elif html.var("_down_from_now"):
+        try:
+            minutes = int(html.var("_down_minutes"))
+        except:
+            minutes = 0
+
+        if minutes <= 0:
+            raise MKUserError("_down_minutes", _("Please enter a positive number of minutes."))
+
+        down_to = time.time() + minutes * 60
+        title = _("<b>schedule an immediate downtime for the next %d minutes</b> on" % minutes)
+
     elif html.var("_down_custom"):
         down_from = html.get_datetime_input("_down_from")
         down_to   = html.get_datetime_input("_down_to")
@@ -394,6 +406,11 @@ multisite_commands.append({
         html.datetime_input("_down_from", time.time()) == \
         html.write("&nbsp; "+_('to')+" &nbsp;") == \
         html.datetime_input("_down_to", time.time() + 7200) == \
+        html.write("<hr>") == \
+        html.button("_down_from_now", _("From now for")) == \
+        html.write("&nbsp;") == \
+        html.number_input("_down_minutes", 60, size=4, style="text-align: right") == \
+        html.write("&nbsp; " + _("minutes")) == \
         html.write("<hr>") == \
         html.checkbox("_down_flexible", False, label=_('flexible with max. duration')+" ") == \
         html.time_input("_down_duration", 2, 0) == \

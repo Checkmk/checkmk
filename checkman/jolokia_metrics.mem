@@ -1,0 +1,35 @@
+title: Memory usage of a JVM
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check allows to monitor the usage of heap and non-heap memory area
+ usage on web application servers.
+
+ To use this plugin, Jolokia and the agent plugin need to be installed
+ on the monitored server.
+ It will then fetch the memory usage from the JMX status info of the remote
+ Java Virtual Machine.
+
+ The check can alert if the {WARN}/{CRIT} thresholds for a configurable total
+ is exceeded.
+
+item:
+ The name of the application server instance as configured by the agent.
+
+perfdata:
+ The heap and non-heap usage information and levels in Megabytes.
+
+inventory:
+ One check is created for each Jolokia instance sent by the agent.
+
+
+[parameters]
+warning (int): The total memory consumption that triggers
+ a WARNING state
+critical (int): The total memory consumption that triggers
+ a CRITICAL state
+
+[configuration]
+jolokia_metrics_mem_default_levels (int, int): Default levels warning and critical

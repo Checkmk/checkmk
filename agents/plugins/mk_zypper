@@ -1,3 +1,4 @@
+#!/bin/bash
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -22,32 +23,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-ifeq ($(shell uname),Linux)
-  CXX = echo -e "\n\nWARNING: MinGW under Linux is broken! Use at your own risk!\n\n" ; i586-mingw32msvc-g++
-else
-  CXX = mingw32-g++
-endif
-
-install_agent.exe: check_mk_agent.exe crash.exe nowin.exe
-	if ! which makensis; then \
-	    echo "ERROR: makensis missing. Please install the nsis package." ; \
-	    exit 1 ; \
-	fi
-	makensis installer.nsi
-	chmod +x install_agent.exe
-
-check_mk_agent.exe: check_mk_agent.cc Makefile
-	$(CXX) -s -O2 -Wall -Werror -o $@ $< -lwsock32
-
-crash.exe: crash.cc Makefile
-	$(CXX) -o $@ $<
-
-nowin.exe: nowin.cc Makefile
-	$(CXX) -o $@ $<
-
-clean:
-	rm -f *.o *~ svn-*.tmp
-
-mrproper: clean
-	rm -f *.exe
-
+if type zypper > /dev/null ; then
+    echo '<<<zypper:sep(124)>>>'
+    if grep -q '^VERSION = 10' < /etc/SuSE-release
+    then
+        ZYPPER='waitmax 10 zypper --no-gpg-checks --non-interactive --terse'
+        $ZYPPER refresh > /dev/null
+        { $ZYPPER pchk || [ $? = 100 -o $? = 101 ] && $ZYPPER lu ; } \
+    	  | egrep '(patches needed|\|)' | egrep -v '^(#|Repository |Catalog )'
+    else
+        ZYPPER='waitmax 10 zypper --no-gpg-checks --non-interactive --quiet'
+        $ZYPPER refresh > /dev/null
+        { { $ZYPPER pchk || [ $? = 100 -o $? = 101 ] && $ZYPPER lp ; } ; $ZYPPER ll ; } \
+    	  | egrep '(patches needed|\|)' | egrep -v '^(#|Repository)'
+    fi
+fi

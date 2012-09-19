@@ -81,7 +81,7 @@ df -PTlk $excludefs | sed 1d
 
 # VMWare shows its own filesystems with 'vdf'. Just one
 # problem: it outputs not 7 but only 6 columns
-if which vdf > /dev/null
+if type vdf > /dev/null
 then
    vdf -P | grep ^/vmfs/volumes | sed 's/ / vmfs /'
 fi
@@ -132,7 +132,7 @@ cat /proc/uptime
 
 # Network interfaces (Link, Autoneg, Speed)
 # This requires ethtool
-if which ethtool > /dev/null
+if type ethtool > /dev/null
 then
   echo '<<<netif>>>'
   for eth in $(cat /proc/net/dev | sed -rn -e 's/[[:space:]]*//g' -e  '/ *([^:]):.*/s//\1/p' | egrep -vx '(lo|sit.*)')
@@ -144,7 +144,7 @@ fi
 # New variant: Information about speed and state in one section
 echo '<<<lnx_if:sep(58)>>>'
 sed 1,2d /proc/net/dev
-if which ethtool > /dev/null
+if type ethtool > /dev/null
 then
     for eth in $(sed -e 1,2d < /proc/net/dev | cut -d':' -f1)
     do
@@ -158,13 +158,13 @@ echo '<<<tcp_conn_stats>>>'
 netstat -nt | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
 
 # Platten- und RAID-Status von LSI-Controlleren, falls vorhanden
-if which cfggen > /dev/null ; then
+if type cfggen > /dev/null ; then
    echo '<<<lsi>>>'
    cfggen 0 DISPLAY | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
 fi
 
 # Multipathgeraete
-if which multipath >/dev/null ; then
+if type multipath >/dev/null ; then
     echo '<<<multipath>>>'
     multipath -l
 fi
@@ -177,7 +177,7 @@ cat /proc/mdstat
 echo '<<<diskstat>>>'
 date +%s
 egrep ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|dm-[0-9]+|VxVM.*) ' < /proc/diskstats
-if which dmsetup >/dev/null ; then
+if type dmsetup >/dev/null ; then
     echo '[dmsetup_info]'
     dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
 fi
@@ -199,7 +199,7 @@ date +%s
 sed -e 1,2d -e 's/:/ /g' < /proc/net/dev
 
 
-if which ipmitool >/dev/null 
+if type ipmitool >/dev/null 
 then
     echo '<<<ipmi>>>'
     IPMI_FILE=$MK_CONFDIR/ipmitool_sensors.cache
@@ -242,7 +242,7 @@ fi
 # that timeout, it leaves and empty cache file. We skip this check forever
 # if we find that empty cache file.
 sdrcache=/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1
-if which ipmi-sensors >/dev/null && [ ! -e "$sdrcache" -o -s "$sdrcache" ] 
+if type ipmi-sensors >/dev/null && [ ! -e "$sdrcache" -o -s "$sdrcache" ] 
 then
     echo '<<<ipmi_sensors>>>'
     # No cache file existing? => Impose a high time limit. We do not suffice
@@ -283,7 +283,7 @@ fi
 # State of LSI MegaRAID controller via MegaCli. You can download that tool from:
 # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
 
-if which MegaCli >/dev/null ; then
+if type MegaCli >/dev/null ; then
     echo '<<<megaraid_pdisks>>>'
     for part in $(MegaCli -EncInfo -aALL -NoLog < /dev/null \
         | sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
@@ -300,7 +300,7 @@ if which MegaCli >/dev/null ; then
 fi
 
 # 3WARE disk controller (by Radoslaw Bak)
-if which tw_cli > /dev/null ; then
+if type tw_cli > /dev/null ; then
     for C in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
         echo '<<<3ware_info>>>'
         tw_cli /$C show all | egrep 'Model =|Firmware|Serial'
@@ -311,7 +311,7 @@ if which tw_cli > /dev/null ; then
     done
 fi
 
-if which vcbVmName > /dev/null 2>&1 ; then
+if type vcbVmName > /dev/null 2>&1 ; then
    echo '<<<vmware_state>>>'
    vcbVmName -s any
 fi
@@ -320,19 +320,19 @@ fi
 # check would not be executed in case no guest additions are installed.
 # And that is something the check wants to detect
 echo '<<<vbox_guest>>>'
-if which VBoxControl > /dev/null 2>&1 ; then
+if type VBoxControl > /dev/null 2>&1 ; then
     VBoxControl -nologo guestproperty enumerate | cut -d, -f1,2
     [ ${PIPESTATUS[0]} = 0 ] || echo "ERROR"
 fi
 
 
-if which ntpq > /dev/null 2>&1 ; then
+if type ntpq > /dev/null 2>&1 ; then
    echo '<<<ntp>>>'
    # remote heading, make first column space separated
    waitmax 2 ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 fi
 
-if which nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ] 
+if type nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ] 
 then
     echo '<<<nvidia>>>'
     for var in GPUErrors GPUCoreTemp
@@ -347,7 +347,7 @@ if [ -e /proc/drbd ]; then
 fi
 
 # Status of CUPS printer queues
-if which lpstat > /dev/null 2>&1; then
+if type lpstat > /dev/null 2>&1; then
    if pgrep cups > /dev/null 2>&1; then
        echo '<<<cups_queues>>>'
        waitmax 3 lpstat -p
@@ -363,7 +363,7 @@ if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ]; then
   echo '<<<heartbeat_crm>>>'
   crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
 fi
-if which cl_status > /dev/null 2>&1; then
+if type cl_status > /dev/null 2>&1; then
   echo '<<<heartbeat_rscstatus>>>'
   cl_status rscstatus
 
@@ -392,7 +392,7 @@ fi
 # Only handle the last 6 lines (includes the summary line at the bottom and
 # the last message in the queue. The last message is not used at the moment
 # but it could be used to get the timestamp of the last message.
-if which mailq >/dev/null 2>&1 && getent passwd postfix >/dev/null 2>&1; then
+if type mailq >/dev/null 2>&1 && getent passwd postfix >/dev/null 2>&1; then
   echo '<<<postfix_mailq>>>'
   mailq | tail -n 6
 fi
@@ -403,6 +403,16 @@ then
    echo '<<<omd_status>>>'
    omd status --bare --auto
 fi
+
+
+# Welcome the ZFS check on Linux
+# We do not endorse running ZFS on linux if your vendor doesnt support it ;)
+# check zpool status
+if type zpool; then
+   echo "<<<zpool_status>>>"
+   zpool status -x
+fi
+
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
 if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then

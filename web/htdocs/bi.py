@@ -83,14 +83,18 @@ SITE_SEP = '#'
 
 # format of a node
 # {
-#     "type" : NT_LEAF, NT_RULE, NT_REMAINING,
+#     "type"     : NT_LEAF, NT_RULE, NT_REMAINING,
 #     "reqhosts" : [ list of required hosts ],
-#     "host" : host spec for leaf node,
-#     "service" : service name for leaf node, missing if HOST_STATE
-#     "title" : title in case of rule nodes
-#     "hidden" : True if hidden
-#     "func" : Name of aggregation function for rule nodes
-#     "nodes" : List of subnodes for rule nodes
+#     "hidden"   : True if hidden
+#
+#     SPECIAL KEYS FOR NT_LEAF:
+#     "host"     : host specification,
+#     "service"  : service name, missing for leaf type HOST_STATE
+#
+#     SPECIAL KEYS FOR NT_RULE:
+#     "title"    : title
+#     "func"     : Name of aggregation function, e.g. "count!2!1"
+#     "nodes"    : List of subnodes
 # }
 
 NT_LEAF = 1
@@ -163,6 +167,11 @@ def compile_forest(user):
         global g_config_information
         g_config_information = new_config_information
 
+    # OPTIMIZE: All users that have the permissing bi.see_all
+    # can use the same cache.
+    if config.may("bi.see_all"):
+        user = '<<<see_all>>>'
+
     # Try to get data from per-user cache:
     cache = g_cache.get(user)
     if cache:
@@ -178,16 +187,18 @@ def compile_forest(user):
 
     services, services_by_hostname = load_services()
     cache = {
-        "forest" :               {},
+        "forest" :                   {},
         "aggregations_by_hostname" : {},
-        "host_aggregations" :    {},
-        "affected_hosts" :       {},
-        "affected_services":     {},
-        "services" :             services,
-        "services_by_hostname" : services_by_hostname,
-        "see_all" :              config.may("bi.see_all"),
+        "host_aggregations" :        {},
+        "affected_hosts" :           {},
+        "affected_services":         {},
+        "services" :                 services,
+        "services_by_hostname" :     services_by_hostname,
+        "see_all" :                  config.may("bi.see_all"),
     }
     g_user_cache = cache
+
+    # before = time.time()
 
     for entry in config.aggregations:
         if len(entry) < 3:
@@ -230,6 +241,9 @@ def compile_forest(user):
 
     # Remember successful compile in cache
     g_cache[user] = cache
+
+    # after = time.time()
+    # file("/tmp/bi.perf", "a").write("Dauer: %.3f sec\n" % (after - before))
 
 
 # Execute an aggregation rule, but prepare arguments
@@ -629,7 +643,7 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
     for (site, hostname), (tags, services, childs, parents) in entries:
         # If host ends with '|@all', we need to check host tags instead
         # of regexes.
-        if False and host_re.endswith('|@all'):
+        if host_re.endswith('|@all'):
             if not match_host_tags(host_re[:-5], tags):
                 continue
         elif host_re != '@all':
@@ -663,6 +677,15 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
                               "host"  : (site, hostname)})
 
             else:
+                # found.append({"type" : NT_LEAF,
+                #               "reqhosts" : [(site, hostname)],
+                #               "host" : (site, hostname),
+                #               "service" : "FOO",
+                #               "title" : "Foo bar",
+                #               })
+                # continue
+
+
                 for service in services:
                     mo = (service_re, service)
                     if mo in service_nomatch_cache:

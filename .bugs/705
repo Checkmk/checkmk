@@ -1,0 +1,9 @@
+Title: Logwatch: confirm not the whole logfile, only one block/message
+Component: multisite
+State: open
+Date: 2012-09-14 14:36:42
+Targetversion: future
+Class: feature
+
+When having several errors in one logfile in logwatch one might not want to confirm
+all present error messages but only a subset of the messages.

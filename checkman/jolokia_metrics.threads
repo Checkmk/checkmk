@@ -1,0 +1,38 @@
+title: Number of JVM threads
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check works on the number of threads running in a JVM.
+ It can alert if a configured number of threads is exceeded, and 
+ it will also calculate the rate (per second) at which new threads
+ are launched, independent of the total number of threads at the
+ time.
+ 
+ To use this plugin, Jolokia and the agent plugin need to be installed
+ on the monitored server.
+
+
+item:
+ The name of the application server instance as configured by the agent.
+
+perfdata:
+ The following values are returned in the perfdata:
+   Rate of thread creations,
+   Count of Threads currently running,
+   Count of Daemon Threads currently serving other threads,
+   Maximum number of Threads started at any given time during the JVM lifetime,
+   Number of Threads started since starting the JVM.
+
+inventory:
+ One check is created per JVM sent by the Jolokia agent.
+
+
+[parameters]
+warn (int): a WARN state is triggered is this many threads are running 
+ a WARNING state is triggered
+crit (int): a CRITICAL state is triggered is this many threads are running
+
+[configuration]
+jolokia_metrics_threads_default_levels (int, int): Default levels, warning and critical

@@ -41,7 +41,7 @@ Filter: plugin_output !~~ no unchecked" | lq`
 if [ "$INVENTORY_INFO" != "" ]; then
     HOSTS=`echo "$INVENTORY_INFO" | cut -f1 -d\;`
     echo "$INVENTORY_INFO"
-    for HOST in "$HOSTS" ; do
+    for HOST in $HOSTS ; do
        reinventory
     done
 fi

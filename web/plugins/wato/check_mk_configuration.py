@@ -591,14 +591,7 @@ register_rule(group,
 register_rulegroup("monconf", _("Monitoring Configuration"), 
     _("Intervals for checking, retries, clustering, configuration for inventory and similar"))
 
-group = "monconf/Checking"
-
-register_rule(group,
-    "extra_host_conf:max_check_attempts",
-    Integer(title = _("Maximum number of check attempts for host"),
-            help = _("The maximum number of failed host checks until the host will be considered "
-                     "in a hard down state"),
-            minvalue = 1))
+group = "monconf/Service Checks"
 
 register_rule(group,
     "extra_service_conf:max_check_attempts",
@@ -635,15 +628,6 @@ register_rule(group,
     itemtype = "service")
 
 register_rule(group,
-    "extra_host_conf:check_period",
-    TimeperiodSelection(
-        title = _("Check period for hosts"),
-        help = _("If you specify a check period for a host then active checks of that "
-                 "host will only take place within that period. In the rest of the time "
-                 "the state of the host will stay at its last status.")),
-    )
-
-register_rule(group,
     "extra_service_conf:check_period",
     TimeperiodSelection(
         title = _("Check period for services"),
@@ -667,7 +651,7 @@ register_rule(group,
 register_rule(group,
     "extra_service_conf:passive_checks_enabled",
     DropdownChoice(
-        title = _("Enable/disable proccessing of passiv check results for services"),
+        title = _("Enable/disable passive checks for services"),
         help = _("This setting allows you to disable the processing of passiv check results for a "
                  "service."),
         choices = [ ("1", _("Enable processing of passiv check results")),
@@ -685,6 +669,50 @@ register_rule(group,
                     ("0", _("Disable active checks")) ],
         ),
         itemtype = "service")
+
+group = "monconf/Host Checks"
+
+register_rule(group,
+    "extra_host_conf:max_check_attempts",
+    Integer(title = _("Maximum number of check attempts for host"),
+            help = _("The maximum number of failed host checks until the host will be considered "
+                     "in a hard down state"),
+            minvalue = 1))
+
+register_rule(group,
+    "extra_host_conf:check_interval",
+    Integer(
+        title = _("Normal check interval for host checks"),
+        help = _("The default interval is set to one minute. Here you can specify a larger "
+                 "interval. The host is contacted in this interval on a regular base. The host "
+                 "check is also being executed when a problematic service state is detected to check "
+                 "wether or not the service problem is resulting from a host problem."),
+        minvalue = 1,
+        label = _("minutes")
+    )
+)
+
+register_rule(group,
+    "extra_host_conf:retry_interval",
+    Integer(title = _("Retry check interval for host checks"),
+        help = _("This setting is relevant if you have set the maximum number of check "
+                 "attempts to a number greater than one. In case a host check is not UP "
+                 "and the maximum number of check attempts is not yet reached, it will be "
+                 "rescheduled with this interval. The retry interval is usually set to a smaller "
+                 "value than the normal interval."),
+        minvalue = 1,
+        label = _("minutes")
+    )
+)
+
+register_rule(group,
+    "extra_host_conf:check_period",
+    TimeperiodSelection(
+        title = _("Check period for hosts"),
+        help = _("If you specify a check period for a host then active checks of that "
+                 "host will only take place within that period. In the rest of the time "
+                 "the state of the host will stay at its last status.")),
+    )
 
 group = "monconf/Notifications"
 register_rule(group,
@@ -1124,5 +1152,6 @@ register_rule(group,
                  "via SSH. The command line may contain the placeholders <tt>&lt;IP&gt;</tt> and "
                  "<tt>&lt;HOST&gt;</tt>."),
         label = _("Command line to execute"),
-        size = 80))
+        size = 80,
+        attrencode = True))
 

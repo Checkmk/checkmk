@@ -1,0 +1,8 @@
+Title: Multisite auth_type can not be changed in WATO
+Component: multisite
+State: open
+Date: 2012-07-09 09:31:16
+Targetversion: 1.2.0
+Class: nastiness
+
+Seems the config option has not been added.

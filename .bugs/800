@@ -1,0 +1,15 @@
+Title: mounts check reinventory seems to not change fs options
+Component: checks
+State: open
+Date: 2012-09-17 17:12:57
+Targetversion: future
+Class: nastiness
+
+This is a bit confusing, but it seems the mount options stay hardcoded
+even if you run a new WATO inventory of a given system.
+This goes as far as showing "OK" on the inventory screen, but the check
+stays WARN anyways
+
+OK - missing: data=journal, exceeding: data=writeback
+
+You can test by changing the journal option forth and back.

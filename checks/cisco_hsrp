@@ -57,8 +57,11 @@ def inventory_cisco_hsrp(info):
     for line in info:
         hsrp_grp_entry, vip, actrouter, sbrouter, hsrp_state, vmac = line
         interface_index, hsrp_grp = hsrp_grp_entry.split(".")
+        hsrp_state = int(hsrp_state)
+        # if the group is in a working state (both routers see and talk to each other),
         # inventorize HSRP group name+IP and the standby state as seen from "this" box.
-        inventory.append( (vip, (hsrp_grp, int(hsrp_state))) )
+        if hsrp_state in [ 5, 6 ]:
+            inventory.append( (vip, (hsrp_grp, hsrp_state)) )
 
     return inventory
 

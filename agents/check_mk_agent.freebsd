@@ -271,6 +271,12 @@ if which mailq >/dev/null 2>&1 && getent passwd postfix >/dev/null 2>&1; then
   mailq | tail -n 6
 fi
 
+# check zpool status
+if [ -x /sbin/zpool ]; then
+   echo "<<<zpool_status>>>"
+   /sbin/zpool status -x
+fi
+
 
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR

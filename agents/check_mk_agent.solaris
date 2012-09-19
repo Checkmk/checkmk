@@ -85,7 +85,7 @@ if [ "$platform" != "zone" ]; then
     statgrab_sections="$statgrab_sections net"
 fi
 
-if statgrab $stagrab_vars > /tmp/statgrab.$$ 2>/dev/null
+if statgrab $statgrab_vars > /tmp/statgrab.$$ 2>/dev/null
     then
     for s in $statgrab_sections
     do

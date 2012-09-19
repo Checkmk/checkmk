@@ -5135,14 +5135,20 @@ def factory_reset():
     for id in users.keys():
         if id != config.user_id:
             del users[id]
-    save_users(users) # this will cleanup htpasswd
 
-    for path in [ root_dir, multisite_dir, sites_mk, log_dir ]:
+    to_delete = [ path for c,n,path 
+                  in backup_paths 
+                  if n != "auth.secret" ] + [ log_dir ]
+    for path in to_delete:
         if os.path.isdir(path):
             shutil.rmtree(path)
         elif os.path.exists(path):
             os.remove(path)
 
+    make_nagios_directory(multisite_dir)
+    make_nagios_directory(root_dir)
+
+    save_users(users) # make sure, omdadmin is present after this
     log_pending(SYNCRESTART, None, "factory-reset", _("Complete reset to factory settings."))
 
 
@@ -6756,8 +6762,8 @@ def save_sites(sites):
     out = create_user_file(sites_mk, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("sites = \\\n%s\n" % pprint.pformat(sites))
-    update_distributed_wato_file(sites)
     config.load_config() # make new site configuration active
+    update_distributed_wato_file(sites)
     declare_site_attribute()
     rewrite_config_files_below(g_root_folder) # fix site attributes
     need_sidebar_reload()
@@ -6773,12 +6779,18 @@ def update_distributed_wato_file(sites):
     # are currently in the process of saving the new
     # site configuration.
     distributed = False
+    found_local = False
     for siteid, site in sites.items():
         if site.get("replication"):
             distributed = True
         if site_is_local(siteid):
+            found_local = True
             create_distributed_wato_file(siteid, site.get("replication"))
-    if not distributed:
+
+    # Remove the distributed wato file
+    # a) If there is no distributed WATO setup
+    # b) If the local site could not be gathered
+    if not distributed: # or not found_local:
         delete_distributed_wato_file()
 
 #.
@@ -7517,7 +7529,8 @@ def mode_users(phase):
         cgs = user.get("contactgroups", [])
         if cgs:
             html.write(", ".join(
-               [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_contact_group"), ("edit", c)]), contact_groups[c]) for c in cgs]))
+               [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_contact_group"), ("edit", c)]),
+                                          contact_groups[c] and contact_groups[c] or c) for c in cgs]))
         else:
             html.write("<i>" + _("none") + "</i>")
         html.write("</td>")
@@ -7701,6 +7714,8 @@ def mode_edit_user(phase):
         for what, opts in [ ( "host", "durfs"), ("service", "wucrfs") ]:
             new_user[what + "_notification_options"] = "".join(
               [ opt for opt in opts if html.get_checkbox(what + "_" + opt) ])
+            # FIXME: Validate notification commands. Do they really exist?
+            new_user[what + "_notification_commands"] = html.var(what + "_notification_commands")
 
         # Custom attributes
         for name, vs in user_attributes:
@@ -7874,6 +7889,15 @@ def mode_edit_user(phase):
     html.help(_("Here you specify which types of alerts "
                "will be notified to this contact. Note: these settings will only be saved "
                "and used if the user is member of a contact group."))
+
+    # Notification commands
+    # FIXME: Add dropdown. But where to get a list of notification commands?
+    forms.section(_("Notification Command for Hosts"))
+    html.text_input("host_notification_commands", user.get("host_notification_commands", "check-mk-notify"))
+    html.help(_("Use this Nagios command for sending host notifications."))
+    forms.section(_("Notification Command for Services"))
+    html.text_input("service_notification_commands", user.get("service_notification_commands", "check-mk-notify"))
+    html.help(_("Use this Nagios command for sending service notifications."))
 
     forms.header(_("Personal Settings"), isopen = False)
     select_language(user.get('language', ''))
@@ -9318,6 +9342,7 @@ vs_rule_options = Dictionary(
             help = _("An optional comment that helps you documenting the purpose of  "
                      "this rule"),
             size = 80,
+            attrencode = True,
           )
         ),
         ( "docu_url",
@@ -9820,7 +9845,7 @@ def mode_edit_ruleset(phase):
             url = rule_options.get("docu_url")
             if url:
                 html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
-            html.write(rule_options.get("comment", ""))
+            html.write(htmllib.attrencode(rule_options.get("comment", "")))
             html.write('</td>')
 
 

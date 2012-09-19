@@ -373,7 +373,7 @@ class EmailAddress(TextAscii):
 # "10.0.0.0/8" or "192.168.56.1"
 class IPv4Network(TextAscii):
     def __init__(self, **kwargs):
-        kwargs.setdefault("size", 12)
+        kwargs.setdefault("size", 18)
         TextAscii.__init__(self, **kwargs)
 
     def validate_value(self, value, varprefix):
@@ -392,23 +392,37 @@ class IPv4Network(TextAscii):
 
         if value.count(".") != 3:
             raise MKUserError(varprefix, _("The network must contain three dots"))
-        try:
-            octets = map(int, network.split("."))
-            if len(octets) != 4:
-                raise MKUserError(varprefix, _("Please specify four octets (X.X.X.X/YY)"))
-            for o in octets:
-                if o < 0 or o > 255:
-                    raise MKUserError(varprefix, _("Invalid octet %d (must be in range 1 ... 255)") % o)
-        except MKUserError:
-            raise
-        except:
-            raise MKUserError(varprefix, _("Please use the syntax X.X.X.X/YY"))
+
+        octets = self.validate_ipaddress(network, varprefix)
 
         # Make sure that non-network bits are zero
         l = (octets[0] << 24) + (octets[1] << 16) + (octets[2] << 8) + (octets[3])
         for b in range(bits, 32):
             if l & (2 ** (31-b)) != 0:
                 raise MKUserError(varprefix, _("Please make sure that only the %d non-network bits are non-zero") % bits)
+
+    def validate_ipaddress(self, value, varprefix):
+        try:
+            octets = map(int, value.split("."))
+            if len(octets) != 4:
+                raise MKUserError(varprefix, _("Please specify four octets (X.X.X.X/YY)"))
+            for o in octets:
+                if o < 0 or o > 255:
+                    raise MKUserError(varprefix, _("Invalid octet %d (must be in range 1 ... 255)") % o)
+            return octets
+        except MKUserError:
+            raise
+        except:
+            raise MKUserError(varprefix, _("Invalid IP address syntax"))
+
+
+class IPv4Address(IPv4Network):
+    def __init__(self, **kwargs):
+        kwargs.setdefault("size", 16)
+        IPv4Network.__init__(self, **kwargs)
+
+    def validate_value(self, value, varprefix):
+        self.validate_ipaddress(value, varprefix)
 
 
 # Valuespec for a HTTP Url (not HTTPS), that
@@ -518,6 +532,7 @@ class ListOfStrings(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._valuespec = kwargs.get("valuespec", TextAscii())
         self._vertical = kwargs.get("orientation", "vertical") == "vertical"
+        self._allow_empty = kwargs.get("allow_empty", True)
 
     def render_input(self, vp, value):
         # Form already submitted?
@@ -544,10 +559,13 @@ class ListOfStrings(ValueSpec):
         return []
 
     def value_to_text(self, value):
-        s = '<table>'
-        for v in value:
-            s += '<tr><td>%s</td></tr>' % self._valuespec.value_to_text(v)
-        return s + '</table>'
+        if self._vertical:
+            s = '<table>'
+            for v in value:
+                s += '<tr><td>%s</td></tr>' % self._valuespec.value_to_text(v)
+            return s + '</table>'
+        else:
+            return ", ".join([ self._valuespec.value_to_text(v) for v in value ])
 
     def from_html_vars(self, vp):
         value = []
@@ -567,6 +585,8 @@ class ListOfStrings(ValueSpec):
             self._valuespec.validate_datatype(s, vp + "_%d" % nr)
 
     def validate_value(self, value, vp):
+        if len(value) == 0 and not self._allow_empty:
+            raise MKUserError(vp + "_0", _("Please specify at least one value"))
         for nr, s in enumerate(value):
             self._valuespec.validate_value(s, vp + "_%d" % nr)
 
@@ -1640,7 +1660,10 @@ class Tuple(ValueSpec):
                 html.write("<tr>")
 
         for no, element in enumerate(self._elements):
-            val = value[no]
+            try:
+                val = value[no]
+            except:
+                val = element.default_value()
             vp = varprefix + "_" + str(no)
             if self._orientation == "vertical":
                 html.write("<tr>")

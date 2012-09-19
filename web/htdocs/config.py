@@ -156,9 +156,15 @@ def declare_permission(name, title, description, defaults):
     # Detect if this permission has already been declared before
     # The dict value is replaced automatically but the list value
     # to be replaced -> INPLACE!
-    if perm in permissions_by_order:
-        permissions_by_order[permissions_by_order.index(perm)] = perm
-    else:
+    # FIXME: permissions_by_order is bad. Remove this and add a "sort" 
+    # attribute to the permissions_by_name dict. This would be much cleaner.
+    replaced = False
+    for index, test_perm in enumerate(permissions_by_order):
+        if test_perm['name'] == perm['name']:
+            permissions_by_order[index] = perm
+            replaced = True
+
+    if not replaced:
         permissions_by_order.append(perm)
 
     permissions_by_name[name] = perm
@@ -228,6 +234,9 @@ def get_language(default = None):
     if default == None:
         default = default_language
     return user and user.get('language', default) or default
+
+def hide_language(lang):
+    return lang in hide_languages
 
 def roles_of_user(user):
     # Make sure, builtin roles are present, even if not modified
@@ -528,6 +537,9 @@ def load_default_values(into):
     
     # Default language for l10n
     into["default_language"] = None
+
+    # Hide these languages from user selection
+    into['hide_languages'] = []
     
     # Default timestamp format to be used in multisite
     into["default_ts_format"] = 'mixed'

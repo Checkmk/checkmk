@@ -112,14 +112,18 @@ def render_dashboard(name):
     # sensitive.
 
     wato_folder = html.var("wato_folder")
-    if not wato_folder: # ignore wato folder in case of root folder
-        wato_folder = None
+
+    # When an empty wato_folder attribute is given a user really wants
+    # to see only the hosts contained in the root folder. So don't ignore
+    # the root folder anymore.
+    #if not wato_folder: # ignore wato folder in case of root folder
+    #    wato_folder = None
 
     # The title of the dashboard needs to be prefixed with the WATO path,
     # in order to make it clear to the user, that he is seeing only partial
     # data.
     title = board["title"]
-    if wato_folder:
+    if wato_folder is not None:
         title = wato.api.get_folder_title(wato_folder) + " - " + title
     html.header(title, javascripts=["dashboard"], stylesheets=["pages", "dashboard", "status", "views"])
 

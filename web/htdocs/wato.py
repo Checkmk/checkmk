@@ -10650,7 +10650,7 @@ def register_rule(group, varname, valuespec = None, title = None,
 #
 
 def select_language(user_language):
-    languages = get_languages()
+    languages = [ l for l in get_languages() if not config.hide_language(l[0]) ]
     inactive = user_language != ''
 
     if languages:

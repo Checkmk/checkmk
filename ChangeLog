@@ -102,6 +102,8 @@
     Multisite:
     * Added css class="dashboard_<name>" to the dashboard div for easier
     customization of the dashboard style of a special dashboard
+    * Dashboard: Param wato_folder="" means WATO root folder, use it and also
+      display the title of this folder
     * Sidebar: Sorting aggregation groups in BI snapin now
     * Sidebar: Sorting sites in master control snapin case insensitive
     * FIX: fixed localization of general permissions

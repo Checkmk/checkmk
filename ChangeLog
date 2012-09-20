@@ -99,6 +99,7 @@
     * FIX: complex list widgets (ListOf) lost remaining entries after deleting one
     * FIX: Fixed error in printer_supply valuespec which lead to an exception
            when defining host/service specific rules
+    * FIX: Fixed button url icon in docu-url link
 
     BI:
     * Great speed up of rule compilation in large environments

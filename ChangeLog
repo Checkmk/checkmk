@@ -132,6 +132,7 @@
            page rendered during reload does not show the message anymore
     * FIX: Fixed bug in alert statistics view (only last 1000 lines were
            processed for calculating the statistics)
+    * FIX: Added missing downtime icon for comment view
 
     Livecheck:
     * FIX: Compile livecheck also if diet libc is missing

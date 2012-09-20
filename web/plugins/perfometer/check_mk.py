@@ -395,16 +395,16 @@ perfometers["check_mk-mysql.innodb_io"] = perfometer_check_mk_diskstat
 
 
 def perfometer_check_mk_printer_supply(row, check_command, perf_data):
-    left = float(perf_data[0][1])
-    warn = float(perf_data[0][3])
-    crit = float(perf_data[0][4])
-    mini = float(perf_data[0][5])
-    maxi = float(perf_data[0][6])
+    left = savefloat(perf_data[0][1])
+    warn = savefloat(perf_data[0][3])
+    crit = savefloat(perf_data[0][4])
+    mini = savefloat(perf_data[0][5])
+    maxi = savefloat(perf_data[0][6])
     if maxi < 0:
         return "", "" # Printer does not supply a max value
 
     # If there is no 100% given, calculate the percentage
-    if maxi != 100.0:
+    if maxi != 100.0 and maxi != 0.0:
         left = left * 100 / maxi
 
     s = row['service_description'].lower()

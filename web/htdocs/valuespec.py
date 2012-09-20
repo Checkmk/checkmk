@@ -614,7 +614,7 @@ class ListOf(ValueSpec):
             "down" : _("down"),
         }
         html.empty_icon_button() # needed as placeholder
-        html.icon_button("#", _("Move this entry %s %s") % (where_name[where],self._movable),  
+        html.icon_button("#", _("Move this entry %s") % (where_name[where]),
            where, onclick=js, style = (not self._movable) and "display: none" or "")
 
     # Implementation idea: we render our element-valuespec

@@ -1228,6 +1228,14 @@ def show_view(view, show_heading = False, show_buttons = True,
         colset.remove("site")
     columns = list(colset)
 
+    # We had a problem with stats queries on the logtable where
+    # the limit was not applied on the resulting rows but on the
+    # lines of the log processed. This resulted in wrong stats.
+    # For these datasources we ignore the query limits.
+    limit = None
+    if not datasource.get('ignore_limit', False):
+        limit = get_limit()
+
     # Get list of painter options we need to display (such as PNP time range
     # or the format being used for timestamp display)
     painter_options = []
@@ -1246,9 +1254,9 @@ def show_view(view, show_heading = False, show_buttons = True,
         # In that case that function is used to compute the result.
 
         if type(tablename) == type(lambda x:None):
-            rows = tablename(columns, query, only_sites, get_limit(), all_active_filters)
+            rows = tablename(columns, query, only_sites, limit, all_active_filters)
         else:
-            rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
+            rows = query_data(datasource, columns, add_columns, query, only_sites, limit)
 
         # Now add join information, if there are join columns
         if len(join_painters) > 0:

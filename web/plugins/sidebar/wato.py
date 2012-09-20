@@ -85,6 +85,7 @@ sidebar_snapins["admin_mini"] = {
     height: 18px;
     position: relative;
     left: 3px;
+    padding: 0;
 }
 
 #snapin_admin_mini div.footnotelink { 

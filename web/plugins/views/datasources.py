@@ -35,6 +35,9 @@
 
 # idkeys: these are used to generate a key which is uniq for each data row
 
+# ignore_limit: Ignore the soft/hard query limits in view.py/query_data(). This
+#               fixes stats queries on e.g. the log table.
+
 multisite_datasources["hosts"] = {
     "title"   : _("All hosts"),
     "table"   : "hosts",
@@ -155,11 +158,12 @@ multisite_datasources["log_host_events"] = {
 }
 
 multisite_datasources["alert_stats"] = {
-    "title"       : _("Alert Statistics"),
-    "table"       : "log",
-    "add_headers" : "Filter: class = 1\nStats: state = 0\nStats: state = 1\nStats: state = 2\nStats: state = 3\nStats: state != 0\n",
-    "add_columns" : [ "alerts_ok", "alerts_warn", "alerts_crit", "alerts_unknown", "alerts_problem" ],
-    "infos"       : [ "log", "host", "service", "contact", "command" ],
-    "keys"        : [],
-    "idkeys"      : [ 'host_name', 'service_description' ],
+    "title"        : _("Alert Statistics"),
+    "table"        : "log",
+    "add_headers"  : "Filter: class = 1\nStats: state = 0\nStats: state = 1\nStats: state = 2\nStats: state = 3\nStats: state != 0\n",
+    "add_columns"  : [ "alerts_ok", "alerts_warn", "alerts_crit", "alerts_unknown", "alerts_problem" ],
+    "infos"        : [ "log", "host", "service", "contact", "command" ],
+    "keys"         : [],
+    "idkeys"       : [ 'host_name', 'service_description' ],
+    "ignore_limit" : True,
 }

@@ -1,0 +1,9 @@
+Title: Refreshing autochecks in wato
+Component: wato
+State: open
+Date: 2012-09-19 11:58:31
+Targetversion: 1.2.0
+Class: nastiness
+
+If for example mount options of a services changes, there is no way in the wato service section to refresh 
+the autochecks to use the new options

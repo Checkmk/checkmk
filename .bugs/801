@@ -1,0 +1,9 @@
+Title: Documentation should no longer mention checkname
+Component: docu
+State: open
+Date: 2012-09-19 16:41:43
+Targetversion: 1.2.0
+Class: cleanup
+
+checkname is no longer supported.
+very few checks still use it but it also confuses new authors of checks.

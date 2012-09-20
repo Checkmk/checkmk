@@ -180,9 +180,13 @@ specific_vars = {
   ],
   "tomcat" : [
       ( "*:type=Manager,*/activeSessions,maxActiveSessions",  None,                      [ "path", "context" ] ),
-      ( "*:type=Manager,*/stateName", None, [ "path", "context" ] ),
-#      ( "*:J2EEApplication=none,J2EEServer=none,WebModule=*,j2eeType=Servlet,name=jsp/stateName", None, [ "path", "context" ] ),
-#      ( "Catalina:J2EEApplication=none,J2EEServer=none,j2eeType=WebModule=,name=*,stateName", None, [ "path", "context" ] ),
+      ( "*:j2eeType=Servlet,name=default,*/stateName", None, [ "WebModule" ] ),
+      # Check not yet working
+      ( "*:j2eeType=Servlet,name=default,*/requestCount", None, [ "WebModule" ]),
+
+     # too wide location for addressing the right info
+     # ( "*:j2eeType=Servlet,*/requestCount", None, [ "WebModule" ] ),
+
   ],
   "jboss" : [
       ( "*:type=Manager,*/activeSessions,maxActiveSessions",  None,                      [ "path", "context" ] ),

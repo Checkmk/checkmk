@@ -235,6 +235,9 @@ def get_language(default = None):
         default = default_language
     return user and user.get('language', default) or default
 
+def hide_language(lang):
+    return lang in hide_languages
+
 def roles_of_user(user):
     # Make sure, builtin roles are present, even if not modified
     # and saved with WATO.
@@ -534,6 +537,9 @@ def load_default_values(into):
     
     # Default language for l10n
     into["default_language"] = None
+
+    # Hide these languages from user selection
+    into['hide_languages'] = []
     
     # Default timestamp format to be used in multisite
     into["default_ts_format"] = 'mixed'

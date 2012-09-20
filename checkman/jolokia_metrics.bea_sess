@@ -1,0 +1,41 @@
+title: Number of JVM sessions on BEA Weblogic
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check allows to monitor the number of current connections to
+ a JVM application on the servlet level)
+ 
+ To use this plugin, Jolokia and the agent plugin need to be deployed
+ on the monitored server in each application container.
+
+ The check can alert if the {WARN}/{CRIT} thresholds for a configurable total
+ is exceeded.
+
+item:
+ The name of the application server instance as configured by the agent
+ followed by the name of the application and the servlet inside it.
+ I.e. webservices webservices jolokia
+ This name is probably dependant on running a loadbalanced install or not.
+
+perfdata:
+ The number of sessions along with the upper (high) alert levels.
+
+inventory:
+ One check is created for each selvet running inside a weblogic 
+ instance sent by the agent.
+
+
+[parameters]
+low_crit (int): If the number of sessions falls to this level,
+ a CRITICAL state is triggered
+low_warn (int): If the number of sessions falls to this level,
+ a WARNING state is triggered
+high_warn (int): If the number of sessions climbs to this level,
+ a WARNING state is triggered
+high_crit (int): If the number of sessions climbs to this level,
+ a CRITICAL state is triggered
+
+[configuration]
+jolokia_metrics_app_sess_default_levels (int, int, int, int): Default levels warning and critical

@@ -200,9 +200,9 @@ class Filter:
         return False
 
     def display(self):
-        raise MKInternalError("Incomplete implementation of filter %s '%s': missing display()" % \
+        raise MKInternalError(_("Incomplete implementation of filter %s '%s': missing display()") % \
                 (self.name, self.title))
-        html.write("FILTER NOT IMPLEMENTED")
+        html.write(_("FILTER NOT IMPLEMENTED"))
 
     def filter(self, tablename):
         return ""
@@ -552,12 +552,12 @@ def page_edit_view():
     html.help(_("The datasource of a view cannot be changed."))
 
     forms.section(_("Topic"))
-    html.text_input("view_topic", "Other", size=50)
+    html.text_input("view_topic", _("Other"), size=50)
     html.help(_("The view will be sorted under this topic in the Views snapin. "))
 
     forms.section(_("Buttontext"))
     html.text_input("view_linktitle", size=26)
-    html.write("&nbsp; Icon: ")
+    html.write(_("&nbsp; Icon: "))
     html.text_input("view_icon", size=14)
     html.help(_("If you define a text here, then it will be used in "
                 "buttons to the view instead of of view title."))
@@ -641,7 +641,7 @@ def page_edit_view():
             html.sorted_select("%s%d" % (var_prefix, n), collist)
             html.write(" ")
             html.select("%sorder_%d" % (var_prefix, n), [("asc", _("Ascending")), ("dsc", _("Descending"))])
-            
+
     def column_selection(title, var_prefix, data):
         allowed = allowed_for_datasource(data, datasourcename)
 
@@ -674,10 +674,10 @@ def page_edit_view():
     forms.header(_("Layout"), isopen=False)
     forms.section(_("Basic Layout"))
     html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() if not v.get("hide")])
-    
+
     forms.section(_("Number of Columns"))
     html.number_input("num_columns", 1)
-    
+
     forms.section(_('Column headers'))
 
     # 1.1.11i3: Fix deprecated column_header option: perpage -> pergroup
@@ -776,7 +776,7 @@ def ajax_get_edit_column():
 def load_view_into_html_vars(view):
     # view is well formed, not checks neccessary
     html.set_var("view_title",       view["title"])
-    html.set_var("view_topic",       view.get("topic", "Other"))
+    html.set_var("view_topic",       view.get("topic", _("Other")))
     html.set_var("view_linktitle",   view.get("linktitle", view["title"]))
     html.set_var("view_icon",        view.get("icon")),
     html.set_var("view_description", view.get("description", ""))
@@ -962,7 +962,7 @@ def create_view():
             allowed_cols = collist_of_collection(allowed_for_datasource(multisite_painters, datasourcename))
             joined_cols  = collist_of_collection(allowed_for_joined_datasource(multisite_painters, datasourcename), allowed_cols)
             if is_joined_value(joined_cols, "col_%d" % n) and not join_index:
-                raise MKUserError('col_join_index_%d' % n, "Please specify the service to show the data for")
+                raise MKUserError('col_join_index_%d' % n, _("Please specify the service to show the data for"))
 
             if join_index and col_title:
                 painternames.append((pname, viewname, tooltip, join_index, col_title))
@@ -1020,10 +1020,10 @@ def page_view():
     load_views()
     view_name = html.var("view_name")
     if view_name == None:
-        raise MKGeneralException("Missing the variable view_name in the URL.")
+        raise MKGeneralException(_("Missing the variable view_name in the URL."))
     view = html.available_views.get(view_name)
     if not view:
-        raise MKGeneralException("No view defined with the name '%s'." % view_name)
+        raise MKGeneralException(("No view defined with the name '%s'.") % view_name)
 
     show_view(view, True, True, True)
 
@@ -1390,7 +1390,7 @@ def render_view(view, rows, datasource, group_painters, painters,
        and 'W' in display_options \
        and (html.output_format == "html" or not config.is_multisite()):
         for sitename, info in html.live.deadsites.items():
-            html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
+            html.show_error("<b>%s - %s</b><br>%s" % (info["site"]["alias"], _('Livestatus error'), info["exception"]))
 
     # FIXME: Sauberer wäre noch die Status Icons hier mit aufzunehmen
     if 'R' in display_options:
@@ -1958,7 +1958,7 @@ def allowed_for_joined_datasource(collection, datasourcename):
 
 def is_joined_value(collection, varname):
     selected_label = [ label for name, label in collection if name == html.var(varname, '') ]
-    return selected_label and selected_label[0][:8] == 'SERVICE:'
+    return selected_label and selected_label[0][:8] == _('SERVICE:')
 
 def collist_of_collection(collection, join_target = []):
     def sort_list(l):
@@ -1970,7 +1970,7 @@ def collist_of_collection(collection, join_target = []):
     if not join_target:
         return sort_list([ (name, p["title"]) for name, p in collection.items() ])
     else:
-        return sort_list([ (name, 'SERVICE: ' + p["title"]) for name, p in collection.items() if (name, p["title"]) not in join_target ])
+        return sort_list([ (name, _('SERVICE:') + ' ' + p["title"]) for name, p in collection.items() if (name, p["title"]) not in join_target ])
 
 #   .----------------------------------------------------------------------.
 #   |         ____                                          _              |
@@ -2486,7 +2486,3 @@ def declare_1to1_sorter(painter_name, func, col_num = 0, reverse = False):
                                         reverse and r2 or r1)
     }
     return painter_name
-
-
-# load_plugins()
-

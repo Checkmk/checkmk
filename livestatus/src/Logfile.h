@@ -38,7 +38,7 @@ class LogEntry;
 class Query;
 class LogCache;
 
-typedef map<uint64_t, LogEntry *> entries_t; // key is time_t . lineno
+typedef map<uint64_t, LogEntry *> logfile_entries_t; // key is time_t . lineno
 
 class Logfile
 {
@@ -52,7 +52,7 @@ public:
     time_t since() { return _since; }
     unsigned classesRead() { return _logclasses_read; }
     long numEntries() { return _entries.size(); }
-    entries_t* getEntriesFromQuery(Query *query, LogCache *lc, time_t since, time_t until, unsigned);
+    logfile_entries_t* getEntriesFromQuery(Query *query, LogCache *lc, time_t since, time_t until, unsigned);
     bool answerQuery(Query *query, LogCache *lc, time_t since, time_t until, unsigned);
     bool answerQueryReverse(Query *query, LogCache *lc, time_t since, time_t until, unsigned);
 
@@ -66,7 +66,7 @@ private:
     fpos_t     _read_pos;      // read until this position
     uint32_t   _lineno;        // read until this line
     unsigned   _logclasses_read; // only these types have been read
-    entries_t  _entries;
+    logfile_entries_t  _entries;
     char       _linebuffer[MAX_LOGLINE];
 
 

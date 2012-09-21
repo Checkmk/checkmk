@@ -31,9 +31,6 @@
 #include "Query.h"
 #include "LogCache.h"
 
-extern int num_cached_log_messages;
-extern int g_debug_level;
-
 Logfile::Logfile(const char *path, bool watch)
   : _path(strdup(path))
   , _since(0)
@@ -75,12 +72,9 @@ Logfile::~Logfile()
 
 void Logfile::flush()
 {
-    for (entries_t::iterator it = _entries.begin();
-            it != _entries.end();
-            ++it)
-    {
+    for (logfile_entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it)
         delete it->second;
-    }
+
     _entries.clear();
     _logclasses_read = 0;
 }
@@ -89,7 +83,6 @@ void Logfile::flush()
 void Logfile::load(LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
     unsigned missing_types = logclasses & ~_logclasses_read;
-
     FILE *file = 0;
     // The current logfile has the _watch flag set to true.
     // In that case, if the logfile has grown, we need to
@@ -114,7 +107,7 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until, unsigned logc
             fgetpos(file, &_read_pos);
         }
         if (missing_types) {
-            fseek(file, 0, SEEK_SET);
+        	fseek(file, 0, SEEK_SET);
             _lineno = 0;
             loadRange(file, missing_types, logcache, since, until, logclasses);
             _logclasses_read |= missing_types;
@@ -146,19 +139,15 @@ void Logfile::loadRange(FILE *file, unsigned missing_types,
     {
         _lineno++;
         if (processLogLine(_lineno, missing_types)) {
-            num_cached_log_messages ++;
             logcache->handleNewMessage(this, since, until, logclasses); // memory management
         }
     }
 }
 
-
 long Logfile::freeMessages(unsigned logclasses)
 {
     long freed = 0;
-    for (entries_t::iterator it = _entries.begin();
-            it != _entries.end();
-            ++it)
+    for (logfile_entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it)
     {
         LogEntry *entry = it->second;
         if ((1 << entry->_logclass) & logclasses)
@@ -171,7 +160,6 @@ long Logfile::freeMessages(unsigned logclasses)
     _logclasses_read &= ~logclasses;
     return freed;
 }
-
 
 bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
 {
@@ -198,8 +186,7 @@ bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
     }
 }
 
-
-entries_t* Logfile::getEntriesFromQuery(Query *query, LogCache *logcache, time_t since, time_t until, unsigned logclasses)
+logfile_entries_t* Logfile::getEntriesFromQuery(Query *query, LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
 	 load(logcache, since, until, logclasses); // make sure all messages are present
 	 return &_entries;
@@ -209,7 +196,7 @@ bool Logfile::answerQuery(Query *query, LogCache *logcache, time_t since, time_t
 {
     load(logcache, since, until, logclasses); // make sure all messages are present
     uint64_t sincekey = makeKey(since, 0);
-    entries_t::iterator it = _entries.lower_bound(sincekey);
+    logfile_entries_t::iterator it = _entries.lower_bound(sincekey);
     while (it != _entries.end())
     {
         LogEntry *entry = it->second;
@@ -226,7 +213,7 @@ bool Logfile::answerQueryReverse(Query *query, LogCache *logcache, time_t since,
 {
     load(logcache, since, until, logclasses); // make sure all messages are present
     uint64_t untilkey = makeKey(until, 999999999);
-    entries_t::iterator it = _entries.upper_bound(untilkey);
+    logfile_entries_t::iterator it = _entries.upper_bound(untilkey);
     while (it != _entries.begin())
     {
         --it;

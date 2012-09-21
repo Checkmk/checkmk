@@ -133,6 +133,10 @@
     * FIX: Fixed bug in alert statistics view (only last 1000 lines were
            processed for calculating the statistics)
     * FIX: Added missing downtime icon for comment view
+    * FIX: Fixed handling of filter configuration in view editor where filters
+           are using same variable names. Overlaping filters are now disabled
+	   in the editor.
+    * FIX: Totally hiding hidden filters from view editor now
 
     Livecheck:
     * FIX: Compile livecheck also if diet libc is missing

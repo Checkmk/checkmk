@@ -590,11 +590,33 @@ def page_edit_view():
 
     forms.header(_("Filters"), isopen=False)
     allowed_filters = filters_allowed_for_datasource(datasourcename)
+
     # sort filters according to title
     s = [(filt.sort_index, filt.title, fname, filt)
           for fname, filt in allowed_filters.items()
           if fname not in ubiquitary_filters ]
     s.sort()
+
+    # Construct a list of other filters which conflict with this filter. A filter uses one or
+    # several http variables for transporting the filter data. There are several filters which
+    # have overlaping vars which must not be used at the same time. Those filters must exclude
+    # eachother. This is done in the JS code. When activating one filter it checks which other
+    # filters to disable and makes the "mode" dropdowns unchangable.
+    filter_htmlvars = {}
+    for sortindex, title, fname, filt in s:
+        for htmlvar in filt.htmlvars:
+            if htmlvar not in filter_htmlvars:
+                filter_htmlvars[htmlvar] = []
+            filter_htmlvars[htmlvar].append(fname)
+
+    filter_groups = {}
+    for sortindex, title, fname, filt in s:
+        filter_groups[fname] = set([])
+        for htmlvar in filt.htmlvars:
+            filter_groups[fname].update(filter_htmlvars[htmlvar])
+        filter_groups[fname].remove(fname)
+        filter_groups[fname] = list(filter_groups[fname])
+
     shown_help = False
     for sortindex, title, fname, filt in s:
         forms.section(title)
@@ -620,14 +642,18 @@ def page_edit_view():
         html.write('</div>')
         html.write('<div class=clear></div>')
         html.help(filt.comment)
-    
-    # Set all filters into the proper display state
+
     html.write("<script language=\"javascript\">\n")
+
+    html.write("g_filter_groups = %r;\n" % filter_groups)
+
+    # Set all filters into the proper display state
     for fname, filt in allowed_filters.items():
         if fname not in ubiquitary_filters:
             html.write("filter_activation(document.getElementById(\"filter_%s\"));\n" % fname)
+
     html.write("</script>\n")
-   
+
 
     def sorter_selection(title, var_prefix, maxnum, data):
         allowed = allowed_for_datasource(data, datasourcename)

@@ -100,6 +100,9 @@
     * FIX: Fixed error in printer_supply valuespec which lead to an exception
            when defining host/service specific rules
     * FIX: Fixed button url icon in docu-url link
+    * FIX: Fixed handling of filter configuration in view editor where filters
+           are using same variable names. Overlaping filters are now disabled
+	   in the editor.
 
     BI:
     * Great speed up of rule compilation in large environments

@@ -44,14 +44,13 @@ extern int g_debug_level;
 
 int num_cached_log_messages = 0;
 
-
 // Debugging logging is hard if debug messages are logged themselves...
 void logcache_debug(const char *loginfo, ...)
 {
     if (g_debug_level < 2)
         return;
 
-    FILE *x = fopen("/tmp/livestatus.log", "a+");
+    FILE *x = fopen("/tmp/livestatus_state.log", "a+");
     va_list ap;
     va_start(ap, loginfo);
     vfprintf(x, loginfo, ap);
@@ -60,16 +59,12 @@ void logcache_debug(const char *loginfo, ...)
     fclose(x);
 }
 
-LogCache* LogCache::handle;
 LogCache::LogCache(unsigned long max_cached_messages)
-  : _num_cached_messages(0)
-  , _max_cached_messages(max_cached_messages)
+  : _max_cached_messages(max_cached_messages)
   , _num_at_last_check(0)
-  , _cleanup_enabled(1)
 {
     pthread_mutex_init(&_lock, 0);
     updateLogfileIndex();
-    handle = this;
 }
 
 LogCache::~LogCache()
@@ -78,21 +73,13 @@ LogCache::~LogCache()
     pthread_mutex_destroy(&_lock);
 }
 
-LogCache::Locker::Locker(int use_log_cleanup){
-	LogCache::handle->lockLogCache();
-	LogCache::handle->_cleanup_enabled = use_log_cleanup;
-}
-
-LogCache::Locker::~Locker(){
-	LogCache::handle->unlockLogCache();
-	LogCache::handle->_cleanup_enabled = 1;
-}
-
-void LogCache::lockLogCache(){
+void LogCache::lockLogCache()
+{
 	pthread_mutex_lock(&_lock);
 }
 
-void LogCache::unlockLogCache(){
+void LogCache::unlockLogCache()
+{
     pthread_mutex_unlock(&_lock);
 }
 
@@ -122,8 +109,9 @@ void LogCache::forgetLogfiles()
     {
         delete it->second;
     }
+    logcache_debug("-----> Raeume logcache auf!");
     _logfiles.clear();
-    _num_cached_messages = 0;
+    num_cached_log_messages = 0;
 }
 
 extern char *log_file;
@@ -132,8 +120,6 @@ extern char *log_archive_path;
 void LogCache::updateLogfileIndex()
 {
     _last_index_update = time(0);
-
-
     // We need to find all relevant logfiles. This includes
     // directory.
     // the current nagios.log and all files in the archive
@@ -166,6 +152,7 @@ void LogCache::updateLogfileIndex()
 
 void LogCache::scanLogfile(char *path, bool watch)
 {
+	logcache_debug("-----> Scan logfile %s", path);
     Logfile *logfile = new Logfile(path, watch);
     time_t since = logfile->since();
     if (since) {
@@ -204,7 +191,7 @@ void LogCache::dumpLogfiles()
  */
 void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((__unused__)), time_t until __attribute__ ((__unused__)), unsigned logclasses)
 {
-    if ( _cleanup_enabled == 0 || ++_num_cached_messages <= _max_cached_messages)
+	if ( ++num_cached_log_messages <= _max_cached_messages  )
         return; // current message count still allowed, everything ok
 
     /* Memory checking an freeing consumes CPU ressources. We save
@@ -213,7 +200,7 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
        memory can be freed. We do this by suppressing the check when
        the number of messages loaded into memory has not grown
        by at least CHECK_MEM_CYCLE messages */
-    if (_num_cached_messages < _num_at_last_check + CHECK_MEM_CYCLE)
+    if (num_cached_log_messages < _num_at_last_check + CHECK_MEM_CYCLE)
         return; // Do not check this time
 
     // [1] Begin by deleting old logfiles
@@ -230,13 +217,13 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
             break;
         }
         if (log->numEntries() > 0) {
-            _num_cached_messages -= log->numEntries();
-            log->flush(); // drop all messages of that file
-            if (_num_cached_messages <= _max_cached_messages) {
+        	num_cached_log_messages -= log->numEntries();
+        	log->flush(); // drop all messages of that file
+            if (num_cached_log_messages <= _max_cached_messages) {
                 // remember the number of log messages in cache when
                 // the last memory-release was done. No further
                 // release-check shall be done until that number changes.
-                _num_at_last_check = _num_cached_messages;
+                _num_at_last_check = num_cached_log_messages;
                 return;
             }
         }
@@ -256,9 +243,9 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
             if (g_debug_level > 2)
                 logcache_debug("Freeing classes 0x%02x of file %s", ~logclasses, log->path());
             long freed = log->freeMessages(~logclasses); // flush only messages not needed for current query
-            _num_cached_messages -= freed;
-            if (_num_cached_messages <= _max_cached_messages) {
-                _num_at_last_check = _num_cached_messages;
+            num_cached_log_messages -= freed;
+            if (num_cached_log_messages <= _max_cached_messages) {
+                _num_at_last_check = num_cached_log_messages;
                 return;
             }
         }
@@ -271,22 +258,23 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
     for (it = ++queryit; it != _logfiles.end(); ++it)
     {
         Logfile *log = it->second;
-
         if (log->numEntries() > 0) {
-            _num_cached_messages -= log->numEntries();
-            log->flush();
-            if (_num_cached_messages <= _max_cached_messages) {
-                _num_at_last_check = _num_cached_messages;
+        	logcache_debug("Flush newer log, msgs %d", log->numEntries());
+        	num_cached_log_messages -= log->numEntries();
+        	log->flush();
+            if (num_cached_log_messages <= _max_cached_messages) {
+                _num_at_last_check = num_cached_log_messages;
                 return;
             }
         }
     }
-    _num_at_last_check = _num_cached_messages;
+    _num_at_last_check = num_cached_log_messages;
     // If we reach this point, no more logfiles can be unloaded,
     // despite the fact that there are still too many messages
     // loaded.
+
     if (g_debug_level > 2)
         logcache_debug("Cannot unload more messages. Still %d loaded (max is %d)",
-                _num_cached_messages, _max_cached_messages);
+                num_cached_log_messages, _max_cached_messages);
 }
 

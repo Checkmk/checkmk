@@ -38,17 +38,15 @@ typedef map<time_t, Logfile *> _logfiles_t;
 class LogCache
 {
     pthread_mutex_t _lock;
-    unsigned long _num_cached_messages;
     unsigned long _max_cached_messages;
     unsigned long _num_at_last_check;
-    int           _cleanup_enabled;
+
 public:
     LogCache(unsigned long max_cached_messages);
     ~LogCache();
     time_t _last_index_update;
     _logfiles_t _logfiles;
 
-    static LogCache* handle;
     const char *name() { return "log"; }
     const char *prefixname() { return "logs"; }
     bool isAuthorized(contact *ctc, void *data);
@@ -60,14 +58,6 @@ public:
     bool logCachePreChecks();
     void lockLogCache();
     void unlockLogCache();
-
-    class Locker
-    {
-    public:
-        Locker(int disable_cleanup);
-        ~Locker();
-    };
-
 
 private:
 

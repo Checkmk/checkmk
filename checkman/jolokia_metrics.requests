@@ -1,0 +1,21 @@
+title: Requests to JVM instances
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check allows to track the number and rate of incoming requests to
+ a JVM application server on BEA weblogic.
+ 
+ To use this plugin, Jolokia and the agent plugin need to be deployed
+ on the monitored server in each application container.
+
+
+item:
+ The name of the application server instance as configured by the agent
+
+perfdata:
+ The number of requests served.
+
+inventory:
+ One check is created for each JVM instance sent by the agent.

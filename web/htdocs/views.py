@@ -619,7 +619,7 @@ def page_edit_view():
 
     shown_help = False
     for sortindex, title, fname, filt in s:
-        forms.section(title)
+        forms.section(title, hide = not filt.visible())
         if not shown_help:
             html.help(_("Please configure, which of the available filters will be used in this "
                   "view. <br><br><b>Show to user</b>: the user will be able to see and modify these "

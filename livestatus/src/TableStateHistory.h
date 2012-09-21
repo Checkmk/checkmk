@@ -37,44 +37,32 @@
 
 
 typedef pair<string, string> HostServiceKey;
-class LessThan
-{
-public:
-    bool operator()(const HostServiceKey& lhs, const HostServiceKey& rhs)
-    {
-        if (lhs.first < rhs.first)
-            return true;
-        if (lhs.first > rhs.first)
-            return false;
-        return lhs.second < rhs.second;
-    }
-};
 
-class HostServiceState{
-public:
+struct HostServiceState {
 	time_t  _time;
 	time_t  _from;
 	time_t  _until;
 	time_t  _duration;
 	double  _duration_part;
-	int     _attempt;
 	int     _state;			 // -1/0/1/2/3
-	char*   _state_alert;    // STARTED/STOPPED
-	char*   _state_flapping; // STARTED/STOPPED
-	char*   _state_downtime; // STARTED/STOPPED/CANCELED
-	int		_no_longer_exists;   // 0/1
-	char*   _notification_period;
 	int     _in_notification_period;
 	int     _in_downtime;
 	int     _is_flapping;
 
-	LogEntry* _log_ptr;
-	LogEntry* _prev_log_ptr;
+	// Absent state handling
+	int		_no_longer_exists;
+	time_t  _last_known_time;
+
+	// Pointer to dynamically allocated strings (strdup) that live here.
+	// These pointers are 0, if there is no output (e.g. downtime)
+	char*   _check_output;
+	char*   _prev_check_output;
+
 	char*   _debug_info;
 	char*   _prev_debug_info;
 
-	time_t  _duration_state_ABSENT;
-	double  _duration_part_ABSENT;
+	time_t  _duration_state_UNMONITORED;
+	double  _duration_part_UNMONITORED;
 	time_t  _duration_state_OK;
 	double  _duration_part_OK;
 	time_t  _duration_state_WARNING;
@@ -84,26 +72,42 @@ public:
 	time_t  _duration_state_UNKNOWN;
 	double  _duration_part_UNKNOWN;
 
-    host      *_host;
-    char*     _host_name; // Fallback if host no longer exists
-    service   *_service;
-    char*     _service_description;  // Fallback if service no longer exists
 
+	// Keep this at end of struct !
+	// Everything above is volatile data and might be bzero'd
+	char       *_notification_period;  // may be "": -> no period known, we assume "always"
+    host       *_host;
+    service    *_service;
+    const char *_host_name;            // Fallback if host no longer exists
+    const char *_service_description;  // Fallback if service no longer exists
 
-
-	HostServiceState(){};
+    HostServiceState() { bzero(this, sizeof(HostServiceState)); }
+    ~HostServiceState();
+    void debug_me(const char *loginfo, ...);
 };
 
-typedef map<HostServiceKey, HostServiceState, LessThan> SLA_Info;
 
 class TableStateHistory : public Table
 {
+    int      _query_timeframe;
+    Query   *_query;
+    int      _since;
+    int      _until;
+
+	// Notification periods information, name: active(1)/inactive(0)
+    typedef map<string, int> _notification_periods_t;
+    _notification_periods_t  _notification_periods;
+
+    // Helper functions to traverse through logfiles
+    _logfiles_t::iterator _it_logs;
+    logfile_entries_t*            _entries;
+    logfile_entries_t::iterator   _it_entries;
+    LogEntry*             _current_entry;
 
 public:
     TableStateHistory();
-    ~TableStateHistory();
     const char *name() { return "statehist"; }
-    const char *prefixname() { return "statehist"; }
+    const char *prefixname() { return "statehist_"; }
     bool isAuthorized(contact *ctc, void *data);
     void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
     void answerQuery(Query *query);
@@ -111,59 +115,9 @@ public:
     void updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &state, bool only_update);
 
 private:
-    int  _query_timeframe;
-    bool answerQuery(Query *, Logfile *, time_t, time_t);
-    Query*   _query;
-    int      _since;
-    int      _until;
-    uint32_t _classmask;
-
-    // Helper functions to traverse through logfiles
-    _logfiles_t::iterator _it_logs;
-    entries_t*            _entries;
-    entries_t::iterator   _it_entries;
-    LogEntry*             _current_entry;
     LogEntry* getPreviousLogentry();
     LogEntry* getNextLogentry();
-
-    inline void process(Query *query, HostServiceState *hs_state, bool do_nothing){
-    	if( do_nothing )
-    		return;
-    	hs_state->_duration = hs_state->_until - hs_state->_from;
-    	hs_state->_duration_part = (double)hs_state->_duration / (double)_query_timeframe;
-
-
-    	bzero(&hs_state->_duration_state_ABSENT, sizeof(time_t) * 5 + sizeof(double) * 5);
-
-    	switch (hs_state->_state) {
-    	case -1:
-    		hs_state->_duration_state_ABSENT = hs_state->_duration;
-    		hs_state->_duration_part_ABSENT  = hs_state->_duration_part;
-    		break;
-    	case STATE_OK:
-    		hs_state->_duration_state_OK       = hs_state->_duration;
-    		hs_state->_duration_part_OK        = hs_state->_duration_part;
-    		break;
-    	case STATE_WARNING:
-    		hs_state->_duration_state_WARNING  = hs_state->_duration;
-    		hs_state->_duration_part_WARNING   = hs_state->_duration_part;
-    		break;
-    	case STATE_CRITICAL:
-    		hs_state->_duration_state_CRITICAL = hs_state->_duration;
-    		hs_state->_duration_part_CRITICAL  = hs_state->_duration_part;
-    		break;
-    	case STATE_UNKNOWN:
-    		hs_state->_duration_state_UNKNOWN  = hs_state->_duration;
-    		hs_state->_duration_part_UNKNOWN   = hs_state->_duration_part;
-    		break;
-    	default:
-    		break;
-    	}
-
-    	query->processDataset(hs_state);
-    	hs_state->_from = hs_state->_until;
-    };
-   SLA_Info* sla_info;
+    void      process(Query *query, HostServiceState *hs_state);
 };
 
 

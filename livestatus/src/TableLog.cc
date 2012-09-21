@@ -44,21 +44,22 @@
 #include "TableContacts.h"
 #include "auth.h"
 #include "LogCache.h"
+#include "Store.h"
 
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 
 // watch nagios' logfile rotation
 extern int g_debug_level;
-
+extern Store *g_store;
 
 // Debugging logging is hard if debug messages are logged themselves...
 void debug(const char *loginfo, ...)
 {
     if (g_debug_level < 2)
-        return;
+       return;
 
-    FILE *x = fopen("/tmp/livestatus.log", "a+");
+    FILE *x = fopen("/tmp/livestatus_tablelog.log", "a+");
     va_list ap;
     va_start(ap, loginfo);
     vfprintf(x, loginfo, ap);
@@ -127,10 +128,9 @@ TableLog::~TableLog()
 
 void TableLog::answerQuery(Query *query)
 {
-    // since logfiles are loaded on demand, we need
-    // to lock out concurrent threads.
-	LogCache::Locker locker(1);
-	LogCache::handle->logCachePreChecks();
+	g_store->logCache()->lockLogCache();
+	g_store->logCache()->logCachePreChecks();
+
 
     int since = 0;
     int until = time(0) + 1;
@@ -146,7 +146,8 @@ void TableLog::answerQuery(Query *query)
     uint32_t classmask = LOGCLASS_ALL;
     query->optimizeBitmask("class", &classmask);
     if (classmask == 0) {
-        return;
+    	g_store->logCache()->unlockLogCache();
+    	return;
     }
 
     /* This code start with the oldest log entries. I'm going
@@ -155,27 +156,29 @@ void TableLog::answerQuery(Query *query)
 
     /* NEW CODE - NEWEST FIRST */
      _logfiles_t::iterator it;
-      it = LogCache::handle->_logfiles.end(); // it now points beyond last log file
+      it = g_store->logCache()->_logfiles.end(); // it now points beyond last log file
     --it; // switch to last logfile (we have at least one)
 
     // Now find newest log where 'until' is contained. The problem
     // here: For each logfile we only know the time of the *first* entry,
     // not that of the last.
-    while (it != LogCache::handle->_logfiles.begin() && it->first > until) // while logfiles are too new...
+    while (it != g_store->logCache()->_logfiles.begin() && it->first > until) // while logfiles are too new...
         --it; // go back in history
     if (it->first > until)  { // all logfiles are too new
+    	g_store->logCache()->unlockLogCache();
         return;
     }
 
     while (true) {
         Logfile *log = it->second;
         debug("Query is now at logfile %s, needing classes 0x%x", log->path(), classmask);
-        if (!log->answerQueryReverse(query, LogCache::handle, since, until, classmask))
+        if (!log->answerQueryReverse(query, g_store->logCache(), since, until, classmask))
             break; // end of time range found
-        if (it == LogCache::handle->_logfiles.begin())
+        if (it == g_store->logCache()->_logfiles.begin())
             break; // this was the oldest one
         --it;
     }
+    g_store->logCache()->unlockLogCache();
 }
 
 

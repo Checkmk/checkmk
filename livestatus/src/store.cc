@@ -47,15 +47,9 @@ Store *g_store = 0;
 ClientQueue *g_client_queue = 0;
 TimeperiodsCache *g_timeperiods_cache = 0;
 
-/* API functions for event broker module (with C linkage) */
-extern unsigned long g_max_cached_messages;
-
-
 void store_init()
 {
-	new LogCache(g_max_cached_messages);
 	g_store = new Store();
-    logger(LG_CRIT, "g_store done");
     g_client_queue = new ClientQueue();
     g_timeperiods_cache = new TimeperiodsCache();
 }

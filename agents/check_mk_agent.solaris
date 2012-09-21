@@ -81,7 +81,7 @@ statgrab_vars="const. cpu. disk. general. mem. page. proc. swap. user."
 statgrab_sections="proc cpu disk page"
 # Only collect net stats if we aren't in a unpriv. zone.
 if [ "$platform" != "zone" ]; then
-    statgrab_vars="$statgrab_vars .net"
+    statgrab_vars="$statgrab_vars net."
     statgrab_sections="$statgrab_sections net"
 fi
 

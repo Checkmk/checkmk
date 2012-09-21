@@ -1,4 +1,4 @@
-title: Requests to JVM sessions on BEA Weblogic
+title: Requests to JVM instances
 agents: linux
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
@@ -10,14 +10,12 @@ description:
  To use this plugin, Jolokia and the agent plugin need to be deployed
  on the monitored server in each application container.
 
+
 item:
  The name of the application server instance as configured by the agent
- followed by the name of the application.
- I.e. webservices webservices
 
 perfdata:
  The number of requests served.
 
 inventory:
- One check is created for each selvet running inside a weblogic 
- instance sent by the agent.
+ One check is created for each JVM instance sent by the agent.

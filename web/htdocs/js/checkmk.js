@@ -55,6 +55,17 @@ if (!Array.prototype.indexOf)
   };
 }
 
+// The nextSibling attribute points also to "text nodes" which might
+// be created by spaces or even newlines in the HTML code and not to
+// the next painted dom object.
+// This works around the problem and really returns the next object.
+function real_next_sibling(o) {
+    var n = o.nextSibling;
+    while (n.nodeType != 1)
+      n = n.nextSibling;
+    return n;
+}
+
 var classRegexes = {};
 
 function hasClass(obj, cls) {
@@ -297,29 +308,50 @@ function update_headinfo(text)
     }
 }
 
+function toggle_input_fields(container, type, disable) {
+    var fields = container.getElementsByTagName(type);
+    for(var a = 0; a < fields.length; a++) {
+        fields[a].disabled = disable;
+    }
+}
+
+function toggle_other_filters(fname, disable_others) {
+    for(var i = 0; i < g_filter_groups[fname].length; i++) {
+        var other_fname = g_filter_groups[fname][i];
+        var oSelect = document.getElementById('filter_' + other_fname);
+
+        // When the filter is active, disable the other filters and vice versa
+
+        // Disable the "filter mode" dropdown
+        oSelect.disabled = disable_others;
+
+        // Now dig into the filter and rename all input fields.
+        // If disabled add an "_disabled" to the end of the var
+        // If enabled remve "_disabled" from the end of the var
+        var oFloatFilter = real_next_sibling(oSelect);
+        if (oFloatFilter) {
+            toggle_input_fields(oFloatFilter, 'input', disable_others);
+            toggle_input_fields(oFloatFilter, 'select', disable_others);
+            oFloatFilter = null;
+        }
+
+        oSelect = null;
+    }
+}
 
 function filter_activation(oSelect)
 {
     var usage = oSelect.value;
+    var fname = oSelect.id.replace('filter_', '');
+
+    // Disable/Enable other filters which conflict with this filter
+    toggle_other_filters(fname, usage != 'off');
+
+    // Make the current filter visible/invisible
     var oDiv = oSelect.parentNode;
     oDiv.setAttribute("className", "filtersetting " + usage);
     oDiv.setAttribute("class", "filtersetting " + usage);
 
-    // If the filter is not in state hard or show, disable filter
-    // input
-    var disabled = usage != "hard" && usage != "show";
-    var oFloatFilter = oSelect.nextSibling;
-    if (oFloatFilter) {
-        for (var i in oFloatFilter.childNodes) {
-            oNode = oFloatFilter.childNodes[i];
-            if (oNode.tagName == "INPUT" || oNode.tagName == "SELECT") {
-                oNode.disabled = disabled;
-            }
-        }
-        oFloatFilter = null;
-    }
-
-    p = null;
     oDiv = null;
     oSelect = null;
 }

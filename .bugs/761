@@ -10,5 +10,5 @@ error then the total ListOf() seems to fall back to its
 original value - for example I've added a value and then
 changed its position to top and then saved.
 
-2012-09-24 15:08:34: changed state open -> done
-Has already been fixed in 1.2.1i1
+2012-09-24 14:07:12: changed state open -> done
+Repaired.

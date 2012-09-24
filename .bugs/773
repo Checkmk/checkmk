@@ -1,10 +1,13 @@
 Title: Available snapins: layout of WATO.Quickaccess garbled
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2012-06-14 15:18:42
 Targetversion: 1.2.0
-Class: nastiness
 
 The changes button overlaps with the icons. But only
 in the add snapin dialog.
 Some style seems to be missing here...
+
+2012-09-24 14:08:20: changed state open -> done
+Fixed by Lars.

@@ -1300,18 +1300,25 @@ class AbsoluteDate(ValueSpec):
         if self._label:
             html.write("%s&nbsp;" % self._label)
 
-        html.write('<table class=vs_date>')
         if self._show_titles:
+            html.write('<table class=vs_date>')
             html.write('<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
                     _("Year"), _("Month"), _("Day")))
-        html.write('<tr><td>')
+            html.write('<tr><td>')
         year, month, day = self.split_date(value)
         html.number_input(varprefix + "_year", year, size=4)
-        html.write('</td><td>')
+        if self._show_titles:
+            html.write('</td><td>')
+        else:
+            html.write(" ")
         html.number_input(varprefix + "_month", month, size=2)
-        html.write('</td><td>')
+        if self._show_titles:
+            html.write('</td><td>')
+        else:
+            html.write(" ")
         html.number_input(varprefix + "_day", day, size=2)
-        html.write('</td></tr></table>')
+        if self._show_titles:
+            html.write('</td></tr></table>')
 
     def set_focus(self, varprefix):
         html.set_focus(varprefix + "_year")
@@ -1763,12 +1770,14 @@ class Dictionary(ValueSpec):
         if self._render == "form":
             self.render_input_form(varprefix, value)
         else:
-            self.render_input_normal(varprefix, value)
+            self.render_input_normal(varprefix, value, self._render == "oneline")
 
-    def render_input_normal(self, varprefix, value):
-        html.write("<table class=dictionary>")
+    def render_input_normal(self, varprefix, value, oneline = False):
+        if not oneline:
+            html.write("<table class=dictionary>")
         for param, vs in self._elements:
-            html.write('<tr><td class=dictleft>')
+            if not oneline:
+                html.write('<tr><td class=dictleft>')
             div_id = varprefix + "_d_" + param
             vp     = varprefix + "_p_" + param
             if self._optional_keys and param not in self._required_keys:
@@ -1782,22 +1791,29 @@ class Dictionary(ValueSpec):
                 visible = True
                 if vs.title():
                     html.write(" %s" % vs.title())
+                if oneline:
+                    html.write(": ")
 
             if self._columns == 2:
                 if vs.title():
                     html.write(':')
                 html.help(vs.help())
-                html.write('</td><td class=dictright>')
+                if not oneline:
+                    html.write('</td><td class=dictright>')
             else:
-                html.write("<br>")
+                if not oneline:
+                    html.write("<br>")
 
             html.write('<div class=dictelement id="%s" style="display: %s">' % (
-                div_id, not visible and "none" or ""))
+                div_id, not visible and "none" or (oneline and "inline-block" or "")))
             if self._columns == 1:
                 html.help(vs.help())
             vs.render_input(vp, value.get(param, vs.default_value()))
-            html.write("</div></td></tr>")
-        html.write("</table>")
+            html.write("</div>")
+            if not oneline:
+                html.write("</td></tr>")
+        if not oneline:
+            html.write("</table>")
 
     def render_input_form(self, varprefix, value):
         if self._headers:
@@ -1852,14 +1868,27 @@ class Dictionary(ValueSpec):
         return def_val
 
     def value_to_text(self, value):
+        oneline = self._render == "oneline"
         if not value:
             return self._empty_text
 
-        s = '<table>'
+        
+        if not oneline:
+            s = '<table>'
+        else:
+            s = ""
         for param, vs in self._elements:
             if param in value:
-                s += "<tr><td>%s</td><td>%s</td></tr>" % (vs.title(), vs.value_to_text(value[param]))
-        return s + '</table>'
+                text = vs.value_to_text(value[param])
+                if oneline:
+                    if param != self._elements[0][0]:
+                        s += ", "
+                    s += "%s: %s" % (vs.title(), text)
+                else:
+                    s += "<tr><td>%s</td><td>%s</td></tr>" % (vs.title(), text)
+        if not oneline:
+            s += '</table>'
+        return s
 
     def from_html_vars(self, varprefix):
         value = {}

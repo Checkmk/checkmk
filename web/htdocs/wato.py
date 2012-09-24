@@ -8934,7 +8934,7 @@ def mode_edit_hosttag(phase):
                               _("The tag ID '%s' is already being used as auxiliary tag.") % id)
 
             if len(new_choices) == 0:
-                raise MKUserError("id_0", _("Please specify at least on tag."))
+                raise MKUserError("id_0", _("Please specify at least one tag."))
             if len(new_choices) == 1 and new_choices[0][0] == None:
                 raise MKUserError("id_0", _("Tags with only one choice must have an ID."))
 

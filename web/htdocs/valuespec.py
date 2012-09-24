@@ -631,8 +631,11 @@ class ListOf(ValueSpec):
         if html.has_var("%s_count" % varprefix):
             value = self.from_html_vars(varprefix)
 
-        html.write('<input type=hidden name="%s_count" value="%d" id="%s_count">\n' % 
-            (varprefix, len(value), varprefix))
+        html.hidden_field('%s_count' % varprefix,
+            str(len(value)),
+            id = '%s_count' % varprefix,
+            add_var = True
+        )
 
         # Render reference element for cloning
         html.write('<table style="display:none" id="%s_prototype">' % varprefix)

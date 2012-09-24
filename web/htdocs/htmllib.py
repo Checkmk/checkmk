@@ -303,9 +303,12 @@ class html:
             self.write('<br>'.join(self.user_errors.values()))
             self.write('</div>\n')
 
-    def hidden_field(self, var, value):
+    def hidden_field(self, var, value, id = None, add_var = False):
         if value != None:
-            self.write("<input type=hidden name=%s value=\"%s\">" % (var, attrencode(value)))
+            id = id and ' id="%s"' % id or ''
+            self.write("<input type=hidden name=%s value=\"%s\"%s>" % (var, attrencode(value), id))
+            if add_var:
+                self.add_form_var(var)
 
     # Beware: call this method just before end_form(). It will
     # add all current non-underscored HTML variables as hiddedn

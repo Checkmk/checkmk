@@ -2,6 +2,9 @@
     Mulitisite
     * Added "view" parameter to dashlet_pnpgraph webservice
 
+    WATO
+    * FIX: Fixed problem with complaining empty ListOf() valuespecs
+
 1.2.1i1:
     Core:
     * Allow to add options to rules. Currently the options "disabled" and

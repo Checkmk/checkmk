@@ -1,3 +1,7 @@
+1.2.0p3
+    Mulitisite
+    * Added "view" parameter to dashlet_pnpgraph webservice
+
 1.2.1i1:
     Core:
     * Allow to add options to rules. Currently the options "disabled" and

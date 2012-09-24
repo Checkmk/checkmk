@@ -616,14 +616,17 @@ if (has_canvas_support()) {
 """ % { "x" : pie_diameter / 2, "y": pie_diameter/2, "d" : pie_diameter, 'p': '\n'.join(pie_parts) })
 
 def dashlet_pnpgraph():
-    render_pnpgraph(html.var("site"), html.var("host"), html.var("service"), int(html.var("source", 0)))
+    render_pnpgraph(
+        html.var("site"), html.var("host"), html.var("service"),
+        int(html.var("source", 0)), int(html.var("view", 0)),
+    )
 
 def dashlet_nodata():
     html.write("<div class=nograph><div class=msg>")
     html.write(html.var("message", _("No data available.")))
     html.write("</div></div>")
 
-def render_pnpgraph(site, host, service=None, source=0):
+def render_pnpgraph(site, host, service = None, source = 0, view = 0):
     if not host:
         html.message("Invalid URL to this dashlet. Missing <tt>host</tt>")
         return;
@@ -635,8 +638,8 @@ def render_pnpgraph(site, host, service=None, source=0):
     else:
         base_url = html.site_status[site]["site"]["url_prefix"]
     base_url += "pnp4nagios/index.php/"
-    var_part = "?host=%s&srv=%s&view=0&source=%d&theme=multisite&_t=%d" % \
-            (pnp_cleanup(host), pnp_cleanup(service), source, int(time.time()))
+    var_part = "?host=%s&srv=%s&view=0&source=%d&view=%d&theme=multisite&_t=%d" % \
+            (pnp_cleanup(host), pnp_cleanup(service), source, view, int(time.time()))
 
     pnp_url = base_url + "graph" + var_part
     img_url = base_url + "image" + var_part

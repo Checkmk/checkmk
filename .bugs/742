@@ -1,0 +1,9 @@
+Title: Livestatus Error when searching with wildcards in multisite
+Component: multisite
+State: open
+Date: 2012-09-24 10:51:47
+Targetversion: future
+Class: nastiness
+
+A Search with wildcards in the quicksearch, leads to:
+Livestatus problem: Unhandled exception: 400: error in Filter header: invalid regular expression '*omd*'

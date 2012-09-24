@@ -1,9 +1,12 @@
 Title: Link to pnp4nagios when hash key in service description
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-07-10 11:43:04
 Targetversion: future
-Class: bug
 
 On service icon linkes, the hash char are not replaced by %23 so the link doesent work
 on pnp service graph line, just the first hash a replaced
+
+2012-09-24 15:58:44: changed state open -> done
+Works in current versions

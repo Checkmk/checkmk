@@ -1,4 +1,4 @@
-1.2.1i1
+1.2.1i1:
     Core:
     * Allow to add options to rules. Currently the options "disabled" and
       "comment" are allowed. Options are kept in an optional dict at the

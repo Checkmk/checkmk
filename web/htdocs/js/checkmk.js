@@ -55,6 +55,17 @@ if (!Array.prototype.indexOf)
   };
 }
 
+// The nextSibling attribute points also to "text nodes" which might
+// be created by spaces or even newlines in the HTML code and not to
+// the next painted dom object.
+// This works around the problem and really returns the next object.
+function real_next_sibling(o) {
+    var n = o.nextSibling;
+    while (n.nodeType != 1)
+      n = n.nextSibling;
+    return n;
+}
+
 var classRegexes = {};
 
 function hasClass(obj, cls) {
@@ -270,7 +281,9 @@ function makeuri(addvars) {
     // Skip unwanted parmas
     for(var i = 0; i < tmp.length; i++) {
         pair = tmp[i].split('=');
-        if(pair[0][0] == '_')
+        if(pair[0][0] == '_') // Skip _<vars>
+            continue;
+        if(addvars.hasOwnProperty(pair[0])) // Skip vars present in addvars
             continue;
         params.push(tmp[i]);
     }
@@ -295,29 +308,50 @@ function update_headinfo(text)
     }
 }
 
+function toggle_input_fields(container, type, disable) {
+    var fields = container.getElementsByTagName(type);
+    for(var a = 0; a < fields.length; a++) {
+        fields[a].disabled = disable;
+    }
+}
+
+function toggle_other_filters(fname, disable_others) {
+    for(var i = 0; i < g_filter_groups[fname].length; i++) {
+        var other_fname = g_filter_groups[fname][i];
+        var oSelect = document.getElementById('filter_' + other_fname);
+
+        // When the filter is active, disable the other filters and vice versa
+
+        // Disable the "filter mode" dropdown
+        oSelect.disabled = disable_others;
+
+        // Now dig into the filter and rename all input fields.
+        // If disabled add an "_disabled" to the end of the var
+        // If enabled remve "_disabled" from the end of the var
+        var oFloatFilter = real_next_sibling(oSelect);
+        if (oFloatFilter) {
+            toggle_input_fields(oFloatFilter, 'input', disable_others);
+            toggle_input_fields(oFloatFilter, 'select', disable_others);
+            oFloatFilter = null;
+        }
+
+        oSelect = null;
+    }
+}
 
 function filter_activation(oSelect)
 {
     var usage = oSelect.value;
+    var fname = oSelect.id.replace('filter_', '');
+
+    // Disable/Enable other filters which conflict with this filter
+    toggle_other_filters(fname, usage != 'off');
+
+    // Make the current filter visible/invisible
     var oDiv = oSelect.parentNode;
     oDiv.setAttribute("className", "filtersetting " + usage);
     oDiv.setAttribute("class", "filtersetting " + usage);
 
-    // If the filter is not in state hard or show, disable filter
-    // input
-    var disabled = usage != "hard" && usage != "show";
-    var oFloatFilter = oSelect.nextSibling;
-    if (oFloatFilter) {
-        for (var i in oFloatFilter.childNodes) {
-            oNode = oFloatFilter.childNodes[i];
-            if (oNode.tagName == "INPUT" || oNode.tagName == "SELECT") {
-                oNode.disabled = disabled;
-            }
-        }
-        oFloatFilter = null;
-    }
-
-    p = null;
     oDiv = null;
     oSelect = null;
 }
@@ -758,7 +792,8 @@ function handleReload(url) {
             window.location.href = url;
     } 
     else {
-        // Enforce specific display_options to get only the content data
+        // Enforce specific display_options to get only the content data.
+        // All options in "opts" will be forced. Existing upper-case options will be switched.
         var display_options = getUrlParam('display_options');
         // Removed 'w' to reflect original rengering mechanism during reload
         // For example show the "Your query produced more than 1000 results." message
@@ -768,6 +803,14 @@ function handleReload(url) {
             if (display_options.indexOf(opts[i].toUpperCase()) > -1)
                 display_options = display_options.replace(opts[i].toUpperCase(), opts[i]);
             else
+                display_options += opts[i];
+        }
+        opts = null;
+
+        // Add optional display_options if not defined in original display_options
+        var opts = [ 'w' ];
+        for (var i = 0; i < opts.length; i++) {
+            if (display_options.indexOf(opts[i].toUpperCase()) == -1)
                 display_options += opts[i];
         }
         opts = null;

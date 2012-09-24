@@ -84,9 +84,11 @@ def check_http_arguments(params):
         args += ' -s %s' % quote_shell_string(settings["expect_string"])
 
     if "expect_regex" in settings:
-        args += ' -r %s' % quote_shell_string(settings['expect_regex'][0])
         if settings['expect_regex'][1]:
             args += ' -R'
+        else:
+            args += ' -r'
+        args += ' %s' % quote_shell_string(settings['expect_regex'][0])
         if settings['expect_regex'][2]:
             args += ' --invert-regex'
 

@@ -971,11 +971,13 @@ checkgroups.append((
           help = _("Levels for printer cardridges."),
           elements = [
               Float(title = _("Warning remaining")),
-              Float(title = _("Critical remaining"))]),
+              Float(title = _("Critical remaining"))]
+    ),
     TextAscii(
         title = _("cardridge specification"),
-        allow_empty = True),
-    "dict",
+        allow_empty = True
+    ),
+    None,
     ))
 
 checkgroups.append((

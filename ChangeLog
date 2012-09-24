@@ -1,4 +1,4 @@
-1.2.0p3:
+1.2.1i1:
     Core:
     * Allow to add options to rules. Currently the options "disabled" and
       "comment" are allowed. Options are kept in an optional dict at the
@@ -85,6 +85,7 @@
     * Added check_interval and retry_interval rules for host checks
     * Removed wmic_process rule from "inventory services" as the check does not support inventory
     * Made more rulegroup titles localizable
+    * FIX: Fixed localization of default permissions
     * FIX: Removed double collect_hosts() call in activate changes hook
     * FIX: Fixed double hook execution when using localized multisite
     * FIX: User list shows names of contactgroups when no alias given
@@ -96,6 +97,9 @@
     * FIX: complex list widgets (ListOf) failed back to old value when
            complaining
     * FIX: complex list widgets (ListOf) lost remaining entries after deleting one
+    * FIX: Fixed error in printer_supply valuespec which lead to an exception
+           when defining host/service specific rules
+    * FIX: Fixed button url icon in docu-url link
 
     BI:
     * Great speed up of rule compilation in large environments
@@ -107,6 +111,10 @@
       display the title of this folder
     * Sidebar: Sorting aggregation groups in BI snapin now
     * Sidebar: Sorting sites in master control snapin case insensitive
+    * Added some missing localizations (error messages, view editor)
+    * Introducted multisite config option hide_languages to remove available
+      languages from the multisite selection dialogs. To hide the builtin
+      english language simply add None to the list of hidden languages.
     * FIX: fixed localization of general permissions
     * FIX: show multisite warning messages even after page reload
     * FIX: fix bug in Age ValueSpec: days had been ignored
@@ -117,6 +125,18 @@
     * Downtimes: new conveniance function for downtime from now for ___ minutes.
       This is especially conveniant for scripting.
     * FIX: fixed layout of login dialog when showing up error messages
+    * FIX: Fixed styling of wato quickaccess snapin preview
+    * FIX: Made printer_supply perfometer a bit more robust against bad perfdata
+    * FIX: Removed duplicate url parameters e.g. in dashboard (display_options)
+    * FIX: Dashboard: If original request showed no "max rows"-message, the
+           page rendered during reload does not show the message anymore
+    * FIX: Fixed bug in alert statistics view (only last 1000 lines were
+           processed for calculating the statistics)
+    * FIX: Added missing downtime icon for comment view
+    * FIX: Fixed handling of filter configuration in view editor where filters
+           are using same variable names. Overlaping filters are now disabled
+	   in the editor.
+    * FIX: Totally hiding hidden filters from view editor now
 
     Livecheck:
     * FIX: Compile livecheck also if diet libc is missing

@@ -2162,7 +2162,12 @@ def show_service_table(host, firsttime):
                     paramtext = _("Invalid check parameter: %s!") % e
                     paramtext += _(" The parameter is: %r") % (params,)
 
-                title = _("Check parameters for this service") + ": " + paramtext
+                # Strip all html code from the paramtext
+                paramtext = paramtext.replace('</td>', '\t')
+                paramtext = paramtext.replace('</tr>', '\n')
+                paramtext = htmllib.strip_tags(paramtext)
+
+                title = _("Check parameters for this service") + ": \n" + paramtext
                 html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
                    (url, title))
 
@@ -9349,7 +9354,7 @@ vs_rule_options = Dictionary(
           TextAscii(
             title = _("Docu-URL"),
             help = _("An optional URL pointing to documentation or any other page. This will be displayed "
-                     "as an icon <img class=icon src='images/icon_url.png'> and open a new page when clicked. "
+                     "as an icon <img class=icon src='images/button_url_lo.png'> and open a new page when clicked. "
                      "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
                      "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."),
             size = 80,
@@ -10650,7 +10655,7 @@ def register_rule(group, varname, valuespec = None, title = None,
 #
 
 def select_language(user_language):
-    languages = get_languages()
+    languages = [ l for l in get_languages() if not config.hide_language(l[0]) ]
     inactive = user_language != ''
 
     if languages:

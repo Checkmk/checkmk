@@ -65,6 +65,7 @@ def check_hp_blade_blades(item, params, info):
             # should represent a state but is empty. So set it to "fake" OK and
             # display the other gathered information.
             state = line[2] == '' and 2 or line[2]
+            state = saveint(state)
 
             snmp_state = hp_blade_status_map[state]
             status     = hp_blade_status2nagios_map[snmp_state]

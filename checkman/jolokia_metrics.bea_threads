@@ -1,0 +1,28 @@
+title: Number of JVM threads
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check works on the number of threads running in a JVM.
+ time.
+ 
+ To use this plugin, Jolokia and the agent plugin need to be installed
+ on the monitored server.
+
+ This check does not have configurable levels.
+
+item:
+ The name of the application server instance as configured by the agent.
+
+perfdata:
+ The following values are returned in the perfdata:
+   The count of threads for processing requests,
+   The count of idle threads that are ready to process requests,
+   The count of threads that are in standby,
+   The count of "hogging" threads that are executing for too long.
+
+inventory:
+ One check is created per JVM instance sent by the Jolokia agent.
+
+

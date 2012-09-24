@@ -1,0 +1,14 @@
+Title: Oracle Sessions should be able to define limits per Database
+Component: checks
+State: open
+Date: 2012-09-21 10:41:08
+Targetversion: 1.2.0
+Class: feature
+
+The oracle_sessions check has has warn/crit levels. If using WATO those can only
+be specified as a "global" value because no service name can be specified.
+A user tried to work around this using the inventory->ruleset shortcut but that
+didn't help either.
+
+We should change the WATO interface for the check, to make it support the 
+same configuration as is available on the CLI-side of things.

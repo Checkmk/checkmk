@@ -1,0 +1,9 @@
+Title: Make icons selectable in view editor
+Component: multisite
+State: open
+Date: 2012-09-19 12:56:10
+Targetversion: future
+Class: nastiness
+
+At the moment there is only a select field without any description what to put into it.
+A dropdownfield of the available icons would be much better.

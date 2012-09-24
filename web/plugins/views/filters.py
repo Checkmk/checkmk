@@ -324,20 +324,20 @@ declare_filter(232, FilterNagiosExpression("service", "in_downtime",            
 
 class FilterSite(Filter):
     def __init__(self, name, enforce):
-        Filter.__init__(self, name, _("Site") + (enforce and _( " (enforced)") or ""), None, [name], [])
+        Filter.__init__(self, name, _("Site") + (enforce and _( " (enforced)") or ""), None, ["site"], [])
         self.enforce = enforce
 
     def visible(self):
         return config.is_multisite()
 
     def display(self):
-        site_selector(html, self.name, self.enforce)
+        site_selector(html, "site", self.enforce)
 
     def filter(self, infoname):
         if config.is_multisite():
-            site = html.var(self.name)
+            site = html.var("site")
             if site:
-                return "Sites: %s\n" % (html.var(self.name, ""))
+                return "Sites: %s\n" % (html.var("site", ""))
             elif not self.enforce:
                 return ""
             else:
@@ -346,7 +346,7 @@ class FilterSite(Filter):
             return ""
 
     def heading_info(self, infoname):
-        current_value = html.var(self.name)
+        current_value = html.var("site")
         if current_value:
             alias = config.site(current_value)["alias"]
             return alias

@@ -200,9 +200,9 @@ class Filter:
         return False
 
     def display(self):
-        raise MKInternalError("Incomplete implementation of filter %s '%s': missing display()" % \
+        raise MKInternalError(_("Incomplete implementation of filter %s '%s': missing display()") % \
                 (self.name, self.title))
-        html.write("FILTER NOT IMPLEMENTED")
+        html.write(_("FILTER NOT IMPLEMENTED"))
 
     def filter(self, tablename):
         return ""
@@ -552,12 +552,12 @@ def page_edit_view():
     html.help(_("The datasource of a view cannot be changed."))
 
     forms.section(_("Topic"))
-    html.text_input("view_topic", "Other", size=50)
+    html.text_input("view_topic", _("Other"), size=50)
     html.help(_("The view will be sorted under this topic in the Views snapin. "))
 
     forms.section(_("Buttontext"))
     html.text_input("view_linktitle", size=26)
-    html.write("&nbsp; Icon: ")
+    html.write(_("&nbsp; Icon: "))
     html.text_input("view_icon", size=14)
     html.help(_("If you define a text here, then it will be used in "
                 "buttons to the view instead of of view title."))
@@ -590,14 +590,36 @@ def page_edit_view():
 
     forms.header(_("Filters"), isopen=False)
     allowed_filters = filters_allowed_for_datasource(datasourcename)
+
     # sort filters according to title
     s = [(filt.sort_index, filt.title, fname, filt)
           for fname, filt in allowed_filters.items()
           if fname not in ubiquitary_filters ]
     s.sort()
+
+    # Construct a list of other filters which conflict with this filter. A filter uses one or
+    # several http variables for transporting the filter data. There are several filters which
+    # have overlaping vars which must not be used at the same time. Those filters must exclude
+    # eachother. This is done in the JS code. When activating one filter it checks which other
+    # filters to disable and makes the "mode" dropdowns unchangable.
+    filter_htmlvars = {}
+    for sortindex, title, fname, filt in s:
+        for htmlvar in filt.htmlvars:
+            if htmlvar not in filter_htmlvars:
+                filter_htmlvars[htmlvar] = []
+            filter_htmlvars[htmlvar].append(fname)
+
+    filter_groups = {}
+    for sortindex, title, fname, filt in s:
+        filter_groups[fname] = set([])
+        for htmlvar in filt.htmlvars:
+            filter_groups[fname].update(filter_htmlvars[htmlvar])
+        filter_groups[fname].remove(fname)
+        filter_groups[fname] = list(filter_groups[fname])
+
     shown_help = False
     for sortindex, title, fname, filt in s:
-        forms.section(title)
+        forms.section(title, hide = not filt.visible())
         if not shown_help:
             html.help(_("Please configure, which of the available filters will be used in this "
                   "view. <br><br><b>Show to user</b>: the user will be able to see and modify these "
@@ -620,14 +642,18 @@ def page_edit_view():
         html.write('</div>')
         html.write('<div class=clear></div>')
         html.help(filt.comment)
-    
-    # Set all filters into the proper display state
+
     html.write("<script language=\"javascript\">\n")
+
+    html.write("g_filter_groups = %r;\n" % filter_groups)
+
+    # Set all filters into the proper display state
     for fname, filt in allowed_filters.items():
         if fname not in ubiquitary_filters:
             html.write("filter_activation(document.getElementById(\"filter_%s\"));\n" % fname)
+
     html.write("</script>\n")
-   
+
 
     def sorter_selection(title, var_prefix, maxnum, data):
         allowed = allowed_for_datasource(data, datasourcename)
@@ -641,7 +667,7 @@ def page_edit_view():
             html.sorted_select("%s%d" % (var_prefix, n), collist)
             html.write(" ")
             html.select("%sorder_%d" % (var_prefix, n), [("asc", _("Ascending")), ("dsc", _("Descending"))])
-            
+
     def column_selection(title, var_prefix, data):
         allowed = allowed_for_datasource(data, datasourcename)
 
@@ -674,10 +700,10 @@ def page_edit_view():
     forms.header(_("Layout"), isopen=False)
     forms.section(_("Basic Layout"))
     html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() if not v.get("hide")])
-    
+
     forms.section(_("Number of Columns"))
     html.number_input("num_columns", 1)
-    
+
     forms.section(_('Column headers'))
 
     # 1.1.11i3: Fix deprecated column_header option: perpage -> pergroup
@@ -776,7 +802,7 @@ def ajax_get_edit_column():
 def load_view_into_html_vars(view):
     # view is well formed, not checks neccessary
     html.set_var("view_title",       view["title"])
-    html.set_var("view_topic",       view.get("topic", "Other"))
+    html.set_var("view_topic",       view.get("topic", _("Other")))
     html.set_var("view_linktitle",   view.get("linktitle", view["title"]))
     html.set_var("view_icon",        view.get("icon")),
     html.set_var("view_description", view.get("description", ""))
@@ -962,7 +988,7 @@ def create_view():
             allowed_cols = collist_of_collection(allowed_for_datasource(multisite_painters, datasourcename))
             joined_cols  = collist_of_collection(allowed_for_joined_datasource(multisite_painters, datasourcename), allowed_cols)
             if is_joined_value(joined_cols, "col_%d" % n) and not join_index:
-                raise MKUserError('col_join_index_%d' % n, "Please specify the service to show the data for")
+                raise MKUserError('col_join_index_%d' % n, _("Please specify the service to show the data for"))
 
             if join_index and col_title:
                 painternames.append((pname, viewname, tooltip, join_index, col_title))
@@ -1020,10 +1046,10 @@ def page_view():
     load_views()
     view_name = html.var("view_name")
     if view_name == None:
-        raise MKGeneralException("Missing the variable view_name in the URL.")
+        raise MKGeneralException(_("Missing the variable view_name in the URL."))
     view = html.available_views.get(view_name)
     if not view:
-        raise MKGeneralException("No view defined with the name '%s'." % view_name)
+        raise MKGeneralException(("No view defined with the name '%s'.") % view_name)
 
     show_view(view, True, True, True)
 
@@ -1228,6 +1254,14 @@ def show_view(view, show_heading = False, show_buttons = True,
         colset.remove("site")
     columns = list(colset)
 
+    # We had a problem with stats queries on the logtable where
+    # the limit was not applied on the resulting rows but on the
+    # lines of the log processed. This resulted in wrong stats.
+    # For these datasources we ignore the query limits.
+    limit = None
+    if not datasource.get('ignore_limit', False):
+        limit = get_limit()
+
     # Get list of painter options we need to display (such as PNP time range
     # or the format being used for timestamp display)
     painter_options = []
@@ -1246,9 +1280,9 @@ def show_view(view, show_heading = False, show_buttons = True,
         # In that case that function is used to compute the result.
 
         if type(tablename) == type(lambda x:None):
-            rows = tablename(columns, query, only_sites, get_limit(), all_active_filters)
+            rows = tablename(columns, query, only_sites, limit, all_active_filters)
         else:
-            rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
+            rows = query_data(datasource, columns, add_columns, query, only_sites, limit)
 
         # Now add join information, if there are join columns
         if len(join_painters) > 0:
@@ -1390,7 +1424,7 @@ def render_view(view, rows, datasource, group_painters, painters,
        and 'W' in display_options \
        and (html.output_format == "html" or not config.is_multisite()):
         for sitename, info in html.live.deadsites.items():
-            html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
+            html.show_error("<b>%s - %s</b><br>%s" % (info["site"]["alias"], _('Livestatus error'), info["exception"]))
 
     # FIXME: Sauberer wäre noch die Status Icons hier mit aufzunehmen
     if 'R' in display_options:
@@ -1958,7 +1992,7 @@ def allowed_for_joined_datasource(collection, datasourcename):
 
 def is_joined_value(collection, varname):
     selected_label = [ label for name, label in collection if name == html.var(varname, '') ]
-    return selected_label and selected_label[0][:8] == 'SERVICE:'
+    return selected_label and selected_label[0][:8] == _('SERVICE:')
 
 def collist_of_collection(collection, join_target = []):
     def sort_list(l):
@@ -1970,7 +2004,7 @@ def collist_of_collection(collection, join_target = []):
     if not join_target:
         return sort_list([ (name, p["title"]) for name, p in collection.items() ])
     else:
-        return sort_list([ (name, 'SERVICE: ' + p["title"]) for name, p in collection.items() if (name, p["title"]) not in join_target ])
+        return sort_list([ (name, _('SERVICE:') + ' ' + p["title"]) for name, p in collection.items() if (name, p["title"]) not in join_target ])
 
 #   .----------------------------------------------------------------------.
 #   |         ____                                          _              |
@@ -2486,7 +2520,3 @@ def declare_1to1_sorter(painter_name, func, col_num = 0, reverse = False):
                                         reverse and r2 or r1)
     }
     return painter_name
-
-
-# load_plugins()
-

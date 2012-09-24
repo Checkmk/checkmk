@@ -36,9 +36,11 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 # to online documentation for details.
 LOCALDIR=$MK_LIBDIR/local
 
+#Avoid problems with wrong decimal separators in other language verions of aix
+export LC_NUMERIC="en_US"
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.0p3
+echo Version: 1.2.1i1
 echo AgentOS: aix
 
 echo '<<<df>>>'

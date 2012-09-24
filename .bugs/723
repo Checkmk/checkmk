@@ -1,12 +1,15 @@
 Title: Simulation mode overrides usewalk_hosts
 Component: core
-State: open
+Class: nastiness
+State: wontfix
 Date: 2012-08-16 12:55:42
 Targetversion: 1.2.0
-Class: nastiness
 
 If you have some hosts defined as usewalk hosts so that they'll check based on their already
 recorded snmpwalks and then enable simulation_mode, it breaks usewalk for some reason.
 The result is that the snmp devices are checked against 127.0.0.1.
 
 This is a big problem if you simulate a customer site.
+
+2012-09-24 14:06:03: changed state open -> wontfix
+Thats the way we want it to be.

@@ -29,11 +29,46 @@
 # Data sources
 ##################################################################################
 
-# keys: columns which must be fetched in order to execute commands on
+# title: Used as display-string for the datasource in multisite (e.g. view editor)
+#
+# table: Might be a string which refers to a livestatus table or a function
+#        which is called instead of the livestatus function query_data().
+#
+# infos: A key to be used to create groups out of single painters and filters.
+#        e.g. 'host' groups all painters and filters which begin with "host_".
+#        Out of this declaration multisite knows which filters or painters are
+#        available for the single datasources.
+#
+# merge_by:
+#  1. Results in fetching these columns from the datasource.
+#  2. Rows from different sites are merged together. For example members 
+#     of hostgroups which exist on different sites are merged together to
+#     show the user one big hostgroup.
+#
+# add_columns: list of columns the datasource is known to add itself
+#
+# add_headers: additional livestatus headers to add to each call
+#
+# keys: columns which must be fetched in order to execute commands on 
 # the items (= in order to identify the items and gather all information
 # needed for constructing Nagios commands)
-
+# those columns are always fetched from the datasource for each item
+#
 # idkeys: these are used to generate a key which is uniq for each data row
+# is used to identify an item between http requests
+#
+# join: A view can display e.g. host-rows and include information from e.g.
+#       the service table to create a column which shows e.g. the state of one
+#       service.
+#       With this attibute it is configured which tables can be joined into 
+#       this table and by which attribute. It must be given as tuple, while
+#       the first argument is the name of the table to be joined and the second
+#       argument is the column in the master table (in this case hosts) which
+#       is used to match the rows of the master and slave table.
+#
+# joinkey: Each joined column in the view can have a 4th attribute which is
+#          used as value for this column to filter the datasource query
+#          to get the matching row of the slave table.
 
 multisite_datasources["hosts"] = {
     "title"   : _("All hosts"),

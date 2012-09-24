@@ -642,7 +642,10 @@ class html:
     # Check if the current form is currently filled in (i.e. we display
     # the form a second time while showing value typed in at the first
     # time and complaining about invalid user input)
-    def form_filled_in(self):
+    def form_filled_in(self, form_name = None):
+        if form_name == None:
+            form_name = self.form_name
+
         return self.has_var("filled_in") and (
             self.form_name == None or \
             self.form_name in self.list_var("filled_in"))

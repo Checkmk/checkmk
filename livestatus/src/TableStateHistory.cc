@@ -1,0 +1,645 @@
+// +------------------------------------------------------------------+
+// |             ____ _               _        __  __ _  __           |
+// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+// |                                                                  |
+// | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+// +------------------------------------------------------------------+
+//
+// This file is part of Check_MK.
+// The official homepage is at http://mathias-kettner.de/check_mk.
+//
+// check_mk is free software;  you can redistribute it and/or modify it
+// under the  terms of the  GNU General Public License  as published by
+// the Free Software Foundation in version 2.  check_mk is  distributed
+// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+// ails.  You should have  received  a copy of the  GNU  General Public
+// License along with GNU Make; see the file  COPYING.  If  not,  write
+// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+// Boston, MA 02110-1301 USA.
+
+#include <time.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <stddef.h>
+
+#include "nagios.h"
+#include "logger.h"
+#include "OffsetIntColumn.h"
+#include "OffsetTimeColumn.h"
+#include "OffsetStringColumn.h"
+#include "OffsetDoubleColumn.h"
+#include "Query.h"
+#include "tables.h"
+#include "auth.h"
+#include "Store.h"
+#include "LogEntry.h"
+#include "TableStateHistory.h"
+
+
+#define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
+
+extern int g_debug_level;
+extern Store *g_store;
+extern int log_initial_states;
+
+#define CLASSMASK_STATEHIST 70
+
+// Debugging logging is hard if debug messages are logged themselves...
+void debug_statehist(const char *loginfo, ...)
+{
+	if (g_debug_level < 2)
+		return;
+
+	FILE *x = fopen("/tmp/livestatus_state.log", "a+");
+	va_list ap;
+	va_start(ap, loginfo);
+	vfprintf(x, loginfo, ap);
+	fputc('\n', x);
+	va_end(ap);
+	fclose(x);
+}
+
+// Debug output of HostServiceState struct
+void log_hst(HostServiceState *state)
+{
+	debug_statehist("STATE INFO");
+	debug_statehist("state %d", state->_state);
+	if (state->_log_output)
+		debug_statehist("check_output %s", state->_log_output);
+	if (state->_debug_info)
+		debug_statehist("debug_info %s", state->_debug_info);
+	if (state->_notification_period)
+		debug_statehist("notification period %s", state->_notification_period);
+	if (state->_host_name)
+		debug_statehist("host name %s", state->_host_name);
+	if (state->_service_description)
+		debug_statehist("svc description %s", state->_service_description);
+}
+
+HostServiceState::~HostServiceState()
+{
+	if (_log_output != 0)
+		free(_log_output);
+};
+
+TableStateHistory::TableStateHistory()
+{
+	HostServiceState *ref = 0;
+	addColumn(new OffsetTimeColumn("time",
+			"Time of the log event (seconds since 1/1/1970)", (char *)&(ref->_time) - (char *)ref, -1));
+	addColumn(new OffsetIntColumn("lineno",
+			"The number of the line in the log file", (char *)&(ref->_lineno) - (char *)ref, -1));
+	addColumn(new OffsetTimeColumn("from",
+			"Start time of state (seconds since 1/1/1970)", (char *)&(ref->_from) - (char *)ref, -1));
+	addColumn(new OffsetTimeColumn("until",
+			"End time of state (seconds since 1/1/1970)", (char *)&(ref->_until) - (char *)ref, -1));
+	addColumn(new OffsetTimeColumn("duration",
+			"Duration of state (until - from)", (char *)&(ref->_duration) - (char *)ref, -1));
+	addColumn(new OffsetDoubleColumn("duration_part",
+			"Duration part in regard to the query timeframe", (char *)(&ref->_duration_part) - (char *)ref, -1));
+	addColumn(new OffsetIntColumn("state",
+			"The state of the host or service in question - OK(0) / WARNING(1) / CRITICAL(2) / UNKNOWN(3) / UNMONITORED(-1)", (char *)&(ref->_state) - (char *)ref, -1));
+	addColumn(new OffsetIntColumn("host_down",
+			"Shows if the host of this service is down", (char *)&(ref->_host_down) - (char *)ref, -1));
+	addColumn(new OffsetIntColumn("in_downtime",
+			"Shows if the host or service is in downtime", (char *)&(ref->_in_downtime) - (char *)ref, -1));
+	addColumn(new OffsetIntColumn("in_host_downtime",
+			"Shows if the host of this service is in downtime", (char *)&(ref->_in_host_downtime) - (char *)ref, -1));
+	addColumn(new OffsetIntColumn("is_flapping",
+			"Shows if the host or service is flapping", (char *)&(ref->_is_flapping) - (char *)ref, -1));
+	addColumn(new OffsetIntColumn("in_notification_period",
+			"Shows if the host or service is within its notification period", (char *)&(ref->_in_notification_period) - (char *)ref, -1));
+	addColumn(new OffsetStringColumn("notification_period",
+			"The notification period of the host or service in question", (char *)&(ref->_notification_period) - (char *)ref, -1));
+	addColumn(new OffsetStringColumn("debug_info",
+			"Debug information", (char *)&(ref->_debug_info) - (char *)ref, -1));
+	addColumn(new OffsetStringColumn("host_name",
+			"Host name", (char *)&(ref->_host_name) - (char *)ref, -1));
+	addColumn(new OffsetStringColumn("service_description",
+			"Description of the service", (char *)&(ref->_service_description) - (char *)ref, -1));
+	addColumn(new OffsetStringColumn("log_output",
+			"Logfile output relevant for this state", (char *)&(ref->_log_output) - (char *)ref, -1));
+	addColumn(new OffsetTimeColumn("duration_ok",
+			"OK duration of state ( until - from )", (char *)&(ref->_duration_state_OK) - (char *)ref, -1));
+	addColumn(new OffsetDoubleColumn("duration_part_ok",
+			"OK duration part in regard to the query timeframe", (char *)(&ref->_duration_part_OK) - (char *)ref, -1));
+
+	addColumn(new OffsetTimeColumn("duration_warning",
+			"WARNING duration of state (until - from)", (char *)&(ref->_duration_state_WARNING) - (char *)ref, -1));
+	addColumn(new OffsetDoubleColumn("duration_part_warning",
+			"WARNING duration part in regard to the query timeframe", (char *)(&ref->_duration_part_WARNING) - (char *)ref, -1));
+
+	addColumn(new OffsetTimeColumn("duration_critical",
+			"CRITICAL duration of state (until - from)", (char *)&(ref->_duration_state_CRITICAL) - (char *)ref, -1));
+	addColumn(new OffsetDoubleColumn("duration_part_critical",
+			"CRITICAL duration part in regard to the query timeframe", (char *)(&ref->_duration_part_CRITICAL) - (char *)ref, -1));
+
+	addColumn(new OffsetTimeColumn("duration_unknown",
+			"UNKNOWN duration of state (until - from)", (char *)&(ref->_duration_state_UNKNOWN) - (char *)ref, -1));
+	addColumn(new OffsetDoubleColumn("duration_part_unknown",
+			"UNKNOWN duration part in regard to the query timeframe", (char *)(&ref->_duration_part_UNKNOWN) - (char *)ref, -1));
+
+	addColumn(new OffsetTimeColumn("duration_unmonitored",
+			"UNMONITORED duration of state (until - from)", (char *)&(ref->_duration_state_UNMONITORED) - (char *)ref, -1));
+	addColumn(new OffsetDoubleColumn("duration_part_unmonitored",
+			"UNMONITORED duration part in regard to the query timeframe", (char *)(&ref->_duration_part_UNMONITORED) - (char *)ref, -1));
+
+
+	// join host and service tables
+	g_table_hosts->addColumns(this, "current_host_", (char *)&(ref->_host)    - (char *)ref);
+	g_table_services->addColumns(this, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
+}
+
+LogEntry *TableStateHistory::getPreviousLogentry()
+{
+	if (_it_entries == _entries->begin()) {
+		// open previous logfile
+		if (_it_logs == g_store->logCache()->logfiles()->begin())
+			return 0;
+		else {
+			_it_logs--;
+			_entries = _it_logs->second->getEntriesFromQuery(_query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
+			_it_entries = _entries->end();
+		}
+	}
+	return (--_it_entries)->second;
+}
+
+LogEntry *TableStateHistory::getNextLogentry()
+{
+	if (++_it_entries == _entries->end()) {
+		if (++_it_logs == g_store->logCache()->logfiles()->end()) {
+			// No further logfiles available
+			// prevent errors on subsequent getNextLogentry()
+			--_it_entries;
+			--_it_logs;
+			return 0;
+		}
+		else {
+			_entries = _it_logs->second->getEntriesFromQuery(_query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
+			_it_entries = _entries->begin();
+		}
+	}
+	return _it_entries->second;
+}
+
+void TableStateHistory::answerQuery(Query *query)
+{
+	g_store->logCache()->lockLogCache();
+	g_store->logCache()->logCachePreChecks();
+
+	typedef map<HostServiceKey, HostServiceState*> state_info_t;
+	state_info_t state_info;
+
+	////	 ____  _____ ____  _   _  ____
+	////	|  _ \| ____| __ )| | | |/ ___|
+	////	| | | |  _| |  _ \| | | | |  _
+	////	| |_| | |___| |_) | |_| | |_| |
+	////	|____/|_____|____/ \___/ \____|
+	//	static int trigger = 0;
+	//	extern int num_cached_log_messages;
+	//	debug_statehist("\n\n\nCached messages: %d", num_cached_log_messages);
+	//	_logfiles_t::iterator _it_debug = g_store->logCache()->logfiles().begin();
+	//	while( _it_debug != g_store->logCache()->logfiles().end() ){
+	//		debug_statehist("######## Available logs cached %d %s", _it_debug->second->numEntries(), _it_debug->second->path());
+	//		_it_debug++;
+	//	}
+	//
+	//    debug_statehist("\n\nDurchlaufe ein paar Daten... ( trigger %d )\n=============================================", trigger);
+	//    _it_logs = g_store->logCache()->logfiles().begin();
+	//    debug_statehist("Logfile handle %x", _it_logs->second);
+	//
+	//    debug_statehist("Lese ein");
+	//	_it_logs->second->getEntriesFromQuery(query, g_store->logCache(), _since, _until, _classmask); // archive
+	//	debug_statehist("Flush");
+	//	_it_logs->second->flush();
+	//
+	////
+	////    if (trigger == 0)
+	////    	_it_logs->second->getEntriesFromQuery(query, g_store->logCache(), _since, _until, _classmask); // archive
+	////
+	////    if (trigger == 2)
+	////    	_it_logs->second->flush();
+	////
+	////    if (trigger == 4){
+	////    	_it_logs->second->getEntriesFromQuery(query, g_store->logCache(), _since, _until, _classmask); // archive
+	////    	trigger = -1;
+	////    }
+	//    trigger++;
+	//    g_store->logCache()->unlockLogCache();
+	//	debug_statehist("Und Ende");
+	//    return;
+
+	_query = query;
+	_since = 0;
+	_until = time(0) + 1;
+
+	// Optimize time interval for the query. In log querys
+	// there should always be a time range in form of one
+	// or two filter expressions over time. We use that
+	// to limit the number of logfiles we need to scan and
+	// to find the optimal entry point into the logfile
+	_query->findIntLimits("time", &_since, &_until);
+	if (_since == 0) {
+		query->setError(RESPONSE_CODE_INVALID_REQUEST, "Start of timeframe required. e.g. Filter: time > 1234567890");
+		g_store->logCache()->unlockLogCache();
+		return;
+	}
+
+	_query_timeframe = _until - _since - 1;
+	if (_query_timeframe == 0) {
+		query->setError(RESPONSE_CODE_INVALID_REQUEST, "Query timeframe is 0 seconds");
+		g_store->logCache()->unlockLogCache();
+		return;
+	}
+
+	// Switch to last logfile (we have at least one)
+	_it_logs = g_store->logCache()->logfiles()->end();
+	--_it_logs;
+
+	// Now find the log where 'since' starts.
+	while (_it_logs != g_store->logCache()->logfiles()->begin() && _it_logs->first >= _since){
+		--_it_logs; // go back in history
+	}
+
+	// Check if 'until' is within these logfiles
+	if (_it_logs->first > _until) {
+		// All logfiles are too new, invalid timeframe
+		// -> No data available. Return empty result.
+		g_store->logCache()->unlockLogCache();
+		return;
+	}
+
+	// Set initial logentry
+	// Further logfile traversal is handled via getPreviousLogentry() / getNextLogentry()
+	_entries = _it_logs->second->getEntriesFromQuery(query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
+	_it_entries = _entries->begin();
+
+	// Start at the logentry LOG VERSION: 2.0 which is logged in the first lines of each logfile
+	LogEntry* entry;
+	bool version_found = false;
+	while ((entry = getNextLogentry()) != 0) {
+		if (entry->_time >= _since){
+			break;
+		}
+		if (entry->_type == LOG_VERSION) {
+			debug_statehist("%d LOG_VERSION found in %s line %d", entry->_time, _it_logs->second->path(), entry->_lineno);
+			version_found = true;
+			break;
+		}
+	}
+	if (!version_found) {
+		query->setError(RESPONSE_CODE_INVALID_REQUEST, "Unable to find any LOG VERSION entries before query "
+				"timeframe. Logfiles seem corrupted.");
+		g_store->logCache()->unlockLogCache();
+		return;
+	}
+
+	HostServiceKey key;
+	bool only_update = true;
+	while (0 != (entry = getNextLogentry()))
+	{
+		if (entry->_time >= _until) {
+			getPreviousLogentry();
+			break;
+		}
+		if (only_update && entry->_time >= _since) {
+			// Reached start of query timeframe. From now on let's produce real output
+			only_update = false;
+		}
+		switch (entry->_type) {
+		case DOWNTIME_ALERT_SERVICE:
+		case DOWNTIME_ALERT_HOST:
+		case STATE_SERVICE:
+		case STATE_HOST:
+		case ALERT_SERVICE:
+		case ALERT_HOST:
+		case FLAPPING_HOST:
+		case FLAPPING_SERVICE:
+		{
+			key.first  = entry->_host_name;
+			key.second = entry->_svc_desc != 0 ? entry->_svc_desc : "";
+
+			HostServiceState *state;
+			state_info_t::iterator it_hst = state_info.find(key);
+			if (it_hst == state_info.end()) {
+				state = new HostServiceState();
+				state_info.insert(std::make_pair(key, state));
+
+				state->_is_host = entry->_svc_desc == 0;
+				state->_from    = _since;
+				state->_host    = entry->_host;
+				state->_service = entry->_service;
+
+				state->_host_name           = key.first.c_str();
+				state->_service_description = key.second.c_str();
+
+				// Get notification period of host/service
+				// If this host/service is no longer availabe in nagios -> set to ""
+				if (state->_service != 0)
+					state->_notification_period = state->_service->notification_period;
+				else if (state->_host != 0)
+					state->_notification_period = state->_host->notification_period;
+				else
+					state->_notification_period = "";
+
+				// Determine initial in_notification_period status
+				_notification_periods_t::const_iterator tmp_period = _notification_periods.find(state->_notification_period);
+				if (tmp_period != _notification_periods.end())
+					state->_in_notification_period = tmp_period->second;
+				else
+					state->_in_notification_period = 1;
+
+				// Log UNMONITORED state if this host or service just appeared within the query timeframe
+				if (!only_update) {
+					state->_debug_info = "UNMONITORED ";
+					state->_state      = -1;
+				}
+				debug_statehist("NEW key %s %s", state->_host_name, state->_service_description);
+			}
+			else
+				state = it_hst->second;
+
+				updateHostServiceState(query, entry, state, only_update);
+            // Host downtime or state changes also affect its services
+			if (entry->_type == ALERT_HOST || entry->_type == STATE_HOST || entry->_type == DOWNTIME_ALERT_HOST){
+				state_info_t::iterator it_hst = state_info.begin();
+				while (it_hst != state_info.end()) {
+					if (!it_hst->second->_is_host && !strcmp(state->_host_name, it_hst->second->_host_name)){
+						updateHostServiceState(query, entry, it_hst->second, only_update);
+					}
+					it_hst++;
+				}
+			}
+			break;
+		}
+		case TIMEPERIOD_TRANSITION:
+		{
+			_notification_periods[entry->_command_name] = atoi(entry->_state_type);
+			state_info_t::iterator it_hst = state_info.begin();
+			while (it_hst != state_info.end()) {
+				updateHostServiceState(query, entry, it_hst->second, only_update);
+				it_hst++;
+			}
+			break;
+		}
+		case NAGIOS_STARTING:
+		{
+			// This feature is only available if log_initial_states is set to 1
+			// If log_initial_states is set, each nagios startup logs the initial states of all known
+			// hosts and services. Therefore we can detect if a host is no longer available after
+			// a nagios startup. If it still exists an INITIAL HOST/SERVICE state entry will follow up shortly.
+			// If it reappaers again after multiple nagios restarts an unmonitored state entry is generated
+			if (log_initial_states)
+			{
+				state_info_t::iterator it_hst = state_info.begin();
+				while (it_hst != state_info.end()) {
+					if (it_hst->second->_no_longer_exists == 0)
+						it_hst->second->_last_known_time = entry->_time;
+					it_hst->second->_no_longer_exists++;
+					it_hst++;
+				}
+			}
+			break;
+		}
+		}
+	}
+
+	// Create final reports
+	state_info_t::iterator it_hst = state_info.begin();
+	while (it_hst != state_info.end())
+	{
+		HostServiceState* hst = it_hst->second;
+		//hst->_debug_info = "LOG FINAL";
+
+		// No trace since the last two nagios startup -> host/service has vanished
+		if (log_initial_states)
+			if (hst->_no_longer_exists > 1) {
+				// Log last known state up to nagios restart
+				hst->_time  = hst->_last_known_time;
+				hst->_until = hst->_last_known_time;
+				process(query, hst);
+
+				// Log absent state
+				hst->_state = -1;
+				hst->_until = hst->_time;
+				hst->_debug_info = "UNMONITORED";
+			}
+
+		hst->_time  = _until - 1;
+		hst->_until = hst->_time;
+
+		process(query, hst);
+		it_hst++;
+	}
+	g_store->logCache()->unlockLogCache();
+}
+
+
+void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *hs_state, const bool only_update){
+	// Handle UNMONITORED states
+	if (entry->_type != TIMEPERIOD_TRANSITION && hs_state->_no_longer_exists > 1)
+	{
+		// Create existing entry for last known existance
+		hs_state->_until = hs_state->_last_known_time;
+		process(query, hs_state);
+
+		// Reanimate this host/service, cleanup any invalid data
+		if (hs_state->_log_output)
+			free(hs_state->_log_output);
+		hs_state->_log_output  = 0;
+		hs_state->_in_downtime = 0;
+		hs_state->_is_flapping = 0;
+
+		hs_state->_debug_info = "UNMONITORED";
+		// Apply latest notification period information and set the host_state to unmonitored
+		_notification_periods_t::const_iterator it_status = _notification_periods.find(hs_state->_notification_period);
+		if (it_status != _notification_periods.end()) {
+			hs_state->_in_notification_period = it_status->second;
+		}
+		else // No notification period information available -> within notification period
+			hs_state->_in_notification_period = 1;
+
+		hs_state->_state = -1;
+	}
+
+	// Update basic information
+	hs_state->_time   = entry->_time;
+	hs_state->_lineno = entry->_lineno;
+	hs_state->_until  = entry->_time;
+
+	// A timeperiod entry never brings an absent host into existance..
+	if (entry->_type != TIMEPERIOD_TRANSITION)
+		hs_state->_no_longer_exists = 0;
+
+	switch (entry->_type)
+	{
+	case STATE_HOST:
+	case ALERT_HOST:
+	{
+		if (hs_state->_is_host) {
+			if (hs_state->_state != entry->_state) {
+				if (!only_update)
+					process(query, hs_state);
+				hs_state->_state      = entry->_state;
+				hs_state->_host_down  = entry->_state > 0;
+				hs_state->_debug_info = "HOST STATE";
+			}
+		}
+		else if (hs_state->_host_down != entry->_state > 0)
+		{
+			if (!only_update)
+				process(query, hs_state);
+			hs_state->_host_down  = entry->_state > 0;
+			hs_state->_debug_info = "SVC HOST STATE";
+
+		}
+		break;
+	}
+	case STATE_SERVICE:
+	case ALERT_SERVICE:
+	{
+		if (hs_state->_state != entry->_state) {
+			if (!only_update)
+				process(query, hs_state);
+			hs_state->_debug_info = "SVC ALERT";
+			hs_state->_state = entry->_state;
+		}
+		break;
+	}
+	case DOWNTIME_ALERT_HOST:
+	{
+		int downtime_active = !strncmp(entry->_state_type,"STARTED",7) ? 1 : 0;
+
+		if (hs_state->_in_host_downtime != downtime_active) {
+			if (!only_update)
+				process(query, hs_state);
+			hs_state->_debug_info       = hs_state->_is_host ? "HOST DOWNTIME" : "SVC HOST DOWNTIME";
+			hs_state->_in_host_downtime = downtime_active;
+			if (hs_state->_is_host)
+				hs_state->_in_downtime  = downtime_active;
+		}
+		break;
+	}
+	case DOWNTIME_ALERT_SERVICE:
+	{
+		int downtime_active = !strncmp(entry->_state_type,"STARTED",7) ? 1 : 0;
+		if (hs_state->_in_downtime != downtime_active) {
+			if (!only_update)
+				process(query, hs_state);
+			hs_state->_debug_info = "DOWNTIME SERVICE";
+			hs_state->_in_downtime = downtime_active;
+		}
+		break;
+
+	}
+	case FLAPPING_HOST:
+	case FLAPPING_SERVICE:
+	{
+		int flapping_active = !strncmp(entry->_state_type,"STARTED",7) ? 1 : 0;
+		if (hs_state->_is_flapping != flapping_active) {
+			if (!only_update)
+				process(query, hs_state);
+			hs_state->_debug_info = "FLAPPING ";
+			hs_state->_is_flapping = flapping_active;
+		}
+		break;
+	}
+	case TIMEPERIOD_TRANSITION:
+	{
+		// if no _host pointer is available the initial status of _in_notification_period (1) never changes
+		if (hs_state->_host && !strcmp(entry->_command_name, hs_state->_notification_period)) {
+			int new_status = atoi(entry->_state_type);
+			if (new_status != hs_state->_in_notification_period) {
+				if (!only_update)
+					process(query, hs_state);
+				hs_state->_debug_info = "TIMEPERIOD ";
+				hs_state->_in_notification_period = new_status;
+			}
+		}
+		break;
+	}
+	}
+
+	if (hs_state->_log_output)
+		free(hs_state->_log_output);
+	hs_state->_log_output = entry->_check_output ? strdup(entry->_check_output) : 0;
+}
+
+
+void TableStateHistory::process(Query *query, HostServiceState *hs_state)
+{
+	hs_state->_duration = hs_state->_until - hs_state->_from;
+	hs_state->_duration_part = (double)hs_state->_duration / (double)_query_timeframe;
+
+	bzero(&hs_state->_duration_state_UNMONITORED, sizeof(time_t) * 5 + sizeof(double) * 5);
+
+	switch (hs_state->_state) {
+	case -1:
+		hs_state->_duration_state_UNMONITORED = hs_state->_duration;
+		hs_state->_duration_part_UNMONITORED  = hs_state->_duration_part;
+		break;
+	case STATE_OK:
+		hs_state->_duration_state_OK          = hs_state->_duration;
+		hs_state->_duration_part_OK           = hs_state->_duration_part;
+		break;
+	case STATE_WARNING:
+		hs_state->_duration_state_WARNING     = hs_state->_duration;
+		hs_state->_duration_part_WARNING      = hs_state->_duration_part;
+		break;
+	case STATE_CRITICAL:
+		hs_state->_duration_state_CRITICAL    = hs_state->_duration;
+		hs_state->_duration_part_CRITICAL     = hs_state->_duration_part;
+		break;
+	case STATE_UNKNOWN:
+		hs_state->_duration_state_UNKNOWN     = hs_state->_duration;
+		hs_state->_duration_part_UNKNOWN      = hs_state->_duration_part;
+		break;
+	default:
+		break;
+	}
+
+	if (hs_state->_duration > 0)
+		query->processDataset(hs_state);
+	hs_state->_from = hs_state->_until;
+};
+
+bool TableStateHistory::isAuthorized(contact *ctc, void *data)
+{
+	LogEntry *entry = (LogEntry *)data;
+	service *svc = entry->_service;
+	host *hst = entry->_host;
+
+	if (hst || svc)
+		return is_authorized_for(ctc, hst, svc);
+	// suppress entries for messages that belong to
+	// hosts that do not exist anymore.
+	else if (entry->_logclass == LOGCLASS_ALERT
+			|| entry->_logclass == LOGCLASS_NOTIFICATION
+			|| entry->_logclass == LOGCLASS_PASSIVECHECK
+			|| entry->_logclass == LOGCLASS_STATE)
+		return false;
+	else
+		return true;
+}
+
+Column *TableStateHistory::column(const char *colname)
+{
+	// First try to find column in the usual way
+	Column *col = Table::column(colname);
+	if (col) return col;
+
+	// Now try with prefix "current_", since our joined
+	// tables have this prefix in order to make clear that
+	// we access current and not historic data and in order
+	// to prevent mixing up historic and current fields with
+	// the same name.
+	string with_current = string("current_") + colname;
+	return Table::column(with_current.c_str());
+}

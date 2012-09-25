@@ -36,37 +36,43 @@ using namespace std;
 
 class LogEntry;
 class Query;
-class TableLog;
+class LogCache;
+
+typedef map<uint64_t, LogEntry *> logfile_entries_t; // key is time_t . lineno
 
 class Logfile
 {
+public:
+	Logfile(const char *path, bool watch);
+    ~Logfile();
+
+    char *path() { return _path; }
+    void load(LogCache *LogCache, time_t since, time_t until, unsigned logclasses);
+    void flush();
+    time_t since() { return _since; }
+    unsigned classesRead() { return _logclasses_read; }
+    long numEntries() { return _entries.size(); }
+    logfile_entries_t* getEntriesFromQuery(Query *query, LogCache *lc, time_t since, time_t until, unsigned);
+    bool answerQuery(Query *query, LogCache *lc, time_t since, time_t until, unsigned);
+    bool answerQueryReverse(Query *query, LogCache *lc, time_t since, time_t until, unsigned);
+
+    long freeMessages(unsigned logclasses);
+
+    unsigned   _logclasses_read; // only these types have been read
+private:
     char      *_path;
     time_t     _since;         // time of first entry
     bool       _watch;         // true only for current logfile
     ino_t      _inode;         // needed to detect switching
     fpos_t     _read_pos;      // read until this position
     uint32_t   _lineno;        // read until this line
-    unsigned   _logclasses_read; // only these types have been read
-    typedef map<uint64_t, LogEntry *> _entries_t; // key is time_t . lineno
-    _entries_t _entries;
+
+    logfile_entries_t  _entries;
     char       _linebuffer[MAX_LOGLINE];
 
-public:
-    Logfile(const char *path, bool watch);
-    ~Logfile();
-
-    char *path() { return _path; }
-    void load(TableLog *tablelog, time_t since, time_t until, unsigned logclasses);
-    void flush();
-    time_t since() { return _since; }
-    unsigned classesRead() { return _logclasses_read; }
-    long numEntries() { return _entries.size(); }
-    bool answerQuery(Query *query, TableLog *tl, time_t since, time_t until, unsigned);
-    bool answerQueryReverse(Query *query, TableLog *tl, time_t since, time_t until, unsigned);
-    long freeMessages(unsigned logclasses);
 
 private:
-    void loadRange(FILE *file, unsigned missing_types, TableLog *, 
+    void loadRange(FILE *file, unsigned missing_types, LogCache *,
                    time_t since, time_t until, unsigned logclasses);
     bool processLogLine(uint32_t, unsigned);
     uint64_t makeKey(time_t, unsigned);

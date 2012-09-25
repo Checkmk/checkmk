@@ -48,7 +48,8 @@ enum LogEntryType {	NONE,
 					FLAPPING_SERVICE,
 					TIMEPERIOD_TRANSITION,
 					NAGIOS_STARTING,
-					LOG_VERSION};
+					LOG_VERSION
+};
 
 struct LogEntry
 {

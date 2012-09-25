@@ -39,28 +39,17 @@
 typedef pair<string, string> HostServiceKey;
 
 struct HostServiceState {
+	bool    _is_host;
 	time_t  _time;
+	int     _lineno;
 	time_t  _from;
 	time_t  _until;
+
 	time_t  _duration;
 	double  _duration_part;
-	int     _state;			 // -1/0/1/2/3
-	int     _in_notification_period;
-	int     _in_downtime;
-	int     _is_flapping;
 
-	// Absent state handling
-	int		_no_longer_exists;
-	time_t  _last_known_time;
-
-	// Pointer to dynamically allocated strings (strdup) that live here.
-	// These pointers are 0, if there is no output (e.g. downtime)
-	char*   _check_output;
-	char*   _prev_check_output;
-
-	char*   _debug_info;
-	char*   _prev_debug_info;
-
+	// Do not change order within this block!
+	// These durations will be bzero'd
 	time_t  _duration_state_UNMONITORED;
 	double  _duration_part_UNMONITORED;
 	time_t  _duration_state_OK;
@@ -72,14 +61,29 @@ struct HostServiceState {
 	time_t  _duration_state_UNKNOWN;
 	double  _duration_part_UNKNOWN;
 
+	// State information
+	int     _host_down;      // used if service
+	int     _state;			 // -1/0/1/2/3
+	int     _in_notification_period;
+	int     _in_downtime;
+	int     _in_host_downtime;
+	int     _is_flapping;
 
-	// Keep this at end of struct !
-	// Everything above is volatile data and might be bzero'd
-	char       *_notification_period;  // may be "": -> no period known, we assume "always"
-    host       *_host;
-    service    *_service;
-    const char *_host_name;            // Fallback if host no longer exists
-    const char *_service_description;  // Fallback if service no longer exists
+
+	// Absent state handling
+	int		_no_longer_exists;
+	time_t  _last_known_time;
+
+
+	const char  *_debug_info;
+	// Pointer to dynamically allocated strings (strdup) that live here.
+	// These pointers are 0, if there is no output (e.g. downtime)
+	char        *_log_output;
+	char        *_notification_period;  // may be "": -> no period known, we assume "always"
+    host        *_host;
+    service     *_service;
+    const char  *_host_name;            // Fallback if host no longer exists
+    const char  *_service_description;  // Fallback if service no longer exists
 
     HostServiceState() { bzero(this, sizeof(HostServiceState)); }
     ~HostServiceState();
@@ -112,7 +116,7 @@ public:
     void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
     void answerQuery(Query *query);
     Column *column(const char *colname); // override in order to handle current_
-    void updateHostServiceState(Query &query, LogEntry &entry, HostServiceState &state, bool only_update);
+    void updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *state, const bool only_update);
 
 private:
     LogEntry* getPreviousLogentry();

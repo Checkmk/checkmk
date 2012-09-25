@@ -31,6 +31,7 @@
 #include "Query.h"
 #include "LogCache.h"
 
+
 Logfile::Logfile(const char *path, bool watch)
   : _path(strdup(path))
   , _since(0)
@@ -72,7 +73,7 @@ Logfile::~Logfile()
 
 void Logfile::flush()
 {
-    for (logfile_entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it)
+	for (logfile_entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it)
         delete it->second;
 
     _entries.clear();

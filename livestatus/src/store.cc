@@ -39,7 +39,6 @@
 #include "OutputBuffer.h"
 #include "logger.h"
 #include "TimeperiodsCache.h"
-#include "LogCache.h"
 
 using namespace std;
 

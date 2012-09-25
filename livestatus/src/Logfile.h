@@ -58,6 +58,7 @@ public:
 
     long freeMessages(unsigned logclasses);
 
+    unsigned   _logclasses_read; // only these types have been read
 private:
     char      *_path;
     time_t     _since;         // time of first entry
@@ -65,7 +66,7 @@ private:
     ino_t      _inode;         // needed to detect switching
     fpos_t     _read_pos;      // read until this position
     uint32_t   _lineno;        // read until this line
-    unsigned   _logclasses_read; // only these types have been read
+
     logfile_entries_t  _entries;
     char       _linebuffer[MAX_LOGLINE];
 

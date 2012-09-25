@@ -34,24 +34,25 @@ class Logfile;
 
 typedef map<time_t, Logfile *> _logfiles_t;
 
-
 class LogCache
 {
     pthread_mutex_t _lock;
-    unsigned long _max_cached_messages;
-    unsigned long _num_at_last_check;
+    unsigned long   _max_cached_messages;
+    unsigned long   _num_at_last_check;
+    _logfiles_t     _logfiles;
 
 public:
     LogCache(unsigned long max_cached_messages);
     ~LogCache();
     time_t _last_index_update;
-    _logfiles_t _logfiles;
+
 
     const char *name() { return "log"; }
     const char *prefixname() { return "logs"; }
     bool isAuthorized(contact *ctc, void *data);
     void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
     Column *column(const char *colname); // override in order to handle current_
+    _logfiles_t *logfiles() { return &_logfiles; };
     void forgetLogfiles();
     void updateLogfileIndex();
 
@@ -60,12 +61,9 @@ public:
     void unlockLogCache();
 
 private:
-
     void scanLogfile(char *path, bool watch);
     _logfiles_t::iterator findLogfileStartingBefore(time_t);
     void dumpLogfiles();
 };
-
-
 
 #endif // LogCache_h

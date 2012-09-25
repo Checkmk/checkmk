@@ -28,8 +28,7 @@ unixcat_LDADD = -lpthread
 
 livecheck_SOURCES = livecheck.c strutil.cc check_icmp.c
 
-pkglib_LIBRARIES = livestatus.so 
-pkglib_PROGRAMS = livecheck
+pkglib_LIBRARIES = livestatus.so livecheck 
 livestatus_so_SOURCES = \
 	AndingFilter.cc ClientQueue.cc Column.cc ColumnsColumn.cc CustomVarsExplicitColumn.cc \
 	ContactsColumn.cc CustomVarsColumn.cc CustomVarsFilter.cc DoubleColumn.cc \

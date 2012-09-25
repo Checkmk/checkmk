@@ -1,10 +1,13 @@
 Title: Logout not working when configured cookie auth but using basic auth
 Component: multisite
-State: open
+Class: bug
+State: wontfix
 Date: 2012-07-09 09:31:42
 Targetversion: future
-Class: bug
 
 Multisite can be configured to use cookie auth but uses basic auth when available. In this case
 of implicit basic auth usage the logout functionality does not work since the page_logout() function
 only takes the configured option into account.
+
+2012-09-24 15:07:42: changed state open -> wontfix
+This is a case of misconfiguration. There is no easy fix possible at the moment - closing.

@@ -1,9 +1,12 @@
 Title: Notification delay WATO rules only save first service listed
 Component: wato
-State: open
+Class: bug
+State: works4me
 Date: 2012-08-21 13:25:39
 Targetversion: 1.2.0
-Class: bug
 
 WATO shows entries for multiple services if you try to define a notification
 delay, but only the first service named will also be in the stored ruleset.
+
+2012-09-24 16:38:21: changed state open -> works4me
+Works over here.

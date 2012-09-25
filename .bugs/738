@@ -1,8 +1,11 @@
 Title: Creating clusters in emtpty wato folders
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-08-21 14:13:37
 Targetversion: 1.2.0
-Class: bug
 
 It is not possible to create an cluster host in an folder without normal hosts in it.
+
+2012-09-24 16:28:51: changed state open -> done
+It is now possible to create clusters in empty folders.

@@ -1,9 +1,9 @@
 Title: PNP Graph zoom zooms wrong position
 Component: multisite
-State: open
+Class: bug
+State: wontfix
 Date: 2012-08-22 11:21:24
 Targetversion: 1.2.0
-Class: bug
 
 If you make a area selection on a pnp graphs displayed in multisite you end up
 at a different position in the graph than you expected
@@ -11,3 +11,6 @@ If you try to view the right-most position, it will not be possible because you
 always get something else.
 
 LM: Where can PNP graphs be zoomed while being displayed in multisite?
+
+2012-09-24 15:59:27: changed state open -> wontfix
+Can not reproduce. Closing this. Please report back with a detailed description how to reproduce.

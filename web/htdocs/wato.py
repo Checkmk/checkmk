@@ -704,18 +704,18 @@ def save_hosts(folder = None):
             out.write('  %s,\n' % entry)
         out.write("]\n")
 
-        if len(clusters) > 0:
-            out.write("\nclusters.update({")
-            for entry, nodes in clusters:
-                out.write('\n  %s : %s,\n' % (entry, repr(nodes))) 
-            out.write("})\n")
+    if len(clusters) > 0:
+        out.write("\nclusters.update({")
+        for entry, nodes in clusters:
+            out.write('\n  %s : %s,\n' % (entry, repr(nodes))) 
+        out.write("})\n")
 
-        if len(ipaddresses) > 0:
-            out.write("\n# Explicit IP addresses\n")
-            out.write("ipaddresses.update(")
-            out.write(pprint.pformat(ipaddresses))
-            out.write(")")
-        out.write("\n")
+    if len(ipaddresses) > 0:
+        out.write("\n# Explicit IP addresses\n")
+        out.write("ipaddresses.update(")
+        out.write(pprint.pformat(ipaddresses))
+        out.write(")")
+    out.write("\n")
 
     for nag_varname, entries in custom_macros.items():
         macrolist = []
@@ -1889,7 +1889,6 @@ def mode_edithost(phase, new, cluster):
         if hostname:
             go_to_services = html.var("services")
             if html.check_transaction():
-
                 if new:
                     g_folder[".hosts"][hostname] = host
                     mark_affected_sites_dirty(g_folder, hostname)
@@ -8934,7 +8933,7 @@ def mode_edit_hosttag(phase):
                               _("The tag ID '%s' is already being used as auxiliary tag.") % id)
 
             if len(new_choices) == 0:
-                raise MKUserError("id_0", _("Please specify at least on tag."))
+                raise MKUserError("id_0", _("Please specify at least one tag."))
             if len(new_choices) == 1 and new_choices[0][0] == None:
                 raise MKUserError("id_0", _("Tags with only one choice must have an ID."))
 

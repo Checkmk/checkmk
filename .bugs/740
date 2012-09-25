@@ -1,8 +1,11 @@
 Title: Empty "Monitoring on Host field" deleteds all Wato config
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2012-09-04 11:35:16
 Targetversion: 1.2.0
-Class: bug
 
 In replicated wato settings all configuration get lost, when the Monitoring on host field is empty on creating a host
+
+2012-09-24 16:03:22: changed state open -> done
+It is not possible to select an empty value in "monitored on". So this bug has been fixed.

@@ -303,9 +303,12 @@ class html:
             self.write('<br>'.join(self.user_errors.values()))
             self.write('</div>\n')
 
-    def hidden_field(self, var, value):
+    def hidden_field(self, var, value, id = None, add_var = False):
         if value != None:
-            self.write("<input type=hidden name=%s value=\"%s\">" % (var, attrencode(value)))
+            id = id and ' id="%s"' % id or ''
+            self.write("<input type=hidden name=%s value=\"%s\"%s>" % (var, attrencode(value), id))
+            if add_var:
+                self.add_form_var(var)
 
     # Beware: call this method just before end_form(). It will
     # add all current non-underscored HTML variables as hiddedn
@@ -642,7 +645,10 @@ class html:
     # Check if the current form is currently filled in (i.e. we display
     # the form a second time while showing value typed in at the first
     # time and complaining about invalid user input)
-    def form_filled_in(self):
+    def form_filled_in(self, form_name = None):
+        if form_name == None:
+            form_name = self.form_name
+
         return self.has_var("filled_in") and (
             self.form_name == None or \
             self.form_name in self.list_var("filled_in"))

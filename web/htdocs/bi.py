@@ -118,8 +118,10 @@ NT_PLACEHOLDER = 4 # temporary dummy entry needed for REMAINING
 
 
 # global variables
-g_cache = {}                # per-user cache
-g_config_information = None # for invalidating cache after config change
+g_cache = {}                  # per-user cache
+g_config_information = None   # for invalidating cache after config change
+did_compilation = False       # Is set to true if anything has been compiled
+g_compiled_everything = False # Is set to true if all aggregations have been compiled
 
 # Load the static configuration of all services and hosts (including tags)
 # without state.
@@ -188,8 +190,8 @@ def aggregation_groups():
 
     else:
         # classic mode: precompile all and display only groups with members
-        bi.compile_forest(config.user_id)
-        group_names = list(set([ group for group, trees in bi.g_user_cache["forest"].items() if trees ]))
+        compile_forest(config.user_id)
+        group_names = list(set([ group for group, trees in g_user_cache["forest"].items() if trees ]))
 
     return sorted(group_names, cmp = lambda a,b: cmp(a.lower(), b.lower()))
 
@@ -199,7 +201,14 @@ def aggregation_groups():
 # aggregation functions are still left as names. That way the forest
 # printable (and storable in Python syntax to a file).
 def compile_forest(user, only_hosts = None, only_groups = None):
-    global g_cache, g_user_cache
+    global g_cache, g_user_cache, g_compiled_everything
+
+    def log(s):
+        file(config.bi_compile_log, "a").write(s)
+
+    if g_compiled_everything:
+        log('PID: %d - Already compiled everything\n' % os.getpid())
+        return # In this case simply skip further compilations
 
     new_config_information = cache_needs_update()
     if new_config_information: # config changed are Nagios restarted, clear cache
@@ -245,12 +254,18 @@ def compile_forest(user, only_hosts = None, only_groups = None):
         # check wether or not hosts are not compiled yet
         only_hosts = to_compile(only_hosts, 'hosts')
         if not only_hosts:
+            log('PID: %d - All requested hosts have already been compiled\n' % os.getpid())
             return # Nothing to do - everything is cached
 
     if only_groups and cache['compiled_groups']:
         only_groups = to_compile(only_groups, 'groups')
         if not only_groups:
+            log('PID: %d - All requested groups have already been compiled\n' % os.getpid())
             return # Nothing to do - everything is cached
+
+    # Set a flag that anything has been compiled in this call
+    global did_compilation
+    did_compilation = True
 
     # Load all (needed) services
     load_services(cache, only_hosts)
@@ -337,6 +352,8 @@ def compile_forest(user, only_hosts = None, only_groups = None):
         cache['compiled_hosts']  = set(g_services.keys())
         cache['compiled_groups'] = set(cache['forest'].keys())
 
+        g_compiled_everything = True
+
     # Remember successful compile in cache
     g_cache[user] = cache
 
@@ -350,13 +367,14 @@ def compile_forest(user, only_hosts = None, only_groups = None):
             num_services += len(val[1])
 
         after = time.time()
-        file(config.bi_compile_log, "a").write(
-            "This request:\n"
+
+        log("This request:\n"
             "  User: %s, Only-Groups: %r, Only-Hosts: %s\n"
             "  PID: %d, Processed %d services on %d hosts in %.3f seconds.\n"
             "\n"
             "  %d compiled multi aggrs, %d compiled host aggrs, %d compiled groups\n"
             "Cache:\n"
+            "  Everything compiled: %r\n"
             "  %d compiled multi aggrs, %d compiled host aggrs, %d compiled groups\n"
             "Config:\n"
             "  Multi-Aggregations: %d, Host-Aggregations: %d\n"
@@ -370,6 +388,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                num_new_multi_aggrs, num_new_host_aggrs,
                only_groups and len(only_groups) or 0,
 
+               g_compiled_everything,
                num_total_aggr - len(cache['compiled_hosts']),
                len(cache['compiled_hosts']),
                len(cache['compiled_groups']),

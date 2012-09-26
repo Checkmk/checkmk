@@ -264,9 +264,8 @@ void TableStateHistory::answerQuery(Query *query)
 	--_it_logs;
 
 	// Now find the log where 'since' starts.
-	while (_it_logs != g_store->logCache()->logfiles()->begin() && _it_logs->first >= _since){
+	while (_it_logs != g_store->logCache()->logfiles()->begin() && _it_logs->first >= _since)
 		--_it_logs; // go back in history
-	}
 
 	// Check if 'until' is within these logfiles
 	if (_it_logs->first > _until) {
@@ -282,18 +281,19 @@ void TableStateHistory::answerQuery(Query *query)
 	_it_entries = _entries->begin();
 
 	// Start at the logentry LOG VERSION: 2.0 which is logged in the first lines of each logfile
-	LogEntry* entry;
+	LogEntry* entry = _it_entries->second;
 	bool version_found = false;
-	while ((entry = getNextLogentry()) != 0) {
+	while (entry != 0) {
 		if (entry->_time >= _since){
 			break;
 		}
 		if (entry->_type == LOG_VERSION) {
-			debug_statehist("%d LOG_VERSION found in %s line %d", entry->_time, _it_logs->second->path(), entry->_lineno);
 			version_found = true;
 			break;
 		}
+		entry = getNextLogentry();
 	}
+
 	if (!version_found) {
 		query->setError(RESPONSE_CODE_INVALID_REQUEST, "Unable to find any LOG VERSION entries before query "
 				"timeframe. Logfiles seem corrupted.");
@@ -356,18 +356,27 @@ void TableStateHistory::answerQuery(Query *query)
 				else
 					state->_in_notification_period = 1;
 
+				// If this key is a service try to find its host and apply its _in_host_downtime and _host_down parameters
+				if (!state->_is_host) {
+					state_info_t::iterator my_host = state_info.find(HostServiceKey(key.first,""));
+					if (my_host != state_info.end()) {
+						state->_in_host_downtime = my_host->second->_in_host_downtime;
+						state->_host_down        = my_host->second->_host_down;
+					}
+				}
+
 				// Log UNMONITORED state if this host or service just appeared within the query timeframe
 				if (!only_update) {
 					state->_debug_info = "UNMONITORED ";
 					state->_state      = -1;
 				}
-				debug_statehist("NEW key %s %s", state->_host_name, state->_service_description);
 			}
 			else
 				state = it_hst->second;
 
-				updateHostServiceState(query, entry, state, only_update);
-            // Host downtime or state changes also affect its services
+			updateHostServiceState(query, entry, state, only_update);
+
+			// Host downtime or state changes also affect its services
 			if (entry->_type == ALERT_HOST || entry->_type == STATE_HOST || entry->_type == DOWNTIME_ALERT_HOST){
 				state_info_t::iterator it_hst = state_info.begin();
 				while (it_hst != state_info.end()) {

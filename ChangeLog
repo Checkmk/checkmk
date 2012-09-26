@@ -2,6 +2,13 @@
     Mulitisite
     * Added "view" parameter to dashlet_pnpgraph webservice
     * BI: Added missing localizations
+    * BI: Added option bit_precompile_on_demand to split compilations of
+          the aggregations in several fragments. If possible only the needed
+          aggregations are compiled to reduce the time a user has to wait for
+          BI based view. This optimizes BI related views which display
+          information for a specific list of hosts or aggregation groups.
+    * BI: Added new config option bi_compile_log to collect statistics about
+          aggregation compilations
 
     WATO
     * FIX: It is now possible to create clusters in empty folders

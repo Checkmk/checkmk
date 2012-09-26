@@ -217,6 +217,35 @@ register_configvar(group,
     domain = "multisite"
     )
 
+register_configvar(group,
+    "bi_precompile_on_demand",
+    Checkbox(title = _("Precompile aggregations on demand"),
+             label = _("Only precompile on demand"),
+             help = _(
+                "By default all aggregations in Check_MK BI are precompiled on first "
+                "usage of a BI or host/service related dialog in the status GUI. "
+                "In case of large environments with many BI aggregations this complete "
+                "precompilation might take too much time (several seconds). It is now possible "
+                "to change the precompilation to be executed on demand. BI only precompiles the "
+                "aggregations which are really requested by the users."
+             ),
+             default_value = False),
+    domain = "multisite")
+
+register_configvar(group,
+    "bi_compile_log",
+    Optional(
+        Filename(
+            label = _("Absolute path to log file"),
+            default = defaults.var_dir + '/bi-compile.log',
+        ),
+          title = _("Logfile for BI compilation diagnostics"),
+          label = _("Activate logging of BI compilations into a logfile"),
+          help = _("If this option is used and set to a filename, Check_MK BI will create a logfile "
+                   "containing details about compiling BI aggregations. This includes statistics and "
+                   "details for each executed compilation.")),
+    domain = "multisite")
+
 group = _("Operation mode of Check_MK")
 
 register_configvar(group,

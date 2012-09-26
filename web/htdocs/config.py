@@ -563,6 +563,9 @@ def load_default_values(into):
     #
     into["aggregation_rules"] = {}
     into["aggregations"] = []
+    into["host_aggregations"] = []
+    into['bi_compile_log'] = None
+    into['bi_precompile_on_demand'] = False
 
     #    __        ___  _____ ___
     #    \ \      / / \|_   _/ _ \
@@ -570,7 +573,7 @@ def load_default_values(into):
     #      \ V  V / ___ \| || |_| |
     #       \_/\_/_/   \_\_| \___/
     #
-    
+
     into["wato_enabled"] = True
     into["wato_host_tags"] = []
     into["wato_aux_tags"] = []

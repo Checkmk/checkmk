@@ -34,11 +34,8 @@ except NameError:
     from sets import Set as set
 
 def render_bi_groups():
-    bi.compile_forest(config.user_id)
     html.write("<ul>")
-    group_names = [ group for group, trees in bi.g_user_cache["forest"].items() if trees ]
-    group_names = sorted(group_names, cmp = lambda a,b: cmp(a.lower(), b.lower()))
-    for group in group_names:
+    for group in bi.aggregation_groups():
         bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" %
               htmllib.urlencode(group))
     html.write("</ul>")

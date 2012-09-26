@@ -30,9 +30,10 @@ logwatch_dir = var_dir + '/logwatch'
 logwatch_patterns = { }
 logwatch_rules = []
 logwatch_max_filesize = 500000 # do not save more than 500k of message (configurable)
+logwatch_service_output = "default"
 
 # Variables embedded in precompiled checks
-check_config_variables += [ "logwatch_dir", "logwatch_max_filesize" ]
+check_config_variables += [ "logwatch_dir", "logwatch_max_filesize", "logwatch_service_output" ]
 
 def inventory_logwatch(info):
     inventory = []
@@ -348,9 +349,11 @@ def check_logwatch(item, params, info):
         count_txt = []
         for level, num in state_counts.iteritems():
             count_txt.append('%d %s' % (num, logwatch_level_name(level)))
-
-        return (worst, state + " - %s messages (Last worst: \"%s\")" %
+        if logwatch_service_output == 'default':
+            return (worst, state + " - %s messages (Last worst: \"%s\")" %
                                            (', '.join(count_txt), last_worst_line))
+        else:
+            return (worst, state + " - %s messages" % ', '.join(count_txt))
 
 
 check_info['logwatch'] = {

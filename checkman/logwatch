@@ -86,3 +86,7 @@ logwatch_dir (string): Directory where log messages are
  For each host a subdirectory is created. The name of the
  files therein are the names of the logfiles with slashes
  replaced by backslashes.
+
+logwatch_service_output (string): Change the output of the service to ony
+ print stats and not the last error message.  Default is {default},  use {small} if
+ you only want to have the stats.

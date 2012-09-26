@@ -36,15 +36,28 @@ try:
 except NameError:
     from sets import Set as set
 
+# Datastructures and functions needed before plugins can be loaded
+loaded_with_language = False
 
-config.declare_permission_section("bi", "BI - Check_MK Business Intelligence")
-config.declare_permission("bi.see_all",
-        "See all hosts and services",
-        "With this permission set, the BI aggregation rules are applied to all "
+# Load all view plugins
+def load_plugins():
+    global loaded_with_language
+    if loaded_with_language == current_language:
+        return
+
+    config.declare_permission_section("bi", _("BI - Check_MK Business Intelligence"))
+    config.declare_permission("bi.see_all",
+        _("See all hosts and services"),
+        _("With this permission set, the BI aggregation rules are applied to all "
         "hosts and services - not only those the user is a contact for. If you "
         "remove this permissions then the user will see incomplete aggregation "
-        "trees with status based only on those items.",
+        "trees with status based only on those items."),
         [ "admin", "guest" ])
+
+    # This must be set after plugin loading to make broken plugins raise
+    # exceptions all the time and not only the first time (when the plugins
+    # are loaded).
+    loaded_with_language = current_language
 
 #      ____                _              _
 #     / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___
@@ -202,8 +215,8 @@ def compile_forest(user):
 
     for entry in config.aggregations:
         if len(entry) < 3:
-            raise MKConfigError("<h1>Invalid aggregation <tt>%s</tt></h1>"
-             "must have at least 3 entries (has %d)" % (entry, len(entry)))
+            raise MKConfigError(_("<h1>Invalid aggregation <tt>%s</tt>'</h1>"
+                                  "Must have at least 3 entries (has %d)") % (entry, len(entry)))
 
         group = entry[0]
         new_entries = compile_rule_node(entry[1:], 0)
@@ -224,7 +237,7 @@ def compile_forest(user):
             # Aggregations by last part of title (assumed to be host name)
             name = aggr["title"].split()[-1]
             cache["aggregations_by_hostname"].setdefault(name, []).append((group, aggr))
-            
+
             # All single-host aggregations looked up per host
             if len(req_hosts) == 1:
                 host = req_hosts[0] # pair of (site, host)
@@ -252,8 +265,8 @@ def compile_rule_node(calllist, lvl):
     # Lookup rule source code
     rulename, arglist = calllist[-2:]
     if rulename not in config.aggregation_rules:
-        raise MKConfigError("<h1>Invalid configuration in variable <tt>aggregations</tt></h1>"
-                "There is no rule named <tt>%s</tt>. Available are: <tt>%s</tt>" %
+        raise MKConfigError(_("<h1>Invalid configuration in variable <tt>aggregations</tt></h1>"
+                "There is no rule named <tt>%s</tt>. Available are: <tt>%s</tt>") %
                 (rulename, "</tt>, </tt>".join(config.aggregation_rules.keys())))
     rule = config.aggregation_rules[rulename]
 
@@ -288,7 +301,7 @@ def find_matching_services(what, calllist):
         required_tags = []
 
     if len(calllist) == 0:
-        raise MKConfigError("Invalid syntax in FOREACH_...")
+        raise MKConfigError(_("Invalid syntax in FOREACH_..."))
 
     host_re = calllist[0]
     if what in [ config.FOREACH_HOST, config.FOREACH_CHILD, config.FOREACH_PARENT ]:
@@ -419,7 +432,7 @@ def make_arginfo(arglist, args):
             expansion = MULTIPLE
             name = name[:-1]
         else:
-            raise MKConfigError("Invalid argument name %s. Must begin with 'a' or end with 's'." % name)
+            raise MKConfigError(_("Invalid argument name %s. Must begin with 'a' or end with 's'.") % name)
         arginfo[name] = (expansion, value)
     return arginfo
 
@@ -469,24 +482,24 @@ def compile_aggregation_rule(rule, args, lvl = 0):
         g_remaining_refs = []
 
     if len(rule) != 4:
-        raise MKConfigError("<h3>Invalid aggregation rule</h1>"
+        raise MKConfigError(_("<h3>Invalid aggregation rule</h1>"
                 "Aggregation rules must contain four elements: description, argument list, "
                 "aggregation function and list of nodes. Your rule has %d elements: "
-                "<pre>%s</pre>" % (len(rule), pprint.pformat(rule)))
+                "<pre>%s</pre>") % (len(rule), pprint.pformat(rule)))
 
     if lvl == 50:
-        raise MKConfigError("<h3>Depth limit reached</h3>"
+        raise MKConfigError(_("<h3>Depth limit reached</h3>"
                 "The nesting level of aggregations is limited to 50. You either configured "
-                "too many levels or built an infinite recursion. This happened in rule <pre>%s</pre>"
+                "too many levels or built an infinite recursion. This happened in rule <pre>%s</pre>")
                   % pprint.pformat(rule))
 
     description, arglist, funcname, nodes = rule
 
     # check arguments and convert into dictionary
     if len(arglist) != len(args):
-        raise MKConfigError("<h1>Invalid rule usage</h1>"
+        raise MKConfigError(_("<h1>Invalid rule usage</h1>"
                 "The rule '%s' needs %d arguments: <tt>%s</tt><br>"
-                "You've specified %d arguments: <tt>%s</tt>" % (
+                "You've specified %d arguments: <tt>%s</tt>") % (
                     description, len(arglist), repr(arglist), len(args), repr(args)))
 
     arginfo = dict(zip(arglist, args))
@@ -714,7 +727,7 @@ def regex(r):
     try:
         rx = re.compile(r)
     except Exception, e:
-        raise MKConfigError("Invalid regular expression '%s': %s" % (r, e))
+        raise MKConfigError(_("Invalid regular expression '%s': %s") % (r, e))
     regex_cache[r] = rx
     return rx
 
@@ -785,19 +798,19 @@ def execute_leaf_node(node, status_info):
                 state = {"state":state, "output":output}
                 if state_assumption != None:
                     assumed_state = {"state":state_assumption,
-                                     "output" : "Assumed to be %s" % service_state_names[state_assumption]}
+                                     "output" : _("Assumed to be %s") % service_state_names[state_assumption]}
                 else:
                     assumed_state = None
                 return (state, assumed_state, node)
 
-        return ({"state":MISSING, "output": "This host has no such service"}, None, node)
+        return ({"state":MISSING, "output": _("This host has no such service")}, None, node)
 
     else:
         aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN}[host_state]
         state = {"state":aggr_state, "output" : host_output}
         if state_assumption != None:
             assumed_state = {"state": state_assumption,
-                             "output" : "Assumed to be %s" % host_state_names[state_assumption]}
+                             "output" : _("Assumed to be %s") % host_state_names[state_assumption]}
         else:
             assumed_state = None
         return (state, assumed_state, node)
@@ -811,7 +824,7 @@ def execute_rule_node(node, status_info):
     funcargs = parts[1:]
     func = config.aggregation_functions.get(funcname)
     if not func:
-        raise MKConfigError("Undefined aggregation function '%s'. Available are: %s" %
+        raise MKConfigError(_("Undefined aggregation function '%s'. Available are: %s") %
                 (funcname, ", ".join(config.aggregation_functions.keys())))
 
     # prepare information for aggregation function
@@ -983,18 +996,18 @@ def aggr_running_on(nodes, regex):
     # if not found, then do normal aggregation with 'worst'
     if not mo or len(mo.groups()) == 0:
         state = config.aggregation_functions['worst'](nodes[1:])
-        state["output"] += ", running nowhere"
+        state["output"] += _(", running nowhere")
         return state
 
     running_on = mo.groups()[0]
     for state, node in nodes[1:]:
         for site, host in node["reqhosts"]:
             if host == running_on:
-                state["output"] += ", running on %s" % running_on
+                state["output"] += _(", running on %s") % running_on
                 return state
 
     # host we run on not found. Strange...
-    return {"state": UNKNOWN, "output": "running on unknown host '%s'" % running_on }
+    return {"state": UNKNOWN, "output": _("running on unknown host '%s'") % running_on }
 
 config.aggregation_functions['running_on'] = aggr_running_on
 

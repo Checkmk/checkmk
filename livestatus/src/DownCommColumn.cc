@@ -33,10 +33,13 @@ void DownCommColumn::output(void *data, Query *query)
 {
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
     query->outputBeginList();
+
     data = shiftPointer(data); // points to host or service
+
     if (data)
     {
         bool first = true;
+        bool found_match = false;
 
         for (map<unsigned long, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
                 it != table->entriesIteratorEnd();
@@ -44,8 +47,17 @@ void DownCommColumn::output(void *data, Query *query)
         {
             unsigned long id = it->first;
             DowntimeOrComment *dt = it->second;
-            if ((void *)dt->_service == data ||
-                    (dt->_service == 0 && dt->_host == data))
+
+            found_match = false;
+            if ( dt->_service == 0){
+            	if (dt->_host->name == ((host_struct*)data)->name)
+            		found_match = true;
+            }
+            else
+            	if ( dt->_service->description == ((service_struct*)data)->description && dt->_service->host_name == ((service_struct*)data)->host_name )
+            		found_match = true;
+
+            if (found_match)
             {
                 if (first)
                     first = false;

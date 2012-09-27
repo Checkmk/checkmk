@@ -6,6 +6,9 @@
     * FIX: It is now possible to create clusters in empty folders
     * FIX: Fixed problem with complaining empty ListOf() valuespecs
 
+    Livestatus
+    * FIX: comments_with_info in service table was always empty
+
 1.2.1i1:
     Core:
     * Allow to add options to rules. Currently the options "disabled" and

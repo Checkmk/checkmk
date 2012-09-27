@@ -52,6 +52,21 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "profile",
+    Checkbox(
+        title = _("Profile requests"),
+        label = _("enable profile mode"),
+        help = _("It is possible to profile the rendering process of Multisite pages. This "
+                 "Is done using the Python module cProfile. When enabled two files are placed "
+                 "into the Multisite var directory named <code>multisite.profile</code> and "
+                 "<code>multisite.profile.py</code>. By executing the later file you can get "
+                 "runtime statistics about the last processed page."),
+       default_value = False
+    ),
+    domain = "multisite"
+)
+
+register_configvar(group,
     "debug_livestatus_queries",
     Checkbox(title = _("Debug Livestatus queries"),
              label = _("enable debug of Livestatus queries"),
@@ -237,7 +252,7 @@ register_configvar(group,
     Optional(
         Filename(
             label = _("Absolute path to log file"),
-            default = defaults.var_dir + '/bi-compile.log',
+            default = defaults.var_dir + '/web/bi-compile.log',
         ),
           title = _("Logfile for BI compilation diagnostics"),
           label = _("Activate logging of BI compilations into a logfile"),

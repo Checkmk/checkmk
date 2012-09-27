@@ -206,16 +206,17 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     def log(s):
         file(config.bi_compile_log, "a").write(s)
 
-    if g_compiled_everything:
-        log('PID: %d - Already compiled everything\n' % os.getpid())
-        return # In this case simply skip further compilations
-
     new_config_information = cache_needs_update()
-    if new_config_information: # config changed are Nagios restarted, clear cache
-        global g_cache
+    if new_config_information:
+        # config changed or monitoring daemon restarted, clear cache
         g_cache = {}
         global g_config_information
         g_config_information = new_config_information
+        g_compiled_everything = False
+
+    if g_compiled_everything:
+        log('PID: %d - Already compiled everything\n' % os.getpid())
+        return # In this case simply skip further compilations
 
     # OPTIMIZE: All users that have the permissing bi.see_all
     # can use the same cache.

@@ -12,6 +12,7 @@
     * BI: Added new config option bi_compile_log to collect statistics about
           aggregation compilations
     * FIX: Fixed releasing of locks and livestatus connections when logging out
+    * FIX: Fixed login/login confusions with index page caching
 
 1.2.0p3:
     Mulitisite

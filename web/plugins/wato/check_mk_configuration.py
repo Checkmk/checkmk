@@ -502,6 +502,19 @@ register_configvar(group,
         ),
     )
 
+register_configvar(group,
+    "logwatch_service_output",
+    DropdownChoice(
+        title = _("Service output of Logwatch"),
+        help = _("You can change the output of the logwatch service "
+                 "between an view with oh"),
+        choices = [
+            ( 'default' , _("Output last log message in service output") ),
+            ( 'small', _("Only print stats in service output")),
+            ],
+        default_value = 'default',
+        ),
+    )
 
 register_configvar(group,
     "printer_supply_some_remaining_status",

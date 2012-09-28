@@ -131,7 +131,21 @@ def check_auth_cookie(cookie_name):
     # Return the authenticated username
     return username
 
+def check_auth_automation():
+    secret = html.var("_secret").strip()
+    user = html.var("_username").strip()
+    del html.req.vars['_username']
+    del html.req.vars['_secret']
+    if secret and user and "/" not in user:
+        path = defaults.var_dir + "/web/" + user + "/automation.secret"
+        if os.path.isfile(path) and file(path).read().strip() == secret:
+            return user
+    raise MKAuthException(_("Invalid automation secret for user %s") % user)
+
 def check_auth():
+    if html.var("_secret"):
+        return check_auth_automation()
+
     for cookie_name in html.get_cookie_names():
         if cookie_name.startswith('auth_'):
             try:
@@ -158,7 +172,7 @@ def do_login():
                 raise MKUserError('_password', _('No password given.'))
 
             origtarget = html.var('_origtarget')
-            if not origtarget or origtarget.endswith("/logout.py"):
+            if not origtarget or "logout.py" in origtarget:
                 origtarget = defaults.url_prefix + 'check_mk/'
 
             users = load_htpasswd()
@@ -220,14 +234,14 @@ def normal_login_page(called_directly = True):
     html.header(_("Check_MK Multisite Login"), javascripts=[], stylesheets=["pages", "login"])
 
     origtarget = html.var('_origtarget', '')
-    if not origtarget and not html.req.myfile == 'login':
+    if not origtarget and not html.req.myfile in [ 'login', 'logout' ]:
         origtarget = html.makeuri([])
 
     # When e.g. the password of a user is changed and the first frame that recognizes the
     # non matching cookies is the sidebar it redirects the user to side.py while removing
     # the frameset. This is not good. Instead of this redirect the user to the index page.
     if html.req.myfile == 'side':
-        html.immediate_browser_redirect(0.1, 'index.py')
+        html.immediate_browser_redirect(0.1, 'login.py')
         return apache.OK
 
     # Never allow the login page to be opened in a frameset. Redirect top page to login page.
@@ -281,7 +295,7 @@ def page_logout():
     del_auth_cookie()
 
     if config.auth_type == 'cookie':
-        html.set_http_header('Location', defaults.url_prefix + 'check_mk/')
+        html.set_http_header('Location', defaults.url_prefix + 'check_mk/login.py')
         raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
     else:
         # Implement HTTP logout with cookie hack

@@ -1,6 +1,10 @@
 1.2.1i2:
     Event Console:
-    * Moved source of Event Console into Check_MK project
+    * Moved source of Event Console into Check_MK project 
+
+    Multisite:
+    * Enable automation login with _username= and _secret=, while
+      _secret is the content of var/check_mk/web/$USER/automation.secret
 
     Multisite:
     * BI: Added missing localizations
@@ -11,6 +15,8 @@
           information for a specific list of hosts or aggregation groups.
     * BI: Added new config option bi_compile_log to collect statistics about
           aggregation compilations
+    * FIX: Fixed releasing of locks and livestatus connections when logging out
+    * FIX: Fixed login/login confusions with index page caching
 
 1.2.0p3:
     Mulitisite

@@ -197,45 +197,6 @@ void TableStateHistory::answerQuery(Query *query)
 	typedef map<HostServiceKey, HostServiceState*> state_info_t;
 	state_info_t state_info;
 
-	////	 ____  _____ ____  _   _  ____
-	////	|  _ \| ____| __ )| | | |/ ___|
-	////	| | | |  _| |  _ \| | | | |  _
-	////	| |_| | |___| |_) | |_| | |_| |
-	////	|____/|_____|____/ \___/ \____|
-	//	static int trigger = 0;
-	//	extern int num_cached_log_messages;
-	//	debug_statehist("\n\n\nCached messages: %d", num_cached_log_messages);
-	//	_logfiles_t::iterator _it_debug = g_store->logCache()->logfiles().begin();
-	//	while( _it_debug != g_store->logCache()->logfiles().end() ){
-	//		debug_statehist("######## Available logs cached %d %s", _it_debug->second->numEntries(), _it_debug->second->path());
-	//		_it_debug++;
-	//	}
-	//
-	//    debug_statehist("\n\nDurchlaufe ein paar Daten... ( trigger %d )\n=============================================", trigger);
-	//    _it_logs = g_store->logCache()->logfiles().begin();
-	//    debug_statehist("Logfile handle %x", _it_logs->second);
-	//
-	//    debug_statehist("Lese ein");
-	//	_it_logs->second->getEntriesFromQuery(query, g_store->logCache(), _since, _until, _classmask); // archive
-	//	debug_statehist("Flush");
-	//	_it_logs->second->flush();
-	//
-	////
-	////    if (trigger == 0)
-	////    	_it_logs->second->getEntriesFromQuery(query, g_store->logCache(), _since, _until, _classmask); // archive
-	////
-	////    if (trigger == 2)
-	////    	_it_logs->second->flush();
-	////
-	////    if (trigger == 4){
-	////    	_it_logs->second->getEntriesFromQuery(query, g_store->logCache(), _since, _until, _classmask); // archive
-	////    	trigger = -1;
-	////    }
-	//    trigger++;
-	//    g_store->logCache()->unlockLogCache();
-	//	debug_statehist("Und Ende");
-	//    return;
-
 	_query = query;
 	_since = 0;
 	_until = time(0) + 1;
@@ -281,6 +242,7 @@ void TableStateHistory::answerQuery(Query *query)
 	_it_entries = _entries->begin();
 
 	// Start at the logentry LOG VERSION: 2.0 which is logged in the first lines of each logfile
+	// If no entry is found there will be an UNMONITORED entry till the host or service appears
 	LogEntry* entry = _it_entries->second;
 	bool version_found = false;
 	while (entry != 0) {
@@ -294,12 +256,12 @@ void TableStateHistory::answerQuery(Query *query)
 		entry = getNextLogentry();
 	}
 
-	if (!version_found) {
-		query->setError(RESPONSE_CODE_INVALID_REQUEST, "Unable to find any LOG VERSION entries before query "
-				"timeframe. Logfiles seem corrupted.");
-		g_store->logCache()->unlockLogCache();
-		return;
-	}
+//	if (!version_found) {
+//		query->setError(RESPONSE_CODE_INVALID_REQUEST, "Unable to find any LOG VERSION entries before query "
+//				"timeframe. Logfiles seem corrupted.");
+//		g_store->logCache()->unlockLogCache();
+//		return;
+//	}
 
 	HostServiceKey key;
 	bool only_update = true;

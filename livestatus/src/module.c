@@ -101,6 +101,8 @@ int g_data_encoding = ENCODING_UTF8;
 /* simple statistics data for TableStatus */
 extern struct host *host_list;
 extern struct service *service_list;
+extern scheduled_downtime *scheduled_downtime_list;
+
 int g_num_hosts;
 int g_num_services;
 
@@ -164,6 +166,7 @@ void livestatus_cleanup_after_fork()
     }
 }
 
+
 void *main_thread(void *data __attribute__ ((__unused__)))
 {
     g_thread_pid = getpid();
@@ -195,7 +198,6 @@ void *main_thread(void *data __attribute__ ((__unused__)))
     logger(LG_INFO, "Socket thread has terminated");
     return voidp;
 }
-
 
 void *client_thread(void *data __attribute__ ((__unused__)))
 {
@@ -409,7 +411,6 @@ int broker_log(int event_type __attribute__ ((__unused__)), void *data __attribu
     return 0;
 }
 
-
 int broker_command(int event_type __attribute__ ((__unused__)), void *data)
 {
     nebstruct_external_command_data *sc = (nebstruct_external_command_data *)data;
@@ -437,37 +438,21 @@ int broker_program(int event_type __attribute__ ((__unused__)), void *data __att
     return 0;
 }
 
-int broker_event(int event_type __attribute__ ((__unused__)), void *data)
+char* get_downtime_comment(char* host_name, char* svc_desc)
 {
-	g_counters[COUNTER_NEB_CALLBACKS]++;
-	struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
-    if( ts->event_type == EVENT_LOG_ROTATION){
-    	if( g_thread_running == 1 ){
-    		logger( LG_CRIT, "##### DAS LOGROTATE EVENT - DIESMAL DAS RICHTIGE" );
-    		livestatus_log_initial_states();
-    	}
-    }
-
-    update_timeperiods_cache(ts->timestamp.tv_sec);
-    return 0;
-}
-
-extern scheduled_downtime *scheduled_downtime_list;
-char* get_downtime_comment(char* host_name, char* svc_desc){
 	char* comment;
 	int matches = 0;
 	scheduled_downtime* dt_list = scheduled_downtime_list;
-	while (dt_list != NULL){
-		if( dt_list->type == HOST_DOWNTIME ){
-			if( strcmp(dt_list->host_name, host_name) == 0 ) {
+	while (dt_list != NULL) {
+		if (dt_list->type == HOST_DOWNTIME) {
+			if (strcmp(dt_list->host_name, host_name) == 0) {
 				matches++;
 				comment = dt_list->comment;
 			}
 		}
-		if( svc_desc != NULL && dt_list->type == SERVICE_DOWNTIME ){
-			if( strcmp(dt_list->host_name, host_name) == 0 &&
-		        strcmp(dt_list->service_description, svc_desc) == 0
-			){
+		if (svc_desc != NULL && dt_list->type == SERVICE_DOWNTIME) {
+			if( strcmp(dt_list->host_name, host_name) == 0
+					&& strcmp(dt_list->service_description, svc_desc) == 0) {
 				matches++;
 				comment = dt_list->comment;
 			}
@@ -482,7 +467,7 @@ void livestatus_log_initial_states(){
 	host *h = (host *)host_list;
 	char buffer[8192];
 	while (h) {
-		if( h->scheduled_downtime_depth > 0 ){
+		if (h->scheduled_downtime_depth > 0) {
 			sprintf(buffer,"HOST DOWNTIME ALERT: %s;STARTED;%s", h->name, get_downtime_comment(h->name, NULL));
 			write_to_all_logs(buffer, LG_INFO);
 
@@ -492,8 +477,9 @@ void livestatus_log_initial_states(){
 	// Log DOWNTIME services
 	service *s = (service *)service_list;
 	while (s) {
-		if( s->scheduled_downtime_depth > 0 ){
-			sprintf(buffer,"SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name, s->description, get_downtime_comment(s->host_name, s->description));
+		if (s->scheduled_downtime_depth > 0) {
+			sprintf(buffer,"SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name, s->description,
+					get_downtime_comment(s->host_name, s->description));
 			write_to_all_logs(buffer, LG_INFO);
 		}
 		s = s->next;
@@ -501,6 +487,23 @@ void livestatus_log_initial_states(){
 	// Log TIMERPERIODS
 	log_timeperiods_cache();
 }
+
+
+int broker_event(int event_type __attribute__ ((__unused__)), void *data)
+{
+	g_counters[COUNTER_NEB_CALLBACKS]++;
+	struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
+    if( ts->event_type == EVENT_LOG_ROTATION){
+    	if( g_thread_running == 1 ){
+    		livestatus_log_initial_states();
+    	}
+    }
+
+    update_timeperiods_cache(ts->timestamp.tv_sec);
+    return 0;
+}
+
+
 
 int broker_process(int event_type __attribute__ ((__unused__)), void *data)
 {

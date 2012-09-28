@@ -11,6 +11,7 @@
           information for a specific list of hosts or aggregation groups.
     * BI: Added new config option bi_compile_log to collect statistics about
           aggregation compilations
+    * FIX: Fixed releasing of locks and livestatus connections when logging out
 
 1.2.0p3:
     Mulitisite

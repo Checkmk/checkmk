@@ -386,7 +386,9 @@ def handler(req, profiling = True):
         else:
             response_code = apache.HTTP_BAD_GATEWAY
 
-    except apache.SERVER_RETURN:
+    except (apache.SERVER_RETURN,
+            (apache.SERVER_RETURN, apache.HTTP_UNAUTHORIZED),
+            (apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY)):
         release_all_locks()
         html.live = None
         raise

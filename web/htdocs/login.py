@@ -131,7 +131,21 @@ def check_auth_cookie(cookie_name):
     # Return the authenticated username
     return username
 
+def check_auth_automation():
+    secret = html.var("_secret").strip()
+    user = html.var("_username").strip()
+    del html.req.vars['_username']
+    del html.req.vars['_secret']
+    if secret and user and "/" not in user:
+        path = defaults.var_dir + "/web/" + user + "/automation.secret"
+        if os.path.isfile(path) and file(path).read().strip() == secret:
+            return user
+    raise MKAuthException(_("Invalid automation secret for user %s") % user)
+
 def check_auth():
+    if html.var("_secret"):
+        return check_auth_automation()
+
     for cookie_name in html.get_cookie_names():
         if cookie_name.startswith('auth_'):
             try:

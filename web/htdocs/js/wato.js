@@ -506,7 +506,7 @@ function wato_replication_finish() {
 function wato_randomize_secret(id, len) {
     var secret = "";
     for (var i=0; i<len; i++) {
-        var c = parseInt((126-33) * Math.random() + 33);
+        var c = parseInt(26 * Math.random() + 64);
         secret += String.fromCharCode(c);
     }
     var oInput = document.getElementById(id);

@@ -7779,7 +7779,7 @@ def mode_edit_user(phase):
     html.radiobutton("authmethod", "secret", is_automation,
                      _("Automation secret for machine accounts"))
     html.write("<ul>")
-    html.text_input("secret", user.get("automation_secret", ""), size=21,
+    html.text_input("secret", user.get("automation_secret", ""), size=30,
                     id="automation_secret")
     html.write(" ")
     html.write("<b style='position: relative; top: 4px;'> &nbsp;")

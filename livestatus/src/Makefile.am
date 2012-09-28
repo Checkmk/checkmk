@@ -28,8 +28,7 @@ unixcat_LDADD = -lpthread
 
 livecheck_SOURCES = livecheck.c strutil.cc check_icmp.c
 
-pkglib_LIBRARIES = livestatus.so 
-pkglib_PROGRAMS = livecheck
+pkglib_LIBRARIES = livestatus.so livecheck 
 livestatus_so_SOURCES = \
 	AndingFilter.cc ClientQueue.cc Column.cc ColumnsColumn.cc CustomVarsExplicitColumn.cc \
 	ContactsColumn.cc CustomVarsColumn.cc CustomVarsFilter.cc DoubleColumn.cc \
@@ -45,7 +44,7 @@ livestatus_so_SOURCES = \
 	StringColumn.cc StringColumnFilter.cc strutil.cc Table.cc TableColumns.cc \
 	TableCommands.cc TableContacts.cc TableDownComm.cc TableHostgroups.cc \
 	TableHosts.cc TableServicegroups.cc TableServices.cc TableStatus.cc  \
-	LogEntry.cc Logfile.cc TableLog.cc TableTimeperiods.cc TableContactgroups.cc \
+	LogEntry.cc LogCache.cc Logfile.cc TableStateHistory.cc TableLog.cc TableTimeperiods.cc TableContactgroups.cc \
 	ContactgroupsMemberColumn.cc OffsetStringMacroColumn.cc OffsetStringServiceMacroColumn.cc \
 	OffsetStringHostMacroColumn.cc StatsColumn.cc IntAggregator.cc CountAggregator.cc \
 	DoubleAggregator.cc AttributelistColumn.cc AttributelistFilter.cc \

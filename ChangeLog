@@ -2,9 +2,7 @@
     Event Console:
     * Moved source of Event Console into Check_MK project
 
-1.2.0p3:
-    Mulitisite
-    * Added "view" parameter to dashlet_pnpgraph webservice
+    Multisite:
     * BI: Added missing localizations
     * BI: Added option bit_precompile_on_demand to split compilations of
           the aggregations in several fragments. If possible only the needed
@@ -13,6 +11,10 @@
           information for a specific list of hosts or aggregation groups.
     * BI: Added new config option bi_compile_log to collect statistics about
           aggregation compilations
+
+1.2.0p3:
+    Mulitisite
+    * Added "view" parameter to dashlet_pnpgraph webservice
 
     WATO
     * Added "profile" option to be configurable via browser

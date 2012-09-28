@@ -28,7 +28,6 @@ import defaults, config
 
 def page_index():
     start_url = html.var("start_url", config.start_url)
-    html.req.headers_out.add("Cache-Control", "max-age=7200, public");
     if "%s" in config.page_heading:
         heading = config.page_heading % (defaults.omd_site or _("Multisite"))
     else:

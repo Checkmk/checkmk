@@ -42,6 +42,28 @@ TimeperiodsCache::~TimeperiodsCache()
     pthread_mutex_destroy(&_cache_lock);
 }
 
+void TimeperiodsCache::logCurrentTimeperiods(){
+    pthread_mutex_lock(&_cache_lock);
+    time_t now = time(0);
+    // Loop over all timeperiods and compute if we are
+    // currently in. Detect the case where no time periods
+    // are known (yet!). This might be the case when a timed
+    // event broker message arrives *before* the start of the
+    // event loop.
+    timeperiod *tp = timeperiod_list;
+    while (tp) {
+        bool is_in = 0 == check_time_against_period(now, tp);
+        // check previous state and log transition if state has changed
+        _cache_t::iterator it = _cache.find(tp);
+        if (it == _cache.end()) { // first entry
+            logTransition(tp->name, -1, is_in ? 1 : 0);
+            _cache.insert(std::make_pair(tp, is_in));
+        }
+        logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
+        tp = tp->next;
+    }
+    pthread_mutex_unlock(&_cache_lock);
+}
 
 void TimeperiodsCache::update(time_t now)
 {

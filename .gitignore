@@ -5,6 +5,7 @@
 check_mk-*.spec
 check_mk-*.tar.gz
 mk-livestatus-*.tar.gz
+mkeventd-*.tar.gz
 rpm.buildroot/
 rpm.topdir/
 *.rpm
@@ -14,4 +15,5 @@ var/
 .bugs/.my_ids
 .bugs/.last
 check-mk-agent-*.exe
-
+.metadata
+RemoteSystemsTempFiles

@@ -49,13 +49,17 @@ class uriinfo:
     # TODO: URI-Encode von Variablen!
     def geturi(self):
         uri = self.req.myfile + ".py"
-        if len(self.req.vars):
+        if self.req.vars:
             uri += "?" + urlencode(self.req.vars.items())
         return uri
 
     # [('varname1', value1), ('varname2', value2) ]
     def makeuri(self, addvars):
-        return self.req.myfile + ".py?" + urlencode_vars(self.req.vars.items() + addvars)
+        v = self.req.vars.items() + addvars
+        if v:
+            return self.req.myfile + ".py?" + urlencode_vars(v)
+        else:
+            return self.req.myfile + ".py"
 
     # Liste von Hidden-Felder erzeugen aus aktueller URI
     def hiddenfields(self, omit=[]):
@@ -87,25 +91,20 @@ def attrencode(value):
 # is saving more then 90% of the total HTML generating time
 # on more complex pages!
 def urlencode_vars(vars):
-    output = ""
+    output = []
     for varname, value in vars:
-        if output != "":
-            output += "&"
-
 	if type(value) == int:
 	    value = str(value)
         elif type(value) == unicode:
             value = value.encode("utf-8")
 
-        output += varname
-        output += "="
         try:
             # urllib is not able to encode non-Ascii characters. Yurks
-            output += urllib.quote(value)
+            output.append(varname + '=' + urllib.quote(value))
         except:
-            output += urlencode(value) # slow but working
+            output.append(varname + '=' + urlencode(value)) # slow but working
 
-    return output
+    return '&'.join(output)
 
 def urlencode(value):
     if type(value) == unicode:
@@ -332,16 +331,23 @@ class html:
 
     # [('varname1', value1), ('varname2', value2) ]
     def makeuri(self, addvars, remove_prefix = None):
-        vars = [ (v, self.var(v)) for v in self.req.vars if not v.startswith("_") ]
+        vars = [ (v, self.var(v)) for v in self.req.vars if v[0] != "_" ]
         if remove_prefix != None:
             vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]
-        return self.req.myfile + ".py?" + urlencode_vars(vars + addvars)
+        vars = vars + addvars
+        if vars:
+            return self.req.myfile + ".py?" + urlencode_vars(vars)
+        else:
+            return self.req.myfile + ".py"
 
     def makeactionuri(self, addvars):
         return self.makeuri(addvars + [("_transid", self.fresh_transid())])
 
     def makeuri_contextless(self, vars):
-        return self.req.myfile + ".py?" + urlencode_vars(vars)
+        if vars:
+            return self.req.myfile + ".py?" + urlencode_vars(vars)
+        else:
+            return self.req.myfile + ".py"
 
     def image_button(self, varname, title, cssclass = ''):
         if not self.mobile:

@@ -37,7 +37,7 @@ def check_fsc_temp(item, _no_params, info):
         crit = int(line[3])
         infotext = "%d C (levels at %d C / %d C)" % (current, warn, crit)
         perfdata = [ ("temp", current, warn, crit, 0 ) ]
-        if current == -1:
+        if current == -1 or current == 4294967295:
             return(3, "UNKNOWN - Problem with sensor")
         elif current >= crit and crit > 0:
             return (2, "CRIT - %s" % infotext, perfdata)

@@ -38,12 +38,15 @@
 #include "TableDownComm.h"
 #include "TableStatus.h"
 #include "TableLog.h"
+#include "TableStateHistory.h"
 #include "TableColumns.h"
 #include "OutputBuffer.h"
 #include "InputBuffer.h"
+#include "LogCache.h"
 
 class Store
 {
+    LogCache           _log_cache;
     TableContacts      _table_contacts;
     TableCommands      _table_commands;
     TableHostgroups    _table_hostgroups;
@@ -59,6 +62,7 @@ class Store
     TableDownComm      _table_comments;
     TableStatus        _table_status;
     TableLog           _table_log;
+    TableStateHistory  _table_statehistory;
     TableColumns       _table_columns;
 
     typedef map<string, Table *> _tables_t;
@@ -66,6 +70,7 @@ class Store
 
 public:
     Store();
+    LogCache* logCache(){ return &_log_cache; };
     void registerHostgroup(hostgroup *);
     void registerComment(nebstruct_comment_data *);
     void registerDowntime(nebstruct_downtime_data *);
@@ -76,6 +81,7 @@ private:
     void answerGetRequest(InputBuffer *, OutputBuffer *, const char *);
     void answerCommandRequest(const char *);
 };
+
 
 #endif // Store_h
 

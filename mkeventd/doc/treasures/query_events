@@ -1,0 +1,34 @@
+#!/usr/bin/python
+# Example program for accessing status of event console
+
+import socket, os
+
+# Create Unix socket and connect to status socket
+path = os.getenv("OMD_ROOT") + "/tmp/run/mkeventd/status"
+sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+sock.connect(path)
+
+# Send query
+sock.send("GET events\nFilter: event_phase = open")
+
+# Read response and convert Python source to Python object
+response_text = ""
+while True:
+    chunk = sock.recv(8192)
+    response_text += chunk
+    if not chunk:
+        break
+response = eval(response_text)
+
+# The name of the column headers are the first item of the result list
+headers = response[0]
+
+# Output all results
+for row in response[1:]:
+    with_headers = zip(headers, row)
+    with_headers.sort()
+
+    for key, value in with_headers:
+        print "%-20s: %s" % (key, value)
+    print
+

@@ -1,0 +1,103 @@
+#!/usr/bin/python
+
+import os, socket, sys
+
+socket_path = os.getenv("OMD_ROOT") + "/tmp/run/mkeventd/status"
+
+def query(query, remote_host):
+    try:
+        if remote_host:
+            parts = remote_host.split(":")
+            host = parts[0]
+            if len(parts) == 2:
+                port = int(parts[1])
+            else:
+                port = 6558
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(10)
+            sock.connect((host, port))
+        else:
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock.settimeout(3)
+            sock.connect(socket_path)
+
+        sock.send(query)
+
+        response_text = ""
+        while True:
+            chunk = sock.recv(8192)
+            response_text += chunk
+            if not chunk:
+                break
+
+        return eval(response_text)
+    except SyntaxError, e:
+        sys.stdout.write("UNKNOWN - Invalid answer from event daemon\n%s\nQuery was:\n%s\n" \
+                % (e, query))
+        sys.exit(3)
+
+    except Exception, e:
+        if remote_host:
+            via = "TCP %s:%d" % (host, port)
+        else:
+            via = "UNIX socket %s" % socket_path
+        sys.stdout.write("UNKNOWN - Cannot connect to event daemon via %s: %s\n" % (via, e))
+        sys.exit(3)
+
+try:
+    remote_host = None
+    if sys.argv[1] == '-H':
+        remote_host = sys.argv[2]
+        del sys.argv[1:3]
+    host_name = sys.argv[1]
+    if len(sys.argv) > 2:
+        application = sys.argv[2]
+    else:
+        application = None
+except:
+    sys.stdout.write("Usage: check_mkevents [-H REMOTE:PORT] HOST [APPLICATION]\n")
+    sys.exit(3)
+
+q = "GET events\n" \
+    "Filter: event_host = %s\n" % host_name
+
+if application:
+    q += "Filter: event_application ~~ %s\n" % application
+
+q += "Filter: event_phase in open ack\n"
+
+response = query(q, remote_host)
+headers = response[0]
+worst_state = 0
+count = 0
+unhandled = 0
+for line in response[1:]:
+    row = dict(zip(headers, line))
+    s = row["event_state"]
+    if s == 3:
+        if worst_state < 2:
+            worst_state = 3
+    else:
+        worst_state = max(worst_state, s)
+    count += 1
+    if row["event_phase"] == 'open':
+        unhandled += 1
+
+nagios_state_names = {
+    0 : "OK",
+    1 : "WARN",
+    2 : "CRIT",
+    3 : "UNKNOWN",
+}
+
+if count == 0 and application:
+    sys.stdout.write("OK - no events for %s on host %s\n" % (application, host_name))
+elif count == 0:
+    sys.stdout.write("OK - no events for %s\n" % host_name)
+else:
+    sys.stdout.write(nagios_state_names[worst_state] + \
+         " - %d events (%d unacknowledged), worst state is %s\n" % \
+         (count, unhandled, nagios_state_names[worst_state]))
+
+sys.exit(worst_state)
+

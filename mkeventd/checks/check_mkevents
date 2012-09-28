@@ -1,0 +1,24 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+
+def check_mkevents_arguments(params):
+    args = ""
+    if "remote" in params:
+        args += "-H %s:%d " % (params["remote"])
+    args += params.get("hostspec", "$HOSTADDRESS$")
+    if "application" in params:
+        args += " " + quote_shell_string(params["application"])
+    return args
+
+def check_mkevents_description(params):
+    if "application" in params:
+        return "Events %s" % params["application"]
+    else:
+        return "Events"
+
+active_check_info['mkevents'] = {
+    "command_line"        : '$USER1$/check_mkevents $ARG1$',
+    "argument_function"   : check_mkevents_arguments,
+    "service_description" : check_mkevents_description,
+    "has_perfdata"        : False,
+}

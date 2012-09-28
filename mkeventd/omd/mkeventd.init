@@ -1,0 +1,82 @@
+#!/bin/bash
+
+unset LANG
+
+PIDFILE=$OMD_ROOT/tmp/run/mkeventd/pid
+STATUS_SOCKET=$OMD_ROOT/tmp/run/mkeventd/status
+DAEMON=$OMD_ROOT/bin/mkeventd
+STATEFILE=$OMD_ROOT/var/mkeventd/status
+THE_PID=$(cat $PIDFILE 2>/dev/null)
+# OPTS="--debug"
+OPTS=""
+
+. $OMD_ROOT/etc/omd/site.conf
+if [ "$CONFIG_MKEVENTD" != on ] ; then
+    exit 5
+fi
+
+case "$1" in
+    start)
+ 	echo -n 'Starting mkeventd...'
+        $DAEMON $OPTS
+        echo OK
+    ;;
+    stop)
+	echo -n 'Stopping mkeventd...'
+        if [ -z "$THE_PID" ] ; then
+            echo 'Not running.'
+        else
+            echo "killing $THE_PID..."
+            kill $THE_PID
+        fi
+    ;;
+    restart)
+	$0 stop
+	$0 start
+    ;;
+    reload)
+	echo -n 'Reloading mkeventd...'
+        if [ -z "$THE_PID" ] ; then
+            echo 'Not running.'
+            exit 1
+        else
+            echo "killing $THE_PID with SIGHUP..."
+            kill -1 $THE_PID
+        fi
+    ;;
+        
+    status)
+	echo -n 'Checking status of mkeventd...'
+        if [ -z "$THE_PID" ] ; then
+            echo "not running (PID file missing)"
+            exit 1
+        elif ! kill -0 $THE_PID ; then
+            echo "not running (PID file orphaned)"
+            exit 1
+        else
+            echo "running"
+            exit 0
+        fi
+    ;;
+    flush)
+        if [ -n "$THE_PID" ] && kill -0 $THE_PID ; then  
+            echo -n "Flushing current state and history..."
+            result=$(echo "COMMAND FLUSH" | unixcat $STATUS_SOCKET)
+            if [ "$result" = "None" ] ; then
+                echo OK
+                exit 0
+            else
+                echo "ERROR: $result"
+                exit 1
+            fi
+        else
+            echo -n "Deleting status and history files..."
+            rm -f $OMD_ROOT/var/{status,history/*}
+            echo OK
+            exit 0
+        fi
+    ;;
+    *)
+	echo "Usage: $0 {start|stop|restart|reload|status|flush}"
+    ;;
+esac

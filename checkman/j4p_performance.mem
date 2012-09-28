@@ -30,7 +30,7 @@ item:
 
 examples:
  # Set default levels for heap memory to 500 MB / 800 MB
- j4p_mem_default_levels = (500, 800)
+ j4p_performance_mem_default_levels = (500, 800)
 
 perfdata:
  Two variables: the heap memory usage and the non heap memory usage
@@ -46,5 +46,5 @@ warning (int): The warning level for used memory in MB
 critical (int): The critical level for used memory in MB
 
 [configuration]
-j4p_mem_default_levels (int, int): Default levels for memory usage in MB. This
+j4p_performance_mem_default_levels (int, int): Default levels for memory usage in MB. This
     is preset to {(1000, 2000)}.

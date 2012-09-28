@@ -5,6 +5,7 @@
 check_mk-*.spec
 check_mk-*.tar.gz
 mk-livestatus-*.tar.gz
+mkeventd-*.tar.gz
 rpm.buildroot/
 rpm.topdir/
 *.rpm

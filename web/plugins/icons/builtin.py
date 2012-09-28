@@ -447,9 +447,12 @@ multisite_icons.append({
 #   |           |___/ |___/          |___/                                 |
 #   +----------------------------------------------------------------------+
 
+# Link to aggregations of the host/service
+# When precompile on demand is enabled, this icon is displayed for all hosts/services
+# otherwise only for the hosts/services which are part of aggregations.
 def paint_aggregations(what, row, tags, custom_vars):
-    # Link to aggregations
-    if bi.is_part_of_aggregation(what, row["site"], row["host_name"],
+    if config.bi_precompile_on_demand \
+       or bi.is_part_of_aggregation(what, row["site"], row["host_name"],
                                  row.get("service_description")):
          return link_to_view('<img class=icon src="images/icon_aggr.gif" title="%s">' %
                   _('Aggregations containing this %s') % what, row, 'aggr_' + what)

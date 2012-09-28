@@ -3319,7 +3319,7 @@ def mode_changelog(phase):
             table += '</table>'
             c = wato_confirm(_("Confirm activating foreign changes"),
               '<img class=foreignchanges src="images/icon_foreign_changes.png">' + 
-              _("There are some changes made by you collegues that you will "
+              _("There are some changes made by your collegues that you will "
                 "activate if you proceed:") + table + 
               _("Do you really want to proceed?"))
             if c == False:

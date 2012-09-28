@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Alias: Start Daemon for Check_MK Event Console
+# Menu: Addons
+# Description: 
+#  This option enabled mkeventd - the event corelation and
+#  classification daemon of Check_MK. This daemon will receive
+#  events via a pipe at tmp/run/mkeventd/events. It understands
+#  plain syslog format as well as RFC 3164 format (which includes
+#  the priority and facility).
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable"
+        echo "off: disable"
+    ;;
+    set)
+        if [ "$2" = on ] ; then
+            enabled=True
+        else
+            enabled=False
+        fi
+        echo -e "# Set by OMD hook MKEVENTD, do not change here!\nmkeventd_enabled = $enabled" \
+            > $OMD_ROOT/etc/check_mk/multisite.d/mkeventd.mk
+    ;;
+esac

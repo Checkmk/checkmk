@@ -1,0 +1,25 @@
+SITE=${SITE:-ev}
+OMD_ROOT=/omd/sites/${SITE}
+
+for dir in web checks pnp-templates
+do
+    if [ -e "$dir" ] ; then
+        sudo rsync -var $dir/ $OMD_ROOT/share/check_mk/$dir/
+    fi
+done
+make -C src
+sudo install -m 755 bin/mkeventd src/mkevent $OMD_ROOT/bin/
+sudo touch $OMD_ROOT/share/check_mk/web/htdocs/*.py
+sudo install -m 755 omd/mkeventd.init $OMD_ROOT/etc/init.d/mkeventd
+sudo sed -i "s@###ROOT###@$OMD_ROOT@g"  $OMD_ROOT/etc/init.d/mkeventd
+sudo ln -sfn ../init.d/mkeventd $OMD_ROOT/etc/rc.d/10-mkeventd
+sudo install -m 755 omd/MKEVENTD.hook $OMD_ROOT/lib/omd/hooks/MKEVENTD
+sudo touch $OMD_ROOT/etc/check_mk/mkeventd.mk
+sudo install -m 755 lib/check_mkevents $OMD_ROOT/lib/nagios/plugins
+sudo install -m 644 checks/* $OMD_ROOT/share/check_mk/checks
+
+sudo chown -R $SITE.$SITE $OMD_ROOT/{etc,local,var}
+sudo omd restart $SITE apache
+sudo omd status $SITE mkeventd && sudo omd restart $SITE mkeventd
+
+

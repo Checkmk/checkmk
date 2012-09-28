@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.2.1i1
+VERSION        	= 1.2.1i2
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -54,7 +54,7 @@ help:
 	@echo "make headers                   --> create/update fileheades"
 	@echo "make healspaces                --> remove trailing spaces in code"
 
-dist: mk-livestatus
+dist: mk-livestatus mk-eventd
 	@echo "--------------------------------------------------------------------------"
 	@echo -n "Checking permissions... with find -not -perm -444..." && [ -z "$$(find -not -perm -444)" ] && echo OK
 	@echo "Making $(DISTNAME)"
@@ -87,6 +87,11 @@ dist: mk-livestatus
 	@echo "   FINISHED. "
 	@echo "=============================================================================="
 
+mk-eventd:
+	tar -c $(TAROPTS) --exclude=.f12 \
+	    --transform 's,^mkeventd,mkeventd-$(VERSION),' \
+	    -zf mkeventd-$(VERSION).tar.gz mkeventd
+
 mk-livestatus:
 	if [ ! -e livestatus/configure ] ; then \
 		cd livestatus && aclocal && autoheader && automake -a && autoconf ; \
@@ -113,7 +118,7 @@ version:
 setversion:
 	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
 	for agent in agents/* ; do \
-	    if [ "$$agent" != agents/windows -a "$$agent" != agents/plugins ] ; then \
+	    if [ "$$agent" != agents/windows -a "$$agent" != agents/plugins -a "$$agent" != agents/hpux ] ; then \
 	        sed -i 's/echo Version: [0-9.a-z]*/'"echo Version: $(NEW_VERSION)/g" $$agent; \
 	    fi ; \
 	done ; \
@@ -121,6 +126,7 @@ setversion:
 	sed -i 's/#define CHECK_MK_VERSION .*/#define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' agents/windows/check_mk_agent.cc ; \
 	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' agents/windows/installer.nsi ; \
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
+	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' mkeventd/bin/mkeventd ; \
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files ; \
 	cd agents/windows ; rm *.exe ; make ; cd ../.. ; \
@@ -181,7 +187,10 @@ deb-agent: $(NAME)-agent-$(VERSION)-1.noarch.rpm $(NAME)-agent-logwatch-$(VERSIO
 
 
 clean:
-	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe mk-livestatus-*.tar.gz $(NAME)-*.tar.gz *~ counters autochecks precompiled cache
+	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe \
+	       mkeventd-*.tar.gz mk-livestatus-*.tar.gz \
+	       $(NAME)-*.tar.gz *~ counters autochecks \
+	       precompiled cache
 	find -name "*~" | xargs rm -f
 
 mrproper:

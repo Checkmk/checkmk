@@ -1,0 +1,9 @@
+Title: Downtime Scheduler
+Component: wato
+State: open
+Date: 2012-09-28 14:34:47
+Targetversion: future
+Class: phantasm
+
+A Wato Future, to set automatic downtimes eg.: 
+Every day from 6am to 8am Backup time, every Saturday a reboot between 5 and 6 etc.

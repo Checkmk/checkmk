@@ -35,7 +35,11 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 	
 	public static void main(String[] args){
 		try {
-			new LivestatusQueryExecuter("localhost 6557\nGET services\nColumns: host_name check_command").createDatasource();
+			//new LivestatusQueryExecuter("localhost 6561\nGET services\nColumns: host_name check_command").createDatasource();
+		
+			String query = "localhost 6561\nGET statehist\nColumns: state host_name service_description\nFilter: time >= 1344195720\nFilter: time <= 1344196820\nFilter: service_description = CPU load\nFilter: host_name = localhost\nStats: sum duration_ok\nStats: sum duration_warning\nStats: sum duration_critical";
+			new LivestatusQueryExecuter(query).createDatasource();
+			
 		} catch (JRException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -88,11 +92,6 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 		try {
 			inteAddress = InetAddress.getByName(server);
 			socketAddress = new InetSocketAddress(inteAddress, server_port);
-			if( socket != null ){ // Close previous connections
-				sockOutput.close();
-				sockInput.close();
-				socket.close();
-			}
 			socket = new Socket();
 			socket.connect(socketAddress, timeoutInMs);
 			sockOutput = socket.getOutputStream();
@@ -102,6 +101,7 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 			throw new JRException("Unable to connect to " + server + " " + server_port + " " + e.getMessage());
 		}
 	}
+	
 	
 	public LivestatusDatasource createDatasource() throws JRException {
 		// conduct query syntax check and determine connection parameters
@@ -119,39 +119,51 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 			
 			// query the column types and their descriptions
 			String table_name = livestatus_query.split("\n")[0].split(" ")[1];
-			String desc_query = String.format("GET columns\nFilter: table = %s\nColumnHeaders: off\n\n", table_name);
+			String desc_query = String.format("GET columns\nFilter: table = %s\nColumnHeaders: off\nResponseHeader: fixed16\nOutputFormat: csv\nKeepAlive: on\n\n", table_name);
 			sockOutput.write(desc_query.getBytes(), 0, desc_query.getBytes().length); 
-		
+			
 			// read description information
+			String[] responseHeader = in.readLine().split("\\s");
+			int response_size = Integer.parseInt(responseHeader[responseHeader.length-1]);
+			int offset = 0;
 			String line;
 			line = in.readLine(); // Skip column headers
-			while( true ){
+			offset += line.getBytes().length + 1;
+			while( offset < response_size ){
 				line = in.readLine();
 				if( line == null )
 					break;
+				offset += line.getBytes().length + 1;
 				map_fielddesc.put(line.split(";")[1],line.split(";")[0]);
 				map_fieldtype.put(line.split(";")[1],line.split(";")[3]);
 			}
 
-			// reinitialize socket, TODO: reuse the old socket instead
-			setupSocket();
-						
 			// send livestatus query to socket
 			sockOutput.write(livestatus_query.getBytes(), 0, livestatus_query.getBytes().length); 
 			sockOutput.write(fixed_appendix.getBytes(), 0, fixed_appendix.getBytes().length); 
 		
 			// check if response is valid
-			String responseHeader = in.readLine();
-			if( ! responseHeader.startsWith("200") )
-				throw new JRException("Livestatus response: \n" + responseHeader + " \n" + in.readLine());
+			responseHeader = in.readLine().split("\\s");
+			if( ! responseHeader[0].equals("200") ){
+				String error = "";
+				while(true){
+					line = in.readLine();
+					if( line == null )
+						break;
+					error.concat(line+"\n");
+				}
+				throw new JRException("Livestatus response: \n" + responseHeader + " \n" + error);
+			}
 			
 			// check if response size not exceeding 10MB
-			int response_size = Integer.parseInt(responseHeader.split(" ")[responseHeader.split(" ").length - 1]);
+			response_size = Integer.parseInt(responseHeader[responseHeader.length-1]);
 			if( response_size > 10 * 1024 * 1024 )
 				throw new JRException("Livestatus answer exceeds 10 MB. Aborting..");
-			
+		
 			// read content
-			while( true ){
+			offset = 0;
+			offset += line.getBytes().length + 1;
+			while( offset < response_size ){
 				line = in.readLine();
 				if( line == null )
 					break;

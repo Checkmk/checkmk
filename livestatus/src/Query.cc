@@ -193,6 +193,9 @@ void Query::addColumn(Column *column)
     _columns.push_back(column);
 }
 
+void Query::setError(int error_code, const char* msg){
+	_output->setError(error_code, msg);
+}
 
 bool Query::hasNoColumns()
 {
@@ -770,7 +773,6 @@ bool Query::processDataset(void *data)
         // not abort the query. We handle it like Limit:
         return false;
     }
-
 
     if (_filter.accepts(data) && (!_auth_user || _table->isAuthorized(_auth_user, data))) {
         _current_line++;

@@ -100,6 +100,7 @@ public:
     void setDefaultColumns(const char *);
     void addColumn(Column *column);
     void setShowColumnHeaders(bool x) { _show_column_headers = x; }
+    void setError(int error_code, const char * msg);
     bool hasNoColumns();
     contact *authUser() { return _auth_user; }
     void outputDatasetBegin();

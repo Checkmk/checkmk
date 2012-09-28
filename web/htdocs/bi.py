@@ -204,7 +204,8 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     global g_cache, g_user_cache, g_compiled_everything
 
     def log(s):
-        file(config.bi_compile_log, "a").write(s)
+        if compile_logging():
+            file(config.bi_compile_log, "a").write(s)
 
     new_config_information = cache_needs_update()
     if new_config_information:

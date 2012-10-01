@@ -5,8 +5,6 @@
     Multisite:
     * Enable automation login with _username= and _secret=, while
       _secret is the content of var/check_mk/web/$USER/automation.secret
-
-    Multisite:
     * BI: Added missing localizations
     * BI: Added option bit_precompile_on_demand to split compilations of
           the aggregations in several fragments. If possible only the needed

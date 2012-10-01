@@ -10,6 +10,9 @@
     Livestatus
     * FIX: comments_with_info in service table was always empty
 
+    Checks & Agents:
+    * FIX: Linux mk_logwatch: iregex Parameter was never used
+
 1.2.1i1:
     Core:
     * Allow to add options to rules. Currently the options "disabled" and

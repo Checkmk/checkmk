@@ -63,8 +63,6 @@
 win_dhcp_pools_default_levels = (10, 5)
 win_dhcp_pools_inventorize_empty = False
 
-check_config_variables += [ "win_dhcp_pools_inventorize_empty"]
-
 win_dhcp_pools_stats_translate = {
     'Entdeckungen': 'Discovers',
     'Angebote': 'Offers',

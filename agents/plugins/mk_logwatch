@@ -241,7 +241,6 @@ for filenames, patterns in config:
     opt_maxlines = None
     opt_maxtime = None
     opt_regex = None
-    opt_iregex = None
     opt_overflow = 'C'
     opt_overflow_level = 2
     try:
@@ -259,7 +258,7 @@ for filenames, patterns in config:
             elif key == 'regex':
                 opt_regex = re.compile(value)
             elif key == 'iregex':
-                opt_iregex = re.compile(value, re.I)
+                opt_regex = re.compile(value, re.I)
             else:
                 raise Exception("Invalid option %s" % key)
     except Exception, e:

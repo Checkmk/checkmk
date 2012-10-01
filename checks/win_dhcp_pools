@@ -61,6 +61,9 @@
 #                 No. of pending offers = 0.
 
 win_dhcp_pools_default_levels = (10, 5)
+win_dhcp_pools_inventorize_empty = False
+
+check_config_variables += [ "win_dhcp_pools_inventorize_empty"]
 
 win_dhcp_pools_stats_translate = {
     'Entdeckungen': 'Discovers',
@@ -82,9 +85,28 @@ def parse_win_dhcp_pools(info):
 
 def inventory_win_dhcp_pools(info):
     inventory = []
+    if win_dhcp_pools_inventorize_empty == True:
+        for line in parse_win_dhcp_pools(info):
+            if win_dhcp_pools_stats_translate.get(line[0], line[0]) == 'Subnet':
+                inventory.append((line[1], 'win_dhcp_pools_default_levels'))  
+        return inventory
+  
+    inBlock = False
+    last_pool = ""
+    poolStats = []
     for line in parse_win_dhcp_pools(info):
         if win_dhcp_pools_stats_translate.get(line[0], line[0]) == 'Subnet':
-            inventory.append((line[1], 'win_dhcp_pools_default_levels'))
+            inBlock = True
+            last_pool = line[1]
+            continue
+        if inBlock:
+            poolStats.append(saveint(line[1]))
+        if len(poolStats) == 3:
+            inBlock = False
+            used, free, pending = poolStats
+            size = used + free + pending
+            if size > 0:
+                inventory.append((last_pool, 'win_dhcp_pools_default_levels'))  
     return inventory
 
 def check_win_dhcp_pools(item, params, info):

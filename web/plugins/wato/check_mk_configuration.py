@@ -563,6 +563,16 @@ register_configvar(group,
     )
 
 register_configvar(group,
+    "win_dhcp_pools_inventorize_empty",
+    Checkbox(
+        title = _("Invetorize empty windows dhcp pools"),
+        help = _("You can activate the inventorization of "
+                 "dhcp pools, which have no ip addresses in it"),
+        ),
+    need_restart = True
+    )
+
+register_configvar(group,
     "printer_supply_some_remaining_status",
     DropdownChoice(
         title = _("Printer supply some ramaining status"),

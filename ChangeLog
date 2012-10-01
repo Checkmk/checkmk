@@ -16,6 +16,10 @@
     * FIX: Fixed releasing of locks and livestatus connections when logging out
     * FIX: Fixed login/login confusions with index page caching
 
+    WATO:
+    * FIX: Implemented basic non HTTP 200 status code response handling in interactive
+           progress dialogs (e.g. bulk inventory mode)
+
 1.2.0p3:
     Mulitisite
     * Added "view" parameter to dashlet_pnpgraph webservice

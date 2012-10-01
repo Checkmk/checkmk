@@ -2530,6 +2530,7 @@ def mode_bulk_inventory(phase):
               (_("Total services"),   0) ], # stats table
             [ ("mode", "folder") ], # URL for "Stop/Finish" button
             50, # ms to sleep between two steps
+            fail_stats = [ 1 ],
         )
 
     else:
@@ -2900,6 +2901,7 @@ def mode_parentscan(phase):
             ],
             [ ("mode", "folder") ], # URL for "Stop/Finish" button
             50, # ms to sleep between two steps
+            fail_stats = [ 1 ],
         )
 
     else:
@@ -4019,7 +4021,9 @@ def hilite_errors(outdata):
 #   | buttons for aborting and pausing.                                    |
 #   '----------------------------------------------------------------------'
 
-def interactive_progress(items, title, stats, finishvars, timewait, success_stats = [], termvars = []):
+# success_stats: Fields from the stats list to use for checking if something has been found
+# fail_stats:    Fields from the stats list to used to count failed elements
+def interactive_progress(items, title, stats, finishvars, timewait, success_stats = [], termvars = [], fail_stats = []):
     if not termvars:
         termvars = finishvars;
     html.write("<center>")
@@ -4050,6 +4054,7 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
     html.write("</center>")
     json_items    = '[ %s ]' % ',\n'.join([ "'" + h + "'" for h in items ])
     success_stats = '[ %s ]' % ','.join(map(str, success_stats))
+    fail_stats    = '[ %s ]' % ','.join(map(str, fail_stats))
     # Remove all sel_* variables. We do not need them for our ajax-calls.
     # They are just needed for the Abort/Finish links. Those must be converted
     # to POST.
@@ -4057,9 +4062,9 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
     finish_url = make_link([("mode", "folder")] + finishvars)
     term_url = make_link([("mode", "folder")] + termvars)
 
-    html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", %s, "%s", "' + _("FINISHED.") + '");') %
+    html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", %s, %s, "%s", "' + _("FINISHED.") + '");') %
                      (html.var('mode'), base_url, json_items, finish_url,
-                      success_stats, term_url))
+                      success_stats, fail_stats, term_url))
 
 
 #.

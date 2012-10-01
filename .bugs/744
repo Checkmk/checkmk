@@ -1,0 +1,10 @@
+Title: Host- and Service Groups empty if contact not have the right for all members
+Component: livestatus
+State: open
+Date: 2012-10-01 15:54:12
+Targetversion: 1.2.0
+Class: bug
+
+On the Hostgroups (Summary) and the Servicegroups (Summary) all elements are missing,
+where a contact is not member for all childrens of element.
+For example, a hostgroup with ten hosts, is contact not member of all ten, the hostgroup doesent appear

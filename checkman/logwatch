@@ -88,5 +88,6 @@ logwatch_dir (string): Directory where log messages are
  replaced by backslashes.
 
 logwatch_service_output (string): Change the output of the service to ony
- print stats and not the last error message.  Default is {default},  use {small} if
- you only want to have the stats.
+ show the count of events whitout the last error message.  Default is {default} which 
+ shows the last error message and the count,  use {count} if
+ you only want to see the count. 

@@ -549,15 +549,17 @@ register_configvar(group,
 register_configvar(group,
     "logwatch_service_output",
     DropdownChoice(
-        title = _("Service output of Logwatch"),
-        help = _("You can change the output of the logwatch service "
-                 "between an view with oh"),
+        title = _("Service output for logwatch"),
+        help = _("You can change the plugin output of logwatch "
+                 "to show only the count of messages or also "
+                 "to show the last worst message"),
         choices = [
-            ( 'default' , _("Output last log message in service output") ),
-            ( 'small', _("Only print stats in service output")),
+            ( 'default' , _("Show count and last message") ),
+            ( 'count', _("Show only count")),
             ],
         default_value = 'default',
         ),
+    need_restart = True
     )
 
 register_configvar(group,

@@ -1,6 +1,7 @@
 1.2.0p3:
     Mulitisite
     * Added "view" parameter to dashlet_pnpgraph webservice
+    * FIX: BI: Assuming "OK" for hosts is now possible
 
     WATO
     * FIX: It is now possible to create clusters in empty folders

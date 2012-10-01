@@ -1,9 +1,12 @@
 Title: BI cannot assume UP host state
 Component: bi
-State: open
+Class: bug
+State: done
 Date: 2012-06-26 17:54:41
 Targetversion: 1.2.0
-Class: bug
 
 You can assume OK as service state but not UP
 as host state (just DOWN and UNREACH).
+
+2012-10-01 11:29:28: changed state open -> done
+Has just been fixed.

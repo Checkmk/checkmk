@@ -575,7 +575,7 @@ register_configvar(group,
 register_configvar(group,
     "printer_supply_some_remaining_status",
     DropdownChoice(
-        title = _("Printer supply some ramaining status"),
+        title = _("Printer supply some remaining status"),
         help = _("Set the reported nagios state when the fill state "
                  "is something between empty and small "
                  "remaining capacity"),

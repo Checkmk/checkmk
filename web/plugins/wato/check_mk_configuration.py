@@ -727,6 +727,16 @@ register_rule(group,
                  "the state of the host will stay at its last status.")),
     )
 
+register_rule(group,
+    "extra_host_conf:check_command",
+    TextAscii(
+        label = _("Command:"),
+        title = _("Check Command for Hosts Check"),
+        help = _("This parameter changes the default check_command for "
+                 "a host check"),
+        ),
+    )
+
 group = "monconf/" + _("Notifications")
 register_rule(group,
     "extra_host_conf:notifications_enabled",
@@ -864,15 +874,6 @@ register_rule(group,
         ),
         itemtype = "service")
 
-register_rule(group,
-    "extra_host_conf:check_command",
-    TextAscii(
-        label = _("Command:"),
-        title = _("Check Command for Hosts Check"),
-        help = _("This parameter changes the default check_command for "
-                 "a host check"),
-        ),
-    )
 
 register_rule(group,
     "extra_service_conf:notes_url",

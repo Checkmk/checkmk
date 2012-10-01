@@ -87,14 +87,16 @@ function toggle_assumption(oImg, site, host, service)
     current = current.substr(7);
     current = current.substr(0, current.length - 4);
     if (current == 'none')
+        // Assume WARN when nothing assumed yet
         current = '1';
-    else if (current == '3')
+    else if (current == '3' || (service == '' && current == '2'))
+        // Assume OK when unknown assumed (or when critical assumed for host)
         current = '0'
     else if (current == '0')
-        current = 'none'
-    else if (current == '2' && service == '')
+        // Disable assumption when ok assumed
         current = 'none'
     else
+        // In all other cases increas the assumption
         current = parseInt(current) + 1;
 
     var url = "bi_set_assumption.py?site=" + encodeURIComponent(site)

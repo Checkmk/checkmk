@@ -1,0 +1,148 @@
+Die LDAP-Anbindung kann sehr vielschichtig sein. Unterteilen wir mal in:
+
+1. Login: Die Validierung von Benutzername und Passwort
+2. User-Objekte/Attribute synchronisieren
+3. Rechnte: Gruppenmitgliedschaften
+
+1. Benötigte Konfigurationsoptionen
+--------
+
+multisite_login_modules = [ 'ldap', 'htpasswd' ]
+
+ldap_uri     = 'ldap://<address>:<port>'
+ldap_version = 3
+ldap_bind_dn = '<DN>'
+ldap_bind_pw = '<pw>'
+
+
+ldap_user_base_dn  = ''
+ldap_user_scope    = 'sub'
+ldap_user_filter   = ''
+ldap_user_attrs    = {
+    # MK        LDAP
+    'username': 'uid',
+}
+
+ldap_sync_plugins = [
+    ldap_sync_name,
+    ldap_sync_mail,
+    ldap_sync_pager,
+    ldap_sync_groups,
+]
+
+# Aktiviert ddas Synchronisieren von Benutzerattributen mit dem LDAP
+ldap_auth_sync_users  = True
+# Aktiviert das Erstellen von nicht vorhandenen Accounts im WATO
+ldap_auth_create_user = True
+
+Innerhalb einiger Konfigurationsoptionen, z.B. der DNs und der Filter müssen einige Macros verfügbar sein,
+z.B. der Name der lokalen OMD-Site. FIXME: Zumindest für Eckard brauchen wir das.
+
+2. Konfiguration über WATO
+--------
+
+Eine Möglichkeit wäre eine eigene Maske zu bauen, für den Anfang sollte es aber ausreichen
+die Einstellungen in der "Global Settings" Seite konfigurierbar zu machen. Unterhalb von
+"Multisite & WATO" könnte man die Option multisite_login_modules hinzufügen und für alle
+LDAP-Spezifischen Attribute eine eigene Gruppe "LDAP" erstellen.
+
+2. LDAP-Verbindung
+--------
+
+Für die Verbindung zum LDAP-Server wird das Modul "ldap" benutzt. Für unsere Implementierung könnte das
+Objekt ldap.ReconnectLDAPObject interessant sein. Es baut die Verbindung zum LDAP-Server automatisch wieder
+auf, wenn die Verbindung nicht aufgebaut ist oder abgebrochen hat. Für unsere Implementierung sind die
+synchronen Funktionen *_s() interessant.
+
+Die LDAP-Verbindung könnte pro Apache-Thread gehalten werden, so dass der Overhead für den Verbindungsaufbau
+bei wiederholten Anfragen entfällt.
+
+Die komplette LDAP-Anbindung muss read-only sein. Es dürfen keine schreibenden Aktionen in das LDAP
+ausgeführt werden.
+
+4. Login
+--------
+
+Die LDAP-Kopplung auf Login-Ebene wird in login.py implementiert. Dazu wird die
+Funktion do_login() so umgebaut, dass sie modularisierbar ist. Die Überprüfung
+der htaccess-Passwörter wird extrahiert und ersetzt. Es wird dann möglich sein
+mehrere Authentifizierungsmechanismen anzugeben, die dann der Reihe nach
+abgearbeitet werden, solange bis der Nutzer erfolgreich eingeloggt ist, oder
+alle Möglichkeiten ausprobiert wurden. Wobei eine Funktion drei Verschiedene Ergebnisse
+haben kann: 1) Erfolg 2) Falsches Passwort 3) Account nicht vorhanden. Nur im dritten
+Fall werden die folgenden Auth-Mechanismen benutzt.
+
+Beim LDAP-Login wird als erstes ein LDAP-Bind mit einem Service-Benutzer (ldap_bind_dn, ldap_bind_pw) ausgeführt.
+Dieser Benutzer muss innerhalb des LDAP ausreichende Rechte zum Auflisten aller Benutzer
+haben. Mit diesem Benutzer wird dann ein LDAP-Search (ldap_user_base_dn, ldap_user_scope, ldap_user_filter) 
+durchgeführt, mit dem dann der Benutzername, der sich gerade authentifizieren will, gesucht wird (ldap_attr_map).
+Wenn der Benutzer nicht gefunden wurde, wird der LDAP-Login abgebrochen und mit dem nächsten Login-Modul
+weiter gemacht. Wenn der Benutzer gefunden wurde, wird versucht einen LDAP-Bind mit dem DN und Passwort des 
+Benutzers zu machen. Wenn das funktioniert, ist der Benutzer erfolgreich eingeloggt.
+
+Auch die Funktion check_auth_cookie() muss modularisiert werden. Hier wird geprüft, ob der Benutzer noch
+existiert und der Passwort-Hash noch stimmt. FIXME: Hier den gleichen Mechanismus wie beim Login verwenden?
+
+Die Authentifizierung am LDAP-Server erfordert immer einen Online-Zugriff. Die LDAP-Authentifizierung ist
+also nicht möglich, wenn der LDAP-Server nicht erreichbar ist.
+
+Die restliche Verarbeitung (Cookie setzten etc.) geschieht über die vorhandenen Mechanismen im Multisite.
+
+5. User-Objekte/Attribute synchronisieren
+
+Es muss möglich sein Nutzer lokal im WATO zu verwalten. Trotzdem sollen sich Nutzer am Multisite anmelden
+können, die noch nicht im WATO vorhanden sind.
+
+5.1 Bei Login Accounts erstellen
+
+Beim Login eines Benutzers, der noch nicht im Multisite existiert, wird, sofern aktiviert (ldap_auth_create_user),
+ein neuer Benutzeraccount im WATO angelegt. Dieser Benutzer hat erst einmal keinen Eintrag in der htpasswd-Datei,
+kann sich also nicht lokal anmelden. FIXME: Welche Attribute setzen/sperren? Eventuell von einem Template klonen?
+
+5.2 Attribute abgleichen
+
+Attribute, wie z.B. Full name, Email address und Pager address sollen vom zentralen LDAP abgeglichen werden können,
+wenn konfiguriert (ldap_auth_sync_users). Dies geschieht für Benutzeraccounts, die im LDAP gefunden werden können.
+Sobald ein Attribut mit dem LDAP abgeglichen wird, ist das LDAP der zentrale Speicherpunkt für diese Information.
+Im WATO ist dieser Wert dann nicht mehr editierbar. Pro Attribut kann ein weiteres Attribut gesetzt werden, das den 
+Schreibzugriff auf das dazugehörige echte Attribut verhindert, z.B. "email" und "email_locked = True". FIXME: Alternativ
+ein internes Attribut ".locked" einführen, das die Liste der gesperrten Felder hält.
+
+Die Attribute, die synchronisiert werden, werden vom LDAP abgefragt und im lokalen Datensatz des Benutzers gespeichert
+um von dort aus z.B. in die Nagios-Konfiguration geschrieben zu werden.
+
+Die Synchronisation von Attributen geschieht über eine Plugin-Schnittstelle. Sync-Funktionen können registriert und
+aktiviert (ldap_sync_plugins) werden, diese bekommen den LDAP-Datensatz des Nutzers und das WATO User-Objekt 
+übergeben, können das WATO User-Objekt beliebig modifizieren und wieder zurück geben. Die Plugins sollten pro 
+Installation konfigurierbar sein.
+
+Der Abgleich mit dem LDAP geschieht nach dem Login eines Benutzers. Bei der Cookie-Validierung sollte das nicht
+gemacht werden. Damit würde bei jedem HTTP-Request an die index.py ein Abgleich stattfinden.
+
+Die Synchronisation eines Benutzers kann von einem Admin manuell im WATO angestoßen werden. Diese Option wird auch
+für Accounts angeboten, die noch keinen Match im LDAP haben um eventuell nachträglich angelegte Accounts sycnrhonisieren zu können.
+
+Es wäre auch zu überlegen, ob es alternativ oder ergänzend einen Bulk-Abgleich, z.B. beim aktivieren der Konfiguration
+geben soll.
+
+Durch den Abgleich werden nur die Daten im WATO editiert. Die Änderungen werden nicht sofort aktiviert.
+FIXME: Wie dann?
+
+5.3 Distributed-WATO
+
+Bisher werden die Benutzer-Accounts beim Distributed-WATO alle synchronisiert. Das darf so nicht bleiben. Bei der
+LDAP-Integration muss es möglich sein Accounts nur in einer Site zu haben. Dabei muss es außerdem möglich sein pro
+Site eigene LDAP-Server zu konfigurieren.
+
+FIXME: Welche Benutzer sychronisieren? Wie wird das geregelt? Hatten wir da nicht schon eine Idee?
+FIXME: Immer LDAP-Server pro Site konfigurierbar machen, oder nur optional?
+
+6. Rechte: Gruppenmitgliedschaften
+
+Im WATO werden die Gruppenmitgliedschaften und Rollenzugehörigkeiten eines Benutzers im Datensatz des Nutzers
+gespeichert. Dadurch ist es möglich diese Listen mit einem sync-plugin zu modifizieren
+(ldap_sync_groups, ldap_sync_roles). Diese Plugins können diese Attribute anhand bestimmter Kriterien, die pro 
+Plugin konfigurierbar gemacht werden können, die Listen der Gruppen oder Rollen pflegen und für die manuelle
+Bearbeitung im WATO sperren.
+
+FIXME: Kann ein Plugin Konfigurationsoptionen im WATO registrieren?

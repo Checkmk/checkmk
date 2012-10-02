@@ -17,6 +17,7 @@
     * FIX: Fixed login/login confusions with index page caching
 
     WATO:
+    * Added progress indicator in single site WATO "Activate Changes"
     * FIX: Implemented basic non HTTP 200 status code response handling in interactive
            progress dialogs (e.g. bulk inventory mode)
 

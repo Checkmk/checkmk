@@ -505,21 +505,23 @@ register_configvar(group,
 register_configvar(group,
     "logwatch_service_output",
     DropdownChoice(
-        title = _("Service output of Logwatch"),
-        help = _("You can change the output of the logwatch service "
-                 "between an view with oh"),
+        title = _("Service output for logwatch"),
+        help = _("You can change the plugin output of logwatch "
+                 "to show only the count of messages or also "
+                 "to show the last worst message"),
         choices = [
-            ( 'default' , _("Output last log message in service output") ),
-            ( 'small', _("Only print stats in service output")),
+            ( 'default' , _("Show count and last message") ),
+            ( 'count', _("Show only count")),
             ],
         default_value = 'default',
         ),
+    need_restart = True
     )
 
 register_configvar(group,
     "printer_supply_some_remaining_status",
     DropdownChoice(
-        title = _("Printer supply some ramaining status"),
+        title = _("Printer supply some remaining status"),
         help = _("Set the reported nagios state when the fill state "
                  "is something between empty and small "
                  "remaining capacity"),
@@ -727,6 +729,16 @@ register_rule(group,
                  "the state of the host will stay at its last status.")),
     )
 
+register_rule(group,
+    "extra_host_conf:check_command",
+    TextAscii(
+        label = _("Command:"),
+        title = _("Check Command for Hosts Check"),
+        help = _("This parameter changes the default check_command for "
+                 "a host check"),
+        ),
+    )
+
 group = "monconf/" + _("Notifications")
 register_rule(group,
     "extra_host_conf:notifications_enabled",
@@ -864,15 +876,6 @@ register_rule(group,
         ),
         itemtype = "service")
 
-register_rule(group,
-    "extra_host_conf:check_command",
-    TextAscii(
-        label = _("Command:"),
-        title = _("Check Command for Hosts Check"),
-        help = _("This parameter changes the default check_command for "
-                 "a host check"),
-        ),
-    )
 
 register_rule(group,
     "extra_service_conf:notes_url",

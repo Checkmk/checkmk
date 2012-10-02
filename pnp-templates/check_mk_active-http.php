@@ -44,7 +44,7 @@ if ($WARN[2] != "")
 if ($CRIT[2] != "")
     $def[2] .= "HRULE:$CRIT[2]#FF0000 ";
 $def[2] .= ""
- . "AREA:size#cc66ff:\"Response Time \" " 
+ . "AREA:size#cc66ff:\"Size of response \" " 
  . "LINE1:size#000000:\"\" " 
  . "GPRINT:size:LAST:\"%3.0lf Bytes LAST \" " 
  . "GPRINT:size:MAX:\"%3.0lf Bytes MAX \" " 

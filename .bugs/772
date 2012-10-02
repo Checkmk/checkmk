@@ -8,5 +8,5 @@ Targetversion: 1.2.0
 When hitting "Try out" in the edit mode of a view then
 the buttons for commands etc are shown but shouldn't.
 
-2012-10-02 15:15:02: changed state open -> done
-Has been solved.
+2012-10-02 15:12:44: changed state open -> done
+Has just been fixed.

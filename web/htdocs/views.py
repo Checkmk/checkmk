@@ -733,6 +733,7 @@ def page_edit_view():
     if html.has_var("try") or html.has_var("search"):
         html.set_var("search", "on")
         if view:
+            bi.reset_cache_status()
             show_view(view, False, False)
             return # avoid second html footer
 

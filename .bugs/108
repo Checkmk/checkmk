@@ -1,8 +1,12 @@
 Title: WATO: link hosts to view in Multisite
 Component: wato
-State: open
-Date: 2011-01-25 16:53:59
 Class: feature
+State: done
+Date: 2011-01-25 16:53:59
+Targetversion: future
 
 A host should show a link directly to the correct view in Multisite
 (if this is possible).
+
+2012-10-02 08:58:07: changed state open -> done
+This is implemented since a long time.

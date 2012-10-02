@@ -1,10 +1,13 @@
 Title: Add optional comment when restarting Nagios via WATO
 Component: wato
-State: open
+Class: feature
+State: wontfix
 Date: 2011-12-08 17:03:28
 Targetversion: 1.2.0
-Class: feature
 
 We add a text input in the "Activate Changes" pages. The user
 can enter a comment here. The comment will be added to the
 audit-Log and will be used to name or tag the snapshot.
+
+2012-10-02 08:54:38: changed state open -> wontfix
+Duplicate of 735. Closing this one.

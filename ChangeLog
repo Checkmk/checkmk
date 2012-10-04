@@ -29,6 +29,7 @@
     * Added progress indicator in single site WATO "Activate Changes"
     * FIX: Implemented basic non HTTP 200 status code response handling in interactive
            progress dialogs (e.g. bulk inventory mode)
+    * Users & Contacts: Case-insensitive sorting of 'Full name' column
 
 1.2.0p3:
     Mulitisite

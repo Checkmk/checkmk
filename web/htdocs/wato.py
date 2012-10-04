@@ -3573,9 +3573,9 @@ def mode_changelog(phase):
             html.write('<tr class="data odd0"><td class=repprogress><div id="repstate_local"></div></td>')
             html.write('<td id="repmsg_local"><i>%s</i></td></tr></table>' % _('activating...'))
 
-            srs = load_replication_status().get('local', {})
+            srs = load_replication_status().get(None, {})
             estimated_duration = srs.get("times", {}).get('act', 2.0)
-            html.javascript("wato_do_activation('local', %d);" %
+            html.javascript("wato_do_activation(%d);" %
               (int(estimated_duration * 1000.0)))
 
         sitestatus_do_async_replication = None # could survive in global context!
@@ -7192,7 +7192,7 @@ def ajax_activation():
             start = time.time()
             check_mk_local_automation(config.wato_activation_method)
             duration = time.time() - start
-            update_replication_status('local', {}, { 'act': duration })
+            update_replication_status(None, {}, { 'act': duration })
         except Exception:
             import traceback
             raise MKUserError(None, "Error executing hooks: %s" %

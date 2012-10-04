@@ -571,8 +571,6 @@
     Multisite
     * Added config option default_ts_format to configure default timestamp
       output format in multisite
-    * BI: Added new painter "affected hosts (link to host page)" to show all
-      host names with links to the "hosts" view
     * Layout and design update
     * Quicksearch: display site name if more than one different site
       is present in the current search result list
@@ -589,7 +587,9 @@
       logged in
     * FIX: Updating the dashboard header time when the dashlets refresh
 
-    BI
+    BI:
+    * Added new painter "affected hosts (link to host page)" to show all
+      host names with links to the "hosts" view
     * FIX: Fixed filtering of Single-Host Aggregations
     * New sorter for aggregation group
     * FIX: fix sorting of Single-Host Aggregations after group

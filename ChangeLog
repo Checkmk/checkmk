@@ -13,6 +13,7 @@
     * FIX: Fixed login/login confusions with index page caching
     * FIX: Speed-o-meter: Fixed calculation of Check_MK passive check invervals
     * Removed focus of "Full name" attribute on editing a contact
+    * Quicksearch: Convert search text to regex when accessing livestatus
 
     BI:
     * Added missing localizations

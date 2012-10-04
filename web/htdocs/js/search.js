@@ -303,6 +303,7 @@ function mkSearchGetSearchObjects(objType) {
 }
 
 function mkSearchGetUrl(objType, objName, objSite, numMatches) {
+    objName = objName.replace(/\*/g,"\.\*");
     if (numMatches == null)
         numMatches = 0;
 

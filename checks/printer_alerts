@@ -114,9 +114,9 @@ def check_printer_alerts(_not_used, _not_used1, info):
             group_txt += ' #%s' % group_index
 
         if state == 2:
-            sum_state = max(2, sum_state)
+            sum_state = 2
         elif state == 3 and sum_state != 2:
-            sum_state = max(3, sum_state)
+            sum_state = 3:
         elif state > sum_state:
             sum_state = max(state, sum_state)
 

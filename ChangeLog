@@ -5,16 +5,18 @@
     Multisite:
     * Enable automation login with _username= and _secret=, while
       _secret is the content of var/check_mk/web/$USER/automation.secret
-    * BI: Added missing localizations
-    * BI: Added option bit_precompile_on_demand to split compilations of
-          the aggregations in several fragments. If possible only the needed
-          aggregations are compiled to reduce the time a user has to wait for
-          BI based view. This optimizes BI related views which display
-          information for a specific list of hosts or aggregation groups.
-    * BI: Added new config option bi_compile_log to collect statistics about
-          aggregation compilations
     * FIX: Fixed releasing of locks and livestatus connections when logging out
     * FIX: Fixed login/login confusions with index page caching
+
+    BI:
+    * Added missing localizations
+    * Added option bit_precompile_on_demand to split compilations of
+      the aggregations in several fragments. If possible only the needed
+      aggregations are compiled to reduce the time a user has to wait for
+      BI based view. This optimizes BI related views which display
+      information for a specific list of hosts or aggregation groups.
+    * Added new config option bi_compile_log to collect statistics about
+      aggregation compilations
 
     WATO:
     * Added progress indicator in single site WATO "Activate Changes"

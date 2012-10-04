@@ -1,20 +1,34 @@
 1.2.1i2:
     Event Console:
-    * Moved source of Event Console into Check_MK project
+    * Moved source of Event Console into Check_MK project 
 
     Multisite:
-    * BI: Added missing localizations
-    * BI: Added option bit_precompile_on_demand to split compilations of
-          the aggregations in several fragments. If possible only the needed
-          aggregations are compiled to reduce the time a user has to wait for
-          BI based view. This optimizes BI related views which display
-          information for a specific list of hosts or aggregation groups.
-    * BI: Added new config option bi_compile_log to collect statistics about
-          aggregation compilations
+    * Enable automation login with _username= and _secret=, while
+      _secret is the content of var/check_mk/web/$USER/automation.secret
+    * FIX: Fixed releasing of locks and livestatus connections when logging out
+    * FIX: Fixed login/login confusions with index page caching
+
+    BI:
+    * Added missing localizations
+    * Added option bit_precompile_on_demand to split compilations of
+      the aggregations in several fragments. If possible only the needed
+      aggregations are compiled to reduce the time a user has to wait for
+      BI based view. This optimizes BI related views which display
+      information for a specific list of hosts or aggregation groups.
+    * Added new config option bi_compile_log to collect statistics about
+      aggregation compilations
+
+    WATO:
+    * Added progress indicator in single site WATO "Activate Changes"
+    * FIX: Implemented basic non HTTP 200 status code response handling in interactive
+           progress dialogs (e.g. bulk inventory mode)
 
 1.2.0p3:
     Mulitisite
     * Added "view" parameter to dashlet_pnpgraph webservice
+    * FIX: BI: Assuming "OK" for hosts is now possible
+    * FIX: Fixed error in makeuri() calls when no parameters in URL
+    * FIX: Try out mode in view editor does not show context buttons anymore
 
     WATO
     * Added "profile" option to be configurable via browser
@@ -23,6 +37,10 @@
 
     Livestatus
     * FIX: comments_with_info in service table was always empty
+
+    Checks & Agents:
+    * FIX: Linux mk_logwatch: iregex Parameter was never used
+    * FIX: Windows agent: quote '%' in plugin output correctly
 
 1.2.1i1:
     Core:
@@ -553,8 +571,6 @@
     Multisite
     * Added config option default_ts_format to configure default timestamp
       output format in multisite
-    * BI: Added new painter "affected hosts (link to host page)" to show all
-      host names with links to the "hosts" view
     * Layout and design update
     * Quicksearch: display site name if more than one different site
       is present in the current search result list
@@ -571,7 +587,9 @@
       logged in
     * FIX: Updating the dashboard header time when the dashlets refresh
 
-    BI
+    BI:
+    * Added new painter "affected hosts (link to host page)" to show all
+      host names with links to the "hosts" view
     * FIX: Fixed filtering of Single-Host Aggregations
     * New sorter for aggregation group
     * FIX: fix sorting of Single-Host Aggregations after group

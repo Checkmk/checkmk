@@ -37,7 +37,7 @@ aggregation_rules["db_host_state"] = (
   "worst",
   [
       ( "$HOST$", HOST_STATE ),
-      ( "cpuandmem", [ "$HOST$" ]),
+      ( "performance", [ "$HOST$" ]),
       ( "db_filesystems", [ "$HOST$", "$DB$" ]),
       ( "nic",   [ "$HOST$", "userlan" ] ), 
       ( "nic",   [ "$HOST$", "cluster" ] ),

@@ -94,8 +94,11 @@ def check_printer_alerts(_not_used, _not_used1, info):
         state = 3 # UNKNOWN
         if desc in printer_alerts_text_map:
             state = printer_alerts_text_map[desc]
-            sum_txt.append("%s - %s" % (nagios_state_names[state], desc))
-            break
+            if state != 0:
+                sum_state = max(state, sum_state)
+                sum_txt.append("%s - %s" % (nagios_state_names[state], desc))
+            continue
+
         code = saveint(code)
         for s in [ 2, 1, 0 ]:
             if code in printer_alerts_state_map[s]:
@@ -111,18 +114,19 @@ def check_printer_alerts(_not_used, _not_used1, info):
             group_txt += ' #%s' % group_index
 
         if state == 2:
-            sum_state = 2
+            sum_state = max(2, sum_state)
         elif state == 3 and sum_state != 2:
-            sum_state = 3
+            sum_state = max(3, sum_state)
         elif state > sum_state:
-            sum_state = state
+            sum_state = max(state, sum_state)
 
         info_text = '%s - %s - %s' % (nagios_state_names[state], group_txt, desc)
         if state == 3 and code != -1:
             info_text += " (code: %d)" % code
 
         sum_txt.append(info_text)
-
+    if len(sum_txt) == 0:
+        sum_txt.append("OK - No alerts found") 
     return (sum_state, ', '.join(sum_txt))
 
 check_info['printer_alerts'] = (check_printer_alerts, "Alerts", 0, inventory_printer_alerts)

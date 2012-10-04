@@ -7,5 +7,6 @@ Targetversion: 1.2.0
 
 Seems the config option has not been added.
 
-2012-10-04 11:23:39: changed state open -> wontfix
-Wontfix. Is configured via omd config
+LM: Maybe this has been excluded for a good reason: To
+    activate the basic auth there is also some apache config
+    modification needed.

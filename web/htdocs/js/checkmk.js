@@ -272,8 +272,16 @@ function getUrlParam(name) {
 function makeuri(addvars) {
     var tmp = window.location.href.split('?');
     var base = tmp[0];
-    tmp = tmp[1].split('#');
-    tmp = tmp[0].split('&');
+    if(tmp.length > 1) {
+        // Remove maybe existing anchors
+        tmp = tmp[1].split('#');
+        // Split to array of param-strings (key=val)
+        tmp = tmp[0].split('&');
+    } else {
+        // Uri has no parameters
+        tmp = [];
+    }
+
     var len = tmp.length;
     var params = [];
     var pair = null;

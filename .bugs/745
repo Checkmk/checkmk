@@ -1,0 +1,9 @@
+Title: New role permission
+Component: wato
+State: open
+Date: 2012-10-02 14:32:30
+Targetversion: future
+Class: feature
+
+The wish is that a role can see all nagios objects, but only perform commands
+on that one, the role is a contact for

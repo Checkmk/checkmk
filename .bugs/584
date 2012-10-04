@@ -1,9 +1,12 @@
 Title: How to control windows agent installer via cli
 Component: docu
-State: open
+Class: todo
+State: done
 Date: 2012-01-10 16:19:00
 Targetversion: 1.2.0
-Class: todo
 
 There are some command line options in the windows agent installer. Create a documentation
 for these options.
+
+2012-10-02 15:00:58: changed state open -> done
+Is already documented.

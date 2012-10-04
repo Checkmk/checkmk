@@ -2530,6 +2530,7 @@ def mode_bulk_inventory(phase):
               (_("Total services"),   0) ], # stats table
             [ ("mode", "folder") ], # URL for "Stop/Finish" button
             50, # ms to sleep between two steps
+            fail_stats = [ 1 ],
         )
 
     else:
@@ -2900,6 +2901,7 @@ def mode_parentscan(phase):
             ],
             [ ("mode", "folder") ], # URL for "Stop/Finish" button
             50, # ms to sleep between two steps
+            fail_stats = [ 1 ],
         )
 
     else:
@@ -3379,26 +3381,16 @@ def mode_changelog(phase):
         elif transaction_already_checked or html.check_transaction():
             config.need_permission("wato.activate")
             create_snapshot()
-            if is_distributed():
-                # Do nothing here, but let site status table be shown in a mode
-                # were in each site that is not up-to-date an asynchronus AJAX
-                # job is being startet that updates that site
-                sitestatus_do_async_replication = True
-            else:
-                try:
-                    check_mk_local_automation(config.wato_activation_method)
-                except Exception, e:
-                    if config.debug:
-                        raise
-                    else:
-                        raise MKUserError(None, "Error executing hooks: %s" % str(e))
-                log_commit_pending() # flush logfile with pending actions
-                log_audit(None, "activate-config", _("Configuration activated, monitoring server restarted"))
-                return None, _("The new configuration has been successfully activated.")
 
-    else:
-        # Distributed WATO: Show replication state of each site
+            # Do nothing here, but let site status table be shown in a mode
+            # were in each site that is not up-to-date an asynchronus AJAX
+            # job is being startet that updates that site
+            sitestatus_do_async_replication = True
+
+    else: # phase: regular page rendering
+
         if is_distributed():
+            # Distributed WATO: Show replication state of each site
 
             # During bulk replication we rather create the sync snapshot now. Otherwise
             # there is the danger, that it is created multiple times in parallel, thus
@@ -3566,11 +3558,25 @@ def mode_changelog(phase):
 
                 html.write("</tr>")
             html.write("</table>")
-
             # The Javascript world needs to know, how many asynchronous
             # replication jobs it should wait to be finished.
-            if num_replsites > 0:
+            if sitestatus_do_async_replication and num_replsites > 0:
                 html.javascript("var num_replsites = %d;\n" % num_replsites)
+
+        elif sitestatus_do_async_replication:
+            # Single site setup
+
+            # Is rendered on the page after hitting the "activate" button
+            # Renders the html to show the progress and starts the sync via javascript
+            html.write("<table class=data>")
+            html.write("<tr><th class=left>%s</th><th>%s</th></tr>" % (_('Progress'), _('Status')))
+            html.write('<tr class="data odd0"><td class=repprogress><div id="repstate_local"></div></td>')
+            html.write('<td id="repmsg_local"><i>%s</i></td></tr></table>' % _('activating...'))
+
+            srs = load_replication_status().get('local', {})
+            estimated_duration = srs.get("times", {}).get('act', 2.0)
+            html.javascript("wato_do_activation('local', %d);" %
+              (int(estimated_duration * 1000.0)))
 
         sitestatus_do_async_replication = None # could survive in global context!
 
@@ -3578,7 +3584,9 @@ def mode_changelog(phase):
         if len(pending) == 0:
             html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
         else:
+            html.write('<div id=pending_changes>')
             render_audit_log(pending, "pending", hilite_others=True)
+            html.write('</div>')
 
 # Determine if other users have made pending changes
 def foreign_changes():
@@ -4019,7 +4027,9 @@ def hilite_errors(outdata):
 #   | buttons for aborting and pausing.                                    |
 #   '----------------------------------------------------------------------'
 
-def interactive_progress(items, title, stats, finishvars, timewait, success_stats = [], termvars = []):
+# success_stats: Fields from the stats list to use for checking if something has been found
+# fail_stats:    Fields from the stats list to used to count failed elements
+def interactive_progress(items, title, stats, finishvars, timewait, success_stats = [], termvars = [], fail_stats = []):
     if not termvars:
         termvars = finishvars;
     html.write("<center>")
@@ -4050,6 +4060,7 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
     html.write("</center>")
     json_items    = '[ %s ]' % ',\n'.join([ "'" + h + "'" for h in items ])
     success_stats = '[ %s ]' % ','.join(map(str, success_stats))
+    fail_stats    = '[ %s ]' % ','.join(map(str, fail_stats))
     # Remove all sel_* variables. We do not need them for our ajax-calls.
     # They are just needed for the Abort/Finish links. Those must be converted
     # to POST.
@@ -4057,9 +4068,9 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
     finish_url = make_link([("mode", "folder")] + finishvars)
     term_url = make_link([("mode", "folder")] + termvars)
 
-    html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", %s, "%s", "' + _("FINISHED.") + '");') %
+    html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", %s, %s, "%s", "' + _("FINISHED.") + '");') %
                      (html.var('mode'), base_url, json_items, finish_url,
-                      success_stats, term_url))
+                      success_stats, fail_stats, term_url))
 
 
 #.
@@ -7165,6 +7176,36 @@ def push_snapshot_to_site(site, do_restart):
         raise MKAutomationException(_("Garbled automation response from site %s: '%s'") %
             (site["id"], response_text))
 
+# AJAX handler for javascript triggered wato activation
+def ajax_activation():
+    try:
+        if is_distributed():
+            raise MKUserError(None, _('Call not supported in distributed setups.'))
+
+        config.need_permission("wato.activate")
+
+        # Initialise g_root_folder, load all folder information
+        prepare_folder_info()
+
+        # This is the single site activation mode
+        try:
+            start = time.time()
+            check_mk_local_automation(config.wato_activation_method)
+            duration = time.time() - start
+            update_replication_status('local', {}, { 'act': duration })
+        except Exception:
+            import traceback
+            raise MKUserError(None, "Error executing hooks: %s" %
+                                        traceback.format_exc().replace('\n', '<br />'))
+
+        log_commit_pending() # flush logfile with pending actions
+        log_audit(None, "activate-config", _("Configuration activated, monitoring server restarted"))
+
+        # html.message
+        html.write('OK: ')
+        html.write('<div class=act_success><img src="images/icon_apply.png" /> %s</div>' % _("The new configuration has been successfully activated."))
+    except Exception, e:
+        html.show_error(str(e))
 
 # AJAX handler for asynchronous site replication
 def ajax_replication():
@@ -7777,7 +7818,7 @@ def mode_edit_user(phase):
     html.radiobutton("authmethod", "secret", is_automation,
                      _("Automation secret for machine accounts"))
     html.write("<ul>")
-    html.text_input("secret", user.get("automation_secret", ""), size=21,
+    html.text_input("secret", user.get("automation_secret", ""), size=30,
                     id="automation_secret")
     html.write(" ")
     html.write("<b style='position: relative; top: 4px;'> &nbsp;")

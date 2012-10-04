@@ -49,13 +49,17 @@ class uriinfo:
     # TODO: URI-Encode von Variablen!
     def geturi(self):
         uri = self.req.myfile + ".py"
-        if len(self.req.vars):
+        if self.req.vars:
             uri += "?" + urlencode(self.req.vars.items())
         return uri
 
     # [('varname1', value1), ('varname2', value2) ]
     def makeuri(self, addvars):
-        return self.req.myfile + ".py?" + urlencode_vars(self.req.vars.items() + addvars)
+        v = self.req.vars.items() + addvars
+        if v:
+            return self.req.myfile + ".py?" + urlencode_vars(v)
+        else:
+            return self.req.myfile + ".py"
 
     # Liste von Hidden-Felder erzeugen aus aktueller URI
     def hiddenfields(self, omit=[]):
@@ -330,13 +334,20 @@ class html:
         vars = [ (v, self.var(v)) for v in self.req.vars if v[0] != "_" ]
         if remove_prefix != None:
             vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]
-        return self.req.myfile + ".py?" + urlencode_vars(vars + addvars)
+        vars = vars + addvars
+        if vars:
+            return self.req.myfile + ".py?" + urlencode_vars(vars)
+        else:
+            return self.req.myfile + ".py"
 
     def makeactionuri(self, addvars):
         return self.makeuri(addvars + [("_transid", self.fresh_transid())])
 
     def makeuri_contextless(self, vars):
-        return self.req.myfile + ".py?" + urlencode_vars(vars)
+        if vars:
+            return self.req.myfile + ".py?" + urlencode_vars(vars)
+        else:
+            return self.req.myfile + ".py"
 
     def image_button(self, varname, title, cssclass = ''):
         if not self.mobile:

@@ -36,3 +36,5 @@ critical (int): Percentage of free leases to be left in the pool to issue a crit
 win_dhcp_pools_default_levels (float, float): The global default levels for all checks
  of this type. This is preset to {(10, 5)} (which means that the check
  gets critical if the pool has less than 5 percent of free leases left).
+win_dhcp_pools_inventorize_empty (bool): Set to {True} if you want to inventorize 
+ pools without any IP Address in it.

@@ -240,6 +240,8 @@ var progress_found = 0;
 // The fields which signal that something has been successfully processed.
 // this is used together with progress_found to find out the correct redirect url
 var progress_success_stats = [];
+// The fields which signal that something has failed
+var progress_fail_stats = [];
 // The URL to redirect to after finish/abort button pressed
 var progress_end_url   = '';
 // The URL to redirect to after finish/abort button pressed when nothing found
@@ -253,23 +255,46 @@ var progress_paused  = false;
 // Is set to true when the user hit aborted/finished
 var progress_ended   = false;
 
-function progress_handle_response(data, code) {
+function progress_handle_error(data, code) {
+    // code contains no parsable response but the http code
+    progress_handle_response(data, '', code);
+}
+
+function progress_handle_response(data, code, http_code) {
     var mode = data[0];
     var item = data[1];
 
     var header = null;
-    try {
-        var header = eval(code.split("\n", 1)[0]);
-        if (header === null)
-	    alert('Header is null!');
-    } catch(err) {
-        alert('Invalid response: ' + code);
-    }
+    var body = null;
+    if(http_code !== undefined) {
+        // If the request failed report the item as failed
+        // - Report failed state
+        // - Update the total count (item 0 = 1)
+        // - Update the failed stats
+        header = [ 'failed', 1 ];
+        for(var i = 1; i <= Math.max.apply(Math, progress_fail_stats); i++) {
+            if(progress_fail_stats.indexOf(i) !== -1) {
+                header.push(1);
+            } else {
+                header.push(0);
+            }
+        }
+        body = 'HTTP-Request failed (' + http_code + ', ' + data + ')'
+    } else {
+        // Regular response processing
+        try {
+            var header = eval(code.split("\n", 1)[0]);
+            if (header === null)
+                alert('Header is null!');
+        } catch(err) {
+            alert('Invalid response: ' + code);
+        }
 
-    // Extract the body from the response
-    var body = code.split('\n');
-    body.splice(0,1);
-    body = body.join('');
+        // Extract the body from the response
+        var body = code.split('\n');
+        body.splice(0,1);
+        body = body.join('');
+    }
 
     // Process statistics
     update_progress_stats(header);
@@ -404,7 +429,7 @@ function progress_clean_log() {
     log = null;
 }
 
-function progress_scheduler(mode, url_prefix, timeout, items, end_url, success_stats, term_url, finished_txt) {
+function progress_scheduler(mode, url_prefix, timeout, items, end_url, success_stats, fail_stats, term_url, finished_txt) {
     // Initialize
     if (progress_items === null) {
         progress_items         = items;
@@ -413,6 +438,7 @@ function progress_scheduler(mode, url_prefix, timeout, items, end_url, success_s
         progress_end_url       = end_url;
         progress_term_url      = term_url;
         progress_success_stats = success_stats;
+        progress_fail_stats    = fail_stats;
         progress_fin_txt       = finished_txt;
         progress_mode          = mode;
         progress_url           = url_prefix;
@@ -430,8 +456,11 @@ function progress_scheduler(mode, url_prefix, timeout, items, end_url, success_s
             progress_running = true;
             // Remove leading pipe signs (when having no folder set)
             update_progress_title(progress_items[0].replace(/^\|*/g, ''));
-            get_url(url_prefix + '&_transid=-1&_item=' +
-                   escape(progress_items[0]), progress_handle_response, [ mode, progress_items[0] ]);
+            get_url(url_prefix + '&_transid=-1&_item=' + escape(progress_items[0]),
+                progress_handle_response,    // regular handler (http code 200)
+                [ mode, progress_items[0] ], // data to hand over to handlers
+                progress_handle_error        // error handler
+            );
         } else {
             progress_finished();
             return;
@@ -448,6 +477,54 @@ function update_bulk_moveto(val) {
             if(fields[i].options[a].value == val)
                 fields[i].options[a].selected = true;
     fields = null;
+}
+
+//   .----------------------------------------------------------------------.
+//   |              _        _   _            _   _                         |
+//   |             / \   ___| |_(_)_   ____ _| |_(_) ___  _ __              |
+//   |            / _ \ / __| __| \ \ / / _` | __| |/ _ \| '_ \             |
+//   |           / ___ \ (__| |_| |\ V / (_| | |_| | (_) | | | |            |
+//   |          /_/   \_\___|\__|_| \_/ \__,_|\__|_|\___/|_| |_|            |
+//   |                                                                      |
+//   +----------------------------------------------------------------------+
+
+function wato_do_activation(siteid, est) {
+    // Hide the activate changes button
+    var button = document.getElementById('act_changes_button');
+    if(button) {
+        button.style.display = 'none';
+        button = null;
+    }
+
+    get_url("wato_ajax_activation.py",
+            wato_activation_result, siteid);
+    replication_progress[siteid] = 20; // 10 of 10 10ths
+    setTimeout("replication_step('"+siteid+"',"+est+");", est/10);
+}
+
+function wato_activation_result(siteid, code) {
+    replication_progress[siteid] = 0;
+    var oState = document.getElementById("repstate_" + siteid);
+    var oMsg   = document.getElementById("repmsg_" + siteid);
+    if (code.substr(0, 3) == "OK:") {
+        oState.innerHTML = "<div class='repprogress ok' style='width: 160px;'>OK</div>";
+        oMsg.innerHTML = code.substr(3);
+
+        // Reload page after 2 secs
+        setTimeout(wato_replication_finish, 2000);
+    } else {
+        oState.innerHTML = '';
+        oMsg.innerHTML = code;
+        
+        // Show the activate changes button again
+        var button = document.getElementById('act_changes_button');
+        if(button) {
+            button.style.display = '';
+            button = null;
+        }
+    }
+    oState = null;
+    oMsg = null;
 }
 
 //   +----------------------------------------------------------------------+
@@ -499,14 +576,22 @@ function wato_replication_result(siteid, code) {
 function wato_replication_finish() {
     if(parent && parent.frames[1])
         parent.frames[1].location.reload(); // reload sidebar
-    oDiv = document.getElementById("act_changes_button");
+    var oDiv = document.getElementById("act_changes_button");
     oDiv.style.display = "none";
+    oDiv = null
+
+    // Hide the pending changes container
+    var oPending = document.getElementById("pending_changes");
+    if(oPending) {
+        oPending.style.display = "none";
+        oPending = null
+    }
 }
 
 function wato_randomize_secret(id, len) {
     var secret = "";
     for (var i=0; i<len; i++) {
-        var c = parseInt((126-33) * Math.random() + 33);
+        var c = parseInt(26 * Math.random() + 64);
         secret += String.fromCharCode(c);
     }
     var oInput = document.getElementById(id);

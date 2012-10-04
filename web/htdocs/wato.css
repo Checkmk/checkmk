@@ -804,6 +804,16 @@ div.varname {
     width: 300px;
 }
 
+/* activation */
+.wato table.data div.act_success {
+}
+
+.wato table.data div.act_success img {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+}
+
 /* Replication */
 .wato table.data td.repprogress {
     width: 160px;

@@ -1,9 +1,12 @@
 Title: Try-Out mode in view editor should not display butons
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2012-06-14 14:51:49
 Targetversion: 1.2.0
-Class: nastiness
 
 When hitting "Try out" in the edit mode of a view then
 the buttons for commands etc are shown but shouldn't.
+
+2012-10-02 15:12:44: changed state open -> done
+Has just been fixed.

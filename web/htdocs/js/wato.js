@@ -488,7 +488,9 @@ function update_bulk_moveto(val) {
 //   |                                                                      |
 //   +----------------------------------------------------------------------+
 
-function wato_do_activation(siteid, est) {
+function wato_do_activation(est) {
+    var siteid = 'local';
+
     // Hide the activate changes button
     var button = document.getElementById('act_changes_button');
     if(button) {

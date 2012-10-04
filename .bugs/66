@@ -1,8 +1,9 @@
 Title: URL-Variable für index.py mit URL von main.py
 Component: multisite
-State: open
-Date: 2010-12-21 22:26:06
 Class: feature
+State: done
+Date: 2010-12-21 22:26:06
+Targetversion: future
 
 So könnte man einen Link auf das ganze Frameset machen. Wenn man dann
 mal in der View ein Icon macht, bei der man einen Link auf die Seite
@@ -11,3 +12,6 @@ lassen.
 
 Man könnte sogar darüber nachdenken, dass die URL auf der rechten
 Seite persistiert wird...
+
+2012-10-04 12:34:23: changed state open -> done
+Ist schon lange drin.

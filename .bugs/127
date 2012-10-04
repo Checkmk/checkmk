@@ -1,11 +1,15 @@
 Title: Reschedule icon for passive Check_MK checks
 Component: multisite
-State: open
-Date: 2011-02-10 12:01:27
 Class: feature
+State: done
+Date: 2011-02-10 12:01:27
+Targetversion: future
 
 When you are in the problems view, there is no direct way
 to reschedule a service since the Check_MK service is not
 visible. We could add a reschedule icon for passive check_MK
 checks as well and let it reschedule the Check_MK service
 on that host instead.
+
+2012-10-04 12:36:14: changed state open -> done
+Is already implemented.

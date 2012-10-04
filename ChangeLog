@@ -1,4 +1,8 @@
 1.2.1i2:
+    Core:
+    * Improved validation of inventory data reported by checks
+    * Added -d option to precompiled checks to enable debug mode
+
     Event Console:
     * Moved source of Event Console into Check_MK project 
 
@@ -7,6 +11,7 @@
       _secret is the content of var/check_mk/web/$USER/automation.secret
     * FIX: Fixed releasing of locks and livestatus connections when logging out
     * FIX: Fixed login/login confusions with index page caching
+    * FIX: Speed-o-meter: Fixed calculation of Check_MK passive check invervals
 
     BI:
     * Added missing localizations

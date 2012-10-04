@@ -2605,9 +2605,9 @@ if os.path.islink(%(dst)r):
 
     # initialize global variables
     output.write("""
-# very simple commandline parsing: only -v is supported
+# very simple commandline parsing: only -v and -d are supported
 opt_verbose = '-v' in sys.argv
-opt_debug   = False
+opt_debug   = '-d' in sys.argv
 
 # make sure these names are defined (even if never needed)
 no_inventory_possible = None

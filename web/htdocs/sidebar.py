@@ -390,10 +390,38 @@ def ajax_speedometer():
         # scheduled checks rate needs to loop over all hosts and services.
         if last_program_start != program_start:
             scheduled_rate = 0.0
+
+            # First get data of all active checks
             for what in [ "host", "service" ]:
                 data = html.live.query_summed_stats(
-                        "GET %ss\nStats: suminv check_interval" % what)
+                        "GET %ss\nStats: suminv check_interval\n"
+                        "Filter: active_checks_enabled = 1" % what)
+
                 scheduled_rate += data[0] / 60.0
+
+            # HACK:
+            # The Check_MK passive checks are always added to Nagios with
+            # a check interval of 1 minute. If one chancges the check interval
+            # of the Check_MK service, the intervals of the passive services
+            # change in fact. But this change is not added to the nagios config
+            # of these objects. Workaround here: Get interval of Check_MK service
+            # and add it as interval to the cmk passive checks
+            intervals = html.live.query_table(
+                "GET services\n"
+                "Columns: host_name check_interval\n"
+                "Filter: description = Check_MK")
+
+            num_svcs = dict(html.live.query_table(
+                "GET services\n"
+                "Columns:host_name\n"
+                "Stats: check_command ~ ^check_mk-"))
+
+            for line in intervals:
+                host_name, check_interval = line
+                num_services = num_svcs.get(host_name, 0)
+
+                file('/tmp/3', 'a').write('%s %d %0.2f\n' % (host_name, num_services, 1.0 / (check_interval / 60.0) * num_services))
+                scheduled_rate += 1.0 / ((check_interval / 60.0) * num_services)
 
         percentage = 100.0 * current_rate / scheduled_rate;
         title = _("Scheduled check rate: %.1f/s, current rate: %.1f/s, that is "

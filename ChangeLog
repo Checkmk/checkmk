@@ -15,6 +15,7 @@
           aggregation compilations
     * FIX: Fixed releasing of locks and livestatus connections when logging out
     * FIX: Fixed login/login confusions with index page caching
+    * FIX: Speed-o-meter: Fixed calculation of Check_MK passive check invervals
 
     WATO:
     * Added progress indicator in single site WATO "Activate Changes"

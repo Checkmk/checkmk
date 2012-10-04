@@ -1,8 +1,11 @@
 Title: Multisite auth_type can not be changed in WATO
 Component: multisite
-State: open
+Class: nastiness
+State: wontfix
 Date: 2012-07-09 09:31:16
 Targetversion: 1.2.0
-Class: nastiness
 
 Seems the config option has not been added.
+
+2012-10-04 11:23:39: changed state open -> wontfix
+Wontfix. Is configured via omd config

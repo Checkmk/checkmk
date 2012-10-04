@@ -1490,7 +1490,7 @@ void run_plugin(SOCKET &out, char *path)
     if (f) {
         char line[4096];
         while (0 != fgets(line, sizeof(line), f)) {
-            output(out, line);
+            output(out, "%s", line);
         }
         pclose(f);
     }

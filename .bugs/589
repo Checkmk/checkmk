@@ -1,10 +1,12 @@
 Title: Wato Configuration: cloneable flag fuer Attribute
 Component: wato
-State: open
+Class: feature
+State: wontfix
 Date: 2012-01-12 10:44:03
 Targetversion: 1.2.0
-Class: feature
 
 Wenn derzeit ein Host in Wato mit der Clone Funktion dupliziert wird
 werden teilweise auch unsinnige Attribute uebernommen, die
 fuer den Klon keine Bedeutung haben/schlichtweg falsch sind. Bsp. ssh key, mac addresse.
+
+2012-10-04 11:20:10: changed state open -> wontfix

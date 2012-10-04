@@ -7792,8 +7792,6 @@ def mode_edit_user(phase):
     # Full name
     forms.section(_("Full name"))
     html.text_input("alias", user.get("alias", userid), size = 50)
-    if not new:
-        html.set_focus("alias")
     html.help(_("Full name or alias of the user"))
 
     # Email address

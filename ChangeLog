@@ -5,17 +5,19 @@
     Multisite:
     * Enable automation login with _username= and _secret=, while
       _secret is the content of var/check_mk/web/$USER/automation.secret
-    * BI: Added missing localizations
-    * BI: Added option bit_precompile_on_demand to split compilations of
-          the aggregations in several fragments. If possible only the needed
-          aggregations are compiled to reduce the time a user has to wait for
-          BI based view. This optimizes BI related views which display
-          information for a specific list of hosts or aggregation groups.
-    * BI: Added new config option bi_compile_log to collect statistics about
-          aggregation compilations
     * FIX: Fixed releasing of locks and livestatus connections when logging out
     * FIX: Fixed login/login confusions with index page caching
     * FIX: Speed-o-meter: Fixed calculation of Check_MK passive check invervals
+
+    BI:
+    * Added missing localizations
+    * Added option bit_precompile_on_demand to split compilations of
+      the aggregations in several fragments. If possible only the needed
+      aggregations are compiled to reduce the time a user has to wait for
+      BI based view. This optimizes BI related views which display
+      information for a specific list of hosts or aggregation groups.
+    * Added new config option bi_compile_log to collect statistics about
+      aggregation compilations
 
     WATO:
     * Added progress indicator in single site WATO "Activate Changes"
@@ -39,6 +41,7 @@
 
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used
+    * FIX: Windows agent: quote '%' in plugin output correctly
 
 1.2.1i1:
     Core:
@@ -569,8 +572,6 @@
     Multisite
     * Added config option default_ts_format to configure default timestamp
       output format in multisite
-    * BI: Added new painter "affected hosts (link to host page)" to show all
-      host names with links to the "hosts" view
     * Layout and design update
     * Quicksearch: display site name if more than one different site
       is present in the current search result list
@@ -587,7 +588,9 @@
       logged in
     * FIX: Updating the dashboard header time when the dashlets refresh
 
-    BI
+    BI:
+    * Added new painter "affected hosts (link to host page)" to show all
+      host names with links to the "hosts" view
     * FIX: Fixed filtering of Single-Host Aggregations
     * New sorter for aggregation group
     * FIX: fix sorting of Single-Host Aggregations after group

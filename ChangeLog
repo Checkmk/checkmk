@@ -14,6 +14,8 @@
     * FIX: Speed-o-meter: Fixed calculation of Check_MK passive check invervals
     * Removed focus of "Full name" attribute on editing a contact
     * Quicksearch: Convert search text to regex when accessing livestatus
+    * FIX: WATO Folder filter not available when WATO disabled
+    * WATO Folder Filter no longer available in single host views
 
     BI:
     * Added missing localizations

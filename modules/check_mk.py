@@ -2287,10 +2287,21 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
 
             for entry in inventory:
                 state_type = "new" # assume new, change later if wrong
+
+                if not isinstance(entry, tuple):
+                    sys.stderr.write("%s: Check %s returned invalid inventory data (entry not a tuple): %s\n" %
+                                                                         (hostname, checkname, repr(inventory)))
+                    continue
+
                 if len(entry) == 2: # comment is now obsolete
                     item, paramstring = entry
                 else:
-                    item, comment, paramstring = entry
+                    try:
+                        item, comment, paramstring = entry
+                    except ValueError:
+                        sys.stderr.write("%s: Check %s returned invalid inventory data (not 2 or 3 elements): %s\n" %
+                                                                               (hostname, checkname, repr(inventory)))
+                        continue
 
                 description = service_description(checkname, item)
                 # make sanity check

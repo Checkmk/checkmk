@@ -38,6 +38,7 @@
 
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used
+    * FIX: Windows agent: quote '%' in plugin output correctly
 
 1.2.1i1:
     Core:

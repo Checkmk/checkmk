@@ -12,6 +12,7 @@
     * FIX: Fixed releasing of locks and livestatus connections when logging out
     * FIX: Fixed login/login confusions with index page caching
     * FIX: Speed-o-meter: Fixed calculation of Check_MK passive check invervals
+    * Removed focus of "Full name" attribute on editing a contact
 
     BI:
     * Added missing localizations
@@ -22,6 +23,7 @@
       information for a specific list of hosts or aggregation groups.
     * Added new config option bi_compile_log to collect statistics about
       aggregation compilations
+    * Correct representation of (!), (!!) and (?) markers in check output
 
     WATO:
     * Added progress indicator in single site WATO "Activate Changes"

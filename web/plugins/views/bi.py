@@ -262,7 +262,7 @@ def aggr_render_node(tree, title, mousecode, show_host):
     else:
         h += title
 
-    output = effective_state["output"]
+    output = format_plugin_output(effective_state["output"])
     if output:
         output = "<b class=bullet>&diams;</b>" + output
     else:

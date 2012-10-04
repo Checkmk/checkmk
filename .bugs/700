@@ -6,3 +6,7 @@ Targetversion: 1.2.0
 Class: nastiness
 
 Seems the config option has not been added.
+
+LM: Maybe this has been excluded for a good reason: To
+    activate the basic auth there is also some apache config
+    modification needed.

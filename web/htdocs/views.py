@@ -733,6 +733,7 @@ def page_edit_view():
     if html.has_var("try") or html.has_var("search"):
         html.set_var("search", "on")
         if view:
+            bi.reset_cache_status()
             show_view(view, False, False)
             return # avoid second html footer
 
@@ -1351,7 +1352,8 @@ def render_view(view, rows, datasource, group_painters, painters,
         len(rows) > 0 and \
         should_show_command_form(display_options, datasource)
 
-    show_context_links(view, hide_filters, show_filters, display_options, 
+    if show_buttons:
+        show_context_links(view, hide_filters, show_filters, display_options, 
                        painter_options, command_form, layout.get('checkboxes', False))
 
     # User errors in filters

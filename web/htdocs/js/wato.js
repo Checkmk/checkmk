@@ -479,6 +479,54 @@ function update_bulk_moveto(val) {
     fields = null;
 }
 
+//   .----------------------------------------------------------------------.
+//   |              _        _   _            _   _                         |
+//   |             / \   ___| |_(_)_   ____ _| |_(_) ___  _ __              |
+//   |            / _ \ / __| __| \ \ / / _` | __| |/ _ \| '_ \             |
+//   |           / ___ \ (__| |_| |\ V / (_| | |_| | (_) | | | |            |
+//   |          /_/   \_\___|\__|_| \_/ \__,_|\__|_|\___/|_| |_|            |
+//   |                                                                      |
+//   +----------------------------------------------------------------------+
+
+function wato_do_activation(siteid, est) {
+    // Hide the activate changes button
+    var button = document.getElementById('act_changes_button');
+    if(button) {
+        button.style.display = 'none';
+        button = null;
+    }
+
+    get_url("wato_ajax_activation.py",
+            wato_activation_result, siteid);
+    replication_progress[siteid] = 20; // 10 of 10 10ths
+    setTimeout("replication_step('"+siteid+"',"+est+");", est/10);
+}
+
+function wato_activation_result(siteid, code) {
+    replication_progress[siteid] = 0;
+    var oState = document.getElementById("repstate_" + siteid);
+    var oMsg   = document.getElementById("repmsg_" + siteid);
+    if (code.substr(0, 3) == "OK:") {
+        oState.innerHTML = "<div class='repprogress ok' style='width: 160px;'>OK</div>";
+        oMsg.innerHTML = code.substr(3);
+
+        // Reload page after 2 secs
+        setTimeout(wato_replication_finish, 2000);
+    } else {
+        oState.innerHTML = '';
+        oMsg.innerHTML = code;
+        
+        // Show the activate changes button again
+        var button = document.getElementById('act_changes_button');
+        if(button) {
+            button.style.display = '';
+            button = null;
+        }
+    }
+    oState = null;
+    oMsg = null;
+}
+
 //   +----------------------------------------------------------------------+
 //   |           ____            _ _           _   _                        |
 //   |          |  _ \ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __             |
@@ -528,8 +576,16 @@ function wato_replication_result(siteid, code) {
 function wato_replication_finish() {
     if(parent && parent.frames[1])
         parent.frames[1].location.reload(); // reload sidebar
-    oDiv = document.getElementById("act_changes_button");
+    var oDiv = document.getElementById("act_changes_button");
     oDiv.style.display = "none";
+    oDiv = null
+
+    // Hide the pending changes container
+    var oPending = document.getElementById("pending_changes");
+    if(oPending) {
+        oPending.style.display = "none";
+        oPending = null
+    }
 }
 
 function wato_randomize_secret(id, len) {

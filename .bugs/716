@@ -1,12 +1,15 @@
 Title: Timeperiods as exceptions can only be selected after saving the rule
 Component: wato
-State: open
+Class: nastiness
+State: done
 Date: 2012-08-01 11:17:46
 Targetversion: 1.2.0
-Class: nastiness
 
 This is a nasty interface problem (for the user)
 If you add a timeperiod, the exception (text) field is visible,
 but the dropdown for selecting a timeperiod exception is not.
 If you save the rule and go back to edit mode, then the dropdown
 is there.
+
+2012-10-02 15:04:01: changed state open -> done
+This works with current WATO.

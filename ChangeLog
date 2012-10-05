@@ -7,6 +7,8 @@
     * FIX: WATO Folder filter not available when WATO disabled
     * FIX: WATO Folder Filter no longer available in single host views
     * FIX: Quicksearch converts search text to regex when accessing livestatus
+    * FIX: Removed focus of "Full name" attribute on editing a contact
+
 
     WATO
     * FIX: It is now possible to create clusters in empty folders

@@ -22,14 +22,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-bin_PROGRAMS = unixcat
+bin_PROGRAMS = unixcat livecheck
 unixcat_SOURCES = unixcat.c
 unixcat_LDADD = -lpthread
 
 livecheck_SOURCES = livecheck.c strutil.cc check_icmp.c
 
-pkglib_LIBRARIES = livestatus.so
-pkglib_PROGRAMS = livecheck
+pkglib_LIBRARIES = livestatus.so 
 
 livestatus_so_SOURCES = \
 	AndingFilter.cc ClientQueue.cc Column.cc ColumnsColumn.cc CustomVarsExplicitColumn.cc \
@@ -73,6 +72,8 @@ install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(pkglibdir)
 	$(INSTALL_PROGRAM) livestatus.o $(DESTDIR)$(pkglibdir)
 	rm -f $(DESTDIR)$(pkglibdir)/livestatus.so
+	$(INSTALL_PROGRAM) livecheck $(DESTDIR)$(pkglibdir)
+	rm -f $(DESTDIR)$(bindir)/livecheck
 
 clean-local:
 	rm -f *~

@@ -408,7 +408,7 @@ fi
 # Welcome the ZFS check on Linux
 # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
 # check zpool status
-if type zpool; then
+if type zpool >/dev/null; then
    echo "<<<zpool_status>>>"
    zpool status -x
 fi

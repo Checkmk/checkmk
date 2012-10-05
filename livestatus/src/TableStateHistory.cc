@@ -69,6 +69,11 @@ void debug_statehist(const char *loginfo, ...)
 void log_hst(HostServiceState *state)
 {
 	debug_statehist("STATE INFO");
+	if (state->_host_name)
+		debug_statehist("host name %s", state->_host_name);
+	if (state->_service_description)
+		debug_statehist("svc description %s", state->_service_description);
+
 	debug_statehist("time  %d", state->_time);
 	debug_statehist("state %d", state->_state);
 	if (state->_log_output)
@@ -77,10 +82,6 @@ void log_hst(HostServiceState *state)
 		debug_statehist("debug_info %s", state->_debug_info);
 	if (state->_notification_period)
 		debug_statehist("notification period %s", state->_notification_period);
-	if (state->_host_name)
-		debug_statehist("host name %s", state->_host_name);
-	if (state->_service_description)
-		debug_statehist("svc description %s", state->_service_description);
 	debug_statehist("from  %d", state->_from);
 	debug_statehist("until %d", state->_until);
 	debug_statehist("duration %d", state->_duration);

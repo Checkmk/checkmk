@@ -7,13 +7,12 @@
     * FIX: WATO Folder filter not available when WATO disabled
     * FIX: WATO Folder Filter no longer available in single host views
     * FIX: Quicksearch converts search text to regex when accessing livestatus
-    * FIX: Removed focus of "Full name" attribute on editing a contact
-
 
     WATO
     * FIX: It is now possible to create clusters in empty folders
     * FIX: Fixed problem with complaining empty ListOf() valuespecs
     * FIX: Users & Contacts uses case-insensitive sorting of 'Full name' column  
+    * FIX: Removed focus of "Full name" attribute on editing a contact
 
     BI:
     * FIX: Correct representation of (!), (!!) and (?) markers in check output

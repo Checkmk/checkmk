@@ -4,10 +4,17 @@
     * FIX: BI: Assuming "OK" for hosts is now possible
     * FIX: Fixed error in makeuri() calls when no parameters in URL
     * FIX: Try out mode in view editor does not show context buttons anymore
+    * FIX: WATO Folder filter not available when WATO disabled
+    * FIX: WATO Folder Filter no longer available in single host views
+    * FIX: Quicksearch converts search text to regex when accessing livestatus
 
     WATO
     * FIX: It is now possible to create clusters in empty folders
     * FIX: Fixed problem with complaining empty ListOf() valuespecs
+    * FIX: Users & Contacts uses case-insensitive sorting of 'Full name' column  
+
+    BI:
+    * FIX: Correct representation of (!), (!!) and (?) markers in check output
 
     Livestatus
     * FIX: comments_with_info in service table was always empty

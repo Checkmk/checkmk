@@ -69,6 +69,7 @@ void debug_statehist(const char *loginfo, ...)
 void log_hst(HostServiceState *state)
 {
 	debug_statehist("STATE INFO");
+	debug_statehist("time  %d", state->_time);
 	debug_statehist("state %d", state->_state);
 	if (state->_log_output)
 		debug_statehist("check_output %s", state->_log_output);
@@ -80,6 +81,9 @@ void log_hst(HostServiceState *state)
 		debug_statehist("host name %s", state->_host_name);
 	if (state->_service_description)
 		debug_statehist("svc description %s", state->_service_description);
+	debug_statehist("from  %d", state->_from);
+	debug_statehist("until %d", state->_until);
+	debug_statehist("duration %d", state->_duration);
 }
 
 HostServiceState::~HostServiceState()
@@ -419,7 +423,9 @@ void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *ent
 	{
 		// Create existing entry for last known existance
 		hs_state->_until = hs_state->_last_known_time;
-		process(query, hs_state);
+        if (!only_update) {
+            process(query, hs_state);
+        }
 
 		// Reanimate this host/service, cleanup any invalid data
 		if (hs_state->_log_output)

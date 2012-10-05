@@ -143,8 +143,6 @@ void TableLog::answerQuery(Query *query)
 		g_store->logCache()->unlockLogCache();
 		return;
 	}
-	debug_log("log classmask after %d", classmask);
-
 
 	/* This code start with the oldest log entries. I'm going
        to change this and start with the newest. That way,

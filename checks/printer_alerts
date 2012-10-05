@@ -116,7 +116,7 @@ def check_printer_alerts(_not_used, _not_used1, info):
         if state == 2:
             sum_state = 2
         elif state == 3 and sum_state != 2:
-            sum_state = 3:
+            sum_state = 3
         elif state > sum_state:
             sum_state = max(state, sum_state)
 

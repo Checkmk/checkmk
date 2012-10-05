@@ -1,8 +1,12 @@
 Title: Make topics in views snapin foldable
 Component: multisite
-State: open
-Date: 2011-01-08 16:50:52
 Class: feature
+State: done
+Date: 2011-01-08 16:50:52
+Targetversion: future
 
 Make the topics foldable like in the custom links snapin. The
 folding state should be persistet on a per user basis.
+
+2012-10-04 16:11:33: changed state open -> done
+Is already implemented

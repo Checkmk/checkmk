@@ -1,9 +1,9 @@
 Title: Better check API validation
 Component: core
-State: open
+Class: cleanup
+State: done
 Date: 2012-09-14 10:18:45
 Targetversion: future
-Class: cleanup
 
 The returned inventory data is validated if it is a list. But not further. It would be good
 to also validate if the items in the list are tuples of 2 or 3 items while the first item
@@ -11,3 +11,6 @@ is a single value of none or a string and the second is a string or also none.
 
 Same for the data returned by the check data.
 
+
+2012-10-04 12:50:41: changed state open -> done
+Implemented slightly better inventory data validation

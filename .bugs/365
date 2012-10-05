@@ -1,8 +1,12 @@
 Title: Windows agent: make sections disableable by config
 Component: checks
-State: open
-Date: 2011-09-07 17:35:51
 Class: feature
+State: done
+Date: 2011-09-07 17:35:51
+Targetversion: future
 
 It would be nice if the configuration of the windows agent would allow
 to disable certain sections, e.g. logwatch.
+
+2012-10-04 16:23:50: changed state open -> done
+Has already been implemented.

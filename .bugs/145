@@ -1,8 +1,12 @@
 Title: import files in conf.d/*.mk in sorted order
 Component: core
-State: open
-Date: 2011-02-16 17:12:01
 Class: feature
+State: done
+Date: 2011-02-16 17:12:01
+Targetversion: future
 
 Simple do a sort() of the globbed files. That way users have a way
 to force a certain order of execution. And write that into the documentation.
+
+2012-10-04 16:25:08: changed state open -> done
+Has been implemented a long time ago...

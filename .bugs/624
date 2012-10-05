@@ -1,8 +1,13 @@
 Title: WATO Folder Filter wird auch bei single host views angezeigt
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2012-01-20 15:54:20
 Targetversion: future
-Class: nastiness
 
 Der Filter ist in solchen Ansichten eigentlich sinnlos.
+
+2012-10-04 17:41:39: changed state open -> done
+Fixed Bug: Filter no longer available when WATO is deactivated
+Filter no longer available on single host views
+( "host" in view["hide_filters"] )

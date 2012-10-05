@@ -1,8 +1,12 @@
 Title: Icon, das anzeigt, dass eine Ansicht gefiltert ist
 Component: multisite
-State: open
-Date: 2010-12-21 22:13:43
 Class: feature
+State: done
+Date: 2010-12-21 22:13:43
+Targetversion: future
 
 Wenn man bei einer View einen Filter ausfüllt (user), dann soll
 irgendwo ein Icon anzeigen, dass das Resultat gefiltert ist.
+
+2012-10-04 12:33:38: changed state open -> done
+Ist auch schon lange drin.

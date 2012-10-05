@@ -1,10 +1,13 @@
 Title: Usability: Focus handling in User & Contacts: Edit User
 Component: wato
-State: open
+Class: feature
+State: done
 Date: 2012-01-09 15:32:35
 Targetversion: 1.2.0
-Class: feature
 
 If you call the edit dialog it will put the focus on the user name field and highlight the whole text. 
 This is great when initially adding the user but causes unwanted overwriting of the user name when you're just updating it.
 If called in edit mode, don't set focus.
+
+2012-10-04 16:26:44: changed state open -> done
+Full name is no longer focused when editing user

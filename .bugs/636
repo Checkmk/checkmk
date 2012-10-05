@@ -1,11 +1,15 @@
 Title: Add missing fields to contact configuration
 Component: wato
-State: open
+Class: todo
+State: done
 Date: 2012-02-22 19:40:24
 Targetversion: 1.2.0
-Class: todo
 
 For example the mobile number field is missing. This is sometime a showstopper
 since it is not possible to manually add further attributes. We even could
 think about letting the user add custom attributes here. Or at least the
 six supplement fields that nagios provides.
+
+2012-10-04 12:15:49: changed state open -> done
+Pager adress added.
+Supplemental fields not required yet

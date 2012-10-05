@@ -1,11 +1,15 @@
 Title: logwatch: Teil der Meldung im Check ausgeben
 Component: checks
-State: open
-Date: 2010-12-21 21:27:03
 Class: feature
+State: done
+Date: 2010-12-21 21:27:03
+Targetversion: future
 
 Kann man dazu evtl. den long_service_output nehmen? Es wäre auf jeden
 Fall gut, wenn neue Meldungen zu sehen sind, auch wenn die später
 wieder verschwinden. Noch besser wäre, wenn der logwatch-Check sogar
 auch später immer die letzten Fehlermeldungen anzeigt. Diese kann
 man ja problemlos aus der Datei holen.
+
+2012-10-04 12:32:13: changed state open -> done
+This is already done. The last problematic line is shown.

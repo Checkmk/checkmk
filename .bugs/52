@@ -1,8 +1,9 @@
 Title: Checkboxen zum Auswählen von Einträgen für Kommandos
 Component: multisite
-State: open
-Date: 2010-12-21 22:01:48
 Class: feature
+State: done
+Date: 2010-12-21 22:01:48
+Targetversion: future
 
 Checkboxen: Bei einer View macht man oben einen kleinen Reiter, der eine
 Checkbox symbolisiert. Wenn man den anklickt, wir bei jedem Datensatz
@@ -58,3 +59,6 @@ und mit der transid nur noch prüfen, ob dieses Formular bereits
 abgeschickt wurde? Man würde dann pro Benutzer mehrere Transids
 speichern.
 
+
+2012-10-04 12:33:06: changed state open -> done
+Das ist schon länger umgesetzt.

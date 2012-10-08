@@ -13,6 +13,8 @@
     * FIX: Fixed problem with complaining empty ListOf() valuespecs
     * FIX: Users & Contacts uses case-insensitive sorting of 'Full name' column  
     * FIX: Removed focus of "Full name" attribute on editing a contact
+    * FIX: fix layout bug in ValueSpec ListOfStrings (e.g. used in
+           list of explicit host/services in rules)
 
     BI:
     * FIX: Correct representation of (!), (!!) and (?) markers in check output

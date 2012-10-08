@@ -66,13 +66,14 @@ def service_levels():
     except:
         return [(0, "(no service level)")]
 
-def action_choices():
+def action_choices(omit_hidden = False):
     # The possible actions are configured in mkeventd.mk,
     # not in multisite.mk (like the service levels). That
     # way we have not direct access to them but need
     # to load them from the configuration.
     return [ (a["id"], a["title"]) 
-             for a in eventd_configuration().get("actions", []) ]
+             for a in eventd_configuration().get("actions", []) 
+             if not omit_hidden or not a.get("hidden") ]
 
 cached_config = None
 def eventd_configuration():

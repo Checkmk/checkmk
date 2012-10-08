@@ -103,6 +103,15 @@ vs_mkeventd_actions = \
                       label = _("Current disable execution of this action"),
                   )
               ),
+              (   "hidden",
+                  Checkbox(
+                      title = _("Hide from Status GUI"),
+                      label = _("Do not offer this action as a command on open events"),
+                      help = _("If you enabled this option, then this action will not "
+                               "be available as an interactive user command. It is usable "
+                               "as an ad-hoc action when a rule fires, nevertheless."),
+                 ),
+              ),
               (   "action",
                   CascadingDropdown(
                       title = _("Type of Action"),

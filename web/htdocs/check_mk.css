@@ -435,6 +435,10 @@ table.valuespec_listof option[selected] {
     font-weight: bold;
 }
 
+div.listofstring.horizontal {
+    clear: left;
+}
+
 div.listofstrings > div {
     margin-bottom: 2px;
 }
@@ -444,7 +448,7 @@ div.listofstrings.horizontal > div {
     margin-right: 2px;
 }
 div.listofstrings.horizontal > div:last-child {
-    float: none;
+    /* float: none; */
 }
 
 table.listchoice {

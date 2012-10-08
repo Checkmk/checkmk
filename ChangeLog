@@ -25,6 +25,10 @@
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used
     * FIX: Windows agent: quote '%' in plugin output correctly
+    * New check mssql_counters.locks: Monitors locking related information of
+      MSSQL tablespaces
+    * windows_updates agent plugin: Fetching data in background mode, caching
+      update information for 30 minutes
 
 1.2.1i1:
     Core:
@@ -88,10 +92,6 @@
     * aironet_errors: Added support for further Cisco WLAN APs
     * apache_status: New check to monitor apache servers which have the status-module enabled.
       This check needs the linux agent plugin "apache_status" installed on the target host.
-    * New check mssql_counters.locks: Monitors locking related information of
-      MSSQL tablespaces
-    * windows_updates agent plugin: Fetching data in background mode, caching
-      update information for 30 minutes
 
     WATO:
     * Added permission to control the "clone host" feature in WATO

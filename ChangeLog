@@ -49,6 +49,13 @@
     * Added "profile" option to be configurable via browser
     * FIX: It is now possible to create clusters in empty folders
     * FIX: Fixed problem with complaining empty ListOf() valuespecs
+    * FIX: Users & Contacts uses case-insensitive sorting of 'Full name' column  
+    * FIX: Removed focus of "Full name" attribute on editing a contact
+    * FIX: fix layout bug in ValueSpec ListOfStrings (e.g. used in
+           list of explicit host/services in rules)
+
+    BI:
+    * FIX: Correct representation of (!), (!!) and (?) markers in check output
 
     Livestatus
     * FIX: comments_with_info in service table was always empty

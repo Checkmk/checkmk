@@ -145,7 +145,6 @@ check_info['mssql_counters.transactions'] = {
 }
 
 def check_mssql_counters_locks(item, params, info):
-    print params
     state    = 0
     output   = []
     perfdata = []

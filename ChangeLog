@@ -5,6 +5,8 @@
 
     Event Console:
     * Moved source of Event Console into Check_MK project 
+    * New button for resetting all rule hits counters
+    * When saving a rule then its hits counter is always reset
 
     Multisite:
     * Enable automation login with _username= and _secret=, while

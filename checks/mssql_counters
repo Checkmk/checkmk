@@ -49,7 +49,7 @@ def mssql_counters_item(line, add_counter_name):
     else:
         return obj + ' ' + instance
 
-def inventory_mssql_counters(info, want_counters, perc_w_base, add_counter_name):
+def inventory_mssql_counters(info, want_counters, perc_w_base, add_counter_name, dflt = None):
     inventory = []
     for line in info:
         if line[1] in want_counters:
@@ -65,7 +65,7 @@ def inventory_mssql_counters(info, want_counters, perc_w_base, add_counter_name)
                 if base == 0.0:
                     continue # Skip counters where base is "0"
 
-            inventory.append((mssql_counters_item(line, add_counter_name), None))
+            inventory.append((mssql_counters_item(line, add_counter_name), dflt))
     return inventory
 
 #
@@ -142,6 +142,55 @@ check_info['mssql_counters.transactions'] = {
         [ 'transactions/sec', 'write_transactions/sec', 'tracked_transactions/sec' ], False, False),
     'service_description': "%s Transactions",
     'has_perfdata':        True,
+}
+
+def check_mssql_counters_locks(item, params, info):
+    print params
+    state    = 0
+    output   = []
+    perfdata = []
+    for line in info:
+        if mssql_counters_item(line, False) != item:
+            continue
+
+        for counter, label in [
+            ('lock_requests/sec', 'Requests'),
+            ('lock_timeouts/sec', 'Timeouts'),
+            ('number_of_deadlocks/sec', 'Deadlocks'),
+            ('lock_waits/sec', 'Waits'),
+            ]:
+            if line[1] == counter:
+                prob_txt = ''
+                value = float(line[-1])
+
+                p = params.get(counter)
+                if p:
+                    warn, crit = p
+                    if value > crit:
+                        state = max(state, 1)
+                        prob_txt = ' (!)'
+                    elif value > warn:
+                        state = max(state, 2)
+                        prob_txt = ' (!!)'
+                else:
+                    warn, crit = None, None
+
+                output.append('%s: %d/s%s' % (label, value, prob_txt))
+                perfdata.append((counter, value, warn, crit))
+
+    if output:
+        return (state, '%s - %s' % (nagios_state_names[state], ', '.join(output)), perfdata)
+    else:
+        return (3, 'UNKNOWN - Counters %s could not be found in agent output' % (item))
+
+check_info['mssql_counters.locks'] = {
+    'check_function':      check_mssql_counters_locks,
+    'inventory_function':  lambda info: inventory_mssql_counters(info,
+        [ 'number_of_deadlocks/sec', 'lock_requests/sec', 'lock_timeouts/sec', 'lock_waits/sec' ],
+        False, False, {}),
+    'service_description': "%s Locks",
+    'has_perfdata':        True,
+    'group':               'mssql_counters_locks',
 }
 
 #

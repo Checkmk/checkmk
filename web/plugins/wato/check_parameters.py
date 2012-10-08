@@ -1072,30 +1072,79 @@ checkgroups.append((
     subgroup_applications,
     "mssql_backup",
     _("MSSQL Backups"),
-    Alternative(
+    Optional(
+        Tuple(
+            elements = [
+              Integer(title = _("Warning if more than"), unit = _("seconds")),
+              Integer(title = _("Critical if more than"), unit = _("seconds"))
+            ]
+        ),
+        title = _("Specify time since last successful backup"),
         help = _("The levels for memory usage on Linux and UNIX systems take into account the "
                "currently used memory (RAM or SWAP) by all processes and sets this in relation "
                "to the total RAM of the system. This means that the memory usage can exceed 100%. "
                "A usage of 200% means that the total size of all processes is twice as large as "
                "the main memory, so <b>at least</b> the half of it is currently swapped out."),
-        elements = [
-            FixedValue(
-                None,
-                totext = '',
-                title = _("Don't use any threshold. Just collect the information.")),
-            Tuple(
-                title = _("Specify time since last successful backup"),
-                elements = [
-                  Integer(title = _("Warning if more than"), unit = _("seconds")),
-                  Integer(title = _("Critical if more than"), unit = _("seconds"))
-                ]
-            )
-        ]
     ),
     TextAscii(
         title = _("Service descriptions"),
         allow_empty = False),
      None))
+
+checkgroups.append((
+    subgroup_applications,
+    "mssql_counters_locks",
+    _("MSSQL Locks"),
+    Dictionary(
+         help = _("This check monitors locking related information of MSSQL tablespaces."),
+         elements = [
+             ("lock_requests/sec",
+               Tuple(
+                   title = _("Lock Requests / sec"),
+                   help = _("Number of new locks and lock conversions per second requested from the lock manager."),
+                   elements = [
+                       Float(title = _("Warning at"),  unit = _("requests/sec")),
+                       Float(title = _("Critical at"), unit = _("requests/sec")),
+                    ],
+               ),
+            ),
+            ( "lock_timeouts/sec",
+               Tuple(
+                   title = _("Lock Timeouts / sec"),
+                   help = _("Number of lock requests per second that timed out, including requests for NOWAIT locks."),
+                   elements = [
+                       Float(title = _("Warning at"),  unit = _("timeouts/sec")),
+                       Float(title = _("Critical at"), unit = _("timeouts/sec")),
+                    ],
+               ),
+            ),
+            ( "number_of_deadlocks/sec",
+               Tuple(
+                   title = _("Number of Deadlocks / sec"),
+                   help = _("Number of lock requests per second that resulted in a deadlock."),
+                   elements = [
+                       Float(title = _("Warning at"),  unit = _("deadlocks/sec")),
+                       Float(title = _("Critical at"), unit = _("deadlocks/sec")),
+                    ],
+               ),
+            ),
+            ( "lock_waits/sec",
+               Tuple(
+                   title = _("Lock Waits / sec"),
+                   help = _("Number of lock requests per second that required the caller to wait."),
+                   elements = [
+                       Float(title = _("Warning at"),  unit = _("waits/sec")),
+                       Float(title = _("Critical at"), unit = _("waits/sec")),
+                    ],
+               ),
+            ),
+         ]
+    ),
+    TextAscii(
+        title = _("Service descriptions"),
+        allow_empty = False
+    ),
+    None))
 
 
 checkgroups.append((

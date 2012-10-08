@@ -33,6 +33,10 @@
     * FIX: Implemented basic non HTTP 200 status code response handling in interactive
            progress dialogs (e.g. bulk inventory mode)
     * Users & Contacts: Case-insensitive sorting of 'Full name' column
+    
+    Checks & Agents:
+    * New check mssql_counters.locks: Monitors locking related information of
+      MSSQL tablespaces
 
 1.2.0p3:
     Mulitisite

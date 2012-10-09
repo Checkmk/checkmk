@@ -5,9 +5,8 @@ Date: 2012-09-20 18:17:19
 Targetversion: future
 Class: nastiness
 
-If you add a simulated state for a given service (using foldable)
-it will be reflected on the top-level, but not on the nodes.
-So you see a lot of green items and but the main state stays as 
-configured to be simulated
-it's very irritating, since the correct subaggrs and services
-are in fact displayed, just not with their simulated states.
+If you add a simulated state for a given service (using foldable) it will be
+reflected on the top-level, but not on the nodes.  So you see a lot of green
+items and but the main state stays as configured to be simulated it's very
+irritating, since the correct subaggrs and services are in fact displayed,
+just not with their simulated states.

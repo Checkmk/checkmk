@@ -102,6 +102,8 @@ int g_data_encoding = ENCODING_UTF8;
 extern struct host *host_list;
 extern struct service *service_list;
 extern scheduled_downtime *scheduled_downtime_list;
+extern int log_initial_states;
+
 
 int g_num_hosts;
 int g_num_services;
@@ -466,6 +468,7 @@ void livestatus_log_initial_states(){
 	// Log DOWNTIME hosts
 	host *h = (host *)host_list;
 	char buffer[8192];
+
 	while (h) {
 		if (h->scheduled_downtime_depth > 0) {
 			sprintf(buffer,"HOST DOWNTIME ALERT: %s;STARTED;%s", h->name, get_downtime_comment(h->name, NULL));
@@ -496,7 +499,10 @@ int broker_event(int event_type __attribute__ ((__unused__)), void *data)
     if( ts->event_type == EVENT_LOG_ROTATION){
     	if( g_thread_running == 1 ){
     		livestatus_log_initial_states();
-    	}
+        } else {
+            if ( log_initial_states == 1 )
+            write_to_all_logs("logging intitial states", LG_INFO);
+        }
     }
 
     update_timeperiods_cache(ts->timestamp.tv_sec);

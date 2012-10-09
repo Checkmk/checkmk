@@ -67,6 +67,7 @@
 
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 extern int event_broker_options;
+extern int enable_environment_macros;
 extern char *log_file;
 
 int g_idle_timeout_msec = 300 * 1000; /* maximum idle time for connection in keep alive state */
@@ -572,7 +573,6 @@ int verify_event_broker_options()
     return errors == 0;
 }
 
-
 void register_callbacks()
 {
     neb_register_callback(NEBCALLBACK_HOST_STATUS_DATA,      g_nagios_handle, 0, broker_host); // Needed to start threads
@@ -797,6 +797,9 @@ int nebmodule_init(int flags __attribute__ ((__unused__)), char *args, void *han
     }
     else if (g_debug_level > 0)
         logger(LG_INFO, "Your event_broker_options are sufficient for livestatus..");
+
+    if (enable_environment_macros == 1)
+        logger(LG_INFO, "Warning: environment_macros are enabled");
 
     store_init();
     register_callbacks();

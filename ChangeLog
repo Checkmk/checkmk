@@ -5,6 +5,9 @@
 
     Event Console:
     * Moved source of Event Console into Check_MK project 
+    * New button for resetting all rule hits counters
+    * When saving a rule then its hits counter is always reset
+    * New feature of hiding certain actions from the commands in the status GUI
 
     Multisite:
     * Enable automation login with _username= and _secret=, while
@@ -33,6 +36,10 @@
     * FIX: Implemented basic non HTTP 200 status code response handling in interactive
            progress dialogs (e.g. bulk inventory mode)
     * Users & Contacts: Case-insensitive sorting of 'Full name' column
+    
+    Checks & Agents:
+    * New check mssql_counters.locks: Monitors locking related information of
+      MSSQL tablespaces
 
 1.2.0p3:
     Mulitisite
@@ -45,6 +52,13 @@
     * Added "profile" option to be configurable via browser
     * FIX: It is now possible to create clusters in empty folders
     * FIX: Fixed problem with complaining empty ListOf() valuespecs
+    * FIX: Users & Contacts uses case-insensitive sorting of 'Full name' column  
+    * FIX: Removed focus of "Full name" attribute on editing a contact
+    * FIX: fix layout bug in ValueSpec ListOfStrings (e.g. used in
+           list of explicit host/services in rules)
+
+    BI:
+    * FIX: Correct representation of (!), (!!) and (?) markers in check output
 
     Livestatus
     * FIX: comments_with_info in service table was always empty

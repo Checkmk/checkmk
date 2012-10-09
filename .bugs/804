@@ -1,0 +1,12 @@
+Title: DRBD check should allow configurable alert level for flipped roles
+Component: checks
+State: open
+Date: 2012-10-05 20:29:21
+Targetversion: future
+Class: bug
+
+The check for DRBD status also keeps an eye on the roles of the DR:BD
+nodes. If the primary and secondary roles switch on both nodes,
+the check will go to critical for historical reasons.
+For many people it would only be considered a WARNING or even OK assuming that
+the primary is working and serving requests.

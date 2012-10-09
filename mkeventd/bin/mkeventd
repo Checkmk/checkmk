@@ -1291,6 +1291,8 @@ class StatusServer:
             self.handle_command_flush()
         elif command == "SYNC":
             self.handle_command_sync()
+        elif command == "RESETCOUNTERS":
+            self.handle_command_resetcounters(arguments)
         elif command == "UPDATE":
             self.handle_command_update(arguments)
         elif command == "CHANGESTATE":
@@ -1350,6 +1352,16 @@ class StatusServer:
 
     def handle_command_sync(self):
         g_event_status.save_status()
+
+    def handle_command_resetcounters(self, arguments):
+        if arguments:
+            rule_id = arguments[0]
+            log("Resetting counters of rule " + rule_id)
+        else:
+            rule_id = None # Reset all rule counters
+            log("Resetting all rule counters")
+        g_event_status.reset_counters(rule_id)
+
 
     def handle_command_action(self, arguments):
         with lock_configuration:
@@ -1593,6 +1605,16 @@ class EventStatus():
         os.rename(path + ".new", path)
         elapsed = time.time() - now
         log("Saved event state to %s in %.3fms." % (path, elapsed * 1000))
+
+    def reset_counters(self, rule_id):
+        if rule_id:
+            if rule_id in self._rule_stats:
+                del self._rule_stats[rule_id]
+        else:
+            self._rule_stats = {}
+        self.save_status()
+
+
 
     def load_status(self):
         path = g_state_dir + "/status"

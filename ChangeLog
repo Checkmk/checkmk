@@ -19,6 +19,13 @@
     * Quicksearch: Convert search text to regex when accessing livestatus
     * FIX: WATO Folder filter not available when WATO disabled
     * WATO Folder Filter no longer available in single host views
+    * Added new painters "Service check command expanded" and
+      "Host check command expanded"
+
+    Livestatus:
+    * Added new table statehist, used for SLA queries
+    * Added new column check_command_expanded in table hosts
+    * Added new column check_command_expanded in table services
 
     BI:
     * Added missing localizations

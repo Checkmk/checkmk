@@ -499,10 +499,8 @@ int broker_event(int event_type __attribute__ ((__unused__)), void *data)
     if( ts->event_type == EVENT_LOG_ROTATION){
     	if( g_thread_running == 1 ){
     		livestatus_log_initial_states();
-        } else {
-            if ( log_initial_states == 1 )
-            write_to_all_logs("logging intitial states", LG_INFO);
-        }
+        } else if (log_initial_states == 1)
+        	write_to_all_logs("logging intitial states", LG_INFO);
     }
 
     update_timeperiods_cache(ts->timestamp.tv_sec);

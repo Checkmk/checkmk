@@ -44,18 +44,14 @@
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 
-extern int g_debug_level;
 extern Store *g_store;
-extern int log_initial_states;
 
 #define CLASSMASK_STATEHIST 70
 
 // Debugging logging is hard if debug messages are logged themselves...
 void debug_statehist(const char *loginfo, ...)
 {
-	if (g_debug_level < 2)
-		return;
-
+	return;
 	FILE *x = fopen("/tmp/livestatus_state.log", "a+");
 	va_list ap;
 	va_start(ap, loginfo);
@@ -365,22 +361,19 @@ void TableStateHistory::answerQuery(Query *query)
 			}
 			break;
 		}
-		case NAGIOS_STARTING:
+		case LOG_INITIAL_STATES:
 		{
 			// This feature is only available if log_initial_states is set to 1
 			// If log_initial_states is set, each nagios startup logs the initial states of all known
 			// hosts and services. Therefore we can detect if a host is no longer available after
 			// a nagios startup. If it still exists an INITIAL HOST/SERVICE state entry will follow up shortly.
 			// If it reappaers again after multiple nagios restarts an unmonitored state entry is generated
-			if (log_initial_states)
-			{
-				state_info_t::iterator it_hst = state_info.begin();
-				while (it_hst != state_info.end()) {
-					if (it_hst->second->_no_longer_exists == 0)
-						it_hst->second->_last_known_time = entry->_time;
-					it_hst->second->_no_longer_exists++;
-					it_hst++;
-				}
+			state_info_t::iterator it_hst = state_info.begin();
+			while (it_hst != state_info.end()) {
+				if (it_hst->second->_no_longer_exists == 0)
+					it_hst->second->_last_known_time = entry->_time;
+				it_hst->second->_no_longer_exists++;
+				it_hst++;
 			}
 			break;
 		}
@@ -395,18 +388,17 @@ void TableStateHistory::answerQuery(Query *query)
 		//hst->_debug_info = "LOG FINAL";
 
 		// No trace since the last two nagios startup -> host/service has vanished
-		if (log_initial_states)
-			if (hst->_no_longer_exists > 1) {
-				// Log last known state up to nagios restart
-				hst->_time  = hst->_last_known_time;
-				hst->_until = hst->_last_known_time;
-				process(query, hst);
+		if (hst->_no_longer_exists > 1) {
+			// Log last known state up to nagios restart
+			hst->_time  = hst->_last_known_time;
+			hst->_until = hst->_last_known_time;
+			process(query, hst);
 
-				// Log absent state
-				hst->_state = -1;
-				hst->_until = hst->_time;
-				hst->_debug_info = "UNMONITORED";
-			}
+			// Log absent state
+			hst->_state = -1;
+			hst->_until = hst->_time;
+			hst->_debug_info = "UNMONITORED";
+		}
 
 		hst->_time  = _until - 1;
 		hst->_until = hst->_time;

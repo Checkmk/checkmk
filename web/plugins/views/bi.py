@@ -231,10 +231,15 @@ def aggr_render_leaf(tree, show_host, bare = False):
     if show_host:
         content += '<a href="%s">%s</a><b class=bullet>&diams;</b>' % (host_url, host.replace(" ", "&nbsp;"))
 
-    if not service:
-        content += '<a href="%s">%s</a>' % (host_url, _("Host&nbsp;status"))
+    if tree[1] and tree[0] != tree[1]:
+        addclass = ' class="state assumed"'
     else:
-        content += '<a href="%s">%s</a>' % (service_url, service.replace(" ", "&nbsp;"))
+        addclass = ""
+
+    if not service:
+        content += '<a href="%s"%s>%s</a>' % (host_url, addclass, _("Host&nbsp;status"))
+    else:
+        content += '<a href="%s"%s>%s</a>' % (service_url, addclass, service.replace(" ", "&nbsp;"))
 
     if bare:
         return content
@@ -242,17 +247,13 @@ def aggr_render_leaf(tree, show_host, bare = False):
         return aggr_render_node(tree, content, None, show_host)
 
 def aggr_render_node(tree, title, mousecode, show_host):
-    state = tree[0]
-    assumed_state = tree[1]
-    if assumed_state != None:
-        effective_state = assumed_state
-    else:
-        effective_state = state
-
-    if (effective_state != state):
+    # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
+    if tree[1] and tree[0] != tree[1]:
         addclass = " " + _("assumed")
+        effective_state = tree[1]
     else:
         addclass = ""
+        effective_state = tree[0]
 
     h = '<span class="content state state%d%s">%s</span>\n' \
          % (effective_state["state"], addclass, render_bi_state(effective_state["state"]))
@@ -314,6 +315,14 @@ def paint_aggr_tree_foldable(row, boxes, omit_root=True):
 
         # Variant: BI-Boxes
         if boxes:
+            # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
+            if tree[1] and tree[0] != tree[1]:
+                addclass = " " + _("assumed")
+                effective_state = tree[1]
+            else:
+                addclass = ""
+                effective_state = tree[0]
+
             if is_leaf:
                 leaf = "leaf"
                 mc = ""
@@ -323,8 +332,8 @@ def paint_aggr_tree_foldable(row, boxes, omit_root=True):
 
             omit = omit_root and len(path) == 1
             if not omit:
-                h += '<span id="%d:%s" %s class="bibox_box %s %s state%s">' % (
-                        expansion_level, path_id, mc, leaf, is_open and "open" or "closed", state["state"])
+                h += '<span id="%d:%s" %s class="bibox_box %s %s state state%s%s">' % (
+                        expansion_level, path_id, mc, leaf, is_open and "open" or "closed", effective_state["state"], addclass)
                 if is_leaf:
                     h += aggr_render_leaf(tree, show_host, bare = True) # .replace(" ", "&nbsp;")
                 else:

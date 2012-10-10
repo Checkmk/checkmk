@@ -38,6 +38,7 @@
     * Added new config option bi_compile_log to collect statistics about
       aggregation compilations
     * Correct representation of (!), (!!) and (?) markers in check output
+    * Corrected representation of assumed state in box layout
 
     WATO:
     * Added progress indicator in single site WATO "Activate Changes"

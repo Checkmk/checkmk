@@ -21,6 +21,7 @@
     * WATO Folder Filter no longer available in single host views
     * Added new painters "Service check command expanded" and
       "Host check command expanded"
+    * FIX: Corrected garbled description for sorter "Service Performance data" 
 
     Livestatus:
     * Added new table statehist, used for SLA queries

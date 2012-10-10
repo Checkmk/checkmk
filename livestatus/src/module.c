@@ -799,7 +799,7 @@ int nebmodule_init(int flags __attribute__ ((__unused__)), char *args, void *han
         logger(LG_INFO, "Your event_broker_options are sufficient for livestatus..");
 
     if (enable_environment_macros == 1)
-        logger(LG_INFO, "Warning: environment_macros are enabled");
+        logger(LG_INFO, "Warning: environment_macros are enabled. This might decrease the overall nagios performance");
 
     store_init();
     register_callbacks();

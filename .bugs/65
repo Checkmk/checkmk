@@ -7,3 +7,9 @@ Class: feature
 Ählich zu den expandierten notes_url. Damit könnte man sehen, welches Kommando
 wirklich ausgeführt wird. Und das zum rausschneiden und auf der Kommandozeile
 pasten.
+
+Dazu einen passenden Multisite-Painter, damit man das Kommando ansehen
+kann. Diesen könnte man evtl. auch direkt in der Service-Details-View
+anzeigen anstelle des jetzigen?
+
+Das gleiche dann natürlich auchbei den Host.

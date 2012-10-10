@@ -194,6 +194,8 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
                 "An optional display name (not used by Nagios standard web pages)", (char *)(&svc.display_name) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(prefix + "check_command",
                 "Nagios command used for active checks", (char *)(&svc.service_check_command) - ref, indirect_offset));
+    table->addColumn(new OffsetStringServiceMacroColumn(prefix + "check_command_expanded",
+                "Nagios command used for active checks with the macros expanded", (char *)(&svc.service_check_command) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(prefix + "event_handler",
                 "Nagios command used as event handler", (char *)(&svc.event_handler) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(prefix + "plugin_output",

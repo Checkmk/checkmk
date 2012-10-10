@@ -460,6 +460,13 @@ multisite_painters["svc_check_command"] = {
     "paint"   : lambda row: (None, row["service_check_command"]),
 }
 
+multisite_painters["svc_check_command_expanded"] = {
+    "title"   : _("Service check command expanded"),
+    "short"   : _("Check command expanded"),
+    "columns" : ["service_check_command_expanded"],
+    "paint"   : lambda row: (None, row["service_check_command_expanded"]),
+}
+
 multisite_painters["svc_contacts"] = {
     "title"   : _("Service contacts"),
     "short"   : _("Contacts"),
@@ -808,6 +815,13 @@ multisite_painters["host_check_command"] = {
     "short"   : _("Check command"),
     "columns" : ["host_check_command"],
     "paint"   : lambda row: (None, row["host_check_command"]),
+}
+
+multisite_painters["host_check_command_expanded"] = {
+    "title"   : _("Host check command expanded"),
+    "short"   : _("Check command expanded"),
+    "columns" : ["host_check_command_expanded"],
+    "paint"   : lambda row: (None, row["host_check_command_expanded"]), 
 }
 
 multisite_painters["host_state_age"] = {

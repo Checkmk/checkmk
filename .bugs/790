@@ -1,0 +1,22 @@
+Title: Three Livecheck issues
+Component: livecheck
+State: open
+Date: 2012-10-09 14:20:28
+Targetversion: 1.2.0
+Class: bug
+
+1. In livecheck.c:53, int bytes_read = read(fd[0], output, sizeof(output));
+does not guarantee a valid 0-byte terminated string. I propose a single
+codeline after it: if (bytes_read > 0) output[bytes_read - 1] = 0; This
+fixed an issue for me, where there was a lot of garbage behind output lines.
+
+2. In livecheck.c:190, check_type should always be 0. check_type determines
+wether it is active(0) or passive(1), not host/service. Since livecheck is
+always run actively on the host that it puts the checkfile. This doesn't
+have to be variable.
+
+3. Somewhere before livecheck.c:188 the output charbuffer needs to be newline
+escaped, there is a nagios function for this called escape_newlines. This
+is necessary for long plugin output to be functional.
+
+Ticket #442

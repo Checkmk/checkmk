@@ -19,6 +19,13 @@
     * Quicksearch: Convert search text to regex when accessing livestatus
     * FIX: WATO Folder filter not available when WATO disabled
     * WATO Folder Filter no longer available in single host views
+    * Added new painters "Service check command expanded" and
+      "Host check command expanded"
+
+    Livestatus:
+    * Added new table statehist, used for SLA queries
+    * Added new column check_command_expanded in table hosts
+    * Added new column check_command_expanded in table services
 
     BI:
     * Added missing localizations
@@ -33,13 +40,16 @@
 
     WATO:
     * Added progress indicator in single site WATO "Activate Changes"
+    * Users & Contacts: Case-insensitive sorting of 'Full name' column
     * FIX: Implemented basic non HTTP 200 status code response handling in interactive
            progress dialogs (e.g. bulk inventory mode)
-    * Users & Contacts: Case-insensitive sorting of 'Full name' column
-    
+    * FIX: Fixed editing of icon_image rules
+
     Checks & Agents:
     * New check mssql_counters.locks: Monitors locking related information of
       MSSQL tablespaces
+    * windows_updates agent plugin: Fetching data in background mode, caching
+      update information for 30 minutes
 
 1.2.0p3:
     Mulitisite

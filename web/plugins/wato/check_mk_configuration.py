@@ -1024,6 +1024,8 @@ class MonitoringIcon(ValueSpec):
         return icons
 
     def render_input(self, varprefix, value):
+        if value is None:
+            value = ""
         num_columns = 12
         html.write("<table>")
         for nr, filename in enumerate([""] + self.available_icons()):
@@ -1049,12 +1051,12 @@ class MonitoringIcon(ValueSpec):
     def from_html_vars(self, varprefix):
         nr = int(html.var(varprefix))
         if nr == 0:
-            return ""
+            return None
         else:
             return self.available_icons()[nr-1]
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != str:
+        if value is not None and type(value) != str:
             raise MKUserError(varprefix, _("The type is %s, but should be str") %
                 type(value))
 

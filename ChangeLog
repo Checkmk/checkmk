@@ -40,16 +40,20 @@
 
     WATO:
     * Added progress indicator in single site WATO "Activate Changes"
+    * Users & Contacts: Case-insensitive sorting of 'Full name' column
     * FIX: Implemented basic non HTTP 200 status code response handling in interactive
            progress dialogs (e.g. bulk inventory mode)
-    * Users & Contacts: Case-insensitive sorting of 'Full name' column
-    
+    * FIX: Fixed editing of icon_image rules
+
     Checks & Agents:
     * New check mssql_counters.locks: Monitors locking related information of
       MSSQL tablespaces
     * Check_MK service is now able to output additional performance data
       user_time, system_time, children_user_time, children_system time
-     
+    * windows_updates agent plugin: Fetching data in background mode, caching
+      update information for 30 minutes
+    * FIX: mssql_counters checks now really only inventorize percentage based
+      counters if a base value is set
 
 1.2.0p3:
     Mulitisite

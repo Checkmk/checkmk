@@ -1,0 +1,12 @@
+Title: Handle ctrl-c for inventory
+Component: core
+State: open
+Date: 2012-10-10 13:37:24
+Targetversion: 1.2.0
+Class: cleanup
+
+Currently, trying to abort an inventory only kills the current inventory. If you
+have simply specified cmk -I you'll need to abort as many times as there are h
+hosts
+It would be nice to be able to press ctrl-c once and have that handled by
+cmk so that it aborts the whole process, ideally in a consistent state.

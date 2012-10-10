@@ -37,6 +37,8 @@
     Checks & Agents:
     * New check mssql_counters.locks: Monitors locking related information of
       MSSQL tablespaces
+    * windows_updates agent plugin: Fetching data in background mode, caching
+      update information for 30 minutes
 
 1.2.0p3:
     Mulitisite

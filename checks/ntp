@@ -153,4 +153,7 @@ def check_ntp_summary(item, params, info):
     return (2, "CRIT - found %d peers, but none is suitable" % len(info))
 
 check_info['ntp']       = (check_ntp,         "NTP Peer %s", 1, inventory_ntp)
+checkgroup_of['ntp'] = 'ntp_time'
+
 check_info['ntp.time']  = (check_ntp_summary, "NTP Time",    1, inventory_ntp_summary)
+checkgroup_of['ntp.time'] = 'ntp_time'

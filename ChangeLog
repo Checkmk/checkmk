@@ -5,6 +5,9 @@
 
     Event Console:
     * Moved source of Event Console into Check_MK project 
+    * New button for resetting all rule hits counters
+    * When saving a rule then its hits counter is always reset
+    * New feature of hiding certain actions from the commands in the status GUI
 
     Multisite:
     * Enable automation login with _username= and _secret=, while
@@ -16,6 +19,13 @@
     * Quicksearch: Convert search text to regex when accessing livestatus
     * FIX: WATO Folder filter not available when WATO disabled
     * WATO Folder Filter no longer available in single host views
+    * Added new painters "Service check command expanded" and
+      "Host check command expanded"
+
+    Livestatus:
+    * Added new table statehist, used for SLA queries
+    * Added new column check_command_expanded in table hosts
+    * Added new column check_command_expanded in table services
 
     BI:
     * Added missing localizations

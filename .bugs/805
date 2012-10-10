@@ -1,0 +1,19 @@
+Title: Custom notification text does not show up
+Component: core
+State: open
+Date: 2012-10-09 10:30:07
+Targetversion: 1.2.0
+Class: todo
+
+If you create a custom notification using Multisite it allwos you to include some text in there
+This text is not passed through to the actual notification, either missing from the 
+template or not handled in notify.py
+
+
+Address:  149.154.154.26
+State:    UP -> UP (RECOVERY)
+Command:  check-mk-ping!-n 9 -t 20 -w 1500.00,80.00% -c 3000.00,100.00%
+Output:   OK - 149.154.154.26: rta 22.841ms, lost 0%
+Perfdata: rta=22.841ms;1500.000;3000.000;0; pl=0%;80;100;; rtmax=28.768ms;;;; rtmin=20.972ms;;;;
+
+We could generally enable those comments, right?

@@ -639,12 +639,12 @@ if mkeventd_enabled:
             [ "user", "admin" ])
     
     def render_mkeventd_actions():
-        for action_id, title in mkeventd.action_choices():
+        for action_id, title in mkeventd.action_choices(omit_hidden = True):
             html.button("_action_" + action_id, title)
             html.write("<br>")
     
     def command_mkeventd_action(cmdtag, spec, row):
-        for action_id, title in mkeventd.action_choices():
+        for action_id, title in mkeventd.action_choices(omit_hidden = True):
             if html.var("_action_" + action_id):
                 return "ACTION;%s;%s;%s" % (row["event_id"], config.user_id, action_id), \
                   (_("execute that action &quot;%s&quot") % title)

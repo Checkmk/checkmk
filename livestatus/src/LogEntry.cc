@@ -300,6 +300,10 @@ bool LogEntry::handleProgrammEntry()
 	{
 		_logclass = LOGCLASS_PROGRAM;
 		return true;
+	}else if (strstr(_text, "logging intitial states")){
+        _logclass = LOGCLASS_PROGRAM;
+        _type     = LOG_INITIAL_STATES;
+        return true;
 	}
 	return false;
 }

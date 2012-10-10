@@ -56,19 +56,6 @@ TableLog::TableLog()
 	addColumns(this, "", -1);
 }
 
-// Debugging logging is hard if debug messages are logged themselves...
-void debug_log(const char *loginfo, ...)
-{
-	FILE *x = fopen("/tmp/livestatus_log.log", "a+");
-	va_list ap;
-	va_start(ap, loginfo);
-	vfprintf(x, loginfo, ap);
-	fputc('\n', x);
-	va_end(ap);
-	fclose(x);
-}
-
-
 void TableLog::addColumns(Table *table, string prefix, int indirect_offset, bool add_host, bool add_services)
 {
 	LogEntry *ref = 0;

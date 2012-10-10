@@ -67,6 +67,7 @@
 
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 extern int event_broker_options;
+extern int enable_environment_macros;
 extern char *log_file;
 
 int g_idle_timeout_msec = 300 * 1000; /* maximum idle time for connection in keep alive state */
@@ -102,6 +103,8 @@ int g_data_encoding = ENCODING_UTF8;
 extern struct host *host_list;
 extern struct service *service_list;
 extern scheduled_downtime *scheduled_downtime_list;
+extern int log_initial_states;
+
 
 int g_num_hosts;
 int g_num_services;
@@ -466,6 +469,7 @@ void livestatus_log_initial_states(){
 	// Log DOWNTIME hosts
 	host *h = (host *)host_list;
 	char buffer[8192];
+
 	while (h) {
 		if (h->scheduled_downtime_depth > 0) {
 			sprintf(buffer,"HOST DOWNTIME ALERT: %s;STARTED;%s", h->name, get_downtime_comment(h->name, NULL));
@@ -496,7 +500,8 @@ int broker_event(int event_type __attribute__ ((__unused__)), void *data)
     if( ts->event_type == EVENT_LOG_ROTATION){
     	if( g_thread_running == 1 ){
     		livestatus_log_initial_states();
-    	}
+        } else if (log_initial_states == 1)
+        	write_to_all_logs("logging intitial states", LG_INFO);
     }
 
     update_timeperiods_cache(ts->timestamp.tv_sec);
@@ -567,7 +572,6 @@ int verify_event_broker_options()
 
     return errors == 0;
 }
-
 
 void register_callbacks()
 {
@@ -793,6 +797,9 @@ int nebmodule_init(int flags __attribute__ ((__unused__)), char *args, void *han
     }
     else if (g_debug_level > 0)
         logger(LG_INFO, "Your event_broker_options are sufficient for livestatus..");
+
+    if (enable_environment_macros == 1)
+        logger(LG_INFO, "Warning: environment_macros are enabled");
 
     store_init();
     register_callbacks();

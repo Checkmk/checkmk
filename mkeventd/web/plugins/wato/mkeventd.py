@@ -103,6 +103,15 @@ vs_mkeventd_actions = \
                       label = _("Current disable execution of this action"),
                   )
               ),
+              (   "hidden",
+                  Checkbox(
+                      title = _("Hide from Status GUI"),
+                      label = _("Do not offer this action as a command on open events"),
+                      help = _("If you enabled this option, then this action will not "
+                               "be available as an interactive user command. It is usable "
+                               "as an ad-hoc action when a rule fires, nevertheless."),
+                 ),
+              ),
               (   "action",
                   CascadingDropdown(
                       title = _("Type of Action"),
@@ -695,6 +704,8 @@ def mode_mkeventd_rules(phase):
         mkeventd_changes_button()
         if config.may("mkeventd.edit"):
             html.context_button(_("New Rule"), make_link([("mode", "mkeventd_edit_rule")]), "new")
+            html.context_button(_("Reset Counters"), 
+              make_action_link([("mode", "mkeventd_rules"), ("_reset_counters", "1")]), "resetcounters")
         return
 
     rules = load_mkeventd_rules()
@@ -715,6 +726,17 @@ def mode_mkeventd_rules(phase):
                 log_mkeventd("delete-rule", _("Deleted rule %s") % rules[nr]["id"])
                 del rules[nr]
                 save_mkeventd_rules(rules)
+            elif c == False:
+                return ""
+            else:
+                return
+
+        elif html.has_var("_reset_counters"):
+            c = wato_confirm(_("Confirm counter reset"),
+                             _("Do you really want to reset all <i>Hits</i> counters to zero?"))
+            if c:
+                mkeventd.query("COMMAND RESETCOUNTERS")
+                log_mkeventd("counter-reset", _("Resetted all rule hit counters to zero"))
             elif c == False:
                 return ""
             else:
@@ -931,6 +953,8 @@ def mode_mkeventd_edit_rule(phase):
             log_mkeventd("new-rule", _("Created new event corelation rule with id %s" % rule["id"]))
         else:
             log_mkeventd("edit-rule", _("Modified event corelation rule %s" % rule["id"]))
+            # Reset hit counters of this rule
+            mkeventd.query("COMMAND RESETCOUNTERS;" + rule["id"])
         return "mkeventd_rules"
 
 

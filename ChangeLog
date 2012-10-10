@@ -50,6 +50,8 @@
       MSSQL tablespaces
     * windows_updates agent plugin: Fetching data in background mode, caching
       update information for 30 minutes
+    * FIX: mssql_counters checks now really only inventorize percentage based
+      counters if a base value is set
 
 1.2.0p3:
     Mulitisite

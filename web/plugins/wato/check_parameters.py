@@ -321,7 +321,7 @@ checkgroups.append((
 checkgroups.append((
    subgroup_os,
     "systemtime",
-    _("System time offset"),
+    _("Windows system time offset"),
     Tuple(
         title = _("Time offset"),
         elements = [
@@ -1717,6 +1717,35 @@ checkgroups.append((
         title = _("Sensor ID"),
         help = _("The identificator of the themal sensor.")),
     "first"))
+
+checkgroups.append((
+   subgroup_os,
+    "ntp_time",
+    _("State of NTP time synchronisation"),
+    Tuple(
+        elements = [
+            Integer(
+                title = _("Max. allowed stratum"),
+                default_value = 10,
+                help = _("The stratum (\"distance\" to the reference clock) at which the check gets critical."),
+            ),
+            Float(
+                title = _("Warning at"),
+                unit = _("Miliseconds"),
+                default_value = 200.0,
+                help = _("The offset in ms at which a warning state is triggered."),
+            ),
+            Float(
+                title = _("Critical at"),
+                unit = _("Miliseconds"),
+                default_value = 500.0,
+                help = _("The offset in ms at which a critical state is triggered."),
+            ),
+        ]
+    ),
+    None,
+    "first"
+))
 
 # Create rules for check parameters of inventorized checks
 for subgroup, checkgroup, title, valuespec, itemspec, matchtype in checkgroups:

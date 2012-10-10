@@ -41,6 +41,7 @@
     WATO:
     * Added progress indicator in single site WATO "Activate Changes"
     * Users & Contacts: Case-insensitive sorting of 'Full name' column
+    * ntp/ntp.time parameters are now configurable via WATO
     * FIX: Implemented basic non HTTP 200 status code response handling in interactive
            progress dialogs (e.g. bulk inventory mode)
     * FIX: Fixed editing of icon_image rules

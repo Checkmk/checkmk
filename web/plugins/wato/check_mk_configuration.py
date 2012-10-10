@@ -342,6 +342,16 @@ register_configvar(group,
                      ("file", _("Create check files")) ]),
     need_restart = True)
 
+register_configvar(group,
+    "check_mk_perfdata_with_times",
+    Checkbox(title = _("Check_MK with times performance data"),
+             label = _("Return process times within performance data"),
+             help = _("Enabling this option results in additional performance data "
+                      "for the Check_MK output, giving information regarding the process times. "  
+                      "It provides the following fields: user_time, system_time, children_user_time "
+                      "and children_system_time")), 
+    need_restart = True)
+
 group = _("Inventory - automatic service detection")
 
 register_configvar(group,

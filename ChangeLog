@@ -49,6 +49,8 @@
     Checks & Agents:
     * New check mssql_counters.locks: Monitors locking related information of
       MSSQL tablespaces
+    * Check_MK service is now able to output additional performance data
+      user_time, system_time, children_user_time, children_system time
     * windows_updates agent plugin: Fetching data in background mode, caching
       update information for 30 minutes
     * FIX: mssql_counters checks now really only inventorize percentage based

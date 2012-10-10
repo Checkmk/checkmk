@@ -219,6 +219,7 @@ cluster_max_cachefile_age          = 90   # secs.
 simulation_mode                    = False
 agent_simulator                    = False
 perfdata_format                    = "pnp" # also possible: "standard"
+check_mk_perfdata_with_times       = False
 debug_log                          = None
 monitoring_host                    = None # deprecated
 max_num_processes                  = 50
@@ -2623,6 +2624,7 @@ no_inventory_possible = None
                  'snmpwalks_dir', 'check_mk_basedir', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
                  'simulation_mode', 'agent_simulator', 'aggregate_check_mk', 'debug_log',
+                 'check_mk_perfdata_with_times'
                  ]:
         output.write("%s = %r\n" % (var, globals()[var]))
 

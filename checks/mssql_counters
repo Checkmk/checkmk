@@ -59,7 +59,8 @@ def inventory_mssql_counters(info, want_counters, perc_w_base, add_counter_name,
             if perc_w_base:
                 base = 0.0
                 for line2 in info:
-                    if line2[1] == this_counter + '_base':
+                    if mssql_counters_item(line2, add_counter_name) == \
+                       mssql_counters_item(line, add_counter_name) + '_base':
                         base = float(line2[-1])
                         break
                 if base == 0.0:
@@ -76,6 +77,7 @@ def check_mssql_counters_perc(item, params, info, perc_w_base = True):
     counter_name = None
     value = None
     base  = None
+
     for line in info:
         if mssql_counters_item(line, True) == item:
             value        = float(line[-1])

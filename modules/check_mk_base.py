@@ -738,7 +738,14 @@ def do_check(hostname, ipaddress, only_check_types = None):
         close_checkresult_file()
 
     run_time = time.time() - start_time
-    output += "execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
+    if check_mk_perfdata_with_times:
+        times = os.times()
+        output += "execution time %.1f sec|execution_time=%.3f user_time=%.3f "\
+                  "system_time=%.3f children_user_time=%.3f children_system_time=%.3f\n" %\
+                (run_time, run_time, times[0], times[1], times[2], times[3])
+    else:
+        output += "execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
+
     sys.stdout.write(output)
     sys.exit(status)
 

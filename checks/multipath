@@ -156,6 +156,7 @@ def parse_multipath_output(info, only_uuid = None):
     group = {}
     numpaths = None
     for line in info:
+        print line
         # newer agent also output the device mapper table.
         # ignore those lines for now.
         if line[0] == "dm":

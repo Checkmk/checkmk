@@ -1,0 +1,11 @@
+Title: BI foldertree should hint aggretion method (worst, best)
+Component: bi
+State: open
+Date: 2012-10-10 17:24:38
+Targetversion: future
+Class: phantasm
+
+Customers have asked to see some indication for what aggregation method used
+at the aggregation levels. The user of the aggretion view is usually not the 
+author so he can't obtain the information; simulation would only allow for
+guessing this.

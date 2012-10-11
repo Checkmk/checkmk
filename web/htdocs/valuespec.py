@@ -2015,6 +2015,8 @@ class Foldable(ValueSpec):
             title = self._title_function(value)
         else:
             title = self._valuespec.title()
+            if not title:
+                title = _("(no title)")
         html.begin_foldable_container("valuespec_foldable", varprefix, self._open, 
                         title, False)
         html.help(self._valuespec.help())

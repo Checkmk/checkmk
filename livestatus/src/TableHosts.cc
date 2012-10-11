@@ -89,6 +89,8 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
                 "IP address", (char *)(&hst.address) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(prefix + "check_command",
                 "Nagios command for active host check of this host", (char *)(&hst.host_check_command) - ref, indirect_offset));
+    table->addColumn(new OffsetStringHostMacroColumn(prefix + "check_command_expanded",
+                "Nagios command for active host check of this host with the macros expanded", (char *)(&hst.host_check_command) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(prefix + "event_handler",
                 "Nagios command used as event handler", (char *)(&hst.event_handler) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(prefix + "notification_period",

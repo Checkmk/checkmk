@@ -86,4 +86,4 @@ for proto, address, port in servers:
                     continue
                 print address, port, line
     except Exception, e:
-        sys.stderr.write('Exception (%s:%d): %s' % (address, port, e))
+        sys.stderr.write('Exception (%s:%d): %s\n' % (address, port, e))

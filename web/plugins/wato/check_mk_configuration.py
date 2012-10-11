@@ -342,6 +342,16 @@ register_configvar(group,
                      ("file", _("Create check files")) ]),
     need_restart = True)
 
+register_configvar(group,
+    "check_mk_perfdata_with_times",
+    Checkbox(title = _("Check_MK with times performance data"),
+             label = _("Return process times within performance data"),
+             help = _("Enabling this option results in additional performance data "
+                      "for the Check_MK output, giving information regarding the process times. "  
+                      "It provides the following fields: user_time, system_time, children_user_time "
+                      "and children_system_time")), 
+    need_restart = True)
+
 group = _("Inventory - automatic service detection")
 
 register_configvar(group,
@@ -1014,6 +1024,8 @@ class MonitoringIcon(ValueSpec):
         return icons
 
     def render_input(self, varprefix, value):
+        if value is None:
+            value = ""
         num_columns = 12
         html.write("<table>")
         for nr, filename in enumerate([""] + self.available_icons()):
@@ -1039,12 +1051,12 @@ class MonitoringIcon(ValueSpec):
     def from_html_vars(self, varprefix):
         nr = int(html.var(varprefix))
         if nr == 0:
-            return ""
+            return None
         else:
             return self.available_icons()[nr-1]
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != str:
+        if value is not None and type(value) != str:
             raise MKUserError(varprefix, _("The type is %s, but should be str") %
                 type(value))
 

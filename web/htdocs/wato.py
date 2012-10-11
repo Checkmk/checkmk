@@ -6175,9 +6175,8 @@ class TimeperiodSelection(ElementSelection):
 
     def get_elements(self):
         timeperiods = load_timeperiods()
-        if "7X24" not in timeperiods:
-            timeperiods["7X24"] = _("Always")
-        elements = dict([ (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items() ])
+        elements = dict([ ("7X24", _("Always")) ] + \
+           [ (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items() ])
         return elements
 
 # Check if a timeperiod is currently in use and cannot be deleted

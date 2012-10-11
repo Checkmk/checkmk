@@ -57,6 +57,8 @@
       update information for 30 minutes
     * FIX: mssql_counters checks now really only inventorize percentage based
       counters if a base value is set
+    * Windows agent: output ullTotalVirtual and ullAvailVirtual (not yet
+      being used by check)
 
 1.2.0p3:
     Mulitisite

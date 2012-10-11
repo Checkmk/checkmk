@@ -1,0 +1,8 @@
+Title: check_mk --cleanup-autochecks shows usage message instead of performing operation.
+Component: core
+State: open
+Date: 2012-10-11 10:49:23
+Targetversion: future
+Class: nastiness
+
+The documentation suggests that check_mk --cleanup-autochecks is synonymous with check_mk -u but when I run check_mk --cleanup-autochecks it reports a usage error instead of performing the operation. When I run check_mk -u, it does not report the usage message.

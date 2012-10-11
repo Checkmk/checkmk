@@ -61,7 +61,7 @@ if which smartctl > /dev/null 2>&1 ; then
 		[ "$a" == Current -a "$b" == Drive  -a "$c" == Temperature: ] && echo TEMP=$d
 	    done`
 	    [ -n "$TEMP" ] && CMD="echo 194 Temperature_Celsius 0x0000 000 000 000 Old_age Always - $TEMP (0 0 0 0)"
-	    DNAME="SCSI_${VEND}_${MODEL}_${SN}"
+	    DNAME="${VEND}_${MODEL}_${SN}"
 	else
 	    CMD="smartctl -d ata -v 9,raw48 -A $D"
 	fi

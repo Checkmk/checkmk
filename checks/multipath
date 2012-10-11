@@ -120,15 +120,6 @@
 #  \_ 4:0:1:11 sdcf 69:48   [active][undef]
 #  \_ 3:0:0:11 sdl  8:176   [active][undef]
 
-# Just an underscore and a dash in the LUN name
-# SDataCoreSANsymphony_DAT05-fscl dm-6 DataCore,SANsymphony
-# [size=600G][features=0][hwhandler=0]
-# \_ round-robin 0 [prio=-1][enabled]
-#  \_ 3:0:0:11 sdae 65:224 [active][undef]
-# \_ round-robin 0 [prio=-1][enabled]
-#  \_ 4:0:0:11 sdt  65:48  [active][undef]
-
-
 
 def parse_multipath_output(info, only_uuid = None):
     # only_uuid --> look only for data of this uuid or alias
@@ -145,7 +136,7 @@ def parse_multipath_output(info, only_uuid = None):
         (get_regex(r"^[a-zA-Z0-9_]+$"),                      0, None), # 3.
         (get_regex(r"^([0-9a-z]{33}|[0-9a-z]{49})\s?dm.+$"), 1, None), # 4.
         (get_regex(r"^[a-zA-Z0-9_]+dm-.+$"),                 0, None), # 5. Remove this line in 1.2.0
-        (get_regex(r"^([a-zA-Z0-9_-]+)\s?dm-.+$"),           1, None), # 6. and 7.
+        (get_regex(r"^([a-zA-Z0-9_]+)\s?dm-.+$"),            1, None), # 6.
     ]
 
     reg_prio = get_regex("[[ ]prio=")
@@ -156,7 +147,6 @@ def parse_multipath_output(info, only_uuid = None):
     group = {}
     numpaths = None
     for line in info:
-        print line
         # newer agent also output the device mapper table.
         # ignore those lines for now.
         if line[0] == "dm":

@@ -1,0 +1,95 @@
+#!/usr/bin/python
+
+# This is an active check that retrieves current performance
+# data of the Event Console (mkeventd). If you are running OMD,
+# then no further arguments are necessary. Otherwise please
+# use -H and specify either the path to the UNIX socket of 
+# the mkeventd ("status") or HOSTNAME:PORT and enable TCP
+# access to the socket.
+
+# This check will currently report the average processing time
+# per message and the number of processed messages per time.
+
+import os, socket, sys
+
+socket_path = os.getenv("OMD_ROOT") + "/tmp/run/mkeventd/status"
+
+def query(query, remote_host):
+    try:
+        if remote_host:
+            parts = remote_host.split(":")
+            host = parts[0]
+            if len(parts) == 2:
+                port = int(parts[1])
+            else:
+                port = 6558
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(10)
+            sock.connect((host, port))
+        else:
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock.settimeout(3)
+            sock.connect(socket_path)
+
+        sock.send(query)
+
+        response_text = ""
+        while True:
+            chunk = sock.recv(8192)
+            response_text += chunk
+            if not chunk:
+                break
+
+        return eval(response_text)
+    except SyntaxError, e:
+        sys.stdout.write("UNKNOWN - Invalid answer from event daemon\n%s\nQuery was:\n%s\n" \
+                % (e, query))
+        sys.exit(3)
+
+    except Exception, e:
+        if remote_host:
+            via = "TCP %s:%d" % (host, port)
+        else:
+            via = "UNIX socket %s" % socket_path
+        sys.stdout.write("UNKNOWN - Cannot connect to event daemon via %s: %s\n" % (via, e))
+        sys.exit(3)
+
+try:
+    remote_host = None
+    if len(sys.argv) == 1:
+        remote_host = None
+    else:
+        if sys.argv[1] == '-H':
+            remote_host = sys.argv[2]
+
+except:
+    sys.stdout.write("Usage: check_mkevents [-H REMOTE:PORT]\n")
+    sys.exit(3)
+
+q = "GET status"
+response = query(q, remote_host)
+headers = response[0]
+count = 0
+for line in response[1:]:
+    row = dict(zip(headers, line))
+    #print headers
+    #sys.stdout.write("Ergebnis: %s\n" % (line))
+    processing_time = row["status_average_processing_time"]
+    processing_time = processing_time * 1000
+    processing_rate_av = row["status_average_message_rate"]
+    busy=processing_time * processing_rate_av / 10
+    count += 1
+
+exit_code=0
+if processing_rate_av > 800 or processing_time > 50 or busy > 70:
+    exit_code=1
+if processing_rate_av > 1000 or processing_time > 100 or busy > 100:
+    exit_code=2
+
+
+if count == 0:
+    sys.stdout.write("Error - no Status Information\n" )
+    sys.exit(3)
+else:
+    sys.stdout.write("Message Rate per sec: %d, Processing Time: %2.1f ms Busy: %2.1f %% | rate_sec=%d;800;1000;; processing_times=%2.1f""ms;50;100;; busy=%2.1f""%%;70;100;;\n" % (processing_rate_av, processing_time, busy, processing_rate_av, processing_time, busy) ) 
+    sys.exit(exit_code)

@@ -25,6 +25,7 @@
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used
     * FIX: Windows agent: quote '%' in plugin output correctly
+    * FIX: multipath check now handles '-' in "user friendly names"
 
 1.2.1i1:
     Core:

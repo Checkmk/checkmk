@@ -1,8 +1,9 @@
 Title: hosts/services -> neue Spalte mit expandiertem check_command
 Component: livestatus
-State: open
-Date: 2010-12-21 22:23:58
 Class: feature
+State: done
+Date: 2010-12-21 22:23:58
+Targetversion: future
 
 Ählich zu den expandierten notes_url. Damit könnte man sehen, welches Kommando
 wirklich ausgeführt wird. Und das zum rausschneiden und auf der Kommandozeile
@@ -13,3 +14,7 @@ kann. Diesen könnte man evtl. auch direkt in der Service-Details-View
 anzeigen anstelle des jetzigen?
 
 Das gleiche dann natürlich auchbei den Host.
+
+2012-10-11 23:16:51: changed state open -> done
+Livestatus/Multisite: New livestatus columns and
+    multisite painters for check_command_expanded

@@ -1,0 +1,11 @@
+Title: IOPS calculation in diskstat gets wrong numbers
+Component: checks
+State: open
+Date: 2012-10-10 12:54:15
+Targetversion: 1.2.0
+Class: bug
+
+Manually tracking the numbers reported by diskstat does not match the numbers
+reported by the OS. 2K IOPS show up as >4k sometimes. possible cause from looking
+at the check is the timedif handling.
+Needs more debugging.

@@ -19,6 +19,14 @@
     * Quicksearch: Convert search text to regex when accessing livestatus
     * FIX: WATO Folder filter not available when WATO disabled
     * WATO Folder Filter no longer available in single host views
+    * Added new painters "Service check command expanded" and
+      "Host check command expanded"
+    * FIX: Corrected garbled description for sorter "Service Performance data" 
+
+    Livestatus:
+    * Added new table statehist, used for SLA queries
+    * Added new column check_command_expanded in table hosts
+    * Added new column check_command_expanded in table services
 
     BI:
     * Added missing localizations
@@ -30,16 +38,25 @@
     * Added new config option bi_compile_log to collect statistics about
       aggregation compilations
     * Correct representation of (!), (!!) and (?) markers in check output
+    * Corrected representation of assumed state in box layout
 
     WATO:
     * Added progress indicator in single site WATO "Activate Changes"
+    * Users & Contacts: Case-insensitive sorting of 'Full name' column
+    * ntp/ntp.time parameters are now configurable via WATO
     * FIX: Implemented basic non HTTP 200 status code response handling in interactive
            progress dialogs (e.g. bulk inventory mode)
-    * Users & Contacts: Case-insensitive sorting of 'Full name' column
-    
+    * FIX: Fixed editing of icon_image rules
+
     Checks & Agents:
     * New check mssql_counters.locks: Monitors locking related information of
       MSSQL tablespaces
+    * Check_MK service is now able to output additional performance data
+      user_time, system_time, children_user_time, children_system time
+    * windows_updates agent plugin: Fetching data in background mode, caching
+      update information for 30 minutes
+    * FIX: mssql_counters checks now really only inventorize percentage based
+      counters if a base value is set
 
 1.2.0p3:
     Mulitisite

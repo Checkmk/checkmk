@@ -1,8 +1,9 @@
 Title: Livestatus-Warnung im Logfile, wenn environment_macros an sind
 Component: livestatus
-State: open
-Date: 2010-12-21 22:18:56
 Class: feature
+State: done
+Date: 2010-12-21 22:18:56
+Targetversion: future
 
 Analog zu den broker options wäre das eine für die Stabilität wichtige
 Sache.
@@ -11,3 +12,7 @@ Diese Variable kann man sicher irgendwie als globale Variable auslesen
 und dann ins Nagios-Log schreiben (da wo auch die broker-Options
 getestet werden).
 
+2012-10-09 16:14:18: changed state open -> done
+enable_environment_macros=1
+fuehrt zum Logeintrag
+Warning: environment_macros are enabled

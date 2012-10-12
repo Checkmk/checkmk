@@ -9,10 +9,12 @@ description:
  should never change. In recent versions of Linux (e.g. UBUNTU oneiric),
  the mount option {commit=} may change automatically depending
  on the current battery state, so this option is being excluded from
- the monitoring.
+ the monitoring. Also excluded is the option {localalloc=} for recent
+ kernels and OCFS2 filesystems.
 
  This check goes critical if the mount option {ro} appears. This
- might indicate IO errors are even a filesystem corruption!
+ might indicate IO errors have occurred, causing the filesystem
+ to switch to read-only mode.
 
  Any other change of mount options will trigger a warning state.
 

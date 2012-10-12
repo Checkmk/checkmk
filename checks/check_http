@@ -71,7 +71,7 @@ def check_http_arguments(params):
         args += ' -a %s:%s' % (quote_shell_string(auth[0]), quote_shell_string(auth[1]))
 
     if "proxy_auth" in settings:
-        auth = settings["auth"]
+        auth = settings["proxy_auth"]
         args += ' -b %s:%s' % (quote_shell_string(auth[0]), quote_shell_string(auth[1]))
 
     if "onredirect" in settings:

@@ -113,6 +113,10 @@ if [ -x /sbin/zpool ]; then
    /sbin/zpool status -x
 fi
 
+# Uptime compatible with Linux format (thanks to Daniel Roettgermann)
+echo '<<<uptime>>>'
+echo `expr \`nawk 'BEGIN{print srand()}'\` - \`kstat -p unix:0:system_misc:boot_time |awk '{print $2}'\``
+
 
 # NTP 
 # This will only work on Sol10 and above

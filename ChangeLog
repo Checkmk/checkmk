@@ -59,6 +59,7 @@
       counters if a base value is set
     * Windows agent: output ullTotalVirtual and ullAvailVirtual (not yet
       being used by check)
+    * Solaris agent: add <<<uptime>>> section (thanks to Daniel Roettgermann)
 
 1.2.0p3:
     Mulitisite

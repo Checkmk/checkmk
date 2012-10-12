@@ -1,0 +1,43 @@
+Title: Active check results mixed up with Livecheck enabled
+Component: livecheck
+State: open
+Date: 2012-10-12 15:35:38
+Targetversion: 1.2.0
+Class: bug
+
+Two hosts were in hoststatus down but working in reality
+Both hosts showed the correct check command, but the check output was 
+corrupted.
+First, it is cut off, like this:
+OK - Agent 20: rta na
+OK - 172.
+OK - symc
+
+Another sympton is that the last check age goes stale.              
+
+
+lsof output of one of the livecheck processes:
+
+COMMAND    PID USER   FD   TYPE             DEVICE   SIZE/OFF       NODE NAME
+livecheck 6271 root  cwd    DIR               8,17       4096          2 /
+livecheck 6271 root  rtd    DIR               8,17       4096          2 /
+livecheck 6271 root  txt    REG               8,33      23456    1970083 /opt/omd/versions/1.2.0-2012.10.11.mk/lib/mk-livestatus/livecheck
+livecheck 6271 root  mem    REG               8,17     156872    1187180 /lib64/ld-2.12.so
+livecheck 6271 root  mem    REG               8,17    1918016    1187181 /lib64/libc-2.12.so
+livecheck 6271 root    0u  unix 0xffff8802389490c0        0t0 1184204333 socket
+livecheck 6271 root    1u  unix 0xffff8802389490c0        0t0 1184204333 socket
+livecheck 6271 root    2u  unix 0xffff8802389490c0        0t0 1184204333 socket
+livecheck 6271 root    3w   REG               8,33     198769    2361360 /opt/omd/sites/prod/var/pnp4nagios/spool/perfdata.1349948997-PID-29917 (deleted)
+livecheck 6271 root    4w   REG               8,33     865944    2362213 /opt/omd/sites/prod/var/pnp4nagios/spool/perfdata.1349970584-PID-10329 (deleted)
+livecheck 6271 root    5w   REG               8,33     423682    2360928 /opt/omd/sites/prod/var/pnp4nagios/spool/perfdata.1349973657-PID-20265 (deleted)
+livecheck 6271 root    7u  FIFO               0,20        0t0 1122431069 /opt/omd/sites/prod/tmp/run/nagios.cmd
+livecheck 6271 root    8w   REG               8,33     176694    2360168 /opt/omd/sites/prod/var/pnp4nagios/spool/perfdata.1350043381-PID-9448 (deleted)
+livecheck 6271 root    9w   REG               8,33 4680734059    2361297 /opt/omd/sites/prod/var/nagios/livestatus.log
+livecheck 6271 root   54r   REG               8,33   26268786    2362455 /opt/omd/sites/prod/var/nagios/archive/nagios-08-04-2012-00.log
+livecheck 6271 root   61u  unix 0xffff8802389490c0        0t0 1184204333 socke
+
+
+Most important there: Livecheck must drop inherited FDs as it will keep that
+open until nagios restarts.
+
+It's not sure if both things are related, but this must be fixed in any case

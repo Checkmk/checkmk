@@ -41,12 +41,14 @@ def check_mounts(item, targetopts, info):
 
             exceeding = []
             for o in opts:
-                if o not in targetopts and not o.startswith("commit="):
+                if o not in targetopts and not o.startswith("commit=") \
+                                       and not o.startswith("localalloc="):
                     exceeding.append(o)
 
             missing = []
             for o in targetopts:
-                if o not in opts and not o.startswith("commit="):
+                if o not in opts and not o.startswith("commit=") \
+                                 and not o.startswith("localalloc="):
                     missing.append(o)
 
             if not missing and not exceeding:

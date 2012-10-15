@@ -136,6 +136,55 @@ register_rule(group + '/' + subgroup_applications,
     match = 'list',
 )
 
+register_rule(group + '/' + subgroup_applications,
+    varname   = "inventory_services_rules",
+    title     = _('Windows Services Inventory'),
+    valuespec = ListOf(
+        Tuple(
+            help = _("This defines one inventory services rule"),
+            show_titles = True,
+            orientation = "horizontal",
+            elements = [
+                Optional(
+                    Transform(
+                        RegExp(size = 40),
+                        forth = lambda x: x.lstrip('~'),   # remove ~
+                        back  = lambda x: "~" + x, # prefix ~
+                    ),
+                    title = _("Service (Regex)"),
+                    label = _("use as inventory criterion"),
+                ),
+                Optional(
+                    DropdownChoice(
+                        choices = [
+                            ('running', _('Running')),
+                            ('stopped', _('Stopped')),
+                        ],
+                    ),
+                    title = _("State"),
+                    label = _("use as inventory criterion"),
+                ),
+                Optional(
+                    DropdownChoice(
+                        choices = [
+                            ('auto',     _('Automatic')),
+                            ('demand',   _('Manual')),
+                            ('disabled', _('Disabled')),
+                        ],
+                    ),
+                    title = _("Start Mode"),
+                    label = _("use as inventory criterion"),
+                ),
+            ]
+        ),
+        help = _('<p>This rule can be used to configure the inventory of the windows services check. '
+                 'You can configure specific window services to be monitored by the windows check by '
+                 'selecting them by name, current state during the inventory or start mode.'),
+        add_label = _("Add rule"),
+    ),
+    match = 'list',
+)
+
 
 checkgroups = []
 
@@ -1593,7 +1642,7 @@ checkgroups.append((
 checkgroups.append((
     subgroup_applications,
     "services",
-    _("Windows services"),
+    _("Windows Services Parameters"),
     Dictionary(
         elements = [
             ( "states", 

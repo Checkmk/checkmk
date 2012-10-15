@@ -74,13 +74,8 @@ inventory:
  Since version 1.2.1i2 there is a new option {inventory_services_rules}
  available, which is used to configure same options as the {inventory_services}
  option but in a standardized format. The option holds a list of rules
- where each rule might contain one or several entries. Each of those
- entries is a tuple of three items. The first element is a string
- matching the service name or a regex (string is starting with a "~")
- to match the names. The second element is a string which matches the
- state of the service during inventory. The third element matches the
- start mode of the service. All of those three elements might be set to
- {None} to disable this criterion for matching a service.
+ where each rule contains one entry matching a list of service matching
+ strings (regexes) state/start mode.
 
 examples:
  # inventory will add checks for the following services
@@ -114,21 +109,15 @@ examples:
  # Inventory Services Rules (like configured when using WATO)
  inventory_services_rules = [
      # Monitor the "Browser" service on all hosts
-     ( [
-           ('Browser', None, None),
-       ], [], ALL_HOSTS),
+     ((['Browser'], None, None), [], ALL_HOSTS),
      
      # Add monitoring of all services starting with "MSSQL " on all hosts
      # which have the "db" tag
-     ( [
-           ('~MSSQL .*', None, None),
-       ], [ 'db' ], ALL_HOSTS),
+     ((['MSSQL .*'], None, None), [ 'db' ], ALL_HOSTS),
     
      # Add monitoring of all automatically started services on all hosts
      # which have the "important" tag 
-     ( [
-            (None, None, 'auto'),
-       ], [ 'important' ], ALL_HOSTS),
+     (([], None, 'auto'), [ 'important' ], ALL_HOSTS),
  ]
 
  # Manual checks without inventory. Those checks will be created

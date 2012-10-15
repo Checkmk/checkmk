@@ -56,28 +56,13 @@ inventory_services = []
 
 # Implemented in 1.2.1i2:
 # New rule-style (WATO compatible) notation:
-#   ( [ ENTRIES ], ALL_HOSTS),
+#   [({'start_mode': 'demand', 'service': ['Netman']}, [], ['@all'], {'docu_url': ''})]
 #
-# ENTRIES is a list of inventory_services definitions like this:
-#
-# (<service>, <state>, <start_mode>)
-#
-# <service> might be a string matching the service-name or a regex
+# <services> is list of regexes matching the service name
 # <state> is the expected state to inventorize services of (running, stopped, ...)
 # <start_mode> is the expected state to inventorize services of (auto, manual, ...)
 #
-# All above attributes can be set to None to disable this filter option for the entry.
-#
-# Example:
-# inventory_services_rules = [
-#     ( [
-#           ('netmsg', None, 'auto'),    # Add monitoring if the service is found
-#                                        # and is automatically started
-#           ('mstsc',  'running', None), # Add monitoring if the service is found and running
-#           ('~MSSQL .*', None, None),   # Add all "MSSQL *" monitoring
-#           (None, None, 'auto'),  # Add monitoring of all automatically started services
-#       ], [ 'win2003' ], ALL_HOSTS),
-# ]
+# All above attributes can be set to None or not set to disable this filter option for the entry.
 inventory_services_rules = []
 
 def inventory_windows_services(info):
@@ -131,15 +116,22 @@ def inventory_windows_services(info):
     # Filter WATO compatible rules by tags/hostlist
     rules = []
     for rule in inventory_services_rules:
-        # e.g. [([('Netman', 'running', None)], [], ['@all'], {'docu_url': ''})]
         # 1. Get all rules matching the current host
         taglist, hostlist = rule[1:3]
         if not hosttags_match_taglist(tags_of_host(g_hostname), taglist) \
            or not in_extraconf_hostlist(hostlist, g_hostname):
             continue
 
-        for entry in rule[0]:
-            rules.append(entry)
+        # 2. Now extract the list of service regexes
+        value = rule[0]
+        svcs  = value.get('services', [])
+        state = value.get('state', None)
+        start_mode  = value.get('start_mode', None)
+        if svcs:
+            for svc in svcs:
+                rules.append(('~' + svc, state, start_mode))
+        else:
+            rules.append((None, state, start_mode))
 
     inventory = []
     for line in info:

@@ -139,52 +139,125 @@ register_rule(group + '/' + subgroup_applications,
 register_rule(group + '/' + subgroup_applications,
     varname   = "inventory_services_rules",
     title     = _('Windows Services Inventory'),
-    valuespec = ListOf(
-        Tuple(
-            help = _("This defines one inventory services rule"),
-            show_titles = True,
-            orientation = "horizontal",
-            elements = [
-                Optional(
-                    Transform(
-                        RegExp(size = 40),
-                        forth = lambda x: x.lstrip('~'),   # remove ~
-                        back  = lambda x: "~" + x, # prefix ~
-                    ),
-                    title = _("Service (Regex)"),
-                    label = _("use as inventory criterion"),
-                ),
-                Optional(
-                    DropdownChoice(
-                        choices = [
-                            ('running', _('Running')),
-                            ('stopped', _('Stopped')),
-                        ],
-                    ),
-                    title = _("State"),
-                    label = _("use as inventory criterion"),
-                ),
-                Optional(
-                    DropdownChoice(
-                        choices = [
-                            ('auto',     _('Automatic')),
-                            ('demand',   _('Manual')),
-                            ('disabled', _('Disabled')),
-                        ],
-                    ),
-                    title = _("Start Mode"),
-                    label = _("use as inventory criterion"),
-                ),
-            ]
-        ),
+    valuespec = Dictionary(
+        elements = [
+            ('services', ListOfStrings(
+                title = _("Service (Regex)"),
+                help  = _('Matching the begining of the service names (regular expression). '
+                          'If no service is given, this rule will match all services.'),
+                orientation = "horizontal",
+            )),
+            ('state', DropdownChoice(
+                choices = [
+                    ('running', _('Running')),
+                    ('stopped', _('Stopped')),
+                ],
+                title = _("State"),
+            )),
+            ('start_mode', DropdownChoice(
+                choices = [
+                    ('auto',     _('Automatic')),
+                    ('demand',   _('Manual')),
+                    ('disabled', _('Disabled')),
+                ],
+                title = _("Start Mode"),
+            )),
+        ],
         help = _('<p>This rule can be used to configure the inventory of the windows services check. '
                  'You can configure specific window services to be monitored by the windows check by '
                  'selecting them by name, current state during the inventory or start mode.'),
-        add_label = _("Add rule"),
     ),
     match = 'list',
 )
 
+register_rule(group + '/' + subgroup_applications,
+    varname   = "inventory_processes_rules",
+    title     = _('Process inventory (Linux/UNIX)'),
+    valuespec = Dictionary(
+        elements = [
+            ('descr', TextAscii(
+                title = _('Service Description'),
+                help  = _('<p>The service description may contain one or more occurances of %s. If you do this, then the pattern must be a regular '
+                          'expression and be prefixed with ~. For each %s in the description, the expression has to contain one "group". A group '
+                          'is a subexpression enclosed in brackets, for example (.*) or ([a-zA-Z]+) or (...). When the inventory finds a process '
+                          'matching the pattern, it will substitute all such groups with the actual values when creating the check. That way one '
+                          'rule can create several checks on a host.</p>'
+                          '<p>If the pattern contains more groups thenoccurrances of %s in the service  description then only the first matching '
+                          'subexpressions  are used for the  service descriptions. The matched substrings corresponding to the remaining groups '
+                          'are copied into the regular expression, nevertheless.</p>'),
+            )),
+            ('match', Alternative(
+                title = _("Name of the process"),
+                elements = [
+                    TextAscii(
+                        title = _("Exact name of the process without argments"),
+                        size = 50,
+                    ),
+                    Transform(
+                        RegExp(size = 50),
+                        title = _("Regular expression matching command line"),
+                        help = _("This regex must match the <i>beginning</i> of the complete "
+                                 "command line of the process including arguments"),
+                        forth = lambda x: x[1:],   # remove ~
+                        back  = lambda x: "~" + x, # prefix ~
+                    ),
+                    FixedValue(
+                        None,
+                        totext = "",
+                        title = _("Match all processes"),
+                    )
+                ],
+                match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
+            )),
+            ('user', Alternative(
+                title = _('Name of the user'),
+                elements = [
+                    TextAscii(
+                        title = _('Exact name of the user'),
+                    ),
+                    FixedValue(
+                        False,
+                        title = _('Grab user from found processess'),
+                        totext = '',
+                    ),
+                ],
+                help = _('<p>The user specification can either be a user name (string). The inventory will then trigger only if that user matches '
+                         'the user the process is running as and the resulting check will require that user. Alternatively you can specify '
+                         '"grab user". If user is not selected the created check will not check for a specific user.</p>'
+                         '<p>Specifying "grab user" makes the created check expect the process to run as the same user as during inventory: the user '
+                         'name will be hardcoded into the check. In that case if you put %u into the service description, that will be replaced '
+                         'by the actual user name during inventory. You need that if your rule might match for more than one user - your would '
+                         'create duplicate services with the same description otherwise.</p>'),
+            )),
+            ('perfdata', FixedValue(True,
+                title = _('Collect performance data'),
+                totext = '',
+            )),
+            ('warnmin',  Integer(
+                title = _("Critical below"),
+                unit = _("processes"),
+                default_value = 1,
+            )),
+            ('okmin',    Integer(
+                title = _("Warning below"),
+                unit = _("processes"),
+                default_value = 1,
+            )),
+            ('okmax',    Integer(
+                title = _("Warning above"),
+                unit = _("processes"),
+                default_value = 1,
+            )),
+            ('warnmax',  Integer(
+                title = _("Critical above"),
+                unit = _("processes"),
+                default_value = 1,
+            )),
+        ],
+        required_keys = ['warnmin', 'okmin', 'okmax', 'warnmax'],
+    ),
+    match = 'list',
+)
 
 checkgroups = []
 

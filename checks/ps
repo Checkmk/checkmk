@@ -33,7 +33,31 @@
 # Third generation (from 1.1.5) output also virtual memory, resident memory and %CPU:
 # (class,122376,88128,0.0) /usr/jre1.6.0_13/bin/java -Dn=Cart_16TH13 -Dmcs.node=zbgh1ca -Dmcs.mdt.redundan
 
-
+# New since 1.2.1i2: WATO compatible syntax
+#
+# Holds a list of rules which are matching hosts by names or tags and
+# where each can hold a list of entries.
+#
+# Each of those entries defines the following options:
+#
+# 1. item name to be used for the service description
+# 2. matching-definition
+# 3. user definition
+# 4. four numbers (thresholds)
+# 5. monitor with perfdata
+#
+# inventory_processes_rules = [
+#     # The ntp daemon must be running on all linux hosts, don't
+#     # gather perfdata for this check.
+#     ([('NTP', '/usr/sbin/ntpd', 'root', 1, 1, 1, 1, False),], ['linux'], ALL_HOSTS),
+#
+#     # if we find Apache2, monitor it and make sure it's running
+#     # as the user 'www-data'! Make also sure, that the number
+#     # of processes is between 5 and 10, (critical if not running
+#     # or if more than 30 processes). Enable perfdata monitoring.
+#     ([('Apache2', '~.*bin/apache2', 'www-data', 1, 5, 10, 30, True)], ['webserver'], ALL_HOSTS),
+# ]
+inventory_processes_rules = []
 
 inventory_processes = []
 inventory_processes_perf = []

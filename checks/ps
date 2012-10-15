@@ -36,27 +36,15 @@
 # New since 1.2.1i2: WATO compatible syntax
 #
 # Holds a list of rules which are matching hosts by names or tags and
-# where each can hold a list of entries.
+# where each rule holds a dictionary.
 #
 # Each of those entries defines the following options:
 #
-# 1. item name to be used for the service description
-# 2. matching-definition
-# 3. user definition
-# 4. four numbers (thresholds)
-# 5. monitor with perfdata
-#
-# inventory_processes_rules = [
-#     # The ntp daemon must be running on all linux hosts, don't
-#     # gather perfdata for this check.
-#     ([('NTP', '/usr/sbin/ntpd', 'root', 1, 1, 1, 1, False),], ['linux'], ALL_HOSTS),
-#
-#     # if we find Apache2, monitor it and make sure it's running
-#     # as the user 'www-data'! Make also sure, that the number
-#     # of processes is between 5 and 10, (critical if not running
-#     # or if more than 30 processes). Enable perfdata monitoring.
-#     ([('Apache2', '~.*bin/apache2', 'www-data', 1, 5, 10, 30, True)], ['webserver'], ALL_HOSTS),
-# ]
+# 1. descr:    item name to be used for the service description
+# 2. match:    matching-definition
+# 3. user:     user definition
+# 5. perfdata: monitor with perfdata
+# 4. levels:   four numbers (thresholds)
 inventory_processes_rules = []
 
 inventory_processes = []
@@ -68,11 +56,14 @@ def inventory_ps(info):
     return inventory_ps_common(inventory_processes, info)
 
 def inventory_ps_perf(info):
-    return inventory_ps_common(inventory_processes_perf, info)
+    return inventory_ps_common(inventory_processes_perf, info, True)
 
-def inventory_ps_common(invdata, info):
+def inventory_ps_common(invdata, info, handle_perfdata = False):
     inventory = []
 
+    entries = []
+
+    # Handle inventory_processes, inventory_processes_perf variables
     for inventry in invdata:
         # New in 1.1.7i1: inventory_processes may be prefixed with list of
         # host names or tags + ALL_HOSTS
@@ -86,13 +77,30 @@ def inventory_ps_common(invdata, info):
             hostlist = inventry[1]
             inventry = inventry[2:]
 
-        # Filter out rules with do not match our current host
+        # Filter out entries with do not match our current host
         if tags != None and ( not hosttags_match_taglist(tags_of_host(g_hostname), tags) or
                               not in_extraconf_hostlist(hostlist, g_hostname)):
             continue
 
-        servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax = inventry
+        entries.append(inventry)
 
+    # Handle new wato style inventory_processes_rules
+    for rule in inventory_processes_rules:
+        taglist, hostlist = rule[1:3]
+        # Filter out entries with do not match our current host
+        if not hosttags_match_taglist(tags_of_host(g_hostname), taglist) \
+           or not in_extraconf_hostlist(hostlist, g_hostname):
+            continue
+
+        v = rule[0]
+
+        # Make ps skip rules for ps.perf and vice versa
+        if handle_perfdata != v['perfdata']:
+            continue
+
+        entries.append((v['descr'], v['match'], v['user']) + v['levels'])
+
+    for servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax in entries:
         num_perc_s = servicedesc.count("%s")
         for line in info:
             # First entry in line is the node name or None for non-clusters

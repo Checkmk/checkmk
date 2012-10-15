@@ -43,6 +43,7 @@ subgroup_environment =  _("Temperature, Humidity, etc.")
 subgroup_applications = _("Applications, Processes &amp; Services")
 subgroup_virt =         _("Virtualization")
 subgroup_hardware =     _("Hardware, BIOS")
+subgroup_inventory =    _("Inventory - automatic service detection")
 
 register_rule(group + "/" + subgroup_networking,
     "ping_levels",
@@ -136,13 +137,13 @@ register_rule(group + '/' + subgroup_applications,
     match = 'list',
 )
 
-register_rule(group + '/' + subgroup_applications,
+register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_services_rules",
-    title     = _('Windows Services Inventory'),
+    title     = _('Windows Services'),
     valuespec = Dictionary(
         elements = [
             ('services', ListOfStrings(
-                title = _("Service (Regex)"),
+                title = _("Services (Regular Expressions)"),
                 help  = _('Matching the begining of the service names (regular expression). '
                           'If no service is given, this rule will match all services.'),
                 orientation = "horizontal",
@@ -152,7 +153,7 @@ register_rule(group + '/' + subgroup_applications,
                     ('running', _('Running')),
                     ('stopped', _('Stopped')),
                 ],
-                title = _("State"),
+                title = _("Create check if service is in state"),
             )),
             ('start_mode', DropdownChoice(
                 choices = [
@@ -160,7 +161,7 @@ register_rule(group + '/' + subgroup_applications,
                     ('demand',   _('Manual')),
                     ('disabled', _('Disabled')),
                 ],
-                title = _("Start Mode"),
+                title = _("Create check if service is in start mode"),
             )),
         ],
         help = _('<p>This rule can be used to configure the inventory of the windows services check. '
@@ -170,9 +171,9 @@ register_rule(group + '/' + subgroup_applications,
     match = 'list',
 )
 
-register_rule(group + '/' + subgroup_applications,
+register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_processes_rules",
-    title     = _('Process inventory (Linux/UNIX)'),
+    title     = _('Processes'),
     valuespec = Dictionary(
         elements = [
             ('descr', TextAscii(
@@ -187,7 +188,7 @@ register_rule(group + '/' + subgroup_applications,
                           'are copied into the regular expression, nevertheless.</p>'),
             )),
             ('match', Alternative(
-                title = _("Name of the process"),
+                title = _("Process Matching"),
                 elements = [
                     TextAscii(
                         title = _("Exact name of the process without argments"),
@@ -207,11 +208,17 @@ register_rule(group + '/' + subgroup_applications,
                         title = _("Match all processes"),
                     )
                 ],
-                match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
+                match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0),
+                default_value = '/usr/sbin/foo',
             )),
             ('user', Alternative(
-                title = _('Name of the user'),
+                title = _('Name of the User'),
                 elements = [
+                    FixedValue(
+                        None,
+                        totext = "",
+                        title = _("Match all users"),
+                    ),
                     TextAscii(
                         title = _('Exact name of the user'),
                     ),
@@ -229,32 +236,37 @@ register_rule(group + '/' + subgroup_applications,
                          'by the actual user name during inventory. You need that if your rule might match for more than one user - your would '
                          'create duplicate services with the same description otherwise.</p>'),
             )),
-            ('perfdata', FixedValue(True,
-                title = _('Collect performance data'),
-                totext = '',
+            ('perfdata', Checkbox(
+                title = _('Performance Data'),
+                label = _('Collect count of processes, memory and cpu usage'),
             )),
-            ('warnmin',  Integer(
-                title = _("Critical below"),
-                unit = _("processes"),
-                default_value = 1,
-            )),
-            ('okmin',    Integer(
-                title = _("Warning below"),
-                unit = _("processes"),
-                default_value = 1,
-            )),
-            ('okmax',    Integer(
-                title = _("Warning above"),
-                unit = _("processes"),
-                default_value = 1,
-            )),
-            ('warnmax',  Integer(
-                title = _("Critical above"),
-                unit = _("processes"),
-                default_value = 1,
+            ('levels', Tuple(
+                title = _('Levels'),
+                elements = [
+                    Integer(
+                        title = _("Critical below"),
+                        unit = _("processes"),
+                        default_value = 1,
+                    ),
+                    Integer(
+                        title = _("Warning below"),
+                        unit = _("processes"),
+                        default_value = 1,
+                    ),
+                    Integer(
+                        title = _("Warning above"),
+                        unit = _("processes"),
+                        default_value = 1,
+                    ),
+                    Integer(
+                        title = _("Critical above"),
+                        unit = _("processes"),
+                        default_value = 1,
+                    ),
+                ],
             )),
         ],
-        required_keys = ['warnmin', 'okmin', 'okmax', 'warnmax'],
+        optional_keys = [],
     ),
     match = 'list',
 )
@@ -1715,7 +1727,7 @@ checkgroups.append((
 checkgroups.append((
     subgroup_applications,
     "services",
-    _("Windows Services Parameters"),
+    _("Windows Services"),
     Dictionary(
         elements = [
             ( "states", 

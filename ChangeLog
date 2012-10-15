@@ -60,6 +60,8 @@
     * Solaris agent: add <<<uptime>>> section (thanks to Daniel Roettgermann)
     * Added new WATO configurable option inventory_services_rules for the
       windows services inventory check
+    * Added new WATO configurable option inventory_processes_rules forr the
+      ps and ps.perf inventory
     * FIX: mssql_counters checks now really only inventorize percentage based
       counters if a base value is set
 

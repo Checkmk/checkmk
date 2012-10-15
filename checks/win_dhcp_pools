@@ -83,45 +83,40 @@ def parse_win_dhcp_pools(info):
 
 def inventory_win_dhcp_pools(info):
     inventory = []
-    if win_dhcp_pools_inventorize_empty == True:
-        for line in parse_win_dhcp_pools(info):
-            if win_dhcp_pools_stats_translate.get(line[0], line[0]) == 'Subnet':
-                inventory.append((line[1], 'win_dhcp_pools_default_levels'))  
-        return inventory
-  
-    inBlock = False
+    in_block = False
     last_pool = ""
-    poolStats = []
+    pool_stats = []
     for line in parse_win_dhcp_pools(info):
         if win_dhcp_pools_stats_translate.get(line[0], line[0]) == 'Subnet':
-            inBlock = True
+            in_block = True
+            pool_stats = []
             last_pool = line[1]
             continue
-        if inBlock:
-            poolStats.append(saveint(line[1]))
-        if len(poolStats) == 3:
-            inBlock = False
-            used, free, pending = poolStats
+        if in_block:
+            pool_stats.append(saveint(line[1]))
+        if len(pool_stats) == 3:
+            in_block = False
+            used, free, pending = pool_stats
             size = used + free + pending
-            if size > 0:
+            if size > 0 or win_dhcp_pools_inventorize_empty:
                 inventory.append((last_pool, 'win_dhcp_pools_default_levels'))  
     return inventory
 
 def check_win_dhcp_pools(item, params, info):
-    inBlock = False
-    poolStats = []
+    in_block = False
+    pool_stats = []
     status = 0
     for line in parse_win_dhcp_pools(info):
         if win_dhcp_pools_stats_translate.get(line[0], line[0]) == 'Subnet' and line[1] == item:
-            inBlock = True
+            in_block = True
             continue
-        if inBlock:
-            poolStats.append(saveint(line[1]))
-        if len(poolStats) == 3:
+        if in_block:
+            pool_stats.append(saveint(line[1]))
+        if len(pool_stats) == 3:
             break
 
-    if len(poolStats) == 3:
-        used, free, pending = poolStats
+    if len(pool_stats) == 3:
+        used, free, pending = pool_stats
         size = used + free + pending
 
         # Catch unused pools
@@ -129,13 +124,13 @@ def check_win_dhcp_pools(item, params, info):
             return (3, "UNKNOWN - DHCP Pool contains no IP addresses / is deactivated")
 
         if free > 0:
-            percFree = 100 - size / free
+            perc_free = 100 - size / free
         else:
-            percFree = 0
+            perc_free = 0
 
-        if percFree < params[1]:
+        if perc_free < params[1]:
             status = 2
-        elif percFree < params[0]:
+        elif perc_free < params[0]:
             status = 1
 
         perfdata = [ ('free', free, params[0], params[1], 0, size),

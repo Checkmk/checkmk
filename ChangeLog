@@ -60,10 +60,12 @@
     * Solaris agent: add <<<uptime>>> section (thanks to Daniel Roettgermann)
     * Added new WATO configurable option inventory_services_rules for the
       windows services inventory check
-    * Added new WATO configurable option inventory_processes_rules forr the
+    * Added new WATO configurable option inventory_processes_rules for the
       ps and ps.perf inventory
     * FIX: mssql_counters checks now really only inventorize percentage based
       counters if a base value is set
+    * win_dhcp_pools: do not inventorize empty pools any more. You can switch
+      back to old behaviour with win_dhcp_pools_inventorize_empty = True
 
 1.2.0p3:
     Mulitisite

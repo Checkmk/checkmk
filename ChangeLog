@@ -26,6 +26,12 @@
     * FIX: Linux mk_logwatch: iregex Parameter was never used
     * FIX: Windows agent: quote '%' in plugin output correctly
     * FIX: multipath check now handles '-' in "user friendly names"
+    * New check mssql_counters.locks: Monitors locking related information of
+      MSSQL tablespaces
+    * FIX: mssql_counters checks now really only inventorize percentage based
+      counters if a base value is set
+    * windows_updates agent plugin: Fetching data in background mode, caching
+      update information for 30 minutes
 
 1.2.1i1:
     Core:

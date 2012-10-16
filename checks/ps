@@ -219,7 +219,7 @@ def check_procs(item, params, info, with_perfdata):
                 if len(addinfo) >= 4: # extended performance data
                     virtual_size += int(addinfo[1])  # kB
                     resident_size += int(addinfo[2]) # kB
-                    percent_cpu += float(addinfo[3])
+                    percent_cpu += savefloat(addinfo[3])
                     extended_perfdata = True
 
     if with_perfdata:

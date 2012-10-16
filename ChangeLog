@@ -47,6 +47,7 @@
     * FIX: Implemented basic non HTTP 200 status code response handling in interactive
            progress dialogs (e.g. bulk inventory mode)
     * FIX: Fixed editing of icon_image rules
+    * Added support of locked hosts and folders ( created by CMDB )
 
     Checks & Agents:
     * New check mssql_counters.locks: Monitors locking related information of

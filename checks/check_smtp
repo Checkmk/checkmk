@@ -70,8 +70,10 @@ def check_smtp_arguments(params):
     if 'cert_days' in settings:
         args += ' -D %d' % settings['cert_days']
 
-    print args
-
+    if 'hostname' in settings:
+        args += ' -H %s' % settings['hostname']
+    else:
+        args += ' -H $HOSTADDRESS$'
     return args
 
 

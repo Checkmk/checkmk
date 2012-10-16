@@ -34,25 +34,23 @@
 
 
 def inventory_netapp_vfiler(info):
-
     inventory = []
     for line in info:
         # If we find an entry consisting of name and status, add it to inventory.
-        # otherwise we dont inventorize anything.
-        if len(info) == 2:
-            inventory.append([line[0], None])
+        # otherwise we don't inventorize anything.
+        if len(line) == 2:
+            inventory.append((line[0], None))
 
     return inventory
 
 def check_netapp_vfiler(item, _no_params, info):
-
     for vfEntry in info:
         vfName, vfState = vfEntry
         if vfName == item:
             if vfState == "2":
                 return (0, "OK - vFiler is running")
             elif vfState == "1":
-                return (2, "CRIT - vFiler is stopped!!")
+                return (2, "CRIT - vFiler is stopped")
             else:
                 return (3, "UNKOWN - vFiler status unknown")
     return (3, "UNKNOWN - vFiler not found in SNMP output")

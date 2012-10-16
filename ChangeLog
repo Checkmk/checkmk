@@ -32,6 +32,7 @@
       counters if a base value is set
     * windows_updates agent plugin: Fetching data in background mode, caching
       update information for 30 minutes
+    * FIX: netapp_vfiler: fix inventory function (thanks to Falk Krentzlin)
 
 1.2.1i1:
     Core:

@@ -150,7 +150,17 @@ int main(int argc, char **argv)
                 if (timeout)
                     alarm(timeout);
 
-                int bytes_read = read(fd[0], output, sizeof(output));
+
+                int bytes_read = 0;
+                char *ptr_output = output;
+                const char *ptr_end = output + sizeof(output) - 1;
+                while ((bytes_read = read(fd[0], ptr_output, ptr_end - ptr_output)) != 0) { 
+                    ptr_output += bytes_read;
+                    if (ptr_output == ptr_end) 
+                        break;
+                }
+                *ptr_output = 0;
+
                 close(fd[0]);
                 int ret;
                 waitpid(pid, &ret, 0);
@@ -170,7 +180,7 @@ int main(int argc, char **argv)
                 }
                 else {
                     return_code = WEXITSTATUS(ret);
-                    if (0 == bytes_read || output[0] == '\n')
+                    if (*output == 0 || *output == '\n')
                         snprintf(output, sizeof(output), "(No output returned from plugin)\n");
                 }
             }
@@ -195,16 +205,31 @@ int main(int argc, char **argv)
             "start_time=%d.%03u\n"
             "finish_time=%d.%03u\n"
             "return_code=%d\n"
-            "output=%s\n",
+            "output=",
             getpid(),
-            is_host_check ? 0 : 1,
+            0,
             latency,
             (int)start.time,
             start.millitm,
             (int)end.time,
             end.millitm,
-            return_code,
-            output);
+            return_code);
+
+        char *ptr_output = output;
+        char *ptr_walk   = output;
+        while (*ptr_walk != 0) {
+            if (*ptr_walk == '\n') {
+                *ptr_walk = 0;
+                fputs(ptr_output, checkfile);
+                fputs("\\n", checkfile);
+                ptr_output = ptr_walk + 1;
+                if (*ptr_output == 0)
+                    break;
+            }
+            ptr_walk++;
+        }
+        fputs("\n", checkfile);
+
         fchown(fd, real_uid, real_gid);
         fclose(checkfile);
         strcat(template, ".ok");

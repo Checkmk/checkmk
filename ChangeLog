@@ -2,6 +2,7 @@
     Core:
     * Improved validation of inventory data reported by checks
     * Added -d option to precompiled checks to enable debug mode
+    * doc/treasures: added script for printing RRD statistics
 
     Event Console:
     * Moved source of Event Console into Check_MK project 

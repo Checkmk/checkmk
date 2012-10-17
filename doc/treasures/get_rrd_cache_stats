@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+# 
+# Run this script within a (started) OMD site in order to
+# retrieve cache statistics of the RRD cache.
+
+import socket,os,sys
+
+try:
+    omdhome = os.environ['OMD_ROOT']
+
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.connect(omdhome + "/tmp/run/rrdcached.sock")
+    s.send('STATS\n')
+    data = s.recv(1024)
+    s.close()
+
+    lines = data.splitlines()[1:]
+    stats = {}
+    for line in lines:
+        key, value = line.split(" ", 1)
+        stats[key[:len(key)-1]] = int(value)
+
+    for key, value in stats.items():
+        print "%-15s :%15d" %(key, value)
+
+except:
+    sys.stderr.write("Unable to retrieve statistics.\n")
+    sys.exit(1)

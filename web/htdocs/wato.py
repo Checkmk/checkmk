@@ -729,8 +729,10 @@ def save_hosts(folder = None):
     # If the contact groups of the host are set to be used for the monitoring,
     # we create an according rule for the folder and an according rule for
     # each host that has an explicit setting for that attribute.
-    use, cgs = effective.get("contactgroups", (False, []))
+    effective_folder_attributes = effective_attributes(None, folder)
+    use, cgs = effective_folder_attributes.get("contactgroups", (False, []))
     if use and cgs:
+        html.debug(effective_folder_attributes)
         out.write("\nhost_contactgroups.append(\n"
                   "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS ))\n" % cgs)
 

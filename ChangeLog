@@ -9,6 +9,7 @@
     * New button for resetting all rule hits counters
     * When saving a rule then its hits counter is always reset
     * New feature of hiding certain actions from the commands in the status GUI
+    * FIX: rule simulator ("Try out") now handles cancelling rules correctly
 
     Multisite:
     * Enable automation login with _username= and _secret=, while

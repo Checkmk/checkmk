@@ -98,6 +98,8 @@
     * FIX: changed check_type to be always active (0)
     * FIX: fix bug in assignment of livecheck helpers 
     * FIX: close inherited unused filedescriptors after fork()
+    * FIX: kill process group of called plugin if timeout is reached
+           -> preventing possible freeze of livecheck
 
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used

@@ -91,6 +91,12 @@
 
     Livestatus
     * FIX: comments_with_info in service table was always empty
+    
+    Livecheck
+    * FIX: fixed problem with long plugin output
+    * FIX: added /0 termination to strings
+    * FIX: changed check_type to be always active (0)
+    * FIX: fix bug in assignment of livecheck helpers 
 
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used

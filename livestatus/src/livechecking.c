@@ -168,32 +168,33 @@ struct live_helper *get_free_live_helper()
         if (g_live_helpers[i].status != LH_BUSY) {
             continue;
         }
-        if (g_live_helpers[i].status != LH_DEAD) {
-            int fd = g_live_helpers[i].sock;
-            FD_SET(fd, &fds);
-            if (fd >= max_fd)
-                max_fd = fd;
-        }
+        int fd = g_live_helpers[i].sock;
+        FD_SET(fd, &fds);
+        if (fd >= max_fd)
+            max_fd = fd;
     }
     struct timeval tv;
     tv.tv_sec = 0;
     tv.tv_usec = 0;
     int r = select(max_fd + 1, &fds, 0, 0, &tv);
+
+    // No filedescriptor readable -> all livecheck helpers are busy!
     if (r == 0)
         return 0;
 
     struct live_helper *free_helper = 0;
     for (i=0; i<g_num_livehelpers; i++) {
         if (FD_ISSET(g_live_helpers[i].sock, &fds))
-            if (g_live_helpers[i].status == LH_DEAD) {
-                logger(LG_INFO, "ARGL: dead livehelper found by select()!");
-                return 0;
-            }
             g_live_helpers[i].status = LH_READY;
-            free_helper = &g_live_helpers[i];
+            free_helper = &g_live_helpers[i]; // could be a candidate
     }
+    
+    // use last found free helper. Do not forget to set this to BUSY!
+    // (this was a bug in previous versions)
+    free_helper->status = LH_BUSY;
     return free_helper;
 }
+
 
 int broker_host_livecheck(int event_type __attribute__ ((__unused__)), void *data)
 {

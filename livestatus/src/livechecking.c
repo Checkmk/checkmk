@@ -158,7 +158,7 @@ struct live_helper *get_free_live_helper()
         }
     }
 
-    // None none to be free -> use select to detect livehelpers
+    // None to be free -> use select to detect livehelpers
     // that have signalled us (by sending a byte) that they are
     // free again.
     fd_set fds;

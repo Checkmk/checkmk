@@ -1,0 +1,12 @@
+Title: Temporarily deactivate active checks in WATO
+Component: wato
+State: open
+Date: 2012-10-12 16:13:51
+Targetversion: future
+Class: feature
+
+WATO could offer the possibility for active checks (legacy checks, custom checks) to
+be currently deactivated. Such checks would then completely vanish from Nagios
+and the status GUI but would remain in the configuration so they could easily
+be activated again later. This is not the same as deactivating active checks
+in Nagios.

@@ -2,12 +2,14 @@
     Core:
     * Improved validation of inventory data reported by checks
     * Added -d option to precompiled checks to enable debug mode
+    * doc/treasures: added script for printing RRD statistics
 
     Event Console:
     * Moved source of Event Console into Check_MK project 
     * New button for resetting all rule hits counters
     * When saving a rule then its hits counter is always reset
     * New feature of hiding certain actions from the commands in the status GUI
+    * FIX: rule simulator ("Try out") now handles cancelling rules correctly
 
     Multisite:
     * Enable automation login with _username= and _secret=, while
@@ -47,6 +49,7 @@
     * FIX: Implemented basic non HTTP 200 status code response handling in interactive
            progress dialogs (e.g. bulk inventory mode)
     * FIX: Fixed editing of icon_image rules
+    * Added support of locked hosts and folders ( created by CMDB )
 
     Checks & Agents:
     * New check mssql_counters.locks: Monitors locking related information of
@@ -55,10 +58,17 @@
       user_time, system_time, children_user_time, children_system time
     * windows_updates agent plugin: Fetching data in background mode, caching
       update information for 30 minutes
-    * FIX: mssql_counters checks now really only inventorize percentage based
-      counters if a base value is set
     * Windows agent: output ullTotalVirtual and ullAvailVirtual (not yet
       being used by check)
+    * Solaris agent: add <<<uptime>>> section (thanks to Daniel Roettgermann)
+    * Added new WATO configurable option inventory_services_rules for the
+      windows services inventory check
+    * Added new WATO configurable option inventory_processes_rules for the
+      ps and ps.perf inventory
+    * FIX: mssql_counters checks now really only inventorize percentage based
+      counters if a base value is set
+    * win_dhcp_pools: do not inventorize empty pools any more. You can switch
+      back to old behaviour with win_dhcp_pools_inventorize_empty = True
 
 1.2.0p3:
     Mulitisite
@@ -75,17 +85,35 @@
     * FIX: Removed focus of "Full name" attribute on editing a contact
     * FIX: fix layout bug in ValueSpec ListOfStrings (e.g. used in
            list of explicit host/services in rules)
+    * FIX: fix inheritation of contactgroups from folder to hosts
 
     BI:
     * FIX: Correct representation of (!), (!!) and (?) markers in check output
 
     Livestatus
     * FIX: comments_with_info in service table was always empty
+    
+    Livecheck
+    * FIX: fixed problem with long plugin output
+    * FIX: added /0 termination to strings
+    * FIX: changed check_type to be always active (0)
+    * FIX: fix bug in assignment of livecheck helpers 
+    * FIX: close inherited unused filedescriptors after fork()
+    * FIX: kill process group of called plugin if timeout is reached
+           -> preventing possible freeze of livecheck
 
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used
     * FIX: Windows agent: quote '%' in plugin output correctly
     * FIX: multipath check now handles '-' in "user friendly names"
+    * New check mssql_counters.locks: Monitors locking related information of
+      MSSQL tablespaces
+    * FIX: mssql_counters checks now really only inventorize percentage based
+      counters if a base value is set
+    * windows_updates agent plugin: Fetching data in background mode, caching
+      update information for 30 minutes
+    * FIX: netapp_vfiler: fix inventory function (thanks to Falk Krentzlin)
+    * FIX: ps: avoid exception, when CPU% is missing (Zombies on Solaris)
 
 1.2.1i1:
     Core:

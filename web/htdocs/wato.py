@@ -412,6 +412,9 @@ def folder_dir(the_folder):
 
 # Save one folder (i.e. make sure the directory exist and write its .wato file)
 def save_folder(folder):
+    if folder[".lock"] != False:
+        raise MKAuthException(_("Sorry, you cannot edit this folder. It is locked."))
+
     # Remove temporary entries from the dictionary
     cleaned = dict([(k, v) for (k, v) in folder.iteritems() if not k.startswith('.') ])
 
@@ -423,22 +426,26 @@ def save_folder(folder):
     config.write_settings_file(wato_filename, cleaned)
 
 def save_folder_and_hosts(folder):
-    save_folder(folder)
-    save_hosts(folder)
+    if folder[".lock"] == False:
+        save_folder(folder)
+    if folder[".lock_hosts"] == False:
+        save_hosts(folder)
 
 
-# Save a folder and all of its subfolders (recursively)
-def save_folders(folder):
-    save_folder(folder)
-    for subfolder in folder[".folders"].values():
-        save_folders(subfolder)
-
-
-def save_all_folders():
-    save_folders(g_root_folder)
-
-def folder_config_exists(dir):
-    return os.path.exists(dir + "/.wato")
+# Removed in version 1.2.1i2 - unused, and might cause 
+# trouble when saving locked folders 
+## Save a folder and all of its subfolders (recursively)
+#def save_folders(folder):
+#    save_folder(folder)
+#    for subfolder in folder[".folders"].values():
+#        save_folders(subfolder)
+#
+#
+#def save_all_folders():
+#    save_folders(g_root_folder)
+#
+#def folder_config_exists(dir):
+#    return os.path.exists(dir + "/.wato")
 
 # Load the meta-data of a folder (it's .wato file), register
 # it in g_folders, load recursively all subfolders and then
@@ -455,9 +462,12 @@ def load_folder(dir, name="", path="", parent=None, childs = True):
             "num_hosts"  : 0,
         }
 
-    folder[".name"]    = name
-    folder[".path"]    = path
-    folder[".folders"] = {}
+    folder[".name"]        = name
+    folder[".path"]        = path
+    folder[".folders"]     = {}
+    folder[".lock"]        = folder.get("lock", False)
+    folder[".lock_subfolders"] = folder.get("lock_subfolders", False)
+    folder[".lock_hosts"]  = False
     if parent:
         folder[".parent"] = parent
 
@@ -549,6 +559,7 @@ def load_hosts_file(folder):
             "extra_service_conf"  : { "_WATO" : [] },
             "host_attributes"     : {},
             "host_contactgroups"  : [],
+            "_lock"               : False,
         }
         execfile(filename, variables, variables)
         nodes_of = {}
@@ -556,6 +567,8 @@ def load_hosts_file(folder):
         for cluster_with_tags, nodes in variables["clusters"].items():
             variables["all_hosts"].append(cluster_with_tags)
             nodes_of[cluster_with_tags.split('|')[0]] = nodes
+
+        folder[".lock_hosts"] = variables["_lock"]
 
         for h in variables["all_hosts"]:
 
@@ -617,9 +630,14 @@ def load_hosts_file(folder):
 def save_hosts(folder = None):
     if folder == None:
         folder = g_folder
+    
+    if folder[".lock_hosts"] != False:
+        raise MKAuthException(_("Sorry, you cannot edit hosts in this folder. They are locked.")) 
+
     folder_path = folder[".path"]
     dirname = root_dir + folder_path
     filename = dirname + "/hosts.mk"
+    
     if not os.path.isdir(dirname):
         make_nagios_directories(dirname)
 
@@ -729,8 +747,10 @@ def save_hosts(folder = None):
     # If the contact groups of the host are set to be used for the monitoring,
     # we create an according rule for the folder and an according rule for
     # each host that has an explicit setting for that attribute.
-    use, cgs = effective.get("contactgroups", (False, []))
+    effective_folder_attributes = effective_attributes(None, folder)
+    use, cgs = effective_folder_attributes.get("contactgroups", (False, []))
     if use and cgs:
+        html.debug(effective_folder_attributes)
         out.write("\nhost_contactgroups.append(\n"
                   "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS ))\n" % cgs)
 
@@ -760,8 +780,11 @@ def rewrite_config_files_below(folder):
 
 def rewrite_config_file(folder):
     load_hosts(folder)
-    save_hosts(folder)
-
+    try:
+        save_hosts(folder)
+    except MKAuthException, e:
+        # Ignore MKAuthExceptions of locked host.mk files
+        pass
 
 # returns the aliaspath of the given folder
 def get_folder_aliaspath(folder, show_main = True):
@@ -795,15 +818,15 @@ def mode_folder(phase):
         if config.may("wato.rulesets") or config.may("wato.seeall"):
             html.context_button(_("Rulesets"),        make_link([("mode", "ruleeditor")]), "rulesets")
         html.context_button(_("Folder Properties"), make_link_to([("mode", "editfolder")], g_folder), "edit")
-        if config.may("wato.manage_folders"):
+        if g_folder[".lock_subfolders"] == False and config.may("wato.manage_folders"):
             html.context_button(_("New folder"),        make_link([("mode", "newfolder")]), "newfolder")
-        if config.may("wato.manage_hosts"):
+        if g_folder[".lock_hosts"] == False and config.may("wato.manage_hosts"):
             html.context_button(_("New host"),    make_link([("mode", "newhost")]), "new")
             html.context_button(_("New cluster"), make_link([("mode", "newcluster")]), "new_cluster")
         if config.may("wato.services"):
             html.context_button(_("Bulk Inventory"), make_link([("mode", "bulkinventory"), ("all", "1")]), 
                         "inventory")
-        if config.may("wato.parentscan"):
+        if g_folder[".lock_hosts"] == False and config.may("wato.parentscan"):
             html.context_button(_("Parent scan"), make_link([("mode", "parentscan"), ("all", "1")]),
                         "parentscan")
         search_button()
@@ -913,20 +936,48 @@ def mode_folder(phase):
 
     else:
         render_folder_path()
+
+        lock_messages = []
+        if g_folder[".lock_hosts"]:
+            if g_folder[".lock_hosts"] == True:
+                lock_messages.append(_("Hosts attributes locked (You cannot create, edit or delete hosts in this folder)")) 
+            else:
+                lock_messages.append(g_folder[".lock_hosts"])
+        if g_folder[".lock"]:
+            if g_folder[".lock"] == True:
+                lock_messages.append(_("Folder attributes locked (You cannot edit the attributes of this folder)"))
+            else:
+                lock_messages.append(g_folder[".lock"])
+        if g_folder[".lock_subfolders"]:
+            if g_folder[".lock_subfolders"] == True:
+                lock_messages.append(_("Folder is locked (You cannot create or remove folders in this folder)")) 
+            else:
+                lock_messages.append(g_folder[".lock_subfolders"])
+        
+        if len(lock_messages) > 0:
+            lock_message = ", ".join(lock_messages)
+            html.write("<div class=info>" + lock_message + "</div>")
+
         have_something = show_subfolders(g_folder)
         # Show hosts only if we have permission to this folder
+        
         if True == check_folder_permissions(g_folder, "read", False):
             have_something = show_hosts(g_folder) or have_something
         if not have_something:
-            render_main_menu([
+            menu_items = []
+            if g_folder[".lock_hosts"] == False:
+                menu_items.extend([
                 ("newhost", _("Create new host"), "new", "hosts",
                   _("Add a new host to the monitoring (agent must be installed)")),
                 ("newcluster", _("Create new cluster"), "new_cluster", "hosts",
                   _("Use Check_MK clusters if an item can move from one host "
-                    "to another at runtime")),
+                    "to another at runtime"))])
+            if g_folder[".lock_subfolders"] == False:
+                menu_items.extend([
                 ("newfolder", _("Create new folder"), "newfolder", "hosts",
                   _("Folders group your hosts, can inherit attributes and can have permissions."))
                 ])
+            render_main_menu(menu_items)
 
 def prepare_folder_info():
     load_all_folders()            # load information about all folders
@@ -1103,30 +1154,31 @@ def show_subfolders(folder):
                     style = 'display:none',
                 )
 
-            if config.may("wato.manage_folders") and auth_write:
-                html.icon_button(
-                    '', # url is replaced by onclick code
-                    _("Move this folder to another place"),
-                    "move",
-                    id = 'move_' + entry['.name'],
-                    cssclass = 'move',
-                    style = 'display:none',
-                    onclick = 'wato_toggle_move_folder(event, this);'
-                )
-                html.write('<div id="move_dialog_%s" class=move_dialog style="display:none">' % entry['.name'])
-                html.write('<span>%s</span>' % _('Move this folder to:'))
-                move_to_folder_combo("folder", entry, False, multiple = True)
-                html.write('</div>')
-
-            if auth_write and config.may("wato.manage_folders"):
-                html.icon_button(
-                    delete_url,
-                    _("Delete this folder"),
-                    "delete",
-                    id = 'delete_' + entry['.name'],
-                    cssclass = 'delete',
-                    style = 'display:none',
-                )
+            if folder[".lock_subfolders"] == False and entry[".lock"] == False: 
+                if config.may("wato.manage_folders") and auth_write:
+                    html.icon_button(
+                        '', # url is replaced by onclick code
+                        _("Move this folder to another place"),
+                        "move",
+                        id = 'move_' + entry['.name'],
+                        cssclass = 'move',
+                        style = 'display:none',
+                        onclick = 'wato_toggle_move_folder(event, this);'
+                    )
+                    html.write('<div id="move_dialog_%s" class=move_dialog style="display:none">' % entry['.name'])
+                    html.write('<span>%s</span>' % _('Move this folder to:'))
+                    move_to_folder_combo("folder", entry, False, multiple = True)
+                    html.write('</div>')
+    
+                if auth_write and config.may("wato.manage_folders"):
+                    html.icon_button(
+                        delete_url,
+                        _("Delete this folder"),
+                        "delete",
+                        id = 'delete_' + entry['.name'],
+                        cssclass = 'delete',
+                        style = 'display:none',
+                    )
             html.write('</div>')
 
         else:
@@ -1198,19 +1250,22 @@ def show_hosts(folder):
         html.write('</td>')
         html.write("<td class=bulkactions colspan=%d>" % (colspan-3))
         html.write(' ' + _("Selected hosts:\n"))
-        if config.may("wato.manage_hosts"):
-            html.button("_bulk_delete", _("Delete"))
-        if config.may("wato.edit_hosts"):
-            html.button("_bulk_edit", _("Edit"))
-            html.button("_bulk_cleanup", _("Cleanup"))
+
+        if g_folder[".lock_hosts"] == False:
+            if config.may("wato.manage_hosts"):
+                html.button("_bulk_delete", _("Delete"))
+            if config.may("wato.edit_hosts"):
+                html.button("_bulk_edit", _("Edit"))
+                html.button("_bulk_cleanup", _("Cleanup"))
         if config.may("wato.services"):
             html.button("_bulk_inventory", _("Inventory"))
-        if config.may("wato.parentscan"):
-            html.button("_parentscan", _("Parentscan"))
-        if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
-            move_to_folder_combo("host", None, top)
-            if at_least_one_imported:
-                html.button("_bulk_movetotarget", _("Move to Target Folders"))
+        if g_folder[".lock_hosts"] == False: 
+            if config.may("wato.parentscan"):
+                html.button("_parentscan", _("Parentscan"))
+            if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+                move_to_folder_combo("host", None, top)
+                if at_least_one_imported:
+                    html.button("_bulk_movetotarget", _("Move to Target Folders"))
         html.write("</td></tr>\n")
 
     # Show table of hosts in this folder
@@ -1261,7 +1316,7 @@ def show_hosts(folder):
         if attr.show_in_table():
             html.write("<th>%s</th>" % attr.title())
 
-    if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+    if g_folder[".lock_hosts"] == False and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
         html.write("<th class=right>" + _("Move To") + "</th>")
 
     html.write("</tr>\n")
@@ -1308,7 +1363,7 @@ def show_hosts(folder):
                 image = "inventory_failed"
                 msg += ". " + _("The inventory of this host failed during a previous bulk inventory.")
             html.icon_button(services_url, msg, image)
-        if config.may("wato.manage_hosts"):
+        if g_folder[".lock_hosts"] == False and config.may("wato.manage_hosts"):
             if config.may("wato.clone_hosts"):
                 html.icon_button(clone_url, _("Create a clone of this host"), "insert")
             html.icon_button(delete_url, _("Delete this host"), "delete")
@@ -1365,7 +1420,7 @@ def show_hosts(folder):
                 html.write("</td>\n")
 
         # Move to
-        if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+        if g_folder[".lock_hosts"] == False and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
             html.write("<td class=right>")
             move_to_folder_combo("host", hostname)
             html.write("</td>\n")
@@ -1460,6 +1515,11 @@ def move_hosts_to(hostnames, path):
     # read hosts currently in target file
     load_hosts(target_folder)
     target_hosts = target_folder[".hosts"]
+    
+    if g_folder[".lock_hosts"] != False:
+        raise MKUserError(None, _("Cannot move selected hosts: Hosts in this folder are locked."))
+    if target_folder[".lock_hosts"] != False:
+        raise MKUserError(None, _("Cannot move selected hosts: Hosts in target folder are locked."))
 
     num_moved = 0
     for hostname in hostnames:
@@ -1494,6 +1554,9 @@ def delete_hosts_after_confirm(hosts):
     c = wato_confirm(_("Confirm deletion of %d hosts") % len(hosts),
                      _("Do you really want to delete the %d selected hosts?") % len(hosts))
     if c:
+        if g_folder[".lock_hosts"] != False:
+            raise MKUserError(None, _("Cannot delete hosts. Hosts in this folder are locked"))
+
         for delname in hosts:
             mark_affected_sites_dirty(g_folder, delname)
             host = g_folder[".hosts"][delname]
@@ -1501,6 +1564,7 @@ def delete_hosts_after_confirm(hosts):
             del g_folder[".hosts"][delname]
             g_folder["num_hosts"] -= 1
             log_pending(AFFECTED, delname, "delete-host", _("Deleted host %s") % delname)
+
         save_folder_and_hosts(g_folder)
         call_hook_hosts_changed(g_folder)
         return "folder", _("Successfully deleted %d hosts") % len(hosts)
@@ -1510,6 +1574,11 @@ def delete_hosts_after_confirm(hosts):
         return None # browser reload
 
 def move_folder(what_folder, target_folder):
+    if what_folder[".lock_subfolders"] != False:
+        raise MKUserError(None, _("Cannot move folder: This folder is locked."))
+    elif target_folder[".lock_subfolders"] != False:
+        raise MKUserError(None, _("Cannot move folder: Target folder is locked."))
+
     old_parent = what_folder[".parent"]
     old_dir = folder_dir(what_folder)
     del old_parent[".folders"][what_folder[".name"]]
@@ -1600,8 +1669,13 @@ def mode_editfolder(phase, new):
 
     elif phase == "action":
         if new:
+            if g_folder[".lock_subfolders"] != False:
+                raise MKUserError("title", _("Folder is locked. You cannot create or remove a folders "  
+                                             "in this folder.")) 
             config.need_permission("wato.manage_folders")
         else:
+            if g_folder[".lock"] != False:
+                raise MKUserError("title", _("Folder attributes locked. You cannot change the attributes of this folder.")) 
             config.need_permission("wato.edit_folders")
 
         if not html.check_transaction():
@@ -1639,6 +1713,7 @@ def mode_editfolder(phase, new):
                 ".folders"   : {},
                 ".hosts"     : {},
                 "num_hosts"  : 0,
+                ".lock"      : False,
             }
             g_folders[newpath] = new_folder
             g_folder[".folders"][name] = new_folder
@@ -1684,10 +1759,7 @@ def mode_editfolder(phase, new):
                        _("Changed attributes of folder %s") % title)
                 call_hook_hosts_changed(g_folder)
 
-
         need_sidebar_reload()
-        save_folder_and_hosts(g_folder) # save folder metainformation
-
 
         if html.has_var("backfolder"):
             set_current_folder(g_folders[html.var("backfolder")])
@@ -1697,6 +1769,15 @@ def mode_editfolder(phase, new):
     else:
         render_folder_path()
         check_folder_permissions(g_folder, "read")
+        
+        lock_message = ""
+        if g_folder[".lock"]:
+            if g_folder[".lock"] == True:
+                lock_message = _("Folder attributes locked (You cannot edit the attributes of this folder)")
+            else:
+                lock_message = g_folder[".lock"]
+        if len(lock_message) > 0:
+            html.write("<div class=info>" + lock_message + "</div>")
 
         html.begin_form("edithost")
 
@@ -1731,7 +1812,8 @@ def mode_editfolder(phase, new):
             configure_attributes(new, {"folder": attributes}, "folder", parent, myself)
 
         forms.end()
-        html.button("save", _("Save &amp; Finish"), "submit")
+        if new or g_folder[".lock"] == False:
+            html.button("save", _("Save &amp; Finish"), "submit")
         html.hidden_fields()
         html.end_form()
 
@@ -1935,6 +2017,15 @@ def mode_edithost(phase, new, cluster):
 
             html.write("</td></tr></table></div>")
 
+        lock_message = ""
+        if g_folder[".lock_hosts"]:
+            if g_folder[".lock_hosts"] == True:
+                lock_message = _("Host attributes locked (You cannot edit this host)")
+            else:
+                lock_message = g_folder[".lock_hosts"] 
+        if len(lock_message) > 0:
+            html.write("<div class=info>" + lock_message + "</div>")
+
         html.begin_form("edithost")
 
         # host name
@@ -1958,10 +2049,11 @@ def mode_edithost(phase, new, cluster):
         configure_attributes(new, {hostname: host}, "host", parent = g_folder)
 
         forms.end()
-        html.image_button("services", _("Save &amp; go to Services"), "submit")
-        html.image_button("save", _("Save &amp; Finish"), "submit")
-        if not new:
-            html.image_button("delete", _("Delete host!"), "submit")
+        if g_folder[".lock_hosts"] == False:
+            html.image_button("services", _("Save &amp; go to Services"), "submit")
+            html.image_button("save", _("Save &amp; Finish"), "submit")
+            if not new:
+                html.image_button("delete", _("Delete host!"), "submit")
         html.hidden_fields()
         html.end_form()
 
@@ -1970,6 +2062,9 @@ def delete_host_after_confirm(delname):
     c = wato_confirm(_("Confirm host deletion"),
                      _("Do you really want to delete the host <tt>%s</tt>?") % delname)
     if c:
+        if g_folder[".lock_hosts"] != False:
+            raise MKUserError(None, _("Cannot delete host. Hosts in this folder are locked"))
+
         mark_affected_sites_dirty(g_folder, delname)
         log_pending(AFFECTED, delname, "delete-host", _("Deleted host %s") % delname)
         host = g_folder[".hosts"][delname]
@@ -2585,6 +2680,7 @@ def mode_bulk_edit(phase):
     elif phase == "action":
         if html.check_transaction():
             config.need_permission("wato.edit_hosts")
+                
             changed_attributes = collect_attributes()
             if "contactgroups" in changed_attributes:
                  if True != check_folder_permissions(g_folder, "write", False):
@@ -4811,13 +4907,16 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 else:
                     disabled = True
 
-            if force_entry:
+            if (for_what == "host" and g_folder[".lock_hosts"] != False) or (for_what == "folder" and g_folder[".lock"] != False):
+                checkbox_code = None
+            elif force_entry:
                 checkbox_code = '<input type=checkbox name="ignored_%s" CHECKED DISABLED>' % checkbox_name
                 checkbox_code += '<input type=hidden name="%s" value="on">' % checkbox_name
             else:
                 onclick = "wato_fix_visibility(); wato_toggle_attribute(this, '%s');" % attrname
                 checkbox_code = '<input type=checkbox name="%s" %s %s onclick="%s">' % (
                     checkbox_name, active and "CHECKED" or "", disabled and "DISABLED" or "", onclick)
+
             forms.section(attr.title(), checkbox=checkbox_code, id="attr_" + attrname)
             html.help(attr.help())
 
@@ -9251,7 +9350,11 @@ def change_host_tags_in_folders(tag_id, operations, mode, folder):
                             attributes[attrname] = new_tag
                         need_save = True
         if need_save:
-            save_folder(folder)
+            try:
+                save_folder(folder)
+            except MKAuthException, e:
+                # Ignore MKAuthExceptions of locked host.mk files
+                pass
 
         for subfolder in folder[".folders"].values():
             aff_folders, aff_hosts, aff_rulespecs = change_host_tags_in_folders(tag_id, operations, mode, subfolder)
@@ -9287,7 +9390,11 @@ def change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
                             host[attrname] = new_tag
                         need_save = True
     if need_save:
-        save_hosts(folder)
+        try:
+            save_hosts(folder)
+        except MKAuthException, e:
+            # Ignore MKAuthExceptions of locked host.mk files
+            pass
     return affected_hosts
 
 

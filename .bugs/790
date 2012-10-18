@@ -1,9 +1,9 @@
 Title: Three Livecheck issues
 Component: livecheck
-State: open
+Class: bug
+State: done
 Date: 2012-10-09 14:20:28
 Targetversion: 1.2.0
-Class: bug
 
 1. In livecheck.c:53, int bytes_read = read(fd[0], output, sizeof(output));
 does not guarantee a valid 0-byte terminated string. I propose a single
@@ -20,3 +20,9 @@ escaped, there is a nagios function for this called escape_newlines. This
 is necessary for long plugin output to be functional.
 
 Ticket #442
+
+2012-10-18 10:48:07: changed state open -> done
+    livecheck:
+    FIX: fixed problem with long plugin output
+    FIX: added /0 termination to strings
+    FIX: changed check_type to be always active (0)

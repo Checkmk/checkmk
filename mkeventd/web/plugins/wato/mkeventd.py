@@ -822,15 +822,19 @@ def mode_mkeventd_rules(phase):
         if rule.get("disabled"):
             html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
         elif event:
-            groups = mkeventd.event_rule_matches(rule, event)
-            if type(groups) != tuple:
-                html.icon(_("Rule does not match: %s") % groups, "rulenmatch")
+            result = mkeventd.event_rule_matches(rule, event)
+            if type(result) != tuple:
+                html.icon(_("Rule does not match: %s") % result, "rulenmatch")
             else:
+                cancelling, groups = result
                 if have_match:
                     msg = _("This rule matches, but is overruled by a previous match.")
                     icon = "rulepmatch"
                 else:
-                    msg = _("This rule matches.")
+                    if cancelling:
+                        msg = _("This rule does a cancelling match.")
+                    else:
+                        msg = _("This rule matches.")
                     icon = "rulematch"
                     have_match = True
                 if groups:

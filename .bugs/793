@@ -1,0 +1,12 @@
+Title: Allow to rename services in a free an flexible way
+Component: core
+State: open
+Date: 2012-10-12 16:11:54
+Targetversion: future
+Class: feature
+
+Currently services can only partially be renamed. For example you
+can change fs_%s to "Filesystem %s". It would be nice to be 
+able to rename "LOG /u01/app/oracle/tools/log/rman.log" -> "BCK-ORA rman.log"
+It is not clear what impact such a feature has on the core and WATO, on
+PNP Templates an the like.

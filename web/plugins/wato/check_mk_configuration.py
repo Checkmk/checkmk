@@ -379,21 +379,6 @@ register_configvar(group,
             (3, _("Unknown") ),
             ]))
 
-
-register_configvar(group,
-    "always_cleanup_autochecks",
-    Checkbox(title = _("Always cleanup autochecks"),
-             help = _("When switched on, Check_MK will always cleanup the autochecks files "
-                      "after each inventory, i.e. create one file per host. This is the same "
-                      "as adding the option <tt>-u</tt> to each call of <tt>-I</tt> on the "
-                      "command line.")))
-
-
-group = _("Check configuration")
-
-# if_inventory_porttypes = [ '6', '32', '117' ]
-# if_inventory_portstates = [ '1' ]
-
 _if_portstate_choices = [
                         ( '1', 'up(1)'),
                         ( '2', 'down(2)'),
@@ -472,30 +457,6 @@ _if_porttype_choices = [
   ("221", "gfp(221)" ), ("222", "ciscoISLvlan(222)" ), ("223", "actelisMetaLOOP(223)" ), ("224",
   "fcipLink(224)" ), ("225", "rpr(225)" ), ("226", "qam(226)" ), ("227", "lmp(227)" ), ("228",
   "cblVectaStar(228)" ), ("229", "docsCableMCmtsDownstream(229)" ), ("230", "adsl2(230)" ), ]
-
-register_configvar(group,
-    "if_inventory_monitor_state",
-    Checkbox(title = _("Monitor port state of network interfaces"),
-             label = _("monitor port state"),
-             help = _("When this option is active then during inventory of networking interfaces "
-                      "(and switch ports) the current operational state of the port will "
-                      "automatically be coded as a check parameter into the check. That way the check "
-                      "will get warning or critical when the state changes. This setting can later "
-                      "by overridden on a per-host and per-port base by defining special check "
-                      "parameters via a rule.")))
-
-register_configvar(group,
-    "if_inventory_monitor_speed",
-    Checkbox(title = _("Monitor port speed of network interfaces"),
-             label = _("monitor port speed"),
-             help = _("When this option is active then during inventory of networking interfaces "
-                      "(and switch ports) the current speed setting of the port will "
-                      "automatically be coded as a check parameter into the check. That way the check "
-                      "will get warning or critical when speed later changes (for example from "
-                      "100 MBit/s to 10 MBit/s). This setting can later "
-                      "by overridden on a per-host and per-port base by defining special check "
-                      "parameters via a rule.")))
-
 register_configvar(group,
     "if_inventory_pad_portnumbers",
     Checkbox(title = _("Pad port numbers with zeroes"),
@@ -557,6 +518,51 @@ register_configvar(group,
     )
 
 register_configvar(group,
+    "win_dhcp_pools_inventorize_empty",
+    Checkbox(
+        title = _("Inventorize empty windows dhcp pools"),
+        help = _("You can activate the inventorization of "
+                 "dhcp pools, which have no ip addresses in it"),
+        ),
+    need_restart = True
+    )
+
+register_configvar(group,
+    "always_cleanup_autochecks",
+    Checkbox(title = _("Always cleanup autochecks"),
+             help = _("When switched on, Check_MK will always cleanup the autochecks files "
+                      "after each inventory, i.e. create one file per host. This is the same "
+                      "as adding the option <tt>-u</tt> to each call of <tt>-I</tt> on the "
+                      "command line.")))
+
+
+group = _("Check configuration")
+
+
+register_configvar(group,
+    "if_inventory_monitor_state",
+    Checkbox(title = _("Monitor port state of network interfaces"),
+             label = _("monitor port state"),
+             help = _("When this option is active then during inventory of networking interfaces "
+                      "(and switch ports) the current operational state of the port will "
+                      "automatically be coded as a check parameter into the check. That way the check "
+                      "will get warning or critical when the state changes. This setting can later "
+                      "by overridden on a per-host and per-port base by defining special check "
+                      "parameters via a rule.")))
+
+register_configvar(group,
+    "if_inventory_monitor_speed",
+    Checkbox(title = _("Monitor port speed of network interfaces"),
+             label = _("monitor port speed"),
+             help = _("When this option is active then during inventory of networking interfaces "
+                      "(and switch ports) the current speed setting of the port will "
+                      "automatically be coded as a check parameter into the check. That way the check "
+                      "will get warning or critical when speed later changes (for example from "
+                      "100 MBit/s to 10 MBit/s). This setting can later "
+                      "by overridden on a per-host and per-port base by defining special check "
+                      "parameters via a rule.")))
+
+register_configvar(group,
     "logwatch_service_output",
     DropdownChoice(
         title = _("Service output for logwatch"),
@@ -568,16 +574,6 @@ register_configvar(group,
             ( 'count', _("Show only count")),
             ],
         default_value = 'default',
-        ),
-    need_restart = True
-    )
-
-register_configvar(group,
-    "win_dhcp_pools_inventorize_empty",
-    Checkbox(
-        title = _("Invetorize empty windows dhcp pools"),
-        help = _("You can activate the inventorization of "
-                 "dhcp pools, which have no ip addresses in it"),
         ),
     need_restart = True
     )

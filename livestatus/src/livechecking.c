@@ -66,6 +66,13 @@ void start_livecheck_helper(struct live_helper *lh)
         dup2(fd[1], 1);
         dup2(fd[1], 2);
         close(fd[0]);
+
+        // close all other inherited filedescriptiors
+        unsigned i;
+        for (i=3; i<1024; i++) {
+            close(i);
+        }
+        
         char ht[32];
         snprintf(ht, sizeof(ht), "%u", host_check_timeout);
         char st[32];

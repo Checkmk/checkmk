@@ -43,7 +43,7 @@ extern int service_check_timeout;
 int g_num_livehelpers = 20;
 int g_livecheck_enabled = 0;
 
-#define LH_WAITING 0
+#define LH_BUSY 0
 #define LH_READY   1
 #define LH_DEAD    2
 
@@ -89,7 +89,7 @@ void start_livecheck_helper(struct live_helper *lh)
     lh->pid = pid;
     lh->sock = fd[0];
     lh->fsock = fdopen(fd[0], "r+");
-    lh->status = LH_WAITING; // wait until helper sends "ready" byte.
+    lh->status = LH_BUSY; // wait until helper sends "ready" byte.
 }
 
 void terminate_livecheck_helper(struct live_helper *lh) {
@@ -153,7 +153,7 @@ struct live_helper *get_free_live_helper()
     unsigned i;
     for (i=0; i<g_num_livehelpers; i++) {
         if (g_live_helpers[i].status == LH_READY) {
-            g_live_helpers[i].status = LH_WAITING;
+            g_live_helpers[i].status = LH_BUSY;
             return &g_live_helpers[i];
         }
     }
@@ -165,7 +165,7 @@ struct live_helper *get_free_live_helper()
     FD_ZERO(&fds);
     int max_fd = 0;
     for (i=0; i<g_num_livehelpers; i++) {
-        if (g_live_helpers[i].status != LH_WAITING) {
+        if (g_live_helpers[i].status != LH_BUSY) {
             continue;
         }
         if (g_live_helpers[i].status != LH_DEAD) {

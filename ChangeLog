@@ -97,6 +97,7 @@
     * FIX: added /0 termination to strings
     * FIX: changed check_type to be always active (0)
     * FIX: fix bug in assignment of livecheck helpers 
+    * FIX: close inherited unused filedescriptors after fork()
 
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used

@@ -34,9 +34,9 @@
 #include "strutil.h"
 
 pid_t g_pid;
-void alarm_handler(int);
-void term_handler(int);
-char **parse_into_arguments(char *command);
+static void alarm_handler(int);
+static void term_handler(int);
+static char **parse_into_arguments(char *command);
 int check_icmp(int argc, char **argv, char *output);
 int icmp_sock = -1;
 
@@ -83,7 +83,6 @@ int main(int argc, char **argv)
         ftime(&start);
         char output[8192];
         int return_code;
-
         // Optimization(1):
         // If it's check_icmp, we use our inline version
         // of that. But only if we have (had) root priviledges
@@ -104,6 +103,10 @@ int main(int argc, char **argv)
                 // Drop root priviledges: only needed for ICMP socket
                 if (geteuid() == 0)
                     setuid(getuid());
+
+                // Assign this child its own process group, so
+                // we can kill its entire process group when a timeout occurs
+                setpgid(getpid(), 0);
 
                 close(fd[0]);   // close read end
                 dup2(fd[1], 1); // point stdout into pipe
@@ -149,7 +152,6 @@ int main(int argc, char **argv)
                 unsigned timeout = is_host_check ? host_check_timeout : service_check_timeout;
                 if (timeout)
                     alarm(timeout);
-
 
                 int bytes_read = 0;
                 char *ptr_output = output;
@@ -214,7 +216,6 @@ int main(int argc, char **argv)
             (int)end.time,
             end.millitm,
             return_code);
-
         char *ptr_output = output;
         char *ptr_walk   = output;
         while (*ptr_walk != 0) {
@@ -239,7 +240,7 @@ int main(int argc, char **argv)
     }
 }
 
-char **parse_into_arguments(char *command)
+static char **parse_into_arguments(char *command) 
 {
     static char *arguments[128];
     char *c = command;
@@ -255,7 +256,7 @@ char **parse_into_arguments(char *command)
 }
 
 // Propagate signal to child, if we are killed
-void term_handler(int signum)
+static void term_handler(int signum)
 {
     if (g_pid) {
         kill(g_pid, signum);
@@ -267,6 +268,6 @@ void term_handler(int signum)
 void alarm_handler(int signum)
 {
     if (g_pid) {
-        kill(g_pid, SIGKILL);
+        kill(-g_pid, SIGKILL);
     }
 }

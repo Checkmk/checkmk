@@ -126,18 +126,17 @@ g_compiled_everything = False # Is set to true if all aggregations have been com
 # Load the static configuration of all services and hosts (including tags)
 # without state.
 def load_services(cache, only_hosts):
+    global g_services, g_services_by_hostname
+    g_services = {}
+    g_services_by_hostname = {}
+
     # TODO: At the moment the data is always refetched. This could really
     # be optimized. Maybe create a cache which fetches data for the given
     # list of hosts, puts it to a cache and then only fetch the additionally
     # needed information which are not cached yet in future requests
-    global g_services, g_services_by_hostname
-    g_services = {}
-    g_services_by_hostname = {}
-    html.live.set_prepend_site(True)
-    html.live.set_auth_domain('bi')
 
     # Create optional host filter
-    filter_txt = ''
+    filter_txt = 'Filter: custom_variable_names < _REALNAME\n"' # drop summary hosts
     if only_hosts:
         # Only fetch the requested hosts
         host_filter = []
@@ -146,8 +145,9 @@ def load_services(cache, only_hosts):
         filter_txt = ''.join(host_filter)
         filter_txt += "Or: %d\n" % len(host_filter)
 
+    html.live.set_prepend_site(True)
+    html.live.set_auth_domain('bi')
     data = html.live.query("GET hosts\n"
-                           "Filter: custom_variable_names < _REALNAME\n" # drop summary hosts
                            +filter_txt+
                            "Columns: name custom_variable_names custom_variable_values services childs parents\n") 
     html.live.set_prepend_site(False)
@@ -269,15 +269,15 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     global did_compilation
     did_compilation = True
 
-    log("This request: User: %s, Only-Groups: %r, Only-Hosts: %s PID: %d\n"
-        % (user, only_groups, only_hosts, os.getpid()))
-
     # Load all (needed) services
     # The only_hosts variable is only set in "precompile on demand" mode to filter out
     # the needed hosts/services if possible. It is used in the load_services() function
     # to reduce the amount of hosts/services. Reducing the host/services leads to faster
     # compilation.
     load_services(cache, only_hosts)
+
+    log("This request: User: %s, Only-Groups: %r, Only-Hosts: %s PID: %d\n"
+        % (user, only_groups, only_hosts, os.getpid()))
 
     if compile_logging():
         before   = time.time()
@@ -332,13 +332,17 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                 cache["aggregations_by_hostname"].setdefault(name, []).append((group, aggr))
 
                 # All single-host aggregations looked up per host
-                if len(req_hosts) == 1:
-                    host = req_hosts[0] # pair of (site, host)
-                    cache["host_aggregations"].setdefault(host, []).append((group, aggr))
+                # Only process the aggregations of hosts which are mentioned in only_hosts
+                if aggr_type == AGGR_HOST:
+                    # In normal cases a host aggregation has only one req_hosts item, we could use
+                    # index 0 here. But clusters (which are also allowed now) have all their nodes
+                    # in the list of required nodes. The cluster node is always the last one in
+                    # this list.
+                    host = req_hosts[-1] # pair of (site, host)
+                    if req_hosts[0] in only_hosts:
+                        cache["host_aggregations"].setdefault(host, []).append((group, aggr))
 
-                    # In case of only_groups requests construct a list of compiled
-                    # single-host aggregations for cached registration
-                    if only_groups:
+                        # construct a list of compiled single-host aggregations for cached registration
                         single_affected_hosts.append(host)
 
                 # All aggregations containing a specific host
@@ -352,7 +356,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
     # Register compiled objects
     if only_hosts:
-        cache['compiled_hosts'].update(only_hosts)
+        cache['compiled_hosts'].update(single_affected_hosts)
 
     elif only_groups:
         cache['compiled_groups'].update(only_groups)
@@ -1021,7 +1025,6 @@ def execute_rule_node(node, status_info):
 # Get all status information we need for the aggregation from
 # a known lists of lists (list of site/host pairs)
 def get_status_info(required_hosts):
-
     # Query each site only for hosts that that site provides
     site_hosts = {}
     for site, host in required_hosts:
@@ -1049,8 +1052,8 @@ def get_status_info(required_hosts):
 # This variant of the function is configured not with a list of
 # hosts but with a livestatus filter header and a list of columns
 # that need to be fetched in any case
-def get_status_info_filtered(filter_header, only_sites, limit, add_columns):
-    columns = [ "name", "state", "plugin_output", "services_with_info" ] + add_columns
+def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetch_parents = True):
+    columns = [ "name", "state", "plugin_output", "services_with_info", "parents" ] + add_columns
 
     html.live.set_only_sites(only_sites)
     html.live.set_prepend_site(True)
@@ -1062,7 +1065,22 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns):
     html.live.set_only_sites(None)
 
     headers = [ "site" ] + columns
+    hostnames = [ row[1] for row in data ]
     rows = [ dict(zip(headers, row)) for row in data]
+
+    # on demand compile: if parents have been found, also fetch data of the parents.
+    # This is needed to allow cluster hosts (which have the nodes as parents) in the
+    # host_aggregation construct.
+    if fetch_parents:
+        parent_filter = []
+        for row in data:
+            parent_filter += [ 'Filter: name = %s\n' % p for p in row[5] ]
+        parent_filter_txt = ''.join(parent_filter)
+        parent_filter_txt += 'Or: %d\n' % len(parent_filter)
+        for row in  get_status_info_filtered(filter_header, only_sites, limit, add_columns, False):
+            if row['name'] not in hostnames:
+                rows.append(row)
+
     return rows
 
 #       _                      _____                 _   _
@@ -1342,7 +1360,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
             filter_code += header
 
     host_columns = filter(lambda c: c.startswith("host_"), columns)
-    hostrows = get_status_info_filtered(filter_code, only_sites, limit, host_columns)
+    hostrows = get_status_info_filtered(filter_code, only_sites, limit, host_columns, config.bi_precompile_on_demand)
     # if limit:
     #     views.check_limit(hostrows, limit)
 
@@ -1362,6 +1380,10 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
     else:
         compile_forest(config.user_id)
 
+    # rows by site/host - needed for later cluster state gathering
+    if config.bi_precompile_on_demand and not joinbyname:
+        row_dict = dict([ ((r['site'], r['name']), r) for r in hostrows])
+
     rows = []
     # Now compute aggregations of these hosts
     for hostrow in hostrows:
@@ -1379,6 +1401,19 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
 
         for group, aggregation in aggrs:
             row = hostrow.copy()
+
+            # on demand compile: host aggregations of clusters need data of several hosts.
+            # It is not enough to only process the hostrow. The status_info construct must
+            # also include the data of the other required hosts.
+            if config.bi_precompile_on_demand and not joinbyname and len(aggregation['reqhosts']) > 1:
+                status_info = {}
+                for site, host in aggregation['reqhosts']:
+                    status_info[(site, host)] = [
+                        row_dict[(site, host)]['state'],
+                        row_dict[(site, host)]['plugin_output'],
+                        row_dict[(site, host)]['services_with_info'],
+                    ]
+
             row.update(create_aggregation_row(aggregation, status_info))
             row["aggr_group"] = group
             rows.append(row)

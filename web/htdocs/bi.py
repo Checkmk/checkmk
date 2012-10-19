@@ -214,8 +214,9 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     global g_cache, g_user_cache, g_compiled_everything
 
     new_config_information = cache_needs_update()
-    if new_config_information:
+    if new_config_information or (not only_groups and not only_hosts):
         # config changed or monitoring daemon restarted, clear cache
+        # or: total compilation requested (even if some hosts have already be compiled)
         g_cache = {}
         global g_config_information
         g_config_information = new_config_information

@@ -42,6 +42,7 @@
       aggregation compilations
     * Correct representation of (!), (!!) and (?) markers in check output
     * Corrected representation of assumed state in box layout
+    * Feature: Using parameters for hosttags
 
     WATO:
     * Added progress indicator in single site WATO "Activate Changes"

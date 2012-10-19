@@ -693,7 +693,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
                 # 2: (['waage'], '(.*)')
                 calllist = []
                 for n in node[1:-2]:
-                    if type(n) in [ str, unicode ]:
+                    if type(n) in [ str, unicode, list ]:
                         n = subst_vars(n, arginfo)
                     calllist.append(n)
                 matches = find_matching_services(aggr_type, node[0], calllist)
@@ -777,6 +777,9 @@ def find_variables(pattern, varname):
 
 # replace variables in a string
 def subst_vars(pattern, arginfo):
+    if type(pattern) == list:
+        return [subst_vars(x, arginfo) for x in pattern ]
+
     for name, value in arginfo.items():
         if type(pattern) in [ str, unicode ]:
             pattern = pattern.replace('$'+name+'$', value)

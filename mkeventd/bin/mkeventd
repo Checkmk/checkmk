@@ -845,6 +845,8 @@ class EventServer:
                     log("  matching groups: %s" % ", ".join(groups))
 
                 g_event_status.count_rule_match(rule["id"])
+                if g_config["log_rulehits"]:
+                    log("Rule %s hit by message '%s'." % (event["text"], rule["id"]))
                 if rule.get("drop"):
                     self.count("drops")
                     return
@@ -1862,6 +1864,7 @@ def load_configuration():
         "rules"                 : [],
         "actions"               : [],
         "debug_rules"           : False,
+        "log_rulehits"          : False,
         "retention_interval"    : 60,
         "housekeeping_interval" : 60,
         "statistics_interval"   : 5,

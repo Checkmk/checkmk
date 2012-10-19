@@ -1183,6 +1183,18 @@ if mkeventd_enabled:
         domain = "mkeventd")
 
     register_configvar(group,
+        "log_rulehits",
+        Checkbox(title = _("Log rule hits"),
+                 label = _("Log hits for rules in log of mkeventd"),
+                 help = _("If you enable this option then every time an event matches a rule "
+                          "(by normal hit, cancelling, counting or dropping) a log entry will be written "
+                          "into the log file of the mkeventd. Please be aware that this might lead to "
+                          "a large number of log entries. "),
+                default_value = False),
+        domain = "mkeventd")
+
+
+    register_configvar(group,
         "debug_mkeventd_queries",
         Checkbox(title = _("Debug queries to mkeventd"),
                  label = _("enable debugging of queries"),

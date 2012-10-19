@@ -10,6 +10,7 @@
     * When saving a rule then its hits counter is always reset
     * New feature of hiding certain actions from the commands in the status GUI
     * FIX: rule simulator ("Try out") now handles cancelling rules correctly
+    * New global option for enabling log entries for rule hits (debugging)
 
     Multisite:
     * Enable automation login with _username= and _secret=, while

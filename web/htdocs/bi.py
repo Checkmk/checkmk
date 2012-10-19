@@ -136,7 +136,7 @@ def load_services(cache, only_hosts):
     # needed information which are not cached yet in future requests
 
     # Create optional host filter
-    filter_txt = 'Filter: custom_variable_names < _REALNAME\n"' # drop summary hosts
+    filter_txt = 'Filter: custom_variable_names < _REALNAME\n' # drop summary hosts
     if only_hosts:
         # Only fetch the requested hosts
         host_filter = []
@@ -186,7 +186,13 @@ def reused_compilation():
 def aggregation_groups():
     if config.bi_precompile_on_demand:
         # on demand: show all configured groups
-        group_names = list(set([ a[0] for a in config.aggregations + config.host_aggregations ]))
+        group_names = set([])
+        for a in config.aggregations + config.host_aggregations:
+            if type(a[0]) == list:
+                group_names.update(a[0])
+            else:
+                group_names.add(a[0])
+        group_names = list(group_names)
 
     else:
         # classic mode: precompile all and display only groups with members
@@ -298,24 +304,26 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                 raise MKConfigError(_("<h1>Invalid aggregation <tt>%s</tt>'</h1>"
                                       "Must have at least 3 entries (has %d)") % (entry, len(entry)))
 
-            group = entry[0]
+            if type(entry[0]) == list:
+                groups = entry[0]
+            else:
+                groups = [ entry[0] ]
+            groups_set = set(groups)
 
-            if only_groups and group not in only_groups:
+            if only_groups and not groups_set.intersection(only_groups):
+                log('Skip aggr (No group of the aggr has been requested: %r)\n' % groups)
                 continue # skip not requested groups if filtered by groups
 
-            if group in cache['compiled_groups']:
-                continue # skip already compiled groups
+            if len(groups_set) == len(groups_set.intersection(cache['compiled_groups'])):
+                log('Skip aggr (All groups have already been compiled\n')
+                continue # skip if all groups have already been compiled
 
             new_entries = compile_rule_node(aggr_type, entry[1:], 0)
 
-            for entry in new_entries:
-                remove_empty_nodes(entry)
+            for this_entry in new_entries:
+                remove_empty_nodes(this_entry)
 
             new_entries = [ e for e in new_entries if len(e["nodes"]) > 0 ]
-
-            # enter new aggregations into dictionary for that group
-            entries = cache["forest"].setdefault(group, [])
-            entries += new_entries
 
             if compile_logging():
                 if aggr_type == AGGR_HOST:
@@ -323,36 +331,47 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                 else:
                     num_new_multi_aggrs += len(new_entries)
 
-            # Update several global speed-up indices
-            for aggr in new_entries:
-                req_hosts = aggr["reqhosts"]
+            # enter new aggregations into dictionary for these groups
+            for group in groups:
+                if group in cache['compiled_groups']:
+                    log('Skip aggr (group %s already compiled)\n' % group)
+                    continue # the group has already been compiled completely
 
-                # Aggregations by last part of title (assumed to be host name)
-                name = aggr["title"].split()[-1]
-                cache["aggregations_by_hostname"].setdefault(name, []).append((group, aggr))
+                if group not in cache['forest']:
+                    cache['forest'][group] = new_entries
+                else:
+                    cache['forest'][group] += new_entries
 
-                # All single-host aggregations looked up per host
-                # Only process the aggregations of hosts which are mentioned in only_hosts
-                if aggr_type == AGGR_HOST:
-                    # In normal cases a host aggregation has only one req_hosts item, we could use
-                    # index 0 here. But clusters (which are also allowed now) have all their nodes
-                    # in the list of required nodes. The cluster node is always the last one in
-                    # this list.
-                    host = req_hosts[-1] # pair of (site, host)
-                    if req_hosts[0] in only_hosts:
-                        cache["host_aggregations"].setdefault(host, []).append((group, aggr))
+                # Update several global speed-up indices
+                for aggr in new_entries:
+                    req_hosts = aggr["reqhosts"]
 
-                        # construct a list of compiled single-host aggregations for cached registration
-                        single_affected_hosts.append(host)
+                    # Aggregations by last part of title (assumed to be host name)
+                    name = aggr["title"].split()[-1]
+                    cache["aggregations_by_hostname"].setdefault(name, []).append((group, aggr))
 
-                # All aggregations containing a specific host
-                for h in req_hosts:
-                    cache["affected_hosts"].setdefault(h, []).append((group, aggr))
+                    # All single-host aggregations looked up per host
+                    # Only process the aggregations of hosts which are mentioned in only_hosts
+                    if aggr_type == AGGR_HOST:
+                        # In normal cases a host aggregation has only one req_hosts item, we could use
+                        # index 0 here. But clusters (which are also allowed now) have all their nodes
+                        # in the list of required nodes. The cluster node is always the last one in
+                        # this list.
+                        host = req_hosts[-1] # pair of (site, host)
+                        if not only_hosts or host in only_hosts:
+                            cache["host_aggregations"].setdefault(host, []).append((group, aggr))
 
-                # All aggregations containing a specific service
-                services = find_all_leaves(aggr)
-                for s in services: # triples of site, host, service
-                    cache["affected_services"].setdefault(s, []).append((group, aggr))
+                            # construct a list of compiled single-host aggregations for cached registration
+                            single_affected_hosts.append(host)
+
+                    # All aggregations containing a specific host
+                    for h in req_hosts:
+                        cache["affected_hosts"].setdefault(h, []).append((group, aggr))
+
+                    # All aggregations containing a specific service
+                    services = find_all_leaves(aggr)
+                    for s in services: # triples of site, host, service
+                        cache["affected_services"].setdefault(s, []).append((group, aggr))
 
     # Register compiled objects
     if only_hosts:
@@ -1408,11 +1427,13 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
             if config.bi_precompile_on_demand and not joinbyname and len(aggregation['reqhosts']) > 1:
                 status_info = {}
                 for site, host in aggregation['reqhosts']:
-                    status_info[(site, host)] = [
-                        row_dict[(site, host)]['state'],
-                        row_dict[(site, host)]['plugin_output'],
-                        row_dict[(site, host)]['services_with_info'],
-                    ]
+                    this_row = row_dict.get((site, host))
+                    if this_row:
+                        status_info[(site, host)] = [
+                            this_row['state'],
+                            this_row['plugin_output'],
+                            this_row['services_with_info'],
+                        ]
 
             row.update(create_aggregation_row(aggregation, status_info))
             row["aggr_group"] = group

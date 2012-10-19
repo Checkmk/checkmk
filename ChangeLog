@@ -31,13 +31,15 @@
 
     BI:
     * Added missing localizations
-    * Added option bit_precompile_on_demand to split compilations of
+    * Added option bi_precompile_on_demand to split compilations of
       the aggregations in several fragments. If possible only the needed
       aggregations are compiled to reduce the time a user has to wait for
       BI based view. This optimizes BI related views which display
       information for a specific list of hosts or aggregation groups.
     * Added new config option bi_compile_log to collect statistics about
       aggregation compilations
+    * Aggregations can now be part of more than one aggregation group
+      (just configure a list of group names instead of a group name string)
     * Correct representation of (!), (!!) and (?) markers in check output
     * Corrected representation of assumed state in box layout
 

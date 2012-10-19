@@ -195,6 +195,10 @@ def aggregation_groups():
 
     return sorted(group_names, cmp = lambda a,b: cmp(a.lower(), b.lower()))
 
+def log(s):
+    if compile_logging():
+        file(config.bi_compile_log, "a").write(s)
+
 # Precompile the forest of BI rules. Forest? A collection of trees.
 # The compiled forest does not contain any regular expressions anymore.
 # Everything is resolved. Sites, hosts and services are hardcoded. The
@@ -202,10 +206,6 @@ def aggregation_groups():
 # printable (and storable in Python syntax to a file).
 def compile_forest(user, only_hosts = None, only_groups = None):
     global g_cache, g_user_cache, g_compiled_everything
-
-    def log(s):
-        if compile_logging():
-            file(config.bi_compile_log, "a").write(s)
 
     new_config_information = cache_needs_update()
     if new_config_information:
@@ -269,7 +269,14 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     global did_compilation
     did_compilation = True
 
+    log("This request: User: %s, Only-Groups: %r, Only-Hosts: %s PID: %d\n"
+        % (user, only_groups, only_hosts, os.getpid()))
+
     # Load all (needed) services
+    # The only_hosts variable is only set in "precompile on demand" mode to filter out
+    # the needed hosts/services if possible. It is used in the load_services() function
+    # to reduce the amount of hosts/services. Reducing the host/services leads to faster
+    # compilation.
     load_services(cache, only_hosts)
 
     if compile_logging():
@@ -277,6 +284,8 @@ def compile_forest(user, only_hosts = None, only_groups = None):
         num_new_host_aggrs  = 0
         num_new_multi_aggrs = 0
 
+    # When only_hosts is given only use the single host aggregations for further processing.
+    # The only_hosts variable is only populated for single host tables.
     if only_hosts:
         aggr_list = [(AGGR_HOST, config.host_aggregations)]
     else:
@@ -364,6 +373,10 @@ def compile_forest(user, only_hosts = None, only_groups = None):
         for grp, aggrs in cache['forest'].iteritems():
             num_total_aggr += len(aggrs)
 
+        num_host_aggr = 0
+        for grp, aggrs in cache['host_aggregations'].iteritems():
+            num_host_aggr += len(aggrs)
+
         num_services = 0
         for key, val in g_services.iteritems():
             num_services += len(val[1])
@@ -391,8 +404,8 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                only_groups and len(only_groups) or 0,
 
                g_compiled_everything,
-               num_total_aggr - len(cache['compiled_hosts']),
-               len(cache['compiled_hosts']),
+               num_total_aggr - num_host_aggr,
+               num_host_aggr,
                len(cache['compiled_groups']),
                len(config.aggregations),
                len(config.host_aggregations),
@@ -463,7 +476,8 @@ def find_matching_services(aggr_type, what, calllist):
             host_re = "(.*)"
     elif not honor_site and not '*' in host_re and not '$' in host_re and not '|' in host_re:
         # Exact host match
-        entries = [ ((e[0], host_re), e[1]) for e in g_services_by_hostname[host_re] ]
+        entries = [ ((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, []) ]
+
     else:
         # All services
         entries = g_services.items()
@@ -709,6 +723,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
             else:
                 # This is a plain leaf node with just host/service
                 new_elements = compile_leaf_node(subst_vars(node[0], arginfo), subst_vars(node[1], arginfo))
+
         else:
             # substitute our arguments in rule arguments
             # rule_args:
@@ -798,8 +813,8 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
     found = []
     honor_site = SITE_SEP in host_re
     if not honor_site and not '*' in host_re and not '$' in host_re and not '|' in host_re:
-        # This is an exact host match, only use the services of this host
-        entries = [ ((e[0], host_re), e[1]) for e in g_services_by_hostname[host_re] ]
+        entries = [ ((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, []) ]
+
     else:
         entries = g_services.items()
 
@@ -1331,9 +1346,9 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
     # if limit:
     #     views.check_limit(hostrows, limit)
 
-    # Apply group filter. This is important for performance. We
-    # must not compute any aggregations from other groups and filter
-    # later out again.
+    # Apply aggregation group filter. This is important for performance. We
+    # must not compute any aggregations from other aggregation groups and filter
+    # them later out again.
     only_groups = None
     for filt in filters:
         if filt.name == "aggr_group":

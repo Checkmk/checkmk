@@ -54,7 +54,7 @@ livestatus_so_SOURCES = \
 
 livecheck$(EXEEXT): livecheck.c strutil.cc check_icmp.c 
 if HAVE_DIET
-	diet -v $(CC) -x c -Wno-deprecated-declarations $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
+	diet -v $(CC) -Wno-deprecated-declarations $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
 else
 	$(CC) -x c -Wno-deprecated-declarations $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
 endif

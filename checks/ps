@@ -33,7 +33,19 @@
 # Third generation (from 1.1.5) output also virtual memory, resident memory and %CPU:
 # (class,122376,88128,0.0) /usr/jre1.6.0_13/bin/java -Dn=Cart_16TH13 -Dmcs.node=zbgh1ca -Dmcs.mdt.redundan
 
-
+# New since 1.2.1i2: WATO compatible syntax
+#
+# Holds a list of rules which are matching hosts by names or tags and
+# where each rule holds a dictionary.
+#
+# Each of those entries defines the following options:
+#
+# 1. descr:    item name to be used for the service description
+# 2. match:    matching-definition
+# 3. user:     user definition
+# 5. perfdata: monitor with perfdata
+# 4. levels:   four numbers (thresholds)
+inventory_processes_rules = []
 
 inventory_processes = []
 inventory_processes_perf = []
@@ -44,11 +56,14 @@ def inventory_ps(info):
     return inventory_ps_common(inventory_processes, info)
 
 def inventory_ps_perf(info):
-    return inventory_ps_common(inventory_processes_perf, info)
+    return inventory_ps_common(inventory_processes_perf, info, True)
 
-def inventory_ps_common(invdata, info):
+def inventory_ps_common(invdata, info, handle_perfdata = False):
     inventory = []
 
+    entries = []
+
+    # Handle inventory_processes, inventory_processes_perf variables
     for inventry in invdata:
         # New in 1.1.7i1: inventory_processes may be prefixed with list of
         # host names or tags + ALL_HOSTS
@@ -62,13 +77,30 @@ def inventory_ps_common(invdata, info):
             hostlist = inventry[1]
             inventry = inventry[2:]
 
-        # Filter out rules with do not match our current host
+        # Filter out entries with do not match our current host
         if tags != None and ( not hosttags_match_taglist(tags_of_host(g_hostname), tags) or
                               not in_extraconf_hostlist(hostlist, g_hostname)):
             continue
 
-        servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax = inventry
+        entries.append(inventry)
 
+    # Handle new wato style inventory_processes_rules
+    for rule in inventory_processes_rules:
+        taglist, hostlist = rule[1:3]
+        # Filter out entries with do not match our current host
+        if not hosttags_match_taglist(tags_of_host(g_hostname), taglist) \
+           or not in_extraconf_hostlist(hostlist, g_hostname):
+            continue
+
+        v = rule[0]
+
+        # Make ps skip rules for ps.perf and vice versa
+        if handle_perfdata != v['perfdata']:
+            continue
+
+        entries.append((v['descr'], v['match'], v['user']) + v['levels'])
+
+    for servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax in entries:
         num_perc_s = servicedesc.count("%s")
         for line in info:
             # First entry in line is the node name or None for non-clusters
@@ -187,7 +219,7 @@ def check_procs(item, params, info, with_perfdata):
                 if len(addinfo) >= 4: # extended performance data
                     virtual_size += int(addinfo[1])  # kB
                     resident_size += int(addinfo[2]) # kB
-                    percent_cpu += float(addinfo[3])
+                    percent_cpu += savefloat(addinfo[3])
                     extended_perfdata = True
 
     if with_perfdata:

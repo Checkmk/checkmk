@@ -1,0 +1,9 @@
+Title: Added check parameters/levels for uptime check
+Component: checks
+State: open
+Date: 2012-10-12 16:10:17
+Targetversion: future
+Class: feature
+
+The uptime check could have optional levels, so that a server goes
+warning for e.g. 30 minutes after a reboot.

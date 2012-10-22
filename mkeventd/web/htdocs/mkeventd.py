@@ -142,6 +142,21 @@ def event_rule_matches(rule, event):
     if "match_facility" in rule and event["facility"] != rule["match_facility"]:
         return _("The syslog facility does not match")
 
+
+    # First try cancelling rules
+    if "match_ok" in rule or "cancel_priority" in rule:
+        if "cancel_priority" in rule:
+            up, lo = rule["cancel_priority"]
+            cp = event["priority"] >= lo and event["priority"] <= up
+        else:
+            cp = True
+
+        match_groups = match(rule.get("match_ok", ""), event["text"], complete = False)
+        if match_groups != False and cp:
+            if match_groups == True:
+                match_groups = ()
+            return True, match_groups
+            
     try:
         match_groups = match(rule.get("match"), event["text"], complete = False)
     except Exception, e:
@@ -159,7 +174,7 @@ def event_rule_matches(rule, event):
 
     if match_groups == True:
         match_groups = () # no matching groups
-    return match_groups
+    return False, match_groups
 
 def match(pattern, text, complete = True):
     if pattern == None:

@@ -1,0 +1,8 @@
+Title: mysql-Check: kleine Datenbanken immer kritisch
+Component: checks
+State: open
+Date: 2012-10-18 16:39:13
+Targetversion: future
+Class: bug
+
+aber nichtsdestotrotz laufen kleine MySQL DB's mit 0.00GB auf Fehler.

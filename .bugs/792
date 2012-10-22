@@ -1,0 +1,9 @@
+Title: WATO access to service_descriptions
+Component: wato
+State: open
+Date: 2012-10-12 16:11:07
+Targetversion: future
+Class: feature
+
+WATO could give access to the variable service_descriptions in order
+to rename services.

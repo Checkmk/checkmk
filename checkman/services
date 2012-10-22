@@ -17,6 +17,9 @@ description:
  of host tags in order to use different rules on different sets of
  hosts (for example for monitoring certain services only on production
  servers). Inventory and manual checks can be used in parallel.
+ Since version 1.2.1i2 there is a new option {inventory_services_rules}
+ available, which is used to configure same options as the {inventory_services}
+ option but in a standardized format which is configurable via WATO.
 
 item:
  The name of the service as string. Please note, that the agent replaces
@@ -67,6 +70,12 @@ inventory:
  host tags, the keyword {ALL_HOSTS} or an explicit list of hosts and
  a {list} of service declarations like the one discussed above. Please
  consult the examples for details.
+ 
+ Since version 1.2.1i2 there is a new option {inventory_services_rules}
+ available, which is used to configure same options as the {inventory_services}
+ option but in a standardized format. The option holds a list of rules
+ where each rule contains one entry matching a list of service matching
+ strings (regexes) state/start mode.
 
 examples:
  # inventory will add checks for the following services
@@ -97,6 +106,20 @@ examples:
    ( [ "super", "mega" ], ALL_HOSTS, [ "~ auto" ] ),
    ]
 
+ # Inventory Services Rules (like configured when using WATO)
+ inventory_services_rules = [
+     # Monitor the "Browser" service on all hosts
+     ((['Browser'], None, None), [], ALL_HOSTS),
+     
+     # Add monitoring of all services starting with "MSSQL " on all hosts
+     # which have the "db" tag
+     ((['MSSQL .*'], None, None), [ 'db' ], ALL_HOSTS),
+    
+     # Add monitoring of all automatically started services on all hosts
+     # which have the "important" tag 
+     (([], None, 'auto'), [ 'important' ], ALL_HOSTS),
+ ]
+
  # Manual checks without inventory. Those checks will be created
  # without calling cmk -I - regardless of whether those services
  # exist and that hosts.
@@ -117,6 +140,9 @@ examples:
 inventory_services (list of entries): List of service declarations.
  For each matching service found on the target host, one check will
  be added to your monitoring.
+inventory_services_rules (list of rules): List of service inventory rules.
+ For each matching entry in each rule found on the target host one check
+ will be added to your monitoring.
 
 [parameters]
 parameters(dict): A dictionary with the following optional keys:

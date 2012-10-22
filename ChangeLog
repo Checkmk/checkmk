@@ -16,6 +16,7 @@
     * FIX: fix layout bug in ValueSpec ListOfStrings (e.g. used in
            list of explicit host/services in rules)
     * FIX: fix inheritation of contactgroups from folder to hosts
+    * FIX: fix sorting of users, fix lost user alias in some situations
 
     BI:
     * FIX: Correct representation of (!), (!!) and (?) markers in check output

@@ -30,6 +30,8 @@
     * FIX: changed check_type to be always active (0)
     * FIX: fix bug in assignment of livecheck helpers 
     * FIX: close inherited unused filedescriptors after fork()
+    * FIX: kill process group of called plugin if timeout is reached
+           -> preventing possible freeze of livecheck
 
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used
@@ -43,6 +45,7 @@
       update information for 30 minutes
     * FIX: netapp_vfiler: fix inventory function (thanks to Falk Krentzlin)
     * FIX: ps: avoid exception, when CPU% is missing (Zombies on Solaris)
+    * FIX: win_dhcp_pools: fixed calculation of perc_free
 
 1.2.1i1:
     Core:

@@ -44,6 +44,7 @@
       update information for 30 minutes
     * FIX: netapp_vfiler: fix inventory function (thanks to Falk Krentzlin)
     * FIX: ps: avoid exception, when CPU% is missing (Zombies on Solaris)
+    * FIX: win_dhcp_pools: fixed calculation of perc_free
 
 1.2.1i1:
     Core:

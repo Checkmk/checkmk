@@ -7625,7 +7625,7 @@ def mode_users(phase):
 
     odd = "even"
     entries = users.items()
-    entries.sort(cmp = lambda a, b: cmp(a[1].get("alias").lower(), b[1].get("alias").lower()))
+    entries.sort(cmp = lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
     for id, user in entries:
         odd = odd == "odd" and "even" or "odd"
         html.write('<tr class="data %s0">' % odd)
@@ -8135,14 +8135,12 @@ def load_users():
                 if id in result:
                     result[id]["password"] = password
                     result[id]["locked"] = locked
-                    result[id]["alias"] = ""
                 else:
                     # Create entry if this is an admin user
                     new_user = {
                         "roles"    : config.roles_of_user(id),
                         "password" : password,
                         "locked"   : False,
-                        "alias"    : ""
                     }
                     result[id] = new_user
             # Other unknown entries will silently be dropped. Sorry...

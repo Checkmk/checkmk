@@ -304,10 +304,10 @@ def check_if_common(item, params, info):
                         if errperc > 0:
                             infotext += ", %s-errors: %.2f%%" % (what, errperc)
 
-                        if errperc >= err_crit:
+                        if   err_crit != None and errperc >= err_crit:
                             state = 2
                             infotext += "(!!) >= " + str(err_crit)
-                        elif errperc >= err_warn:
+                        elif err_warn != None and errperc >= err_warn:
                             state = max(state, 1)
                             infotext += "(!) >= " + str(err_warn)
 

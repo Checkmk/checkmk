@@ -1,0 +1,79 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+pdu_gude_default_levels = { 
+        "V"    : ( 220, 210 ),
+        "A"    : ( 15, 16 ),
+        "W"    : ( 3500, 3600 ),
+    }
+
+def inventory_pdu_gude(info):
+    if len(info) > 0:
+        return [(x + 1, "pdu_gude_default_levels") for x in xrange(len(info))]
+
+def check_pdu_gude(item, params, info):
+        try: 
+            values = info[item - 1]
+        except ValueError:
+            return (3, "UKN - Item not found")
+
+        units = { 
+            0 : ("kWh", 1000),
+            1 : ("W", False ),
+            2 : ("A", 1000),
+            3 : ("V", False),
+            4 : ("VA",False),
+        }
+
+        message = []
+        perf = []
+        state = 0
+        for pos, data in units.items():
+            value = saveint(values[pos])
+            unit, div = data
+            if div:
+                value = value / div
+            warn, crit = params.get(unit, (None, None))
+            perf.append((unit, value, warn, crit))
+            label = ""
+            if warn > crit:
+                if value < crit:
+                    state = 2
+                    label = "(!!)"
+                elif value < warn:
+                    state = max(state, 1)
+                    label = "(!)"
+            else:
+                if crit != None and value > crit:
+                    state = 2
+                    label = "(!!)"
+                elif warn != None and value > warn:
+                    state = max(state, 1)
+                    label = "(!)"
+            message.append("%d%s%s" % (value, unit, label))
+
+        return(state, nagios_state_names[0] + " - " + ", ".join(message), perf)
+ 

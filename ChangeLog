@@ -76,6 +76,7 @@
     * Added new Check for Eaton UPS Devices
     * zfslist: new check for monitoring ZFS disk usage for Linux, Solaris, FreeBSD
       (you need to update your agent as well)
+    * Added new Checks for Gude PDU Units
 
 1.2.0p3:
     Mulitisite

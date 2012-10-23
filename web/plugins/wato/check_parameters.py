@@ -1828,18 +1828,33 @@ checkgroups.append((
 
 checkgroups.append((
     subgroup_environment,
-    "hw_temperature",
-    _("Hardware temperature (CPU, Memory, etc.)"),
-    Tuple(
-        help = _("Temperature levels for internal sensors found in many appliances, "
-                 "switches, routers, mainboards and other devices. "),  
+    "eaton_enviroment",
+    _("Temperature and Humidity for Eaton UPS"),
+    Dictionary(
         elements = [
-            Integer(title = "warning at", unit = u"°C"),
-            Integer(title = "critical at", unit = u"°C"),
-        ]),
-    TextAscii(
-        title = _("Sensor ID"),
-        help = _("The identificator of the themal sensor.")),
+            ( "temp",
+              Tuple(
+                  title = _("Temerature"),
+                  elements = [
+                      Integer(title = "warning at", unit = u"°C", default_value = 26),
+                      Integer(title = "critical at", unit = u"°C", default_value = 30),
+                  ])),
+            ( "remote_temp",
+              Tuple(
+                  title = _("Remote Temerature"),
+                  elements = [
+                      Integer(title = "warning at", unit = u"°C", default_value = 26),
+                      Integer(title = "critical at", unit = u"°C", default_value = 30),
+                  ])),
+            ( "humidity",
+              Tuple(
+                  title = _("Humidity"),
+                  elements = [
+                      Integer(title = "warning at", unit = u"%", default_value = 60),
+                      Integer(title = "critical at", unit = u"%", default_value = 75),
+                  ])),
+            ]),
+     None,
     "first"))
 
 checkgroups.append((

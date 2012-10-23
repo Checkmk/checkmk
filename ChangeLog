@@ -30,6 +30,7 @@
     * Added new table statehist, used for SLA queries
     * Added new column check_command_expanded in table hosts
     * Added new column check_command_expanded in table services
+    * New columns livestatus_threads, livestatus_{active,queued}_connections
 
     BI:
     * Added missing localizations
@@ -76,6 +77,7 @@
     * Added new Check for Eaton UPS Devices
     * zfslist: new check for monitoring ZFS disk usage for Linux, Solaris, FreeBSD
       (you need to update your agent as well)
+    * Added new Checks for Gude PDU Units
 
 1.2.0p3:
     Mulitisite

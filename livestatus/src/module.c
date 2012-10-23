@@ -73,7 +73,9 @@ extern char *log_file;
 int g_idle_timeout_msec = 300 * 1000; /* maximum idle time for connection in keep alive state */
 int g_query_timeout_msec = 10 * 1000;      /* maximum time for reading a query */
 
-unsigned g_num_clientthreads = 10;     /* allow 10 concurrent connections per default */
+int g_num_clientthreads = 10;     /* allow 10 concurrent connections per default */
+int g_num_queued_connections = 0;     /* current number of queued connections (for statistics) */
+int g_num_active_connections = 0;     /* current number of active connections (for statistics) */
 size_t g_thread_stack_size = 65536; /* stack size of threads */
 
 #define false 0
@@ -195,6 +197,7 @@ void *main_thread(void *data __attribute__ ((__unused__)))
             if (0 < fcntl(cc, F_SETFD, FD_CLOEXEC))
                 logger(LG_INFO, "Cannot set FD_CLOEXEC on client socket: %s", strerror(errno));
             queue_add_connection(cc); // closes fd
+            g_num_queued_connections++;
             g_counters[COUNTER_CONNECTIONS]++;
         }
     }
@@ -209,6 +212,8 @@ void *client_thread(void *data __attribute__ ((__unused__)))
 
     while (!g_should_terminate) {
         int cc = queue_pop_connection();
+        g_num_queued_connections--;
+        g_num_active_connections++;
         if (cc >= 0) {
             if (g_debug_level >= 2)
                 logger(LG_INFO, "Accepted client connection on fd %d", cc);
@@ -225,6 +230,7 @@ void *client_thread(void *data __attribute__ ((__unused__)))
             }
             close(cc);
         }
+        g_num_active_connections--;
     }
     delete_outputbuffer(output_buffer);
     delete_inputbuffer(input_buffer);

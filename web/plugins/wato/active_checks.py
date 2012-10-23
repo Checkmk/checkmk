@@ -593,6 +593,12 @@ register_rule(group,
             Dictionary(
                title = _("Optional parameters"),
                elements = [
+                   ( "hostname",
+                     TextAscii(
+                         title = _("DNS Hostname or IP address"),
+                         allow_empty = False,
+                         help = _("You can specify a hostname or IP address different from IP address "
+                                  "of the host as configured in your host properties."))),
                    ( "port",
                      TextAscii(
                          title = _("TCP Port to connect to"),

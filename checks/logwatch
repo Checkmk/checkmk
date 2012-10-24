@@ -24,18 +24,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Configuration variables in main.mk needed during the actual check
 logwatch_dir = var_dir + '/logwatch'
 logwatch_patterns = { }
 logwatch_rules = []
 logwatch_max_filesize = 500000 # do not save more than 500k of message (configurable)
 logwatch_service_output = "default"
+logwatch_forward_to_ec = False
 
 # Variables embedded in precompiled checks
 check_config_variables += [ "logwatch_dir", "logwatch_max_filesize", "logwatch_service_output" ]
 
 def inventory_logwatch(info):
+    if logwatch_forward_to_ec:
+        # this is the regular logwatch inventory. Terminate when in logwatch forward mode
+        return []
+
     inventory = []
     for l in info:
         line = " ".join(l)
@@ -66,7 +70,7 @@ def inventory_logwatch(info):
 # appearance.
 #
 # PATTERN is a list like:
-# [ ( 'I',      ".*ssh.*" ),          # Ignore these messages
+# [ ( 'I',      ".*ssh.*" ),          # Make informational (OK) messages from these
 #   ( (10, 20), "login"   ),          # Warning at 10 messages, Critical at 20
 #   ( 'C',      "bad"     ),          # Always critical
 #   ( 'W',      "not entirely bad" ), # Always warning
@@ -85,11 +89,11 @@ def logwatch_state(state):
 def logwatch_level_name(level):
     if   level == 'W': return 'WARN'
     elif level == 'C': return 'CRIT'
-    elif level == 'O': return 'OK'
+    elif level == 'I': return 'OK'
     else: return 'IGN'
 
 def logwatch_level_worst(worst, level):
-    if   level == 'O': return max(worst, 0)
+    if   level == 'I': return max(worst, 0)
     elif level == 'W': return max(worst, 1)
     elif level == 'C': return max(worst, 2)
     else: return worst
@@ -105,7 +109,19 @@ def logwatch_precompile(hostname, item, _unused):
     rules = service_extra_conf(hostname, item, logwatch_rules)
     for rule in rules:
         for pattern in rule:
-            params.append((pattern[0], pattern[1]))
+            # The specification of "O" -> OK and "I" -> IGNORE is not equal to the.
+            # states reported by the logwatch agent. The agent sends "I" for OK messages.
+            # This is really a nastiness. We do not change the valuespec for th moment but
+            # only modify the levels taken from the defined rules.
+            # FIXME: Oneday we should clean it up. Maybe via hint in migration nodes or
+            # some mor inteligent valuespec, ...
+            if pattern[0] == 'O': # Fix "OK" declaration
+                level = 'I'
+            elif pattern[0] == 'I': # Fix "IGNORE" declaration
+                level = 'S'
+            else:
+                level = pattern[0]
+            params.append((level, pattern[1]))
 
     # Now load the old logwatch_patterns var
     patterns = logwatch_patterns.get(item)
@@ -230,7 +246,7 @@ def check_logwatch(item, params, info):
         for line in loglines:
             worst = logwatch_level_worst(worst, logwatch_parse_line(line)[0])
 
-        # Ignore log lines which result in an "I" -> "Ignore" state
+        # Ignore log lines which result in an "S" -> "Skip / Ignore" state
         if worst > -1:
             try:
                 logarch = file(logfile, "a+")
@@ -365,3 +381,104 @@ check_info['logwatch'] = {
 }
 
 precompile_params['logwatch'] = logwatch_precompile
+
+#   .----------------------------------------------------------------------.
+#   |      _____ ____   _____ ___  ______        ___    ____  ____         |
+#   |     | ____/ ___| |  ___/ _ \|  _ \ \      / / \  |  _ \|  _ \        |
+#   |     |  _|| |     | |_ | | | | |_) \ \ /\ / / _ \ | |_) | | | |       |
+#   |     | |__| |___  |  _|| |_| |  _ < \ V  V / ___ \|  _ <| |_| |       |
+#   |     |_____\____| |_|   \___/|_| \_\ \_/\_/_/   \_\_| \_\____/        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Forwarding logwatch messages to event console                        |
+#   '----------------------------------------------------------------------'
+
+import socket, time
+
+def inventory_logwatch_ec(info):
+    if logwatch_forward_to_ec and info:
+        # this is the logwatch event console forward inventory. Add one service per host.
+        return [(None, "{}")]
+
+    # this is the logwatch event console forward inventory. Terminate when not in logwatch forward mode
+    return []
+
+# OK   -> priority 5
+# WARN -> priority 4
+# CRIT -> priority 2
+def logwatch_to_prio(level):
+    if level == 'W':
+        return 4
+    elif level == 'C':
+        return 2
+    elif level == 'I':
+        return 5
+
+def syslog_time():
+    localtime = time.localtime()
+    day = int(time.strftime("%d", localtime)) # strip leading 0
+    value = time.strftime("%b %%d %H:%M:%S", localtime)
+    return value % day
+
+def check_logwatch_ec(_unused, params, info):
+    # 1. Parse lines in info and separate by logfile
+    logs = []
+    logfile = None
+    for l in info:
+        line = " ".join(l)
+        if len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]":
+            # new logfile, extract name
+            logfile = line[3:-3]
+
+        elif logfile and line:
+            # new regular line, skip context lines
+            if line[0] != '.':
+                logs.append((logfile, line))
+
+    # 2. create syslog message of each line
+    # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasdad as
+    # <facility+priority> timestamp hostname logfile: message
+    facility = params.get('facility', 17) # default to "local1"
+    messages = []
+    for logfile, line in logs:
+        msg = '<%d>' % ((facility << 3) + logwatch_to_prio(line[0]),)
+        msg += '%s %s %s: %s' % (syslog_time(), g_hostname, logfile, line[2:])
+        messages.append(msg)
+
+    # 3. send lines to event console
+    # a) local in same omd site
+    # b) local pipe
+    # c) remote via udp
+    # d) remote via tcp
+    method = params.get('method')
+    if method == None:
+        method = os.getenv('OMD_ROOT') + "/tmp/run/mkeventd/events"
+
+    try:
+        if isinstance(method, tuple):
+            # connect either via tcp or udp
+            if method[0] == 'udp':
+                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            else:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            sock.send('\n'.join(messages))
+            sock.close()
+
+        else:
+            # write into local event pipe
+            pipe = file(method, 'w')
+            pipe.write('\n'.join(messages))
+            pipe.close()
+
+        return (0, 'OK - Forwarded %d messages to event console' % len(messages))
+    except Exception, e:
+        return (2, 'CRITICAL - Unable to forward messages to event console (%s)' % e)
+
+check_info['logwatch.ec'] = {
+    'check_function':      check_logwatch_ec,
+    'service_description': "Log Forwarding",
+    'has_perfdata':        0,
+    'inventory_function':  inventory_logwatch_ec,
+    'group':               'logwatch_ec',
+}

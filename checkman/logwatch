@@ -4,7 +4,7 @@ author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check processes the output of agents with the logwatch pluing. The windows agent has built
+ This check processes the output of agents with the logwatch plugin. The windows agent has built
  in this extension. The logwatch extension of the Linux/UNIX agents needs a configuration file
  that lists all relevant logfiles and lists possible log lines that should result in warning
  or critical state. The windows agents does not need any configuration but sends all log files
@@ -25,8 +25,9 @@ item:
  (case sensitive!).
 
 inventory:
- All logfiles sent by the agent are automatically inventorized. Please use standard inventory
- configuration methods if you want to ignore certain log files.
+ All logfiles sent by the agent are automatically inventorized when the option {logwatch_forward_to_ec}
+ is not configured or set to {False}. Please use standard inventory configuration methods if 
+ you want to ignore certain log files.
 
 
 examples:

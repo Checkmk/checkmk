@@ -30,6 +30,7 @@
     * Added new table statehist, used for SLA queries
     * Added new column check_command_expanded in table hosts
     * Added new column check_command_expanded in table services
+    * New columns livestatus_threads, livestatus_{active,queued}_connections
 
     BI:
     * Added missing localizations
@@ -73,6 +74,10 @@
       counters if a base value is set
     * win_dhcp_pools: do not inventorize empty pools any more. You can switch
       back to old behaviour with win_dhcp_pools_inventorize_empty = True
+    * Added new Check for Eaton UPS Devices
+    * zfslist: new check for monitoring ZFS disk usage for Linux, Solaris, FreeBSD
+      (you need to update your agent as well)
+    * Added new Checks for Gude PDU Units
     * logwatch: Working around confusion with OK/Ignore handling in logwatch_rules
     * logwatch_ec: Added new subcheck to forward all incoming logwatch messages
       to the event console. With this check you can use the Event Console 
@@ -96,6 +101,7 @@
     * FIX: fix layout bug in ValueSpec ListOfStrings (e.g. used in
            list of explicit host/services in rules)
     * FIX: fix inheritation of contactgroups from folder to hosts
+    * FIX: fix sorting of users, fix lost user alias in some situations
 
     BI:
     * FIX: Correct representation of (!), (!!) and (?) markers in check output
@@ -124,6 +130,7 @@
       update information for 30 minutes
     * FIX: netapp_vfiler: fix inventory function (thanks to Falk Krentzlin)
     * FIX: ps: avoid exception, when CPU% is missing (Zombies on Solaris)
+    * FIX: win_dhcp_pools: fixed calculation of perc_free
 
 1.2.1i1:
     Core:

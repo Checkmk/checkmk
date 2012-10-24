@@ -1,0 +1,29 @@
+title: Tempreature and Humidity Sensors for Eaton UPS devices
+agents: snmp
+author: Bastian Kuhn <bk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ Shows Sensor information for Tempreature, External Tempreature an Humidity for 
+ Eaton UPS desvices
+
+item:
+ None
+
+perfdata:
+ Tempreature
+ External Tempreature
+ Humidty 
+
+inventory:
+ One service will be created
+
+[parameters]
+parameters (dict): One Tuple for each sensor 
+
+ warning (int): The lower limit which triggers an WARNING state
+
+ critical (int): The lower limit which triggers an CRITICAL state
+
+[configuration]
+ups_eaton_enviroment_default (dict): Default warning and critical level for each sensor

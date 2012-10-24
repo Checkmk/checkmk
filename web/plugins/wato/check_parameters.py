@@ -1823,8 +1823,8 @@ checkgroups.append((
                  "for monitoring the temperature of a datacenter. An example "
                  "is the webthem from W&amp;T."),
         elements = [
-            Integer(title = "warning at", unit = u"°C", default_value = 26),
-            Integer(title = "critical at", unit = u"°C", default_value = 30),
+            Integer(title = _("warning at"), unit = u"°C", default_value = 26),
+            Integer(title = _("critical at"), unit = u"°C", default_value = 30),
         ]),
     TextAscii(
         title = _("Sensor ID"),
@@ -1833,19 +1833,83 @@ checkgroups.append((
 
 checkgroups.append((
     subgroup_environment,
-    "hw_temperature",
-    _("Hardware temperature (CPU, Memory, etc.)"),
-    Tuple(
-        help = _("Temperature levels for internal sensors found in many appliances, "
-                 "switches, routers, mainboards and other devices. "),  
+    "eaton_enviroment",
+    _("Temperature and Humidity for Eaton UPS"),
+    Dictionary(
         elements = [
-            Integer(title = "warning at", unit = u"°C"),
-            Integer(title = "critical at", unit = u"°C"),
-        ]),
-    TextAscii(
-        title = _("Sensor ID"),
-        help = _("The identificator of the themal sensor.")),
+            ( "temp",
+              Tuple(
+                  title = _("Temerature"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = u"°C", default_value = 26),
+                      Integer(title = _("critical at"), unit = u"°C", default_value = 30),
+                  ])),
+            ( "remote_temp",
+              Tuple(
+                  title = _("Remote Temerature"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = u"°C", default_value = 26),
+                      Integer(title = _("critical at"), unit = u"°C", default_value = 30),
+                  ])),
+            ( "humidity",
+              Tuple(
+                  title = _("Humidity"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = u"%", default_value = 60),
+                      Integer(title = _("critical at"), unit = u"%", default_value = 75),
+                  ])),
+            ]),
+            None,
     "first"))
+
+
+checkgroups.append((
+    subgroup_environment,
+    "pdu_gude",
+    _("Levels for Gude PDU Devices"),
+    Dictionary(
+        elements = [
+            ( "kWh",
+              Tuple(
+                  title = _("Total accumulated Active Energy of Power Channel"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = _("kW") ),
+                      Integer(title = _("critical at"), unit = _("kW")),
+                  ])),
+            ( "W",
+              Tuple(
+                  title = _("Active Power"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = _("W") ),
+                      Integer(title = _("critical at"), unit = _("W") ),
+                  ])),
+            ( "A",
+              Tuple(
+                  title = _("Current on Power Channel"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = _("A") ),
+                      Integer(title = _("critical at"), unit = _("A")),
+                  ])),
+            ( "V",
+              Tuple(
+                  title = _("Voltage on Power Channel"),
+                  elements = [
+                      Integer(title = _("warning lower"), unit = _("V") ),
+                      Integer(title = _("critical lower"), unit = _("V") ),
+                  ])),
+            ( "VA",
+              Tuple(
+                  title = _("Line Mean Apparent Power"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = _("VA") ),
+                      Integer(title = _("critical at"), unit = _("VA")),
+                  ])),
+            ]),
+    TextAscii(
+        title = _("Phase Number"),
+        help = _("The Number of the power Phase.")),
+    "first"))
+
 
 checkgroups.append((
     subgroup_environment,

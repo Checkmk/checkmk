@@ -76,7 +76,7 @@ fi
 echo '<<<df>>>'
 # The exclusion list is getting a bit of a problem. -l should hide any remote FS but seems 
 # to be all but working.
-excludefs="-x smbfs -x tmpfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs"
+excludefs="-x smbfs -x tmpfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs"
 df -PTlk $excludefs | sed 1d
 
 # VMWare shows its own filesystems with 'vdf'. Just one
@@ -84,6 +84,12 @@ df -PTlk $excludefs | sed 1d
 if type vdf > /dev/null
 then
    vdf -P | grep ^/vmfs/volumes | sed 's/ / vmfs /'
+fi
+
+# Filesystem usage for ZFS
+if type zfs > /dev/null 2>&1 ; then
+    echo '<<<zfslist>>>'
+    zfs list -H -o name,used,avail,mountpoint
 fi
 
 # Check NFS mounts by accessing them with stat -f (System

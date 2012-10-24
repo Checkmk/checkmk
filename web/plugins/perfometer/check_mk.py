@@ -67,6 +67,7 @@ perfometers["check_mk-vms_diskstat.df"] = perfometer_check_mk_df
 perfometers["check_disk"] = perfometer_check_mk_df
 perfometers["check_mk-df_netapp"] = perfometer_check_mk_df
 perfometers["check_mk-df_netapp32"] = perfometer_check_mk_df
+perfometers["check_mk-zfslist"] = perfometer_check_mk_df
 perfometers["check_mk-hr_fs"] = perfometer_check_mk_df
 perfometers["check_mk-oracle_asm_diskgroup"] = perfometer_check_mk_df
 perfometers["check_mk-mysql_capacity"] = perfometer_check_mk_df
@@ -589,4 +590,16 @@ def perfometer_carel_uniflair_cooling(row, check_command, perf_data):
     return "%3.1f%%" % humidity, perfometer_linear(humidity, '#6f2')
 
 perfometers['check_mk-carel_uniflair_cooling'] = perfometer_carel_uniflair_cooling
+
+def perfometer_eaton(row, command, perf):
+    h = "<table><tr>"
+    vname, wert, einheit, warn, crit, minw, maxw = perf[0]
+
+    h += perfometer_td(int(wert), "silver")
+    diff = 100 - int(wert)
+    h += perfometer_td(diff, "white")
+    h += "</tr></table>"
+    return u"%s°C" % wert, h
+
+perfometers['check_mk-ups_eaton_enviroment'] = perfometer_eaton
 

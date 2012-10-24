@@ -1,0 +1,16 @@
+Title: Better Check-Output if Check_MK check crashes
+Component: core
+State: open
+Date: 2012-10-19 15:46:26
+Targetversion: future
+Class: nastiness
+
+In the very very rare and unbelievable case that the Check_MK check
+itself crashes - the output of the Check in Nagios is currently '(null)'.
+We should try to wrap the whole code in some general exception handling
+(at least the precompiled code). If any exception appears, we should
+
+1. Make the check result with 3 (UNKNOWN)
+2. Make the str(exception) be the plugin output
+3. Optionally put the exception trace into the long output
+4. If the debug log is active, then also log into that something

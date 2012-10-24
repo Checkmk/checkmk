@@ -60,7 +60,7 @@ else
 fi
 
 echo '<<<df>>>'
-for fs in ufs zfs vxfs
+for fs in ufs vxfs
 do
    df -lk -F $fs 2>/dev/null | sed 1d | \
    while read Filesystem kbytes used avail capacity Mountedon
@@ -69,6 +69,12 @@ do
       echo "${Filesystem} $fs ${kbytes} ${used} ${avail} ${capacity} ${Mountedon}"
    done
 done
+
+# Filesystem usage for ZFS
+if type zfs > /dev/null 2>&1 ; then
+    echo '<<<zfslist>>>'
+    zfs list -H -o name,used,avail,mountpoint
+fi
 
 # Processes
 echo '<<<ps>>>'

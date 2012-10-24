@@ -1,14 +1,9 @@
-Title: bugs in postgresql_sessions and mk_postgres
-Component: checks
+Title: PING check removed when legacy check added to host
+Component: core
 State: open
-Date: 2012-10-24 09:49:37
+Date: 2012-10-23 10:15:13
 Targetversion: future
-Class: bug
+Class: nastiness
 
- postgresql_sessions:
-wrong parsing when query from agent returned only one line with, e.g.
-"f 1"
-than I've got an error when run "cmk -v /dev/null ; then"
-
-on Debian there is only a user "postgres" not "pgsql" - maybe double
-checks (postgres & pgsql) will do? (because of different distros)
+The PING check should remain on the host when the host has the tag
+"ping" assigned, event when a legacy check has been added to the host.

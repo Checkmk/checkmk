@@ -579,6 +579,17 @@ register_configvar(group,
     )
 
 register_configvar(group,
+    "logwatch_forward_to_ec",
+    Checkbox(
+        title = _("Forward logwatch messages to event console"),
+        label = _("forward to event console"),
+        help  = _("Instead of using the regular logwatch check all lines received by logwatch can "
+                  "be forwarded to a Check_MK event console daemon to be processed. The target event "
+                  "console can be configured for each host in a separate rule."),
+    ),
+)
+
+register_configvar(group,
     "printer_supply_some_remaining_status",
     DropdownChoice(
         title = _("Printer supply some remaining status"),

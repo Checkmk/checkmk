@@ -164,19 +164,36 @@ def check_jolokia_metrics_mem(item, params, info):
     d = parsed[item]
     mb = 1024 * 1024.0
     heap = saveint(d["HeapMemoryUsage"]) / mb
+    heapmax = saveint(d["HeapMemoryMax"]) / mb
     non_heap = saveint(d["NonHeapMemoryUsage"]) / mb
+    non_heapmax = saveint(d["NonHeapMemoryMax"]) / mb
     total = heap + non_heap
-    perfdata = [ ("heap",    heap,     warn, crit),
-                 ("nonheap", non_heap, warn, crit) ]
-    infotext = "%.0f MB total (%.0f MB heap, %.0f MB non-heap), levels at %.0f/%.0f" % (total, heap, non_heap, warn, crit)
-    if total >= crit:
-        return (2, "CRIT - " + infotext, perfdata)
-    elif total >= warn:
-        return (1, "WARN - " + infotext, perfdata)
+    if type(warn) == int:
+        perfdata = [ ("heap",    heap,     warn, crit),
+                     ("nonheap", non_heap, warn, crit) ]
+        infotext = "%.0f MB total (%.0f MB heap, %.0f MB non-heap), levels at %.0f/%.0f" % (total, heap, non_heap, warn, crit)
+        if total >= crit:
+            return (2, "CRIT - " + infotext, perfdata)
+        elif total >= warn:
+            return (1, "WARN - " + infotext, perfdata)
+        else:
+            return (0, "OK - " + infotext, perfdata)
     else:
-        return (0, "OK - " + infotext, perfdata)
-
-
+        perfdata = [ ("heap",    heap,     heapmax*warn/100.0, heapmax*crit/100.0),
+                     ("nonheap", non_heap, non_heapmax*warn/100.0, non_heapmax*crit/100.0) ]
+	infotext = "%.0f MB heap levels at %.0f/%.0f, %.0f MB non-heap, levels at %.0f/%.0f" % (heap, heapmax*warn/100., heapmax*crit/100., non_heap, non_heapmax*warn/100., non_heapmax*crit/100.) 
+        if heap >= heapmax*crit/100.0:
+            return (2, "CRIT - " + infotext, perfdata)
+        elif heap >= heapmax*warn/100.0:
+            return (1, "WARN - " + infotext, perfdata)
+        elif non_heap >= non_heapmax*crit/100.0:
+            return (2, "CRIT - " + infotext, perfdata)
+        elif non_heap >= non_heapmax*warn/100.0:
+            return (1, "WARN - " + infotext, perfdata)
+        else:
+            return (0, "OK - " + infotext, perfdata)
+       
+ 
 def check_jolokia_metrics_threads(item, params, info):
     warn, crit = params
     parsed = jolokia_metrics_parse(info)

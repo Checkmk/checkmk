@@ -38,7 +38,7 @@
 # rpool/export/opt         842M   887G  /opt
 # rpool/swap              8.00G   893G  -
 #
-# The columns are: name, used, avail, mountpoint
+# The columns are: name, used, total, mountpoint
 
 
 def inventory_zfslist(info):
@@ -62,12 +62,11 @@ def convert_zfssize(txt):
 
 def check_zfslist(item, params, info):
     fslist = []
-    for name, used_txt, avail_txt, mountpoint in info:
+    for name, used_txt, total_txt, mountpoint in info:
         if "patterns" in params or item == mountpoint:
             used_mb = convert_zfssize(used_txt)
-            avail_mb = convert_zfssize(avail_txt) 
-            size_mb = used_mb + avail_mb
-            fslist.append((mountpoint, size_mb, avail_mb))
+            total_mb = convert_zfssize(total_txt) 
+            fslist.append((mountpoint, total_mb, total_mb - used_mb))
 
     return df_check_filesystem_list(item, params, fslist)
 

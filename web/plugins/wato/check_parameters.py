@@ -103,6 +103,11 @@ register_rule(group + '/' + subgroup_applications,
           elements = [
              DropdownChoice(
                title = _("State"),
+               # The specification of "O" -> OK and "I" -> IGNORE is not equal to the.
+               # states reported by the logwatch agent. The agent sends "I" for OK messages.
+               # This is really a nastiness here. Since this rule definition is already part
+               # of a released version we don't change it here, instead we clean it up in
+               # the logwatch check before applying the rules.
                choices = [
                    ('C', _('CRITICAL')),
                    ('W', _('WARNING')),
@@ -1818,8 +1823,8 @@ checkgroups.append((
                  "for monitoring the temperature of a datacenter. An example "
                  "is the webthem from W&amp;T."),
         elements = [
-            Integer(title = "warning at", unit = u"°C", default_value = 26),
-            Integer(title = "critical at", unit = u"°C", default_value = 30),
+            Integer(title = _("warning at"), unit = u"°C", default_value = 26),
+            Integer(title = _("critical at"), unit = u"°C", default_value = 30),
         ]),
     TextAscii(
         title = _("Sensor ID"),
@@ -1836,26 +1841,75 @@ checkgroups.append((
               Tuple(
                   title = _("Temerature"),
                   elements = [
-                      Integer(title = "warning at", unit = u"°C", default_value = 26),
-                      Integer(title = "critical at", unit = u"°C", default_value = 30),
+                      Integer(title = _("warning at"), unit = u"°C", default_value = 26),
+                      Integer(title = _("critical at"), unit = u"°C", default_value = 30),
                   ])),
             ( "remote_temp",
               Tuple(
                   title = _("Remote Temerature"),
                   elements = [
-                      Integer(title = "warning at", unit = u"°C", default_value = 26),
-                      Integer(title = "critical at", unit = u"°C", default_value = 30),
+                      Integer(title = _("warning at"), unit = u"°C", default_value = 26),
+                      Integer(title = _("critical at"), unit = u"°C", default_value = 30),
                   ])),
             ( "humidity",
               Tuple(
                   title = _("Humidity"),
                   elements = [
-                      Integer(title = "warning at", unit = u"%", default_value = 60),
-                      Integer(title = "critical at", unit = u"%", default_value = 75),
+                      Integer(title = _("warning at"), unit = u"%", default_value = 60),
+                      Integer(title = _("critical at"), unit = u"%", default_value = 75),
                   ])),
             ]),
-     None,
+            None,
     "first"))
+
+
+checkgroups.append((
+    subgroup_environment,
+    "pdu_gude",
+    _("Levels for Gude PDU Devices"),
+    Dictionary(
+        elements = [
+            ( "kWh",
+              Tuple(
+                  title = _("Total accumulated Active Energy of Power Channel"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = _("kW") ),
+                      Integer(title = _("critical at"), unit = _("kW")),
+                  ])),
+            ( "W",
+              Tuple(
+                  title = _("Active Power"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = _("W") ),
+                      Integer(title = _("critical at"), unit = _("W") ),
+                  ])),
+            ( "A",
+              Tuple(
+                  title = _("Current on Power Channel"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = _("A") ),
+                      Integer(title = _("critical at"), unit = _("A")),
+                  ])),
+            ( "V",
+              Tuple(
+                  title = _("Voltage on Power Channel"),
+                  elements = [
+                      Integer(title = _("warning lower"), unit = _("V") ),
+                      Integer(title = _("critical lower"), unit = _("V") ),
+                  ])),
+            ( "VA",
+              Tuple(
+                  title = _("Line Mean Apparent Power"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = _("VA") ),
+                      Integer(title = _("critical at"), unit = _("VA")),
+                  ])),
+            ]),
+    TextAscii(
+        title = _("Phase Number"),
+        help = _("The Number of the power Phase.")),
+    "first"))
+
 
 checkgroups.append((
     subgroup_environment,
@@ -1894,6 +1948,87 @@ checkgroups.append((
     ),
     None,
     "first"
+))
+
+syslog_facilities = [
+    (0, "kern"),
+    (1, "user"),
+    (2, "mail"),
+    (3, "daemon"),
+    (4, "auth"),
+    (5, "syslog"),
+    (6, "lpr"),
+    (7, "news"),
+    (8, "uucp"),
+    (9, "cron"),
+    (10, "authpriv"),
+    (11, "ftp"),
+    (16, "local0"),
+    (17, "local1"),
+    (18, "local2"),
+    (19, "local3"),
+    (20, "local4"),
+    (21, "local5"),
+    (22, "local6"),
+    (23, "local7"),
+]
+
+checkgroups.append((
+    subgroup_applications,
+    "logwatch_ec",
+    _('Logwatch Event Console Forwarding'),
+    Dictionary(
+        elements = [
+            ('method', Alternative(
+                title = _("Forwarding Method"),
+                elements = [
+                    FixedValue(
+                        None,
+                        totext = "",
+                        title = _("Send events to local event console in same OMD site"),
+                    ),
+                    TextAscii(
+                        title = _("Send events to local event console into pipe"),
+                        allow_empty = False,
+                    ),
+                    Tuple(
+                        title = _("Send events to remote syslog host"),
+                        elements = [
+                            DropdownChoice(
+                                choices = [
+                                    ('udp', _('UDP')),
+                                    ('tcp', _('TCP')),
+                                ],
+                                title = _("Protocol"),
+                            ),
+                            TextAscii(
+                                title = _("Address"),
+                                allow_empty = False,
+                            ),
+                            Integer(
+                                title = _("Port"),
+                                allow_empty = False,
+                                default_value = 514,
+                                minvalue = 1,
+                                maxvalue = 65535,
+                                size = 6,
+                            ),
+                        ]
+                    ),
+                ],
+            )),
+            ('facility', DropdownChoice(
+                title = _("Syslog facility for forwarded messages"),
+                help = _("When forwarding messages and no facility can be extracted from the "
+                         "message this facility is used."),
+                choices = syslog_facilities,
+                default_value = 17, # local1
+            )),
+        ],
+        optional_keys = [],
+    ),
+    None,
+    'first'
 ))
 
 # Create rules for check parameters of inventorized checks

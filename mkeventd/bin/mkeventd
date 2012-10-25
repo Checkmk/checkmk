@@ -512,6 +512,9 @@ class EventServer:
         self._rates = {}
         self._average_rates = {}
         self._average_processing_time = 0.0
+        self._hash_stats = []
+        for facility in range(24):
+            self._hash_stats.append([ 0 ] * 8 )
 
     def count(self, counter):
         self._perfcounters[counter] += 1
@@ -910,6 +913,22 @@ class EventServer:
             if need:
                 prio_hash.setdefault(prio, []).append(rule)
 
+    def output_hash_stats(self):
+        log("Top 20 of facility/priority:")
+        entries = []
+        total_count = 0
+        for facility in range(24):
+            for priority in range(8):
+                count = self._hash_stats[facility][priority]
+                if count:
+                    total_count += count
+                    entries.append((count, (facility, priority)))
+        entries.sort()
+        entries.reverse()
+        for count, (facility, priority) in entries[:20]:
+            log("  %s/%s - %d (%.2f%%)" % (
+                syslog_facilities[facility], syslog_priorities[priority], count, 
+                    (100.0 * count / float(total_count))))
 
     def process_event(self, line):
         if g_config["debug_rules"]:
@@ -918,11 +937,8 @@ class EventServer:
 
         # Rule optimizer
         if g_config["rule_optimizer"]:
+            self._hash_stats[event["facility"]][event["priority"]] += 1
             rule_candidates = self._rule_hash.get(event["facility"], {}).get(event["priority"], [])
-            if opt_debug:
-                log("Optimizer: %s.%s - need to check only %d out of %d rules" % (
-                    event["facility"], event["priority"], 
-                    len(rule_candidates), len(self._rules)))
         else:
            rule_candidates = self._rules
         
@@ -2169,6 +2185,8 @@ try:
     g_event_status.save_status()
     os.remove(g_socket_path)
     os.remove(g_pid_file)
+
+    g_event_server.output_hash_stats()
 
     log("Successfully shut down.")
     sys.exit(0)

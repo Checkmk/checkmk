@@ -1,0 +1,20 @@
+Title: Apache Status bug
+Component: checks
+State: open
+Date: 2012-10-24 11:08:13
+Targetversion: 1.2.0
+Class: bug
+
+osTicket id 258581
+sorry to report a bug regarding the new apache_status in 1.2.0p3.
+
+I confirmed on the english mailing list, that also other people have the problem.
+We get the same result on auto-detecting and specifying server and port:
+./apache_status
+
+Exception (192.168.2.28:80): addinfourl instance has no attribute 'getcode'[root@www local]#
+
+We tested the server-status url with lynx and it is working fine.
+
+CentOS release 5.6 (Final) 32-Bit
+httpd-2.2.3-65.el5.centos

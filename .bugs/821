@@ -1,0 +1,14 @@
+Title: bugs in postgresql_sessions and mk_postgres
+Component: checks
+State: open
+Date: 2012-10-24 09:49:37
+Targetversion: future
+Class: bug
+
+ postgresql_sessions:
+wrong parsing when query from agent returned only one line with, e.g.
+"f 1"
+than I've got an error when run "cmk -v /dev/null ; then"
+
+on Debian there is only a user "postgres" not "pgsql" - maybe double
+checks (postgres & pgsql) will do? (because of different distros)

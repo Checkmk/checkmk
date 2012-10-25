@@ -1,0 +1,37 @@
+Title: check_mk_agent can incorrectly detect postfix on RHEL
+Component: core
+State: open
+Date: 2012-10-24 10:19:40
+Targetversion: future
+Class: nastiness
+
+osTicket ID 443234
+This probably happens on CentOS too, since it's so similar to RHEL.
+
+When the system has multiple MTA packages installed, and postfix is one of the installed packages, but postfix is not active, the mailq test returns a false result. This is how the code currently checks for the MTA:
+
+if which mailq >/dev/null 2>&1 && getent passwd postfix >/dev/null 2>&1; then
+echo ''
+mailq | tail -n 6
+fi
+
+However, on at least RHEL and CentOS, it is possible and not uncommon to have multiple MTA packages installed concurrently, but you only have one active at a time. The presence of the postfix user (or package) does not imply that postfix is the active MTA. In my case, Exim is active, but the mailq test thinks postfix is active and it doesn't work properly because it's looking for a postfix-formatted mailq, and that's not what it gets.
+
+The active profile is controlled by the "alternatives" subsystem. For full documentation, see update-alternatives(8).
+
+http://linux.die.net/man/8/update-alternatives
+
+A rough test to check for postfix vs. another mailer might look like this. This can probably be streamlined further, this is just something I threw together as a proof of concept...
+
+if [[ -f /etc/redhat-release || -f /etc/centos-release ]]; then
+_mta=$(/usr/sbin/alternatives --display mta | awk '/link currently points to/ {print $5}' | sed -e 's,/usr/sbin/sendmail\.,,')
+if [[ "$_mta" = "postfix" ]]; then
+# postfix case
+elif [[ "$_mta" = "exim" ]]; then
+# exim case
+else
+# default case
+fi
+else
+# this is not redhat or centos, so do your usual getent test here...
+fi

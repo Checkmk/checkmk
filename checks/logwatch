@@ -471,7 +471,8 @@ def check_logwatch_ec(_unused, params, info):
             pipe.write('\n'.join(messages))
             pipe.close()
 
-        return (0, 'OK - Forwarded %d messages to event console' % len(messages))
+        num_messages = len(messages)
+        return (0, 'OK - Forwarded %d messages to event console' % num_messages, [('messages', num_messages)])
     except Exception, e:
         return (2, 'CRITICAL - Unable to forward messages to event console (%s)' % e)
 

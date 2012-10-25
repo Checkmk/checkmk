@@ -22,6 +22,12 @@ VERSION="1.2.1i2"
 # Basic settings, can be changed with configuration file (at
 # least I hope so)
 
+syslog_priorities = [ "emerg", "alert", "crit", "err", "warning", "notice", "info", "debug" ]
+syslog_facilities = [ "kern", "user", "mail", "daemon", "auth", "syslog", "lpr", "news",
+                      "uucp", "cron", "authpriv", "ftp", 
+                      "(unused 12)", "(unused 13)", "(unused 13)", "(unused 14)", 
+                      "local0", "local1", "local2", "local3", "local4", "local5", "local6", "local7", ]
+
 event_columns = [ 
     ( "event_id",            1 ),
     ( "event_count",         1 ),
@@ -831,8 +837,10 @@ class EventServer:
     def compile_rules(self, rules):
         self._rules = []
         self._rule_by_id = {}
+        self._rule_hash = {} # Speedup-Hash for rule execution
         count_disabled = 0
         count_rules = 0
+        count_unspecific = 0
 
         for rule in rules:
             if rule.get("disabled"):
@@ -858,14 +866,67 @@ class EventServer:
                     log("Ignoring rule %s because of an invalid regex (%s)." % 
                             (rule["id"], e))
 
+                if g_config["rule_optimizer"]:
+                    self.hash_rule(rule)
+                    if "match_facility" not in rule and "match_priority" not in rule and "cancel_priority" not in rule:
+                        count_unspecific += 1
+
+
         log("Loaded %d active rules (ignoring %d disabled rules)" % (count_rules, count_disabled))
+        if g_config["rule_optimizer"]:
+            log("Rule hash: %d rules - %d hashed, %d unspecific" % 
+               (len(self._rules), len(self._rules) - count_unspecific, count_unspecific))
+            for facility in range(24):
+                stats = []
+                for prio, entries in self._rule_hash[facility].items():
+                    stats.append("%s(%d)" % (syslog_priorities[prio], len(entries)))
+                log(" %-12s: %s" % (syslog_facilities[facility], " ".join(stats)))
+
+
+    def hash_rule(self, rule):
+        # Construct rule hash for faster execution. 
+        facility = rule.get("match_facility")
+        if facility:
+            self.hash_rule_facility(rule, facility)
+        else:
+            for facility in range(24): # all syslog facilities
+                self.hash_rule_facility(rule, facility)
+
+
+    def hash_rule_facility(self, rule, facility):
+        needed_prios = [False] * 8
+        for key in [ "match_priority", "cancel_priority" ]:
+            if key in rule:  
+                prio_from, prio_to = rule[key]
+                for p in range(prio_from, prio_to+1):
+                    needed_prios[p] = True
+            elif key == "match_priority": # all priorities match
+                needed_prios = [True] * 8 # needed to check this rule for all event priorities
+            elif "match_ok" in rule: # a cancelling rule where all priorities cancel
+                needed_prios = [True] * 8 # needed to check this rule for all event priorities
+
+        prio_hash = self._rule_hash.setdefault(facility, {})
+        for prio, need in enumerate(needed_prios):
+            if need:
+                prio_hash.setdefault(prio, []).append(rule)
 
 
     def process_event(self, line):
         if g_config["debug_rules"]:
             log(u"Processing message '%s'" % line)
         event = self.parse_event(line)
-        for rule in self._rules:
+
+        # Rule optimizer
+        if g_config["rule_optimizer"]:
+            rule_candidates = self._rule_hash.get(event["facility"], {}).get(event["priority"], [])
+            if opt_debug:
+                log("Optimizer: %s.%s - need to check only %d out of %d rules" % (
+                    event["facility"], event["priority"], 
+                    len(rule_candidates), len(self._rules)))
+        else:
+           rule_candidates = self._rules
+        
+        for rule in rule_candidates:
             result = self.event_rule_matches(rule, event)
             if result:
                 self.count("rule_hits")
@@ -1893,6 +1954,7 @@ def load_configuration():
         "rules"                 : [],
         "actions"               : [],
         "debug_rules"           : False,
+        "rule_optimizer"        : True,
         "log_rulehits"          : False,
         "retention_interval"    : 60,
         "housekeeping_interval" : 60,

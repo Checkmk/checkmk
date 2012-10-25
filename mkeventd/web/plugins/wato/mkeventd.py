@@ -1205,6 +1205,14 @@ if mkeventd_enabled:
         domain = "mkeventd")
 
     register_configvar(group,
+        "rule_optimizer",
+        Checkbox(title = _("Optimize rule execution"),
+                 label = _("enable optimized rule execution"),
+                 help = _("This option turns on a faster algorithm for matching events to rules. "),
+                default_value = True),
+        domain = "mkeventd")
+
+    register_configvar(group,
         "log_rulehits",
         Checkbox(title = _("Log rule hits"),
                  label = _("Log hits for rules in log of mkeventd"),

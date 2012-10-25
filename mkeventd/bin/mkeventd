@@ -567,14 +567,40 @@ class EventServer:
         os.chmod(g_pipe_path, 0666)
 
     def run(self):
+        if opt_profile.get("event"):
+            import cProfile
+            profilefile = omd_root + "/var/mkeventd/event.profile"
+            log("Writing profile of event thread to %s." % profilefile)
+            try:
+                cProfile.run("g_event_server.run_loop()", profilefile)
+            except:
+                raise
+            finally:
+                file(profilefile + ".py", "w").write("#!/usr/bin/python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
+                os.chmod(profilefile + ".py", 0755)
+                log("Created profile conversion script %s.py." % profilefile)
+
+        else:
+            self.run_loop()
+        
+
+
+    def run_loop(self):
+        c = 0
         while True:
+            c += 1
             try:
                 self.serve()
+                
             except Exception, e:
                 log("EXCEPTION in event server:\n%s" % format_exception())
                 if opt_debug:
                     raise
                 time.sleep(1)
+
+            if opt_profile.get("event") and c > 100:
+                return
+
 
     def serve(self):
         for line in file(g_pipe_path, "r", 0):
@@ -591,6 +617,9 @@ class EventServer:
                 self.process_event(line.rstrip())
                 elapsed = time.time() - before
                 self.count_processing_time(elapsed)
+
+            if opt_profile.get("event"):
+                return
 
     def do_housekeeping(self):
         with lock_eventstatus:
@@ -1974,7 +2003,7 @@ else:
 
 short_options = "hvVgS:P:p:C:"
 long_options = [ "help", "version", "verbose", "debug", "foreground", "socket=", "pipe=",
-                 "pidfile=", "statedir=", "configdir", "profile-status", "debug-locking" ]
+                 "pidfile=", "statedir=", "configdir", "profile-status", "profile-event", "debug-locking" ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)

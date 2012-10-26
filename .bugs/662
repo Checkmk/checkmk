@@ -1,0 +1,13 @@
+Title: "Remove All" downtimes command button selection problem
+Component: multisite
+State: open
+Date: 2012-10-26 10:55:14
+Targetversion: 1.2.0
+Class: bug
+
+Set a downtime for multiple services within a view
+
+Try to remove these downtimes with the "Remove all" button, but additionally select some services with no
+downtime set -> Shows error "Sorry. This function is not implemented" 
+
+Select exactly the services in downtime and press "Remove all" -> working

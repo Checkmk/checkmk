@@ -224,9 +224,14 @@ int main(int argc, char **argv)
                 fputs(ptr_output, checkfile);
                 fputs("\\n", checkfile);
                 ptr_output = ptr_walk + 1;
-                if (*ptr_output == 0)
-                    break;
+            } else if (*ptr_walk == '\\') {
+                *ptr_walk = 0;
+                fputs(ptr_output, checkfile);
+                fputs("\\\\", checkfile);
+                ptr_output = ptr_walk + 1;
             }
+            if (*ptr_output == 0)
+            	break;
             ptr_walk++;
         }
         fputs("\n", checkfile);

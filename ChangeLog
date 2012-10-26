@@ -84,6 +84,8 @@
       mechanisms and GUIs instead of the classic logwatch GUI. It can be 
       enabled on "Global Settings" page in WATO for your whole installation.
       After enabling it you need to reinventorize your hosts.
+    * Windows Update Check: Now with caching, Thanks to Phil Randal and Patrick Schlüter
+    * Windows Check_MK Agent: Now able to parse textfiles for logwatch output
 
 1.2.0p3:
     Mulitisite
@@ -117,6 +119,7 @@
     * FIX: close inherited unused filedescriptors after fork()
     * FIX: kill process group of called plugin if timeout is reached
            -> preventing possible freeze of livecheck
+    * FIX: correct escaping of character / in nagios checkresult file
 
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used

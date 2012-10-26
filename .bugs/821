@@ -1,14 +1,24 @@
-Title: bugs in postgresql_sessions and mk_postgres
+Title: Logwatch and Logfiles with colon in name
 Component: checks
 State: open
-Date: 2012-10-24 09:49:37
+Date: 2012-10-25 09:49:17
 Targetversion: future
-Class: bug
+Class: nastiness
 
- postgresql_sessions:
-wrong parsing when query from agent returned only one line with, e.g.
-"f 1"
-than I've got an error when run "cmk -v /dev/null ; then"
+When a logfile has a colon in name inventory doesent work: osTicket 999212
 
-on Debian there is only a user "postgres" not "pgsql" - maybe double
-checks (postgres & pgsql) will do? (because of different distros)
+Our 3rd party software has logs with ":" present in the name...XPHUB_OA_SWITCH_20121024_00:30:03
+
+In share/check_mk/checks/logwatch, I believe the inventory function assumes that if there is a ":" in the line that it is because mk_logwatch on the client is returning "[[[:cannotopen]]]". This is causing our log to not get inventoried.
+
+.. /share/check_mk/checks/logwatch
+def process_logfile(logfile, patterns):
+# Look at which file offset we have finished scanning
+# the logfile last time. If we have never seen this file
+# before, we set the offset to -1
+offset, prev_inode = status.get(logfile, (-1, -1))
+try:
+fl = os.open(logfile, os.O_RDONLY)
+inode = os.fstat(fl)[1] # 1 = st_ino
+except:
+----> print "[[[%s:cannotopen]]]" % logfile if len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]" and ':' not in line:

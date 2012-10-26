@@ -553,6 +553,10 @@ def render_statistics(pie_id, what, table, filter):
     for (name, color, viewurl, query), count in table_entries:
         url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder=" \
               + htmllib.urlencode(html.var("wato_folder", ""))
+        if host_contact_group:
+            url += '&opthost_contactgroup=' + host_contact_group
+        if service_contact_group:
+            url += '&optservice_contactgroup=' + service_contact_group
         html.write('<tr><th><a href="%s">%s</a></th>' % (url, name))
         style = ''
         if color:

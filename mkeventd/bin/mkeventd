@@ -952,7 +952,10 @@ class EventServer:
 
                 g_event_status.count_rule_match(rule["id"])
                 if g_config["log_rulehits"]:
-                    log("Rule %s hit by message '%s'." % (event["text"], rule["id"]))
+                    log("Rule %s hit by message %s/%s - '%s'." % (
+                        rule["id"],
+                        syslog_facilities[event["facility"]], syslog_priorities[event["priority"]],
+                        event["text"]))
                 if rule.get("drop"):
                     self.count("drops")
                     return

@@ -84,6 +84,7 @@
       mechanisms and GUIs instead of the classic logwatch GUI. It can be 
       enabled on "Global Settings" page in WATO for your whole installation.
       After enabling it you need to reinventorize your hosts.
+    * Windows Update Check: Now with caching, Thanks to Phil Randal and Patrick Schlüter
 
 1.2.0p3:
     Mulitisite

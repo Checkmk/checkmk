@@ -196,6 +196,10 @@ def render_dashlet(nr, dashlet, wato_folder):
         bg = ""
     html.write('<div class="dashlet_inner%s" id="dashlet_inner_%d">' % (bg, nr))
 
+    # Optional way to render a dynamic iframe URL
+    if "iframefunc" in dashlet:
+        dashlet["iframe"] = dashlet["iframefunc"]()
+
     # The method "view" is a shortcut for "iframe" with a certain url
     if "view" in dashlet:
         dashlet["iframe"] = "view.py?view_name=%s&display_options=HRSIXL&_body_class=dashlet" % dashlet["view"]

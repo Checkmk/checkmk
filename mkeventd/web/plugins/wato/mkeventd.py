@@ -1248,6 +1248,22 @@ if mkeventd_enabled:
         ),
         domain = "mkeventd")
 
+    register_configvar(group,
+        "socket_queue_len",
+        Integer(
+            title = _("Max. number of pending connections to the status socket"),
+            help = _("When the Multisite GUI or the active check check_mkevents connects "
+                     "to the socket of the event daemon in order to retrieve information "
+                     "about current and historic events then its connection request might "
+                     "be queued before being processed. This defines the number of unaccepted "
+                     "connections to be queued before refusing new connections."),
+            minvalue = 1,
+            default_value = 10,
+            label = "max.",
+            unit = "pending connections",
+        ),
+        domain = "mkeventd"
+    )
 
 
 # Settings that should also be avaiable on distributed Sites that

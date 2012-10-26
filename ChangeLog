@@ -13,6 +13,7 @@
     * New global option for enabling log entries for rule hits (debugging)
     * New icon linking to event views for the event services
     * check_mkevents outputs last worst line in service output
+    * Max. number of queued connections on status sockets is configurable now
 
     Multisite:
     * Enable automation login with _username= and _secret=, while

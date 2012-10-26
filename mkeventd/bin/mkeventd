@@ -1148,7 +1148,7 @@ class StatusServer:
             os.remove(g_socket_path)
         self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self._socket.bind(g_socket_path)
-        self._socket.listen(10)
+        self._socket.listen(g_config['socket_queue_len'])
 
         if g_config["remote_status"]:
             try:
@@ -1161,7 +1161,7 @@ class StatusServer:
                 self._tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self._tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self._tcp_socket.bind(("0.0.0.0", self._tcp_port))
-                self._tcp_socket.listen(10)
+                self._tcp_socket.listen(g_config['socket_queue_len'])
                 log("Going to listen for status queries on TCP port %d" % self._tcp_port)
             except Exception, e:
                 if opt_debug:

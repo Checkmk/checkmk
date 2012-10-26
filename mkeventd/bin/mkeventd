@@ -22,6 +22,12 @@ VERSION="1.2.1i2"
 # Basic settings, can be changed with configuration file (at
 # least I hope so)
 
+syslog_priorities = [ "emerg", "alert", "crit", "err", "warning", "notice", "info", "debug" ]
+syslog_facilities = [ "kern", "user", "mail", "daemon", "auth", "syslog", "lpr", "news",
+                      "uucp", "cron", "authpriv", "ftp", 
+                      "(unused 12)", "(unused 13)", "(unused 13)", "(unused 14)", 
+                      "local0", "local1", "local2", "local3", "local4", "local5", "local6", "local7", ]
+
 event_columns = [ 
     ( "event_id",            1 ),
     ( "event_count",         1 ),
@@ -506,6 +512,9 @@ class EventServer:
         self._rates = {}
         self._average_rates = {}
         self._average_processing_time = 0.0
+        self._hash_stats = []
+        for facility in range(24):
+            self._hash_stats.append([ 0 ] * 8 )
 
     def count(self, counter):
         self._perfcounters[counter] += 1
@@ -567,14 +576,40 @@ class EventServer:
         os.chmod(g_pipe_path, 0666)
 
     def run(self):
+        if opt_profile.get("event"):
+            import cProfile
+            profilefile = omd_root + "/var/mkeventd/event.profile"
+            log("Writing profile of event thread to %s." % profilefile)
+            try:
+                cProfile.run("g_event_server.run_loop()", profilefile)
+            except:
+                raise
+            finally:
+                file(profilefile + ".py", "w").write("#!/usr/bin/python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
+                os.chmod(profilefile + ".py", 0755)
+                log("Created profile conversion script %s.py." % profilefile)
+
+        else:
+            self.run_loop()
+        
+
+
+    def run_loop(self):
+        c = 0
         while True:
+            c += 1
             try:
                 self.serve()
+                
             except Exception, e:
                 log("EXCEPTION in event server:\n%s" % format_exception())
                 if opt_debug:
                     raise
                 time.sleep(1)
+
+            if opt_profile.get("event") and c > 100:
+                return
+
 
     def serve(self):
         for line in file(g_pipe_path, "r", 0):
@@ -591,6 +626,9 @@ class EventServer:
                 self.process_event(line.rstrip())
                 elapsed = time.time() - before
                 self.count_processing_time(elapsed)
+
+            if opt_profile.get("event"):
+                return
 
     def do_housekeeping(self):
         with lock_eventstatus:
@@ -802,8 +840,10 @@ class EventServer:
     def compile_rules(self, rules):
         self._rules = []
         self._rule_by_id = {}
+        self._rule_hash = {} # Speedup-Hash for rule execution
         count_disabled = 0
         count_rules = 0
+        count_unspecific = 0
 
         for rule in rules:
             if rule.get("disabled"):
@@ -829,14 +869,80 @@ class EventServer:
                     log("Ignoring rule %s because of an invalid regex (%s)." % 
                             (rule["id"], e))
 
-        log("Loaded %d active rules (ignoring %d disabled rules)" % (count_rules, count_disabled))
+                if g_config["rule_optimizer"]:
+                    self.hash_rule(rule)
+                    if "match_facility" not in rule and "match_priority" not in rule and "cancel_priority" not in rule:
+                        count_unspecific += 1
 
+
+        log("Loaded %d active rules (ignoring %d disabled rules)" % (count_rules, count_disabled))
+        if g_config["rule_optimizer"]:
+            log("Rule hash: %d rules - %d hashed, %d unspecific" % 
+               (len(self._rules), len(self._rules) - count_unspecific, count_unspecific))
+            for facility in range(24):
+                stats = []
+                for prio, entries in self._rule_hash[facility].items():
+                    stats.append("%s(%d)" % (syslog_priorities[prio], len(entries)))
+                log(" %-12s: %s" % (syslog_facilities[facility], " ".join(stats)))
+
+
+    def hash_rule(self, rule):
+        # Construct rule hash for faster execution. 
+        facility = rule.get("match_facility")
+        if facility:
+            self.hash_rule_facility(rule, facility)
+        else:
+            for facility in range(24): # all syslog facilities
+                self.hash_rule_facility(rule, facility)
+
+
+    def hash_rule_facility(self, rule, facility):
+        needed_prios = [False] * 8
+        for key in [ "match_priority", "cancel_priority" ]:
+            if key in rule:  
+                prio_from, prio_to = rule[key]
+                for p in range(prio_from, prio_to+1):
+                    needed_prios[p] = True
+            elif key == "match_priority": # all priorities match
+                needed_prios = [True] * 8 # needed to check this rule for all event priorities
+            elif "match_ok" in rule: # a cancelling rule where all priorities cancel
+                needed_prios = [True] * 8 # needed to check this rule for all event priorities
+
+        prio_hash = self._rule_hash.setdefault(facility, {})
+        for prio, need in enumerate(needed_prios):
+            if need:
+                prio_hash.setdefault(prio, []).append(rule)
+
+    def output_hash_stats(self):
+        log("Top 20 of facility/priority:")
+        entries = []
+        total_count = 0
+        for facility in range(24):
+            for priority in range(8):
+                count = self._hash_stats[facility][priority]
+                if count:
+                    total_count += count
+                    entries.append((count, (facility, priority)))
+        entries.sort()
+        entries.reverse()
+        for count, (facility, priority) in entries[:20]:
+            log("  %s/%s - %d (%.2f%%)" % (
+                syslog_facilities[facility], syslog_priorities[priority], count, 
+                    (100.0 * count / float(total_count))))
 
     def process_event(self, line):
         if g_config["debug_rules"]:
             log(u"Processing message '%s'" % line)
         event = self.parse_event(line)
-        for rule in self._rules:
+
+        # Rule optimizer
+        if g_config["rule_optimizer"]:
+            self._hash_stats[event["facility"]][event["priority"]] += 1
+            rule_candidates = self._rule_hash.get(event["facility"], {}).get(event["priority"], [])
+        else:
+           rule_candidates = self._rules
+        
+        for rule in rule_candidates:
             result = self.event_rule_matches(rule, event)
             if result:
                 self.count("rule_hits")
@@ -846,7 +952,10 @@ class EventServer:
 
                 g_event_status.count_rule_match(rule["id"])
                 if g_config["log_rulehits"]:
-                    log("Rule %s hit by message '%s'." % (event["text"], rule["id"]))
+                    log("Rule %s hit by message %s/%s - '%s'." % (
+                        rule["id"],
+                        syslog_facilities[event["facility"]], syslog_priorities[event["priority"]],
+                        event["text"]))
                 if rule.get("drop"):
                     self.count("drops")
                     return
@@ -1864,6 +1973,7 @@ def load_configuration():
         "rules"                 : [],
         "actions"               : [],
         "debug_rules"           : False,
+        "rule_optimizer"        : True,
         "log_rulehits"          : False,
         "retention_interval"    : 60,
         "housekeeping_interval" : 60,
@@ -1974,7 +2084,7 @@ else:
 
 short_options = "hvVgS:P:p:C:"
 long_options = [ "help", "version", "verbose", "debug", "foreground", "socket=", "pipe=",
-                 "pidfile=", "statedir=", "configdir", "profile-status", "debug-locking" ]
+                 "pidfile=", "statedir=", "configdir", "profile-status", "profile-event", "debug-locking" ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -2078,6 +2188,8 @@ try:
     g_event_status.save_status()
     os.remove(g_socket_path)
     os.remove(g_pid_file)
+
+    g_event_server.output_hash_stats()
 
     log("Successfully shut down.")
     sys.exit(0)

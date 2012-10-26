@@ -780,6 +780,8 @@ def mode_mkeventd_rules(phase):
     html.write("<th></th>")
     html.write("<th>%s</th>" % _("ID"))
     html.write("<th>%s</th>" % _("State"))
+    html.write("<th>%s</th>" % _("Priority"))
+    html.write("<th>%s</th>" % _("Facility"))
     html.write("<th>%s</th>" % _("Service Level"))
     if defaults.omd_root:
         html.write("<th>%s</th>" % _("Hits"))
@@ -848,6 +850,26 @@ def mode_mkeventd_rules(phase):
         else:
             html.write('<td class="state state%d">%s</td>' % (rule["state"],
               {0:_("OK"), 1:_("WARN"), 2:_("CRIT"), 3:_("UNKNOWN"), -1:_("(syslog)")}[rule["state"]]))
+
+        # Syslog priority
+        if "match_priority" in rule:
+            prio_from, prio_to = rule["match_priority"]
+            if prio_from == prio_to:
+                prio_text = mkeventd.syslog_priorities[prio_from][1]
+            else:
+                prio_text = mkeventd.syslog_priorities[prio_from][1][:2] + ".." + \
+                            mkeventd.syslog_priorities[prio_to][1][:2]
+        else:
+            prio_text = ""
+        html.write("<td>%s</td>" % prio_text)
+
+        # Syslog Facility
+        if "match_facility" in rule:
+            facnr = rule["match_facility"]
+            html.write("<td>%s</td>" % mkeventd.syslog_facilities[facnr][1])
+        else:
+            html.write("<td></td>")
+
         html.write('<td>%s</td>' % dict(mkeventd.service_levels()).get(rule["sl"], rule["sl"]))
         if defaults.omd_root:
             hits = rule.get('hits')
@@ -1180,6 +1202,14 @@ if mkeventd_enabled:
                           "the execution details of each rule are logged. This creates an immense "
                           "volume of logging and should never be used in productive operation."),
                 default_value = False),
+        domain = "mkeventd")
+
+    register_configvar(group,
+        "rule_optimizer",
+        Checkbox(title = _("Optimize rule execution"),
+                 label = _("enable optimized rule execution"),
+                 help = _("This option turns on a faster algorithm for matching events to rules. "),
+                default_value = True),
         domain = "mkeventd")
 
     register_configvar(group,

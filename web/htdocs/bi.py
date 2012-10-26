@@ -212,11 +212,14 @@ def log(s):
 # printable (and storable in Python syntax to a file).
 def compile_forest(user, only_hosts = None, only_groups = None):
     global g_cache, g_user_cache, g_compiled_everything
+    global used_cache, did_compilation
 
     new_config_information = cache_needs_update()
-    if new_config_information or (not only_groups and not only_hosts):
-        # config changed or monitoring daemon restarted, clear cache
-        # or: total compilation requested (even if some hosts have already be compiled)
+    if new_config_information \
+       or (config.bi_precompile_on_demand and not only_groups and not only_hosts):
+        # config changed or monitoring daemon restarted, clear cache.
+        # or: in case of on demand precompile and a total compilation
+        # requested (even if some hosts have already be compiled).
         g_cache = {}
         global g_config_information
         g_config_information = new_config_information
@@ -224,6 +227,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
     if g_compiled_everything:
         log('PID: %d - Already compiled everything\n' % os.getpid())
+        used_cache = True
         return # In this case simply skip further compilations
 
     # OPTIMIZE: All users that have the permissing bi.see_all
@@ -264,16 +268,17 @@ def compile_forest(user, only_hosts = None, only_groups = None):
         only_hosts = to_compile(only_hosts, 'hosts')
         if not only_hosts:
             log('PID: %d - All requested hosts have already been compiled\n' % os.getpid())
+            used_cache = True
             return # Nothing to do - everything is cached
 
     if only_groups and cache['compiled_groups']:
         only_groups = to_compile(only_groups, 'groups')
         if not only_groups:
             log('PID: %d - All requested groups have already been compiled\n' % os.getpid())
+            used_cache = True
             return # Nothing to do - everything is cached
 
     # Set a flag that anything has been compiled in this call
-    global did_compilation
     did_compilation = True
 
     # Load all (needed) services

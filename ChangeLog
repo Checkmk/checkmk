@@ -85,6 +85,7 @@
       enabled on "Global Settings" page in WATO for your whole installation.
       After enabling it you need to reinventorize your hosts.
     * Windows Update Check: Now with caching, Thanks to Phil Randal and Patrick Schlüter
+    * Windows Check_MK Agent: Now able to parse textfiles for logwatch output
 
 1.2.0p3:
     Mulitisite

@@ -1,0 +1,10 @@
+Title: Distributed WATO setup - error message during setting up slaves
+Component: wato
+State: open
+Date: 2012-10-26 08:38:47
+Targetversion: future
+Class: bug
+
+In current version, when setting up the local site and a slave site in the main site,
+the main site reports that it is not the "preferred peer" while there is no peer setup.
+Seems like the naming of the site is somewhat relevant here.

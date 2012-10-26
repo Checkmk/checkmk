@@ -1,0 +1,123 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent (sizes are in bytes)
+# <<<zfsget>>>
+# bpool   name    bpool   -
+# bpool   quota   0       default 
+# bpool   used    21947036798826  -
+# bpool   available       11329512075414  -
+# bpool   mountpoint      /bpool  default
+# bpool   type    filesystem      -
+# bpool/acs_fs    name    bpool/acs_fs    -
+# bpool/acs_fs    quota   0       default 
+# bpool/acs_fs    used    4829131610      -
+# bpool/acs_fs    available       11329512075414  -
+# bpool/acs_fs    mountpoint      /backup/acs     local
+# bpool/acs_fs    type    filesystem      -
+
+def parse_zfsget(info):
+    def mb(x):
+        return int(x) / (1024.0 * 1024)
+
+    entries = {}
+    entry = None
+    last_name = None
+    for line in info:
+        name, what, value = line[:3]
+        if last_name != name:
+            if entry:
+                entries[entry["mountpoint"]] = entry
+            entry = {}
+        last_name = name
+        if what in ["used", "available"]:
+            entry[what] = mb(value)
+        elif what == "quota":
+            if value not in [ '0', '-' ]:
+                entry[what] = mb(value)
+        elif what in [ 'mountpoint', 'type' ]:
+            entry[what] = value
+
+    if entry:
+        entries[entry["mountpoint"]] = entry
+
+    for mountpoint, entry in entries.items():
+        if entry["type"] == 'volume':
+            del entries[mountpoint]
+        entry["is_pool"] = '/' not in name
+
+    return entries
+
+
+def inventory_zfsget(info):
+    mplist = []
+    for mountpoint in parse_zfsget(info):
+        if mountpoint not in inventory_df_exclude_mountpoints:
+            mplist.append(mountpoint)
+    return df_inventory(mplist)
+
+
+# def convert_zfssize(txt):
+#     units_to_mb = {
+#         'K'  : 1/1024.0,
+#         'M'  : 1.0,
+#         'G'  : 1024.0,
+#         'T'  : 1024 * 1024.0,
+#         'P'  : 1024 * 1024 * 1024.0,
+#     }
+#     return float(txt[:-1]) * units_to_mb[txt[-1]]
+
+
+def check_zfsget(item, params, info):
+    entries = parse_zfsget(info)
+    # ist item drin -> OK, ansonsten gleich hier 
+    fslist = []
+    for mountpoint, entry in parse_zfsget(info).items():
+        if "patterns" in params or item == mountpoint:
+            # 1. Filesystems with a quota 
+            if "quota" in entry:
+                used_mb = entry["used"]
+                total_mb = entry["quota"] 
+                avail_mb = total_mb - used_mb
+            # 2. Normal filesystems.
+            else:
+                used_mb = entry["used"]
+                avail_mb = entry["available"]
+                total_mb = used_mb + avail_mb
+            fslist.append((mountpoint, total_mb, avail_mb))
+
+    return df_check_filesystem_list(item, params, fslist)
+
+
+check_info['zfsget'] = {
+    "check_function"          : check_zfsget,
+    "inventory_function"      : inventory_zfsget,
+    "service_description"     : "fs_%s",
+    "has_perfdata"            : True,
+    "group"                   : "filesystem",
+    "default_levels_variable" : "filesystem_default_levels",
+    "includes"                : [ "df.include" ],
+}

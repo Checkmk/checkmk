@@ -75,7 +75,7 @@
     * win_dhcp_pools: do not inventorize empty pools any more. You can switch
       back to old behaviour with win_dhcp_pools_inventorize_empty = True
     * Added new Check for Eaton UPS Devices
-    * zfslist: new check for monitoring ZFS disk usage for Linux, Solaris, FreeBSD
+    * zfsget: new check for monitoring ZFS disk usage for Linux, Solaris, FreeBSD
       (you need to update your agent as well)
     * Added new Checks for Gude PDU Units
     * logwatch: Working around confusion with OK/Ignore handling in logwatch_rules

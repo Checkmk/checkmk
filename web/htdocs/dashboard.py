@@ -521,6 +521,16 @@ def render_statistics(pie_id, what, table, filter):
         # filter += "Filter: host_state = 0"
         filter += "Filter: host_filename ~ ^/wato/%s/\n" % wato_folder.replace("\n", "")
 
+    # Is the query restricted to a host contact group?
+    host_contact_group = html.var("host_contact_group")
+    if host_contact_group:
+        filter += "Filter: host_contact_groups >= %s\n" % host_contact_group.replace("\n", "")
+
+    # Is the query restricted to a service contact group?
+    service_contact_group = html.var("service_contact_group")
+    if service_contact_group:
+        filter += "Filter: service_contact_groups >= %s\n" % service_contact_group.replace("\n", "")
+
     query = "GET %s\n" % what
     for entry in table:
         query += entry[3]

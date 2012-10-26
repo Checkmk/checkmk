@@ -118,6 +118,7 @@
     * FIX: close inherited unused filedescriptors after fork()
     * FIX: kill process group of called plugin if timeout is reached
            -> preventing possible freeze of livecheck
+    * FIX: correct escaping of character / in nagios checkresult file
 
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used

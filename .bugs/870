@@ -1,0 +1,12 @@
+Title: livestatus.log is spammed with "Time to process request"
+Component: livestatus
+State: open
+Date: 2012-10-26 12:31:04
+Targetversion: future
+Class: cleanup
+
+Seems on each livestatus request a log entry
+
+"2012-10-26 12:25:49 Time to process request"
+
+is sent to the livestatus logfile. This entry is not very informative, why not simply drop it?

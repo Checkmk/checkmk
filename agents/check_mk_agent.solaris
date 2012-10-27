@@ -72,8 +72,8 @@ done
 
 # Filesystem usage for ZFS
 if type zfs > /dev/null 2>&1 ; then
-    echo '<<<zfslist>>>'
-    zfs list -H -o name,used,avail,mountpoint
+    echo '<<<zfsget>>>'
+    zfs get -Hp name,quota,used,avail,mountpoint,type
 fi
 
 # Processes

@@ -361,14 +361,15 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                     if aggr_type == AGGR_HOST:
                         # In normal cases a host aggregation has only one req_hosts item, we could use
                         # index 0 here. But clusters (which are also allowed now) have all their nodes
-                        # in the list of required nodes. The cluster node is always the last one in
-                        # this list.
-                        host = req_hosts[-1] # pair of (site, host)
-                        if not only_hosts or host in only_hosts:
-                            cache["host_aggregations"].setdefault(host, []).append((group, aggr))
+                        # in the list of required nodes.
+                        # Before the latest change this used the last item of the req_hosts. I think it
+                        # would be better to register this for all hosts mentioned in req_hosts. Give it a try...
+                        for host in req_hosts:
+                            if not only_hosts or host in only_hosts:
+                                cache["host_aggregations"].setdefault(host, []).append((group, aggr))
 
-                            # construct a list of compiled single-host aggregations for cached registration
-                            single_affected_hosts.append(host)
+                                # construct a list of compiled single-host aggregations for cached registration
+                                single_affected_hosts.append(host)
 
                     # All aggregations containing a specific host
                     for h in req_hosts:
@@ -646,17 +647,22 @@ def find_all_leaves(node):
     else:
         return []
 
+# Removes all empty nodes from the given rule tree
 def remove_empty_nodes(node):
-    if node["type"] != NT_RULE: # leaf node
+    if node["type"] != NT_RULE:
+        # simply return leaf nodes without action
         return node
     else:
         subnodes = node["nodes"]
+        # loop all subnodes recursing down to the lowest level
         for i in range(0, len(subnodes)):
             remove_empty_nodes(subnodes[i])
+        # remove all subnode rules which have no subnodes
         for i in range(0, len(subnodes))[::-1]:
             if node_is_empty(subnodes[i]):
                 del subnodes[i]
 
+# Checks wether or not a rule node has no subnodes
 def node_is_empty(node):
     if node["type"] != NT_RULE: # leaf node
         return False
@@ -774,7 +780,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
         needed_hosts.update(element.get("reqhosts", []))
 
     aggregation = { "type"     : NT_RULE,
-                    "reqhosts" : list(needed_hosts),
+                    "reqhosts" : needed_hosts,
                     "title"    : inst_description,
                     "func"     : funcname,
                     "nodes"    : elements}
@@ -783,8 +789,12 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
     if lvl == 0:
         for hostspec, ref, placeholder in g_remaining_refs:
             new_entries = find_remaining_services(hostspec, aggregation)
+            for entry in new_entries:
+                aggregation['reqhosts'].update(entry['reqhosts'])
             where_to_put = ref.index(placeholder)
             ref[where_to_put:where_to_put+1] = new_entries
+
+    aggregation['reqhosts'] = list(aggregation['reqhosts'])
 
     return [ aggregation ]
 
@@ -884,8 +894,9 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
                               "title"    : hostname})
 
             elif service_re == config.REMAINING:
-                found.append({"type"  : NT_REMAINING,
-                              "host"  : (site, hostname)})
+                found.append({"type"     : NT_REMAINING,
+                              "reqhosts" : [(site, hostname)],
+                              "host"     : (site, hostname)})
 
             else:
                 # found.append({"type" : NT_LEAF,

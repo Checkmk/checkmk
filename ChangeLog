@@ -17,6 +17,8 @@
            list of explicit host/services in rules)
     * FIX: fix inheritation of contactgroups from folder to hosts
     * FIX: fix sorting of users, fix lost user alias in some situations
+    * FIX: Sites not using distritubed WATO now being skipped when determining
+           the prefered peer
 
     BI:
     * FIX: Correct representation of (!), (!!) and (?) markers in check output

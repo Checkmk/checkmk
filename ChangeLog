@@ -92,6 +92,8 @@
       After enabling it you need to reinventorize your hosts.
     * Windows Update Check: Now with caching, Thanks to Phil Randal and Patrick Schlüter
     * Windows Check_MK Agent: Now able to parse textfiles for logwatch output
+    * Added new Checks sni_octopuse_cpu, sni_octopuse_status, sni_octopuse_trunks: These
+      allow monitoring Siemens HiPath 3000/5000 series PBX.
 
 1.2.0p3:
     Mulitisite

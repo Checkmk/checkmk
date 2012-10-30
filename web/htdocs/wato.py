@@ -7449,12 +7449,6 @@ def get_login_secret(create_on_demand = False):
         write_settings_file(path, secret)
         return secret
 
-def encrypt_password(password, salt = None):
-    import md5crypt
-    if not salt:
-        salt = "%06d" % (1000000 * (time.time() % 1.0))
-    return md5crypt.md5crypt(password, salt, '$1$')
-
 def site_is_local(siteid):
     return config.site_is_local(siteid)
 
@@ -7785,7 +7779,7 @@ def mode_edit_user(phase):
             if not secret or len(secret) < 10:
                 raise MKUserError('secret', _("Please specify a secret of at least 10 characters length."))
             new_user["automation_secret"] = secret
-            new_user["password"] = encrypt_password(secret)
+            new_user["password"] = userdb.encrypt_password(secret)
 
         else:
             password = html.var("password").strip()
@@ -7803,7 +7797,7 @@ def mode_edit_user(phase):
                 raise MKUserError("password2", _("The both passwords do not match."))
 
             if password:
-                new_user["password"] = encrypt_password(password)
+                new_user["password"] = userdb.encrypt_password(password)
 
         # Set initial password serial or increase existing
         if new:
@@ -10879,7 +10873,7 @@ def page_user_profile():
                     if password2 and password != password2:
                         raise MKUserError("password2", _("The both passwords do not match."))
 
-                    users[config.user_id]['password'] = encrypt_password(password)
+                    users[config.user_id]['password'] = userdb.encrypt_password(password)
 
                     # Increase serial to invalidate old cookies
                     if 'serial' not in users[config.user_id]:

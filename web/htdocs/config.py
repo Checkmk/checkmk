@@ -587,6 +587,15 @@ def load_default_values(into):
     into["wato_write_nagvis_auth"] = False
     into["wato_hidden_users"] = []
 
+    #     _   _               ____  ____
+    #    | | | |___  ___ _ __|  _ \| __ )
+    #    | | | / __|/ _ \ '__| | | |  _ \
+    #    | |_| \__ \  __/ |  | |_| | |_) |
+    #     \___/|___/\___|_|  |____/|____/
+    #
+
+    into["user_connectors"] = ['htpasswd']
+
 # Make sure, we have all values set right now - until
 # the configuration will be loaded
 load_default_values(globals())

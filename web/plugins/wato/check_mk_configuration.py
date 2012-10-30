@@ -261,6 +261,44 @@ register_configvar(group,
                    "details for each executed compilation.")),
     domain = "multisite")
 
+#   .----------------------------------------------------------------------.
+#   |          _   _                 __  __                 _              |
+#   |         | | | |___  ___ _ __  |  \/  | __ _ _ __ ___ | |_            |
+#   |         | | | / __|/ _ \ '__| | |\/| |/ _` | '_ ` _ \| __|           |
+#   |         | |_| \__ \  __/ |    | |  | | (_| | | | | | | |_            |
+#   |          \___/|___/\___|_|    |_|  |_|\__, |_| |_| |_|\__|           |
+#   |                                       |___/                          |
+#   +----------------------------------------------------------------------+
+
+import userdb
+
+group = _("User Management")
+
+register_configvar(group,
+    "user_connectors",
+    ListChoice(
+        title = _('Enabled User Connectors'),
+        help  = _('The Multisite User Management code is modularized, the modules '
+                  'are called user connectors. A user connector can hook into multisite '
+                  'at several places where users are handled. Examples are the authentication '
+                  'or saving of user accounts. Here you can enable one or several connectors '
+                  'to extend or replace the default authentication mechanism (htpasswd) e.g. '
+                  'with ldap based mechanism.'),
+        default_value = [ 'htpasswd' ],
+        choices = userdb.list_user_connectors(),
+    ),
+    domain = "multisite",
+)
+
+#   .----------------------------------------------------------------------.
+#   |                   _                                      _           |
+#   |     ___ _ __ ___ | | __   ___  _ __  _ __ ___   ___   __| | ___      |
+#   |    / __| '_ ` _ \| |/ /  / _ \| '_ \| '_ ` _ \ / _ \ / _` |/ _ \     |
+#   |   | (__| | | | | |   <  | (_) | |_) | | | | | | (_) | (_| |  __/     |
+#   |    \___|_| |_| |_|_|\_\  \___/| .__/|_| |_| |_|\___/ \__,_|\___|     |
+#   |                               |_|                                    |
+#   +----------------------------------------------------------------------+
+
 group = _("Operation mode of Check_MK")
 
 register_configvar(group,

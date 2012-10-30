@@ -24,10 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import defaults, htmllib, config, wato
+import defaults, htmllib, config, userdb, wato
 from lib import *
 from mod_python import apache
-import os, md5, md5crypt, crypt, time
+import os, md5, time
 
 def site_cookie_name(site_id = None):
     if not site_id:
@@ -41,29 +41,6 @@ def site_cookie_name(site_id = None):
 
     name = os.path.dirname(url_prefix).replace('/', '_')
     return 'auth%s' % name
-
-# Validate hashes taken from the htpasswd file. This method handles
-# crypt() and md5 hashes. This should be the common cases in the
-# used htpasswd files.
-def password_valid(pwhash, password):
-    if pwhash[:3] == '$1$':
-        salt = pwhash.split('$', 3)[2]
-        return pwhash == wato.encrypt_password(password, salt)
-    else:
-        #html.write(repr(pwhash + ' ' + crypt.crypt(password, pwhash)))
-        return pwhash == crypt.crypt(password, pwhash[:2])
-
-# Loads the contents of a valid htpasswd file into a dictionary
-# and returns the dictionary
-def load_htpasswd():
-    creds = {}
-
-    for line in open(defaults.htpasswd_file, 'r'):
-        if ':' in line:
-            username, pwhash = line.split(':', 1)
-            creds[username] = pwhash.rstrip('\n')
-
-    return creds
 
 # Reads the auth secret from a file. Creates the files if it does
 # not exist. Having access to the secret means that one can issue valid
@@ -118,7 +95,7 @@ def check_auth_cookie(cookie_name):
     #    del_auth_cookie()
     #    return ''
 
-    users = load_htpasswd()
+    users = wato.load_users().keys()
     if not username in users:
         raise MKAuthException(_('Username is unknown'))
 
@@ -158,9 +135,11 @@ def check_auth():
             try:
                 return check_auth_cookie(cookie_name)
             except Exception, e:
-                #html.write('Exception occured while checking cookie %s' % cookie_name)
-                #raise
-                pass
+                if html.debug:
+                    html.write('Exception occured while checking cookie %s' % cookie_name)
+                    raise
+                else:
+                    pass
 
     return ''
 
@@ -182,8 +161,7 @@ def do_login():
             if not origtarget or "logout.py" in origtarget:
                 origtarget = defaults.url_prefix + 'check_mk/'
 
-            users = load_htpasswd()
-            if username in users and password_valid(users[username], password):
+            if userdb.hook_login(username, password):
                 # The login succeeded! Now:
                 # a) Set the auth cookie
                 # b) Unset the login vars in further processing

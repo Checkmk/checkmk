@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from mod_python import Cookie
+from mod_python import Cookie, apache
 import time, cgi, config, os, defaults, pwd, urllib, weblib, random
 from lib import *
 # Python 2.3 does not have 'set' in normal namespace.
@@ -1185,6 +1185,16 @@ class html:
         import pprint
         for element in x:
             self.write("<pre>%s</pre>\n" % pprint.pformat(element))
+
+    # Debug logging directly to apache error_log
+    # Even if this is for debugging purpose, set the log-level to WARN in all cases
+    # since the apache in OMD sites has LogLevel set to "warn" by default which would
+    # suppress messages generated here. Again, this is only for debugging during
+    # development, so this should be no problem for regular users.
+    def log(self, msg):
+        if type(msg) != str:
+            msg = repr(msg)
+        self.req.log_error(msg, apache.APLOG_WARNING)
 
     def debug_vars(self):
         self.write('<table onmouseover="this.style.display=\'none\';" class=debug_vars>')

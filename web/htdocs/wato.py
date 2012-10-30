@@ -7805,13 +7805,19 @@ def mode_edit_user(phase):
             if password:
                 new_user["password"] = encrypt_password(password)
 
+        # Set initial password serial or increase existing
+        if new:
+            new_user["serial"] = 0
+        else:
+            new_user["serial"] += 1
+
         # Email address
         email = html.var("email").strip()
         regex_email = '^[-a-zäöüÄÖÜA-Z0-9_.]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[a-zA-Z]+)*$'
         if email and not re.match(regex_email, email):
             raise MKUserError("email", _("'%s' is not a valid email address." % email))
         new_user["email"] = email
-        
+
         # Pager
         pager = html.var("pager").strip()
         new_user["pager"] = pager
@@ -10874,6 +10880,12 @@ def page_user_profile():
                         raise MKUserError("password2", _("The both passwords do not match."))
 
                     users[config.user_id]['password'] = encrypt_password(password)
+
+                    # Increase serial to invalidate old cookies
+                    if 'serial' not in users[config.user_id]:
+                        users[config.user_id]['serial'] = 1
+                    else:
+                        users[config.user_id]['serial'] += 1
 
             save_users(users)
             success = True

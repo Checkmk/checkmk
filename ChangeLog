@@ -16,6 +16,8 @@
     * Max. number of queued connections on status sockets is configurable now
 
     Multisite:
+    * Restructured cookie auth cookies (all auth cookies will be invalid
+      after update -> all users have to login again)
     * Enable automation login with _username= and _secret=, while
       _secret is the content of var/check_mk/web/$USER/automation.secret
     * FIX: Fixed releasing of locks and livestatus connections when logging out

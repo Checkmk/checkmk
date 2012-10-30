@@ -82,25 +82,32 @@ def load_secret():
 
     return secret
 
+# Load the password serial of the user. This serial identifies the current config
+# state of the user account. If either the password is changed or the account gets
+# locked the serial is increased by WATO and all cookies get invalidated.
+def load_serial(user_id):
+    users = wato.load_users()
+    return users.get(user_id, {}).get('serial', 0)
+
 # Generates the hash to be added into the cookie value
-def generate_hash(username, now, pwhash):
+def generate_hash(username, now, serial):
     secret = load_secret()
-    return md5.md5(username + now + pwhash + secret).hexdigest()
+    return md5.md5(username + now + str(serial) + secret).hexdigest()
 
 def del_auth_cookie():
     name = site_cookie_name()
     if html.has_cookie(name):
         html.del_cookie(name)
 
-def auth_cookie_value(username, pwhash):
+def auth_cookie_value(username, serial):
     now = str(time.time())
-    return username + ':' + now + ':' + generate_hash(username, now, pwhash)
+    return username + ':' + now + ':' + generate_hash(username, now, serial)
 
-def set_auth_cookie(username, pwhash):
-    html.set_cookie(site_cookie_name(), auth_cookie_value(username, pwhash))
+def set_auth_cookie(username, serial):
+    html.set_cookie(site_cookie_name(), auth_cookie_value(username, serial))
 
 def get_cookie_value():
-    return auth_cookie_value(config.user_id, load_htpasswd()[config.user_id])
+    return auth_cookie_value(config.user_id, load_serial(config.user_id))
 
 def check_auth_cookie(cookie_name):
     username, issue_time, cookie_hash = html.cookie(cookie_name, '::').split(':', 2)
@@ -114,10 +121,10 @@ def check_auth_cookie(cookie_name):
     users = load_htpasswd()
     if not username in users:
         raise MKAuthException(_('Username is unknown'))
-    pwhash = users[username]
 
     # Validate the hash
-    if cookie_hash != generate_hash(username, issue_time, pwhash):
+    serial = load_serial(username)
+    if cookie_hash != generate_hash(username, issue_time, serial):
         raise MKAuthException(_('Invalid credentials'))
 
     # Once reached this the cookie is a good one. Renew it!
@@ -126,7 +133,7 @@ def check_auth_cookie(cookie_name):
     # b) A logout is requested
     if (html.req.myfile != 'logout' or html.has_var('_ajaxid')) \
        and cookie_name == site_cookie_name():
-        set_auth_cookie(username, pwhash)
+        set_auth_cookie(username, serial)
 
     # Return the authenticated username
     return username
@@ -181,7 +188,7 @@ def do_login():
                 # a) Set the auth cookie
                 # b) Unset the login vars in further processing
                 # c) Show the real requested page (No redirect needed)
-                set_auth_cookie(username, users[username])
+                set_auth_cookie(username, load_serial(username))
 
                 # Use redirects for URLs or simply execute other handlers for
                 # mulitsite modules

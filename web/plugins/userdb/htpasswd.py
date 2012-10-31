@@ -86,7 +86,9 @@ def password_valid(pwhash, password):
 # Validates a users credentials
 def htpasswd_login(username, password):
     users = load_htpasswd()
-    return username in users and password_valid(users[username], password)
+    if username not in users:
+        return None # not existing user, skip over
+    return password_valid(users[username], password)
 
 multisite_user_connectors.append({
     'id':    'htpasswd',

@@ -595,6 +595,11 @@ def load_default_values(into):
     #
 
     into["user_connectors"] = ['htpasswd']
+    into["ldap_connection"] = {}
+    into["ldap_userspec"]   = {}
+    into["default_user_profile"] = {
+        'roles': ['user'],
+    }
 
 # Make sure, we have all values set right now - until
 # the configuration will be loaded

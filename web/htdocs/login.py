@@ -135,11 +135,11 @@ def check_auth():
             try:
                 return check_auth_cookie(cookie_name)
             except Exception, e:
-                if html.debug:
-                    html.write('Exception occured while checking cookie %s' % cookie_name)
-                    raise
-                else:
-                    pass
+                #if html.debug:
+                #    html.write('Exception occured while checking cookie %s' % cookie_name)
+                #    raise
+                #else:
+                pass
 
     return ''
 

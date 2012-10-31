@@ -46,10 +46,11 @@ def load_plugins():
     # are loaded).
     loaded_with_language = current_language
 
+
 def list_user_connectors():
     return [ (c['id'], c['title']) for c in multisite_user_connectors ]
 
-# Returns the connector dictionary
+# Returns the connector dictionary of the given id
 def get_connector(connector_id):
     if connector_id is None:
         connector_id = 'htpasswd'
@@ -73,11 +74,44 @@ def encrypt_password(password, salt = None):
         salt = "%06d" % (1000000 * (time.time() % 1.0))
     return md5crypt.md5crypt(password, salt, '$1$')
 
+#   .----------------------------------------------------------------------.
+#   |                     _   _             _                              |
+#   |                    | | | | ___   ___ | | _____                       |
+#   |                    | |_| |/ _ \ / _ \| |/ / __|                      |
+#   |                    |  _  | (_) | (_) |   <\__ \                      |
+#   |                    |_| |_|\___/ \___/|_|\_\___/                      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+def create_non_existing_user(connector_id, username):
+    import wato
+    users = wato.load_users()
+    if username in users:
+        return # User exists. Nothing to do...
+
+    new_user = {
+        'serial':        0,
+        'connector':     connector_id,
+    }
+
+    # Apply the default user profile
+    new_user.update(config.default_user_profile)
+
+    users[username] = new_user
+    wato.save_users(users)
+
 def hook_login(username, password):
     for connector in multisite_user_connectors:
         handler = connector.get('login', None)
         if handler:
             result = handler(username, password)
-            # None -> User unknown, means continue with other connectors
-            if result != None:
-                return result # is True (success) or False (login failed)
+            # None  -> User unknown, means continue with other connectors
+            # True  -> success
+            # False -> failed
+            if result == True:
+                # Check wether or not the user exists (and maybe create it)
+                create_non_existing_user(connector['id'], username)
+                return result
+
+            elif result == False:
+                return result

@@ -7616,6 +7616,7 @@ def mode_users(phase):
     html.write("<table class=data>")
     html.write("<tr><th>" + _("Actions") + "<th>"
                 + _("Name")
+                + "</th><th>" + _("Connector")
                 + "</th><th>" + _("Authentication")
                 + "</th><th>" + _("Locked")
                 + "</th><th>" + _("Full Name")
@@ -7644,6 +7645,9 @@ def mode_users(phase):
 
         # ID
         html.write("<td>%s</td>" % id)
+
+        # Connector
+        html.write("<td>%s</td>" % userdb.get_connector(user.get('connector'))['title'])
 
         # Authentication
         if "automation_secret" in user:
@@ -7737,6 +7741,13 @@ def mode_edit_user(phase):
             user = {}
     else:
         user = users.get(userid, {})
+
+    # Returns true if an attribute is locked and should be read only. Is only
+    # checked when modifying an existing user
+    # FIXME: Also lock those attributes on form processing
+    locked_attributes = userdb.locked_attributes(user.get('connector'))
+    def is_locked(attr):
+        return not new and attr in locked_attributes
 
     # Load data that is referenced - in order to display dropdown
     # boxes and to check for validity.
@@ -7897,31 +7908,44 @@ def mode_edit_user(phase):
         html.write(userid)
         html.hidden_field("userid", userid)
 
+    def lockable_input(name, dflt):
+        if not is_locked(name):
+            html.text_input(name, user.get(name, dflt), size = 50)
+        else:
+            html.write(user.get(name, dflt))
+            html.hidden_field(name, user.get(name, dflt))
+
     # Full name
     forms.section(_("Full name"))
-    html.text_input("alias", user.get("alias", userid), size = 50)
+    lockable_input('alias', userid)
     html.help(_("Full name or alias of the user"))
 
     # Email address
     forms.section(_("Email address"))
-    html.text_input("email", user.get("email", ""), size = 50)
+    lockable_input('email', '')
     html.help(_("The email address is optional and is needed "
                 "if the user is a monitoring contact and receives notifications "
                 "via Email."))
 
     forms.section(_("Pager address"))
-    html.text_input("pager", user.get("pager", ""), size = 50)
+    lockable_input('pager', '')
     html.help(_("The pager address is optional "))
+
     forms.header(_("Security"))
     forms.section(_("Authentication"))
     is_automation = user.get("automation_secret", None) != None
     html.radiobutton("authmethod", "password", not is_automation,
                      _("Normal user login with password"))
     html.write("<ul><table><tr><td>%s</td><td>" % _("password:"))
-    html.password_input("password", autocomplete="off")
-    html.write("</td></tr><tr><td>%s</td><td>" % _("repeat:"))
-    html.password_input("password2", autocomplete="off")
-    html.write(" (%s)" % _("optional"))
+    if not is_locked('password'):
+        html.password_input("password", autocomplete="off")
+        html.write("</td></tr><tr><td>%s</td><td>" % _("repeat:"))
+        html.password_input("password2", autocomplete="off")
+        html.write(" (%s)" % _("optional"))
+    else:
+        html.write('<i>%s</i>' % _('The password can not be changed (It is locked by the user connector).'))
+        html.hidden_field('password', '')
+        html.hidden_field('password2', '')
     html.write("</td></tr></table></ul>")
     html.radiobutton("authmethod", "secret", is_automation,
                      _("Automation secret for machine accounts"))
@@ -7947,7 +7971,11 @@ def mode_edit_user(phase):
 
     # Locking
     forms.section(_("Disable password"), simple=True)
-    html.checkbox("locked", user.get("locked", False), label = _("disable the login to this account"))
+    if not is_locked('locked'):
+        html.checkbox("locked", user.get("locked", False), label = _("disable the login to this account"))
+    else:
+        html.write(user.get("locked", False) and _('Login disabled') or _('Login possible'))
+        html.hidden_field('locked', user.get("locked", False) and '1' or '')
     html.help(_("Disabling the password will prevent a user from logging in while "
                  "retaining the original password. Notifications are not affected "
                  "by this setting."))
@@ -7957,9 +7985,18 @@ def mode_edit_user(phase):
     entries = roles.items()
     entries.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
     for role_id, role in entries:
-        html.checkbox("role_" + role_id, role_id in user.get("roles", []))
-        url = make_link([("mode", "edit_role"), ("edit", role_id)])
-        html.write("<a href='%s'>%s</a><br>" % (url, role["alias"]))
+        if not is_locked('roles'):
+            html.checkbox("role_" + role_id, role_id in user.get("roles", []))
+            url = make_link([("mode", "edit_role"), ("edit", role_id)])
+            html.write("<a href='%s'>%s</a><br>" % (url, role["alias"]))
+        else:
+            is_member = role_id in user.get("roles", [])
+            html.hidden_field("role_" + role_id, is_member and '1' or '')
+            if not is_member:
+                html.write('<i>%s</i>' % _('No roles assigned.'))
+            else:
+                url = make_link([("mode", "edit_role"), ("edit", role_id)])
+                html.write("<a href='%s'>%s</a><br>" % (url, role["alias"]))
     html.help(_("By assigning roles to a user he obtains permissions. "
                 "If a user has more than one role, he gets the maximum of all "
                 "permissions of his roles. "
@@ -7980,9 +8017,18 @@ def mode_edit_user(phase):
         for alias, gid in entries:
             if not alias:
                 alias = gid
-            html.checkbox("cg_" + gid, gid in user.get("contactgroups", []))
-            url = make_link([("mode", "edit_contact_group"), ("edit", gid)])
-            html.write(" <a href=\"%s\">%s</a><br>" % (url, alias))
+            if not is_locked('contactgroups'):
+                html.checkbox("cg_" + gid, gid in user.get("contactgroups", []))
+                url = make_link([("mode", "edit_contact_group"), ("edit", gid)])
+                html.write(" <a href=\"%s\">%s</a><br>" % (url, alias))
+            else:
+                is_member = gid in user.get("contactgroups", [])
+                html.hidden_field("cg_" + gid, is_member and '1' or '')
+                if not is_member:
+                    html.write('<i>%s</i>' % _('No contact groups assigned.'))
+                else:
+                    url = make_link([("mode", "edit_contact_group"), ("edit", gid)])
+                    html.write("<a href='%s'>%s</a><br>" % (url, alias))
 
     html.help(_("Contact groups are used to assign monitoring "
                 "objects to users. If you haven't defined any contact groups yet, "

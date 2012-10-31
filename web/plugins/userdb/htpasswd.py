@@ -55,6 +55,8 @@
 # locked_attributes
 #   List of user attributes locked for all users attached to this
 #   connector. Those locked attributes are read-only in WATO.
+#   Lockable attributes at the moment:
+#     password, locked, roles, contactgroups, alias, email, pager
 
 import crypt
 import defaults

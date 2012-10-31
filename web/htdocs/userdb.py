@@ -49,6 +49,22 @@ def load_plugins():
 def list_user_connectors():
     return [ (c['id'], c['title']) for c in multisite_user_connectors ]
 
+# Returns the connector dictionary
+def get_connector(connector_id):
+    if connector_id is None:
+        connector_id = 'htpasswd'
+    for connector in multisite_user_connectors:
+        if connector['id'] == connector_id:
+            return connector
+
+# Returns a list of locked attributes. If connector is None the htpasswd
+# connector is assumed.
+def locked_attributes(connector_id):
+    for connector in multisite_user_connectors:
+        if connector['id'] == connector_id:
+            return connector.get('locked_attributes', None)
+    return []
+
 # This is a function needed in WATO and the htpasswd module. This should
 # really be modularized one day. Till this day this is a good place ...
 def encrypt_password(password, salt = None):

@@ -74,7 +74,7 @@ def get_perfometer_files():
     return [ f for f in files if f.endswith(".py") and not f.startswith('.') ]
 
 def check_has_perfdata(check):
-    return check_info[check]["has_perfdata"]
+    return check_info[check].get("has_perfdata", False)
 
 def get_all_checks():
     k = check_info.keys()

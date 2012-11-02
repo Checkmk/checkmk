@@ -1427,7 +1427,6 @@ void update_or_create_logwatch_textfile(const char *full_filename, pattern_conta
     logwatch_textfile *textfile;
     if ((textfile = get_logwatch_textfile(full_filename)) != NULL) 
     {
-        printf("File already exists %s\n", full_filename);
         HANDLE hFile = CreateFile(textfile->path,// file to open
                GENERIC_READ,          // open for reading
                FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
@@ -1461,7 +1460,7 @@ void update_or_create_logwatch_textfile(const char *full_filename, pattern_conta
             }
             CloseHandle(hFile);
         } else {
-            printf("Cant open file with CreateFile\n");
+            printf("Cant open file with CreateFile %s\n", full_filename);
         }
 
     }
@@ -2831,7 +2830,6 @@ void read_config_file()
         }
     }
     fclose(file);
-    print_logwatch_config();
 }
 
 

@@ -1,0 +1,8 @@
+Title: All rules get the dict key "docu_url" - is it really wanted?
+Component: wato
+State: open
+Date: 2012-10-25 15:45:59
+Targetversion: future
+Class: cleanup
+
+Since the comment and docu url have been implemented, the rules always get the dict added with an empty 'docu_url' key/value.

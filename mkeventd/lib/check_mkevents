@@ -69,6 +69,7 @@ q += "Filter: event_phase in open ack\n"
 response = query(q, remote_host)
 headers = response[0]
 worst_state = 0
+worst_row = None
 count = 0
 unhandled = 0
 for line in response[1:]:
@@ -77,8 +78,10 @@ for line in response[1:]:
     if s == 3:
         if worst_state < 2:
             worst_state = 3
-    else:
-        worst_state = max(worst_state, s)
+            worst_row = row
+    elif s >= worst_state:
+        worst_state = s
+        worst_row = row
     count += 1
     if row["event_phase"] == 'open':
         unhandled += 1
@@ -96,8 +99,8 @@ elif count == 0:
     sys.stdout.write("OK - no events for %s\n" % host_name)
 else:
     sys.stdout.write(nagios_state_names[worst_state] + \
-         " - %d events (%d unacknowledged), worst state is %s\n" % \
-         (count, unhandled, nagios_state_names[worst_state]))
+         " - %d events (%d unacknowledged), worst state is %s (Last line: %s)\n" % \
+         (count, unhandled, nagios_state_names[worst_state], worst_row['event_text'].encode('utf-8')))
 
 sys.exit(worst_state)
 

@@ -196,6 +196,10 @@ def render_dashlet(nr, dashlet, wato_folder):
         bg = ""
     html.write('<div class="dashlet_inner%s" id="dashlet_inner_%d">' % (bg, nr))
 
+    # Optional way to render a dynamic iframe URL
+    if "iframefunc" in dashlet:
+        dashlet["iframe"] = dashlet["iframefunc"]()
+
     # The method "view" is a shortcut for "iframe" with a certain url
     if "view" in dashlet:
         dashlet["iframe"] = "view.py?view_name=%s&display_options=HRSIXL&_body_class=dashlet" % dashlet["view"]
@@ -521,6 +525,16 @@ def render_statistics(pie_id, what, table, filter):
         # filter += "Filter: host_state = 0"
         filter += "Filter: host_filename ~ ^/wato/%s/\n" % wato_folder.replace("\n", "")
 
+    # Is the query restricted to a host contact group?
+    host_contact_group = html.var("host_contact_group")
+    if host_contact_group:
+        filter += "Filter: host_contact_groups >= %s\n" % host_contact_group.replace("\n", "")
+
+    # Is the query restricted to a service contact group?
+    service_contact_group = html.var("service_contact_group")
+    if service_contact_group:
+        filter += "Filter: service_contact_groups >= %s\n" % service_contact_group.replace("\n", "")
+
     query = "GET %s\n" % what
     for entry in table:
         query += entry[3]
@@ -543,6 +557,10 @@ def render_statistics(pie_id, what, table, filter):
     for (name, color, viewurl, query), count in table_entries:
         url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder=" \
               + htmllib.urlencode(html.var("wato_folder", ""))
+        if host_contact_group:
+            url += '&opthost_contactgroup=' + host_contact_group
+        if service_contact_group:
+            url += '&optservice_contactgroup=' + service_contact_group
         html.write('<tr><th><a href="%s">%s</a></th>' % (url, name))
         style = ''
         if color:

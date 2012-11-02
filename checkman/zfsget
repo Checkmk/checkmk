@@ -1,0 +1,34 @@
+title: Check used space in ZFS pools and filesystems
+agents: linux, solaris, freebsd
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the usage of ZFS filesystems using the output
+ of the command {zfsget}. This is done in a separate check since
+ the output of {df} does not show the required metrics when ZFS
+ is used with quotas.
+
+ The check is fully compatible with {df} with respect to its configuration,
+ output and logic. Please refer to the manual of {df} for details.
+
+ ZFS has some specialities when compared with "normal" filesystems. From
+ the point of view of monitoring the crucial difference is that several
+ filesystems live together in a common "pool". Each of the filesystems
+ has its own amount of used space. But they share a common free space.
+ If you want to compute the {percentage} of used/free space of a filesystem,
+ then you run into trouble. Let's take the following example:
+
+ Lets say we have a pool P of the size 10GB where the filesystems A and B
+ live. Lets assume that A currently uses 2GB and B uses 7GB. That makes 1GB
+ left available in the pool. Reporting 20% usage for A would be misleading 
+ in such a case, because you would assume 80% (i.e. 8GB) of free space. But
+ in fact just 1GB is left free for futher files. For that reason our {zfsget}
+ check reports the current usage plus the available pool space as total size
+ of the filesystem. In our example that means that the "size" of A is reported
+ as 3GB with 2GB used (which makes 66.6%). That way all filesystems will
+ become critical if the available pool space goes to zero.
+
+ Filesystems with a {quota} are handled differntly, however! Here the quota
+ is reported as the total size. If A would have a quota of 5GB then we report
+ 2GB out of 5GB used.

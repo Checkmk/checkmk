@@ -11,6 +11,9 @@
     * New feature of hiding certain actions from the commands in the status GUI
     * FIX: rule simulator ("Try out") now handles cancelling rules correctly
     * New global option for enabling log entries for rule hits (debugging)
+    * New icon linking to event views for the event services
+    * check_mkevents outputs last worst line in service output
+    * Max. number of queued connections on status sockets is configurable now
 
     Multisite:
     * Enable automation login with _username= and _secret=, while
@@ -25,6 +28,9 @@
     * Added new painters "Service check command expanded" and
       "Host check command expanded"
     * FIX: Corrected garbled description for sorter "Service Performance data" 
+    * Dashboard globes can now be filtered by host_contact_group/service_contact_group
+    * Dashboard "iframe" attribute can now be rendered dynamically using the
+      "iframefunc" attribute in the dashlet declaration
 
     Livestatus:
     * Added new table statehist, used for SLA queries
@@ -75,7 +81,7 @@
     * win_dhcp_pools: do not inventorize empty pools any more. You can switch
       back to old behaviour with win_dhcp_pools_inventorize_empty = True
     * Added new Check for Eaton UPS Devices
-    * zfslist: new check for monitoring ZFS disk usage for Linux, Solaris, FreeBSD
+    * zfsget: new check for monitoring ZFS disk usage for Linux, Solaris, FreeBSD
       (you need to update your agent as well)
     * Added new Checks for Gude PDU Units
     * logwatch: Working around confusion with OK/Ignore handling in logwatch_rules
@@ -85,6 +91,7 @@
       enabled on "Global Settings" page in WATO for your whole installation.
       After enabling it you need to reinventorize your hosts.
     * Windows Update Check: Now with caching, Thanks to Phil Randal and Patrick Schlüter
+    * Windows Check_MK Agent: Now able to parse textfiles for logwatch output
 
 1.2.0p3:
     Mulitisite
@@ -103,6 +110,8 @@
            list of explicit host/services in rules)
     * FIX: fix inheritation of contactgroups from folder to hosts
     * FIX: fix sorting of users, fix lost user alias in some situations
+    * FIX: Sites not using distritubed WATO now being skipped when determining
+           the prefered peer
 
     BI:
     * FIX: Correct representation of (!), (!!) and (?) markers in check output
@@ -118,6 +127,7 @@
     * FIX: close inherited unused filedescriptors after fork()
     * FIX: kill process group of called plugin if timeout is reached
            -> preventing possible freeze of livecheck
+    * FIX: correct escaping of character / in nagios checkresult file
 
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used

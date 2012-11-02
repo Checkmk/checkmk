@@ -63,7 +63,6 @@
 #include <sys/stat.h> // stat()
 #include <sys/time.h> // gettimeofday()
 
-
 //  .----------------------------------------------------------------------.
 //  |       ____            _                 _   _                        |
 //  |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |
@@ -93,6 +92,7 @@
 #define SECTION_LOCAL        0x00000400
 #define SECTION_MRPE         0x00000800 
 #define SECTION_FILEINFO     0x00001000  
+#define SECTION_LOGFILES     0x00002000  
 
 // Limits for static global arrays
 #define MAX_EVENTLOGS               128
@@ -1272,6 +1272,414 @@ bool find_eventlogs(SOCKET &out)
 }
 
 
+// .-----------------------------------------------------------------------.
+// |            _                              _       _                   |
+// |           | |    ___   __ ___      ____ _| |_ ___| |__                |
+// |           | |   / _ \ / _` \ \ /\ / / _` | __/ __| '_ \               |
+// |           | |__| (_) | (_| |\ V  V / (_| | || (__| | | |              |
+// |           |_____\___/ \__, | \_/\_/ \__,_|\__\___|_| |_|              |
+// |                       |___/                                           |
+// +-----------------------------------------------------------------------+
+// | Functions related to the evaluation of logwatch textfiles             |
+// '-----------------------------------------------------------------------'
+#define MAX_LOGWATCH_GLOBLINES         128  // Maximum globline definitions
+#define MAX_LOGWATCH_GLOBLINE_TOKENS   128  // Maximum globline tokens
+#define MAX_LOGWATCH_CONDITIONS       1024  // Maximum text patterns per globline
+#define MAX_LOGWATCH_TEXTFILES        1024  // Maximum processed textfiles
+
+// Stores the condition pattern together with its state
+// Pattern definition within the config file:
+//      C = *critpatternglobdescription*
+struct condition_pattern {
+    char  state;
+    char *glob_pattern;
+};
+
+// All condition patterns from the config file are stored within this container
+// These elements are referenced by the globline_container
+struct pattern_container {
+    condition_pattern  *patterns[MAX_LOGWATCH_CONDITIONS];
+    int                 num_patterns;
+};
+
+// Single element of a globline:
+// C:/tmp/Testfile*.log
+struct glob_token {
+    char *pattern;
+    bool  found_match;
+};
+
+// Container for all globlines read from the config
+// The following is considered a globline
+// textfile = C:\Logfile1.txt C:\tmp\Logfile*.txt
+struct globline_container {
+    glob_token        *token[MAX_LOGWATCH_GLOBLINES];
+    int                num_tokens;
+    pattern_container *patterns;
+};
+
+// A textfile instance containing information about various file 
+// parameters and the pointer to the matching pattern_container
+struct logwatch_textfile {
+    char              *path;     
+    unsigned long long file_id;   // used to detect if a file has been replaced
+    unsigned long long file_size; // size of the file
+    unsigned long long offset;    // current fseek offset in the file
+    bool               missing;   // file no longer exists
+    pattern_container *patterns;  // glob patterns applying for this file
+};
+
+globline_container *g_logwatch_globlines[MAX_LOGWATCH_GLOBLINES];
+logwatch_textfile  *g_logwatch_textfiles[MAX_LOGWATCH_TEXTFILES];
+
+unsigned g_num_logwatch_globlines  = 0;
+unsigned g_num_logwatch_textfiles  = 0;
+unsigned g_num_logwatch_conditions = 0;
+
+globline_container *g_current_globline_container = NULL;
+
+// debug output
+void print_logwatch_config()
+{
+    printf("\nLOGWATCH CONFIG\n=================\nFILES\n");
+    for (unsigned int i = 0; i < g_num_logwatch_textfiles ; i++) {
+        printf("  %s %u %x missing %d\n", g_logwatch_textfiles[i]->path, 
+               (unsigned int)g_logwatch_textfiles[i]->offset, 
+               (unsigned int) g_logwatch_textfiles[i]->patterns, 
+               g_logwatch_textfiles[i]->missing);  
+    }
+    printf("\n");
+
+    printf("GLOBS\n");
+    for (unsigned int i = 0; i < g_num_logwatch_globlines ; i++) {
+        printf("Globline Container %x\n", (unsigned int)g_logwatch_globlines[i]->patterns); 
+        for (int j = 0; j < g_logwatch_globlines[i]->num_tokens ; j++)
+            printf("  %s\n", g_logwatch_globlines[i]->token[j]->pattern);
+        printf("Pattern Container\n");
+        for (int j = 0; j < g_logwatch_globlines[i]->patterns->num_patterns; j++) 
+            printf("  %c %s\n", g_logwatch_globlines[i]->patterns->patterns[j]->state, 
+                                g_logwatch_globlines[i]->patterns->patterns[j]->glob_pattern);
+    }
+    printf("\n");
+}
+
+// Add a new state pattern to the current pattern container
+void add_condition_pattern(char state, char *value)
+{
+    if (g_current_globline_container && g_current_globline_container->patterns->num_patterns + 1 >= MAX_LOGWATCH_CONDITIONS)
+        fprintf(stderr, "Maximum number of conditions for a globline exceeded %d.\n", MAX_LOGWATCH_CONDITIONS);
+
+    condition_pattern *new_pattern = new condition_pattern();
+    new_pattern->state = state;
+    new_pattern->glob_pattern = strdup(value);
+    g_current_globline_container->patterns->patterns[g_current_globline_container->patterns->num_patterns++] = new_pattern;
+}
+
+
+logwatch_textfile* get_logwatch_textfile(const char *filename)
+{
+    for (unsigned int i = 0; i < g_num_logwatch_textfiles; i++)
+        if (strcmp(filename, g_logwatch_textfiles[i]->path) == 0)
+            return g_logwatch_textfiles[i];
+    return 0;
+}
+
+// Add a new textfile and to the global textfile list
+// and determine some initial values
+bool add_new_logwatch_textfile(const char *full_filename, pattern_container *patterns)
+{
+    if (g_num_logwatch_textfiles + 1 >= MAX_LOGWATCH_TEXTFILES) {
+        fprintf(stderr, "Maximum number of textfiles exceeded %d.\n", MAX_LOGWATCH_TEXTFILES);
+        return false;
+    }
+
+    logwatch_textfile *new_textfile = new logwatch_textfile(); 
+    
+    HANDLE hFile = CreateFile(full_filename,// file to open
+           GENERIC_READ,          // open for reading
+           FILE_SHARE_READ,       // share for reading
+           NULL,                  // default security
+           OPEN_EXISTING,         // existing file only
+           FILE_ATTRIBUTE_NORMAL, // normal file
+           NULL);                 // no attr. template
+           
+    BY_HANDLE_FILE_INFORMATION fileinfo;
+    GetFileInformationByHandle(hFile, &fileinfo);
+    CloseHandle(hFile);
+
+    new_textfile->path         = strdup(full_filename);
+    new_textfile->missing      = false;
+    new_textfile->file_size    = (unsigned long long)fileinfo.nFileSizeLow + 
+                                 (((unsigned long long)fileinfo.nFileSizeHigh) << 32);
+    new_textfile->file_id      = (unsigned long long)fileinfo.nFileIndexLow + 
+                                  (((unsigned long long)fileinfo.nFileIndexHigh) << 32);
+    new_textfile->offset       = new_textfile->file_size; 
+    new_textfile->patterns     = patterns;
+    g_logwatch_textfiles[g_num_logwatch_textfiles++] = new_textfile;
+    return true;
+}
+
+
+// Check if the given full_filename already exists. If so, do some basic file integrity checks
+// Otherwise create a new textfile instance
+void update_or_create_logwatch_textfile(const char *full_filename, pattern_container *patterns)
+{
+    logwatch_textfile *textfile;
+    if ((textfile = get_logwatch_textfile(full_filename)) != NULL) 
+    {
+        HANDLE hFile = CreateFile(textfile->path,// file to open
+               GENERIC_READ,          // open for reading
+               FILE_SHARE_READ,       // share for reading
+               NULL,                  // default security
+               OPEN_EXISTING,         // existing file only
+               FILE_ATTRIBUTE_NORMAL, // normal file
+               NULL);                 // no attr. template
+
+        BY_HANDLE_FILE_INFORMATION fileinfo;
+        // Do some basic checks to ensure its still the same file
+        // try to fill the structure with info regarding the file
+        if (hFile != INVALID_HANDLE_VALUE)
+        {
+            if (GetFileInformationByHandle(hFile, &fileinfo))
+            {
+                unsigned long long file_id = (unsigned long long)fileinfo.nFileIndexLow + 
+                                             (((unsigned long long)fileinfo.nFileIndexHigh) << 32);
+                textfile->file_size        = (unsigned long long)fileinfo.nFileSizeLow + 
+                                             (((unsigned long long)fileinfo.nFileSizeHigh) << 32);
+
+                if (file_id != textfile->file_id) {                // file has been changed 
+                    textfile->offset = 0;
+                    textfile->file_id = file_id;
+                } else if (textfile->file_size < textfile->offset) // file has been truncated
+                    textfile->offset = 0;
+
+                textfile->missing = false; 
+            }
+            CloseHandle(hFile);
+        }
+    }
+    else
+        add_new_logwatch_textfile(full_filename, patterns); // Add new file
+}
+
+// Process a single expression (token) of a globline and try to find matching files
+void process_glob_expression(glob_token *glob_token, pattern_container *patterns) 
+{
+    WIN32_FIND_DATA data;
+    char full_filename[512];
+    glob_token->found_match = false;
+    HANDLE h = FindFirstFileEx(glob_token->pattern, FindExInfoStandard, &data, FindExSearchNameMatch, NULL, 0);
+    if (h != INVALID_HANDLE_VALUE) {
+        glob_token->found_match = true;
+        const char *basename = "";
+        char *end = strrchr(glob_token->pattern, '\\');
+        if (end) {
+            *end = 0; 
+            basename = glob_token->pattern;
+        }
+        snprintf(full_filename,sizeof(full_filename), "%s//%s", basename, data.cFileName);
+        update_or_create_logwatch_textfile(full_filename, patterns);
+
+        while (FindNextFile(h, &data)){
+            snprintf(full_filename,sizeof(full_filename), "%s//%s", basename, data.cFileName);
+            update_or_create_logwatch_textfile(full_filename, patterns);
+        }
+        
+        if (end) 
+            *end = '\\'; // repair string
+        FindClose(h);
+    }
+}
+
+// Add a new globline from the config file:
+// C:/Testfile D:/var/log/data.log D:/tmp/art*.log
+// This globline is split into tokens which are processed by process_glob_expression
+void add_globline(char *value)
+{
+    if ( g_num_logwatch_globlines + 1 >= MAX_LOGWATCH_GLOBLINES) {
+        fprintf(stderr, "Maximum number of globlines exceeded %d.\n", MAX_LOGWATCH_GLOBLINES);
+        exit(1);
+    }
+
+    // Each globline receives its own pattern container
+    // In case new files matching the glob pattern are we
+    // we already have all state,regex patterns available
+    globline_container *new_globline = new globline_container();
+    new_globline->patterns           = new pattern_container();
+    new_globline->num_tokens         = 0;
+
+    g_logwatch_globlines[g_num_logwatch_globlines++] = new_globline;
+    g_current_globline_container                     = new_globline;
+
+    // Split globline into tokens
+    if (value != 0) { 
+        char *copy = strdup(value);
+        char *token = strtok(copy, "|");
+        while (token) {
+            token = lstrip(token);
+            new_globline->token[new_globline->num_tokens]          = new glob_token();
+            new_globline->token[new_globline->num_tokens]->pattern = strdup(token); 
+            process_glob_expression(new_globline->token[new_globline->num_tokens], new_globline->patterns);
+            token = strtok(NULL, "|");
+            new_globline->num_tokens++;
+        }
+        free(copy);
+    } 
+}
+
+
+// Revalidate the existance of logfiles and check if the files attribute (id / size) indicate a change
+void revalidate_logwatch_textfiles()
+{
+    // First of all invalidate all textfiles
+    for (unsigned int i = 0; i < g_num_logwatch_textfiles ; i++)
+        g_logwatch_textfiles[i]->missing = true;  
+
+    for (unsigned int i = 0; i < g_num_logwatch_globlines; i++) {
+        globline_container *current_globline = g_logwatch_globlines[i];
+        for (int j = 0; j < current_globline->num_tokens; j++) { 
+            process_glob_expression(current_globline->token[j], current_globline->patterns);
+        }
+    }
+}
+
+
+bool globmatch(const char *pattern, char *astring);
+
+// Remove missing files from list
+void cleanup_logwatch_textfiles()
+{ 
+    for (unsigned int i=0; i < g_num_logwatch_textfiles; i++) {
+        if (g_logwatch_textfiles[i]->missing) {
+            // remove this file from the list
+            free(g_logwatch_textfiles[i]->path);
+            delete g_logwatch_textfiles[i]; 
+
+            // One entry less in our list..
+            g_num_logwatch_textfiles--;
+            i--;
+
+            // Check if this was not the last entry in the list
+            // In this case take the last entry and fill the gap
+            if (i != g_num_logwatch_textfiles)
+                g_logwatch_textfiles[i] = g_logwatch_textfiles[g_num_logwatch_textfiles];
+        }
+    }
+}
+
+// Called on program exit
+void cleanup_logwatch() 
+{
+    // cleanup textfiles
+    for (unsigned int i = 0; i < g_num_logwatch_textfiles ; i++)
+        g_logwatch_textfiles[i]->missing = true;  
+    cleanup_logwatch_textfiles();
+
+    // cleanup globlines and textpatterns
+    for (unsigned int i = 0; i < g_num_logwatch_globlines ; i++) {
+        for (int j = 0; j < g_logwatch_globlines[i]->num_tokens ; j++) {
+            free(g_logwatch_globlines[i]->token[j]->pattern);
+            delete g_logwatch_globlines[i]->token[j]; 
+        }
+        for (int j = 0; j < g_logwatch_globlines[i]->patterns->num_patterns; j++) { 
+            free(g_logwatch_globlines[i]->patterns->patterns[j]->glob_pattern);
+            delete g_logwatch_globlines[i]->patterns->patterns[j];
+        }
+        delete g_logwatch_globlines[i]->patterns;
+        delete g_logwatch_globlines[i];
+    }
+}
+
+
+// Process content of the given textfile
+// Can be called in dry-run mode (write_output = false). This tries to detect CRIT or WARN patterns
+// If write_output is set to true any data found is written to the out socket
+bool process_textfile(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool write_output) {
+    char line[4096];
+    condition_pattern *pattern = 0;
+    while (!feof(file)) {
+        if (!fgets(line, sizeof(line), file))
+            break;
+        
+        if (line[strlen(line)-1] == '\n')
+           line[strlen(line)-1] = 0;
+
+        char state = '.';
+        for (int j=0; j < textfile->patterns->num_patterns; j++) {
+            pattern = textfile->patterns->patterns[j];
+            if (globmatch(pattern->glob_pattern, line)){
+                if (!write_output && (pattern->state == 'C' || pattern->state == 'W' || pattern->state == 'O'))
+                   return true;
+                state = pattern->state;
+                break;
+            }
+        }
+        if (write_output && strlen(line) > 0)
+            output(out, "%c %s\n", state == 'O' ? 'I' : state, line);
+    }
+
+    return false;
+}
+
+
+// The output of this section is compatible with
+// the logwatch agent for Linux and UNIX
+void section_logfiles(SOCKET &out)
+{
+    crash_log("<<<logwatch>>>");
+    revalidate_logwatch_textfiles();
+
+    output(out, "<<<logwatch>>>\n");
+    logwatch_textfile *textfile;
+    
+    // Missing glob patterns
+    for (unsigned int i = 0; i < g_num_logwatch_globlines; i++) {
+        globline_container *current_globline = g_logwatch_globlines[i];
+        for(int j = 0; j < current_globline->num_tokens; j++) { 
+            if (!current_globline->token[j]->found_match)
+                output(out, "[[[%s:missing]]]\n", current_globline->token[j]->pattern); 
+        }
+    }
+    
+    for (unsigned int i = 0; i < g_num_logwatch_textfiles ; i++) {
+        textfile = g_logwatch_textfiles[i];
+        if (textfile->missing){
+            output(out, "[[[%s:missing]]]\n", textfile->path); 
+            continue;
+        }
+
+
+        FILE *file = fopen(textfile->path, "r");
+        if (!file) {
+            output(out, "[[[%s:cannotopen]]]\n", textfile->path); 
+            continue;
+        }
+
+        output(out, "[[[%s]]]\n", textfile->path);
+        
+        if (textfile->offset == textfile->file_size) {// no new data
+            fclose(file);
+            continue;
+        }
+        
+        fseek(file, textfile->offset, SEEK_SET);
+
+        // try to find WARN / CRIT match
+        bool found_match = process_textfile(file, textfile, out, false);
+
+        if (found_match) {
+            fseek(file, textfile->offset, SEEK_SET);
+            process_textfile(file, textfile, out, true);
+        }
+         
+        fclose(file);
+        textfile->offset = textfile->file_size;
+    }
+
+    cleanup_logwatch_textfiles();
+}
+
+
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
 void section_eventlog(SOCKET &out)
@@ -1284,8 +1692,8 @@ void section_eventlog(SOCKET &out)
     // is skipped to the end. Historic messages are
     // not been processed.
     static bool first_run = true;
-
     output(out, "<<<logwatch>>>\n");
+
     if (find_eventlogs(out))
     {
 	for (unsigned i=0; i < num_eventlogs; i++) {
@@ -1638,6 +2046,9 @@ void section_check_mk(SOCKET &out)
         output(out, "\n");
     }
 }
+
+
+
 
 //  .----------------------------------------------------------------------.
 //  |                  ____                  _                             |
@@ -2099,7 +2510,7 @@ bool parse_crash_debug(char *value)
 
 bool handle_global_config_variable(char *var, char *value)
 {
-    if (!strcmp(var, "only_from")) {
+if (!strcmp(var, "only_from")) {
         parse_only_from(value);
         return true;
     }
@@ -2130,6 +2541,8 @@ bool handle_global_config_variable(char *var, char *value)
                 enabled_sections |= SECTION_WINPERF;
             else if (!strcmp(word, "logwatch"))
                 enabled_sections |= SECTION_LOGWATCH;
+            else if (!strcmp(word, "logfiles"))
+                enabled_sections |= SECTION_LOGFILES;
             else if (!strcmp(word, "systemtime"))
                 enabled_sections |= SECTION_SYSTEMTIME;
             else if (!strcmp(word, "plugins"))
@@ -2175,6 +2588,32 @@ bool handle_winperf_config_variable(char *var, char *value)
     return false;
 }
 
+bool handle_logfiles_config_variable(char *var, char *value)
+{
+    if (!strcmp(var, "textfile")) {
+        if (value != 0)
+            add_globline(value);
+        return true;
+    }else if (!strcmp(var, "warn")) {
+        if (value != 0)
+            add_condition_pattern('W', value);
+        return true;
+    }else if (!strcmp(var, "crit")) {
+        if (value != 0)
+            add_condition_pattern('C', value);
+        return true;
+    }else if (!strcmp(var, "ignore")) {
+        if (value != 0)
+            add_condition_pattern('I', value);
+        return true;
+    }else if (!strcmp(var, "ok")) {
+        if (value != 0)
+            add_condition_pattern('O', value);
+        return true;
+    }
+    return false;
+}
+
 bool handle_logwatch_config_variable(char *var, char *value)
 {
     if (!strncmp(var, "logfile ", 8)) {
@@ -2208,7 +2647,6 @@ bool handle_logwatch_config_variable(char *var, char *value)
         logwatch_send_initial_entries = s;
         return true;
     }
-
     return false;
 }
 
@@ -2311,8 +2749,10 @@ void read_config_file()
     bool is_active = true; // false in sections with host restrictions
 
     while (!feof(file)) {
-        if (!fgets(line, sizeof(line), file))
+        if (!fgets(line, sizeof(line), file)){
+            fclose(file);
             return;
+        }
         lineno ++;
         char *l = strip(line);
         if (l[0] == 0 || l[0] == '#' || l[0] == ';')
@@ -2328,6 +2768,8 @@ void read_config_file()
                 variable_handler = handle_winperf_config_variable;
             else if (!strcmp(section, "logwatch"))
                 variable_handler = handle_logwatch_config_variable;
+            else if (!strcmp(section, "logfiles"))
+                variable_handler = handle_logfiles_config_variable;
             else if (!strcmp(section, "mrpe"))
                 variable_handler = handle_mrpe_config_variable;
             else if (!strcmp(section, "fileinfo"))
@@ -2380,7 +2822,11 @@ void read_config_file()
             }
         }
     }
+    fclose(file);
 }
+
+
+
 
 
 //  .----------------------------------------------------------------------.
@@ -2624,6 +3070,8 @@ void output_data(SOCKET &out)
         section_winperf(out);
     if (enabled_sections & SECTION_LOGWATCH)
         section_eventlog(out);
+    if (enabled_sections & SECTION_LOGFILES)
+        section_logfiles(out);
     if (enabled_sections & SECTION_PLUGINS)
         section_plugins(out);
     if (enabled_sections & SECTION_LOCAL)
@@ -2647,6 +3095,8 @@ void cleanup()
 
     while (g_num_fileinfo_paths) 
         free(g_fileinfo_path[--g_num_fileinfo_paths]);
+    
+    cleanup_logwatch();
 }
 
 void show_version()

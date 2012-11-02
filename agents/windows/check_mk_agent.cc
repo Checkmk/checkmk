@@ -1397,7 +1397,7 @@ bool add_new_logwatch_textfile(const char *full_filename, pattern_container *pat
     
     HANDLE hFile = CreateFile(full_filename,// file to open
            GENERIC_READ,          // open for reading
-           FILE_SHARE_READ,       // share for reading
+           FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
            NULL,                  // default security
            OPEN_EXISTING,         // existing file only
            FILE_ATTRIBUTE_NORMAL, // normal file
@@ -1430,7 +1430,7 @@ void update_or_create_logwatch_textfile(const char *full_filename, pattern_conta
         printf("File already exists %s\n", full_filename);
         HANDLE hFile = CreateFile(textfile->path,// file to open
                GENERIC_READ,          // open for reading
-               FILE_SHARE_READ,       // share for reading
+               FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
                NULL,                  // default security
                OPEN_EXISTING,         // existing file only
                FILE_ATTRIBUTE_NORMAL, // normal file

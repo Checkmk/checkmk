@@ -1448,10 +1448,13 @@ void update_or_create_logwatch_textfile(const char *full_filename, pattern_conta
                                              (((unsigned long long)fileinfo.nFileSizeHigh) << 32);
 
                 if (file_id != textfile->file_id) {                // file has been changed 
+                    printf("File id has been changed %s\n", full_filename);
                     textfile->offset = 0;
                     textfile->file_id = file_id;
-                } else if (textfile->file_size < textfile->offset) // file has been truncated
+                } else if (textfile->file_size < textfile->offset) { // file has been truncated
+                    printf("File has been truncated %s\n", full_filename);
                     textfile->offset = 0;
+                }
 
                 textfile->missing = false; 
             }
@@ -1597,6 +1600,7 @@ void cleanup_logwatch()
 bool process_textfile(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool write_output) {
     char line[4096];
     condition_pattern *pattern = 0;
+    printf("Checking file %s\n", textfile->path);
     while (!feof(file)) {
         if (!fgets(line, sizeof(line), file))
             break;
@@ -2823,6 +2827,7 @@ void read_config_file()
         }
     }
     fclose(file);
+    print_logwatch_config();
 }
 
 

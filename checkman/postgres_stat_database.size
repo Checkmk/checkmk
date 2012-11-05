@@ -8,6 +8,9 @@ description:
   The check has no alarm levels since PostgreSQL databasizes don't have a 
   size limit. (Single table limit is 32TB, too)
 
+  This check relies on data reported by the agent-side plugin {mk_postgres}
+
+
 inventory:
   The check generates one item per Database found.
 

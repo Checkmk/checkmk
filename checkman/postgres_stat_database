@@ -17,6 +17,8 @@ description:
   {commits}, which PostgreSQL tracks down to the sub-transaction level.
 
   You can then define levels on the per-second amount of the statements.
+
+  This check relies on data reported by the agent-side plugin {mk_postgres}
   
 inventory:
   One item is generated per database.

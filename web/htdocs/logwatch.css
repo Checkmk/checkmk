@@ -89,6 +89,11 @@ Boston, MA 02110-1301 USA.
     border-bottom: 1px solid #c00;
 }
 
+#logwatch .OK {
+    background-color: #0b3;
+    border-bottom: 1px solid #0c0;
+}
+
 #logwatch td.WARN, td.CRIT, td.OK {
     width: 5em;
     text-align: center;

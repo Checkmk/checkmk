@@ -61,6 +61,7 @@
            progress dialogs (e.g. bulk inventory mode)
     * FIX: Fixed editing of icon_image rules
     * Added support of locked hosts and folders ( created by CMDB )
+    * Logwatch: logwatch agents/plugins now with ok pattern support 
 
     Checks & Agents:
     * New check mssql_counters.locks: Monitors locking related information of
@@ -92,6 +93,8 @@
       After enabling it you need to reinventorize your hosts.
     * Windows Update Check: Now with caching, Thanks to Phil Randal and Patrick Schlüter
     * Windows Check_MK Agent: Now able to parse textfiles for logwatch output
+    * Added new Checks sni_octopuse_cpu, sni_octopuse_status, sni_octopuse_trunks: These
+      allow monitoring Siemens HiPath 3000/5000 series PBX.
 
 1.2.0p3:
     Mulitisite
@@ -118,6 +121,7 @@
 
     Livestatus
     * FIX: comments_with_info in service table was always empty
+    * FIX: check_icmp: fixed calculation of remaining length of output buffer
     
     Livecheck
     * FIX: fixed problem with long plugin output
@@ -128,6 +132,7 @@
     * FIX: kill process group of called plugin if timeout is reached
            -> preventing possible freeze of livecheck
     * FIX: correct escaping of character / in nagios checkresult file
+    * FIX: fixed SIGSEGV on hosts without defined check_command
 
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used

@@ -88,13 +88,15 @@ def logwatch_state(state):
         return "OK"
 
 def logwatch_level_name(level):
-    if   level == 'W': return 'WARN'
+    if   level == 'I': return 'OK'
+    elif level == 'O': return 'OK'
+    elif level == 'W': return 'WARN'
     elif level == 'C': return 'CRIT'
-    elif level == 'I': return 'OK'
     else: return 'IGN'
 
 def logwatch_level_worst(worst, level):
     if   level == 'I': return max(worst, 0)
+    elif level == 'O': return max(worst, 0)
     elif level == 'W': return max(worst, 1)
     elif level == 'C': return max(worst, 2)
     else: return worst
@@ -116,9 +118,7 @@ def logwatch_precompile(hostname, item, _unused):
             # only modify the levels taken from the defined rules.
             # FIXME: Oneday we should clean it up. Maybe via hint in migration nodes or
             # some mor inteligent valuespec, ...
-            if pattern[0] == 'O': # Fix "OK" declaration
-                level = 'I'
-            elif pattern[0] == 'I': # Fix "IGNORE" declaration
+            if pattern[0] == 'I': # Fix "IGNORE" declaration
                 level = 'S'
             else:
                 level = pattern[0]

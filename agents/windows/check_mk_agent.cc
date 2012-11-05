@@ -1397,7 +1397,7 @@ bool add_new_logwatch_textfile(const char *full_filename, pattern_container *pat
     
     HANDLE hFile = CreateFile(full_filename,// file to open
            GENERIC_READ,          // open for reading
-           FILE_SHARE_READ,       // share for reading
+           FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
            NULL,                  // default security
            OPEN_EXISTING,         // existing file only
            FILE_ATTRIBUTE_NORMAL, // normal file
@@ -1429,7 +1429,7 @@ void update_or_create_logwatch_textfile(const char *full_filename, pattern_conta
     {
         HANDLE hFile = CreateFile(textfile->path,// file to open
                GENERIC_READ,          // open for reading
-               FILE_SHARE_READ,       // share for reading
+               FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
                NULL,                  // default security
                OPEN_EXISTING,         // existing file only
                FILE_ATTRIBUTE_NORMAL, // normal file
@@ -1448,15 +1448,21 @@ void update_or_create_logwatch_textfile(const char *full_filename, pattern_conta
                                              (((unsigned long long)fileinfo.nFileSizeHigh) << 32);
 
                 if (file_id != textfile->file_id) {                // file has been changed 
+                    printf("File id has been changed %s\n", full_filename);
                     textfile->offset = 0;
                     textfile->file_id = file_id;
-                } else if (textfile->file_size < textfile->offset) // file has been truncated
+                } else if (textfile->file_size < textfile->offset) { // file has been truncated
+                    printf("File has been truncated %s\n", full_filename);
                     textfile->offset = 0;
+                }
 
                 textfile->missing = false; 
             }
             CloseHandle(hFile);
+        } else {
+            printf("Cant open file with CreateFile %s\n", full_filename);
         }
+
     }
     else
         add_new_logwatch_textfile(full_filename, patterns); // Add new file
@@ -1597,6 +1603,7 @@ void cleanup_logwatch()
 bool process_textfile(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool write_output) {
     char line[4096];
     condition_pattern *pattern = 0;
+    printf("Checking file %s\n", textfile->path);
     while (!feof(file)) {
         if (!fgets(line, sizeof(line), file))
             break;
@@ -1615,7 +1622,7 @@ bool process_textfile(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool
             }
         }
         if (write_output && strlen(line) > 0)
-            output(out, "%c %s\n", state == 'O' ? 'I' : state, line);
+            output(out, "%c %s\n", state, line);
     }
 
     return false;

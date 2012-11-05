@@ -86,12 +86,16 @@ echo '<<<netctr>>>'
 # BO= Bytes out
 # PO= Packets out
 # CO= Colls
+# NI= number of interfaces
 
 Z1=1
 Z2=p
+NI=$(netstat -in | grep 'Link' | wc -l)
+[ "${NI}" -ge 1 ] || NI=15
+
 
 date +%s
-while [ $Z1 -lt 15 ]
+while [ $Z1 -lt $NI ]
   do
   BI=$( netstat -inb | egrep -v Name | grep Link | awk '{print $1" "$5}' | sed -ne $Z1$Z2 )
   PI=$( netstat -in | egrep -v Name | grep Link | awk '{print $5}' | sed -ne $Z1$Z2 )
@@ -102,7 +106,7 @@ while [ $Z1 -lt 15 ]
   EO=$( netstat -in | egrep -v Name | grep Link | awk '{print $8}' | sed -ne $Z1$Z2 )
   CO=$( netstat -in | egrep -v Name | grep Link | awk '{print $9}' | sed -ne $Z1$Z2 )
   FF2="0 0"
-    if [ "$PI" -gt "0" ]
+    if [ "$(echo ${PI} | cut -c 1-3)" -gt 0 ]
       then
 	echo $BI $PI $EI $FF1 $BO $PO $EO $FF2 $CO $FF2
     fi

@@ -52,7 +52,7 @@ def check_pdu_gude(item, params, info):
         perf = []
         state = 0
         for pos, data in units.items():
-            value = saveint(values[pos])
+            value = savefloat(values[pos])
             unit, div = data
             if div:
                 value = value / div
@@ -73,7 +73,7 @@ def check_pdu_gude(item, params, info):
                 elif warn != None and value > warn:
                     state = max(state, 1)
                     label = "(!)"
-            message.append("%d%s%s" % (value, unit, label))
+            message.append("%.2f%s%s" % (value, unit, label))
 
         return(state, nagios_state_names[0] + " - " + ", ".join(message), perf)
  

@@ -242,7 +242,7 @@ void do_output(int crash, char *format, ...)
 {
     va_list ap;
     va_start(ap, format);
-    int place_left = g_output_pointer - g_output_buffer + g_output_buffer_size;
+    int place_left = g_output_buffer + g_output_buffer_size - g_output_pointer;
     g_output_pointer += vsnprintf(g_output_pointer, place_left, format, ap);
     va_end(ap);
     *g_output_pointer = 0;

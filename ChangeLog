@@ -25,6 +25,7 @@
 
     Livestatus
     * FIX: comments_with_info in service table was always empty
+    * FIX: check_icmp: fixed calculation of remaining length of output buffer
     
     Livecheck
     * FIX: fixed problem with long plugin output

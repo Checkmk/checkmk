@@ -89,6 +89,22 @@ def do_notify(args):
             sys.stderr.write("check_mk --notify does not take any arguments.\n")
             sys.exit(1)
 
+
+        # Hier müssen wir erstmal rausfinden, an wen die Notifikation gehen soll.
+        # Das sollte hoffentlich als Env-Variable da sein. Wenn nicht in check_mk_templates.cfg
+        # einbauen. Dann können wir in den Kontaktdefinitionen nachschauen. Diese sollten
+        # ja in main.mk/conf.d vorhanden sein. Die neue Notifikationstabelle muss auf jeden
+        # fall da rein. Für den Benutzer rufen also diese Tabelle auf. Wenn es die
+        # nicht gibt (garkein Eintrag), verfahren wir nach dem alten Verfahren und
+        # senden direkt eine Email. Wenn es die Tabelle aber gibt, werten wir
+        # Zeile für Zeile aus:
+        # - Bestimmen, ob die Zeile aktiv ist. Dazu ist evtl. eine Livestatus-Rückanfrage
+        #   notwendig. Das ist nicht optimal, aber zumindest wegen der Timeperiods notwendig.
+        # - Wenn aktiv, dann rufen wir das Plugin dazu auf. Dieses hat sich mit einer
+        #   Python-Funktion registriert. Wo werden diese definiert? Im precompiled-Fall
+        #   brauchen wir das *nicht*. Man könnte die Plugins also einfach nur bei --notify
+        #   einlesen. Zeitkritisch ist das nicht sehr, denn Notifikationen sind selten.
+
         # Information about notification is excpected in the
         # environment in variables with the prefix NOTIFY_
         context = dict([
@@ -115,32 +131,19 @@ def do_notify(args):
                              "that are prefixed with NOTIFY_\n")
             sys.exit(1)
 
+        # Get notification settings for the contact in question - if available.
+        method = "email"
+        contact = contacts.get(context["CONTACTNAME"])
+
         try:
-            notify_log(substitute_context(notification_log_template, context))
-
-            if "SERVICEDESC" in context:
-                subject_t = notification_service_subject
-                body_t = notification_service_body
+            if contact:
+                method = contact.get("notification_method")
             else:
-                subject_t = notification_host_subject
-                body_t = notification_host_body
-
-            subject = substitute_context(subject_t, context)
-            context["SUBJECT"] = subject
-            body = substitute_context(notification_common_body + body_t, context)
-            command = substitute_context(notification_mail_command, context)
-            command_utf8 = command.encode("utf-8")
-            if notification_logging >= 2:
-                notify_log("Executing command: %s" % command)
-            notify_log(body)
-            # Make sure that mail(x) is using UTF-8. More then
-            # setting the locale cannot be done here. We hope that
-            # C.UTF-8 is always available. Please check the output
-            # of 'locale -a' on your system if you are curious.
-            os.putenv("LANG", "C.UTF-8")
-            if notification_logging >= 2:
-                file(var_dir + "/notify/body.log", "w").write(body.encode("utf-8"))
-            os.popen(command_utf8, "w").write(body.encode("utf-8"))
+                method = 'email'
+            if type(method) == tuple and method[0] == 'flexible':
+                notify_flexible(contact, context, method[1])
+            else:
+                notify_via_email(context)
 
         except Exception, e:
             notify_log("ERROR: %s\n%s" % (e, format_exception()))
@@ -148,11 +151,56 @@ def do_notify(args):
             if notification_log:
                 sys.stderr.write("Details have been logged to %s.\n" % notification_log)
             sys.exit(1)
+
     except Exception, e:
         crash_dir = var_dir + "/notify"
         if not os.path.exists(crash_dir):
             os.makedirs(crash_dir)
         file(crash_dir + "/crash.log", "a").write("CRASH:\n%s\n\n" % format_exception())
+
+
+def notify_via_email(context):
+    notify_log(substitute_context(notification_log_template, context))
+
+    if "SERVICEDESC" in context:
+        subject_t = notification_service_subject
+        body_t = notification_service_body
+    else:
+        subject_t = notification_host_subject
+        body_t = notification_host_body
+
+    subject = substitute_context(subject_t, context)
+    context["SUBJECT"] = subject
+    body = substitute_context(notification_common_body + body_t, context)
+    command = substitute_context(notification_mail_command, context)
+    command_utf8 = command.encode("utf-8")
+    if notification_logging >= 2:
+        notify_log("Executing command: %s" % command)
+    notify_log(body)
+    # Make sure that mail(x) is using UTF-8. More then
+    # setting the locale cannot be done here. We hope that
+    # C.UTF-8 is always available. Please check the output
+    # of 'locale -a' on your system if you are curious.
+    os.putenv("LANG", "C.UTF-8")
+    if notification_logging >= 2:
+        file(var_dir + "/notify/body.log", "w").write(body.encode("utf-8"))
+    os.popen(command_utf8, "w").write(body.encode("utf-8"))
+
+def notify_flexible(contact, context, notification_table):
+    notify_log("Flexible notification for %s" % context["CONTACTNAME"])
+    for entry in notification_table:
+        plugin = entry["plugin"]
+        notify_log("Plugin: %s" % plugin)
+        if entry["disabled"]:
+            notify_log("- Skipping: it is disabled for this user")
+            continue
+        # Was fehlt noch?
+        # 1. Event-Typ filtern
+        # 2. timepreriod filtern (dazu Livestatusanfrage notwendig, wenn nicht 7X24
+        # 3. Eskalation
+        # 4. Dann das Plugin aufrufen, dabei aber das Environment vorher vorbereiten
+    notify_log(repr(notification_table))
+
 
 def format_exception():
     import traceback, StringIO, sys

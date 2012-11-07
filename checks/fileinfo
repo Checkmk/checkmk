@@ -36,10 +36,10 @@
 # M:\crash.exe|20024|12968154426
 
 # Parameters
-# "minsize" : ( 5000, 4000 ),  in bytes
-# "maxsize" : ( 8000, 9000 ),  in bytes
-# "minage"  : (   10,   20 ),  in minutes
-# "maxage"  : (   50,   80 ),  in minutes
+# "minsize" : ( 5000,  4000 ),  in bytes
+# "maxsize" : ( 8000,  9000 ),  in bytes
+# "minage"  : ( 600,  1200 ),  in seconds
+# "maxage"  : ( 6000, 12000 ), in seconds
 fileinfo_groups = []
 
 def inventory_fileinfo(info, case):

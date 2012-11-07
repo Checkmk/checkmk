@@ -23,22 +23,23 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
-# .1.3.6.1.4.1.9.9.48.1.1.1.7.1 ciscoMemoryPoolLargestFree CPU Pool
-# .1.3.6.1.4.1.9.9.48.1.1.1.7.2 ciscoMemoryPoolLargestFree CPU Pool
-# .1.3.6.1.4.1.9.9.48.1.1.1.6.1 ciscoMemoryPoolUsed I/0 Pool
-# .1.3.6.1.4.1.9.9.48.1.1.1.6.2 ciscoMemoryPoolUsed I/0 Pool
+#
+# ciscoMemoryPoolName           1.3.6.1.4.1.9.9.48.1.1.1.2
+# ciscoMemoryPoolUsed           1.3.6.1.4.1.9.9.48.1.1.1.5
+# ciscoMemoryPoolFree           1.3.6.1.4.1.9.9.48.1.1.1.6
+# ciscoMemoryPoolLargestFree    1.3.6.1.4.1.9.9.48.1.1.1.7
+#
 
 cisco_mem_default_levels = (80.0, 90.0)
 
-def check_cisco_mem(item, params, info):
-    if item == 'cpu':
-        mem_free =  saveint(info[0][0]) 
-        mem_used =  saveint(info[0][1])
-    elif item == 'io':
-        mem_free = saveint(info[0][2])
-        mem_used = saveint(info[0][3])
+def inventory_cisco_mem(info):
+    return [ (line[0], "cisco_mem_default_levels") for line in info ]
 
+def check_cisco_mem(item, params, info):
+    for line in info:
+        if line[0] == item:
+            mem_free =  saveint(line[2])
+            mem_used =  saveint(line[1])
     mem_total = mem_free + mem_used
     return check_cisco_mem_sub(params, mem_used, mem_total)
 
@@ -69,11 +70,10 @@ def check_cisco_mem_sub(params, mem_used, mem_total):
 
 check_info["cisco_mem"] = {
     "check_function"        : check_cisco_mem,
-    "inventory_function"    : lambda info: [("cpu", "cisco_mem_default_levels"), ("io", "cisco_mem_default_levels")],
-    "service_description"   : "Mem used %s pool",
+    "inventory_function"    : inventory_cisco_mem,
+    "service_description"   : "Mem used %s",
     "has_perfdata"          : True,
     "group"                 : "memory",
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.4.1.9.9.48.1.1.1.6.1"),
-    "snmp_info"		    : ( ".1.3.6.1.4.1.9.9.48.1.1.1", [ 6.1, 6.2, 7.1, 7.2 ]),
+    "snmp_info"		    : ( ".1.3.6.1.4.1.9.9.48.1.1.1", [ "2", "5", "6", "7" ]),
 }
-

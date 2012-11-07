@@ -1622,7 +1622,7 @@ bool process_textfile(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool
             }
         }
         if (write_output && strlen(line) > 0)
-            output(out, "%c %s\n", state == 'O' ? 'I' : state, line);
+            output(out, "%c %s\n", state, line);
     }
 
     return false;

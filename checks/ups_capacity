@@ -57,8 +57,10 @@ def check_ups_capacity(item, params, info):
 
     time_on_bat, minutes_left, percent_fuel = map(int, info[0])
     perf = [
-      ('capacity', minutes_left)
+      ('capacity', minutes_left, warn, crit),
+      ('percent', percent_fuel),
     ]
+
     info_text = "remaining capacity %d minutes (%d%%)" % (minutes_left, percent_fuel)
     if time_on_bat > crit:
         return(2, "CRIT - On battery since %ds(!!) " % time_on_bat + info_text, perf)

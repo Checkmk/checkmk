@@ -123,8 +123,16 @@ def render_dashboard(name):
     # in order to make it clear to the user, that he is seeing only partial
     # data.
     title = board["title"]
-    if wato_folder is not None:
+
+    if title is None:
+        # If the title is none, hide the header line
+        html.set_render_headfoot(False)
+        header_height = 0
+        title = ''
+
+    elif wato_folder is not None:
         title = wato.api.get_folder_title(wato_folder) + " - " + title
+
     html.header(title, javascripts=["dashboard"], stylesheets=["pages", "dashboard", "status", "views"])
 
     html.write("<div id=dashboard class=\"dashboard_%s\">\n" % name) # Container of all dashlets

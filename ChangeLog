@@ -31,6 +31,7 @@
     * Dashboard globes can now be filtered by host_contact_group/service_contact_group
     * Dashboard "iframe" attribute can now be rendered dynamically using the
       "iframefunc" attribute in the dashlet declaration
+    * Dashboard header can now be hidden by setting "title" to None
 
     Livestatus:
     * Added new table statehist, used for SLA queries
@@ -61,6 +62,7 @@
            progress dialogs (e.g. bulk inventory mode)
     * FIX: Fixed editing of icon_image rules
     * Added support of locked hosts and folders ( created by CMDB )
+    * Logwatch: logwatch agents/plugins now with ok pattern support 
 
     Checks & Agents:
     * New check mssql_counters.locks: Monitors locking related information of

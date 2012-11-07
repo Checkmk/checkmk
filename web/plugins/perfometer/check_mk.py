@@ -592,14 +592,12 @@ def perfometer_carel_uniflair_cooling(row, check_command, perf_data):
 perfometers['check_mk-carel_uniflair_cooling'] = perfometer_carel_uniflair_cooling
 
 def perfometer_eaton(row, command, perf):
-    h = "<table><tr>"
-    vname, wert, einheit, warn, crit, minw, maxw = perf[0]
-
-    h += perfometer_td(int(wert), "silver")
-    diff = 100 - int(wert)
-    h += perfometer_td(diff, "white")
-    h += "</tr></table>"
-    return u"%s°C" % wert, h
+    return u"%s°C" % str(perf[0][1]), perfometer_linear(float(perf[0][1]), 'silver') 
 
 perfometers['check_mk-ups_eaton_enviroment'] = perfometer_eaton
 
+
+def perfometer_ups_capacity(row, command, perf):
+    return "%0.2f%%" % float(perf[1][1]), perfometer_linear(float(perf[1][1]), '#B2FF7F')
+
+perfometers['check_mk-ups_capacity'] = perfometer_ups_capacity 

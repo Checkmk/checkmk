@@ -1425,6 +1425,16 @@ register_rule(
                 allow_empty = False,
               )
             ),
+            ( "ignore_acknowledged",
+              FixedValue(
+                  True,
+                  title = _("Ignore Acknowledged Events"),
+                  help = _("If you check this box then only open events are honored when "
+                           "determining the event state. Acknowledged events are displayed "
+                           "(i.e. their count) but not taken into account."),
+                  totext = _("acknowledged events will not be honored"),
+                 ) 
+            ),
             ( "remote",
               Tuple(
                   elements = [
@@ -1447,7 +1457,7 @@ register_rule(
             )
           ),
         ],
-        optional_keys = [ "application", "remote" ],
+        optional_keys = [ "application", "remote", "ignore_acknowledged" ],
     ),
     match = 'all',
 )

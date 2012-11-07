@@ -191,14 +191,22 @@ def notify_flexible(contact, context, notification_table):
     for entry in notification_table:
         plugin = entry["plugin"]
         notify_log("Plugin: %s" % plugin)
-        if entry["disabled"]:
+
+        # Check disabling
+        if entry.get("disabled"):
             notify_log("- Skipping: it is disabled for this user")
             continue
+
+        # Check service, if configured
+        if entry.get(["
+
+
         # Was fehlt noch?
         # 1. Event-Typ filtern
         # 2. timepreriod filtern (dazu Livestatusanfrage notwendig, wenn nicht 7X24
         # 3. Eskalation
         # 4. Dann das Plugin aufrufen, dabei aber das Environment vorher vorbereiten
+        # 5. Services
     notify_log(repr(notification_table))
 
 

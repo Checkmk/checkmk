@@ -571,14 +571,28 @@ if mkeventd_enabled:
             _("Update an event"),
             _("Needed for acknowledging and changing the comment and contact of an event"),
             [ "user", "admin" ])
+
+    # Sub-Permissions for Changing Comment, Contact and Acknowledgement
+    config.declare_permission("mkeventd.update_comment",
+            _("Update an event: change comment"),
+            _("Needed for changing a comment when updating an event"),
+            [ "user", "admin" ])
+    config.declare_permission("mkeventd.update_contact",
+            _("Update an event: change contact"),
+            _("Needed for changing a contact when updating an event"),
+            [ "user", "admin" ])
     
     def render_mkeventd_update():
         html.write('<table border=0 cellspacing=3 cellpadding=0>')
-        html.write('<tr><td>%s</td><td>' % _("Change comment:"))
-        html.text_input('_mkeventd_comment', size=50)
-        html.write('</td></tr><tr><td>%s</td><td>' % _("Change contact:"))
-        html.text_input('_mkeventd_contact', size=50)
-        html.write('</td></tr><td></td><td>')
+        if config.may("mkeventd.update_comment"):
+            html.write('<tr><td>%s</td><td>' % _("Change comment:"))
+            html.text_input('_mkeventd_comment', size=50)
+            html.write('</td></tr>')
+        if config.may("mkeventd.update_contact"):
+            html.write('<tr><td>%s</td><td>' % _("Change contact:"))
+            html.text_input('_mkeventd_contact', size=50)
+            html.write('</td></tr>')
+        html.write('<td></td><td>')
         html.checkbox('_mkeventd_acknowledge', True, label=_("Set event to acknowledged"))
         html.write('</td></tr>')
         html.write('</table>')
@@ -586,8 +600,14 @@ if mkeventd_enabled:
     
     def command_mkeventd_update(cmdtag, spec, row):
         if html.var('_mkeventd_update'):
-            comment = html.var_utf8("_mkeventd_comment").strip().replace(";",",")
-            contact = html.var_utf8("_mkeventd_contact").strip().replace(":",",")
+            if config.may("mkeventd.update_comment"):
+                comment = html.var_utf8("_mkeventd_comment").strip().replace(";",",")
+            else:
+                comment = ""
+            if config.may("mkeventd.update_contact"):
+                contact = html.var_utf8("_mkeventd_contact").strip().replace(":",",")
+            else:
+                contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")
             return "UPDATE;%s;%s;%s;%s;%s" % \
                 (row["event_id"], config.user_id, ack and 1 or 0, comment, contact), \

@@ -35,7 +35,7 @@ register_configvar(group,
         title = _("Debug notifications"),
         help = _("When notification debugging is on, then in the notification logfile "
                  "in <tt>%s</tt> additional information will be logged." %
-                  defaults.var_dir + "/notify/notify.log"),
+                  (defaults.var_dir + "/notify/notify.log")),
         choices = [
             ( 0, _("No logging")),
             ( 1, _("One line per notification")),

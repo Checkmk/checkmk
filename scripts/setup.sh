@@ -415,6 +415,7 @@ later."
 fi
 
 checksdir=$sharedir/checks
+notificationsdir=$sharedir/notifications
 modulesdir=$sharedir/modules
 web_dir=$sharedir/web
 localedir=$sharedir/locale
@@ -438,6 +439,7 @@ default_config_dir          = '$confdir'
 check_mk_configdir          = '$confdir/conf.d'
 share_dir                   = '$sharedir'
 checks_dir                  = '$checksdir'
+notifications_dir           = '$notificationsdir'
 check_manpages_dir          = '$checkmandir'
 modules_dir                 = '$modulesdir'
 locale_dir                  = '$localedir'
@@ -609,6 +611,8 @@ do
            mkdir -p $DESTDIR$localedir &&
 	   mkdir -p $DESTDIR$checksdir &&
 	   tar xzf $SRCDIR/checks.tar.gz -C $DESTDIR$checksdir &&
+	   mkdir -p $DESTDIR$notificationsdir &&
+	   tar xzf $SRCDIR/notifications.tar.gz -C $DESTDIR$notificationsdir &&
 	   mkdir -p $DESTDIR$web_dir &&
 	   tar xzf $SRCDIR/web.tar.gz -C $DESTDIR$web_dir &&
 	   cp $DESTDIR$modulesdir/defaults $DESTDIR$web_dir/htdocs/defaults.py &&

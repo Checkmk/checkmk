@@ -4,6 +4,7 @@
 default_config_dir          = '.'
 check_mk_configdir          = 'conf.d'
 checks_dir                  = 'checks'
+notifications_dir           = 'notifications'
 check_manpages_dir          = 'checkman'
 agents_dir                  = 'agents'
 modules_dir                 = 'modules'

@@ -1,0 +1,6 @@
+#!/bin/bash
+# Debug Notifications
+# Turn on notification logging and you will see the environment in
+# your notification logfile (var/check_mk/notify/notify.log)
+
+env | grep NOTIFY_ | sort

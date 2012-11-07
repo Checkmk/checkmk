@@ -4,6 +4,9 @@
     * Added -d option to precompiled checks to enable debug mode
     * doc/treasures: added script for printing RRD statistics
 
+    Notifications:
+    * New system of custom notification, with WATO support
+
     Event Console:
     * Moved source of Event Console into Check_MK project 
     * New button for resetting all rule hits counters

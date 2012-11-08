@@ -1,6 +1,21 @@
 #!/bin/bash
 # Debug Notifications
-# Turn on notification logging and you will see the environment in
-# your notification logfile (var/check_mk/notify/notify.log)
+
+# This notification script is just an example and shows how the
+# script is being called:
+
+# Check_MK will call this without an command line arguments.
+# All information is passed in environment variables that begin
+# with NOTIFY_.
+
+# This debug script will fetch those variables and simply
+# write them to the standard output. If you have enabled
+# notification logging by setting notification_logging=1
+# or notification_logging=2 in main.mk (or via WATO in the
+# global settings: Notification -> Debug notifications, then
+# you will see this output in the notitifcation log file.
+# Under OMD this file is in ~/var/check_mk/notify/notify.log.
+
+# Please refer to the official documentation for more details.
 
 env | grep NOTIFY_ | sort

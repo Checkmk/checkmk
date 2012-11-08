@@ -103,6 +103,7 @@
     * Windows Check_MK Agent: Now able to parse textfiles for logwatch output
     * Added new Checks sni_octopuse_cpu, sni_octopuse_status, sni_octopuse_trunks: These
       allow monitoring Siemens HiPath 3000/5000 series PBX.
+    * if-checks now support "bit" as measurement unit
 
 1.2.0p3:
     Mulitisite

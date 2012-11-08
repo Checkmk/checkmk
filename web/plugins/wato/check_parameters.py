@@ -1034,6 +1034,15 @@ checkgroups.append((
                     none_label = _("ignore"),
                     negate = True)
              ),
+             ( "unit",
+               RadioChoice(
+                   title = _("Measurement unit"), 
+                   help = _("Here you can specifiy the measurement unit of the network interface"),
+                   default_value = "B",
+                   choices = [
+                       ( "Bit", _("Bit") ),
+                       ( "B",   _("Byte") ),],
+               )),
              ( "traffic",
                Alternative(
                    title = _("Used bandwidth (traffic)"),
@@ -1048,10 +1057,11 @@ checkgroups.append((
                            ]
                        ),
                        Tuple(
-                           title = _("Absolute levels in <b>bytes</b> per second"),
+                           title = _("Absolute levels in bits or bytes per second"),
+                           help = _("Depending on the measurement unit (defaults to byte) the absolute levels are set in bit or byte"),
                            elements = [
-                               Integer(title = _("Warning at"), label = _("bytes per second")),
-                               Integer(title = _("Critical at"), label = _("bytes per second")),
+                               Integer(title = _("Warning at"), label = _("bits / bytes per second")),
+                               Integer(title = _("Critical at"), label = _("bits / bytes per second")),
                            ]
                         )
                    ])

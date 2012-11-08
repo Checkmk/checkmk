@@ -90,17 +90,17 @@ def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right
     return result + '</tr></table>'
 
 
-def number_human_readable(n, precision=1):
+def number_human_readable(n, precision=1, unit="B"):
     n = float(n)
     f = "%." + str(precision) + "f"
     if abs(n) > 1024 * 1024 * 1024:
-        return (f + "G") % (n / (1024.0 * 1024 * 1024))
+        return (f + "G%s") % (n / (1024.0 * 1024 * 1024), unit) 
     elif abs(n) > 1024 * 1024:
-        return (f + "M") % (n / (1024.0 * 1024))
+        return (f + "M%s") % (n / (1024.0 * 1024), unit)
     elif abs(n) > 1024:
-        return (f + "K") % (n / 1024.0)
+        return (f + "K%s") % (n / 1024.0, unit)
     else:
-        return (f + "B") % n
+        return (f + "%s") % (n, unit)
 
 def age_human_readable(secs):
     if secs < 240:
@@ -136,7 +136,7 @@ def paint_perfometer(row):
     perf_painter = perfometers.get(check_command)
     if not perf_painter:
         return "", ""
-
+    
     # Python's isdigit() works only on str. We deal with unicode since
     # we deal with data coming from Livestatus
     def isdigit(x):
@@ -186,7 +186,7 @@ multisite_painters["perfometer"] = {
     "title" : _("Service Perf-O-Meter"),
     "short" : _("Perf-O-Meter"),
     "columns" : [ "service_perf_data", "service_state",
-                  "service_check_command", "service_pnpgraph_present" ],
+                  "service_check_command", "service_pnpgraph_present", "service_plugin_output" ],
     "paint" : paint_perfometer
 }
 

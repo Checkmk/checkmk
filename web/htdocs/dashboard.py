@@ -124,10 +124,10 @@ def render_dashboard(name):
     # data.
     title = board["title"]
 
+    global header_height
     if title is None:
         # If the title is none, hide the header line
         html.set_render_headfoot(False)
-        global header_height
         header_height = 0
         title = ''
 

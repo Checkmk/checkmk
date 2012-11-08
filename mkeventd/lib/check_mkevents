@@ -46,6 +46,12 @@ def query(query, remote_host):
 
 try:
     remote_host = None
+    try:
+        del sys.argv[sys.argv.index('-a')]
+        opt_ignore_acknowledged = True
+    except:
+        opt_ignore_acknowledged = False
+
     if sys.argv[1] == '-H':
         remote_host = sys.argv[2]
         del sys.argv[1:3]
@@ -54,8 +60,10 @@ try:
         application = sys.argv[2]
     else:
         application = None
-except:
-    sys.stdout.write("Usage: check_mkevents [-H REMOTE:PORT] HOST [APPLICATION]\n")
+except 1:
+    sys.stdout.write("Usage: check_mkevents [-H REMOTE:PORT] [-a] HOST [APPLICATION]\n")
+    sys.stdout.write("\n -a    do not take into account acknowledged events.\n")
+    sys.stdout.write("\n")
     sys.exit(3)
 
 q = "GET events\n" \
@@ -73,17 +81,19 @@ worst_row = None
 count = 0
 unhandled = 0
 for line in response[1:]:
-    row = dict(zip(headers, line))
-    s = row["event_state"]
-    if s == 3:
-        if worst_state < 2:
-            worst_state = 3
-            worst_row = row
-    elif s >= worst_state:
-        worst_state = s
-        worst_row = row
     count += 1
-    if row["event_phase"] == 'open':
+    row = dict(zip(headers, line))
+    p = row["event_phase"]
+    if p == 'open' or not opt_ignore_acknowledged:
+        s = row["event_state"]
+        if s == 3:
+            if worst_state < 2:
+                worst_state = 3
+                worst_row = row
+        elif s >= worst_state:
+            worst_state = s
+            worst_row = row
+    if p == 'open':
         unhandled += 1
 
 nagios_state_names = {
@@ -99,8 +109,11 @@ elif count == 0:
     sys.stdout.write("OK - no events for %s\n" % host_name)
 else:
     sys.stdout.write(nagios_state_names[worst_state] + \
-         " - %d events (%d unacknowledged), worst state is %s (Last line: %s)\n" % \
-         (count, unhandled, nagios_state_names[worst_state], worst_row['event_text'].encode('utf-8')))
+         " - %d events (%d unacknowledged)" % (count, unhandled))
+    if worst_row:
+        sys.stdout.write(", worst state is %s (Last line: %s)" % \
+         (nagios_state_names[worst_state], worst_row['event_text'].encode('utf-8')))
+    sys.stdout.write("\n")
 
 sys.exit(worst_state)
 

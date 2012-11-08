@@ -4,6 +4,9 @@
     * Added -d option to precompiled checks to enable debug mode
     * doc/treasures: added script for printing RRD statistics
 
+    Notifications:
+    * New system of custom notification, with WATO support
+
     Event Console:
     * Moved source of Event Console into Check_MK project 
     * New button for resetting all rule hits counters
@@ -14,6 +17,8 @@
     * New icon linking to event views for the event services
     * check_mkevents outputs last worst line in service output
     * Max. number of queued connections on status sockets is configurable now
+    * check_mkevents: new option -a for ignoring acknowledged events
+    * New sub-permissions for changing comment and contact while updating an event
 
     Multisite:
     * Enable automation login with _username= and _secret=, while
@@ -31,6 +36,7 @@
     * Dashboard globes can now be filtered by host_contact_group/service_contact_group
     * Dashboard "iframe" attribute can now be rendered dynamically using the
       "iframefunc" attribute in the dashlet declaration
+    * Dashboard header can now be hidden by setting "title" to None
 
     Livestatus:
     * Added new table statehist, used for SLA queries

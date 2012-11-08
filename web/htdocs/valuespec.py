@@ -24,9 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import math, os, time, re, sre_constants, urlparse, forms
+import math, os, time, re, sre_constants, urlparse, forms, htmllib
 from lib import *
-from htmllib import attrencode
 
 # Abstract base class of all value declaration classes.
 class ValueSpec:
@@ -310,7 +309,7 @@ class TextAscii(ValueSpec):
             return _("none")
         else:
             if self._attrencode:
-                return attrencode(value)
+                return htmllib.attrencode(value)
             else:
                 return value
 

@@ -750,7 +750,6 @@ def save_hosts(folder = None):
     effective_folder_attributes = effective_attributes(None, folder)
     use, cgs = effective_folder_attributes.get("contactgroups", (False, []))
     if use and cgs:
-        html.debug(effective_folder_attributes)
         out.write("\nhost_contactgroups.append(\n"
                   "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS ))\n" % cgs)
 
@@ -6193,8 +6192,8 @@ def mode_edit_timeperiod(phase):
                     raise MKUserError("name", _("Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
                 if name in timeperiods:
                     raise MKUserError("name", _("This name is already being used by another timeperiod."))
-                if name == "7X24":
-                    raise MKUserError("name", _("The time period name 7X24 cannot be used. It is always autmatically defined."))
+                if name == "24X7":
+                    raise MKUserError("name", _("The time period name 24X7 cannot be used. It is always autmatically defined."))
                 timeperiods[name] = timeperiod
                 log_pending(SYNCRESTART, None, "edit-timeperiods", _("Created new time period %s" % name))
             else:
@@ -6274,7 +6273,7 @@ class TimeperiodSelection(ElementSelection):
 
     def get_elements(self):
         timeperiods = load_timeperiods()
-        elements = dict([ ("7X24", _("Always")) ] + \
+        elements = dict([ ("24X7", _("Always")) ] + \
            [ (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items() ])
         return elements
 
@@ -7583,6 +7582,160 @@ def declare_user_attribute(name, vs):
     user_attributes.append((name, vs))
     user_attribute[name] = vs
 
+def load_notification_scripts_from(adir):
+    scripts = {}
+    if os.path.exists(adir):
+        for entry in os.listdir(adir):
+            path = adir + "/" + entry
+            if os.path.isfile(path) and os.access(path, os.X_OK):
+                title = entry
+                try:
+                    lines = file(path)
+                    lines.next()
+                    line = lines.next().strip()
+                    if line.startswith("#"):
+                        title = line.lstrip("#").strip()
+                except:
+                    pass
+                scripts[entry] = title
+    return scripts
+
+
+def load_notification_scripts():
+    scripts = {}
+    try:
+        not_dir = defaults.notifications_dir
+    except:
+        not_dir = defaults.share_dir + "/notifications" # for those with not up-to-date defaults
+
+    scripts = load_notification_scripts_from(not_dir)
+    try:
+        local_dir = defaults.omd_root + "/local/share/check_mk/notifications"
+        load_notification_scripts_from(local_dir)
+    except:
+        pass
+    choices = scripts.items()
+    choices.sort(cmp = lambda a,b: cmp(a[1], b[1]))
+    return choices
+
+def notification_script_title(name):
+    return dict(load_notification_scripts()).get(name, name)
+
+
+# Notification table
+vs_notification_method = \
+    CascadingDropdown(
+        title = _("Notification Method"),
+        choices = [
+            ( "email", _("Send Email") ),
+            ( "flexible", 
+              _("Flexible Custom Notifications"),
+                ListOf(
+                    Foldable(
+                        Dictionary(
+                            optional_keys = [ "only_services", "escalation" ],
+                            columns = 1,
+                            headers = True,
+                            elements = [
+                                (  "plugin", 
+                                   DropdownChoice(
+                                        title = _("Notification Plugin"),
+                                        choices = load_notification_scripts,
+                                    ),
+                                ),
+                                (  "disabled",
+                                   Checkbox(
+                                        title = _("Disabled"),
+                                        label = _("Currently disable this notification"),
+                                        default_value = False,
+                                    )
+                                ),
+                                ( "timeperiod",
+                                  TimeperiodSelection(
+                                      title = _("Timeperiod"),
+                                      help = _("Do only notifiy alerts within this time period"),
+                                  )
+                                ),
+                                ( "escalation",
+                                  Tuple(
+                                      title = _("Restrict to n<sup>th</sup> to m<sup>th</sup> notification (escalation)"),
+                                      orientation = "float",
+                                      elements = [
+                                          Integer(
+                                              label = _("from"),
+                                              help = _("Let through notifications counting from this number"),
+                                              default_value = 1,
+                                              minvalue = 1,
+                                              maxvalue = 999999,
+                                          ),
+                                          Integer(
+                                              label = _("to"),
+                                              help = _("Let through notifications counting upto this number"),
+                                              default_value = 999999,
+                                              minvalue = 1,
+                                              maxvalue = 999999,
+                                          ),
+                                    ],
+                                  ),
+                                ),
+                              ( "host_events",
+                                 ListChoice(
+                                      title = _("Host Events"),
+                                      choices = [
+                                      ( 'd', _("Host goes down")),
+                                      ( 'u', _("Host gets unreachble")),
+                                      ( 'r', _("Host goes up again")),
+                                      ( 'f', _("Start or end of flapping state")),
+                                      ( 's', _("Start or end of a scheduled downtime ")),
+                                      ( 'x', _("Acknowledgement of host problem")),
+                                    ],
+                                    default_value = [ 'd', 'u' ],
+                                )
+                              ),
+                                ( "service_events",
+                                  ListChoice(
+                                      title = _("Service Events"),
+                                      choices = [
+                                        ( 'w', _("Service goes into warning state")),
+                                        ( 'u', _("Service goes into unknown state")),
+                                        ( 'c', _("Service goes into critical state")),
+                                        ( 'r', _("Service recovers to OK")),
+                                        ( 'f', _("Start or end of flapping state")),
+                                        ( 's', _("Start or end of a scheduled downtime")),
+                                        ( 'x', _("Acknowledgement of service problem")),
+                                    ],
+                                    default_value = [ 'w', 'c', 'u' ],
+                                )
+                              ),
+                              ( "only_services",
+                                ListOfStrings(
+                                    title = _("Limit to the following services"),
+                                    help = _("Configure regular expressions that match the beginning of the service names here. Prefix an "
+                                             "entry with <tt>!</tt> in order to <i>exclude</i> that service."),
+                                    orientation = "horizontal",
+                                    valuespec = RegExp(size = 20),
+                                ),
+                              ),
+                              ( "parameters",
+                                ListOfStrings(
+                                    title = _("Plugin Arguments"),
+                                    help = _("You can specify arguments to the notification plugin here. "
+                                             "Please refer to the documentation about the plugin for what "
+                                             "parameters are allowed or required here."),
+                                )
+                            ),
+                            ]
+                        ),
+                        title_function = lambda v: _("Notify by: ") + notification_script_title(v["plugin"]),
+                    ),
+                    title = _("Flexible Custom Notifications"),
+                    add_label = _("Add notification"),
+                ),
+            ),
+        ]
+    )
+
+
 def mode_users(phase):
     if phase == "title":
         return _("Users & Contacts")
@@ -7868,7 +8021,12 @@ def mode_edit_user(phase):
             new_user[what + "_notification_options"] = "".join(
               [ opt for opt in opts if html.get_checkbox(what + "_" + opt) ])
             # FIXME: Validate notification commands. Do they really exist?
+            # FIXME(2): This is deprecated anyway. Remove in future.
             new_user[what + "_notification_commands"] = html.var(what + "_notification_commands")
+
+        value = vs_notification_method.from_html_vars("notification_method")
+        vs_notification_method.validate_value(value, "notification_method")
+        new_user["notification_method"] = value
 
         # Custom attributes
         for name, vs in user_attributes:
@@ -7884,6 +8042,8 @@ def mode_edit_user(phase):
             log_pending(SYNCRESTART, None, "edit-users", _("Modified user %s" % id))
         return "users"
 
+    # Let exceptions from loading notification scripts happen now
+    load_notification_scripts()
 
     html.begin_form("user")
     forms.header(_("Identity"))
@@ -8041,8 +8201,10 @@ def mode_edit_user(phase):
                "will be notified to this contact. Note: these settings will only be saved "
                "and used if the user is member of a contact group."))
 
-    # Notification commands
-    # FIXME: Add dropdown. But where to get a list of notification commands?
+    forms.section(_("Notification Method"))
+    vs_notification_method.render_input("notification_method", user.get("notification_method"))
+
+    # Notification commands (deprecated)
     forms.section(_("Notification Command for Hosts"))
     html.text_input("host_notification_commands", user.get("host_notification_commands", "check-mk-notify"))
     html.help(_("Use this Nagios command for sending host notifications."))

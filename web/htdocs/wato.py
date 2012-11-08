@@ -11027,6 +11027,10 @@ def page_user_profile():
                 # load the new language
                 load_language(config.get_language())
 
+            if config.may('general.edit_notifications'):
+                value = forms.get_input(vs_notification_method, "notification_method")
+                users[config.user_id]["notification_method"] = value
+
             # Change the password if requested
             if config.may('general.change_password'):
                 password  = html.var('password')
@@ -11059,15 +11063,19 @@ def page_user_profile():
     if html.has_user_errors():
         html.show_user_errors()
 
+    users = load_users()
+    user = users.get(config.user_id)
+    if user == None:
+        html.warning(_("Sorry, your user account does not exist."))
+        html.footer()
+        return
+
     html.begin_form("profile", method="POST")
     html.write('<div class=wato>')
     
     forms.header(_("Personal Settings"))
     forms.section(_("Name"), simple=True)
-    html.write(config.user_id)
-
-    if config.may('general.edit_profile'):
-        select_language(config.get_language(''))
+    html.write(user["alias"])
 
     if config.may('general.change_password'):
         forms.section(_("Password"))
@@ -11075,6 +11083,16 @@ def page_user_profile():
 
         forms.section(_("Password confirmation"))
         html.password_input('password2')
+
+    if config.may('general.edit_profile'):
+        select_language(config.get_language(''))
+        # Let the user configure how he wants to be notified
+        if config.may('general.edit_notifications') and user.get("notifications_enabled"):
+            forms.section(_("Notifications"))
+            html.help(_("Here you can configure how you want to be notified about host and service problems and "
+                        "other monitoring events."))
+            vs_notification_method.render_input("notification_method", user.get("notification_method"))
+            # forms.input(vs_notification_method, "notification_method", user.get("notification_method"))
 
     # Save button
     forms.end()

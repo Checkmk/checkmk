@@ -68,6 +68,8 @@
     * FIX: Fixed editing of icon_image rules
     * Added support of locked hosts and folders ( created by CMDB )
     * Logwatch: logwatch agents/plugins now with ok pattern support 
+    * Valuespec: Alternative Value Spec now shows helptext of its elements
+    * Valuespec: DropdownChoice, fixed exception on validate_datatype
 
     Checks & Agents:
     * New check mssql_counters.locks: Monitors locking related information of

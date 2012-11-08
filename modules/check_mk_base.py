@@ -1130,7 +1130,9 @@ def savefloat(f):
 
 # Takes bytes as integer and returns a string which represents the bytes in a
 # more human readable form scaled to GB/MB/KB
-def get_bytes_human_readable(b, base=1024.0, bytefrac=True):
+# The unit parameter simply changes the returned string, but does not interfere 
+# with any calcluations
+def get_bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
     # Handle negative bytes correctly
     prefix = ''
     if b < 0:
@@ -1138,17 +1140,17 @@ def get_bytes_human_readable(b, base=1024.0, bytefrac=True):
         b *= -1
 
     if b >= base * base * base * base:
-        return '%s%.2fTB' % (prefix, b / base / base / base / base)
+        return '%s%.2fT%s' % (prefix, b / base / base / base / base, unit)
     elif b >= base * base * base:
-        return '%s%.2fGB' % (prefix, b / base / base / base)
+        return '%s%.2fG%s' % (prefix, b / base / base / base, unit) 
     elif b >= base * base:
-        return '%s%.2fMB' % (prefix, b / base / base)
+        return '%s%.2fM%s' % (prefix, b / base / base, unit) 
     elif b >= base:
-        return '%s%.2fKB' % (prefix, b / base)
+        return '%s%.2fK%s' % (prefix, b / base, unit) 
     elif bytefrac:
-        return '%s%.2fB' % (prefix, b)
+        return '%s%.2f%s' % (prefix, b, unit)
     else: # Omit byte fractions
-        return '%s%.0fB' % (prefix, b)
+        return '%s%.0f%s' % (prefix, b, unit)
 
 # Similar to get_bytes_human_readable, but optimized for file
 # sizes

@@ -36,20 +36,31 @@ setlocale(LC_ALL, 'C');
 # outnucast=10.5828285795;0.01;0.1;;
 # outdisc=0.0;0.01;0.1;;
 # outerr=0.0;0.01;0.1;;
-# outqlen=0;;;;
+# outqlen=0;;;;10000000
 
 # Graph 1: used bandwidth
-$bitBandwidth = $MAX[1] * 8;
-$warn = $WARN[1];
-$crit = $CRIT[1];
 
-$megabyte = 1024.0 * 1024.0;
+# Determine if Bit or Byte.
+# Change multiplier and labels
+$unit = "B"; 
+$unit_multiplier = 1;
+$vertical_label_name = "MByte/sec";
+if (strcmp($MIN[11], "0.0") == 0) {
+    $unit = "Bit";
+    $unit_multiplier = 8;
+    $vertical_label_name = "MBit/sec";
+}
+$bandwidth = $MAX[1]  * $unit_multiplier;
+$warn      = $WARN[1] * $unit_multiplier;
+$crit      = $CRIT[1] * $unit_multiplier;
 
-$bandwidth = $bitBandwidth;
-$mByteBandwidth = $MAX[1] / $megabyte;
-$mByteWarn      = $WARN[1] / $megabyte;
-$mByteCrit      = $CRIT[1] / $megabyte;
+# Horizontal lines
+$mega        = 1024.0 * 1024.0;
+$mBandwidthH = $bandwidth / $mega;
+$mWarnH      = $warn      / $mega;
+$mCritH      = $crit      / $mega;
 
+# Break down bandwidth, warn and crit
 $bwuom = ' ';
 $base = 1000;
 if($bandwidth > $base * $base * $base) {
@@ -69,54 +80,62 @@ if($bandwidth > $base * $base * $base) {
 	$bwuom = 'K';
 }
 
-if ($mByteBandwidth < 10)
-   $range = $mByteBandwidth;
+if ($mBandwidthH < 10)
+   $range = $mBandwidthH;
 else
    $range = 10.0;
 
-
+$bandwidthInfo = "";
+if ($bandwidth > 0){
+    $bandwidthInfo = " at bandwidth ${bwuom}${unit}/s";
+}
 $ds_name[1] = 'Used bandwidth';
-$opt[1] = "--vertical-label \"MByte/sec\" -l -$range -u $range -X0 -b 1024 --title \"Used bandwidth $hostname / $servicedesc at $bandwidth${bwuom}Bit/s\" ";
+$opt[1] = "--vertical-label \"$vertical_label_name\" -l -$range -u $range -X0 -b 1024 --title \"Used bandwidth $hostname / $servicedesc $bandwidthInfo\" ";
 $def[1] = 
-  "HRULE:0#c0c0c0 ".
-  "HRULE:$mByteBandwidth#808080:\"Port speed\:  " . sprintf("%.1f", $bandwidth) . " ".$bwuom."Bit/s\\n\" ".
-  "HRULE:-$mByteBandwidth#808080: ";
+  "HRULE:0#c0c0c0 ";
+  if ($mBandwidthH) 
+      $def[1] .= "HRULE:$mBandwidthH#808080:\"Port speed\:  " . sprintf("%.1f", $bandwidth) . " ".$bwuom."$unit/s\\n\" ".
+                 "HRULE:-$mBandwidthH#808080: ";
    if ($warn)
-      $def[1] .= "HRULE:$mByteWarn#ffff00:\"Warning\:                " . sprintf("%6.1f", $warn) . " ".$bwuom."B/s\\n\" ".
-                 "HRULE:-$mByteWarn#ffff00: ";
+      $def[1] .= "HRULE:$mWarnH#ffff00:\"Warning\:                " . sprintf("%6.1f", $warn) . " ".$bwuom."$unit/s\\n\" ".
+                 "HRULE:-$mWarnH#ffff00: ";
    if ($crit)
-      $def[1] .= "HRULE:$mByteCrit#ff0000:\"Critical\:               " . sprintf("%6.1f", $crit) . " ".$bwuom."B/s\\n\" ".
-                 "HRULE:-$mByteCrit#ff0000: ";
+      $def[1] .= "HRULE:$mCritH#ff0000:\"Critical\:               " . sprintf("%6.1f", $crit) . " ".$bwuom."$unit/s\\n\" ".
+                 "HRULE:-$mCritH#ff0000: ";
 
   $def[1] .= "DEF:inbytes=$RRDFILE[1]:$DS[1]:MAX ".
   "DEF:outbytes=$RRDFILE[6]:$DS[6]:MAX ".
-  "CDEF:inmb=inbytes,1048576,/ ".
-  "CDEF:outmb=outbytes,1048576,/ ".
+  "CDEF:intraffic=inbytes,$unit_multiplier,* ".
+  "CDEF:outtraffic=outbytes,$unit_multiplier,* ".
+  "CDEF:inmb=intraffic,1048576,/ ".
+  "CDEF:outmb=outtraffic,1048576,/ ".
   "CDEF:minusoutmb=0,outmb,- ".
   "AREA:inmb#00e060:\"in                    \" ".
-  "GPRINT:inbytes:LAST:\"%6.1lf %sB/s last\" ".
-  "GPRINT:inbytes:AVERAGE:\"%6.1lf %sB/s avg\" ".
-  "GPRINT:inbytes:MAX:\"%6.1lf %sB/s max\\n\" ".
+  "GPRINT:intraffic:LAST:\"%6.1lf %s$unit/s last\" ".
+  "GPRINT:intraffic:AVERAGE:\"%6.1lf %s$unit/s avg\" ".
+  "GPRINT:intraffic:MAX:\"%6.1lf %s$unit/s max\\n\" ".
   "AREA:minusoutmb#0080e0:\"out                   \" ".
-  "GPRINT:outbytes:LAST:\"%6.1lf %sB/s last\" ".
-  "GPRINT:outbytes:AVERAGE:\"%6.1lf %sB/s avg\" ".
-  "GPRINT:outbytes:MAX:\"%6.1lf %sB/s max\\n\" ";
+  "GPRINT:outtraffic:LAST:\"%6.1lf %s$unit/s last\" ".
+  "GPRINT:outtraffic:AVERAGE:\"%6.1lf %s$unit/s avg\" ".
+  "GPRINT:outtraffic:MAX:\"%6.1lf %s$unit/s max\\n\" ";
 
 if (isset($DS[12])) {
   $def[1] .= 
   "DEF:inbytesa=$RRDFILE[12]:$DS[12]:MAX ".
   "DEF:outbytesa=$RRDFILE[13]:$DS[13]:MAX ".
-  "CDEF:inmba=inbytesa,1048576,/ ".
-  "CDEF:outmba=outbytesa,1048576,/ ".
+  "CDEF:intraffica=inbytesa,$unit_multiplier,* ".
+  "CDEF:outtraffica=outbytesa,$unit_multiplier,* ".
+  "CDEF:inmba=intraffica,1048576,/ ".
+  "CDEF:outmba=outtraffica,1048576,/ ".
   "CDEF:minusoutmba=0,outmba,- ".
   "LINE:inmba#00a060:\"in (avg)              \" ".
-  "GPRINT:inbytesa:LAST:\"%6.1lf %sB/s last\" ".
-  "GPRINT:inbytesa:AVERAGE:\"%6.1lf %sB/s avg\" ".
-  "GPRINT:inbytesa:MAX:\"%6.1lf %sB/s max\\n\" ".
+  "GPRINT:intraffica:LAST:\"%6.1lf %s$unit/s last\" ".
+  "GPRINT:intraffica:AVERAGE:\"%6.1lf %s$unit/s avg\" ".
+  "GPRINT:intraffica:MAX:\"%6.1lf %s$unit/s max\\n\" ".
   "LINE:minusoutmba#0060c0:\"out (avg)             \" ".
-  "GPRINT:outbytesa:LAST:\"%6.1lf %sB/s last\" ".
-  "GPRINT:outbytesa:AVERAGE:\"%6.1lf %sB/s avg\" ".
-  "GPRINT:outbytesa:MAX:\"%6.1lf %sB/s max\\n\" ";
+  "GPRINT:outtraffica:LAST:\"%6.1lf %s$unit/s last\" ".
+  "GPRINT:outtraffica:AVERAGE:\"%6.1lf %s$unit/s avg\" ".
+  "GPRINT:outtraffica:MAX:\"%6.1lf %s$unit/s max\\n\" ";
 }
 
 # Graph 2: packets

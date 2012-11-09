@@ -466,6 +466,14 @@ register_rule(group,
                                  unit = _("days"),
                              )
                           ),
+                           ( "cert_host", 
+                             TextAscii(
+                               title = _("Check Cerficate on diffrent IP/ DNS Name"), 
+                               help = _("For each SSL cerficate on a host, a diffrent IP address is needed. " 
+                                        "Here you can specify there address if it differs from the  "
+                                        "address from the host primary address."),
+                            )
+                           ),
                         ],
                         required_keys = [ "cert_days" ],
                     ),

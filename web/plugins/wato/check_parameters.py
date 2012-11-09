@@ -1608,7 +1608,29 @@ checkgroups.append((
              ])),
             ( "latency_perfdata",
               Checkbox(
-                  title = _("Performance Data"),
+                  title = _("Performance Data for Latency"),
+                  label = _("Collect performance data for disk latency"),
+                  help = _("Note: enabling performance data for the latency might "
+                           "cause incompatibilities with existing historical data "
+                           "if you are running PNP4Nagios in SINGLE mode.")),
+            ),
+            ( "read_ql", 
+              Tuple(
+                  title = _("Read Queue-Length"),
+                  elements = [
+                      Float(title = "warning at",  unit = _(""), default_value = 80.0),
+                      Float(title = "critical at", unit = _(""), default_value = 90.0),
+             ])),
+            ( "write_ql", 
+              Tuple(
+                  title = _("Write Queue-Length"),
+                  elements = [
+                      Float(title = "warning at",  unit = _(""), default_value = 80.0),
+                      Float(title = "critical at", unit = _(""), default_value = 90.0),
+             ])),
+            ( "ql_perfdata",
+              Checkbox(
+                  title = _("Performance Data for Queue Length"),
                   label = _("Collect performance data for disk latency"),
                   help = _("Note: enabling performance data for the latency might "
                            "cause incompatibilities with existing historical data "

@@ -93,8 +93,8 @@ if (isset($DS[2])) {
 
     # latency
     if (isset($RRD["latency"])) {
-        $opt[2] = "--vertical-label 'Latency (ms)' -X0  --title \"Latency $hostname / $disk\" ";
-        $def[2] = ""
+        $opt[] = "--vertical-label 'Latency (ms)' -X0  --title \"Latency $hostname / $disk\" ";
+        $def[] = ""
                 . "DEF:latency=$RRD[latency] "
                 . "AREA:latency#aaccdd:\"Latency\" "
                 . "LINE:latency#7799aa "
@@ -106,8 +106,8 @@ if (isset($DS[2])) {
 
     # IOs per second
     if (isset($RRD["ios"])) {
-        $opt[3] = "--vertical-label 'IO Operations / sec' -X0  --title \"IOs/sec $hostname / $disk\" ";
-        $def[3] = ""
+        $opt[] = "--vertical-label 'IO Operations / sec' -X0  --title \"IOs/sec $hostname / $disk\" ";
+        $def[] = ""
                 . "DEF:ios=$RRD[ios] "
                 . "AREA:ios#ddccaa:\"ios\" "
                 . "LINE:ios#aa9977 "
@@ -117,6 +117,18 @@ if (isset($DS[2])) {
                 ;
     }
 
+    if (isset($RRD["read_ql"])) {
+        $opt[] = "--vertical-label 'Queue Length' -X0 -u10 -l-10 --title \"Queue Length $hostname / $disk\" ";
+        $def[] = ""
+                . "DEF:read=$RRD[read_ql] "
+                . "DEF:write=$RRD[write_ql] "
+                . "CDEF:writen=write,-1,* " 
+                . "HRULE:0#a0a0a0 "
+                . "AREA:read#669a76 "
+                . "AREA:writen#517ba5 "
+                ;
+
+    }
             
 }
 
@@ -127,6 +139,7 @@ else {
     $def[1]  = "DEF:kb=$RRDFILE[1]:$DS[1]:AVERAGE " ;
     $def[1] .= "CDEF:mb=kb,1024,/ " ;
     $def[1] .= "AREA:mb#40c080 " ;
+               "HRULE:0#a0a0a0 ".
     $def[1] .= "GPRINT:mb:LAST:\"%6.1lf MByte/s last\" " ;
     $def[1] .= "GPRINT:mb:AVERAGE:\"%6.1lf MByte/s avg\" " ;
     $def[1] .= "GPRINT:mb:MAX:\"%6.1lf MByte/s max\\n\" ";

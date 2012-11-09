@@ -68,6 +68,8 @@
     * FIX: Fixed editing of icon_image rules
     * Added support of locked hosts and folders ( created by CMDB )
     * Logwatch: logwatch agents/plugins now with ok pattern support 
+    * Valuespec: Alternative Value Spec now shows helptext of its elements
+    * Valuespec: DropdownChoice, fixed exception on validate_datatype
 
     Checks & Agents:
     * New check mssql_counters.locks: Monitors locking related information of
@@ -101,6 +103,7 @@
     * Windows Check_MK Agent: Now able to parse textfiles for logwatch output
     * Added new Checks sni_octopuse_cpu, sni_octopuse_status, sni_octopuse_trunks: These
       allow monitoring Siemens HiPath 3000/5000 series PBX.
+    * if-checks now support "bit" as measurement unit
 
 1.2.0p3:
     Mulitisite

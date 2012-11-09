@@ -874,7 +874,7 @@ class DropdownChoice(ValueSpec):
             if val == value:
                 return
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
-            ", ".join([v for (v,t) in self.choices()]))
+            (value, ", ".join([v for (v,t) in self.choices()]))) 
 
 
 # Special conveniance variant for monitoring states
@@ -1606,6 +1606,7 @@ class Alternative(ValueSpec):
             else:
                 checked = vs == mvs
 
+            html.help(vs.help())
             title = vs.title()
             if not title and nr:
                 html.write("&nbsp;&nbsp;")

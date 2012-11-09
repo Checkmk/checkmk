@@ -247,13 +247,13 @@ def perfometer_lcp_regulator(row, check_command, perf_data):
 
 perfometers["check_mk-cmctc_lcp.regulator"] = perfometer_lcp_regulator
 
-def perfometer_bandwidth(in_bytes, out_bytes, in_bw, out_bw):
+def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit = "B"):
     txt = []
     have_bw = True
     h = '<table><tr>'
     for name, bytes, bw, color in [
-          ("in",  in_bytes,  in_bw,  "#0e6"),
-          ("out", out_bytes, out_bw, "#2af") ]:
+          ("in",  in_traffic,  in_bw,  "#0e6"),
+          ("out", out_traffic, out_bw, "#2af") ]:
         if bw > 0.0:
             rrate = bytes / bw
         else:
@@ -276,23 +276,25 @@ def perfometer_bandwidth(in_bytes, out_bytes, in_bw, out_bw):
     # make logarithmic perf-o-meter
     MB = 1000000.0
     text = "%s/s&nbsp;&nbsp;&nbsp;%s/s" % (
-        number_human_readable(in_bytes), number_human_readable(out_bytes))
+        number_human_readable(in_traffic, 1, unit), number_human_readable(out_traffic, 1, unit))
 
     return text, perfometer_logarithmic_dual(
-                 in_bytes, "#0e6", out_bytes, "#2af", 1000000, 5)
+                 in_traffic, "#0e6", out_traffic, "#2af", 1000000, 5)
 
 def perfometer_check_mk_if(row, check_command, perf_data):
+    unit =  "Bit/s" in row["service_plugin_output"] and "Bit" or "B"
     return perfometer_bandwidth(
-        in_bytes  = savefloat(perf_data[0][1]),
-        out_bytes = savefloat(perf_data[5][1]),
+        in_traffic  = savefloat(perf_data[0][1]),
+        out_traffic = savefloat(perf_data[5][1]),
         in_bw     = savefloat(perf_data[0][6]),
         out_bw    = savefloat(perf_data[5][6]),
+        unit      = unit
     )
 
 def perfometer_check_mk_brocade_fcport(row, check_command, perf_data):
     return perfometer_bandwidth(
-        in_bytes  = savefloat(perf_data[0][1]),
-        out_bytes = savefloat(perf_data[1][1]),
+        in_traffic  = savefloat(perf_data[0][1]),
+        out_traffic = savefloat(perf_data[1][1]),
         in_bw     = savefloat(perf_data[0][6]),
         out_bw    = savefloat(perf_data[1][6]),
     )

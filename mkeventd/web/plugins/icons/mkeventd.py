@@ -50,6 +50,13 @@ def paint_mkeventd(what, row, tags, custom_vars):
         return
 
     if len(args) >= 1:
+        # Handle -a and -H options. Sorry for the hack. We currently
+        # have no better idea
+        if args[0] == '-H':
+            args = args[2:] # skip two arguments
+        if args[0] == '-a':
+            args = args[1:]
+
         if args[0] == '$HOSTNAME$':
             host = row['host_name']
         elif args[0] == '$HOSTADDRESS$':
@@ -79,6 +86,6 @@ def paint_mkeventd(what, row, tags, custom_vars):
 
 if mkeventd_enabled:
     multisite_icons.append({
-        'host_columns': [ 'address' ],
+        'host_columns': [ 'address', 'name' ],
         'paint':   paint_mkeventd,
     })

@@ -37,7 +37,7 @@ pid_t g_pid;
 static void alarm_handler(int);
 static void term_handler(int);
 static char **parse_into_arguments(char *command);
-int check_icmp(int argc, char **argv, char *output);
+int check_icmp(int argc, char **argv, char *output, int size);
 int icmp_sock = -1;
 
 // This program must be called with two arguments:
@@ -92,7 +92,7 @@ int main(int argc, char **argv)
             int arg_c = 0;
             while (arguments[arg_c])
                 arg_c++;
-            return_code = check_icmp(arg_c, arguments, output);
+            return_code = check_icmp(arg_c, arguments, output, sizeof(output));
         }
         else {
             int fd[2];

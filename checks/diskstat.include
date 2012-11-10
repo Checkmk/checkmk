@@ -131,7 +131,7 @@ def check_diskstat_line(this_time, item, params, line):
         perfdata = [ perfdata[0], perfdata[2], perfdata[1], perfdata[3] ]
 
     # Do Latency computation if this information is available:
-    if len(line) >= 6:
+    if len(line) >= 6 and line[3] >= 0:
         reads, writes, timems = map(int, line[3:6])
         ios = reads + writes 
         timedif, ios_per_sec = get_counter(countername + ".ios", this_time, ios)
@@ -155,6 +155,34 @@ def check_diskstat_line(this_time, item, params, line):
         if params.get("latency_perfdata"):
             perfdata.append(("ios", ios_per_sec))
             perfdata.append(("latency", latency, warn, crit))
+
+    # Queue Lengths (currently only Windows). Windows uses counters here.
+    # I have not understood, why....
+    if len(line) >= 8:
+        for what, ctr in [ ("read",  line[6]), ("write", line[7]) ]:
+            countername = "diskstat.%s.ql.%s" % (item, what) 
+            levels = params.get(what + "_ql")
+            if levels:
+                warn, crit = levels
+            else:
+                warn, crit = None, None
+
+            timedif, qlx = get_counter(countername, this_time, int(ctr))
+            ql = qlx / 100000.0
+            infos.append(what.title() + " Queue: %.1f%%" % ql)
+
+            # check levels
+            if levels != None:
+                if ql >= crit:
+                    status = 2
+                    infos[-1] += "(!!)"
+                elif ql >= warn:
+                    status = max(status, 1)
+                    infos[-1] += "(!)"
+
+            if params.get("ql_perfdata"):
+                perfdata.append((what + "_ql", ql))
+
 
     return (status, nagios_state_names[status] + " - " + ", ".join(infos) , perfdata)
 

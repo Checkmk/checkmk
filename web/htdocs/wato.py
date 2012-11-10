@@ -10965,6 +10965,65 @@ def register_rule(group, varname, valuespec = None, title = None,
 
     g_rulespecs[varname] = ruleset
 
+# Special version of register_rule, dedicated to checks. This is not really
+# modular here, but we cannot put this function into the plugins file because
+# the order is not defined there.
+def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, matchtype, has_inventory=True):
+    # Register rule for inventorized checks
+    if valuespec and has_inventory: # would be useless rule if check has no parameters
+        itemenum = None
+        if itemspec:
+            itemtype = "item"
+            itemname = itemspec.title()
+            itemhelp = itemspec.help()
+            if isinstance(itemspec, DropdownChoice):
+                itemenum = itemspec._choices
+        else:
+            itemtype = None
+            itemname = None
+            itemhelp = None
+
+        register_rule(
+            "checkparams/" + subgroup,
+            varname = "checkgroup_parameters:%s" % checkgroup,
+            title = title,
+            valuespec = valuespec,
+            itemtype = itemtype, itemname = itemname,
+            itemhelp = itemhelp,
+            itemenum = itemenum,
+            match = matchtype)
+
+    # Register rule for static checks
+    elements = [
+        CheckTypeGroupSelection(
+            checkgroup,
+            title = _("Checktype"),
+            help = _("Please choose the check plugin")) ]
+    if itemspec:
+        elements.append(itemspec)
+    if not valuespec:
+        valuespec =\
+            FixedValue(None,
+                help = _("This check has no parameters."),
+                totext = "")
+    if not valuespec.title():
+        valuespec._title = _("Parameters")
+    elements.append(valuespec)
+
+    register_rule(
+        "static/" + subgroup, 
+        "static_checks:%s" % checkgroup,
+        title = title,
+        valuespec = Tuple(
+            title = valuespec.title(),
+            elements = elements,
+        ),
+        match = "all")
+
+    
+
+
+
 #
 # User profile edit page
 # The user can edit the own profile

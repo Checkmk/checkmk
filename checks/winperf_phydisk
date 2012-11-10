@@ -26,30 +26,39 @@
 
 # Example output from agent
 # <<<winperf_phydisk>>>
-# 12947256139.12
+# 1352457622.31 234
 # 2 instances: 0_C: _Total
-# 198 0 0 rawcount
-# 200 3716463928 3716463928 type(20570500)
-# 200 3454184016 3454184016 type(40030500)
-# 1400 3716463928 3716463928 type(550500) -----> Average Disk Queue Length
-# 202 1070680520 1070680520 type(20570500)
-# 202 3454184016 3454184016 type(40030500)
-# 1402 1070680520 1070680520 type(550500) -----> Average Disk Read Queue Length
-# 204 2645783408 2645783408 type(20570500)
-# 204 3454184016 3454184016 type(40030500)
-# 1404 2645783408 2645783408 type(550500) -----> Average Disk Write Queue Length
-# 206 627690886 627690886 average_timer
-# 206 571096 571096 average_base
-# 208 1856854327 1856854327 average_timer
-# 208 453714 453714 average_base
-# 210 3065803855 3065803855 average_timer
-# 210 117382 117382 average_base
-# 212 571096 571096 counter
-# 214 453714 453714 counter
-# 216 117382 117382 counter
-# 218 304823296 304823296 bulk_count
-# 220 2434501632 2434501632 bulk_count ----> Disk Read Bytes/sec
-# 222 2165288960 2165288960 bulk_count ----> Disk Write Bytes/sec
+# -36 0 0 rawcount
+# -34 235822560 235822560 type(20570500)
+# -34 2664021277 2664021277 type(40030500)
+# 1166 235822560 235822560 type(550500)        ----> Average Disk Queue Length
+# -32 109877176 109877176 type(20570500)
+# -32 2664021277 2664021277 type(40030500)
+# 1168 109877176 109877176 type(550500)        ----> Average Disk Read Queue Length
+# -30 125945384 125945384 type(20570500)
+# -30 2664021277 2664021277 type(40030500)
+# 1170 125945384 125945384 type(550500)        ----> Average Disk Write Queue Length
+# -28 3526915777 3526915777 average_timer
+# -28 36283 36283 average_base
+# -26 1888588843 1888588843 average_timer
+# -26 17835 17835 average_base
+# -24 1638326933 1638326933 average_timer
+# -24 18448 18448 average_base
+# -22 36283 36283 counter
+# -20 17835 17835 counter
+# -18 18448 18448 counter
+# -16 1315437056 1315437056 bulk_count
+# -14 672711680 672711680 bulk_count          ----> Disk Read Bytes/sec
+# -12 642725376 642725376 bulk_count          ----> Disk Write Bytes/sec
+# -10 1315437056 1315437056 average_bulk
+# -10 36283 36283 average_base
+# -8 672711680 672711680 average_bulk
+# -8 17835 17835 average_base
+# -6 642725376 642725376 average_bulk
+# -6 18448 18448 average_base
+# 1248 769129229 769129229 type(20570500)
+# 1248 2664021277 2664021277 type(40030500)
+# 1250 1330 1330 counter
 
 check_includes['winperf_phydisk'] = [ "diskstat.include" ]
 
@@ -60,8 +69,16 @@ def winperf_phydisk_convert(info):
             disk_reads = [ int(x) / 512 for x in line[1:-2] ]
         elif line[0] == '-12':
             disk_writes = [ int(x) / 512 for x in line[1:-2] ]
+        elif line[0] == '1168': # Average Disk Read Queue Length
+            disk_readq_ctrs = [ int(x) for x in line[1:-2] ]
+        elif line[0] == '1170': # Average Disk Read Queue Length
+            disk_writeq_ctrs = [ int(x) for x in line[1:-2] ]
 
-    return zip(disks, disk_reads, disk_writes)
+    # Missing columns are donted by negative values (Linux sends here latency
+    # information)
+    empty = [ -1 for x in disks ]
+
+    return zip(disks, disk_reads, disk_writes, empty, empty, empty, disk_readq_ctrs, disk_writeq_ctrs)
 
 def inventory_winperf_phydisk(info):
     return inventory_diskstat_generic(winperf_phydisk_convert(info))

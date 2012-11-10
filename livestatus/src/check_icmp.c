@@ -251,10 +251,6 @@ void do_output(int crash, char *format, ...)
         longjmp(exit_jmp, 1);
     }
 }
-void do_output_char(char c)
-{
-    *g_output_pointer++ = c;
-}
 
 static const char *
 get_icmp_error_msg(unsigned char icmp_type, unsigned char icmp_code)
@@ -845,7 +841,7 @@ finish(int sig)
 	}
 
 	/* iterate once more for pretty perfparse output */
-        do_output_char('|');
+	do_output(0, "|");
 	i = 0;
 	host = list;
 	while(host) {
@@ -865,8 +861,7 @@ finish(int sig)
 	}
 
 	/* finish with an empty line */
-        do_output_char('\n');
-
+        do_output(0,"\n");
         exit_code = status;
         longjmp(exit_jmp, 1);
 }

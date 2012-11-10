@@ -37,6 +37,7 @@
            -> preventing possible freeze of livecheck
     * FIX: correct escaping of character / in nagios checkresult file
     * FIX: fixed SIGSEGV on hosts without defined check_command
+    * FIX: now providing correct output buffer size when calling check_icmp 
 
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used

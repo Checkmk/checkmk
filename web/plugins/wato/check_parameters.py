@@ -144,7 +144,7 @@ register_rule(group + '/' + subgroup_applications,
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_services_rules",
-    title     = _('Windows Services'),
+    title     = _("Windows Service Inventory"),
     valuespec = Dictionary(
         elements = [
             ('services', ListOfStrings(
@@ -178,7 +178,7 @@ register_rule(group + '/' + subgroup_inventory,
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_processes_rules",
-    title     = _('Processes'),
+    title     = _('Process Inventory'),
     valuespec = Dictionary(
         elements = [
             ('descr', TextAscii(
@@ -1034,6 +1034,15 @@ checkgroups.append((
                     none_label = _("ignore"),
                     negate = True)
              ),
+             ( "unit",
+               RadioChoice(
+                   title = _("Measurement unit"), 
+                   help = _("Here you can specifiy the measurement unit of the network interface"),
+                   default_value = "B",
+                   choices = [
+                       ( "Bit", _("Bit") ),
+                       ( "B",   _("Byte") ),],
+               )),
              ( "traffic",
                Alternative(
                    title = _("Used bandwidth (traffic)"),
@@ -1048,10 +1057,11 @@ checkgroups.append((
                            ]
                        ),
                        Tuple(
-                           title = _("Absolute levels in <b>bytes</b> per second"),
+                           title = _("Absolute levels in bits or bytes per second"),
+                           help = _("Depending on the measurement unit (defaults to byte) the absolute levels are set in bit or byte"),
                            elements = [
-                               Integer(title = _("Warning at"), label = _("bytes per second")),
-                               Integer(title = _("Critical at"), label = _("bytes per second")),
+                               Integer(title = _("Warning at"), label = _("bits / bytes per second")),
+                               Integer(title = _("Critical at"), label = _("bits / bytes per second")),
                            ]
                         )
                    ])
@@ -1598,7 +1608,29 @@ checkgroups.append((
              ])),
             ( "latency_perfdata",
               Checkbox(
-                  title = _("Performance Data"),
+                  title = _("Performance Data for Latency"),
+                  label = _("Collect performance data for disk latency"),
+                  help = _("Note: enabling performance data for the latency might "
+                           "cause incompatibilities with existing historical data "
+                           "if you are running PNP4Nagios in SINGLE mode.")),
+            ),
+            ( "read_ql", 
+              Tuple(
+                  title = _("Read Queue-Length"),
+                  elements = [
+                      Float(title = "warning at",  unit = _(""), default_value = 80.0),
+                      Float(title = "critical at", unit = _(""), default_value = 90.0),
+             ])),
+            ( "write_ql", 
+              Tuple(
+                  title = _("Write Queue-Length"),
+                  elements = [
+                      Float(title = "warning at",  unit = _(""), default_value = 80.0),
+                      Float(title = "critical at", unit = _(""), default_value = 90.0),
+             ])),
+            ( "ql_perfdata",
+              Checkbox(
+                  title = _("Performance Data for Queue Length"),
                   label = _("Collect performance data for disk latency"),
                   help = _("Note: enabling performance data for the latency might "
                            "cause incompatibilities with existing historical data "
@@ -2033,30 +2065,9 @@ checkgroups.append((
 
 # Create rules for check parameters of inventorized checks
 for subgroup, checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
-    if not valuespec:
-        continue # would be useles rule if check has no parameters
-    itemenum = None
-    if itemspec:
-        itemtype = "item"
-        itemname = itemspec.title()
-        itemhelp = itemspec.help()
-        if isinstance(itemspec, DropdownChoice):
-            itemenum = itemspec._choices
-    else:
-        itemtype = None
-        itemname = None
-        itemhelp = None
+    register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, matchtype)
 
-    register_rule(
-        group + "/" + subgroup,
-        varname = "checkgroup_parameters:%s" % checkgroup,
-        title = title,
-        valuespec = valuespec,
-        itemtype = itemtype, itemname = itemname,
-        itemhelp = itemhelp,
-        itemenum = itemenum,
-        match = matchtype)
-
+checkgroups = []
 
 register_rule(
     group + "/" + subgroup_networking,
@@ -2071,7 +2082,7 @@ register_rule(
 # Create Rules for static checks
 register_rulegroup("static", _("Manual Checks"),
     _("Statically configured Check_MK checks that do not rely on the inventory"))
-group = "static"
+
 
 # wmic_process does not support inventory at the moment
 checkgroups.append((
@@ -2160,31 +2171,6 @@ checkgroups.append((
     "first"))
 
 
-
 for subgroup, checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
-    elements = [
-        CheckTypeGroupSelection(
-            checkgroup,
-            title = _("Checktype"),
-            help = _("Please choose the check plugin")) ]
-    if itemspec:
-        elements.append(itemspec)
-    if not valuespec:
-        valuespec =\
-            FixedValue(None,
-                help = _("This check has no parameters."),
-                totext = "")
-    if not valuespec.title():
-        valuespec._title = _("Parameters")
-    elements.append(valuespec)
-
-    register_rule(
-        group + "/" + subgroup, 
-        "static_checks:%s" % checkgroup,
-        title = title,
-        valuespec = Tuple(
-            title = valuespec.title(),
-            elements = elements,
-        ),
-        match = "all")
+    register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, matchtype, False)
 

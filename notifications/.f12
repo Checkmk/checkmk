@@ -1,0 +1,3 @@
+sudo mkdir -p /omd/versions/default/share/check_mk/notifications
+sudo cp -p * /omd/versions/default/share/check_mk/notifications
+

@@ -42,7 +42,7 @@ class FilterText(Filter):
         htmlvar = self.htmlvars[0]
         current_value = html.var(htmlvar)
         if current_value:
-            return _("Filter: %s %s %s\n") % (self.column, self.op, current_value)
+            return "Filter: %s %s %s\n" % (self.column, self.op, current_value)
         else:
             return ""
 

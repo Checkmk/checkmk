@@ -33,11 +33,13 @@ stylesheets = [ 'pages', 'status', 'logwatch' ]
 def level_name(level):
     if   level == 'W': return 'WARN'
     elif level == 'C': return 'CRIT'
+    elif level == 'O': return 'OK'
     else: return 'OK'
 
 def level_state(level):
     if   level == 'W': return 1
     elif level == 'C': return 2
+    elif level == 'O': return 0
     else: return 0
 
 #   .----------------------------------------------------------------------.
@@ -301,6 +303,8 @@ def parse_file(host, file, hidecontext = False):
                     log['level'] = 2
                 elif level == 'WARN':
                     log['level'] = 1
+                elif level == 'OK':
+                    log['level'] = 0
                 else:
                     log['level'] = 0
 
@@ -321,6 +325,10 @@ def parse_file(host, file, hidecontext = False):
                 elif line[0] == 'C':
                     line_level = 2
                     line_class = 'CRIT'
+                
+                elif line[0] == 'O': 
+                    line_level = 0 
+                    line_class = 'OK'
 
                 elif not hidecontext:
                     line_level = 0

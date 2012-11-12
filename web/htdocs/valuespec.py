@@ -24,9 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import math, os, time, re, sre_constants, urlparse, forms
+import math, os, time, re, sre_constants, urlparse, forms, htmllib
 from lib import *
-from htmllib import attrencode
 
 # Abstract base class of all value declaration classes.
 class ValueSpec:
@@ -310,7 +309,7 @@ class TextAscii(ValueSpec):
             return _("none")
         else:
             if self._attrencode:
-                return attrencode(value)
+                return htmllib.attrencode(value)
             else:
                 return value
 
@@ -625,17 +624,12 @@ class ListOf(ValueSpec):
     # of entries is stored in the hidden variable 'varprefix'
     def render_input(self, varprefix, value):
 
-        # In the 'complain' phase, where the user already saved the
-        # form but the validation failed, we must not display the
-        # original 'value' but take the value from the HTML variables.
-        if html.has_var("%s_count" % varprefix):
-            value = self.from_html_vars(varprefix)
-
-        html.hidden_field('%s_count' % varprefix,
-            str(len(value)),
-            id = '%s_count' % varprefix,
-            add_var = True
-        )
+        # Beware: the 'value' is only the default value in case the form
+        # has not yet been filled in. In the complain phase we must
+        # ignore 'value' but reuse the input from the HTML variables - 
+        # even if they are not syntactically correct. Calling from_html_vars
+        # here is *not* an option since this might not work in case of
+        # a wrong user input.
 
         # Render reference element for cloning
         html.write('<table style="display:none" id="%s_prototype">' % varprefix)
@@ -651,10 +645,25 @@ class ListOf(ValueSpec):
             self._valuespec.default_value())
         html.write('</td></tr></table>')
 
+        # In the 'complain' phase, where the user already saved the
+        # form but the validation failed, we must not display the
+        # original 'value' but take the value from the HTML variables.
+        if html.has_var("%s_count" % varprefix):
+            filled_in = True
+            count = int(html.var("%s_count" % varprefix))
+            value = [None] * count # dummy for the loop
+        else:
+            filled_in = False
+            html.hidden_field('%s_count' % varprefix,
+                str(len(value)),
+                id = '%s_count' % varprefix,
+                add_var = True
+            )
+
         # Actual table of currently existing entries
         html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
 
-        for nr, v  in enumerate(value):
+        for nr, v in enumerate(value):
             html.push_transformation(lambda x: x.replace(self._magic, str(nr+1)))
             html.write('<tr><td class=vlof_buttons>')
             html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "") # reconstruct order after moving stuff
@@ -865,7 +874,7 @@ class DropdownChoice(ValueSpec):
             if val == value:
                 return
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
-            ", ".join([v for (v,t) in self.choices()]))
+            (value, ", ".join([v for (v,t) in self.choices()]))) 
 
 
 # Special conveniance variant for monitoring states
@@ -1597,6 +1606,7 @@ class Alternative(ValueSpec):
             else:
                 checked = vs == mvs
 
+            html.help(vs.help())
             title = vs.title()
             if not title and nr:
                 html.write("&nbsp;&nbsp;")
@@ -1767,6 +1777,8 @@ class Dictionary(ValueSpec):
         self._headers = kwargs.get("headers")
 
     def render_input(self, varprefix, value):
+        if type(value) != dict:
+            value = {} # makes code simpler in complain phase
         if self._render == "form":
             self.render_input_form(varprefix, value)
         else:
@@ -1808,7 +1820,13 @@ class Dictionary(ValueSpec):
                 div_id, not visible and "none" or (oneline and "inline-block" or "")))
             if self._columns == 1:
                 html.help(vs.help())
-            vs.render_input(vp, value.get(param, vs.default_value()))
+            # Remember: in complain mode we do not render 'value' (the default value),
+            # but re-display the values from the HTML variables. We must not use 'value'
+            # in that case.
+            if type(value) == dict:
+                vs.render_input(vp, value.get(param, vs.default_value()))
+            else:
+                vs.render_input(vp, None)
             html.write("</div>")
             if not oneline:
                 html.write("</td></tr>")
@@ -2011,9 +2029,9 @@ class Foldable(ValueSpec):
         self._title_function = kwargs.get("title_function", None)
 
     def render_input(self, varprefix, value):
-        if self._title_function:
+        try:
             title = self._title_function(value)
-        else:
+        except:
             title = self._valuespec.title()
             if not title:
                 title = _("(no title)")

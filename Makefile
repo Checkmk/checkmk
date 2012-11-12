@@ -62,6 +62,7 @@ dist: mk-livestatus mk-eventd
 	mkdir -p $(DISTNAME)
 	tar czf $(DISTNAME)/share.tar.gz $(TAROPTS) check_mk_templates.cfg
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
+	tar czf $(DISTNAME)/notifications.tar.gz $(TAROPTS) -C notifications $$(cd notifications ; ls)
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs plugins
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
@@ -208,7 +209,7 @@ check:
 
 healspaces:
 	@echo "Removing trailing spaces from code lines..."
-	@sed -ri 's/[ 	]+$$//g' checkman/* modules/* checks/* $$(find -name Makefile) \
+	@sed -ri 's/[ 	]+$$//g' checkman/* modules/* checks/* notifications/* $$(find -name Makefile) \
           livestatus/src/*{cc,c,h} web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
           doc/helpers/* $(find -type f pnp-templates/*.php)
 

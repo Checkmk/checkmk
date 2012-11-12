@@ -1397,7 +1397,7 @@ bool add_new_logwatch_textfile(const char *full_filename, pattern_container *pat
     
     HANDLE hFile = CreateFile(full_filename,// file to open
            GENERIC_READ,          // open for reading
-           FILE_SHARE_READ,       // share for reading
+           FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
            NULL,                  // default security
            OPEN_EXISTING,         // existing file only
            FILE_ATTRIBUTE_NORMAL, // normal file
@@ -1429,7 +1429,7 @@ void update_or_create_logwatch_textfile(const char *full_filename, pattern_conta
     {
         HANDLE hFile = CreateFile(textfile->path,// file to open
                GENERIC_READ,          // open for reading
-               FILE_SHARE_READ,       // share for reading
+               FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
                NULL,                  // default security
                OPEN_EXISTING,         // existing file only
                FILE_ATTRIBUTE_NORMAL, // normal file
@@ -1448,15 +1448,21 @@ void update_or_create_logwatch_textfile(const char *full_filename, pattern_conta
                                              (((unsigned long long)fileinfo.nFileSizeHigh) << 32);
 
                 if (file_id != textfile->file_id) {                // file has been changed 
+                    printf("File id has been changed %s\n", full_filename);
                     textfile->offset = 0;
                     textfile->file_id = file_id;
-                } else if (textfile->file_size < textfile->offset) // file has been truncated
+                } else if (textfile->file_size < textfile->offset) { // file has been truncated
+                    printf("File has been truncated %s\n", full_filename);
                     textfile->offset = 0;
+                }
 
                 textfile->missing = false; 
             }
             CloseHandle(hFile);
+        } else {
+            printf("Cant open file with CreateFile %s\n", full_filename);
         }
+
     }
     else
         add_new_logwatch_textfile(full_filename, patterns); // Add new file
@@ -1514,14 +1520,16 @@ void add_globline(char *value)
     // Split globline into tokens
     if (value != 0) { 
         char *copy = strdup(value);
-        char *token = strtok(copy, " ");
+        char *token = strtok(copy, "|");
         while (token) {
+            token = lstrip(token);
             new_globline->token[new_globline->num_tokens]          = new glob_token();
             new_globline->token[new_globline->num_tokens]->pattern = strdup(token); 
             process_glob_expression(new_globline->token[new_globline->num_tokens], new_globline->patterns);
-            token = strtok(NULL, " ");
+            token = strtok(NULL, "|");
             new_globline->num_tokens++;
         }
+        free(copy);
     } 
 }
 
@@ -1595,26 +1603,27 @@ void cleanup_logwatch()
 bool process_textfile(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool write_output) {
     char line[4096];
     condition_pattern *pattern = 0;
+    printf("Checking file %s\n", textfile->path);
     while (!feof(file)) {
         if (!fgets(line, sizeof(line), file))
             break;
         
+        if (line[strlen(line)-1] == '\n')
+           line[strlen(line)-1] = 0;
+
         char state = '.';
         for (int j=0; j < textfile->patterns->num_patterns; j++) {
             pattern = textfile->patterns->patterns[j];
             if (globmatch(pattern->glob_pattern, line)){
-                if (!write_output && (pattern->state == 'C' || pattern->state == 'W'))
+                if (!write_output && (pattern->state == 'C' || pattern->state == 'W' || pattern->state == 'O'))
                    return true;
                 state = pattern->state;
                 break;
             }
         }
-        if (write_output)
-            output(out, "%c %s", state, line);
+        if (write_output && strlen(line) > 0)
+            output(out, "%c %s\n", state, line);
     }
-    // add an extra \n if the last logline was missing a newline character
-    if (write_output && line[strlen(line)] != '\n')
-        output(out, "\n");
 
     return false;
 }
@@ -2604,9 +2613,14 @@ bool handle_logfiles_config_variable(char *var, char *value)
         if (value != 0)
             add_condition_pattern('I', value);
         return true;
+    }else if (!strcmp(var, "ok")) {
+        if (value != 0)
+            add_condition_pattern('O', value);
+        return true;
     }
     return false;
 }
+
 bool handle_logwatch_config_variable(char *var, char *value)
 {
     if (!strncmp(var, "logfile ", 8)) {

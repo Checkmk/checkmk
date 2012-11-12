@@ -140,6 +140,8 @@ def check_if_common(item, params, info):
     targetspeed        = params.get("speed")
     targetstate        = params.get("state")
     average            = params.get("average")
+    unit               = params.get("unit")
+    unit_multiplier    = unit == "Bit" and 8.0 or 1.0
 
     # error checking might be turned off
     if params["errors"]:
@@ -224,9 +226,9 @@ def check_if_common(item, params, info):
             # this is only possible if a reference speed is available.
             if ref_speed:
                 if bw_warn != None and type(bw_warn) == float:
-                    bw_warn = bw_warn / 100.0 * ref_speed
+                    bw_warn = bw_warn / 100.0 * ref_speed * unit_multiplier
                 if bw_crit != None and type(bw_crit) == float:
-                    bw_crit = bw_crit / 100.0 * ref_speed
+                    bw_crit = bw_crit / 100.0 * ref_speed * unit_multiplier
 
             # Ignore percentual levels if no reference speed is available
             else:
@@ -235,6 +237,14 @@ def check_if_common(item, params, info):
 
                 if bw_crit != None and type(bw_crit) == float:
                     bw_crit = None
+
+            # Even if the measurement unit is set to "bit" the WARN and CRIT levels are 
+            # still reported as bytes to stay compatible with older rrd data
+            if unit == "Bit":
+                if bw_crit:
+                    bw_crit = bw_crit / 8
+                if bw_warn:
+                    bw_warn = bw_warn / 8
 
             # Performance counters
             this_time = time.time()
@@ -270,13 +280,13 @@ def check_if_common(item, params, info):
                     raise MKCounterWrapped("", "Counter wrap, skipping checks this time") 
                 perfdata = []
             else:
-                perfdata.append(("outqlen", saveint(ifOutQLen)))
-
+                perfdata.append(("outqlen", saveint(ifOutQLen),"","", unit == "Bit" and "0.0" or "0"))
+                get_human_readable = lambda traffic: get_bytes_human_readable(traffic * unit_multiplier, 1024, True, unit)
                 for what, errorrate, okrate, traffic in \
                    [ ("in",  rates[4], rates[1] + rates[2], rates[0]),
                      ("out", rates[9], rates[6] + rates[7], rates[5]) ]:
 
-                    infotext += ", %s: %s/s" % (what, get_bytes_human_readable(traffic))
+                    infotext += ", %s: %s/s" % (what, get_human_readable(traffic))
 
                     if ref_speed:
                         perc_used = 100.0 * traffic / ref_speed
@@ -285,17 +295,17 @@ def check_if_common(item, params, info):
                     # handle computation of average
                     if average:
                         timedif, traffic_avg = get_average("if.%s.%s.avg" % (what, item), this_time, traffic, average)
-                        infotext += ", %dmin avg: %s/s" % (average, get_bytes_human_readable(traffic_avg))
+                        infotext += ", %dmin avg: %s/s" % (average, get_human_readable(traffic_avg))
                         perfdata.append( ("%s_avg_%d" % (what, average), traffic_avg, bw_warn, bw_crit, 0, ref_speed) )
                         traffic = traffic_avg # apply levels to average traffic
 
                     # Check bandwidth thresholds
-                    if not bw_crit is None and traffic >= bw_crit:
+                    if not bw_crit is None and traffic * unit_multiplier >= bw_crit:
                         state = 2
-                        infotext += ' (!!) >= ' + get_bytes_human_readable(bw_crit) + "/s"
-                    elif not bw_warn is None and traffic >= bw_warn:
+                        infotext += ' (!!) >= ' + get_human_readable(bw_crit / unit_multiplier) + "/s"
+                    elif not bw_warn is None and traffic * unit_multiplier >= bw_warn:
                         state = max(state, 1)
-                        infotext += ' (!) >= ' + get_bytes_human_readable(bw_warn) + "/s"
+                        infotext += ' (!) >= ' + get_human_readable(bw_warn / unit_multiplier) + "/s"
 
                     pacrate = okrate + errorrate
                     if pacrate > 0.0: # any packets transmitted?

@@ -74,7 +74,7 @@ def parse_pattern(line):
         compiled = re.compile(pattern)
     except:
         raise(Exception("Invalid regular expression in line '%s'" % line))
-    if level not in [ 'C', 'W', 'I' ]:
+    if level not in [ 'C', 'W', 'I', 'O' ]:
         raise(Exception("Invalid pattern line '%s'" % line))
     return (level, compiled)
 
@@ -177,7 +177,7 @@ def process_logfile(logfile, patterns):
     # now seek to offset where interesting data begins
     os.lseek(fl, offset, 0) # os.SEEK_SET not available in Python 2.4
     f = os.fdopen(fl)
-    worst = 0
+    worst = -1
     outputtxt = ""
     lines_parsed = 0
     start_time = time.time()
@@ -206,17 +206,17 @@ def process_logfile(logfile, patterns):
         for lev, pattern in patterns:
             if pattern.search(line[:-1]):
                 level = lev
-                levelint = {'C': 2, 'W': 1, 'I': 0, '.': 0}[lev]
+                levelint = {'C': 2, 'W': 1, 'O': 0, 'I': -1, '.': -1}[lev]
                 worst = max(levelint, worst)
                 break
-        color = {'C': tty_red, 'W': tty_yellow, 'I': tty_blue, '.': ''}[level]
+        color = {'C': tty_red, 'W': tty_yellow, 'O': tty_green, 'I': tty_blue, '.': ''}[level]
         outputtxt += "%s%s %s%s\n" % (color, level, line[:-1], tty_normal)
 
     new_offset = os.lseek(fl, 0, 1) # os.SEEK_CUR not available in Python 2.4
     status[logfile] = new_offset, inode
 
-    # output all lines if at least one warning or error has been found
-    if worst > 0:
+    # output all lines if at least one warning, error or ok has been found
+    if worst > -1:
         sys.stdout.write(outputtxt)
         sys.stdout.flush()
 
@@ -251,10 +251,10 @@ for filenames, patterns in config:
             elif key == 'maxtime':
                 opt_maxtime = float(value)
             elif key == 'overflow':
-                if value not in [ 'C', 'I', 'W' ]:
-                    raise Exception("Invalid value %s for overflow. Allowed are C, I and W" % value)
+                if value not in [ 'C', 'I', 'W', 'O' ]:
+                    raise Exception("Invalid value %s for overflow. Allowed are C, I, O and W" % value)
                 opt_overflow = value
-                opt_overflow_level = {'C':2, 'W':1, 'I':0}[value]
+                opt_overflow_level = {'C':2, 'W':1, 'O':0, 'I':0}[value]
             elif key == 'regex':
                 opt_regex = re.compile(value)
             elif key == 'iregex':

@@ -4,6 +4,9 @@
     * Added -d option to precompiled checks to enable debug mode
     * doc/treasures: added script for printing RRD statistics
 
+    Notifications:
+    * New system of custom notification, with WATO support
+
     Event Console:
     * Moved source of Event Console into Check_MK project 
     * New button for resetting all rule hits counters
@@ -14,6 +17,8 @@
     * New icon linking to event views for the event services
     * check_mkevents outputs last worst line in service output
     * Max. number of queued connections on status sockets is configurable now
+    * check_mkevents: new option -a for ignoring acknowledged events
+    * New sub-permissions for changing comment and contact while updating an event
 
     Multisite:
     * Restructured cookie auth cookies (all auth cookies will be invalid
@@ -34,6 +39,7 @@
     * Dashboard globes can now be filtered by host_contact_group/service_contact_group
     * Dashboard "iframe" attribute can now be rendered dynamically using the
       "iframefunc" attribute in the dashlet declaration
+    * Dashboard header can now be hidden by setting "title" to None
 
     Livestatus:
     * Added new table statehist, used for SLA queries
@@ -64,6 +70,9 @@
            progress dialogs (e.g. bulk inventory mode)
     * FIX: Fixed editing of icon_image rules
     * Added support of locked hosts and folders ( created by CMDB )
+    * Logwatch: logwatch agents/plugins now with ok pattern support 
+    * Valuespec: Alternative Value Spec now shows helptext of its elements
+    * Valuespec: DropdownChoice, fixed exception on validate_datatype
 
     Checks & Agents:
     * New check mssql_counters.locks: Monitors locking related information of
@@ -95,6 +104,10 @@
       After enabling it you need to reinventorize your hosts.
     * Windows Update Check: Now with caching, Thanks to Phil Randal and Patrick Schlüter
     * Windows Check_MK Agent: Now able to parse textfiles for logwatch output
+    * Added new Checks sni_octopuse_cpu, sni_octopuse_status, sni_octopuse_trunks: These
+      allow monitoring Siemens HiPath 3000/5000 series PBX.
+    * if-checks now support "bit" as measurement unit
+    * winperf_phydisk: monitor average queue length for read/write
 
 1.2.0p3:
     Mulitisite
@@ -121,6 +134,8 @@
 
     Livestatus
     * FIX: comments_with_info in service table was always empty
+    * FIX: check_icmp: fixed calculation of remaining length of output buffer
+    * FIX: check_icmp: removed possible buffer overflow on do_output_char()
     
     Livecheck
     * FIX: fixed problem with long plugin output
@@ -131,6 +146,8 @@
     * FIX: kill process group of called plugin if timeout is reached
            -> preventing possible freeze of livecheck
     * FIX: correct escaping of character / in nagios checkresult file
+    * FIX: fixed SIGSEGV on hosts without defined check_command
+    * FIX: now providing correct output buffer size when calling check_icmp 
 
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used

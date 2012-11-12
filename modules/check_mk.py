@@ -56,6 +56,7 @@ omd_root = os.getenv("OMD_ROOT", None)
 if omd_root:
     local_share              = omd_root + "/local/share/check_mk"
     local_checks_dir         = local_share + "/checks"
+    local_notifications_dir  = local_share + "/notifications"
     local_check_manpages_dir = local_share + "/checkman"
     local_agents_dir         = local_share + "/agents"
     local_web_dir            = local_share + "/web"
@@ -64,6 +65,7 @@ if omd_root:
     local_locale_dir         = local_share + "/locale"
 else:
     local_checks_dir         = None
+    local_notifications_dir  = None
     local_check_manpages_dir = None
     local_agents_dir         = None
     local_web_dir            = None
@@ -90,6 +92,7 @@ else:
 default_config_dir                 = '/etc/check_mk'
 check_mk_configdir                 = default_config_dir + "/conf.d"
 checks_dir                         = '/usr/share/check_mk/checks'
+notifications_dir                  = '/usr/share/check_mk/notifications'
 agents_dir                         = '/usr/share/check_mk/agents'
 check_manpages_dir                 = '/usr/share/doc/check_mk/checks'
 modules_dir                        = '/usr/share/check_mk/modules'
@@ -3497,6 +3500,7 @@ def show_paths():
     paths = [
         ( modules_dir,                 dir, inst, "Main components of check_mk"),
         ( checks_dir,                  dir, inst, "Checks"),
+        ( notifications_dir,           dir, inst, "Notification scripts"),
         ( agents_dir,                  dir, inst, "Agents for operating systems"),
         ( doc_dir,                     dir, inst, "Documentation files"),
         ( web_dir,                     dir, inst, "Check_MK's web pages"),
@@ -3531,6 +3535,7 @@ def show_paths():
     if omd_root:
         paths += [
          ( local_checks_dir,           dir, local, "Locally installed checks"),
+         ( local_notifications_dir,    dir, local, "Locally installed notification scripts"),
          ( local_check_manpages_dir,   dir, local, "Locally installed check man pages"),
          ( local_agents_dir,           dir, local, "Locally installed agents and plugins"),
          ( local_web_dir,              dir, local, "Locally installed Multisite addons"),

@@ -184,7 +184,7 @@ def get_user_dn(username):
     result = ldap_search(
         ldap_dn(config.ldap_userspec['user_dn']),
         '(%s=%s)' % (ldap_attr('user_id'), ldap.filter.escape_filter_chars(username)),
-        [key],
+        [ldap_attr('user_id')],
     )
 
     if result:

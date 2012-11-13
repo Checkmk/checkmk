@@ -7942,6 +7942,10 @@ def mode_edit_user(phase):
             raise MKUserError(_("You cannot lock your own account!"))
         new_user["locked"] = html.get_checkbox("locked")
 
+        increase_serial = False
+        if users[id] != new_user["locked"] and new_user["locked"]:
+            increase_serial = True # when user is being locked now, increase the auth serial
+
         # Authentication: Password or Secret
         auth_method = html.var("authmethod")
         if auth_method == "secret":
@@ -7950,6 +7954,7 @@ def mode_edit_user(phase):
                 raise MKUserError('secret', _("Please specify a secret of at least 10 characters length."))
             new_user["automation_secret"] = secret
             new_user["password"] = userdb.encrypt_password(secret)
+            increase_serial = True # password changed, reflect in auth serial
 
         else:
             password = html.var("password").strip()
@@ -7968,11 +7973,12 @@ def mode_edit_user(phase):
 
             if password:
                 new_user["password"] = userdb.encrypt_password(password)
+                increase_serial = True # password changed, reflect in auth serial
 
         # Set initial password serial or increase existing
         if new:
             new_user["serial"] = 0
-        else:
+        elif increase_serial:
             new_user["serial"] += 1
 
         # Email address

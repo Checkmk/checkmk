@@ -97,6 +97,9 @@ def create_non_existing_user(connector_id, username):
     users[username] = new_user_template(connector_id)
     wato.save_users(users)
 
+    # Call the sync function for this new user
+    hook_sync(connector_id = connector_id, only_username = username)
+
 #   .----------------------------------------------------------------------.
 #   |                     _   _             _                              |
 #   |                    | | | | ___   ___ | | _____                       |
@@ -118,8 +121,6 @@ def hook_login(username, password):
             if result == True:
                 # Check wether or not the user exists (and maybe create it)
                 create_non_existing_user(connector['id'], username)
-                # Call the sync function for this new user
-                hook_sync(connector_id = connector['id'], only_username = username)
 
                 return result
 

@@ -286,6 +286,10 @@ def handler(req, profiling = True):
                 else:
                     return result
 
+        # Call userdb page hooks which are executed on a regular base to e.g. syncronize
+        # information withough explicit user triggered actions
+        userdb.hook_page()
+
         # Set all permissions, read site config, and similar stuff
         config.login(html.req.user)
 

@@ -261,6 +261,7 @@ ldap_attribute_plugins['alias'] = {
 # Connector hook functions
 #
 
+# This function only validates credentials, no locked checking or similar
 def ldap_login(username, password):
     ldap_connect()
     # Returns None when the user is not found or not uniq, else returns the
@@ -328,11 +329,16 @@ def ldap_sync(add_to_changelog, only_username):
 
 # Calculates the attributes of the users which are locked for users managed
 # by this connector
-def ldap_locked():
+def ldap_locked_attributes():
     locked = set([ 'password' ]) # This attributes are locked in all cases!
     for key in config.ldap_active_plugins:
         locked.update(ldap_attribute_plugins[key]['set_attributes'])
     return list(locked)
+
+# Is called on every multisite http request
+def ldap_page():
+    # FIXME: Implement
+    pass
 
 multisite_user_connectors.append({
     'id':    'ldap',
@@ -340,5 +346,11 @@ multisite_user_connectors.append({
 
     'login':             ldap_login,
     'sync':              ldap_sync,
-    'locked_attributes': ldap_locked,
+    'page':              ldap_page,
+    'locked':            user_locked, # no ldap check, just check the WATO attribute.
+                                      # This handles setups where the locked attribute is not
+                                      # synchronized and the user is enabled in LDAP and disabled
+                                      # in Check_MK. When the user is locked in LDAP a login is
+                                      # not possible.
+    'locked_attributes': ldap_locked_attributes,
 })

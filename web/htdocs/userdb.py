@@ -100,6 +100,11 @@ def create_non_existing_user(connector_id, username):
     # Call the sync function for this new user
     hook_sync(connector_id = connector_id, only_username = username)
 
+def user_locked(username):
+    import wato
+    users = wato.load_users()
+    return users[username].get('locked', False)
+
 #   .----------------------------------------------------------------------.
 #   |                     _   _             _                              |
 #   |                    | | | | ___   ___ | | _____                       |
@@ -113,19 +118,31 @@ def create_non_existing_user(connector_id, username):
 def hook_login(username, password):
     for connector in multisite_user_connectors:
         handler = connector.get('login', None)
-        if handler:
-            result = handler(username, password)
-            # None  -> User unknown, means continue with other connectors
-            # True  -> success
-            # False -> failed
-            if result == True:
-                # Check wether or not the user exists (and maybe create it)
-                create_non_existing_user(connector['id'], username)
+        if not handler:
+            continue
 
-                return result
+        result = handler(username, password)
+        # None  -> User unknown, means continue with other connectors
+        # True  -> success
+        # False -> failed
+        if result == True:
+            # Check wether or not the user exists (and maybe create it)
+            create_non_existing_user(connector['id'], username)
 
-            elif result == False:
-                return result
+            # Now, after successfull login (and optional user account
+            # creation), check wether or not the user is locked.
+            # In e.g. htpasswd connector this is checked by validating the
+            # password against the hash in the htpasswd file prefixed with
+            # a "!". But when using other conectors it might be neccessary
+            # to validate the user "locked" attribute.
+            lock_handler = connector.get('locked', None)
+            if lock_handler:
+                result = not lock_handler(username) # returns True if locked
+
+            return result
+
+        elif result == False:
+            return result
 
 # Hook function can be registered here to be executed to synchronize all users.
 # Is called on:
@@ -150,3 +167,11 @@ def hook_sync(connector_id = None, add_to_changelog = False, only_username = Non
                     )
                 else:
                     raise
+
+# Hook function can be registered here to execute actions on a "regular" base without
+# user triggered action. This hook is called on each page load.
+def hook_page():
+    for connector in multisite_user_connectors:
+        handler = connector.get('page', None)
+        if handler:
+            handler()

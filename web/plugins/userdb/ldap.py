@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config
+import config, defaults
 
 # FIXME: For some reason mod_python is missing /usr/lib/python2.7/dist-packages
 # in sys.path. Therefor the ldap module can not be found. Need to fix this!
@@ -102,21 +102,35 @@ def ldap_connect():
         ldap_default_bind()
 
     except ldap.LDAPError, e:
+        ldap_connection = None # Invalidate connection on failure
         raise MKLDAPException(e)
+
+    except Exception:
+        ldap_connection = None # Invalidate connection on failure
+        raise
 
 # Bind with the default credentials
 def ldap_default_bind():
-    if config.ldap_connection['bind']:
-        ldap_bind(config.ldap_connection['bind'][0],
-                  config.ldap_connection['bind'][1])
-    else:
-        ldap_bind('', '') # anonymous bind
+    try:
+        if config.ldap_connection['bind']:
+            ldap_bind(ldap_dn(config.ldap_connection['bind'][0]),
+                      config.ldap_connection['bind'][1], catch = False)
+        else:
+            ldap_bind('', '', catch = False) # anonymous bind
+    except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
+        raise MKLDAPException(_('Unable to connect to LDAP server with the configured bind credentials. '
+                                'Plase fix this in the '
+                                '<a href="wato.py?mode=edit_configvar&varname=ldap_connection">LDAP '
+                                'connection settings</a>.'))
 
-def ldap_bind(username, password):
+def ldap_bind(username, password, catch = True):
     try:
         ldap_connection.simple_bind_s(username, password)
     except ldap.LDAPError, e:
-        raise MKLDAPException(_('Unable to authenticate with LDAP (%s)' % e))
+        if catch:
+            raise MKLDAPException(_('Unable to authenticate with LDAP (%s)' % e))
+        else:
+            raise
 
 def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
     if scope:
@@ -151,12 +165,24 @@ def ldap_attr(key):
 def ldap_attrs(keys):
     return map(ldap_attr, keys)
 
+# Returns the given distinguished name template with replaced vars
+def ldap_dn(tmpl):
+    dn = tmpl
+
+    for key, val in [ ('$OMD_SITE$', defaults.omd_site) ]:
+        if val:
+            dn = dn.replace(key, val)
+        else:
+            dn = dn.replace(key, '')
+
+    return dn
+
 def get_user_dn(username):
     # Check wether or not the user exists in the directory
     # It's only ok when exactly one entry is found.
     # Returns the DN in this case.
     result = ldap_search(
-        config.ldap_userspec['user_dn'],
+        ldap_dn(config.ldap_userspec['user_dn']),
         '(%s=%s)' % (ldap_attr('user_id'), ldap.filter.escape_filter_chars(username)),
         [key],
     )
@@ -174,7 +200,7 @@ def ldap_get_users(add_filter = None):
         filt = '(&%s%s)' % (filt, add_filter)
 
     result = {}
-    for dn, ldap_user in ldap_search(config.ldap_userspec['user_dn'], filt, columns = columns):
+    for dn, ldap_user in ldap_search(ldap_dn(config.ldap_userspec['user_dn']), filt, columns = columns):
         user_id = ldap_user[ldap_attr('user_id')][0]
         result[user_id] = ldap_user
 

@@ -337,7 +337,7 @@ if userdb.connector_enabled('ldap'):
                 ("bind", Optional(
                     Tuple(
                         elements = [
-                            TextAscii(
+                            LDAPDistinguishedName(
                                 title = _("Bind DN"),
                                 help  = _("Specify the distinguished name to be used to bind to "
                                           "the LDAP directory."),
@@ -365,7 +365,7 @@ if userdb.connector_enabled('ldap'):
         ),
         domain = "multisite",
     )
-    
+
     register_configvar(group,
         "ldap_userspec",
         Dictionary(
@@ -373,13 +373,13 @@ if userdb.connector_enabled('ldap'):
             help  = _("This option configures all user related LDAP options. These options "
                       "are used by the LDAP user connector to find the needed users in the LDAP directory."),
             elements = [
-                ("user_dn", TextAscii(
+                ("user_dn", LDAPDistinguishedName(
                     title = _("User Base DN"),
                     help  = _("The base distinguished name to be used when performing user account "
                               "related queries to the LDAP server."),
                     size = 80,
                 )),
-                ("group_dn", TextAscii(
+                ("group_dn", LDAPDistinguishedName(
                     title = _("Group Base DN"),
                     help  = _("The base distinguished name to be used when performing group "
                               "related queries to the LDAP server."),

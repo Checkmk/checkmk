@@ -7528,6 +7528,8 @@ def automation_push_snapshot():
         multitar.extract_from_buffer(tarcontent, replication_paths)
         log_commit_pending() # pending changes are lost
 
+        call_hook_snapshot_pushed()
+
         # Create rule making this site only monitor our hosts
         create_distributed_wato_file(site_id, mode)
         log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
@@ -7738,6 +7740,10 @@ def mode_users(phase):
         global_buttons()
         html.context_button(_("New user"), make_link([("mode", "edit_user")]), "new")
         return
+
+    # Execute all connectors synchronisations of users. This must be done before
+    # loading the users, because it might modify the users list
+    userdb.hook_sync(add_to_changelog = True)
 
     roles = load_roles()
     users = filter_hidden_users(load_users())
@@ -11701,6 +11707,9 @@ def call_hooks(name, *args):
             else:
                 raise
 
+def call_hook_snapshot_pushed():
+    if "snapshot-pushed" in g_hooks:
+        call_hooks("snapshot-pushed")
 
 def call_hook_hosts_changed(folder):
     if "hosts-changed" in g_hooks:

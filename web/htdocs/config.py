@@ -594,9 +594,10 @@ def load_default_values(into):
     #     \___/|___/\___|_|  |____/|____/
     #
 
-    into["user_connectors"] = ['htpasswd']
-    into["ldap_connection"] = {}
-    into["ldap_userspec"]   = {}
+    into["user_connectors"]      = ['htpasswd']
+    into["ldap_connection"]      = {}
+    into["ldap_userspec"]        = {}
+    into["ldap_active_plugins"]  = {'email', 'alias'}
     into["default_user_profile"] = {
         'roles': ['user'],
     }

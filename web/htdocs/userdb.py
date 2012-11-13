@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import config
 from lib import *
 import time
 
@@ -50,6 +51,9 @@ def load_plugins():
 def list_user_connectors():
     return [ (c['id'], c['title']) for c in multisite_user_connectors ]
 
+def connector_enabled(connector_id):
+    return connector_id in config.user_connectors
+
 # Returns the connector dictionary of the given id
 def get_connector(connector_id):
     if connector_id is None:
@@ -63,7 +67,7 @@ def get_connector(connector_id):
 def locked_attributes(connector_id):
     for connector in multisite_user_connectors:
         if connector['id'] == connector_id:
-            return connector.get('locked_attributes', None)
+            return connector.get('locked_attributes', lambda: [])()
     return []
 
 # This is a function needed in WATO and the htpasswd module. This should
@@ -74,6 +78,25 @@ def encrypt_password(password, salt = None):
         salt = "%06d" % (1000000 * (time.time() % 1.0))
     return md5crypt.md5crypt(password, salt, '$1$')
 
+def new_user_template(connector_id):
+    new_user = {
+        'serial':        0,
+        'connector':     connector_id,
+    }
+
+    # Apply the default user profile
+    new_user.update(config.default_user_profile)
+    return new_user
+
+def create_non_existing_user(connector_id, username):
+    import wato
+    users = wato.load_users()
+    if username in users:
+        return # User exists. Nothing to do...
+
+    users[username] = new_user_template(connector_id)
+    wato.save_users(users)
+
 #   .----------------------------------------------------------------------.
 #   |                     _   _             _                              |
 #   |                    | | | | ___   ___ | | _____                       |
@@ -83,23 +106,7 @@ def encrypt_password(password, salt = None):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def create_non_existing_user(connector_id, username):
-    import wato
-    users = wato.load_users()
-    if username in users:
-        return # User exists. Nothing to do...
-
-    new_user = {
-        'serial':        0,
-        'connector':     connector_id,
-    }
-
-    # Apply the default user profile
-    new_user.update(config.default_user_profile)
-
-    users[username] = new_user
-    wato.save_users(users)
-
+# This hook is called to validate the login credentials provided by a user
 def hook_login(username, password):
     for connector in multisite_user_connectors:
         handler = connector.get('login', None)
@@ -111,7 +118,34 @@ def hook_login(username, password):
             if result == True:
                 # Check wether or not the user exists (and maybe create it)
                 create_non_existing_user(connector['id'], username)
+                # Call the sync function for this new user
+                hook_sync(connector_id = connector['id'], only_username = username)
+
                 return result
 
             elif result == False:
                 return result
+
+# Hook function can be registered here to be executed to synchronize all users.
+# Is called on:
+#   a) before rendering the user management page in WATO
+def hook_sync(connector_id = None, add_to_changelog = False, only_username = None):
+    if connector_id:
+        connectors = [ get_connector(connector_id) ]
+    else:
+        connectors = multisite_user_connectors
+
+    for connector in connectors:
+        handler = connector.get('sync', None)
+        if handler:
+            try:
+                handler(add_to_changelog, only_username)
+            except:
+                if config.debug:
+                    import traceback
+                    html.show_error(
+                        "<h3>" + _("Error executing sync hook") + "</h3>"
+                        "<pre>%s</pre>" % (traceback.format_exc())
+                    )
+                else:
+                    raise

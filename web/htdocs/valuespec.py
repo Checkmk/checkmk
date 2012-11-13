@@ -2130,7 +2130,6 @@ class LDAPDistinguishedName(TextAscii):
             # At least one DC= must be in distinguished name
             found_dc = False
             for part in dn:
-                html.write(repr(part[0]))
                 key, val = part[0][:2]
                 if key.lower() == 'dc':
                     found_dc = True

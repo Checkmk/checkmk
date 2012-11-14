@@ -1,8 +1,18 @@
 #!/usr/bin/python
 # encoding: utf-8
 
-import socket, config, defaults, re
+import socket, config, defaults, re, time
 from lib import *
+
+# TODO: make this configurable and thus work for non OMD-users as
+# well.
+try:
+    socket_path = defaults.omd_root + "/tmp/run/mkeventd/status"
+    pipe_path = defaults.omd_root + "/tmp/run/mkeventd/events"
+except:
+    run_dir = defaults.livestatus_unix_socket.rsplit("/",1)[0]
+    socket_path = run_dir + "/mkeventd/status"
+    pipe_path = run_dir + "/mkeventd/events"
 
 syslog_priorities = [
     (0, "emerg" ),
@@ -98,7 +108,18 @@ def eventd_configuration():
     
 
 def daemon_running():
-    return os.path.exists(defaults.omd_root + "/tmp/run/mkeventd/status")
+    return os.path.exists(socket_path)
+
+
+def send_event(event):
+    # "<%PRI%>%TIMESTAMP% %HOSTNAME% %syslogtag% %msg%\n"
+    prio = (event["facility"] << 3) + event["priority"]
+    timestamp = time.strftime("%b %d %T", time.localtime())
+    rfc = "<%d>%s %s %s: %s\n" % (
+        prio, timestamp, event["host"], event["application"], event["text"])
+    pipe = file(pipe_path, "w")
+    pipe.write(rfc + "\n")
+    return rfc
 
 def query(query):
     try:
@@ -110,7 +131,7 @@ def query(query):
 
         sock.settimeout(timeout)
         # TODO: Pfad nicht auf OMD hart kodieren
-        sock.connect(defaults.omd_root + "/tmp/run/mkeventd/status")
+        sock.connect(socket_path)
         sock.send(query)
 
         response_text = ""

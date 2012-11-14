@@ -712,9 +712,18 @@ def mode_mkeventd_rules(phase):
 
     if phase == "action":
         # Validation of input for rule simulation (no further action here)
-        if html.var("simulate"):
+        if html.var("simulate") or html.var("_generate"):
             event = vs_mkeventd_event.from_html_vars("event")
             vs_mkeventd_event.validate_value(event, "event")
+
+        if html.has_var("_generate") and html.check_transaction():
+            if not event.get("application"):
+                raise MKUserError("event_p_application", _("Please specify an application name"))
+            if not event.get("host"):
+                raise MKUserError("event_p_host", _("Please specify a host name"))
+            rfc = mkeventd.send_event(event)
+            return None, "Test event generated and sent to Event Console.<br><pre>%s</pre>" % rfc
+
 
         if html.has_var("_delete"):
             nr = int(html.var("_delete"))
@@ -764,7 +773,8 @@ def mode_mkeventd_rules(phase):
     vs_mkeventd_event.render_input("event", event)
     forms.end()
     html.hidden_fields()
-    html.button("simulate", _("Try out!"))
+    html.button("simulate", _("Try out"))
+    html.button("_generate", _("Generate Event!"))
     html.end_form()
     html.write("<br>")
 

@@ -1,6 +1,5 @@
-1.2.0p3:
-    Mulitisite
-    * Added "view" parameter to dashlet_pnpgraph webservice
+1.2.0p4:
+    Mulitisite:
     * FIX: BI: Assuming "OK" for hosts is now possible
     * FIX: Fixed error in makeuri() calls when no parameters in URL
     * FIX: Try out mode in view editor does not show context buttons anymore
@@ -8,9 +7,7 @@
     * FIX: WATO Folder Filter no longer available in single host views
     * FIX: Quicksearch converts search text to regex when accessing livestatus
 
-    WATO
-    * FIX: It is now possible to create clusters in empty folders
-    * FIX: Fixed problem with complaining empty ListOf() valuespecs
+    WATO:
     * FIX: Users & Contacts uses case-insensitive sorting of 'Full name' column  
     * FIX: Removed focus of "Full name" attribute on editing a contact
     * FIX: fix layout bug in ValueSpec ListOfStrings (e.g. used in
@@ -19,16 +16,17 @@
     * FIX: fix sorting of users, fix lost user alias in some situations
     * FIX: Sites not using distritubed WATO now being skipped when determining
            the prefered peer
+    * FIX: Updating internal variables after moving hosts correctly
+      (fixes problems with hosts tree processed in hooks)
 
     BI:
     * FIX: Correct representation of (!), (!!) and (?) markers in check output
 
-    Livestatus
-    * FIX: comments_with_info in service table was always empty
+    Livestatus:
     * FIX: check_icmp: fixed calculation of remaining length of output buffer
     * FIX: check_icmp: removed possible buffer overflow on do_output_char()
     
-    Livecheck
+    Livecheck:
     * FIX: fixed problem with long plugin output
     * FIX: added /0 termination to strings
     * FIX: changed check_type to be always active (0)
@@ -54,6 +52,17 @@
     * FIX: netapp_cluster: fix inventory function
     * FIX: ps: avoid exception, when CPU% is missing (Zombies on Solaris)
     * FIX: win_dhcp_pools: fixed calculation of perc_free
+
+1.2.0p3:
+    Multisite:
+    * Added "view" parameter to dashlet_pnpgraph webservice
+
+    WATO:
+    * FIX: It is now possible to create clusters in empty folders
+    * FIX: Fixed problem with complaining empty ListOf() valuespecs
+
+    Livestatus:
+    * FIX: comments_with_info in service table was always empty
 
 1.2.1i1:
     Core:

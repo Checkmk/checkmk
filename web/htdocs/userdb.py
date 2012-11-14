@@ -54,21 +54,25 @@ def list_user_connectors():
 def connector_enabled(connector_id):
     return connector_id in config.user_connectors
 
+def enabled_connectors():
+    connectors = []
+    for connector in multisite_user_connectors:
+        if connector['id'] in config.user_connectors:
+            connectors.append(connector)
+    return connectors
+
 # Returns the connector dictionary of the given id
 def get_connector(connector_id):
     if connector_id is None:
         connector_id = 'htpasswd'
-    for connector in multisite_user_connectors:
+    for connector in enabled_connectors():
         if connector['id'] == connector_id:
             return connector
 
-# Returns a list of locked attributes. If connector is None the htpasswd
-# connector is assumed.
+# Returns a list of locked attributes
 def locked_attributes(connector_id):
-    for connector in multisite_user_connectors:
-        if connector['id'] == connector_id:
-            return connector.get('locked_attributes', lambda: [])()
-    return []
+    connector = get_connector(connector_id)
+    return connector.get('locked_attributes', lambda: [])()
 
 # This is a function needed in WATO and the htpasswd module. This should
 # really be modularized one day. Till this day this is a good place ...
@@ -116,7 +120,7 @@ def user_locked(username):
 
 # This hook is called to validate the login credentials provided by a user
 def hook_login(username, password):
-    for connector in multisite_user_connectors:
+    for connector in enabled_connectors():
         handler = connector.get('login', None)
         if not handler:
             continue
@@ -147,11 +151,12 @@ def hook_login(username, password):
 # Hook function can be registered here to be executed to synchronize all users.
 # Is called on:
 #   a) before rendering the user management page in WATO
+#   b) a user is created during login (only for this user)
 def hook_sync(connector_id = None, add_to_changelog = False, only_username = None):
     if connector_id:
         connectors = [ get_connector(connector_id) ]
     else:
-        connectors = multisite_user_connectors
+        connectors = enabled_connectors()
 
     for connector in connectors:
         handler = connector.get('sync', None)
@@ -168,10 +173,29 @@ def hook_sync(connector_id = None, add_to_changelog = False, only_username = Non
                 else:
                     raise
 
+# Hook function can be registered here to be executed during saving of the
+# new user construct
+def hook_save(users):
+    for connector in enabled_connectors():
+        handler = connector.get('save', None)
+        if not handler:
+            continue
+        try:
+            handler(users)
+        except:
+            if config.debug:
+                import traceback
+                html.show_error(
+                    "<h3>" + _("Error executing sync hook") + "</h3>"
+                    "<pre>%s</pre>" % (traceback.format_exc())
+                )
+            else:
+                raise
+
 # Hook function can be registered here to execute actions on a "regular" base without
 # user triggered action. This hook is called on each page load.
 def hook_page():
-    for connector in multisite_user_connectors:
+    for connector in enabled_connectors():
         handler = connector.get('page', None)
         if handler:
             handler()

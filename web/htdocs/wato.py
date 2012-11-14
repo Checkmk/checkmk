@@ -7895,15 +7895,14 @@ def mode_edit_user(phase):
 
     if new:
         if cloneid:
-            user = users.get(cloneid, {})
+            user = users.get(cloneid, userdb.new_user_template('htpasswd'))
         else:
-            user = {}
+            user = userdb.new_user_template('htpasswd')
     else:
-        user = users.get(userid, {})
+        user = users.get(userid, userdb.new_user_template('htpasswd'))
 
     # Returns true if an attribute is locked and should be read only. Is only
     # checked when modifying an existing user
-    # FIXME: Also lock those attributes on form processing
     locked_attributes = userdb.locked_attributes(user.get('connector'))
     def is_locked(attr):
         return not new and attr in locked_attributes
@@ -7975,11 +7974,9 @@ def mode_edit_user(phase):
                 new_user["password"] = userdb.encrypt_password(password)
                 increase_serial = True # password changed, reflect in auth serial
 
-        # Set initial password serial or increase existing
-        if new:
-            new_user["serial"] = 0
-        elif increase_serial:
-            new_user["serial"] += 1
+        # Increase serial (if needed)
+        if increase_serial:
+            new_user['serial'] = new_user.get('serial', 0) + 1
 
         # Email address
         email = html.var("email").strip()
@@ -8444,27 +8441,11 @@ def save_users(profiles):
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("multisite_users = \\\n%s\n" % pprint.pformat(users))
 
-    # Apache htpasswd. We only store passwords here. During
-    # loading we created entries for all admin users we know. Other
-    # users from htpasswd are lost. If you start managing users with
-    # WATO, you should continue to do so or stop doing to for ever...
-    # Locked accounts get a '!' before their password. This disable it.
-    # FIXME: implement as 'save'-hook in htpasswd connector
-    filename = defaults.htpasswd_file
-    out = create_user_file(filename, "w")
+    # Execute user connector save hooks
+    userdb.hook_save(profiles)
+
+    # Write authentication secret for local processes
     for id, user in profiles.items():
-        # only process users which are handled by htpasswd connector
-        if user.get('connector', 'htpasswd') != 'htpasswd':
-            continue
-
-        if user.get("password"):
-            if user.get("locked", False):
-                locksym = '!'
-            else:
-                locksym = ""
-            out.write("%s:%s%s\n" % (id, locksym, user["password"]))
-
-        # Authentication secret for local processes
         auth_dir = defaults.var_dir + "/web/" + id
         auth_file = auth_dir + "/automation.secret"
         make_nagios_directory(auth_dir)

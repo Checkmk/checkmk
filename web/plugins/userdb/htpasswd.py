@@ -90,11 +90,32 @@ def htpasswd_login(username, password):
         return None # not existing user, skip over
     return password_valid(users[username], password)
 
+# Saves htpasswd connector managed users
+def htpasswd_save(users):
+    # Apache htpasswd. We only store passwords here. During
+    # loading we created entries for all admin users we know. Other
+    # users from htpasswd are lost. If you start managing users with
+    # WATO, you should continue to do so or stop doing to for ever...
+    # Locked accounts get a '!' before their password. This disable it.
+    out = create_user_file(defaults.htpasswd_file, "w")
+    for id, user in users.items():
+        # only process users which are handled by htpasswd connector
+        if user.get('connector', 'htpasswd') != 'htpasswd':
+            continue
+
+        if user.get("password"):
+            if user.get("locked", False):
+                locksym = '!'
+            else:
+                locksym = ""
+            out.write("%s:%s%s\n" % (id, locksym, user["password"]))
+
 multisite_user_connectors.append({
     'id':    'htpasswd',
     'title': _('htpasswd file'),
 
     # Register hook functions
     'login': htpasswd_login,
-    # Not registering: sync, save, locked_attributes, page
+    'save':  htpasswd_save,
+    # Not registering: sync, locked_attributes, page
 })

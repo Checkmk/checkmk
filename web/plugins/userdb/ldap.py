@@ -59,21 +59,6 @@ user_filter = {
     'openldap': '(objectcategory=user)',
 }
 
-def ldap_ad_auth_expired():
-    # FIXME
-    pass
-
-def ldap_openldap_auth_expired():
-    # FIXME
-    pass
-
-# Directory type specific function to check wether or not a user
-# session is expired (e.g. because the password has been)
-ldap_pw_expire_check = {
-    'ad':       ldap_ad_auth_expired,
-    'openldap': ldap_openldap_auth_expired,
-}
-
 #   .----------------------------------------------------------------------.
 #   |                      _     ____    _    ____                         |
 #   |                     | |   |  _ \  / \  |  _ \                        |

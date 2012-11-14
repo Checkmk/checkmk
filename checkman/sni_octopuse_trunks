@@ -1,0 +1,21 @@
+title: Siemens Octopus E trunk ports
+agents: snmp
+author: Florian Heigl <fh@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check queries the status of trunk ports on local PBX 
+ supporting the SNI-OCTOPUS-E Mib.
+ Most common example is the Siemens HiPath 3000 and 5000 series.
+ Using this check you should be able to be notified if your telco line has
+ failed.
+ Such a port can be either "active" or "inactive".
+ If a port switches to "inactive" the check will mark this port as {CRIT}
+ 
+inventory:
+ The check will inventorize a trunk port if two conditions are fulfilled.
+ The port must be named "S0 trunk: extern" and be in an active state at the 
+ time of inventory. The check can easily be extended to handle other port 
+ types.
+ A service named "Trunk port" including a slot/port ID is generated for 
+ each port and used as the check item.

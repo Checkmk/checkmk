@@ -71,7 +71,7 @@ case "$1" in
             fi
         else
             echo -n "Deleting status and history files..."
-            rm -f $OMD_ROOT/var/{status,history/*}
+            rm -f $OMD_ROOT/var/{status,master_config,slave_status,history/*}
             echo OK
             exit 0
         fi

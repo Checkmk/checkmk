@@ -623,7 +623,11 @@ class EventServer:
             if line:
                 self.count("messages")
                 before = time.time()
-                self.process_event(line.rstrip())
+                # In replication slave mode (when not took over), ignore all events
+                if not is_replication_slave() or g_slave_status["mode"] != "sync":
+                    self.process_event(line.rstrip())
+                elif opt_debug:
+                    log("Replication: we are in slave mode, ignoring event")
                 elapsed = time.time() - before
                 self.count_processing_time(elapsed)
 
@@ -850,6 +854,7 @@ class EventServer:
                 count_disabled += 1
             else:
                 count_rules += 1
+                rule = rule.copy() # keep original intact because of slave replication
                 self._rules.append(rule)
                 self._rule_by_id[rule["id"]] = rule
                 try:
@@ -871,19 +876,22 @@ class EventServer:
 
                 if g_config["rule_optimizer"]:
                     self.hash_rule(rule)
-                    if "match_facility" not in rule and "match_priority" not in rule and "cancel_priority" not in rule:
+                    if "match_facility" not in rule \
+                        and "match_priority" not in rule \
+                        and "cancel_priority" not in rule:
                         count_unspecific += 1
 
 
-        log("Loaded %d active rules (ignoring %d disabled rules)" % (count_rules, count_disabled))
+        log("Compiled %d active rules (ignoring %d disabled rules)" % (count_rules, count_disabled))
         if g_config["rule_optimizer"]:
             log("Rule hash: %d rules - %d hashed, %d unspecific" % 
                (len(self._rules), len(self._rules) - count_unspecific, count_unspecific))
             for facility in range(24):
-                stats = []
-                for prio, entries in self._rule_hash[facility].items():
-                    stats.append("%s(%d)" % (syslog_priorities[prio], len(entries)))
-                log(" %-12s: %s" % (syslog_facilities[facility], " ".join(stats)))
+                if facility in self._rule_hash:
+                    stats = []
+                    for prio, entries in self._rule_hash[facility].items():
+                        stats.append("%s(%d)" % (syslog_priorities[prio], len(entries)))
+                    log(" %-12s: %s" % (syslog_facilities[facility], " ".join(stats)))
 
 
     def hash_rule(self, rule):
@@ -1293,6 +1301,7 @@ class StatusServer:
     def reload_configuration(self):
         self._reopen_sockets = True
 
+
     # TODO: Wenn das hier komplexer wird, machen wir eine
     # Klassenvererbung
     def run(self):
@@ -1348,7 +1357,7 @@ class StatusServer:
                             continue
                     else:
                         allow_commands = True
-                    self.handle_client(client_socket, allow_commands)
+                    self.handle_client(client_socket, allow_commands, addr_info and addr_info[0] or "")
 
             except Exception, e:
                 log("Error handling client %s: %s" % (addr_info, e))
@@ -1362,7 +1371,7 @@ class StatusServer:
             client_socket = None # close without danger of exception
 
 
-    def handle_client(self, socket, allow_commands):
+    def handle_client(self, socket, allow_commands, client_ip):
         query = socket.recv(8192).splitlines()
         parts = query[0].split(None, 1)
         if len(parts) != 2:
@@ -1373,12 +1382,18 @@ class StatusServer:
         with lock_eventstatus:
             if method == "GET":
                 response = self.handle_get_request(table, query[1:])
+
+            elif method == "REPLICATE":
+                response = self.handle_replicate(table, client_ip)
+
             elif method == "COMMAND":
                 if not allow_commands:
                     raise MKClientError("Sorry. Commands are disallowed via TCP")
-                response = self.handle_command_request(table)
+                self.handle_command_request(table)
+                response = None
+
             else:
-                raise MKClientError("Invalid method %s (allowed is only GET)" % method)
+                raise MKClientError("Invalid method %s (allowed are GET, COMMAND and REPLICATE)" % method)
 
         socket.send(repr(response))
         socket.send("\n")
@@ -1441,7 +1456,6 @@ class StatusServer:
         event["state"] = int(newstate)
         log_event_history(event, "CHANGESTATE", user)
 
-
     def handle_command_reload(self):
         with lock_configuration:
             load_configuration()
@@ -1459,6 +1473,13 @@ class StatusServer:
         flush_event_history()
         g_event_status.flush()
         g_event_status.save_status()
+        if is_replication_slave():
+            try:
+                os.remove(g_state_dir + "/master_config")
+                os.remove(g_state_dir + "/slave_status")
+                load_slave_status()
+            except:
+                pass
         log("Flushed current status and historic events.")
 
     def handle_command_sync(self):
@@ -1473,7 +1494,6 @@ class StatusServer:
             log("Resetting all rule counters")
         g_event_status.reset_counters(rule_id)
 
-
     def handle_command_action(self, arguments):
         with lock_configuration:
             event_id, user, action_id = arguments
@@ -1483,6 +1503,18 @@ class StatusServer:
                    "make sure that you activate the changes in the Event Console.") % action_id
             action = g_config["action"][action_id]
         do_rule_action(action, event, user)
+
+    def handle_replicate(self, argument, client_ip):
+        # Last time our slave got a config update
+        try:
+            last_update = int(argument)
+            if opt_debug:
+                log("Replication: sync request from %s, last update %d seconds ago" % (
+                    client_ip, time.time() - last_update))
+
+        except:
+            raise MKClientError("Invalid arguments to command REPLICATE")
+        return replication_send(last_update)
 
     def handle_get_request(self, table, headerlines):
         if table == "events":
@@ -1584,13 +1616,19 @@ def run_eventd():
     next_housekeeping = now + g_config["housekeeping_interval"]
     next_retention = now + g_config["retention_interval"]
     next_statistics = now + g_config["statistics_interval"]
+    next_replication = 0 # force immediate replication after restart
 
     while True:
         try:
             # Wait until either housekeeping or retention is due, but at
             # maximum 60 seconds. That way changes of the interval from a very
             # high to a low value will never require more than 60 seconds
-            time_left = max(0, min(next_housekeeping, next_retention, next_statistics) - time.time())
+            
+            event_list = [ next_housekeeping, next_retention, next_statistics ]
+            if is_replication_slave():
+                event_list.append(next_replication)
+
+            time_left = max(0, min(event_list) - time.time())
             time.sleep(min(time_left, 60))
 
             now = time.time()
@@ -1607,6 +1645,10 @@ def run_eventd():
                 g_event_server.do_statistics()
                 next_statistics = now + g_config["statistics_interval"]
 
+            # Beware: replication might be turned on during this loop!
+            if is_replication_slave() and now > next_replication:
+                replication_pull()
+                next_replication = now + g_config["replication"]["interval"]
 
 
         except MKSignalException, e:
@@ -1701,15 +1743,23 @@ class EventStatus():
             log("Rule %s: next interval starts %s (i.e. now + %.2f sec)" % 
                     (rule_id, next_start, time.time() - next_start))
 
-
-    def save_status(self):
-        now = time.time()
-        status = {
+    def pack_status(self):
+        return {
             "next_event_id"   : self._next_event_id,
             "events"          : self._events,
             "rule_stats"      : self._rule_stats,
             "interval_starts" : self._interval_starts, 
         }
+
+    def unpack_status(self, status):
+        self._next_event_id   = status["next_event_id"]
+        self._events          = status["events"]
+        self._rule_stats      = status["rule_stats"]
+        self._interval_starts = status["interval_starts"]
+
+    def save_status(self):
+        now = time.time()
+        status = self.pack_status()
         path = g_state_dir + "/status"
         # Belive it or not: cPickle is more than two times slower than repr()
         out = file(path + ".new", "w").write(repr(status) + "\n")
@@ -1725,8 +1775,6 @@ class EventStatus():
             self._rule_stats = {}
         self.save_status()
 
-
-
     def load_status(self):
         path = g_state_dir + "/status"
         if os.path.exists(path):
@@ -1740,6 +1788,7 @@ class EventStatus():
             except Exception, e:
                 log("Error loading event state from %s: %s" % (path, e))
                 raise
+
 
     def new_event(self, event):
         g_event_server.count("events")
@@ -1956,6 +2005,189 @@ def send_email(to, subject, body):
 def execute_script(body):
     os.popen("/bin/bash", "w").write(body)
 
+
+#.
+#   .--Replication---------------------------------------------------------.
+#   |           ____            _ _           _   _                        |
+#   |          |  _ \ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __             |
+#   |          | |_) / _ \ '_ \| | |/ __/ _` | __| |/ _ \| '_ \            |
+#   |          |  _ <  __/ |_) | | | (_| (_| | |_| | (_) | | | |           |
+#   |          |_| \_\___| .__/|_|_|\___\__,_|\__|_|\___/|_| |_|           |
+#   |                    |_|                                               |
+#   +----------------------------------------------------------------------+
+#   |  Functions for doing replication, master and slave parts.            |
+#   '----------------------------------------------------------------------'
+def is_replication_slave():
+    repl_settings = g_config.get("replication")
+    return repl_settings and not repl_settings.get("disabled")
+
+def replication_send(last_update):
+    response = {}
+    with lock_configuration:
+        response["status"] = g_event_status.pack_status()
+        if last_update < g_last_config_reload:
+            response["rules"] = g_config["rules"]
+            response["actions"] = g_config["actions"]
+        return response
+
+def replication_pull():
+    # We distinguish two modes:
+    # 1. slave mode: just pull the current state from the master.
+    #    if the master is not reachable then decide wether to 
+    #    switch to takeover mode.
+    # 2. takeover mode: if automatic fallback is enabled and the
+    #    time frame for that has not yet ellapsed, then try to
+    #    pull the current state from the master. If that is successful
+    #    then switch back to slave mode. If not automatic fallback
+    #    is enabled then simply do nothing.
+    now = time.time()
+    repl_settings = g_config["replication"]
+    mode = g_slave_status["mode"]
+    need_sync = mode == "sync" or \
+            ( mode == "takeover" and "fallback" in repl_settings and \
+               ( g_slave_status["last_master_down"] == None or
+                 now - repl_settings["fallback"] < g_slave_status["last_master_down"] ))
+
+    if need_sync:
+        with lock_eventstatus:
+            with lock_configuration:
+                
+                try:
+                    new_state = get_state_from_master()
+                    replication_update_state(new_state)
+                    if repl_settings.get("logging"):
+                        log("Successfully synchronized with master")
+                    g_slave_status["last_sync"] = now
+
+                    # Fall back to slave mode after successful sync 
+                    # (time frame has already been checked)
+                    if mode == "takeover":
+                        if g_slave_status["last_master_down"] == None:
+                            log("Replication: master reachable for the first time, "
+                                "switching back to slave mode")
+                            g_slave_status["mode"] = "sync"
+                        else:
+                            log("Replication: master reachable again after %d seconds, "
+                                "switching back to sync mode" % (now - g_slave_status["last_master_down"]))
+                            g_slave_status["mode"] = "sync"
+                    g_slave_status["last_master_down"] = None
+
+                except Exception, e:
+                    log("Replication: cannot sync with master: %s" % e)
+                    if g_slave_status["last_master_down"] == None:
+                        g_slave_status["last_master_down"] = now
+
+                    # Takeover
+                    if "takeover" in repl_settings and mode != "takeover":
+                        if not g_slave_status["last_sync"]:
+                            if repl_settings.get("logging"):
+                                log("Replication: no takeover since master was never reached.")
+                        else:
+                            offline = now - g_slave_status["last_sync"]
+                            if offline < repl_settings["takeover"]:
+                                if repl_settings.get("logging"):
+                                    log("Replication: no takeover yet, still %d seconds to wait" % 
+                                        (repl_settings["takeover"] - offline))
+                            else:
+                                log("Replication: master not reached for %d seconds, taking over!" %
+                                    offline)
+                                g_slave_status["mode"] = "takeover"
+
+                save_slave_status()
+
+# Called when we have new data from our master
+def replication_update_state(new_state):
+
+    # Keep a copy of the masters' rules and actions and also prepare using them
+    if "rules" in new_state:
+        save_master_config(new_state)
+        g_event_server.compile_rules(new_state["rules"])
+        g_config["actions"] = new_state["actions"]
+
+    # Update to the masters' event state
+    g_event_status.unpack_status(new_state["status"])
+
+
+
+def save_master_config(new_state):
+    path = g_state_dir + "/master_config"
+    file(path + ".new", "w").write(repr({
+        "rules" : new_state["rules"],
+        "actions" : new_state["actions"],
+    }) + "\n")
+    os.rename(path + ".new", path)
+
+def load_master_config():
+    path = g_state_dir + "/master_config"
+    try:
+        config = eval(file(path).read())
+        g_config["rules"] = config["rules"]
+        g_config["actions"] = config["actions"]
+        log("Replication: restored %d rules and %d actions from %s" %
+            (len(config["rules"]), len(config["actions"]), path))
+    except:
+        log("Replication: no previously saved master state available")
+
+
+def get_state_from_master():
+    repl_settings = g_config["replication"]
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(repl_settings["connect_timeout"])
+        sock.connect(repl_settings["master"])
+        sock.send("REPLICATE %d\n" % (g_slave_status["last_sync"] and g_slave_status["last_sync"] or 0))
+
+        response_text = ""
+        while True:
+            chunk = sock.recv(8192)
+            response_text += chunk
+            if not chunk:
+                break
+
+        return eval(response_text)
+    except SyntaxError, e:
+        raise Exception("Invalid response from event daemon: <pre>%s</pre>" % response_text)
+
+    except IOError, e:
+        raise Exception("Master not responding: %s" % e)
+
+    except Exception, e:
+        raise Exception("Cannot connect to event daemon: %s" % e)
+
+            
+
+def save_slave_status():
+    global g_slave_status
+    path = g_state_dir + "/slave_status"
+    file(path, "w").write(repr(g_slave_status) + "\n")
+
+# Load the current replication slave status. If we are in
+# replication mode then after this call g_slave_status will be set.
+# if not, then this variable will be missing and also the file
+def load_slave_status():
+    global g_slave_status
+    path = g_state_dir + "/slave_status"
+    if is_replication_slave():
+        try:
+            g_slave_status = eval(file(path).read())
+        except:
+            g_slave_status = {
+                "last_sync"        : 0, # Time of last successfull sync 
+                "last_master_down" : None,
+                "mode"             : "sync",
+            }
+            save_slave_status()
+
+
+    # Remove slave status if we are (no longer) a slave
+    else:
+        if os.path.exists(path):
+            os.remove(path)
+        try:
+            del g_slave_status
+        except: 
+            pass
+
 #.
 #   .--Configuration-------------------------------------------------------.
 #   |    ____             __ _                       _   _                 |
@@ -1968,7 +2200,7 @@ def execute_script(body):
 #   |  Loading of the configuration files                                  |
 #   '----------------------------------------------------------------------'
 def load_configuration():
-    global g_config
+    global g_config, g_last_config_reload
     g_config = {
         "rules"                 : [],
         "actions"               : [],
@@ -1995,10 +2227,20 @@ def load_configuration():
     for path in [ main_file ] + list_of_files:
         execfile(path, g_config, g_config)
 
+    # Are we a replication slave? Parts of the configuration
+    # will be overridden by values from the master.
+    load_slave_status()
+    if is_replication_slave():
+        log("Replication: slave configuration, current mode: %s" %
+            g_slave_status["mode"])
+    load_master_config()
+
     # Create dictionary for actions for easy access
     g_config["action"] = {}
     for action in g_config["actions"]:
         g_config["action"][action["id"]] = action
+
+    g_last_config_reload = time.time()
 
 
 #.
@@ -2128,13 +2370,13 @@ try:
     if not g_socket_path:
         bail_out("Please specify the path to the socket (using -S).")
 
-    load_configuration()
-
     # Prepare logging if running in daemon mode
     if not opt_foreground:
         open_logfile()
     log("-" * 65)
     log("mkeventd version %s starting" % VERSION)
+
+    load_configuration()
 
     if os.path.exists(g_pid_file):
         old_pid = int(file(g_pid_file).read())

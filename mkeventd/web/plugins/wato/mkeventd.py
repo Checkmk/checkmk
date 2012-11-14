@@ -712,9 +712,18 @@ def mode_mkeventd_rules(phase):
 
     if phase == "action":
         # Validation of input for rule simulation (no further action here)
-        if html.var("simulate"):
+        if html.var("simulate") or html.var("_generate"):
             event = vs_mkeventd_event.from_html_vars("event")
             vs_mkeventd_event.validate_value(event, "event")
+
+        if html.has_var("_generate") and html.check_transaction():
+            if not event.get("application"):
+                raise MKUserError("event_p_application", _("Please specify an application name"))
+            if not event.get("host"):
+                raise MKUserError("event_p_host", _("Please specify a host name"))
+            rfc = mkeventd.send_event(event)
+            return None, "Test event generated and sent to Event Console.<br><pre>%s</pre>" % rfc
+
 
         if html.has_var("_delete"):
             nr = int(html.var("_delete"))
@@ -764,7 +773,8 @@ def mode_mkeventd_rules(phase):
     vs_mkeventd_event.render_input("event", event)
     forms.end()
     html.hidden_fields()
-    html.button("simulate", _("Try out!"))
+    html.button("simulate", _("Try out"))
+    html.button("_generate", _("Generate Event!"))
     html.end_form()
     html.write("<br>")
 
@@ -878,7 +888,6 @@ def mode_mkeventd_rules(phase):
         html.write('<td>%s</td>' % rule.get("match"))
         html.write('</tr>\n')
     html.write('</table>')
-
 
 
 def mode_mkeventd_edit_rule(phase):
@@ -1160,6 +1169,105 @@ if mkeventd_enabled:
         ),
         domain = "multisite"
     )
+
+    register_configvar(group,
+        "replication",
+        Optional(
+            Dictionary(
+                optional_keys = [ "takeover", "fallback", "disabled", "logging" ],
+                elements = [
+                    ( "master", 
+                      Tuple(
+                          title = _("Master Event Console"),
+                          help = _("Specify the host name or IP address of the master Event Console that "
+                                   "you want to replicate from. The port number must be the same as set "
+                                   "in the master in <i>Access to event status via TCP</i>."),
+                          elements = [
+                              TextAscii(
+                                  title = _("Hostname/IP address of Master Event Console:"),
+                                  allow_empty = False,
+                              ),
+                              Integer(
+                                  title = _("TCP Port number of status socket:"), 
+                                  minvalue = 1,
+                                  maxvalue = 65535,
+                                  default_value = 6558,
+                              ),
+                          ],
+                        )
+                    ),
+                    ( "interval",
+                      Integer(
+                          title = _("Replication interval"),
+                          help = _("The replication will be triggered each this number of seconds"),
+                          label = _("Do a replication every"),
+                          unit = _("sec"),
+                          minvalue = 1,
+                          default_value = 10,
+                      ),
+                    ),
+                    ( "connect_timeout",
+                      Integer(
+                          title = _("Connection timeout"),
+                          help = _("TCP connection timeout for connecting to the master"),
+                          label = _("Try bringing up TCP connection for"),
+                          unit = _("sec"),
+                          minvalue = 1,
+                          default_value = 10,
+                      ),
+                    ),
+                    ( "takeover", 
+                      Integer(
+                          title = _("Automatic takeover"),
+                          help = _("If you enable this option then the slave will automatically "
+                                   "take over and enable event processing if the master is for "
+                                   "the configured number of seconds unreachable."),
+                          label = _("Take over after a master downtime of"),
+                          unit = _("sec"),
+                          minvalue = 1,
+                          default_value = 30,
+                      ),
+                    ),
+                    ( "fallback",
+                      Integer(
+                          title = _("Automatic fallback"),
+                          help = _("If you enable this option then the slave will automatically "
+                                   "fallback from takeover mode to slavemode if the master is "
+                                   "rechable again within the selected number of seconds since "
+                                   "the previous unreachability (not since the takeover)"),
+                          label = _("Fallback if master comes back within"),
+                          unit = _("sec"),
+                          minvalue = 1,
+                          default_value = 60,
+                      ),
+                    ),
+                    ( "disabled",
+                      FixedValue(
+                          True,
+                          totext = _("Replication is disabled"),
+                          title = _("Currently disable replication"),
+                          help = _("This allows you to disable the replication without loosing "
+                                   "your settings. If you check this box, then no replication "
+                                   "will be done and the Event Console will act as its own master."),
+                      ),
+                    ),
+                    ( "logging",
+                      FixedValue(
+                          True,
+                          title = _("Log replication events"),
+                          totext = _("logging is enabled"),
+                          help = _("Enabling this option will create detailed log entries for all "
+                                   "replication activities of the slave. If disabled only problems "
+                                   "will be logged."),
+                      ),
+                    ),
+                ]
+            ),
+            title = _("Enable replication from a master"),
+        ),
+        domain = "mkeventd"
+    )
+
 
     
     register_configvar(group,

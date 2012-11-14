@@ -5454,7 +5454,11 @@ def mode_globalvars(phase):
                 to_text = valuespec.value_to_text(current_settings[varname])
             else:
                 to_text = valuespec.value_to_text(defaultvalue)
-            simple = isinstance(valuespec, Checkbox) or "\n" not in to_text
+
+            # Is this a simple (single) value or not? change styling in these cases...
+            simple = True
+            if '\n' in to_text or '<td>' in to_text:
+                simple = False
             forms.section(title, simple=simple)
 
             toggle_url = make_action_link([("mode", "globalvars"), 

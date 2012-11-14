@@ -17,12 +17,16 @@
            list of explicit host/services in rules)
     * FIX: fix inheritation of contactgroups from folder to hosts
     * FIX: fix sorting of users, fix lost user alias in some situations
+    * FIX: Sites not using distritubed WATO now being skipped when determining
+           the prefered peer
 
     BI:
     * FIX: Correct representation of (!), (!!) and (?) markers in check output
 
     Livestatus
     * FIX: comments_with_info in service table was always empty
+    * FIX: check_icmp: fixed calculation of remaining length of output buffer
+    * FIX: check_icmp: removed possible buffer overflow on do_output_char()
     
     Livecheck
     * FIX: fixed problem with long plugin output
@@ -32,6 +36,9 @@
     * FIX: close inherited unused filedescriptors after fork()
     * FIX: kill process group of called plugin if timeout is reached
            -> preventing possible freeze of livecheck
+    * FIX: correct escaping of character / in nagios checkresult file
+    * FIX: fixed SIGSEGV on hosts without defined check_command
+    * FIX: now providing correct output buffer size when calling check_icmp 
 
     Checks & Agents:
     * FIX: Linux mk_logwatch: iregex Parameter was never used
@@ -44,6 +51,7 @@
     * windows_updates agent plugin: Fetching data in background mode, caching
       update information for 30 minutes
     * FIX: netapp_vfiler: fix inventory function (thanks to Falk Krentzlin)
+    * FIX: netapp_cluster: fix inventory function
     * FIX: ps: avoid exception, when CPU% is missing (Zombies on Solaris)
     * FIX: win_dhcp_pools: fixed calculation of perc_free
 

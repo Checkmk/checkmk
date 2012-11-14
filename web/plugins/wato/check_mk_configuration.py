@@ -418,8 +418,21 @@ if userdb.connector_enabled('ldap'):
                       'or disabled. When enabling a plugin, it is used upon the next synchonisation of '
                       'user accounts for gathering their attributes. The user options which get imported '
                       'into Check_MK from LDAP will be locked in WATO.'),
-            default_value = [ 'email', 'alias' ],
+            default_value = [ 'email', 'alias', 'auth_expire' ],
             choices = userdb.ldap_list_attribute_plugins,
+        ),
+        domain = "multisite",
+    )
+
+    register_configvar(group,
+        "ldap_cache_livetime",
+        Integer(
+            title = _('LDAP Cache Livetime'),
+            help  = _('This option defines the maximum age for using the cached LDAP data. The time of the '
+                      'last LDAP synchronisation is saved and checked on every request to the multisite '
+                      'interface. Once the cache gets outdated, a new synchronisation job is started.'),
+            minvalue = 1,
+            default_value = 300,
         ),
         domain = "multisite",
     )

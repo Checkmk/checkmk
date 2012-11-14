@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults
+import time
 
 # FIXME: For some reason mod_python is missing /usr/lib/python2.7/dist-packages
 # in sys.path. Therefor the ldap module can not be found. Need to fix this!
@@ -37,13 +38,18 @@ except:
     pass
 from lib import *
 
+# File for storing the time of the last success event
+g_ldap_sync_time_file = defaults.var_dir + '/web/ldap_sync_time.mk'
+
 # LDAP attributes are case insensitive, we only use lower case!
 ldap_attr_map = {
     'ad': {
-        'user_id': 'samaccountname',
+        'user_id':    'samaccountname',
+        'pw_changed': 'pwdlastset',
     },
     'openldap': {
-        'user_id': 'uid',
+        'user_id':    'uid',
+        'pw_changed': 'pwdchangedtime',
     },
 }
 
@@ -53,10 +59,31 @@ user_filter = {
     'openldap': '(objectcategory=user)',
 }
 
-#
-# GENERAL LDAP CODE
-# FIXME: Maybe extract to central lib
-#
+def ldap_ad_auth_expired():
+    # FIXME
+    pass
+
+def ldap_openldap_auth_expired():
+    # FIXME
+    pass
+
+# Directory type specific function to check wether or not a user
+# session is expired (e.g. because the password has been)
+ldap_pw_expire_check = {
+    'ad':       ldap_ad_auth_expired,
+    'openldap': ldap_openldap_auth_expired,
+}
+
+#   .----------------------------------------------------------------------.
+#   |                      _     ____    _    ____                         |
+#   |                     | |   |  _ \  / \  |  _ \                        |
+#   |                     | |   | | | |/ _ \ | |_) |                       |
+#   |                     | |___| |_| / ___ \|  __/                        |
+#   |                     |_____|____/_/   \_\_|                           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | General LDAP handling code                                           |
+#   '----------------------------------------------------------------------'
 
 class MKLDAPException(MKGeneralException):
     pass
@@ -192,7 +219,7 @@ def get_user_dn(username):
 
 def ldap_get_users(add_filter = None):
     columns = [
-        ldap_attr('user_id'),
+        ldap_attr('user_id'), # needed in all cases as uniq id
     ] + ldap_needed_attributes()
 
     filt = user_filter[config.ldap_connection['type']]
@@ -206,9 +233,16 @@ def ldap_get_users(add_filter = None):
 
     return result
 
-#
-# Attribute plugin handling
-#
+#   .----------------------------------------------------------------------.
+#   |              _   _   _        _ _           _                        |
+#   |             / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___             |
+#   |            / _ \| __| __| '__| | '_ \| | | | __/ _ \/ __|            |
+#   |           / ___ \ |_| |_| |  | | |_) | |_| | ||  __/\__ \            |
+#   |          /_/   \_\__|\__|_|  |_|_.__/ \__,_|\__\___||___/            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Attribute plugin handling code goes here                             |
+#   '----------------------------------------------------------------------'
 
 ldap_attribute_plugins = {}
 
@@ -226,10 +260,10 @@ def ldap_needed_attributes():
         attrs.update(ldap_attribute_plugins[key]['needed_attributes']())
     return list(attrs)
 
-def ldap_convert_simple(user_id, ldap_user, wato_attr, attr):
+def ldap_convert_simple(user_id, ldap_user, user, wato_attr, attr):
     return {wato_attr: ldap_user[ldap_attr(attr)][0]}
 
-def ldap_convert_mail(user_id, ldap_user):
+def ldap_convert_mail(user_id, ldap_user, user):
     mail = ''
     if ldap_user.get(ldap_attr('mail')):
         mail = ldap_user[ldap_attr('mail')][0].lower()
@@ -253,13 +287,55 @@ ldap_attribute_plugins['alias'] = {
     'title': _('Alias'),
     'help':  _('Synchronizes the alias of the LDAP user account into Check_MK.'),
     'needed_attributes': lambda: ldap_attrs(['cn']),
-    'convert':           lambda user_id, ldap_user: ldap_convert_simple(user_id, ldap_user, 'alias', 'cn'),
+    'convert':           lambda user_id, ldap_user, user: ldap_convert_simple(user_id, ldap_user, user, 'alias', 'cn'),
     'set_attributes':    [ 'alias' ],
 }
 
-#
-# Connector hook functions
-#
+# Checks wether or not the user auth must be invalidated (increasing the serial).
+# In first instance, it must parse the pw-changed field, then check wether or not
+# a date has been stored in the user before and then maybe increase the serial.
+def ldap_convert_auth_expire(user_id, ldap_user, user):
+    changed_attr = ldap_attr('pw_changed')
+    if not changed_attr in ldap_user:
+        raise MKLDAPException(_('The "Authentication Expiration" attribute (%s) could not be fetched'
+                                'from the LDAP server for user %s.') % (changed_attr, ldap_user))
+
+    # For keeping this thing simple, we don't parse the date here. We just store
+    # the last value of the field in the user data and invalidate the auth if the
+    # value has been changed.
+
+    if 'ldap_pw_last_changed' not in user:
+        return {'ldap_pw_last_changed': ldap_user[changed_attr]} # simply store
+
+    # Update data (and invalidate auth) if the attribute has changed
+    if user['ldap_pw_last_changed'] != ldap_user[changed_attr]:
+        return {
+            'ldap_pw_last_changed': ldap_user[changed_attr],
+            'serial':               user.get('serial', 0) + 1,
+        }
+
+    return {}
+
+ldap_attribute_plugins['auth_expire'] = {
+    'title': _('Authentication Expiration'),
+    'help':  _('This plugin fetches all information which are needed to check wether or '
+               'not an already authenticated user should be deauthenticated, e.g. because '
+               'the password has changed in LDAP or the account has been locked.'),
+    'needed_attributes': lambda: ldap_attrs(['pw_changed']),
+    'convert':           ldap_convert_auth_expire,
+    'set_attributes':    [],
+}
+
+#   .----------------------------------------------------------------------.
+#   |                     _   _             _                              |
+#   |                    | | | | ___   ___ | | _____                       |
+#   |                    | |_| |/ _ \ / _ \| |/ / __|                      |
+#   |                    |  _  | (_) | (_) |   <\__ \                      |
+#   |                    |_| |_|\___/ \___/|_|\_\___/                      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Hook functions used in this connector                                |
+#   '----------------------------------------------------------------------'
 
 # This function only validates credentials, no locked checking or similar
 def ldap_login(username, password):
@@ -313,7 +389,7 @@ def ldap_sync(add_to_changelog, only_username):
 
         # Gather config from convert functions of plugins
         for key in config.ldap_active_plugins:
-            user.update(ldap_attribute_plugins[key]['convert'](user_id, ldap_user))
+            user.update(ldap_attribute_plugins[key]['convert'](user_id, ldap_user, user))
 
         if not mode_create and user == users[user_id]:
             continue # no modification. Skip this user.
@@ -327,6 +403,9 @@ def ldap_sync(add_to_changelog, only_username):
 
     wato.save_users(users)
 
+    # Store time of the last sync
+    file(g_ldap_sync_time_file, 'w').write('%s\n' % time.time())
+
 # Calculates the attributes of the users which are locked for users managed
 # by this connector
 def ldap_locked_attributes():
@@ -337,8 +416,16 @@ def ldap_locked_attributes():
 
 # Is called on every multisite http request
 def ldap_page():
-    # FIXME: Implement
-    pass
+    try:
+        last_sync_time = float(file(g_ldap_sync_time_file).read().strip())
+    except:
+        last_sync_time = 0
+
+    if last_sync_time + config.ldap_cache_livetime > time.time():
+        return # No action needed, cache is recent enough
+
+    # ok, cache is too old. Act!
+    ldap_sync(False, None)
 
 multisite_user_connectors.append({
     'id':    'ldap',

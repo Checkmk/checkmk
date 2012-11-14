@@ -242,7 +242,7 @@ void do_output(int crash, char *format, ...)
 {
     va_list ap;
     va_start(ap, format);
-    int place_left = g_output_buffer + g_output_buffer_size - g_output_pointer;
+    int place_left = g_output_buffer + g_output_buffer_size - g_output_pointer - 1;
     g_output_pointer += vsnprintf(g_output_pointer, place_left, format, ap);
     va_end(ap);
     *g_output_pointer = 0;
@@ -250,10 +250,6 @@ void do_output(int crash, char *format, ...)
         exit_code = 3;
         longjmp(exit_jmp, 1);
     }
-}
-void do_output_char(char c)
-{
-    *g_output_pointer++ = c;
 }
 
 static const char *
@@ -845,7 +841,7 @@ finish(int sig)
 	}
 
 	/* iterate once more for pretty perfparse output */
-        do_output_char('|');
+	do_output(0, "|");
 	i = 0;
 	host = list;
 	while(host) {
@@ -865,8 +861,7 @@ finish(int sig)
 	}
 
 	/* finish with an empty line */
-        do_output_char('\n');
-
+        do_output(0,"\n");
         exit_code = status;
         longjmp(exit_jmp, 1);
 }

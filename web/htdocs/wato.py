@@ -1469,10 +1469,16 @@ def move_hosts_to(hostnames, path):
             continue
 
         mark_affected_sites_dirty(g_folder, hostname)
+
+        # Add to new folder
         target_hosts[hostname] = g_folder[".hosts"][hostname]
+        target_hosts[hostname]['.folder'] = target_folder
         target_folder["num_hosts"] += 1
+
+        # Remove from old folder
         g_folder["num_hosts"] -= 1
         del g_folder[".hosts"][hostname]
+
         mark_affected_sites_dirty(target_folder, hostname)
 
         if len(hostnames) == 1:

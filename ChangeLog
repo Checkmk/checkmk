@@ -107,7 +107,6 @@
     * winperf_phydisk: monitor average queue length for read/write
 
 1.2.0p4:
-    Mulitisite:
     * FIX: BI: Assuming "OK" for hosts is now possible
     * FIX: Fixed error in makeuri() calls when no parameters in URL
     * FIX: Try out mode in view editor does not show context buttons anymore

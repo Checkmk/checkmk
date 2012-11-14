@@ -26,5 +26,5 @@
 
 import userdb
 
-api.register_hook('pre-activate-changes', userdb.hook_sync)
+api.register_hook('pre-activate-changes', lambda hosts: userdb.hook_sync())
 api.register_hook('snapshot-pushed', userdb.hook_sync)

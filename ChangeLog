@@ -114,6 +114,7 @@
     * FIX: WATO Folder filter not available when WATO disabled
     * FIX: WATO Folder Filter no longer available in single host views
     * FIX: Quicksearch converts search text to regex when accessing livestatus
+    * FIX: Localize option for not OMD Environments
 
     WATO:
     * FIX: Users & Contacts uses case-insensitive sorting of 'Full name' column  

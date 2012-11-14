@@ -112,7 +112,7 @@ def htpasswd_save(users):
 
 multisite_user_connectors.append({
     'id':    'htpasswd',
-    'title': _('htpasswd file'),
+    'title': _('htpasswd'),
 
     # Register hook functions
     'login': htpasswd_login,

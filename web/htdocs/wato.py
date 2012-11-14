@@ -7808,10 +7808,12 @@ def mode_users(phase):
         # Connector
         html.write("<td>%s</td>" % userdb.get_connector(user.get('connector'))['title'])
 
+        locked_attributes = userdb.locked_attributes(user.get('connector'))
+
         # Authentication
         if "automation_secret" in user:
             auth_method = _("Automation")
-        elif user.get("password"):
+        elif user.get("password") or 'password' in locked_attributes:
             auth_method = _("Password")
         else:
             auth_method = "<i>%s</i>" % _("none")

@@ -871,7 +871,9 @@ class EventServer:
 
                 if g_config["rule_optimizer"]:
                     self.hash_rule(rule)
-                    if "match_facility" not in rule and "match_priority" not in rule and "cancel_priority" not in rule:
+                    if "match_facility" not in rule \
+                        and "match_priority" not in rule \
+                        and "cancel_priority" not in rule:
                         count_unspecific += 1
 
 
@@ -880,10 +882,11 @@ class EventServer:
             log("Rule hash: %d rules - %d hashed, %d unspecific" % 
                (len(self._rules), len(self._rules) - count_unspecific, count_unspecific))
             for facility in range(24):
-                stats = []
-                for prio, entries in self._rule_hash[facility].items():
-                    stats.append("%s(%d)" % (syslog_priorities[prio], len(entries)))
-                log(" %-12s: %s" % (syslog_facilities[facility], " ".join(stats)))
+                if facility in self._rule_hash:
+                    stats = []
+                    for prio, entries in self._rule_hash[facility].items():
+                        stats.append("%s(%d)" % (syslog_priorities[prio], len(entries)))
+                    log(" %-12s: %s" % (syslog_facilities[facility], " ".join(stats)))
 
 
     def hash_rule(self, rule):

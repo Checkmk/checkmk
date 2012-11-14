@@ -706,6 +706,7 @@ def mode_mkeventd_rules(phase):
             html.context_button(_("New Rule"), make_link([("mode", "mkeventd_edit_rule")]), "new")
             html.context_button(_("Reset Counters"), 
               make_action_link([("mode", "mkeventd_rules"), ("_reset_counters", "1")]), "resetcounters")
+        html.context_button(_("Server Status"), make_link([("mode", "mkeventd_status")]), "status")
         return
 
     rules = load_mkeventd_rules()
@@ -762,6 +763,13 @@ def mode_mkeventd_rules(phase):
                 save_mkeventd_rules(rules)
                 log_mkeventd("move-rule", _("Changed position of rule %s") % rule["id"])
         return
+
+    rep_mode = mkeventd.replication_mode()
+    if rep_mode in [ "sync", "takeover" ]:
+        html.show_warning(_("WARNING: This Event Console is currently running as a replication "
+          "slave. The rules edited here will not be used. Instead a copy of the rules of the "
+          "master are being used in the case of a take over. The same holds for the event "
+          "actions in the global settings."))
 
     if len(rules) == 0:
         html.write(_("You have not created any rules yet."))
@@ -1049,12 +1057,83 @@ def mkeventd_changes_button():
     html.context_button(buttontext, make_link([("mode", "mkeventd_changes")]), icon, hot)
 
 def mkeventd_rules_button():
-    html.context_button(_("All rules"), make_link([("mode", "mkeventd_rules")]), "back")
+    html.context_button(_("All Rules"), make_link([("mode", "mkeventd_rules")]), "back")
+
+def mode_mkeventd_status(phase):
+    if phase == "title":
+        return _("Event Console - Server Status")
+
+    elif phase == "buttons":
+        home_button()
+        mkeventd_rules_button()
+        return
+    
+    elif phase == "action":
+        if config.may("mkeventd.switchmode"):
+            if html.has_var("_switch_sync"):
+                new_mode = "sync"
+            else:
+                new_mode = "takeover"
+            c = wato_confirm(_("Confirm switching replication mode"),
+                    _("Do you really want to switch the event daemon to %s mode?" % 
+                        new_mode))
+            if c:
+                mkeventd.query("COMMAND SWITCHMODE;%s" % new_mode)
+                log_audit(None, "mkeventd-switchmode", _("Switched replication slave mode to %s" % new_mode))
+                return None, _("Switched to %s mode") % new_mode
+            elif c == False:
+                return ""
+            else:
+                return
+
+        return
+                
+    if not mkeventd.daemon_running():
+        warning = _("The Event Console Daemon is currently not running. ")
+        if defaults.omd_root:
+            warning += _("Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> "
+                         "before starting this site.")
+        html.show_warning(warning)
+        return
+
+    response = mkeventd.query("GET status")
+    status = dict(zip(response[0], response[1]))
+    repl_mode = status["status_replication_slavemode"]
+    html.write("<h3>%s</h3>" % _("Current Server Status"))
+    html.write("<ul>")
+    html.write("<li>%s</li>" % _("Event Daemon is running."))
+    html.write("<li>%s: <b>%s</b></li>" % (_("Current replication mode"), 
+        { "sync" : _("synchronize"),
+          "takeover" : _("Take Over!"),
+        }.get(repl_mode, _("master / standalone"))))
+    if repl_mode in [ "sync", "takeover" ]:
+        html.write(("<li>" + _("Status of last synchronization: <b>%s</b>") + "</li>") % (
+                status["status_replication_success"] and _("Success") or _("Failed!")))
+        last_sync = status["status_replication_last_sync"]
+        if last_sync:
+            html.write("<li>" + _("Last successful sync %d seconds ago.") % (time.time() - last_sync) + "</li>")
+        else:
+            html.write(_("<li>No successful synchronization so far.</li>"))
+
+    html.write("</ul>")
+    
+    if config.may("mkeventd.switchmode"):
+        html.begin_form("switch")
+        if repl_mode == "sync":
+            html.button("_switch_takeover", _("Switch to Take Over mode!"))
+        elif repl_mode == "takeover":
+            html.button("_switch_sync", _("Switch back to sync mode!"))
+        html.hidden_fields()
+        html.end_form()
+    
+
 
 if mkeventd_enabled:
-    modes["mkeventd_rules"] = (["mkeventd.edit"], mode_mkeventd_rules)
+    modes["mkeventd_rules"]     = (["mkeventd.edit"], mode_mkeventd_rules)
     modes["mkeventd_edit_rule"] = (["mkeventd.edit"], mode_mkeventd_edit_rule)
-    modes["mkeventd_changes"] = (["mkeventd.edit"], mode_mkeventd_changes)
+    modes["mkeventd_changes"]   = (["mkeventd.edit"], mode_mkeventd_changes)
+    modes["mkeventd_status"]    = ([], mode_mkeventd_status)
+    
 
 
 #.
@@ -1083,6 +1162,12 @@ if mkeventd_enabled:
        _("Activation of changes for the event console (rule modification, "
          "global settings) is done separately from the monitoring configuration "
          "and needs this permission."),
+         ["admin"])
+
+    config.declare_permission("mkeventd.switchmode",
+       _("Switch slave replication mode"),
+       _("This permission is only useful if the Event Console is setup as a replication "
+         "slave. It allows a manual switch between sync and takeover mode."),
          ["admin"])
 
     modules.append(

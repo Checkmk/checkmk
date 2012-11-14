@@ -20,6 +20,8 @@
     * check_mkevents: new option -a for ignoring acknowledged events
     * New sub-permissions for changing comment and contact while updating an event
     * New button for generating test events directly via WATO
+    * Allow Event Console to replicate from another (master) console for
+      fast failover.
 
     Multisite:
     * Enable automation login with _username= and _secret=, while

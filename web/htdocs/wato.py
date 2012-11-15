@@ -8382,12 +8382,14 @@ def load_users():
                     result[id] = new_user
             # Other unknown entries will silently be dropped. Sorry...
 
-    # Now read the automation secrets and add them to existing
-    # users or create new users automatically
+    # Now read the user specific files
     dir = defaults.var_dir + "/web/"
     for d in os.listdir(dir):
         if d[0] != '.':
             id = d
+
+            # read automation secrets and add them to existing
+            # users or create new users automatically
             secret_file = dir + d + "/automation.secret"
             if os.path.exists(secret_file):
                 secret = file(secret_file).read().strip()
@@ -8399,15 +8401,18 @@ def load_users():
                         "automation_secret" : secret,
                     }
 
+            # read the users serials, only process for existing users
+            if id in result:
+                serial_file = dir + d + '/serial.mk'
+                if os.path.exists(serial_file):
+                    result[id]['serial'] = saveint(file(serial_file).read().strip())
+
     return result
 
 def split_dict(d, keylist, positive):
     return dict([(k,v) for (k,v) in d.items() if (k in keylist) == positive])
 
 def save_users(profiles):
-    # TODO: delete var/check_mk/web/$USER of non-existing users. Do we
-    # need to remove other references as well?
-
     custom_values = [ name for (name, vs) in user_attributes ]
 
     # Keys not to put into contact definitions for Check_MK
@@ -8428,7 +8433,6 @@ def save_users(profiles):
         "automation_secret",
         "alias",
         "language",
-        "serial",
         "connector",
     ] + custom_values
 
@@ -8460,15 +8464,21 @@ def save_users(profiles):
     # Execute user connector save hooks
     userdb.hook_save(profiles)
 
-    # Write authentication secret for local processes
+    # Write user specific files
     for id, user in profiles.items():
-        auth_dir = defaults.var_dir + "/web/" + id
-        auth_file = auth_dir + "/automation.secret"
-        make_nagios_directory(auth_dir)
+        user_dir = defaults.var_dir + "/web/" + id
+        make_nagios_directory(user_dir)
+
+        # authentication secret for local processes
+        auth_file = user_dir + "/automation.secret"
         if "automation_secret" in user:
             create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
         elif os.path.exists(auth_file):
             os.remove(auth_file)
+
+        # Write out the users serial
+        serial_file = user_dir + '/serial.mk'
+        create_user_file(serial_file, 'w').write('%d\n' % user.get('serial', 0))
 
     # Remove settings directories of non-existant users
     dir = defaults.var_dir + "/web"

@@ -113,7 +113,12 @@ def ldap_connect():
         ldap_connection.protocol_version = config.ldap_connection['version']
         ldap_default_bind()
 
+    except ldap.SERVER_DOWN:
+        ldap_connection = None # Invalidate connection on failure
+        raise MKLDAPException(_('The LDAP connector is unable to connect to the LDAP server.'))
+
     except ldap.LDAPError, e:
+        html.write(repr(e))
         ldap_connection = None # Invalidate connection on failure
         raise MKLDAPException(e)
 
@@ -290,12 +295,12 @@ def ldap_convert_auth_expire(user_id, ldap_user, user):
     # value has been changed.
 
     if 'ldap_pw_last_changed' not in user:
-        return {'ldap_pw_last_changed': ldap_user[changed_attr]} # simply store
+        return {'ldap_pw_last_changed': ldap_user[changed_attr][0]} # simply store
 
     # Update data (and invalidate auth) if the attribute has changed
-    if user['ldap_pw_last_changed'] != ldap_user[changed_attr]:
+    if user['ldap_pw_last_changed'] != ldap_user[changed_attr][0]:
         return {
-            'ldap_pw_last_changed': ldap_user[changed_attr],
+            'ldap_pw_last_changed': ldap_user[changed_attr][0],
             'serial':               user.get('serial', 0) + 1,
         }
 

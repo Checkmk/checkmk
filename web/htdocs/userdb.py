@@ -194,8 +194,19 @@ def hook_save(users):
 
 # Hook function can be registered here to execute actions on a "regular" base without
 # user triggered action. This hook is called on each page load.
+# Catch all exceptions and log them to apache error log. Let exceptions raise trough
+# when debug mode is enabled.
 def hook_page():
     for connector in enabled_connectors():
         handler = connector.get('page', None)
-        if handler:
+        if not handler:
+            continue
+        try:
             handler()
+        except:
+            if config.debug:
+                raise
+            else:
+                import traceback
+                html.log('Exception (%s, page handler): %s' % 
+                            (connector['id'], traceback.format_exc()))

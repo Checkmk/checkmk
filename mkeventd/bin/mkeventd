@@ -575,13 +575,14 @@ class EventServer:
 
         # Replication
         headers += [ "status_replication_slavemode", "status_replication_last_sync", 
-                     "status_replication_success" ]
+                     "status_replication_success", "status_replication_average_sync_time" ]
         if is_replication_slave():
             row.append(g_slave_status["mode"])
             row.append(g_slave_status["last_sync"])
             row.append(g_slave_status["success"])
+            row.append(g_slave_status["average_sync_time"])
         else:
-            row += [ "master", 0.0, False ]
+            row += [ "master", 0.0, False, None ]
 
         return headers, [row]
 
@@ -2135,6 +2136,14 @@ def replication_pull():
 
                 save_slave_status()
 
+                # Compute statistics of the average time needed for a sync
+                sync_time = time.time() - now
+                if g_slave_status.get("average_sync_time") == None:
+                    g_slave_status["average_sync_time"] = sync_time
+                else:
+                    g_slave_status["average_sync_time"] = \
+                       g_slave_status["average_sync_time"] * 0.95 + 0.05 * sync_time
+
 # Called when we have new data from our master
 def replication_update_state(new_state):
 
@@ -2170,6 +2179,7 @@ def load_master_config():
 
 
 def get_state_from_master():
+    now = time.time()
     repl_settings = g_config["replication"]
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -2212,9 +2222,10 @@ def load_slave_status():
             g_slave_status = eval(file(path).read())
         except:
             g_slave_status = {
-                "last_sync"        : 0, # Time of last successfull sync 
-                "last_master_down" : None,
-                "mode"             : "sync",
+                "last_sync"         : 0, # Time of last successfull sync 
+                "last_master_down"  : None,
+                "mode"              : "sync",
+                "average_sync_time" : None,
             }
             save_slave_status()
 

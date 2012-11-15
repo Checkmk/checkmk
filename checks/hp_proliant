@@ -31,8 +31,8 @@
 # '.1.3.6.1.4.1.232.11.2.14.1.1.5.0'    => cpqHoFwVerVersion
 # '.1.3.6.1.4.1.232.11.1.3.0'           => cpqHoMibCondition
 
-hp_proliant_generel_status_map =        { 1: 'Other',    2: 'Ok',     3: 'Degraded', 4: 'Failed' }
-hp_proliant_generel_status2nagios_map = { 'Other':       2, 'Ok':     0, 'Degraded': 1, 'Failed': 2, }
+hp_proliant_generel_status_map =        { 1: 'Unknown',    2: 'Ok',     3: 'Degraded', 4: 'Failed' }
+hp_proliant_generel_status2nagios_map = { 'Unknown':       0, 'Ok':     0, 'Degraded': 1, 'Failed': 2, }
 
 def inventory_proliant_general(info):
     if len(info) > 0 and len(info[0]) > 1:

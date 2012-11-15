@@ -129,7 +129,7 @@ diskstat_inventory_mode(string): By default this is now set to {"rule"} for
  to rules internally. Either {"single"} for one service per disk
  or {"summary"} for the throughput of all disks summed up in one service.
  Also possible is {"legacy"} for the old style mode (see above). Default
- is {"single"}.
+ is {"summary"}.
 
 
 diskstat_inventory(list): This is a list of block device types to track.

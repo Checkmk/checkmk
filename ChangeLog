@@ -22,6 +22,11 @@
     * New button for generating test events directly via WATO
 
     Multisite:
+    * Implemented LDAP integration of Multisite. You can now authenticate your
+      users using the form based authentication with LDAP. It is also possible
+      to synchronize some attributes like mail addresses, names and roles from
+      LDAP into multisite.
+    * Modularized the authentication and user management code in WATO
     * Restructured cookie auth cookies (all auth cookies will be invalid
       after update -> all users have to login again)
     * Modularized login and cookie validation

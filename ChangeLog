@@ -116,6 +116,9 @@
     * FIX: WATO Folder filter not available when WATO disabled
     * FIX: WATO Folder Filter no longer available in single host views
     * FIX: Quicksearch converts search text to regex when accessing livestatus
+    * FIX: Fixed "access denied" problem with multisite authorization in PNP/NagVis
+           in new OMD sites which use the multisite authorization
+    * FIX: Localize option for not OMD Environments
 
     WATO:
     * FIX: Users & Contacts uses case-insensitive sorting of 'Full name' column  

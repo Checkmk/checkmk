@@ -1,9 +1,9 @@
 Title: Livechecks goes zoombie
 Component: livecheck
-State: open
+Class: bug
+State: done
 Date: 2012-08-08 11:32:12
 Targetversion: future
-Class: bug
 
 Have been using livecheck and came across this rather nasty bug. We
 use livecheck for a whole bunch of http checks (check_http) and after
@@ -44,3 +44,7 @@ in time) has been detected. Compensating...
 
 
 Reference in Ticket System: #110644
+
+2012-11-12 08:00:27: changed state open -> done
+kill process group of called plugin if timeout is reached
+           -> preventing possible freeze of livecheck

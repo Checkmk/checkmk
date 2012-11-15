@@ -13,9 +13,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRDataset;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.query.JRQueryExecuter;
+
 
 public class LivestatusQueryExecuter implements JRQueryExecuter{
 	// Connection parameters
@@ -24,7 +26,7 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 	private String    			server;           // server name
 	private int       			server_port;      // server port
 	private int 				timeoutInMs = 10*1000;  // 10 seconds
-	private String    			fixed_appendix = "\nColumnHeaders: on\nResponseHeader: fixed16\nOutputFormat: csv\n\n";
+	private String    			fixed_appendix = "\nColumnHeaders: on\nResponseHeader: fixed16\nSeparators: 10 1 44 124\nOutputFormat: csv\n\n";
 
 	// Socket parameters
 	private Socket    			socket;           // socket to server
@@ -36,10 +38,17 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 	public static void main(String[] args){
 		try {
 			//new LivestatusQueryExecuter("localhost 6561\nGET services\nColumns: host_name check_command").createDatasource();
-		
-			String query = "localhost 6561\nGET statehist\nColumns: state host_name service_description\nFilter: time >= 1344195720\nFilter: time <= 1344196820\nFilter: service_description = CPU load\nFilter: host_name = localhost\nStats: sum duration_ok\nStats: sum duration_warning\nStats: sum duration_critical";
-			new LivestatusQueryExecuter(query).createDatasource();
-			
+			String query = "localhost 6561\n"+
+			"GET statehist\n" +
+			"Columns: host_name service_description\n"+
+			"Filter: time >= 1344195720\n"+
+			"Filter: time <= 1344195776\n"+
+			"Filter: host_name = localhost\n"+
+			"Stats: sum duration_ok\n"+
+			"Stats: sum duration_warning\n"+
+			"Stats: sum duration_critical";
+						
+			JRDataSource sourci = new LivestatusQueryExecuter(query).createDatasource();
 		} catch (JRException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -69,10 +78,8 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 	}
 
 	public boolean cancelQuery() throws JRException {
-		System.out.println("ABORT QUERY");
 		try {
 			if( socket.isConnected() ){
-				System.out.println("STOPPED !");
 				socket.close();
 				return true;
 			}
@@ -117,9 +124,11 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 			// setup socket and in/output streams
 			setupSocket();
 			
+			
 			// query the column types and their descriptions
 			String table_name = livestatus_query.split("\n")[0].split(" ")[1];
-			String desc_query = String.format("GET columns\nFilter: table = %s\nColumnHeaders: off\nResponseHeader: fixed16\nOutputFormat: csv\nKeepAlive: on\n\n", table_name);
+			String desc_query = String.format("GET columns\nFilter: table = %s\nColumnHeaders: off\nResponseHeader: fixed16\nOutputFormat: csv\nSeparators:  10 1 44 124\nKeepAlive: on\n\n", table_name);
+			
 			sockOutput.write(desc_query.getBytes(), 0, desc_query.getBytes().length); 
 			
 			// read description information
@@ -129,13 +138,18 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 			String line;
 			line = in.readLine(); // Skip column headers
 			offset += line.getBytes().length + 1;
+			String[] tokens;
 			while( offset < response_size ){
-				line = in.readLine();
+				line = in.readLine();				
 				if( line == null )
 					break;
 				offset += line.getBytes().length + 1;
-				map_fielddesc.put(line.split(";")[1],line.split(";")[0]);
-				map_fieldtype.put(line.split(";")[1],line.split(";")[3]);
+				tokens = line.split("\001");
+				map_fielddesc.put(tokens[1],tokens[0]);
+				if( tokens[1].startsWith("stats_") )
+					map_fieldtype.put(tokens[1],"float");
+				else
+					map_fieldtype.put(tokens[1],tokens[3]);
 			}
 
 			// send livestatus query to socket
@@ -163,12 +177,12 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 			// read content
 			offset = 0;
 			offset += line.getBytes().length + 1;
-			while( offset < response_size ){
+			while( true ){
 				line = in.readLine();
 				if( line == null )
 					break;
 				ArrayList<String> tmp_array = new ArrayList<String>();
-				for( String field : line.split(";") ){
+				for( String field : line.split("\001") ){
 					tmp_array.add(field);
 				}
 				livestatus_data.add(tmp_array);

@@ -768,7 +768,7 @@ def mode_mkeventd_rules(phase):
     if rep_mode in [ "sync", "takeover" ]:
         html.show_warning(_("WARNING: This Event Console is currently running as a replication "
           "slave. The rules edited here will not be used. Instead a copy of the rules of the "
-          "master are being used in the case of a take over. The same holds for the event "
+          "master are being used in the case of a takeover. The same holds for the event "
           "actions in the global settings."))
 
     if len(rules) == 0:
@@ -1104,7 +1104,7 @@ def mode_mkeventd_status(phase):
     html.write("<li>%s</li>" % _("Event Daemon is running."))
     html.write("<li>%s: <b>%s</b></li>" % (_("Current replication mode"), 
         { "sync" : _("synchronize"),
-          "takeover" : _("Take Over!"),
+          "takeover" : _("Takeover!"),
         }.get(repl_mode, _("master / standalone"))))
     if repl_mode in [ "sync", "takeover" ]:
         html.write(("<li>" + _("Status of last synchronization: <b>%s</b>") + "</li>") % (
@@ -1120,7 +1120,7 @@ def mode_mkeventd_status(phase):
     if config.may("mkeventd.switchmode"):
         html.begin_form("switch")
         if repl_mode == "sync":
-            html.button("_switch_takeover", _("Switch to Take Over mode!"))
+            html.button("_switch_takeover", _("Switch to Takeover mode!"))
         elif repl_mode == "takeover":
             html.button("_switch_sync", _("Switch back to sync mode!"))
         html.hidden_fields()
@@ -1305,9 +1305,9 @@ if mkeventd_enabled:
                       Integer(
                           title = _("Automatic takeover"),
                           help = _("If you enable this option then the slave will automatically "
-                                   "take over and enable event processing if the master is for "
+                                   "takeover and enable event processing if the master is for "
                                    "the configured number of seconds unreachable."),
-                          label = _("Take over after a master downtime of"),
+                          label = _("Takeover after a master downtime of"),
                           unit = _("sec"),
                           minvalue = 1,
                           default_value = 30,

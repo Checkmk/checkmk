@@ -35,7 +35,7 @@ from mod_python import apache, util, Cookie
 import sys, os, pprint
 from lib import *
 import livestatus
-import defaults, config, htmllib, login, userdb
+import defaults, config, htmllib, login, userdb, default_permissions
 
 # Load page handlers
 pagehandlers = {}
@@ -261,6 +261,10 @@ def handler(req, profiling = True):
         output_format = html.var("output_format", "html")
         html.set_output_format(output_format)
 
+        # First initialization of the default permissions. Needs to be done before the auth_file
+        # (auth.php) ist written (it's done during showing the login page for the first time).
+        default_permissions.load()
+
         # Is the user set by the webserver? otherwise use the cookie based auth
         if not req.user or type(req.user) != str:
             config.auth_type = 'cookie'
@@ -301,8 +305,7 @@ def handler(req, profiling = True):
         # All plugins might have to be reloaded due to a language change
         load_all_plugins()
 
-        # Initialize default permissions (maybe reload due to language change)
-        import default_permissions
+        # Reload default permissions (maybe reload due to language change)
         default_permissions.load()
 
         # User allowed to login at all?

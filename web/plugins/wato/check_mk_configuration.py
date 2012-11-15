@@ -367,6 +367,39 @@ if userdb.connector_enabled('ldap'):
     )
 
     register_configvar(group,
+        "ldap_attr_map",
+        Dictionary(
+            title = _("LDAP Attribute Mapping"),
+            help  = _("Here you have the option to customize the LDAP attributes used during "
+                      "communication with the LDAP server. It controls which attributes are "
+                      "e.g. used for the unique username or similar."),
+            elements = [
+                ("user_id", TextAscii(
+                    title = _("User-ID"),
+                    help  = _("The attribute used to identify the individual users. It must have "
+                              "unique values to make an user identifyable by the value of this "
+                              "attribute."),
+                    default_value = lambda: userdb.ldap_attr('user_id', False),
+                )),
+                ("pw_changed", TextAscii(
+                    title = _("Relogon Indicator"),
+                    help  = _("When the value of this attribute changes for a user account, all "
+                              "current authenticated sessions of the user are invalidated and the "
+                              "user must login again. By default this field uses the fields whcih "
+                              "hold the time of the last password change of the user."),
+                    default_value = lambda: userdb.ldap_attr('pw_changed', False),
+                )),
+                ("mobile", TextAscii(
+                    title = _("Mobile Number"),
+                    help  = _("The LDAP attribute containing the mobile number of the user."),
+                    default_value = lambda: userdb.ldap_attr('mobile', False),
+                )),
+            ],
+        ),
+        domain = "multisite",
+    )
+
+    register_configvar(group,
         "ldap_userspec",
         Dictionary(
             title = _("LDAP User Settings"),
@@ -376,12 +409,6 @@ if userdb.connector_enabled('ldap'):
                 ("user_dn", LDAPDistinguishedName(
                     title = _("User Base DN"),
                     help  = _("The base distinguished name to be used when performing user account "
-                              "related queries to the LDAP server."),
-                    size = 80,
-                )),
-                ("group_dn", LDAPDistinguishedName(
-                    title = _("Group Base DN"),
-                    help  = _("The base distinguished name to be used when performing group "
                               "related queries to the LDAP server."),
                     size = 80,
                 )),
@@ -402,9 +429,10 @@ if userdb.connector_enabled('ldap'):
                              "LDAP searches. It can be used to only handle a subset of the users below the given "
                              "base DN."),
                     size = 80,
+                    default_value = lambda: userdb.ldap_filter('users', False),
                 )),
             ],
-            optional_keys = ['filter'],
+            optional_keys = ['scope', 'filter'],
         ),
         domain = "multisite",
     )
@@ -418,7 +446,7 @@ if userdb.connector_enabled('ldap'):
                       'or disabled. When enabling a plugin, it is used upon the next synchonisation of '
                       'user accounts for gathering their attributes. The user options which get imported '
                       'into Check_MK from LDAP will be locked in WATO.'),
-            default_value = [ 'email', 'alias', 'auth_expire' ],
+            default_value = [ 'email', 'cn_to_alias', 'auth_expire' ],
             choices = userdb.ldap_list_attribute_plugins,
         ),
         domain = "multisite",

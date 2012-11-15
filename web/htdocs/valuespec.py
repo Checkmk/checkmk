@@ -67,7 +67,10 @@ class ValueSpec:
     # for same cases where the default value is known.
     def default_value(self):
         try:
-            return self._default_value
+            if type(self._default_value) == type(lambda:True):
+                return self._default_value()
+            else:
+                return self._default_value
         except:
             return self.canonical_value()
 

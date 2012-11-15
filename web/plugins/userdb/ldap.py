@@ -42,6 +42,8 @@ from lib import *
 g_ldap_sync_time_file = defaults.var_dir + '/web/ldap_sync_time.mk'
 
 # LDAP attributes are case insensitive, we only use lower case!
+# Please note: This are only default values. The user might override this
+# by configuration.
 ldap_attr_map = {
     'ad': {
         'user_id':    'samaccountname',
@@ -54,9 +56,15 @@ ldap_attr_map = {
 }
 
 # LDAP attributes are case insensitive, we only use lower case!
-user_filter = {
-    'ad':       '(&(objectclass=user)(objectcategory=person))',
-    'openldap': '(objectcategory=user)',
+# Please note: This are only default values. The user might override this
+# by configuration.
+ldap_filter_map = {
+    'ad': {
+        'users': '(&(objectclass=user)(objectcategory=person))',
+    },
+    'openldap': {
+        'users': '(objectcategory=user)',
+    },
 }
 
 #   .----------------------------------------------------------------------.
@@ -130,7 +138,7 @@ def ldap_connect():
 def ldap_default_bind():
     try:
         if config.ldap_connection['bind']:
-            ldap_bind(ldap_dn(config.ldap_connection['bind'][0]),
+            ldap_bind(ldap_replace_macros(config.ldap_connection['bind'][0]),
                       config.ldap_connection['bind'][1], catch = False)
         else:
             ldap_bind('', '', catch = False) # anonymous bind
@@ -174,16 +182,27 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
     #for dn, obj in ldap_connection.search_s(base, scope, filter, columns):
     #    html.log(repr(dn) + ' ' + repr(obj))
 
+# Returns the ldap filter depending on the configured ldap directory type
+def ldap_filter(key, handle_config = True):
+    value = ldap_filter_map[config.ldap_connection['type']][key]
+    if handle_config:
+        value = config.ldap_filter_map.get(key, value)
+    return ldap_replace_macros(value)
+
 # Returns the ldap attribute name depending on the configured ldap directory type
 # If a key is not present in the map, the assumption is, that the key matches 1:1
-def ldap_attr(key):
-    return ldap_attr_map[config.ldap_connection['type']].get(key, key)
+def ldap_attr(key, handle_config = True):
+    coded_value = ldap_attr_map[config.ldap_connection['type']].get(key, key)
+    if handle_config:
+        return config.ldap_attr_map.get(key, coded_value)
+    else:
+        return coded_value
 
 def ldap_attrs(keys):
     return map(ldap_attr, keys)
 
 # Returns the given distinguished name template with replaced vars
-def ldap_dn(tmpl):
+def ldap_replace_macros(tmpl):
     dn = tmpl
 
     for key, val in [ ('$OMD_SITE$', defaults.omd_site) ]:
@@ -199,7 +218,7 @@ def get_user_dn(username):
     # It's only ok when exactly one entry is found.
     # Returns the DN in this case.
     result = ldap_search(
-        ldap_dn(config.ldap_userspec['user_dn']),
+        ldap_replace_macros(config.ldap_userspec['user_dn']),
         '(%s=%s)' % (ldap_attr('user_id'), ldap.filter.escape_filter_chars(username)),
         [ldap_attr('user_id')],
     )
@@ -212,12 +231,12 @@ def ldap_get_users(add_filter = None):
         ldap_attr('user_id'), # needed in all cases as uniq id
     ] + ldap_needed_attributes()
 
-    filt = user_filter[config.ldap_connection['type']]
+    filt = ldap_filter('users')
     if add_filter:
         filt = '(&%s%s)' % (filt, add_filter)
 
     result = {}
-    for dn, ldap_user in ldap_search(ldap_dn(config.ldap_userspec['user_dn']), filt, columns = columns):
+    for dn, ldap_user in ldap_search(ldap_replace_macros(config.ldap_userspec['user_dn']), filt, columns = columns):
         user_id = ldap_user[ldap_attr('user_id')][0]
         result[user_id] = ldap_user
 
@@ -251,7 +270,11 @@ def ldap_needed_attributes():
     return list(attrs)
 
 def ldap_convert_simple(user_id, ldap_user, user, wato_attr, attr):
-    return {wato_attr: ldap_user[ldap_attr(attr)][0]}
+    attr = ldap_attr(attr)
+    if attr in ldap_user:
+        return {wato_attr: ldap_user[attr][0]}
+    else:
+        return {}
 
 def ldap_convert_mail(user_id, ldap_user, user):
     mail = ''
@@ -273,9 +296,9 @@ ldap_attribute_plugins['email'] = {
     'lock_attributes': [ 'email' ],
 }
 
-ldap_attribute_plugins['alias'] = {
-    'title': _('Alias'),
-    'help':  _('Synchronizes the alias of the LDAP user account into Check_MK.'),
+ldap_attribute_plugins['cn_to_alias'] = {
+    'title': _('Common Name to Alias'),
+    'help':  _('Synchronizes the Common Name of the LDAP user account into Check_MK.'),
     'needed_attributes': lambda: ldap_attrs(['cn']),
     'convert':           lambda user_id, ldap_user, user: ldap_convert_simple(user_id, ldap_user, user, 'alias', 'cn'),
     'lock_attributes':   [ 'alias' ],
@@ -320,6 +343,16 @@ ldap_attribute_plugins['auth_expire'] = {
     # contacts.mk file.
     'multisite_attributes':   ['ldap_pw_last_changed'],
     'non_contact_attributes': ['ldap_pw_last_changed'],
+}
+
+ldap_attribute_plugins['mobile_to_pager'] = {
+    'title': _('Mobile Number to Pager'),
+    'help':  _('This plugin synchronizes the mobile number of the users to the pager attribute '
+               'of the WATO user accounts, which is then forwarded to Nagios and can be used'
+               'for notifications.'),
+    'needed_attributes': lambda: ldap_attrs(['mobile']),
+    'convert':           lambda user_id, ldap_user, user: ldap_convert_simple(user_id, ldap_user, user, 'pager', 'mobile'),
+    'lock_attributes':   ['pager'],
 }
 
 #   .----------------------------------------------------------------------.

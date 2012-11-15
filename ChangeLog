@@ -41,6 +41,7 @@
     * Dashboard "iframe" attribute can now be rendered dynamically using the
       "iframefunc" attribute in the dashlet declaration
     * Dashboard header can now be hidden by setting "title" to None
+    * Better error handling in PNP-Graph hover menus in case of invalid responses
 
     Livestatus:
     * Added new table statehist, used for SLA queries

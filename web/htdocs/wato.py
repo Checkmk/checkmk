@@ -8417,6 +8417,8 @@ def save_users(profiles):
         "locked",
         "automation_secret",
         "language",
+        "serial",
+        "connector",
     ] + custom_values
 
     # Keys to put into multisite configuration
@@ -8426,19 +8428,21 @@ def save_users(profiles):
         "automation_secret",
         "alias",
         "language",
+        "serial",
+        "connector",
     ] + custom_values
 
     # Remove multisite keys in contacts.
     contacts = dict(
         e for e in 
-            [ (id, split_dict(user, non_contact_keys, False))
+            [ (id, split_dict(user, non_contact_keys + userdb.non_contact_attributes(user.get('connector')), False))
                for (id, user)
                in profiles.items() ])
 
     # Only allow explicitely defined attributes to be written to multisite config
     users = {}
     for uid, profile in profiles.items():
-        users[uid] = dict([ (p, val) for p, val in profile.items() if p in multisite_keys ])
+        users[uid] = dict([ (p, val) for p, val in profile.items() if p in multisite_keys + userdb.multisite_attributes(user.get('connector'))])
 
     # Check_MK's monitoring contacts
     filename = root_dir + "contacts.mk"

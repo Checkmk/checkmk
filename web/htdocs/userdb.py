@@ -74,6 +74,16 @@ def locked_attributes(connector_id):
     connector = get_connector(connector_id)
     return connector.get('locked_attributes', lambda: [])()
 
+# Returns a list of multisite attributes
+def multisite_attributes(connector_id):
+    connector = get_connector(connector_id)
+    return connector.get('multisite_attributes', lambda: [])()
+
+# Returns a list of non contact attributes
+def non_contact_attributes(connector_id):
+    connector = get_connector(connector_id)
+    return connector.get('non_contact_attributes', lambda: [])()
+
 # This is a function needed in WATO and the htpasswd module. This should
 # really be modularized one day. Till this day this is a good place ...
 def encrypt_password(password, salt = None):

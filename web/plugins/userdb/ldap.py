@@ -270,7 +270,7 @@ ldap_attribute_plugins['email'] = {
     # gathered from ldap
     'convert': ldap_convert_mail,
     # User-Attributes to be written by this plugin and will be locked in WATO
-    'set_attributes': [ 'email' ],
+    'lock_attributes': [ 'email' ],
 }
 
 ldap_attribute_plugins['alias'] = {
@@ -278,7 +278,7 @@ ldap_attribute_plugins['alias'] = {
     'help':  _('Synchronizes the alias of the LDAP user account into Check_MK.'),
     'needed_attributes': lambda: ldap_attrs(['cn']),
     'convert':           lambda user_id, ldap_user, user: ldap_convert_simple(user_id, ldap_user, user, 'alias', 'cn'),
-    'set_attributes':    [ 'alias' ],
+    'lock_attributes':   [ 'alias' ],
 }
 
 # Checks wether or not the user auth must be invalidated (increasing the serial).
@@ -313,7 +313,13 @@ ldap_attribute_plugins['auth_expire'] = {
                'the password has changed in LDAP or the account has been locked.'),
     'needed_attributes': lambda: ldap_attrs(['pw_changed']),
     'convert':           ldap_convert_auth_expire,
-    'set_attributes':    [],
+    'lock_attributes':   [],
+    # When a plugin introduces new user attributes, it should declare the output target for
+    # this attribute. It can either be written to the multisites users.mk or the check_mk
+    # contacts.mk to be forwarded to nagios. Undeclared attributes are stored in the check_mk
+    # contacts.mk file.
+    'multisite_attributes':   ['ldap_pw_last_changed'],
+    'non_contact_attributes': ['ldap_pw_last_changed'],
 }
 
 #   .----------------------------------------------------------------------.
@@ -401,8 +407,24 @@ def ldap_sync(add_to_changelog, only_username):
 def ldap_locked_attributes():
     locked = set([ 'password' ]) # This attributes are locked in all cases!
     for key in config.ldap_active_plugins:
-        locked.update(ldap_attribute_plugins[key]['set_attributes'])
+        locked.update(ldap_attribute_plugins[key]['lock_attributes'])
     return list(locked)
+
+# Calculates the attributes added in this connector which shal be written to
+# the multisites users.mk
+def ldap_multisite_attributes():
+    attrs = set([])
+    for key in config.ldap_active_plugins:
+        attrs.update(ldap_attribute_plugins[key].get('multisite_attributes', []))
+    return list(attrs)
+
+# Calculates the attributes added in this connector which shal NOT be written to
+# the check_mks contacts.mk
+def ldap_non_contact_attributes():
+    attrs = set([])
+    for key in config.ldap_active_plugins:
+        attrs.update(ldap_attribute_plugins[key].get('non_contact_attributes', []))
+    return list(attrs)
 
 # Is called on every multisite http request
 def ldap_page():
@@ -429,5 +451,7 @@ multisite_user_connectors.append({
                                       # synchronized and the user is enabled in LDAP and disabled
                                       # in Check_MK. When the user is locked in LDAP a login is
                                       # not possible.
-    'locked_attributes': ldap_locked_attributes,
+    'locked_attributes':      ldap_locked_attributes,
+    'multisite_attributes':   ldap_multisite_attributes,
+    'non_contact_attributes': ldap_multisite_attributes,
 })

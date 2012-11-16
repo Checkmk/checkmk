@@ -2128,19 +2128,19 @@ class LDAPDistinguishedName(TextAscii):
     def validate_value(self, value, varprefix):
         TextAscii.validate_value(self, value, varprefix)
 
-        if value:
-            import ldap
-            try:
-                dn = ldap.dn.str2dn(value)
-            except ldap.DECODING_ERROR:
-                raise MKUserError(varprefix, _('Unable to parse the given distingushed name.'))
+        # At least one DC= must be in distinguished name
+        if value and 'dc=' not in value.lower():
+            raise MKUserError(varprefix, _('Found no "dc=" (Domain Component).'))
 
-            # At least one DC= must be in distinguished name
-            found_dc = False
-            for part in dn:
-                key, val = part[0][:2]
-                if key.lower() == 'dc':
-                    found_dc = True
+class Password(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, attrencode = True, **kwargs)
 
-            if not found_dc:
-                raise MKUserError(varprefix, _('Found no "dc=" (Domain Component).'))
+    def render_input(self, varprefix, value):
+        if value == None:
+            value = ""
+
+        if self._label:
+            html.write(self._label)
+            html.write("&nbsp;")
+        html.password_input(varprefix, str(value), size = self._size)

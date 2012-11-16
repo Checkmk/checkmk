@@ -291,219 +291,219 @@ register_configvar(group,
     domain = "multisite",
 )
 
-if userdb.connector_enabled('ldap'):
-    register_configvar(group,
-        "ldap_connection",
-        Dictionary(
-            title = _("LDAP Connection Settings"),
-            help  = _("This option configures all LDAP specific connection options. These options "
-                      "are used by the LDAP user connector."),
-            elements = [
-                ("server", TextAscii(
-                    title = _("LDAP Server"),
-                    help = _("Set the host address of the LDAP server. Might be an IP address or "
-                             "resolvable hostname."),
-                )),
-                ("port", Integer(
-                    title = _("TCP Port"),
-                    help  = _("This variable allows to specify the TCP port to "
-                              "be used to connect to the LDAP server. "),
-                    minvalue = 1,
-                    maxvalue = 65535,
-                    default_value = 389,
-                )),
-                ("use_ssl", Checkbox(
-                    title = _("Use SSL"),
-                    label = _("SSL encrypted connection"),
-                    help = _("Connect to the LDAP server with a SSL encrypted connection."),
-                )),
-                ("version", Integer(
-                    title = _("LDAP Version"),
-                    help  = _("Select the LDAP version the LDAP server is serving. Most modern "
-                              "servers use LDAP version 3."),
-                    minvalue = 1,
-                    maxvalue = 3,
-                    default_value = 3,
-                )),
-                ("type", DropdownChoice(
-                    title = _("Directory Type"),
-                    help  = _("Select the software the LDAP directory is based on. Depending on "
-                              "the selection e.g. the attribute names used in LDAP queries will "
-                              "be altered."),
-                    choices = [
-                        ("ad",       _("Active Directory")),
-                        ("openldap", _("OpenLDAP")),
+register_configvar(group,
+    "ldap_connection",
+    Dictionary(
+        title = _("LDAP Connection Settings"),
+        help  = _("This option configures all LDAP specific connection options. These options "
+                  "are used by the LDAP user connector."),
+        elements = [
+            ("server", TextAscii(
+                title = _("LDAP Server"),
+                help = _("Set the host address of the LDAP server. Might be an IP address or "
+                         "resolvable hostname."),
+                allow_empty = False,
+            )),
+            ("port", Integer(
+                title = _("TCP Port"),
+                help  = _("This variable allows to specify the TCP port to "
+                          "be used to connect to the LDAP server. "),
+                minvalue = 1,
+                maxvalue = 65535,
+                default_value = 389,
+            )),
+            ("use_ssl", Checkbox(
+                title = _("Use SSL"),
+                label = _("SSL encrypted connection"),
+                help = _("Connect to the LDAP server with a SSL encrypted connection."),
+            )),
+            ("version", Integer(
+                title = _("LDAP Version"),
+                help  = _("Select the LDAP version the LDAP server is serving. Most modern "
+                          "servers use LDAP version 3."),
+                minvalue = 1,
+                maxvalue = 3,
+                default_value = 3,
+            )),
+            ("type", DropdownChoice(
+                title = _("Directory Type"),
+                help  = _("Select the software the LDAP directory is based on. Depending on "
+                          "the selection e.g. the attribute names used in LDAP queries will "
+                          "be altered."),
+                choices = [
+                    ("ad",       _("Active Directory")),
+                    ("openldap", _("OpenLDAP")),
+                ],
+            )),
+            ("bind", Optional(
+                Tuple(
+                    elements = [
+                        LDAPDistinguishedName(
+                            title = _("Bind DN"),
+                            help  = _("Specify the distinguished name to be used to bind to "
+                                      "the LDAP directory."),
+                            size = 80,
+                        ),
+                        Password(
+                            title = _("Bind Password"),
+                            help  = _("Specify the password to be used to bind to "
+                                      "the LDAP directory."),
+                        ),
                     ],
-                )),
-                ("bind", Optional(
-                    Tuple(
-                        elements = [
-                            LDAPDistinguishedName(
-                                title = _("Bind DN"),
-                                help  = _("Specify the distinguished name to be used to bind to "
-                                          "the LDAP directory."),
-                                size = 80,
-                            ),
-                            TextAscii(
-                                title = _("Bind Password"),
-                                help  = _("Specify the password to be used to bind to "
-                                          "the LDAP directory."),
-                            ),
-                        ],
-                    ),
-                    title = _("LDAP Bind Credentials"),
-                    help  = _("Set the credentials to be used to connect to the LDAP server. The "
-                              "used account must not be allowed to do any changes in the directory "
-                              "the whole connection is read only. "
-                              "In some environment an anonymous connect/bind is allowed, in this "
-                              "case you don't have to configure anything here."
-                              "It must be possible to list all needed user and group objects from the "
-                              "directory."),
-                    label = _("Specify bind credentials"),
-                )),
-            ],
-            optional_keys = [],
-        ),
-        domain = "multisite",
-    )
+                ),
+                title = _("LDAP Bind Credentials"),
+                help  = _("Set the credentials to be used to connect to the LDAP server. The "
+                          "used account must not be allowed to do any changes in the directory "
+                          "the whole connection is read only. "
+                          "In some environment an anonymous connect/bind is allowed, in this "
+                          "case you don't have to configure anything here."
+                          "It must be possible to list all needed user and group objects from the "
+                          "directory."),
+                label = _("Specify bind credentials"),
+            )),
+        ],
+        optional_keys = [],
+    ),
+    domain = "multisite",
+)
 
-    register_configvar(group,
-        "ldap_attr_map",
-        Dictionary(
-            title = _("LDAP Attribute Mapping"),
-            help  = _("Here you have the option to customize the LDAP attributes used during "
-                      "communication with the LDAP server. It controls which attributes are "
-                      "e.g. used for the unique username or similar."),
-            elements = [
-                ("user_id", TextAscii(
-                    title = _("User-ID"),
-                    help  = _("The attribute used to identify the individual users. It must have "
-                              "unique values to make an user identifyable by the value of this "
-                              "attribute."),
-                    default_value = lambda: userdb.ldap_attr('user_id', False),
-                )),
-                ("pw_changed", TextAscii(
-                    title = _("Relogon Indicator"),
-                    help  = _("When the value of this attribute changes for a user account, all "
-                              "current authenticated sessions of the user are invalidated and the "
-                              "user must login again. By default this field uses the fields whcih "
-                              "hold the time of the last password change of the user."),
-                    default_value = lambda: userdb.ldap_attr('pw_changed', False),
-                )),
-                ("mobile", TextAscii(
-                    title = _("Mobile Number"),
-                    help  = _("The LDAP attribute containing the mobile number of the user."),
-                    default_value = lambda: userdb.ldap_attr('mobile', False),
-                )),
-            ],
-        ),
-        domain = "multisite",
-    )
+register_configvar(group,
+    "ldap_userspec",
+    Dictionary(
+        title = _("LDAP User Settings"),
+        help  = _("This option configures all user related LDAP options. These options "
+                  "are used by the LDAP user connector to find the needed users in the LDAP directory."),
+        elements = [
+            ("dn", LDAPDistinguishedName(
+                title = _("User Base DN"),
+                help  = _("The base distinguished name to be used when performing user account "
+                          "related queries to the LDAP server."),
+                size = 80,
+            )),
+            ("scope", DropdownChoice(
+                title = _("Search Scope"),
+                help  = _("Scope to be used in LDAP searches. In most cases \"sub\" is the best choice. "
+                          "It searches for matching objects in the given base and the whole subtree."),
+                choices = [
+                    ("sub",  _("Search whole subtree below the base DN")),
+                    ("base", _("Search only the entry at the base DN")),
+                    ("one",  _("Search all entries one level below the base DN")),
+                ],
+                default_value = "sub",
+            )),
+            ("filter", TextAscii(
+                title = _("Search Filter"),
+                help = _("Using this option you can define an optional LDAP filter which is used during "
+                         "LDAP searches. It can be used to only handle a subset of the users below the given "
+                         "base DN."),
+                size = 80,
+                default_value = lambda: userdb.ldap_filter('users', False),
+            )),
+        ],
+        optional_keys = ['scope', 'filter'],
+    ),
+    domain = "multisite",
+)
 
-    register_configvar(group,
-        "ldap_userspec",
-        Dictionary(
-            title = _("LDAP User Settings"),
-            help  = _("This option configures all user related LDAP options. These options "
-                      "are used by the LDAP user connector to find the needed users in the LDAP directory."),
-            elements = [
-                ("dn", LDAPDistinguishedName(
-                    title = _("User Base DN"),
-                    help  = _("The base distinguished name to be used when performing user account "
-                              "related queries to the LDAP server."),
-                    size = 80,
-                )),
-                ("scope", DropdownChoice(
-                    title = _("Search Scope"),
-                    help  = _("Scope to be used in LDAP searches. In most cases \"sub\" is the best choice. "
-                              "It searches for matching objects in the given base and the whole subtree."),
-                    choices = [
-                        ("sub",  _("Search whole subtree below the base DN")),
-                        ("base", _("Search only the entry at the base DN")),
-                        ("one",  _("Search all entries one level below the base DN")),
-                    ],
-                    default_value = "sub",
-                )),
-                ("filter", TextAscii(
-                    title = _("Search Filter"),
-                    help = _("Using this option you can define an optional LDAP filter which is used during "
-                             "LDAP searches. It can be used to only handle a subset of the users below the given "
-                             "base DN."),
-                    size = 80,
-                    default_value = lambda: userdb.ldap_filter('users', False),
-                )),
-            ],
-            optional_keys = ['scope', 'filter'],
-        ),
-        domain = "multisite",
-    )
+register_configvar(group,
+    "ldap_groupspec",
+    Dictionary(
+        title = _("LDAP Group Settings"),
+        help  = _("This option configures all group related LDAP options. These options "
+                  "are only needed when using group related attribute synchonisation plugins."),
+        elements = [
+            ("dn", LDAPDistinguishedName(
+                title = _("Group Base DN"),
+                help  = _("The base distinguished name to be used when performing group account "
+                          "related queries to the LDAP server."),
+                size = 80,
+            )),
+            ("scope", DropdownChoice(
+                title = _("Search Scope"),
+                help  = _("Scope to be used in group related LDAP searches. In most cases \"sub\" "
+                          "is the best choice. It searches for matching objects in the given base "
+                          "and the whole subtree."),
+                choices = [
+                    ("sub",  _("Search whole subtree below the base DN")),
+                    ("base", _("Search only the entry at the base DN")),
+                    ("one",  _("Search all entries one level below the base DN")),
+                ],
+                default_value = "sub",
+            )),
+            ("filter", TextAscii(
+                title = _("Search Filter"),
+                help = _("Using this option you can define an optional LDAP filter which is used "
+                         "during group related LDAP searches. It can be used to only handle a "
+                         "subset of the groups below the given base DN."),
+                size = 80,
+                default_value = lambda: userdb.ldap_filter('groups', False),
+            )),
+        ],
+        optional_keys = ['scope', 'filter'],
+    ),
+    domain = "multisite",
+)
 
-    register_configvar(group,
-        "ldap_groupspec",
-        Dictionary(
-            title = _("LDAP Group Settings"),
-            help  = _("This option configures all group related LDAP options. These options "
-                      "are only needed when using group related attribute synchonisation plugins."),
-            elements = [
-                ("dn", LDAPDistinguishedName(
-                    title = _("Group Base DN"),
-                    help  = _("The base distinguished name to be used when performing group account "
-                              "related queries to the LDAP server."),
-                    size = 80,
-                )),
-                ("scope", DropdownChoice(
-                    title = _("Search Scope"),
-                    help  = _("Scope to be used in group related LDAP searches. In most cases \"sub\" "
-                              "is the best choice. It searches for matching objects in the given base "
-                              "and the whole subtree."),
-                    choices = [
-                        ("sub",  _("Search whole subtree below the base DN")),
-                        ("base", _("Search only the entry at the base DN")),
-                        ("one",  _("Search all entries one level below the base DN")),
-                    ],
-                    default_value = "sub",
-                )),
-                ("filter", TextAscii(
-                    title = _("Search Filter"),
-                    help = _("Using this option you can define an optional LDAP filter which is used "
-                             "during group related LDAP searches. It can be used to only handle a "
-                             "subset of the groups below the given base DN."),
-                    size = 80,
-                    default_value = lambda: userdb.ldap_filter('groups', False),
-                )),
-            ],
-            optional_keys = ['scope', 'filter'],
-        ),
-        domain = "multisite",
-    )
+register_configvar(group,
+    "ldap_active_plugins",
+    ListChoice(
+        title = _('LDAP Attribute Sync Plugins'),
+        help  = _('It is possible to fetch several attributes of users, like Email or full names, '
+                  'from the LDAP directory. This is done by plugins which can individually enabled '
+                  'or disabled. When enabling a plugin, it is used upon the next synchonisation of '
+                  'user accounts for gathering their attributes. The user options which get imported '
+                  'into Check_MK from LDAP will be locked in WATO.'),
+        default_value = [ 'email', 'cn_to_alias', 'auth_expire' ],
+        choices = userdb.ldap_list_attribute_plugins,
+    ),
+    domain = "multisite",
+)
 
-    register_configvar(group,
-        "ldap_active_plugins",
-        ListChoice(
-            title = _('Attribute Sync Plugins'),
-            help  = _('It is possible to fetch several attributes of users, like Email or full names, '
-                      'from the LDAP directory. This is done by plugins which can individually enabled '
-                      'or disabled. When enabling a plugin, it is used upon the next synchonisation of '
-                      'user accounts for gathering their attributes. The user options which get imported '
-                      'into Check_MK from LDAP will be locked in WATO.'),
-            default_value = [ 'email', 'cn_to_alias', 'auth_expire' ],
-            choices = userdb.ldap_list_attribute_plugins,
-        ),
-        domain = "multisite",
-    )
+register_configvar(group,
+    "ldap_cache_livetime",
+    Integer(
+        title = _('LDAP Cache Livetime'),
+        help  = _('This option defines the maximum age for using the cached LDAP data. The time of the '
+                  'last LDAP synchronisation is saved and checked on every request to the multisite '
+                  'interface. Once the cache gets outdated, a new synchronisation job is started.'),
+        minvalue = 1,
+        default_value = 300,
+    ),
+    domain = "multisite",
+)
 
-    register_configvar(group,
-        "ldap_cache_livetime",
-        Integer(
-            title = _('LDAP Cache Livetime'),
-            help  = _('This option defines the maximum age for using the cached LDAP data. The time of the '
-                      'last LDAP synchronisation is saved and checked on every request to the multisite '
-                      'interface. Once the cache gets outdated, a new synchronisation job is started.'),
-            minvalue = 1,
-            default_value = 300,
-        ),
-        domain = "multisite",
-    )
+register_configvar(group,
+    "ldap_attr_map",
+    Dictionary(
+        title = _("LDAP Attribute Mapping"),
+        help  = _("Here you have the option to customize the LDAP attributes used during "
+                  "communication with the LDAP server. It controls which attributes are "
+                  "e.g. used for the unique username or similar."),
+        elements = [
+            ("user_id", TextAscii(
+                title = _("User-ID"),
+                help  = _("The attribute used to identify the individual users. It must have "
+                          "unique values to make an user identifyable by the value of this "
+                          "attribute."),
+                default_value = lambda: userdb.ldap_attr('user_id', False),
+            )),
+            ("pw_changed", TextAscii(
+                title = _("Relogon Indicator"),
+                help  = _("When the value of this attribute changes for a user account, all "
+                          "current authenticated sessions of the user are invalidated and the "
+                          "user must login again. By default this field uses the fields whcih "
+                          "hold the time of the last password change of the user."),
+                default_value = lambda: userdb.ldap_attr('pw_changed', False),
+            )),
+            ("mobile", TextAscii(
+                title = _("Mobile Number"),
+                help  = _("The LDAP attribute containing the mobile number of the user."),
+                default_value = lambda: userdb.ldap_attr('mobile', False),
+            )),
+        ],
+    ),
+    domain = "multisite",
+)
 
 def list_roles():
     roles = load_roles()

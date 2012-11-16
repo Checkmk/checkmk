@@ -7802,23 +7802,32 @@ def mode_users(phase):
         odd = odd == "odd" and "even" or "odd"
         html.write('<tr class="data %s0">' % odd)
 
+        connector = userdb.get_connector(user.get('connector'))
+
         # Buttons
-        edit_url = make_link([("mode", "edit_user"), ("edit", id)])
-        delete_url = html.makeactionuri([("_delete", id)])
-        clone_url = make_link([("mode", "edit_user"), ("clone", id)])
         html.write("<td class=buttons>")
-        html.icon_button(edit_url, _("Properties"), "edit")
-        html.icon_button(clone_url, _("Create a copy of this user"), "clone")
+        if connector: # only show edit buttons when the connector is available and enabled
+            edit_url = make_link([("mode", "edit_user"), ("edit", id)])
+            html.icon_button(edit_url, _("Properties"), "edit")
+
+            clone_url = make_link([("mode", "edit_user"), ("clone", id)])
+            html.icon_button(clone_url, _("Create a copy of this user"), "clone")
+
+        delete_url = html.makeactionuri([("_delete", id)])
         html.icon_button(delete_url, _("Delete"), "delete")
+
         html.write("</td>")
 
         # ID
         html.write("<td>%s</td>" % id)
 
         # Connector
-        html.write("<td>%s</td>" % userdb.get_connector(user.get('connector'))['title'])
-
-        locked_attributes = userdb.locked_attributes(user.get('connector'))
+        if connector:
+            html.write("<td>%s</td>" % connector['title'])
+            locked_attributes = userdb.locked_attributes(user.get('connector'))
+        else:
+            html.write("<td class=error>%s (disabled)</td>" % userdb.get_connector_id(user.get('connector')))
+            locked_attributes = []
 
         # Authentication
         if "automation_secret" in user:

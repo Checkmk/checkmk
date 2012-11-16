@@ -1063,6 +1063,7 @@ class ListChoice(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._choices = kwargs.get("choices")
         self._columns = kwargs.get("columns", 1)
+        self._allow_empty = kwargs.get("allow_empty", True)
         self._loaded_at = None
         self._render_function = kwargs.get("render_function", 
                   lambda id, val: val)
@@ -1118,6 +1119,10 @@ class ListChoice(ValueSpec):
         for v in value:
             if v not in d:
                 raise MKUserError(varprefix, _("%s is not an allowed value") % v)
+
+    def validate_value(self, value, varprefix):
+        if not self._allow_empty and not value:
+            raise MKUserError(varprefix, _('You have not selected any connector. You have to select at least one.'))
 
 
 # A alternative way of editing list choices

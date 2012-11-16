@@ -285,7 +285,8 @@ register_configvar(group,
                   'to extend or replace the default authentication mechanism (htpasswd) e.g. '
                   'with ldap based mechanism.'),
         default_value = [ 'htpasswd' ],
-        choices = userdb.list_user_connectors,
+        choices       = userdb.list_user_connectors,
+        allow_empty   = False,
     ),
     domain = "multisite",
 )

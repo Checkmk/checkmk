@@ -173,6 +173,10 @@ Boston, MA 02110-1301 USA.
     color: #f00;
 }
 
+.wato td.error {
+    color: #f00;
+}
+
 .wato td.takeall {
     /* width: 100%; */
 }

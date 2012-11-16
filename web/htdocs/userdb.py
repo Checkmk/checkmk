@@ -61,13 +61,18 @@ def enabled_connectors():
             connectors.append(connector)
     return connectors
 
-# Returns the connector dictionary of the given id
-def get_connector(connector_id):
+def get_connector_id(connector_id):
     if connector_id is None:
         connector_id = 'htpasswd'
+    return connector_id
+
+# Returns the connector dictionary of the given id
+def get_connector(connector_id):
+    connector_id = get_connector_id(connector_id)
     for connector in enabled_connectors():
         if connector['id'] == connector_id:
             return connector
+    return {}
 
 # Returns a list of locked attributes
 def locked_attributes(connector_id):

@@ -8195,6 +8195,7 @@ def mode_edit_user(phase):
     else:
         entries = [ (contact_groups[c], c) for c in contact_groups ]
         entries.sort()
+        is_member_of_at_least_one = False
         for alias, gid in entries:
             if not alias:
                 alias = gid
@@ -8204,12 +8205,16 @@ def mode_edit_user(phase):
                 html.write(" <a href=\"%s\">%s</a><br>" % (url, alias))
             else:
                 is_member = gid in user.get("contactgroups", [])
-                html.hidden_field("cg_" + gid, is_member and '1' or '')
-                if not is_member:
-                    html.write('<i>%s</i>' % _('No contact groups assigned.'))
-                else:
+                if is_member:
+                    is_member_of_at_least_one = True
+
                     url = make_link([("mode", "edit_contact_group"), ("edit", gid)])
                     html.write("<a href='%s'>%s</a><br>" % (url, alias))
+
+                html.hidden_field("cg_" + gid, is_member and '1' or '')
+
+        if not is_member_of_at_least_one:
+            html.write('<i>%s</i>' % _('No contact groups assigned.'))
 
     html.help(_("Contact groups are used to assign monitoring "
                 "objects to users. If you haven't defined any contact groups yet, "

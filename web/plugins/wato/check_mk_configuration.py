@@ -406,7 +406,7 @@ if userdb.connector_enabled('ldap'):
             help  = _("This option configures all user related LDAP options. These options "
                       "are used by the LDAP user connector to find the needed users in the LDAP directory."),
             elements = [
-                ("user_dn", LDAPDistinguishedName(
+                ("dn", LDAPDistinguishedName(
                     title = _("User Base DN"),
                     help  = _("The base distinguished name to be used when performing user account "
                               "related queries to the LDAP server."),
@@ -430,6 +430,45 @@ if userdb.connector_enabled('ldap'):
                              "base DN."),
                     size = 80,
                     default_value = lambda: userdb.ldap_filter('users', False),
+                )),
+            ],
+            optional_keys = ['scope', 'filter'],
+        ),
+        domain = "multisite",
+    )
+
+    register_configvar(group,
+        "ldap_groupspec",
+        Dictionary(
+            title = _("LDAP Group Settings"),
+            help  = _("This option configures all group related LDAP options. These options "
+                      "are only needed when using group related attribute synchonisation plugins."),
+            elements = [
+                ("dn", LDAPDistinguishedName(
+                    title = _("Group Base DN"),
+                    help  = _("The base distinguished name to be used when performing group account "
+                              "related queries to the LDAP server."),
+                    size = 80,
+                )),
+                ("scope", DropdownChoice(
+                    title = _("Search Scope"),
+                    help  = _("Scope to be used in group related LDAP searches. In most cases \"sub\" "
+                              "is the best choice. It searches for matching objects in the given base "
+                              "and the whole subtree."),
+                    choices = [
+                        ("sub",  _("Search whole subtree below the base DN")),
+                        ("base", _("Search only the entry at the base DN")),
+                        ("one",  _("Search all entries one level below the base DN")),
+                    ],
+                    default_value = "sub",
+                )),
+                ("filter", TextAscii(
+                    title = _("Search Filter"),
+                    help = _("Using this option you can define an optional LDAP filter which is used "
+                             "during group related LDAP searches. It can be used to only handle a "
+                             "subset of the groups below the given base DN."),
+                    size = 80,
+                    default_value = lambda: userdb.ldap_filter('groups', False),
                 )),
             ],
             optional_keys = ['scope', 'filter'],

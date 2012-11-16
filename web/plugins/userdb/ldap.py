@@ -61,9 +61,11 @@ ldap_attr_map = {
 ldap_filter_map = {
     'ad': {
         'users': '(&(objectclass=user)(objectcategory=person))',
+        'groups': '(objectclass=group)',
     },
     'openldap': {
         'users': '(objectcategory=user)',
+        'groups': '(objectclass=groupOfUniqueNames)',
     },
 }
 
@@ -110,7 +112,7 @@ def ldap_connect():
                                 '<a href="wato.py?mode=edit_configvar&varname=ldap_connection">LDAP '
                                 'connection settings</a>.'))
 
-    if not config.ldap_userspec.get('user_dn'):
+    if not config.ldap_userspec.get('dn'):
         raise MKLDAPException(_('The distinguished name of the container object, which holds '
                                 'the user objects to be authenticated, is not configured. Please '
                                 'fix this in the <a href="wato.py?mode=edit_configvar&varname=ldap_userspec">'
@@ -184,9 +186,12 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
 
 # Returns the ldap filter depending on the configured ldap directory type
 def ldap_filter(key, handle_config = True):
-    value = ldap_filter_map[config.ldap_connection['type']][key]
+    value = ldap_filter_map[config.ldap_connection['type']].get(key, '(objectclass=*)')
     if handle_config:
-        value = config.ldap_filter_map.get(key, value)
+        if key == 'users':
+            value = config.ldap_userspec.get('filter', value)
+        elif key == 'groups':
+            value = config.ldap_groupspec.get('filter', value)
     return ldap_replace_macros(value)
 
 # Returns the ldap attribute name depending on the configured ldap directory type
@@ -213,12 +218,12 @@ def ldap_replace_macros(tmpl):
 
     return dn
 
-def get_user_dn(username):
+def ldap_get_user_dn(username):
     # Check wether or not the user exists in the directory
     # It's only ok when exactly one entry is found.
     # Returns the DN in this case.
     result = ldap_search(
-        ldap_replace_macros(config.ldap_userspec['user_dn']),
+        ldap_replace_macros(config.ldap_userspec['dn']),
         '(%s=%s)' % (ldap_attr('user_id'), ldap.filter.escape_filter_chars(username)),
         [ldap_attr('user_id')],
     )
@@ -236,11 +241,27 @@ def ldap_get_users(add_filter = None):
         filt = '(&%s%s)' % (filt, add_filter)
 
     result = {}
-    for dn, ldap_user in ldap_search(ldap_replace_macros(config.ldap_userspec['user_dn']), filt, columns = columns):
+    for dn, ldap_user in ldap_search(ldap_replace_macros(config.ldap_userspec['dn']),
+                                     filt, columns = columns):
         user_id = ldap_user[ldap_attr('user_id')][0]
         result[user_id] = ldap_user
 
     return result
+
+def ldap_user_groups(username):
+    user_dn = ldap_get_user_dn(username)
+
+    # Apply configured group ldap filter and only reply with groups
+    # having the current user as member
+    filt = '(&%s(member=%s))' % (ldap_filter('groups'), user_dn)
+
+    # First get all groups
+    groups = []
+    for dn, group in ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']),
+                                 filt, ['cn']):
+        groups.append(group['cn'][0])
+
+    return groups
 
 #   .----------------------------------------------------------------------.
 #   |              _   _   _        _ _           _                        |
@@ -266,7 +287,8 @@ def ldap_list_attribute_plugins():
 def ldap_needed_attributes():
     attrs = set([])
     for key in config.ldap_active_plugins:
-        attrs.update(ldap_attribute_plugins[key]['needed_attributes']())
+        if 'needed_attributes' in ldap_attribute_plugins[key]:
+            attrs.update(ldap_attribute_plugins[key]['needed_attributes']())
     return list(attrs)
 
 def ldap_convert_simple(user_id, ldap_user, user, wato_attr, attr):
@@ -336,7 +358,6 @@ ldap_attribute_plugins['auth_expire'] = {
                'the password has changed in LDAP or the account has been locked.'),
     'needed_attributes': lambda: ldap_attrs(['pw_changed']),
     'convert':           ldap_convert_auth_expire,
-    'lock_attributes':   [],
     # When a plugin introduces new user attributes, it should declare the output target for
     # this attribute. It can either be written to the multisites users.mk or the check_mk
     # contacts.mk to be forwarded to nagios. Undeclared attributes are stored in the check_mk
@@ -355,6 +376,27 @@ ldap_attribute_plugins['mobile_to_pager'] = {
     'lock_attributes':   ['pager'],
 }
 
+def ldap_convert_groups_to_contactgroups(user_id, ldap_user, user):
+    groups = []
+    # 1. Fetch CNs of all LDAP groups of the user (use group_dn, group_filter)
+    ldap_groups = ldap_user_groups(user_id)
+
+    # 2. Fetch all existing group names in WATO
+    import wato
+    cg_names = wato.load_group_information().get("contact", {}).keys()
+
+    # Only add groups which are already contactgroups in wato
+    return {'contactgroups': [ g for g in ldap_groups if g in cg_names]}
+
+ldap_attribute_plugins['groups_to_contactgroups'] = {
+    'title': _('Contactgroup Memberhip'),
+    'help':  _('Adds the user to contactgroups based on the group memberhips in LDAP. This '
+               'plugin adds the user only to existing contactgroups while the name of the '
+               'contactgroup must match the common name of the LDAP group.'),
+    'convert':           ldap_convert_groups_to_contactgroups,
+    'lock_attributes':   ['contactgroups'],
+}
+
 #   .----------------------------------------------------------------------.
 #   |                     _   _             _                              |
 #   |                    | | | | ___   ___ | | _____                       |
@@ -371,7 +413,7 @@ def ldap_login(username, password):
     ldap_connect()
     # Returns None when the user is not found or not uniq, else returns the
     # distinguished name of the user as string which is needed for the login.
-    user_dn = get_user_dn(username)
+    user_dn = ldap_get_user_dn(username)
     if not user_dn:
         return None # The user does not exist. Skip this connector.
 
@@ -440,7 +482,7 @@ def ldap_sync(add_to_changelog, only_username):
 def ldap_locked_attributes():
     locked = set([ 'password' ]) # This attributes are locked in all cases!
     for key in config.ldap_active_plugins:
-        locked.update(ldap_attribute_plugins[key]['lock_attributes'])
+        locked.update(ldap_attribute_plugins[key].get('lock_attributes', []))
     return list(locked)
 
 # Calculates the attributes added in this connector which shal be written to

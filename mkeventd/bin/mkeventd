@@ -727,12 +727,14 @@ class EventServer:
 
 
             # Handle events with a limited lifetime
-            elif event["phase"] == "open" and "live_until" in event:
+            elif "live_until" in event:
                 if now >= event["live_until"]:
-                    events_to_delete.append(nr)
-                    log("Livetime of event %d (rule %s) exceeded. Deleting event." % (
-                            event["id"], event["rule_id"]))
-                    log_event_history(event, "EXPIRED")
+                    allowed_phases = event.get("live_until_phases", ["open"])
+                    if event["phase"] in allowed_phases:
+                        events_to_delete.append(nr)
+                        log("Livetime of event %d (rule %s) exceeded. Deleting event." % (
+                                event["id"], event["rule_id"]))
+                        log_event_history(event, "EXPIRED")
 
 
         # Do delayed deletion now (was delayed in order to keep list indices OK)
@@ -871,6 +873,13 @@ class EventServer:
             else:
                 count_rules += 1
                 rule = rule.copy() # keep original intact because of slave replication
+
+                # Convert some data fields into newer format
+                if "livetime" in rule:
+                    livetime = rule["livetime"]
+                    if type(livetime) != tuple:
+                        rule["livetime"] = ( livetime, ["open"] )
+
                 self._rules.append(rule)
                 self._rule_by_id[rule["id"]] = rule
                 try:
@@ -1980,9 +1989,12 @@ class EventStatus():
 
 def do_rule_actions(rule, event):
     # Prepare for events with a limited livetime. This time starts
-    # when the event enters the open state.
+    # when the event enters the open state or acked state
     if "livetime" in rule:
-        event["live_until"] = time.time() + rule["livetime"]
+        livetime, phases = rule["livetime"]
+        event["live_until"] = time.time() + livetime
+        event["live_until_phases"] = phases
+
     for aname in rule.get("actions", []):
         action = g_config["action"].get(aname)
         if not action:

@@ -22,6 +22,7 @@
     * New button for generating test events directly via WATO
     * Allow Event Console to replicate from another (master) console for
       fast failover.
+    * Allow event expiration also on acknowledged events (configurable)
 
     Multisite:
     * Enable automation login with _username= and _secret=, while

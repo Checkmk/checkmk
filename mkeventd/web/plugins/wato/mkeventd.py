@@ -422,10 +422,22 @@ vs_mkeventd_rule = Dictionary(
                      "rule."))
         ),
         ( "livetime",
-          Age(
-            title = _("Limit event livetime"),
-            help = _("If you set a livetime of an event, then it will automatically be "
-                     "deleted after that time if, even if no action has taken by the user."),
+          Tuple(
+              title = _("Limit event livetime"),
+              help = _("If you set a livetime of an event, then it will automatically be "
+                       "deleted after that time if, even if no action has taken by the user. You can "
+                       "decide whether to expire open, acknowledged or both types of events. The lifetime "
+                       "always starts when the event is entering the open state."),
+              elements = [
+                  Age(),
+                  ListChoice(
+                    choices = [
+                      ( "open", _("Expire events that are in state <i>open</i>") ),
+                      ( "ack", _("Expire events thar are in state <i>acknowledged</i>") ),
+                    ],
+                    default_value = [ "open" ],
+                  )
+              ],
           ),
         ),
         ( "match",
@@ -658,6 +670,13 @@ def load_mkeventd_rules():
             rule_stats = mkeventd_status["rule_stats"]
             for rule in vars["rules"]:
                 rule["hits"] = rule_stats.get(rule["id"], 0)
+
+        # Convert some data fields into a new format
+        for rule in vars["rules"]:
+            if "livetime" in rule:
+                livetime = rule["livetime"]
+                if type(livetime) != tuple:
+                    rule["livetime"] = ( livetime, ["open"] )
 
         return vars["rules"]
 

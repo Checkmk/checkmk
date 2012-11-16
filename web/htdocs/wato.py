@@ -7823,7 +7823,7 @@ def mode_users(phase):
 
         # Connector
         if connector:
-            html.write("<td>%s</td>" % connector['title'])
+            html.write("<td>%s</td>" % connector['short_title'])
             locked_attributes = userdb.locked_attributes(user.get('connector'))
         else:
             html.write("<td class=error>%s (disabled)</td>" % userdb.get_connector_id(user.get('connector')))

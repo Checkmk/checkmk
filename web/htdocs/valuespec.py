@@ -2144,3 +2144,9 @@ class Password(TextAscii):
             html.write(self._label)
             html.write("&nbsp;")
         html.password_input(varprefix, str(value), size = self._size)
+
+    def value_to_text(self, value):
+        if value == None:
+            return _("none")
+        else:
+            return '******'

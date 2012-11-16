@@ -515,8 +515,9 @@ def ldap_page():
     ldap_sync(False, None)
 
 multisite_user_connectors.append({
-    'id':    'ldap',
-    'title': _('LDAP (AD, OpenLDAP)'),
+    'id':          'ldap',
+    'title':       _('LDAP (Active Directory, OpenLDAP)'),
+    'short_title': _('LDAP'),
 
     'login':             ldap_login,
     'sync':              ldap_sync,

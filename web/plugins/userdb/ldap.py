@@ -86,7 +86,7 @@ class MKLDAPException(MKGeneralException):
 ldap_connection = None
 
 def ldap_uri():
-    if config.ldap_connection.get('use_ssl', False):
+    if 'use_ssl' in config.ldap_connection:
         uri = 'ldaps://'
     else:
         uri = 'ldap://'
@@ -139,7 +139,7 @@ def ldap_connect():
 # Bind with the default credentials
 def ldap_default_bind():
     try:
-        if config.ldap_connection['bind']:
+        if 'bind' in config.ldap_connection:
             ldap_bind(ldap_replace_macros(config.ldap_connection['bind'][0]),
                       config.ldap_connection['bind'][1], catch = False)
         else:

@@ -312,10 +312,11 @@ register_configvar(group,
                 maxvalue = 65535,
                 default_value = 389,
             )),
-            ("use_ssl", Checkbox(
-                title = _("Use SSL"),
-                label = _("SSL encrypted connection"),
-                help = _("Connect to the LDAP server with a SSL encrypted connection."),
+            ("use_ssl", FixedValue(
+                title  = _("Use SSL"),
+                help   = _("Connect to the LDAP server with a SSL encrypted connection."),
+                value  = True,
+                totext = _("Encrypt the network connection using SSL."),
             )),
             ("version", Integer(
                 title = _("LDAP Version"),
@@ -335,22 +336,7 @@ register_configvar(group,
                     ("openldap", _("OpenLDAP")),
                 ],
             )),
-            ("bind", Optional(
-                Tuple(
-                    elements = [
-                        LDAPDistinguishedName(
-                            title = _("Bind DN"),
-                            help  = _("Specify the distinguished name to be used to bind to "
-                                      "the LDAP directory."),
-                            size = 80,
-                        ),
-                        Password(
-                            title = _("Bind Password"),
-                            help  = _("Specify the password to be used to bind to "
-                                      "the LDAP directory."),
-                        ),
-                    ],
-                ),
+            ("bind", Tuple(
                 title = _("LDAP Bind Credentials"),
                 help  = _("Set the credentials to be used to connect to the LDAP server. The "
                           "used account must not be allowed to do any changes in the directory "
@@ -359,10 +345,22 @@ register_configvar(group,
                           "case you don't have to configure anything here."
                           "It must be possible to list all needed user and group objects from the "
                           "directory."),
-                label = _("Specify bind credentials"),
+                elements = [
+                    LDAPDistinguishedName(
+                        title = _("Bind DN"),
+                        help  = _("Specify the distinguished name to be used to bind to "
+                                  "the LDAP directory."),
+                        size = 80,
+                    ),
+                    Password(
+                        title = _("Bind Password"),
+                        help  = _("Specify the password to be used to bind to "
+                                  "the LDAP directory."),
+                    ),
+                ],
             )),
         ],
-        optional_keys = [],
+        optional_keys = ['use_ssl', 'bind', ],
     ),
     domain = "multisite",
 )

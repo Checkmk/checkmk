@@ -397,8 +397,15 @@ register_configvar(group,
                 size = 80,
                 default_value = lambda: userdb.ldap_filter('users', False),
             )),
+            ("user_id", TextAscii(
+                title = _("User-ID"),
+                help  = _("The attribute used to identify the individual users. It must have "
+                          "unique values to make an user identifyable by the value of this "
+                          "attribute."),
+                default_value = lambda: userdb.ldap_attr('user_id', False),
+            )),
         ],
-        optional_keys = ['scope', 'filter'],
+        optional_keys = ['scope', 'filter', 'user_id'],
     ),
     domain = "multisite",
 )
@@ -478,13 +485,6 @@ register_configvar(group,
                   "communication with the LDAP server. It controls which attributes are "
                   "e.g. used for the unique username or similar."),
         elements = [
-            ("user_id", TextAscii(
-                title = _("User-ID"),
-                help  = _("The attribute used to identify the individual users. It must have "
-                          "unique values to make an user identifyable by the value of this "
-                          "attribute."),
-                default_value = lambda: userdb.ldap_attr('user_id', False),
-            )),
             ("pw_changed", TextAscii(
                 title = _("Relogon Indicator"),
                 help  = _("When the value of this attribute changes for a user account, all "

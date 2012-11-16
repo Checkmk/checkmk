@@ -218,14 +218,17 @@ def ldap_replace_macros(tmpl):
 
     return dn
 
+def ldap_user_id_attr():
+    return config.ldap_userspec.get('user_id', ldap_attr('user_id', False))
+
 def ldap_get_user_dn(username):
     # Check wether or not the user exists in the directory
     # It's only ok when exactly one entry is found.
     # Returns the DN in this case.
     result = ldap_search(
         ldap_replace_macros(config.ldap_userspec['dn']),
-        '(%s=%s)' % (ldap_attr('user_id'), ldap.filter.escape_filter_chars(username)),
-        [ldap_attr('user_id')],
+        '(%s=%s)' % (ldap_user_id_attr(), ldap.filter.escape_filter_chars(username)),
+        [ldap_user_id_attr()],
     )
 
     if result:
@@ -233,7 +236,7 @@ def ldap_get_user_dn(username):
 
 def ldap_get_users(add_filter = None):
     columns = [
-        ldap_attr('user_id'), # needed in all cases as uniq id
+        ldap_user_id_attr(), # needed in all cases as uniq id
     ] + ldap_needed_attributes()
 
     filt = ldap_filter('users')
@@ -243,7 +246,7 @@ def ldap_get_users(add_filter = None):
     result = {}
     for dn, ldap_user in ldap_search(ldap_replace_macros(config.ldap_userspec['dn']),
                                      filt, columns = columns):
-        user_id = ldap_user[ldap_attr('user_id')][0]
+        user_id = ldap_user[ldap_user_id_attr()][0]
         result[user_id] = ldap_user
 
     return result
@@ -433,7 +436,7 @@ def ldap_sync(add_to_changelog, only_username):
 
     filt = None
     if only_username:
-        filt = '(%s=%s)' % (ldap_attr('user_id'), only_username)
+        filt = '(%s=%s)' % (ldap_user_id_attr(), only_username)
 
     import wato
     users      = wato.load_users()

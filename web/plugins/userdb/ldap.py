@@ -94,9 +94,10 @@ def ldap_uri():
     return uri + '%s:%d' % (config.ldap_connection['server'], config.ldap_connection['port'])
 
 def ldap_connect():
-    global ldap_connection
-    if ldap_connection:
-        return # Only initialize once.
+    global ldap_connection, ldap_connection_options
+
+    if ldap_connection and config.ldap_connection == ldap_connection_options:
+        return # Use existing connections (if connection settings have not changed)
 
     try:
         ldap
@@ -122,6 +123,9 @@ def ldap_connect():
         ldap_connection = ldap.ldapobject.ReconnectLDAPObject(ldap_uri())
         ldap_connection.protocol_version = config.ldap_connection['version']
         ldap_default_bind()
+
+        # on success, store the connection options the connection has been made with
+        ldap_connection_options = config.ldap_connection
 
     except ldap.SERVER_DOWN:
         ldap_connection = None # Invalidate connection on failure

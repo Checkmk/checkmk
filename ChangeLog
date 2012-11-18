@@ -1,5 +1,11 @@
 1.2.0p4:
+    WATO:
+    * FIX: fixed detection of existing groups when creating new groups
+
+
+1.2.0p3:
     Mulitisite:
+    * Added "view" parameter to dashlet_pnpgraph webservice
     * FIX: BI: Assuming "OK" for hosts is now possible
     * FIX: Fixed error in makeuri() calls when no parameters in URL
     * FIX: Try out mode in view editor does not show context buttons anymore
@@ -7,6 +13,8 @@
     * FIX: WATO Folder Filter no longer available in single host views
     * FIX: Quicksearch converts search text to regex when accessing livestatus
     * FIX: Localize option for not OMD Environments
+    * FIX: Fixed "access denied" problem with multisite authorization in PNP/NagVis
+           in new OMD sites which use the multisite authorization
 
     WATO:
     * FIX: Users & Contacts uses case-insensitive sorting of 'Full name' column  

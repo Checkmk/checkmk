@@ -974,7 +974,8 @@ class EventServer:
         for key in [ "match_priority", "cancel_priority" ]:
             if key in rule:  
                 prio_from, prio_to = rule[key]
-                for p in range(prio_from, prio_to+1):
+                # Beware: from > to!
+                for p in range(prio_to, prio_from + 1):
                     needed_prios[p] = True
             elif key == "match_priority": # all priorities match
                 needed_prios = [True] * 8 # needed to check this rule for all event priorities

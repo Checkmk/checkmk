@@ -1,3 +1,8 @@
+1.2.0p4:
+    WATO:
+    * FIX: fixed detection of existing groups when creating new groups
+
+
 1.2.0p3:
     Mulitisite
     * Added "view" parameter to dashlet_pnpgraph webservice

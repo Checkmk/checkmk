@@ -5692,6 +5692,8 @@ def mode_edit_group(phase, what):
                     raise MKUserError("name", _("Sorry, spaces are not allowed in group names."))
                 if not re.match("^[-a-z0-9A-Z_]*$", name):
                     raise MKUserError("name", _("Invalid group name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+                if name in groups:
+                    raise MKUserError("name", _("Sorry, there is already a group with that name"))
                 groups[name] = alias
                 log_pending(SYNCRESTART, None, "edit-%sgroups" % what, _("Create new %s group %s" % (what, name)))
             else:

@@ -523,7 +523,7 @@ class Perfcounters:
         if counter not in self._times:
             self._times[counter] = ptime
         else:
-            weight = self._weights(counter)
+            weight = self._weights[counter]
             self._times[counter] *= weight
             self._times[counter] += (1.00 - weight) * ptime
 
@@ -1609,17 +1609,23 @@ class StatusServer:
             raise MKClientError("Invalid table %s, we only have 'events', 'history' and 'status'" % table)
 
         filters = []
+        only_host = None
         for line in headerlines:
             try:
                 header, argument = line.rstrip().split(":", 1)
                 argument = argument.strip()
                 if header == "Filter":
-                    filters.append(self.parse_filter(argument, columns))
+                    name, opfunc, argument = self.parse_filter(argument, columns)
+                    # Needed for later optimization
+                    if name == "event_host" and filter_operators['=']:
+                        only_host = argument
+                    filters.append((name, opfunc, argument))
+                    
             except Exception, e:
                 raise MKClientError("Invalid header line '%s': %s" % (line.rstrip(), e))
 
         if table == "events":
-            headers, list_rows = g_event_status.get_events()
+            headers, list_rows = g_event_status.get_events(only_host)
         elif table == "history":
             headers, list_rows = get_event_history(filters)
         else:
@@ -2007,9 +2013,12 @@ class EventStatus():
                 return
         raise MKClientError("No event with id %s" % event_id)
 
-    def get_events(self):
+    def get_events(self, only_host = None):
         result = []
         for event in self._events:
+            # A small optimization for check_mkevents
+            if only_host and event["host"] != only_host:
+                continue
             event_line = []
             for col_name, col_default in event_columns:
                 without_prefix = col_name[6:] # drop event_
@@ -2225,7 +2234,8 @@ def load_master_config():
         log("Replication: restored %d rules and %d actions from %s" %
             (len(config["rules"]), len(config["actions"]), path))
     except:
-        log("Replication: no previously saved master state available")
+        if is_replication_slave():
+            log("Replication: no previously saved master state available")
 
 
 def get_state_from_master():

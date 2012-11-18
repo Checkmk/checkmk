@@ -52,22 +52,25 @@ def render_mkeventd_performance():
 
     # Hit rate
     try:
-        write_line(_("Rule hit ratio"), "%.2f%%" % (
+        write_line(_("Rule hit ratio"), "%.2f %%" % (
            data["status_average_rule_hit_rate"] / 
            data["status_average_rule_trie_rate"] * 100))
     except: # division by zero
+        write_line(_("Rule hit ratio"), _("-.-- %"))
         pass
 
     # Time columns
     time_columns = [
         (_("Processing time per message"), "processing"),
-        (_("Processing time per client request"), "request"),
-        (_("Replication synchronization (avg)"), "sync"),
+        (_("Tiime per client request"), "request"),
+        (_("Replication synchronization"), "sync"),
     ]
     for title, name in time_columns:
         value = data.get("status_average_%s_time" % name)
         if value:
             write_line(title, "%.2f ms" % (value * 1000))
+        else:
+            write_line(title, _("-.-- ms"))
     html.write("</table>\n")
 
 if mkeventd_enabled:

@@ -37,7 +37,7 @@ pid_t g_pid;
 static void alarm_handler(int);
 static void term_handler(int);
 static char **parse_into_arguments(char *command);
-int check_icmp(int argc, char **argv, char *output);
+int check_icmp(int argc, char **argv, char *output, int size);
 int icmp_sock = -1;
 
 // This program must be called with two arguments:
@@ -92,7 +92,7 @@ int main(int argc, char **argv)
             int arg_c = 0;
             while (arguments[arg_c])
                 arg_c++;
-            return_code = check_icmp(arg_c, arguments, output);
+            return_code = check_icmp(arg_c, arguments, output, sizeof(output));
         }
         else {
             int fd[2];
@@ -224,9 +224,14 @@ int main(int argc, char **argv)
                 fputs(ptr_output, checkfile);
                 fputs("\\n", checkfile);
                 ptr_output = ptr_walk + 1;
-                if (*ptr_output == 0)
-                    break;
+            } else if (*ptr_walk == '\\') {
+                *ptr_walk = 0;
+                fputs(ptr_output, checkfile);
+                fputs("\\\\", checkfile);
+                ptr_output = ptr_walk + 1;
             }
+            if (*ptr_output == 0)
+            	break;
             ptr_walk++;
         }
         fputs("\n", checkfile);

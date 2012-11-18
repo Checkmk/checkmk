@@ -228,7 +228,10 @@ int broker_host_livecheck(int event_type __attribute__ ((__unused__)), void *dat
     grab_host_macros(hst);
 
     char *raw_command;
-    get_raw_command_line(hst->check_command_ptr, hst->host_check_command, &raw_command,0);
+    if (get_raw_command_line(hst->check_command_ptr, hst->host_check_command, &raw_command,0) == ERROR) {
+        // No need to free raw_command
+        return NEB_OK;
+    }
     char *processed_command;
     process_macros(raw_command, &processed_command, 0);
 

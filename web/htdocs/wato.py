@@ -1469,10 +1469,16 @@ def move_hosts_to(hostnames, path):
             continue
 
         mark_affected_sites_dirty(g_folder, hostname)
+
+        # Add to new folder
         target_hosts[hostname] = g_folder[".hosts"][hostname]
+        target_hosts[hostname]['.folder'] = target_folder
         target_folder["num_hosts"] += 1
+
+        # Remove from old folder
         g_folder["num_hosts"] -= 1
         del g_folder[".hosts"][hostname]
+
         mark_affected_sites_dirty(target_folder, hostname)
 
         if len(hostnames) == 1:
@@ -7206,7 +7212,15 @@ def preferred_peer():
         if site.get("replication") == "slave":
             continue # Ignore slave sites
 
-        if best_peer == None or site.get("repl_priority",0) > best_peer.get("repl_priority",0) or (site_id < best_peer["id"] and site.get("repl_priority",0) == best_peer.get("repl_priority",0)):
+        if not site.get("replication") and not site_is_local(site_id):
+           continue # Ignore sites without distributed WATO
+
+        # a) No peer found yet
+        # b) Replication priority of current site is greater than best peer
+        # c) On same priority -> use higher alphabetical order
+        if best_peer == None \
+           or site.get("repl_priority",0) > best_peer.get("repl_priority",0) \
+           or (site_id < best_peer["id"] and site.get("repl_priority",0) == best_peer.get("repl_priority",0)):
             best_peer = site
             if site_is_local(site_id):
                 best_working_peer = site

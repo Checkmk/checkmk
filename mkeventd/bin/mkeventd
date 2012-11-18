@@ -6,7 +6,7 @@ import socket, os, time, sys, getopt, signal, thread, pprint, re, \
 from pwd import getpwnam
 from grp import getgrnam
 
-VERSION="1.2.1i2"
+VERSION="1.2.1i3"
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |

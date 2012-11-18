@@ -66,7 +66,7 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.1i2
+echo Version: 1.2.1i3
 echo AgentOS: freebsd
 
 
@@ -266,7 +266,7 @@ fi
 
 # Number of TCP connections in the various states
 echo '<<<tcp_conn_stats>>>'
-netstat -na | awk ' /^tcp/ { c[$7]++; } END { for (x in c) { print x, c[x]; } }'
+netstat -na | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
 
 
 # Postfix mailqueue monitoring

@@ -481,6 +481,7 @@ def get_logfile_timespan(path):
     except:
         return 0.0, 0.0
 
+#.
 #   .--Perfcounters--------------------------------------------------------.
 #   |      ____            __                       _                      |
 #   |     |  _ \ ___ _ __ / _| ___ ___  _   _ _ __ | |_ ___ _ __ ___       |
@@ -1429,7 +1430,11 @@ class StatusServer:
             except Exception, e:
                 log("Error handling client %s: %s" % (addr_info, e))
                 if client_socket:
-                    client_socket.send("ERROR: %s\n" % e)
+                    try:
+                        client_socket.send("ERROR: %s\n" % e)
+                    except:
+                        pass # avoid next exception because of broken pipe!
+
                     client_socket.close()
                     client_socket = None
                 if opt_debug:

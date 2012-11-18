@@ -3,6 +3,9 @@
     * New performance counter for client request processing time
     * FIX: fixed bug in rule optimizer with ranges of syslog priorities
 
+    WATO:
+    * Cloning of contact/host/service groups (without members)
+
 
 1.2.1i2:
     Core:

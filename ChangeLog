@@ -1,3 +1,14 @@
+1.2.1i3:
+    Core:
+    * added HOST/SERVICEPROBLEMID to notification macros
+    Event Console:
+    * New performance counter for client request processing time
+    * FIX: fixed bug in rule optimizer with ranges of syslog priorities
+
+    WATO:
+    * Cloning of contact/host/service groups (without members)
+
+
 1.2.1i2:
     Core:
     * Improved validation of inventory data reported by checks
@@ -20,6 +31,9 @@
     * check_mkevents: new option -a for ignoring acknowledged events
     * New sub-permissions for changing comment and contact while updating an event
     * New button for generating test events directly via WATO
+    * Allow Event Console to replicate from another (master) console for
+      fast failover.
+    * Allow event expiration also on acknowledged events (configurable)
 
     Multisite:
     * Enable automation login with _username= and _secret=, while
@@ -108,12 +122,21 @@
     * winperf_phydisk: monitor average queue length for read/write
 
 1.2.0p4:
+    WATO:
+    * FIX: fixed detection of existing groups when creating new groups
+
+
+1.2.0p3:
+    Mulitisite
+    * Added "view" parameter to dashlet_pnpgraph webservice
     * FIX: BI: Assuming "OK" for hosts is now possible
     * FIX: Fixed error in makeuri() calls when no parameters in URL
     * FIX: Try out mode in view editor does not show context buttons anymore
     * FIX: WATO Folder filter not available when WATO disabled
     * FIX: WATO Folder Filter no longer available in single host views
     * FIX: Quicksearch converts search text to regex when accessing livestatus
+    * FIX: Fixed "access denied" problem with multisite authorization in PNP/NagVis
+           in new OMD sites which use the multisite authorization
     * FIX: Localize option for not OMD Environments
 
     WATO:

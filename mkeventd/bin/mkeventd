@@ -203,7 +203,7 @@ def format_exception():
 
 # Class for debugging locking. Beware: This does not really
 # implement a true locking! It's just for detecting deadlocks!
-class VerboseLock():
+class VerboseLock:
     def __init__(self, name):
         self._depth = 0
         self._name = name

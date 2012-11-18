@@ -27,8 +27,10 @@ if sys.argv[1].startswith("-"):
 width = 76
 sepmid = sep + '-' * (width - len(sep) - 1) + '+'
 
-print first + '-' * (width - len(first) - 1) + '.'
-for line in os.popen("figlet -c -w %d '%s'" % (width - 7, " ".join(sys.argv[1:])), "r"):
+title = " ".join(sys.argv[1:])
+first_line = first + "-" + title 
+print first_line + '-' * (width - len(first_line) - 1) + '.'
+for line in os.popen("figlet -c -w %d '%s'" % (width - 7, title), "r"):
     line = line[:-1]
     print (cont + "|%-" + str(width - len(cont) - 2) + "s|") % line
 print sepmid

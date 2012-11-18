@@ -1,4 +1,6 @@
 1.2.1i3:
+    Event Console:
+    * New performance counter for client request processing time
 
 
 1.2.1i2:

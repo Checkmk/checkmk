@@ -8,6 +8,9 @@
     WATO:
     * Cloning of contact/host/service groups (without members)
 
+    Checks:
+    * logwatch: Fixed confusion with ignore/ok states of log messages
+
 
 1.2.1i2:
     Core:

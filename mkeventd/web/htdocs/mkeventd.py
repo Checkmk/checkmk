@@ -148,6 +148,14 @@ def query(query):
     except Exception, e:
         raise MKGeneralException("Cannot connect to event daemon: %s" % e)
 
+def replication_mode():
+    try:
+        response = query("GET status")
+        status = dict(zip(response[0], response[1]))
+        return status["status_replication_slavemode"]
+    except:
+        return None
+
 
 # Rule matching for simulation. Yes - there is some hateful code duplication
 # here. But it does not make sense to query the live eventd here since it

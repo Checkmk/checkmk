@@ -6,7 +6,7 @@ import socket, os, time, sys, getopt, signal, thread, pprint, re, \
 from pwd import getpwnam
 from grp import getgrnam
 
-VERSION="1.2.1i2"
+VERSION="1.2.1i3"
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -203,7 +203,7 @@ def format_exception():
 
 # Class for debugging locking. Beware: This does not really
 # implement a true locking! It's just for detecting deadlocks!
-class VerboseLock():
+class VerboseLock:
     def __init__(self, name):
         self._depth = 0
         self._name = name
@@ -482,6 +482,104 @@ def get_logfile_timespan(path):
         return 0.0, 0.0
 
 #.
+#   .--Perfcounters--------------------------------------------------------.
+#   |      ____            __                       _                      |
+#   |     |  _ \ ___ _ __ / _| ___ ___  _   _ _ __ | |_ ___ _ __ ___       |
+#   |     | |_) / _ \ '__| |_ / __/ _ \| | | | '_ \| __/ _ \ '__/ __|      |
+#   |     |  __/  __/ |  |  _| (_| (_) | |_| | | | | ||  __/ |  \__ \      |
+#   |     |_|   \___|_|  |_|  \___\___/ \__,_|_| |_|\__\___|_|  |___/      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Helper class for performance counting                               |
+#   '----------------------------------------------------------------------'
+class Perfcounters:
+    def __init__(self):
+        # Event counters
+        self._counters = {
+            "messages"        : 0,
+            "rule_tries"      : 0,
+            "rule_hits"       : 0,
+            "drops"           : 0,
+            "events"          : 0,
+            "connects"        : 0,
+        }
+
+        # Average processing times
+        self._weights = {
+            "processing" : 0.99, # event processing
+            "sync"       : 0.95, # Replication sync
+            "request"    : 0.95, # Client requests
+        }
+
+        self._old_counters = {}
+        self._rates = {}
+        self._average_rates = {}
+        self._times = {}
+        self._last_statistics = None
+
+    def count(self, counter):
+        self._counters[counter] += 1
+
+    def count_time(self, counter, ptime):
+        if counter not in self._times:
+            self._times[counter] = ptime
+        else:
+            weight = self._weights[counter]
+            self._times[counter] *= weight
+            self._times[counter] += (1.00 - weight) * ptime
+
+    def do_statistics(self):
+        now = time.time()
+        weight = 0.9 # We could make this configurable
+        if self._last_statistics:
+            duration = now - self._last_statistics
+        else:
+            duration = 0
+        for name, value in self._counters.items():
+            if duration:
+                delta = value - self._old_counters[name]
+                rate = delta / duration
+                self._rates[name] = rate
+                if name in self._average_rates:
+                    self._average_rates[name] = \
+                        self._average_rates[name] * weight + rate * (1.0 - weight)
+                else:
+                    self._average_rates[name] = rate
+
+        self._last_statistics = now
+        self._old_counters = self._counters.copy()
+
+    def status_columns(self):
+        columns = []
+        for name, value in self._counters.items():
+            columns.append(("status_" + name, 0.0))
+            columns.append(("status_" + name.rstrip("s") + "_rate", 0.0))
+            columns.append(("status_average_" + name.rstrip("s") + "_rate", 0.0))
+        for name, value in self._weights.items():
+            columns.append(("status_average_%s_time" % name, 0.0))
+        return columns
+
+    def get_status(self):
+        headers = []
+        row = []
+        for name, value in self._counters.items():
+            rate_name = name.rstrip("s") + "_rate"
+            average_rate_name = "average_" + name.rstrip("s") + "_rate"
+            headers.append("status_" + name)
+            headers.append("status_" + rate_name)
+            headers.append("status_" + average_rate_name)
+            row.append(value)
+            row.append(self._rates.get(name, 0.0))
+            row.append(self._average_rates.get(name, 0.0))
+
+        for name in self._weights.keys():
+            headers.append("status_average_%s_time" % name)
+            row.append(self._times.get(name, 0.0))
+            
+        return headers, row
+        
+
+#.
 #   .--EventServer---------------------------------------------------------.
 #   |      _____                 _   ____                                  |
 #   |     | ____|_   _____ _ __ | |_/ ___|  ___ _ ____   _____ _ __        |
@@ -501,73 +599,31 @@ class EventServer:
     def __init__(self):
         self.create_pipe()
         self._rules = []
-        self._perfcounters = {
-            "messages"        : 0,
-            "rule_tries"      : 0,
-            "rule_hits"       : 0,
-            "drops"           : 0,
-            "events"          : 0,
-        }
-        self._last_statistics = None
-        self._rates = {}
-        self._average_rates = {}
-        self._average_processing_time = 0.0
         self._hash_stats = []
         for facility in range(24):
             self._hash_stats.append([ 0 ] * 8 )
 
-    def count(self, counter):
-        self._perfcounters[counter] += 1
-
-    def count_processing_time(self, ptime):
-        if self._average_processing_time == 0.0:
-            self._average_processing_time = ptime
-        else:
-            self._average_processing_time = self._average_processing_time * 0.99 + 0.01 * ptime
-
     def status_columns(self):
-        columns = []
-        for name, value in self._perfcounters.items():
-            columns.append(("status_" + name, value))
-            columns.append(("status_" + name.rstrip("s") + "_rate", 0.0))
-            columns.append(("status_average_" + name.rstrip("s") + "_rate", 0.0))
-        columns.append("status_average_processing_time")
+        columns = g_perfcounters.status_columns()
+        # Information about replication
+        columns.append(("status_replication_slavemode", ""))
+        columns.append(("status_replication_last_sync", 0.0))
+        columns.append(("status_replication_success", False))
         return columns
 
-    def do_statistics(self):
-        now = time.time()
-        weight = 0.9 # We could make this configurable
-        if self._last_statistics:
-            duration = now - self._last_statistics
-        else:
-            duration = 0
-        for name, value in self._perfcounters.items():
-            if duration:
-                delta = value - self._old_perfcounters[name]
-                rate = delta / duration
-                self._rates[name] = rate
-                if name in self._average_rates:
-                    self._average_rates[name] = self._average_rates[name] * weight + rate * (1.0 - weight)
-                else:
-                    self._average_rates[name] = rate
-
-        self._last_statistics = now
-        self._old_perfcounters = self._perfcounters.copy()
-
     def get_status(self):
-        headers = []
-        row = []
-        for name, value in self._perfcounters.items():
-            rate_name = name.rstrip("s") + "_rate"
-            average_rate_name = "average_" + name.rstrip("s") + "_rate"
-            headers.append("status_" + name)
-            headers.append("status_" + rate_name)
-            headers.append("status_" + average_rate_name)
-            row.append(value)
-            row.append(self._rates.get(name, 0.0))
-            row.append(self._average_rates.get(name, 0.0))
-        headers.append("status_average_processing_time")
-        row.append(self._average_processing_time)
+        headers, row = g_perfcounters.get_status()
+
+        # Replication
+        headers += [ "status_replication_slavemode", "status_replication_last_sync", 
+                     "status_replication_success" ]
+        if is_replication_slave():
+            row.append(g_slave_status["mode"])
+            row.append(g_slave_status["last_sync"])
+            row.append(g_slave_status["success"])
+        else:
+            row += [ "master", 0.0, False ]
+
         return headers, [row]
 
     def create_pipe(self):
@@ -621,7 +677,7 @@ class EventServer:
                 line = line.decode("latin-1")
 
             if line:
-                self.count("messages")
+                g_perfcounters.count("messages")
                 before = time.time()
                 # In replication slave mode (when not took over), ignore all events
                 if not is_replication_slave() or g_slave_status["mode"] != "sync":
@@ -629,7 +685,7 @@ class EventServer:
                 elif opt_debug:
                     log("Replication: we are in slave mode, ignoring event")
                 elapsed = time.time() - before
-                self.count_processing_time(elapsed)
+                g_perfcounters.count_time("processing", elapsed)
 
             if opt_profile.get("event"):
                 return
@@ -711,12 +767,14 @@ class EventServer:
 
 
             # Handle events with a limited lifetime
-            elif event["phase"] == "open" and "live_until" in event:
+            elif "live_until" in event:
                 if now >= event["live_until"]:
-                    events_to_delete.append(nr)
-                    log("Livetime of event %d (rule %s) exceeded. Deleting event." % (
-                            event["id"], event["rule_id"]))
-                    log_event_history(event, "EXPIRED")
+                    allowed_phases = event.get("live_until_phases", ["open"])
+                    if event["phase"] in allowed_phases:
+                        events_to_delete.append(nr)
+                        log("Livetime of event %d (rule %s) exceeded. Deleting event." % (
+                                event["id"], event["rule_id"]))
+                        log_event_history(event, "EXPIRED")
 
 
         # Do delayed deletion now (was delayed in order to keep list indices OK)
@@ -855,6 +913,13 @@ class EventServer:
             else:
                 count_rules += 1
                 rule = rule.copy() # keep original intact because of slave replication
+
+                # Convert some data fields into newer format
+                if "livetime" in rule:
+                    livetime = rule["livetime"]
+                    if type(livetime) != tuple:
+                        rule["livetime"] = ( livetime, ["open"] )
+
                 self._rules.append(rule)
                 self._rule_by_id[rule["id"]] = rule
                 try:
@@ -909,7 +974,8 @@ class EventServer:
         for key in [ "match_priority", "cancel_priority" ]:
             if key in rule:  
                 prio_from, prio_to = rule[key]
-                for p in range(prio_from, prio_to+1):
+                # Beware: from > to!
+                for p in range(prio_to, prio_from + 1):
                     needed_prios[p] = True
             elif key == "match_priority": # all priorities match
                 needed_prios = [True] * 8 # needed to check this rule for all event priorities
@@ -953,7 +1019,7 @@ class EventServer:
         for rule in rule_candidates:
             result = self.event_rule_matches(rule, event)
             if result:
-                self.count("rule_hits")
+                g_perfcounters.count("rule_hits")
                 cancelling, groups = result
                 if g_config["debug_rules"]:
                     log("  matching groups: %s" % ", ".join(groups))
@@ -965,7 +1031,7 @@ class EventServer:
                         syslog_facilities[event["facility"]], syslog_priorities[event["priority"]],
                         event["text"]))
                 if rule.get("drop"):
-                    self.count("drops")
+                    g_perfcounters.count("drops")
                     return
 
                 if cancelling:
@@ -1020,7 +1086,7 @@ class EventServer:
     # if matched regex groups in either text (normal) or match_ok (cancelling)
     # match.
     def event_rule_matches(self, rule, event):
-        self.count("rule_tries")
+        g_perfcounters.count("rule_tries")
         with lock_configuration:
             debug = g_config["debug_rules"]
             if debug:
@@ -1344,6 +1410,8 @@ class StatusServer:
                 readable = select.select(listen_list, [], [], 0.2)[0]
                 for s in readable:
                     client_socket, addr_info = s.accept()
+                    before = time.time()
+                    g_perfcounters.count("connects")
                     if addr_info:
                         allow_commands = self._tcp_allow_commands
                         if opt_debug:
@@ -1358,11 +1426,16 @@ class StatusServer:
                     else:
                         allow_commands = True
                     self.handle_client(client_socket, allow_commands, addr_info and addr_info[0] or "")
+                    g_perfcounters.count_time("request", time.time() - before)
 
             except Exception, e:
                 log("Error handling client %s: %s" % (addr_info, e))
                 if client_socket:
-                    client_socket.send("ERROR: %s\n" % e)
+                    try:
+                        client_socket.send("ERROR: %s\n" % e)
+                    except:
+                        pass # avoid next exception because of broken pipe!
+
                     client_socket.close()
                     client_socket = None
                 if opt_debug:
@@ -1403,6 +1476,7 @@ class StatusServer:
         log("Executing command: %s" % commandline)
         parts = commandline.split(";")
         command = parts[0]
+        replication_allow_command(command)
         arguments = parts[1:]
         if command == "DELETE":
             self.handle_command_delete(arguments)
@@ -1425,6 +1499,8 @@ class StatusServer:
             self.handle_command_changestate(arguments)
         elif command == "ACTION":
             self.handle_command_action(arguments)
+        elif command == "SWITCHMODE":
+            self.handle_command_switchmode(arguments)
         else:
             raise MKClientError("Unknown command %s" % command)
 
@@ -1435,8 +1511,8 @@ class StatusServer:
         g_event_status.delete_event(int(event_id), user)
 
     def handle_command_update(self, arguments):
-        event_id, user, acknowledged, comment, contact = arguments
-        event = g_event_status.event(int(event_id))
+        event_id, user, acknowledged, comment, contact = arguments 
+        event = g_event_status.event(int(event_id)) 
         if not event:
             raise MKClientError("No event with id %s" % event_id)
         if comment:
@@ -1504,6 +1580,18 @@ class StatusServer:
             action = g_config["action"][action_id]
         do_rule_action(action, event, user)
 
+    def handle_command_switchmode(self, arguments):
+        new_mode = arguments[0]
+        if not is_replication_slave():
+            raise MKClientError("Cannot switch replication mode: this is not a replication slave.")
+        elif new_mode not in [ "sync", "takeover" ]:
+            raise MKClientError("Invalid target mode '%s': allowed are only 'sync' and 'takeover'" % 
+                new_mode)
+        g_slave_status["mode"] = new_mode
+        save_slave_status()
+        log("Switched replication mode to '%s' by external command." % new_mode)
+
+
     def handle_replicate(self, argument, client_ip):
         # Last time our slave got a config update
         try:
@@ -1527,17 +1615,23 @@ class StatusServer:
             raise MKClientError("Invalid table %s, we only have 'events', 'history' and 'status'" % table)
 
         filters = []
+        only_host = None
         for line in headerlines:
             try:
                 header, argument = line.rstrip().split(":", 1)
                 argument = argument.strip()
                 if header == "Filter":
-                    filters.append(self.parse_filter(argument, columns))
+                    name, opfunc, argument = self.parse_filter(argument, columns)
+                    # Needed for later optimization
+                    if name == "event_host" and filter_operators['=']:
+                        only_host = argument
+                    filters.append((name, opfunc, argument))
+                    
             except Exception, e:
                 raise MKClientError("Invalid header line '%s': %s" % (line.rstrip(), e))
 
         if table == "events":
-            headers, list_rows = g_event_status.get_events()
+            headers, list_rows = g_event_status.get_events(only_host)
         elif table == "history":
             headers, list_rows = get_event_history(filters)
         else:
@@ -1642,7 +1736,7 @@ def run_eventd():
                 next_retention = now + g_config["retention_interval"]
 
             if now > next_statistics:
-                g_event_server.do_statistics()
+                g_perfcounters.do_statistics()
                 next_statistics = now + g_config["statistics_interval"]
 
             # Beware: replication might be turned on during this loop!
@@ -1765,7 +1859,8 @@ class EventStatus():
         out = file(path + ".new", "w").write(repr(status) + "\n")
         os.rename(path + ".new", path)
         elapsed = time.time() - now
-        log("Saved event state to %s in %.3fms." % (path, elapsed * 1000))
+        if opt_debug:
+            log("Saved event state to %s in %.3fms." % (path, elapsed * 1000))
 
     def reset_counters(self, rule_id):
         if rule_id:
@@ -1791,7 +1886,7 @@ class EventStatus():
 
 
     def new_event(self, event):
-        g_event_server.count("events")
+        g_perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
         self._events.append(event)
@@ -1924,9 +2019,12 @@ class EventStatus():
                 return
         raise MKClientError("No event with id %s" % event_id)
 
-    def get_events(self):
+    def get_events(self, only_host = None):
         result = []
         for event in self._events:
+            # A small optimization for check_mkevents
+            if only_host and event["host"] != only_host:
+                continue
             event_line = []
             for col_name, col_default in event_columns:
                 without_prefix = col_name[6:] # drop event_
@@ -1949,9 +2047,12 @@ class EventStatus():
 
 def do_rule_actions(rule, event):
     # Prepare for events with a limited livetime. This time starts
-    # when the event enters the open state.
+    # when the event enters the open state or acked state
     if "livetime" in rule:
-        event["live_until"] = time.time() + rule["livetime"]
+        livetime, phases = rule["livetime"]
+        event["live_until"] = time.time() + livetime
+        event["live_until_phases"] = phases
+
     for aname in rule.get("actions", []):
         action = g_config["action"].get(aname)
         if not action:
@@ -2021,6 +2122,14 @@ def is_replication_slave():
     repl_settings = g_config.get("replication")
     return repl_settings and not repl_settings.get("disabled")
 
+def replication_allow_command(command):
+    if is_replication_slave() and g_slave_status["mode"] == "sync" \
+        and command in [
+            "DELETE", "UPDATE", "CHANGESTATE", "ACTION",
+        ]:
+        raise MKClientError("This command is not allowed on a replication slave "
+           "while it is in sync mode.")
+
 def replication_send(last_update):
     response = {}
     with lock_configuration:
@@ -2058,6 +2167,7 @@ def replication_pull():
                     if repl_settings.get("logging"):
                         log("Successfully synchronized with master")
                     g_slave_status["last_sync"] = now
+                    g_slave_status["success"] = True
 
                     # Fall back to slave mode after successful sync 
                     # (time frame has already been checked)
@@ -2074,6 +2184,7 @@ def replication_pull():
 
                 except Exception, e:
                     log("Replication: cannot sync with master: %s" % e)
+                    g_slave_status["success"] = False
                     if g_slave_status["last_master_down"] == None:
                         g_slave_status["last_master_down"] = now
 
@@ -2094,6 +2205,9 @@ def replication_pull():
                                 g_slave_status["mode"] = "takeover"
 
                 save_slave_status()
+
+                # Compute statistics of the average time needed for a sync
+                g_perfcounters.count_time("sync", time.time() - now)
 
 # Called when we have new data from our master
 def replication_update_state(new_state):
@@ -2126,10 +2240,12 @@ def load_master_config():
         log("Replication: restored %d rules and %d actions from %s" %
             (len(config["rules"]), len(config["actions"]), path))
     except:
-        log("Replication: no previously saved master state available")
+        if is_replication_slave():
+            log("Replication: no previously saved master state available")
 
 
 def get_state_from_master():
+    now = time.time()
     repl_settings = g_config["replication"]
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -2172,9 +2288,10 @@ def load_slave_status():
             g_slave_status = eval(file(path).read())
         except:
             g_slave_status = {
-                "last_sync"        : 0, # Time of last successfull sync 
-                "last_master_down" : None,
-                "mode"             : "sync",
+                "last_sync"         : 0, # Time of last successfull sync 
+                "last_master_down"  : None,
+                "mode"              : "sync",
+                "average_sync_time" : None,
             }
             save_slave_status()
 
@@ -2403,6 +2520,7 @@ try:
         lock_logging = thread.allocate_lock()
 
     # First do all things that might fail, before daemonizing
+    g_perfcounters = Perfcounters()
     g_event_status  = EventStatus()
     g_event_status.load_status()
     g_status_server = StatusServer()

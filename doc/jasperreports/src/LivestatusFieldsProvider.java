@@ -29,7 +29,7 @@ public class LivestatusFieldsProvider implements FieldsProvider{
 	@SuppressWarnings("rawtypes")
 	public JRField[] getFields(IReportConnection con, JRDataset dataset, Map parameters)
 			throws JRException, UnsupportedOperationException {
-
+		
 		JRField[] ret = null;
 		try{
 			Vector<JRDesignField> jr_vector = new Vector<JRDesignField>();
@@ -42,18 +42,17 @@ public class LivestatusFieldsProvider implements FieldsProvider{
 			int header_count = headers.length;
 			String descr;
 			String type;
+						
 			for( int i = 0; i < header_count; i++ ){
 				// Set field name
 				JRDesignField tmp_field = new JRDesignField();
 				tmp_field.setName(headers[i]);
-				
 				
 				// Add field description, if available
 				descr = data.getFieldDescription(headers[i]);
 				if( ! descr.equals("") )
 					tmp_field.setDescription(descr);
 
-				
 				// Add field class type
 				type  = data.getFieldType(headers[i]);
 				if( ! type.equals("") ){
@@ -81,10 +80,10 @@ public class LivestatusFieldsProvider implements FieldsProvider{
 			ret = new JRField[jr_vector.size()];
 			jr_vector.toArray(ret);
 		}catch(JRException jrex){
-			throw jrex;
+			throw new JRException("Jasper Error evaluating query" + jrex.getMessage());
 		}
 		catch(Exception ex){
-			throw new JRException("Error evaluating query");
+			throw new JRException("Error evaluating query:" + ex.getMessage());
 		}
 		return ret;
 	}

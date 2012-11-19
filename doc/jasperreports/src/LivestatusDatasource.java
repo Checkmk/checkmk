@@ -29,7 +29,10 @@ public class LivestatusDatasource implements JRDataSource, JRRewindableDataSourc
 
 	protected String getFieldDescription(String fieldname){
 		try{ 
-			return map_fielddescr.get(fieldname);
+			if (map_fielddescr.containsKey(fieldname))
+				return map_fielddescr.get(fieldname);
+			else
+				return "";
 		}catch(Exception ex){
 			return "";
 		}
@@ -37,7 +40,10 @@ public class LivestatusDatasource implements JRDataSource, JRRewindableDataSourc
 	
 	protected String getFieldType(String fieldname){
 		try{ 
-			return map_fieldtypes.get(fieldname);
+			if (map_fieldtypes.containsKey(fieldname))
+				return map_fieldtypes.get(fieldname);
+			else
+				return "";			
 		}catch(Exception ex){
 			return "";
 		}
@@ -66,7 +72,6 @@ public class LivestatusDatasource implements JRDataSource, JRRewindableDataSourc
 			}else if(fieldtype.equals("list")){
 				ArrayList<String> res_list = new ArrayList<String>();
 				String[] tokens = value.split("\\|");
-				System.out.println("token value " + value);
 				for( int i = 0; i<tokens.length; i++){
 					res_list.add(tokens[i]);
 				}
@@ -77,6 +82,7 @@ public class LivestatusDatasource implements JRDataSource, JRRewindableDataSourc
 		return value;
 	}
 
+	
 	public boolean next() throws JRException {
 		m_nIdx++;
 		return (m_nIdx < data.size());

@@ -11,6 +11,15 @@
     Checks:
     * logwatch: Fixed confusion with ignore/ok states of log messages
 
+    Multisite:
+    * Implemented LDAP integration of Multisite. You can now authenticate your
+      users using the form based authentication with LDAP. It is also possible
+      to synchronize some attributes like mail addresses, names and roles from
+      LDAP into multisite.
+    * Modularized the authentication and user management code in WATO
+    * Restructured cookie auth cookies (all auth cookies will be invalid
+      after update -> all users have to login again)
+    * Modularized login and cookie validation
 
 1.2.1i2:
     Core:
@@ -39,14 +48,6 @@
     * Allow event expiration also on acknowledged events (configurable)
 
     Multisite:
-    * Implemented LDAP integration of Multisite. You can now authenticate your
-      users using the form based authentication with LDAP. It is also possible
-      to synchronize some attributes like mail addresses, names and roles from
-      LDAP into multisite.
-    * Modularized the authentication and user management code in WATO
-    * Restructured cookie auth cookies (all auth cookies will be invalid
-      after update -> all users have to login again)
-    * Modularized login and cookie validation
     * Enable automation login with _username= and _secret=, while
       _secret is the content of var/check_mk/web/$USER/automation.secret
     * FIX: Fixed releasing of locks and livestatus connections when logging out

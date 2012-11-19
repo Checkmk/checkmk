@@ -8403,7 +8403,6 @@ def load_users():
         for line in file(serials_file):
             line = line.strip()
             if ':' in line:
-                html.write(line)
                 user_id, serial = line.split(':')[:2]
                 if user_id in result:
                     result[user_id]['serial'] = saveint(serial)
@@ -8466,7 +8465,9 @@ def save_users(profiles):
     # Only allow explicitely defined attributes to be written to multisite config
     users = {}
     for uid, profile in profiles.items():
-        users[uid] = dict([ (p, val) for p, val in profile.items() if p in multisite_keys + userdb.multisite_attributes(user.get('connector'))])
+        users[uid] = dict([ (p, val)
+                            for p, val in profile.items()
+                            if p in multisite_keys + userdb.multisite_attributes(profile.get('connector'))])
 
     # Check_MK's monitoring contacts
     filename = root_dir + "contacts.mk"

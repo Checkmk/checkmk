@@ -200,15 +200,8 @@ def ldap_filter(key, handle_config = True):
 
 # Returns the ldap attribute name depending on the configured ldap directory type
 # If a key is not present in the map, the assumption is, that the key matches 1:1
-def ldap_attr(key, handle_config = True):
-    coded_value = ldap_attr_map[config.ldap_connection['type']].get(key, key)
-    if handle_config:
-        return config.ldap_attr_map.get(key, coded_value)
-    else:
-        return coded_value
-
-def ldap_attrs(keys):
-    return map(ldap_attr, keys)
+def ldap_attr(key):
+    return ldap_attr_map[config.ldap_connection['type']].get(key, key)
 
 # Returns the given distinguished name template with replaced vars
 def ldap_replace_macros(tmpl):
@@ -223,7 +216,7 @@ def ldap_replace_macros(tmpl):
     return dn
 
 def ldap_user_id_attr():
-    return config.ldap_userspec.get('user_id', ldap_attr('user_id', False))
+    return config.ldap_userspec.get('user_id', ldap_attr('user_id'))
 
 def ldap_get_user_dn(username):
     # Check wether or not the user exists in the directory
@@ -290,22 +283,38 @@ def ldap_list_attribute_plugins():
         plugins.append((key, plugin['title']))
     return plugins
 
+# Returns a list of pairs (key, parameters) of all available attribute plugins
+def ldap_attribute_plugins_elements():
+    elements = []
+    for key, plugin in ldap_attribute_plugins.items():
+        if 'parameters' not in plugin:
+            param = []
+        else:
+            param = plugin['parameters']
+
+        elements.append((key, Dictionary(
+            title    = plugin['title'],
+            help     = plugin['help'],
+            elements = param,
+        )))
+    return elements
+
 # Returns a list of all needed LDAP attributes of all enabled plugins
 def ldap_needed_attributes():
     attrs = set([])
-    for key in config.ldap_active_plugins:
-        if 'needed_attributes' in ldap_attribute_plugins[key]:
-            attrs.update(ldap_attribute_plugins[key]['needed_attributes']())
+    for key, params in config.ldap_active_plugins.items():
+        plugin = ldap_attribute_plugins[key]
+        if 'needed_attributes' in plugin:
+            attrs.update(plugin['needed_attributes'](params))
     return list(attrs)
 
 def ldap_convert_simple(user_id, ldap_user, user, wato_attr, attr):
-    attr = ldap_attr(attr)
     if attr in ldap_user:
         return {wato_attr: ldap_user[attr][0]}
     else:
         return {}
 
-def ldap_convert_mail(user_id, ldap_user, user):
+def ldap_convert_mail(params, user_id, ldap_user, user):
     mail = ''
     if ldap_user.get(ldap_attr('mail')):
         mail = ldap_user[ldap_attr('mail')][0].lower()
@@ -315,9 +324,7 @@ ldap_attribute_plugins['email'] = {
     'title': _('Email address'),
     'help':  _('Synchronizes the email of the LDAP user account into Check_MK.'),
     # Attributes which must be fetched from ldap
-    'needed_attributes': lambda: ldap_attrs(['mail']),
-    # Optional: ValueSpec for configuring this plugin
-    # 'config': 
+    'needed_attributes': lambda params: [ ldap_attr('mail') ],
     # Calculating the value of the attribute based on the configuration and the values
     # gathered from ldap
     'convert': ldap_convert_mail,
@@ -325,19 +332,29 @@ ldap_attribute_plugins['email'] = {
     'lock_attributes': [ 'email' ],
 }
 
-ldap_attribute_plugins['cn_to_alias'] = {
-    'title': _('Common Name to Alias'),
-    'help':  _('Synchronizes the Common Name of the LDAP user account into Check_MK.'),
-    'needed_attributes': lambda: ldap_attrs(['cn']),
-    'convert':           lambda user_id, ldap_user, user: ldap_convert_simple(user_id, ldap_user, user, 'alias', 'cn'),
+ldap_attribute_plugins['alias'] = {
+    'title': _('Alias'),
+    'help':  _('Populates the alias attribute of the WATO user by syncrhonizing an attribute '
+               'from the LDAP user account. By default the LDAP attribute &quot;cn&quot; is used.'),
+    'needed_attributes': lambda params: [ params.get('attr', ldap_attr('cn')) ],
+    'convert':           lambda params, user_id, ldap_user, user: \
+                             ldap_convert_simple(user_id, ldap_user, user, 'alias',
+                                                 params.get('attr', ldap_attr('cn'))),
     'lock_attributes':   [ 'alias' ],
+    'parameters': [
+        ("attr", TextAscii(
+            title = _("LDAP attribute to sync"),
+            help  = _("The LDAP attribute containing the alias of the user."),
+            default_value = lambda: ldap_attr('cn'),
+        )),
+    ],
 }
 
 # Checks wether or not the user auth must be invalidated (increasing the serial).
 # In first instance, it must parse the pw-changed field, then check wether or not
 # a date has been stored in the user before and then maybe increase the serial.
-def ldap_convert_auth_expire(user_id, ldap_user, user):
-    changed_attr = ldap_attr('pw_changed')
+def ldap_convert_auth_expire(params, user_id, ldap_user, user):
+    changed_attr = params.get('attr', ldap_attr('pw_changed'))
     if not changed_attr in ldap_user:
         raise MKLDAPException(_('The "Authentication Expiration" attribute (%s) could not be fetched'
                                 'from the LDAP server for user %s.') % (changed_attr, ldap_user))
@@ -363,7 +380,7 @@ ldap_attribute_plugins['auth_expire'] = {
     'help':  _('This plugin fetches all information which are needed to check wether or '
                'not an already authenticated user should be deauthenticated, e.g. because '
                'the password has changed in LDAP or the account has been locked.'),
-    'needed_attributes': lambda: ldap_attrs(['pw_changed']),
+    'needed_attributes': lambda params: [ params.get('attr', ldap_attr('pw_changed')) ],
     'convert':           ldap_convert_auth_expire,
     # When a plugin introduces new user attributes, it should declare the output target for
     # this attribute. It can either be written to the multisites users.mk or the check_mk
@@ -371,19 +388,38 @@ ldap_attribute_plugins['auth_expire'] = {
     # contacts.mk file.
     'multisite_attributes':   ['ldap_pw_last_changed'],
     'non_contact_attributes': ['ldap_pw_last_changed'],
+    'parameters': [
+        ("attr", TextAscii(
+            title = _("LDAP attribute to be used as indicator"),
+            help  = _("When the value of this attribute changes for a user account, all "
+                      "current authenticated sessions of the user are invalidated and the "
+                      "user must login again. By default this field uses the fields whcih "
+                      "hold the time of the last password change of the user."),
+            default_value = lambda: ldap_attr('pw_changed'),
+        )),
+    ],
 }
 
-ldap_attribute_plugins['mobile_to_pager'] = {
-    'title': _('Mobile Number to Pager'),
-    'help':  _('This plugin synchronizes the mobile number of the users to the pager attribute '
+ldap_attribute_plugins['pager'] = {
+    'title': _('Pager'),
+    'help':  _('This plugin synchronizes a field of the users ldap account to the pager attribute '
                'of the WATO user accounts, which is then forwarded to Nagios and can be used'
-               'for notifications.'),
-    'needed_attributes': lambda: ldap_attrs(['mobile']),
-    'convert':           lambda user_id, ldap_user, user: ldap_convert_simple(user_id, ldap_user, user, 'pager', 'mobile'),
+               'for notifications. By default the LDAP attribute &quot;mobile&quot; is used.'),
+    'needed_attributes': lambda params: [ params.get('attr', ldap_attr('mobile')) ],
+    'convert':           lambda params, user_id, ldap_user, user: \
+                             ldap_convert_simple(user_id, ldap_user, user, 'pager',
+                                                 params.get('attr', ldap_attr('mobile'))),
     'lock_attributes':   ['pager'],
+    'parameters': [
+        ('attr', TextAscii(
+            title = _("LDAP attribute to sync"),
+            help  = _("The LDAP attribute containing the pager number of the user."),
+            default_value = lambda: ldap_attr('mobile'),
+        )),
+    ],
 }
 
-def ldap_convert_groups_to_contactgroups(user_id, ldap_user, user):
+def ldap_convert_groups_to_contactgroups(params, user_id, ldap_user, user):
     groups = []
     # 1. Fetch CNs of all LDAP groups of the user (use group_dn, group_filter)
     ldap_groups = ldap_user_groups(user_id)
@@ -466,8 +502,8 @@ def ldap_sync(add_to_changelog, only_username):
             continue
 
         # Gather config from convert functions of plugins
-        for key in config.ldap_active_plugins:
-            user.update(ldap_attribute_plugins[key]['convert'](user_id, ldap_user, user))
+        for key, params in config.ldap_active_plugins.items():
+            user.update(ldap_attribute_plugins[key]['convert'](params, user_id, ldap_user, user))
 
         if not mode_create and user == users[user_id]:
             continue # no modification. Skip this user.
@@ -488,7 +524,7 @@ def ldap_sync(add_to_changelog, only_username):
 # by this connector
 def ldap_locked_attributes():
     locked = set([ 'password' ]) # This attributes are locked in all cases!
-    for key in config.ldap_active_plugins:
+    for key in config.ldap_active_plugins.keys():
         locked.update(ldap_attribute_plugins[key].get('lock_attributes', []))
     return list(locked)
 
@@ -496,7 +532,7 @@ def ldap_locked_attributes():
 # the multisites users.mk
 def ldap_multisite_attributes():
     attrs = set([])
-    for key in config.ldap_active_plugins:
+    for key in config.ldap_active_plugins.keys():
         attrs.update(ldap_attribute_plugins[key].get('multisite_attributes', []))
     return list(attrs)
 
@@ -504,7 +540,7 @@ def ldap_multisite_attributes():
 # the check_mks contacts.mk
 def ldap_non_contact_attributes():
     attrs = set([])
-    for key in config.ldap_active_plugins:
+    for key in config.ldap_active_plugins.keys():
         attrs.update(ldap_attribute_plugins[key].get('non_contact_attributes', []))
     return list(attrs)
 

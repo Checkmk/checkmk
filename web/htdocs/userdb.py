@@ -27,6 +27,7 @@
 import config
 from lib import *
 import time
+from valuespec import *
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False

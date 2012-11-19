@@ -451,7 +451,7 @@ register_configvar(group,
 
 register_configvar(group,
     "ldap_active_plugins",
-    ListChoice(
+    Dictionary(
         title = _('LDAP Attribute Sync Plugins'),
         help  = _('It is possible to fetch several attributes of users, like Email or full names, '
                   'from the LDAP directory. This is done by plugins which can individually enabled '
@@ -459,7 +459,7 @@ register_configvar(group,
                   'user accounts for gathering their attributes. The user options which get imported '
                   'into Check_MK from LDAP will be locked in WATO.'),
         default_value = [ 'email', 'cn_to_alias', 'auth_expire' ],
-        choices = userdb.ldap_list_attribute_plugins,
+        elements = userdb.ldap_attribute_plugins_elements,
     ),
     domain = "multisite",
 )
@@ -473,32 +473,6 @@ register_configvar(group,
                   'interface. Once the cache gets outdated, a new synchronisation job is started.'),
         minvalue = 1,
         default_value = 300,
-    ),
-    domain = "multisite",
-)
-
-register_configvar(group,
-    "ldap_attr_map",
-    Dictionary(
-        title = _("LDAP Attribute Mapping"),
-        help  = _("Here you have the option to customize the LDAP attributes used during "
-                  "communication with the LDAP server. It controls which attributes are "
-                  "e.g. used for the unique username or similar."),
-        elements = [
-            ("pw_changed", TextAscii(
-                title = _("Relogon Indicator"),
-                help  = _("When the value of this attribute changes for a user account, all "
-                          "current authenticated sessions of the user are invalidated and the "
-                          "user must login again. By default this field uses the fields whcih "
-                          "hold the time of the last password change of the user."),
-                default_value = lambda: userdb.ldap_attr('pw_changed', False),
-            )),
-            ("mobile", TextAscii(
-                title = _("Mobile Number"),
-                help  = _("The LDAP attribute containing the mobile number of the user."),
-                default_value = lambda: userdb.ldap_attr('mobile', False),
-            )),
-        ],
     ),
     domain = "multisite",
 )

@@ -46,12 +46,13 @@ def check_http_arguments(params):
     if settings.get("ssl"):
         args += ' --ssl'
 
-    if "cert_days" in settings:
-        args += ' -C %d' % settings["cert_days"]
-
     if "cert_host" in settings:
         omit_ip = True
+        args += '-H $HOSTADDRESS$'
         args += ' -I %s' % quote_shell_string(settings['cert_host'])
+
+    if "cert_days" in settings:
+        args += ' -C %d' % settings["cert_days"]
 
     if settings.get("sni"):
         args += ' --sni'

@@ -1,6 +1,7 @@
 1.2.1i3:
     Core:
     * added HOST/SERVICEPROBLEMID to notification macros
+
     Event Console:
     * New performance counter for client request processing time
     * FIX: fixed bug in rule optimizer with ranges of syslog priorities

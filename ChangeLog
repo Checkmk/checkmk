@@ -2,6 +2,9 @@
     Core:
     * added HOST/SERVICEPROBLEMID to notification macros
 
+    Notifications:
+    * fix two errors in code that broke some service notifications
+
     Event Console:
     * New performance counter for client request processing time
     * FIX: fixed bug in rule optimizer with ranges of syslog priorities

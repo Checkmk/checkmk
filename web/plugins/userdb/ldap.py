@@ -248,7 +248,7 @@ def ldap_get_users(add_filter = None):
 
     return result
 
-def ldap_user_groups(username):
+def ldap_user_groups(username, attr = 'cn'):
     user_dn = ldap_get_user_dn(username)
 
     # Apply configured group ldap filter and only reply with groups
@@ -259,7 +259,11 @@ def ldap_user_groups(username):
     groups = []
     for dn, group in ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']),
                                  filt, ['cn']):
-        groups.append(group['cn'][0])
+        if attr == 'cn':
+            groups.append(group['cn'][0])
+
+        elif attr == 'dn':
+            groups.append(dn)
 
     return groups
 
@@ -438,6 +442,41 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
                'contactgroup must match the common name of the LDAP group.'),
     'convert':           ldap_convert_groups_to_contactgroups,
     'lock_attributes':   ['contactgroups'],
+}
+
+def ldap_convert_groups_to_roles(params, user_id, ldap_user, user):
+    groups = []
+    # 1. Fetch DNs of all LDAP groups of the user
+    ldap_groups = [ g.lower() for g in ldap_user_groups(user_id, 'dn') ]
+
+    # 2. Loop all roles mentioned in params (configured to be synchronized)
+    roles = []
+    for role_id, dn in params.items():
+        if dn.lower() in ldap_groups:
+            roles.append(role_id)
+
+    return {'roles': roles}
+
+def ldap_list_roles_with_group_dn():
+    import wato
+    roles = wato.load_roles()
+
+    elements = []
+    for role_id, role in wato.load_roles().items():
+        elements.append((role_id, LDAPDistinguishedName(
+            title = role['alias'] + ' - ' + _("Specify the Group DN"),
+            help  = _("Distinguished Name of the LDAP group to add users this role."),
+            size  = 80,
+        )))
+    return elements
+
+ldap_attribute_plugins['groups_to_roles'] = {
+    'title': _('Roles'),
+    'help':  _('Configures the roles of the user depending on its group memberships '
+               'in LDAP.'),
+    'convert':           ldap_convert_groups_to_roles,
+    'lock_attributes':   ['roles'],
+    'parameters':        ldap_list_roles_with_group_dn,
 }
 
 #   .----------------------------------------------------------------------.

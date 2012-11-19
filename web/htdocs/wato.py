@@ -8175,6 +8175,7 @@ def mode_edit_user(phase):
     forms.section(_("Roles"))
     entries = roles.items()
     entries.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
+    is_member_of_at_least_one = False
     for role_id, role in entries:
         if not is_locked('roles'):
             html.checkbox("role_" + role_id, role_id in user.get("roles", []))
@@ -8182,17 +8183,15 @@ def mode_edit_user(phase):
             html.write("<a href='%s'>%s</a><br>" % (url, role["alias"]))
         else:
             is_member = role_id in user.get("roles", [])
-            html.hidden_field("role_" + role_id, is_member and '1' or '')
-            if not is_member:
-                html.write('<i>%s</i>' % _('No roles assigned.'))
-            else:
+            if is_member:
+                is_member_of_at_least_one = True
+
                 url = make_link([("mode", "edit_role"), ("edit", role_id)])
                 html.write("<a href='%s'>%s</a><br>" % (url, role["alias"]))
-    html.help(_("By assigning roles to a user he obtains permissions. "
-                "If a user has more than one role, he gets the maximum of all "
-                "permissions of his roles. "
-                "Users without any role have no permissions to use Multisite at all "
-                "but still can be monitoring contacts and receive notifications."))
+
+            html.hidden_field("role_" + role_id, is_member and '1' or '')
+    if not is_member_of_at_least_one:
+        html.write('<i>%s</i>' % _('No roles assigned.'))
 
     # Contact groups
     forms.header(_("Contact Groups"), isopen=False)

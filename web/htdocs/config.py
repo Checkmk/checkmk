@@ -599,7 +599,7 @@ def load_default_values(into):
     into["ldap_attr_map"]        = {}
     into["ldap_userspec"]        = {}
     into["ldap_groupspec"]       = {}
-    into["ldap_active_plugins"]  = {'email', 'cn_to_alias', 'auth_expire'}
+    into["ldap_active_plugins"]  = {'email', 'alias', 'auth_expire'}
     into["ldap_cache_livetime"]  = 300
     into["default_user_profile"] = {
         'roles': ['user'],

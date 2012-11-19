@@ -133,7 +133,8 @@ replication_paths = [
   ( "dir",  "check_mk",   root_dir ),
   ( "dir",  "multisite",  multisite_dir ),
   ( "file", "htpasswd",   defaults.htpasswd_file ),
-  ( "file", "auth.secret", '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file) ),
+  ( "file", "auth.secret",  '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file) ),
+  ( "file", "auth.serials", '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file) ),
   # Also replicate the user-settings of Multisite? While the replication
   # as such works pretty well, the count of pending changes will not
   # know.
@@ -8396,6 +8397,17 @@ def load_users():
                     result[id] = new_user
             # Other unknown entries will silently be dropped. Sorry...
 
+    # Now read the serials, only process for existing users
+    serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
+    if os.path.exists(serials_file):
+        for line in file(serials_file):
+            line = line.strip()
+            if ':' in line:
+                html.write(line)
+                user_id, serial = line.split(':')[:2]
+                if user_id in result:
+                    result[user_id]['serial'] = saveint(serial)
+
     # Now read the user specific files
     dir = defaults.var_dir + "/web/"
     for d in os.listdir(dir):
@@ -8414,12 +8426,6 @@ def load_users():
                         "roles" : ["guest"],
                         "automation_secret" : secret,
                     }
-
-            # read the users serials, only process for existing users
-            if id in result:
-                serial_file = dir + d + '/serial.mk'
-                if os.path.exists(serial_file):
-                    result[id]['serial'] = saveint(file(serial_file).read().strip())
 
     return result
 
@@ -8477,6 +8483,14 @@ def save_users(profiles):
 
     # Execute user connector save hooks
     userdb.hook_save(profiles)
+
+    # Write out the users serials
+    serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
+    out = create_user_file(serials_file, "w")
+    out.write('# Writtem by WATO\n')
+    for user_id, user in profiles.items():
+        out.write('%s:%d\n' % (user_id, user.get('serial', 0)))
+    out.close()
 
     # Write user specific files
     for id, user in profiles.items():

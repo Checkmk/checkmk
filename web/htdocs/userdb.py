@@ -178,7 +178,7 @@ def hook_sync(connector_id = None, add_to_changelog = False, only_username = Non
         if handler:
             try:
                 handler(add_to_changelog, only_username)
-            except:
+            except MKLDAPException, e:
                 if config.debug:
                     import traceback
                     html.show_error(
@@ -186,7 +186,16 @@ def hook_sync(connector_id = None, add_to_changelog = False, only_username = Non
                         "<pre>%s</pre>" % (traceback.format_exc())
                     )
                 else:
-                    raise
+                    html.show_error(
+                        "<h3>" + _("Error executing sync hook") + "</h3>"
+                        "<pre>%s</pre>" % (e)
+                    )
+            except:
+                import traceback
+                html.show_error(
+                    "<h3>" + _("Error executing sync hook") + "</h3>"
+                    "<pre>%s</pre>" % (traceback.format_exc())
+                )
 
 # Hook function can be registered here to be executed during saving of the
 # new user construct

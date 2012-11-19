@@ -7676,7 +7676,7 @@ def mode_edit_user(phase):
 
         # Email address
         email = html.var("email").strip()
-        regex_email = '^[-a-zäöüÄÖÜA-Z0-9_.]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[a-zA-Z]+)*$'
+        regex_email = '^[-a-zäöüÄÖÜA-Z0-9_.]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*$'
         if email and not re.match(regex_email, email):
             raise MKUserError("email", _("'%s' is not a valid email address." % email))
         new_user["email"] = email

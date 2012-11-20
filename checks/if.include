@@ -140,7 +140,7 @@ def check_if_common(item, params, info):
     targetspeed        = params.get("speed")
     targetstate        = params.get("state")
     average            = params.get("average")
-    unit               = params.get("unit")
+    unit               = params.get("unit", "B")
     unit_multiplier    = unit == "Bit" and 8.0 or 1.0
 
     # error checking might be turned off
@@ -241,9 +241,9 @@ def check_if_common(item, params, info):
             # Even if the measurement unit is set to "bit" the WARN and CRIT levels are 
             # still reported as bytes to stay compatible with older rrd data
             if unit == "Bit":
-                if bw_crit:
+                if bw_crit and bw_crit != None:
                     bw_crit = bw_crit / 8
-                if bw_warn:
+                if bw_warn and bw_warn != None:
                     bw_warn = bw_warn / 8
 
             # Performance counters

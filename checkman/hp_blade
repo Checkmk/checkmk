@@ -8,6 +8,8 @@ description:
  The check uses the state information reported by SNMP. Addionally to the
  reported state the firmware version and the serial number are shown in
  the check output.
+ On windows systems, some versions of the Proliant tools seem to report 
+ a status of "Other" which triggers an UNKNOWN status.
 
 inventory:
  One check per enclosure is created automatically.

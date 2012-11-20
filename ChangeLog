@@ -2,6 +2,9 @@
     Core:
     * added HOST/SERVICEPROBLEMID to notification macros
 
+    Checks & Agents:
+    * Windows agent: persist offsets for logfile monitoring
+
     Notifications:
     * fix two errors in code that broke some service notifications
 

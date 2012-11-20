@@ -1,0 +1,12 @@
+Title: check_livestatus
+Component: core
+State: open
+Date: 2012-11-20 10:39:53
+Targetversion: future
+Class: feature
+
+We could write a small check_livestatus in C (diet?) that
+checks if Livestatus is working by just getting the versions
+of Nagios, Check_MK and maybe the Nagios uptime. This could
+then be used as a host check for the status_hosts and in a multisite
+setup.

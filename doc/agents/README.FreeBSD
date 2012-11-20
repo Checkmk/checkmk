@@ -4,7 +4,7 @@ Setup of check_MK agent on FreeBSD:
 -----------------------------------
 
 The check_mk agent is not available as a port so far.
-This means you have to manually downloadf and install it.
+This means you have to manually download and install it.
 
 
 First we'll be installing a few small ports that allow us to access more

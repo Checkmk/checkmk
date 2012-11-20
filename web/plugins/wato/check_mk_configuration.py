@@ -458,7 +458,6 @@ register_configvar(group,
                   'or disabled. When enabling a plugin, it is used upon the next synchonisation of '
                   'user accounts for gathering their attributes. The user options which get imported '
                   'into Check_MK from LDAP will be locked in WATO.'),
-        default_value = [ 'email', 'cn_to_alias', 'auth_expire' ],
         elements = userdb.ldap_attribute_plugins_elements,
     ),
     domain = "multisite",

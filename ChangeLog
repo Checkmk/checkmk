@@ -12,8 +12,9 @@
     WATO:
     * Cloning of contact/host/service groups (without members)
 
-    Checks:
+    Checks & Agents:
     * logwatch: Fixed confusion with ignore/ok states of log messages
+    * AIX Agent: now possible to specify -d flag. Please test :)
 
 
 1.2.1i2:

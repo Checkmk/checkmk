@@ -38,7 +38,14 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 # refer to online documentation for details about local checks.
 LOCALDIR=$MK_LIBDIR/local
 
-exec <&- 2>/dev/null
+# close standard input (for security reasons) and stderr
+if [ "$1" = -d ]
+then
+    set -xv
+else
+    exec <&- 2>/dev/null
+fi
+
 
 echo '<<<check_mk>>>'
 echo Version: 1.2.1i3

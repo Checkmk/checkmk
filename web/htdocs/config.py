@@ -596,7 +596,6 @@ def load_default_values(into):
 
     into["user_connectors"]      = ['htpasswd']
     into["ldap_connection"]      = {}
-    into["ldap_attr_map"]        = {}
     into["ldap_userspec"]        = {}
     into["ldap_groupspec"]       = {}
     into["ldap_active_plugins"]  = {'email', 'alias', 'auth_expire'}

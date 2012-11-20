@@ -290,7 +290,8 @@ def ldap_list_attribute_plugins():
 # Returns a list of pairs (key, parameters) of all available attribute plugins
 def ldap_attribute_plugins_elements():
     elements = []
-    for key, plugin in ldap_attribute_plugins.items():
+    items = sorted(ldap_attribute_plugins.items(), key = lambda x: x[1]['title'])
+    for key, plugin in items:
         if 'parameters' not in plugin:
             param = []
         else:

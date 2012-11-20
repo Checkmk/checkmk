@@ -71,7 +71,7 @@ def inventory_logwatch(info):
 # appearance.
 #
 # PATTERN is a list like:
-# [ ( 'I',      ".*ssh.*" ),          # Make informational (OK) messages from these
+# [ ( 'O',      ".*ssh.*" ),          # Make informational (OK) messages from these
 #   ( (10, 20), "login"   ),          # Warning at 10 messages, Critical at 20
 #   ( 'C',      "bad"     ),          # Always critical
 #   ( 'W',      "not entirely bad" ), # Always warning
@@ -88,15 +88,13 @@ def logwatch_state(state):
         return "OK"
 
 def logwatch_level_name(level):
-    if   level == 'I': return 'OK'
-    elif level == 'O': return 'OK'
+    if   level == 'O': return 'OK'
     elif level == 'W': return 'WARN'
     elif level == 'C': return 'CRIT'
     else: return 'IGN'
 
 def logwatch_level_worst(worst, level):
-    if   level == 'I': return max(worst, 0)
-    elif level == 'O': return max(worst, 0)
+    if   level == 'O': return max(worst, 0)
     elif level == 'W': return max(worst, 1)
     elif level == 'C': return max(worst, 2)
     else: return worst
@@ -112,17 +110,7 @@ def logwatch_precompile(hostname, item, _unused):
     rules = service_extra_conf(hostname, item, logwatch_rules)
     for rule in rules:
         for pattern in rule:
-            # The specification of "O" -> OK and "I" -> IGNORE is not equal to the.
-            # states reported by the logwatch agent. The agent sends "I" for OK messages.
-            # This is really a nastiness. We do not change the valuespec for th moment but
-            # only modify the levels taken from the defined rules.
-            # FIXME: Oneday we should clean it up. Maybe via hint in migration nodes or
-            # some mor inteligent valuespec, ...
-            if pattern[0] == 'I': # Fix "IGNORE" declaration
-                level = 'S'
-            else:
-                level = pattern[0]
-            params.append((level, pattern[1]))
+            params.append((pattern[0], pattern[1]))
 
     # Now load the old logwatch_patterns var
     patterns = logwatch_patterns.get(item)
@@ -247,7 +235,7 @@ def check_logwatch(item, params, info):
         for line in loglines:
             worst = logwatch_level_worst(worst, logwatch_parse_line(line)[0])
 
-        # Ignore log lines which result in an "S" -> "Skip / Ignore" state
+        # Ignore log lines which result in an "I" -> "Ignore" state
         if worst > -1:
             try:
                 logarch = file(logfile, "a+")
@@ -412,7 +400,7 @@ def logwatch_to_prio(level):
         return 4
     elif level == 'C':
         return 2
-    elif level == 'I':
+    elif level == '0':
         return 5
 
 def syslog_time():

@@ -82,7 +82,7 @@ parameters (dict): Due to its complexity, this check now uses a dictionary as
                    time range are - to a low degree - represented in the average. If you configure
                    an average, then the traffic levels are applied to the averaged values.
 
-                   {"state"} - the expected operstatus of the interface (as string or list of strings. If this
+                   {"state"} - the expected operational status of the interface (as string or list of strings. If this
                    is {None} then the state is not checked. Possible values for the
                    state are {"1"}(up), {"2"}(down), {"3"}(testing), {"4"}(unknown),
                    {"5"}(dormant), {"6"}(notPresent) and {"7"}(lowerLayerDown). The default is to

@@ -6,7 +6,4 @@ distribution: check_mk
 description:
  This check monitors the link status of Linux network interfaces.
 
- Note: this check is deprecated. Better use {lnx_if}. Set {linux_nic_check =
- "lnx_if"} in your configuration in order to turn on inventory of {lnx_if}
- and turn it of for this check.
-
+ Note: this check is deprecated. Better use {lnx_if}.

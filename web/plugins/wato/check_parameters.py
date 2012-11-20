@@ -103,11 +103,6 @@ register_rule(group + '/' + subgroup_applications,
           elements = [
              DropdownChoice(
                title = _("State"),
-               # The specification of "O" -> OK and "I" -> IGNORE is not equal to the.
-               # states reported by the logwatch agent. The agent sends "I" for OK messages.
-               # This is really a nastiness here. Since this rule definition is already part
-               # of a released version we don't change it here, instead we clean it up in
-               # the logwatch check before applying the rules.
                choices = [
                    ('C', _('CRITICAL')),
                    ('W', _('WARNING')),

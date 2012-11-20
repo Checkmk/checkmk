@@ -5755,8 +5755,10 @@ def mode_groups(phase, what):
         html.write('<tr class="data %s0">' % odd)
         edit_url = make_link([("mode", "edit_%s_group" % what), ("edit", name)])
         delete_url = html.makeactionuri([("_delete", name)])
+        clone_url    =  make_link([("mode", "edit_%s_group" % what), ("clone", name)])
         html.write("<td class=buttons>")
         html.icon_button(edit_url, _("Properties"), "edit")
+        html.icon_button(clone_url, _("Create a copy of this group"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
         html.write("</td><td>%s</td><td>%s</td>" % (name, alias))
         if what == "contact":
@@ -5805,6 +5807,8 @@ def mode_edit_group(phase, what):
                     raise MKUserError("name", _("Sorry, spaces are not allowed in group names."))
                 if not re.match("^[-a-z0-9A-Z_]*$", name):
                     raise MKUserError("name", _("Invalid group name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+                if name in groups:
+                    raise MKUserError("name", _("Sorry, there is already a group with that name"))
                 groups[name] = alias
                 log_pending(SYNCRESTART, None, "edit-%sgroups" % what, _("Create new %s group %s" % (what, name)))
             else:
@@ -5821,7 +5825,8 @@ def mode_edit_group(phase, what):
     html.help(_("The name of the group is used as an internal key. It cannot be "
                  "changed later. It is also visible in the status GUI."))
     if new:
-        html.text_input("name")
+        clone_group = html.var("clone")
+        html.text_input("name", clone_group or "")
         html.set_focus("name")
     else:
         html.write(name)
@@ -5829,7 +5834,12 @@ def mode_edit_group(phase, what):
 
     forms.section(_("Alias"))
     html.help(_("An Alias or description of this group."))
-    html.text_input("alias", name and groups.get(name, "") or "")
+    alias = groups.get(name, "")
+    if not alias and clone_group:
+        alias = groups.get(clone_group, "")
+    if not alias:
+        alias = name
+    html.text_input("alias", alias)
     forms.end()
     html.button("save", _("Save"))
     html.hidden_fields()
@@ -7966,7 +7976,7 @@ def mode_edit_user(phase):
 
         # Email address
         email = html.var("email").strip()
-        regex_email = '^[-a-zäöüÄÖÜA-Z0-9_.]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[a-zA-Z]+)*$'
+        regex_email = '^[-a-zäöüÄÖÜA-Z0-9_.]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*$'
         if email and not re.match(regex_email, email):
             raise MKUserError("email", _("'%s' is not a valid email address." % email))
         new_user["email"] = email

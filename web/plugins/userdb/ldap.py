@@ -294,14 +294,19 @@ def ldap_attribute_plugins_elements():
     for key, plugin in items:
         if 'parameters' not in plugin:
             param = []
+            elements.append((key, FixedValue(
+                title    = plugin['title'],
+                help     = plugin['help'],
+                value    = None,
+                totext   = 'no_param_txt' in plugin and plugin['no_param_txt'] \
+                              or _('This synchronization plugin has no parameters.'),
+            )))
         else:
-            param = plugin['parameters']
-
-        elements.append((key, Dictionary(
-            title    = plugin['title'],
-            help     = plugin['help'],
-            elements = param,
-        )))
+            elements.append((key, Dictionary(
+                title    = plugin['title'],
+                help     = plugin['help'],
+                elements = plugin['parameters'],
+            )))
     return elements
 
 # Returns a list of all needed LDAP attributes of all enabled plugins
@@ -335,6 +340,7 @@ ldap_attribute_plugins['email'] = {
     'convert': ldap_convert_mail,
     # User-Attributes to be written by this plugin and will be locked in WATO
     'lock_attributes': [ 'email' ],
+    'no_param_txt': _('Synchronize the &quot;mail&quot; attribute of LDAP users into Check_MK.'),
 }
 
 ldap_attribute_plugins['alias'] = {
@@ -443,6 +449,7 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
                'contactgroup must match the common name of the LDAP group.'),
     'convert':           ldap_convert_groups_to_contactgroups,
     'lock_attributes':   ['contactgroups'],
+    'no_param_txt': _('Add user to all contactgroups where the common name matches the group name.'),
 }
 
 def ldap_convert_groups_to_roles(params, user_id, ldap_user, user):
@@ -592,7 +599,10 @@ def ldap_page():
         last_sync_time = 0
 
     if last_sync_time + config.ldap_cache_livetime > time.time():
+        html.log('no sync needed (%d > %d)' % (last_sync_time + config.ldap_cache_livetime, time.time()))
         return # No action needed, cache is recent enough
+
+    html.log('sync needed (%d <= %d)' % (last_sync_time + config.ldap_cache_livetime, time.time()))
 
     # ok, cache is too old. Act!
     ldap_sync(False, None)

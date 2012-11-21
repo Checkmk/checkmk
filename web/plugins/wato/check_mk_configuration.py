@@ -318,12 +318,11 @@ register_configvar(group,
                 value  = True,
                 totext = _("Encrypt the network connection using SSL."),
             )),
-            ("version", Integer(
+            ("version", DropdownChoice(
                 title = _("LDAP Version"),
                 help  = _("Select the LDAP version the LDAP server is serving. Most modern "
                           "servers use LDAP version 3."),
-                minvalue = 1,
-                maxvalue = 3,
+                choices = [ (2, "2"), (3, "3") ],
                 default_value = 3,
             )),
             ("type", DropdownChoice(
@@ -398,11 +397,11 @@ register_configvar(group,
                 default_value = lambda: userdb.ldap_filter('users', False),
             )),
             ("user_id", TextAscii(
-                title = _("User-ID"),
+                title = _("User-ID Attrubute"),
                 help  = _("The attribute used to identify the individual users. It must have "
                           "unique values to make an user identifyable by the value of this "
                           "attribute."),
-                default_value = lambda: userdb.ldap_attr('user_id', False),
+                default_value = lambda: userdb.ldap_attr('user_id'),
             )),
         ],
         optional_keys = ['scope', 'filter', 'user_id'],

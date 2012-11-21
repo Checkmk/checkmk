@@ -1,4 +1,13 @@
 1.2.1i4:
+    Multisite:
+    * Implemented LDAP integration of Multisite. You can now authenticate your
+      users using the form based authentication with LDAP. It is also possible
+      to synchronize some attributes like mail addresses, names and roles from
+      LDAP into multisite.
+    * Modularized the authentication and user management code in WATO
+    * Restructured cookie auth cookies (all auth cookies will be invalid
+      after update -> all users have to login again)
+    * Modularized login and cookie validation
 
 1.2.1i3:
     Core:
@@ -20,16 +29,6 @@
     Checks & Agents:
     * logwatch: Fixed confusion with ignore/ok states of log messages
     * AIX Agent: now possible to specify -d flag. Please test :)
-
-    Multisite:
-    * Implemented LDAP integration of Multisite. You can now authenticate your
-      users using the form based authentication with LDAP. It is also possible
-      to synchronize some attributes like mail addresses, names and roles from
-      LDAP into multisite.
-    * Modularized the authentication and user management code in WATO
-    * Restructured cookie auth cookies (all auth cookies will be invalid
-      after update -> all users have to login again)
-    * Modularized login and cookie validation
 
 1.2.1i2:
     Core:

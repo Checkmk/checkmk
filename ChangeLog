@@ -1,4 +1,7 @@
 1.2.1i4:
+    Checks & Agents:
+    * Linux Agent, mk_postgres: Supporting pgsql and postgres as user
+
     Multisite:
     * Implemented LDAP integration of Multisite. You can now authenticate your
       users using the form based authentication with LDAP. It is also possible

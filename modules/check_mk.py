@@ -316,6 +316,7 @@ donation_command                     = 'mail -r checkmk@yoursite.de  -s "Host do
 scanparent_hosts                     = [ ( ALL_HOSTS ) ]
 host_attributes                      = {} # needed by WATO, ignored by Check_MK
 ping_levels                          = [] # special parameters for host/PING check_command
+check_periods                        = []
 
 # global variables used to cache temporary values (not needed in check_mk_base)
 ip_to_hostname_cache = None
@@ -675,6 +676,17 @@ def is_snmpv2c_host(hostname):
 
 def is_usewalk_host(hostname):
     return in_binary_hostlist(hostname, usewalk_hosts)
+
+def check_period_of(hostname, service):
+    periods = service_extra_conf(hostname, service, check_periods)
+    if periods:
+        period = periods[0]
+        if period == "24X7":
+            return None
+        else:
+            return period
+    else:
+        return None
 
 def get_single_oid(hostname, ipaddress, oid):
     # New in Check_MK 1.1.11: oid can end with ".*". In that case
@@ -2627,7 +2639,7 @@ no_inventory_possible = None
                  'snmpwalks_dir', 'check_mk_basedir', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
                  'simulation_mode', 'agent_simulator', 'aggregate_check_mk', 'debug_log',
-                 'check_mk_perfdata_with_times'
+                 'check_mk_perfdata_with_times', 'livestatus_unix_socket',
                  ]:
         output.write("%s = %r\n" % (var, globals()[var]))
 
@@ -2640,14 +2652,22 @@ no_inventory_possible = None
     need_snmp_module = False
     needed_check_types = set([])
     needed_sections = set([])
+    service_timeperiods = {}
     for check_type, item, param, descr, aggr in check_table:
         if check_type not in check_info:
             sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_type)
             continue
+        period = check_period_of(hostname, descr)
+        if period:
+            service_timeperiods[descr] = period
+
         needed_sections.add(check_type.split(".")[0])
         needed_check_types.add(check_type)
         if check_uses_snmp(check_type):
             need_snmp_module = True
+
+    output.write("precompiled_service_timeperiods = %r\n" % service_timeperiods)
+    output.write("def check_period_of(hostname, service):\n    return precompiled_service_timeperiods.get(service)\n\n")
 
     if need_snmp_module:
         output.write(stripped_python_file(modules_dir + "/snmp.py"))

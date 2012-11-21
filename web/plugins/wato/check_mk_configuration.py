@@ -716,11 +716,19 @@ register_rule(group,
 register_rule(group,
     "extra_service_conf:check_period",
     TimeperiodSelection(
-        title = _("Check period for services"),
+        title = _("Check period for active services"),
         help = _("If you specify a notification period for a service then active checks "
                  "of that service will only be done in that period. Please note, that the "
                  "checks driven by Check_MK are passive checks and are not affected by this "
                  "rule. You can use the rule for the active Check_MK check, however.")),
+    itemtype = "service")
+
+register_rule(group,
+    "check_periods",
+    TimeperiodSelection(
+        title = _("Check period for passive Check_MK services"),
+        help = _("If you specify a notification period for a Check_MK service then "
+                 "results will be processed only within this period.")),
     itemtype = "service")
 
 register_rule(group,

@@ -1,6 +1,8 @@
 1.2.1i3:
     Core:
     * added HOST/SERVICEPROBLEMID to notification macros
+    * New configuration check_periods for limiting execution of
+      Check_MK checks to a certain time period.
 
     Checks & Agents:
     * Windows agent: persist offsets for logfile monitoring

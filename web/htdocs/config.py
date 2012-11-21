@@ -587,6 +587,23 @@ def load_default_values(into):
     into["wato_write_nagvis_auth"] = False
     into["wato_hidden_users"] = []
 
+    #     _   _               ____  ____
+    #    | | | |___  ___ _ __|  _ \| __ )
+    #    | | | / __|/ _ \ '__| | | |  _ \
+    #    | |_| \__ \  __/ |  | |_| | |_) |
+    #     \___/|___/\___|_|  |____/|____/
+    #
+
+    into["user_connectors"]      = ['htpasswd']
+    into["ldap_connection"]      = {}
+    into["ldap_userspec"]        = {}
+    into["ldap_groupspec"]       = {}
+    into["ldap_active_plugins"]  = {'email', 'alias', 'auth_expire'}
+    into["ldap_cache_livetime"]  = 300
+    into["default_user_profile"] = {
+        'roles': ['user'],
+    }
+
 # Make sure, we have all values set right now - until
 # the configuration will be loaded
 load_default_values(globals())

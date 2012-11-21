@@ -173,6 +173,10 @@ Boston, MA 02110-1301 USA.
     color: #f00;
 }
 
+.wato td.error {
+    color: #f00;
+}
+
 .wato td.takeall {
     /* width: 100%; */
 }
@@ -764,13 +768,12 @@ div.varname {
     text-decoration: underline;
 }
 
-.wato div.globalvars a.modified {
+.wato div.globalvars td.simple a.modified, .wato div.globalvars a.modified table {
     border-radius: 5px 5px 5px 5px;
     box-shadow: 3px 3px 5px #A2BECD inset;
     margin-left: -5px;
     padding: 0 5px;
 }
-
 
 .wato div.globalvars td.content img.iconbutton {
     width: 60px;

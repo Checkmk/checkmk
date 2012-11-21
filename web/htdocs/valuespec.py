@@ -67,7 +67,10 @@ class ValueSpec:
     # for same cases where the default value is known.
     def default_value(self):
         try:
-            return self._default_value
+            if type(self._default_value) == type(lambda:True):
+                return self._default_value()
+            else:
+                return self._default_value
         except:
             return self.canonical_value()
 
@@ -1060,6 +1063,7 @@ class ListChoice(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._choices = kwargs.get("choices")
         self._columns = kwargs.get("columns", 1)
+        self._allow_empty = kwargs.get("allow_empty", True)
         self._loaded_at = None
         self._render_function = kwargs.get("render_function", 
                   lambda id, val: val)
@@ -1115,6 +1119,10 @@ class ListChoice(ValueSpec):
         for v in value:
             if v not in d:
                 raise MKUserError(varprefix, _("%s is not an allowed value") % v)
+
+    def validate_value(self, value, varprefix):
+        if not self._allow_empty and not value:
+            raise MKUserError(varprefix, _('You have not selected any connector. You have to select at least one.'))
 
 
 # A alternative way of editing list choices
@@ -1762,7 +1770,7 @@ class Dictionary(ValueSpec):
             ok = kwargs["optional_keys"]
             if type(ok) == list:
                 self._required_keys = \
-                    [ e[0] for e in self._elements if e[0] not in ok ]
+                    [ e[0] for e in self._get_elements() if e[0] not in ok ]
                 self._optional_keys = True
             elif ok:
                 self._optional_keys = True
@@ -1776,6 +1784,12 @@ class Dictionary(ValueSpec):
         self._form_narrow = kwargs.get("form_narrow", False) # used if render == "form"
         self._headers = kwargs.get("headers")
 
+    def _get_elements(self):
+        if type(self._elements) == list:
+            return self._elements
+        else:
+            return self._elements()
+
     def render_input(self, varprefix, value):
         if type(value) != dict:
             value = {} # makes code simpler in complain phase
@@ -1787,7 +1801,7 @@ class Dictionary(ValueSpec):
     def render_input_normal(self, varprefix, value, oneline = False):
         if not oneline:
             html.write("<table class=dictionary>")
-        for param, vs in self._elements:
+        for param, vs in self._get_elements():
             if not oneline:
                 html.write('<tr><td class=dictleft>')
             div_id = varprefix + "_d_" + param
@@ -1842,7 +1856,7 @@ class Dictionary(ValueSpec):
 
     def render_input_form_header(self, varprefix, value, title, sections):
         forms.header(title, narrow=self._form_narrow)
-        for param, vs in self._elements:
+        for param, vs in self._get_elements():
             if sections and param not in sections:
                 continue
 
@@ -1868,18 +1882,20 @@ class Dictionary(ValueSpec):
             html.write("</div>")
 
     def set_focus(self, varprefix):
-        self._elements[0][1].set_focus(varprefix + "_p_" + self._elements[0][0])
+        elem = self._get_elements()
+        if elem:
+            elem[0][1].set_focus(varprefix + "_p_" + elem[0][0])
 
     def canonical_value(self):
         return dict([
             (name, vs.canonical_value()) 
              for (name, vs) 
-             in self._elements
+             in self._get_elements()
              if name in self._required_keys or not self._optional_keys])
 
     def default_value(self):
         def_val = {}
-        for name, vs in self._elements:
+        for name, vs in self._get_elements():
             if name in self._required_keys or not self._optional_keys:
                 def_val[name] = vs.default_value()
 
@@ -1890,16 +1906,16 @@ class Dictionary(ValueSpec):
         if not value:
             return self._empty_text
 
-        
         if not oneline:
             s = '<table>'
         else:
             s = ""
-        for param, vs in self._elements:
+        elem = self._get_elements()
+        for param, vs in elem:
             if param in value:
                 text = vs.value_to_text(value[param])
                 if oneline:
-                    if param != self._elements[0][0]:
+                    if param != elem[0][0]:
                         s += ", "
                     s += "%s: %s" % (vs.title(), text)
                 else:
@@ -1910,7 +1926,7 @@ class Dictionary(ValueSpec):
 
     def from_html_vars(self, varprefix):
         value = {}
-        for param, vs in self._elements:
+        for param, vs in self._get_elements():
             vp = varprefix + "_p_" + param
             if not self._optional_keys \
                 or param in self._required_keys \
@@ -1922,7 +1938,7 @@ class Dictionary(ValueSpec):
         if type(value) != dict:
             raise MKUserError(varprefix, _("The type must be a dictionary, but it is a %s") % type(value))
 
-        for param, vs in self._elements:
+        for param, vs in self._get_elements():
             if param in value:
                 vp = varprefix + "_p_" + param
                 try:
@@ -1933,14 +1949,14 @@ class Dictionary(ValueSpec):
                 raise MKUserError(varprefix, _("The entry %s is missing") % vp.title())
 
         # Check for exceeding keys
-        allowed_keys = [ p for (p,v) in self._elements ]
+        allowed_keys = [ p for (p,v) in self._get_elements() ]
         for param in value.keys():
             if param not in allowed_keys:
                 raise MKUserError(varprefix, _("Undefined key '%s' in the dictionary. Allowed are %s.") %
                         (param, ", ".join(allowed_keys)))
 
     def validate_value(self, value, varprefix):
-        for param, vs in self._elements:
+        for param, vs in self._get_elements():
             if param in value:
                 vp = varprefix + "_p_" + param
                 vs.validate_value(value[param], vp)
@@ -2112,3 +2128,33 @@ class Transform(ValueSpec):
 
     def validate_value(self, value, varprefix):
         self._valuespec.validate_value(self.forth(value), varprefix)
+
+class LDAPDistinguishedName(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+
+    def validate_value(self, value, varprefix):
+        TextAscii.validate_value(self, value, varprefix)
+
+        # At least one DC= must be in distinguished name
+        if value and 'dc=' not in value.lower():
+            raise MKUserError(varprefix, _('Found no "dc=" (Domain Component).'))
+
+class Password(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, attrencode = True, **kwargs)
+
+    def render_input(self, varprefix, value):
+        if value == None:
+            value = ""
+
+        if self._label:
+            html.write(self._label)
+            html.write("&nbsp;")
+        html.password_input(varprefix, str(value), size = self._size)
+
+    def value_to_text(self, value):
+        if value == None:
+            return _("none")
+        else:
+            return '******'

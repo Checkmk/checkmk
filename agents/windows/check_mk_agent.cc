@@ -74,7 +74,7 @@
 //  | Declarations of macrosk, structs and function prototypes             |
 //  '----------------------------------------------------------------------'
 
-#define CHECK_MK_VERSION "1.2.1i3"
+#define CHECK_MK_VERSION "1.2.1i4"
 #define CHECK_MK_AGENT_PORT 6556
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024
@@ -188,6 +188,7 @@ char     g_config_file[256];
 char     g_crash_log[256];
 char     g_connection_log[256];
 char     g_success_log[256];
+char     g_logwatch_statefile[256];
 
 // Configuration of eventlog monitoring (see config parser)
 int num_eventlog_configs = 0;
@@ -278,6 +279,19 @@ char *llu_to_string(unsigned long long value)
     	value = value / 10;
     }
     return write;
+}
+
+unsigned long long string_to_llu(char *s)
+{
+    unsigned long long value = 0;
+    unsigned long long mult = 1;
+    char *e = s + strlen(s);
+    while (e > s) {
+        --e;
+        value += mult * (*e - '0');
+        mult *= 10;
+    }
+    return value;
 }
 
 
@@ -678,7 +692,7 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
 	    // Der Puffer war zu klein. Toll. Also den Puffer größer machen
 	    // und das ganze nochmal probieren.
 	    size += DEFAULT_BUFFER_SIZE;
-	    debug("Buffer for RegQueryValueEx too small. Resizing...");
+	    verbose("Buffer for RegQueryValueEx too small. Resizing...");
 	    delete [] data;
 	    data = new BYTE [size];
 	} else {
@@ -1331,12 +1345,80 @@ struct logwatch_textfile {
 
 globline_container *g_logwatch_globlines[MAX_LOGWATCH_GLOBLINES];
 logwatch_textfile  *g_logwatch_textfiles[MAX_LOGWATCH_TEXTFILES];
+logwatch_textfile  *g_logwatch_hints[MAX_LOGWATCH_TEXTFILES]; // result of loaded state
 
 unsigned g_num_logwatch_globlines  = 0;
 unsigned g_num_logwatch_textfiles  = 0;
 unsigned g_num_logwatch_conditions = 0;
+unsigned g_num_logwatch_hints      = 0;
 
 globline_container *g_current_globline_container = NULL;
+
+
+void save_logwatch_offsets()
+{
+    FILE *file = fopen(g_logwatch_statefile, "w");
+    for (unsigned int i = 0; i < g_num_logwatch_textfiles ; i++) {
+        logwatch_textfile *tf = g_logwatch_textfiles[i];
+        if (!tf->missing) {
+            // llu_to_string is not reentrant, so do this in three steps
+            fprintf(file, "%s|%s", tf->path, llu_to_string(tf->file_id));
+            fprintf(file, "|%s", llu_to_string(tf->file_size));
+            fprintf(file, "|%s\r\n", llu_to_string(tf->offset));
+        }
+    }
+    fclose(file);
+}
+
+void parse_logwatch_state_line(char *line) 
+{
+    if (g_num_logwatch_hints >= MAX_LOGWATCH_TEXTFILES) {
+        verbose("Too many entries in logwatch state file.");
+        return;
+    }
+
+    /* Example: line = "M://log1.log|98374598374|0|16"; */
+    rstrip(line);
+    char *p = line;
+    while (*p && *p != '|') p++;
+    *p = 0;
+    char *path = line;
+    p++;
+    char *token = strtok(p, "|");
+    unsigned long long file_id = string_to_llu(token);
+    token = strtok(NULL, "|");
+    unsigned long long file_size = string_to_llu(token);
+    token = strtok(NULL, "|");
+    unsigned long long offset = string_to_llu(token);
+
+    logwatch_textfile *tf = new logwatch_textfile();
+    tf->path = strdup(path);
+    tf->file_id = file_id;
+    tf->file_size = file_size;
+    tf->offset = offset;
+    tf->missing = false;
+    tf->patterns = 0;
+    g_logwatch_hints[g_num_logwatch_hints++] = tf;
+}
+
+void load_logwatch_offsets()
+{
+    static bool offsets_loaded = false;
+    if (!offsets_loaded) {
+        FILE *file = fopen(g_logwatch_statefile, "r");
+        if (file) {
+            char line[256];
+            while (NULL != fgets(line, sizeof(line), file)) {
+                parse_logwatch_state_line(line);
+            }
+            fclose(file);
+        }
+        offsets_loaded = true;
+    }
+}
+
+
+
 
 // debug output
 void print_logwatch_config()
@@ -1366,13 +1448,17 @@ void print_logwatch_config()
 // Add a new state pattern to the current pattern container
 void add_condition_pattern(char state, char *value)
 {
-    if (g_current_globline_container && g_current_globline_container->patterns->num_patterns + 1 >= MAX_LOGWATCH_CONDITIONS)
+    if (g_current_globline_container 
+        && g_current_globline_container->patterns->num_patterns + 1 >= MAX_LOGWATCH_CONDITIONS)
+    {
         fprintf(stderr, "Maximum number of conditions for a globline exceeded %d.\n", MAX_LOGWATCH_CONDITIONS);
+    }
 
     condition_pattern *new_pattern = new condition_pattern();
     new_pattern->state = state;
     new_pattern->glob_pattern = strdup(value);
-    g_current_globline_container->patterns->patterns[g_current_globline_container->patterns->num_patterns++] = new_pattern;
+    g_current_globline_container->patterns->patterns[g_current_globline_container->patterns->num_patterns++] 
+        = new_pattern;
 }
 
 
@@ -1409,12 +1495,29 @@ bool add_new_logwatch_textfile(const char *full_filename, pattern_container *pat
 
     new_textfile->path         = strdup(full_filename);
     new_textfile->missing      = false;
-    new_textfile->file_size    = (unsigned long long)fileinfo.nFileSizeLow + 
-                                 (((unsigned long long)fileinfo.nFileSizeHigh) << 32);
-    new_textfile->file_id      = (unsigned long long)fileinfo.nFileIndexLow + 
-                                  (((unsigned long long)fileinfo.nFileIndexHigh) << 32);
-    new_textfile->offset       = new_textfile->file_size; 
     new_textfile->patterns     = patterns;
+
+    // Hier aus den gespeicherten Hints was holen....
+    bool found_hint = false;
+    for (unsigned i=0; i<g_num_logwatch_hints; i++) {
+        logwatch_textfile *hint = g_logwatch_hints[i];
+        if (!strcmp(hint->path, full_filename)) {
+            new_textfile->file_size = hint->file_size;
+            new_textfile->file_id = hint->file_id;
+            new_textfile->offset = hint->offset;
+            found_hint = true;
+            break;
+        }
+    }
+        
+    if (!found_hint) {
+        new_textfile->file_size    = (unsigned long long)fileinfo.nFileSizeLow + 
+                                     (((unsigned long long)fileinfo.nFileSizeHigh) << 32);
+        new_textfile->file_id      = (unsigned long long)fileinfo.nFileIndexLow + 
+                                      (((unsigned long long)fileinfo.nFileIndexHigh) << 32);
+        new_textfile->offset       = new_textfile->file_size; 
+    }
+
     g_logwatch_textfiles[g_num_logwatch_textfiles++] = new_textfile;
     return true;
 }
@@ -1448,11 +1551,13 @@ void update_or_create_logwatch_textfile(const char *full_filename, pattern_conta
                                              (((unsigned long long)fileinfo.nFileSizeHigh) << 32);
 
                 if (file_id != textfile->file_id) {                // file has been changed 
-                    printf("File id has been changed %s\n", full_filename);
+                    verbose("File %s: id has changed from %s", 
+                        full_filename, llu_to_string(textfile->file_id));
+                    verbose(" to %s\n", llu_to_string(file_id));
                     textfile->offset = 0;
                     textfile->file_id = file_id;
                 } else if (textfile->file_size < textfile->offset) { // file has been truncated
-                    printf("File has been truncated %s\n", full_filename);
+                    verbose("File %s: file has been truncated\n", full_filename);
                     textfile->offset = 0;
                 }
 
@@ -1460,7 +1565,7 @@ void update_or_create_logwatch_textfile(const char *full_filename, pattern_conta
             }
             CloseHandle(hFile);
         } else {
-            printf("Cant open file with CreateFile %s\n", full_filename);
+            verbose("Cant open file with CreateFile %s\n", full_filename);
         }
 
     }
@@ -1603,7 +1708,7 @@ void cleanup_logwatch()
 bool process_textfile(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool write_output) {
     char line[4096];
     condition_pattern *pattern = 0;
-    printf("Checking file %s\n", textfile->path);
+    verbose("Checking file %s\n", textfile->path);
     while (!feof(file)) {
         if (!fgets(line, sizeof(line), file))
             break;
@@ -1634,9 +1739,9 @@ bool process_textfile(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool
 void section_logfiles(SOCKET &out)
 {
     crash_log("<<<logwatch>>>");
+    output(out, "<<<logwatch>>>\n");
     revalidate_logwatch_textfiles();
 
-    output(out, "<<<logwatch>>>\n");
     logwatch_textfile *textfile;
     
     // Missing glob patterns
@@ -1684,6 +1789,7 @@ void section_logfiles(SOCKET &out)
     }
 
     cleanup_logwatch_textfiles();
+    save_logwatch_offsets();
 }
 
 
@@ -2597,6 +2703,7 @@ bool handle_winperf_config_variable(char *var, char *value)
 
 bool handle_logfiles_config_variable(char *var, char *value)
 {
+    load_logwatch_offsets();
     if (!strcmp(var, "textfile")) {
         if (value != 0)
             add_globline(value);
@@ -3156,6 +3263,7 @@ void determine_directories()
     get_agent_dir(g_agent_directory, sizeof(g_agent_directory));
     snprintf(g_plugins_dir, sizeof(g_plugins_dir), "%s\\plugins", g_agent_directory);
     snprintf(g_local_dir, sizeof(g_local_dir), "%s\\local", g_agent_directory);
+    snprintf(g_logwatch_statefile, sizeof(g_logwatch_statefile), "%s\\logstate.txt", g_agent_directory);
 }
 
 int main(int argc, char **argv)

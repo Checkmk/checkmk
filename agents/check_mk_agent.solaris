@@ -40,8 +40,16 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 # to online documentation for details.
 LOCALDIR=$MK_LIBDIR/local
 
+# close standard input (for security reasons) and stderr
+if [ "$1" = -d ]
+then
+    set -xv
+else
+    exec <&- 2>/dev/null
+fi
+
 echo '<<<check_mk>>>'
-echo Version: 1.2.1i3
+echo Version: 1.2.1i4
 echo AgentOS: solaris
 
 

@@ -189,7 +189,7 @@ def notify_via_email(context):
 
 def notify_flexible(contact, context, notification_table):
     notify_log("Flexible notification for %s" % context["CONTACTNAME"])
-    is_host = not context["SERVICEDESC"]
+    is_host = "SERVICEDESC" in context
     for entry in notification_table:
         plugin = entry["plugin"]
         notify_log("Plugin: %s" % plugin)
@@ -296,7 +296,7 @@ def check_timeperiod(timeperiod):
 
 def check_notification_type(context, host_events, service_events):
     notification_type = context["NOTIFICATIONTYPE"]
-    is_host = not context["SERVICEDESC"]
+    is_host = "SERVICEDESC" not in context
     if is_host:
         allowed_events = host_events
         state = context["HOSTSTATE"]

@@ -17,10 +17,6 @@ description:
  link speed setting and link status if {ethtool} is installed and supported
  by the NIC.
 
- Please also note, that the inventory of this check is currently still
- turned off per default. Please set {linux_nic_check = "lnx_if"} in order
- to turn it on. This will change in some day in the future.
-
  Depending on the check parameters this check can go WARN or CRIT when the
  port status changes (i.e. is down), when the link speed changes (e.g. a
  port expected to be set to 1GBit/s operates only at 100MBit/s), when the
@@ -91,7 +87,7 @@ parameters (dict): Due to its complexity, this check now uses a dictionary as
                    time range are - to a low degree - represented in the average. If you configure
                    an average, then the traffic levels are applied to the averaged values.
 
-                   {"state"} - the expected operstatus of the interface (as string or list of strings. If this
+                   {"state"} - the expected operational status of the interface (as string or list of strings. If this
                    is {None} then the state is not checked. Possible values for the
                    state are {"1"}(up), {"2"}(down), {"3"}(testing), {"4"}(unknown),
                    {"5"}(dormant), {"6"}(notPresent) and {"7"}(lowerLayerDown). The default is to
@@ -143,5 +139,3 @@ if_default_traffic_levels (float/int, float/int): Default levels for checking tr
 if_default_average (int): Default time range for averaging in minutes. This is preset to {None}, which disables
     averaging of port traffic.
 
-linux_nic_check(string): Set this to {"lnx_if"} if you want inventory this find this check
- instead of the old check {"netif.link"}, {"netif.params"} and {"netctr"}.

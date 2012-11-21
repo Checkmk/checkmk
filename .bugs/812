@@ -1,0 +1,11 @@
+Title: Windows fileinfo gets invetorized without escaping backslashes
+Component: checks
+State: open
+Date: 2012-11-20 15:16:48
+Targetversion: 1.2.0
+Class: nastiness
+
+The fileinfo check does not escape backslashes upon inventory.
+resulting items would be i.e. c:\windows\test.ini
+WATO on the other hand does escape them, and in the end the WATO
+rules do not match & apply to the service as intended

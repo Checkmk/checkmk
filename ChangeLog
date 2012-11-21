@@ -1,6 +1,15 @@
+1.2.1i4:
+
 1.2.1i3:
     Core:
     * added HOST/SERVICEPROBLEMID to notification macros
+
+    Checks & Agents:
+    * Windows agent: persist offsets for logfile monitoring
+
+    Notifications:
+    * fix two errors in code that broke some service notifications
+
     Event Console:
     * New performance counter for client request processing time
     * FIX: fixed bug in rule optimizer with ranges of syslog priorities
@@ -8,8 +17,9 @@
     WATO:
     * Cloning of contact/host/service groups (without members)
 
-    Checks:
+    Checks & Agents:
     * logwatch: Fixed confusion with ignore/ok states of log messages
+    * AIX Agent: now possible to specify -d flag. Please test :)
 
     Multisite:
     * Implemented LDAP integration of Multisite. You can now authenticate your
@@ -137,6 +147,7 @@
 1.2.0p4:
     WATO:
     * FIX: fixed detection of existing groups when creating new groups
+    * FIX: allow email addresses like test@test.test-test.com
 
 
 1.2.0p3:

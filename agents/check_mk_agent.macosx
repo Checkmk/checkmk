@@ -33,8 +33,17 @@ unset LANG
 export MK_LIBDIR="/to/be/changed"
 export MK_CONFDIR="/to/be/changed"
 
+# close standard input (for security reasons) and stderr
+if [ "$1" = -d ]
+then
+    set -xv
+else
+    exec <&- 2>/dev/null
+fi
+
+
 echo '<<<check_mk>>>'
-echo Version: 1.2.1i3
+echo Version: 1.2.1i4
 echo AgentOS: macosx
 
 osver="$(uname -r)"
@@ -68,7 +77,6 @@ echo '<<<tcp_conn_stats>>>'
 ###############################
 # Things up for takers:
 ###############################
-# *Add agent debug mode
 # *OSX SW Raid status
 # *launchctl daemon status
 # *hw sensors, how to query them?

@@ -36,7 +36,8 @@ if which smartctl > /dev/null 2>&1 ; then
         else
             MODEL=$(smartctl -a $D | grep -i "device model" | sed -e "s/.*:[ ]*//g" -e "s/\ /_/g")
         fi
-        if [ "$MODEL" = "iSCSI_Disk" ]; then
+        # Excluded disk models for SAN arrays or certain RAID luns that are also not usable..
+        if [ "$MODEL" = "iSCSI_Disk" ] || ["$MODEL" = "LOGICAL_VOLUME" ]; then
             continue
         fi
 

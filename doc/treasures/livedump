@@ -164,7 +164,7 @@ latency=%(latency).2f
 start_time=%(now).1f
 finish_time=%(now).1f
 return_code=%(state)d
-output=%(plugin_output)s|%(perf_data)%s
+output=%(plugin_output)s|%(perf_data)s
 
 """ % row)
 
@@ -186,7 +186,7 @@ latency=%(latency).2f
 start_time=%(now).1f
 finish_time=%(now).1f
 return_code=%(state)d
-output=%(plugin_output)s|%(perf_data)%s
+output=%(plugin_output)s|%(perf_data)s
 
 """ % row)
 

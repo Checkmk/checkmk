@@ -831,6 +831,17 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
         if only_check_types != None and checkname not in only_check_types:
             continue
 
+        # Skip checks that are not in their check period
+        period = check_period_of(hostname, description)
+        if period and not check_timeperiod(period):
+            if opt_debug:
+                sys.stderr.write("Skipping service %s: currently not in timeperiod %s.\n" % 
+                        (description, period))
+            continue
+        elif period and opt_debug:
+            sys.stderr.write("Service %s: timeperiod %s is currently active.\n" % 
+                    (description, period))
+
         # In case of a precompiled check table info is the aggrated
         # service name. In the non-precompiled version there are the dependencies
         if type(info) == str:
@@ -1210,3 +1221,23 @@ def get_age_human_readable(secs):
 # in command definitions as $ARG1$)
 def quote_shell_string(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
+
+
+# Check if a timeperiod is currently active. We have no other way than
+# doing a Livestatus query. This is not really nice, but if you have a better
+# idea, please tell me...
+g_inactive_timerperiods = None
+def check_timeperiod(timeperiod):
+    global g_inactive_timerperiods
+    # Let exceptions happen, they will be handled upstream.
+    if g_inactive_timerperiods == None:
+        import socket
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(livestatus_unix_socket)
+        # We just get the currently inactive timeperiods. All others
+        # (also non-existing) are considered to be active
+        s.send("GET timeperiods\nColumns:name\nFilter: in = 0\n")
+        s.shutdown(socket.SHUT_WR)
+        g_inactive_timerperiods = s.recv(10000000).splitlines()
+    return timeperiod not in g_inactive_timerperiods
+

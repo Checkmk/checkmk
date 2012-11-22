@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config
+import config, defaults
 from lib import *
 import time
 from valuespec import *
@@ -217,6 +217,25 @@ def hook_save(users):
             else:
                 raise
 
+# This function registers general stuff, which is independet of the single
+# connectors to each page load. It is exectued AFTER all other page hooks.
+def general_page_hook():
+    # Working around the problem that the auth.php file needed for multisite based
+    # authorization of external addons might not exist when setting up a new installation
+    # We assume: Each user must visit this login page before using the multisite based
+    #            authorization. So we can easily create the file here if it is missing.
+    # This is a good place to replace old api based files in the future.
+    auth_php = defaults.var_dir + '/wato/auth/auth.php'
+    if not os.path.exists(auth_php) or os.path.getsize(auth_php) == 0:
+        import wato
+        wato.create_auth_file(wato.load_users())
+
+    # Create initial auth.serials file, same issue as auth.php above
+    serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
+    if not os.path.exists(serials_file):
+        import wato
+        wato.save_users(wato.load_users())
+
 # Hook function can be registered here to execute actions on a "regular" base without
 # user triggered action. This hook is called on each page load.
 # Catch all exceptions and log them to apache error log. Let exceptions raise trough
@@ -235,3 +254,5 @@ def hook_page():
                 import traceback
                 html.log('Exception (%s, page handler): %s' % 
                             (connector['id'], traceback.format_exc()))
+
+    general_page_hook()

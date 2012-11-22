@@ -1,0 +1,13 @@
+Title: Manpage of fileinfo outdated
+Component: docu
+State: open
+Date: 2012-11-22 12:21:55
+Targetversion: future
+Class: bug
+
+The man page of fileinfo is not uptodate: The linux agent now
+supports fileinfo. Also the configuration of that should be
+described here.
+
+The man page of fileinfo.groups: do we really have regular expressions?
+It does not seem to work...

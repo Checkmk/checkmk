@@ -19,7 +19,6 @@
     * FIX: Fixed generated manual check definitions for checks without items
       like ntp_time and tcp_conn_stats
 
-
 1.2.1i3:
     Core:
     * added HOST/SERVICEPROBLEMID to notification macros

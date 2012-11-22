@@ -41,7 +41,7 @@ def try_detect_servers():
         pid, proc = parts[6].split('/')
 
         # Skip unwanted processes
-        if proc not in [ 'apache2', 'httpd', 'httpd2-prefork', 'httpd2-worker' ]:
+        if proc not in [ 'apache2', 'httpd', 'httpd2-prefork', 'httpd2-worker', 'httpd.worker' ]:
             continue
 
         # Add only the first found port of a single server process

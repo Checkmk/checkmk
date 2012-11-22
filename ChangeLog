@@ -1,4 +1,10 @@
 1.2.1i4:
+    Checks & Agents:
+    * Linux Agent, mk_postgres: Supporting pgsql and postgres as user
+    * Linux Agent, mk_postgres: Fixed database stats query to be compatible
+      with more versions of postgres
+    * apache_status: Modified to be usable on python < 2.6 (eg RHEL 5.x)
+
     Multisite:
     * Implemented LDAP integration of Multisite. You can now authenticate your
       users using the form based authentication with LDAP. It is also possible
@@ -8,6 +14,10 @@
     * Restructured cookie auth cookies (all auth cookies will be invalid
       after update -> all users have to login again)
     * Modularized login and cookie validation
+    
+    WATO:
+    * FIX: Fixed generated manual check definitions for checks without items
+      like ntp_time and tcp_conn_stats
 
 1.2.1i3:
     Core:

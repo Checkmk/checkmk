@@ -11109,6 +11109,13 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, 
             help = _("Please choose the check plugin")) ]
     if itemspec:
         elements.append(itemspec)
+    else:
+        # In case of static checks without check-item, add the fixed
+        # valuespec to add "None" as second element in the tuple
+        elements.append(FixedValue(
+            None,
+            totext = '',
+        ))
     if not valuespec:
         valuespec =\
             FixedValue(None,

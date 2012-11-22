@@ -14,6 +14,10 @@
     * Restructured cookie auth cookies (all auth cookies will be invalid
       after update -> all users have to login again)
     * Modularized login and cookie validation
+    
+    WATO:
+    * FIX: Fixed generated manual check definitions for checks without items
+      like ntp_time and tcp_conn_stats
 
 1.2.1i3:
     Core:

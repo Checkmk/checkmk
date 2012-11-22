@@ -1,4 +1,7 @@
 1.2.1i4:
+    Notifications:
+    * Fix flexible notifications on non-OMD systems
+    
     Checks & Agents:
     * Linux Agent, mk_postgres: Supporting pgsql and postgres as user
     * Linux Agent, mk_postgres: Fixed database stats query to be compatible

@@ -255,9 +255,13 @@ def call_notification_script(plugin, parameters):
             os.putenv(name, "")
 
     # Call actual script without any arguments
-    path = local_notifications_dir + "/" + plugin
-    if not os.path.exists(path):
+    if local_notifications_dir:
+        path = local_notifications_dir + "/" + plugin
+        if not os.path.exists(path):
+            path = notifications_dir + "/" + plugin
+    else:
         path = notifications_dir + "/" + plugin
+
     if not os.path.exists(path):
         notify_log("Notification plugin '%s' not found" % plugin)
         notify_log("  not in %s" % notifications_dir)

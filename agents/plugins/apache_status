@@ -18,7 +18,7 @@
 # It is also possible to override or extend the ssl_ports variable to make the
 # check contact other ports than 443 with HTTPS requests.
 
-import os, sys, urllib
+import os, sys, urllib2
 
 config_file = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/apache_status.conf"
 
@@ -79,11 +79,13 @@ for proto, address, port in servers:
     try:
         # Try to fetch the status page for each server
         url = '%s://%s:%s/server-status?auto' % (proto, address, port)
-        fd = urllib.urlopen(url)
-        if fd.getcode() == 200:
-            for line in fd.read().split('\n'):
-                if not line.strip():
-                    continue
-                print address, port, line
+        fd = urllib2.urlopen(url)
+        for line in fd.read().split('\n'):
+            if not line.strip():
+                continue
+            print address, port, line
+    except urllib2.HTTPError, e:
+        sys.stderr.write('HTTP-Error (%s:%d): %s %s\n' % (address, port, e.code, e))
+
     except Exception, e:
         sys.stderr.write('Exception (%s:%d): %s\n' % (address, port, e))

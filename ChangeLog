@@ -3,6 +3,7 @@
     * Linux Agent, mk_postgres: Supporting pgsql and postgres as user
     * Linux Agent, mk_postgres: Fixed database stats query to be compatible
       with more versions of postgres
+    * apache_status: Modified to be usable on python < 2.6 (eg RHEL 5.x)
 
     Multisite:
     * Implemented LDAP integration of Multisite. You can now authenticate your

@@ -17,6 +17,8 @@
     * Restructured cookie auth cookies (all auth cookies will be invalid
       after update -> all users have to login again)
     * Modularized login and cookie validation
+    * Logwatch: Added buttons to acknowledge all logs of all hosts or really
+      all logs which currently have a problem
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

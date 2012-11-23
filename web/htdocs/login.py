@@ -24,10 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import defaults, htmllib, config, wato
+import defaults, htmllib, config, userdb, wato
 from lib import *
 from mod_python import apache
-import os, md5, md5crypt, crypt, time
+import os, md5, time
 
 def site_cookie_name(site_id = None):
     if not site_id:
@@ -41,29 +41,6 @@ def site_cookie_name(site_id = None):
 
     name = os.path.dirname(url_prefix).replace('/', '_')
     return 'auth%s' % name
-
-# Validate hashes taken from the htpasswd file. This method handles
-# crypt() and md5 hashes. This should be the common cases in the
-# used htpasswd files.
-def password_valid(pwhash, password):
-    if pwhash[:3] == '$1$':
-        salt = pwhash.split('$', 3)[2]
-        return pwhash == wato.encrypt_password(password, salt)
-    else:
-        #html.write(repr(pwhash + ' ' + crypt.crypt(password, pwhash)))
-        return pwhash == crypt.crypt(password, pwhash[:2])
-
-# Loads the contents of a valid htpasswd file into a dictionary
-# and returns the dictionary
-def load_htpasswd():
-    creds = {}
-
-    for line in open(defaults.htpasswd_file, 'r'):
-        if ':' in line:
-            username, pwhash = line.split(':', 1)
-            creds[username] = pwhash.rstrip('\n')
-
-    return creds
 
 # Reads the auth secret from a file. Creates the files if it does
 # not exist. Having access to the secret means that one can issue valid
@@ -82,25 +59,32 @@ def load_secret():
 
     return secret
 
+# Load the password serial of the user. This serial identifies the current config
+# state of the user account. If either the password is changed or the account gets
+# locked the serial is increased by WATO and all cookies get invalidated.
+def load_serial(user_id):
+    users = wato.load_users()
+    return users.get(user_id, {}).get('serial', 0)
+
 # Generates the hash to be added into the cookie value
-def generate_hash(username, now, pwhash):
+def generate_hash(username, now, serial):
     secret = load_secret()
-    return md5.md5(username + now + pwhash + secret).hexdigest()
+    return md5.md5(username + now + str(serial) + secret).hexdigest()
 
 def del_auth_cookie():
     name = site_cookie_name()
     if html.has_cookie(name):
         html.del_cookie(name)
 
-def auth_cookie_value(username, pwhash):
+def auth_cookie_value(username, serial):
     now = str(time.time())
-    return username + ':' + now + ':' + generate_hash(username, now, pwhash)
+    return username + ':' + now + ':' + generate_hash(username, now, serial)
 
-def set_auth_cookie(username, pwhash):
-    html.set_cookie(site_cookie_name(), auth_cookie_value(username, pwhash))
+def set_auth_cookie(username, serial):
+    html.set_cookie(site_cookie_name(), auth_cookie_value(username, serial))
 
 def get_cookie_value():
-    return auth_cookie_value(config.user_id, load_htpasswd()[config.user_id])
+    return auth_cookie_value(config.user_id, load_serial(config.user_id))
 
 def check_auth_cookie(cookie_name):
     username, issue_time, cookie_hash = html.cookie(cookie_name, '::').split(':', 2)
@@ -111,13 +95,13 @@ def check_auth_cookie(cookie_name):
     #    del_auth_cookie()
     #    return ''
 
-    users = load_htpasswd()
+    users = wato.load_users().keys()
     if not username in users:
         raise MKAuthException(_('Username is unknown'))
-    pwhash = users[username]
 
     # Validate the hash
-    if cookie_hash != generate_hash(username, issue_time, pwhash):
+    serial = load_serial(username)
+    if cookie_hash != generate_hash(username, issue_time, serial):
         raise MKAuthException(_('Invalid credentials'))
 
     # Once reached this the cookie is a good one. Renew it!
@@ -126,7 +110,7 @@ def check_auth_cookie(cookie_name):
     # b) A logout is requested
     if (html.req.myfile != 'logout' or html.has_var('_ajaxid')) \
        and cookie_name == site_cookie_name():
-        set_auth_cookie(username, pwhash)
+        set_auth_cookie(username, serial)
 
     # Return the authenticated username
     return username
@@ -151,8 +135,10 @@ def check_auth():
             try:
                 return check_auth_cookie(cookie_name)
             except Exception, e:
-                #html.write('Exception occured while checking cookie %s' % cookie_name)
-                #raise
+                #if html.debug:
+                #    html.write('Exception occured while checking cookie %s' % cookie_name)
+                #    raise
+                #else:
                 pass
 
     return ''
@@ -175,13 +161,12 @@ def do_login():
             if not origtarget or "logout.py" in origtarget:
                 origtarget = defaults.url_prefix + 'check_mk/'
 
-            users = load_htpasswd()
-            if username in users and password_valid(users[username], password):
+            if userdb.hook_login(username, password):
                 # The login succeeded! Now:
                 # a) Set the auth cookie
                 # b) Unset the login vars in further processing
                 # c) Show the real requested page (No redirect needed)
-                set_auth_cookie(username, users[username])
+                set_auth_cookie(username, load_serial(username))
 
                 # Use redirects for URLs or simply execute other handlers for
                 # mulitsite modules
@@ -220,16 +205,6 @@ def page_login(no_html_output = False):
         return normal_login_page()
 
 def normal_login_page(called_directly = True):
-    # Working around the problem that the auth.php file needed for multisite based
-    # authorization of external addons might not exist when setting up a new installation
-    # We assume: Each user must visit this login page before using the multisite based
-    #            authorization. So we can easily create the file here if it is missing.
-    # This is a good place to replace old api based files in the future.
-    auth_php = defaults.var_dir + '/wato/auth/auth.php'
-    if not os.path.exists(auth_php) or os.path.getsize(auth_php) == 0:
-        import wato
-        wato.create_auth_file(wato.load_users())
-
     html.set_render_headfoot(False)
     html.header(_("Check_MK Multisite Login"), javascripts=[], stylesheets=["pages", "login"])
 

@@ -189,7 +189,7 @@ def notify_via_email(context):
 
 def notify_flexible(contact, context, notification_table):
     notify_log("Flexible notification for %s" % context["CONTACTNAME"])
-    is_host = not context["SERVICEDESC"]
+    is_host = "SERVICEDESC" in context
     for entry in notification_table:
         plugin = entry["plugin"]
         notify_log("Plugin: %s" % plugin)
@@ -255,9 +255,13 @@ def call_notification_script(plugin, parameters):
             os.putenv(name, "")
 
     # Call actual script without any arguments
-    path = local_notifications_dir + "/" + plugin
-    if not os.path.exists(path):
+    if local_notifications_dir:
+        path = local_notifications_dir + "/" + plugin
+        if not os.path.exists(path):
+            path = notifications_dir + "/" + plugin
+    else:
         path = notifications_dir + "/" + plugin
+
     if not os.path.exists(path):
         notify_log("Notification plugin '%s' not found" % plugin)
         notify_log("  not in %s" % notifications_dir)
@@ -275,28 +279,10 @@ def call_notification_script(plugin, parameters):
 
 
 
-# Check if a timeperiod is currently active. We have no other way than
-# doing a Livestatus query. This is not really nice, but if you have a better
-# idea, please tell me...
-g_inactive_timerperiods = None
-def check_timeperiod(timeperiod):
-    global g_inactive_timerperiods
-    # Let exceptions happen, they will be handled upstream.
-    if g_inactive_timerperiods == None:
-        import socket
-        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(livestatus_unix_socket)
-        # We just get the currently inactive timeperiods. All others
-        # (also non-existing) are considered to be active
-        s.send("GET timeperiods\nColumns:name\nFilter: in = 0\n")
-        s.shutdown(socket.SHUT_WR)
-        g_inactive_timerperiods = s.recv(10000000).splitlines()
-    return timeperiod not in g_inactive_timerperiods
-
 
 def check_notification_type(context, host_events, service_events):
     notification_type = context["NOTIFICATIONTYPE"]
-    is_host = not context["SERVICEDESC"]
+    is_host = "SERVICEDESC" not in context
     if is_host:
         allowed_events = host_events
         state = context["HOSTSTATE"]

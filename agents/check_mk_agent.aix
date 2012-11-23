@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/ksh93
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -39,8 +39,16 @@ LOCALDIR=$MK_LIBDIR/local
 #Avoid problems with wrong decimal separators in other language verions of aix
 export LC_NUMERIC="en_US"
 
+# close standard input (for security reasons) and stderr
+if [ "$1" = -d ]
+then
+    set -xv
+else
+    exec <&- 2>/dev/null
+fi
+
 echo '<<<check_mk>>>'
-echo Version: 1.2.1i3
+echo Version: 1.2.1i4
 echo AgentOS: aix
 
 echo '<<<df>>>'

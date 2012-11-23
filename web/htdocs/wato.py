@@ -133,7 +133,8 @@ replication_paths = [
   ( "dir",  "check_mk",   root_dir ),
   ( "dir",  "multisite",  multisite_dir ),
   ( "file", "htpasswd",   defaults.htpasswd_file ),
-  ( "file", "auth.secret", '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file) ),
+  ( "file", "auth.secret",  '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file) ),
+  ( "file", "auth.serials", '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file) ),
   # Also replicate the user-settings of Multisite? While the replication
   # as such works pretty well, the count of pending changes will not
   # know.
@@ -5460,7 +5461,11 @@ def mode_globalvars(phase):
                 to_text = valuespec.value_to_text(current_settings[varname])
             else:
                 to_text = valuespec.value_to_text(defaultvalue)
-            simple = isinstance(valuespec, Checkbox) or "\n" not in to_text
+
+            # Is this a simple (single) value or not? change styling in these cases...
+            simple = True
+            if '\n' in to_text or '<td>' in to_text:
+                simple = False
             forms.section(title, simple=simple)
 
             toggle_url = make_action_link([("mode", "globalvars"), 
@@ -7464,12 +7469,6 @@ def get_login_secret(create_on_demand = False):
         write_settings_file(path, secret)
         return secret
 
-def encrypt_password(password, salt = None):
-    import md5crypt
-    if not salt:
-        salt = "%06d" % (1000000 * (time.time() % 1.0))
-    return md5crypt.md5crypt(password, salt, '$1$')
-
 def site_is_local(siteid):
     return config.site_is_local(siteid)
 
@@ -7549,6 +7548,8 @@ def automation_push_snapshot():
         tarcontent = html.var('snapshot')
         multitar.extract_from_buffer(tarcontent, replication_paths)
         log_commit_pending() # pending changes are lost
+
+        call_hook_snapshot_pushed()
 
         # Create rule making this site only monitor our hosts
         create_distributed_wato_file(site_id, mode)
@@ -7761,6 +7762,10 @@ def mode_users(phase):
         html.context_button(_("New user"), make_link([("mode", "edit_user")]), "new")
         return
 
+    # Execute all connectors synchronisations of users. This must be done before
+    # loading the users, because it might modify the users list
+    userdb.hook_sync(add_to_changelog = True)
+
     roles = load_roles()
     users = filter_hidden_users(load_users())
     timeperiods = load_timeperiods()
@@ -7791,6 +7796,7 @@ def mode_users(phase):
     html.write("<table class=data>")
     html.write("<tr><th>" + _("Actions") + "<th>"
                 + _("Name")
+                + "</th><th>" + _("Connector")
                 + "</th><th>" + _("Authentication")
                 + "</th><th>" + _("Locked")
                 + "</th><th>" + _("Full Name")
@@ -7807,23 +7813,37 @@ def mode_users(phase):
         odd = odd == "odd" and "even" or "odd"
         html.write('<tr class="data %s0">' % odd)
 
+        connector = userdb.get_connector(user.get('connector'))
+
         # Buttons
-        edit_url = make_link([("mode", "edit_user"), ("edit", id)])
-        delete_url = html.makeactionuri([("_delete", id)])
-        clone_url = make_link([("mode", "edit_user"), ("clone", id)])
         html.write("<td class=buttons>")
-        html.icon_button(edit_url, _("Properties"), "edit")
-        html.icon_button(clone_url, _("Create a copy of this user"), "clone")
+        if connector: # only show edit buttons when the connector is available and enabled
+            edit_url = make_link([("mode", "edit_user"), ("edit", id)])
+            html.icon_button(edit_url, _("Properties"), "edit")
+
+            clone_url = make_link([("mode", "edit_user"), ("clone", id)])
+            html.icon_button(clone_url, _("Create a copy of this user"), "clone")
+
+        delete_url = html.makeactionuri([("_delete", id)])
         html.icon_button(delete_url, _("Delete"), "delete")
+
         html.write("</td>")
 
         # ID
         html.write("<td>%s</td>" % id)
 
+        # Connector
+        if connector:
+            html.write("<td>%s</td>" % connector['short_title'])
+            locked_attributes = userdb.locked_attributes(user.get('connector'))
+        else:
+            html.write("<td class=error>%s (disabled)</td>" % userdb.get_connector_id(user.get('connector')))
+            locked_attributes = []
+
         # Authentication
         if "automation_secret" in user:
             auth_method = _("Automation")
-        elif user.get("password"):
+        elif user.get("password") or 'password' in locked_attributes:
             auth_method = _("Password")
         else:
             auth_method = "<i>%s</i>" % _("none")
@@ -7907,11 +7927,17 @@ def mode_edit_user(phase):
 
     if new:
         if cloneid:
-            user = users.get(cloneid, {})
+            user = users.get(cloneid, userdb.new_user_template('htpasswd'))
         else:
-            user = {}
+            user = userdb.new_user_template('htpasswd')
     else:
-        user = users.get(userid, {})
+        user = users.get(userid, userdb.new_user_template('htpasswd'))
+
+    # Returns true if an attribute is locked and should be read only. Is only
+    # checked when modifying an existing user
+    locked_attributes = userdb.locked_attributes(user.get('connector'))
+    def is_locked(attr):
+        return not new and attr in locked_attributes
 
     # Load data that is referenced - in order to display dropdown
     # boxes and to check for validity.
@@ -7947,6 +7973,10 @@ def mode_edit_user(phase):
             raise MKUserError(_("You cannot lock your own account!"))
         new_user["locked"] = html.get_checkbox("locked")
 
+        increase_serial = False
+        if users[id] != new_user["locked"] and new_user["locked"]:
+            increase_serial = True # when user is being locked now, increase the auth serial
+
         # Authentication: Password or Secret
         auth_method = html.var("authmethod")
         if auth_method == "secret":
@@ -7954,7 +7984,8 @@ def mode_edit_user(phase):
             if not secret or len(secret) < 10:
                 raise MKUserError('secret', _("Please specify a secret of at least 10 characters length."))
             new_user["automation_secret"] = secret
-            new_user["password"] = encrypt_password(secret)
+            new_user["password"] = userdb.encrypt_password(secret)
+            increase_serial = True # password changed, reflect in auth serial
 
         else:
             password = html.var("password").strip()
@@ -7972,15 +8003,20 @@ def mode_edit_user(phase):
                 raise MKUserError("password2", _("The both passwords do not match."))
 
             if password:
-                new_user["password"] = encrypt_password(password)
+                new_user["password"] = userdb.encrypt_password(password)
+                increase_serial = True # password changed, reflect in auth serial
+
+        # Increase serial (if needed)
+        if increase_serial:
+            new_user['serial'] = new_user.get('serial', 0) + 1
 
         # Email address
         email = html.var("email").strip()
-        regex_email = '^[-a-zäöüÄÖÜA-Z0-9_.]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[a-zA-Z]+)*$'
+        regex_email = '^[-a-zäöüÄÖÜA-Z0-9_.]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*$'
         if email and not re.match(regex_email, email):
             raise MKUserError("email", _("'%s' is not a valid email address." % email))
         new_user["email"] = email
-        
+
         # Pager
         pager = html.var("pager").strip()
         new_user["pager"] = pager
@@ -8073,31 +8109,44 @@ def mode_edit_user(phase):
         html.write(userid)
         html.hidden_field("userid", userid)
 
+    def lockable_input(name, dflt):
+        if not is_locked(name):
+            html.text_input(name, user.get(name, dflt), size = 50)
+        else:
+            html.write(user.get(name, dflt))
+            html.hidden_field(name, user.get(name, dflt))
+
     # Full name
     forms.section(_("Full name"))
-    html.text_input("alias", user.get("alias", userid), size = 50)
+    lockable_input('alias', userid)
     html.help(_("Full name or alias of the user"))
 
     # Email address
     forms.section(_("Email address"))
-    html.text_input("email", user.get("email", ""), size = 50)
+    lockable_input('email', '')
     html.help(_("The email address is optional and is needed "
                 "if the user is a monitoring contact and receives notifications "
                 "via Email."))
 
     forms.section(_("Pager address"))
-    html.text_input("pager", user.get("pager", ""), size = 50)
+    lockable_input('pager', '')
     html.help(_("The pager address is optional "))
+
     forms.header(_("Security"))
     forms.section(_("Authentication"))
     is_automation = user.get("automation_secret", None) != None
     html.radiobutton("authmethod", "password", not is_automation,
                      _("Normal user login with password"))
     html.write("<ul><table><tr><td>%s</td><td>" % _("password:"))
-    html.password_input("password", autocomplete="off")
-    html.write("</td></tr><tr><td>%s</td><td>" % _("repeat:"))
-    html.password_input("password2", autocomplete="off")
-    html.write(" (%s)" % _("optional"))
+    if not is_locked('password'):
+        html.password_input("password", autocomplete="off")
+        html.write("</td></tr><tr><td>%s</td><td>" % _("repeat:"))
+        html.password_input("password2", autocomplete="off")
+        html.write(" (%s)" % _("optional"))
+    else:
+        html.write('<i>%s</i>' % _('The password can not be changed (It is locked by the user connector).'))
+        html.hidden_field('password', '')
+        html.hidden_field('password2', '')
     html.write("</td></tr></table></ul>")
     html.radiobutton("authmethod", "secret", is_automation,
                      _("Automation secret for machine accounts"))
@@ -8123,7 +8172,11 @@ def mode_edit_user(phase):
 
     # Locking
     forms.section(_("Disable password"), simple=True)
-    html.checkbox("locked", user.get("locked", False), label = _("disable the login to this account"))
+    if not is_locked('locked'):
+        html.checkbox("locked", user.get("locked", False), label = _("disable the login to this account"))
+    else:
+        html.write(user.get("locked", False) and _('Login disabled') or _('Login possible'))
+        html.hidden_field('locked', user.get("locked", False) and '1' or '')
     html.help(_("Disabling the password will prevent a user from logging in while "
                  "retaining the original password. Notifications are not affected "
                  "by this setting."))
@@ -8132,15 +8185,23 @@ def mode_edit_user(phase):
     forms.section(_("Roles"))
     entries = roles.items()
     entries.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
+    is_member_of_at_least_one = False
     for role_id, role in entries:
-        html.checkbox("role_" + role_id, role_id in user.get("roles", []))
-        url = make_link([("mode", "edit_role"), ("edit", role_id)])
-        html.write("<a href='%s'>%s</a><br>" % (url, role["alias"]))
-    html.help(_("By assigning roles to a user he obtains permissions. "
-                "If a user has more than one role, he gets the maximum of all "
-                "permissions of his roles. "
-                "Users without any role have no permissions to use Multisite at all "
-                "but still can be monitoring contacts and receive notifications."))
+        if not is_locked('roles'):
+            html.checkbox("role_" + role_id, role_id in user.get("roles", []))
+            url = make_link([("mode", "edit_role"), ("edit", role_id)])
+            html.write("<a href='%s'>%s</a><br>" % (url, role["alias"]))
+        else:
+            is_member = role_id in user.get("roles", [])
+            if is_member:
+                is_member_of_at_least_one = True
+
+                url = make_link([("mode", "edit_role"), ("edit", role_id)])
+                html.write("<a href='%s'>%s</a><br>" % (url, role["alias"]))
+
+            html.hidden_field("role_" + role_id, is_member and '1' or '')
+    if not is_member_of_at_least_one:
+        html.write('<i>%s</i>' % _('No roles assigned.'))
 
     # Contact groups
     forms.header(_("Contact Groups"), isopen=False)
@@ -8153,12 +8214,26 @@ def mode_edit_user(phase):
     else:
         entries = [ (contact_groups[c], c) for c in contact_groups ]
         entries.sort()
+        is_member_of_at_least_one = False
         for alias, gid in entries:
             if not alias:
                 alias = gid
-            html.checkbox("cg_" + gid, gid in user.get("contactgroups", []))
-            url = make_link([("mode", "edit_contact_group"), ("edit", gid)])
-            html.write(" <a href=\"%s\">%s</a><br>" % (url, alias))
+            if not is_locked('contactgroups'):
+                html.checkbox("cg_" + gid, gid in user.get("contactgroups", []))
+                url = make_link([("mode", "edit_contact_group"), ("edit", gid)])
+                html.write(" <a href=\"%s\">%s</a><br>" % (url, alias))
+            else:
+                is_member = gid in user.get("contactgroups", [])
+                if is_member:
+                    is_member_of_at_least_one = True
+
+                    url = make_link([("mode", "edit_contact_group"), ("edit", gid)])
+                    html.write("<a href='%s'>%s</a><br>" % (url, alias))
+
+                html.hidden_field("cg_" + gid, is_member and '1' or '')
+
+        if not is_member_of_at_least_one:
+            html.write('<i>%s</i>' % _('No contact groups assigned.'))
 
     html.help(_("Contact groups are used to assign monitoring "
                 "objects to users. If you haven't defined any contact groups yet, "
@@ -8331,12 +8406,24 @@ def load_users():
                     result[id] = new_user
             # Other unknown entries will silently be dropped. Sorry...
 
-    # Now read the automation secrets and add them to existing
-    # users or create new users automatically
+    # Now read the serials, only process for existing users
+    serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
+    if os.path.exists(serials_file):
+        for line in file(serials_file):
+            line = line.strip()
+            if ':' in line:
+                user_id, serial = line.split(':')[:2]
+                if user_id in result:
+                    result[user_id]['serial'] = saveint(serial)
+
+    # Now read the user specific files
     dir = defaults.var_dir + "/web/"
     for d in os.listdir(dir):
         if d[0] != '.':
             id = d
+
+            # read automation secrets and add them to existing
+            # users or create new users automatically
             secret_file = dir + d + "/automation.secret"
             if os.path.exists(secret_file):
                 secret = file(secret_file).read().strip()
@@ -8354,9 +8441,6 @@ def split_dict(d, keylist, positive):
     return dict([(k,v) for (k,v) in d.items() if (k in keylist) == positive])
 
 def save_users(profiles):
-    # TODO: delete var/check_mk/web/$USER of non-existing users. Do we
-    # need to remove other references as well?
-
     custom_values = [ name for (name, vs) in user_attributes ]
 
     # Keys not to put into contact definitions for Check_MK
@@ -8366,6 +8450,8 @@ def save_users(profiles):
         "locked",
         "automation_secret",
         "language",
+        "serial",
+        "connector",
     ] + custom_values
 
     # Keys to put into multisite configuration
@@ -8375,19 +8461,22 @@ def save_users(profiles):
         "automation_secret",
         "alias",
         "language",
+        "connector",
     ] + custom_values
 
     # Remove multisite keys in contacts.
     contacts = dict(
         e for e in 
-            [ (id, split_dict(user, non_contact_keys, False))
+            [ (id, split_dict(user, non_contact_keys + userdb.non_contact_attributes(user.get('connector')), False))
                for (id, user)
                in profiles.items() ])
 
     # Only allow explicitely defined attributes to be written to multisite config
     users = {}
     for uid, profile in profiles.items():
-        users[uid] = dict([ (p, val) for p, val in profile.items() if p in multisite_keys ])
+        users[uid] = dict([ (p, val)
+                            for p, val in profile.items()
+                            if p in multisite_keys + userdb.multisite_attributes(profile.get('connector'))])
 
     # Check_MK's monitoring contacts
     filename = root_dir + "contacts.mk"
@@ -8402,29 +8491,32 @@ def save_users(profiles):
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("multisite_users = \\\n%s\n" % pprint.pformat(users))
 
-    # Apache htpasswd. We only store passwords here. During
-    # loading we created entries for all admin users we know. Other
-    # users from htpasswd are lost. If you start managing users with
-    # WATO, you should continue to do so or stop doing to for ever...
-    # Locked accounts get a '!' before their password. This disable it.
-    filename = defaults.htpasswd_file
-    out = create_user_file(filename, "w")
-    for id, user in profiles.items():
-        if user.get("password"):
-            if user.get("locked", False):
-                locksym = '!'
-            else:
-                locksym = ""
-            out.write("%s:%s%s\n" % (id, locksym, user["password"]))
+    # Execute user connector save hooks
+    userdb.hook_save(profiles)
 
-        # Authentication secret for local processes
-        auth_dir = defaults.var_dir + "/web/" + id
-        auth_file = auth_dir + "/automation.secret"
-        make_nagios_directory(auth_dir)
+    # Write out the users serials
+    serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
+    out = create_user_file(serials_file, "w")
+    out.write('# Writtem by WATO\n')
+    for user_id, user in profiles.items():
+        out.write('%s:%d\n' % (user_id, user.get('serial', 0)))
+    out.close()
+
+    # Write user specific files
+    for id, user in profiles.items():
+        user_dir = defaults.var_dir + "/web/" + id
+        make_nagios_directory(user_dir)
+
+        # authentication secret for local processes
+        auth_file = user_dir + "/automation.secret"
         if "automation_secret" in user:
             create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
         elif os.path.exists(auth_file):
             os.remove(auth_file)
+
+        # Write out the users serial
+        serial_file = user_dir + '/serial.mk'
+        create_user_file(serial_file, 'w').write('%d\n' % user.get('serial', 0))
 
     # Remove settings directories of non-existant users
     dir = defaults.var_dir + "/web"
@@ -11017,6 +11109,13 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, 
             help = _("Please choose the check plugin")) ]
     if itemspec:
         elements.append(itemspec)
+    else:
+        # In case of static checks without check-item, add the fixed
+        # valuespec to add "None" as second element in the tuple
+        elements.append(FixedValue(
+            None,
+            totext = '',
+        ))
     if not valuespec:
         valuespec =\
             FixedValue(None,
@@ -11114,7 +11213,13 @@ def page_user_profile():
                     if password2 and password != password2:
                         raise MKUserError("password2", _("The both passwords do not match."))
 
-                    users[config.user_id]['password'] = encrypt_password(password)
+                    users[config.user_id]['password'] = userdb.encrypt_password(password)
+
+                    # Increase serial to invalidate old cookies
+                    if 'serial' not in users[config.user_id]:
+                        users[config.user_id]['serial'] = 1
+                    else:
+                        users[config.user_id]['serial'] += 1
 
             save_users(users)
             success = True
@@ -11665,6 +11770,9 @@ def call_hooks(name, *args):
             else:
                 raise
 
+def call_hook_snapshot_pushed():
+    if "snapshot-pushed" in g_hooks:
+        call_hooks("snapshot-pushed")
 
 def call_hook_hosts_changed(folder):
     if "hosts-changed" in g_hooks:

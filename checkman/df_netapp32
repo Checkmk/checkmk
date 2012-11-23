@@ -72,7 +72,7 @@ examples:
     # /usr and /opt on hosts zlnx01 and zlnx02
     ( (98, 99), [ "zlnx01", "zlnx02" ], [ "fs_/usr$", "fs_/opt$" ] ),
     # All filesystems on clusters get 80/95
-    ( (80, 95), ALL_CLUSTERS, [ "fs_" ] ),
+    ( (80, 95), CLUSTER_HOSTS, [ "fs_" ] ),
     # Complex parameters in dictionary form
     ( {"levels":(80,90), "trend_range":48, "trend_mb":(20,40)},
       [ "windows" ], ALL_HOSTS, [ "fs_" ]),

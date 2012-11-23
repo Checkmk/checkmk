@@ -436,6 +436,23 @@ function render_pnp_graphs(container, site, host, service, pnpview, base_url, pn
         pnp_response_handler, data, pnp_error_response_handler);
 }
 
+// Renders contents for the PNP hover menus
+function pnp_hover_contents(url) {
+    var c = get_url_sync(url);
+    // It is possible that, if using multisite based authentication, pnp sends a 302 redirect
+    // to the login page which is transparently followed by XmlHttpRequest. There is no chance
+    // to catch the redirect. So we try to check the response content. If it does not contain
+    // the expected code, simply display an error message.
+    if(c.indexOf('/image?') === -1) {
+        // Error! unexpected response
+        c = '<div style="background-color:#BA2C2C;width:350px;padding:5px"> '
+          + 'ERROR: Received an unexpected response '
+          + 'while trying to display the PNP-Graphs. Maybe there is a problem with the '
+          + 'authentication.</div>';
+    }
+    return c;
+}
+
 // ----------------------------------------------------------------------------
 // Synchronous action handling
 // ----------------------------------------------------------------------------

@@ -193,7 +193,7 @@ def pnp_icon(row, what):
         url = pnp_url(row, what)
     else:
         url = ""
-    return '<a href="%s" onmouseover="displayHoverMenu(event, get_url_sync(\'%s\'))" ' \
+    return '<a href="%s" onmouseover="displayHoverMenu(event, pnp_hover_contents(\'%s\'))" ' \
            'onmouseout="hoverHide()"><img class=icon src="images/icon_pnp.png"></a>' % \
                                                         (url, pnp_popup_url(row, what))
 

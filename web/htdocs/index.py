@@ -35,7 +35,7 @@ from mod_python import apache, util, Cookie
 import sys, os, pprint
 from lib import *
 import livestatus
-import defaults, config, htmllib, login, default_permissions
+import defaults, config, htmllib, login, userdb, default_permissions
 
 # Load page handlers
 pagehandlers = {}
@@ -169,7 +169,7 @@ def connect_to_livestatus(html):
 
 # Call the load_plugins() function in all modules
 def load_all_plugins():
-    for module in [ views, sidebar, dashboard, wato, bi, mobile ]:
+    for module in [ userdb, views, sidebar, dashboard, wato, bi, mobile ]:
         try:
             module.load_plugins # just check if this function exists
             module.load_plugins()
@@ -289,6 +289,10 @@ def handler(req, profiling = True):
                     handler = pagehandlers.get(req.myfile, page_not_found)
                 else:
                     return result
+
+        # Call userdb page hooks which are executed on a regular base to e.g. syncronize
+        # information withough explicit user triggered actions
+        userdb.hook_page()
 
         # Set all permissions, read site config, and similar stuff
         config.login(html.req.user)

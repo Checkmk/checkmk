@@ -1,0 +1,10 @@
+Title: Convert check writing docu to new check API
+Component: docu
+State: open
+Date: 2012-11-22 12:09:37
+Targetversion: future
+Class: todo
+
+Now since 1.2.0 is out long enough it is time to convert
+the check writing docu to the new dictionary based format
+of check_info[...].

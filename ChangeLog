@@ -1,6 +1,41 @@
+1.2.1i4:
+    Notifications:
+    * Fix flexible notifications on non-OMD systems
+    
+    Checks & Agents:
+    * Linux Agent, mk_postgres: Supporting pgsql and postgres as user
+    * Linux Agent, mk_postgres: Fixed database stats query to be compatible
+      with more versions of postgres
+    * apache_status: Modified to be usable on python < 2.6 (eg RHEL 5.x)
+
+    Multisite:
+    * Implemented LDAP integration of Multisite. You can now authenticate your
+      users using the form based authentication with LDAP. It is also possible
+      to synchronize some attributes like mail addresses, names and roles from
+      LDAP into multisite.
+    * Modularized the authentication and user management code in WATO
+    * Restructured cookie auth cookies (all auth cookies will be invalid
+      after update -> all users have to login again)
+    * Modularized login and cookie validation
+    * Logwatch: Added buttons to acknowledge all logs of all hosts or really
+      all logs which currently have a problem
+    
+    WATO:
+    * FIX: Fixed generated manual check definitions for checks without items
+      like ntp_time and tcp_conn_stats
+
 1.2.1i3:
     Core:
     * added HOST/SERVICEPROBLEMID to notification macros
+    * New configuration check_periods for limiting execution of
+      Check_MK checks to a certain time period.
+
+    Checks & Agents:
+    * Windows agent: persist offsets for logfile monitoring
+
+    Notifications:
+    * fix two errors in code that broke some service notifications
+
     Event Console:
     * New performance counter for client request processing time
     * FIX: fixed bug in rule optimizer with ranges of syslog priorities
@@ -8,9 +43,9 @@
     WATO:
     * Cloning of contact/host/service groups (without members)
 
-    Checks:
+    Checks & Agents:
     * logwatch: Fixed confusion with ignore/ok states of log messages
-
+    * AIX Agent: now possible to specify -d flag. Please test :)
 
 1.2.1i2:
     Core:
@@ -55,6 +90,7 @@
     * Dashboard "iframe" attribute can now be rendered dynamically using the
       "iframefunc" attribute in the dashlet declaration
     * Dashboard header can now be hidden by setting "title" to None
+    * Better error handling in PNP-Graph hover menus in case of invalid responses
 
     Livestatus:
     * Added new table statehist, used for SLA queries
@@ -127,6 +163,7 @@
 1.2.0p4:
     WATO:
     * FIX: fixed detection of existing groups when creating new groups
+    * FIX: allow email addresses like test@test.test-test.com
 
 
 1.2.0p3:

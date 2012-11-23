@@ -2791,8 +2791,33 @@ no_inventory_possible = None
         for var in check_info[check_type].get("check_config_variables", []):
             output.write("%s = %r\n" % (var, eval(var)))
 
-    # perform actual check
-    output.write("do_check(%r, %r)\n" % (hostname, ipaddress))
+    # perform actual check with a general exception handler
+    output.write("try:\n")
+    output.write("    do_check(%r, %r)\n" % (hostname, ipaddress))
+    output.write("except Exception, e:\n")
+    output.write("    import traceback, pprint\n")
+
+    # status output message
+    output.write("    sys.stdout.write(\"UNKNOWN - Exception in precompiled check: %s (details in long output)\\n\" % e)\n")
+
+    # generate traceback for long output
+    output.write("    sys.stdout.write(\"Traceback: %s\\n\" % traceback.format_exc())\n")
+
+    # debug logging
+    output.write("    if debug_log:\n")
+    output.write("        l = file(debug_log, \"a\")\n")
+    output.write("        l.write((\"Exception in precompiled check:\\n\"\n")
+    output.write("                \"  Check_MK Version: %s\\n\"\n")
+    output.write("                \"  Date:             %s\\n\"\n")
+    output.write("                \"  Host:             %s\\n\"\n")
+    output.write("                \"  %s\\n\") % (\n")
+    output.write("                check_mk_version,\n")
+    output.write("                time.strftime(\"%Y-%d-%m %H:%M:%S\"),\n")
+    output.write("                \"%s\",\n" % hostname)
+    output.write("                traceback.format_exc().replace('\\n', '\\n      ')))\n")
+    output.write("        l.close()\n")
+
+    output.write("    sys.exit(3)\n")
     output.close()
 
     # compile python (either now or delayed), but only if the source

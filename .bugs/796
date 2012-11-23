@@ -1,9 +1,9 @@
 Title: Better Check-Output if Check_MK check crashes
 Component: core
-State: open
+Class: nastiness
+State: done
 Date: 2012-10-19 15:46:26
 Targetversion: future
-Class: nastiness
 
 In the very very rare and unbelievable case that the Check_MK check
 itself crashes - the output of the Check in Nagios is currently '(null)'.
@@ -14,3 +14,7 @@ We should try to wrap the whole code in some general exception handling
 2. Make the str(exception) be the plugin output
 3. Optionally put the exception trace into the long output
 4. If the debug log is active, then also log into that something
+
+2012-11-23 15:28:57: changed state open -> done
+Better exception handling when executing "Check_MK"-Check. Printing python
+      exception to status output and traceback to long output now.

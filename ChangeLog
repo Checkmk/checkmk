@@ -1,6 +1,7 @@
 1.2.0p4:
     WATO:
     * FIX: fixed detection of existing groups when creating new groups
+    * FIX: allow email addresses like test@test.test-test.com
 
 
 1.2.0p3:

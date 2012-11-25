@@ -1,0 +1,119 @@
+Idee zu neuem Verfahren mit Check-Intervallen
+---------------------------------------------
+
+Problemstellung: Manche der Plugins/Befehle im Agenten dauern zu lange,
+als dass man sie jedes mal ausführen möchte. Aktuell gibt es einen Trick,
+dass man mit einem Cache-File arbeitet - wie z.B. der ORACLE-Agent.
+Das ist etwas umständlich und funktioniert auch nicht bei Windows.
+
+Ich habe jetzt eine neue Idee, die das ganze vor allem für den Agenten
+vereinfacht und die Intelligenz ins zentrale Check_MK verlagert. Es 
+funktioniert so:
+
+Es wird eine neue Sektions-Option eingeführt (die zweite nach sep(...)).
+Diese sagt dem Check_MK, dass eine Sektion bis zu einem bestimmten
+Zeitpunkt gültig ist und (maximal) solange vom Agenten nicht mehr neu gesendet
+werden wird.
+
+<<<foo:valid(1353854778)>>>
+foo1 bar test
+foo2 bar test2
+...
+
+Innerhalb der nächsten 300 Sekunden kann diese Sektion fehlen. In diesem
+Fall soll Check_MK einfach - aus der alten Datei von tmp/check_mk/cache -
+den Wert vom letzten Mal nehmen. Erst nach Ablauf der Zeit soll die übliche
+Warnung ausgegeben werden, dass Daten vom Agenten fehlen.
+
+Check_MK muss jetzt so vorgehen: Wenn es feststellt, dass eine Sektion fehlt
+(und nur dann!), lädt es die Cache-Datei. Wenn nicht vorhanden, gilt die
+Sektion als endgültig fehlend. Falls sie vorhanden ist, wird der Sektion
+aus der Cache-Datei geholt. Wenn der Zeitstempel noch nicht erreicht ist,
+wird die Sektion genommen und zur Ausgabe des Agenten hinzugefügt und auch
+an die dann neu erstellte Cache-Datei wieder angehängt.
+
+Gleichzeitig aber - und jetzt kommts(!) - wird Check_MK den Check dann
+nicht einfach mit den Cache-Daten nochmal ausführen, sondern einfach
+auslassen. Dadurch ist die Ausgabe in der GUI korrekt, wo man sieht,
+wie alt Check-Ergebnisse sind. Das Einzige, was jetzt noch doof ist, ist
+die neue Staleness-Funktion, die jetzt nicht weiß, wie oft die Daten
+eigentlich kommen sollen.
+
+Um die Implementierung mit dem Plugins zu vereinfachen (siehe unten),
+wird ferner die Möglichkeit eingeführt, Sektionsoptionen anonym für
+zukünftige Sektionen zu setzen:
+
+<<<:valid(1353854778)>>> --> Gilt für alle zukünftigen Sektionen
+<<<:valid(0)>>> --> Löscht die Option wieder
+
+Implementierung im Agenten (Linux):
+
+Hier muss sich der Agent irgendwie merken, wann er eine Sache das letzte
+Mal ausgeführt hat. Hier ist eine mögliche Lösung für das Verzeichnis
+plugins: Man führt darunter Unterverzeichnisse ein, die einer Anzahl von
+Minuten entsprechen (oder Sekunden)?
+
+/usr/lib/check_mk_agent/plugins/10/mk_oracle
+
+Das bedeutet, dass die Daten nur alle 10 Minuten berechnet werden sollen.
+Im Agenten ist das dann so implementiert (man verwendet die modification time
+des plugins selbst als Indikator, wann es das letzte mal aufgerufen wurde):
+
+# Execute timed plugins
+cd $PLUGINS_DIR
+for dir in $(find -type d) ; do
+    cd $dir
+    date '+<<<:valid(%s)>>>' -d "now + $dir min"
+    for plugin in $(find -cmin +$dir) ; do
+        touch $plugin
+        ./plugin
+    done
+done
+
+Frage ist noch, wie man das effizient bei eingebauten Plugins machen
+soll. Gut wäre es schon, wenn das geht.
+
+Implementierung im Agenten (Windows):
+
+Im Windows-Agenten merkt man sich die Ausführungszeit einfach im Speicher.
+Zusätzlich kann man in [global] auch die Gültigkeiten für die eingebauten
+Sektionen konfigurieren. Das sieht dann so aus:
+
+[global]
+    valid logwatch = 10
+    valid winperf_phydisk = 5
+
+
+SNMP:
+
+Hier kann man das Intervall einfach per Regel steuern:
+
+snmp_check_interval["filesystem"] = [
+  ( 3, ALL_HOSTS, ),
+]
+
+Hier geht man einfach nach der Checkgruppe. Das Item kann man natürlich
+nicht beeinflussen, da ein Check ja immer ganz oder garnich läuft.
+Zusätzlich könnte ein Check - analog zu dem was ja dann der Linux-Agent
+macht - selbst einen Default für seine Häufigkeit vorgeben. Das ist
+dann ein neuer Schlüssel in der check_info:
+
+check_info["hr_fs"] = {
+    ....
+    "interval"  : 5,
+}
+
+Um das hinzubekommen, könnte man mit Zeitstempeln auf den Check_MK
+Cachefiles arbeiten. Diese sind ja pro Checktyp separat. Also könnte
+das gehen.
+
+Noch ein Problem gibt es: wenn ein manuelles reschedule ausgeführt wurde,
+wäre es natürlich schön, wenn das Intervall jetzt nicht berücksichtigt
+würde. Dazu müsste man bei SNMP Checks das Intervall ignorieren und bei den
+Agenten-Checks zumindest auf die Daten aus dem Cache-File zugreifen und doch
+zum Nagios senden, auch wenn diese ja nicht aktuell sind. Immerhin werden
+jetzt neue Check-Parameter aktiv, auch wenn der Agent wieder die gleichen
+Daten liefert. Um das hinzubekommen müsste man irgendwie rausbekommen,
+ob ein Check manuell angeworfen wurde oder nicht. Ist das möglich?
+Sendet Nagios hier etwas?
+

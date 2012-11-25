@@ -1,4 +1,8 @@
 1.2.1i4:
+    Core:
+    * Better exception handling when executing "Check_MK"-Check. Printing python
+      exception to status output and traceback to long output now.
+
     Notifications:
     * Fix flexible notifications on non-OMD systems
     

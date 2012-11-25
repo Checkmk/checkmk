@@ -8,3 +8,5 @@ Class: bug
 When having e.g. the speedometer in the sidebar and removing it, the javascript worker code
 remains fetching the speedometer webservice. The worker should detect that the snapin has
 been removed and stop updating the data.
+
+Not a general problem: The speedometer uses its own scheduler. Must be fixed individually.

@@ -1,9 +1,9 @@
 Title: Apache Status bug
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2012-10-24 11:08:13
 Targetversion: 1.2.0
-Class: bug
 
 osTicket id 258581
 sorry to report a bug regarding the new apache_status in 1.2.0p3.
@@ -18,3 +18,6 @@ We tested the server-status url with lynx and it is working fine.
 
 CentOS release 5.6 (Final) 32-Bit
 httpd-2.2.3-65.el5.centos
+
+2012-11-23 14:38:23: changed state open -> done
+URL handling changed and fixed for python versions <2.6. Should work now.

@@ -1977,6 +1977,34 @@ checkgroups.append((
     "first"
 ))
 
+checkgroups.append((
+   subgroup_os,
+    "apc_symentra",
+    _("Levels for APC Symentra Check"),
+    Tuple(
+        elements = [
+            Integer(
+                title = _("Max. Crit Capacity"),
+                help = _("The battery capacity in percent at and below which a critical state is be triggered"),
+            ),
+            Integer(
+                title = _("Max. Battery Temperature"),
+                help = _("The critical temperature of the battery"),
+            ),
+            Integer(
+                title = _("Max. Current Power"),
+                help = _("The critical battery current in Ampere"),
+            ),
+            Integer(
+                title = _("Max. Voltage"),
+                help = _("The output voltage at and below which a critical state is triggered."),
+            ),
+        ]
+    ),
+    None,
+    "first"
+))
+
 syslog_facilities = [
     (0, "kern"),
     (1, "user"),

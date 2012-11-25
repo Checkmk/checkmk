@@ -9,3 +9,8 @@ If you install an MKP and it brings a check man page this man page is not
 displayed from Multisite, instead it gives an error about not finding the
 check man page in the default path. It would be good if multisite could
 also check the local/ structure for existing man pages
+
+LM: This is already implemented, but with the nastyness, that the regular
+check manpages are placed in share/doc/check_mk/checks but the local
+check manpages are searched in local/share/check_mk/checkman. This should
+be cleaned up!

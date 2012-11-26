@@ -1588,11 +1588,11 @@ void process_glob_expression(glob_token *glob_token, pattern_container *patterns
             *end = 0; 
             basename = glob_token->pattern;
         }
-        snprintf(full_filename,sizeof(full_filename), "%s//%s", basename, data.cFileName);
+        snprintf(full_filename,sizeof(full_filename), "%s\\%s", basename, data.cFileName);
         update_or_create_logwatch_textfile(full_filename, patterns);
 
         while (FindNextFile(h, &data)){
-            snprintf(full_filename,sizeof(full_filename), "%s//%s", basename, data.cFileName);
+            snprintf(full_filename,sizeof(full_filename), "%s\\%s", basename, data.cFileName);
             update_or_create_logwatch_textfile(full_filename, patterns);
         }
         

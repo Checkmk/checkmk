@@ -1,4 +1,5 @@
 1.2.1i4:
+    * FIX: postgres_sessions: handle case of no active/no idle sessions
     Core:
     * Better exception handling when executing "Check_MK"-Check. Printing python
       exception to status output and traceback to long output now.
@@ -11,6 +12,7 @@
     * Linux Agent, mk_postgres: Fixed database stats query to be compatible
       with more versions of postgres
     * apache_status: Modified to be usable on python < 2.6 (eg RHEL 5.x)
+    * FIX: postgres_sessions: handle case of no active/no idle sessions
 
     Multisite:
     * Implemented LDAP integration of Multisite. You can now authenticate your

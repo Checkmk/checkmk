@@ -3,6 +3,9 @@
     * FIX: fixed detection of existing groups when creating new groups
     * FIX: allow email addresses like test@test.test-test.com
 
+    Checks & Agents:
+    * FIX: postgres_sessions: handle case of no active/no idle sessions
+
 
 1.2.0p3:
     Mulitisite:

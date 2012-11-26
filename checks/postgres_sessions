@@ -29,15 +29,17 @@
 # t 4
 
 # t -> idle sessions, f -> active sessions
+# Note: one (or both?) lines might be missing. They will never show 0.
 
 def inventory_postgres_sessions(info):
-    if len(info) == 2:
+    # inventorize only if at least one idle or active session exist
+    if info:
         return [(None, {})]
 
 def check_postgres_sessions(_no_item, params, info):
     parsed = dict(info)
-    idle = int(parsed['t'])
-    running = int(parsed['f'])
+    idle = int(parsed.get('t', 0))
+    running = int(parsed.get('f', 0))
     total = idle + running
 
     status = 0

@@ -97,7 +97,7 @@ def paint_reschedule(what, row, tags, custom_vars):
         txt         = _('Reschedule an immediate check of this %s') % _(what)
 
         if what == 'service':
-            servicedesc = row['service_description']
+            servicedesc = row['service_description'].replace("\\","\\\\")
             wait_svc = servicedesc
 
             # Use Check_MK service for cmk based services

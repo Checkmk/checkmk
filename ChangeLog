@@ -23,6 +23,7 @@
     * Modularized login and cookie validation
     * Logwatch: Added buttons to acknowledge all logs of all hosts or really
       all logs which currently have a problem
+    * Check reschedule icon now works on services containing an \
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

@@ -1,0 +1,26 @@
+#!/bin/bash
+# Create Ticket via SNMP Trap
+# Create Tickets in HP Service Center,
+# Author Bastian Kuhn, <bk@mathias-kettner.de>
+
+
+RECEIVER=""
+SENDER=""
+SNMP_COMMUNITY=""
+
+TIMESTAMP=$(date +%s)
+
+#Fall fuer Serivces Down
+if [ $NOTIFY_SERVICEOUTPUT ]; then
+	/usr/bin/snmptrap -v 1 -c $SNMP_COMMUNITY $RECEIVER 1.3.6.1.4.1.791.2.9.2.2 $SENDER 6 \
+        12 00:00:00 1.3.6.1.4.1.791.2.9.2.1 s \
+        "$TIMESTAMP^$NOTIFY_HOSTNAME^$NOTIFY_CONTACTNAME^$NOTIFY_SHORTDATETIME^SERVER^!^$NOTIFY_HOSTOUTPUT^!^HOSTSTATE" 
+#Fall fuer Host Down
+else
+	/usr/bin/snmptrap -v 1 -c $SNMP_COMMUNITY $RECEIVER 1.3.6.1.4.1.791.2.9.2.2 $SENDER 6 \
+        12 00:00:00 1.3.6.1.4.1.791.2.9.2.1 s \
+        "$TIMESTAMP^$NOTIFY_HOSTNAME^$NOTIFY_CONTACTNAME^$NOTIFY_SHORTDATETIME^SERVER^!^$NOTIFY_SERVICEOUTPUT^!^$NOTIFY_SERVICEDESC" 
+fi
+
+
+

@@ -1,0 +1,20 @@
+title: Rittal CMC-TC PSM-M Sensors
+agents: snmp
+author: Bastian Kuhn <bk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check polls the state of the sensors
+ from rittal cmctc PSM-M device
+
+item:
+ A descriptive name of the sensor, followed by " - ", followed by 
+ the combination of IO unit number (3-6) and sensors index (1-4).
+ Example: {"3.2"} for first IO unit and second sensor.
+
+perfdata:
+ One variable: the current value.
+
+inventory:
+ All available sensors are automatically inventorized.
+

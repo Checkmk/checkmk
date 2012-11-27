@@ -1033,10 +1033,10 @@ checkgroups.append((
                RadioChoice(
                    title = _("Measurement unit"), 
                    help = _("Here you can specifiy the measurement unit of the network interface"),
-                   default_value = "B",
+                   default_value = "byte",
                    choices = [
-                       ( "Bit", _("Bit") ),
-                       ( "B",   _("Byte") ),],
+                       ( "bit",  _("Bits") ),
+                       ( "byte", _("Bytes") ),],
                )),
              ( "traffic",
                Alternative(

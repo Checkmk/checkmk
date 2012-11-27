@@ -14,6 +14,7 @@
     * apache_status: Modified to be usable on python < 2.6 (eg RHEL 5.x)
     * FIX: postgres_sessions: handle case of no active/no idle sessions
     * FIX: correct backslash representation of windows logwatch files
+    * Add: New Check for Rittal CMC PSM-M devices
 
     Multisite:
     * Implemented LDAP integration of Multisite. You can now authenticate your

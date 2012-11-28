@@ -12,7 +12,6 @@ public class LivestatusQueryExecuterFactory implements JRQueryExecuterFactory{
 	public JRQueryExecuter createQueryExecuter(JRDataset dataset, Map<String, 
 			? extends JRValueParameter> parameters) throws JRException {
 		// TODO Auto-generated method stub
-		logFile("Create livestatusQueryExecut0r!\n");
 		return new LivestatusQueryExecuter(dataset, parameters);
 		
 	}
@@ -38,6 +37,6 @@ static	public void logFile(String info){
 	}
 
 	public boolean supportsQueryParameterType(String arg0) {
-		return false;
+		return true;
 	}
 }

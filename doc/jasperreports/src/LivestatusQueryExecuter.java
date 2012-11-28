@@ -16,12 +16,14 @@ import java.util.Map;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRDataset;
 import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JRValueParameter;
 import net.sf.jasperreports.engine.query.JRQueryExecuter;
 
 
 public class LivestatusQueryExecuter implements JRQueryExecuter{
 	// Connection parameters
-	private String    			jasper_query;     // Query from jasperreports incl. connection details
+	private Map<String,? extends JRValueParameter> parameters;       // Given parameters from iReport
+	private String    			jasper_query;     // Query from iReport incl. connection details
 	private String    			livestatus_query; // Query send to livestatus
 	private String    			server;           // server name
 	private int       			server_port;      // server port
@@ -48,20 +50,23 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 			"Stats: sum duration_warning\n"+
 			"Stats: sum duration_critical";
 						
-			JRDataSource sourci = new LivestatusQueryExecuter(query).createDatasource();
+			JRDataSource sourci = new LivestatusQueryExecuter(query, null).createDatasource();
 		} catch (JRException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
 	}
 	
-	public LivestatusQueryExecuter(String query) {
-		this.jasper_query = query; 
+	@SuppressWarnings("rawtypes")
+	public LivestatusQueryExecuter(String query, Map parameters) {
+		this.jasper_query = query;
+		this.parameters   = parameters;
 	}
 
 	@SuppressWarnings("rawtypes")
-	public LivestatusQueryExecuter(JRDataset dataset, Map parameters) {
-		this.jasper_query = dataset.getQuery().getText(); 
+	public LivestatusQueryExecuter(JRDataset dataset, Map<String,? extends JRValueParameter> parameters) {
+		this.jasper_query = dataset.getQuery().getText();
+		this.parameters   = parameters;
 	}
 
 	private void evaluateQuery() throws JRException{
@@ -71,8 +76,18 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 				throw new JRException("LQL Query: Remove blank lines from query");			
 		}
 
-		String target_info = jasper_query.split("\n")[0];
-		livestatus_query   = jasper_query.substring(target_info.length()+1);
+		// Replace any parameters within the jasper_query
+		String mod_query = jasper_query;
+		for (String key : parameters.keySet())
+		{
+			JRValueParameter value = parameters.get(key);
+			if ( value.getValue() != null ) {
+				mod_query = mod_query.replaceAll("\\$P\\{"+key+"\\}", value.getValue().toString());
+			}
+		}
+		
+		String target_info = mod_query.split("\n")[0];
+		livestatus_query   = mod_query.substring(target_info.length()+1);
 		server      = target_info.split(" ")[0];
 		server_port = Integer.parseInt(target_info.split(" ")[1]);
 	}

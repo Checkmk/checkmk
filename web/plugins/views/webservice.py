@@ -65,7 +65,20 @@ def encode_string_json(s):
 
 def render_json(rows, view, group_painters, painters, num_columns, show_checkboxes):
     html.write("[\n")
-    html.write(repr([p[0]["name"] for p in painters]))
+
+    first = True
+    html.write("[")
+    for p in painters:
+        if first:
+            first = False
+        else:
+            html.write(",")
+        content = p[0]["name"]
+        stripped = htmllib.strip_tags(content)
+        utf8 = stripped.encode("utf-8")
+        html.write(encode_string_json(utf8))
+    html.write("]")
+
     for row in rows:
         html.write(",\n[")
         first = True
@@ -79,7 +92,9 @@ def render_json(rows, view, group_painters, painters, num_columns, show_checkbox
             utf8 = stripped.encode("utf-8")
             html.write(encode_string_json(utf8))
         html.write("]")
+
     html.write("\n]\n")
+
 
 multisite_layouts["json"] = {
     "title"  : _("JSON data output"),

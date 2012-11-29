@@ -251,6 +251,7 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit = "B"):
     txt = []
     have_bw = True
     h = '<table><tr>'
+    traffic_multiplier = unit == "B" and 1 or 8
     for name, bytes, bw, color in [
           ("in",  in_traffic,  in_bw,  "#0e6"),
           ("out", out_traffic, out_bw, "#2af") ]:
@@ -276,7 +277,7 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit = "B"):
     # make logarithmic perf-o-meter
     MB = 1000000.0
     text = "%s/s&nbsp;&nbsp;&nbsp;%s/s" % (
-        number_human_readable(in_traffic, 1, unit), number_human_readable(out_traffic, 1, unit))
+        number_human_readable(in_traffic * traffic_multiplier, 1, unit), number_human_readable(out_traffic * traffic_multiplier, 1, unit)) 
 
     return text, perfometer_logarithmic_dual(
                  in_traffic, "#0e6", out_traffic, "#2af", 1000000, 5)

@@ -30,6 +30,7 @@
       all logs which currently have a problem
     * Check reschedule icon now works on services containing an \
     * Now showing correct representation of SI unit kilo ( k )
+    * if perfometer now differs between byte and bit output
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

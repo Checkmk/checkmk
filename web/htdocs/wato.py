@@ -8404,6 +8404,8 @@ def load_users():
                         "locked"   : False,
                     }
                     result[id] = new_user
+                # Make sure that the user has an alias
+                result[id].setdefault("alias", id)
             # Other unknown entries will silently be dropped. Sorry...
 
     # Now read the serials, only process for existing users

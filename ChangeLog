@@ -31,6 +31,7 @@
     * Check reschedule icon now works on services containing an \
     * Now showing correct representation of SI unit kilo ( k )
     * if perfometer now differs between byte and bit output
+    * FIX: warn / crit levels in if-check when using "bit" as unit
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

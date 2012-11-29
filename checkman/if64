@@ -97,6 +97,11 @@ parameters (dict): Due to its complexity, this check now uses a dictionary as
                    {"speed"} - the expected port speed as an integer of the bits per second (not
                    the bytes!). If you set this to {None}, then the port speed is not checked.
                    The default is to remember and enforce the port speed found during inventory.
+                   
+                   {"unit"} - the measurement unit which can be set to "bit" or "byte".
+                   Depending on this choice the limits set in the {"traffic"} parameter are regarded
+                   as bits or bytes, too. When this parameter is set to "bit" any traffic related plugin output 
+                   is reported in bits instead of bytes(default).
 
 [configuration]
 if_inventory_porttypes (list of strings): List of interface types the inventory should create checks for.

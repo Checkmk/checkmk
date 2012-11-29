@@ -98,7 +98,7 @@ def number_human_readable(n, precision=1, unit="B"):
     elif abs(n) > 1024 * 1024:
         return (f + "M%s") % (n / (1024.0 * 1024), unit)
     elif abs(n) > 1024:
-        return (f + "K%s") % (n / 1024.0, unit)
+        return (f + "k%s") % (n / 1024.0, unit)
     else:
         return (f + "%s") % (n, unit)
 

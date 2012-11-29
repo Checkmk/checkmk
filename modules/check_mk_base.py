@@ -1157,7 +1157,7 @@ def get_bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
     elif b >= base * base:
         return '%s%.2fM%s' % (prefix, b / base / base, unit) 
     elif b >= base:
-        return '%s%.2fK%s' % (prefix, b / base, unit) 
+        return '%s%.2fk%s' % (prefix, b / base, unit) 
     elif bytefrac:
         return '%s%.2f%s' % (prefix, b, unit)
     else: # Omit byte fractions

@@ -77,7 +77,7 @@ if($bandwidth > $base * $base * $base) {
 	$warn /= $base;
 	$crit /= $base;
 	$bandwidth /= $base;
-	$bwuom = 'K';
+	$bwuom = 'k';
 }
 
 if ($mBandwidthH < 10)

@@ -1,12 +1,14 @@
 package livestatus;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jasperreports.engine.JRDataset;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRField;
+import net.sf.jasperreports.engine.JRValueParameter;
 import net.sf.jasperreports.engine.design.JRDesignField;
 
 import com.jaspersoft.ireport.designer.FieldsProvider;
@@ -29,14 +31,13 @@ public class LivestatusFieldsProvider implements FieldsProvider{
 	@SuppressWarnings("rawtypes")
 	public JRField[] getFields(IReportConnection con, JRDataset dataset, Map parameters)
 			throws JRException, UnsupportedOperationException {
-		
 		JRField[] ret = null;
 		try{
 			Vector<JRDesignField> jr_vector = new Vector<JRDesignField>();
 
 			// Disable data columns. We only need the header line
 			String query = dataset.getQuery().getText().concat("\nLimit: 0");
-			LivestatusDatasource data = new LivestatusQueryExecuter(query).createDatasource();
+			LivestatusDatasource data = new LivestatusQueryExecuter(query, parameters).createDatasource();
 			
 			String[] headers = data.getHeaders();
 			int header_count = headers.length;

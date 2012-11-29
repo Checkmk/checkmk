@@ -10808,7 +10808,8 @@ def mode_edit_rule(phase):
 
                 html.help(_("The entries here are regular expressions to match the beginning. "
                              "Add a <tt>$</tt> for an exact match. An arbitrary substring is matched "
-                             "with <tt>.*</tt>"))
+                             "with <tt>.*</tt><br>Please note that on windows systems any backslashes need to be escaped."
+                             "For example C:\\\\tmp\\\\message.log"))
                 html.write("</div>")
 
     forms.end()

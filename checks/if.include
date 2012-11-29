@@ -140,7 +140,7 @@ def check_if_common(item, params, info):
     targetspeed        = params.get("speed")
     targetstate        = params.get("state")
     average            = params.get("average")
-    unit               = params.get("unit", "B")
+    unit               = params.get("unit") in ["Bit", "bit"] and "Bit" or "B"
     unit_multiplier    = unit == "Bit" and 8.0 or 1.0
 
     # error checking might be turned off

@@ -221,7 +221,7 @@ def perfometer_temperature(row, check_command, perf_data):
     color = { 0: "#39f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[state]
     value = float(perf_data[0][1])
     crit = savefloat(perf_data[0][4])
-    return "%d°C" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
+    return u"%d°C" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
 
 perfometers["check_mk-nvidia.temp"] = perfometer_temperature
 perfometers["check_mk-cisco_temp_sensor"] = perfometer_temperature

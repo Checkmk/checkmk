@@ -15,6 +15,7 @@
     * FIX: postgres_sessions: handle case of no active/no idle sessions
     * FIX: correct backslash representation of windows logwatch files
     * Add: New Check for Rittal CMC PSM-M devices
+    * Smart plugin: Only use relevant numbers of serial
 
     Multisite:
     * Implemented LDAP integration of Multisite. You can now authenticate your

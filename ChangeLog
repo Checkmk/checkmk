@@ -1,5 +1,4 @@
 1.2.1i4:
-    * FIX: postgres_sessions: handle case of no active/no idle sessions
     Core:
     * Better exception handling when executing "Check_MK"-Check. Printing python
       exception to status output and traceback to long output now.
@@ -16,6 +15,7 @@
     * FIX: correct backslash representation of windows logwatch files
     * Add: New Check for Rittal CMC PSM-M devices
     * Smart plugin: Only use relevant numbers of serial
+    * FIX: postgres_sessions: handle case of no active/no idle sessions
 
     Multisite:
     * Implemented LDAP integration of Multisite. You can now authenticate your
@@ -34,6 +34,9 @@
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items
       like ntp_time and tcp_conn_stats
+
+    Event Console:
+    * FIX: fix exception in rules that use facility local7
 
 1.2.1i3:
     Core:

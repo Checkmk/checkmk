@@ -1,4 +1,4 @@
-SITE=${SITE:-ev}
+SITE=${SITE:-$(omd sites --bare | sort | head -n 1)}
 OMD_ROOT=/omd/sites/${SITE}
 
 for dir in web checks pnp-templates

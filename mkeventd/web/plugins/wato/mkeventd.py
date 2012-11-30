@@ -771,6 +771,20 @@ def mode_mkeventd_rules(phase):
             else:
                 return
 
+        elif html.has_var("_copy_rules"):
+            c = wato_confirm(_("Confirm copying rules"),
+                             _("Do you really want to copy all event rules from the master and "
+                               "replace your local configuration with them?"))
+            if c:
+                copy_rules_from_master()
+                log_mkeventd("copy-rules-from-master", _("Copied the event rules from the master "
+                             "into the local configuration"))
+                return None, _("Copied rules from master")
+            elif c == False:
+                return ""
+            else:
+                return
+
             
         if html.check_transaction():
             if html.has_var("_move"):
@@ -785,10 +799,14 @@ def mode_mkeventd_rules(phase):
 
     rep_mode = mkeventd.replication_mode()
     if rep_mode in [ "sync", "takeover" ]:
+        copy_url = make_action_link([("mode", "mkeventd_rules"), ("_copy_rules", "1")])
         html.show_warning(_("WARNING: This Event Console is currently running as a replication "
           "slave. The rules edited here will not be used. Instead a copy of the rules of the "
           "master are being used in the case of a takeover. The same holds for the event "
-          "actions in the global settings."))
+          "actions in the global settings.<br><br>If you want you can copy the ruleset of "
+          "the master into your local slave configuration: ") + \
+          '<a class=button href="%s">' % copy_url + 
+          _("Copy Rules From Master") + '</a>')
 
     if len(rules) == 0:
         html.write(_("You have not created any rules yet."))
@@ -915,6 +933,14 @@ def mode_mkeventd_rules(phase):
         html.write('<td>%s</td>' % rule.get("match"))
         html.write('</tr>\n')
     html.write('</table>')
+
+
+def copy_rules_from_master():
+    answer = mkeventd.query("REPLICATE 0")
+    if "rules" not in answer:
+        raise MKGeneralException(_("Cannot get rules from local event daemon."))
+    rules = answer["rules"]
+    save_mkeventd_rules(rules)
 
 
 def mode_mkeventd_edit_rule(phase):

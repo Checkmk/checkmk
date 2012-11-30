@@ -40,6 +40,8 @@
 
     Event Console:
     * FIX: fix exception in rules that use facility local7
+    * Replication slave can now copy rules from master into local configuration
+      via a new button in WATO.
 
 1.2.1i3:
     Core:

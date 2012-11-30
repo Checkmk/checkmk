@@ -16,6 +16,7 @@
     * Add: New Check for Rittal CMC PSM-M devices
     * Smart plugin: Only use relevant numbers of serial
     * FIX: postgres_sessions: handle case of no active/no idle sessions
+    * Add: ibm_xraid_pdisks - new check for agentless monitoring of disks on IBM SystemX servers.
 
     Multisite:
     * Implemented LDAP integration of Multisite. You can now authenticate your

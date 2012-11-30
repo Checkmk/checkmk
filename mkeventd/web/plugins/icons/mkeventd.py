@@ -45,24 +45,29 @@ def paint_mkeventd(what, row, tags, custom_vars):
     app  = None
 
     # Extract parameters from check_command:
-    args = command.split('!')[1].split(' ', 1)
+    args = command.split('!')[1].split()
     if not args:
         return
 
-    if len(args) >= 1:
-        # Handle -a and -H options. Sorry for the hack. We currently
-        # have no better idea
-        if args[0] == '-H':
-            args = args[2:] # skip two arguments
-        if args[0] == '-a':
-            args = args[1:]
+    # Handle -a and -H options. Sorry for the hack. We currently
+    # have no better idea
+    if len(args) >= 2 and args[0] == '-H':
+        args = args[2:] # skip two arguments
+    if len(args) >= 1 and args[0] == '-a':
+        args = args[1:]
 
+    if len(args) >= 1:
         if args[0] == '$HOSTNAME$':
             host = row['host_name']
         elif args[0] == '$HOSTADDRESS$':
             host = row['host_address']
         else:
             host = args[0]
+
+    # If we have no host then the command line from the check_command seems
+    # to be garbled. Better show nothing in this case.
+    if not host:
+        return
 
     # It is possible to have a central event console, this is the default case.
     # Another possible architecture is to have an event console in each site in

@@ -5367,7 +5367,7 @@ def render_main_menu(some_modules, columns = 2):
     html.write("</div>")
 
 #.
-#   .-Global-Vars----------------------------------------------------------.
+#   .-Global-Settings------------------------------------------------------.
 #   |          ____ _       _           _  __     __                       |
 #   |         / ___| | ___ | |__   __ _| | \ \   / /_ _ _ __ ___           |
 #   |        | |  _| |/ _ \| '_ \ / _` | |  \ \ / / _` | '__/ __|          |
@@ -5646,7 +5646,7 @@ def save_configuration_vars(vars, filename):
     out = create_user_file(filename, 'w')
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     for varname, value in vars.items():
-        out.write("%s = %r\n" % (varname, value))
+        out.write("%s = %s\n" % (varname, pprint.pformat(value)))
 
 #.
 #   .-Groups---------------------------------------------------------------.

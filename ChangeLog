@@ -32,6 +32,7 @@
     * Now showing correct representation of SI unit kilo ( k )
     * if perfometer now differs between byte and bit output
     * FIX: warn / crit levels in if-check when using "bit" as unit
+    * Use pprint when writing global settings (makes files more readable)
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

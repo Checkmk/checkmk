@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import socket, os, time, sys, getopt, signal, thread, pprint, re, \
-       select
+       select, subprocess
 from pwd import getpwnam
 from grp import getgrnam
 
@@ -409,13 +409,31 @@ def flush_event_history():
     with lock_logging:
        expire_logfiles(True) 
 
+grepping_filters = [ 'event_text', 'event_comment', 'event_host', 'event_host_regex', 
+                     'event_contact', 'event_application', 'event_rule_id', 'event_owner' ]
 
-def get_event_history(filters):
+def get_event_history(filters, limit):
     history_entries = []
     headers = [ c[0] for c in history_columns ]
     log_dir = g_state_dir + "/history"
     if not os.path.exists(log_dir):
         return headers, []
+
+    # Optimization: use grep in order to reduce amount
+    # of read lines based on some frequently used filters.
+    greptexts = []
+    for filter_name, opfunc, args in filters:
+        # Make sure that the greptexts are in the same order as in the
+        # actual logfiles. They will be joined with ".*"!
+        try:
+            nr = grepping_filters.index(filter_name)
+            if opfunc in [ filter_operators['='], filter_operators['~~'] ]:
+                greptexts.append((nr, args))
+        except:
+            pass
+
+    greptexts.sort()
+    greptexts = [ x[1] for x in greptexts ]
 
     time_filters = [ f for f in filters 
                      if f[0].split("_")[-1] == "time" ]
@@ -429,6 +447,8 @@ def get_event_history(filters):
                    if fn.endswith(".log") ]
     timestamps.sort()
     for ts in timestamps:
+        if limit != None and limit <= 0:
+            break
         path = log_dir + "/%d.log" % ts
         first_entry, last_entry = get_logfile_timespan(path)
         for name, opfunc, argument in time_filters:
@@ -445,17 +465,34 @@ def get_event_history(filters):
                     log("Skipping logfile %s.log because of time filter" % ts)
                 continue # skip this file
 
-        history_entries += parse_history_file(path)
+        new_entries = parse_history_file(path, headers, filters, greptexts, limit)
+        history_entries += new_entries
+        if limit != None:
+            limit -= len(new_entries)
 
     return headers, history_entries
 
 
 
-def parse_history_file(path):
+def parse_history_file(path, headers, filters, greptexts, limit):
     entries = []
     line_no = 0
-    for line in file(path):
+    # If we have greptexts we pre-filter the file using the extremely
+    # fast GNU Grep
+    if greptexts:
+        args = [ 'grep', '-i', '-e' , ".*".join(greptexts), path ] 
+        grep = subprocess.Popen(args, close_fds=True, stdout=subprocess.PIPE)
+        logfile = grep.stdout
+    else:
+        logfile = file(path)
+
+    for line in logfile:
         line_no += 1
+        if limit != None and len(entries) > limit:
+            if greptexts:
+                os.kill(grep.pid, 15)
+            break
+
         try:
             parts = line.rstrip('\n').split('\t')
             if False:
@@ -467,9 +504,11 @@ def parse_history_file(path):
                 pairs = zip(history_columns[1:], parts)
                 values = [line_no] + map(lambda p: unsplit(type(p[0][1])(p[1])), pairs)
                 # Handle \1 separated lists/tuples (e.g. match_groups)
-            entries.append(values)
+            if g_status_server.filter_row(headers, filters, values):
+                entries.append(values)
         except Exception, e:
             log("Invalid line %d in history file %s: %s" % (line_no, path, e))
+    
     return entries
 
 
@@ -1616,6 +1655,7 @@ class StatusServer:
 
         filters = []
         only_host = None
+        limit = None
         for line in headerlines:
             try:
                 header, argument = line.rstrip().split(":", 1)
@@ -1623,9 +1663,13 @@ class StatusServer:
                 if header == "Filter":
                     name, opfunc, argument = self.parse_filter(argument, columns)
                     # Needed for later optimization
-                    if name == "event_host" and filter_operators['=']:
+                    if name == "event_host" and opfunc == filter_operators['=']:
                         only_host = argument
                     filters.append((name, opfunc, argument))
+                elif header == "Limit":
+                    limit = int(argument)
+                else:
+                    log("Ignoring not-implemented header %s" % header)
                     
             except Exception, e:
                 raise MKClientError("Invalid header line '%s': %s" % (line.rstrip(), e))
@@ -1633,25 +1677,30 @@ class StatusServer:
         if table == "events":
             headers, list_rows = g_event_status.get_events(only_host)
         elif table == "history":
-            headers, list_rows = get_event_history(filters)
+            headers, list_rows = get_event_history(filters, limit)
         else:
             headers, list_rows = g_event_server.get_status()
 
         rows = [headers]
-        for list_row in list_rows:
-            if filters:
-                match = True
-                row = dict(zip(headers, list_row))
-                for column, opfunc, argument in filters:
-                    if not opfunc(row[column], argument):
-                        match = False
-                        break
-                if match:
+        if table != "history": # Do filtering now
+            for list_row in list_rows:
+                if filters:
+                    match = self.filter_row(headers, filters, list_row)
+                    if match:
+                        rows.append(list_row)
+                else:
                     rows.append(list_row)
-            else:
-                rows.append(list_row)
+        else:
+            rows += list_rows
 
         return rows
+
+    def filter_row(self, headers, filters, list_row):
+        row = dict(zip(headers, list_row))
+        for column, opfunc, argument in filters:
+            if not opfunc(row[column], argument):
+                return None
+        return list_row
 
     def parse_filter(self, textspec, columns):
         # Examples:

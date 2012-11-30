@@ -25,7 +25,7 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
     # in case. Also in the events table instead of the host name there
     # might be the IP address of the host - while in the monitoring we
     # name. We will join later.
-    rows = get_all_events(what, filters)
+    rows = get_all_events(what, filters, limit)
 
     # Now we join the stuff with the host information. Therefore we
     # get the information about all hosts that are referred to in 
@@ -139,13 +139,15 @@ def get_host_table(filter_header, only_sites, add_columns):
     rows = [ dict(zip(headers, row)) for row in data ]
     return rows
 
-def get_all_events(what, filters):
+def get_all_events(what, filters, limit):
     headers = ""
     for f in filters:
         try:
             headers += f.event_headers()
         except:
             pass
+    if limit:
+        headers += "Limit: %d\n" % limit
 
     query = "GET %s\n%s" % (what, headers)
     try:
@@ -216,7 +218,8 @@ if mkeventd_enabled:
     declare_filter(201, EventFilterText("event", "event_application", _("Application / Syslog-Tag"),              "~~"))
     declare_filter(201, EventFilterText("event", "event_contact",     _("Contact Person"),                        "~~"))
     declare_filter(201, EventFilterText("event", "event_comment",     _("Comment to the event"),                  "~~"))
-    declare_filter(201, EventFilterText("event", "event_host",        _("Hostname/IP-Address of original event"), "~~"))
+    declare_filter(201, EventFilterText("event", "event_host_regex",  _("Hostname/IP-Address of original event"), "~~"))
+    declare_filter(201, EventFilterText("event", "event_host",        _("Hostname/IP-Address of event, exact match"), "="))
     declare_filter(201, EventFilterText("event", "event_owner",       _("Owner of event"),                        "~~"))
     declare_filter(221, EventFilterText("history", "history_who",       _("User that performed action"),            "~~"))
     declare_filter(222, EventFilterText("history", "history_line",      _("Line number in history logfile"),        "="))
@@ -806,7 +809,7 @@ if mkeventd_enabled:
             'event_application',
             'event_contact',
             'event_comment',
-            'event_host',
+            'event_host_regex',
             'event_count',
             'event_phase',
             'event_state',
@@ -849,7 +852,6 @@ if mkeventd_enabled:
             'event_application',
             'event_contact',
             'event_comment',
-            'event_host',
             'event_count',
             'event_phase',
             'event_state',
@@ -919,7 +921,7 @@ if mkeventd_enabled:
             ('event_state',   None, ''),
             ('event_phase',   None, ''),
             ('event_sl',      None, ''),
-            ('event_host',   'host', ''),
+            ('event_host',   'ec_history_of_host', ''),
             ('event_rule_id', None, ''),
             ('event_application', None, ''),
             ('event_text',    None, ''),
@@ -933,7 +935,7 @@ if mkeventd_enabled:
             'event_application',
             'event_contact',
             'event_comment',
-            'event_host',
+            'event_host_regex',
             'event_count',
             'event_phase',
             'event_state',
@@ -975,7 +977,7 @@ if mkeventd_enabled:
             ('history_who', None, ''),
             ('history_addinfo', None, ''),
             ('event_state', None, ''),
-            ('event_host', None, ''),
+            ('event_host', 'ec_history_of_host', ''),
             ('event_text', None, ''),
             ('event_comment', None, ''),
             ('event_owner', None, ''),
@@ -1000,7 +1002,7 @@ if mkeventd_enabled:
         'description':  u'History entries of one specific event',
         'datasource':   'mkeventd_history',
         'layout':       'table',
-        'columns':      10,
+        'columns':      1,
     
         'hidden':       True,
         'browser_reload': 0,
@@ -1009,6 +1011,59 @@ if mkeventd_enabled:
         ],
         'painters': [
             ('history_time', None, ''),
+            ('history_line', 'ec_historyentry', ''),
+            ('history_what', None, ''),
+            ('history_what_explained', None, ''),
+            ('history_who', None, ''),
+            ('event_state', None, ''),
+            ('event_host', None, ''),
+            ('event_application', None, ''),
+            ('event_text', None, ''),
+            ('event_sl', None, ''),
+            ('event_priority', None, ''),
+            ('event_facility', None, ''),
+            ('event_phase', None, ''),
+            ('event_count', None, ''),
+        ],
+        'sorters': [
+            ('history_time', False),
+        ],
+    })
+
+    multisite_builtin_views['ec_history_of_host'] = mkeventd_view({
+        'title':        u'Event History of Host',
+        'description':  u'History entries of one specific host',
+        'datasource':   'mkeventd_history',
+        'layout':       'table',
+        'columns':      1,
+    
+        'hidden':       True,
+        'browser_reload': 0,
+        'hide_filters': [
+            'event_host',
+        ],
+        'show_filters': [
+            'event_id',
+            'event_rule_id',
+            'event_text',
+            'event_application',
+            'event_contact',
+            'event_comment',
+            'event_count',
+            'event_phase',
+            'event_state',
+            'event_first',
+            'event_last',
+            'event_priority',
+            'event_facility',
+            'event_sl',
+            'history_time',
+            'history_who',
+            'history_what',
+        ],
+        'painters': [
+            ('history_time', None, ''),
+            ('event_id', 'ec_history_of_event', ''),
             ('history_line', 'ec_historyentry', ''),
             ('history_what', None, ''),
             ('history_what_explained', None, ''),

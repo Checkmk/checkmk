@@ -8499,7 +8499,6 @@ def save_users(profiles):
     # Write out the users serials
     serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
     out = create_user_file(serials_file, "w")
-    out.write('# Writtem by WATO\n')
     for user_id, user in profiles.items():
         out.write('%s:%d\n' % (user_id, user.get('serial', 0)))
     out.close()

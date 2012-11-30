@@ -30,6 +30,8 @@
       all logs which currently have a problem
     * Check reschedule icon now works on services containing an \
     * Now showing correct representation of SI unit kilo ( k )
+    * if perfometer now differs between byte and bit output
+    * FIX: warn / crit levels in if-check when using "bit" as unit
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items
@@ -179,6 +181,12 @@
     * FIX: fixed detection of existing groups when creating new groups
     * FIX: allow email addresses like test@test.test-test.com
 
+    Checks & Agents:
+    * FIX: postgres_sessions: handle case of no active/no idle sessions
+
+    Multisite:
+    * FIX: performeter_temparature now returns unicode string, because of °C
+    * FIX: output_format json in webservices now using " as quotes
 
 1.2.0p3:
     Mulitisite

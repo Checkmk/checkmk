@@ -2,6 +2,8 @@
     Core:
     * Better exception handling when executing "Check_MK"-Check. Printing python
       exception to status output and traceback to long output now.
+    * Added HOSTTAGS to notification macros which contains all Check_MK-Tags
+      separated by spaces
 
     Notifications:
     * Fix flexible notifications on non-OMD systems

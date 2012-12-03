@@ -2,6 +2,8 @@
     Core:
     * Better exception handling when executing "Check_MK"-Check. Printing python
       exception to status output and traceback to long output now.
+    * Added HOSTTAGS to notification macros which contains all Check_MK-Tags
+      separated by spaces
 
     Notifications:
     * Fix flexible notifications on non-OMD systems
@@ -43,6 +45,7 @@
     Event Console:
     * FIX: fix exception in rules that use facility local7
     * FIX: fix event icon in case of using TCP access to EC
+    * FIX: Allowing ":" in application field (e.g. needed for windows logfiles)
     * Replication slave can now copy rules from master into local configuration
       via a new button in WATO.
     * Speedup access to event history by earlier filtering and prefiltering with grep

@@ -1,0 +1,192 @@
+#!/usr/bin/python
+# encoding: utf-8
+
+# Sets/Removes downtimes via Check_MK Multisite Webservice
+# Before you can use this script, please read:
+# http://mathias-kettner.de/checkmk_multisite_automation.html
+# And create an automation user - best with the name 'automation'
+# And make sure that this user either has the admin role or is
+# contact for all relevant objects.
+
+# Restrictions / Bugs
+# - When removing host downtimes, always *all* services downtimes
+#   are also removed
+# - When removing service downtimes the service names are interpreted
+#   as regular expressions, but not when setting
+# -> We need a specialized view for the downtimes. Or even better
+#    implement the "Remove all downtimes" button in a normal hosts/
+#    services views.
+
+import os, sys, getopt, time, urllib
+
+omd_site = os.getenv("OMD_SITE")
+omd_root = os.getenv("OMD_ROOT")
+
+def bail_out(reason):
+    sys.stderr.write(reason + "\n")
+    sys.exit(1)
+
+def verbose(text):
+    if opt_verbose:
+        sys.stdout.write(text + "\n")
+
+
+def usage():
+    sys.stdout.write("""Usage: downtime [-r] [OPTIONS] HOST [SERVICE1] [SERVICE2...]
+
+This program sets and removes downtimes on hosts and services
+via command line. If you run this script from within an OMD
+site then most options will be guessed automatically. Currently
+the script only supports cookie based login - no HTTP basic
+authentication.
+
+Before you use this script, please read:
+http://mathias-kettner.de/checkmk_multisite_automation.html 
+You need to create an automation user - best with the name 'automation' 
+- and make sure that this user either has the admin role or is contact 
+for all relevant objects.
+
+Options:
+  -v, --verbose    Show what's going on
+  -s, --set        Set downtime (this is the default and thus optional)
+  -r, --remove     Remove all downtimes from that host/service
+  -c, --comment    Comment for the downtime (otherwise "Automatic downtime")
+  -d, --duration   Duration of the downtime in minutes (default: 120)
+  -h, --help       Show this help and exit
+  -u, --user       Name of automation user (default: "automation")
+  -S, --secret     Automation secret (default: read from user settings) 
+  -U, --url        Base-URL of Multisite (default: guess local OMD site)
+  -a, --all        Include all services when setting/removing host downtime
+""")
+
+
+short_options = 'vhrsc:d:u:S:a'
+long_options = [ "help", "set", "remove", "comment=", 
+                 "duration=", "user=", "secret=", "all" ]
+
+opt_all = False
+opt_verbose = False
+opt_mode = 'set'
+opt_command = "Automatic downtime"
+opt_user = "automation"
+opt_secret = None
+opt_url = None
+opt_duration = 120
+if omd_site:
+    opt_url = "http://localhost/" + omd_site + "/check_mk/"
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n\n" % err)
+    usage()
+    sys.exit(1)
+
+for o,a in opts:
+    # Docu modes
+    if o in [ '-h', '--help' ]:
+        usage()
+        sys.exit(0)
+
+    # Modifiers
+    elif o in [ '-v', '--verbose']:
+        opt_verbose = True
+    elif o in [ '-a', '--all']:
+        opt_all = True
+    elif o in [ '-r', '--remove']:
+        opt_mode = 'remove'
+    elif o in [ '-r', '--remove']:
+        opt_mode = 'remove'
+    elif o in [ '-c', '--comment']:
+        opt_comment = a
+    elif o in [ '-d', '--duration']:
+        opt_duration = int(a)
+    elif o in [ '-u', '--user']:
+        opt_user = a
+    elif o in [ '-S', '--secret']:
+        opt_secret = a
+    elif o in [ '-U', '--url']:
+        opt_ = a
+
+if omd_site and not opt_secret:
+    try:
+        opt_secret = file(omd_root + "/var/check_mk/web/" + opt_user 
+                          + "/automation.secret").read().strip()
+    except Exception, e:
+        bail_out("Cannot read automation secret from user %s: %s" % 
+            (opt_user, e))
+
+if not opt_url:
+    bail_out("Please specify the URL to Check_MK Multisite with -U.")
+
+if not opt_url.endswith("/check_mk/"):
+    bail_out("The automation URL must end with /check_mk/")
+
+if not args:
+    bail_out("Please specify the host to set a downtime for.")
+
+arg_host = args[0]
+arg_services = args[1:]
+
+if opt_mode == "set":
+    verbose("Mode:          set downtime")
+    verbose("Duration:      %ds" % opt_duration)
+else:
+    verbose("Mode:          remove downtimes")
+verbose("Host:          " + arg_host)
+if arg_services:
+    verbose("Services:      " + " ".join(arg_services))
+verbose("Multisite-URL: " + opt_url)
+verbose("User:          " + opt_user)
+verbose("Secret:        " + opt_secret)
+
+def make_url(base, variables):
+    vartext = "&".join([ "%s=%s" % e for e in variables ])
+    return base + "?" + vartext
+
+variables = [
+    ( "_username",      opt_user ),
+    ( "_secret",        opt_secret ),
+    ( "_transid",       "-1" ),
+    ( "_do_confirm",    "yes" ),
+    ( "_do_actions",    "yes" ),
+    ( "host",           arg_host ),
+]
+
+if opt_mode == 'remove':
+    variables += [
+        ("view_name",   "downtimes"),
+        ("_remove_downtimes", "Remove"),
+    ]
+else:
+    variables += [
+        ( "_down_from_now", "yes" ),
+        ( "_down_minutes",  opt_duration ),
+        ( "_down_comment",  opt_comment ),
+    ]
+    if arg_services:
+        variables.append(("view_name", "service"))
+    else:
+        variables.append(("view_name", "hoststatus"))
+
+def set_downtime(variables, add_vars):
+    url = make_url(opt_url + "view.py", variables + add_vars)
+    verbose("URL:           " + url)
+    try:
+        pipe = urllib.urlopen(url)
+        l = len(pipe.readlines())
+        verbose(" --> Got %d lines of response" % l)
+    except Exception, e:
+        bail_out("Cannot call Multisite URL: %s" % e)
+
+
+if arg_services:
+    for service in arg_services:
+        set_downtime(variables, [("service", service + "$")])
+else:
+    set_downtime(variables, [])
+    if opt_all:
+        if opt_mode == 'set':
+            set_downtime(variables, [("view_name", "service")])
+
+

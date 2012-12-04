@@ -1613,15 +1613,15 @@ checkgroups.append((
               Tuple(
                   title = _("Read Queue-Length"),
                   elements = [
-                      Float(title = "warning at",  unit = _(""), default_value = 80.0),
-                      Float(title = "critical at", unit = _(""), default_value = 90.0),
+                      Float(title = "warning at",  default_value = 80.0),
+                      Float(title = "critical at", default_value = 90.0),
              ])),
             ( "write_ql", 
               Tuple(
                   title = _("Write Queue-Length"),
                   elements = [
-                      Float(title = "warning at",  unit = _(""), default_value = 80.0),
-                      Float(title = "critical at", unit = _(""), default_value = 90.0),
+                      Float(title = "warning at",  default_value = 80.0),
+                      Float(title = "critical at", default_value = 90.0),
              ])),
             ( "ql_perfdata",
               Checkbox(

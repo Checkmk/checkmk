@@ -1,5 +1,8 @@
 package livestatus;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Map;
 import net.sf.jasperreports.engine.JRDataset;
 import net.sf.jasperreports.engine.JRException;
@@ -11,7 +14,7 @@ import net.sf.jasperreports.engine.query.JRQueryExecuterFactory;
 public class LivestatusQueryExecuterFactory implements JRQueryExecuterFactory{
 	public JRQueryExecuter createQueryExecuter(JRDataset dataset, Map<String, 
 			? extends JRValueParameter> parameters) throws JRException {
-		// TODO Auto-generated method stub
+
 		return new LivestatusQueryExecuter(dataset, parameters);
 		
 	}

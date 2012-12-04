@@ -22,7 +22,7 @@ import net.sf.jasperreports.engine.query.JRQueryExecuter;
 
 public class LivestatusQueryExecuter implements JRQueryExecuter{
 	// Connection parameters
-	private Map<String,? extends JRValueParameter> parameters;       // Given parameters from iReport
+	private HashMap<String, String> parameters;       // Given parameters from iReport
 	private String    			jasper_query;     // Query from iReport incl. connection details
 	private String    			livestatus_query; // Query send to livestatus
 	private String    			server;           // server name
@@ -60,13 +60,32 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 	@SuppressWarnings("rawtypes")
 	public LivestatusQueryExecuter(String query, Map parameters) {
 		this.jasper_query = query;
-		this.parameters   = parameters;
+		this.parameters = new HashMap<String,String>();
+		for ( Object key : parameters.keySet() ) {
+			if ( parameters.get(key) == null ) {
+				continue;
+			}
+			this.parameters.put(key.toString(), parameters.get(key).toString());
+		}
+		
+//		LivestatusQueryExecuterFactory.logFile(this.jasper_query);
+//		for (String key : this.parameters.keySet())
+//		{
+//			LivestatusQueryExecuterFactory.logFile("key " + key + " " + this.parameters.get(key.toString()));	
+//			String value = this.parameters.get(key);
+//			LivestatusQueryExecuterFactory.logFile(key +  " = " + value);			
+//		}
 	}
 
-	@SuppressWarnings("rawtypes")
 	public LivestatusQueryExecuter(JRDataset dataset, Map<String,? extends JRValueParameter> parameters) {
 		this.jasper_query = dataset.getQuery().getText();
-		this.parameters   = parameters;
+		this.parameters = new HashMap<String,String>();
+		for ( Object key : parameters.keySet() ) {
+			if ( parameters.get(key) == null || parameters.get(key).getValue() == null ) {
+				continue;
+			}
+			this.parameters.put(key.toString(), parameters.get(key).getValue().toString());
+		}
 	}
 
 	private void evaluateQuery() throws JRException{
@@ -78,11 +97,14 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 
 		// Replace any parameters within the jasper_query
 		String mod_query = jasper_query;
-		for (String key : parameters.keySet())
-		{
-			JRValueParameter value = parameters.get(key);
-			if ( value.getValue() != null ) {
-				mod_query = mod_query.replaceAll("\\$P\\{"+key+"\\}", value.getValue().toString());
+		if ( parameters != null ) {
+			for (String key : parameters.keySet())
+			{
+				String value = parameters.get(key);
+				if ( value != null ) {
+					mod_query = mod_query.replaceAll("\\$P\\{"+key+"\\}", "\"" + value + "\"");
+					mod_query = mod_query.replaceAll("\\$P!\\{"+key+"\\}", value);
+				}
 			}
 		}
 		

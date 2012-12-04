@@ -1,0 +1,58 @@
+SERVER-INVENTURISIERUNG
+-----------------------
+
+(aus der Antwort aus einer Email)
+
+in der Tat haben wir über das Thema diskutiert und ich habe mir auch
+einige Gedanken dazu gemacht.  Die Ideen aus dem LIESMICH.interval sind
+nicht zuletzt deswegen entstanden.
+
+Das Konzept, dass mir vorschwebt, ist allerdings nicht, einfach Check_MK
+als Transportmechnismus für ein bestehenden Inventurisierungsskript zu
+nehmen, sondern die vorhandenen Mittel auszureizen. Das Beispiel, das Sie
+mir gemailt haben, zeigt den Grund: der aktuelle Agent sendet bereits heute
+einen Großteil der Daten. Wenn man z.B. unter Linux noch ergänzt:
+
+/proc/cpuinfo
+rpm -qa
+lspci
+dmidecode
+
+Dann hat man fast alles, was was man braucht. Die Idee ist wie beim Monitoring
+mit Check_MK, dass der Agent die Daten nicht vorauswertet - also z.B. nicht
+selbst in der Ausgabe von lspci nach einer Soundkarte sucht - sondern dass
+man das im zentralen Check_MK macht. Das ist effizienter, flexibler, leichter
+änderbar und sorgt vor allem für einen viel einfacheren Agenten.
+
+Was man also tun müsste wäre:
+
+* Agenten um eine Handvoll Plugins erweitern, dabei eventuelle Langläufer
+mit größeren Intervall abfedern. Im obigen Beispiel ist das evtl. noch
+nicht mal notwendig.
+
+* Inventur-basierte Parser für die vorhandenen und neuen relevanten Sektionen
+schreiben. Die extrahieren dann Daten und gliedern sie in einen strukturierten
+Baum ein. Der Baum wird pro Host in eine Daten geschrieben.
+
+* Die Check_MK Kommandozeile um Befehle zur Inventur erweitern.
+
+* Auch im WATO eine Bedienung der Inventur ermöglichen - z.B.
+direktes antriggern. Evtl. ist die Inventur aber einfach als aktiver
+Check realisiert. Damit könnte man die Nagios-Funktionen direkt nutzen
+(z.B. Reschedule).
+
+* In der Multisite-GUI Seiten, mit denen das schön angezeigt werden
+kann. Evtl. verwendet man die Tabellenfunktionen, die es aktuell schon
+gibt. Dadurch könnte man alles nutzen, wie Filter/Suchfunktionen, Sortierung,
+Gruppierung, Freie Spaltenauswahl, Export in JSON, etc.  und könnte die
+Daten auch sofort mit Monitoringdaten verknüpfen.  Evtl. dann noch ein
+Webservice für einen XML-Export.
+
+* Das ganze im Rahmen des verteilten Monitorings auch umsetzen, also Zugriff
+über Multisite auf Inventurdaten, die auf einem anderen Host liegen -
+oder Synchronisation der Daten.
+
+* Und - am schwierigsten - einen guten Begriff für das ganze finden. Denn
+Check_MK verwendet den Begriff "Inventur" bereits für das automatische
+Einrichten von Services....
+

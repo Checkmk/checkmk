@@ -181,7 +181,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
     for dn, obj in ldap_connection.search_s(base, scope, filt, columns):
         new_obj = {}
         for key, val in obj.iteritems():
-            new_obj[key.lower()] = val
+            new_obj[key.lower().decode('utf-8')] = [ i.decode('utf-8') for i in val ]
         result.append((dn, new_obj))
     return result
     #return ldap_connection.search_s(base, scope, filter, columns)
@@ -229,7 +229,7 @@ def ldap_get_user_dn(username):
     )
 
     if result:
-        return result[0][0]
+        return result[0][0].replace('\\', '\\\\')
 
 def ldap_get_users(add_filter = None):
     columns = [

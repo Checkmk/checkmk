@@ -1008,6 +1008,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
     EVENTLOGRECORD *event = (EVENTLOGRECORD *)buffer;
     while (bytesread > 0)
     {
+        crash_log("     - record %d: process_eventlog_entries bytesread %d, event->Length %d", *record_number, bytesread, event->Length); 
 	*record_number = event->RecordNumber;
 
 	char type_char;
@@ -1111,6 +1112,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 	} // type_char != '.'
 
 	bytesread -= event->Length;
+        crash_log("     - record %d: event_processed, bytesread %d, event->Length %d", *record_number, bytesread, event->Length); 
 	event = (EVENTLOGRECORD *) ((LPBYTE) event + event->Length);
     }
 }

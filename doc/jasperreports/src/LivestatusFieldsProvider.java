@@ -28,10 +28,27 @@ public class LivestatusFieldsProvider implements FieldsProvider{
 		return null;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public JRField[] getFields(IReportConnection con, JRDataset dataset, Map parameters)
+	public boolean hasEditorComponent() {
+		return false;
+	}
+
+	public boolean hasQueryDesigner() {
+		return false;
+	}
+
+	public boolean supportsAutomaticQueryExecution() {
+		return true;
+	}
+
+	public boolean supportsGetFieldsOperation() {
+		return true;
+	}
+
+	@Override
+	public JRField[] getFields(IReportConnection arg0, JRDataset dataset, Map parameters)
 			throws JRException, UnsupportedOperationException {
 		JRField[] ret = null;
+		
 		try{
 			Vector<JRDesignField> jr_vector = new Vector<JRDesignField>();
 
@@ -44,6 +61,7 @@ public class LivestatusFieldsProvider implements FieldsProvider{
 			String descr;
 			String type;
 						
+			
 			for( int i = 0; i < header_count; i++ ){
 				// Set field name
 				JRDesignField tmp_field = new JRDesignField();
@@ -87,21 +105,5 @@ public class LivestatusFieldsProvider implements FieldsProvider{
 			throw new JRException("Error evaluating query:" + ex.getMessage());
 		}
 		return ret;
-	}
-
-	public boolean hasEditorComponent() {
-		return false;
-	}
-
-	public boolean hasQueryDesigner() {
-		return false;
-	}
-
-	public boolean supportsAutomaticQueryExecution() {
-		return true;
-	}
-
-	public boolean supportsGetFieldsOperation() {
-		return true;
 	}
 }

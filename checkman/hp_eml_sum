@@ -1,0 +1,12 @@
+title: Monitor summary status of HP StorageWorks EML E-Series enterprise tape library
+agents: SNMP
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the reported summary status of tample libraries of the
+ HP EML series. It has been developed and tested with EML 103e but should also
+ work with other models. It uses information provided by the SEMI-MIB.
+
+inventory:
+ The check supports automatic inventory. Each system gets one summary checks.

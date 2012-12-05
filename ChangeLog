@@ -5,6 +5,11 @@
     * Added HOSTTAGS to notification macros which contains all Check_MK-Tags
       separated by spaces
 
+    Checks & Agents:
+    * Added check for disk controllers in HP Proliant servers: hp_proliant_da_cntlr
+    * Added check to monitor Storage System Drive Box Groups attached to HP servers
+    * Added check to monitor the summary status of HP EML tape libraries
+
     Notifications:
     * Fix flexible notifications on non-OMD systems
     

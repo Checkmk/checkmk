@@ -364,7 +364,7 @@ multisite_icons.append({
 def paint_flapping(what, row, tags, custom_vars):
     if row[what + "_is_flapping"]:
         return '<img class=icon title="%s" src="images/icon_flapping.gif">' % \
-                                          _('This %s is flapping') % what
+                                          _('This %s is flapping') % _(what)
 
 multisite_icons.append({
     'columns':         [ 'is_flapping' ],

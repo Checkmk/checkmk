@@ -401,6 +401,7 @@ def handler(req, profiling = True):
         raise
 
     except Exception, e:
+        html.unplug()
         if plain_error:
             html.write(_("Internal error") + ": %s\n" % e)
         elif not fail_silently:

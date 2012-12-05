@@ -108,7 +108,7 @@
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
        shutil, tarfile, StringIO, math, fcntl, pickle
-import config, htmllib,  multitar
+import config, htmllib, table, multitar
 from lib import *
 from valuespec import *
 import forms
@@ -343,12 +343,14 @@ def page_handler():
         raise
 
     except MKInternalError:
+        html.unplug()
         raise
 
     except MKAuthException:
         raise
 
     except Exception, e:
+        html.unplug()
         import traceback
         html.show_error(traceback.format_exc().replace('\n', '<br />'))
 
@@ -5724,7 +5726,6 @@ def mode_groups(phase, what):
 
     sorted = groups.items()
     sorted.sort()
-    html.write("<h3>%s</h3>" % what_name.title())
     if len(sorted) == 0:
         if what == "contact":
             render_main_menu([
@@ -5735,16 +5736,6 @@ def mode_groups(phase, what):
             html.write("<div class=info>" + _("There are not defined any groups yet.") + "</div>")
         return
 
-    html.write("<table class=data>")
-    html.write("<tr><th>" + _("Actions")
-                + "</th><th>" + _("Name")
-                + "</th><th>" + _("Alias"))
-
-    if what == "contact":
-        html.write("</th><th>" + _("Members"))
-
-    html.write("</th></tr>\n")
-
     # Show member of contact groups
     if what == "contact":
         users = filter_hidden_users(load_users())
@@ -5754,24 +5745,29 @@ def mode_groups(phase, what):
             for cg in cgs:
                 members.setdefault(cg, []).append((userid, user.get('alias', userid)))
 
-    odd = "even"
+    table.begin(what_name.title())
     for name, alias in sorted:
-        odd = odd == "odd" and "even" or "odd"
-        html.write('<tr class="data %s0">' % odd)
+        table.row()
+
+        table.cell(_("Actions"), css="buttons")
         edit_url = make_link([("mode", "edit_%s_group" % what), ("edit", name)])
         delete_url = html.makeactionuri([("_delete", name)])
         clone_url    =  make_link([("mode", "edit_%s_group" % what), ("clone", name)])
-        html.write("<td class=buttons>")
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Create a copy of this group"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
-        html.write("</td><td>%s</td><td>%s</td>" % (name, alias))
+        html.write("</td>")
+        
+        table.cell(_("Name"), name)
+        table.cell(_("Alias"), alias)
+
         if what == "contact":
-            html.write("<td>%s</td>" % ", ".join(
+            table.cell(_("Members"))
+            html.write(", ".join(
                [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_user"), ("edit", userid)]), alias)
                  for userid, alias in members.get(name, [])]))
-        html.write("</tr>")
-    html.write("</table>")
+
+    table.end()
 
 
 def mode_edit_group(phase, what):
@@ -7788,35 +7784,18 @@ def mode_users(phase):
         else:
             return None
 
-    if len(users) == 0:
-        html.write("<div class=info>" +
-            _("There are not defined any contacts/users yet.") + "</div>")
-
-    html.write("<h3>" + _("Users & Contacts") + "</h3>")
-    html.write("<table class=data>")
-    html.write("<tr><th>" + _("Actions") + "<th>"
-                + _("Name")
-                + "</th><th>" + _("Connector")
-                + "</th><th>" + _("Authentication")
-                + "</th><th>" + _("Locked")
-                + "</th><th>" + _("Full Name")
-                + "</th><th>" + _("Email")
-                + "</th><th>" + _("Roles")
-                + "</th><th>" + _("Contact groups")
-                + "</th><th>" + _("Notifications")
-                + "</th></tr>\n")
-
-    odd = "even"
     entries = users.items()
     entries.sort(cmp = lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
+
+    table.begin(_("Users & Contacts"),
+                empty_text = _("There are not defined any contacts/users yet."))
     for id, user in entries:
-        odd = odd == "odd" and "even" or "odd"
-        html.write('<tr class="data %s0">' % odd)
+        table.row()
 
         connector = userdb.get_connector(user.get('connector'))
 
         # Buttons
-        html.write("<td class=buttons>")
+        table.cell(_("Actions"), css="buttons")
         if connector: # only show edit buttons when the connector is available and enabled
             edit_url = make_link([("mode", "edit_user"), ("edit", id)])
             html.icon_button(edit_url, _("Properties"), "edit")
@@ -7827,17 +7806,15 @@ def mode_users(phase):
         delete_url = html.makeactionuri([("_delete", id)])
         html.icon_button(delete_url, _("Delete"), "delete")
 
-        html.write("</td>")
-
         # ID
-        html.write("<td>%s</td>" % id)
+        table.cell(_("ID"), id)
 
         # Connector
         if connector:
-            html.write("<td>%s</td>" % connector['short_title'])
+            table.cell(_("Connector"), connector['short_title'])
             locked_attributes = userdb.locked_attributes(user.get('connector'))
         else:
-            html.write("<td class=error>%s (disabled)</td>" % userdb.get_connector_id(user.get('connector')))
+            table_cell(_("Connector"), "%s (disabled)" % userdb.get_connector_id(user.get('connector')), css="error")
             locked_attributes = []
 
         # Authentication
@@ -7847,27 +7824,26 @@ def mode_users(phase):
             auth_method = _("Password")
         else:
             auth_method = "<i>%s</i>" % _("none")
-        html.write("<td>%s</td>" % auth_method)
+        table.cell(_("Authentication"), auth_method)
 
         # Locked
         locked = user.get("locked", False)
-        html.write("<td>%s</td>" % (locked and ("<b>" + _("yes") + "</b>") or _("no")))
+        table.cell(_("Locked"), (locked and ("<b>" + _("yes") + "</b>") or _("no")))
 
         # Full name / Alias
-        html.write("<td>%s</td>" % user.get("alias", ""))
+        table.cell(_("Alias"), user.get("alias", ""))
 
         # Email
-        html.write("<td>%s</td>" % user.get("email", ""))
+        table.cell(_("Email"), user.get("email", ""))
 
         # Roles
+        table.cell(_("Roles"))
         if user.get("roles", []):
-            html.write("<td>%s</td>" % ", ".join(
+            html.write(", ".join(
                [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_role"), ("edit", r)]), roles[r].get('alias')) for r in user["roles"]]))
-        else:
-            html.write("<td></td>")
 
         # contact groups
-        html.write("<td>")
+        table.cell(_("Contact groups"))
         cgs = user.get("contactgroups", [])
         if cgs:
             html.write(", ".join(
@@ -7875,10 +7851,9 @@ def mode_users(phase):
                                           contact_groups[c] and contact_groups[c] or c) for c in cgs]))
         else:
             html.write("<i>" + _("none") + "</i>")
-        html.write("</td>")
 
         # notifications
-        html.write("<td>")
+        table.cell(_("Notifications"))
         if not cgs:
             html.write(_("<i>not a contact</i>"))
         elif not user.get("notifications_enabled", True):
@@ -7896,9 +7871,8 @@ def mode_users(phase):
             else:
                 tp = _("Always")
             html.write(tp)
-        html.write("</td>")
-        html.write("</tr>")
-    html.write("</table>")
+
+    table.end()
 
     if not load_group_information().get("contact", {}):
         url = "wato.py?mode=contact_groups"

@@ -188,6 +188,7 @@ class html:
         self.final_javascript_code = ""
         self.auto_id = 0
         self.have_help = False
+        self.plugged = False
 
     def set_buffering(self, b):
         self.buffering = b
@@ -230,10 +231,34 @@ class html:
 
         if type(text) == unicode:
 	    text = text.encode("utf-8")
+
+        if self.plugged:
+            self.plugged_text += text
+        else:
+            self.lowlevel_write(text)
+
+    def lowlevel_write(self, text):
         if self.buffering:
             self.req.write(text, 0)
         else:
             self.req.write(text)
+
+    def plug(self):
+        self.plugged = True
+        self.plugged_text = ''
+
+    def flush(self):
+        self.lowlevel_write(self.plugged_text)
+        self.plugged_text = ''
+
+    def drain(self):
+        if self.plugged:
+            t = self.plugged_text
+            self.plugged_text = ''
+            return t
+
+    def unplug(self):
+        self.plugged = False
 
     def heading(self, text):
         self.write("<h2>%s</h2>\n" % text)
@@ -1184,7 +1209,7 @@ class html:
     def debug(self, *x):
         import pprint
         for element in x:
-            self.write("<pre>%s</pre>\n" % pprint.pformat(element))
+            self.lowlevel_write("<pre>%s</pre>\n" % pprint.pformat(element))
 
     # Debug logging directly to apache error_log
     # Even if this is for debugging purpose, set the log-level to WARN in all cases
@@ -1197,8 +1222,8 @@ class html:
         self.req.log_error(msg, apache.APLOG_WARNING)
 
     def debug_vars(self):
-        self.write('<table onmouseover="this.style.display=\'none\';" class=debug_vars>')
-        self.write("<tr><th colspan=2>POST / GET Variables</th></tr>")
+        self.lowlevel_write('<table onmouseover="this.style.display=\'none\';" class=debug_vars>')
+        self.lowlevel_write("<tr><th colspan=2>POST / GET Variables</th></tr>")
         for name, value in sorted(self.req.vars.items()):
             self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" % (name, value))
         self.write("</ul>")

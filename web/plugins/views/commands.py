@@ -383,41 +383,79 @@ def command_downtime(cmdtag, spec, row):
         else:
             fixed = 1
             duration = 0
-        command = (("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec) \
+
+        if html.var("_include_childs"): # only for hosts
+            specs = [ spec ] + get_child_hosts(row["site"], [spec], recurse = not not html.var("_include_childs_recurse"))
+        else:
+            specs = [ spec ]
+
+        commands = [(("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec ) \
                    + ("%d;%d;%d;0;%d;%s;" % (down_from, down_to, fixed, duration, config.user_id)) \
-                   + comment)
-        return command, title
+                   + comment) for spec in specs]
+        return commands, title
+
+def get_child_hosts(site, hosts, recurse):
+    hosts = set(hosts)
+    html.live.set_only_sites([site])
+    query = "GET hosts\nColumns: name\n"
+    for h in hosts:
+        query += "Filter: parents >= %s\n" % h
+    query += "Or: %d\n" % len(hosts)
+    childs = html.live.query_column(query)
+    html.live.set_only_sites(None)
+    # Recursion, but try to avoid duplicate work
+    childs = set(childs)
+    new_childs = childs.difference(hosts)
+    if new_childs and recurse:
+        rec_childs = get_child_hosts(site, new_childs, True)
+        new_childs.update(rec_childs)
+    return list(new_childs)
+
+def paint_downtime_buttons(what):
+    html.write(_('Downtime Comment')+": ")
+    html.text_input("_down_comment", size=40)
+    html.write("<hr>")
+    html.button("_down_2h", _("2 hours"))
+    html.button("_down_today", _("Today"))
+    html.button("_down_week", _("This week"))
+    html.button("_down_month", _("This month"))
+    html.button("_down_year", _("This year"))
+    html.write(" &nbsp; - &nbsp;")
+    html.button("_down_remove", _("Remove all"))
+    html.write("<hr>")
+    html.button("_down_custom", _("Custom time range"))
+    html.datetime_input("_down_from", time.time())
+    html.write("&nbsp; "+_('to')+" &nbsp;")
+    html.datetime_input("_down_to", time.time() + 7200)
+    html.write("<hr>")
+    html.button("_down_from_now", _("From now for"))
+    html.write("&nbsp;")
+    html.number_input("_down_minutes", 60, size=4, style="text-align: right")
+    html.write("&nbsp; " + _("minutes"))
+    html.write("<hr>")
+    html.checkbox("_down_flexible", False, label=_('flexible with max. duration')+" ")
+    html.time_input("_down_duration", 2, 0)
+    html.write(" "+_('(HH:MM)'))
+    if what == "host":
+        html.write("<hr>")
+        html.checkbox("_include_childs", False, label=_('Also set downtime on child hosts'))
+        html.write("  ")
+        html.checkbox("_include_childs_recurse", False, label=_('Do this recursively'))
 
 
 multisite_commands.append({
-    "tables"      : [ "host", "service" ],
+    "tables"      : [ "host" ],
     "permission"  : "action.downtimes",
     "title"       : _("Schedule downtimes"),
-    "render"      : lambda: \
-        html.button("_down_2h", _("2 hours")) == \
-        html.button("_down_today", _("Today")) == \
-        html.button("_down_week", _("This week")) == \
-        html.button("_down_month", _("This month")) == \
-        html.button("_down_year", _("This year")) == \
-        html.write(" &nbsp; - &nbsp;") == \
-        html.button("_down_remove", _("Remove all")) == \
-        html.write("<hr>") == \
-        html.button("_down_custom", _("Custom time range")) == \
-        html.datetime_input("_down_from", time.time()) == \
-        html.write("&nbsp; "+_('to')+" &nbsp;") == \
-        html.datetime_input("_down_to", time.time() + 7200) == \
-        html.write("<hr>") == \
-        html.button("_down_from_now", _("From now for")) == \
-        html.write("&nbsp;") == \
-        html.number_input("_down_minutes", 60, size=4, style="text-align: right") == \
-        html.write("&nbsp; " + _("minutes")) == \
-        html.write("<hr>") == \
-        html.checkbox("_down_flexible", False, label=_('flexible with max. duration')+" ") == \
-        html.time_input("_down_duration", 2, 0) == \
-        html.write(" "+_('(HH:MM)')) == \
-        html.write("<hr>") == \
-        html.write(_('Comment')+": ") == \
-        html.text_input("_down_comment", size=48),
+    "render"      : lambda: paint_downtime_buttons("host"),
+    "action"      : command_downtime,
+})
+
+multisite_commands.append({
+    "tables"      : [ "service" ],
+    "permission"  : "action.downtimes",
+    "title"       : _("Schedule downtimes"),
+    "render"      : lambda: paint_downtime_buttons("service"),
     "action"      : command_downtime,
 })
 

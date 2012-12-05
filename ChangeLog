@@ -37,6 +37,7 @@
     * FIX: warn / crit levels in if-check when using "bit" as unit
     * Use pprint when writing global settings (makes files more readable)
     * New script for settings/removing downtimes: doc/treasures/downtime
+    * New option when setting host downtimes for also including child hosts
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

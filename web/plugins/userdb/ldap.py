@@ -229,7 +229,7 @@ def ldap_get_user_dn(username):
     )
 
     if result:
-        return result[0][0]
+        return result[0][0].replace('\\', '\\\\')
 
 def ldap_get_users(add_filter = None):
     columns = [

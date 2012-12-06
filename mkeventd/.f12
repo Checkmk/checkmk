@@ -8,7 +8,9 @@ do
     fi
 done
 make -C src
-sudo install -m 755 bin/mkeventd src/mkevent $OMD_ROOT/bin/
+sudo install -m 755 bin/mkeventd src/mkeventd_open514 src/mkevent $OMD_ROOT/bin/
+sudo chown root.omd $OMD_ROOT/bin/mkeventd_open514
+sudo chmod 4750 $OMD_ROOT/bin/mkeventd_open514
 sudo touch $OMD_ROOT/share/check_mk/web/htdocs/*.py
 sudo install -m 755 omd/mkeventd.init $OMD_ROOT/etc/init.d/mkeventd
 sudo sed -i "s@###ROOT###@$OMD_ROOT@g"  $OMD_ROOT/etc/init.d/mkeventd

@@ -636,7 +636,9 @@ class EventServer:
 
 
     def __init__(self):
+        self._syslog = None
         self.create_pipe()
+        self.open_syslog()
         self._rules = []
         self._hash_stats = []
         for facility in range(24):
@@ -669,6 +671,22 @@ class EventServer:
         if not os.path.exists(g_pipe_path):
             os.mkfifo(g_pipe_path)
         os.chmod(g_pipe_path, 0666)
+
+    def open_syslog(self):
+        if opt_syslog:
+            try:
+                if opt_syslog_fd != None:
+                    self._syslog = socket.fromfd(opt_syslog_fd, socket.AF_INET, socket.SOCK_DGRAM)
+                    os.close(opt_syslog_fd)
+                    log("Opened builtin syslog server on inherited filedescriptor %d" % opt_syslog_fd)
+
+                else:
+                    self._syslog = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    self._syslog.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    self._syslog.bind(("0.0.0.0", 514))
+                    log("Opened builtin syslog server on UDP port 514")
+            except Exception, e:
+                raise Exception("Cannot start builtin syslog server: %s" % e)
 
     def run(self):
         if opt_profile.get("event"):
@@ -705,29 +723,62 @@ class EventServer:
             if opt_profile.get("event") and c > 100:
                 return
 
+    def open_pipe(self):
+        # Beware: we must open the pipe also for writing. Otherwise
+        # we will see EOF forever after one writer has finished and
+        # select() will trigger even if there is no data. A good article
+        # about this is here:
+        # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
+        return os.open(g_pipe_path, os.O_RDWR | os.O_NONBLOCK)
 
     def serve(self):
-        for line in file(g_pipe_path, "r", 0):
-            line = line.rstrip()
-            # Convert to Unicode, first assume UTF-8, then latin-1
-            try:
-                line = line.decode("utf-8")
-            except:
-                line = line.decode("latin-1")
+        pipe = self.open_pipe() 
+        listen_list = [ pipe ]
+        if self._syslog != None:
+            listen_list.append(self._syslog.fileno())
+            log("FD geerbt: %d" % opt_syslog_fd)
+            log("FD von syslog: %d" % self._syslog.fileno())
 
-            if line:
-                g_perfcounters.count("messages")
-                before = time.time()
-                # In replication slave mode (when not took over), ignore all events
-                if not is_replication_slave() or g_slave_status["mode"] != "sync":
-                    self.process_event(line.rstrip())
-                elif opt_debug:
-                    log("Replication: we are in slave mode, ignoring event")
-                elapsed = time.time() - before
-                g_perfcounters.count_time("processing", elapsed)
+        while True:
+            readable = select.select(listen_list, [], [], None)[0]
+            data = None
+            if pipe in readable:
+                try:
+                    data = os.read(pipe, 4096)
+                    if len(data) == 0: # END OF FILE!
+                        log("DAS GIBTS NICHT!")
+                        os.close(pipe)
+                        pipe = self.open_pipe()
+                        listen_list[0] = pipe
+                except:
+                    data = None
+            elif self._syslog.fileno() in readable:
+                data = self._syslog.recv(4096)
 
-            if opt_profile.get("event"):
-                return
+            if data:
+                log("JUHU: [%s]" % data)
+                lines = data.splitlines()
+                for line in lines:
+                    line = line.rstrip()
+                    # Convert to Unicode, first assume UTF-8, then latin-1
+                    try:
+                        line = line.decode("utf-8")
+                    except:
+                        line = line.decode("latin-1")
+
+                    if line:
+                        g_perfcounters.count("messages")
+                        before = time.time()
+                        # In replication slave mode (when not took over), ignore all events
+                        if not is_replication_slave() or g_slave_status["mode"] != "sync":
+                            self.process_event(line.rstrip())
+                        elif opt_debug:
+                            log("Replication: we are in slave mode, ignoring event")
+                        elapsed = time.time() - before
+                        g_perfcounters.count_time("processing", elapsed)
+
+                    if opt_profile.get("event"):
+                        return
 
     def do_housekeeping(self):
         with lock_eventstatus:
@@ -2434,6 +2485,8 @@ def usage():
    -C, --configdir      Path to directory where mkevent.mk lives
    -S, --socket P       Path to unix socket for querying status
    -P, --pipe P         Path to pipe for receiving events
+   --syslog             Enable builtin syslog server
+   --syslog-fd FD       Do not open UDP port 514, but inherit it via this FD
    --statedir           Path to directory for saving status
    -p, --pidfile        Path to PID file
    --profile-status     Create Python profile for status thread
@@ -2475,6 +2528,8 @@ opt_debug         = False
 opt_debug_locking = False
 opt_foreground    = False
 opt_profile       = {}
+opt_syslog        = False
+opt_syslog_fd     = None
 
 # Set default values for options
 omd_root = os.getenv("OMD_ROOT")
@@ -2496,7 +2551,8 @@ else:
 
 short_options = "hvVgS:P:p:C:"
 long_options = [ "help", "version", "verbose", "debug", "foreground", "socket=", "pipe=",
-                 "pidfile=", "statedir=", "configdir", "profile-status", "profile-event", "debug-locking" ]
+                 "pidfile=", "statedir=", "configdir", "profile-status", "profile-event", "debug-locking",
+                 "syslog", "syslog-fd=" ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -2515,6 +2571,10 @@ try:
             g_socket_path = a
         elif o in [ '-P', '--pipe' ]:
             g_pipe_path = a
+        elif o == '--syslog':
+            opt_syslog = True
+        elif o == '--syslog-fd':
+            opt_syslog_fd = int(a)
         elif o in [ '-p', '--pidfile' ]:
             g_pid_file = a
         elif o in [ '-C', '--configdir' ]:

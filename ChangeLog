@@ -55,6 +55,7 @@
     * Replication slave can now copy rules from master into local configuration
       via a new button in WATO.
     * Speedup access to event history by earlier filtering and prefiltering with grep
+    * New builtin syslog server! Please refer to online docu for details.
 
 1.2.1i3:
     Core:

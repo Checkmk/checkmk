@@ -2118,7 +2118,7 @@ checkgroups.append((
                 title = _("Name of the process"),
                 allow_empty = False,
             ),
-            Integer(title = _("Memory waring at"), unit = "MB"),
+            Integer(title = _("Memory warning at"), unit = "MB"),
             Integer(title = _("Memory critical at"), unit = "MB"),
             Integer(title = _("Pagefile warning at"), unit = "MB"),
             Integer(title = _("Pagefile critical at"), unit = "MB"), 

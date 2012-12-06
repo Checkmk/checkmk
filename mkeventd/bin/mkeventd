@@ -736,8 +736,6 @@ class EventServer:
         listen_list = [ pipe ]
         if self._syslog != None:
             listen_list.append(self._syslog.fileno())
-            log("FD geerbt: %d" % opt_syslog_fd)
-            log("FD von syslog: %d" % self._syslog.fileno())
 
         while True:
             readable = select.select(listen_list, [], [], None)[0]
@@ -746,7 +744,6 @@ class EventServer:
                 try:
                     data = os.read(pipe, 4096)
                     if len(data) == 0: # END OF FILE!
-                        log("DAS GIBTS NICHT!")
                         os.close(pipe)
                         pipe = self.open_pipe()
                         listen_list[0] = pipe
@@ -756,7 +753,6 @@ class EventServer:
                 data = self._syslog.recv(4096)
 
             if data:
-                log("JUHU: [%s]" % data)
                 lines = data.splitlines()
                 for line in lines:
                     line = line.rstrip()

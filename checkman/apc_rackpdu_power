@@ -1,0 +1,20 @@
+title: APC PDU units 
+agents: snmp
+author: Florian Heigl <fh@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ Monitors Power and Voltage on APC PDU Units.
+ This check will alert if the amperage on the input exceeds
+ the limit reported by the PDU. It knows either {OK} or {CRIT}
+ states.
+
+item:
+ The name of the PDU as set in the PDU
+
+perfdata:
+ Amps, defined MAX Amp value
+
+inventory:
+ One service per PDU
+

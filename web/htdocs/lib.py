@@ -34,13 +34,13 @@ class MKGeneralException(Exception):
     def __init__(self, reason):
         self.reason = reason
     def __str__(self):
-        return str(self.reason)
+        return self.reason
 
 class MKAuthException(Exception):
     def __init__(self, reason):
         self.reason = reason
     def __str__(self):
-        return str(self.reason)
+        return self.reason
 
 class MKUnauthenticatedException(MKGeneralException):
     pass

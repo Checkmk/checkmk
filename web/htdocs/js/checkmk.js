@@ -1594,6 +1594,22 @@ function valuespec_listof_fixarrows(oTbody) {
     }
 }
 
+function vs_passwordspec_randomize(img) {
+    password = "";
+    while (password.length < 8) {
+        a = parseInt(Math.random() * 128);
+        if ((a >= 97 && a <= 122) ||
+            (a >= 65 && a <= 90) ||
+            (a >= 48 && a <= 57))  {
+            c = String.fromCharCode(a);
+            password += c;
+        }
+    }
+    img.previousElementSibling.value = password;
+}
+
+
+
 function help_enable() {
     var aHelp = document.getElementById('helpbutton');
     aHelp.style.display = "inline-block";

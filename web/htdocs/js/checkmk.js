@@ -1605,7 +1605,10 @@ function vs_passwordspec_randomize(img) {
             password += c;
         }
     }
-    img.previousElementSibling.value = password;
+    var oInput = img.previousElementSibling;
+    if (oInput.tagName != "INPUT")
+        oInput = oInput.firstChild; // in complain mode
+    oInput.value = password;
 }
 
 

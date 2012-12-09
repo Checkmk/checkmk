@@ -336,10 +336,10 @@ class TextAscii(ValueSpec):
         if self._none_is_empty and value == "":
             raise MKUserError(varprefix, _("An empty value must be represented with None here."))
         if not self._allow_empty and value.strip() == "":
-            raise MKUserError(varprefix, self.title() + ": " + _("An empty value is not allowed here."))
+            raise MKUserError(varprefix, _("An empty value is not allowed here."))
         if value and self._regex:
             if not self._regex.match(value):
-                raise MKUserError(varprefix, self.title() + ": " + self._regex_error)
+                raise MKUserError(varprefix, self._regex_error)
 
 # Internal ID as used in many places (for contact names, group name,
 # an so on)
@@ -2158,3 +2158,15 @@ class Password(TextAscii):
             return _("none")
         else:
             return '******'
+
+class PasswordSpec(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+
+    def render_input(self, varprefix, value):
+        TextAscii.render_input(self, varprefix, value)
+        if not value:
+            html.icon_button("#", _(u"Randomize password"), "random", 
+                onclick="vs_passwordspec_randomize(this);")
+
+

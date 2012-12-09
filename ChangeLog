@@ -5,11 +5,6 @@
     * Added HOSTTAGS to notification macros which contains all Check_MK-Tags
       separated by spaces
 
-    Checks & Agents:
-    * Added check for disk controllers in HP Proliant servers: hp_proliant_da_cntlr
-    * Added check to monitor Storage System Drive Box Groups attached to HP servers
-    * Added check to monitor the summary status of HP EML tape libraries
-
     Notifications:
     * Fix flexible notifications on non-OMD systems
     
@@ -24,6 +19,10 @@
     * Smart plugin: Only use relevant numbers of serial
     * FIX: postgres_sessions: handle case of no active/no idle sessions
     * Add: ibm_xraid_pdisks - new check for agentless monitoring of disks on IBM SystemX servers.
+    * Add: hp_proliant_da_cntlr check for disk controllers in HP Proliant servers
+    * Add: Check to monitor Storage System Drive Box Groups attached to HP servers
+    * Add: check to monitor the summary status of HP EML tape libraries
+    * Add: apc_rackpdu_status - monitor the power consumption on APC rack PDUs
 
     Multisite:
     * Implemented LDAP integration of Multisite. You can now authenticate your
@@ -55,6 +54,7 @@
     * Replication slave can now copy rules from master into local configuration
       via a new button in WATO.
     * Speedup access to event history by earlier filtering and prefiltering with grep
+    * New builtin syslog server! Please refer to online docu for details.
 
 1.2.1i3:
     Core:

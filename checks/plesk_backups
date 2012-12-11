@@ -1,0 +1,115 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def inventory_plesk_backups(info):
+    inventory = []
+    for line in info:
+        inventory.append((line[0], {}))
+    return inventory
+
+def check_plesk_backups(item, params, info):
+    for line in info:
+        if item != line[0]:
+            continue
+
+        if len(line) != 5:
+            if line[1] == '4':
+                state = params.get('no_backup_configured_state', 1)
+                return (state, '%s - No backup configured' % nagios_state_names[state])
+
+            elif line[1] == '5':
+                state = params.get('no_backup_found_state', 1)
+                return (state, '%s - No backup found' % nagios_state_names[state])
+
+            else:
+                return (3, 'UNKNOWN - Unexpected line %r' % line)
+
+        domain, rc, timestamp, size, total_size = line
+        size       = saveint(size)
+        total_size = saveint(total_size)
+        timestamp  = saveint(timestamp)
+
+        status   = 0
+        output   = []
+        perfdata = []
+
+        # 1. check last backup size not 0 bytes
+        status_txt = ''
+        if size == 0:
+           status = 2
+           status_txt = ' (!!)'
+        output.append('Last Backup - Size: %s%s' % (get_bytes_human_readable(size), status_txt))
+        perfdata.append(('last_backup_size', size))
+
+        age_seconds = int(time.time()) - timestamp
+        seconds = age_seconds % 60
+        rem = age_seconds / 60
+        minutes = rem % 60
+        hours = (rem % 1440) / 60
+        days = rem / 1440
+
+        # 2. check age of last backup < 24h
+        status_txt = ''
+        warn, crit = None, None
+        if 'backup_age' in params:
+            warn, crit = params['backup_age']
+            if age_seconds > params['backup_age'][1]:
+                status = max(status, 2)
+                status_txt = ' (!!)'
+            elif age_seconds > params['backup_age'][0]:
+                status = max(status, 1)
+                status_txt = ' (!)'
+        
+        backup_time = time.strftime("%c", time.localtime(timestamp))
+        output.append('Age: %s (%dd %02d:%02d:%02d)%s' % 
+             (backup_time, days, hours, minutes, seconds, status_txt))
+        perfdata.append(('last_backup_age', age_seconds, warn, crit))
+
+        # 3. check total size of directory above configured threshold
+        warn, crit = None, None
+        if 'total_size' in params:
+            warn, crit = params['total_size']
+            if total_size > params['total_size'][1]:
+                status = max(status, 2)
+                status_txt = ' (!!)'
+            elif total_size > params['total_size'][0]:
+                status = max(status, 1)
+                status_txt = ' (!)'
+        output.append('Total Size: %s%s' % (get_bytes_human_readable(total_size), status_txt))
+        perfdata.append(('total_size', total_size))
+ 
+        return (status, 'OK - %s' % ', '.join(output), perfdata)
+
+    return (3, 'UNKNOWN - Domain not found')
+    
+
+check_info['plesk_backups'] = {
+    'check_function':      check_plesk_backups,
+    'inventory_function':  inventory_plesk_backups,
+    'service_description': "Plesk Backup %s",
+    'has_perfdata':        True,
+    'group':               'plesk_backups',
+}

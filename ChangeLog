@@ -24,6 +24,8 @@
     * Add: check to monitor the summary status of HP EML tape libraries
     * Add: apc_rackpdu_status - monitor the power consumption on APC rack PDUs
     * Add: sym_brightmail_queues - monitor the queue levels on Symantec Brightmail mail scanners.
+    * Add: plesk_domains - List domains configured in plesk installations
+    * Add: plesk_backups - Monitor backup spaces configured for domains in plesk
     * FIX: zfsget: fix exception on snapshot volumes (where available is '-')
 
     Multisite:

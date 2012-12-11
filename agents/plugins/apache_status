@@ -78,8 +78,17 @@ print '<<<apache_status>>>'
 for proto, address, port in servers:
     try:
         # Try to fetch the status page for each server
-        url = '%s://%s:%s/server-status?auto' % (proto, address, port)
-        fd = urllib2.urlopen(url)
+        try:
+            fd = urllib2.urlopen(url)
+        except urllib2.URLError, e:
+            if 'SSL23_GET_SERVER_HELLO:unknown protocol' in str(e):
+                # HACK: workaround misconfigurations where port 443 is used for
+                # serving non ssl secured http
+                url = 'http://%s:%s/server-status?auto' % (address, port)
+                fd = urllib2.urlopen(url)
+            else:
+                raise
+
         for line in fd.read().split('\n'):
             if not line.strip():
                 continue

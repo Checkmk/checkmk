@@ -2392,18 +2392,12 @@ def search_hosts_in_folder(folder, crit):
     if found:
         render_folder_path(folder, True)
         found.sort()
-        html.write("<table class=data><tr><th>%s</th>" % (_("Hostname"), ))
-        for attr, topic in host_attributes:
-            if attr.show_in_table():
-                html.write("<th>%s</th>" % attr.title())
-        html.write("</tr>")
 
-        even = "even"
+        table.begin(""); 
         for hostname, host, effective in found:
-            even = even == "even" and "odd" or "even"
             host_url =  make_link_to([("mode", "edithost"), ("host", hostname)], folder)
-            html.write('<tr class="data %s0"><td><a href="%s">%s</a></td>\n' %
-               (even, host_url, hostname))
+            table.row()
+            table.cell(_("Hostname"), '<a href="%s">%s</a>' % (host_url, hostname))
             for attr, topic in host_attributes:
                 attrname = attr.name()
                 if attr.show_in_table():
@@ -2412,9 +2406,8 @@ def search_hosts_in_folder(folder, crit):
                     else:
                         tdclass, content = attr.paint(effective[attrname], hostname)
                         tdclass += " inherited"
-                    html.write('<td class="%s">%s</td>' % (tdclass, content))
-        html.write("</tr>\n")
-        html.write("</table><br>\n")
+                    table.cell(attr.title(), content, css=tdclass)
+        table.end()
 
     return len(found)
 
@@ -5186,42 +5179,25 @@ def mode_snapshot(phase):
                 snapshots.append(f)
         snapshots.sort(reverse=True)
 
-        if len(snapshots) == 0:
-            html.write("<div class=info>" + _("There are no snapshots available.") + "</div>")
-        else:
-            html.write('<h3>' + _("Snapshots") + '</h3>')
-            html.write('<table class=data>')
-            html.write("<tr>")
-            html.write("<th>%s</th>" % _("Actions"))
-            html.write("<th>%s</th>" % _("Filename"))
-            html.write("<th>%s</th>" % _("Age"))
-            html.write("<th>%s</th>" % _("Size"))
-            html.write("</tr>")
 
-            odd = "odd"
-            for name in snapshots:
-                odd = odd == "odd" and "even" or "odd"
-                html.write('<tr class="data %s0"><td>' % odd)
-
-                # Buttons
-                html.icon_button(make_action_link(
-                   [("mode","snapshot"),("_restore_snapshot", name)]), _("Restore"), "restore")
-                html.icon_button(make_action_link(
-                   [("mode","snapshot"),("_delete_file", name)]), _("Delete"), "delete")
-                html.write("<td>")
-
-                # Snapshot name
-                html.write('<a href="%s">%s</a>' % (make_action_link([("mode","snapshot"),("_download_file", name)]), name))
-
-                # Age and Size
-                html.write("<td class=number>")
-                st = os.stat(snapshot_dir + name)
-                age = time.time() - st.st_mtime
-                html.write(html.age_text(age))
-                html.write("</td>")
-                html.write("<td class=number>%d</td>" % st.st_size)
-            html.write('</table>')
-
+        table.begin(_("Snapshots"), empty_text=_("There are no snapshots available."))
+        for name in snapshots:
+            table.row()
+            # Buttons
+            table.cell(_("Actions"), css="buttons") 
+            html.icon_button(make_action_link(
+               [("mode","snapshot"),("_restore_snapshot", name)]), _("Restore"), "restore")
+            html.icon_button(make_action_link(
+               [("mode","snapshot"),("_delete_file", name)]), _("Delete"), "delete")
+            # Snapshot name
+            table.cell(_("Filename"), '<a href="%s">%s</a>' % 
+                       (make_action_link([("mode","snapshot"),("_download_file", name)]), name)) 
+            # Age and Size
+            st = os.stat(snapshot_dir + name)
+            age = time.time() - st.st_mtime
+            table.cell(_("Age"), html.age_text(age), css="number")
+            table.cell(_("Size"), "%d" % st.st_size, css="number"), 
+        table.end()
 
         html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
         html.begin_form("upload_form", None, "POST")
@@ -5757,7 +5733,6 @@ def mode_groups(phase, what):
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Create a copy of this group"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
-        html.write("</td>")
         
         table.cell(_("Name"), name)
         table.cell(_("Alias"), alias)
@@ -5966,39 +5941,25 @@ def mode_timeperiods(phase):
             else:
                 return None
 
-    html.write("<h3>" + _("Time Periods") + "</h3>")
 
-    if len(timeperiods) == 0:
-        html.write("<div class=info>" + _("There are no timeperiods defined yet.") + "</div>")
-        return
-
-    html.write("<table class=data>")
-    html.write("<tr><th>"
-               + _("Actions") + "</th><th>"
-               + _("Name")    + "</th><th>"
-               + _("Alias")   + "</th></tr>")
-
-    odd = "even"
+    table.begin(_("Time Periods"), empty_text = _("There are no timeperiods defined yet."))
     names = timeperiods.keys()
     names.sort()
     for name in names:
-        odd = odd == "odd" and "even" or "odd"
-        html.write('<tr class="data %s0">' % odd)
-
+        table.row()
+        
         timeperiod = timeperiods[name]
         edit_url     = make_link([("mode", "edit_timeperiod"), ("edit", name)])
         delete_url   = html.makeactionuri([("_delete", name)])
 
-        html.write("<td class=buttons>")
+        table.cell(_("Actions"), css="buttons")
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(delete_url, _("Delete"), "delete")
-        html.write("</td>")
 
-        html.write("<td>%s</td>" % name)
-        html.write("<td>%s</td>" % timeperiod.get("alias", ""))
-        html.write("</tr>")
+        table.cell(_("Name"), name)
+        table.cell(_("Alias"), timeperiod.get("alias", ""))
+    table.end()
 
-    html.write("</table>")
 
 
 def load_timeperiods():
@@ -6477,74 +6438,60 @@ def mode_sites(phase):
             return ""
         return
 
-    if len(sites) == 0:
-        html.write("<div class=info>" +
-           _("You have not configured any local or remotes sites. Multisite will "
-             "implicitely add the data of the local monitoring site. If you add remotes "
-             "sites, please do not forget to add your local monitoring site also, if "
-             "you want to display its data.") + "</div>")
-        return
 
+    table.begin(_("Connections to local and remote sites"),
+                empty_text = _("You have not configured any local or remotes sites. Multisite will "
+                               "implicitely add the data of the local monitoring site. If you add remotes "
+                               "sites, please do not forget to add your local monitoring site also, if "
+                               "you want to display its data."))
 
-    html.write("<h3>" + _("Connections to local and remote sites") + "</h3>")
-    html.write("<table class=data>")
-    html.write("<tr><th>" + _("Actions") + "<th>"
-                + _("Site-ID")
-                + "</th><th>" + _("Alias")
-                + "</th><th>" + _("Connection")
-                + "</th><th>" + _("Status host")
-                + "</th><th>" + _("Disabled")
-                + "</th><th>" + _("Timeout")
-                + "</th><th>" + _("Pers.")
-                + "</th><th>" + _("Replication")
-                + "</th><th>" + _("Prio")
-                + "</th><th>" + _("Login")
-                + "</th></tr>\n")
-
-    odd = "even"
     entries = sites.items()
     sort_sites(entries)
     for id, site in entries:
-        odd = odd == "odd" and "even" or "odd"
-        html.write('<tr class="data %s0">' % odd)
+        table.row()
         # Buttons
         edit_url = make_link([("mode", "edit_site"), ("edit", id)])
         delete_url = html.makeactionuri([("_delete", id)])
-        html.write("<td class=buttons>")
+        table.cell(_("Actions"), css="buttons") 
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(delete_url, _("Delete"), "delete")
 
+        # Site-ID
+        table.cell(_("Site-ID"), id)
+
         # Alias
-        html.write("</td><td>%s</td><td>%s</td>" % (id, site.get("alias", "")))
+        table.cell(_("Alias"), site.get("alias", "")) 
 
         # Socket
         socket = site.get("socket", _("local site"))
         if socket == "disabled:":
             socket = _("don't query status")
-        html.write("<td>%s</td>" % socket)
+        table.cell(_("Socket"), socket)
 
         # Status host
         if "status_host" in site:
             sh_site, sh_host = site["status_host"]
-            html.write("<td>%s/%s</td>" % (sh_site, sh_host))
+            table.cell(_("Status host"), "%s/%s" % (sh_site, sh_host)) 
         else:
-            html.write("<td></td>")
+            table.cell(_("Status host"))
+
+        # Disabled
         if site.get("disabled", False) == True:
-            html.write("<td><b>" + _("yes") + "</b></td>")
+            table.cell(_("Disabled"), "<b>%s</b>" % _("yes"))
         else:
-            html.write("<td>" + _("no") + "</td>")
+            table.cell(_("Disabled"), _("no"))
 
         # Timeout
         if "timeout" in site:
-            html.write("<td class=number>%d sec</td>" % site["timeout"])
+            table.cell(_("Timeout"), _("%d sec") % site["timeout"], css="number")
         else:
-            html.write("<td></td>")
+            table.cell(_("Timeout"), "")
 
         # Persist
         if site.get("persist", False):
-            html.write("<td><b>" + _("yes") + "</b></td>")
+            table.cell(_("Pers."), "<b>%s</b>" % _("yes"))
         else:
-            html.write("<td>" + _("no") + "</td>")
+            table.cell(_("Pers."), _("no"))
 
         # Replication
         if site.get("replication") == "slave":
@@ -6553,13 +6500,14 @@ def mode_sites(phase):
             repl = _("Peer")
         else:
             repl = ""
-        html.write("<td>%s</td>" % repl)
+        table.cell(_("Replication"), repl)
 
-        html.write("<td class=number>%s</td>" % 
-                ( site.get("replication") != "slave" and str(site.get("repl_priority", 0)) or ""))
+        # Replication Priority
+        table.cell(_("Prio"), (site.get("replication") != "slave" and 
+                    str(site.get("repl_priority", 0)) or ""), css="number")
 
         # Login-Button for Replication
-        html.write("<td>")
+        table.cell(_("Login"))
         if repl:
             if site.get("secret"):
                 logout_url = make_action_link([("mode", "sites"), ("_logout", id)])
@@ -6567,11 +6515,8 @@ def mode_sites(phase):
             else:
                 login_url = make_action_link([("mode", "sites"), ("_login", id)])
                 html.buttonlink(login_url, _("Login"))
-        html.write("</td>")
-
-
-        html.write("</tr>")
-    html.write("</table>")
+    
+    table.end()
 
 def mode_edit_site(phase):
     sites = load_sites()
@@ -8595,30 +8540,17 @@ def mode_roles(phase):
             else:
                 return None
 
-
-    html.write("<h3>" + _("Roles") + "</h3>")
-    html.write("<table class=data>")
-    html.write("<tr>"
-             + "<th>" + _("Actions")       + "</th>"
-             + "<th>" + _("Name")          + "</th>"
-             + "<th>" + _("Alias")         + "</th>"
-             + "<th>" + _("Type")          + "</th>"
-             + "<th>" + _("Modifications") + "</th>"
-             + "<th>" + _("Users")         + "</th>"
-             + "</tr>\n")
-
+    table.begin(_("Roles"))
 
     # Show table of builtin and user defined roles
     entries = roles.items()
     entries.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
 
-    odd = "even"
     for id, role in entries:
-        odd = odd == "odd" and "even" or "odd"
-        html.write('<tr class="data %s0">' % odd)
+        table.row()
 
         # Actions
-        html.write("<td>")
+        table.cell(_("Actions"), css="buttons")
         edit_url = make_link([("mode", "edit_role"), ("edit", id)])
         clone_url = html.makeactionuri([("_clone", id)])
         delete_url = html.makeactionuri([("_delete", id)])
@@ -8626,33 +8558,35 @@ def mode_roles(phase):
         html.icon_button(clone_url, _("Clone"), "clone")
         if not role.get("builtin"):
             html.icon_button(delete_url, _("Delete this role"), "delete")
-        html.write("</td>")
 
         # ID
-        html.write("<td>%s</td>" % id)
+        table.cell(_("Name"), id)
 
         # Alias
-        html.write("<td>%s</td>" % role["alias"])
+        table.cell(_("Alias"), role["alias"])
 
         # Type
-        html.write("<td>%s</td>" % (role.get("builtin") and _("builtin") or _("custom")))
+        table.cell(_("Type"), role.get("builtin") and _("builtin") or _("custom"))
 
         # Modifications
-        html.write("<td><span title='%s'>%s</span></td>" % (
-            _("That many permissions do not use the factory defaults."), len(role["permissions"])))
+        table.cell(_("Modifications"), "<span title='%s'>%s</span>" % ( 
+            _("That many permissions do not use the factory defaults."), len(role["permissions"]))) 
 
         # Users
-        html.write("<td>%s</td>" %
+        table.cell(_("Users"), 
           ", ".join([ '<a href="%s">%s</a>' % (make_link([("mode", "edit_user"), ("edit", user_id)]),
              user.get("alias", user_id))
             for (user_id, user) in users.items() if (id in user["roles"])]))
 
-        html.write("</tr>\n")
 
     # Possibly we could also display the following information
     # - number of set permissions (needs loading users)
     # - number of users with this role
-    html.write("</table>")
+    table.end() 
+
+
+
+    
 
 def mode_edit_role(phase):
     id = html.var("edit")
@@ -9031,32 +8965,22 @@ def mode_hosttags(phase):
             ])
 
     else:
-        html.write("<h3>" + _("Host tag groups") + "</h3>")
-        html.help(_("Host tags are the basis of Check_MK's rule based configuration. "
-                    "If the first step you define arbitrary tag groups. A host "
-                    "has assigned exactly one tag out of each group. These tags can "
-                    "later be used for defining parameters for hosts and services, "
-                    "such as <i>disable notifications for all hosts with the tags "
-                    "<b>Network device</b> and <b>Test</b></i>."))
+        table.begin(_("Host tag groups"),
+                    help = (_("Host tags are the basis of Check_MK's rule based configuration. "
+                             "If the first step you define arbitrary tag groups. A host "
+                             "has assigned exactly one tag out of each group. These tags can "
+                             "later be used for defining parameters for hosts and services, "
+                             "such as <i>disable notifications for all hosts with the tags "
+                             "<b>Network device</b> and <b>Test</b></i>.")),
+                    empty_text = _("You haven't defined any tag groups yet."))
 
         if hosttags:
-            html.write("<table class=data>")
-            html.write("<tr>" +
-                       "<th>" + _("Actions") + "</th>"
-                       "<th>" + _("ID") + "</th>"
-                       "<th>" + _("Title") + "</th>"
-                       "<th>" + _("Type") + "</th>"
-                       "<th>" + _("Choices") + "</th>"
-                       "<th>" + _("Demonstration") + "</th>"
-                       "</tr>")
-            odd = "even"
             for nr, entry in enumerate(hosttags):
                 tag_id, title, choices = entry[:3] # forth: dependency information
-                odd = odd == "odd" and "even" or "odd"
-                html.write('<tr class="data %s0">' % odd)
+                table.row() 
                 edit_url     = make_link([("mode", "edit_hosttag"), ("edit", tag_id)])
                 delete_url   = html.makeactionuri([("_delete", tag_id)])
-                html.write("<td>")
+                table.cell(_("Actions"), css="buttons")
                 if nr == 0:
                     html.empty_icon_button()
                 else:
@@ -9069,52 +8993,35 @@ def mode_hosttags(phase):
                                 _("Move this tag group one position down"), "down")
                 html.icon_button(edit_url,   _("Edit this tag group"), "edit")
                 html.icon_button(delete_url, _("Delete this tag group"), "delete")
-                html.write("</td>")
-                html.write("<td>%s</td>" % tag_id)
-                html.write("<td>%s</td>" % title)
-                html.write("<td>%s</td>" % (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
-                html.write("<td class=number>%d</td>" % len(choices))
-                html.write("<td>")
+
+                table.cell(_("ID"), tag_id)
+                table.cell(_("Title"), title) 
+                table.cell(_("Type"), (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
+                table.cell(_("Choices"), str(len(choices)))
+                table.cell(_("Demonstration"))
                 html.begin_form("tag_%s" % tag_id)
                 host_attribute["tag_%s" % tag_id].render_input(None)
                 html.end_form()
-                html.write("</td>")
+        table.end()
 
-                html.write("</tr>")
-            html.write("</table>")
-
-        else:
-            html.write("<div class=info>%s</div>" % _("You haven't defined any tag groups yet."))
-
-        html.write("<h3>" + _("Auxiliary tags") + "</h3>")
-        html.help(_("Auxiliary tags can be attached to other tags. That way "
-                    "you can for example have all hosts with the tag <tt>cmk-agent</tt> "
-                    "get also the tag <tt>tcp</tt>. This makes the configuration of "
-                    "your hosts easier."))
+        table.begin(_("Auxiliary tags"),
+                    help = _("Auxiliary tags can be attached to other tags. That way "
+                             "you can for example have all hosts with the tag <tt>cmk-agent</tt> "
+                             "get also the tag <tt>tcp</tt>. This makes the configuration of "
+                             "your hosts easier."),
+                    empty_text = _("You haven't defined any auxiliary tags."))
 
         if auxtags:
-            html.write("<table class=data>")
-            html.write("<tr>" +
-                       "<th>" + _("Actions") + "</th>"
-                       "<th>" + _("ID") + "</th>"
-                       "<th>" + _("Title") + "</th>"
-                       "</tr>")
-            odd = "even"
+            table.row()
             for nr, (tag_id, title) in enumerate(auxtags):
-                odd = odd == "odd" and "even" or "odd"
-                html.write('<tr class="data %s0">' % odd)
                 edit_url     = make_link([("mode", "edit_auxtag"), ("edit", nr)])
                 delete_url   = html.makeactionuri([("_delaux", nr)])
-                html.write("<td class=buttons>")
+                table.cell(_("Actions"), css="buttons")
                 html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
                 html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
-                html.write("</td>")
-                html.write("<td>%s</td>" % tag_id)
-                html.write("<td>%s</td>" % title)
-                html.write("</tr>")
-            html.write("</table>")
-        else:
-            html.write("<div class=info>%s</div>" % _("You haven't defined any auxiliary tags."))
+                table.cell(_("ID"), tag_id)
+                table.cell(_("Title"), title)
+        table.end()
 
 
 def mode_edit_auxtag(phase):

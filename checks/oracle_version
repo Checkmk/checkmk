@@ -40,6 +40,7 @@ def check_oracle_version(item, _no_params, info):
                 return err
 
             return (0, 'OK - Version: ' + " ".join(line[1:]))
+    return (3, 'UNKNOWN - no version information, database might be stopped')
 
 check_info['oracle_version'] = {
     "check_function"      : check_oracle_version,

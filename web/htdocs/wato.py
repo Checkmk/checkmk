@@ -1693,6 +1693,7 @@ def mode_editfolder(phase, new):
         title = html.var_utf8("title")
         if not title:
             raise MKUserError("title", _("Please supply a title."))
+        title_changed = not new and title != g_folder.get('title', '')
 
         # OS filename
         if new:
@@ -1750,7 +1751,7 @@ def mode_editfolder(phase, new):
 
             g_folder["title"]      = title
 
-            if attributes_changed:
+            if attributes_changed or title_changed:
                 mark_affected_sites_dirty(g_folder)
                 g_folder["attributes"] = attributes
 
@@ -11177,7 +11178,8 @@ def page_user_profile():
                 # load the new language
                 load_language(config.get_language())
 
-            if config.may('general.edit_notifications'):
+            user = users.get(config.user_id)
+            if config.may('general.edit_notifications') and user.get("notifications_enabled"):
                 value = forms.get_input(vs_notification_method, "notification_method")
                 users[config.user_id]["notification_method"] = value
 

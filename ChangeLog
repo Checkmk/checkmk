@@ -24,6 +24,8 @@
     * Add: check to monitor the summary status of HP EML tape libraries
     * Add: apc_rackpdu_status - monitor the power consumption on APC rack PDUs
     * Add: sym_brightmail_queues - monitor the queue levels on Symantec Brightmail mail scanners.
+    * Add: plesk_domains - List domains configured in plesk installations
+    * Add: plesk_backups - Monitor backup spaces configured for domains in plesk
     * FIX: zfsget: fix exception on snapshot volumes (where available is '-')
 
     Multisite:
@@ -44,10 +46,12 @@
     * Use pprint when writing global settings (makes files more readable)
     * New script for settings/removing downtimes: doc/treasures/downtime
     * New option when setting host downtimes for also including child hosts
+    * FIX: Fixed changing own password when notifications are disabled
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items
       like ntp_time and tcp_conn_stats
+    * FIX: Persisting changing of folder titles when only the title has changed
 
     Event Console:
     * FIX: fix exception in rules that use facility local7

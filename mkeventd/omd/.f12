@@ -12,7 +12,7 @@ cp -r web bin lib checks src $DIRNAME
 tar cvzf $DIRNAME.tar.gz --exclude=.git* --exclude=.f12 --exclude=.*.swp $DIRNAME
 
 # Integrate into CMK+OMD
-OMD=../cmk-omd/packages/mkeventd
+OMD=../../cmk-omd/packages/mkeventd
 mkdir -p $OMD
 cp -v $DIRNAME.tar.gz $OMD
 sed "s/^VERSION = .*/VERSION = $VERSION/" omd/Makefile > $OMD/Makefile

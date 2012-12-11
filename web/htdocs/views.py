@@ -1412,8 +1412,8 @@ def render_view(view, rows, datasource, group_painters, painters,
         if show_checkboxes and html.var("selected_rows"):
             selected = get_selected_rows(view, rows, html.var("selected_rows"))
             headinfo = "%d/%s" % (len(selected), headinfo)
-        if 'T' in display_options:
-            html.javascript("update_headinfo('%s');" % headinfo)
+        
+        html.javascript("update_headinfo('%s');" % headinfo)
 
         # Play alarm sounds, if critical events have been displayed
         if 'S' in display_options and view.get("play_sounds"):

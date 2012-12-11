@@ -83,13 +83,16 @@ for domain, p in domains.iteritems():
 
         # Zeilen holen
         files = []
-        ftp.retrlines('LIST', callback = files.append)
+        ftp.retrlines(
+            'LIST %s' % p['backup_ftp_settingdirectory'],
+            callback = files.append
+        )
         # example line:
         # -rw----r--   1 b091045  cust     13660160 Dec  3 01:50 bla_v8_bla-v8.bla0.net_1212030250.tar
-        
+
         # Zeilen formatieren
         last_backup = None
-        backups = []
+        backups     = []
         for line in files:
             parts = line.split()
             if parts[-1].endswith('.tar'):
@@ -104,8 +107,25 @@ for domain, p in domains.iteritems():
             output.append('%s 5' % domain) # Keine Sicherungen vorhanden
             continue
 
-        # Alle Backups zusammenrechnen
-        total_size = sum([ b[2] for b in backups ])
+        # Get total size of all files on FTP
+        f = []
+        def get_size(base_dir, l = None):
+            if l and l.split()[-1] in ['.', '..']:
+                return 0
+
+            size = 0
+            if not l or l[0] == 'd':
+                subdir = l and '/' + l.split()[-1] or ''
+                dir_files = []
+                ftp.retrlines('LIST %s%s' % (base_dir, subdir),
+                    callback = dir_files.append
+                )
+                for line in dir_files:
+                    size += get_size('%s%s' % (base_dir, subdir), line)
+            else:
+                size += int(l.split()[-5])
+            return size
+        total_size = get_size('')
         
         output.append('%s 0 %s %d %d' % (domain, last_backup[1].strftime('%s'), last_backup[2], total_size))
         

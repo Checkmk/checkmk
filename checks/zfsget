@@ -41,16 +41,16 @@
 
 def parse_zfsget(info):
     def mb(x):
-        return int(x) / (1024.0 * 1024)
+        return saveint(x) / (1024.0 * 1024)
 
-    entries = {}
+    entries = []
     entry = None
     last_name = None
     for line in info:
         name, what, value = line[:3]
         if last_name != name:
             if entry:
-                entries[entry["mountpoint"]] = entry
+                entries.append(entry)
             entry = {}
         last_name = name
         if what in ["used", "available"]:
@@ -58,25 +58,28 @@ def parse_zfsget(info):
         elif what == "quota":
             if value not in [ '0', '-' ]:
                 entry[what] = mb(value)
-        elif what in [ 'mountpoint', 'type' ]:
+        elif what in [ 'mountpoint', 'type', 'name' ]:
             entry[what] = value
 
     if entry:
-        entries[entry["mountpoint"]] = entry
+        entries.append(entry)
 
-    for mountpoint, entry in entries.items():
-        if entry["type"] == 'volume':
-            del entries[mountpoint]
-        entry["is_pool"] = '/' not in name
 
-    return entries
+    parsed = {}
+    for entry in entries:
+        if entry["mountpoint"] != '-':
+            entry["is_pool"] = '/' not in name
+            parsed[entry["mountpoint"]] = entry
+    return parsed
 
 
 def inventory_zfsget(info):
     mplist = []
-    for mountpoint in parse_zfsget(info):
+    parsed = parse_zfsget(info)
+    for mountpoint, properties in parsed.items():
         if mountpoint not in inventory_df_exclude_mountpoints:
-            mplist.append(mountpoint)
+            if True or properties["available"] != 0:
+                mplist.append(mountpoint)
     return df_inventory(mplist)
 
 

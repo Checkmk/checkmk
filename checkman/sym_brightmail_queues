@@ -1,0 +1,44 @@
+title: Check the status of queues on Symantec brightmail scanners
+agents: snmp
+author: Florian Heigl <fh@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check is used to monitor successful email delivery through 
+ Symantec Brightmail Scanner appliances.
+ The check allows to define levels for all parameters the device supports.
+ It will report an {OK} state if either no level was defined or the threshold
+ was not reached. Otherwise it will accordingly report a {WARN} or {CRIT} state.
+
+item:
+ The name of the queue, usually delivery, inbound or outbound.
+
+
+inventory:
+ The check creates one item per queue found.
+
+perfdata:
+  The check does not support performance data.
+
+[parameters]
+parameters (dict): To allow fine-grained and optional configuration, this check uses a dictionary.
+
+                   {"connections"} - a pair of two integer values to be used as WARN/CRIT
+                   level for the number of connections. The defaults will be None, None
+                   equalling an {OK} status.
+                   {"messageRate"} - a pair of two integer values to be used as WARN/CRIT
+                   level for the number of messages delivered. The defaults will be None, None
+                   equalling an {OK} status.
+                   {"dataRate"} - a pair of two integer values to be used as WARN/CRIT
+                   level for the amount of data processed. The defaults will be None, None
+                   equalling an {OK} status, and the unit is undocumented by Symantec.
+                   {"queuedMessages"} - a pair of two integer values to be used as WARN/CRIT
+                   level for the number of messages currently queued. This is probably the most
+                   important to monitor. The defaults will be None, None
+                   equalling an {OK} status.
+                   {"queueSize"} - a pair of two integer values to be used as WARN/CRIT
+                   level for the size of this queue. The defaults will be None, None
+                   equalling an {OK} status. Note that the unit is undocumented by Symantec.
+                   {"deferredMessages"} - a pair of two integer values to be used as WARN/CRIT
+                   level for the number of messages in a deferred state. The defaults will be None, None
+                   equalling an {OK} status.

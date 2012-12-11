@@ -1,0 +1,26 @@
+title: Check state of physical disks on IBM servers
+agents: snmp
+author: Florian Heigl <fh@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of the physical disks on a
+ IBM xSeries / SystemX PC-based server that has the IBM SNMP
+ management software installed.
+ It can be used for "agentless" monitoring of disk failures,
+ and should even work with different types of raid controllers 
+ in the same server. (It is only tested on a system with
+ one Adaptec-based controller)
+ The check verifies a disk has not {disappeared}, and will go
+ to {CRIT} otherwise. If there is status data for the disk the
+ check will return {CRIT} for a dead disk, {WARN} for a disk 
+ that is rebuilding and {OK} if the disk is active.
+ 
+item:
+ A combination of the controller, enclosure and the slot number, separated by
+ a slash, for example {"1/0/4"} for controller {1}, enclosure {0} and slot {4}.
+ The naming is chosen to be compatible with the megaraid_pdisks check, so in 
+ dual monitoring one of them needs to be disabled using {disabled_checks}.
+
+inventory:
+ All disks are automatically inventorized. 

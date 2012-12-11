@@ -17,8 +17,13 @@ fi
 
 case "$1" in
     start)
- 	echo -n 'Starting mkeventd...'
-        $DAEMON $OPTS
+        if [ "$CONFIG_MKEVENTD_SYSLOG" = on ] ; then
+            echo -n 'Starting mkeventd with integrated syslog...'
+            ${DAEMON}_open514 --syslog --syslog-fd 3 $OPTS
+        else
+            echo -n 'Starting mkeventd...'
+            $DAEMON $OPTS
+        fi
         echo OK
     ;;
     stop)

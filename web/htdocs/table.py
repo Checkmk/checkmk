@@ -28,17 +28,21 @@ table = None
 mode = None
 next_func = None
 
-def begin(title, empty_text=None):
+def begin(title, **kwargs):
     global table, mode, next_func
     table = {
         "title": title,
         "headers" : [],
         "rows" : [],
     }
-    if empty_text:
-        table["empty_text"] = empty_text
+    if kwargs.get("empty_text"): 
+        table["empty_text"] = kwargs["empty_text"]
     else:
         table["empty_text"] = _("No entries.")
+    
+    if kwargs.get("help"):  
+        table["help"] = kwargs["help"]
+
     html.plug()
     mode = 'row'
     next_func = None
@@ -72,6 +76,10 @@ def end():
     finish_previous()
     html.unplug()
     html.write("<h3>%s</h3>" % table["title"])
+
+    if table.get("help"):
+        html.help(table["help"])
+
     if not table["rows"]:
         html.write("<div class=info>%s</div>" % table["empty_text"])
         return

@@ -47,6 +47,7 @@
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items
       like ntp_time and tcp_conn_stats
+    * FIX: Persisting changing of folder titles when only the title has changed
 
     Event Console:
     * FIX: fix exception in rules that use facility local7

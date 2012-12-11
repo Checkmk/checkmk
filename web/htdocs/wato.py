@@ -1693,6 +1693,7 @@ def mode_editfolder(phase, new):
         title = html.var_utf8("title")
         if not title:
             raise MKUserError("title", _("Please supply a title."))
+        title_changed = not new and title != g_folder.get('title', '')
 
         # OS filename
         if new:
@@ -1750,7 +1751,7 @@ def mode_editfolder(phase, new):
 
             g_folder["title"]      = title
 
-            if attributes_changed:
+            if attributes_changed or title_changed:
                 mark_affected_sites_dirty(g_folder)
                 g_folder["attributes"] = attributes
 

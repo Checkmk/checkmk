@@ -1,0 +1,11 @@
+Title: Handle gracefully missing sidebar snapins
+Component: multisite
+State: open
+Date: 2012-12-11 12:45:52
+Targetversion: 1.2.0
+Class: bug
+
+If via replication user settings are put onto a remote server
+that cannot display all configured sidebar snapins then the
+sidebar cannot be displayed. Fix: silently ignore missing
+sidebar snapins.

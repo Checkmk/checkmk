@@ -1,8 +1,13 @@
 Title: number of rows in header is not updated during content reload
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-10-26 09:34:50
 Targetversion: future
-Class: bug
 
 The "x rows" label does not seem to be updated after content reload of views.
+
+2012-12-11 14:32:57: changed state open -> done
+fa1bfcc66732e76b8055ec2fbbd3789f765cca76
+
+done

@@ -82,13 +82,14 @@ def check_plesk_backups(item, params, info):
             elif age_seconds > params['backup_age'][0]:
                 status = max(status, 1)
                 status_txt = ' (!)'
-        
+
         backup_time = time.strftime("%c", time.localtime(timestamp))
         output.append('Age: %s (%dd %02d:%02d:%02d)%s' % 
              (backup_time, days, hours, minutes, seconds, status_txt))
         perfdata.append(('last_backup_age', age_seconds, warn, crit))
 
         # 3. check total size of directory above configured threshold
+        status_txt = ''
         warn, crit = None, None
         if 'total_size' in params:
             warn, crit = params['total_size']
@@ -100,11 +101,11 @@ def check_plesk_backups(item, params, info):
                 status_txt = ' (!)'
         output.append('Total Size: %s%s' % (get_bytes_human_readable(total_size), status_txt))
         perfdata.append(('total_size', total_size))
- 
+
         return (status, 'OK - %s' % ', '.join(output), perfdata)
 
     return (3, 'UNKNOWN - Domain not found')
-    
+
 
 check_info['plesk_backups'] = {
     'check_function':      check_plesk_backups,

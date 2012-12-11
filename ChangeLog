@@ -43,6 +43,7 @@
     * Use pprint when writing global settings (makes files more readable)
     * New script for settings/removing downtimes: doc/treasures/downtime
     * New option when setting host downtimes for also including child hosts
+    * FIX: Fixed changing own password when notifications are disabled
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

@@ -11178,7 +11178,8 @@ def page_user_profile():
                 # load the new language
                 load_language(config.get_language())
 
-            if config.may('general.edit_notifications'):
+            user = users.get(config.user_id)
+            if config.may('general.edit_notifications') and user.get("notifications_enabled"):
                 value = forms.get_input(vs_notification_method, "notification_method")
                 users[config.user_id]["notification_method"] = value
 

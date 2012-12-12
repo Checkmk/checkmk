@@ -828,6 +828,44 @@ if mkeventd_enabled:
         ],
     })
     
+    multisite_builtin_views['ec_events_of_monhost'] = mkeventd_view({
+        'title':       u'Events of Monitored Host',
+        'description': u'Currently open events of a host that is monitored',
+        'datasource':  'mkeventd_events',
+        'layout':      'table',
+        'hidden':      True,
+        'painters': [
+            ('event_id',     'ec_event', ''),
+            ('event_icons', None, ''),
+            ('event_state',   None, ''),
+            ('event_sl',      None, ''),
+            ('event_rule_id', None, ''),
+            ('event_application', None, ''),
+            ('event_text',    None, ''),
+            ('event_last',    None, ''),
+            ('event_count',   None, ''),
+        ],
+        'show_filters': [
+            'event_id',
+            'event_rule_id',
+            'event_text',
+            'event_application',
+            'event_contact',
+            'event_comment',
+            'event_count',
+            'event_phase',
+            'event_state',
+            'event_first',
+            'event_last',
+            'event_priority',
+            'event_facility',
+            'event_sl',
+        ],
+        'hide_filters': [
+            'site',
+            'host',
+        ],
+    })
     multisite_builtin_views['ec_events_of_host'] = mkeventd_view({
         'title':       u'Events of Host',
         'description': u'Currently open events of one specific host',

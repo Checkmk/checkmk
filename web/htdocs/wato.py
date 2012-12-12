@@ -7570,7 +7570,7 @@ def load_notification_scripts():
     scripts = load_notification_scripts_from(not_dir)
     try:
         local_dir = defaults.omd_root + "/local/share/check_mk/notifications"
-        load_notification_scripts_from(local_dir)
+        scripts.update(load_notification_scripts_from(local_dir))
     except:
         pass
     choices = scripts.items()

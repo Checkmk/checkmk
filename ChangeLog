@@ -27,6 +27,7 @@
     * Add: plesk_domains - List domains configured in plesk installations
     * Add: plesk_backups - Monitor backup spaces configured for domains in plesk
     * FIX: zfsget: fix exception on snapshot volumes (where available is '-')
+    * FIX: loading notification scripts in local directory for real
 
     Multisite:
     * Implemented LDAP integration of Multisite. You can now authenticate your

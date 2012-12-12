@@ -56,6 +56,8 @@
     * FIX: Fixed changing own password when notifications are disabled
     * FIX: On page reload, now updating the row field in the headline
     * FIX: ListOfStrings Fields now correctly autoappend on focus
+    * FIX: Reloading of sidebar after activate changes
+    * FIX: Main Frame without sidebar: reload after activate changes
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

@@ -576,8 +576,12 @@ function wato_replication_result(siteid, code) {
 }
 
 function wato_replication_finish() {
-    if(parent && parent.frames[1])
-        parent.frames[1].location.reload(); // reload sidebar
+    // check if we have a sidebar-main frame setup
+    if(this.parent && parent && parent.frames[1] == this) 
+        parent.frames[0].location.reload(); // reload sidebar 
+
+    // always reload main
+    this.location.reload();
     var oDiv = document.getElementById("act_changes_button");
     oDiv.style.display = "none";
     oDiv = null

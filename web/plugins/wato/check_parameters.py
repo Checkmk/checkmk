@@ -1412,6 +1412,30 @@ checkgroups.append((
 
 checkgroups.append((
     subgroup_applications,
+    "mysql_connections",
+    _("MySQL Connections"),
+    Dictionary(
+        elements = [
+            ( "perc_used",
+                Tuple(
+                    title = _("Max. parallel connections"),
+                    help = _("Compares the the maximum number of connections that have been "
+                             "in use simultaneously since the server started with the maximum parallel "
+                             "connections allowed by the configuration of the server. This threshold "
+                             "makes the check raises warning/critical states if the percentage is equal to "
+                             "or above the configured levels."),
+                    elements = [
+                       Percentage(title = _("Warning at")),
+                       Percentage(title = _("Critical at")),
+                    ]
+                )
+            ),
+        ]),
+    None,
+    "dict"))
+
+checkgroups.append((
+    subgroup_applications,
     "dbsize",
     _("Size of MySQL/PostgresQL databases"),
     Optional(

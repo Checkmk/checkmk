@@ -31,5 +31,5 @@ then
   mysqladmin --defaults-extra-file=$MK_CONFDIR/mysql.cfg ping 2>&1
 
   mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg -sN \
-     -e "select '<<<mysql>>>' ; show global status; select '<<<mysql_capacity>>>' ; SELECT table_schema, sum( data_length + index_length ), sum( data_free )  FROM information_schema.TABLES GROUP BY table_schema;"
+     -e "select '<<<mysql>>>' ; show global status; show global variables; select '<<<mysql_capacity>>>' ; SELECT table_schema, sum( data_length + index_length ), sum( data_free )  FROM information_schema.TABLES GROUP BY table_schema;"
 fi

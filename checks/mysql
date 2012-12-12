@@ -154,3 +154,51 @@ check_info['mysql.innodb_io'] = {
     "has_perfdata"            : True,
     "group"                   : "mysql_innodb_io",
 }
+
+#   .--Connections---------------------------------------------------------.
+#   |        ____                            _   _                         |
+#   |       / ___|___  _ __  _ __   ___  ___| |_(_) ___  _ __  ___         |
+#   |      | |   / _ \| '_ \| '_ \ / _ \/ __| __| |/ _ \| '_ \/ __|        |
+#   |      | |__| (_) | | | | | | |  __/ (__| |_| | (_) | | | \__ \        |
+#   |       \____\___/|_| |_|_| |_|\___|\___|\__|_|\___/|_| |_|___/        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+def inventory_mysql_connections(info):
+    values = parse_mysql(info)
+    if 'Max_used_connections' in values:
+        return [(None, {})]
+
+def check_mysql_connections(item, params, info):
+    values = parse_mysql(info)
+    # The maximum number of connections that have been in use simultaneously
+    # since the server started.
+    conn = float(values['Max_used_connections'])
+    # Maximum number of possible parallel connections
+    max_conn = float(values['max_connections'])
+
+    perc_used = conn / max_conn * 100
+
+    status = 0
+    status_txt = ''
+    if 'perc_used' in params:
+        if perc_used >= params['perc_used'][1]:
+            status = 2
+            status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
+                         'has been reached at least once since program start' % params['perc_used'][1]
+        elif perc_used >= params['perc_used'][0]:
+            status = 1
+            status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
+                         'has been reached at least once since program start)' % params['perc_used'][0]
+
+    return (status, '%s - Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' %
+        (nagios_state_names[status], conn, max_conn, perc_used, status_txt))
+
+
+check_info['mysql.connections'] = {
+    "check_function"          : check_mysql_connections,
+    "inventory_function"      : inventory_mysql_connections,
+    "service_description"     : "MySQL Daemon Connections",
+    "has_perfdata"            : True,
+    "group"                   : "mysql_connections",
+}

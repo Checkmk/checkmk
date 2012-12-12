@@ -27,6 +27,7 @@
     * Add: sym_brightmail_queues - monitor the queue levels on Symantec Brightmail mail scanners.
     * Add: plesk_domains - List domains configured in plesk installations
     * Add: plesk_backups - Monitor backup spaces configured for domains in plesk
+    * Add: mysql_connections - Monitor number of parallel connections to mysql daemon
     * FIX: zfsget: fix exception on snapshot volumes (where available is '-')
     * FIX: loading notification scripts in local directory for real
     * FIX: oracle_version: return valid check result in case of missing agent info

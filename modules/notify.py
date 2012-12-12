@@ -198,6 +198,13 @@ def notify_flexible(contact, context, notification_table):
         if entry.get("disabled"):
             notify_log("- Skipping: it is disabled for this user")
             continue
+        
+        # Check host, if configured
+        if entry.get("only_hosts"):
+            hostname = context.get("HOSTNAME")
+            if hostname not in entry["only_hosts"]:
+                notify_log(" - Skipping: host '%s' matches non of %s" % (hostname, ", ".join(entry["only_hosts"])))
+                continue
 
         # Check service, if configured
         if entry.get("only_services"):

@@ -7592,7 +7592,7 @@ vs_notification_method = \
                 ListOf(
                     Foldable(
                         Dictionary(
-                            optional_keys = [ "only_services", "escalation" ],
+                            optional_keys = [ "only_hosts", "only_services", "escalation" ],
                             columns = 1,
                             headers = True,
                             elements = [
@@ -7665,6 +7665,14 @@ vs_notification_method = \
                                     ],
                                     default_value = [ 'w', 'c', 'u' ],
                                 )
+                              ),
+                              ( "only_hosts",
+                                ListOfStrings(
+                                    title = _("Limit to the following hosts"),
+                                    help = _("Configure the hosts for this notification. Only exact, case sensitive matches"),
+                                    orientation = "horizontal",
+                                    valuespec = RegExp(size = 20),
+                                ),
                               ),
                               ( "only_services",
                                 ListOfStrings(

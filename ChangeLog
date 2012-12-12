@@ -30,6 +30,7 @@
     * FIX: loading notification scripts in local directory for real
     * FIX: oracle_version: return valid check result in case of missing agent info
     * FIX: apache_status: fixed bug with missing 'url', wrote man page
+    * Add: flexible notifcations: filter by hostname
 
     Multisite:
     * Implemented LDAP integration of Multisite. You can now authenticate your

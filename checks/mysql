@@ -172,7 +172,7 @@ def inventory_mysql_connections(info):
 def check_mysql_connections(item, params, info):
     values = parse_mysql(info)
     if 'Max_used_connections' not in values:
-        return (3 'UNKNOWN - Connection information are missing')
+        return (3, 'UNKNOWN - Connection information are missing')
 
     # The maximum number of connections that have been in use simultaneously
     # since the server started.

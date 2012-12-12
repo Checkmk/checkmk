@@ -13,6 +13,7 @@
     * Linux Agent, mk_postgres: Fixed database stats query to be compatible
       with more versions of postgres
     * apache_status: Modified to be usable on python < 2.6 (eg RHEL 5.x)
+    * apache_status: Fixed handling of PIDs with more than 4 numbers
     * FIX: postgres_sessions: handle case of no active/no idle sessions
     * FIX: correct backslash representation of windows logwatch files
     * Add: New Check for Rittal CMC PSM-M devices

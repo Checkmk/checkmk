@@ -40,8 +40,14 @@ def try_detect_servers():
 
         pid, proc = parts[6].split('/')
 
+        procs = [ 'apache2', 'httpd', 'httpd2-prefork', 'httpd2-worker', 'httpd.worker' ]
+        # the pid/proc field length is limited to 19 chars. Thus in case of
+        # long PIDs, the process names are stripped of by that length.
+        # Workaround this problem here
+        procs = [ p[:19 - len(pid) - 1] for p in procs ]
+
         # Skip unwanted processes
-        if proc not in [ 'apache2', 'httpd', 'httpd2-prefork', 'httpd2-worker', 'httpd.worker' ]:
+        if proc not in procs:
             continue
 
         # Add only the first found port of a single server process

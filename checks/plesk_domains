@@ -24,27 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<oracle_version>>>
-# XE Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production
+def inventory_plesk_domains(info):
+    if info and info[0]:
+        return [ (None, None) ]
 
-def inventory_oracle_version(info):
-    return [ (line[0], None) for line in info if len(line) >= 2 ]
+def check_plesk_domains(_no_item, _no_params, info):
+    if not info:
+        return (1, 'WARN - No domains configured')
+    return (0, '%s' % ',<br>'.join([ i[0] for i in info]))
 
-def check_oracle_version(item, _no_params, info):
-    for line in info:
-        if line[0] == item:
-            err = oracle_handle_ora_errors(line)
-            if err == False:
-                continue
-            elif isinstance(err, tuple):
-                return err
-
-            return (0, 'OK - Version: ' + " ".join(line[1:]))
-    return (3, 'UNKNOWN - no version information, database might be stopped')
-
-check_info['oracle_version'] = {
-    "check_function"      : check_oracle_version,
-    "inventory_function"  : inventory_oracle_version,
-    "service_description" : "ORA Version %s",
-    "includes"            : [ "oracle.include" ],
-}
+check_info["plesk_domains"] = (check_plesk_domains, "Plesk Domains", 0, inventory_plesk_domains)

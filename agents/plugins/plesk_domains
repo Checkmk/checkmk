@@ -1,0 +1,27 @@
+#!/usr/bin/python
+# encoding: utf-8
+#
+# Lists all domains configured in plesk
+#
+# <<<plesk_domains>>>
+# <domain>
+
+import MySQLdb
+
+try:
+    db = MySQLdb.connect(
+        host    = 'localhost',
+        db      = 'psa',
+        user    = 'admin',
+        passwd  = file('/etc/psa/.psa.shadow').read().strip(),
+        charset = 'utf8',
+    )
+except MySQLdb.Error, e:
+    sys.stderr.write("MySQL-Error %d: %s\n" % (e.args[0], e.args[1]))
+    sys.exit(1)
+
+cursor = db.cursor()
+cursor.execute('SELECT name FROM domains')
+print '<<<plesk_domains>>>'
+print '\n'.join([ d[0] for d in cursor.fetchall() ])
+cursor.close()

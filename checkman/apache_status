@@ -1,0 +1,36 @@
+title: Check performance indicators of Apache web server
+agents: linux
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check parses the information provided by the Apache status module.
+ If you have enabled that module (on Debian/Ubuntu this is the default),
+ then below the URL {/server-status} Apache show interesting information
+ about the number of connections and the like. The agent plugin {apache_status}
+ fetches that data and this check processes it. The status is always OK,
+ but it fetches interesting performance data.
+
+ As a preparation you need to install the agent plugin {apache_status}
+ into you agent's plugins directory (usually {/usr/lib/check_mk_agent/plugins}).
+ The plugin tries to autodetect all running apache servers. If that fails
+ for some reason you need to create the configuration file 
+ {/etc/check_mk/apache_status.cfg} and list your servers here. Write
+ a Python list of triples of protocol, servername and port. Here is
+ an example: {servers = [('http', 'localhost', 80),('https', 'localhost', 443)]}.
+
+inventory:
+ One service per Apache server will be created.
+
+item:
+ A string-combination of servername and port, e.g. {127.0.0.1:5000}.
+
+perfdata:
+ This check outputs lots of performance variables since this is the
+ purpose of the check. Please look at the shipped PNP template for
+ details.
+
+
+
+
+

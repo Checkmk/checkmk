@@ -1,0 +1,137 @@
+#!/usr/bin/python
+# encoding: utf-8
+#
+# Monitors FTP backup spaces of plesk domains.
+# Data format
+#
+# <<<plesk_backups>>>
+# <domain> <age-of-newest-file> <size-of-newest-file> <total-size>
+
+# Cache the result for 1 hour by default
+cache_seconds = 60 * 60
+# The cache file to use
+cache_file = '/tmp/plesk_backups.cache'
+
+import MySQLdb, sys, datetime, time, os
+from ftplib import FTP
+
+# use the cache?
+if os.path.exists(cache_file) \
+   and os.stat(cache_file).st_mtime > time.time() - cache_seconds:
+    print file(cache_file).read()
+    sys.exit(0)
+
+def connect():
+    try:
+        return MySQLdb.connect(
+	    host    = 'localhost',
+            db      = 'psa',
+            user    = 'admin',
+            passwd  = file('/etc/psa/.psa.shadow').read().strip(),
+            charset = 'utf8',
+        )
+    except MySQLdb.Error, e:
+        sys.stderr.write("MySQL-Error %d: %s\n" % (e.args[0], e.args[1]))
+        sys.exit(1)
+
+def get_domains():
+    global db
+    cursor = db.cursor()
+    cursor2 = db.cursor()
+
+    cursor.execute('SELECT id, name FROM domains')
+    domains = {}
+    for domain_id, domain in cursor.fetchall():
+        cursor2.execute('SELECT param, value FROM BackupsSettings '
+                        'WHERE id = %d AND type = \'domain\'' % domain_id)
+        params = dict(cursor2.fetchall())
+        domains[domain] = params
+    
+    cursor2.close()
+    cursor.close()
+    return domains
+
+#
+# MAIN
+#
+
+db = connect()
+
+# 1. Virtual Hosts / Domains auflisten
+# 2. Backupkonfiguration herausfinden
+domains = get_domains()
+
+# 3. Per FTP verbinden
+#   4. Alter und Größe der neuesten Datei herausfinden
+#   5. Größe aller Dateien in Summe herausfinden
+#
+# 6. Neuer Monat?
+#   7. Auf FTP neues Verzeichnis anlegen: <kunde>_2012<monat>
+#   8. Konfiguration in Plesk anpassen
+output = ['<<<plesk_backups>>>']
+for domain, p in domains.iteritems():
+    try:
+        if not p:
+            output.append('%s 4' % domain) # Backup nicht konfiguriert
+            continue
+
+        ftp = FTP(
+            p['backup_ftp_settinghost'],
+            p['backup_ftp_settinglogin'],
+            p['backup_ftp_settingpassword']
+        )
+
+        # Zeilen holen
+        files = []
+        ftp.retrlines(
+            'LIST %s' % p['backup_ftp_settingdirectory'],
+            callback = files.append
+        )
+        # example line:
+        # -rw----r--   1 b091045  cust     13660160 Dec  3 01:50 bla_v8_bla-v8.bla0.net_1212030250.tar
+
+        # Zeilen formatieren
+        last_backup = None
+        backups     = []
+        for line in files:
+            parts = line.split()
+            if parts[-1].endswith('.tar'):
+                dt = datetime.datetime(*time.strptime(parts[-1][-14:-4], '%y%m%d%H%M')[0:5])
+                backup = (parts[-1], dt, int(parts[-5]))
+
+                if not last_backup or dt > last_backup[1]:
+                    last_backup = backup
+                backups.append(backup)
+
+        if not backups:
+            output.append('%s 5' % domain) # Keine Sicherungen vorhanden
+            continue
+
+        # Get total size of all files on FTP
+        f = []
+        def get_size(base_dir, l = None):
+            if l and l.split()[-1] in ['.', '..']:
+                return 0
+
+            size = 0
+            if not l or l[0] == 'd':
+                subdir = l and '/' + l.split()[-1] or ''
+                dir_files = []
+                ftp.retrlines('LIST %s%s' % (base_dir, subdir),
+                    callback = dir_files.append
+                )
+                for line in dir_files:
+                    size += get_size('%s%s' % (base_dir, subdir), line)
+            else:
+                size += int(l.split()[-5])
+            return size
+        total_size = get_size('')
+        
+        output.append('%s 0 %s %d %d' % (domain, last_backup[1].strftime('%s'), last_backup[2], total_size))
+        
+    except Exception, e:
+        output.append('%s 2 %s' % (domain, e))
+
+# Write cache and output
+file(cache_file, 'w').write('\n'.join(output))
+print '\n'.join(output)

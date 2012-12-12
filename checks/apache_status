@@ -88,7 +88,7 @@ def inventory_apache_status(info):
         inv.append((item, None))
     return inv
 
-def check_apache_status(item, params, info):
+def check_apache_status(item, _no_params, info):
     all_data = apache_status_parse(info)
     if item not in all_data:
         return (3, 'UNKNOWN - Unable to find instance in agent output')

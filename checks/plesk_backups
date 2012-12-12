@@ -35,8 +35,11 @@ def check_plesk_backups(item, params, info):
         if item != line[0]:
             continue
 
-        if len(line) != 5:
-            if line[1] == '4':
+        if len(line) != 5 or line[1] != '0':
+            if line[1] == '2':
+                return (3, 'UNKNOWN - Error in agent (%s)' % ' '.join(line[1:]))
+
+            elif line[1] == '4':
                 state = params.get('no_backup_configured_state', 1)
                 return (state, '%s - No backup configured' % nagios_state_names[state])
 

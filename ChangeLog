@@ -52,6 +52,7 @@
     * New option when setting host downtimes for also including child hosts
     * FIX: Fixed changing own password when notifications are disabled
     * FIX: On page reload, now updating the row field in the headline
+    * FIX: ListOfStrings Fields now correctly autoappend on focus
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

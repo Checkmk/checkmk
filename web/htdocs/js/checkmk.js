@@ -196,6 +196,14 @@ function executeJS(objId) {
   // executing the javascript manually.
   // if (!isFirefox()) {
   var obj = document.getElementById(objId);
+  executeJSbyObject(obj);
+}
+
+function executeJSbyObject(obj) {
+  // Before switching to asynchronous requests this worked in firefox
+  // out of the box. Now it seems not to work with ff too. So now
+  // executing the javascript manually.
+  // if (!isFirefox()) {
   var aScripts = obj.getElementsByTagName('script');
   for(var i = 0; i < aScripts.length; i++) {
     if (aScripts[i].src && aScripts[i].src !== '') {
@@ -1508,13 +1516,15 @@ function valuespec_listof_add(varprefix, magic) {
       oTbody = document.createElement('tbody');
       oTable.appendChild(oTbody);
   }
-
+  
   // Hack for IE. innerHTML does not work on tbody/tr correctly.
   var container = document.createElement('div');
   container.innerHTML = '<table><tbody><tr>' + htmlcode + '</tr></tbody></tr>';
   var oTr = container.childNodes[0].childNodes[0].childNodes[0] // TR
   oTbody.appendChild(oTr);
-
+  
+  executeJSbyObject(oTable.lastChild);
+  
   valuespec_listof_fixarrows(oTbody);
 }
 

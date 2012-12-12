@@ -7570,7 +7570,7 @@ def load_notification_scripts():
     scripts = load_notification_scripts_from(not_dir)
     try:
         local_dir = defaults.omd_root + "/local/share/check_mk/notifications"
-        load_notification_scripts_from(local_dir)
+        scripts.update(load_notification_scripts_from(local_dir))
     except:
         pass
     choices = scripts.items()
@@ -7592,7 +7592,7 @@ vs_notification_method = \
                 ListOf(
                     Foldable(
                         Dictionary(
-                            optional_keys = [ "only_services", "escalation" ],
+                            optional_keys = [ "only_hosts", "only_services", "escalation" ],
                             columns = 1,
                             headers = True,
                             elements = [
@@ -7665,6 +7665,14 @@ vs_notification_method = \
                                     ],
                                     default_value = [ 'w', 'c', 'u' ],
                                 )
+                              ),
+                              ( "only_hosts",
+                                ListOfStrings(
+                                    title = _("Limit to the following hosts"),
+                                    help = _("Configure the hosts for this notification. Only exact, case sensitive matches"),
+                                    orientation = "horizontal",
+                                    valuespec = RegExp(size = 20),
+                                ),
                               ),
                               ( "only_services",
                                 ListOfStrings(

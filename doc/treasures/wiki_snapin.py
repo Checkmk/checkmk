@@ -15,8 +15,10 @@ def render_wiki():
         line = line.strip()
         if line == "":
             html.write("<br />")
+        elif line == "----":
+            html.write("<hr>")
 
-        if line.startswith("*"):
+        elif line.startswith("*"):
             if start_ul == True:
                 html.write("<ul>")
                 start_ul = False
@@ -32,13 +34,26 @@ def render_wiki():
             else:
                 link = erg[0]
                 name = erg[0]
-            bulletlink(name, "/%s/wiki/doku.php?id=%s" % (defaults.omd_site, link))
+
+
+            if link.startswith("http://") or link.startswith("https://"):
+                simplelink(name, link, "_blank")
+            else:
+                erg = name.split(':')
+                if len(erg) > 0:
+                    name = erg[-1]
+                else:
+                    name = erg[0]
+                bulletlink(name, "/%s/wiki/doku.php?id=%s" % (defaults.omd_site, link))
         else:
             if ul_started == True:
                 html.write("</ul>")
                 start_ul = True
                 ul_started = False
             html.write(line)
+
+    if ul_started == True:
+        html.write("</ul>")
 
 sidebar_snapins["wiki"] = {
     "title" : _("Wiki"),

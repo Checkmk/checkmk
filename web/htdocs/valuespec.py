@@ -554,8 +554,7 @@ class ListOfStrings(ValueSpec):
             self._valuespec.render_input(vp + "_%d" % nr, s)
             html.write('</div>')
         html.write('</div>')
-
-        html.final_javascript("list_of_strings_init('%s');" % vp);
+        html.javascript("list_of_strings_init('%s');" % vp);
 
     def canonical_value(self):
         return []

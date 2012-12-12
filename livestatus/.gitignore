@@ -10,3 +10,9 @@ config.status
 src/Makefile
 src/unixcat
 stamp-h1
+.cproject
+.metadata
+.project
+Debug
+src/.cproject
+src/.project

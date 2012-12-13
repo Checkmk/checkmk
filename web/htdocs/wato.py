@@ -11143,14 +11143,20 @@ def page_user_profile():
         html.footer()
         return
 
+    # Returns true if an attribute is locked and should be read only. Is only
+    # checked when modifying an existing user
+    locked_attributes = userdb.locked_attributes(user.get('connector'))
+    def is_locked(attr):
+        return attr in locked_attributes
+
     html.begin_form("profile", method="POST")
     html.write('<div class=wato>')
-    
+
     forms.header(_("Personal Settings"))
     forms.section(_("Name"), simple=True)
     html.write(user["alias"])
 
-    if config.may('general.change_password'):
+    if config.may('general.change_password') and not is_locked('password'):
         forms.section(_("Password"))
         html.password_input('password')
 

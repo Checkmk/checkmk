@@ -7768,7 +7768,7 @@ def mode_users(phase):
             table.cell(_("Connector"), connector['short_title'])
             locked_attributes = userdb.locked_attributes(user.get('connector'))
         else:
-            table_cell(_("Connector"), "%s (disabled)" % userdb.get_connector_id(user.get('connector')), css="error")
+            table.cell(_("Connector"), "%s (disabled)" % userdb.get_connector_id(user.get('connector')), css="error")
             locked_attributes = []
 
         # Authentication

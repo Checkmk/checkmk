@@ -605,10 +605,7 @@ def ldap_page():
         last_sync_time = 0
 
     if last_sync_time + config.ldap_cache_livetime > time.time():
-        html.log('no sync needed (%d > %d)' % (last_sync_time + config.ldap_cache_livetime, time.time()))
         return # No action needed, cache is recent enough
-
-    html.log('sync needed (%d <= %d)' % (last_sync_time + config.ldap_cache_livetime, time.time()))
 
     # ok, cache is too old. Act!
     ldap_sync(False, None)

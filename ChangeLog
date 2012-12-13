@@ -58,6 +58,7 @@
     * FIX: ListOfStrings Fields now correctly autoappend on focus
     * FIX: Reloading of sidebar after activate changes
     * FIX: Main Frame without sidebar: reload after activate changes
+    * FIX: output_format json: handle newlines correctly
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

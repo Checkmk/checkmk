@@ -27,21 +27,15 @@
 import config, defaults
 import time
 
-# FIXME: For some reason mod_python is missing /usr/lib/python2.7/dist-packages
-# in sys.path. Therefor the ldap module can not be found. Need to fix this!
-#import sys ; sys.path.append('/usr/lib/python2.7/dist-packages')
-#
-# details: /usr/lib/python2.7/site.py
-#
-# My assumption is that there is a problem during compilation/execution of mod_python.
-# When starting python as site user, the correct sys.path is set, when printing sys.path
-# from mod_python code for debugging, it misses a lot of paths.
-#
-# mod_python:
-# ['/omd/sites/event/local/share/check_mk/web/htdocs', '/omd/sites/event/share/check_mk/web/htdocs', '/omd/versions/2012.10.25.mk/lib/python', '/omd/sites/event/lib/python', '/omd/sites/event/local/lib/python', '/usr/lib/python2.7/', '/usr/lib/python2.7/plat-linux2', '/usr/lib/python2.7/lib-tk', '/usr/lib/python2.7/lib-old', '/usr/lib/python2.7/lib-dynload']
-#
-# >>> sys.path
-# ['', '/usr/local/lib/python2.7/dist-packages/pip-1.1-py2.7.egg', '/usr/local/lib/python2.7/dist-packages/xhtml2pdf-0.0.4-py2.7.egg', '/usr/local/lib/python2.7/dist-packages/pyPdf-1.13-py2.7.egg', '/usr/local/lib/python2.7/dist-packages/html5lib-0.95-py2.7.egg', '/usr/lib/python2.7/dist-packages/PIL', '/usr/local/lib/python2.7/dist-packages/pisa-3.0.33-py2.7.egg', '/usr/lib/python2.7', '/usr/lib/python2.7/plat-linux2', '/usr/lib/python2.7/lib-tk', '/usr/lib/python2.7/lib-old', '/usr/lib/python2.7/lib-dynload', '/usr/local/lib/python2.7/dist-packages', '/usr/lib/python2.7/dist-packages', '/usr/lib/python2.7/dist-packages/gst-0.10', '/usr/lib/python2.7/dist-packages/gtk-2.0', '/usr/lib/pymodules/python2.7', '/usr/lib/python2.7/dist-packages/ubuntu-sso-client', '/usr/lib/python2.7/dist-packages/ubuntuone-client', '/usr/lib/python2.7/dist-packages/ubuntuone-control-panel', '/usr/lib/python2.7/dist-packages/ubuntuone-couch', '/usr/lib/python2.7/dist-packages/ubuntuone-installer', '/usr/lib/python2.7/dist-packages/ubuntuone-storage-protocol', '/usr/lib/python2.7/dist-packages/wx-2.8-gtk2-unicode']
+# For some reason mod_python is missing /usr/lib/python2.7/dist-packages
+# in sys.path. Therefor the ldap module can not be found at least on current
+# ubuntu and sles releases.
+# There seem to be some initialization problems with mod_pythan as the sys.path
+# is correct when excuting python from the command line as site user.
+# Try to workaround the problem now...
+import site, sys
+sys.path.extend(site.getsitepackages())
+
 try:
     # docs: http://www.python-ldap.org/doc/html/index.html
     import ldap

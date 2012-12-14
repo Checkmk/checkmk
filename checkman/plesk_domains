@@ -1,0 +1,22 @@
+title: Dumps out the domains configured in Plesk
+agents: linux
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ Plesk is a commercial webhosting management software. It allows you to
+ manage multiple independent webspace instances including domains and
+ so on.
+
+ This check simply outputs all domains configured in a local plesk 
+ installation. It raises a {WARNING} state when no domain is configured,
+ otherwise the plugin is always reporting an {OK} state.
+
+ To make this check work you need to install the agent plugin
+ {plesk_domains} on the host wich runs Plesk in the 
+ directory {/usr/lib/check_mk_agent/plugins}.
+
+inventory:
+ One check per system is created if the {plesk_domains} agent plugin
+ is installed and working (it outputs the {<<<plesk_domains>>>} section).
+

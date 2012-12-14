@@ -12,5 +12,5 @@ perfdata:
  The uptime in seconds.
 
 inventory:
- One check per system is created if the agent has a action {<<<uptime>>>}.
+ One check per system is created if the agent has a section {<<<uptime>>>}.
 

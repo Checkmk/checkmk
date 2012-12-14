@@ -524,6 +524,10 @@ def ldap_login(username, password):
     return result
 
 def ldap_sync(add_to_changelog, only_username):
+    # Store time of the last sync. Don't store after sync since parallel
+    # requests to e.g. the page hook would cause duplicate calculations
+    file(g_ldap_sync_time_file, 'w').write('%s\n' % time.time())
+
     ldap_connect()
 
     # Unused at the moment, always sync all users
@@ -572,16 +576,14 @@ def ldap_sync(add_to_changelog, only_username):
         users[user_id] = user # Update the user record
 
         if mode_create:
-            wato.log_pending(wato.SYNCRESTART, None, "edit-users", _("LDAP Connector: Created user %s" % user_id))
+            wato.log_pending(wato.SYNCRESTART, None, "edit-users",
+                             _("LDAP Connector: Created user %s" % user_id))
         else:
             wato.log_pending(wato.SYNCRESTART, None, "edit-users",
                  _("LDAP Connector: Modified user %s (Added: %s, Removed: %s, Changed: %s)" %
                     (user_id, ', '.join(added), ', '.join(removed), ', '.join(changed))))
 
     save_users(users)
-
-    # Store time of the last sync
-    file(g_ldap_sync_time_file, 'w').write('%s\n' % time.time())
 
 # Calculates the attributes of the users which are locked for users managed
 # by this connector

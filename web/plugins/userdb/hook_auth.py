@@ -187,8 +187,6 @@ def create_auth_file(users):
     make_nagios_directory(g_auth_base_dir)
     create_php_file(users, config.get_role_permissions(), get_folder_permissions_of_users(users))
 
-api.register_hook('users-saved',      create_auth_file)
-api.register_hook('roles-saved',      lambda x: create_auth_file(load_users()))
-# TODO: optimize: This hook does not use the list of the collected
-# hosts. And collicting the hosts is a lengthy operation.
-api.register_hook('activate-changes', lambda x: create_auth_file(load_users()))
+hooks.register('users-saved',      create_auth_file)
+hooks.register('roles-saved',      lambda x: create_auth_file(load_users()))
+hooks.register('activate-changes', lambda x: create_auth_file(load_users()))

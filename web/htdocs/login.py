@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import defaults, htmllib, config, userdb, wato
+import defaults, htmllib, config, userdb
 from lib import *
 from mod_python import apache
 import os, md5, time
@@ -61,9 +61,9 @@ def load_secret():
 
 # Load the password serial of the user. This serial identifies the current config
 # state of the user account. If either the password is changed or the account gets
-# locked the serial is increased by WATO and all cookies get invalidated.
+# locked the serial is increased and all cookies get invalidated.
 def load_serial(user_id):
-    users = wato.load_users()
+    users = userdb.load_users()
     return users.get(user_id, {}).get('serial', 0)
 
 # Generates the hash to be added into the cookie value
@@ -95,7 +95,7 @@ def check_auth_cookie(cookie_name):
     #    del_auth_cookie()
     #    return ''
 
-    users = wato.load_users().keys()
+    users = userdb.load_users().keys()
     if not username in users:
         raise MKAuthException(_('Username is unknown'))
 

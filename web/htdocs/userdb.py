@@ -264,8 +264,6 @@ def split_dict(d, keylist, positive):
 def save_users(profiles):
     custom_values = user_attributes.keys()
 
-    file('/tmp/a', 'a').write('%d saving users (%s %r)\n' % (time.time(), html.req.myfile, html.req.vars))
-
     # Keys not to put into contact definitions for Check_MK
     non_contact_keys = [
         "roles",

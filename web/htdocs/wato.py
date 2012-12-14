@@ -85,9 +85,6 @@
 # actual Check_MK files (hosts.mk). WATO is designed for managing
 # 100.000 hosts. So operations on all hosts might last a while...
 #
-# g_hook -> dictionary of hooks (i.e. user supplied functions) to
-#           be called in various situations.
-#
 # g_configvars -> dictionary of variables in main.mk that can be configured
 #           via WATO.
 #
@@ -108,7 +105,7 @@
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
        shutil, tarfile, StringIO, math, fcntl, pickle
-import config, htmllib, table, multitar
+import config, htmllib, table, multitar, userdb, hooks
 from lib import *
 from valuespec import *
 import forms
@@ -1011,7 +1008,7 @@ def check_host_permissions(hostname, exception=True, folder=None):
     effective = effective_attributes(host, folder)
     use, cgs = effective.get("contactgroups", (None, []))
     # Get contact groups of user
-    users = load_users()
+    users = userdb.load_users()
     if config.user_id not in users:
         user_cgs = []
     else:
@@ -1040,7 +1037,7 @@ def get_folder_permissions_of_users(users):
 
     permissions = {}
 
-    users = load_users()
+    users = userdb.load_users()
     for username in users.iterkeys():
         permissions[username] = {}
         for folder_path, folder in folders.iteritems():
@@ -1071,7 +1068,7 @@ def check_folder_permissions(folder, how, exception=True, user = None, users = N
 
     # Get contact groups of user
     if users == None:
-        users = load_users()
+        users = userdb.load_users()
     if user not in users:
         user_cgs = []
     else:
@@ -1104,7 +1101,7 @@ def check_user_contactgroups(cgspec):
         return
 
     use, cgs = cgspec
-    users = load_users()
+    users = userdb.load_users()
     if config.user_id not in users:
         user_cgs = []
     else:
@@ -1190,7 +1187,7 @@ def show_subfolders(folder):
         # Show contact groups of the folder
         effective = effective_attributes(None, entry)
         use, cgs = effective.get("contactgroups", (None, []))
-        group_info = load_group_information().get("contact", {})
+        group_info = userdb.load_group_information().get("contact", {})
         for num, cg in enumerate(cgs):
             cgalias = group_info.get(cg,cg)
             html.icon(_("Contactgroup assign to this folder"), "contactgroups")
@@ -4615,7 +4612,7 @@ class ContactGroupsAttribute(Attribute):
             return
         self._loaded_at = id(html)
 
-        self._contactgroups = load_group_information().get("contact", {})
+        self._contactgroups = userdb.load_group_information().get("contact", {})
 
     def from_html_vars(self):
         cgs = []
@@ -5230,7 +5227,7 @@ def create_snapshot():
 def factory_reset():
     # Darn. What makes things complicated here is that we need to conserve htpasswd,
     # at least the account of the currently logged in user.
-    users = load_users()
+    users = userdb.load_users()
     for id in users.keys():
         if id != config.user_id:
             del users[id]
@@ -5247,7 +5244,7 @@ def factory_reset():
     make_nagios_directory(multisite_dir)
     make_nagios_directory(root_dir)
 
-    save_users(users) # make sure, omdadmin is present after this
+    userdb.save_users(users) # make sure, omdadmin is present after this
     log_pending(SYNCRESTART, None, "factory-reset", _("Complete reset to factory settings."))
 
 
@@ -5660,7 +5657,7 @@ def mode_groups(phase, what):
             html.context_button(_("Rules"), make_link([("mode", "edit_ruleset"), ("varname", varname)]), "rulesets")
         return
 
-    all_groups = load_group_information()
+    all_groups = userdb.load_group_information()
     groups = all_groups.get(what, {})
 
     if phase == "action":
@@ -5669,7 +5666,7 @@ def mode_groups(phase, what):
         if what == 'contact':
             # Is the contactgroup in use?
             member_links = []
-            users = filter_hidden_users(load_users())
+            users = filter_hidden_users(userdb.load_users())
             entries = users.items()
             entries.sort(cmp = lambda a, b: cmp(a[1].get("alias"), b[1].get("alias")))
             for id, user in entries:
@@ -5715,7 +5712,7 @@ def mode_groups(phase, what):
 
     # Show member of contact groups
     if what == "contact":
-        users = filter_hidden_users(load_users())
+        users = filter_hidden_users(userdb.load_users())
         members = {}
         for userid, user in users.items():
             cgs = user.get("contactgroups", [])
@@ -5770,7 +5767,7 @@ def mode_edit_group(phase, what):
         html.context_button(_("All groups"), make_link([("mode", "%s_groups" % what)]), "back")
         return
 
-    all_groups = load_group_information()
+    all_groups = userdb.load_group_information()
     groups = all_groups.setdefault(what, {})
 
     if phase == "action":
@@ -5822,32 +5819,6 @@ def mode_edit_group(phase, what):
     html.hidden_fields()
     html.end_form()
 
-
-
-    # Formular malen für neue / bestehende Gruppe
-
-def load_group_information():
-    try:
-        filename = root_dir + "groups.mk"
-        if not os.path.exists(filename):
-            return {}
-
-        vars = {}
-        for what in ["host", "service", "contact" ]:
-            vars["define_%sgroups" % what] = {}
-
-        execfile(filename, vars, vars)
-        groups = {}
-        for what in ["host", "service", "contact" ]:
-            groups[what] = vars.get("define_%sgroups" % what, {})
-        return groups
-
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
-        return {}
-
 def save_group_information(groups):
     make_nagios_directory(root_dir)
     out = create_user_file(root_dir + "groups.mk", "w")
@@ -5866,7 +5837,7 @@ class GroupSelection(ElementSelection):
         self._no_selection = kwargs.get("no_selection")
 
     def get_elements(self):
-        all_groups = load_group_information()
+        all_groups = userdb.load_group_information()
         this_group = all_groups.get(self._what, {})
         # replace the title with the key if the title is empty
         elements = [ (k, t and t or k) for (k, t) in this_group.items() ]
@@ -6277,7 +6248,7 @@ def find_usage_of_timeperiod(tpname):
                     break
 
     # Part 2: Users
-    for userid, user in load_users().items():
+    for userid, user in userdb.load_users().items():
         tp = user.get("notification_period")
         if tp == tpname:
             used_in.append(("%s: %s" % (_("User"), userid),
@@ -7533,13 +7504,10 @@ def delete_distributed_wato_file():
 #   | Mode for managing users and contacts.                                |
 #   '----------------------------------------------------------------------'
 
-# Custom user attributes
-user_attributes = []
-user_attribute = {}
-
 def declare_user_attribute(name, vs):
-    user_attributes.append((name, vs))
-    user_attribute[name] = vs
+    userdb.user_attributes[name] = {
+        'valuespec': vs,
+    }
 
 def load_notification_scripts_from(adir):
     scripts = {}
@@ -7716,10 +7684,10 @@ def mode_users(phase):
     # loading the users, because it might modify the users list
     userdb.hook_sync(add_to_changelog = True)
 
-    roles = load_roles()
-    users = filter_hidden_users(load_users())
+    roles = userdb.load_roles()
+    users = filter_hidden_users(userdb.load_users())
     timeperiods = load_timeperiods()
-    contact_groups = load_group_information().get("contact", {})
+    contact_groups = userdb.load_group_information().get("contact", {})
 
     if phase == "action":
         delid = html.var("_delete")
@@ -7730,7 +7698,7 @@ def mode_users(phase):
                          _("Do you really want to delete the user %s?" % delid))
         if c:
             del users[delid]
-            save_users(users)
+            userdb.save_users(users)
             log_pending(SYNCRESTART, None, "edit-users", _("Deleted user %s" % (delid)))
             return None
         elif c == False:
@@ -7828,7 +7796,7 @@ def mode_users(phase):
 
     table.end()
 
-    if not load_group_information().get("contact", {}):
+    if not userdb.load_group_information().get("contact", {}):
         url = "wato.py?mode=contact_groups"
         html.write("<div class=info>" +
             _("Note: you haven't defined any contact groups yet. If you <a href='%s'>"
@@ -7839,7 +7807,7 @@ def mode_users(phase):
 
 
 def mode_edit_user(phase):
-    users = load_users()
+    users = userdb.load_users()
     userid = html.var("edit") # missing -> new user
     cloneid = html.var("clone") # Only needed in 'new' mode
     new = userid == None
@@ -7869,9 +7837,9 @@ def mode_edit_user(phase):
 
     # Load data that is referenced - in order to display dropdown
     # boxes and to check for validity.
-    contact_groups = load_group_information().get("contact", {})
+    contact_groups = userdb.load_group_information().get("contact", {})
     timeperiods = load_timeperiods()
-    roles = load_roles()
+    roles = userdb.load_roles()
 
     if phase == "action":
         if not html.check_transaction():
@@ -8009,13 +7977,13 @@ def mode_edit_user(phase):
         new_user["notification_method"] = value
 
         # Custom attributes
-        for name, vs in user_attributes:
+        for name, vs in userdb.get_user_attributes():
             value = vs.from_html_vars('ua_' + name)
             vs.validate_value(value, "ua_" + name)
             new_user[name] = value
 
         # Saving
-        save_users(users)
+        userdb.save_users(users)
         if new:
             log_pending(SYNCRESTART, None, "edit-users", _("Create new user %s" % id))
         else:
@@ -8233,7 +8201,7 @@ def mode_edit_user(phase):
 
     forms.header(_("Personal Settings"), isopen = False)
     select_language(user.get('language', ''))
-    for name, vs in user_attributes:
+    for name, vs in userdb.get_user_attributes():
         forms.section(vs.title())
         vs.render_input("ua_" + name, user.get(name, vs.default_value()))
         html.help(vs.help())
@@ -8254,209 +8222,6 @@ def filter_hidden_users(users):
     else:
         return users
 
-def load_users():
-    # First load monitoring contacts from Check_MK's world
-    filename = root_dir + "contacts.mk"
-    if os.path.exists(filename):
-        try:
-            vars = { "contacts" : {} }
-            execfile(filename, vars, vars)
-            contacts = vars["contacts"]
-        except Exception, e:
-            if config.debug:
-                raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                              (filename, e)))
-            contacts = {}
-    else:
-        contacts = {}
-
-    # Now add information about users from the Web world
-    filename = multisite_dir + "users.mk"
-    if os.path.exists(filename):
-        try:
-            vars = { "multisite_users" : {} }
-            execfile(filename, vars, vars)
-            users = vars["multisite_users"]
-        except Exception, e:
-            if config.debug:
-                raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                              (filename, e)))
-            users = {}
-    else:
-        users = {}
-
-    # Merge them together. Monitoring users not known to Multisite
-    # will be added later as normal users.
-    result = {}
-    for id, user in users.items():
-        profile = contacts.get(id, {})
-        profile.update(user)
-        result[id] = profile
-
-    # This loop is only neccessary if someone has edited
-    # contacts.mk manually. But we want to support that as
-    # far as possible.
-    for id, contact in contacts.items():
-        if id not in result:
-            result[id] = contact
-            result[id]["roles"] = [ "user" ]
-            result[id]["locked"] = True
-            result[id]["password"] = ""
-
-    # Passwords are read directly from the apache htpasswd-file.
-    # That way heroes of the command line will still be able to
-    # change passwords with htpasswd. Users *only* appearing
-    # in htpasswd will also be loaded and assigned to the role
-    # they are getting according to the multisite old-style
-    # configuration variables.
-
-    filename = defaults.htpasswd_file
-    if os.path.exists(filename):
-        for line in file(filename):
-            line = line.strip()
-            if ':' in line:
-                id, password = line.strip().split(":")[:2]
-                if password.startswith("!"):
-                    locked = True
-                    password = password[1:]
-                else:
-                    locked = False
-                if id in result:
-                    result[id]["password"] = password
-                    result[id]["locked"] = locked
-                else:
-                    # Create entry if this is an admin user
-                    new_user = {
-                        "roles"    : config.roles_of_user(id),
-                        "password" : password,
-                        "locked"   : False,
-                    }
-                    result[id] = new_user
-                # Make sure that the user has an alias
-                result[id].setdefault("alias", id)
-            # Other unknown entries will silently be dropped. Sorry...
-
-    # Now read the serials, only process for existing users
-    serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
-    if os.path.exists(serials_file):
-        for line in file(serials_file):
-            line = line.strip()
-            if ':' in line:
-                user_id, serial = line.split(':')[:2]
-                if user_id in result:
-                    result[user_id]['serial'] = saveint(serial)
-
-    # Now read the user specific files
-    dir = defaults.var_dir + "/web/"
-    for d in os.listdir(dir):
-        if d[0] != '.':
-            id = d
-
-            # read automation secrets and add them to existing
-            # users or create new users automatically
-            secret_file = dir + d + "/automation.secret"
-            if os.path.exists(secret_file):
-                secret = file(secret_file).read().strip()
-                if id in result:
-                    result[id]["automation_secret"] = secret
-                else:
-                    result[id] = {
-                        "roles" : ["guest"],
-                        "automation_secret" : secret,
-                    }
-
-    return result
-
-def split_dict(d, keylist, positive):
-    return dict([(k,v) for (k,v) in d.items() if (k in keylist) == positive])
-
-def save_users(profiles):
-    custom_values = [ name for (name, vs) in user_attributes ]
-
-    # Keys not to put into contact definitions for Check_MK
-    non_contact_keys = [
-        "roles",
-        "password",
-        "locked",
-        "automation_secret",
-        "language",
-        "serial",
-        "connector",
-    ] + custom_values
-
-    # Keys to put into multisite configuration
-    multisite_keys   = [
-        "roles",
-        "locked",
-        "automation_secret",
-        "alias",
-        "language",
-        "connector",
-    ] + custom_values
-
-    # Remove multisite keys in contacts.
-    contacts = dict(
-        e for e in 
-            [ (id, split_dict(user, non_contact_keys + userdb.non_contact_attributes(user.get('connector')), False))
-               for (id, user)
-               in profiles.items() ])
-
-    # Only allow explicitely defined attributes to be written to multisite config
-    users = {}
-    for uid, profile in profiles.items():
-        users[uid] = dict([ (p, val)
-                            for p, val in profile.items()
-                            if p in multisite_keys + userdb.multisite_attributes(profile.get('connector'))])
-
-    # Check_MK's monitoring contacts
-    filename = root_dir + "contacts.mk"
-    out = create_user_file(filename, "w")
-    out.write("# Written by WATO\n# encoding: utf-8\n\n")
-    out.write("contacts.update(\n%s\n)\n" % pprint.pformat(contacts))
-
-    # Users with passwords for Multisite
-    make_nagios_directory(multisite_dir)
-    filename = multisite_dir + "users.mk"
-    out = create_user_file(filename, "w")
-    out.write("# Written by WATO\n# encoding: utf-8\n\n")
-    out.write("multisite_users = \\\n%s\n" % pprint.pformat(users))
-
-    # Execute user connector save hooks
-    userdb.hook_save(profiles)
-
-    # Write out the users serials
-    serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
-    out = create_user_file(serials_file, "w")
-    for user_id, user in profiles.items():
-        out.write('%s:%d\n' % (user_id, user.get('serial', 0)))
-    out.close()
-
-    # Write user specific files
-    for id, user in profiles.items():
-        user_dir = defaults.var_dir + "/web/" + id
-        make_nagios_directory(user_dir)
-
-        # authentication secret for local processes
-        auth_file = user_dir + "/automation.secret"
-        if "automation_secret" in user:
-            create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
-        elif os.path.exists(auth_file):
-            os.remove(auth_file)
-
-        # Write out the users serial
-        serial_file = user_dir + '/serial.mk'
-        create_user_file(serial_file, 'w').write('%d\n' % user.get('serial', 0))
-
-    # Remove settings directories of non-existant users
-    dir = defaults.var_dir + "/web"
-    for e in os.listdir(dir):
-        if e not in ['.', '..'] and e not in profiles: 
-            entry = dir + "/" + e
-            if os.path.isdir(entry):
-                shutil.rmtree(entry)
-
-    # Call the users_saved hook
-    call_hook_users_saved(users)
 
 # Dropdown for choosing a multisite user
 class UserSelection(ElementSelection):
@@ -8464,7 +8229,7 @@ class UserSelection(ElementSelection):
         ElementSelection.__init__(self, **kwargs)
 
     def get_elements(self):
-        users = filter_hidden_users(load_users())
+        users = filter_hidden_users(userdb.load_users())
         elements = dict([ (name, "%s - %s" % (name, us.get("alias", name))) for (name, us) in users.items() ])
         return elements
 
@@ -8508,8 +8273,8 @@ def mode_roles(phase):
         html.context_button(_("Matrix"), make_link([("mode", "role_matrix")]), "matrix")
         return
 
-    roles = load_roles()
-    users = filter_hidden_users(load_users())
+    roles = userdb.load_roles()
+    users = filter_hidden_users(userdb.load_users())
 
     if phase == "action":
         if html.var("_delete"):
@@ -8606,7 +8371,7 @@ def mode_edit_role(phase):
         html.context_button(_("All Roles"), make_link([("mode", "roles")]), "back")
         return
 
-    roles = load_roles()
+    roles = userdb.load_roles()
     role = roles[id]
 
     if phase == "action":
@@ -8723,50 +8488,6 @@ def make_unicode(s):
     else:
 	return s
 
-
-def load_roles():
-    # Fake builtin roles into user roles.
-    builtin_role_names = {  # Default names for builtin roles
-        "admin" : _("Administrator"),
-        "user"  : _("Normal monitoring user"),
-        "guest" : _("Guest user"),
-    }
-    roles = dict([(id, {
-         "alias" : builtin_role_names.get(id, id),
-         "permissions" : {}, # use default everywhere
-         "builtin": True})
-                  for id in config.builtin_role_ids ])
-
-    filename = multisite_dir + "roles.mk"
-    if not os.path.exists(filename):
-        return roles
-
-    try:
-        vars = { "roles" : roles }
-        execfile(filename, vars, vars)
-        # Make sure that "general." is prefixed to the general permissions
-        # (due to a code change that converted "use" into "general.use", etc.
-        for role in roles.values():
-            for pname, pvalue in role["permissions"].items():
-                if "." not in pname:
-                    del role["permissions"][pname]
-                    role["permissions"]["general." + pname] = pvalue
-
-        # Reflect the data in the roles dict kept in the config module needed
-        # for instant changes in current page while saving modified roles.
-        # Otherwise the hooks would work with old data when using helper
-        # functions from the config module
-        config.roles.update(vars['roles'])
-
-        return vars["roles"]
-
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
-        return roles
-
-
 def save_roles(roles):
     # Reflect the data in the roles dict kept in the config module Needed
     # for instant changes in current page while saving modified roles.
@@ -8787,13 +8508,13 @@ def save_roles(roles):
 # be renamed and are not handled here. If new_id is None,
 # the role is being deleted
 def rename_user_role(id, new_id):
-    users = load_users()
+    users = userdb.load_users()
     for user in users.values():
         if id in user["roles"]:
             user["roles"].remove(id)
             if new_id:
                 user["roles"].append(new_id)
-    save_users(users)
+    userdb.save_users(users)
 
 def mode_role_matrix(phase):
     if phase == "title":
@@ -8807,7 +8528,7 @@ def mode_role_matrix(phase):
         return
 
     # Show table of builtin and user defined roles, sorted by alias
-    roles = load_roles()
+    roles = userdb.load_roles()
     role_list = roles.items()
     role_list.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
 
@@ -11069,7 +10790,7 @@ def page_user_profile():
     success = None
     if html.has_var('_save') and html.check_transaction():
         try:
-            users = load_users()
+            users = userdb.load_users()
 
             # Profile edit (user options like language etc.)
             if config.may('general.edit_profile'):
@@ -11114,7 +10835,7 @@ def page_user_profile():
                     else:
                         users[config.user_id]['serial'] += 1
 
-            save_users(users)
+            userdb.save_users(users)
             success = True
 
             if password:
@@ -11136,7 +10857,7 @@ def page_user_profile():
     if html.has_user_errors():
         html.show_user_errors()
 
-    users = load_users()
+    users = userdb.load_users()
     user = users.get(config.user_id)
     if user == None:
         html.warning(_("Sorry, your user account does not exist."))
@@ -11479,10 +11200,10 @@ def mode_pattern_editor(phase):
 
 class API:
     def register_hook(self, name, func):
-        g_hooks.setdefault(name, []).append(func)
+        hooks.register(name, func)
 
     def get_all_users(self):
-        return load_users()
+        return userdb.load_users()
 
     # Get a (flat) dictionary containing all hosts with their *effective*
     # attributes (containing all inherited and default values where appropriate)
@@ -11649,55 +11370,32 @@ def collect_hosts(folder):
 
     return hosts
 
-def hook_registered(name):
-    """ Returns True if at least one function is registered for the given hook """
-    return g_hooks.get(name, []) != []
-
-def call_hooks(name, *args):
-    n = 0
-    for hk in g_hooks.get(name, []):
-        n += 1
-        try:
-            hk(*args)
-        except Exception, e:
-            if config.debug:
-                import traceback, StringIO
-                txt = StringIO.StringIO()
-                t, v, tb = sys.exc_info()
-                traceback.print_exception(t, v, tb, None, txt)
-                html.show_error("<h3>" + _("Error executing hook") + " %s #%d: %s</h3><pre>%s</pre>" % (name, n, e, txt.getvalue()))
-            else:
-                raise
-
 def call_hook_snapshot_pushed():
-    if "snapshot-pushed" in g_hooks:
-        call_hooks("snapshot-pushed")
+    hooks.call("snapshot-pushed")
 
 def call_hook_hosts_changed(folder):
-    if "hosts-changed" in g_hooks:
+    if hooks.registered("hosts-changed"):
         hosts = collect_hosts(folder)
-        call_hooks("hosts-changed", hosts)
+        hooks.call("hosts-changed", hosts)
 
     # The same with all hosts!
-    if "all-hosts-changed" in g_hooks:
+    if hooks.registered("all-hosts-changed"):
         hosts = collect_hosts(g_root_folder)
-        call_hooks("all-hosts-changed", hosts)
+        hooks.call("all-hosts-changed", hosts)
 
 def call_hook_folder_created(folder):
-    if 'folder-created' in g_hooks:
-        call_hooks("folder-created", folder)
+    hooks.call("folder-created", folder)
 
 def call_hook_folder_deleted(folder):
-    if 'folder-deleted' in g_hooks:
-        call_hooks("folder-deleted", folder)
+    hooks.call("folder-deleted", folder)
 
 # This hook is executed before distributing changes to the remote
 # sites (in distributed WATO) or before activating them (in single-site
 # WATO). If the hook raises an exception, then the distribution and
 # activation is aborted.
 def call_hook_pre_distribute_changes():
-    if hook_registered('pre-distribute-changes'):
-        call_hooks("pre-distribute-changes", collect_hosts(g_root_folder))
+    if hooks.registered('pre-distribute-changes'):
+        hooks.call("pre-distribute-changes", collect_hosts(g_root_folder))
 
 # This hook is executed when one applies the pending configuration changes
 # from wato but BEFORE the nagios restart is executed.
@@ -11708,8 +11406,8 @@ def call_hook_pre_distribute_changes():
 # holds all available with the hostnames as keys and the attributes of
 # the hosts as values.
 def call_hook_pre_activate_changes():
-    if hook_registered('pre-activate-changes'):
-        call_hooks("pre-activate-changes", collect_hosts(g_root_folder))
+    if hooks.registered('pre-activate-changes'):
+        hooks.call("pre-activate-changes", collect_hosts(g_root_folder))
 
 # This hook is executed when one applies the pending configuration changes
 # from wato.
@@ -11721,33 +11419,26 @@ def call_hook_pre_activate_changes():
 # holds all available with the hostnames as keys and the attributes of
 # the hosts as values.
 def call_hook_activate_changes():
-    if hook_registered('activate-changes'):
+    if hooks.registered('activate-changes'):
         hosts = collect_hosts(g_root_folder)
-        call_hooks("activate-changes", hosts)
-
-# This hook is executed when the save_users() function is called
-def call_hook_users_saved(users):
-    if hook_registered('users-saved'):
-        call_hooks("users-saved", users)
+        hooks.call("activate-changes", hosts)
 
 # This hook is executed when the save_roles() function is called
 def call_hook_roles_saved(roles):
-    if hook_registered('roles-saved'):
-        call_hooks("roles-saved", roles)
+    hooks.call("roles-saved", roles)
 
 # This hook is executed when the save_sites() function is called
 def call_hook_sites_saved(sites):
-    if hook_registered('sites-saved'):
-        call_hooks("sites-saved", sites)
+    hooks.call("sites-saved", sites)
 
 # This hook is called in order to determine if a host has a 'valid'
 # configuration. It used for displaying warning symbols in the
 # host list and in the host detail view.
 def validate_host(host, folder):
-    if hook_registered('validate-host'):
+    if hooks.registered('validate-host'):
         errors = []
         eff = effective_attributes(host, folder)
-        for hk in g_hooks.get('validate-host', []):
+        for hk in hooks.get('validate-host'):
             try:
                 hk(eff)
             except MKUserError, e:
@@ -11761,7 +11452,7 @@ def validate_host(host, folder):
 # symbols in the host list and the host detail view
 # Returns dictionary { hostname: [errors] }
 def validate_all_hosts(hostnames, force_all = False):
-    if hook_registered('validate-all-hosts') and (len(hostnames) > 0 or force_all):
+    if hooks.registered('validate-all-hosts') and (len(hostnames) > 0 or force_all):
         hosts_errors = {}
         all_hosts = collect_hosts(g_root_folder)
         
@@ -11771,7 +11462,7 @@ def validate_all_hosts(hostnames, force_all = False):
         for name in hostnames:
             eff = all_hosts[name]
             errors = []
-            for hk in g_hooks.get('validate-all-hosts', []):
+            for hk in hooks.get('validate-all-hosts'):
                 try:
                     hk(eff, all_hosts)
                 except MKUserError, e:
@@ -12068,13 +11759,11 @@ def load_plugins():
         return
 
     # Reset global vars
-    global extra_buttons, configured_host_tags, host_attributes, user_attributes, \
-           user_attribute
+    global extra_buttons, configured_host_tags, host_attributes
     extra_buttons = []
     configured_host_tags = None
     host_attributes = []
-    user_attributes = []
-    user_attribute = {}
+    userdb.reset_user_attributes()
 
     global g_configvars, g_configvar_groups
     g_configvars = {}
@@ -12086,8 +11775,7 @@ def load_plugins():
     g_rulespec_group = {}
     g_rulespec_groups = []
 
-    global g_hooks
-    g_hooks = {}
+    hooks.unregister()
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))

@@ -24,13 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults
+import config, defaults, hooks
 from lib import *
-import time
+import time, os, pprint, shutil
 from valuespec import *
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
+
+# Custom user attributes
+user_attributes = {}
 
 # Load all login plugins
 def load_plugins():
@@ -90,14 +93,6 @@ def non_contact_attributes(connector_id):
     connector = get_connector(connector_id)
     return connector.get('non_contact_attributes', lambda: [])()
 
-# This is a function needed in WATO and the htpasswd module. This should
-# really be modularized one day. Till this day this is a good place ...
-def encrypt_password(password, salt = None):
-    import md5crypt
-    if not salt:
-        salt = "%06d" % (1000000 * (time.time() % 1.0))
-    return md5crypt.md5crypt(password, salt, '$1$')
-
 def new_user_template(connector_id):
     new_user = {
         'serial':        0,
@@ -109,21 +104,351 @@ def new_user_template(connector_id):
     return new_user
 
 def create_non_existing_user(connector_id, username):
-    import wato
-    users = wato.load_users()
+    users = load_users()
     if username in users:
         return # User exists. Nothing to do...
 
     users[username] = new_user_template(connector_id)
-    wato.save_users(users)
+    save_users(users)
 
     # Call the sync function for this new user
     hook_sync(connector_id = connector_id, only_username = username)
 
 def user_locked(username):
-    import wato
-    users = wato.load_users()
+    users = load_users()
     return users[username].get('locked', False)
+
+
+
+root_dir      = defaults.check_mk_configdir + "/wato/"
+multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
+
+#   .--Users---------------------------------------------------------------.
+#   |                       _   _                                          |
+#   |                      | | | |___  ___ _ __ ___                        |
+#   |                      | | | / __|/ _ \ '__/ __|                       |
+#   |                      | |_| \__ \  __/ |  \__ \                       |
+#   |                       \___/|___/\___|_|  |___/                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+def get_user_attributes():
+    return user_attributes.items()
+
+def reset_user_attributes():
+    global user_attributes
+    user_attributes = {}
+
+def load_users():
+    # First load monitoring contacts from Check_MK's world
+    filename = root_dir + "contacts.mk"
+    if os.path.exists(filename):
+        try:
+            vars = { "contacts" : {} }
+            execfile(filename, vars, vars)
+            contacts = vars["contacts"]
+        except Exception, e:
+            if config.debug:
+                raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                              (filename, e)))
+            else:
+                html.log('load_users: Problem while loading contacts (%s - %s). '
+                         'Initializing structure...' % (filename, e))
+            contacts = {}
+    else:
+        contacts = {}
+
+    # Now add information about users from the Web world
+    filename = multisite_dir + "users.mk"
+    if os.path.exists(filename):
+        try:
+            vars = { "multisite_users" : {} }
+            execfile(filename, vars, vars)
+            users = vars["multisite_users"]
+        except Exception, e:
+            if config.debug:
+                raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                              (filename, e)))
+            else:
+                html.log('load_users: Problem while loading users (%s - %s). '
+                         'Initializing structure...' % (filename, e))
+            users = {}
+    else:
+        users = {}
+
+    # Merge them together. Monitoring users not known to Multisite
+    # will be added later as normal users.
+    result = {}
+    for id, user in users.items():
+        profile = contacts.get(id, {})
+        profile.update(user)
+        result[id] = profile
+
+    # This loop is only neccessary if someone has edited
+    # contacts.mk manually. But we want to support that as
+    # far as possible.
+    for id, contact in contacts.items():
+        if id not in result:
+            result[id] = contact
+            result[id]["roles"] = [ "user" ]
+            result[id]["locked"] = True
+            result[id]["password"] = ""
+
+    # Passwords are read directly from the apache htpasswd-file.
+    # That way heroes of the command line will still be able to
+    # change passwords with htpasswd. Users *only* appearing
+    # in htpasswd will also be loaded and assigned to the role
+    # they are getting according to the multisite old-style
+    # configuration variables.
+
+    filename = defaults.htpasswd_file
+    if os.path.exists(filename):
+        for line in file(filename):
+            line = line.strip()
+            if ':' in line:
+                id, password = line.strip().split(":")[:2]
+                if password.startswith("!"):
+                    locked = True
+                    password = password[1:]
+                else:
+                    locked = False
+                if id in result:
+                    result[id]["password"] = password
+                    result[id]["locked"] = locked
+                else:
+                    # Create entry if this is an admin user
+                    new_user = {
+                        "roles"    : config.roles_of_user(id),
+                        "password" : password,
+                        "locked"   : False,
+                    }
+                    result[id] = new_user
+                # Make sure that the user has an alias
+                result[id].setdefault("alias", id)
+            # Other unknown entries will silently be dropped. Sorry...
+
+    # Now read the serials, only process for existing users
+    serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
+    if os.path.exists(serials_file):
+        for line in file(serials_file):
+            line = line.strip()
+            if ':' in line:
+                user_id, serial = line.split(':')[:2]
+                if user_id in result:
+                    result[user_id]['serial'] = saveint(serial)
+
+    # Now read the user specific files
+    dir = defaults.var_dir + "/web/"
+    for d in os.listdir(dir):
+        if d[0] != '.':
+            id = d
+
+            # read automation secrets and add them to existing
+            # users or create new users automatically
+            secret_file = dir + d + "/automation.secret"
+            if os.path.exists(secret_file):
+                secret = file(secret_file).read().strip()
+                if id in result:
+                    result[id]["automation_secret"] = secret
+                else:
+                    result[id] = {
+                        "roles" : ["guest"],
+                        "automation_secret" : secret,
+                    }
+
+    return result
+
+def split_dict(d, keylist, positive):
+    return dict([(k,v) for (k,v) in d.items() if (k in keylist) == positive])
+
+def save_users(profiles):
+    custom_values = user_attributes.keys()
+
+    # Keys not to put into contact definitions for Check_MK
+    non_contact_keys = [
+        "roles",
+        "password",
+        "locked",
+        "automation_secret",
+        "language",
+        "serial",
+        "connector",
+    ] + custom_values
+
+    # Keys to put into multisite configuration
+    multisite_keys   = [
+        "roles",
+        "locked",
+        "automation_secret",
+        "alias",
+        "language",
+        "connector",
+    ] + custom_values
+
+    # Remove multisite keys in contacts.
+    contacts = dict(
+        e for e in
+            [ (id, split_dict(user, non_contact_keys + non_contact_attributes(user.get('connector')), False))
+               for (id, user)
+               in profiles.items() ])
+
+    # Only allow explicitely defined attributes to be written to multisite config
+    users = {}
+    for uid, profile in profiles.items():
+        users[uid] = dict([ (p, val)
+                            for p, val in profile.items()
+                            if p in multisite_keys + multisite_attributes(profile.get('connector'))])
+
+    filename = root_dir + "contacts.mk"
+    locked = False
+    if os.path.exists(filename):
+        # When the file exists, lock the file before opening (and truncating) it
+        aquire_lock(filename)
+        locked = True
+
+    # Check_MK's monitoring contacts
+    out = create_user_file(filename, "w")
+
+    # In create mode lock the file after creation
+    if not locked:
+        aquire_lock(filename)
+
+    out.write("# Written by Multisite UserDB\n# encoding: utf-8\n\n")
+    out.write("contacts.update(\n%s\n)\n" % pprint.pformat(contacts))
+    out.close()
+
+    # Users with passwords for Multisite
+    make_nagios_directory(multisite_dir)
+    filename = multisite_dir + "users.mk"
+    out = create_user_file(filename, "w")
+    out.write("# Written by Multisite UserDB\n# encoding: utf-8\n\n")
+    out.write("multisite_users = \\\n%s\n" % pprint.pformat(users))
+    out.close()
+
+    # Execute user connector save hooks
+    hook_save(profiles)
+
+    # Write out the users serials
+    serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
+    out = create_user_file(serials_file, "w")
+    for user_id, user in profiles.items():
+        out.write('%s:%d\n' % (user_id, user.get('serial', 0)))
+    out.close()
+
+    # Write user specific files
+    for id, user in profiles.items():
+        user_dir = defaults.var_dir + "/web/" + id
+        make_nagios_directory(user_dir)
+
+        # authentication secret for local processes
+        auth_file = user_dir + "/automation.secret"
+        if "automation_secret" in user:
+            create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
+        elif os.path.exists(auth_file):
+            os.remove(auth_file)
+
+        # Write out the users serial
+        serial_file = user_dir + '/serial.mk'
+        create_user_file(serial_file, 'w').write('%d\n' % user.get('serial', 0))
+
+    # Remove settings directories of non-existant users
+    dir = defaults.var_dir + "/web"
+    for e in os.listdir(dir):
+        if e not in ['.', '..'] and e not in profiles:
+            entry = dir + "/" + e
+            if os.path.isdir(entry):
+                shutil.rmtree(entry)
+
+    # Call the users_saved hook
+    hooks.call("users-saved", users)
+
+#   .-Roles----------------------------------------------------------------.
+#   |                       ____       _                                   |
+#   |                      |  _ \ ___ | | ___  ___                         |
+#   |                      | |_) / _ \| |/ _ \/ __|                        |
+#   |                      |  _ < (_) | |  __/\__ \                        |
+#   |                      |_| \_\___/|_|\___||___/                        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+def load_roles():
+    # Fake builtin roles into user roles.
+    builtin_role_names = {  # Default names for builtin roles
+        "admin" : _("Administrator"),
+        "user"  : _("Normal monitoring user"),
+        "guest" : _("Guest user"),
+    }
+    roles = dict([(id, {
+         "alias" : builtin_role_names.get(id, id),
+         "permissions" : {}, # use default everywhere
+         "builtin": True})
+                  for id in config.builtin_role_ids ])
+
+    filename = multisite_dir + "roles.mk"
+    if not os.path.exists(filename):
+        return roles
+
+    try:
+        vars = { "roles" : roles }
+        execfile(filename, vars, vars)
+        # Make sure that "general." is prefixed to the general permissions
+        # (due to a code change that converted "use" into "general.use", etc.
+        for role in roles.values():
+            for pname, pvalue in role["permissions"].items():
+                if "." not in pname:
+                    del role["permissions"][pname]
+                    role["permissions"]["general." + pname] = pvalue
+
+        # Reflect the data in the roles dict kept in the config module needed
+        # for instant changes in current page while saving modified roles.
+        # Otherwise the hooks would work with old data when using helper
+        # functions from the config module
+        config.roles.update(vars['roles'])
+
+        return vars["roles"]
+
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                          (filename, e)))
+        else:
+            html.log('load_roles: Problem while loading roles (%s - %s). '
+                     'Initializing structure...' % (filename, e))
+        return roles
+
+#   .-Groups---------------------------------------------------------------.
+#   |                    ____                                              |
+#   |                   / ___|_ __ ___  _   _ _ __  ___                    |
+#   |                  | |  _| '__/ _ \| | | | '_ \/ __|                   |
+#   |                  | |_| | | | (_) | |_| | |_) \__ \                   |
+#   |                   \____|_|  \___/ \__,_| .__/|___/                   |
+#   |                                        |_|                           |
+#   +----------------------------------------------------------------------+
+
+def load_group_information():
+    try:
+        filename = root_dir + "groups.mk"
+        if not os.path.exists(filename):
+            return {}
+
+        vars = {}
+        for what in ["host", "service", "contact" ]:
+            vars["define_%sgroups" % what] = {}
+
+        execfile(filename, vars, vars)
+        groups = {}
+        for what in ["host", "service", "contact" ]:
+            groups[what] = vars.get("define_%sgroups" % what, {})
+        return groups
+
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                          (filename, e)))
+        else:
+            html.log('load_group_information: Problem while loading groups (%s - %s). '
+                     'Initializing structure...' % (filename, e))
+        return {}
 
 #   .----------------------------------------------------------------------.
 #   |                     _   _             _                              |
@@ -227,14 +552,12 @@ def general_page_hook():
     # This is a good place to replace old api based files in the future.
     auth_php = defaults.var_dir + '/wato/auth/auth.php'
     if not os.path.exists(auth_php) or os.path.getsize(auth_php) == 0:
-        import wato
-        wato.create_auth_file(wato.load_users())
+        create_auth_file(load_users())
 
     # Create initial auth.serials file, same issue as auth.php above
     serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
     if not os.path.exists(serials_file):
-        import wato
-        wato.save_users(wato.load_users())
+        save_users(load_users())
 
 # Hook function can be registered here to execute actions on a "regular" base without
 # user triggered action. This hook is called on each page load.

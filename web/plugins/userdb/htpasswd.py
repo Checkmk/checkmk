@@ -73,6 +73,12 @@ def load_htpasswd():
 
     return creds
 
+def encrypt_password(password, salt = None):
+    import md5crypt
+    if not salt:
+        salt = "%06d" % (1000000 * (time.time() % 1.0))
+    return md5crypt.md5crypt(password, salt, '$1$')
+
 # Validate hashes taken from the htpasswd file. This method handles
 # crypt() and md5 hashes. This should be the common cases in the
 # used htpasswd files.

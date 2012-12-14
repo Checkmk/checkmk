@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults
-import time
+import time, copy
 
 # For some reason mod_python is missing /usr/lib/python2.7/dist-packages
 # in sys.path. Therefor the ldap module can not be found at least on current
@@ -324,9 +324,9 @@ def ldap_needed_attributes():
             attrs.update(plugin['needed_attributes'](params))
     return list(attrs)
 
-def ldap_convert_simple(user_id, ldap_user, user, wato_attr, attr):
+def ldap_convert_simple(user_id, ldap_user, user, user_attr, attr):
     if attr in ldap_user:
-        return {wato_attr: ldap_user[attr][0]}
+        return {user_attr: ldap_user[attr][0]}
     else:
         return {}
 
@@ -334,7 +334,10 @@ def ldap_convert_mail(params, user_id, ldap_user, user):
     mail = ''
     if ldap_user.get(ldap_attr('mail')):
         mail = ldap_user[ldap_attr('mail')][0].lower()
-    return {'email': mail}
+    if mail:
+        return {'email': mail}
+    else:
+        return {}
 
 ldap_attribute_plugins['email'] = {
     'title': _('Email address'),
@@ -442,8 +445,7 @@ def ldap_convert_groups_to_contactgroups(params, user_id, ldap_user, user):
     ldap_groups = ldap_user_groups(user_id)
 
     # 2. Fetch all existing group names in WATO
-    import wato
-    cg_names = wato.load_group_information().get("contact", {}).keys()
+    cg_names = load_group_information().get("contact", {}).keys()
 
     # Only add groups which are already contactgroups in wato
     return {'contactgroups': [ g for g in ldap_groups if g in cg_names]}
@@ -472,11 +474,8 @@ def ldap_convert_groups_to_roles(params, user_id, ldap_user, user):
     return {'roles': roles}
 
 def ldap_list_roles_with_group_dn():
-    import wato
-    roles = wato.load_roles()
-
     elements = []
-    for role_id, role in wato.load_roles().items():
+    for role_id, role in load_roles().items():
         elements.append((role_id, LDAPDistinguishedName(
             title = role['alias'] + ' - ' + _("Specify the Group DN"),
             help  = _("Distinguished Name of the LDAP group to add users this role."),
@@ -527,12 +526,13 @@ def ldap_login(username, password):
 def ldap_sync(add_to_changelog, only_username):
     ldap_connect()
 
-    filt = None
-    if only_username:
-        filt = '(%s=%s)' % (ldap_user_id_attr(), only_username)
+    # Unused at the moment, always sync all users
+    #filt = None
+    #if only_username:
+    #    filt = '(%s=%s)' % (ldap_user_id_attr(), only_username)
 
     import wato
-    users      = wato.load_users()
+    users      = load_users()
     ldap_users = ldap_get_users()
 
     # Remove users which are controlled by this connector but can not be found in
@@ -544,7 +544,7 @@ def ldap_sync(add_to_changelog, only_username):
 
     for user_id, ldap_user in ldap_users.items():
         if user_id in users:
-            user = users[user_id].copy()
+            user = copy.deepcopy(users[user_id])
             mode_create = False
         else:
             user = new_user_template('ldap')
@@ -561,14 +561,24 @@ def ldap_sync(add_to_changelog, only_username):
         if not mode_create and user == users[user_id]:
             continue # no modification. Skip this user.
 
+        # Gather changed attributes for easier debugging
+        if not mode_create:
+            set_new, set_old = set(user.keys()), set(users[user_id].keys())
+            intersect = set_new.intersection(set_old)
+            added = set_new - intersect
+            removed = set_old - intersect
+            changed = set(o for o in intersect if users[user_id][o] != user[o])
+
         users[user_id] = user # Update the user record
 
         if mode_create:
             wato.log_pending(wato.SYNCRESTART, None, "edit-users", _("LDAP Connector: Created user %s" % user_id))
         else:
-            wato.log_pending(wato.SYNCRESTART, None, "edit-users", _("LDAP Connector: Modified user %s" % user_id))
+            wato.log_pending(wato.SYNCRESTART, None, "edit-users",
+                 _("LDAP Connector: Modified user %s (Added: %s, Removed: %s, Changed: %s)" %
+                    (user_id, ', '.join(added), ', '.join(removed), ', '.join(changed))))
 
-    wato.save_users(users)
+    save_users(users)
 
     # Store time of the last sync
     file(g_ldap_sync_time_file, 'w').write('%s\n' % time.time())

@@ -476,11 +476,11 @@ register_configvar(group,
 )
 
 def list_roles():
-    roles = load_roles()
+    roles = userdb.load_roles()
     return [ (i, r["alias"]) for i, r in roles.items() ]
 
 def list_contactgroups():
-    contact_groups = load_group_information().get("contact", {})
+    contact_groups = userdb.load_group_information().get("contact", {})
     entries = [ (c, contact_groups[c]) for c in contact_groups ]
     entries.sort()
     return entries

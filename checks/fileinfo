@@ -76,6 +76,9 @@ def fileinfo_patterns_of_group(group):
     return patterns
 
 def check_fileinfo(item, params, info):
+    if len(info) == 0:
+        return (3, "UNKNOWN - no information sent by agent")
+
     reftime = int(info[0][0])
     check_definition = False
     for line in info[1:]:
@@ -94,8 +97,11 @@ def check_fileinfo(item, params, info):
     return fileinfo_check_function(check_definition, params)            
 
 def check_fileinfogroups(item, params, info):
+    if len(info) == 0:
+        return (3, "UNKNOWN - no information sent by agent")
     import fnmatch
     reftime = int(info[0][0])
+
     count_all = 0
     age_oldest = None
     age_newest = 0

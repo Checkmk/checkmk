@@ -7504,9 +7504,10 @@ def delete_distributed_wato_file():
 #   | Mode for managing users and contacts.                                |
 #   '----------------------------------------------------------------------'
 
-def declare_user_attribute(name, vs):
+def declare_user_attribute(name, vs, user_editable = True):
     userdb.user_attributes[name] = {
-        'valuespec': vs,
+        'valuespec':     vs,
+        'user_editable': user_editable,
     }
 
 def load_notification_scripts_from(adir):
@@ -7977,9 +7978,9 @@ def mode_edit_user(phase):
         new_user["notification_method"] = value
 
         # Custom attributes
-        for name, vs in userdb.get_user_attributes():
-            value = vs.from_html_vars('ua_' + name)
-            vs.validate_value(value, "ua_" + name)
+        for name, attr in userdb.get_user_attributes():
+            value = attr['valuespec'].from_html_vars('ua_' + name)
+            attr['valuespec'].validate_value(value, "ua_" + name)
             new_user[name] = value
 
         # Saving
@@ -8201,10 +8202,12 @@ def mode_edit_user(phase):
 
     forms.header(_("Personal Settings"), isopen = False)
     select_language(user.get('language', ''))
-    for name, vs in userdb.get_user_attributes():
-        forms.section(vs.title())
-        vs.render_input("ua_" + name, user.get(name, vs.default_value()))
-        html.help(vs.help())
+    for name, attr in userdb.get_user_attributes():
+        if attr['user_editable']:
+            vs = attr['valuespec']
+            forms.section(vs.title())
+            vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+            html.help(vs.help())
 
     # TODO: Later we could add custom macros here, which
     # then could be used for notifications. On the other hand,
@@ -10814,10 +10817,19 @@ def page_user_profile():
                 # load the new language
                 load_language(config.get_language())
 
-            user = users.get(config.user_id)
-            if config.may('general.edit_notifications') and user.get("notifications_enabled"):
-                value = forms.get_input(vs_notification_method, "notification_method")
-                users[config.user_id]["notification_method"] = value
+                user = users.get(config.user_id)
+                if config.may('general.edit_notifications') and user.get("notifications_enabled"):
+                    value = forms.get_input(vs_notification_method, "notification_method")
+                    users[config.user_id]["notification_method"] = value
+
+                # Custom attributes
+                if config.may('general.edit_user_attributes'):
+                    for name, attr in userdb.get_user_attributes():
+                        if attr['user_editable']:
+                            vs = attr['valuespec']
+                            value = vs.from_html_vars('ua_' + name)
+                            vs.validate_value(value, "ua_" + name)
+                            users[config.user_id][name] = value
 
             # Change the password if requested
             if config.may('general.change_password'):
@@ -10893,6 +10905,13 @@ def page_user_profile():
                         "other monitoring events."))
             vs_notification_method.render_input("notification_method", user.get("notification_method"))
             # forms.input(vs_notification_method, "notification_method", user.get("notification_method"))
+
+        if config.may('general.edit_user_attributes'):
+            for name, attr in userdb.get_user_attributes():
+                vs = attr['valuespec']
+                forms.section(vs.title())
+                vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+                html.help(vs.help())
 
     # Save button
     forms.end()

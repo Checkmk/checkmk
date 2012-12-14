@@ -118,6 +118,13 @@ def load():
         [ 'admin', 'user' ]
     )
 
+    config.declare_permission('general.edit_user_attributes',
+        _('Edit personal user attributes'),
+        _('This allows a user to edit his personal user attributes. You also need the permission '
+          '<i>Edit the user profile</i> in order to do this.'),
+        [ 'admin', 'user' ]
+    )
+
     config.declare_permission('general.change_password',
         _('Edit the user password'),
         _('Permits the user to change the password.'),

@@ -185,7 +185,8 @@ function may($username, $need_permission) {
 
 def create_auth_file(users):
     make_nagios_directory(g_auth_base_dir)
-    create_php_file(users, config.get_role_permissions(), get_folder_permissions_of_users(users))
+    import wato # HACK: cleanup!
+    create_php_file(users, config.get_role_permissions(), wato.get_folder_permissions_of_users(users))
 
 hooks.register('users-saved',      create_auth_file)
 hooks.register('roles-saved',      lambda x: create_auth_file(load_users()))

@@ -75,8 +75,8 @@ perfometers["check_mk-mysql_capacity"] = perfometer_check_mk_df
 
 def perfometer_check_mk_kernel_util(row, check_command, perf_data):
     h = '<table><tr>'
-    h += perfometer_td(perf_data[0][1], "#f60")
-    h += perfometer_td(perf_data[1][1], "#6f2")
+    h += perfometer_td(perf_data[0][1], "#6f2")
+    h += perfometer_td(perf_data[1][1], "#f60")
     h += perfometer_td(perf_data[2][1], "#0bc")
     total = sum([float(p[1]) for p in perf_data])
     h += perfometer_td(100.0 - total, "white")
@@ -604,3 +604,10 @@ def perfometer_ups_capacity(row, command, perf):
     return "%0.2f%%" % float(perf[1][1]), perfometer_linear(float(perf[1][1]), '#B2FF7F')
 
 perfometers['check_mk-ups_capacity'] = perfometer_ups_capacity 
+
+def perfometer_genu_screen(row, command, perf):
+    value = saveint(perf[0][1])
+    return "%d Sessions" % value  , perfometer_logarithmic(value, 5000 , 2 , "#7109AA")
+
+perfometers['check_mk-genu_pfstate'] = perfometer_genu_screen
+

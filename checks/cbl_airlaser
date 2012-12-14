@@ -177,9 +177,11 @@ def inventory_cbl_airlaser(info):
 
 
 def check_cbl_airlaser_status(item, _no_params, info):
+    if len(info) == 0:
+        return (3, "UNKNOWN - no information sent by agent")
+
     selftest, chassis, power, module, optrx, opttx = info
     status = selftest[0][0]
-
 
     if status == "1":
         return (0, "OK - Airlaser: normal operation")

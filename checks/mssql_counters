@@ -219,7 +219,7 @@ def check_mssql_file_sizes(item, params, info):
     perfdata.append(('data_files', data_file_bytes))
 
     output.append('Log Files: %s (Used: %s)' %
-        (get_bytes_human_readable(data_file_bytes), get_bytes_human_readable(log_file_used_bytes)))
+        (get_bytes_human_readable(log_file_bytes), get_bytes_human_readable(log_file_used_bytes)))
 
     perfdata.append(('log_files', log_file_bytes))
     perfdata.append(('log_files_used', log_file_used_bytes))

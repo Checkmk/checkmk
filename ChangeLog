@@ -281,6 +281,7 @@
     * FIX: netapp_cluster: fix inventory function
     * FIX: ps: avoid exception, when CPU% is missing (Zombies on Solaris)
     * FIX: win_dhcp_pools: fixed calculation of perc_free
+    * FIX: mssql_counters: fixed wrong log size output
 
 1.2.0p3:
     Multisite:

@@ -4,6 +4,7 @@
       exception to status output and traceback to long output now.
     * Added HOSTTAGS to notification macros which contains all Check_MK-Tags
       separated by spaces
+    * Output better error message in case of old inventory function
 
     Notifications:
     * Fix flexible notifications on non-OMD systems

@@ -201,8 +201,8 @@ if mkeventd_enabled:
     # returns header lines for the event daemon, if the filter is in
     # use.
     class EventFilterText(FilterText):
-        def __init__(self, table, name, title, op):
-           FilterText.__init__(self, name, title, table, name, name, op)
+        def __init__(self, table, filter_name, column, title, op):
+           FilterText.__init__(self, filter_name, title, table, column, filter_name, op)
            self._table = table
     
         # Disable Livestatus filter
@@ -212,17 +212,17 @@ if mkeventd_enabled:
         def event_headers(self):
             return FilterText.filter(self, self._table)
     
-    declare_filter(200, EventFilterText("event", "event_id",          _("Event ID"),                              "="))
-    declare_filter(200, EventFilterText("event", "event_rule_id",     _("ID of rule"),                            "="))
-    declare_filter(201, EventFilterText("event", "event_text",        _("Message/Text of event"),                 "~~"))
-    declare_filter(201, EventFilterText("event", "event_application", _("Application / Syslog-Tag"),              "~~"))
-    declare_filter(201, EventFilterText("event", "event_contact",     _("Contact Person"),                        "~~"))
-    declare_filter(201, EventFilterText("event", "event_comment",     _("Comment to the event"),                  "~~"))
-    declare_filter(201, EventFilterText("event", "event_host_regex",  _("Hostname/IP-Address of original event"), "~~"))
-    declare_filter(201, EventFilterText("event", "event_host",        _("Hostname/IP-Address of event, exact match"), "="))
-    declare_filter(201, EventFilterText("event", "event_owner",       _("Owner of event"),                        "~~"))
-    declare_filter(221, EventFilterText("history", "history_who",       _("User that performed action"),            "~~"))
-    declare_filter(222, EventFilterText("history", "history_line",      _("Line number in history logfile"),        "="))
+    declare_filter(200, EventFilterText("event",   "event_id",         "event_id",          _("Event ID"),                              "="))
+    declare_filter(200, EventFilterText("event",   "event_rule_id",    "event_rule_id",     _("ID of rule"),                            "="))
+    declare_filter(201, EventFilterText("event",   "event_text",       "event_text",        _("Message/Text of event"),                 "~~"))
+    declare_filter(201, EventFilterText("event",   "event_application","event_application", _("Application / Syslog-Tag"),              "~~"))
+    declare_filter(201, EventFilterText("event",   "event_contact",    "event_contact",     _("Contact Person"),                        "~~"))
+    declare_filter(201, EventFilterText("event",   "event_comment",    "event_comment",     _("Comment to the event"),                  "~~"))
+    declare_filter(201, EventFilterText("event",   "event_host_regex", "event_host",        _("Hostname/IP-Address of original event"), "~~"))
+    declare_filter(201, EventFilterText("event",   "event_host",       "event_host",        _("Hostname/IP-Address of event, exact match"), "="))
+    declare_filter(201, EventFilterText("event",   "event_owner",      "event_owner",       _("Owner of event"),                        "~~"))
+    declare_filter(221, EventFilterText("history", "history_who",      "history_who",       _("User that performed action"),            "~~"))
+    declare_filter(222, EventFilterText("history", "history_line",     "history_line",      _("Line number in history logfile"),        "="))
     
     
     class EventFilterCount(Filter):

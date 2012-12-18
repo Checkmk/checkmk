@@ -70,6 +70,7 @@
     * FIX: fix exception in rules that use facility local7
     * FIX: fix event icon in case of using TCP access to EC
     * FIX: Allowing ":" in application field (e.g. needed for windows logfiles)
+    * FIX: fix bug in Filter "Hostname/IP-Address of original event"
     * Replication slave can now copy rules from master into local configuration
       via a new button in WATO.
     * Speedup access to event history by earlier filtering and prefiltering with grep

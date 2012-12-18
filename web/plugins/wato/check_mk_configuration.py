@@ -270,8 +270,6 @@ register_configvar(group,
 #   |                                       |___/                          |
 #   +----------------------------------------------------------------------+
 
-import userdb
-
 group = _("User Management")
 
 register_configvar(group,

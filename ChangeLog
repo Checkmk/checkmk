@@ -35,6 +35,9 @@
     * FIX: apache_status: fixed bug with missing 'url', wrote man page
     * Add: flexible notifcations: filter by hostname
     * FIX: fixed missing localisation in check_parameteres.py 
+    * FIX: userdb/ldap.py: fixed invalid call site.getsitepackages() for python 2.6
+    * FIX: zpool_status: fixed crash when spare devices were available
+
 
     Multisite:
     * Implemented LDAP integration of Multisite. You can now authenticate your
@@ -60,6 +63,7 @@
     * FIX: Reloading of sidebar after activate changes
     * FIX: Main Frame without sidebar: reload after activate changes
     * FIX: output_format json: handle newlines correctly
+    * FIX: handle ldap logins with ',' in distinguished name
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

@@ -1,0 +1,9 @@
+Title: crontab omd required package
+Component: core
+State: open
+Date: 2012-12-19 14:08:16
+Targetversion: future
+Class: todo
+
+crontab is not a default package in centos6.2 and maybe other distributions
+missing crontab -> problem

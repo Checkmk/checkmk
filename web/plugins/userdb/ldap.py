@@ -232,7 +232,7 @@ def ldap_replace_macros(tmpl):
 def ldap_user_id_attr():
     return config.ldap_userspec.get('user_id', ldap_attr('user_id'))
 
-def ldap_get_user_dn(username):
+def ldap_get_user_dn(username, no_escape = False):
     # Check wether or not the user exists in the directory
     # It's only ok when exactly one entry is found.
     # Returns the DN in this case.
@@ -243,7 +243,10 @@ def ldap_get_user_dn(username):
     )
 
     if result:
-        return result[0][0].replace('\\', '\\\\')
+        if no_escape:
+            return result[0][0]
+        else
+            return result[0][0].replace('\\', '\\\\')
 
 def ldap_get_users(add_filter = None):
     columns = [
@@ -516,7 +519,7 @@ def ldap_login(username, password):
     ldap_connect()
     # Returns None when the user is not found or not uniq, else returns the
     # distinguished name of the user as string which is needed for the login.
-    user_dn = ldap_get_user_dn(username)
+    user_dn = ldap_get_user_dn(username, True)
     if not user_dn:
         return None # The user does not exist. Skip this connector.
 

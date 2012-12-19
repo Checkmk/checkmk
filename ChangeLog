@@ -63,6 +63,7 @@
     * FIX: Reloading of sidebar after activate changes
     * FIX: Main Frame without sidebar: reload after activate changes
     * FIX: output_format json: handle newlines correctly
+    * FIX: handle ldap logins with ',' in distinguished name
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

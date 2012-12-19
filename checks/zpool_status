@@ -89,6 +89,10 @@ def check_zpool_status(_no_item, _no_params, info):
             start_pool = False  
             pool_messages[last_pool] = " ".join(line[1:])
             continue
+        
+        if line[0] == "spares":
+            start_pool = False  
+            continue
 
         if start_pool == True: 
             if line[1] != "ONLINE": 

@@ -36,6 +36,7 @@
     * Add: flexible notifcations: filter by hostname
     * FIX: fixed missing localisation in check_parameteres.py 
     * FIX: userdb/ldap.py: fixed invalid call site.getsitepackages() for python 2.6
+    * FIX: zpool_status: fixed crash when spare devices were available
 
 
     Multisite:

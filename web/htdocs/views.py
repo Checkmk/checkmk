@@ -1413,7 +1413,8 @@ def render_view(view, rows, datasource, group_painters, painters,
             selected = get_selected_rows(view, rows, html.var("selected_rows"))
             headinfo = "%d/%s" % (len(selected), headinfo)
         
-        html.javascript("update_headinfo('%s');" % headinfo)
+        if html.output_format == "html":
+            html.javascript("update_headinfo('%s');" % headinfo)
 
         # Play alarm sounds, if critical events have been displayed
         if 'S' in display_options and view.get("play_sounds"):

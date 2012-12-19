@@ -93,8 +93,8 @@ for o,a in opts:
         opt_verbose = True
     elif o in [ '-a', '--all']:
         opt_all = True
-    elif o in [ '-r', '--remove']:
-        opt_mode = 'remove'
+    elif o in [ '-s', '--set']:
+        opt_mode = 'set'
     elif o in [ '-r', '--remove']:
         opt_mode = 'remove'
     elif o in [ '-c', '--comment']:
@@ -106,7 +106,7 @@ for o,a in opts:
     elif o in [ '-S', '--secret']:
         opt_secret = a
     elif o in [ '-U', '--url']:
-        opt_ = a
+        opt_url = a
 
 if omd_site and not opt_secret:
     try:

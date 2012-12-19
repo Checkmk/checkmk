@@ -5,6 +5,8 @@
     * Added HOSTTAGS to notification macros which contains all Check_MK-Tags
       separated by spaces
     * Output better error message in case of old inventory function
+    * Do object cache precompile for monitoring core on cmk -R/-O
+    * Avoid duplicate verification of monitoring config on cmk -R/-O
 
     Notifications:
     * Fix flexible notifications on non-OMD systems

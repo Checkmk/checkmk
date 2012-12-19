@@ -245,7 +245,7 @@ def ldap_get_user_dn(username, no_escape = False):
     if result:
         if no_escape:
             return result[0][0]
-        else
+        else:
             return result[0][0].replace('\\', '\\\\')
 
 def ldap_get_users(add_filter = None):

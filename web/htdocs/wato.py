@@ -10328,7 +10328,7 @@ def mode_edit_rule(phase, new = False):
 
     html.help(rulespec["help"])
 
-    html.begin_form("rule_editor")
+    html.begin_form("rule_editor", method="POST")
 
     # Rule Options
     vs_rule_options.render_input("options", rule_options)

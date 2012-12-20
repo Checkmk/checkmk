@@ -4085,8 +4085,10 @@ def check_mk_local_automation(command, args=[], indata=""):
     if exitcode != 0:
         if config.debug:
             log_audit(None, "automation", "Automation command %s failed with exit code %d: %s" % (" ".join(cmd), exitcode, outdata))
-        raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
-              (" ".join(cmd), exitcode, hilite_errors(outdata), outdata.lstrip().startswith('sudo:') and sudo_msg or ''))
+            raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
+                  (" ".join(cmd), exitcode, hilite_errors(outdata), outdata.lstrip().startswith('sudo:') and sudo_msg or ''))
+        else:
+            raise MKGeneralException("<h1>%s</h1>%s" % (_("Error"), hilite_errors(outdata)))
 
 
     # On successful "restart" command execute the activate changes hook
@@ -7227,9 +7229,12 @@ def ajax_activation():
             duration = time.time() - start
             update_replication_status(None, {}, { 'act': duration })
         except Exception:
-            import traceback
-            raise MKUserError(None, "Error executing hooks: %s" %
-                                        traceback.format_exc().replace('\n', '<br />'))
+            if config.debug:
+                import traceback
+                raise MKUserError(None, "Error executing hooks: %s" %
+                                            traceback.format_exc().replace('\n', '<br />'))
+            else:
+                raise
 
         log_commit_pending() # flush logfile with pending actions
         log_audit(None, "activate-config", _("Configuration activated, monitoring server restarted"))

@@ -87,6 +87,7 @@
     * New builtin syslog server! Please refer to online docu for details.
     * Icon to events of host links to view that has context button to host
     * FIX: remove event pipe on program shutdown, prevents syslog freeze
+    * FIX: hostnames in livestatus query now being utf8 encoded
 
 1.2.1i3:
     Core:

@@ -24,7 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from agent (sizes are in bytes)
+# Example output from agent (sizes are in bytes). Note: the part
+# [df] in this check is duplicated. We need this information because
+# zfsget does not show pass-through filesystems like '/'. :-(
+
 # <<<zfsget>>>
 # bpool   name    bpool   -
 # bpool   quota   0       default 
@@ -38,6 +41,24 @@
 # bpool/acs_fs    available       11329512075414  -
 # bpool/acs_fs    mountpoint      /backup/acs     local
 # bpool/acs_fs    type    filesystem      -
+# [df]
+# /                    10255636 1836517 8419119    18%    /
+# /dev                 10255636 1836517 8419119    18%    /dev
+# proc                       0       0       0     0%    /proc
+# ctfs                       0       0       0     0%    /system/contract
+# mnttab                     0       0       0     0%    /etc/mnttab
+# objfs                      0       0       0     0%    /system/object
+# swap                 153480592     232 153480360     1%    /etc/svc/volatile
+# /usr/lib/libc/libc_hwcap1.so.1 10255636 1836517 8419119    18%    /lib/libc.so.1
+# fd                         0       0       0     0%    /dev/fd
+# swap                 2097152   11064 2086088     1%    /tmp
+# swap                 153480384      24 153480360     1%    /var/run
+# tsrdb10exp/export    5128704      21 4982717     1%    /export
+# tsrdb10exp/export/home 5128704      55 4982717     1%    /home
+# tsrdb10exp/export/opt 5128704  145743 4982717     3%    /opt
+# tsrdb10exp           5128704      21 4982717     1%    /tsrdb10exp
+# tsrdb10dat           30707712 19914358 10789464    65%    /u01
+
 
 def parse_zfsget(info):
     def mb(x):
@@ -45,8 +66,14 @@ def parse_zfsget(info):
 
     entries = []
     entry = None
+    lineno = 0
     last_name = None
+    start_of_df = None
     for line in info:
+        lineno += 1
+        if line == ['[df]']:
+            start_of_df = lineno
+            break
         name, what, value = line[:3]
         if last_name != name:
             if entry:
@@ -64,13 +91,50 @@ def parse_zfsget(info):
     if entry:
         entries.append(entry)
 
-
     parsed = {}
     for entry in entries:
         if entry["mountpoint"] != '-':
             entry["is_pool"] = '/' not in name
             parsed[entry["mountpoint"]] = entry
+
+    if start_of_df != None:
+        zfsget_parse_df_info(parsed, info[start_of_df:])
+
     return parsed
+
+
+def zfsget_parse_df_info(entries, info):
+    new_entries = {}
+
+    for device, kbytes, used, avail, percent, mountpoint in info:
+        # ignore entries already contained in zfsget and also 
+        # entries for virtual filesystems (like swap)
+        if device.startswith("/") and mountpoint not in entries:
+            entry = {}
+            total = int(kbytes) / 1024.0
+            entry["total"] = total
+            entry["used"] = int(used) / 1024.0
+            entry["available"] = total - entry["used"]
+            entry["mountpoint"] = mountpoint
+            new_entries[mountpoint] = entry
+
+    # Now remove duplicate entries for the root filesystem, such
+    # as /dev/ or /lib/libc.so.1. We do this if size, used and
+    # avail is equal. I hope that it will not happen too often
+    # that this is per chance the case for different passed-through
+    # filesystems
+    root_entry = new_entries.get("/")
+    if root_entry:
+        t_u_a = (root_entry["total"], root_entry["used"], root_entry["available"])
+        drop = []
+        for mountpoint, entry in new_entries.items():
+            if mountpoint != "/" and \
+                t_u_a == (entry["total"], entry["used"], entry["available"]):
+                drop.append(mountpoint)
+        for mp in drop:
+            del new_entries[mp]
+    entries.update(new_entries)
+
 
 
 def inventory_zfsget(info):
@@ -78,7 +142,7 @@ def inventory_zfsget(info):
     parsed = parse_zfsget(info)
     for mountpoint, properties in parsed.items():
         if mountpoint not in inventory_df_exclude_mountpoints:
-            if True or properties["available"] != 0:
+            if properties["available"] != 0:
                 mplist.append(mountpoint)
     return df_inventory(mplist)
 
@@ -98,7 +162,7 @@ def check_zfsget(item, params, info):
     entries = parse_zfsget(info)
     # ist item drin -> OK, ansonsten gleich hier 
     fslist = []
-    for mountpoint, entry in parse_zfsget(info).items():
+    for mountpoint, entry in entries.items():
         if "patterns" in params or item == mountpoint:
             # 1. Filesystems with a quota 
             if "quota" in entry:

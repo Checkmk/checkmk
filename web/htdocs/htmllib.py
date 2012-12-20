@@ -330,7 +330,7 @@ class html:
     def hidden_field(self, var, value, id = None, add_var = False):
         if value != None:
             id = id and ' id="%s"' % id or ''
-            self.write("<input type=hidden name=%s value=\"%s\"%s>" % (var, attrencode(value), id))
+            self.write("<input type=hidden name=\"%s\" value=\"%s\"%s>" % (attrencode(var), attrencode(value), id))
             if add_var:
                 self.add_form_var(var)
 

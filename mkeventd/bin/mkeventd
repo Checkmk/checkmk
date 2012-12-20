@@ -131,6 +131,21 @@ def open_logfile():
     global g_logfile
     g_logfile = file(g_logfile_path, "a")
 
+
+def drain_pipe(pipe):
+    while True:
+        readable = select.select([ pipe ], [], [], 1)[0]
+        data = None
+        if pipe in readable:
+            try:
+                data = os.read(pipe, 4096)
+                if len(data) == 0: # END OF FILE!
+                    break
+            except:
+                break # Error while reading
+        else:
+            break # No data available
+
 def log(text):
     if type(text) == unicode:
         text = text.encode("utf-8")
@@ -2653,6 +2668,15 @@ try:
     
     # We reach this point, if the server has been killed by
     # a signal or hitting Ctrl-C (in foreground mode)
+
+    # Remove event pipe and drain it, so that we make sure
+    # that processes (syslog, etc) will not hang when trying
+    # to write into the pipe.
+    log("Cleaning up event pipe")
+    pipe = g_event_server.open_pipe()  # Open it
+    os.remove(g_pipe_path)             # Remove pipe
+    drain_pipe(pipe)                   # Drain any data
+    os.close(pipe)                     # Close pipe
 
     g_event_status.save_status()
     os.remove(g_socket_path)

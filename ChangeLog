@@ -72,6 +72,7 @@
     * FIX: Fixed generated manual check definitions for checks without items
       like ntp_time and tcp_conn_stats
     * FIX: Persisting changing of folder titles when only the title has changed
+    * Add: Creating a new rule immediately opens its edit formular
 
     Event Console:
     * FIX: fix exception in rules that use facility local7
@@ -83,6 +84,7 @@
     * Speedup access to event history by earlier filtering and prefiltering with grep
     * New builtin syslog server! Please refer to online docu for details.
     * Icon to events of host links to view that has context button to host
+    * FIX: remove event pipe on program shutdown, prevents syslog freeze
 
 1.2.1i3:
     Core:

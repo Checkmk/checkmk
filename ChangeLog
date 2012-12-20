@@ -67,6 +67,7 @@
     * FIX: Main Frame without sidebar: reload after activate changes
     * FIX: output_format json: handle newlines correctly
     * FIX: handle ldap logins with ',' in distinguished name
+    * FIX: quote HTML variable names, fixes potential JS injection
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

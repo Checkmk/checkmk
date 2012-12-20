@@ -9632,7 +9632,7 @@ def mode_rulesets(phase):
     html.write('</div>')
 
 def create_new_rule_form(rulespec, hostname = None, item = None):
-    html.begin_form("new_rule")
+    html.begin_form("new_rule", add_transid = False)
 
     html.write('<table>')
     if hostname:
@@ -9657,7 +9657,7 @@ def create_new_rule_form(rulespec, hostname = None, item = None):
     html.select("rule_folder", folder_selection(g_root_folder))
     html.write('</td></tr></table>\n')
     html.hidden_field("varname", html.var("varname"))
-    html.hidden_field("mode", html.var("mode"))
+    html.hidden_field("mode", "new_rule")
     html.end_form()
 
 def mode_edit_ruleset(phase):
@@ -9697,10 +9697,6 @@ def mode_edit_ruleset(phase):
         return
 
     elif phase == "action":
-        # The creation of any new rule is handled by the new_rule mode
-        if html.has_var("_new_host_rule") or html.has_var("_new_rule"):
-            return "new_rule"
-
         # Folder for the rule actions is defined by _folder
         rule_folder = g_folders[html.var("_folder", html.var("folder"))]
         check_folder_permissions(rule_folder, "write", True)
@@ -10325,7 +10321,7 @@ def mode_edit_rule(phase, new = False):
                             "folder %s to %s") % (rulespec["title"], folder["title"],
                             new_rule_folder["title"]))
         else:
-            return "edit_ruleset"
+            return
 
         return ("edit_ruleset",  _("%s rule in ruleset '%s' in folder %s") % 
                                   (new and _("Created new") or _("Edited"), rulespec["title"], new_rule_folder["title"]))

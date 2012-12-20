@@ -1991,8 +1991,8 @@ def mode_edithost(phase, new, cluster):
                     mark_affected_sites_dirty(g_folder, hostname)
                     log_pending(AFFECTED, hostname, "edit-host", _("Edited properties of host [%s]") % hostname)
                 save_folder_and_hosts(g_folder)
-                call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
+                call_hook_hosts_changed(g_folder)
 
             errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(g_folder[".hosts"][hostname], g_folder)
             if errors: # keep on this page if host does not validate

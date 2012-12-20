@@ -44,8 +44,10 @@ void open_logfile()
 
 void close_logfile()
 {
-    if (g_logfile)
+    if (g_logfile) {
         fclose(g_logfile);
+        g_logfile = 0;
+    }
 }
 
 void logger(int priority, const char *loginfo, ...)

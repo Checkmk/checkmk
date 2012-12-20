@@ -273,6 +273,7 @@ void terminate_threads()
         if (g_debug_level > 0)
             logger(LG_INFO, "Main thread + %u client threads have finished", g_num_clientthreads);
         g_thread_running = 0;
+        g_should_terminate = false;
     }
     free(g_clientthread_id);
 }

@@ -5,6 +5,8 @@
     * Added HOSTTAGS to notification macros which contains all Check_MK-Tags
       separated by spaces
     * Output better error message in case of old inventory function
+    * Do object cache precompile for monitoring core on cmk -R/-O
+    * Avoid duplicate verification of monitoring config on cmk -R/-O
 
     Notifications:
     * Fix flexible notifications on non-OMD systems
@@ -30,6 +32,7 @@
     * Add: plesk_backups - Monitor backup spaces configured for domains in plesk
     * Add: mysql_connections - Monitor number of parallel connections to mysql daemon
     * FIX: zfsget: fix exception on snapshot volumes (where available is '-')
+    * FIX: zfsget: handle passed-through filesystems (need agent update)
     * FIX: loading notification scripts in local directory for real
     * FIX: oracle_version: return valid check result in case of missing agent info
     * FIX: apache_status: fixed bug with missing 'url', wrote man page

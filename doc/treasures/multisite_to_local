@@ -1,0 +1,137 @@
+#!/usr/bin/python
+# encoding: utf-8
+
+# Fetches the current state of all services of a host via Multisite and
+# outputs a <<<local>>> section reflecting these states. This script is
+# intended to be used as a datasource program.
+# 
+# Still missing:
+# - Output of performance data (not included in standard view)
+# - Assignment of corrent PNP template (need original check command)
+
+import os, sys, getopt, time, urllib
+
+omd_site = os.getenv("OMD_SITE")
+omd_root = os.getenv("OMD_ROOT")
+
+def convert_from_multisite(response):
+    headers = response[0]
+    return [ dict(zip(headers, line)) for line in response[1:] ]
+
+def bail_out(reason):
+    sys.stderr.write(reason + "\n")
+    sys.exit(1)
+
+def verbose(text):
+    if opt_verbose:
+        sys.stdout.write(text + "\n")
+
+def usage():
+    sys.stdout.write("""Usage: multisite_to_local [OPTIONS] HOST
+
+This program is intended to be used as a datasource program.
+It fetches the current state of all services of a host
+from a remote Multisite and create a <<<local>>> section
+from it. That way all those services can be added to the
+monitoring of another OMD site.
+
+URL is the
+/check_mk/ e.g.  http://someserver.abc/prod/check_mk/
+
+Options:
+  -h, --help       Show this help and exit
+  -v, --verbose    Show what's going on
+  -u, --user U     Name of automation user (default: "automation")
+  -U, --url U      Multisite URL of the remote server including
+  -S, --secret S   Automation secret (default: public)
+""")
+
+
+short_options = 'hvu:U:S:'
+long_options = [ "help", "verbose", "user=", "url=", "secret=" ]
+
+opt_verbose = False
+opt_user = "automation"
+opt_secret = None
+opt_url = None
+if omd_site:
+    opt_url = "http://localhost/" + omd_site + "/check_mk/"
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n\n" % err)
+    usage()
+    sys.exit(1)
+
+for o,a in opts:
+    # Docu modes
+    if o in [ '-h', '--help' ]:
+        usage()
+        sys.exit(0)
+
+    # Modifiers
+    elif o in [ '-v', '--verbose']:
+        opt_verbose = True
+    elif o in [ '-u', '--user']:
+        opt_user = a
+    elif o in [ '-S', '--secret']:
+        opt_secret = a
+    elif o in [ '-U', '--url']:
+        opt_url = a
+
+if omd_site and not opt_secret:
+    try:
+        opt_secret = file(omd_root + "/var/check_mk/web/" + opt_user 
+                          + "/automation.secret").read().strip()
+    except Exception, e:
+        bail_out("Cannot read automation secret from user %s: %s" % 
+            (opt_user, e))
+
+if not opt_url:
+    bail_out("Please specify the URL to Check_MK Multisite with -U.")
+
+if not opt_url.endswith("/check_mk/"):
+    bail_out("The automation URL must end with /check_mk/")
+
+if not args:
+    bail_out("Please specify the host to query services for")
+
+arg_host = args[0]
+
+verbose("Host:          " + arg_host)
+verbose("Multisite-URL: " + opt_url)
+verbose("User:          " + opt_user)
+verbose("Secret:        " + opt_secret)
+
+def make_url(base, variables):
+    vartext = "&".join([ "%s=%s" % e for e in variables ])
+    return base + "?" + vartext
+
+variables = [
+    ( "_username",      opt_user ),
+    ( "_secret",        opt_secret ),
+    ( "host",           arg_host ),
+    ( "view_name",      "host" ),
+    ( "output_format",  "python" ),
+]
+
+
+url = make_url(opt_url + "view.py", variables)
+verbose("URL:           " + url)
+try:
+    pipe = urllib.urlopen(url)
+    answer = pipe.read()
+    services = convert_from_multisite(eval(answer))
+except Exception, e:
+    bail_out("Cannot call Multisite URL: %s" % e)
+
+sys.stdout.write('<<<local>>>\n')
+
+for service in services:
+    state = { "OK" : 0, "WARN" : 1, "CRIT" : 2, "UNKNOWN" : 3}.get(service['service_state'])
+    if state != None: # skip pending services
+        sys.stdout.write("%d %s - %s\n" % (
+            state, 
+            service["service_description"].replace(" ", "_"),
+            service["svc_plugin_output"]))

@@ -90,6 +90,8 @@ fi
 if type zfs > /dev/null 2>&1 ; then
     echo '<<<zfsget>>>'
     zfs get -Hp name,quota,used,avail,mountpoint,type
+    echo '[df]'
+    df -PTlk -t zfs | sed 1d
 fi
 
 # Check NFS mounts by accessing them with stat -f (System

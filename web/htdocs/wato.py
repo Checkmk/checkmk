@@ -1991,8 +1991,8 @@ def mode_edithost(phase, new, cluster):
                     mark_affected_sites_dirty(g_folder, hostname)
                     log_pending(AFFECTED, hostname, "edit-host", _("Edited properties of host [%s]") % hostname)
                 save_folder_and_hosts(g_folder)
-                call_hook_hosts_changed(g_folder)
                 reload_hosts(g_folder)
+                call_hook_hosts_changed(g_folder)
 
             errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(g_folder[".hosts"][hostname], g_folder)
             if errors: # keep on this page if host does not validate
@@ -3439,7 +3439,7 @@ def mode_changelog(phase):
             if config.debug:
                 raise
             else:
-                raise MKUserError(None, "<h3>%s</h3>%s" % (_("Cannot activate changes"), e))
+                raise MKUserError(None, "<h1>%s</h1>%s" % (_("Cannot activate changes"), e))
 
         sitestatus_do_async_replication = False # see below
         if html.has_var("_siteaction"):
@@ -4061,7 +4061,7 @@ def check_mk_local_automation(command, args=[], indata=""):
         except Exception, e:
             if config.debug:
                 raise
-            html.show_error("<h3>Cannot activate changes</h3>%s" % e)
+            html.show_error("<h1>Cannot activate changes</h1>%s" % e)
             return
 
     if config.debug:
@@ -4085,8 +4085,10 @@ def check_mk_local_automation(command, args=[], indata=""):
     if exitcode != 0:
         if config.debug:
             log_audit(None, "automation", "Automation command %s failed with exit code %d: %s" % (" ".join(cmd), exitcode, outdata))
-        raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
-              (" ".join(cmd), exitcode, hilite_errors(outdata), outdata.lstrip().startswith('sudo:') and sudo_msg or ''))
+            raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
+                  (" ".join(cmd), exitcode, hilite_errors(outdata), outdata.lstrip().startswith('sudo:') and sudo_msg or ''))
+        else:
+            raise MKGeneralException("<h1>%s</h1>%s" % (_("Error"), hilite_errors(outdata)))
 
 
     # On successful "restart" command execute the activate changes hook
@@ -7227,9 +7229,12 @@ def ajax_activation():
             duration = time.time() - start
             update_replication_status(None, {}, { 'act': duration })
         except Exception:
-            import traceback
-            raise MKUserError(None, "Error executing hooks: %s" %
-                                        traceback.format_exc().replace('\n', '<br />'))
+            if config.debug:
+                import traceback
+                raise MKUserError(None, "Error executing hooks: %s" %
+                                            traceback.format_exc().replace('\n', '<br />'))
+            else:
+                raise
 
         log_commit_pending() # flush logfile with pending actions
         log_audit(None, "activate-config", _("Configuration activated, monitoring server restarted"))

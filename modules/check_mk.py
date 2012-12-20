@@ -3919,7 +3919,7 @@ def do_update():
 
 
 def do_check_nagiosconfig():
-    command = nagios_binary + " -v "  + nagios_config_file + " 2>&1"
+    command = nagios_binary + " -vp "  + nagios_config_file + " 2>&1"
     sys.stdout.write("Validating Nagios configuration...")
     if opt_verbose:
         sys.stderr.write("Running '%s'" % command)
@@ -3941,10 +3941,8 @@ def do_restart_nagios(only_reload):
     action = only_reload and "load" or "start"
     sys.stdout.write("Re%sing Nagios..." % action)
     sys.stdout.flush()
-    if omd_root:
-        command = "omd re%s core 2>&1" % action
-    else:
-        command = nagios_startscript + " re%s 2>&1" % action
+    os.putenv("CORE_NOVERIFY", "yes")
+    command = nagios_startscript + " re%s 2>&1" % action
 
     process = os.popen(command, "r")
     output = process.read()

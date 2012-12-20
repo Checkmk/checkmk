@@ -82,6 +82,8 @@ done
 if type zfs > /dev/null 2>&1 ; then
     echo '<<<zfsget>>>'
     zfs get -Hp name,quota,used,avail,mountpoint,type
+    echo '[df]'
+    df -lk -F zfs | sed 1d
 fi
 
 # Processes

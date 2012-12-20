@@ -54,7 +54,6 @@ def call(name, *args):
                 txt = StringIO.StringIO()
                 t, v, tb = sys.exc_info()
                 traceback.print_exception(t, v, tb, None, txt)
-                html.show_error("<h3>" + _("Error executing hook") + " %s #%d: %s</h3>"
+                html.show_error("<h1>" + _("Error executing hook") + " %s #%d: %s</h1>"
                                 "<pre>%s</pre>" % (name, n, e, txt.getvalue()))
-            else:
-                raise
+            raise

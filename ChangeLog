@@ -233,6 +233,7 @@
     * FIX: postgres_sessions: handle case of no active/no idle sessions
     * FIX: winperf_processor: handle parameters "None" (as WATO creates)
     * FIX: mssql_counters: remove debug output, fix bytes output
+    * FIX: mssql_tablespaces: gracefully handle garbled agent output
 
     Multisite:
     * FIX: performeter_temparature now returns unicode string, because of °C

@@ -47,11 +47,15 @@
 # 13: uom
 
 def inventory_mssql_tablespaces(info):
-    return [ (line[0] + ' ' + line[1], None) for line in info ]
+    inventory = []
+    for line in info:
+        if len(line) > 1:
+	    inventory.append((line[0] + ' ' + line[1], None))
+    return inventory
 
 def check_mssql_tablespaces(item, params, info):
     for line in info:
-        if item != line[0] + ' ' + line[1]:
+        if len(line) < 2 or item != line[0] + ' ' + line[1]:
             continue
 
         output   = []

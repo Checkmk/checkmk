@@ -57,7 +57,10 @@ def check_winperf_util(item, params, info):
                 used_perc = 0
             elif used_perc > 100:
                 used_perc = 100
-            warn, crit = params
+            if params != None:
+                warn, crit = params
+            else:
+                warn, crit = None, None
             perfdata = [ ("util", "%.2f" % used_perc, warn, crit, 0, 100) ]
             if num_cpus == 1:
                 num_txt = ""
@@ -66,9 +69,9 @@ def check_winperf_util(item, params, info):
 
             infotext = " - %d%% used%s (in last %d secs)" % (int(used_perc), num_txt, timedif)
 
-            if used_perc >= crit:
+            if crit != None and used_perc >= crit:
                 return (2, "CRIT" + infotext, perfdata)
-            elif used_perc >= warn:
+            elif warn != None and used_perc >= warn:
                 return (1, "WARN" + infotext, perfdata)
             else:
                 return (0, "OK" + infotext, perfdata)

@@ -9642,9 +9642,10 @@ def create_new_rule_form(rulespec, hostname = None, item = None):
             label += _(" and %s '%s'") % (rulespec["itemname"], item)
             ty = rulespec["itemname"]
 
-        title = _("Create %s specific rule for: ") % ty
         html.write('<tr><td>')
-        html.button("_new_host_rule", title)
+        html.button("_new_host_rule", _("Create %s specific rule for: ") % ty)
+        html.hidden_field("host", hostname)
+        html.hidden_field("item", mk_repr(item))
         html.write('</td><td style="vertical-align:middle">')
         html.write(label)
         html.write('</td></tr>\n')
@@ -9652,9 +9653,11 @@ def create_new_rule_form(rulespec, hostname = None, item = None):
     html.write('<tr><td>')
     html.button("_new_rule", _("Create rule in folder: "))
     html.write('</td><td>')
-    html.select("folder", folder_selection(g_root_folder))
+
+    html.select("rule_folder", folder_selection(g_root_folder))
     html.write('</td></tr></table>\n')
-    html.hidden_fields()
+    html.hidden_field("varname", html.var("varname"))
+    html.hidden_field("mode", html.var("mode"))
     html.end_form()
 
 def mode_edit_ruleset(phase):
@@ -9694,27 +9697,15 @@ def mode_edit_ruleset(phase):
         return
 
     elif phase == "action":
+        # The creation of any new rule is handled by the new_rule mode
+        if html.has_var("_new_host_rule") or html.has_var("_new_rule"):
+            return "new_rule"
+
         # Folder for the rule actions is defined by _folder
         rule_folder = g_folders[html.var("_folder", html.var("folder"))]
         check_folder_permissions(rule_folder, "write", True)
         rulesets = load_rulesets(rule_folder)
         rules = rulesets.get(varname, [])
-
-        if html.var("_new_rule") or html.var("_new_host_rule"):
-            if html.check_transaction():
-                if html.var("_new_rule"):
-                    hostname = None
-                    item = NO_ITEM
-                new_rule = create_rule(rulespec, hostname, item)
-                if hostname:
-                    rules[0:0] = [new_rule]
-                else:
-                    rules.append(new_rule)
-                save_rulesets(rule_folder, rulesets)
-                mark_affected_sites_dirty(rule_folder)
-                log_pending(AFFECTED, None, "edit-ruleset",
-                      _("Created new rule in ruleset %s in folder %s") % (rulespec["title"], rule_folder["title"]))
-            return
 
         rulenr = int(html.var("_rulenr")) # rule number relativ to folder
         action = html.var("_action")
@@ -9797,12 +9788,14 @@ def mode_edit_ruleset(phase):
                    "</tr>\n")
 
         odd = "odd"
+        folder_odd = "odd"
         alread_matched = False
         match_keys = set([]) # in case if match = "dict"
         last_folder = None
         for rulenr in range(0, len(ruleset)):
             folder, rule = ruleset[rulenr]
             if folder != last_folder:
+                folder_odd = folder_odd == "odd" and "even" or "odd"
                 first_in_group = True
                 rel_rulenr = 0
                 # Count how many of the following rules are located in the same
@@ -9901,7 +9894,7 @@ def mode_edit_ruleset(phase):
             # Folder
             if first_in_group:
                 alias_path = get_folder_aliaspath(folder, show_main = False)
-                html.write('<td rowspan=%d>%s</td>' % (row_span, alias_path))
+                html.write('<td rowspan=%d class="%s0">%s</td>' % (row_span, folder_odd, alias_path))
 
             # Value
             html.write('<td class=value>\n')
@@ -10250,26 +10243,37 @@ def get_rule_conditions(ruleset):
     return tag_list, host_list, item_list
 
 
-def mode_edit_rule(phase):
-    rulenr = int(html.var("rulenr"))
+
+def mode_edit_rule(phase, new = False):
     varname = html.var("varname")
     rulespec = g_rulespecs[varname]
 
     if phase == "title":
-        return _("Edit rule %s") % rulespec["title"]
+        return _("%s rule %s") % (new and _("New") or _("Edit"), rulespec["title"])
 
     elif phase == "buttons":
-        html.context_button(_("Abort"),
-             make_link([("mode", "edit_ruleset"),
-                        ("varname", varname),
-                        ("host", html.var("host", "")),
-                        ("item", html.var("item", "None"))]), "abort")
+        var_list = [("mode", "edit_ruleset"), ("varname", varname), ("host", html.var("host",""))] 
+        if html.var("item"):        
+            var_list.append( ("item", html.var("item")) )
+        html.context_button(_("Abort"), make_link(var_list), "abort")
         return
 
-    folder = g_folders[html.var("rule_folder")]
+    folder   = html.has_var("_new_host_rule") and g_folder or g_folders[html.var("rule_folder")]
     rulesets = load_rulesets(folder)
-    rules = rulesets[varname]
-    rule = rules[rulenr]
+    rules    = rulesets[varname]
+
+    if new:
+        host = None
+        item = NO_ITEM
+        if html.has_var("_new_host_rule"):
+            host = html.var("host")
+            item = html.has_var("item") and mk_eval(html.var("item")) or NO_ITEM 
+        rule     = create_rule(rulespec, host, item)
+        rulenr   = len(rules) 
+    else:
+        rulenr   = int(html.var("rulenr"))
+        rule     = rules[rulenr]
+
     valuespec = rulespec.get("valuespec")
     value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
 
@@ -10294,13 +10298,22 @@ def mode_edit_rule(phase):
                 value = html.var("value") == "yes"
             rule = construct_rule(rulespec, value, tag_specs, host_list, item_list, rule_options)
             if new_rule_folder == folder:
-                rules[rulenr] = rule
+                if new:
+                    rules.append(rule)
+                else:
+                    rules[rulenr] = rule
                 save_rulesets(folder, rulesets)
                 mark_affected_sites_dirty(folder)
-                log_pending(AFFECTED, None, "edit-rule", _("Changed properties of rule %s in folder %s") %
-                        (rulespec["title"], folder["title"]))
+
+                if new:
+                    log_pending(AFFECTED, None, "edit-rule", _("Created new rule in ruleset %s in folder %s") % 
+                               (rulespec["title"], new_rule_folder["title"]))
+                else:
+                    log_pending(AFFECTED, None, "edit-rule", _("Changed properties of rule %s in folder %s") %
+                               (rulespec["title"], new_rule_folder["title"]))
             else: # Move rule to new folder
-                del rules[rulenr]
+                if not new: 
+                    del rules[rulenr]
                 save_rulesets(folder, rulesets)
                 rulesets = load_rulesets(new_rule_folder)
                 rules = rulesets.setdefault(varname, [])
@@ -10311,8 +10324,11 @@ def mode_edit_rule(phase):
                 log_pending(AFFECTED, None, "edit-rule", _("Changed properties of rule %s, moved rule from "
                             "folder %s to %s") % (rulespec["title"], folder["title"],
                             new_rule_folder["title"]))
+        else:
+            return "edit_ruleset"
 
-        return "edit_ruleset"
+        return ("edit_ruleset",  _("%s rule in ruleset '%s' in folder %s") % 
+                                  (new and _("Created new") or _("Edited"), rulespec["title"], new_rule_folder["title"]))
 
     html.help(rulespec["help"])
 
@@ -11753,7 +11769,8 @@ modes = {
    "ruleeditor"         : (["rulesets"], mode_ruleeditor),
    "rulesets"           : (["rulesets"], mode_rulesets),
    "edit_ruleset"       : (["rulesets"], mode_edit_ruleset),
-   "edit_rule"          : (["rulesets"], mode_edit_rule),
+   "new_rule"           : (["rulesets"], lambda phase: mode_edit_rule(phase, True)),
+   "edit_rule"          : (["rulesets"], lambda phase: mode_edit_rule(phase, False)),
    "host_groups"        : (["groups"], lambda phase: mode_groups(phase, "host")),
    "service_groups"     : (["groups"], lambda phase: mode_groups(phase, "service")),
    "contact_groups"     : (["users"], lambda phase: mode_groups(phase, "contact")),

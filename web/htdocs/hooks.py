@@ -56,5 +56,4 @@ def call(name, *args):
                 traceback.print_exception(t, v, tb, None, txt)
                 html.show_error("<h3>" + _("Error executing hook") + " %s #%d: %s</h3>"
                                 "<pre>%s</pre>" % (name, n, e, txt.getvalue()))
-            else:
-                raise
+            raise

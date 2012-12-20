@@ -3439,7 +3439,7 @@ def mode_changelog(phase):
             if config.debug:
                 raise
             else:
-                raise MKUserError(None, "<h3>%s</h3>%s" % (_("Cannot activate changes"), e))
+                raise MKUserError(None, "<h1>%s</h1>%s" % (_("Cannot activate changes"), e))
 
         sitestatus_do_async_replication = False # see below
         if html.has_var("_siteaction"):
@@ -4061,7 +4061,7 @@ def check_mk_local_automation(command, args=[], indata=""):
         except Exception, e:
             if config.debug:
                 raise
-            html.show_error("<h3>Cannot activate changes</h3>%s" % e)
+            html.show_error("<h1>Cannot activate changes</h1>%s" % e)
             return
 
     if config.debug:

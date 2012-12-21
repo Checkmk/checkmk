@@ -42,7 +42,7 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
     host_filters = ""
     for host in required_hosts:
         host_filters += "Filter: host_name =~ %s\n" \
-                        "Filter: host_address = %s\n" % (host, host)
+                        "Filter: host_address = %s\n" % (host.encode("utf-8"), host.encode("utf-8"))
     if len(required_hosts) > 0:
         host_filters += "Or: %d\n" % (len(required_hosts) * 2)
 

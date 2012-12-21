@@ -40,8 +40,14 @@ def check_hr_fs(item, params, info):
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
         if "patterns" in params or item == hrdescr:
             unit_size = saveint(hrunits)
-            size      = saveint(hrsize) * unit_size
-            used      = saveint(hrused) * unit_size
+            hrsize = saveint(hrsize)
+            if hrsize < 0:
+                hrsize = hrsize+2**32
+            size      = hrsize * unit_size
+            hrused = saveint(hrused)
+            if hrused < 0:
+                hrsize = hrused+2**32
+            used      = hrused * unit_size
             size_mb   = size / 1048576.0
             used_mb   = used / 1048576.0
             avail_mb  = size_mb - used_mb

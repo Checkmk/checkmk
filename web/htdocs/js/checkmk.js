@@ -841,7 +841,7 @@ function handleReload(url) {
         opts = null;
 
         // Add optional display_options if not defined in original display_options
-        var opts = [ 'W' ];
+        var opts = [ 'w' ];
         for (var i = 0; i < opts.length; i++) {
             if (display_options.indexOf(opts[i].toUpperCase()) == -1)
                 display_options += opts[i];

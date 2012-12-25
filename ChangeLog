@@ -68,6 +68,7 @@
     * FIX: output_format json: handle newlines correctly
     * FIX: handle ldap logins with ',' in distinguished name
     * FIX: quote HTML variable names, fixes potential JS injection
+    * Option dials (refresh, number of columns) now turnable by mouse wheel
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

@@ -1612,6 +1612,7 @@ def view_optiondial(view, option, choices, help):
     html.write('<div title="%s" id="optiondial_%s" class="optiondial %s val_%s"' 
        'onclick="view_dial_option(this, \'%s\', \'%s\', %r);"><div>%s</div></div>' % (
         help, option, option, value, view["name"], option, choices, title))
+    html.final_javascript("init_optiondial('optiondial_%s');" % option)
 
 def view_optiondial_off(option):
     html.write('<div class="optiondial off %s"></div>' % option)

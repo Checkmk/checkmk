@@ -1684,17 +1684,57 @@ function view_toggle_form(oButton, idForm) {
     add_class(oButton, down);
 }
 
+function init_optiondial(id) {
+    oDiv = document.getElementById(id);
+    make_unselectable(oDiv);
+
+    var eventname = (/Firefox/i.test(navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel"
+     
+     if (oDiv.attachEvent) //if IE (and Opera depending on user setting)
+             oDiv.attachEvent("on" + eventname, optiondial_wheel)
+     else if (oDiv.addEventListener) //WC3 browsers
+             oDiv.addEventListener(eventname, optiondial_wheel, false)
+    
+}
+
+var dial_direction = 1;
+function optiondial_wheel(e) {
+    var evt = window.event || e;
+    var delta = evt.detail ? evt.detail * (-120) : evt.wheelDelta;
+
+    var oDiv;
+    if (evt.target) oDiv = evt.target;
+    else if (evt.srcElement) oDiv = evt.srcElement;
+    if (evt.nodeType == 3) // defeat Safari bug
+        oDiv = oDiv.parentNode;
+    while (!oDiv.className)
+        oDiv = oDiv.parentNode;
+
+
+    code = ('' + (oDiv.onclick)).replace("this", "oDiv").replace("onclick", "dial_wheel_function");
+    eval(code);
+    if (delta < 0)
+        dial_direction = -1;
+    dial_wheel_function(e);
+    dial_direction = 1;
+
+    if (evt.preventDefault)
+        evt.preventDefault();
+    else
+        return false;
+ 
+}
+
 // used for refresh und num_columns
 function view_dial_option(oDiv, viewname, option, choices) {
     // prevent double click from select text
-    make_unselectable(oDiv);
     var new_choice = choices[0]; // in case not contained in choices
     for (var c=0; c<choices.length; c++) {
         choice = choices[c];
         val = choice[0];
         title = choice[1];
         if (has_class(oDiv, "val_" + val)) {
-            var new_choice = choices[(c+1) % choices.length];
+            var new_choice = choices[(c + choices.length + dial_direction) % choices.length];
             change_class(oDiv, "val_" + val, "val_" + new_choice[0]);
             break; 
         }
@@ -1705,11 +1745,11 @@ function view_dial_option(oDiv, viewname, option, choices) {
     speed = 10;
     for (var way = 0; way <= 10; way +=1) { 
         step += speed;
-        setTimeout("turn_dial('" + option + "', '', " + way + ")", step);
+        setTimeout("turn_dial('" + option + "', '', " + way + "," + dial_direction + ")", step);
     }
     for (var way = -10; way <= 0; way +=1) { 
         step += speed;
-        setTimeout("turn_dial('" + option + "', '" + new_choice[1] + "', " + way + ")", step);
+        setTimeout("turn_dial('" + option + "', '" + new_choice[1] + "', " + way + "," + dial_direction + ")", step);
     }
     
     get_url_sync("ajax_set_viewoption.py?view_name=" + viewname + 
@@ -1719,17 +1759,16 @@ function view_dial_option(oDiv, viewname, option, choices) {
     else {
         if (gReloadTimer)
             clearTimeout(gReloadTimer);
-        if (gReloadTime) 
-            gReloadTimer = setTimeout("handleReload('')", 400.0);
+        gReloadTimer = setTimeout("handleReload('')", 400.0);
     }
     // handleReload('');
 }
 // way ranges from -10 to 10 means centered (normal place)
-function turn_dial(option, text, way) {
+function turn_dial(option, text, way, direction) {
     var oDiv = document.getElementById("optiondial_" + option).firstChild;
     if (text && oDiv.innerHTML != text)
         oDiv.innerHTML = text;
-    oDiv.style.top = (way * 1.3) + "px";
+    oDiv.style.top = (way * 1.3 * direction) + "px";
 }
 
 

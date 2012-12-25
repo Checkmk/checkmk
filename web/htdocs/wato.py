@@ -10086,16 +10086,20 @@ def construct_rule(ruleset, value, tag_specs, host_list, item_list, rule_options
     if item_list != None:
         rule.append(item_list)
 
-    # Append rule options, but only if they are not trivial
+    # Append rule options, but only if they are not trivial. That way we 
+    # keep as close as possible to the original Check_MK in rules.mk so that
+    # command line users will feel at home...
     ro = {}
     if rule_options.get("disabled"):
         ro["disabled"] = True
     if rule_options.get("comment"):
         ro["comment"] = rule_options["comment"]
+    if rule_options.get("docu_url"):
+        ro["docu_url"] = rule_options["docu_url"]
 
     # Preserve other keys that we do not know of
     for k,v in rule_options.items():
-        if k not in [ "disabled", "comment"] :
+        if k not in [ "disabled", "comment", "docu_url"]:
             ro[k] = v
     if ro:
         rule.append(ro)

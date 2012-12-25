@@ -8135,7 +8135,7 @@ def mode_edit_user(phase):
 
                 html.hidden_field("cg_" + gid, is_member and '1' or '')
 
-        if not is_member_of_at_least_one:
+        if is_locked('contactgroups') and not is_member_of_at_least_one:
             html.write('<i>%s</i>' % _('No contact groups assigned.'))
 
     html.help(_("Contact groups are used to assign monitoring "

@@ -389,19 +389,28 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
                     html.write("</tr>\n")
                     column = 1
 
-                # paint group header
                 group_open = True
                 visible_row_number = 0
-                html.write("<tr class=groupheader>")
-                html.write("<td class=groupheader colspan=%d><table class=groupheader cellspacing=0 cellpadding=0 border=0><tr>" %
-                     (num_painters * (num_columns + 2) + (num_columns - 1)))
-                painted = False
-                for p in group_painters:
-                    if painted:
-                        html.write("<td>,</td>")
-                    painted = paint(p, row)
 
-                html.write("</tr></table></td></tr>\n")
+                # paint group header, but only if it is non-empty
+                header_is_empty = True
+                for p in group_painters:
+                    tdclass, content = prepare_paint(p, row)
+                    if content:
+                        header_is_empty = False
+                        break
+
+                if not header_is_empty:
+                    html.write("<tr class=groupheader>")
+                    html.write("<td class=groupheader colspan=%d><table class=groupheader cellspacing=0 cellpadding=0 border=0><tr>" %
+                         (num_painters * (num_columns + 2) + (num_columns - 1)))
+                    painted = False
+                    for p in group_painters:
+                        if painted:
+                            html.write("<td>,</td>")
+                        painted = paint(p, row)
+
+                    html.write("</tr></table></td></tr>\n")
 
                 # Table headers
                 if view.get("column_headers") != "off":

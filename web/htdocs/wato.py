@@ -5653,7 +5653,8 @@ def mode_groups(phase, what):
         global_buttons()
         html.context_button(_("New group"), make_link([("mode", "edit_%s_group" % what)]), "new")
         if what == "contact":
-            pass
+            html.context_button(_("Rules"), make_link([("mode", "rulesets"), 
+                ("filled_in", "search"), ("search", "contact group")]), "rulesets")
         else:
             varname = what + "_groups"
             html.context_button(_("Rules"), make_link([("mode", "edit_ruleset"), ("varname", varname)]), "rulesets")
@@ -10950,14 +10951,22 @@ def page_user_profile():
 #   | Functions for creating an example configuration                      |
 #   '----------------------------------------------------------------------'
 
-# Create a very basic sample configuration, but only if no host tags
-# or rules have been defined *ever*.
+# Create a very basic sample configuration, but only if none of the 
+# files that we will create already exists. That is e.g. the case
+# after an update from an older version where no sample config had
+# been created.
 def create_sample_config():
     if os.path.exists(multisite_dir + "hosttags.mk") \
-        or os.path.exists(root_dir + "rules.mk"):
+        or os.path.exists(root_dir + "rules.mk") \
+        or os.path.exists(root_dir + "groups.mk"):
         return
 
-    # Example values for host tags
+    # A contact group where everyone is member of
+    groups = {
+        "contact" : { 'all', u'Everybody' },
+    }
+
+    # Basic setting of host tags
     wato_host_tags = \
     [('agent',
       u'Agent type',
@@ -10984,17 +10993,29 @@ def create_sample_config():
 
     save_hosttags(wato_host_tags, wato_aux_tags)
 
-    # Example values for rules
+    # Rules that match the upper host tag definition
     rulesets = { 
+        # Make the tag 'offline' remove hosts from the monitoring
         'only_hosts': [
-            (['!offline'], ['@all'])],
-         'ping_levels': [
+            (['!offline'], ['@all'],
+            {'comment': u'Do not monitor hosts with the tag "offline"'})],
+
+        # Rule for WAN hosts with adapted PING levels
+        'ping_levels': [
             ({'loss': (80.0, 100.0),
               'packets': 6,
               'rta': (1500.0, 3000.0),
-              'timeout': 20}, ['wan'], ['@all'])],
-         'bulkwalk_hosts': [
-            (['!snmp-v1'], ['@all'])],
+              'timeout': 20}, ['wan'], ['@all'],
+              {'comment': u'Allow longer round trip times when pinging WAN hosts'})],
+
+        # All hosts should use SNMP v2c if not specially tagged
+        'bulkwalk_hosts': [
+            (['!snmp-v1'], ['@all'], {'comment': u'Hosts with the tag "snmp-v1" must not use bulkwalk'})],
+
+        # Put all hosts and the contact group 'all'
+        'host_contactgroups': [
+            ('all', [], ALL_HOSTS, {'comment': u'Put all hosts into the contact group "all"'} ),
+        ]
     }
 
     save_rulesets(g_root_folder, rulesets)

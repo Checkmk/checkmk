@@ -33,8 +33,8 @@ register_rule(group,
     "active_checks:dns",
     Tuple(
         title = _("Check DNS service"),
-        help = _("Check optain an IP address for a host or domain"
-                 "It uses <tt>check_dns</tt> from standard plugins."),
+        help = _("Check the resultion of a hostname into an IP address by a DNS server. "
+                 "This check uses <tt>check_dns</tt> from the standard Nagios plugins."),
         elements = [
            TextAscii(title = _("Hostname"), allow_empty = False,
                      help = _('The name or address you want to query')),

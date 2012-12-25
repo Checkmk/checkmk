@@ -9382,7 +9382,7 @@ def change_host_tags_in_rules(folder, operations, mode):
 #   '----------------------------------------------------------------------'
 
 vs_rule_options = Dictionary(
-    title = _("General options"),
+    title = _("Additional options"),
     optional_keys = False,
     render = "form",
     elements = [
@@ -9397,7 +9397,7 @@ vs_rule_options = Dictionary(
         ),
         ( "docu_url",
           TextAscii(
-            title = _("Docu-URL"),
+            title = _("Documentation-URL"),
             help = _("An optional URL pointing to documentation or any other page. This will be displayed "
                      "as an icon <img class=icon src='images/button_url_lo.png'> and open a new page when clicked. "
                      "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
@@ -10271,7 +10271,7 @@ def mode_edit_rule(phase, new = False):
 
     if phase == "action":
         if html.check_transaction():
-            # General options
+            # Additional options
             rule_options = vs_rule_options.from_html_vars("options")
             vs_rule_options.validate_value(rule_options, "options")
 
@@ -10322,33 +10322,9 @@ def mode_edit_rule(phase, new = False):
         return ("edit_ruleset",  _("%s rule in ruleset '%s' in folder %s") % 
                                   (new and _("Created new") or _("Edited"), rulespec["title"], new_rule_folder["title"]))
 
-    html.help(rulespec["help"])
+    html.write("<div class=info>" + rulespec["help"] + "</div>")
 
     html.begin_form("rule_editor", method="POST")
-
-    # Rule Options
-    vs_rule_options.render_input("options", rule_options)
-
-    # Value
-    forms.header(_("Value"))
-    if valuespec:
-        value = rule[0]
-        forms.section()
-        try:
-            valuespec.validate_datatype(value, "ve")
-            valuespec.render_input("ve", value)
-        except:
-            if config.debug:
-                raise
-            valuespec.render_input("ve", valuespec.default_value())
-
-        valuespec.set_focus("ve")
-    else:
-        forms.section("")
-        for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
-            val = img == "yes"
-            html.write('<img class=ruleyesno align=top src="images/rule_%s.png"> ' % img)
-            html.radiobutton("value", img, value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
 
     # Conditions
     forms.header(_("Conditions"))
@@ -10437,6 +10413,30 @@ def mode_edit_rule(phase, new = False):
                              "with <tt>.*</tt><br>Please note that on windows systems any backslashes need to be escaped."
                              "For example C:\\\\tmp\\\\message.log"))
                 html.write("</div>")
+
+    # Value
+    forms.header(_("Value"))
+    if valuespec:
+        value = rule[0]
+        forms.section()
+        try:
+            valuespec.validate_datatype(value, "ve")
+            valuespec.render_input("ve", value)
+        except:
+            if config.debug:
+                raise
+            valuespec.render_input("ve", valuespec.default_value())
+
+        valuespec.set_focus("ve")
+    else:
+        forms.section("")
+        for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
+            val = img == "yes"
+            html.write('<img class=ruleyesno align=top src="images/rule_%s.png"> ' % img)
+            html.radiobutton("value", img, value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
+
+    # Addiitonal rule options
+    vs_rule_options.render_input("options", rule_options)
 
     forms.end()
     html.button("save", _("Save"))

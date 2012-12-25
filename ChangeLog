@@ -77,6 +77,7 @@
     * The rules formular now uses POST as transaction method
     * Modularized the authentication and user management code
     * Default config: add contact group 'all' and put all hosts into it
+    * Reverse order of Condition, Value and General options in rule editor
 
     Event Console:
     * FIX: fix exception in rules that use facility local7

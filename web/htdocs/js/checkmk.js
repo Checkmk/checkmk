@@ -1713,7 +1713,7 @@ function optiondial_wheel(e) {
 
     code = ('' + (oDiv.onclick)).replace("this", "oDiv").replace("onclick", "dial_wheel_function");
     eval(code);
-    if (delta < 0)
+    if (delta > 0)
         dial_direction = -1;
     dial_wheel_function(e);
     dial_direction = 1;

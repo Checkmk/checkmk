@@ -314,7 +314,7 @@ table.data th.tablegap {
     background-color: transparent; /* none; */
 }
 
-table.data tr.data td {
+table.data tr.data > td {
     border-right: 1px solid #ccc;
     padding: 2px 4px;
     height: 22px;

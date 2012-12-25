@@ -378,6 +378,16 @@ td.dictleft div.dictelement {
     float: none;
 }
 
+table.vs_dict_text {
+    padding: 0px;
+    margin: 0px;
+}
+table.data tr td table.vs_dict_text > tbody > tr > td {
+    padding: 0px;
+    margin: 0px;
+    vertical-align: top;
+}
+
 table.valuespec_tuple td.tuple_left {
     padding-right: 8px;
     padding-top: 5px;

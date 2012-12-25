@@ -27,9 +27,14 @@
 table = None
 mode = None
 next_func = None
+row_css = None
 
 def begin(title, **kwargs):
     global table, mode, next_func
+
+    if table:
+        end()
+
     table = {
         "title": title,
         "headers" : [],
@@ -42,6 +47,9 @@ def begin(title, **kwargs):
     
     if kwargs.get("help"):  
         table["help"] = kwargs["help"]
+
+    if kwargs.get("css"):
+        table["css"] = kwargs["css"]
 
     html.plug()
     mode = 'row'
@@ -57,8 +65,9 @@ def row(*posargs, **kwargs):
     next_func = add_row
     next_args = posargs, kwargs
 
-def add_row():
-    table["rows"].append([])
+def add_row(css=None):
+    table["rows"].append(([], css))
+
 
 def cell(*posargs, **kwargs):
     finish_previous()
@@ -67,12 +76,15 @@ def cell(*posargs, **kwargs):
     next_args = posargs, kwargs
 
 def add_cell(title, text="", css=None):
+    if type(text) != unicode:
+        text = str(text)
     htmlcode = text + html.drain()
     if len(table["rows"]) == 1: # first row -> pick headers
         table["headers"].append(title)
-    table["rows"][-1].append((htmlcode, css))
+    table["rows"][-1][0].append((htmlcode, css))
 
 def end():
+    global table
     finish_previous()
     html.unplug()
     html.write("<h3>%s</h3>" % table["title"])
@@ -84,7 +96,10 @@ def end():
         html.write("<div class=info>%s</div>" % table["empty_text"])
         return
 
-    html.write("<table class=data>\n")
+    html.write('<table class="data')
+    if "css" in table:
+        html.write(" %s" % table["css"])
+    html.write('">\n')
     html.write("  <tr>")
     for header in table["headers"]:
         html.write("    <th>%s</th>\n" % header)
@@ -92,15 +107,19 @@ def end():
 
     odd = "even"
     # TODO: Sorting
-    for row in table["rows"]:
+    for row, css in table["rows"]:
         # TODO: Filtering
         odd = odd == "odd" and "even" or "odd"
-        html.write('  <tr class="data %s0">\n' % odd)
+        html.write('  <tr class="data %s0' % odd)
+        if css:
+            html.write(' %s' % css)
+        html.write('">\n')
         for cell_content, css_classes in row:
             html.write("    <td%s>" % (css_classes and (" class='%s'" % css_classes) or ""))
             html.write(cell_content)
             html.write("</td>\n")
         html.write("</tr>\n")
     html.write("</table>\n")
+    table = None
 
 

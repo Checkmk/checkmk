@@ -589,8 +589,14 @@ table.validationerror img {
     vertical-align: middle;
 }*/
 
-.wato table.data.ruleset td {
-/*    vertical-align: top; */
+
+.wato table.data.ruleset tr.disabled td * {
+    color: #999;
+    text-shadow: 0px 1px 0px #fff;
+}
+
+.wato table.data.ruleset td.condition {
+    width: 360px;
 }
 
 /* Special styling for Timeperiods editor */ 

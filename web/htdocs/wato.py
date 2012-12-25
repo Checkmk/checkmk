@@ -9758,7 +9758,8 @@ def mode_edit_ruleset(phase):
     if not hostname:
         render_folder_path(keepvarnames = ["mode", "varname"])
 
-    html.write("<h3>" + rulespec["title"] + "</h3>")
+    # Titel ist schon Seitentitel
+    # html.write("<h3>" + rulespec["title"] + "</h3>")
     if not config.wato_hide_varnames:
         display_varname = ':' in varname and '%s["%s"]' % tuple(varname.split(":")) or varname
         html.write('<div class=varname>%s</div>' % display_varname)
@@ -9773,74 +9774,39 @@ def mode_edit_ruleset(phase):
 
     else:
         html.write('<table class="data ruleset">')
-        html.write("<tr>"
-                   "<th>" + _("#") + "</th>"
-                   "<th>" + _("Actions") + "</th>"
-                   "<th>" + _("Act.") + "</th>"
-                   "<th>" + _("Comment") + "</th>"
-                   "<th>" + _("Folder") + "</th>"
-                   "<th>" + _("Value") + "</th>"
-                   "<th>" + _("Conditions") + "</th>"
-                   "</tr>\n")
 
-        odd = "odd"
-        folder_odd = "odd"
         alread_matched = False
         match_keys = set([]) # in case if match = "dict"
         last_folder = None
+
         for rulenr in range(0, len(ruleset)):
             folder, rule = ruleset[rulenr]
             if folder != last_folder:
-                folder_odd = folder_odd == "odd" and "even" or "odd"
                 first_in_group = True
+                alias_path = get_folder_aliaspath(folder, show_main = False)
+                table.begin(title = "%s %s" % (_("Rules in folder"), alias_path), css="ruleset")
                 rel_rulenr = 0
-                # Count how many of the following rules are located in the same
-                # folder
-                row_span = 1
-                while rulenr + row_span < len(ruleset) and ruleset[rulenr + row_span][0] == folder:
-                    row_span += 1
                 last_folder = folder
             else:
                 first_in_group = False
-            last_in_group = rulenr == len(ruleset) - 1 or ruleset[rulenr+1][0] != folder
+                rel_rulenr += 1
 
-            odd = odd == "odd" and "even" or "odd"
+            last_in_group = (rulenr == len(ruleset) - 1 or \
+                ruleset[rulenr+1][0] != folder)
+            
             value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
-            html.write('<tr class="data %s0">' % odd)
+            disabled = rule_options.get("disabled")
+            table.row(disabled and "disabled" or None)
 
-            # Rule number
-            html.write("<td class=number>%d</td>" % (rulenr + 1))
 
-            # Actions
-            html.write("<td class=\"buttons rulebuttons\">")
-            if not first_in_group:
-                rule_button("up", _("Move this rule one position up"), folder, rel_rulenr)
-            else:
-                rule_button(None)
-            if not last_in_group:
-                rule_button("down", _("Move this rule one position down"), folder, rel_rulenr)
-            else:
-                rule_button(None)
-            edit_url = make_link([
-                ("mode", "edit_rule"),
-                ("varname", varname),
-                ("rulenr", rel_rulenr),
-                ("host", hostname),
-                ("item", mk_repr(item)),
-                ("rule_folder", folder[".path"])])
-            html.icon_button(edit_url, _("Edit this rule"), "edit")
-            rule_button("insert", _("Insert a copy of this rule into the folder '%s'")
-                        % g_folder["title"], folder, rel_rulenr)
-            rule_button("delete", _("Delete this rule"), folder, rel_rulenr)
-            html.write("</td>")
-
-            # Disabling and rule matching 
-            html.write("<td class=buttons>")
-            if rule_options.get("disabled"):
-                html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
-            elif hostname:
-                reason = rule_matches_host_and_item(
-                    rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, item)
+            # Rule matching
+            if hostname:
+                table.cell(_("Ma."))
+                if disabled:
+                    reason = _("This rule is disabled")
+                else:
+                    reason = rule_matches_host_and_item(
+                        rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, item)
 
                 # Handle case where dict is constructed from rules
                 if reason == True and rulespec["match"] == "dict":
@@ -9876,24 +9842,54 @@ def mode_edit_ruleset(phase):
                     title = _("This rule does not match: %s") % reason
                     img = 'nmatch'
                 html.write('<img align=absmiddle title="%s" class=icon src="images/icon_rule%s.png"> ' % (title, img))
-            html.write("</td>")
 
-            # Comment
-            html.write('<td>')
-            url = rule_options.get("docu_url")
-            if url:
-                html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
-            html.write(htmllib.attrencode(rule_options.get("comment", "")))
-            html.write('</td>')
+            # Disabling
+            table.cell("", css="buttons")
+            if disabled:
+                html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
+            else:
+                html.empty_icon()
+
+            # Actions
+            table.cell(_("Order"), css="buttons rulebuttons")
+            if not first_in_group:
+                rule_button("up", _("Move this rule one position up"), folder, rel_rulenr)
+            else:
+                rule_button(None)
+            if not last_in_group:
+                rule_button("down", _("Move this rule one position down"), folder, rel_rulenr)
+            else:
+                rule_button(None)
+
+            table.cell(_("Actions"), css="buttons rulebuttons")
+            edit_url = make_link([
+                ("mode", "edit_rule"),
+                ("varname", varname),
+                ("rulenr", rel_rulenr),
+                ("host", hostname),
+                ("item", mk_repr(item)),
+                ("rule_folder", folder[".path"])])
+            html.icon_button(edit_url, _("Edit this rule"), "edit")
+            rule_button("insert", _("Insert a copy of this rule into the folder '%s'")
+                        % g_folder["title"], folder, rel_rulenr)
+            rule_button("delete", _("Delete this rule"), folder, rel_rulenr)
 
 
             # Folder
-            if first_in_group:
-                alias_path = get_folder_aliaspath(folder, show_main = False)
-                html.write('<td rowspan=%d class="%s0">%s</td>' % (row_span, folder_odd, alias_path))
+            # alias_path = get_folder_aliaspath(folder, show_main = False)
+            # classes = ""
+            # if first_in_group:
+            #     classes += "first"
+            # if last_in_group:
+            #     classes += " last"
+            # html.write('<td class="folder %s"><table><tr><td>%s</td></tr></table></td>' % (classes, alias_path))
+
+            # Conditions
+            table.cell(_("Conditions"), css="condition")
+            render_conditions(rulespec, tag_specs, host_list, item_list, varname, folder)
 
             # Value
-            html.write('<td class=value>\n')
+            table.cell(_("Value"))
 
             if rulespec["valuespec"]:
                 try:
@@ -9912,17 +9908,19 @@ def mode_edit_ruleset(phase):
                 img = value and "yes" or "no"
                 title = value and _("This rule results in a positive outcome.") \
                               or  _("this rule results in a negative outcome.")
-                value_html = '<img align=absmiddle title="%s" src="images/rule_%s.png">' % (title, img)
-            html.write('%s</td>\n' % value_html)
+                value_html = '<img align=absmiddle class=icon title="%s" src="images/rule_%s.png">' \
+                                % (title, img)
+            html.write(value_html)
 
-            # Conditions
-            html.write("<td>")
-            render_conditions(rulespec, tag_specs, host_list, item_list, varname, folder)
-            html.write("</td>")
+            # Comment
+            table.cell(_("Comment"))
+            url = rule_options.get("docu_url")
+            if url:
+                html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
+                html.write("&nbsp;")
+            html.write(htmllib.attrencode(rule_options.get("comment", "")))
 
-            rel_rulenr += 1
-
-        html.write('</table>')
+        table.end()
 
     create_new_rule_form(rulespec, hostname, item)
 
@@ -10317,7 +10315,7 @@ def mode_edit_rule(phase, new = False):
                             "folder %s to %s") % (rulespec["title"], folder["title"],
                             new_rule_folder["title"]))
         else:
-            return
+            return "edit_ruleset"
 
         return ("edit_ruleset",  _("%s rule in ruleset '%s' in folder %s") % 
                                   (new and _("Created new") or _("Edited"), rulespec["title"], new_rule_folder["title"]))

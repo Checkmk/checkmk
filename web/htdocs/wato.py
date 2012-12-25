@@ -9781,7 +9781,6 @@ def mode_edit_ruleset(phase):
                    "<th>" + _("Folder") + "</th>"
                    "<th>" + _("Value") + "</th>"
                    "<th>" + _("Conditions") + "</th>"
-                   "<th></th>" # Several icons
                    "</tr>\n")
 
         odd = "odd"
@@ -9921,19 +9920,6 @@ def mode_edit_ruleset(phase):
             render_conditions(rulespec, tag_specs, host_list, item_list, varname, folder)
             html.write("</td>")
 
-            # Icons
-            html.write("<td>")
-            # "this folder"
-            if not hostname and folder == g_folder:
-                title = _("This rule is defined in the current folder.")
-                html.write('<img title="%s" class=icon src="images/icon_localrule.png">' % title)
-            elif hostname and hostname in host_list:
-                title = _("This rule contains an exception for the host %s." % hostname)
-                html.write('<img title="%s" class=icon src="images/icon_localrule.png">' % title)
-            else:
-                html.write('<img src="images/icon_trans.png" class=icon>')
-
-            html.write("</td>")
             rel_rulenr += 1
 
         html.write('</table>')

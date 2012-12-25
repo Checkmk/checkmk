@@ -66,6 +66,8 @@ body.main {
     font-family: arial, helvetica, sans-serif;
     font-size: 9pt;
     margin: 0;
+    /* avoid white background shining through in case of unaligned image in zoomed browser view */
+    background-color: #426D8A; 
 }
 
 body.main div.main {

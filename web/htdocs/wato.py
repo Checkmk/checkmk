@@ -10265,7 +10265,12 @@ def mode_edit_rule(phase, new = False):
         if html.has_var("_new_host_rule"):
             host = html.var("host")
             item = html.has_var("item") and mk_eval(html.var("item")) or NO_ITEM 
-        rule     = create_rule(rulespec, host, item)
+        try:
+            rule     = create_rule(rulespec, host, item)
+        except Exception, e:
+            if phase != "action":
+                html.message(_("Cannot create rule: %s") % e)
+            return
         rulenr   = len(rules) 
     else:
         rulenr   = int(html.var("rulenr"))

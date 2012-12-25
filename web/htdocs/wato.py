@@ -8148,7 +8148,7 @@ def mode_edit_user(phase):
     forms.header(_("Notifications"), isopen=False)
 
     forms.section(_("Enabling"), simple=True)
-    html.checkbox("notifications_enabled", user.get("notifications_enabled", True), 
+    html.checkbox("notifications_enabled", user.get("notifications_enabled", False),
          label = _("enable notifications"))
     html.help(_("Notifications are sent out "
                 "when the status of a host or service changes."))

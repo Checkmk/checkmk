@@ -1647,6 +1647,7 @@ def ajax_set_viewoption():
     config.save_user_file("viewoptions", vo)
 
 def togglebutton_off(icon):
+    html.begin_context_buttons()
     html.write('<div class="togglebutton off %s"></div>' % icon)
 
 def togglebutton(id, isopen, icon, help):

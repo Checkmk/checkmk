@@ -10968,8 +10968,9 @@ def create_sample_config():
 
     # A contact group where everyone is member of
     groups = {
-        "contact" : { 'all', u'Everybody' },
+        "contact" : { 'all' : u'Everybody' },
     }
+    save_group_information(groups)
 
     # Basic setting of host tags
     wato_host_tags = \

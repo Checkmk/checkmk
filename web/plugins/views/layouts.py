@@ -291,7 +291,7 @@ def render_tiled(rows, view, group_painters, painters, _ignore_num_columns, show
         if len(painters) < 5:
             painters = painters + ([ (empty_painter, None) ] * (5 - len(painters)))
 
-        rendered = [ ("", prepare_paint(p, row)[1]) for p in painters ]
+        rendered = [ prepare_paint(p, row) for p in painters ]
 
         html.write("<tr><td class=\"tl %s\">" % (rendered[1][0],))
         if show_checkboxes:

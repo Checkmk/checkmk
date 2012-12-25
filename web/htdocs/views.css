@@ -266,14 +266,19 @@ table.tiled td {
 }
 
 .tile {
-    width: 160px;
+    width: 180px;
     border: 1px solid #000;
     float: left;
-    border-radius: 4px;
-    margin-right: 3px;
-    margin-bottom: 3px;
-    border-right: 2px solid #000;
-    border-bottom: 2px solid #000;
+    border-radius: 0px;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    box-shadow: 1px 1px 3px #000;
+    background-color: #ccc;
+}
+
+.tile img.icon {
+    width: 16px;
+    height: 16px;
 }
 
 .tile table {
@@ -284,16 +289,20 @@ table.tiled td {
     font-size: 7pt;
 }
 .tile.sstate0, .tile.hhstate0 {
-    background-color: #afa;
+    border-color: #0f0;
+    /* background-color: #afa; */
 }
 .tile.sstate1 {
+    border-color: #ff0;
     background-color: #ff0;
 }
 .tile.sstate2, .tile.hhstate1 {
-    background-color: #f42;
+    border-color: #f00;
+    background-color: #f88;
 }
 .tile.sstate3, .tile.hhstate2 {
-    background-color: #f80;
+    border-color: #f80;
+    background-color: #fc8;
 }
 
 .tile table {

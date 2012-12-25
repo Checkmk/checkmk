@@ -1686,6 +1686,8 @@ function view_toggle_form(oButton, idForm) {
 
 // used for refresh und num_columns
 function view_dial_option(oDiv, viewname, option, choices) {
+    // prevent double click from select text
+    make_unselectable(oDiv);
     var new_choice = choices[0]; // in case not contained in choices
     for (var c=0; c<choices.length; c++) {
         choice = choices[c];
@@ -1722,6 +1724,14 @@ function turn_dial(option, text, way) {
     if (text && oDiv.innerHTML != text)
         oDiv.innerHTML = text;
     oDiv.style.top = (way * 1.3) + "px";
+}
+
+
+function make_unselectable(elem) {
+    elem.onselectstart = function() { return false; };
+    elem.style.MozUserSelect = "none";
+    elem.style.KhtmlUserSelect = "none";
+    elem.unselectable = "on";
 }
 
 /* Switch number of view columns, refresh and checkboxes. If the

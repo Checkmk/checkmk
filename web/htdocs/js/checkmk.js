@@ -738,7 +738,7 @@ function toggleRefreshFooter(s) {
 // timer to the given interval. If the parameter is 0 the reload is stopped.
 // When called with two parmeters the 2nd one is used as new url.
 function setReload(secs, url) {
-    if(typeof url === 'undefined')
+    if (typeof url === 'undefined')
         url = '';
 
     if (gReloadTimer) {
@@ -1716,7 +1716,13 @@ function view_dial_option(oDiv, viewname, option, choices) {
             "&option=" + option + "&value=" + new_choice[0]);
     if (option == "refresh")
         setReload(new_choice[0]);
-    handleReload('');
+    else {
+        if (gReloadTimer)
+            clearTimeout(gReloadTimer);
+        if (gReloadTime) 
+            gReloadTimer = setTimeout("handleReload('')", 400.0);
+    }
+    // handleReload('');
 }
 // way ranges from -10 to 10 means centered (normal place)
 function turn_dial(option, text, way) {

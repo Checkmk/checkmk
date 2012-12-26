@@ -833,10 +833,11 @@ div.varname {
     background-image: url("images/repprogress.png");
     background-repeat: repeat;
     float: left;
-    color: white;
     text-align: center;
-    padding-top: 0px;
+    padding-top: 4px;
     font-size: 8pt;
+    box-shadow: 0.5px 0.5px 1px #224466 inset;
+    color: black;
 }
 
 .wato td.tag-ellipsis {
@@ -846,6 +847,11 @@ div.varname {
     text-overflow: ellipsis;
     -o-text-overflow: ellipsis;
 }
+
+.wato td#repmsg_local {
+    width: 280px;
+}
+
 
 /*-------------------------------------------------------------------------.
 |               ____                                                       |

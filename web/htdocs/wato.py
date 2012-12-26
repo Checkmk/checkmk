@@ -7242,7 +7242,8 @@ def ajax_activation():
 
         # html.message
         html.write('OK: ')
-        html.write('<div class=act_success><img src="images/icon_apply.png" /> %s</div>' % _("The new configuration has been successfully activated."))
+        html.write('<div class=act_success><img src="images/icon_apply.png" /> %s</div>' % 
+                  _("Configuration successfully activated."))
     except Exception, e:
         html.show_error(str(e))
 
@@ -11730,7 +11731,12 @@ def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mo
         html.sorted_select(
             "folder", [ ("", "") ] + options,
             onchange = "folderpath.submit();",
-            attrs = {"class" : "folderpath"}
+            attrs = {
+                "class"   : "folderpath", 
+                # This does not work: it prevents the selection from
+                # being unfolded
+                # "onfhocus" : "if (this.blur) this.blur();",
+            }
         )
         for var in keepvarnames:
             html.hidden_field(var, html.var(var))

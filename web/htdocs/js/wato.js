@@ -513,7 +513,7 @@ function wato_activation_result(siteid, code) {
         oMsg.innerHTML = code.substr(3);
 
         // Reload page after 2 secs
-        setTimeout(wato_replication_finish, 2000);
+        setTimeout(wato_replication_finish, 1000);
     } else {
         oState.innerHTML = '';
         oMsg.innerHTML = code;
@@ -571,24 +571,24 @@ function wato_replication_result(siteid, code) {
         oDiv.innerHTML = code;
 
     if (0 == num_replsites) {
-        setTimeout(wato_replication_finish, 2000);
+        setTimeout(wato_replication_finish, 1000);
     }
 }
 
 function wato_replication_finish() {
     // check if we have a sidebar-main frame setup
-    if(this.parent && parent && parent.frames[1] == this) 
+    if (this.parent && parent && parent.frames[1] == this) 
         parent.frames[0].location.reload(); // reload sidebar 
 
     // always reload main
-    this.location.reload();
+    // this.location.reload();
     var oDiv = document.getElementById("act_changes_button");
     oDiv.style.display = "none";
     oDiv = null
 
     // Hide the pending changes container
     var oPending = document.getElementById("pending_changes");
-    if(oPending) {
+    if (oPending) {
         oPending.style.display = "none";
         oPending = null
     }

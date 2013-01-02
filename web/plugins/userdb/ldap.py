@@ -141,9 +141,10 @@ def ldap_connect():
         # on success, store the connection options the connection has been made with
         ldap_connection_options = config.ldap_connection
 
-    except ldap.SERVER_DOWN:
+    except ldap.SERVER_DOWN, e:
+        msg = e[0].get('info', e[0].get('desc', ''))
         ldap_connection = None # Invalidate connection on failure
-        raise MKLDAPException(_('The LDAP connector is unable to connect to the LDAP server.'))
+        raise MKLDAPException(_('The LDAP connector is unable to connect to the LDAP server (%s).') % msg)
 
     except ldap.LDAPError, e:
         html.write(repr(e))

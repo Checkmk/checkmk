@@ -22,12 +22,6 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// +------------------------------------------------------------------+
-// | This file has been contributed and is copyrighted by:            |
-// |                                                                  |
-// | Lars Michelsen <lm@mathias-kettner.de>            Copyright 2010 |
-// +------------------------------------------------------------------+
-
 var aSearchResults = [];
 var aSearchContents = '';
 var iCurrent = null;
@@ -45,8 +39,6 @@ function mkSearchAddField(field, targetFrame) {
         oField.onkeydown = function(e) { if (!e) e = window.event; return mkSearchKeyDown(e, oField); }
         oField.onkeyup   = function(e) { if (!e) e = window.event; return mkSearchKeyUp(e, oField);}
         oField.onclick   = function(e) { mkSearchClose(); return true; }
-        // keypress is needed for key-repeation for cursor up/down
-        oField.onkeypress  = function(e) { if (!e) e = window.event; return mkSearchKeyRepeat(e, oField);}
 
         // On doubleclick toggle the list
         oField.ondblclick  = function(e) { if (!e) e = window.event; mkSearchToggle(e, oField); }
@@ -68,12 +60,6 @@ function mkSearchKeyUp(e, oField) {
             mkSearchClose();
             e.returnValue = false;
             e.cancelBubble = true;
-        break;
-
-        // Up/Down
-        case 38:
-        case 40:
-            return false;
         break;
 
         // Other keys
@@ -121,33 +107,6 @@ function mkSearchFindUrl(aSearchObjects, objType, oField) {
     // not found, not unique or only prefix -> display a view that shows more objects
     return mkSearchGetUrl(objType, namepart, '', found);
 }
-
-function mkSearchKeyRepeat(e, oField) {
-    var keyCode = e.which || e.keyCode;
-
-    switch (keyCode) {
-            // Up arrow
-            case 38:
-                if(!mkSearchResultShown()) {
-                    mkSearch(e, oField);
-                }
-
-                mkSearchMoveElement(-1);
-                return false;
-            break;
-
-            // Down arrow
-            case 40:
-                if(!mkSearchResultShown()) {
-                    mkSearch(e, oField);
-                }
-
-                mkSearchMoveElement(1);
-                return false;
-            break;
-    }
-}
-
 
 // On key press down event handler
 function mkSearchButton() {
@@ -197,6 +156,19 @@ function mkSearchKeyDown(e, oField) {
                     mkSearchClose();
                 }
                 return;
+            break;
+
+            // Up/Down arrow (Must not be handled in onkeyup since this does not fire repeated events)
+            case 38:
+            case 40:
+                if(!mkSearchResultShown()) {
+                    mkSearch(e, oField);
+                }
+
+                mkSearchMoveElement(keyCode == 38 ? -1 : 1);
+
+                e.preventDefault();
+                return false;
             break;
     }
     oldValue = oField.value;

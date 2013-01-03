@@ -1,9 +1,14 @@
 Title: Quicksearch on Chrome: key down/up does not work
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-11-19 15:29:03
 Targetversion: 1.2.0
-Class: bug
 
 Reason is unclear. Down should move the selection field down in order
 to select a host without the mouse.
+
+2013-01-03 10:38:58: changed state open -> done
+The event handling was broken for chrome. Simplified the arrow key handling now, 
+
+Tested in FF, Chrome, IE.

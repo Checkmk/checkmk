@@ -72,6 +72,7 @@
     * Option dials (refresh, number of columns) now turnable by mouse wheel
     * FIX: Sidebar not raising exceptions on configured but not available snapins
     * FIX: Quicksearch: Fixed Up/Down arrow handling in chrome
+    * FIX: Speedometer: Terminating data updates when snapin is removed from sidebar
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

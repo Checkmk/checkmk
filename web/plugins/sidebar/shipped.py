@@ -656,7 +656,11 @@ def render_speedometer():
 
     html.javascript("""
 function show_speed(percentage) {
-    var context = document.getElementById('speedometer').getContext('2d');
+    var canvas = document.getElementById('speedometer');
+    if (!canvas)
+        return;
+
+    var context = canvas.getContext('2d');
     if (!context)
         return;
 
@@ -701,6 +705,12 @@ function speedometer_show_speed(last_perc, program_start, scheduled_rate)
         title            = code[4];
 
         oDiv = document.getElementById('speedometer');
+
+        // Terminate reschedule when the speedometer div does not exist anymore
+        // (e.g. the snapin has been removed)
+        if (!oDiv)
+            return;
+
         oDiv.title = title
         oDiv = document.getElementById('speedometerbg');
         oDiv.title = title

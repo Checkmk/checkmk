@@ -76,6 +76,7 @@
     * FIX: Speedometer: Terminating data updates when snapin is removed from sidebar
     * Views: Commands/Checkboxes buttons are now activated dynamically (depending on data displayed)
     * FIX: Views: toggling forms does not disable the checkbox button anymore
+    * FIX: Dashboard: Fixed wrong display options in links after data reloads
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

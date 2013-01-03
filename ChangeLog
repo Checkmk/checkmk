@@ -81,6 +81,7 @@
     * Modularized the authentication and user management code
     * Default config: add contact group 'all' and put all hosts into it
     * Reverse order of Condition, Value and General options in rule editor
+    * Allowing "%" and "+" in mail prefixes of contacts now
 
     Event Console:
     * FIX: fix exception in rules that use facility local7

@@ -1689,11 +1689,11 @@ function view_toggle_form(oButton, idForm) {
     if (oForm)
         oForm.style.display = display;
 
-    // Make all other buttons inactive
+    // Make other buttons inactive
     var allbuttons = document.getElementsByClassName('togglebutton');
     for (var i=0; i<allbuttons.length; i++) {
         var b = allbuttons[i];
-        if (b != oButton && !has_class(b, "empth")) {
+        if (b != oButton && !has_class(b, "empth") && !has_class(b, "checkbox")) {
             remove_class(b, "down") 
             add_class(b, "up") 
         }

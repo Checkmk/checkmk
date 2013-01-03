@@ -74,7 +74,8 @@
     * FIX: Sidebar not raising exceptions on configured but not available snapins
     * FIX: Quicksearch: Fixed Up/Down arrow handling in chrome
     * FIX: Speedometer: Terminating data updates when snapin is removed from sidebar
-    * Commands/Checkboxes buttons are now activated dynamically (depending on data displayed)
+    * Views: Commands/Checkboxes buttons are now activated dynamically (depending on data displayed)
+    * FIX: Views: toggling forms does not disable the checkbox button anymore
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

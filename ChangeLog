@@ -7,6 +7,7 @@
     * Output better error message in case of old inventory function
     * Do object cache precompile for monitoring core on cmk -R/-O
     * Avoid duplicate verification of monitoring config on cmk -R/-O
+    * FIX: Parameter --cleanup-autochecks (long for -u) works now like suggested in help
 
     Notifications:
     * Fix flexible notifications on non-OMD systems

@@ -4717,7 +4717,7 @@ if __name__ == "__main__":
             opt_showperfdata = True
         elif o == '-n':
             opt_dont_submit = True
-        elif o == '-u':
+        elif o in [ '-u', '--cleanup-autochecks' ]:
             opt_cleanup_autochecks = True
         elif o == '--fake-dns':
             fake_dns = a

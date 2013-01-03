@@ -41,6 +41,7 @@
     * FIX: userdb/ldap.py: fixed invalid call site.getsitepackages() for python 2.6
     * FIX: zpool_status: fixed crash when spare devices were available
     * FIX: hr_fs: handle negative values in order to larger disks (thanks to Christof Musik)
+    * FIX: mssql_backup: Fixed wrong calculation of backup age in seconds
 
 
     Multisite:

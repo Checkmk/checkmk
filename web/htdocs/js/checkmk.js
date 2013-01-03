@@ -316,9 +316,24 @@ function makeuri(addvars) {
 // GUI styling
 // ----------------------------------------------------------------------------
 
+function update_togglebutton(id, enabled) {
+    var on  = document.getElementById(id + '_on');
+    var off = document.getElementById(id + '_off');
+    if (!on || !off)
+        return;
+
+    if (enabled) {
+        on.style.display = 'block';
+        off.style.display = 'none';
+    } else {
+        on.style.display = 'none';
+        off.style.display = 'block';
+    }
+}
+
 function update_headinfo(text)
 {
-    oDiv = document.getElementById("headinfo");
+    var oDiv = document.getElementById("headinfo");
     if (oDiv) {
         oDiv.innerHTML = text;
     }
@@ -1652,13 +1667,15 @@ function help_switch(how) {
 /* Switch filter, commands and painter options */
 function view_toggle_form(oButton, idForm) {
     var oForm = document.getElementById(idForm);
-    if (oForm.style.display == "none") {
-        var display = "";
-        var down = "down";
-    }
-    else {
-        var display = "none";
-        var down = "up";
+    if (oForm) {
+        if (oForm.style.display == "none") {
+            var display = "";
+            var down = "down";
+        }
+        else {
+            var display = "none";
+            var down = "up";
+        }
     }
 
     // Close all other view forms
@@ -1668,7 +1685,9 @@ function view_toggle_form(oButton, idForm) {
             alldivs[i].style.display = "none";
         }
     }
-    oForm.style.display = display;
+
+    if (oForm)
+        oForm.style.display = display;
 
     // Make all other buttons inactive
     var allbuttons = document.getElementsByClassName('togglebutton');

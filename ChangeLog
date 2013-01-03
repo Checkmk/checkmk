@@ -74,6 +74,7 @@
     * FIX: Fixed generated manual check definitions for checks without items
       like ntp_time and tcp_conn_stats
     * FIX: Persisting changing of folder titles when only the title has changed
+    * FIX: Fixed rendering bug after folder editing
     * Add: Creating a new rule immediately opens its edit formular
     * The rules formular now uses POST as transaction method
     * Modularized the authentication and user management code

@@ -1,9 +1,9 @@
 Title: "Remove All" downtimes command button selection problem
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-10-26 10:55:14
 Targetversion: 1.2.0
-Class: bug
 
 Set a downtime for multiple services within a view
 
@@ -11,3 +11,8 @@ Try to remove these downtimes with the "Remove all" button, but additionally sel
 downtime set -> Shows error "Sorry. This function is not implemented" 
 
 Select exactly the services in downtime and press "Remove all" -> working
+
+2013-01-04 09:42:59: changed state open -> done
+Has been changed to work even if there was no downtime available to delete. The "success" message shows
+up a note "no data row", means no downtime has been deleted. But this is no error message, since the 
+result is as expected: No downtimes (anymore).

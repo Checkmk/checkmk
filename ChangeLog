@@ -77,6 +77,7 @@
     * Views: Commands/Checkboxes buttons are now activated dynamically (depending on data displayed)
     * FIX: Views: toggling forms does not disable the checkbox button anymore
     * FIX: Dashboard: Fixed wrong display options in links after data reloads
+    * FIX: Fixed "remove all downtimes" button in views when no downtimes to be deleted 
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

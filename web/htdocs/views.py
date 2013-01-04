@@ -2126,7 +2126,10 @@ def core_command(what, row):
                 commands, title = result
                 break
 
-    if not commands:
+    # Use the title attribute to determine if a command exists, since the list
+    # of commands might be empty (e.g. in case of "remove all downtimes" where)
+    # no downtime exists in a selection of rows.
+    if not title:
         raise MKUserError(None, _("Sorry. This command is not implemented."))
 
     # Some commands return lists of commands, others
@@ -2176,15 +2179,19 @@ def do_actions(view, what, action_rows, backurl):
             executor(command, row["site"])
             count += 1
 
+    message = None
     if command:
         message = _("Successfully sent %d commands.") % count
         if config.debug:
             message += _("The last one was: <pre>%s</pre>") % command
+    elif count == 0:
+        message = _("No matching data row. No command sent.")
+
+    if message:
         if html.output_format == "html": # sorry for this hack
             message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
         html.message(message)
-    elif count == 0:
-        html.message(_("No matching data row. No command sent."))
+
     return True
 
 def get_selected_rows(view, rows, sel_var):

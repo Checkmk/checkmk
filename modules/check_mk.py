@@ -3278,6 +3278,9 @@ def do_restore(tarname):
     if opt_verbose:
         sys.stderr.write("Restoring from '%s'...\n" % tarname)
 
+    if not os.path.exists(tarname):
+        raise MKGeneralException("Unable to restore: File does not exist")
+
     for name, path, canonical_name, descr, is_dir, owned_by_nagios, group_www in backup_paths:
         absdir = os.path.abspath(path)
         if is_dir:

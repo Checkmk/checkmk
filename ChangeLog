@@ -8,6 +8,7 @@
     * Do object cache precompile for monitoring core on cmk -R/-O
     * Avoid duplicate verification of monitoring config on cmk -R/-O
     * FIX: Parameter --cleanup-autochecks (long for -u) works now like suggested in help
+    * FIX: Added error handling when trying to --restore with a non existant file
 
     Notifications:
     * Fix flexible notifications on non-OMD systems

@@ -79,6 +79,7 @@
     * FIX: Views: toggling forms does not disable the checkbox button anymore
     * FIX: Dashboard: Fixed wrong display options in links after data reloads
     * FIX: Fixed "remove all downtimes" button in views when no downtimes to be deleted 
+    * FIX: Services in hosttables now use the service name as header (if no custom title set)
     
     WATO:
     * FIX: Fixed generated manual check definitions for checks without items

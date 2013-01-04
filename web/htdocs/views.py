@@ -2440,8 +2440,9 @@ def paint_header(view, p):
     t = painter.get("short", painter["title"])
     if len(p) >= 4: # join column
         join_index = p[3]
+        t = p[3] # use join index (service name) as title
     if len(p) >= 5 and p[4]:
-        t = p[4]
+        t = p[4] # use custom defined title
 
     # Optional: Sort link in title cell
     # Use explicit defined sorter or implicit the sorter with the painter name

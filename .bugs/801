@@ -1,9 +1,12 @@
 Title: Documentation should no longer mention checkname
 Component: docu
-State: open
+Class: cleanup
+State: done
 Date: 2012-09-19 16:41:43
 Targetversion: 1.2.0
-Class: cleanup
 
 checkname is no longer supported.
 very few checks still use it but it also confuses new authors of checks.
+
+2013-01-04 09:05:49: changed state open -> done
+I jst removed all notes on this old var.

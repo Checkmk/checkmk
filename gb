@@ -185,6 +185,7 @@ where COMMAND is one of:
   delete #..             - delete bug(s)
   grep [-v] KW1 KW2...   - show bugs containing all of the given keywords (-v: verbose)
   edit [#]               - open bug # in editor (or newest bug)
+  blame [#]              - show who worked on a bug
   commit                 - commit all changed and new bugs
 
 """)
@@ -413,6 +414,22 @@ def main_new(args):
     invalidate_my_bugid(bug["id"])
     sys.stdout.write("Bug saved with id %d.\n" % bug["id"])
 
+def main_blame(args):
+    if len(args) == 0:
+        if g_last_bug == None:
+            bail_out("No last bug, please specify id.")
+        id = g_last_bug
+    else:
+        if len(args) != 1:
+            usage()
+        id = int(args[0])
+
+    bug = g_bugs.get(id)
+    if not bug:
+        bail_out("No such bug.\n")
+
+    os.system("git blame %d" % id)
+
 def main_resolve(args):
     if len(args) == 0:
         if g_last_bug == None:
@@ -609,6 +626,7 @@ commands = {
   "new"     : main_new,
   "resolve" : main_resolve,
   "solve"   : main_resolve,
+  "blame"   : main_blame,
   "delete"  : main_delete,
   "grep"    : main_grep,
   "edit"    : main_edit,

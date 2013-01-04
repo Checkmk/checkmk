@@ -103,6 +103,9 @@
     * FIX: remove event pipe on program shutdown, prevents syslog freeze
     * FIX: hostnames in livestatus query now being utf8 encoded
 
+    Livestatus:
+    * FIX: Changed logging output "Time to process request" to be debug output
+
 1.2.1i3:
     Core:
     * added HOST/SERVICEPROBLEMID to notification macros

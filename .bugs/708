@@ -1,9 +1,9 @@
 Title: should be able to clear logwatch status for multiple hosts
 Component: multisite
-State: open
+Class: feature
+State: done
 Date: 2012-05-11 17:48:29
 Targetversion: future
-Class: feature
 
 if you receive events for a central failure, i.e. lan or san issues or a 
 certain patch triggering errors on all systems, it would be very good to 
@@ -11,3 +11,6 @@ acknowledge the error for all system after you updated your filters
 i didn't find a way to acknowledge log messages for more than a single host.
 there might be hundreds of affected systems and it's overly complicated and
 long to clear one by one.
+
+2013-01-04 13:57:00: changed state open -> done
+This has already been implemented some releases before

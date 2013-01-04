@@ -1,8 +1,11 @@
 Title: Dasboard misses iframefunc capability
 Component: multisite
-State: open
+Class: feature
+State: done
 Date: 2012-07-27 10:27:06
 Targetversion: 1.2.0
-Class: feature
 
 Analog to urlfunc there should be a iframefunc to be able to create dynamic iframe based dashlets.
+
+2013-01-04 13:56:19: changed state open -> done
+This has already been implemented.

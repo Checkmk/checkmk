@@ -1,9 +1,12 @@
 Title: Documentation about distributed WATO
 Component: docu
-State: open
+Class: todo
+State: done
 Date: 2012-02-22 19:26:04
 Targetversion: 1.2.0
-Class: todo
 
 When we finalize the version 1.2.0 we surely need some
 documentation about distributed WATO.
+
+2013-01-04 13:53:08: changed state open -> done
+Has already been written by ab.

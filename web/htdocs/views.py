@@ -1138,6 +1138,7 @@ def prepare_display_options():
         display_options = html.var("_display_options", "")
         display_options = apply_display_option_defaults(display_options)
         html.display_options = display_options
+        html.title_display_options = display_options
 
     # But there is one special case: The sorter links! These links need to know
     # about the provided display_option parameter. The links could use

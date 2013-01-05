@@ -1781,7 +1781,7 @@ class Dictionary(ValueSpec):
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
         self._render = kwargs.get("render", "normal") # also: "form" -> use forms.section()
         self._form_narrow = kwargs.get("form_narrow", False) # used if render == "form"
-        self._headers = kwargs.get("headers")
+        self._headers = kwargs.get("headers") # "sup" -> small headers in online mode
 
     def _get_elements(self):
         if type(self._elements) == list:
@@ -1798,8 +1798,11 @@ class Dictionary(ValueSpec):
             self.render_input_normal(varprefix, value, self._render == "oneline")
 
     def render_input_normal(self, varprefix, value, oneline = False):
-        if not oneline:
+        headers_sup = oneline and self._headers == "sup"
+        if headers_sup or not oneline:
             html.write("<table class=dictionary>")
+        if headers_sup:
+            html.write('<tr>')
         for param, vs in self._get_elements():
             if not oneline:
                 html.write('<tr><td class=dictleft>')
@@ -1815,9 +1818,14 @@ class Dictionary(ValueSpec):
             else:
                 visible = True
                 if vs.title():
+                    if headers_sup:
+                        html.write('<td><b class=header>')
                     html.write(" %s" % vs.title())
-                if oneline:
-                    html.write(": ")
+                    if oneline:
+                        if self._headers == "sup":
+                            html.write('</b><br>')
+                        else:
+                            html.write(": ")
 
             if self._columns == 2:
                 if vs.title():
@@ -1843,8 +1851,13 @@ class Dictionary(ValueSpec):
             html.write("</div>")
             if not oneline:
                 html.write("</td></tr>")
+            elif headers_sup:
+                html.write("</td>")
+
         if not oneline:
             html.write("</table>")
+        elif oneline and self._headers == "sup":
+            html.write('</tr></table>')
 
     def render_input_form(self, varprefix, value):
         if self._headers:

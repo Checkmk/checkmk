@@ -296,6 +296,10 @@ table.data td.number {
     text-align: right;
 }
 
+table.data td.nobr {
+    white-space: nowrap;
+}
+
 td.narrow {
     width: 10px;
 }

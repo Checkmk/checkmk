@@ -43,7 +43,9 @@ def check_mssql_backup(item, params, info):
             dt = datetime.datetime(*time.strptime(last_backup_date + ' ' + last_backup_time, '%Y-%m-%d %H:%M:%S')[0:5])
 
             state = 0
-            sec_ago = (datetime.datetime.now() - dt).seconds
+            # Would be so nice to use delta.total_seconds(). But we must care about python < 2.7
+            delta = datetime.datetime.now() - dt
+            sec_ago = (delta.microseconds + (delta.seconds + delta.days * 24 * 3600) * 10**6) / 10**6
 
             if params is not None:
                 if sec_ago >= params[1]:

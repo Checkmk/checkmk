@@ -1,9 +1,9 @@
 Title: Multisite does not display local check man pages
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-11-16 10:39:32
 Targetversion: 1.2.0
-Class: bug
 
 If you install an MKP and it brings a check man page this man page is not 
 displayed from Multisite, instead it gives an error about not finding the
@@ -14,3 +14,6 @@ LM: This is already implemented, but with the nastyness, that the regular
 check manpages are placed in share/doc/check_mk/checks but the local
 check manpages are searched in local/share/check_mk/checkman. This should
 be cleaned up!
+
+2013-01-03 11:08:57: changed state open -> done
+This is already solved. I open a new bug for the path nastiness

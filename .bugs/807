@@ -1,9 +1,12 @@
 Title: cmk --restore does report errors
 Component: core
-State: open
+Class: cleanup
+State: done
 Date: 2012-10-10 12:58:08
 Targetversion: 1.2.0
-Class: cleanup
 
 cmk --restore does not set an returncode != 1 or print errors if the restore
 failed if the input file was unreadable or missing or somehow else troubled.
+
+2013-01-04 10:11:48: changed state open -> done
+Added error message when the file given to restore does not exist

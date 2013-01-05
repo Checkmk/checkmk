@@ -1138,6 +1138,7 @@ def prepare_display_options():
         display_options = html.var("_display_options", "")
         display_options = apply_display_option_defaults(display_options)
         html.display_options = display_options
+        html.title_display_options = display_options
 
     # But there is one special case: The sorter links! These links need to know
     # about the provided display_option parameter. The links could use
@@ -1346,15 +1347,16 @@ def render_view(view, rows, datasource, group_painters, painters,
             html.top_heading(view_title(view))
 
     has_done_actions = False
+    row_count = len(rows)
 
-    # Show the command form? Are commands possible?
-    command_form = \
-        len(rows) > 0 and \
-        should_show_command_form(display_options, datasource)
+    # This is a general flag which makes the command form render when the current
+    # view might be able to handle commands. When no commands are possible due missing
+    # permissions or datasources without commands, the form is not rendered
+    command_form = should_show_command_form(display_options, datasource)
 
     if show_buttons:
         show_context_links(view, hide_filters, show_filters, display_options, 
-                       painter_options, command_form, layout.get('checkboxes', False))
+                       painter_options, row_count > 0 and command_form, layout.get('checkboxes', False))
 
     # User errors in filters
     html.show_user_errors()
@@ -1365,7 +1367,6 @@ def render_view(view, rows, datasource, group_painters, painters,
         show_filter_form(filter_isopen, show_filters)
 
     # Actions
-    row_count = len(rows)
     if command_form:
         # If we are currently within an action (confirming or executing), then
         # we display only the selected rows (if checkbox mode is active)
@@ -1388,7 +1389,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     
     # Also execute commands in cases without command form (needed for Python-
     # web service e.g. for NagStaMon)
-    elif len(rows) > 0 and config.may("general.act") \
+    elif row_count > 0 and config.may("general.act") \
          and html.do_actions() and html.transaction_valid():
         try:
             do_actions(view, datasource["infos"][0], rows, '')
@@ -1412,9 +1413,13 @@ def render_view(view, rows, datasource, group_painters, painters,
         if show_checkboxes and html.var("selected_rows"):
             selected = get_selected_rows(view, rows, html.var("selected_rows"))
             headinfo = "%d/%s" % (len(selected), headinfo)
-        
+
         if html.output_format == "html":
             html.javascript("update_headinfo('%s');" % headinfo)
+
+            # The number of rows might have changed to enable/disable actions and checkboxes
+            if show_buttons:
+                update_context_links(row_count > 0, layout.get('checkboxes', False))
 
         # Play alarm sounds, if critical events have been displayed
         if 'S' in display_options and view.get("play_sounds"):
@@ -1618,13 +1623,14 @@ def view_optiondial_off(option):
     html.write('<div class="optiondial off %s"></div>' % option)
 
 
-def view_option_toggler(view, option, icon, help):
+def view_option_toggler(id, view, option, icon, help, hidden = False):
     vo = view_options(view["name"])
     value = vo.get(option, view.get(option, False))
     html.begin_context_buttons() # just to be sure
-    html.write('<div title="%s" class="togglebutton %s %s"'
-       'onclick="view_switch_option(this, \'%s\', \'%s\');"></div>' % (
-        help, icon, value and "down" or "up", view["name"], option)) 
+    hide = hidden and ' style="display:none"' or ''
+    html.write('<div id="%s_on" title="%s" class="togglebutton %s %s"'
+       'onclick="view_switch_option(this, \'%s\', \'%s\');"%s></div>' % (
+        id, help, icon, value and "down" or "up", view["name"], option, hide))
 
 
 
@@ -1647,21 +1653,23 @@ def ajax_set_viewoption():
     vo[view_name][option] = value
     config.save_user_file("viewoptions", vo)
 
-def togglebutton_off(icon):
+def togglebutton_off(id, icon, hidden = False):
     html.begin_context_buttons()
-    html.write('<div class="togglebutton off %s"></div>' % icon)
+    hide = hidden and ' style="display:none"' or ''
+    html.write('<div id="%s_off" class="togglebutton off %s"%s></div>' % (id, icon, hide))
 
-def togglebutton(id, isopen, icon, help):
+def togglebutton(id, isopen, icon, help, hidden = False):
     html.begin_context_buttons()
     if isopen:
         cssclass = "down"
     else:
         cssclass = "up"
-    html.write('<div class="togglebutton %s %s" title="%s" '
-               'onclick="view_toggle_form(this, \'%s\');"></div>' % (icon, cssclass, help, id))
+    hide = hidden and ' style="display:none"' or ''
+    html.write('<div id="%s_on" class="togglebutton %s %s" title="%s" '
+               'onclick="view_toggle_form(this, \'%s\');"%s></div>' % (id, icon, cssclass, help, id, hide))
 
 def show_context_links(thisview, active_filters, show_filters, display_options, 
-                       painter_options, command_form, show_checkboxes):
+                       painter_options, enable_commands, enable_checkboxes):
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
     if 'B' in display_options:
@@ -1678,24 +1686,23 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
                 help = _("Set a filter for refining the shown data")
             togglebutton("filters", filter_isopen, icon, help)
         else:
-            togglebutton_off("filters")
+            togglebutton_off("filters", "filters")
 
     if 'D' in display_options:
         if len(painter_options) > 0 and config.may("general.painter_options"):
             togglebutton("painteroptions", False, "painteroptions", _("Modify display options"))
         else:
-            togglebutton_off("painteroptions")
+            togglebutton_off("painteroptions", "painteroptions")
 
     if 'C' in display_options:
-        if command_form:
-            togglebutton("commands", False, "commands", _("Execute commands on hosts, services and other objects"))
-            if show_checkboxes:
-                view_option_toggler(thisview, "show_checkboxes", "checkbox", _("Enable/Disable checkboxes for selecting rows for commands"))
-            else:
-                togglebutton_off("checkbox")
-        else:
-            togglebutton_off("commands")
-            togglebutton_off("checkbox")
+        togglebutton("commands", False, "commands", _("Execute commands on hosts, services and other objects"),
+                     hidden = not enable_commands)
+        togglebutton_off("commands", "commands", hidden = enable_commands)
+
+        view_option_toggler("checkbox", thisview, "show_checkboxes", "checkbox",
+                            _("Enable/Disable checkboxes for selecting rows for commands"),
+                            hidden = not enable_commands or not enable_checkboxes)
+        togglebutton_off("checkbox", "checkbox", hidden = enable_commands and enable_checkboxes)
 
     if 'O' in display_options:
         if config.may("general.view_option_columns"):
@@ -1745,6 +1752,10 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
         execute_hooks('buttons-end')
 
     html.end_context_buttons()
+
+def update_context_links(enable_commands, show_checkboxes):
+    html.javascript("update_togglebutton('commands', %d);" % enable_commands)
+    html.javascript("update_togglebutton('checkbox', %d);" % (enable_commands and show_checkboxes, ))
 
 # Collect all views that share a context with thisview. For example
 # if a view has an active filter variable specifying a host, then
@@ -2116,7 +2127,10 @@ def core_command(what, row):
                 commands, title = result
                 break
 
-    if not commands:
+    # Use the title attribute to determine if a command exists, since the list
+    # of commands might be empty (e.g. in case of "remove all downtimes" where)
+    # no downtime exists in a selection of rows.
+    if not title:
         raise MKUserError(None, _("Sorry. This command is not implemented."))
 
     # Some commands return lists of commands, others
@@ -2166,15 +2180,19 @@ def do_actions(view, what, action_rows, backurl):
             executor(command, row["site"])
             count += 1
 
+    message = None
     if command:
         message = _("Successfully sent %d commands.") % count
         if config.debug:
             message += _("The last one was: <pre>%s</pre>") % command
+    elif count == 0:
+        message = _("No matching data row. No command sent.")
+
+    if message:
         if html.output_format == "html": # sorry for this hack
             message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
         html.message(message)
-    elif count == 0:
-        html.message(_("No matching data row. No command sent."))
+
     return True
 
 def get_selected_rows(view, rows, sel_var):
@@ -2423,8 +2441,9 @@ def paint_header(view, p):
     t = painter.get("short", painter["title"])
     if len(p) >= 4: # join column
         join_index = p[3]
+        t = p[3] # use join index (service name) as title
     if len(p) >= 5 and p[4]:
-        t = p[4]
+        t = p[4] # use custom defined title
 
     # Optional: Sort link in title cell
     # Use explicit defined sorter or implicit the sorter with the painter name

@@ -116,7 +116,11 @@ def load_user_config():
         user_config = config.sidebar
 
     # Remove entries the user is not allowed for or which have state "off" (from legacy version)
-    return [ entry for entry in user_config if entry[1] != "off" and config.may("sidesnap." + entry[0])]
+    # silently skip configured but not existant snapins
+    return [ entry for entry in user_config
+                       if entry[0] in sidebar_snapins
+                          and entry[1] != "off"
+                          and config.may("sidesnap." + entry[0])]
 
 def save_user_config(user_config):
     if config.may("general.configure_sidebar"):

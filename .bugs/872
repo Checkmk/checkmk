@@ -1,12 +1,15 @@
-Title: Sidebar does not terminate refresh jobs of removed snapins
+Title: Speedometer scheduler is not terminated when removed from sidebar
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-10-29 09:20:48
 Targetversion: future
-Class: bug
 
 When having e.g. the speedometer in the sidebar and removing it, the javascript worker code
 remains fetching the speedometer webservice. The worker should detect that the snapin has
 been removed and stop updating the data.
 
 Not a general problem: The speedometer uses its own scheduler. Must be fixed individually.
+
+2013-01-03 10:58:12: changed state open -> done
+The speedometer timeout detects the removal of the snpain and terminates itselfs now.

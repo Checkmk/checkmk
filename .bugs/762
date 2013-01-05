@@ -1,12 +1,16 @@
 Title: Command form off at empty table, but that might change
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2012-06-03 20:35:28
 Targetversion: future
-Class: nastiness
 
 If a view has no rows then the command form is deactivated.
 But as time goes by the view might have entries. The command
 form is not being activated automtically - nevertheless. Better
 solution: Always have it active. When it comes to executing
 give then a warning if not items for the commands are available.
+
+2013-01-03 12:38:11: changed state open -> done
+The command form and checkboxes get now activated / deactivated when there are either
+rows to perform actions on or not.

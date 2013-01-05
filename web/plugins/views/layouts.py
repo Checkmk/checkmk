@@ -78,6 +78,8 @@ def render_single_dataset(rows, view, group_painters, painters, num_columns, _ig
             painter, link = p[0:2]
             if len(p) >= 5 and p[4]:
                 title = p[4] # Use custom title
+            elif len(p) == 4 and p[3]:
+                title = p[3] # Use the join index (service name) as title
             else:
                 title = painter["title"]
 

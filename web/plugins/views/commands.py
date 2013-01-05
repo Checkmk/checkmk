@@ -367,6 +367,7 @@ def command_downtime(cmdtag, spec, row):
         for id in row[prefix + "downtimes"]:
             if id != "":
                 downtime_ids.append(int(id))
+
         commands = []
         for dtid in downtime_ids:
             commands.append("DEL_%s_DOWNTIME;%d\n" % (cmdtag, dtid))

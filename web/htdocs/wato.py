@@ -469,7 +469,11 @@ def load_folder(dir, name="", path="", parent=None, childs = True):
     folder[".lock_subfolders"] = folder.get("lock_subfolders", False)
     folder[".lock_hosts"]  = False
     if parent:
+        # Update reference to parent folder
         folder[".parent"] = parent
+
+        # Update reference in parent folder
+        parent[".folders"][name] = folder
 
     if "attributes" not in folder: # Make sure, attributes are always present
         folder["attributes"] = {}
@@ -952,14 +956,14 @@ def mode_folder(phase):
                 lock_messages.append(_("Folder is locked (You cannot create or remove folders in this folder)")) 
             else:
                 lock_messages.append(g_folder[".lock_subfolders"])
-        
+
         if len(lock_messages) > 0:
             lock_message = ", ".join(lock_messages)
             html.write("<div class=info>" + lock_message + "</div>")
 
         have_something = show_subfolders(g_folder)
         # Show hosts only if we have permission to this folder
-        
+
         if True == check_folder_permissions(g_folder, "read", False):
             have_something = show_hosts(g_folder) or have_something
         if not have_something:
@@ -1440,6 +1444,8 @@ def show_hosts(folder):
     return True
 
 move_to_folder_combo_cache_id = None
+# In case of what == "host", thing is either None or the name of the host
+# In case of what == "folder", thing is the folder dict
 def move_to_folder_combo(what, thing = None, top = False, multiple = False):
     global move_to_folder_combo_cache, move_to_folder_combo_cache_id
     if move_to_folder_combo_cache_id != id(html):
@@ -1458,6 +1464,7 @@ def move_to_folder_combo(what, thing = None, top = False, multiple = False):
             # TODO: Check permisssions
             if afolder != g_folder and \
                  (what != "folder" or not (
+                    # no move to itselfs or child folders of "thing"
                     folder_is_parent_of(thing, afolder)
                     # avoid naming conflict!
                     or thing[".name"] in afolder[".folders"])):
@@ -1757,6 +1764,7 @@ def mode_editfolder(phase, new):
                 # in Nagios-relevant attributes.
                 rewrite_config_files_below(g_folder) # due to inherited attributes
                 save_folder(g_folder)
+                # This updats g_folder and g_folders[...]
                 g_folder = reload_folder(g_folder)
 
                 mark_affected_sites_dirty(g_folder)
@@ -7916,7 +7924,7 @@ def mode_edit_user(phase):
 
         # Email address
         email = html.var("email").strip()
-        regex_email = '^[-a-zäöüÄÖÜA-Z0-9_.]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*$'
+        regex_email = '^[-a-zäöüÄÖÜA-Z0-9_.+%]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*$'
         if email and not re.match(regex_email, email):
             raise MKUserError("email", _("'%s' is not a valid email address." % email))
         new_user["email"] = email

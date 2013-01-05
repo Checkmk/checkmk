@@ -1,11 +1,15 @@
 Title: Services in Hosttables: wrong headings
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2012-06-14 13:29:43
 Targetversion: 1.2.0
-Class: nastiness
 
 When adding service columns to host tables the column headers of those
 columns should be the service name, not the title of the painter. The latter
 one is for example "Perf-O-Meter". Better would be "CPU load".  (if this is
 not specified by the user in the first place).
+
+2013-01-04 13:27:34: changed state open -> done
+Just implemented this change. Using service description (join index) when no title defined in
+the view for this column.

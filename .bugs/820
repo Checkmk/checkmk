@@ -1,8 +1,11 @@
 Title: Refreshing of row count in multisite
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2012-10-24 11:54:14
 Targetversion: future
-Class: nastiness
 
 The count of row in the upper corner of Mulisite show 0/n Rows after automatic refresh, even when the checkboxes not activated.
+
+2013-01-04 10:16:00: changed state open -> done
+Seems to already be solved.

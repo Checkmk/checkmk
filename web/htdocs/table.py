@@ -95,6 +95,7 @@ def end():
 
     if not table["rows"]:
         html.write("<div class=info>%s</div>" % table["empty_text"])
+        table = None
         return
 
     html.write('<table class="data')

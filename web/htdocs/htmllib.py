@@ -256,6 +256,8 @@ class html:
             t = self.plugged_text
             self.plugged_text = ''
             return t
+        else:
+            return ''
 
     def unplug(self):
         self.plugged = False

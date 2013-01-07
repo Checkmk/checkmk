@@ -56,8 +56,10 @@ def begin(title=None, **kwargs):
     next_func = None
 
 def finish_previous():
+    global next_func
     if next_func:
         next_func(*next_args[0], **next_args[1])
+        next_func = None
 
 def row(*posargs, **kwargs):
     finish_previous()

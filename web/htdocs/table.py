@@ -29,7 +29,7 @@ mode = None
 next_func = None
 row_css = None
 
-def begin(title, **kwargs):
+def begin(title=None, **kwargs):
     global table, mode, next_func
 
     if table:
@@ -87,13 +87,15 @@ def end():
     global table
     finish_previous()
     html.unplug()
-    html.write("<h3>%s</h3>" % table["title"])
+    if table["title"]:
+        html.write("<h3>%s</h3>" % table["title"])
 
     if table.get("help"):
         html.help(table["help"])
 
     if not table["rows"]:
         html.write("<div class=info>%s</div>" % table["empty_text"])
+        table = None
         return
 
     html.write('<table class="data')

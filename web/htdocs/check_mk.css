@@ -359,6 +359,11 @@ div.warning a {
 table.dictionary {
 }
 
+table.dictionary b.header {
+    font-size: 80%;
+    font-weight: normal;
+}
+
 table.dictionary td.dictright {
     white-space: nowrap;
     padding: 0px;

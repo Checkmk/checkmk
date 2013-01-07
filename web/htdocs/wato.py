@@ -10329,7 +10329,8 @@ def mode_edit_rule(phase, new = False):
         return ("edit_ruleset",  _("%s rule in ruleset '%s' in folder %s") % 
                                   (new and _("Created new") or _("Edited"), rulespec["title"], new_rule_folder["title"]))
 
-    html.write("<div class=info>" + rulespec["help"] + "</div>")
+    if rulespec.get("help"):
+        html.write("<div class=info>" + rulespec["help"] + "</div>")
 
     html.begin_form("rule_editor", method="POST")
 

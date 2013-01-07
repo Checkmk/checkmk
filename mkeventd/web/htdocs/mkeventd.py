@@ -213,7 +213,12 @@ def match(pattern, text, complete = True):
     if pattern == None:
         return True
     else:
-        m = re.compile(pattern).search(text)
+        if complete:
+            if not pattern.endswith("$"):
+                pattern += '$'
+            m = re.compile(pattern).match(text)
+        else:
+            m = re.compile(pattern).search(text)
         if m:
             return m.groups()
         else:

@@ -44,6 +44,7 @@
     * FIX: zpool_status: fixed crash when spare devices were available
     * FIX: hr_fs: handle negative values in order to larger disks (thanks to Christof Musik)
     * FIX: mssql_backup: Fixed wrong calculation of backup age in seconds
+    * New script multisite_to_mrpe for exporting services from a remote system
 
 
     Multisite:

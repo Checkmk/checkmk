@@ -8245,10 +8245,13 @@ def filter_hidden_users(users):
 class UserSelection(ElementSelection):
     def __init__(self, **kwargs):
         ElementSelection.__init__(self, **kwargs)
+        self._none = kwargs.get("none")
 
     def get_elements(self):
         users = filter_hidden_users(userdb.load_users())
         elements = dict([ (name, "%s - %s" % (name, us.get("alias", name))) for (name, us) in users.items() ])
+        if self._none:
+            elements[None] = self._none
         return elements
 
     def value_to_text(self, value):

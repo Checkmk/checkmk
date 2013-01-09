@@ -1,12 +1,11 @@
-Title: Command and now row selected garbles things up
+Title: Command while no row selected show not do any command
 Component: multisite
 State: open
 Date: 2012-07-29 23:00:06
-Targetversion: future
-Class: bug
+Targetversion: 1.2.2
+Class: nastiness
 
-If you enablec checkboxes and then issue a command with now
-rows selected, then an error message appears. This is nice.
-But at the same time you see an empty view with now chance to
-come back to normal mode other then opening the view from
-fresh.
+Currently if no row is checked then it behaves like *all*
+rows are selected. Better would be a warning message
+that no row is selected. An no command executed.
+

@@ -1,9 +1,9 @@
 Title: Checkbox handling in views sometimes broken
 Component: multisite
-State: open
+Class: bug
+State: wontfix
 Date: 2012-05-28 16:13:51
 Targetversion: future
-Class: bug
 
 The handling of the checkboxes in the views still has
 bad control flows. The following will trigger a bug:
@@ -32,3 +32,8 @@ which makes all variables available as json construct in JS.
 But this does not resolve the problem completely. Once we
 have too many vars we need to make POST requests for reloading
 views.
+
+Resolution: won't fix, we might reimplement the checkboxes
+anyway using Ajax and a "basket".
+
+2013-01-09 14:05:52: changed state open -> wontfix

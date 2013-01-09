@@ -2,7 +2,7 @@ Title: View checkboxes: Request-URI Too Large
 Component: multisite
 State: open
 Date: 2012-05-28 16:16:51
-Targetversion: future
+Targetversion: 1.4.0
 Class: bug
 
 If you select too many checkboxes in a Multisite view
@@ -12,3 +12,9 @@ and execute a command, then you will get a
 We need to convert the complete checkbox logic including
 the page refresh to POST. This will then also fix bug
 #759. Postponed until after 1.2.0.
+
+Resolution: persist the current check state via AJAX
+on a file on the server and do not try to transport
+that information via GET/POST. Also consolidate Checkboxes
+with WATO. WATO might need persistent checkboxes anyway.
+

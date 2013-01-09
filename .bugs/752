@@ -2,7 +2,7 @@ Title: Opera: Globes are only displayed half
 Component: multisite
 State: open
 Date: 2012-05-20 15:58:01
-Targetversion: future
+Targetversion: 1.2.2
 Class: nastiness
 
 Only the right half of the actual data is being displayed.

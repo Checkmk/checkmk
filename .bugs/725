@@ -1,11 +1,13 @@
 Title: parent scan might want to exclude dyndns_hosts
 Component: core
-State: open
+Class: nastiness
+State: wontfix
 Date: 2012-08-21 16:43:10
 Targetversion: 1.2.0
-Class: nastiness
 
 if you run a parent scan, you also inherit parents for dynamic hosts.
 They routing can change on each ip address change though.
 The sanest thing is allowing to exempt them, or say that for them the folder's parent
 should not be overwriten.
+
+2013-01-09 14:24:58: changed state open -> wontfix

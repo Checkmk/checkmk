@@ -1,9 +1,13 @@
 Title: mkeventd/user_connector options in WATO are visible/invisible only after apache restart
 Component: wato
-State: open
-Date: 2012-11-13 11:26:16
-Targetversion: future
 Class: nastiness
+State: done
+Date: 2012-11-13 11:26:16
+Targetversion: 1.2.2
 
-When enablding/disabling the mkeventd or enabling/disabling a user connector in WATO,
-the depending options are only visible/invisible after restarting the apache webserver.
+When enablding/disabling the mkeventd or enabling/disabling a user connector
+in WATO, the depending options are only visible/invisible after restarting
+the apache webserver.
+
+2013-01-09 14:54:54: changed state open -> done
+Should work now.

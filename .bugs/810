@@ -1,9 +1,9 @@
 Title: Active check results mixed up with Livecheck enabled
 Component: livecheck
-State: open
+Class: bug
+State: done
 Date: 2012-10-12 15:35:38
 Targetversion: 1.2.0
-Class: bug
 
 Two hosts were in hoststatus down but working in reality
 Both hosts showed the correct check command, but the check output was 
@@ -41,3 +41,6 @@ Most important there: Livecheck must drop inherited FDs as it will keep that
 open until nagios restarts.
 
 It's not sure if both things are related, but this must be fixed in any case
+
+2013-01-09 14:14:06: changed state open -> done
+Should be fixed now.

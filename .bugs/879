@@ -5,8 +5,7 @@ Date: 2012-11-20 17:03:46
 Targetversion: future
 Class: nastiness
 
-If one instance is e.g. out of memory then it does not
-answer timely on the jolokia URL. The agent plugin needs
-to introduce a (short) timeout and proceed then with
-the further instances. Otherwise the complete agent will
+If one instance is e.g. out of memory then it does not answer timely on
+the jolokia URL. The agent plugin needs to introduce a (short) timeout and
+proceed then with the further instances. Otherwise the complete agent will
 hang and the remaining checks missing.

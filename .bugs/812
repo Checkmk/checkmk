@@ -2,10 +2,16 @@ Title: Windows fileinfo gets invetorized without escaping backslashes
 Component: checks
 State: open
 Date: 2012-11-20 15:16:48
-Targetversion: 1.2.0
+Targetversion: 1.4.0
 Class: nastiness
 
-The fileinfo check does not escape backslashes upon inventory.
-resulting items would be i.e. c:\windows\test.ini
-WATO on the other hand does escape them, and in the end the WATO
-rules do not match & apply to the service as intended
+The fileinfo check does not escape backslashes upon inventory.  resulting items
+would be i.e. c:\windows\test.ini WATO on the other hand does escape them,
+and in the end the WATO rules do not match & apply to the service as intended
+
+MK: I'm not sure if this really is a bug or just the problem, that WATO
+interprets texts as regular expressions (which again interprets backslashes!)
+
+Resolution: We put a nice icon into each text input that is being interpreted
+as regex. When you hover over the icon (or click on it?) you get a help
+page about regular expressions with nice examples etc.

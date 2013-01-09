@@ -32,7 +32,7 @@
 # "$OMD_ROOT/local/lib/multisite_to_mrpe --secret dasistgeheim --url http://localhost/remote/check_mk/ <HOST>"
 # 
 
-import os, sys, getopt, time, urllib
+import os, sys, getopt, time, urllib, subprocess
 
 omd_site = os.getenv("OMD_SITE")
 omd_root = os.getenv("OMD_ROOT")
@@ -50,7 +50,7 @@ def verbose(text):
         sys.stdout.write(text + "\n")
 
 def usage():
-    sys.stdout.write("""Usage: multisite_to_mrpe [OPTIONS] HOST
+    sys.stdout.write("""Usage: multisite_to_mrpe -U URL {-P PASSWORD|-S SECRET} [OPTIONS] HOST
 
 This program is intended to be used as a datasource program.
 It fetches the current state of all services of a host
@@ -62,21 +62,24 @@ URL is the
 /check_mk/ e.g.  http://someserver.abc/prod/check_mk/
 
 Options:
-  -h, --help       Show this help and exit
-  -v, --verbose    Show what's going on
-  -u, --user U     Name of automation user (default: "automation")
-  -U, --url U      Multisite URL of the remote server including
-  -S, --secret S   Automation secret (default: public)
-      --debug      Let Python exceptions come through
+  -h, --help          Show this help and exit
+  -v, --verbose       Show what's going on
+  -u, --user U        Name of automation user (default: "automation")
+  -U, --url U         Multisite URL of the remote server including
+  -S, --secret S      Automation secret (default: public)
+  -P, --password P    Use HTTP password P (when using BasicAuth, no Cookies)
+      --debug         Let Python exceptions come through
+
 """)
 
 
-short_options = 'hvu:U:S:'
-long_options = [ "help", "verbose", "user=", "url=", "secret=", "debug" ]
+short_options = 'hvu:U:S:P:'
+long_options = [ "help", "verbose", "user=", "url=", "secret=", "debug", "password=" ]
 
 opt_verbose = False
 opt_user = "automation"
 opt_secret = None
+opt_password = None
 opt_url = None
 opt_debug = False
 
@@ -105,18 +108,13 @@ for o,a in opts:
         opt_user = a
     elif o in [ '-S', '--secret']:
         opt_secret = a
+    elif o in [ '-P', '--password']:
+        opt_password = a
     elif o in [ '-U', '--url']:
         opt_url = a
 
-if omd_site and not opt_secret:
-    try:
-        opt_secret = file(omd_root + "/var/check_mk/web/" + opt_user 
-                          + "/automation.secret").read().strip()
-    except Exception, e:
-        if opt_debug:
-            raise
-        bail_out("Cannot read automation secret from user %s: %s" % 
-            (opt_user, e))
+if not opt_secret and not opt_password:
+    bail_out("You must specify either -P or -S.")
 
 if not opt_url:
     bail_out("Please specify the URL to Check_MK Multisite with -U.")
@@ -129,31 +127,57 @@ if not args:
 
 arg_host = args[0]
 
-verbose("Host:          " + arg_host)
-verbose("Multisite-URL: " + opt_url)
-verbose("User:          " + opt_user)
-verbose("Secret:        " + opt_secret)
+verbose("Host:             " + arg_host)
+verbose("Multisite-URL:    " + opt_url)
+verbose("User:             " + opt_user)
+if opt_secret:
+    verbose("Authentication:   Cookies")
+    verbose("Secret:           " + opt_secret)
+else:
+    verbose("Authentication:   HTTP BasicAuth")
+    verbose("Password:         " + opt_password)
+
 
 def make_url(base, variables):
-    vartext = "&".join([ "%s=%s" % e for e in variables ])
-    return base + "?" + vartext
+    return base + "?" + urllib.urlencode(variables)
 
 variables = [
-    ( "_username",      opt_user ),
-    ( "_secret",        opt_secret ),
     ( "host",           arg_host ),
     ( "view_name",      "host_export" ),
     ( "output_format",  "python" ),
 ]
 
+if opt_secret:
+    variables += [
+       ( "_username",      opt_user ),
+       ( "_secret", opt_secret )
+   ]
 
 url = make_url(opt_url + "view.py", variables)
-verbose("URL:           " + url)
+verbose("URL:              " + url)
+
 try:
-    pipe = urllib.urlopen(url)
-    answer = pipe.read()
+    arguments = [ 'curl', '--silent', '--insecure', ]
+    if opt_password: 
+        arguments.append('--user')
+        arguments.append("%s:%s" % (opt_user, opt_password))
+    else:
+        arguments.append(opt_user)
+    arguments.append(url)
+    verbose("Calling:          " + " ".join(arguments))
+
+
+    process = subprocess.Popen(arguments, executable='curl', stdout=subprocess.PIPE)
+    answer, stderrdata = process.communicate()
+    result = process.wait()
+    print result
     if answer.startswith("ERROR:"):
         bail_out("Error response from remote Multisite: %s" % answer[7:])
+    try:
+        parsed = eval(answer)
+    except:
+        bail_out("Invalid response from Multisite: %s\n" % answer)
+
     services = convert_from_multisite(eval(answer))
 except Exception, e:
     if opt_debug:

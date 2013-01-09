@@ -2,7 +2,7 @@ Title: Logwatch and Logfiles with colon in name
 Component: checks
 State: open
 Date: 2012-10-25 09:49:17
-Targetversion: future
+Targetversion: 1.2.2
 Class: nastiness
 
 When a logfile has a colon in name inventory doesent work: osTicket 999212

@@ -2,7 +2,7 @@ Title: CPU Utilization immer auf 100% bei -nv (Windows)
 Component: core
 State: open
 Date: 2012-01-10 17:58:52
-Targetversion: 1.2.0
+Targetversion: 1.2.2
 Class: nastiness
 
 Windows Hosts zeigen bei einem cmk -nv immer eine CPU Utilization von 100% an.

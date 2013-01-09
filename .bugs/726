@@ -1,9 +1,9 @@
 Title: WATO Users & Contacts misses sorting
 Component: wato
-State: open
+Class: cleanup
+State: wontfix
 Date: 2012-08-21 17:26:38
 Targetversion: 1.2.0
-Class: cleanup
 
 The users & contacts page seems to not sort the displayed users alphabetically
 (or by any other visible pattern)
@@ -18,3 +18,7 @@ list all guest accounts
 
 oh, that seems like saying "list be role" - yes, maybe.
 per group they should really be sorted a-z
+
+2013-01-09 15:01:44: changed state open -> wontfix
+The sorting for *all* WATO tables will be implemented one bright
+day in future.

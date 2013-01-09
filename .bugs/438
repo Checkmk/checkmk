@@ -1,9 +1,12 @@
 Title: Document automation accounts
 Component: docu
-State: open
+Class: todo
+State: done
 Date: 2011-11-22 15:59:36
 Targetversion: 1.2.0
-Class: todo
 
 Document the new feature of Automation accounts and alos
 how to setup them without WATO.
+
+2013-01-09 13:56:36: changed state open -> done
+Done.

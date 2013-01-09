@@ -2,9 +2,12 @@ Title: WATO permission "edit views" = False disables display of custom views
 Component: wato
 State: open
 Date: 2012-07-06 14:16:42
-Targetversion: 1.2.0
+Targetversion: 1.2.2
 Class: bug
 
-if a user is restricted of the rights to edit/create views of his own, he'll also not be able to
-see any views that you put in his views.mk
-It should be possible to still use that were "installed" on setup.
+if a user is restricted of the rights to edit/create views of his own, he'll
+also not be able to see any views that you put in his views.mk It should be
+possible to still use that were "installed" on setup.
+
+Resolution: we simply rename the permission into "Allow creating and using
+own customized views"

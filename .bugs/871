@@ -2,9 +2,9 @@ Title: When adding a new site all sites are marked as dirty
 Component: wato
 State: open
 Date: 2012-10-26 12:43:07
-Targetversion: future
+Targetversion: 1.2.2
 Class: nastiness
 
-When adding a new site or changing the configuration of a site, all sites
-are marked as dirty. It would be better to only mark the master site (currently editing on)
-and the modified site as dirty.
+When adding a new site or changing the configuration of a site, all sites are
+marked as dirty. It would be better to only mark the master site (currently
+editing on) and the modified site as dirty.

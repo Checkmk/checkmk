@@ -1,9 +1,9 @@
 Title: Duplicate Service for Cisco Temp Sensor
 Component: checks
-State: open
+Class: nastiness
+State: wontfix
 Date: 2012-06-05 17:23:20
 Targetversion: future
-Class: nastiness
 
 found on Cisco C4000:
 
@@ -13,3 +13,6 @@ Generating Nagios configuration...Error creating configuration: ERROR: Duplicate
  - 2nd occurrance: checktype = cisco_temp_sensor, item = 'Chassis Temperature Sensor'
 
 Solution not clear yet.
+
+2013-01-09 14:37:09: changed state open -> wontfix
+Duplicate

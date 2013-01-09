@@ -2,7 +2,7 @@ Title: Manpage of fileinfo outdated
 Component: docu
 State: open
 Date: 2012-11-22 12:21:55
-Targetversion: future
+Targetversion: 1.2.2
 Class: bug
 
 The man page of fileinfo is not uptodate: The linux agent now

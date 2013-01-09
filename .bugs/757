@@ -2,7 +2,7 @@ Title: Compilation of livecheck with dietlibc broken on SLES11SP1/2
 Component: livecheck
 State: open
 Date: 2012-05-25 10:28:46
-Targetversion: future
+Targetversion: 1.2.2
 Class: nastiness
 
 Generally we should enable compiling livecheck with dietlibc in
@@ -45,3 +45,6 @@ In file included from check_icmp.c:68:
 /tmp/cchZoOhZ.o:(.eh_frame+0x12): undefined reference to `__gxx_personality_v0'
 collect2: ld returned 1 exit status
 make[2]: *** [livecheck] Error 1
+
+
+Important: same for 'mkevent'!

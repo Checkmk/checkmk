@@ -1,9 +1,9 @@
 Title: mounts check reinventory seems to not change fs options
 Component: checks
-State: open
+Class: nastiness
+State: wontfix
 Date: 2012-09-17 17:12:57
 Targetversion: future
-Class: nastiness
 
 This is a bit confusing, but it seems the mount options stay hardcoded
 even if you run a new WATO inventory of a given system.
@@ -13,3 +13,6 @@ stays WARN anyways
 OK - missing: data=journal, exceeding: data=writeback
 
 You can test by changing the journal option forth and back.
+
+2013-01-09 14:30:26: changed state open -> wontfix
+Same as other bug.

@@ -5,11 +5,12 @@ Date: 2012-08-22 11:23:13
 Targetversion: future
 Class: nastiness
 
-If the user and the monitoring server exist in different timezones, multisi
-has enough smarts to handle this. the problem is with PNP graphs - if the 
-user views them, he ends up with time information recorded on the nagios server
-This breaks the UI logic, and worse, he can't even tell what timezone the server
-is running in.
-It might be possible to fudge with the numbers when calling PNP.
-Otherwise we could at least add timezone info to the output, but this would 
-only work if there's just a single monitoring host (thus useless)
+If the user and the monitoring server exist in different timezones, multisite
+has enough smarts to handle this. the problem is with PNP graphs - if the
+user views them, he ends up with time information recorded on the nagios
+server This breaks the UI logic, and worse, he can't even tell what timezone
+the server is running in.
+
+It might be possible to fudge with the numbers when calling PNP.  Otherwise we
+could at least add timezone info to the output, but this would only work if
+there's just a single monitoring host (thus useless)

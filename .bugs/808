@@ -2,11 +2,15 @@ Title: Handle ctrl-c for inventory
 Component: core
 State: open
 Date: 2012-10-10 13:37:24
-Targetversion: 1.2.0
-Class: cleanup
+Targetversion: 1.2.2
+Class: nastiness
 
 Currently, trying to abort an inventory only kills the current inventory. If you
-have simply specified cmk -I you'll need to abort as many times as there are h
-hosts
+have simply specified cmk -I you'll need to abort as many times as there are hosts
 It would be nice to be able to press ctrl-c once and have that handled by
 cmk so that it aborts the whole process, ideally in a consistent state.
+
+Currently we have the problem, that the snmp commands get the Ctrl-C and not
+Python. Can we start the snmp commands without a controlling terminal? 
+And the gracefully handle Ctrl-C in Check_MK.
+

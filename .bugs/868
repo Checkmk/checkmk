@@ -2,7 +2,7 @@ Title: Distributed WATO setup - error message during setting up slaves
 Component: wato
 State: open
 Date: 2012-10-26 08:38:47
-Targetversion: future
+Targetversion: 1.2.2
 Class: bug
 
 In current version, when setting up the local site and a slave site in the main site,

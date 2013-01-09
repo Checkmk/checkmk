@@ -2,7 +2,7 @@ Title: check_mk_agent can incorrectly detect postfix on RHEL
 Component: core
 State: open
 Date: 2012-10-24 10:19:40
-Targetversion: future
+Targetversion: 1.2.3
 Class: nastiness
 
 osTicket ID 443234
@@ -35,3 +35,6 @@ fi
 else
 # this is not redhat or centos, so do your usual getent test here...
 fi
+
+Resolution could be: use postqueue -p instead of mailq, check with 'which postqueue'
+

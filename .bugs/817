@@ -2,8 +2,11 @@ Title: PING check removed when legacy check added to host
 Component: core
 State: open
 Date: 2012-10-23 10:15:13
-Targetversion: future
+Targetversion: 1.2.3
 Class: nastiness
 
 The PING check should remain on the host when the host has the tag
 "ping" assigned, event when a legacy check has been added to the host.
+
+Resolution: Create a WATO rule for check_icmp as active check. That
+way the user can do all he wants...

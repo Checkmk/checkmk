@@ -1,11 +1,14 @@
 Title: WATO clustered_services differs from cmk conf docs
 Component: wato
-State: open
+Class: cleanup
+State: wontfix
 Date: 2012-05-11 17:51:56
 Targetversion: 1.2.0
-Class: cleanup
 
 In WATO you don't see references to PHYSICAL_HOSTS etc. 
 These special flags should either be deprecated / taken out of docs or added
 to WATO. I'm confused if they're needed or not, but WATO and under-the-hood CM
 should match.
+
+2013-01-09 15:00:08: changed state open -> wontfix
+This is an advanced command line feature and rarely used. Not needed int WATO.

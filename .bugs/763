@@ -2,7 +2,7 @@ Title: Duplicate Check on Cisco 4500
 Component: checks
 State: open
 Date: 2012-06-04 12:20:55
-Targetversion: future
+Targetversion: 1.4.0
 Class: nastiness
 
 Generating Nagios configuration...Configuration Error: ERROR: 
@@ -15,9 +15,17 @@ Temperature Sensor'
 - 2nd occurrance: checktype = cisco_temp_sensor, item = 'Chassis 
 Temperature Sensor'
 
-Can we invent something in Check_MK that automatically drops
-duplicate services? How can a precedence be implemented? Should
-we at least issue a warning? Should this be checked during
-inventory? The service description is known at this point of
-time and a check for duplicates could be done and the new duplicate
-checks ignored.
+Can we invent something in Check_MK that automatically drops duplicate
+services? How can a precedence be implemented? Should we at least issue a
+warning? Should this be checked during inventory? The service description
+is known at this point of time and a check for duplicates could be done and
+the new duplicate checks ignored.
+
+Precedence should be:
+
+1. TCP beats SNMP
+2. Alphabetical order
+
+We could do: the cmk -I outputs a warning on duplicate (automatically
+ignored) services. WATO introduces a new section: "Duplicate Services"
+that simply displays the ignored services.

@@ -192,11 +192,18 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
 
     # Convert all keys to lower case!
     result = []
-    for dn, obj in ldap_connection.search_s(base, scope, filt, columns):
-        new_obj = {}
-        for key, val in obj.iteritems():
-            new_obj[key.lower().decode('utf-8')] = [ i.decode('utf-8') for i in val ]
-        result.append((dn, new_obj))
+    try:
+        for dn, obj in ldap_connection.search_s(base, scope, filt, columns):
+            new_obj = {}
+            for key, val in obj.iteritems():
+                new_obj[key.lower().decode('utf-8')] = [ i.decode('utf-8') for i in val ]
+            result.append((dn, new_obj))
+    except ldap.SIZELIMIT_EXCEEDED:
+        raise MKLDAPException(_('The response reached a size limit. This could be due to '
+                                'a sizelimit configuration on the LDAP server.<br />Throwing away the '
+                                'incomplete results. You should change the scope of operation '
+                                'within the ldap or adapt the limit settings of the LDAP server.'))
+
     return result
     #return ldap_connection.search_s(base, scope, filter, columns)
     #for dn, obj in ldap_connection.search_s(base, scope, filter, columns):

@@ -105,6 +105,7 @@
     * Icon to events of host links to view that has context button to host
     * FIX: remove event pipe on program shutdown, prevents syslog freeze
     * FIX: hostnames in livestatus query now being utf8 encoded
+    * FIX: fixed a nastiness when reading from local pipe
 
     Livestatus:
     * FIX: Changed logging output "Time to process request" to be debug output

@@ -37,12 +37,9 @@ import time, copy
 import site, sys
 try:
     sys.path.extend(site.getsitepackages())
-except: # Workaround, python 2.6 ( debian squeeze ) 
+except: # Workaround, python 2.6 ( debian squeeze )
     sys.path.extend(["/usr/local/lib/python2.6/dist-packages"])
     sys.path.extend(["/usr/lib/python2.6/dist-packages"])
-    pass
-
-
 
 try:
     # docs: http://www.python-ldap.org/doc/html/index.html
@@ -136,6 +133,8 @@ def ldap_connect():
     try:
         ldap_connection = ldap.ldapobject.ReconnectLDAPObject(ldap_uri())
         ldap_connection.protocol_version = config.ldap_connection['version']
+        ldap_connection.network_timeout  = config.ldap_connection.get('connect_timeout', 2.0)
+
         ldap_default_bind()
 
         # on success, store the connection options the connection has been made with

@@ -316,6 +316,12 @@ register_configvar(group,
                 value  = True,
                 totext = _("Encrypt the network connection using SSL."),
             )),
+            ("connect_timeout", Float(
+                title = _("LDAP Connect Timeout (sec)"),
+                help = _("Timeout for the initial connection to the LDAP server in seconds."),
+                minvalue = 1.0,
+                default_value = 2.0,
+            )),
             ("version", DropdownChoice(
                 title = _("LDAP Version"),
                 help  = _("Select the LDAP version the LDAP server is serving. Most modern "

@@ -450,15 +450,20 @@ def check_logwatch_ec(_unused, params, info):
                 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             else:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-            sock.send('\n'.join(messages))
+            sock.connect((method[1], method[2]))
+            for message in messages:
+                sock.send(message)
             sock.close()
 
         else:
             # write into local event pipe
-            pipe = file(method, 'w')
-            pipe.write('\n'.join(messages))
-            pipe.close()
+            # Important: When the event daemon is stopped, then the pipe
+            # is *not* existing! This prevents us from hanging in such
+            # situations. So we must make sure that we do not create a file
+            # instead of the pipe!
+            pipe = os.open(method, os.O_WRONLY) 
+            os.write(pipe, '\n'.join(messages))
+            os.close(pipe)
 
         num_messages = len(messages)
         return (0, 'OK - Forwarded %d messages to event console' % num_messages, [('messages', num_messages)])

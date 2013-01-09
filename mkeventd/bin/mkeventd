@@ -683,6 +683,12 @@ class EventServer:
         return headers, [row]
 
     def create_pipe(self):
+        import stat
+        try:
+            if not stat.S_ISFIFO(os.stat(g_pipe_path).st_mode): 
+                os.remove(g_pipe_path)
+        except:
+            pass
         if not os.path.exists(g_pipe_path):
             os.mkfifo(g_pipe_path)
         os.chmod(g_pipe_path, 0666)
@@ -744,14 +750,16 @@ class EventServer:
         # select() will trigger even if there is no data. A good article
         # about this is here:
         # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
+
         return os.open(g_pipe_path, os.O_RDWR | os.O_NONBLOCK)
 
     def serve(self):
+        pipe_fragment = ''
         pipe = self.open_pipe() 
         listen_list = [ pipe ]
         if self._syslog != None:
             listen_list.append(self._syslog.fileno())
-
+        
         while True:
             readable = select.select(listen_list, [], [], None)[0]
             data = None
@@ -762,6 +770,26 @@ class EventServer:
                         os.close(pipe)
                         pipe = self.open_pipe()
                         listen_list[0] = pipe
+                        # Pending fragments from previos reads that are not terminated
+                        # by a \n are ignored. 
+                        if pipe_fragment:
+                            log("Warning: ignoring incomplete message '%s' from pipe" % pipe_fragment)
+                            pipe_fragment = ""
+                    else:
+                        # Prepend previous beginning of message to read data
+                        data = pipe_fragment + data
+                        pipe_fragment = ""
+
+                        # Last message still incomplete?
+                        if data[-1] != '\n':
+                            if '\n' in data: # at least one complete message contained
+                                messages, pipe_fragment = data.rsplit('\n', 1) 
+                                data = messages + '\n' # got lost in split
+                            else:
+                                pipe_fragment = data # keep beginning of message, wait for \n
+                                data = ""
+
+
                 except:
                     data = None
             elif self._syslog.fileno() in readable:

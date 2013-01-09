@@ -1,9 +1,9 @@
 Title: Logwatch ruleeditor (or ValueSpec ListOf) breaks on Iceweasel on Debian 6.0
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-04-24 12:07:14
 Targetversion: 1.2.2
-Class: bug
 
 On Iceweasel 3.5.16 the rule editor breaks while editing ListOf()
 in the logwatch pattern editor. When adding a line, the layout
@@ -28,3 +28,6 @@ Traceback (most recent call last):
 ValueError: invalid literal for int() with base 10: ''
 
 It also looks that the pickling does not work on this browser.
+
+2013-01-09 15:35:31: changed state open -> done
+This has already been fixed in the past

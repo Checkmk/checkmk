@@ -82,6 +82,7 @@
     * FIX: Dashboard: Fixed wrong display options in links after data reloads
     * FIX: Fixed "remove all downtimes" button in views when no downtimes to be deleted 
     * FIX: Services in hosttables now use the service name as header (if no custom title set)
+    * FIX: Fixed rendering of dashboard globes in opera
     * New filter for host_contact and service_contact
     
     WATO:

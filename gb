@@ -427,6 +427,7 @@ def main_blame(args):
     bug = g_bugs.get(id)
     if not bug:
         bail_out("No such bug.\n")
+    save_last_bugid(id)
 
     os.system("git blame %d" % id)
 

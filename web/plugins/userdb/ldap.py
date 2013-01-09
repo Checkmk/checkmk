@@ -239,10 +239,10 @@ def ldap_replace_macros(tmpl):
 def ldap_user_id_attr():
     return config.ldap_userspec.get('user_id', ldap_attr('user_id'))
 
-def ldap_get_user_dn(username, no_escape = False):
+def ldap_get_user(username, no_escape = False):
     # Check wether or not the user exists in the directory
     # It's only ok when exactly one entry is found.
-    # Returns the DN in this case.
+    # Returns the DN and user_id as tuple in this case.
     result = ldap_search(
         ldap_replace_macros(config.ldap_userspec['dn']),
         '(%s=%s)' % (ldap_user_id_attr(), ldap.filter.escape_filter_chars(username)),
@@ -250,10 +250,12 @@ def ldap_get_user_dn(username, no_escape = False):
     )
 
     if result:
+        dn = result[0][0]
+        user_id = result[0][1][ldap_user_id_attr()][0]
         if no_escape:
-            return result[0][0]
+            return (dn, user_id)
         else:
-            return result[0][0].replace('\\', '\\\\')
+            return (dn.replace('\\', '\\\\'), user_id)
 
 def ldap_get_users(add_filter = None):
     columns = [
@@ -273,7 +275,9 @@ def ldap_get_users(add_filter = None):
     return result
 
 def ldap_user_groups(username, attr = 'cn'):
-    user_dn = ldap_get_user_dn(username)
+    # The given username might be wrong case. The ldap search is case insensitive,
+    # so the username read from ldap might differ. Fix it here.
+    user_dn, username = ldap_get_user(username)
 
     # Apply configured group ldap filter and only reply with groups
     # having the current user as member
@@ -525,16 +529,19 @@ ldap_attribute_plugins['groups_to_roles'] = {
 def ldap_login(username, password):
     ldap_connect()
     # Returns None when the user is not found or not uniq, else returns the
-    # distinguished name of the user as string which is needed for the login.
-    user_dn = ldap_get_user_dn(username, True)
-    if not user_dn:
+    # distinguished name and the username as tuple which are both needed for
+    # the further login process.
+    result = ldap_get_user(username, True)
+    if not result:
         return None # The user does not exist. Skip this connector.
+
+    user_dn, username = result
 
     # Try to bind with the user provided credentials. This unbinds the default
     # authentication which should be rebound again after trying this.
     try:
         ldap_bind(user_dn, password)
-        result = True
+        result = username
     except:
         result = False
 

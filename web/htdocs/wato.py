@@ -7786,7 +7786,7 @@ def mode_users(phase):
         if cgs:
             html.write(", ".join(
                [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_contact_group"), ("edit", c)]),
-                                          contact_groups[c] and contact_groups[c] or c) for c in cgs]))
+                                          c in contact_groups and contact_groups[c] or c) for c in cgs]))
         else:
             html.write("<i>" + _("none") + "</i>")
 

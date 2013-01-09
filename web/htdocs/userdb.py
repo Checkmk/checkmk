@@ -467,10 +467,11 @@ def hook_login(username, password):
             continue
 
         result = handler(username, password)
-        # None  -> User unknown, means continue with other connectors
-        # True  -> success
-        # False -> failed
-        if result == True:
+        # None        -> User unknown, means continue with other connectors
+        # '<user_id>' -> success
+        # False       -> failed
+        if result not in [ False, None ]:
+            username = result
             # Check wether or not the user exists (and maybe create it)
             create_non_existing_user(connector['id'], username)
 
@@ -481,8 +482,8 @@ def hook_login(username, password):
             # a "!". But when using other conectors it might be neccessary
             # to validate the user "locked" attribute.
             lock_handler = connector.get('locked', None)
-            if lock_handler:
-                result = not lock_handler(username) # returns True if locked
+            if lock_handler and lock_handler(username):
+                return False # The account is locked
 
             return result
 

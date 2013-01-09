@@ -161,7 +161,12 @@ def do_login():
             if not origtarget or "logout.py" in origtarget:
                 origtarget = defaults.url_prefix + 'check_mk/'
 
-            if userdb.hook_login(username, password):
+            # None        -> User unknown, means continue with other connectors
+            # '<user_id>' -> success
+            # False       -> failed
+            result = userdb.hook_login(username, password)
+            if result:
+                username = result
                 # The login succeeded! Now:
                 # a) Set the auth cookie
                 # b) Unset the login vars in further processing

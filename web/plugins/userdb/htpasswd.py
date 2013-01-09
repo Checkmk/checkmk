@@ -37,9 +37,9 @@
 #   to validate a login issued by a user.
 #   Gets parameters: username, password
 #   Has to return either:
-#       True  -> Login succeeded
-#       False -> Login failed
-#       None  -> Unknown user
+#       '<user_id>' -> Login succeeded
+#       False       -> Login failed
+#       None        -> Unknown user
 # sync
 #   Optional: Hook function can be registered here to be executed
 #   to synchronize all users.
@@ -94,7 +94,11 @@ def htpasswd_login(username, password):
     users = load_htpasswd()
     if username not in users:
         return None # not existing user, skip over
-    return password_valid(users[username], password)
+
+    if password_valid(users[username], password):
+        return username
+    else:
+        return False
 
 # Saves htpasswd connector managed users
 def htpasswd_save(users):

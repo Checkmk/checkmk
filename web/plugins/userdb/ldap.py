@@ -37,12 +37,9 @@ import time, copy
 import site, sys
 try:
     sys.path.extend(site.getsitepackages())
-except: # Workaround, python 2.6 ( debian squeeze ) 
+except: # Workaround, python 2.6 ( debian squeeze )
     sys.path.extend(["/usr/local/lib/python2.6/dist-packages"])
     sys.path.extend(["/usr/lib/python2.6/dist-packages"])
-    pass
-
-
 
 try:
     # docs: http://www.python-ldap.org/doc/html/index.html
@@ -136,6 +133,8 @@ def ldap_connect():
     try:
         ldap_connection = ldap.ldapobject.ReconnectLDAPObject(ldap_uri())
         ldap_connection.protocol_version = config.ldap_connection['version']
+        ldap_connection.network_timeout  = config.ldap_connection.get('connect_timeout', 2.0)
+
         ldap_default_bind()
 
         # on success, store the connection options the connection has been made with
@@ -193,11 +192,18 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
 
     # Convert all keys to lower case!
     result = []
-    for dn, obj in ldap_connection.search_s(base, scope, filt, columns):
-        new_obj = {}
-        for key, val in obj.iteritems():
-            new_obj[key.lower().decode('utf-8')] = [ i.decode('utf-8') for i in val ]
-        result.append((dn, new_obj))
+    try:
+        for dn, obj in ldap_connection.search_s(base, scope, filt, columns):
+            new_obj = {}
+            for key, val in obj.iteritems():
+                new_obj[key.lower().decode('utf-8')] = [ i.decode('utf-8') for i in val ]
+            result.append((dn, new_obj))
+    except ldap.SIZELIMIT_EXCEEDED:
+        raise MKLDAPException(_('The response reached a size limit. This could be due to '
+                                'a sizelimit configuration on the LDAP server.<br />Throwing away the '
+                                'incomplete results. You should change the scope of operation '
+                                'within the ldap or adapt the limit settings of the LDAP server.'))
+
     return result
     #return ldap_connection.search_s(base, scope, filter, columns)
     #for dn, obj in ldap_connection.search_s(base, scope, filter, columns):
@@ -233,10 +239,10 @@ def ldap_replace_macros(tmpl):
 def ldap_user_id_attr():
     return config.ldap_userspec.get('user_id', ldap_attr('user_id'))
 
-def ldap_get_user_dn(username, no_escape = False):
+def ldap_get_user(username, no_escape = False):
     # Check wether or not the user exists in the directory
     # It's only ok when exactly one entry is found.
-    # Returns the DN in this case.
+    # Returns the DN and user_id as tuple in this case.
     result = ldap_search(
         ldap_replace_macros(config.ldap_userspec['dn']),
         '(%s=%s)' % (ldap_user_id_attr(), ldap.filter.escape_filter_chars(username)),
@@ -244,10 +250,12 @@ def ldap_get_user_dn(username, no_escape = False):
     )
 
     if result:
+        dn = result[0][0]
+        user_id = result[0][1][ldap_user_id_attr()][0]
         if no_escape:
-            return result[0][0]
+            return (dn, user_id)
         else:
-            return result[0][0].replace('\\', '\\\\')
+            return (dn.replace('\\', '\\\\'), user_id)
 
 def ldap_get_users(add_filter = None):
     columns = [
@@ -267,7 +275,9 @@ def ldap_get_users(add_filter = None):
     return result
 
 def ldap_user_groups(username, attr = 'cn'):
-    user_dn = ldap_get_user_dn(username)
+    # The given username might be wrong case. The ldap search is case insensitive,
+    # so the username read from ldap might differ. Fix it here.
+    user_dn, username = ldap_get_user(username)
 
     # Apply configured group ldap filter and only reply with groups
     # having the current user as member
@@ -519,16 +529,19 @@ ldap_attribute_plugins['groups_to_roles'] = {
 def ldap_login(username, password):
     ldap_connect()
     # Returns None when the user is not found or not uniq, else returns the
-    # distinguished name of the user as string which is needed for the login.
-    user_dn = ldap_get_user_dn(username, True)
-    if not user_dn:
+    # distinguished name and the username as tuple which are both needed for
+    # the further login process.
+    result = ldap_get_user(username, True)
+    if not result:
         return None # The user does not exist. Skip this connector.
+
+    user_dn, username = result
 
     # Try to bind with the user provided credentials. This unbinds the default
     # authentication which should be rebound again after trying this.
     try:
         ldap_bind(user_dn, password)
-        result = True
+        result = username
     except:
         result = False
 

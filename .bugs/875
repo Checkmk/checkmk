@@ -1,0 +1,9 @@
+Title: Create ldap debugging page
+Component: multisite
+State: open
+Date: 2013-01-07 08:43:52
+Targetversion: future
+Class: feature
+
+It would be nice to have a dedicated ldap connection debugging page which displays
+the configured ldap settings and maybe shows all objects reported by ldap.

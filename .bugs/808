@@ -1,9 +1,9 @@
 Title: Handle ctrl-c for inventory
 Component: core
-State: open
+Class: nastiness
+State: done
 Date: 2012-10-10 13:37:24
 Targetversion: 1.2.2
-Class: nastiness
 
 Currently, trying to abort an inventory only kills the current inventory. If you
 have simply specified cmk -I you'll need to abort as many times as there are hosts
@@ -14,3 +14,6 @@ Currently we have the problem, that the snmp commands get the Ctrl-C and not
 Python. Can we start the snmp commands without a controlling terminal? 
 And the gracefully handle Ctrl-C in Check_MK.
 
+
+2013-01-10 12:09:04: changed state open -> done
+This could simply be solved by adding a SIGINT handler to check_mk

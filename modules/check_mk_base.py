@@ -75,7 +75,6 @@ else:
     def tty(fg=-1, bg=-1, attr=-1):
         return ''
 
-
 # global variables used to cache temporary values
 g_dns_cache                  = {}
 g_infocache                  = {} # In-memory cache of host info.
@@ -105,6 +104,11 @@ opt_use_snmp_walk            = False
 opt_cleanup_autochecks       = False
 fake_dns                     = False
 
+# register SIGINT handler for consistenct CTRL+C handling
+def interrupt_handler(signum, frame):
+    sys.stderr.write('<Interrupted>\n')
+    sys.exit(1)
+signal.signal(signal.SIGINT, interrupt_handler)
 
 class MKGeneralException(Exception):
     def __init__(self, reason):

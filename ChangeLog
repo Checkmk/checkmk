@@ -1,4 +1,6 @@
 1.2.1i5
+    Checks & Agents:
+    * Add: fileinfo is now supported by the solaris agent. Thanks to Daniel Roettgermann
 
 1.2.1i4:
     Core:

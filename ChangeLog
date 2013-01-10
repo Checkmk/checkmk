@@ -1,5 +1,6 @@
 1.2.1i5
     Checks & Agents
+    * Linux Agent, diskstat: Now supporting /dev/emcpower* devices (Thanks to Claas Rockmann-Buchterkirche)
     * FIX: winperf_processor: Showing 0% on "cmk -nv" now instead of 100%
     * FIX: win_dhcp_pools: removed faulty output on non-german windows 2003 servers 
            with no dhcp server installed (Thanks to Mathias Decker)
@@ -23,7 +24,6 @@
     * Linux Agent, mk_postgres: Supporting pgsql and postgres as user
     * Linux Agent, mk_postgres: Fixed database stats query to be compatible
       with more versions of postgres
-    * Linux Agent, diskstat: Now supporting /dev/emcpower* devices (Thanks to Claas Rockmann-Buchterkirche)
     * apache_status: Modified to be usable on python < 2.6 (eg RHEL 5.x)
     * apache_status: Fixed handling of PIDs with more than 4 numbers
     * Add: New Check for Rittal CMC PSM-M devices

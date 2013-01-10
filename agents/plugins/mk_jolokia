@@ -5,13 +5,13 @@ import urllib2, sys, os, socket, pprint
 opt_debug = '--debug' in sys.argv
 
 def fetch_var(server, port, path, suburi, itemspec):
+    url = "http://%s:%d/%s/%s" % (server, port, suburi, path)
     try:
-        url = "http://%s:%d/%s/%s" % (server, port, suburi, path)
+        json = urllib2.urlopen(url).read()
     except Exception, e:
         sys.stderr.write("ERROR: %s" % e)
         return []
 
-    json = urllib2.urlopen(url).read()
 
     try:
         true = True

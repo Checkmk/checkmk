@@ -1,9 +1,9 @@
 Title: Opera: Globes are only displayed half
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2012-05-20 15:58:01
 Targetversion: 1.2.2
-Class: nastiness
 
 Only the right half of the actual data is being displayed.
 Maybe Opera has problems with negative values somewhere.
@@ -14,3 +14,6 @@ in opera the negative scale for flipping the thing does not work:
 context.scale(x_scale, 1);
 
 Maybe simply draw the figure vice versa instead of flipping it after drawing?
+
+2013-01-09 16:11:23: changed state open -> done
+fixed rendering algorithm

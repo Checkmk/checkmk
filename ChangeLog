@@ -45,6 +45,8 @@
     * FIX: hr_fs: handle negative values in order to larger disks (thanks to Christof Musik)
     * FIX: mssql_backup: Fixed wrong calculation of backup age in seconds
     * FIX: winperf_processor: Showing 0% on "cmk -nv" now instead of 100%
+    * FIX: win_dhcp_pools: removed faulty output on non-german windows 2003 servers 
+           with no dhcp server installed (Thanks to Mathias Decker)
     * New script multisite_to_mrpe for exporting services from a remote system
 
 

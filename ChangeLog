@@ -5,6 +5,9 @@
     * FIX: win_dhcp_pools: removed faulty output on non-german windows 2003 servers 
            with no dhcp server installed (Thanks to Mathias Decker)
 
+    Multisite
+    * FIX: Fixed rendering of dashboard globes in opera
+
 1.2.1i4:
     Core:
     * Better exception handling when executing "Check_MK"-Check. Printing python
@@ -88,7 +91,6 @@
     * FIX: Dashboard: Fixed wrong display options in links after data reloads
     * FIX: Fixed "remove all downtimes" button in views when no downtimes to be deleted 
     * FIX: Services in hosttables now use the service name as header (if no custom title set)
-    * FIX: Fixed rendering of dashboard globes in opera
     * New filter for host_contact and service_contact
     
     WATO:

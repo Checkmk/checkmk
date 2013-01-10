@@ -7519,11 +7519,14 @@ def delete_distributed_wato_file():
 #   | Mode for managing users and contacts.                                |
 #   '----------------------------------------------------------------------'
 
-def declare_user_attribute(name, vs, user_editable = True):
+def declare_user_attribute(name, vs, user_editable = True, permission = None):
     userdb.user_attributes[name] = {
         'valuespec':     vs,
         'user_editable': user_editable,
     }
+    # Permission needed for editing this attribute
+    if permission:
+        userdb.user_attributes[name]["permission"] = permission
 
 def load_notification_scripts_from(adir):
     scripts = {}
@@ -8219,10 +8222,11 @@ def mode_edit_user(phase):
     select_language(user.get('language', ''))
     for name, attr in userdb.get_user_attributes():
         if attr['user_editable']:
-            vs = attr['valuespec']
-            forms.section(vs.title())
-            vs.render_input("ua_" + name, user.get(name, vs.default_value()))
-            html.help(vs.help())
+            if not attr.get("permission") or config.may(attr["permission"]):
+                vs = attr['valuespec']
+                forms.section(vs.title())
+                vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+                html.help(vs.help())
 
     # TODO: Later we could add custom macros here, which
     # then could be used for notifications. On the other hand,
@@ -10850,10 +10854,11 @@ def page_user_profile():
                 if config.may('general.edit_user_attributes'):
                     for name, attr in userdb.get_user_attributes():
                         if attr['user_editable']:
-                            vs = attr['valuespec']
-                            value = vs.from_html_vars('ua_' + name)
-                            vs.validate_value(value, "ua_" + name)
-                            users[config.user_id][name] = value
+                            if not attr.get("permission") or config.may(attr["permission"]):
+                                vs = attr['valuespec']
+                                value = vs.from_html_vars('ua_' + name)
+                                vs.validate_value(value, "ua_" + name)
+                                users[config.user_id][name] = value
 
             # Change the password if requested
             if config.may('general.change_password'):

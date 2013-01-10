@@ -58,8 +58,8 @@ def load():
          [ "admin", "guest" ])
 
     config.declare_permission("general.edit_views",
-         _("Edit views"),
-         _("Create own views and customize builtin views"),
+         _("Customize views and use them"),
+         _("Allows to create own views, customize builtin views and use them."),
          [ "admin", "user" ])
 
     config.declare_permission("general.publish_views",

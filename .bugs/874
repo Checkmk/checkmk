@@ -1,9 +1,9 @@
 Title: Cleanup OMD manpage paths
 Component: core
-State: open
+Class: nastiness
+State: done
 Date: 2013-01-03 11:09:30
 Targetversion: 1.2.2
-Class: nastiness
 
 The regular check manpage path in OMD is share/doc/check_mk/checks but the
 local path is local/share/check_mk/checkman. This is confusing. Cleanup the
@@ -12,3 +12,6 @@ normal/local paths to make them equal.
 Resolution: Change the OMD path to share/check_mk/checkman. Move the
 directory around. No symlinking. Manpages are not intended for manual
 reading.
+
+2013-01-09 16:18:00: changed state open -> done
+Has been changed in omd. Was an integration issue

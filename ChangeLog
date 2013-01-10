@@ -1,3 +1,18 @@
+1.2.1i5
+    Core:
+    * Improved handling of CTRL+C (SIGINT) to terminate long runnining tasks 
+      (e.g.  inventory of SNMP hosts)
+
+    Checks & Agents:
+    * Linux Agent, diskstat: Now supporting /dev/emcpower* devices (Thanks to Claas Rockmann-Buchterkirche)
+    * FIX: winperf_processor: Showing 0% on "cmk -nv" now instead of 100%
+    * FIX: win_dhcp_pools: removed faulty output on non-german windows 2003 servers 
+           with no dhcp server installed (Thanks to Mathias Decker)
+    * Add: fileinfo is now supported by the solaris agent. Thanks to Daniel Roettgermann
+
+    Multisite:
+    * FIX: Fixed rendering of dashboard globes in opera
+
 1.2.1i4:
     Core:
     * Better exception handling when executing "Check_MK"-Check. Printing python
@@ -19,11 +34,8 @@
       with more versions of postgres
     * apache_status: Modified to be usable on python < 2.6 (eg RHEL 5.x)
     * apache_status: Fixed handling of PIDs with more than 4 numbers
-    * FIX: postgres_sessions: handle case of no active/no idle sessions
-    * FIX: correct backslash representation of windows logwatch files
     * Add: New Check for Rittal CMC PSM-M devices
     * Smart plugin: Only use relevant numbers of serial
-    * FIX: postgres_sessions: handle case of no active/no idle sessions
     * Add: ibm_xraid_pdisks - new check for agentless monitoring of disks on IBM SystemX servers.
     * Add: hp_proliant_da_cntlr check for disk controllers in HP Proliant servers
     * Add: Check to monitor Storage System Drive Box Groups attached to HP servers
@@ -33,18 +45,21 @@
     * Add: plesk_domains - List domains configured in plesk installations
     * Add: plesk_backups - Monitor backup spaces configured for domains in plesk
     * Add: mysql_connections - Monitor number of parallel connections to mysql daemon
+    * Add: flexible notifcations: filter by hostname
+    * New script multisite_to_mrpe for exporting services from a remote system
+    * FIX: postgres_sessions: handle case of no active/no idle sessions
+    * FIX: correct backslash representation of windows logwatch files
+    * FIX: postgres_sessions: handle case of no active/no idle sessions
     * FIX: zfsget: fix exception on snapshot volumes (where available is '-')
     * FIX: zfsget: handle passed-through filesystems (need agent update)
     * FIX: loading notification scripts in local directory for real
     * FIX: oracle_version: return valid check result in case of missing agent info
     * FIX: apache_status: fixed bug with missing 'url', wrote man page
-    * Add: flexible notifcations: filter by hostname
     * FIX: fixed missing localisation in check_parameteres.py 
     * FIX: userdb/ldap.py: fixed invalid call site.getsitepackages() for python 2.6
     * FIX: zpool_status: fixed crash when spare devices were available
     * FIX: hr_fs: handle negative values in order to larger disks (thanks to Christof Musik)
     * FIX: mssql_backup: Fixed wrong calculation of backup age in seconds
-    * New script multisite_to_mrpe for exporting services from a remote system
 
 
     Multisite:
@@ -60,10 +75,12 @@
     * Check reschedule icon now works on services containing an \
     * Now showing correct representation of SI unit kilo ( k )
     * if perfometer now differs between byte and bit output
-    * FIX: warn / crit levels in if-check when using "bit" as unit
     * Use pprint when writing global settings (makes files more readable)
     * New script for settings/removing downtimes: doc/treasures/downtime
     * New option when setting host downtimes for also including child hosts
+    * Option dials (refresh, number of columns) now turnable by mouse wheel
+    * Views: Commands/Checkboxes buttons are now activated dynamically (depending on data displayed)
+    * FIX: warn / crit levels in if-check when using "bit" as unit
     * FIX: Fixed changing own password when notifications are disabled
     * FIX: On page reload, now updating the row field in the headline
     * FIX: ListOfStrings Fields now correctly autoappend on focus
@@ -72,11 +89,9 @@
     * FIX: output_format json: handle newlines correctly
     * FIX: handle ldap logins with ',' in distinguished name
     * FIX: quote HTML variable names, fixes potential JS injection
-    * Option dials (refresh, number of columns) now turnable by mouse wheel
     * FIX: Sidebar not raising exceptions on configured but not available snapins
     * FIX: Quicksearch: Fixed Up/Down arrow handling in chrome
     * FIX: Speedometer: Terminating data updates when snapin is removed from sidebar
-    * Views: Commands/Checkboxes buttons are now activated dynamically (depending on data displayed)
     * FIX: Views: toggling forms does not disable the checkbox button anymore
     * FIX: Dashboard: Fixed wrong display options in links after data reloads
     * FIX: Fixed "remove all downtimes" button in views when no downtimes to be deleted 
@@ -84,22 +99,18 @@
     * New filter for host_contact and service_contact
     
     WATO:
-    * FIX: Fixed generated manual check definitions for checks without items
-      like ntp_time and tcp_conn_stats
-    * FIX: Persisting changing of folder titles when only the title has changed
-    * FIX: Fixed rendering bug after folder editing
     * Add: Creating a new rule immediately opens its edit formular
     * The rules formular now uses POST as transaction method
     * Modularized the authentication and user management code
     * Default config: add contact group 'all' and put all hosts into it
     * Reverse order of Condition, Value and General options in rule editor
     * Allowing "%" and "+" in mail prefixes of contacts now
+    * FIX: Fixed generated manual check definitions for checks without items
+      like ntp_time and tcp_conn_stats
+    * FIX: Persisting changing of folder titles when only the title has changed
+    * FIX: Fixed rendering bug after folder editing
 
     Event Console:
-    * FIX: fix exception in rules that use facility local7
-    * FIX: fix event icon in case of using TCP access to EC
-    * FIX: Allowing ":" in application field (e.g. needed for windows logfiles)
-    * FIX: fix bug in Filter "Hostname/IP-Address of original event"
     * Replication slave can now copy rules from master into local configuration
       via a new button in WATO.
     * Speedup access to event history by earlier filtering and prefiltering with grep
@@ -108,6 +119,10 @@
     * FIX: remove event pipe on program shutdown, prevents syslog freeze
     * FIX: hostnames in livestatus query now being utf8 encoded
     * FIX: fixed a nastiness when reading from local pipe
+    * FIX: fix exception in rules that use facility local7
+    * FIX: fix event icon in case of using TCP access to EC
+    * FIX: Allowing ":" in application field (e.g. needed for windows logfiles)
+    * FIX: fix bug in Filter "Hostname/IP-Address of original event"
 
     Livestatus:
     * FIX: Changed logging output "Time to process request" to be debug output

@@ -1,6 +1,6 @@
 Title: WATO permission "edit views" = False disables display of custom views
 Component: wato
-State: open
+State: done
 Date: 2012-07-06 14:16:42
 Targetversion: 1.2.2
 Class: bug
@@ -11,3 +11,9 @@ possible to still use that were "installed" on setup.
 
 Resolution: we simply rename the permission into "Allow creating and using
 own customized views"
+
+2013-01-09 15:38:55: changed state open -> done
+Has just been renamed.
+
+2013-01-09 16:10:01: changed state done -> done
+Changed calculation algorithm.

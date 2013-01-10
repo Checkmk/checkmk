@@ -605,8 +605,8 @@ def render_statistics(pie_id, what, table, filter):
                 # compute radius of this sphere *including all inner spheres!* The first
                 # sphere always gets a radius of 1.0, of course.
                 radius = remaining_separatorspace + remaining_radius * (remaining_part ** (1/3.0))
-                pie_parts.append('chart_pie("%s", %f, %f, %r);' % (pie_id, pie_right_aspect, radius, color))
-                pie_parts.append('chart_pie("%s", -%f, %f, %r);' % (pie_id, pie_left_aspect, radius, color))
+                pie_parts.append('chart_pie("%s", %f, %f, %r, true);' % (pie_id, pie_right_aspect, radius, color))
+                pie_parts.append('chart_pie("%s", %f, %f, %r, false);' % (pie_id, pie_left_aspect, radius, color))
 
                 # compute relative part of this class
                 part = float(value) / total # ranges from 0 to 1
@@ -616,7 +616,7 @@ def render_statistics(pie_id, what, table, filter):
 
     html.write("</div>")
     html.javascript("""
-function chart_pie(pie_id, x_scale, radius, color) {
+function chart_pie(pie_id, x_scale, radius, color, right_side) {
     var context = document.getElementById(pie_id + "_stats").getContext('2d');
     if (!context)
         return;
@@ -628,8 +628,10 @@ function chart_pie(pie_id, x_scale, radius, color) {
     context.translate(pie_x, pie_y);
     context.scale(x_scale, 1);
     context.beginPath();
-    context.moveTo(0, 0);
-    context.arc(0, 0, (pie_d / 2) * radius, 1.5 * Math.PI, 0.5 * Math.PI, false);
+    if(right_side)
+        context.arc(0, 0, (pie_d / 2) * radius, 1.5 * Math.PI, 0.5 * Math.PI, false);
+    else
+        context.arc(0, 0, (pie_d / 2) * radius, 0.5 * Math.PI, 1.5 * Math.PI, false);
     context.closePath();
     context.fill();
     context.restore();

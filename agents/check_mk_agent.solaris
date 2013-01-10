@@ -49,7 +49,7 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.1i4
+echo Version: 1.2.1i5
 echo AgentOS: solaris
 
 
@@ -168,6 +168,14 @@ then
             ./$skript
     fi
   done
+fi
+
+# Fileinfo-Check: put patterns for files into $MK_CONFDIR/fileinfo.cfg
+if [ -f "$MK_CONFDIR/fileinfo.cfg" ] ; 
+then
+    echo ''
+    nawk 'BEGIN{print srand()}'
+    echo `ls $(cat "$MK_CONFDIR/fileinfo.cfg")`"|"`ls -nl $(cat "$MK_CONFDIR/fileinfo.cfg") | awk '{print $5}'`"|"`truss -v lstat -t lstat ls -l $(cat "$MK_CONFDIR/fileinfo.cfg") 2>&1|grep mt |awk '{print $9}'|cut -d . -f 1` 
 fi
 
 echo '<<<local>>>'

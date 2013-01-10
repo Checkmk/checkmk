@@ -1,9 +1,9 @@
 Title: CPU Utilization immer auf 100% bei -nv (Windows)
 Component: core
-State: open
+Class: nastiness
+State: done
 Date: 2012-01-10 17:58:52
 Targetversion: 1.2.2
-Class: nastiness
 
 Windows Hosts zeigen bei einem cmk -nv immer eine CPU Utilization von 100% an.
 Der Normale Check funktioniert. Tritt hier bei 1.1.13i2 auf.
@@ -11,3 +11,6 @@ Der Normale Check funktioniert. Tritt hier bei 1.1.13i2 auf.
 Grund: der Check arbeitet mit Countern. Sollte aber trotzdem machbar sein,
 dass er funktioniert, wenn schon von früher Werte da sind. Bei erstenmal
 sollte der Check pending sein (analog zu disk IO).
+
+2013-01-09 15:32:54: changed state open -> done
+Correct percentage calciulation for this situation has been added.

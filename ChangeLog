@@ -1,6 +1,17 @@
 1.2.1i5
+    Core:
+    * Improved handling of CTRL+C (SIGINT) to terminate long runnining tasks 
+      (e.g.  inventory of SNMP hosts)
+
     Checks & Agents:
+    * Linux Agent, diskstat: Now supporting /dev/emcpower* devices (Thanks to Claas Rockmann-Buchterkirche)
+    * FIX: winperf_processor: Showing 0% on "cmk -nv" now instead of 100%
+    * FIX: win_dhcp_pools: removed faulty output on non-german windows 2003 servers 
+           with no dhcp server installed (Thanks to Mathias Decker)
     * Add: fileinfo is now supported by the solaris agent. Thanks to Daniel Roettgermann
+
+    Multisite:
+    * FIX: Fixed rendering of dashboard globes in opera
 
 1.2.1i4:
     Core:

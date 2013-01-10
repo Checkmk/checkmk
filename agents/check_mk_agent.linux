@@ -184,7 +184,7 @@ cat /proc/mdstat
 # Performancecounter Platten
 echo '<<<diskstat>>>'
 date +%s
-egrep ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|dm-[0-9]+|VxVM.*) ' < /proc/diskstats
+egrep ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*) ' < /proc/diskstats
 if type dmsetup >/dev/null ; then
     echo '[dmsetup_info]'
     dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name

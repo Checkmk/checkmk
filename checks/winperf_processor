@@ -50,8 +50,11 @@ def check_winperf_util(item, params, info):
             ticks = int(line[-2])
             num_cpus = len(line) - 3
             timedif, ticks_per_sec = get_counter("winperf_util", this_time, ticks)
-            secs_per_sec = ticks_per_sec / 10000000.0;
-            used_perc = 100 * (1 - secs_per_sec)
+            if ticks_per_sec == 0.0:
+                used_perc = 0.0
+            else:
+                cpusecs_per_sec = ticks_per_sec / 10000000.0
+                used_perc = 100 * (1 - cpusecs_per_sec)
 
             if used_perc < 0:
                 used_perc = 0

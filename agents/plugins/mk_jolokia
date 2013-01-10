@@ -6,7 +6,12 @@ opt_debug = '--debug' in sys.argv
 
 def fetch_var(server, port, path, suburi, itemspec):
     url = "http://%s:%d/%s/%s" % (server, port, suburi, path)
-    json = urllib2.urlopen(url).read()
+    try:
+        json = urllib2.urlopen(url).read()
+    except Exception, e:
+        sys.stderr.write("ERROR: %s" % e)
+        return []
+
 
     try:
         true = True

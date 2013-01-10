@@ -15,6 +15,10 @@ def render_wiki():
         for line in file(filename).readlines():
             line = line.strip()
             if line == "":
+                if ul_started == True:
+                    html.write("</ul>")
+                    start_ul = True
+                    ul_started = False
                 html.write("<br />")
             elif line == "----":
                 html.write("<hr>")
@@ -38,7 +42,9 @@ def render_wiki():
 
 
                 if link.startswith("http://") or link.startswith("https://"):
+                    html.write('<li>')
                     simplelink(name, link, "_blank")
+                    html.write('</li>')
                 else:
                     erg = name.split(':')
                     if len(erg) > 0:
@@ -46,11 +52,8 @@ def render_wiki():
                     else:
                         name = erg[0]
                     bulletlink(name, "/%s/wiki/doku.php?id=%s" % (defaults.omd_site, link))
+
             else:
-                if ul_started == True:
-                    html.write("</ul>")
-                    start_ul = True
-                    ul_started = False
                 html.write(line)
 
         if ul_started == True:

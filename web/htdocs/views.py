@@ -1370,7 +1370,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     if command_form:
         # If we are currently within an action (confirming or executing), then
         # we display only the selected rows (if checkbox mode is active)
-        if html.var("selected_rows", "") and html.do_actions():
+        if html.var("selected_rows", None) != None and html.do_actions():
             rows = get_selected_rows(view, rows, html.var("selected_rows"))
 
         if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
@@ -1614,7 +1614,7 @@ def view_optiondial(view, option, choices, help):
     html.begin_context_buttons() # just to be sure
     # Remove unicode strings
     choices = [ [c[0], str(c[1])] for c in choices ]
-    html.write('<div title="%s" id="optiondial_%s" class="optiondial %s val_%s"' 
+    html.write('<div title="%s" id="optiondial_%s" class="optiondial %s val_%s" '
        'onclick="view_dial_option(this, \'%s\', \'%s\', %r);"><div>%s</div></div>' % (
         help, option, option, value, view["name"], option, choices, title))
     html.final_javascript("init_optiondial('optiondial_%s');" % option)
@@ -1628,7 +1628,7 @@ def view_option_toggler(id, view, option, icon, help, hidden = False):
     value = vo.get(option, view.get(option, False))
     html.begin_context_buttons() # just to be sure
     hide = hidden and ' style="display:none"' or ''
-    html.write('<div id="%s_on" title="%s" class="togglebutton %s %s"'
+    html.write('<div id="%s_on" title="%s" class="togglebutton %s %s" '
        'onclick="view_switch_option(this, \'%s\', \'%s\');"%s></div>' % (
         id, help, icon, value and "down" or "up", view["name"], option, hide))
 
@@ -1699,10 +1699,12 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
                      hidden = not enable_commands)
         togglebutton_off("commands", "commands", hidden = enable_commands)
 
+        selection_enabled = enable_commands and enable_checkboxes
         view_option_toggler("checkbox", thisview, "show_checkboxes", "checkbox",
                             _("Enable/Disable checkboxes for selecting rows for commands"),
-                            hidden = not enable_commands or not enable_checkboxes)
-        togglebutton_off("checkbox", "checkbox", hidden = enable_commands and enable_checkboxes)
+                            hidden = not selection_enabled)
+        togglebutton_off("checkbox", "checkbox", hidden = selection_enabled)
+        html.javascript('g_selection_enabled = %s;' % (selection_enabled and 'true' or 'false'))
 
     if 'O' in display_options:
         if config.may("general.view_option_columns"):
@@ -2162,7 +2164,10 @@ def do_actions(view, what, action_rows, backurl):
         return False # no actions done
 
     if not action_rows:
-        html.show_error(_("No rows selected to perform actions for."))
+        message = _("No rows selected to perform actions for.")
+        if html.output_format == "html": # sorry for this hack
+            message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
+        html.show_error(message)
         return False # no actions done
 
     command = None

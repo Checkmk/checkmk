@@ -11,6 +11,9 @@
 
     Multisite:
     * FIX: Fixed rendering of dashboard globes in opera
+    * When having row selections enabled and no selected and performing
+      actions an error message is displayed instead of performing the action on
+      all rows
 
 1.2.1i4:
     Core:

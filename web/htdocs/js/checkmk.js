@@ -1004,6 +1004,8 @@ function toggle_foldable_container(treename, id) {
  * +----------------------------------------------------------------------+
  */
 
+// Tells us if the row selection is enabled at the moment
+var g_selection_enabled = false;
 // Holds the row numbers of all selected rows
 var g_selected_rows = [];
 
@@ -1362,18 +1364,31 @@ function init_rowselect() {
 
 // Adds a hidden field with the selected rows to the form if
 // some are selected
+// Send an empty field to tell the server code that the checkbox
+// handling is enabled in GUI but no row has been selected
 function add_row_selections(form) {
-    var num_selected = g_selected_rows.length;
-    // Skip when none selected
-    if(num_selected == 0)
+    // Skip when selection is not enabled
+    if(!g_selection_enabled) {
+        // Remove var from form before submission
+        if(form.elements['selected_rows'] !== undefined) {
+            form.removeChild(form.elements['selected_rows']);
+        }
         return true;
+    }
 
-    var field = document.createElement('input');
+    var num_selected = g_selected_rows.length;
+
+    if(form.elements['selected_rows'] === undefined) {
+        var field = document.createElement('input');
+        form.appendChild(field);
+    } else {
+        var field = form.elements['selected_rows'];
+    }
+
     field.name = 'selected_rows';
     field.type = 'hidden';
     field.value = g_selected_rows.join(',');
 
-    form.appendChild(field);
     field = null;
 }
 
@@ -1814,7 +1829,12 @@ function view_switch_option(oDiv, viewname, option, choices) {
 
     get_url_sync("ajax_set_viewoption.py?view_name=" + viewname + 
             "&option=" + option + "&value=" + new_choice[0]);
-    if (option == "refresh")
+
+    if (option == "refresh") {
         setReload(new_choice[0]);
+    } else if (option == "show_checkboxes") {
+        g_selection_enabled = new_value;
+    }
+
     handleReload('');
 }

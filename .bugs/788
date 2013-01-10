@@ -1,11 +1,14 @@
 Title: Command while no row selected show not do any command
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2012-07-29 23:00:06
 Targetversion: 1.2.2
-Class: nastiness
 
 Currently if no row is checked then it behaves like *all*
 rows are selected. Better would be a warning message
 that no row is selected. An no command executed.
 
+
+2013-01-10 14:42:01: changed state open -> done
+Has been implemented like written here.

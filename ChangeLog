@@ -12,6 +12,7 @@
 
     Multisite:
     * FIX: Fixed rendering of dashboard globes in opera
+    * Add: New user_options to limit seen nagios objects even the role is set to see all
 
 1.2.1i4:
     Core:

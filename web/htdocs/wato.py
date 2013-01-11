@@ -8551,6 +8551,7 @@ def mode_role_matrix(phase):
 
     elif phase == "buttons":
         global_buttons()
+        html.context_button(_("Back"), make_link([("mode", "roles")]), "back")
         return
 
     elif phase == "action":

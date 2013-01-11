@@ -34,8 +34,9 @@ def init_rowselect(view):
     # In views do not use the persisted selection on initial rendering
     # But use it when:
     # a) rendering views for page reloads
-    # b) some form has been submitted
-    if 'U' in html.display_options and not html.form_submitted():
+    # b) the view is being sorted
+    # c) some form has been submitted
+    if 'U' in html.display_options and not html.has_var('sort') and not html.form_submitted():
         weblib.set_rowselection('view-' + view['name'], [])
         selected = [] # initial rendering
     else:

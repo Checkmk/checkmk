@@ -1139,7 +1139,8 @@ def prepare_display_options():
         display_options = html.var("_display_options", "")
         display_options = apply_display_option_defaults(display_options)
         html.display_options = display_options
-        html.title_display_options = display_options
+        # Dont do this!! This garbles up the title links after a reload.
+        #html.title_display_options = display_options
 
     # But there is one special case: The sorter links! These links need to know
     # about the provided display_option parameter. The links could use
@@ -1355,9 +1356,16 @@ def render_view(view, rows, datasource, group_painters, painters,
     # permissions or datasources without commands, the form is not rendered
     command_form = should_show_command_form(display_options, datasource)
 
+    # Is the layout able to display checkboxes?
+    can_display_checkboxes = layout.get('checkboxes', False)
+
     if show_buttons:
         show_context_links(view, hide_filters, show_filters, display_options,
-                       painter_options, row_count > 0 and command_form, layout.get('checkboxes', False))
+                       painter_options,
+                       # Take into account: permissions, display_options
+                       row_count > 0 and command_form,
+                       # Take into account: layout capabilities
+                       can_display_checkboxes)
 
     # User errors in filters
     html.show_user_errors()
@@ -1387,7 +1395,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 
         elif 'C' in display_options: # (*not* display open, if checkboxes are currently shown)
             show_command_form(False, datasource)
-    
+
     # Also execute commands in cases without command form (needed for Python-
     # web service e.g. for NagStaMon)
     elif row_count > 0 and config.may("general.act") \
@@ -1420,7 +1428,11 @@ def render_view(view, rows, datasource, group_painters, painters,
 
             # The number of rows might have changed to enable/disable actions and checkboxes
             if show_buttons:
-                update_context_links(row_count > 0, layout.get('checkboxes', False))
+                update_context_links(
+                    # don't take display_options into account here ('c' is set during reload)
+                    row_count > 0 and should_show_command_form('C', datasource),
+                    can_display_checkboxes
+                )
 
         # Play alarm sounds, if critical events have been displayed
         if 'S' in display_options and view.get("play_sounds"):
@@ -1459,39 +1471,6 @@ def view_options(viewname):
     # Now get options for the view in question
     v = vo.get(viewname, {})
     must_save = False
-
-    # NEW IMPLEMENTION: Options for columns, refresh and
-    # checkboxes are switched via JS/AJAX, no longer via
-    # the URL.
-    # # Refresh rate
-    # if config.may("general.view_option_refresh"):
-    #     if html.has_var("refresh"):
-    #         try:
-    #             v["refresh"] = int(html.var("refresh"))
-    #         except:
-    #             v["refresh"] = None
-    #         must_save = True
-    # elif "refresh" in v:
-    #     del v["refresh"]
-
-    # # Number of columns in layout
-    # if config.may("general.view_option_columns"):
-    #     if html.has_var("num_columns"):
-    #         try:
-    #             v["num_columns"] = max(1, int(html.var("num_columns")))
-    #         except:
-    #             v["num_columns"] = 1
-    #         must_save = True
-    # elif "num_columns" in v:
-    #     del v["num_columns"]
-
-    # # Show checkboxes for commands
-    # if config.may("general.act"):
-    #     if html.has_var("show_checkboxes"):
-    #         v["show_checkboxes"] = html.var("show_checkboxes", "") != ""
-    #         must_save = True
-    # elif "show_checkboxes" in v:
-    #     del v["show_checkboxes"]
 
     if config.may("general.painter_options"):
         for on, opt in multisite_painter_options.items():
@@ -1754,9 +1733,9 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
 
     html.end_context_buttons()
 
-def update_context_links(enable_commands, show_checkboxes):
-    html.javascript("update_togglebutton('commands', %d);" % enable_commands)
-    html.javascript("update_togglebutton('checkbox', %d);" % (enable_commands and show_checkboxes, ))
+def update_context_links(enable_command_toggle, enable_checkbox_toggle):
+    html.javascript("update_togglebutton('commands', %d);" % enable_command_toggle)
+    html.javascript("update_togglebutton('checkbox', %d);" % (enable_command_toggle and enable_checkbox_toggle, ))
 
 # Collect all views that share a context with thisview. For example
 # if a view has an active filter variable specifying a host, then

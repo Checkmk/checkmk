@@ -27,6 +27,17 @@
 import config
 import lib
 
+#   .--Treestates----------------------------------------------------------.
+#   |            _____                   _        _                        |
+#   |           |_   _| __ ___  ___  ___| |_ __ _| |_ ___  ___             |
+#   |             | || '__/ _ \/ _ \/ __| __/ _` | __/ _ \/ __|            |
+#   |             | || | |  __/  __/\__ \ || (_| | ||  __/\__ \            |
+#   |             |_||_|  \___|\___||___/\__\__,_|\__\___||___/            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Saves and loads the current states of foldertrees for the user       |
+#   +----------------------------------------------------------------------+
+
 treestates = {}
 treestates_for_id = None
 
@@ -67,3 +78,28 @@ def ajax_tree_openclose():
 
     set_tree_state(tree, name, html.var("state"))
     save_tree_states()
+
+#   .--Row Selector--------------------------------------------------------.
+#   |      ____                 ____       _           _                   |
+#   |     |  _ \ _____      __ / ___|  ___| | ___  ___| |_ ___  _ __       |
+#   |     | |_) / _ \ \ /\ / / \___ \ / _ \ |/ _ \/ __| __/ _ \| '__|      |
+#   |     |  _ < (_) \ V  V /   ___) |  __/ |  __/ (__| || (_) | |         |
+#   |     |_| \_\___/ \_/\_/   |____/ \___|_|\___|\___|\__\___/|_|         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Saves and loads selected row information of the current user         |
+#   +----------------------------------------------------------------------+
+
+def get_rowselection(ident):
+    vo = config.load_user_file("rowselection", {})
+    return vo.get(ident, [])
+
+def set_rowselection(ident, rows):
+    vo = config.load_user_file("rowselection", {})
+    vo[ident] = rows
+    config.save_user_file("rowselection", vo)
+
+def ajax_set_rowselection():
+    ident = html.var('id')
+    rows  = html.var('rows').split(',')
+    set_rowselection(ident, rows)

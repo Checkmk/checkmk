@@ -177,6 +177,38 @@ function get_url_sync(url) {
     return AJAX.responseText; 
 }
 
+function post_url(url, params) {
+    if (window.XMLHttpRequest) {
+        var AJAX = new XMLHttpRequest();
+    } else {
+        var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+
+    AJAX.open("POST", url);
+
+    AJAX.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    AJAX.setRequestHeader("Content-length", params.length);
+    AJAX.setRequestHeader("Connection", "close");
+
+    AJAX.onreadystatechange = function() {
+        if (AJAX && AJAX.readyState == 4) {
+            if (AJAX.status == 401) {
+                // This is reached when someone is not authenticated anymore
+                // but has some webservices running which are still fetching
+                // infos via AJAX. Reload the whole frameset or only the
+                // single page in that case.
+                if(top)
+                    top.location.reload();
+                else
+                    document.location.reload();
+            }
+            else if (AJAX.status != 200) {
+                alert('Error ' + AJAX.status + ' during POST to URL ' + url);
+            }
+        }
+    }
+    AJAX.send(params);
+}
 
 // Updates the contents of a snapin container after get_url
 function updateContents(id, code) {
@@ -846,7 +878,7 @@ function handleReload(url) {
         // Removed 'w' to reflect original rengering mechanism during reload
         // For example show the "Your query produced more than 1000 results." message
         // in views even during reload.
-        var opts = [ 'h', 't', 'b', 'f', 'c', 'o', 'd', 'e', 'r' ];
+        var opts = [ 'h', 't', 'b', 'f', 'c', 'o', 'd', 'e', 'r', 'u' ];
         for (var i = 0; i < opts.length; i++) {
             if (display_options.indexOf(opts[i].toUpperCase()) > -1)
                 display_options = display_options.replace(opts[i].toUpperCase(), opts[i]);
@@ -868,10 +900,6 @@ function handleReload(url) {
         if(real_display_options !== '')
             params['display_options'] = real_display_options;
 
-        // Handle user selections. If g_selected_rows has elements replace/set the
-        // parameter selected_rows with the current selected rows as value.
-        // otherwhise clear the parameter
-        params['selected_rows'] = g_selected_rows.join(',');
         params['_do_actions'] = getUrlParam('_do_actions')
 
         var url = makeuri(params);
@@ -1004,6 +1032,10 @@ function toggle_foldable_container(treename, id) {
  * +----------------------------------------------------------------------+
  */
 
+// The unique ID to identify the current page and its selections of a user
+var g_page_id = '';
+// Tells us if the row selection is enabled at the moment
+var g_selection_enabled = false;
 // Holds the row numbers of all selected rows
 var g_selected_rows = [];
 
@@ -1057,7 +1089,11 @@ function highlight_elem(elem, on) {
         remove_class(elem, "checkbox_hover");
 }
 
-function update_row_selection_information() {
+function update_row_selection_information(submit) {
+    if(submit === undefined)
+        submit = true;
+
+    // First update the header information (how many rows selected)
     var count = g_selected_rows.length;
     var oDiv = document.getElementById("headinfo");
     if (oDiv) {
@@ -1068,6 +1104,14 @@ function update_row_selection_information() {
         }
         oDiv.innerHTML = count + "/" + current_text;
     }
+
+    // Now tell the server which rows are selected by the user
+    if(submit)
+        set_rowselection(g_page_id, g_selected_rows);
+}
+
+function set_rowselection(id, rows) {
+    post_url('ajax_set_rowselection.py', 'id=' + id + '&rows=' + rows.join(','));
 }
 
 function select_all_rows(elems, only_failed) {
@@ -1349,7 +1393,7 @@ function table_init_rowselect(oTable) {
     }
     childs = null;
 
-    update_row_selection_information();
+    update_row_selection_information(false);
 }
 
 function init_rowselect() {
@@ -1358,23 +1402,6 @@ function init_rowselect() {
         if(tables[i].tagName === 'TABLE')
             table_init_rowselect(tables[i]);
     tables = null;
-}
-
-// Adds a hidden field with the selected rows to the form if
-// some are selected
-function add_row_selections(form) {
-    var num_selected = g_selected_rows.length;
-    // Skip when none selected
-    if(num_selected == 0)
-        return true;
-
-    var field = document.createElement('input');
-    field.name = 'selected_rows';
-    field.type = 'hidden';
-    field.value = g_selected_rows.join(',');
-
-    form.appendChild(field);
-    field = null;
 }
 
 function has_canvas_support() {
@@ -1814,7 +1841,12 @@ function view_switch_option(oDiv, viewname, option, choices) {
 
     get_url_sync("ajax_set_viewoption.py?view_name=" + viewname + 
             "&option=" + option + "&value=" + new_choice[0]);
-    if (option == "refresh")
+
+    if (option == "refresh") {
         setReload(new_choice[0]);
+    } else if (option == "show_checkboxes") {
+        g_selection_enabled = new_value;
+    }
+
     handleReload('');
 }

@@ -337,7 +337,6 @@ def get_role_permissions():
                 role_permissions[role_id].append(perm['name'])
     return role_permissions
 
-
 # Helper functions
 def load_user_file(name, deflt):
     path = user_confdir + "/" + name + ".mk"

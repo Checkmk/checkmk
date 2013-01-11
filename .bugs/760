@@ -1,9 +1,9 @@
 Title: View checkboxes: Request-URI Too Large
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2012-05-28 16:16:51
 Targetversion: 1.4.0
-Class: bug
 
 If you select too many checkboxes in a Multisite view
 and execute a command, then you will get a
@@ -18,3 +18,12 @@ on a file on the server and do not try to transport
 that information via GET/POST. Also consolidate Checkboxes
 with WATO. WATO might need persistent checkboxes anyway.
 
+
+2013-01-11 12:54:55: changed state open -> done
+I decided to fix this before 1.4.0 (because we had several problems
+with the confirm page which was making POST requests, leading the user
+in several undefined situations).
+
+The selected rows are saved as user file named "rowselection
+.mk". The selected rows in the views are reset when opening the fresh
+view. The WATO selections are persisted and loaded in all situations.

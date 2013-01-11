@@ -24,21 +24,30 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def init_rowselect():
+def init_rowselect(view):
     # Don't make rows selectable when no commands can be fired
     # Ignore "C" display option here. Otherwise the rows will not be selectable
     # after view reload.
     if not config.may("general.act"):
         return
 
-    selected = []
-    if html.has_var('selected_rows'):
-        selected_rows = html.var('selected_rows', '')
-        if selected_rows or ',' in selected_rows:
-            selected = selected_rows.split(',')
+    # In views do not use the persisted selection on initial rendering
+    # But use it when:
+    # a) rendering views for page reloads
+    # b) the view is being sorted
+    # c) some form has been submitted
+    if 'U' in html.display_options and not html.has_var('sort') and not html.form_submitted():
+        weblib.set_rowselection('view-' + view['name'], [])
+        selected = [] # initial rendering
+    else:
+        # used e.g. during ajax page reload
+        selected = weblib.get_rowselection('view-' + view['name'])
 
-    html.javascript('g_selected_rows = %s;\n'
-                    'init_rowselect();' % repr(selected))
+    html.javascript(
+        'g_page_id = "view-%s";\n'
+        'g_selected_rows = %s;\n'
+        'init_rowselect();' % (view['name'], repr(selected))
+    )
 
 def render_checkbox(view, row, num_tds):
     # value contains the number of columns of this datarow. This is
@@ -213,7 +222,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
             html.write("</tr>\n")
 
         html.write("</table>\n")
-        init_rowselect()
+        init_rowselect(view)
 
     # render table
     html.write("<table class=boxlayout><tr>")
@@ -311,7 +320,7 @@ def render_tiled(rows, view, group_painters, painters, _ignore_num_columns, show
     if group_open:
         html.write("</td></tr>\n")
     html.write("</table>\n")
-    init_rowselect()
+    init_rowselect(view)
 
 
 multisite_layouts["tiled"] = {
@@ -467,7 +476,7 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
             html.write("<td class=fillup colspan=%d></td>" % num_painters)
         html.write("</tr>\n")
     html.write("</table>\n")
-    init_rowselect()
+    init_rowselect(view)
 
 multisite_layouts["table"] = {
     "title"  : _("Table"),

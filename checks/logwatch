@@ -395,12 +395,15 @@ def inventory_logwatch_ec(info):
 # OK   -> priority 5
 # WARN -> priority 4
 # CRIT -> priority 2
+# u = Uknown
 def logwatch_to_prio(level):
     if level == 'W':
         return 4
     elif level == 'C':
         return 2
     elif level == '0':
+        return 5
+    elif level == 'u':
         return 5
 
 def syslog_time():

@@ -8,6 +8,7 @@
     * FIX: winperf_processor: Showing 0% on "cmk -nv" now instead of 100%
     * FIX: win_dhcp_pools: removed faulty output on non-german windows 2003 servers 
            with no dhcp server installed (Thanks to Mathias Decker)
+    * Add: fileinfo is now supported by the solaris agent. Thanks to Daniel Roettgermann
 
     Multisite:
     * FIX: Fixed rendering of dashboard globes in opera
@@ -16,6 +17,7 @@
       all rows
     * Storing row selections in user files, cleaned up row selection 
       handling to single files. Cleaned up GET/POST mixups in confirm dialogs
+    * Add: New user_options to limit seen nagios objects even the role is set to see all
 
 1.2.1i4:
     Core:

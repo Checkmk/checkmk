@@ -1,0 +1,8 @@
+Title: Cloned ruleset apears always in Main Directory
+Component: wato
+State: open
+Date: 2013-01-11 16:11:04
+Targetversion: 1.2.2
+Class: bug
+
+If a rule is cloned, the new rule always is created in the Main Directory

@@ -14,6 +14,8 @@
     * When having row selections enabled and no selected and performing
       actions an error message is displayed instead of performing the action on
       all rows
+    * Storing row selections in user files, cleaned up row selection 
+      handling to single files. Cleaned up GET/POST mixups in confirm dialogs
 
 1.2.1i4:
     Core:

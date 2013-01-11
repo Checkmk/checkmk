@@ -1100,13 +1100,14 @@ def prepare_display_options():
     # Z  The footer line, where refresh: 30s is being displayed
     # R  The auto-refreshing in general (browser reload)
     # S  The playing of alarm sounds (on critical and warning services)
+    # U  Load persisted user row selections
     # I  All hyperlinks pointing to other views
     # X  All other hyperlinks (pointing to external applications like PNP, WATO or others)
     # M  If this option is not set, then all hyperlinks are targeted to the HTML frame
     #    with the name main. This is useful when using views as elements in the dashboard.
     # L  The column title links in multisite views
     # W  The limit and livestatus error message in views
-    all_display_options = "HTBFCEOZRSIXDMLW"
+    all_display_options = "HTBFCEOZRSUIXDMLW"
 
     # Parse display options and
     if html.output_format == "html":
@@ -1355,7 +1356,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     command_form = should_show_command_form(display_options, datasource)
 
     if show_buttons:
-        show_context_links(view, hide_filters, show_filters, display_options, 
+        show_context_links(view, hide_filters, show_filters, display_options,
                        painter_options, row_count > 0 and command_form, layout.get('checkboxes', False))
 
     # User errors in filters
@@ -1370,8 +1371,8 @@ def render_view(view, rows, datasource, group_painters, painters,
     if command_form:
         # If we are currently within an action (confirming or executing), then
         # we display only the selected rows (if checkbox mode is active)
-        if html.var("selected_rows", None) != None and html.do_actions():
-            rows = get_selected_rows(view, rows, html.var("selected_rows"))
+        if show_checkboxes and html.do_actions():
+            rows = filter_selected_rows(view, rows, weblib.get_rowselection('view-' + view['name']))
 
         if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
             try:
@@ -1410,8 +1411,8 @@ def render_view(view, rows, datasource, group_painters, painters,
         layout["render"](rows, view, group_painters, painters, num_columns,
                          show_checkboxes and not html.do_actions())
         headinfo = "%d %s" % (row_count, row_count == 1 and _("row") or _("rows"))
-        if show_checkboxes and html.var("selected_rows"):
-            selected = get_selected_rows(view, rows, html.var("selected_rows"))
+        if show_checkboxes:
+            selected = filter_selected_rows(view, rows, weblib.get_rowselection('view-' + view['name']))
             headinfo = "%d/%s" % (len(selected), headinfo)
 
         if html.output_format == "html":
@@ -1631,8 +1632,6 @@ def view_option_toggler(id, view, option, icon, help, hidden = False):
     html.write('<div id="%s_on" title="%s" class="togglebutton %s %s" '
        'onclick="view_switch_option(this, \'%s\', \'%s\');"%s></div>' % (
         id, help, icon, value and "down" or "up", view["name"], option, hide))
-
-
 
 # Will be called when the user presses the upper button, in order
 # to persist the new setting - and to make it active before the
@@ -2070,7 +2069,7 @@ def show_command_form(is_open, datasource):
 
     html.write('<div class="view_form" id="commands" %s>' %
                 (not is_open and 'style="display: none"' or '') )
-    html.begin_form("actions", onsubmit = 'add_row_selections(this);')
+    html.begin_form("actions")
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
@@ -2173,7 +2172,7 @@ def do_actions(view, what, action_rows, backurl):
     command = None
     title, executor = core_command(what, action_rows[0])[1:3] # just get the title and executor
     if not html.confirm(_("Do you really want to %(title)s the following %(count)d %(what)s?") %
-            { "title" : title, "count" : len(action_rows), "what" : _(what + "s"), }):
+            { "title" : title, "count" : len(action_rows), "what" : _(what + "s"), }, method = 'GET'):
         return False
 
     count = 0
@@ -2200,11 +2199,10 @@ def do_actions(view, what, action_rows, backurl):
 
     return True
 
-def get_selected_rows(view, rows, sel_var):
+def filter_selected_rows(view, rows, selected_ids):
     action_rows = []
-    selected_rows = sel_var.split(',')
     for row in rows:
-        if row_id(view, row) in selected_rows:
+        if row_id(view, row) in selected_ids:
             action_rows.append(row)
     return action_rows
 

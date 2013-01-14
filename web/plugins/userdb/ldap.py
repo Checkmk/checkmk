@@ -497,10 +497,12 @@ def ldap_convert_groups_to_roles(params, user_id, ldap_user, user):
     # 1. Fetch DNs of all LDAP groups of the user
     ldap_groups = [ g.lower() for g in ldap_user_groups(user_id, 'dn') ]
 
-    # 2. Loop all roles mentioned in params (configured to be synchronized)
-    roles = []
+    # 2. Load default roles from default user profile
+    roles = config.default_user_profile['roles'][:]
+
+    # 3. Loop all roles mentioned in params (configured to be synchronized)
     for role_id, dn in params.items():
-        if dn.lower() in ldap_groups:
+        if dn.lower() in ldap_groups and role_id not in roles:
             roles.append(role_id)
 
     return {'roles': roles}

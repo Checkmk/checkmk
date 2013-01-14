@@ -90,16 +90,63 @@ def ajax_tree_openclose():
 #   | Saves and loads selected row information of the current user         |
 #   +----------------------------------------------------------------------+
 
+import uuid, os, time
+from lib import make_nagios_directory
+
+def init_selection():
+    # Generate the initial selection_id
+    selection_id()
+
+    cleanup_old_selections()
+
+def cleanup_old_selections():
+    # Loop all selection files and compare the last modification time with
+    # the current time and delete the selection file when it is older than
+    # the livetime.
+    path = config.user_confdir + '/rowselection'
+    for f in os.listdir(path):
+        if f[1] != '.' and f.endswith('.mk'):
+            p = path + '/' + f
+            if time.time() - os.stat(p).st_mtime > config.selection_livetime:
+                os.unlink(p)
+
+# Generates a selection id or uses the given one
+def selection_id():
+    if not html.has_var('selection'):
+        html.add_var('selection', str(uuid.uuid1())) # generate when not set
+    return html.var('selection')
+
 def get_rowselection(ident):
-    vo = config.load_user_file("rowselection", {})
+    vo = config.load_user_file("rowselection/%s" % selection_id(), {})
     return vo.get(ident, [])
 
-def set_rowselection(ident, rows):
-    vo = config.load_user_file("rowselection", {})
-    vo[ident] = rows
-    config.save_user_file("rowselection", vo)
+def set_rowselection(ident, rows, action):
+    vo = config.load_user_file("rowselection/%s" % selection_id(), {})
+
+    if action == 'set':
+        vo[ident] = rows
+
+    elif action == 'add':
+        vo[ident] = list(set(vo.get(ident, [])).union(rows))
+
+    elif action == 'del':
+        vo[ident] = list(set(vo.get(ident, [])) - set(rows))
+
+    elif action == 'unset':
+        del vo[ident]
+
+    if not os.path.exists(config.user_confdir + '/rowselection'):
+        make_nagios_directory(config.user_confdir + '/rowselection')
+
+    config.save_user_file("rowselection/%s" % selection_id(), vo)
 
 def ajax_set_rowselection():
     ident = html.var('id')
-    rows  = html.var('rows').split(',')
-    set_rowselection(ident, rows)
+
+    action = html.var('action', 'set')
+    if action not in [ 'add', 'del', 'set', 'unset' ]:
+        raise MKUserError(_('Invalid action'))
+
+    rows  = html.var('rows', '').split(',')
+
+    set_rowselection(ident, rows, action)

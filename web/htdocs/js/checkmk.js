@@ -1034,6 +1034,8 @@ function toggle_foldable_container(treename, id) {
 
 // The unique ID to identify the current page and its selections of a user
 var g_page_id = '';
+// The unique identifier of the selection
+var g_selection = '';
 // Tells us if the row selection is enabled at the moment
 var g_selection_enabled = false;
 // Holds the row numbers of all selected rows
@@ -1089,10 +1091,7 @@ function highlight_elem(elem, on) {
         remove_class(elem, "checkbox_hover");
 }
 
-function update_row_selection_information(submit) {
-    if(submit === undefined)
-        submit = true;
-
+function update_row_selection_information() {
     // First update the header information (how many rows selected)
     var count = g_selected_rows.length;
     var oDiv = document.getElementById("headinfo");
@@ -1104,20 +1103,20 @@ function update_row_selection_information(submit) {
         }
         oDiv.innerHTML = count + "/" + current_text;
     }
-
-    // Now tell the server which rows are selected by the user
-    if(submit)
-        set_rowselection(g_page_id, g_selected_rows);
 }
 
-function set_rowselection(id, rows) {
-    post_url('ajax_set_rowselection.py', 'id=' + id + '&rows=' + rows.join(','));
+function set_rowselection(action, rows) {
+    post_url('ajax_set_rowselection.py', 'id=' + g_page_id
+             + '&selection=' + g_selection
+             + '&action=' + action
+             + '&rows=' + rows.join(','));
 }
 
 function select_all_rows(elems, only_failed) {
     if (typeof only_failed === 'undefined') {
         only_failed = false;
     }
+
     for(var i = 0; i < elems.length; i++) {
         if (!only_failed || elems[i].classList.contains('failed')) {
             elems[i].checked = true;
@@ -1125,10 +1124,14 @@ function select_all_rows(elems, only_failed) {
                 g_selected_rows.push(elems[i].name);
         }
     }
+
     update_row_selection_information();
+    set_rowselection('add', g_selected_rows);
 }
 
 function remove_selected_rows(elems) {
+    set_rowselection('del', g_selected_rows);
+
     for(var i = 0; i < elems.length; i++) {
         elems[i].checked = false;
         var row_pos = g_selected_rows.indexOf(elems[i].name);
@@ -1136,16 +1139,21 @@ function remove_selected_rows(elems) {
             g_selected_rows.splice(row_pos, 1);
         row_pos = null;
     }
+
     update_row_selection_information();
 }
 
 function toggle_box(e, elem) {
     var row_pos = g_selected_rows.indexOf(elem.name);
+
     if(row_pos > -1) {
         g_selected_rows.splice(row_pos, 1);
+        set_rowselection('del', [elem.name]);
     } else {
         g_selected_rows.push(elem.name);
+        set_rowselection('add', [elem.name]);
     }
+
     update_row_selection_information();
 }
 
@@ -1177,10 +1185,12 @@ function toggle_row(e, elem) {
         // Yes: Unselect it
         checkbox.checked = false;
         g_selected_rows.splice(row_pos, 1);
+        set_rowselection('del', [checkbox.name]);
     } else {
         // No:  Select it
         checkbox.checked = true;
         g_selected_rows.push(checkbox.name);
+        set_rowselection('add', [checkbox.name]);
     }
     update_row_selection_information();
 
@@ -1393,7 +1403,7 @@ function table_init_rowselect(oTable) {
     }
     childs = null;
 
-    update_row_selection_information(false);
+    update_row_selection_information();
 }
 
 function init_rowselect() {

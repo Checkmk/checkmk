@@ -553,7 +553,10 @@ def load_default_values(into):
     
     # Buffering of HTML output stream
     into["buffered_http_stream"] = True
-    
+
+    # Maximum livetime of unmodified selections
+    into["selection_livetime"]  = 3600
+
     #     ____ ___
     #    | __ )_ _|
     #    |  _ \| |

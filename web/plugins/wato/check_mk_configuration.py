@@ -88,6 +88,20 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "selection_livetime",
+    Integer(
+        title = _('Checkbox Selection Livetime'),
+        help  = _('This option defines the maximum age of unmodified checkbox selections stored for users. '
+                  'If a user modifies the selection in a view, these selections are persisted for the currently '
+                  'open view. When a view is re-opened a new selection is used. The old one remains on the '
+                  'server until the livetime is exceeded.'),
+        minvalue = 1,
+        default_value = 3600,
+    ),
+    domain = "multisite",
+)
+
+register_configvar(group,
     "show_livestatus_errors",
     Checkbox(title = _("Show MK Livestatus error messages"),
              label = _("show errors"),

@@ -9,6 +9,7 @@
     * FIX: win_dhcp_pools: removed faulty output on non-german windows 2003 servers 
            with no dhcp server installed (Thanks to Mathias Decker)
     * Add: fileinfo is now supported by the solaris agent. Thanks to Daniel Roettgermann
+    * Logwatch: unknown eventlog level ('u') from windows agent treated as warning
     * FIX: logwatch_ec: Added state undefined as priority
 
     Multisite:

@@ -1444,8 +1444,9 @@ def show_hosts(folder):
 
     html.javascript(
         'g_page_id = "wato-folder-%s";\n'
+        'g_selection = "%s";\n'
         'g_selected_rows = %r;\n'
-        'init_rowselect();' % ('/' + g_folder['.path'], selected)
+        'init_rowselect();' % ('/' + g_folder['.path'], weblib.selection_id(), selected)
     )
     return True
 

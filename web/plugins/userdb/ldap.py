@@ -281,7 +281,7 @@ def ldap_user_groups(username, attr = 'cn'):
 
     # Apply configured group ldap filter and only reply with groups
     # having the current user as member
-    filt = '(&%s(member=%s))' % (ldap_filter('groups'), user_dn)
+    filt = '(&%s(member=%s))' % (ldap_filter('groups'), ldap.filter.escape_filter_chars(user_dn))
 
     # First get all groups
     groups = []

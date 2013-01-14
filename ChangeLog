@@ -20,6 +20,8 @@
     * Storing row selections in user files, cleaned up row selection 
       handling to single files. Cleaned up GET/POST mixups in confirm dialogs
     * Add: New user_options to limit seen nagios objects even the role is set to see all
+    * FIX: LDAP: Fixed problem with special chars in LDAP queries when having
+    contactgroup sync plugin enabled
 
 1.2.1i4:
     Core:

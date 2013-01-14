@@ -10727,6 +10727,7 @@ def page_user_profile():
                 load_language(config.get_language())
 
             # Change the password if requested
+            password = False
             if config.may('general.change_password'):
                 password  = html.var('password')
                 password2 = html.var('password2', '')

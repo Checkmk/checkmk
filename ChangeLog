@@ -279,6 +279,7 @@
     WATO:
     * FIX: fixed detection of existing groups when creating new groups
     * FIX: allow email addresses like test@test.test-test.com
+    * FIX: Fixed Password saving problem in user settings
 
     Checks & Agents:
     * FIX: postgres_sessions: handle case of no active/no idle sessions

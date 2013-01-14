@@ -194,6 +194,8 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
     result = []
     try:
         for dn, obj in ldap_connection.search_s(base, scope, filt, columns):
+            if dn is None:
+                continue # skip unwanted answers
             new_obj = {}
             for key, val in obj.iteritems():
                 new_obj[key.lower().decode('utf-8')] = [ i.decode('utf-8') for i in val ]
@@ -282,7 +284,6 @@ def ldap_user_groups(username, attr = 'cn'):
     # Apply configured group ldap filter and only reply with groups
     # having the current user as member
     filt = '(&%s(member=%s))' % (ldap_filter('groups'), ldap.filter.escape_filter_chars(user_dn))
-
     # First get all groups
     groups = []
     for dn, group in ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']),

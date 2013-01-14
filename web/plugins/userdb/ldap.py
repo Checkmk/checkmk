@@ -200,6 +200,12 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
             for key, val in obj.iteritems():
                 new_obj[key.lower().decode('utf-8')] = [ i.decode('utf-8') for i in val ]
             result.append((dn, new_obj))
+    except ldap.NO_SUCH_OBJECT, e:
+        raise MKLDAPException(_('The given base object "%s" does not exist in LDAP (%s))') % (base, e))
+
+    except ldap.FILTER_ERROR, e:
+        raise MKLDAPException(_('The given ldap filter "%s" is invalid (%s)') % (filt, e))
+
     except ldap.SIZELIMIT_EXCEEDED:
         raise MKLDAPException(_('The response reached a size limit. This could be due to '
                                 'a sizelimit configuration on the LDAP server.<br />Throwing away the '
@@ -271,6 +277,9 @@ def ldap_get_users(add_filter = None):
     result = {}
     for dn, ldap_user in ldap_search(ldap_replace_macros(config.ldap_userspec['dn']),
                                      filt, columns = columns):
+        if ldap_user_id_attr() not in ldap_user:
+            raise MKLDAPException(_('The configured User-ID attribute "%s" does not '
+                                    'exist for the user "%s"') % (ldap_user_id_attr(), dn))
         user_id = ldap_user[ldap_user_id_attr()][0]
         result[user_id] = ldap_user
 

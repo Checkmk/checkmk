@@ -1,10 +1,24 @@
 Title: Distributed WATO setup - error message during setting up slaves
 Component: wato
-State: open
+Class: bug
+State: works4me
 Date: 2012-10-26 08:38:47
 Targetversion: 1.2.2
-Class: bug
 
 In current version, when setting up the local site and a slave site in the main site,
 the main site reports that it is not the "preferred peer" while there is no peer setup.
 Seems like the naming of the site is somewhat relevant here.
+
+2013-01-11 12:29:43: changed state open -> works4me
+Just tested - works
+Creating a site setup:
+  - add local site 
+    Connection: connect to the local site
+    URL Prefix: http://localhost/heute
+  - add slave site
+    Connection: unixsocket
+    URL Prefix: http://localhost/sklave
+
+    Set slave site replication method to "slave"
+
+-> works like a charm

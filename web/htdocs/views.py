@@ -2045,6 +2045,8 @@ def should_show_command_form(display_options, datasource):
         if what in command["tables"] and config.may(command["permission"]):
             return True
 
+    return False
+
 def show_command_form(is_open, datasource):
     # What commands are available depends on the Livestatus table we
     # deal with. If a data source provides information about more

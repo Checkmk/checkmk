@@ -10866,6 +10866,7 @@ def page_user_profile():
                                 users[config.user_id][name] = value
 
             # Change the password if requested
+            password = False
             if config.may('general.change_password'):
                 password  = html.var('password')
                 password2 = html.var('password2', '')

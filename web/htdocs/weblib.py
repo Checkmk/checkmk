@@ -104,11 +104,14 @@ def cleanup_old_selections():
     # the current time and delete the selection file when it is older than
     # the livetime.
     path = config.user_confdir + '/rowselection'
-    for f in os.listdir(path):
-        if f[1] != '.' and f.endswith('.mk'):
-            p = path + '/' + f
-            if time.time() - os.stat(p).st_mtime > config.selection_livetime:
-                os.unlink(p)
+    try:
+        for f in os.listdir(path):
+            if f[1] != '.' and f.endswith('.mk'):
+                p = path + '/' + f
+                if time.time() - os.stat(p).st_mtime > config.selection_livetime:
+                    os.unlink(p)
+    except OSError:
+        pass # no directory -> no cleanup
 
 # Generates a selection id or uses the given one
 def selection_id():

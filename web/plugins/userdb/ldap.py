@@ -500,8 +500,11 @@ def ldap_list_roles_with_group_dn():
     for role_id, role in load_roles().items():
         elements.append((role_id, LDAPDistinguishedName(
             title = role['alias'] + ' - ' + _("Specify the Group DN"),
-            help  = _("Distinguished Name of the LDAP group to add users this role."),
+            help  = _("Distinguished Name of the LDAP group to add users this role. This group must "
+                      "be defined within the scope of the "
+                      "<a href=\"wato.py?mode=edit_configvar&varname=ldap_groupspec\">LDAP Group Settings</a>."),
             size  = 80,
+            enforce_suffix = ldap_replace_macros(config.ldap_groupspec['dn']),
         )))
     return elements
 

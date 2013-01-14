@@ -2144,6 +2144,7 @@ class Transform(ValueSpec):
 class LDAPDistinguishedName(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
+        self.enforce_suffix = kwargs.get('enforce_suffix')
 
     def validate_value(self, value, varprefix):
         TextAscii.validate_value(self, value, varprefix)
@@ -2151,6 +2152,11 @@ class LDAPDistinguishedName(TextAscii):
         # At least one DC= must be in distinguished name
         if value and 'dc=' not in value.lower():
             raise MKUserError(varprefix, _('Found no "dc=" (Domain Component).'))
+
+        # Check wether or not the given DN is below a base DN
+        if self.enforce_suffix and value and not value.lower().endswith(self.enforce_suffix.lower()):
+            raise MKUserError(varprefix, _('Does not ends with "%s".') % self.enforce_suffix)
+
 
 class Password(TextAscii):
     def __init__(self, **kwargs):

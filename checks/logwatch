@@ -406,7 +406,7 @@ def logwatch_to_prio(level):
     elif level == '0':
         return 5
     elif level == 'u':
-        return 5
+        return 4
 
 def syslog_time():
     localtime = time.localtime()

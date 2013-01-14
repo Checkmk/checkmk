@@ -2,7 +2,7 @@ Title: Rule editor: selection boxes must not be visible on 'ignore'
 Component: wato
 State: open
 Date: 2013-01-14 09:06:06
-Targetversion: 1.2.3
+Targetversion: 1.2.2
 Class: bug
 
 In the rule editor in the host tag section when the first selection

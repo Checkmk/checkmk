@@ -48,18 +48,27 @@ def mobile_html_head(title, ready_code=""):
 <html>
  <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="initial-scale=1.0">
+  <meta content="yes" name="apple-mobile-web-app-capable" />
+  <meta name="apple-mobile-web-app-title" content="Check_MK" />
   <title>%s</title>
   <link rel="stylesheet" type="text/css" href="jquery/jquery.mobile-1.0.css">
   <link rel="stylesheet" type="text/css" href="check_mk.css">
   <link rel="stylesheet" type="text/css" href="status.css">
   <link rel="stylesheet" type="text/css" href="mobile.css">
+  <link rel="apple-touch-icon" href="images/ios_logo.png"/>
   <script type='text/javascript' src='jquery/jquery-1.6.4.min.js'></script>
   <script type='text/javascript' src='js/mobile.js'></script>
   <script type='text/javascript' src='jquery/jquery.mobile-1.0.min.js'></script>
   <script type='text/javascript' src='js/checkmk.js'></script>
   <script type='text/javascript'>
       $(document).ready(function() { %s });
+      $(document).ready(function() {
+        $("a").click(function (event) {
+        event.preventDefault();
+        window.location = $(this).attr("href");
+      });
+
   </script>
 
 </head>

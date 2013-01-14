@@ -105,7 +105,7 @@
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
        shutil, tarfile, StringIO, math, fcntl, pickle
-import config, htmllib, table, multitar, userdb, hooks
+import config, htmllib, table, multitar, userdb, hooks, weblib
 from lib import *
 from valuespec import *
 import forms
@@ -1272,7 +1272,7 @@ def show_hosts(folder):
         html.write("</td></tr>\n")
 
     # Show table of hosts in this folder
-    html.begin_form("hosts", None, "POST", onsubmit = 'add_row_selections(this);')
+    html.begin_form("hosts", None, "POST")
     html.write("<table class=data>\n")
 
     # Remember if that host has a target folder (i.e. was imported with
@@ -1436,11 +1436,17 @@ def show_hosts(folder):
     html.hidden_fields() 
     html.end_form()
 
+    selected = weblib.get_rowselection('wato-folder-/'+g_folder['.path'])
+
     row_count = len(rendered_hosts)
     headinfo = "%d %s" % (row_count, row_count == 1 and _("host") or _("hosts"))
     html.javascript("update_headinfo('%s');" % headinfo)
-    html.javascript('g_selected_rows = %s;\n'
-                    'init_rowselect();' % repr(["_c_%s" % h for h in rendered_hosts]))
+
+    html.javascript(
+        'g_page_id = "wato-folder-%s";\n'
+        'g_selected_rows = %r;\n'
+        'init_rowselect();' % ('/' + g_folder['.path'], selected)
+    )
     return True
 
 move_to_folder_combo_cache_id = None
@@ -1628,9 +1634,7 @@ def get_hostnames_from_checkboxes(filterfunc = None):
     entries = g_folder[".hosts"].items()
     entries.sort()
 
-    selected = []
-    if html.var('selected_rows', '') != '':
-        selected = html.var('selected_rows', '').split(',')
+    selected = weblib.get_rowselection('wato-folder-/'+g_folder['.path'])
 
     selected_hosts = []
     search_text = html.var("search")
@@ -8547,6 +8551,7 @@ def mode_role_matrix(phase):
 
     elif phase == "buttons":
         global_buttons()
+        html.context_button(_("Back"), make_link([("mode", "roles")]), "back")
         return
 
     elif phase == "action":

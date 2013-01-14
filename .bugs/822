@@ -1,0 +1,9 @@
+Title: RPMs contining a 64bit Version of waitmax
+Component: checks
+State: open
+Date: 2013-01-11 16:01:24
+Targetversion: 1.2.2
+Class: bug
+
+The check_mk-agent 1.2.1i3 and i4 RPMs erroneously contain a 64-bit waitmax binary, and thus cause problems on 32-bit Linux systems.
+Ticket ID: 645082

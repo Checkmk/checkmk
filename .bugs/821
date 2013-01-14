@@ -1,9 +1,9 @@
 Title: Logwatch and Logfiles with colon in name
 Component: checks
-State: open
+Class: nastiness
+State: done
 Date: 2012-10-25 09:49:17
 Targetversion: 1.2.2
-Class: nastiness
 
 When a logfile has a colon in name inventory doesent work: osTicket 999212
 
@@ -22,3 +22,6 @@ fl = os.open(logfile, os.O_RDONLY)
 inode = os.fstat(fl)[1] # 1 = st_ino
 except:
 ----> print "[[[%s:cannotopen]]]" % logfile if len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]" and ':' not in line:
+
+2013-01-10 12:17:46: changed state open -> done
+This works in current version

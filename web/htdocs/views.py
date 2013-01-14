@@ -1100,13 +1100,14 @@ def prepare_display_options():
     # Z  The footer line, where refresh: 30s is being displayed
     # R  The auto-refreshing in general (browser reload)
     # S  The playing of alarm sounds (on critical and warning services)
+    # U  Load persisted user row selections
     # I  All hyperlinks pointing to other views
     # X  All other hyperlinks (pointing to external applications like PNP, WATO or others)
     # M  If this option is not set, then all hyperlinks are targeted to the HTML frame
     #    with the name main. This is useful when using views as elements in the dashboard.
     # L  The column title links in multisite views
     # W  The limit and livestatus error message in views
-    all_display_options = "HTBFCEOZRSIXDMLW"
+    all_display_options = "HTBFCEOZRSUIXDMLW"
 
     # Parse display options and
     if html.output_format == "html":
@@ -1138,7 +1139,8 @@ def prepare_display_options():
         display_options = html.var("_display_options", "")
         display_options = apply_display_option_defaults(display_options)
         html.display_options = display_options
-        html.title_display_options = display_options
+        # Dont do this!! This garbles up the title links after a reload.
+        #html.title_display_options = display_options
 
     # But there is one special case: The sorter links! These links need to know
     # about the provided display_option parameter. The links could use
@@ -1354,9 +1356,16 @@ def render_view(view, rows, datasource, group_painters, painters,
     # permissions or datasources without commands, the form is not rendered
     command_form = should_show_command_form(display_options, datasource)
 
+    # Is the layout able to display checkboxes?
+    can_display_checkboxes = layout.get('checkboxes', False)
+
     if show_buttons:
-        show_context_links(view, hide_filters, show_filters, display_options, 
-                       painter_options, row_count > 0 and command_form, layout.get('checkboxes', False))
+        show_context_links(view, hide_filters, show_filters, display_options,
+                       painter_options,
+                       # Take into account: permissions, display_options
+                       row_count > 0 and command_form,
+                       # Take into account: layout capabilities
+                       can_display_checkboxes)
 
     # User errors in filters
     html.show_user_errors()
@@ -1370,8 +1379,8 @@ def render_view(view, rows, datasource, group_painters, painters,
     if command_form:
         # If we are currently within an action (confirming or executing), then
         # we display only the selected rows (if checkbox mode is active)
-        if html.var("selected_rows", "") and html.do_actions():
-            rows = get_selected_rows(view, rows, html.var("selected_rows"))
+        if show_checkboxes and html.do_actions():
+            rows = filter_selected_rows(view, rows, weblib.get_rowselection('view-' + view['name']))
 
         if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
             try:
@@ -1386,7 +1395,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 
         elif 'C' in display_options: # (*not* display open, if checkboxes are currently shown)
             show_command_form(False, datasource)
-    
+
     # Also execute commands in cases without command form (needed for Python-
     # web service e.g. for NagStaMon)
     elif row_count > 0 and config.may("general.act") \
@@ -1410,8 +1419,8 @@ def render_view(view, rows, datasource, group_painters, painters,
         layout["render"](rows, view, group_painters, painters, num_columns,
                          show_checkboxes and not html.do_actions())
         headinfo = "%d %s" % (row_count, row_count == 1 and _("row") or _("rows"))
-        if show_checkboxes and html.var("selected_rows"):
-            selected = get_selected_rows(view, rows, html.var("selected_rows"))
+        if show_checkboxes:
+            selected = filter_selected_rows(view, rows, weblib.get_rowselection('view-' + view['name']))
             headinfo = "%d/%s" % (len(selected), headinfo)
 
         if html.output_format == "html":
@@ -1419,7 +1428,11 @@ def render_view(view, rows, datasource, group_painters, painters,
 
             # The number of rows might have changed to enable/disable actions and checkboxes
             if show_buttons:
-                update_context_links(row_count > 0, layout.get('checkboxes', False))
+                update_context_links(
+                    # don't take display_options into account here ('c' is set during reload)
+                    row_count > 0 and should_show_command_form('C', datasource),
+                    can_display_checkboxes
+                )
 
         # Play alarm sounds, if critical events have been displayed
         if 'S' in display_options and view.get("play_sounds"):
@@ -1458,39 +1471,6 @@ def view_options(viewname):
     # Now get options for the view in question
     v = vo.get(viewname, {})
     must_save = False
-
-    # NEW IMPLEMENTION: Options for columns, refresh and
-    # checkboxes are switched via JS/AJAX, no longer via
-    # the URL.
-    # # Refresh rate
-    # if config.may("general.view_option_refresh"):
-    #     if html.has_var("refresh"):
-    #         try:
-    #             v["refresh"] = int(html.var("refresh"))
-    #         except:
-    #             v["refresh"] = None
-    #         must_save = True
-    # elif "refresh" in v:
-    #     del v["refresh"]
-
-    # # Number of columns in layout
-    # if config.may("general.view_option_columns"):
-    #     if html.has_var("num_columns"):
-    #         try:
-    #             v["num_columns"] = max(1, int(html.var("num_columns")))
-    #         except:
-    #             v["num_columns"] = 1
-    #         must_save = True
-    # elif "num_columns" in v:
-    #     del v["num_columns"]
-
-    # # Show checkboxes for commands
-    # if config.may("general.act"):
-    #     if html.has_var("show_checkboxes"):
-    #         v["show_checkboxes"] = html.var("show_checkboxes", "") != ""
-    #         must_save = True
-    # elif "show_checkboxes" in v:
-    #     del v["show_checkboxes"]
 
     if config.may("general.painter_options"):
         for on, opt in multisite_painter_options.items():
@@ -1614,7 +1594,7 @@ def view_optiondial(view, option, choices, help):
     html.begin_context_buttons() # just to be sure
     # Remove unicode strings
     choices = [ [c[0], str(c[1])] for c in choices ]
-    html.write('<div title="%s" id="optiondial_%s" class="optiondial %s val_%s"' 
+    html.write('<div title="%s" id="optiondial_%s" class="optiondial %s val_%s" '
        'onclick="view_dial_option(this, \'%s\', \'%s\', %r);"><div>%s</div></div>' % (
         help, option, option, value, view["name"], option, choices, title))
     html.final_javascript("init_optiondial('optiondial_%s');" % option)
@@ -1628,11 +1608,9 @@ def view_option_toggler(id, view, option, icon, help, hidden = False):
     value = vo.get(option, view.get(option, False))
     html.begin_context_buttons() # just to be sure
     hide = hidden and ' style="display:none"' or ''
-    html.write('<div id="%s_on" title="%s" class="togglebutton %s %s"'
+    html.write('<div id="%s_on" title="%s" class="togglebutton %s %s" '
        'onclick="view_switch_option(this, \'%s\', \'%s\');"%s></div>' % (
         id, help, icon, value and "down" or "up", view["name"], option, hide))
-
-
 
 # Will be called when the user presses the upper button, in order
 # to persist the new setting - and to make it active before the
@@ -1699,10 +1677,12 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
                      hidden = not enable_commands)
         togglebutton_off("commands", "commands", hidden = enable_commands)
 
+        selection_enabled = enable_commands and enable_checkboxes
         view_option_toggler("checkbox", thisview, "show_checkboxes", "checkbox",
                             _("Enable/Disable checkboxes for selecting rows for commands"),
-                            hidden = not enable_commands or not enable_checkboxes)
-        togglebutton_off("checkbox", "checkbox", hidden = enable_commands and enable_checkboxes)
+                            hidden = not selection_enabled)
+        togglebutton_off("checkbox", "checkbox", hidden = selection_enabled)
+        html.javascript('g_selection_enabled = %s;' % (selection_enabled and 'true' or 'false'))
 
     if 'O' in display_options:
         if config.may("general.view_option_columns"):
@@ -1753,9 +1733,9 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
 
     html.end_context_buttons()
 
-def update_context_links(enable_commands, show_checkboxes):
-    html.javascript("update_togglebutton('commands', %d);" % enable_commands)
-    html.javascript("update_togglebutton('checkbox', %d);" % (enable_commands and show_checkboxes, ))
+def update_context_links(enable_command_toggle, enable_checkbox_toggle):
+    html.javascript("update_togglebutton('commands', %d);" % enable_command_toggle)
+    html.javascript("update_togglebutton('checkbox', %d);" % (enable_command_toggle and enable_checkbox_toggle, ))
 
 # Collect all views that share a context with thisview. For example
 # if a view has an active filter variable specifying a host, then
@@ -2068,7 +2048,7 @@ def show_command_form(is_open, datasource):
 
     html.write('<div class="view_form" id="commands" %s>' %
                 (not is_open and 'style="display: none"' or '') )
-    html.begin_form("actions", onsubmit = 'add_row_selections(this);')
+    html.begin_form("actions")
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
@@ -2162,13 +2142,16 @@ def do_actions(view, what, action_rows, backurl):
         return False # no actions done
 
     if not action_rows:
-        html.show_error(_("No rows selected to perform actions for."))
+        message = _("No rows selected to perform actions for.")
+        if html.output_format == "html": # sorry for this hack
+            message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
+        html.show_error(message)
         return False # no actions done
 
     command = None
     title, executor = core_command(what, action_rows[0])[1:3] # just get the title and executor
     if not html.confirm(_("Do you really want to %(title)s the following %(count)d %(what)s?") %
-            { "title" : title, "count" : len(action_rows), "what" : _(what + "s"), }):
+            { "title" : title, "count" : len(action_rows), "what" : _(what + "s"), }, method = 'GET'):
         return False
 
     count = 0
@@ -2195,11 +2178,10 @@ def do_actions(view, what, action_rows, backurl):
 
     return True
 
-def get_selected_rows(view, rows, sel_var):
+def filter_selected_rows(view, rows, selected_ids):
     action_rows = []
-    selected_rows = sel_var.split(',')
     for row in rows:
-        if row_id(view, row) in selected_rows:
+        if row_id(view, row) in selected_ids:
             action_rows.append(row)
     return action_rows
 

@@ -99,7 +99,7 @@ def check_zpool_status(_no_item, _no_params, info):
                 error_pools[line[0]] = tuple(line[1:]) 
                 continue
 
-            if int(line[4]) != 0:
+            if saveint(line[4]) != 0:
                 warning_pools[line[0]] = tuple(line[1:])
     message = []
     for pool in  pool_messages.keys():
@@ -108,7 +108,7 @@ def check_zpool_status(_no_item, _no_params, info):
 
     for pool in warning_pools.keys():
         state = 1
-        message.append("%s CKSUM:%d(!)" % (pool, int(warning_pools[pool][3]))) 
+        message.append("%s CKSUM:%d(!)" % (pool, saveint(warning_pools[pool][3]))) 
 
     for pool in error_pools.keys():
         state = 2

@@ -23,6 +23,7 @@
     * FIX: LDAP: Fixed problem with special chars in LDAP queries when having
     contactgroup sync plugin enabled
     * LDAP: Role sync plugin validates the given group DNs with the group base dn now
+    * LDAP: Using roles defined in default user profile in role sync plugin processing
     * LDAP: Improved error handling in case of misconfigurations
 
 1.2.1i4:

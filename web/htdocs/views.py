@@ -1741,8 +1741,8 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
     html.end_context_buttons()
 
 def update_context_links(enable_command_toggle, enable_checkbox_toggle):
-    html.javascript("update_togglebutton('commands', %d);" % enable_command_toggle)
-    html.javascript("update_togglebutton('checkbox', %d);" % (enable_command_toggle and enable_checkbox_toggle, ))
+    html.javascript("update_togglebutton('commands', %d);" % (enable_command_toggle and 1 or 0))
+    html.javascript("update_togglebutton('checkbox', %d);" % (enable_command_toggle and enable_checkbox_toggle and 1 or 0, ))
 
 # Collect all views that share a context with thisview. For example
 # if a view has an active filter variable specifying a host, then

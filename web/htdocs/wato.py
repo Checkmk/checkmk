@@ -1444,8 +1444,9 @@ def show_hosts(folder):
 
     html.javascript(
         'g_page_id = "wato-folder-%s";\n'
+        'g_selection = "%s";\n'
         'g_selected_rows = %r;\n'
-        'init_rowselect();' % ('/' + g_folder['.path'], selected)
+        'init_rowselect();' % ('/' + g_folder['.path'], weblib.selection_id(), selected)
     )
     return True
 
@@ -10866,6 +10867,7 @@ def page_user_profile():
                                 users[config.user_id][name] = value
 
             # Change the password if requested
+            password = False
             if config.may('general.change_password'):
                 password  = html.var('password')
                 password2 = html.var('password2', '')

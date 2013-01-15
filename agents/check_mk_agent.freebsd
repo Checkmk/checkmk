@@ -295,6 +295,14 @@ if [ -x /sbin/zpool ]; then
 fi
 
 
+# Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
+if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
+    echo '<<<fileinfo:sep(124)>>>'
+    date +%s
+    stat -f "%N|%z|%m" $(cat "$MK_CONFDIR/fileinfo.cfg")
+fi
+
+
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR
 then

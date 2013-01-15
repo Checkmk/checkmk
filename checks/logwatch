@@ -90,12 +90,14 @@ def logwatch_state(state):
 def logwatch_level_name(level):
     if   level == 'O': return 'OK'
     elif level == 'W': return 'WARN'
+    elif level == 'u': return 'WARN' # undefined states are treated as warning
     elif level == 'C': return 'CRIT'
     else: return 'IGN'
 
 def logwatch_level_worst(worst, level):
     if   level == 'O': return max(worst, 0)
     elif level == 'W': return max(worst, 1)
+    elif level == 'u': return max(worst, 1)
     elif level == 'C': return max(worst, 2)
     else: return worst
 
@@ -404,7 +406,7 @@ def logwatch_to_prio(level):
     elif level == '0':
         return 5
     elif level == 'u':
-        return 5
+        return 4
 
 def syslog_time():
     localtime = time.localtime()

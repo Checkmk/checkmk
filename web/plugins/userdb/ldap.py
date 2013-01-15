@@ -194,10 +194,18 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
     result = []
     try:
         for dn, obj in ldap_connection.search_s(base, scope, filt, columns):
+            if dn is None:
+                continue # skip unwanted answers
             new_obj = {}
             for key, val in obj.iteritems():
                 new_obj[key.lower().decode('utf-8')] = [ i.decode('utf-8') for i in val ]
             result.append((dn, new_obj))
+    except ldap.NO_SUCH_OBJECT, e:
+        raise MKLDAPException(_('The given base object "%s" does not exist in LDAP (%s))') % (base, e))
+
+    except ldap.FILTER_ERROR, e:
+        raise MKLDAPException(_('The given ldap filter "%s" is invalid (%s)') % (filt, e))
+
     except ldap.SIZELIMIT_EXCEEDED:
         raise MKLDAPException(_('The response reached a size limit. This could be due to '
                                 'a sizelimit configuration on the LDAP server.<br />Throwing away the '
@@ -269,6 +277,9 @@ def ldap_get_users(add_filter = None):
     result = {}
     for dn, ldap_user in ldap_search(ldap_replace_macros(config.ldap_userspec['dn']),
                                      filt, columns = columns):
+        if ldap_user_id_attr() not in ldap_user:
+            raise MKLDAPException(_('The configured User-ID attribute "%s" does not '
+                                    'exist for the user "%s"') % (ldap_user_id_attr(), dn))
         user_id = ldap_user[ldap_user_id_attr()][0]
         result[user_id] = ldap_user
 
@@ -281,8 +292,7 @@ def ldap_user_groups(username, attr = 'cn'):
 
     # Apply configured group ldap filter and only reply with groups
     # having the current user as member
-    filt = '(&%s(member=%s))' % (ldap_filter('groups'), user_dn)
-
+    filt = '(&%s(member=%s))' % (ldap_filter('groups'), ldap.filter.escape_filter_chars(user_dn))
     # First get all groups
     groups = []
     for dn, group in ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']),
@@ -500,8 +510,11 @@ def ldap_list_roles_with_group_dn():
     for role_id, role in load_roles().items():
         elements.append((role_id, LDAPDistinguishedName(
             title = role['alias'] + ' - ' + _("Specify the Group DN"),
-            help  = _("Distinguished Name of the LDAP group to add users this role."),
+            help  = _("Distinguished Name of the LDAP group to add users this role. This group must "
+                      "be defined within the scope of the "
+                      "<a href=\"wato.py?mode=edit_configvar&varname=ldap_groupspec\">LDAP Group Settings</a>."),
             size  = 80,
+            enforce_suffix = ldap_replace_macros(config.ldap_groupspec['dn']),
         )))
     return elements
 

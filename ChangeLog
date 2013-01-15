@@ -9,6 +9,7 @@
     * FIX: win_dhcp_pools: removed faulty output on non-german windows 2003 servers 
            with no dhcp server installed (Thanks to Mathias Decker)
     * Add: fileinfo is now supported by the solaris agent. Thanks to Daniel Roettgermann
+    * Logwatch: unknown eventlog level ('u') from windows agent treated as warning
     * FIX: logwatch_ec: Added state undefined as priority
 
     Multisite:
@@ -19,6 +20,10 @@
     * Storing row selections in user files, cleaned up row selection 
       handling to single files. Cleaned up GET/POST mixups in confirm dialogs
     * Add: New user_options to limit seen nagios objects even the role is set to see all
+    * FIX: LDAP: Fixed problem with special chars in LDAP queries when having
+    contactgroup sync plugin enabled
+    * LDAP: Role sync plugin validates the given group DNs with the group base dn now
+    * LDAP: Improved error handling in case of misconfigurations
 
 1.2.1i4:
     Core:
@@ -274,6 +279,7 @@
     WATO:
     * FIX: fixed detection of existing groups when creating new groups
     * FIX: allow email addresses like test@test.test-test.com
+    * FIX: Fixed Password saving problem in user settings
 
     Checks & Agents:
     * FIX: postgres_sessions: handle case of no active/no idle sessions

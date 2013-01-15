@@ -74,6 +74,15 @@ echo '<<<ntp>>>'
 echo '<<<tcp_conn_stats>>>'
     netstat -ntfinet | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
 
+
+# Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
+if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
+    echo '<<<fileinfo:sep(124)>>>'
+    date +%s
+    stat -f "%N|%z|%m" $(cat "$MK_CONFDIR/fileinfo.cfg")
+fi
+
+
 ###############################
 # Things up for takers:
 ###############################

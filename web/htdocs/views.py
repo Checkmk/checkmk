@@ -719,8 +719,6 @@ def page_edit_view():
     forms.section(_('Sortable by user'), simple=True)
     html.checkbox('user_sortable', True, label=_("Make view sortable by user"))
 
-    forms.section(_('Checkboxes'), simple=True)
-    html.checkbox('show_checkboxes', False, label=_("Show checkboxes for selecting rows")) 
     forms.end()
 
     html.button("save", _("Save"))
@@ -820,7 +818,6 @@ def load_view_into_html_vars(view):
     html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
     html.set_var("hidebutton",       view.get("hidebutton",  False) and "on" or "")
     html.set_var("user_sortable",    view.get("user_sortable", True) and "on" or "")
-    html.set_var("show_checkboxes",  view.get("show_checkboxes", False) and "on" or "")
 
     # [3] Filters
     for name, filt in multisite_filters.items():
@@ -929,7 +926,6 @@ def create_view():
     hidebutton       = html.var("hidebutton", "") != ""
     column_headers   = html.var("column_headers")
     user_sortable    = html.var("user_sortable")
-    show_checkboxes  = html.var("show_checkboxes")
 
     show_filternames = []
     hide_filternames = []
@@ -1021,7 +1017,6 @@ def create_view():
         "play_sounds"     : play_sounds,
         "column_headers"  : column_headers,
         "user_sortable"   : user_sortable,
-        "show_checkboxes" : show_checkboxes,
         "show_filters"    : show_filternames,
         "hide_filters"    : hide_filternames,
         "hard_filters"    : hard_filternames,
@@ -1174,7 +1169,8 @@ def show_view(view, show_heading = False, show_buttons = True,
     vo = view_options(view["name"])
     num_columns     = vo.get("num_columns",     view.get("num_columns",    1))
     browser_reload  = vo.get("refresh",         view.get("browser_reload", None))
-    show_checkboxes = vo.get("show_checkboxes", view.get("show_checkboxes", False))
+
+    show_checkboxes = html.var('show_checkboxes', '0') == '1'
 
     # Get the datasource (i.e. the logical table)
     datasource = multisite_datasources[view["datasource"]]
@@ -1356,6 +1352,9 @@ def render_view(view, rows, datasource, group_painters, painters,
     # permissions or datasources without commands, the form is not rendered
     command_form = should_show_command_form(display_options, datasource)
 
+    if command_form:
+        weblib.init_selection()
+
     # Is the layout able to display checkboxes?
     can_display_checkboxes = layout.get('checkboxes', False)
 
@@ -1365,7 +1364,7 @@ def render_view(view, rows, datasource, group_painters, painters,
                        # Take into account: permissions, display_options
                        row_count > 0 and command_form,
                        # Take into account: layout capabilities
-                       can_display_checkboxes)
+                       can_display_checkboxes, show_checkboxes)
 
     # User errors in filters
     html.show_user_errors()
@@ -1612,6 +1611,14 @@ def view_option_toggler(id, view, option, icon, help, hidden = False):
        'onclick="view_switch_option(this, \'%s\', \'%s\');"%s></div>' % (
         id, help, icon, value and "down" or "up", view["name"], option, hide))
 
+def toggler(id, icon, help, onclick, value, hidden = False):
+    html.begin_context_buttons() # just to be sure
+    hide = hidden and ' style="display:none"' or ''
+    html.write('<div id="%s_on" title="%s" class="togglebutton %s %s" '
+       'onclick="%s"%s></div>' % (
+        id, help, icon, value and "down" or "up", onclick, hide))
+
+
 # Will be called when the user presses the upper button, in order
 # to persist the new setting - and to make it active before the
 # browser reload of the DIV containing the actual status data is done.
@@ -1647,7 +1654,7 @@ def togglebutton(id, isopen, icon, help, hidden = False):
                'onclick="view_toggle_form(this, \'%s\');"%s></div>' % (id, icon, cssclass, help, id, hide))
 
 def show_context_links(thisview, active_filters, show_filters, display_options, 
-                       painter_options, enable_commands, enable_checkboxes):
+                       painter_options, enable_commands, enable_checkboxes, show_checkboxes):
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
     if 'B' in display_options:
@@ -1678,9 +1685,9 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
         togglebutton_off("commands", "commands", hidden = enable_commands)
 
         selection_enabled = enable_commands and enable_checkboxes
-        view_option_toggler("checkbox", thisview, "show_checkboxes", "checkbox",
-                            _("Enable/Disable checkboxes for selecting rows for commands"),
-                            hidden = not selection_enabled)
+        toggler("checkbox", "checkbox", _("Enable/Disable checkboxes for selecting rows for commands"),
+                "location.href='%s';" % html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),
+                show_checkboxes, hidden = not selection_enabled)
         togglebutton_off("checkbox", "checkbox", hidden = selection_enabled)
         html.javascript('g_selection_enabled = %s;' % (selection_enabled and 'true' or 'false'))
 
@@ -2037,6 +2044,8 @@ def should_show_command_form(display_options, datasource):
     for command in multisite_commands:
         if what in command["tables"] and config.may(command["permission"]):
             return True
+
+    return False
 
 def show_command_form(is_open, datasource):
     # What commands are available depends on the Livestatus table we

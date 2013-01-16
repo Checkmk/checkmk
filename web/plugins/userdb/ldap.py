@@ -27,20 +27,6 @@
 import config, defaults
 import time, copy
 
-# For some reason mod_python is missing /usr/lib/python2.7/dist-packages
-# in sys.path. Therefor the ldap module can not be found at least on current
-# ubuntu and sles releases.
-# There seem to be some initialization problems with mod_pythan as the sys.path
-# is correct when excuting python from the command line as site user.
-# Try to workaround the problem now...
-
-import site, sys
-try:
-    sys.path.extend(site.getsitepackages())
-except: # Workaround, python 2.6 ( debian squeeze )
-    sys.path.extend(["/usr/local/lib/python2.6/dist-packages"])
-    sys.path.extend(["/usr/lib/python2.6/dist-packages"])
-
 try:
     # docs: http://www.python-ldap.org/doc/html/index.html
     import ldap

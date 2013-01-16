@@ -78,7 +78,6 @@ ldap_filter_map = {
         'groups': '(objectclass=group)',
     },
     'openldap': {
-        #'users': '(objectcategory=user)',
         'users': '(objectclass=person)',
         'groups': '(objectclass=groupOfUniqueNames)',
     },
@@ -96,8 +95,8 @@ ldap_filter_map = {
 #   '----------------------------------------------------------------------'
 
 def ldap_log(s):
-    pass # no logging by default
-    #file('/tmp/ldap.log', 'a').write('%s\n' % s)
+    if config.ldap_debug_log is not None:
+        file(config.ldap_debug_log, "a").write('%s\n' % s)
 
 class MKLDAPException(MKGeneralException):
     pass
@@ -223,6 +222,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
                                 'incomplete results. You should change the scope of operation '
                                 'within the ldap or adapt the limit settings of the LDAP server.'))
 
+    ldap_log('  RESULT length: %d' % len(result))
     return result
     #return ldap_connection.search_s(base, scope, filter, columns)
     #for dn, obj in ldap_connection.search_s(base, scope, filter, columns):

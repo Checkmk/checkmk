@@ -27,6 +27,7 @@
     * LDAP: Using roles defined in default user profile in role sync plugin processing
     * LDAP: Improved error handling in case of misconfigurations
     * LDAP: Reduced number of ldap querys during a single page request / sync process
+    * LDAP: Implemnted some kind of debug logging for LDAP communication
 
 1.2.1i4:
     Core:

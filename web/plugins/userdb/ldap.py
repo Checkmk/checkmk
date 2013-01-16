@@ -483,10 +483,10 @@ def ldap_convert_groups_to_contactgroups(params, user_id, ldap_user, user):
     return {'contactgroups': [ g for g in ldap_groups if g in cg_names]}
 
 ldap_attribute_plugins['groups_to_contactgroups'] = {
-    'title': _('Contactgroup Memberhip'),
-    'help':  _('Adds the user to contactgroups based on the group memberhips in LDAP. This '
+    'title': _('Contactgroup Membership'),
+    'help':  _('Adds the user to contactgroups based on the group memberships in LDAP. This '
                'plugin adds the user only to existing contactgroups while the name of the '
-               'contactgroup must match the common name of the LDAP group.'),
+               'contactgroup must match the common name (cn) of the LDAP group.'),
     'convert':           ldap_convert_groups_to_contactgroups,
     'lock_attributes':   ['contactgroups'],
     'no_param_txt': _('Add user to all contactgroups where the common name matches the group name.'),

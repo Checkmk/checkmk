@@ -96,7 +96,8 @@ ldap_filter_map = {
 #   '----------------------------------------------------------------------'
 
 def ldap_log(s):
-    file('/tmp/ldap.log', 'a').write('%s\n' % s)
+    pass # no logging by default
+    #file('/tmp/ldap.log', 'a').write('%s\n' % s)
 
 class MKLDAPException(MKGeneralException):
     pass

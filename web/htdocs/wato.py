@@ -1255,7 +1255,7 @@ def show_hosts(folder):
         if not show_checkboxes:
             html.write('<div id="%s_on" title="%s" class="togglebutton %s up" '
                        'onclick="location.href=\'%s\'"></div>' % (
-                        'checkbox', _('Show Checkboxes and show bulk actions'), 'checkbox',
+                        'checkbox', _('Show Checkboxes and bulk actions'), 'checkbox',
                         html.makeuri([('show_checkboxes', '1'), ('selection', weblib.selection_id())])))
 
         else:

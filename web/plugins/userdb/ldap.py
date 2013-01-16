@@ -66,6 +66,8 @@ ldap_attr_map = {
     'openldap': {
         'user_id':    'uid',
         'pw_changed': 'pwdchangedtime',
+        # group attributes
+        'member':     'uniquemember',
     },
 }
 
@@ -315,7 +317,8 @@ def ldap_user_groups(username, attr = 'cn'):
 
     # Apply configured group ldap filter and only reply with groups
     # having the current user as member
-    filt = '(&%s(member=%s))' % (ldap_filter('groups'), ldap.filter.escape_filter_chars(user_dn))
+    filt = '(&%s(%s=%s))' % (ldap_filter('groups'), ldap_attr('member'),
+                             ldap.filter.escape_filter_chars(user_dn))
     # First get all groups
     groups_cn = []
     groups_dn = []

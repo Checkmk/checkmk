@@ -6,10 +6,10 @@ PREDECTIVE MONITORING
 Some people call the following concept "predictive monitoring": Let's assume
 that you have problems assigning levels for your CPU load on a specific server,
 because at certain times in a week an important CPU intense job is running.
-This jobs do produce a high load - which is completely OK. At other times -
-however - a high load could be a problem.  If you now set the warn/crit levels such
-that the check does not trigger during the runs of the job - you make the monitoring
-blind to CPU load problems in the other periods.
+These jobs do produce a high load - which is completely OK. At other times -
+however - a high load could indicate a problem.  If you now set the warn/crit
+levels such that the check does not trigger during the runs of the job -
+you make the monitoring blind to CPU load problems in the other periods.
 
 What we need is levels that change dynamically with the time, so that e.g. a load
 of 10 at monday 10:00 is OK while the same load at 11:00 should raise an alert.
@@ -19,16 +19,16 @@ what is OK and what not. Other people also call this "anomaly detection".
 
 2) An idea for a solution
 
-Our idea is to use the data that are kept in RRDs in order to compute sensible
-dynamic levels for certain check parameters. Let's keep with the CPU load as an
-example. In any default Check_MK or OMD installation, PNP4Nagios and thus RRDs
-are used for storing historic performance data such as the CPU load for up to
-four years. This will be our basis. We will analyse this data from time to time
-and compute a forecast for the future. 
+Our idea is that we use the data that are kept in RRDs in order to compute
+sensible dynamic levels for certain check parameters. Let's stay with the CPU
+load as an example. In any default Check_MK or OMD installation, PNP4Nagios
+and thus RRDs are used for storing historic performance data such as the CPU
+load for up to four years. This will be our basis. We will analyse this data
+from time to time and compute a forecast for the future.
 
 Before we can do this we need to understand, that the whole prediction idea
-is based on *periodic intervals* that repeat again and again. For example
-if we had a high CPU load on each of the last 50 mondays from 10:00 to 10:05
+is based on *periodic intervals* that repeat again and again. For example if
+we had a high CPU load on each of the last 50 mondays from 10:00 to 10:05
 then we assume that at the next monday we will have a similar development.
 But the day of the week might not always be the way to go. Here are some
 possible periods:
@@ -40,66 +40,69 @@ possible periods:
 * Just whether its a work day or a holiday
 
 In general we need to make two decisions:
-* The slicing (for example one day)
-* The grouping (for example group by the day of the week)
+* The slicing (for example "one day")
+* The grouping (for example "group by the day of the week")
 
-If we slice into days and group by the day of the week we get seven different
-groups. For each group we separately compute a prediction by fetching the
-relevant data from (a certain time horizon) of the past - for example the
-data of the last 20 mondays. Then we overlay these 20 graphs, compute for
-each time of day the 
+Example: if we slice into days and then group by the day of the week then we
+get seven different groups. For each of these groups we separately compute
+a prediction by fetching the relevant data from the past - limited to a
+certain time horizon, for example to the data of the last 20 mondays. Then
+we overlay these 20 graphs and compute for each time of day the
 
 - Maximum value
 - Minimum value
 - Average value
 - Standard deviation
 
-When doing this we could impose a larger weight on more recent mondays
-and a lesser weight on the other ones. The result is a condensed information
-about the past and at the same time a prediction of the future.
+When doing this we could impose a larger weight on more recent mondays and
+a lesser weight on the older ones. The result is a condensed information
+about the past that we use as a prediction for the future.
 
 Based on that prediction we can now construct dynamic levels by creating
 a "corridor". An example could be: "Alert a warning if the CPU load is
 more than 10% higher then the predicted value". A percentage is not the
-only way to go. We can use:
+only way to go. Useful seem at least:
 
-- A +/- a percentage of the predicted value (average, min or max)
-- A absolute difference +/- of the predicted value (e.g. +/- 5)
-- A difference in relation to the standard deviation
+- +/- a percentage of the predicted value (average, min or max)
+- an absolute difference to the predicted value (e.g. +/- 5)
+- a difference in relation to the standard deviation
 
-Working the the Standard deviation takes into account the difference
+Working with the the Standard deviation takes into account the difference
 between situations where the historic values show a greater or smaller
-variety. In other words: the smaller the standard deviation the more
-precise is the prediction.
+variety. In other words: the smaller the standard deviation the more precise
+is the prediction.
 
 It is not only possible to set upper levels - also lower levels are
-possible. In other words: "Warn me, if the CPU load is too *low*!"
-This could be a hint for an important job that is *not* running.
+possible. In other words: "Warn me, if the CPU load is too *low*!"  This could
+be a hint for an important job that is *not* running.
+
 
 3) Implementation within Check_MK
 
-When trying to find a good architecture for an implementation several
-aspects have to taken into mind:
+When trying to find a good architecture for an implementation several aspects
+have to taken into mind:
 
-- performance (used CPU/IO/disk ressources)
-- flexibility for the user
+- performance (used CPU/IO/disk ressources on the monitoring host)
 - code complexity - and thus cost of implementation and code maintainance
+- flexibility for the user
 - transparency to the user
-- possibility of later improvements
+- openness to later improvements
 
-The implementation that we suggest tries to maximies all these aspects - while
-being sure that it is not impossible that even better ideas exist...
+The implementation that we suggest tries to maximise all those aspects -
+while we are sure that even better ideas might exist...
 
-The implementation touches various areas of Check_MK and consists of the followin
-tasks:
+The implementation touches various areas of Check_MK and consists of the
+following tasks:
 
 a) A script/program that analyses RRD data and creates predicted dynamic levels
-b) A helper function for checks that makes use of that data
+b) A helper function for checks that makes use of that data when they need
+   to determine levels
 c) Implementing dynamic levels in several checks by using that function
 d) Enhancing the WATO rules of those checks such that the user can configure 
    the dynamic levels
 e) Adapting the PNP templates of those checks such that the dynamic levels
    are being displayed in the graphs.
+
 
 Implementation details:
 
@@ -127,10 +130,14 @@ This script needs the following input parameters:
    of the succeessing week, or: weight all weeks identically)
 
 Notes:
-[1] If we just compute one slice at a time we can cut down the running time of 
-    the script and can do this right within the check on a on-demand base.
-[2] The grouping can be implemented as a Python function that maps a time stamp (the 
-    beginning of a slice) to a string that represents the group. E.g. 1763747600 -> "monday".
+
+  [1] If we just compute one slice at a time (e.g. only monday) then we can
+      cut down the running time of the script and can do this right within 
+      the check on a on-demand base.
+  
+  [2] The grouping can be implemented as a Python function that maps a time
+      stamp (the beginning of a slice) to a string that represents the
+      group. E.g. 1763747600 -> "monday".
 
 The result is a binary encoded file that is stored below var, e.g.:
 
@@ -141,21 +148,25 @@ the time of youngest contained slice:
 
 var/check_mk/prediction/srvabc012/CPU load/load1/monday.info
 
-This info file allows to re-run the prediction is the check parameters have changed
+This info file allows to re-run the prediction only when the check parameters have changed
 or if a new slice is needed.
 
 The implementation of this program is in Python, if this is fast enough (which I
-hope) or in C++ otherwise. If it is in Python then we do not need an external 
-program but can put this into a module (just like currently snmp.py or automation.py).
+assume) or in C++ otherwise. If it is in Python then we do not need an external 
+program but can put this into a module (just like currently snmp.py or automation.py)
+und call it directly from the check.
 
 
 b) Helper function for checks
 
-When a check (e.g. cpu.loads) wants to apply dynamic levels it can call a helper
-function the encapsulates all of the intelligent stuff to 100%. A example 
-call could be (the current hostname and checktype are implicitely known, the
-service description is being computed from the checktype and the item):
+When a check (e.g. cpu.loads) wants to apply dynamic levels then it should
+call a helper function the encapsulates all of the intelligent stuff of the
+prediction. An example call could be the following (the current hostname and
+checktype are implicitely known, the service description is being computed
+from the checktype and the item):
 
+# These values come from the checks' parameters and are configured
+# on a per-check base:
 analyser_params = {
     "slicing"  : (24 * 3600, 0), # duration in sec, offset from UTC
     "slice"    : "monday",
@@ -168,19 +179,20 @@ warn, crit = predict_levels("load1", "avg", "relative", (0.05, 0.10), analyser_p
 The function prototype looks like this:
 
 def predict_levels(ds_name, levels_rel, levels_op, levels, prediction_parameters, item=None):
-    # Get current slice
-    # Check if prediction file is up-to-date
-    # if not, (re-)create prediction file
-    # get mmin, mmax, avg, stddev from prediction file for current time
-    # compute levels from that by applying levels_rel, levels_op and levels
-    # return levels
+    - Get current slice
+    - Check if prediction file is up-to-date
+    - if not (re-)create prediction file
+    - get min, max, avg, stddev from prediction file for current time
+    - compute levels from that by applying levels_rel, levels_op and levels
+    - return levels
 
 
 c) Implementing dynamic levels in several checks
 
-From the variety of different checks it should be clear that there can be
-now generic way of enabling dynamic levels for *all* checks. So we need to
-concentrate on those checks where dynamic levels make sense. Such are for example:
+From the existing variety of different checks it should be clear that there
+can be no generic way of enabling dynamic levels for *all* checks. So we
+need to concentrate on those checks where dynamic levels make sense. Such
+are for example:
 
 CPU Load
 CPU Utilization
@@ -200,10 +212,11 @@ configurations are still supported.
 
 d) WATO rules for dynamic levels
 
-When the user is using dynamic levels for a check he needs to (or better: can) specify
-many parameters, as we have seen. All those parameters are mostly the same for
-all the different checks that support dynamic levels. We can create a helper function
-that makes it easier to declare such parameters in WATO rules.
+When the user is using dynamic levels for a check then he needs to (or better:
+can) specify many parameters, as we have seen. All those parameters are
+mostly the same for all the different checks that support dynamic levels. We
+can create a helper function that makes it easier to declare such parameters
+in WATO rules.
 
 Checks that support upper *and* lower levels will get two sets of parameters, because
 the logic for upper and lower levels might differ. But the need to share the same
@@ -213,13 +226,14 @@ per check is sufficient.
 
 e) PNP Templates
 
-Makeing the actually predicted levels transparent to the user is a crucial point
+Making the actually predicted levels transparent to the user is a crucial point
 in the implementation. An easy way to do this is to simply add the predicted
 levels as additional performance values. The PNP templates of the affected
-checks need to detect the availability of those values on add nice lines to
+checks need to detect the availability of those values and add nice lines to
 the graph. 
 
 This is easy - while having one drawback: The user can see predicted levels
 not before they are actually applied. The advantage on the other hand is that
-if parameters for the prediction are changed the graph still correctly shows
-the levels that had been valid at each point of time in the past.
+if parameters for the prediction are changed then the graph still correctly
+shows the levels that had been valid at each point of time in the past.
+

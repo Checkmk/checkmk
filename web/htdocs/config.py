@@ -553,7 +553,10 @@ def load_default_values(into):
     
     # Buffering of HTML output stream
     into["buffered_http_stream"] = True
-    
+
+    # Maximum livetime of unmodified selections
+    into["selection_livetime"]  = 3600
+
     #     ____ ___
     #    | __ )_ _|
     #    |  _ \| |
@@ -599,6 +602,7 @@ def load_default_values(into):
     into["ldap_groupspec"]       = {}
     into["ldap_active_plugins"]  = {'email': {}, 'alias': {}, 'auth_expire': {}}
     into["ldap_cache_livetime"]  = 300
+    into['ldap_debug_log']       = None
     into["default_user_profile"] = {
         'roles': ['user'],
     }

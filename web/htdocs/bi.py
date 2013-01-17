@@ -736,7 +736,11 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
             new_elements = new_new_elements
 
         elif type(node[-1]) != list:
-            if node[0] in [ config.FOREACH_HOST, config.FOREACH_CHILD, config.FOREACH_PARENT ]:
+            if node[0] in [
+                    config.FOREACH_HOST,
+                    config.FOREACH_CHILD,
+                    config.FOREACH_PARENT,
+                    config.FOREACH_SERVICE ]:
                 # Handle case that leaf elements also need to be iterable via FOREACH_HOST
                 # 1: config.FOREACH_HOST
                 # 2: (['waage'], '(.*)')

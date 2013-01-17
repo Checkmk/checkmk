@@ -1,5 +1,5 @@
 title: Check age and size of files
-agents: windows
+agents: windows, linux
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
@@ -15,13 +15,19 @@ description:
  as the agent needs to know the information about
  which files need to be sent.
 
- Currently only the Windows agent supports this type
- of check. Configuration is done in {check_mk.ini} in
- the section {[fileinfo]}. Put one or more entries
- of the format {path = C:\Some Dir\*.log} into this
+ Currently the linux and windows agents supports this type
+ of check.
+
+ For windows, the configuration is done in {check_mk.ini} in 
+ the section {[fileinfo]}. Put one or more entries of the 
+ format {path = C:\Some Dir\*.log} into this
  section. The agent will send all files that match
  the pattern. Wildcards are only allowed in the
  filename part, not in the directory path.
+
+ For linux, the configuration is done via {fileinfo.cfg} located
+ in the {$MK_CONFDIR} (usually {/etc/check_mk/fileinfo.cfg}).
+ To add files to the check, simply add one path pattern per line.
 
 item:
  The complete path name of the file as sent by

@@ -1,9 +1,9 @@
 Title: FOREACH_SERVICE in a leaf node does not work for direct host/services
 Component: bi
-State: open
+Class: bug
+State: done
 Date: 2012-07-26 16:05:16
 Targetversion: 1.2.2
-Class: bug
 
 If you use FOREACH_SERVICE within an inner node then you cannot
 directly add leaf nodes. The following produces an error:
@@ -14,3 +14,15 @@ aggregation_rules[...] = (
      ( FOREACH_SERVICE, ALL_HOSTS, ".*", "$1$", HOST_STATE ),
   ]
 )
+
+2013-01-17 15:19:06: changed state open -> done
+1. added FOREACH_SERVICE for leaf nodes
+2. the following works for me now:
+
+(FOREACH_SERVICE, "localhost", "fs_(.*)", "filesystem", [ "localhost", "$1$" ] ),
+(FOREACH_SERVICE, "localhost", "fs_(.*)", "localhost", "fs_$1$"),
+(FOREACH_SERVICE, "localhost", "fs_(.*)", "localhost", "fs_$1$" ),
+(FOREACH_SERVICE, "localhost", "fs_(.*)", "localhost", HOST_STATE ),
+(FOREACH_SERVICE, "(.*)", "fs_(.*)", "$1$", HOST_STATE ),
+
+Some of the rules are senseless but should work in general.

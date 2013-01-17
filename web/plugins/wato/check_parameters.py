@@ -1128,17 +1128,47 @@ checkgroups.append((
     "dict",
     ))
 
+checkgroups.append((
+    subgroup_os,
+    "cisco_mem",
+    _("Cisco Memory Usage"),
+    Alternative(
+        elements = [
+            Tuple(
+                title = _("Specify levels in percentage of total RAM"),
+                elements = [
+                  Percentage(title = _("Warning at a usage of"), label = _("% of RAM"), max_value = None),
+                  Percentage(title = _("Critical at a usage of"), label = _("% of RAM"), max_value = None)
+                ]
+            ),
+            Tuple(
+                title = _("Specify levels in absolute usage values"),
+                elements = [
+                  Integer(title = _("Warning at"), unit = _("MB")),
+                  Integer(title = _("Critical at"), unit = _("MB"))
+                ]
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Memory Pool Name"),
+        allow_empty = False
+    ),
+    None
+))
 
 checkgroups.append((
     subgroup_os,
     "memory",
-    _("Main memory usage (Linux / UNIX)"),
+    _("Main memory usage (Linux / UNIX / Other Devices)"),
     Alternative(
         help = _("The levels for memory usage on Linux and UNIX systems take into account the "
                "currently used memory (RAM or SWAP) by all processes and sets this in relation "
                "to the total RAM of the system. This means that the memory usage can exceed 100%. "
                "A usage of 200% means that the total size of all processes is twice as large as "
-               "the main memory, so <b>at least</b> the half of it is currently swapped out."),
+               "the main memory, so <b>at least</b> the half of it is currently swapped out. "
+               "Besides Linux and UNIX systems, these parameters are also used for memory checks "
+               "of other devices, like Fortigate devices."),
         elements = [
             Tuple(
                 title = _("Specify levels in percentage of total RAM"),
@@ -1180,10 +1210,12 @@ checkgroups.append((
                    "for one. The <u>load average</u> is the averaged CPU load over the last 1, "
                    "5 or 15 minutes. The following levels will be applied on the average "
                    "load. On Linux system the 15-minute average load is used when applying "
-                   "those levels."),
+                   "those levels. The configured levels are multiplied with the number of "
+                   "CPUs, so you should configure the levels based on the value you want to "
+                   "be warned \"per CPU\"."),
           elements = [
-              Integer(title = _("Warning at a load of")),
-              Integer(title = _("Critical at a load of"))]),
+              Float(title = _("Warning at a load of")),
+              Float(title = _("Critical at a load of"))]),
     None, None))
 
 checkgroups.append((

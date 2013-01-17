@@ -1,9 +1,9 @@
 Title: Manpage of fileinfo outdated
 Component: docu
-State: open
+Class: bug
+State: done
 Date: 2012-11-22 12:21:55
 Targetversion: 1.2.2
-Class: bug
 
 The man page of fileinfo is not uptodate: The linux agent now
 supports fileinfo. Also the configuration of that should be
@@ -11,3 +11,6 @@ described here.
 
 The man page of fileinfo.groups: do we really have regular expressions?
 It does not seem to work...
+
+2013-01-17 14:02:22: changed state open -> done
+Has just been fixed.

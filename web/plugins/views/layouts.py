@@ -31,22 +31,12 @@ def init_rowselect(view):
     if not config.may("general.act"):
         return
 
-    # In views do not use the persisted selection on initial rendering
-    # But use it when:
-    # a) rendering views for page reloads
-    # b) the view is being sorted
-    # c) some form has been submitted
-    if 'U' in html.display_options and not html.has_var('sort') and not html.form_submitted():
-        weblib.set_rowselection('view-' + view['name'], [])
-        selected = [] # initial rendering
-    else:
-        # used e.g. during ajax page reload
-        selected = weblib.get_rowselection('view-' + view['name'])
-
+    selected = weblib.get_rowselection('view-' + view['name'])
     html.javascript(
         'g_page_id = "view-%s";\n'
+        'g_selection = "%s";\n'
         'g_selected_rows = %s;\n'
-        'init_rowselect();' % (view['name'], repr(selected))
+        'init_rowselect();' % (view['name'], weblib.selection_id(), repr(selected))
     )
 
 def render_checkbox(view, row, num_tds):

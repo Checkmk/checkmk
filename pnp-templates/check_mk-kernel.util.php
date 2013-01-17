@@ -38,20 +38,27 @@ else
    $thirdname = "Wait";
 
 
+$def[1] .= ""
+        . "COMMENT:Average\:  "
+        . "AREA:system#ff6000:\"System\" " 
+        . "GPRINT:system:AVERAGE:\"%2.1lf%%  \" " 
+        . "AREA:user#60f020:\"User\":STACK " 
+        . "GPRINT:user:AVERAGE:\"%2.1lf%% \" " 
+        . "AREA:wait#00b0c0:\"$thirdname\":STACK " 
+        . "GPRINT:wait:AVERAGE:\"%2.1lf%%  \" " 
+        . "LINE:sum#004080:\"Total\" " 
+        . "GPRINT:sum:AVERAGE:\"%2.1lf%%  \\n\" "
 
-$def[1] .= "LINE:idle#ffffff:\"Idle\" " ;
-$def[1] .= "GPRINT:idle:LAST:\"%2.1lf%%\" " ;
+        . "COMMENT:\"Last\:   \" "
+        . "AREA:system#ff6000:\"System\" " 
+        . "GPRINT:system:LAST:\"%2.1lf%%  \" " 
+        . "AREA:user#60f020:\"User\":STACK " 
+        . "GPRINT:user:LAST:\"%2.1lf%%  \" " 
+        . "AREA:wait#00b0c0:\"$thirdname\":STACK " 
+        . "GPRINT:wait:LAST:\"%2.1lf%%  \" " 
+        . "LINE:sum#004080:\"Total\" " 
+        . "GPRINT:sum:LAST:\"%2.1lf%%  \\n\" "
 
-$def[1] .= "AREA:system#ff6000:\"System\" " ;
-$def[1] .= "GPRINT:system:LAST:\"%2.1lf%%\" " ;
-
-$def[1] .= "AREA:user#60f020:\"User\":STACK " ;
-$def[1] .= "GPRINT:user:LAST:\"%2.1lf%%\" " ;
-
-$def[1] .= "AREA:wait#00b0c0:\"$thirdname\":STACK " ;
-$def[1] .= "GPRINT:wait:LAST:\"%2.1lf%%\" " ;
-
-$def[1] .= "LINE:sum#004080:\"Utilization\" " ;
-$def[1] .= "GPRINT:sum:LAST:\"%2.1lf%%\" " ;
+        ."";
 
 ?>

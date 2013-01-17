@@ -88,6 +88,20 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "selection_livetime",
+    Integer(
+        title = _('Checkbox Selection Livetime'),
+        help  = _('This option defines the maximum age of unmodified checkbox selections stored for users. '
+                  'If a user modifies the selection in a view, these selections are persisted for the currently '
+                  'open view. When a view is re-opened a new selection is used. The old one remains on the '
+                  'server until the livetime is exceeded.'),
+        minvalue = 1,
+        default_value = 3600,
+    ),
+    domain = "multisite",
+)
+
+register_configvar(group,
     "show_livestatus_errors",
     Checkbox(title = _("Show MK Livestatus error messages"),
              label = _("show errors"),
@@ -478,6 +492,20 @@ register_configvar(group,
     ),
     domain = "multisite",
 )
+
+register_configvar(group,
+    "ldap_debug_log",
+    Optional(
+        Filename(
+            label = _("Absolute path to log file"),
+            default = defaults.var_dir + '/web/ldap-debug.log',
+        ),
+          title = _("LDAP connection diagnostics"),
+          label = _("Activate logging of LDAP transactions into a logfile"),
+          help = _("If this option is used and set to a filename, Check_MK will create a logfile "
+                   "containing details about connecting to LDAP and the single transactions.")),
+    domain = "multisite")
+
 
 def list_roles():
     roles = userdb.load_roles()

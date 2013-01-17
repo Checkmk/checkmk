@@ -3,6 +3,10 @@
     * Improved handling of CTRL+C (SIGINT) to terminate long runnining tasks 
       (e.g.  inventory of SNMP hosts)
     * FIX: PING services on clusters are treated like the host check of clusters
+    * cmk --notify: new environment variable NOTIFY_WHAT which has HOST or SERVICE as value
+    * cmk --notify: removing service related envvars in case of host notifications
+    * cmk --notify: added test code to help developing nitofication plugins.
+      Can be called with "cmk --notify fake-service debug" for example
 
     Checks & Agents:
     * Linux Agent, diskstat: Now supporting /dev/emcpower* devices (Thanks to Claas Rockmann-Buchterkirche)

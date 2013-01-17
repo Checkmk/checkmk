@@ -12,6 +12,7 @@
     * Add: fileinfo is now supported by the solaris agent. Thanks to Daniel Roettgermann
     * Logwatch: unknown eventlog level ('u') from windows agent treated as warning
     * FIX: logwatch_ec: Added state undefined as priority
+    * Add: New Check for Raritan EMX Devices
     * Add: mailman_lists - New check to gather statistics of mailman mailinglists
     * FIX: megaraid_bbu - Handle missing charge information (ignoring them)
     * FIX: myssql_tablespaces - fix PNP graph (thanks to Christian Zock)

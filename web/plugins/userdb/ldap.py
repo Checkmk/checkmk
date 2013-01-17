@@ -35,7 +35,7 @@ except:
     pass
 from lib import *
 
-g_ladp_user_cache  = {}
+g_ldap_user_cache  = {}
 g_ldap_group_cache = {}
 
 # File for storing the time of the last success event
@@ -571,7 +571,7 @@ def ldap_login(username, password):
     # authentication which should be rebound again after trying this.
     try:
         ldap_bind(user_dn, password)
-        result = username
+        result = username.encode('utf-8')
     except:
         result = False
 

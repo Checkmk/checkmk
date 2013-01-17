@@ -23,6 +23,9 @@
     * Fix: On site configaration changes, only relevant sites are marked as dirty
     * Fix: Distributed setup: Correct cleanup of pending changes logfile after "Activate changes"
 
+    Bi:
+    * Add: Bi views now support debug of livestatus queries
+
 1.2.1i4:
     Core:
     * Better exception handling when executing "Check_MK"-Check. Printing python

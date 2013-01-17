@@ -1,0 +1,84 @@
+#!/usr/bin/python'
+
+test_vars = {
+  'host': {
+    'NOTIFY_CONTACTEMAIL': 'lm@mathias-kettner.de',
+    'NOTIFY_CONTACTNAME': 'lm',
+    'NOTIFY_CONTACTPAGER': '',
+    'NOTIFY_DATE': '2013-01-17',
+    'NOTIFY_HOSTADDRESS': '127.0.0.1',
+    'NOTIFY_HOSTALIAS': 'localhost',
+    'NOTIFY_HOSTCHECKCOMMAND': 'check-mk-ping',
+    'NOTIFY_HOSTDOWNTIME': '0',
+    'NOTIFY_HOSTNAME': 'localhost',
+    'NOTIFY_HOSTNOTIFICATIONNUMBER': '1',
+    'NOTIFY_HOSTOUTPUT': 'Manually set to Down by lm',
+    'NOTIFY_HOSTPERFDATA': '',
+    'NOTIFY_HOSTPROBLEMID': '136',
+    'NOTIFY_HOSTSTATE': 'DOWN',
+    'NOTIFY_HOSTTAGS': 'cmk-agent prod lan tcp wato /wato/',
+    'NOTIFY_LASTHOSTSTATE': 'UP',
+    'NOTIFY_LASTSERVICESTATE': '$LASTSERVICESTATE$',
+    'NOTIFY_LOGDIR': '/omd/sites/event/var/check_mk/notify',
+    'NOTIFY_LONGDATETIME': 'Thu Jan 17 15:28:13 CET 2013',
+    'NOTIFY_LONGHOSTOUTPUT': '',
+    'NOTIFY_LONGSERVICEOUTPUT': '$LONGSERVICEOUTPUT$',
+    'NOTIFY_NOTIFICATIONTYPE': 'PROBLEM',
+    'NOTIFY_PARAMETERS': '',
+    'NOTIFY_SERVICECHECKCOMMAND': '$SERVICECHECKCOMMAND$',
+    'NOTIFY_SERVICEDESC': '$SERVICEDESC$',
+    'NOTIFY_SERVICENOTIFICATIONNUMBER': '$SERVICENOTIFICATIONNUMBER$',
+    'NOTIFY_SERVICEOUTPUT': '$SERVICEOUTPUT$',
+    'NOTIFY_SERVICEPERFDATA': '$SERVICEPERFDATA$',
+    'NOTIFY_SERVICEPROBLEMID': '$SERVICEPROBLEMID$',
+    'NOTIFY_SERVICESTATE': '$SERVICESTATE$',
+    'NOTIFY_SHORTDATETIME': '2013-01-17 15:28:13',
+  },
+  'service': {
+    'NOTIFY_CONTACTEMAIL': 'lm@mathias-kettner.de',
+    'NOTIFY_CONTACTNAME': 'lm',
+    'NOTIFY_CONTACTPAGER': '',
+    'NOTIFY_DATE': '2013-01-17',
+    'NOTIFY_HOSTADDRESS': '127.0.0.1',
+    'NOTIFY_HOSTALIAS': 'localhost',
+    'NOTIFY_HOSTCHECKCOMMAND': 'check-mk-ping',
+    'NOTIFY_HOSTDOWNTIME': '0',
+    'NOTIFY_HOSTNAME': 'localhost',
+    'NOTIFY_HOSTNOTIFICATIONNUMBER': '0',
+    'NOTIFY_HOSTOUTPUT': 'OK - 127.0.0.1: rta 0.028ms, lost 0%',
+    'NOTIFY_HOSTPERFDATA': 'rta=0.028ms;200.000;500.000;0; pl=0%;40;80;; rtmax=0.052ms;;;; rtmin=0.021ms;;;;',
+    'NOTIFY_HOSTPROBLEMID': '0',
+    'NOTIFY_HOSTSTATE': 'UP',
+    'NOTIFY_HOSTTAGS': 'cmk-agent prod lan tcp wato /wato/',
+    'NOTIFY_LASTHOSTSTATE': 'UP',
+    'NOTIFY_LASTSERVICESTATE': 'OK',
+    'NOTIFY_LOGDIR': '/omd/sites/event/var/check_mk/notify',
+    'NOTIFY_LONGDATETIME': 'Thu Jan 17 15:31:46 CET 2013',
+    'NOTIFY_LONGHOSTOUTPUT': '',
+    'NOTIFY_LONGSERVICEOUTPUT': '',
+    'NOTIFY_NOTIFICATIONTYPE': 'PROBLEM',
+    'NOTIFY_PARAMETERS': '',
+    'NOTIFY_SERVICECHECKCOMMAND': 'check_mk-cpu.loads',
+    'NOTIFY_SERVICEDESC': 'CPU load',
+    'NOTIFY_SERVICENOTIFICATIONNUMBER': '1',
+    'NOTIFY_SERVICEOUTPUT': 'CRIT - 15min load 1.29 at 2 CPUs (critical at 0.00)',
+    'NOTIFY_SERVICEPERFDATA': 'load1=1.35;0;0;0;2 load5=1.33;0;0;0;2 load15=1.29;0;0;0;2',
+    'NOTIFY_SERVICEPROBLEMID': '137',
+    'NOTIFY_SERVICESTATE': 'CRITICAL',
+    'NOTIFY_SHORTDATETIME': '2013-01-17 15:31:46',
+  },
+}
+
+import os, sys
+
+if len(sys.argv) < 3:
+    sys.stderr.write('USAGE:\n')
+    sys.stderr.write('  ./test_notify <plugin> <what>\n')
+    sys.stderr.write('  ./test_notify debug service\n')
+    sys.exit(1)
+
+plugin, what = sys.argv[1:]
+
+os.environ.update(test_vars[what])
+sys.exit(os.system('./%s' % plugin))
+

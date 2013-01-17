@@ -27,20 +27,6 @@
 import config, defaults
 import time, copy
 
-# For some reason mod_python is missing /usr/lib/python2.7/dist-packages
-# in sys.path. Therefor the ldap module can not be found at least on current
-# ubuntu and sles releases.
-# There seem to be some initialization problems with mod_pythan as the sys.path
-# is correct when excuting python from the command line as site user.
-# Try to workaround the problem now...
-
-import site, sys
-try:
-    sys.path.extend(site.getsitepackages())
-except: # Workaround, python 2.6 ( debian squeeze )
-    sys.path.extend(["/usr/local/lib/python2.6/dist-packages"])
-    sys.path.extend(["/usr/lib/python2.6/dist-packages"])
-
 try:
     # docs: http://www.python-ldap.org/doc/html/index.html
     import ldap
@@ -48,6 +34,9 @@ try:
 except:
     pass
 from lib import *
+
+g_ldap_user_cache  = {}
+g_ldap_group_cache = {}
 
 # File for storing the time of the last success event
 g_ldap_sync_time_file = defaults.var_dir + '/web/ldap_sync_time.mk'
@@ -63,6 +52,8 @@ ldap_attr_map = {
     'openldap': {
         'user_id':    'uid',
         'pw_changed': 'pwdchangedtime',
+        # group attributes
+        'member':     'uniquemember',
     },
 }
 
@@ -75,7 +66,7 @@ ldap_filter_map = {
         'groups': '(objectclass=group)',
     },
     'openldap': {
-        'users': '(objectcategory=user)',
+        'users': '(objectclass=person)',
         'groups': '(objectclass=groupOfUniqueNames)',
     },
 }
@@ -90,6 +81,10 @@ ldap_filter_map = {
 #   +----------------------------------------------------------------------+
 #   | General LDAP handling code                                           |
 #   '----------------------------------------------------------------------'
+
+def ldap_log(s):
+    if config.ldap_debug_log is not None:
+        file(config.ldap_debug_log, "a").write('%s\n' % s)
 
 class MKLDAPException(MKGeneralException):
     pass
@@ -169,6 +164,7 @@ def ldap_default_bind():
                                 'connection settings</a>.'))
 
 def ldap_bind(username, password, catch = True):
+    ldap_log('LDAP_BIND %s' % username)
     try:
         ldap_connection.simple_bind_s(username, password)
     except ldap.LDAPError, e:
@@ -189,6 +185,8 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
         scope = ldap.SCOPE_BASE
     elif config_scope == 'one':
         scope = ldap.SCOPE_ONELEVEL
+
+    ldap_log('LDAP_SEARCH "%s" "%s" "%s" "%r"' % (base, scope, filt, columns))
 
     # Convert all keys to lower case!
     result = []
@@ -212,6 +210,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
                                 'incomplete results. You should change the scope of operation '
                                 'within the ldap or adapt the limit settings of the LDAP server.'))
 
+    ldap_log('  RESULT length: %d' % len(result))
     return result
     #return ldap_connection.search_s(base, scope, filter, columns)
     #for dn, obj in ldap_connection.search_s(base, scope, filter, columns):
@@ -248,6 +247,9 @@ def ldap_user_id_attr():
     return config.ldap_userspec.get('user_id', ldap_attr('user_id'))
 
 def ldap_get_user(username, no_escape = False):
+    if username in g_ldap_user_cache:
+        return g_ldap_user_cache[username]
+
     # Check wether or not the user exists in the directory
     # It's only ok when exactly one entry is found.
     # Returns the DN and user_id as tuple in this case.
@@ -260,6 +262,9 @@ def ldap_get_user(username, no_escape = False):
     if result:
         dn = result[0][0]
         user_id = result[0][1][ldap_user_id_attr()][0]
+
+        g_ldap_user_cache[username] = (dn, user_id)
+
         if no_escape:
             return (dn, user_id)
         else:
@@ -290,20 +295,30 @@ def ldap_user_groups(username, attr = 'cn'):
     # so the username read from ldap might differ. Fix it here.
     user_dn, username = ldap_get_user(username)
 
+    if username in g_ldap_group_cache:
+        if attr == 'cn':
+            return g_ldap_group_cache[username][0]
+        else:
+            return g_ldap_group_cache[username][1]
+
     # Apply configured group ldap filter and only reply with groups
     # having the current user as member
-    filt = '(&%s(member=%s))' % (ldap_filter('groups'), ldap.filter.escape_filter_chars(user_dn))
+    filt = '(&%s(%s=%s))' % (ldap_filter('groups'), ldap_attr('member'),
+                             ldap.filter.escape_filter_chars(user_dn))
     # First get all groups
-    groups = []
+    groups_cn = []
+    groups_dn = []
     for dn, group in ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']),
                                  filt, ['cn']):
-        if attr == 'cn':
-            groups.append(group['cn'][0])
+        groups_cn.append(group['cn'][0])
+        groups_dn.append(dn)
 
-        elif attr == 'dn':
-            groups.append(dn)
+    g_ldap_group_cache.setdefault(username, (groups_cn, groups_dn))
 
-    return groups
+    if attr == 'cn':
+        return groups_cn
+    else:
+        return groups_dn
 
 #   .----------------------------------------------------------------------.
 #   |              _   _   _        _ _           _                        |
@@ -483,10 +498,10 @@ def ldap_convert_groups_to_contactgroups(params, user_id, ldap_user, user):
     return {'contactgroups': [ g for g in ldap_groups if g in cg_names]}
 
 ldap_attribute_plugins['groups_to_contactgroups'] = {
-    'title': _('Contactgroup Memberhip'),
-    'help':  _('Adds the user to contactgroups based on the group memberhips in LDAP. This '
+    'title': _('Contactgroup Membership'),
+    'help':  _('Adds the user to contactgroups based on the group memberships in LDAP. This '
                'plugin adds the user only to existing contactgroups while the name of the '
-               'contactgroup must match the common name of the LDAP group.'),
+               'contactgroup must match the common name (cn) of the LDAP group.'),
     'convert':           ldap_convert_groups_to_contactgroups,
     'lock_attributes':   ['contactgroups'],
     'no_param_txt': _('Add user to all contactgroups where the common name matches the group name.'),
@@ -497,10 +512,12 @@ def ldap_convert_groups_to_roles(params, user_id, ldap_user, user):
     # 1. Fetch DNs of all LDAP groups of the user
     ldap_groups = [ g.lower() for g in ldap_user_groups(user_id, 'dn') ]
 
-    # 2. Loop all roles mentioned in params (configured to be synchronized)
-    roles = []
+    # 2. Load default roles from default user profile
+    roles = config.default_user_profile['roles'][:]
+
+    # 3. Loop all roles mentioned in params (configured to be synchronized)
     for role_id, dn in params.items():
-        if dn.lower() in ldap_groups:
+        if dn.lower() in ldap_groups and role_id not in roles:
             roles.append(role_id)
 
     return {'roles': roles}
@@ -554,7 +571,7 @@ def ldap_login(username, password):
     # authentication which should be rebound again after trying this.
     try:
         ldap_bind(user_dn, password)
-        result = username
+        result = username.encode('utf-8')
     except:
         result = False
 
@@ -565,6 +582,12 @@ def ldap_sync(add_to_changelog, only_username):
     # Store time of the last sync. Don't store after sync since parallel
     # requests to e.g. the page hook would cause duplicate calculations
     file(g_ldap_sync_time_file, 'w').write('%s\n' % time.time())
+
+    # Flush ldap related before each sync to have a caching only for the
+    # current sync process
+    global g_ldap_user_cache, g_ldap_group_cache
+    g_ldap_user_cache = {}
+    g_ldap_group_cache = {}
 
     ldap_connect()
 

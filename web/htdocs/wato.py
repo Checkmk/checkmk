@@ -966,6 +966,7 @@ def mode_folder(phase):
 
         if True == check_folder_permissions(g_folder, "read", False):
             have_something = show_hosts(g_folder) or have_something
+
         if not have_something:
             menu_items = []
             if not g_folder.get(".lock_hosts"):
@@ -1231,6 +1232,8 @@ def show_hosts(folder):
     if len(folder[".hosts"]) == 0:
         return False
 
+    show_checkboxes = html.var('show_checkboxes', '0') == '1'
+
     html.write("<h3>" + _("Hosts") + "</h3>")
     hostnames = folder[".hosts"].keys()
     hostnames.sort()
@@ -1240,35 +1243,44 @@ def show_hosts(folder):
     # of the table of hosts and - if there are more than just a few - also
     # at the top of the table.
     search_shown = False
-    def bulk_actions(at_least_one_imported, top, withsearch, colspan, odd):
-        # bulk actions
+    def bulk_actions(at_least_one_imported, top, withsearch, colspan, odd, show_checkboxes):
         html.write('<tr class="data %s0">' % odd)
-        html.write('<td>')
-        html.jsbutton('_markall', _('X'), 'javascript:toggle_all_rows();')
-        html.write("</td><td class=bulksearch colspan=2>")
+        html.write("<td class=bulksearch colspan=3>")
         if withsearch:
             html.text_input(top and "search" or "search")
             html.button("_search", _("Search"))
             html.set_focus("search")
         html.write('</td>')
         html.write("<td class=bulkactions colspan=%d>" % (colspan-3))
-        html.write(' ' + _("Selected hosts:\n"))
+        if not show_checkboxes:
+            html.write('<div id="%s_on" title="%s" class="togglebutton %s up" '
+                       'onclick="location.href=\'%s\'"></div>' % (
+                        'checkbox', _('Show Checkboxes and bulk actions'), 'checkbox',
+                        html.makeuri([('show_checkboxes', '1'), ('selection', weblib.selection_id())])))
 
-        if not g_folder.get(".lock_hosts"):
-            if config.may("wato.manage_hosts"):
-                html.button("_bulk_delete", _("Delete"))
-            if config.may("wato.edit_hosts"):
-                html.button("_bulk_edit", _("Edit"))
-                html.button("_bulk_cleanup", _("Cleanup"))
-        if config.may("wato.services"):
-            html.button("_bulk_inventory", _("Inventory"))
-        if not g_folder.get(".lock_hosts"):
-            if config.may("wato.parentscan"):
-                html.button("_parentscan", _("Parentscan"))
-            if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
-                move_to_folder_combo("host", None, top)
-                if at_least_one_imported:
-                    html.button("_bulk_movetotarget", _("Move to Target Folders"))
+        else:
+            html.write('<div id="%s_on" title="%s" class="togglebutton %s down" '
+                       'onclick="location.href=\'%s\'"></div>' % (
+                        'checkbox', _('Hide Checkboxes and bulk actions'), 'checkbox',
+                        html.makeuri([('show_checkboxes', '0')])))
+
+            html.write(' ' + _("Selected hosts:\n"))
+
+            if not g_folder.get(".lock_hosts"):
+                if config.may("wato.manage_hosts"):
+                    html.button("_bulk_delete", _("Delete"))
+                if config.may("wato.edit_hosts"):
+                    html.button("_bulk_edit", _("Edit"))
+                    html.button("_bulk_cleanup", _("Cleanup"))
+            if config.may("wato.services"):
+                html.button("_bulk_inventory", _("Inventory"))
+            if not g_folder.get(".lock_hosts"):
+                if config.may("wato.parentscan"):
+                    html.button("_parentscan", _("Parentscan"))
+                if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+                    move_to_folder_combo("host", None, top)
+                    if at_least_one_imported:
+                        html.button("_bulk_movetotarget", _("Move to Target Folders"))
         html.write("</td></tr>\n")
 
     # Show table of hosts in this folder
@@ -1305,11 +1317,17 @@ def show_hosts(folder):
     # list shows more than 10 rows
     if more_than_ten_items and \
         (config.may("wato.edit_hosts") or config.may("wato.manage_hosts")):
-        bulk_actions(at_least_one_imported, True, True, colspan, "even")
+        bulk_actions(at_least_one_imported, True, True, colspan, "even", show_checkboxes)
         search_shown = True
 
     # Header line
-    html.write("<tr><th class=left></th><th>"+_("Actions")+"</th><th>"
+    html.write("<tr>")
+    if show_checkboxes:
+        html.write("<th class=left>")
+        html.write("<input type=button class=checkgroup name=_toggle_group"
+                       " onclick=\"toggle_all_rows();\" value=\"%s\" />" % _('X'))
+        html.write("</th>")
+    html.write("<th>"+_("Actions")+"</th><th>"
                + _("Hostname") + "</th><th>"
                + _("Auth") + "</th>")
     if not config.wato_hide_hosttags:
@@ -1347,15 +1365,16 @@ def show_hosts(folder):
                                  ("clone", hostname)])
         delete_url   = make_action_link([("mode", "folder"), ("_delete_host", hostname)])
 
-        html.write('<td class=checkbox>')
-        # Use CSS class "failed" in order to provide information about
-        # selective toggling inventory-failed hosts for Javascript
-        if host.get("inventory_failed"):
-            css_class = "class=failed"
-        else:
-            css_class = ""
-        html.write("<input type=checkbox %s name=\"_c_%s\" value=%d />" % (css_class, hostname, colspan))
-        html.write('</td>\n')
+        if show_checkboxes:
+            html.write('<td class=checkbox>')
+            # Use CSS class "failed" in order to provide information about
+            # selective toggling inventory-failed hosts for Javascript
+            if host.get("inventory_failed"):
+                css_class = "class=failed"
+            else:
+                css_class = ""
+            html.write("<input type=checkbox %s name=\"_c_%s\" value=%d />" % (css_class, hostname, colspan))
+            html.write('</td>\n')
 
         html.write("<td class=buttons>")
         html.icon_button(edit_url, _("Edit the properties of this host"), "edit")
@@ -1430,7 +1449,7 @@ def show_hosts(folder):
         html.write("</tr>\n")
 
     if config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
-        bulk_actions(at_least_one_imported, False, not search_shown, colspan, odd)
+        bulk_actions(at_least_one_imported, False, not search_shown, colspan, odd, show_checkboxes)
     html.write("</table>\n")
 
     html.hidden_fields() 
@@ -1442,12 +1461,13 @@ def show_hosts(folder):
     headinfo = "%d %s" % (row_count, row_count == 1 and _("host") or _("hosts"))
     html.javascript("update_headinfo('%s');" % headinfo)
 
-    html.javascript(
-        'g_page_id = "wato-folder-%s";\n'
-        'g_selection = "%s";\n'
-        'g_selected_rows = %r;\n'
-        'init_rowselect();' % ('/' + g_folder['.path'], weblib.selection_id(), selected)
-    )
+    if show_checkboxes:
+        html.javascript(
+            'g_page_id = "wato-folder-%s";\n'
+            'g_selection = "%s";\n'
+            'g_selected_rows = %r;\n'
+            'init_rowselect();' % ('/' + g_folder['.path'], weblib.selection_id(), selected)
+        )
     return True
 
 move_to_folder_combo_cache_id = None
@@ -6654,16 +6674,22 @@ def mode_edit_site(phase):
         if not new and "secret" in old_site:
             new_site["secret"] = old_site["secret"]
 
+    
         save_sites(sites)
+        
+        # Own site needs SYNCRESTART in any case
+        update_replication_status(our_site_id(), { "need_restart" : True })
+
         if new:
-            log_pending(SYNCRESTART, None, "edit-sites", _("Created new connection to site %s" % id))
+            update_replication_status(id, { "need_sync" : True, "need_restart" : True })
+            log_pending(AFFECTED, None, "edit-sites", _("Created new connection to site %s" % id))
         else:
-            log_pending(SYNCRESTART, None, "edit-sites", _("Modified site connection %s" % id))
+            log_pending(AFFECTED, None, "edit-sites", _("Modified site connection %s" % id))
             # Replication mode has switched on/off => handle replication state
             repstatus = load_replication_status()
-            if repl and id not in repstatus: # Repl switched on
+            if repl:              # Repl is on
                 update_replication_status(id, { "need_sync" : True, "need_restart" : True })
-            elif (not repl) and id in repstatus:
+            elif id in repstatus: # Repl switched off
                 update_replication_status(id, None) # Replication switched off
                 if is_distributed() and global_replication_state() == "clean":
                     log_commit_pending()
@@ -7282,6 +7308,10 @@ def ajax_replication():
         result = str(e)
     if result == True:
         answer = "OK:" + _("Success");
+        # Make sure that the pending changes are clean as soon as the
+        # last site has successfully been updated.
+        if is_distributed() and global_replication_state() == "clean":
+            log_commit_pending()
     else:
         answer = "<div class=error>%s: %s</div>" % (_("Error"), hilite_errors(result))
 
@@ -9747,16 +9777,9 @@ def mode_edit_ruleset(phase):
         elif action == "insert":
             if not html.check_transaction():
                 return None # browser reload
-            if g_folder == rule_folder:
-                rules[rulenr:rulenr] = [rules[rulenr]]
-                save_rulesets(rule_folder, rulesets)
-                mark_affected_sites_dirty(rule_folder)
-            else:
-                folder_rulesets = load_rulesets(g_folder)
-                folder_rules = folder_rulesets.setdefault(varname, [])
-                folder_rules.append(rules[rulenr])
-                save_rulesets(g_folder, folder_rulesets)
-                mark_affected_sites_dirty(g_folder)
+            rules[rulenr:rulenr] = [rules[rulenr]]
+            save_rulesets(rule_folder, rulesets)
+            mark_affected_sites_dirty(rule_folder)
 
             log_pending(AFFECTED, None, "edit-ruleset",
                   _("Inserted new rule in ruleset %s") % rulespec["title"])
@@ -9892,8 +9915,8 @@ def mode_edit_ruleset(phase):
                 ("item", mk_repr(item)),
                 ("rule_folder", folder[".path"])])
             html.icon_button(edit_url, _("Edit this rule"), "edit")
-            rule_button("insert", _("Insert a copy of this rule into the folder '%s'")
-                        % g_folder["title"], folder, rel_rulenr)
+            rule_button("insert", _("Insert a copy of this rule in current folder"),
+                        folder, rel_rulenr)
             rule_button("delete", _("Delete this rule"), folder, rel_rulenr)
 
 
@@ -10503,12 +10526,12 @@ def render_condition_editor(tag_specs):
             ("is",     _("is")),
             ("isnot",  _("isnot"))], deflt,
             onchange="valuespec_toggle_dropdownn(this, 'tag_sel_%s');" % id)
-        html.write("</td><td>")
+        html.write("</td><td class=\"tag_sel\">")
         if html.form_submitted():
-            div_is_open = html.var(tagtype + "_" + id) != "ignore"
+            div_is_open = html.var(tagtype + "_" + id, "ignore") != "ignore"
         else:
             div_is_open = deflt != "ignore"
-        html.write('<div id="tag_sel_%s" style="white-space: nowrap; %s">' % (
+        html.write('<div id="tag_sel_%s" style="%s">' % (
             id, not div_is_open and "display: none;" or ""))
 
     # Show main tags

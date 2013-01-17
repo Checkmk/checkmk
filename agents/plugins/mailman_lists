@@ -1,0 +1,30 @@
+#!/usr/bin/python
+# encoding: utf-8
+# This Check_MK-Agent plugin gathers information about mailinglists hosted
+# by the local mailman instance.
+
+# Needed if you have located your mailman python modules not in default
+# python module paths
+import sys
+sys.path.append("/usr/local/mailman")
+
+# Set to True to filter out all "hidden" mailinglists
+only_advertised = True
+
+from Mailman import Utils, MailList
+
+# 1. list memberships
+print '<<<mailman_lists>>>'
+total_members = set([])
+for name in sorted(Utils.list_names()):
+    mlist = MailList.MailList(name, lock=0)
+    if only_advertised and not mlist.advertised:
+        continue
+
+    rmembers = mlist.getRegularMemberKeys()
+    dmembers = mlist.getDigestMemberKeys()
+    members = rmembers + dmembers
+    total_members.update(members)
+
+    print '%s %d' % (name, len(members))
+print 'TOTAL %d' % len(total_members)

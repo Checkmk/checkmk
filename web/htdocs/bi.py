@@ -736,7 +736,11 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
             new_elements = new_new_elements
 
         elif type(node[-1]) != list:
-            if node[0] in [ config.FOREACH_HOST, config.FOREACH_CHILD, config.FOREACH_PARENT ]:
+            if node[0] in [
+                    config.FOREACH_HOST,
+                    config.FOREACH_CHILD,
+                    config.FOREACH_PARENT,
+                    config.FOREACH_SERVICE ]:
                 # Handle case that leaf elements also need to be iterable via FOREACH_HOST
                 # 1: config.FOREACH_HOST
                 # 2: (['waage'], '(.*)')
@@ -1096,10 +1100,23 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
 
     html.live.set_only_sites(only_sites)
     html.live.set_prepend_site(True)
-    data = html.live.query(
-            "GET hosts\n" +
-            "Columns: " + (" ".join(columns)) + "\n" +
-            filter_header)
+
+    query = "GET hosts\n"
+    query += "Columns: " + (" ".join(columns)) + "\n"
+    query += filter_header
+
+
+    if config.debug_livestatus_queries \
+            and html.output_format == "html" and 'W' in html.display_options:
+        html.write('<div class="livestatus message" onmouseover="this.style.display=\'none\';">'
+                           '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
+
+
+    html.live.set_only_sites(only_sites)
+    html.live.set_prepend_site(True)
+
+    data = html.live.query(query)
+    
     html.live.set_prepend_site(False)
     html.live.set_only_sites(None)
 

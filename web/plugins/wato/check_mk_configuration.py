@@ -493,6 +493,20 @@ register_configvar(group,
     domain = "multisite",
 )
 
+register_configvar(group,
+    "ldap_debug_log",
+    Optional(
+        Filename(
+            label = _("Absolute path to log file"),
+            default = defaults.var_dir + '/web/ldap-debug.log',
+        ),
+          title = _("LDAP connection diagnostics"),
+          label = _("Activate logging of LDAP transactions into a logfile"),
+          help = _("If this option is used and set to a filename, Check_MK will create a logfile "
+                   "containing details about connecting to LDAP and the single transactions.")),
+    domain = "multisite")
+
+
 def list_roles():
     roles = userdb.load_roles()
     return [ (i, r["alias"]) for i, r in roles.items() ]

@@ -1,9 +1,9 @@
 Title: WATO rule for CPU load does not allow float
 Component: checks
-State: open
+Class: nastiness
+State: done
 Date: 2012-12-05 16:03:54
 Targetversion: 1.2.2
-Class: nastiness
 
 The WATO rule for the CPU load does not allow to specify float values. But
 since the level is multiplied by the number of cores this would be
@@ -12,3 +12,6 @@ ints? If not, make it configurable such that it does or make an automatic
 conversion, so WATO is happy with existing int-based rules.
 
 Also fix the labelling: The level is multiplied by the number of Cores!
+
+2013-01-17 09:50:12: changed state open -> done
+Has just been implemented.

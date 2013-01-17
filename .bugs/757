@@ -2,7 +2,7 @@ Title: Compilation of livecheck with dietlibc broken on SLES11SP1/2
 Component: livecheck
 State: open
 Date: 2012-05-25 10:28:46
-Targetversion: 1.2.2
+Targetversion: future
 Class: nastiness
 
 Generally we should enable compiling livecheck with dietlibc in

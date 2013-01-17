@@ -1,0 +1,16 @@
+title: Monitor mailinglist statistics of Mailman
+agents: linux
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+  This check gathers statistics of Mailinglists hosted with Mailman.
+  Currently the check monitors only the number of subscribed members
+  but might be extended by other statistic information.
+
+  To make this check work, you have to install the mailman_lists
+  agent plugin on your the host running mailman.
+
+inventory:
+ Each mailinglist results in one service. The service is named by
+ the internal name of the mailinglist

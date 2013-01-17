@@ -578,6 +578,15 @@ table.validationerror img {
     width: 90px;
 }
 
+.wato form.rule_editor td.tag_sel {
+    vertical-align: middle;
+    display: table-cell;
+}
+
+.wato form.rule_editor td.tag_sel > div {
+    white-space: nowrap;
+}
+
 .wato table.itemlist td {
     margin: 0;
     padding: 0;

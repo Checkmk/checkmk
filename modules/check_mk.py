@@ -1931,17 +1931,22 @@ define service {
 """ % (template, hostname, description, simulate_command(command),
        command_line and 1 or 0, extraconf))
 
+    # Levels for host check
+    if is_cluster(hostname):
+        ping_command = 'check-mk-ping-cluster'
+    else:
+        ping_command = 'check-mk-ping'
 
     # No check_mk service, no legacy service -> create PING service
     if not have_at_least_one_service and not legchecks and not actchecks:
         outfile.write("""
 define service {
   use\t\t\t\t%s
-  check_command\t\t\tcheck-mk-ping!%s
+  check_command\t\t\t%s!%s
 %s  host_name\t\t\t%s
 }
 
-""" % (pingonly_template, check_icmp_arguments(hostname), extra_service_conf_of(hostname, "PING"), hostname))
+""" % (pingonly_template, ping_command, check_icmp_arguments(hostname), extra_service_conf_of(hostname, "PING"), hostname))
 
 def simulate_command(command):
     if simulation_mode:

@@ -79,8 +79,10 @@ def check_megaraid_bbu(item, _no_params, info):
     broken = []
     state  = 0
     # get current charge level
-    charge = (", Charge is %s" % controller['Relative State of Charge'])
-
+    if 'Relative State of Charge' not in controller:
+        charge = ", No charge information were reported for this controller"
+    else:
+        charge = ", Charge is %s" % controller['Relative State of Charge']
 
     # verify defined important parameters to current level
     for varname, (refvalue, refstate) in megaraid_bbu_refvalues.items():

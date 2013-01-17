@@ -2,6 +2,7 @@
     Core:
     * Improved handling of CTRL+C (SIGINT) to terminate long runnining tasks 
       (e.g.  inventory of SNMP hosts)
+    * FIX: PING services on clusters are treated like the host check of clusters
 
     Checks & Agents:
     * Linux Agent, diskstat: Now supporting /dev/emcpower* devices (Thanks to Claas Rockmann-Buchterkirche)
@@ -12,6 +13,13 @@
     * Logwatch: unknown eventlog level ('u') from windows agent treated as warning
     * FIX: logwatch_ec: Added state undefined as priority
     * Add: New Check for Raritan EMX Devices
+    * Add: mailman_lists - New check to gather statistics of mailman mailinglists
+    * FIX: megaraid_bbu - Handle missing charge information (ignoring them)
+    * FIX: myssql_tablespaces - fix PNP graph (thanks to Christian Zock)
+    * kernel.util: add "Average" information to PNP graph
+    * Windows Agent: Fix startup crash on adding a logfiles pattern, but no logfile specified
+    * Windows Agent: check_mk.example.ini: commented logfiles section
+                     
 
     Multisite:
     * FIX: Fixed rendering of dashboard globes in opera
@@ -21,10 +29,28 @@
     * Storing row selections in user files, cleaned up row selection 
       handling to single files. Cleaned up GET/POST mixups in confirm dialogs
     * Add: New user_options to limit seen nagios objects even the role is set to see all
+    * Fix: On site configaration changes, only relevant sites are marked as dirty
+    * Fix: Distributed setup: Correct cleanup of pending changes logfile after "Activate changes"
     * FIX: LDAP: Fixed problem with special chars in LDAP queries when having
     contactgroup sync plugin enabled
+    * FIX: LDAP: OpenLDAP - Changed default filter for users
+    * FIX: LDAP: OpenLDAP - Using uniqueMember instead of member when searching for groups of a user
+    * FIX: LDAP: Fixed encoding problem of ldap retrieved usernames
     * LDAP: Role sync plugin validates the given group DNs with the group base dn now
+    * LDAP: Using roles defined in default user profile in role sync plugin processing
     * LDAP: Improved error handling in case of misconfigurations
+    * LDAP: Reduced number of ldap querys during a single page request / sync process
+    * LDAP: Implemnted some kind of debug logging for LDAP communication
+
+    WATO:
+    * CPU load ruleset does now accept float values
+    * Added valuespec for cisco_mem check to configure thresholds via WATO
+    * FIX: Fixed displaying of tag selections when creating a rule in the ruleeditor
+    * FIX: Rulesets are always cloned in the same folder
+
+    BI:
+    * Added FOREACH_SERVICE capability to leaf nodes
+    * Add: Bi views now support debug of livestatus queries
 
 1.2.1i4:
     Core:

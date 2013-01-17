@@ -12,6 +12,7 @@
     * Logwatch: unknown eventlog level ('u') from windows agent treated as warning
     * FIX: logwatch_ec: Added state undefined as priority
     * Add: mailman_lists - New check to gather statistics of mailman mailinglists
+    * FIX: megaraid_bbu - Handle missing charge information (ignoring them)
 
     Multisite:
     * FIX: Fixed rendering of dashboard globes in opera

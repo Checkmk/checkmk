@@ -32,6 +32,7 @@
 
     WATO:
     * CPU load ruleset does now accept float values
+    * Added valuespec for cisco_mem check to configure thresholds via WATO
     * FIX: Fixed displaying of tag selections when creating a rule in the ruleeditor
 
 1.2.1i4:

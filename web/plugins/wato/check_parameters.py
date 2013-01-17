@@ -1128,6 +1128,34 @@ checkgroups.append((
     "dict",
     ))
 
+checkgroups.append((
+    subgroup_os,
+    "cisco_mem",
+    _("Cisco Memory Usage"),
+    Alternative(
+        elements = [
+            Tuple(
+                title = _("Specify levels in percentage of total RAM"),
+                elements = [
+                  Percentage(title = _("Warning at a usage of"), label = _("% of RAM"), max_value = None),
+                  Percentage(title = _("Critical at a usage of"), label = _("% of RAM"), max_value = None)
+                ]
+            ),
+            Tuple(
+                title = _("Specify levels in absolute usage values"),
+                elements = [
+                  Integer(title = _("Warning at"), unit = _("MB")),
+                  Integer(title = _("Critical at"), unit = _("MB"))
+                ]
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Memory Pool Name"),
+        allow_empty = False
+    ),
+    None
+))
 
 checkgroups.append((
     subgroup_os,
@@ -1140,7 +1168,7 @@ checkgroups.append((
                "A usage of 200% means that the total size of all processes is twice as large as "
                "the main memory, so <b>at least</b> the half of it is currently swapped out. "
                "Besides Linux and UNIX systems, these parameters are also used for memory checks "
-               "of other devices, like Cisco and Fortigate devices."),
+               "of other devices, like Fortigate devices."),
         elements = [
             Tuple(
                 title = _("Specify levels in percentage of total RAM"),

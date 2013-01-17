@@ -28,12 +28,13 @@ $title = str_replace("_", " ", $servicedesc);
 $opt[1] = "--vertical-label 'Bytes' -l0 --title \"$title\" ";
 #
 $def[1] =  "DEF:size=$RRDFILE[1]:$DS[1]:MAX " ;
-$def[1] .= "DEF:unallocated=$RRDFILE[2]:$DS[1]:MAX " ;
-$def[1] .= "DEF:data=$RRDFILE[4]:$DS[1]:MAX " ;
-$def[1] .= "DEF:indexes=$RRDFILE[5]:$DS[1]:MAX " ;
-$def[1] .= "DEF:unused=$RRDFILE[6]:$DS[1]:MAX " ;
+$def[1] .= "DEF:unallocated=$RRDFILE[2]:$DS[2]:MAX " ;
+$def[1] .= "DEF:data=$RRDFILE[4]:$DS[4]:MAX " ;
+$def[1] .= "DEF:indexes=$RRDFILE[5]:$DS[5]:MAX " ;
+$def[1] .= "DEF:unused=$RRDFILE[6]:$DS[6]:MAX " ;
 
 $def[1] .= "AREA:size#f7f7f7:\"Size    \" " ;
+$def[1] .= "LINE:size#000000 " ;
 $def[1] .= "GPRINT:size:LAST:\"%4.2lf%sB\" ";
 
 $def[1] .= "AREA:data#80c0ff:\"Data       \" " ;

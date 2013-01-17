@@ -2,6 +2,7 @@
     Core:
     * Improved handling of CTRL+C (SIGINT) to terminate long runnining tasks 
       (e.g.  inventory of SNMP hosts)
+    * FIX: PING services on clusters are treated like the host check of clusters
 
     Checks & Agents:
     * Linux Agent, diskstat: Now supporting /dev/emcpower* devices (Thanks to Claas Rockmann-Buchterkirche)

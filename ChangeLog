@@ -40,6 +40,9 @@
     * FIX: Fixed displaying of tag selections when creating a rule in the ruleeditor
     * FIX: Rulesets are always cloned in the same folder
 
+    BI:
+    * Added FOREACH_SERVICE capability to leaf nodes
+
 1.2.1i4:
     Core:
     * Better exception handling when executing "Check_MK"-Check. Printing python

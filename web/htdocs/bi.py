@@ -1100,10 +1100,23 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
 
     html.live.set_only_sites(only_sites)
     html.live.set_prepend_site(True)
-    data = html.live.query(
-            "GET hosts\n" +
-            "Columns: " + (" ".join(columns)) + "\n" +
-            filter_header)
+
+    query = "GET hosts\n"
+    query += "Columns: " + (" ".join(columns)) + "\n"
+    query += filter_header
+
+
+    if config.debug_livestatus_queries \
+            and html.output_format == "html" and 'W' in html.display_options:
+        html.write('<div class="livestatus message" onmouseover="this.style.display=\'none\';">'
+                           '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
+
+
+    html.live.set_only_sites(only_sites)
+    html.live.set_prepend_site(True)
+
+    data = html.live.query(query)
+    
     html.live.set_prepend_site(False)
     html.live.set_only_sites(None)
 

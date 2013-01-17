@@ -15,6 +15,7 @@
     * Add: mailman_lists - New check to gather statistics of mailman mailinglists
     * FIX: megaraid_bbu - Handle missing charge information (ignoring them)
     * FIX: myssql_tablespaces - fix PNP graph (thanks to Christian Zock)
+    * kernel.util: add "Average" information to PNP graph
 
     Multisite:
     * FIX: Fixed rendering of dashboard globes in opera
@@ -24,6 +25,8 @@
     * Storing row selections in user files, cleaned up row selection 
       handling to single files. Cleaned up GET/POST mixups in confirm dialogs
     * Add: New user_options to limit seen nagios objects even the role is set to see all
+    * Fix: On site configaration changes, only relevant sites are marked as dirty
+    * Fix: Distributed setup: Correct cleanup of pending changes logfile after "Activate changes"
     * FIX: LDAP: Fixed problem with special chars in LDAP queries when having
     contactgroup sync plugin enabled
     * FIX: LDAP: OpenLDAP - Changed default filter for users
@@ -43,6 +46,7 @@
 
     BI:
     * Added FOREACH_SERVICE capability to leaf nodes
+    * Add: Bi views now support debug of livestatus queries
 
 1.2.1i4:
     Core:

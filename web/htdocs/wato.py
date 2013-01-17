@@ -10523,12 +10523,12 @@ def render_condition_editor(tag_specs):
             ("is",     _("is")),
             ("isnot",  _("isnot"))], deflt,
             onchange="valuespec_toggle_dropdownn(this, 'tag_sel_%s');" % id)
-        html.write("</td><td>")
+        html.write("</td><td class=\"tag_sel\">")
         if html.form_submitted():
-            div_is_open = html.var(tagtype + "_" + id) != "ignore"
+            div_is_open = html.var(tagtype + "_" + id, "ignore") != "ignore"
         else:
             div_is_open = deflt != "ignore"
-        html.write('<div id="tag_sel_%s" style="white-space: nowrap; %s">' % (
+        html.write('<div id="tag_sel_%s" style="%s">' % (
             id, not div_is_open and "display: none;" or ""))
 
     # Show main tags

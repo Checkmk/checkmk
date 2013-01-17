@@ -35,6 +35,7 @@
     * CPU load ruleset does now accept float values
     * Added valuespec for cisco_mem check to configure thresholds via WATO
     * FIX: Fixed displaying of tag selections when creating a rule in the ruleeditor
+    * FIX: Rulesets are always cloned in the same folder
 
 1.2.1i4:
     Core:

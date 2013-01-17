@@ -9767,16 +9767,9 @@ def mode_edit_ruleset(phase):
         elif action == "insert":
             if not html.check_transaction():
                 return None # browser reload
-            if g_folder == rule_folder:
-                rules[rulenr:rulenr] = [rules[rulenr]]
-                save_rulesets(rule_folder, rulesets)
-                mark_affected_sites_dirty(rule_folder)
-            else:
-                folder_rulesets = load_rulesets(g_folder)
-                folder_rules = folder_rulesets.setdefault(varname, [])
-                folder_rules.append(rules[rulenr])
-                save_rulesets(g_folder, folder_rulesets)
-                mark_affected_sites_dirty(g_folder)
+            rules[rulenr:rulenr] = [rules[rulenr]]
+            save_rulesets(rule_folder, rulesets)
+            mark_affected_sites_dirty(rule_folder)
 
             log_pending(AFFECTED, None, "edit-ruleset",
                   _("Inserted new rule in ruleset %s") % rulespec["title"])
@@ -9912,8 +9905,8 @@ def mode_edit_ruleset(phase):
                 ("item", mk_repr(item)),
                 ("rule_folder", folder[".path"])])
             html.icon_button(edit_url, _("Edit this rule"), "edit")
-            rule_button("insert", _("Insert a copy of this rule into the folder '%s'")
-                        % g_folder["title"], folder, rel_rulenr)
+            rule_button("insert", _("Insert a copy of this rule in current folder"),
+                        folder, rel_rulenr)
             rule_button("delete", _("Delete this rule"), folder, rel_rulenr)
 
 

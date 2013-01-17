@@ -6653,16 +6653,22 @@ def mode_edit_site(phase):
         if not new and "secret" in old_site:
             new_site["secret"] = old_site["secret"]
 
+    
         save_sites(sites)
+        
+        # Own site needs SYNCRESTART in any case
+        update_replication_status(our_site_id(), { "need_restart" : True })
+
         if new:
-            log_pending(SYNCRESTART, None, "edit-sites", _("Created new connection to site %s" % id))
+            update_replication_status(id, { "need_sync" : True, "need_restart" : True })
+            log_pending(AFFECTED, None, "edit-sites", _("Created new connection to site %s" % id))
         else:
-            log_pending(SYNCRESTART, None, "edit-sites", _("Modified site connection %s" % id))
+            log_pending(AFFECTED, None, "edit-sites", _("Modified site connection %s" % id))
             # Replication mode has switched on/off => handle replication state
             repstatus = load_replication_status()
-            if repl and id not in repstatus: # Repl switched on
+            if repl:              # Repl is on
                 update_replication_status(id, { "need_sync" : True, "need_restart" : True })
-            elif (not repl) and id in repstatus:
+            elif id in repstatus: # Repl switched off
                 update_replication_status(id, None) # Replication switched off
                 if is_distributed() and global_replication_state() == "clean":
                     log_commit_pending()
@@ -7281,6 +7287,10 @@ def ajax_replication():
         result = str(e)
     if result == True:
         answer = "OK:" + _("Success");
+        # Make sure that the pending changes are clean as soon as the
+        # last site has successfully been updated.
+        if is_distributed() and global_replication_state() == "clean":
+            log_commit_pending()
     else:
         answer = "<div class=error>%s: %s</div>" % (_("Error"), hilite_errors(result))
 

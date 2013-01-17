@@ -472,6 +472,9 @@ def hook_login(username, password):
         # False       -> failed
         if result not in [ False, None ]:
             username = result
+            if type(username) != str:
+                raise MKInternalError(_("The username returned by the %s "
+                    "connector is not of type string (%r).") % (connector['id'], username))
             # Check wether or not the user exists (and maybe create it)
             create_non_existing_user(connector['id'], username)
 

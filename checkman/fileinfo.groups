@@ -1,5 +1,5 @@
 title: Check age, size and count of a group of files
-agents: windows
+agents: windows, linux
 author: Bastian Kuhn <bk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
@@ -23,7 +23,7 @@ item:
 examples:
 
  fileinfo_groups = [
-     ([("Auth_group",r"/var/log/auth.*")], ALL_HOSTS),
+     ([("Auth_group",r"/var/log/auth*")], ALL_HOSTS),
      ([("Message_group", r"/var/log/messages*")], ['test2'], ALL_HOSTS),
  ] 
 

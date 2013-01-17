@@ -1450,6 +1450,12 @@ void print_logwatch_config()
 // Add a new state pattern to the current pattern container
 void add_condition_pattern(char state, char *value)
 {
+    if (g_current_globline_container == NULL) {
+        fprintf(stderr, "You need to set a textfile, before specifying a condition pattern\n");
+        return;
+    }
+
+
     if (g_current_globline_container 
         && g_current_globline_container->patterns->num_patterns + 1 >= MAX_LOGWATCH_CONDITIONS)
     {

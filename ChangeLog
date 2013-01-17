@@ -15,6 +15,7 @@
     * Add: mailman_lists - New check to gather statistics of mailman mailinglists
     * FIX: megaraid_bbu - Handle missing charge information (ignoring them)
     * FIX: myssql_tablespaces - fix PNP graph (thanks to Christian Zock)
+    * kernel.util: add "Average" information to PNP graph
 
     Multisite:
     * FIX: Fixed rendering of dashboard globes in opera

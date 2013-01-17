@@ -11,6 +11,7 @@
     * Add: fileinfo is now supported by the solaris agent. Thanks to Daniel Roettgermann
     * Logwatch: unknown eventlog level ('u') from windows agent treated as warning
     * FIX: logwatch_ec: Added state undefined as priority
+    * Add: mailman_lists - New check to gather statistics of mailman mailinglists
 
     Multisite:
     * FIX: Fixed rendering of dashboard globes in opera

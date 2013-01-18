@@ -26,7 +26,7 @@ bin_PROGRAMS = unixcat livecheck
 unixcat_SOURCES = unixcat.c
 unixcat_LDADD = -lpthread
 
-livecheck_SOURCES = livecheck.c strutil.cc check_icmp.c
+livecheck_SOURCES = livecheck.c strutil.c check_icmp.c
 
 pkglib_LIBRARIES = livestatus.so 
 
@@ -52,7 +52,7 @@ livestatus_so_SOURCES = \
 	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc pnp4nagios.cc \
 	ContactgroupsColumn.cc opids.cc auth.cc livechecking.c
 
-livecheck$(EXEEXT): livecheck.c strutil.cc check_icmp.c 
+livecheck$(EXEEXT): livecheck.c strutil.c check_icmp.c 
 if HAVE_DIET
 	diet -v $(CC) -Wno-deprecated-declarations $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
 else

@@ -57,6 +57,10 @@ help:
 dist: mk-livestatus mk-eventd
 	@echo "--------------------------------------------------------------------------"
 	@echo -n "Checking permissions... with find -not -perm -444..." && [ -z "$$(find -not -perm -444)" ] && echo OK
+	if [ -z "$(SKIP_SANITY_CHECKS)" ]; then \
+	    echo -n "Checking precompiled binaries..." && file agents/waitmax | grep 32-bit >/dev/null && echo OK ; \
+	fi
+	
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)

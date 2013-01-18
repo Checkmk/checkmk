@@ -3,6 +3,10 @@
     * Improved handling of CTRL+C (SIGINT) to terminate long runnining tasks 
       (e.g.  inventory of SNMP hosts)
     * FIX: PING services on clusters are treated like the host check of clusters
+    * cmk --notify: new environment variable NOTIFY_WHAT which has HOST or SERVICE as value
+    * cmk --notify: removing service related envvars in case of host notifications
+    * cmk --notify: added test code to help developing nitofication plugins.
+      Can be called with "cmk --notify fake-service debug" for example
 
     Checks & Agents:
     * Linux Agent, diskstat: Now supporting /dev/emcpower* devices (Thanks to Claas Rockmann-Buchterkirche)
@@ -12,10 +16,14 @@
     * Add: fileinfo is now supported by the solaris agent. Thanks to Daniel Roettgermann
     * Logwatch: unknown eventlog level ('u') from windows agent treated as warning
     * FIX: logwatch_ec: Added state undefined as priority
+    * Add: New Check for Raritan EMX Devices
     * Add: mailman_lists - New check to gather statistics of mailman mailinglists
     * FIX: megaraid_bbu - Handle missing charge information (ignoring them)
     * FIX: myssql_tablespaces - fix PNP graph (thanks to Christian Zock)
     * kernel.util: add "Average" information to PNP graph
+    * Windows Agent: Fix startup crash on adding a logfiles pattern, but no logfile specified
+    * Windows Agent: check_mk.example.ini: commented logfiles section
+                     
 
     Multisite:
     * FIX: Fixed rendering of dashboard globes in opera
@@ -37,6 +45,7 @@
     * LDAP: Improved error handling in case of misconfigurations
     * LDAP: Reduced number of ldap querys during a single page request / sync process
     * LDAP: Implemnted some kind of debug logging for LDAP communication
+    * FIX: Re-added an empty file as auth.py (wato plugin) to prevent problems during update 
 
     WATO:
     * CPU load ruleset does now accept float values

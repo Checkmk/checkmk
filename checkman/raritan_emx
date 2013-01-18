@@ -1,0 +1,21 @@
+title: Temperature, FAN  and Door States for Raritan EMX devices
+agents: snmp
+author: Bastian Kuhn <bk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ Shows Sensor information for Temperature, FAN and Door States
+ for each Rack connected to a Raritan EMX devices. 
+ No configuration is needed, the devices sends the state by himself
+
+
+item:
+ Rack ID, Sensor Type, Sensor Name 
+
+perfdata:
+ Tempreature
+ FAN Speed
+
+inventory:
+ One service per sensor will be created 
+

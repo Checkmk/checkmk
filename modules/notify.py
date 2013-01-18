@@ -67,6 +67,87 @@ Perfdata: $SERVICEPERFDATA$
 $LONGSERVICEOUTPUT$
 """
 
+test_vars = {
+  'host': {
+    'NOTIFY_CONTACTEMAIL': 'lm@mathias-kettner.de',
+    'NOTIFY_CONTACTNAME': 'lm',
+    'NOTIFY_CONTACTPAGER': '',
+    'NOTIFY_DATE': '2013-01-17',
+    'NOTIFY_HOSTADDRESS': '127.0.0.1',
+    'NOTIFY_HOSTALIAS': 'localhost',
+    'NOTIFY_HOSTCHECKCOMMAND': 'check-mk-ping',
+    'NOTIFY_HOSTDOWNTIME': '0',
+    'NOTIFY_HOSTNAME': 'localhost',
+    'NOTIFY_HOSTNOTIFICATIONNUMBER': '1',
+    'NOTIFY_HOSTOUTPUT': 'Manually set to Down by lm',
+    'NOTIFY_HOSTPERFDATA': '',
+    'NOTIFY_HOSTPROBLEMID': '136',
+    'NOTIFY_HOSTSTATE': 'DOWN',
+    'NOTIFY_HOSTTAGS': 'cmk-agent prod lan tcp wato /wato/',
+    'NOTIFY_LASTHOSTSTATE': 'UP',
+    'NOTIFY_LASTSERVICESTATE': '$LASTSERVICESTATE$',
+    'NOTIFY_LOGDIR': '/omd/sites/event/var/check_mk/notify',
+    'NOTIFY_LONGDATETIME': 'Thu Jan 17 15:28:13 CET 2013',
+    'NOTIFY_LONGHOSTOUTPUT': '',
+    'NOTIFY_LONGSERVICEOUTPUT': '$LONGSERVICEOUTPUT$',
+    'NOTIFY_NOTIFICATIONTYPE': 'PROBLEM',
+    'NOTIFY_PARAMETERS': '',
+    'NOTIFY_SERVICECHECKCOMMAND': '$SERVICECHECKCOMMAND$',
+    'NOTIFY_SERVICEDESC': '$SERVICEDESC$',
+    'NOTIFY_SERVICENOTIFICATIONNUMBER': '$SERVICENOTIFICATIONNUMBER$',
+    'NOTIFY_SERVICEOUTPUT': '$SERVICEOUTPUT$',
+    'NOTIFY_SERVICEPERFDATA': '$SERVICEPERFDATA$',
+    'NOTIFY_SERVICEPROBLEMID': '$SERVICEPROBLEMID$',
+    'NOTIFY_SERVICESTATE': '$SERVICESTATE$',
+    'NOTIFY_SHORTDATETIME': '2013-01-17 15:28:13',
+    'NOTIFY_WHAT': 'HOST',
+    'NOTIFY_OMD_ROOT': '/omd/sites/event',
+    'NOTIFY_OMD_SITE': 'event',
+  },
+  'service': {
+    'NOTIFY_CONTACTEMAIL': 'lm@mathias-kettner.de',
+    'NOTIFY_CONTACTNAME': 'lm',
+    'NOTIFY_CONTACTPAGER': '',
+    'NOTIFY_DATE': '2013-01-17',
+    'NOTIFY_HOSTADDRESS': '127.0.0.1',
+    'NOTIFY_HOSTALIAS': 'localhost',
+    'NOTIFY_HOSTCHECKCOMMAND': 'check-mk-ping',
+    'NOTIFY_HOSTDOWNTIME': '0',
+    'NOTIFY_HOSTNAME': 'localhost',
+    'NOTIFY_HOSTNOTIFICATIONNUMBER': '0',
+    'NOTIFY_HOSTOUTPUT': 'OK - 127.0.0.1: rta 0.028ms, lost 0%',
+    'NOTIFY_HOSTPERFDATA': 'rta=0.028ms;200.000;500.000;0; pl=0%;40;80;; rtmax=0.052ms;;;; rtmin=0.021ms;;;;',
+    'NOTIFY_HOSTPROBLEMID': '0',
+    'NOTIFY_HOSTSTATE': 'UP',
+    'NOTIFY_HOSTTAGS': 'cmk-agent prod lan tcp wato /wato/',
+    'NOTIFY_LASTHOSTSTATE': 'UP',
+    'NOTIFY_LASTSERVICESTATE': 'OK',
+    'NOTIFY_LOGDIR': '/omd/sites/event/var/check_mk/notify',
+    'NOTIFY_LONGDATETIME': 'Thu Jan 17 15:31:46 CET 2013',
+    'NOTIFY_LONGHOSTOUTPUT': '',
+    'NOTIFY_LONGSERVICEOUTPUT': '',
+    'NOTIFY_NOTIFICATIONTYPE': 'PROBLEM',
+    'NOTIFY_PARAMETERS': '',
+    'NOTIFY_SERVICECHECKCOMMAND': 'check_mk-cpu.loads',
+    'NOTIFY_SERVICEDESC': 'CPU load',
+    'NOTIFY_SERVICENOTIFICATIONNUMBER': '1',
+    'NOTIFY_SERVICEOUTPUT': 'CRIT - 15min load 1.29 at 2 CPUs (critical at 0.00)',
+    'NOTIFY_SERVICEPERFDATA': 'load1=1.35;0;0;0;2 load5=1.33;0;0;0;2 load15=1.29;0;0;0;2',
+    'NOTIFY_SERVICEPROBLEMID': '137',
+    'NOTIFY_SERVICESTATE': 'CRITICAL',
+    'NOTIFY_SHORTDATETIME': '2013-01-17 15:31:46',
+    'NOTIFY_WHAT': 'SERVICE',
+    'NOTIFY_OMD_ROOT': '/omd/sites/event',
+    'NOTIFY_OMD_SITE': 'event',
+  },
+}
+
+g_interactive = False
+
+def set_fake_env(ty, context):
+    os.environ.update(test_vars[ty])
+    context.update(dict([(k[7:], v) for (k, v) in test_vars[ty].items()]))
+
 def substitute_context(template, context):
     # First replace all known variables
     for varname, value in context.items():
@@ -77,15 +158,41 @@ def substitute_context(template, context):
     return template
 
 def notify_log(message):
-    if notification_logging >= 1:
+    if g_interactive or notification_logging >= 1:
         formatted = (u"[%d] " % int(time.time())) + message + "\n"
-        file(notification_log, "a").write(formatted.encode("utf-8"))
+        if g_interactive:
+            sys.stdout.write(formatted.encode("utf-8"))
+        else:
+            file(notification_log, "a").write(formatted.encode("utf-8"))
+
+def notify_usage():
+    sys.stderr.write("""Usage: check_mk --notify
+       check_mk --notify fake-service <plugin>
+       check_mk --notify fake-host <plugin>
+
+Normally the notify module is called without arguments to send real
+notification. But there are situations where this module is called with
+COMMANDS to e.g. support development of notification plugins.
+
+Available commands:
+    fake-service <plugin> ... Calls the given notification plugin with fake
+                              notification data of a service notification.
+    fake-host <plugin>    ... Calls the given notification plugin with fake
+                              notification data of a host notification.
+""")
 
 def do_notify(args):
     try:
-        if len(args) > 0:
-            sys.stderr.write("check_mk --notify does not take any arguments.\n")
-            sys.exit(1)
+        mode = 'notify'
+        if args:
+            if len(args) != 2 or args[0] not in ['fake-service', 'fake-host']:
+                sys.stderr.write("ERROR: Invalid call to check_mk --notify.\n\n")
+                notify_usage()
+                sys.exit(1)
+
+            mode, plugin = args
+            global g_interactive
+            g_interactive = True
 
         if not os.path.exists(notification_logdir):
             os.makedirs(notification_logdir)
@@ -113,13 +220,24 @@ def do_notify(args):
             in os.environ.items()
             if var.startswith("NOTIFY_")
                 and not re.match('^\$[A-Z]+\$$', value)])
-    
+
         # Add a few further helper variables
         import socket
         context["MONITORING_HOST"] = socket.gethostname()
         if omd_root:
             context["OMD_ROOT"] = omd_root
             context["OMD_SITE"] = os.getenv("OMD_SITE", "")
+
+        context["WHAT"] = "SERVICEDESC" in context and "SERVICE" or "HOST"
+
+        # Handle interactive calls
+        if mode == 'fake-service':
+            set_fake_env('service', context)
+            sys.exit(call_notification_script(plugin, [], context))
+
+        elif mode == 'fake-host':
+            set_fake_env('host', context)
+            sys.exit(call_notification_script(plugin, [], context))
 
 
         if notification_logging >= 2:
@@ -153,6 +271,8 @@ def do_notify(args):
             sys.exit(1)
 
     except Exception, e:
+        if g_interactive:
+            raise
         crash_dir = var_dir + "/notify"
         if not os.path.exists(crash_dir):
             os.makedirs(crash_dir)
@@ -189,7 +309,6 @@ def notify_via_email(context):
 
 def notify_flexible(contact, context, notification_table):
     notify_log("Flexible notification for %s" % context["CONTACTNAME"])
-    is_host = "SERVICEDESC" in context
     for entry in notification_table:
         plugin = entry["plugin"]
         notify_log("Plugin: %s" % plugin)
@@ -198,7 +317,7 @@ def notify_flexible(contact, context, notification_table):
         if entry.get("disabled"):
             notify_log("- Skipping: it is disabled for this user")
             continue
-        
+
         # Check host, if configured
         if entry.get("only_hosts"):
             hostname = context.get("HOSTNAME")
@@ -229,7 +348,7 @@ def notify_flexible(contact, context, notification_table):
         # Check notification number (in case of repeated notifications/escalations)
         if "escalation" in entry:
             from_number, to_number = entry["escalation"]
-            if is_host:
+            if context["WHAT"] == "HOST":
                 notification_number = int(context.get("HOSTNOTIFICATIONNUMBER", 1))
             else:
                 notification_number = int(context.get("SERVICENOTIFICATIONNUMBER", 1))
@@ -245,15 +364,25 @@ def notify_flexible(contact, context, notification_table):
                     notify_log(" - Skipping: time period %s is currently not active" % timeperiod)
                     continue
 
-        call_notification_script(plugin, entry.get("parameters", []))
+        call_notification_script(plugin, entry.get("parameters", []), context)
 
 
-def call_notification_script(plugin, parameters):
+def call_notification_script(plugin, parameters, context):
     # Prepare environment
     os.putenv("NOTIFY_PARAMETERS", " ".join(parameters))
     for nr, value in enumerate(parameters):
         os.putenv("NOTIFY_PARAMETER_%d" % (nr + 1), value)
     os.putenv("NOTIFY_LOGDIR", notification_logdir)
+
+    for key in [ 'WHAT', 'OMD_ROOT', 'OMD_SITE' ]:
+        if key in context:
+            os.putenv('NOTIFY_' + key, context[key])
+
+    # Remove service macros for host notifications
+    if context['WHAT'] == 'HOST':
+        for key in context.keys():
+            if 'SERVICE' in key:
+                os.unsetenv('NOTIFY_%s' % key)
 
     # Remove exceeding arguments from previous plugin calls
     for nr in range(len(parameters)+1, 101):
@@ -283,14 +412,13 @@ def call_notification_script(plugin, parameters):
     exitcode = out.close()
     if exitcode: 
         notify_log("Plugin exited with code %d" % (exitcode >> 8))
-
-
+        return exitcode
+    return 0
 
 
 def check_notification_type(context, host_events, service_events):
     notification_type = context["NOTIFICATIONTYPE"]
-    is_host = "SERVICEDESC" not in context
-    if is_host:
+    if context["WHAT"] == "HOST":
         allowed_events = host_events
         state = context["HOSTSTATE"]
         events = { "UP" : 'u', "DOWN" : 'd' }

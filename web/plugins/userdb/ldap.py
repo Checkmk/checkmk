@@ -293,7 +293,7 @@ def ldap_get_users(add_filter = None):
 def ldap_user_groups(username, attr = 'cn'):
     # The given username might be wrong case. The ldap search is case insensitive,
     # so the username read from ldap might differ. Fix it here.
-    user_dn, username = ldap_get_user(username)
+    user_dn, username = ldap_get_user(username, True)
 
     if username in g_ldap_group_cache:
         if attr == 'cn':

@@ -1,4 +1,4 @@
-1.2.1i5
+1.2.1i5:
     Core:
     * Improved handling of CTRL+C (SIGINT) to terminate long runnining tasks 
       (e.g.  inventory of SNMP hosts)

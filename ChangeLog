@@ -52,7 +52,7 @@
     * Added valuespec for cisco_mem check to configure thresholds via WATO
     * FIX: Fixed displaying of tag selections when creating a rule in the ruleeditor
     * FIX: Rulesets are always cloned in the same folder
-    * Flexibile notifications: removed "debug notification" script from GUI (you make it
+    * Flexibile notifications: removed "debug notification" script from GUI (you can make it
       executable to be choosable again)
     * Flexibile notifications: added plain mail notification which uses the
       mail templates from global settings dialog

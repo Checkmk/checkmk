@@ -85,24 +85,16 @@ test_vars = {
     'NOTIFY_HOSTSTATE': 'DOWN',
     'NOTIFY_HOSTTAGS': 'cmk-agent prod lan tcp wato /wato/',
     'NOTIFY_LASTHOSTSTATE': 'UP',
-    'NOTIFY_LASTSERVICESTATE': '$LASTSERVICESTATE$',
     'NOTIFY_LOGDIR': '/omd/sites/event/var/check_mk/notify',
     'NOTIFY_LONGDATETIME': 'Thu Jan 17 15:28:13 CET 2013',
     'NOTIFY_LONGHOSTOUTPUT': '',
-    'NOTIFY_LONGSERVICEOUTPUT': '$LONGSERVICEOUTPUT$',
     'NOTIFY_NOTIFICATIONTYPE': 'PROBLEM',
     'NOTIFY_PARAMETERS': '',
-    'NOTIFY_SERVICECHECKCOMMAND': '$SERVICECHECKCOMMAND$',
-    'NOTIFY_SERVICEDESC': '$SERVICEDESC$',
-    'NOTIFY_SERVICENOTIFICATIONNUMBER': '$SERVICENOTIFICATIONNUMBER$',
-    'NOTIFY_SERVICEOUTPUT': '$SERVICEOUTPUT$',
-    'NOTIFY_SERVICEPERFDATA': '$SERVICEPERFDATA$',
-    'NOTIFY_SERVICEPROBLEMID': '$SERVICEPROBLEMID$',
-    'NOTIFY_SERVICESTATE': '$SERVICESTATE$',
     'NOTIFY_SHORTDATETIME': '2013-01-17 15:28:13',
     'NOTIFY_WHAT': 'HOST',
     'NOTIFY_OMD_ROOT': '/omd/sites/event',
     'NOTIFY_OMD_SITE': 'event',
+    'NOTIFY_MAIL_COMMAND': 'mail -s \'$SUBJECT$\' \'$CONTACTEMAIL$\'',
   },
   'service': {
     'NOTIFY_CONTACTEMAIL': 'lm@mathias-kettner.de',
@@ -139,6 +131,7 @@ test_vars = {
     'NOTIFY_WHAT': 'SERVICE',
     'NOTIFY_OMD_ROOT': '/omd/sites/event',
     'NOTIFY_OMD_SITE': 'event',
+    'NOTIFY_MAIL_COMMAND': 'mail -s \'$SUBJECT$\' \'$CONTACTEMAIL$\'',
   },
 }
 
@@ -229,6 +222,7 @@ def do_notify(args):
             context["OMD_SITE"] = os.getenv("OMD_SITE", "")
 
         context["WHAT"] = "SERVICEDESC" in context and "SERVICE" or "HOST"
+        context["MAIL_COMMAND"] = notification_mail_command
 
         # Handle interactive calls
         if mode == 'fake-service':
@@ -377,7 +371,7 @@ def call_notification_script(plugin, parameters, context):
         os.putenv("NOTIFY_PARAMETER_%d" % (nr + 1), value)
     os.putenv("NOTIFY_LOGDIR", notification_logdir)
 
-    for key in [ 'WHAT', 'OMD_ROOT', 'OMD_SITE' ]:
+    for key in [ 'WHAT', 'OMD_ROOT', 'OMD_SITE', 'MAIL_COMMAND' ]:
         if key in context:
             os.putenv('NOTIFY_' + key, context[key])
 

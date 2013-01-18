@@ -1,0 +1,13 @@
+Title: Notification form broken after personal settings editing
+Component: wato
+State: open
+Date: 2013-01-18 11:50:32
+Targetversion: 1.2.2
+Class: bug
+
+When editing the personal settings while being permitted to edit the custom notifications,
+the shown data seems to be broken after submission. For example the title of a custom
+notification is set to "Notify by: (no title)" instead of the correct title.
+
+It seems that the CascadingDropdown (and maybe also ListOf) do not use the "value" provided
+to the render_input() method. Instead of it they try to fetch the infos from html.var.

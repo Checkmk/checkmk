@@ -1,3 +1,5 @@
+1.2.1i6:
+
 1.2.1i5:
     Core:
     * Improved handling of CTRL+C (SIGINT) to terminate long runnining tasks 

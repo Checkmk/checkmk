@@ -100,6 +100,9 @@ test_vars = {
     'NOTIFY_SERVICEPROBLEMID': '$SERVICEPROBLEMID$',
     'NOTIFY_SERVICESTATE': '$SERVICESTATE$',
     'NOTIFY_SHORTDATETIME': '2013-01-17 15:28:13',
+    'NOTIFY_WHAT': 'HOST',
+    'NOTIFY_OMD_ROOT': '/omd/sites/event',
+    'NOTIFY_OMD_SITE': 'event',
   },
   'service': {
     'NOTIFY_CONTACTEMAIL': 'lm@mathias-kettner.de',
@@ -133,6 +136,9 @@ test_vars = {
     'NOTIFY_SERVICEPROBLEMID': '137',
     'NOTIFY_SERVICESTATE': 'CRITICAL',
     'NOTIFY_SHORTDATETIME': '2013-01-17 15:31:46',
+    'NOTIFY_WHAT': 'SERVICE',
+    'NOTIFY_OMD_ROOT': '/omd/sites/event',
+    'NOTIFY_OMD_SITE': 'event',
   },
 }
 
@@ -367,7 +373,10 @@ def call_notification_script(plugin, parameters, context):
     for nr, value in enumerate(parameters):
         os.putenv("NOTIFY_PARAMETER_%d" % (nr + 1), value)
     os.putenv("NOTIFY_LOGDIR", notification_logdir)
-    os.putenv("NOTIFY_WHAT", context['WHAT'])
+
+    for key in [ 'WHAT', 'OMD_ROOT', 'OMD_SITE' ]:
+        if key in context:
+            os.putenv('NOTIFY_' + key, context[key])
 
     # Remove service macros for host notifications
     if context['WHAT'] == 'HOST':

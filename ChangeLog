@@ -45,6 +45,7 @@
     * LDAP: Improved error handling in case of misconfigurations
     * LDAP: Reduced number of ldap querys during a single page request / sync process
     * LDAP: Implemnted some kind of debug logging for LDAP communication
+    * FIX: Re-added an empty file as auth.py (wato plugin) to prevent problems during update 
 
     WATO:
     * CPU load ruleset does now accept float values

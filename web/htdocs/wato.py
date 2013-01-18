@@ -7596,6 +7596,7 @@ def load_notification_scripts():
     except:
         pass
     choices = scripts.items()
+    choices.append((None, _("Plain Text Email (using configured templates)")))
     choices.sort(cmp = lambda a,b: cmp(a[1], b[1]))
     return choices
 
@@ -7608,7 +7609,7 @@ vs_notification_method = \
     CascadingDropdown(
         title = _("Notification Method"),
         choices = [
-            ( "email", _("Send Email") ),
+            ( "email", _("Plain Text Email (using configured templates)") ),
             ( "flexible", 
               _("Flexible Custom Notifications"),
                 ListOf(

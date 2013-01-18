@@ -364,7 +364,10 @@ def notify_flexible(contact, context, notification_table):
                     notify_log(" - Skipping: time period %s is currently not active" % timeperiod)
                     continue
 
-        call_notification_script(plugin, entry.get("parameters", []), context)
+        if plugin is None:
+            notify_via_email(context)
+        else:
+            call_notification_script(plugin, entry.get("parameters", []), context)
 
 
 def call_notification_script(plugin, parameters, context):

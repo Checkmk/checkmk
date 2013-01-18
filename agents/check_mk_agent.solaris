@@ -49,7 +49,7 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.1i5
+echo Version: 1.2.1i6
 echo AgentOS: solaris
 
 

@@ -1,4 +1,6 @@
-1.2.1i5
+1.2.1i6:
+
+1.2.1i5:
     Core:
     * Improved handling of CTRL+C (SIGINT) to terminate long runnining tasks 
       (e.g.  inventory of SNMP hosts)
@@ -23,7 +25,6 @@
     * kernel.util: add "Average" information to PNP graph
     * Windows Agent: Fix startup crash on adding a logfiles pattern, but no logfile specified
     * Windows Agent: check_mk.example.ini: commented logfiles section
-                     
 
     Multisite:
     * FIX: Fixed rendering of dashboard globes in opera
@@ -45,12 +46,17 @@
     * LDAP: Improved error handling in case of misconfigurations
     * LDAP: Reduced number of ldap querys during a single page request / sync process
     * LDAP: Implemnted some kind of debug logging for LDAP communication
+    * FIX: Re-added an empty file as auth.py (wato plugin) to prevent problems during update 
 
     WATO:
     * CPU load ruleset does now accept float values
     * Added valuespec for cisco_mem check to configure thresholds via WATO
     * FIX: Fixed displaying of tag selections when creating a rule in the ruleeditor
     * FIX: Rulesets are always cloned in the same folder
+    * Flexibile notifications: removed "debug notification" script from GUI (you can make it
+      executable to be choosable again)
+    * Flexibile notifications: added plain mail notification which uses the
+      mail templates from global settings dialog
 
     BI:
     * Added FOREACH_SERVICE capability to leaf nodes

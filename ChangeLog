@@ -7,6 +7,8 @@
 
     WATO:
     * Added hr_mem check to the memory checkgroup to make it configurable in WATO
+    * Fixed some typos in ldap error messages
+    * Fixed problem on user profile page when no alias set for a user
 
 1.2.1i5:
     Core:

@@ -159,7 +159,7 @@ def ldap_default_bind():
             ldap_bind('', '', catch = False) # anonymous bind
     except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
         raise MKLDAPException(_('Unable to connect to LDAP server with the configured bind credentials. '
-                                'Plase fix this in the '
+                                'Please fix this in the '
                                 '<a href="wato.py?mode=edit_configvar&varname=ldap_connection">LDAP '
                                 'connection settings</a>.'))
 
@@ -423,7 +423,7 @@ ldap_attribute_plugins['alias'] = {
 def ldap_convert_auth_expire(params, user_id, ldap_user, user):
     changed_attr = params.get('attr', ldap_attr('pw_changed'))
     if not changed_attr in ldap_user:
-        raise MKLDAPException(_('The "Authentication Expiration" attribute (%s) could not be fetched'
+        raise MKLDAPException(_('The "Authentication Expiration" attribute (%s) could not be fetched '
                                 'from the LDAP server for user %s.') % (changed_attr, ldap_user))
 
     # For keeping this thing simple, we don't parse the date here. We just store

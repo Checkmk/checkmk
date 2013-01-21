@@ -10947,7 +10947,7 @@ def page_user_profile():
 
     forms.header(_("Personal Settings"))
     forms.section(_("Name"), simple=True)
-    html.write(user["alias"])
+    html.write(user.get("alias", config.user_id))
 
     if config.may('general.change_password') and not is_locked('password'):
         forms.section(_("Password"))

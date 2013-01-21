@@ -83,8 +83,11 @@ test_vars = {
     'NOTIFY_HOSTPERFDATA': '',
     'NOTIFY_HOSTPROBLEMID': '136',
     'NOTIFY_HOSTSTATE': 'DOWN',
+    'NOTIFY_HOSTSTATEID': '1',
     'NOTIFY_HOSTTAGS': 'cmk-agent prod lan tcp wato /wato/',
     'NOTIFY_LASTHOSTSTATE': 'UP',
+    'NOTIFY_LASTHOSTSTATECHANGE': '1358761208',
+    'NOTIFY_LASTHOSTSTATECHANGE_REL': '0d 00:11:38',
     'NOTIFY_LOGDIR': '/omd/sites/event/var/check_mk/notify',
     'NOTIFY_LONGDATETIME': 'Thu Jan 17 15:28:13 CET 2013',
     'NOTIFY_LONGHOSTOUTPUT': '',
@@ -111,9 +114,14 @@ test_vars = {
     'NOTIFY_HOSTPERFDATA': 'rta=0.028ms;200.000;500.000;0; pl=0%;40;80;; rtmax=0.052ms;;;; rtmin=0.021ms;;;;',
     'NOTIFY_HOSTPROBLEMID': '0',
     'NOTIFY_HOSTSTATE': 'UP',
+    'NOTIFY_HOSTSTATEID': '0',
     'NOTIFY_HOSTTAGS': 'cmk-agent prod lan tcp wato /wato/',
     'NOTIFY_LASTHOSTSTATE': 'UP',
+    'NOTIFY_LASTHOSTSTATECHANGE': '1358761208',
+    'NOTIFY_LASTHOSTSTATECHANGE_REL': '0d 00:11:38',
     'NOTIFY_LASTSERVICESTATE': 'OK',
+    'NOTIFY_LASTSERVICESTATECHANGE': '1358761208',
+    'NOTIFY_LASTSERVICESTATECHANGE_REL': '0d 00:00:01',
     'NOTIFY_LOGDIR': '/omd/sites/event/var/check_mk/notify',
     'NOTIFY_LONGDATETIME': 'Thu Jan 17 15:31:46 CET 2013',
     'NOTIFY_LONGHOSTOUTPUT': '',
@@ -127,6 +135,7 @@ test_vars = {
     'NOTIFY_SERVICEPERFDATA': 'load1=1.35;0;0;0;2 load5=1.33;0;0;0;2 load15=1.29;0;0;0;2',
     'NOTIFY_SERVICEPROBLEMID': '137',
     'NOTIFY_SERVICESTATE': 'CRITICAL',
+    'NOTIFY_SERVICESTATEID': '2',
     'NOTIFY_SHORTDATETIME': '2013-01-17 15:31:46',
     'NOTIFY_WHAT': 'SERVICE',
     'NOTIFY_OMD_ROOT': '/omd/sites/event',
@@ -173,6 +182,19 @@ Available commands:
     fake-host <plugin>    ... Calls the given notification plugin with fake
                               notification data of a host notification.
 """)
+
+def get_readable_rel_date(timestamp):
+    try:
+        change = int(timestamp)
+    except:
+        change = 0
+    rel_time = time.time() - change
+    seconds = rel_time % 60
+    rem = rel_time / 60
+    minutes = rem % 60
+    hours = (rem % 1440) / 60
+    days = rem / 1440
+    return '%dd %02d:%02d:%02d' % (days, hours, minutes, seconds)
 
 def do_notify(args):
     try:
@@ -233,6 +255,9 @@ def do_notify(args):
             set_fake_env('host', context)
             sys.exit(call_notification_script(plugin, [], context))
 
+        context['LASTHOSTSTATECHANGE_REL'] = get_readable_rel_date(context['LASTHOSTSTATECHANGE'])
+        if context['WHAT'] != 'HOST':
+            context['LASTSERVICESTATECHANGE_REL'] = get_readable_rel_date(context['LASTSERVICESTATECHANGE'])
 
         if notification_logging >= 2:
             notify_log("Notification context:\n"
@@ -371,7 +396,8 @@ def call_notification_script(plugin, parameters, context):
         os.putenv("NOTIFY_PARAMETER_%d" % (nr + 1), value)
     os.putenv("NOTIFY_LOGDIR", notification_logdir)
 
-    for key in [ 'WHAT', 'OMD_ROOT', 'OMD_SITE', 'MAIL_COMMAND' ]:
+    for key in [ 'WHAT', 'OMD_ROOT', 'OMD_SITE',
+                 'MAIL_COMMAND', 'LASTHOSTSTATECHANGE_REL' ]:
         if key in context:
             os.putenv('NOTIFY_' + key, context[key])
 

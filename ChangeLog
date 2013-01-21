@@ -1,4 +1,9 @@
 1.2.1i6:
+    Core:
+    * cmk --notify: added notification script to generate HTML mails including
+      the performance graphs of hosts and services
+    * cmk --notify: added the macros NOTIFY_LASTHOSTSTATECHANGE, NOTIFY_HOSTSTATEID,
+      NOTIFY_LASTSERVICESTATECHANGE and NOTIFY_SERVICESTATEID
 
 1.2.1i5:
     Core:

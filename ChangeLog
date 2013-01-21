@@ -7,6 +7,8 @@
 
     WATO:
     * Added hr_mem check to the memory checkgroup to make it configurable in WATO
+    * FIX: list valuespecs could not be extended after once saving
+    * FIX: fix title of foldable areas contained in list valuespecs
 
 1.2.1i5:
     Core:

@@ -5,6 +5,9 @@
     * cmk --notify: added the macros NOTIFY_LASTHOSTSTATECHANGE, NOTIFY_HOSTSTATEID,
       NOTIFY_LASTSERVICESTATECHANGE and NOTIFY_SERVICESTATEID
 
+    WATO:
+    * Added hr_mem check to the memory checkgroup to make it configurable in WATO
+
 1.2.1i5:
     Core:
     * Improved handling of CTRL+C (SIGINT) to terminate long runnining tasks 

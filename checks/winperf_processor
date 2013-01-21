@@ -64,7 +64,7 @@ def check_winperf_util(item, params, info):
                 warn, crit = params
             else:
                 warn, crit = None, None
-            perfdata = [ ("util", "%.2f" % used_perc, warn, crit, 0, 100) ]
+            perfdata = [ ("util", "%.2f" % used_perc, warn, crit, 0, num_cpus) ]
             if num_cpus == 1:
                 num_txt = ""
             else:

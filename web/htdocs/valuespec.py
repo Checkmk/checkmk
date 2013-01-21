@@ -656,11 +656,12 @@ class ListOf(ValueSpec):
             value = [None] * count # dummy for the loop
         else:
             filled_in = False
-            html.hidden_field('%s_count' % varprefix,
-                str(len(value)),
-                id = '%s_count' % varprefix,
-                add_var = True
-            )
+            count = len(value)
+
+        html.hidden_field('%s_count' % varprefix,
+            str(count),
+            id = '%s_count' % varprefix,
+            add_var = True)
 
         # Actual table of currently existing entries
         html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
@@ -2058,13 +2059,19 @@ class Foldable(ValueSpec):
 
     def render_input(self, varprefix, value):
         try:
-            title = self._title_function(value)
+            title_value = value
+            if html.form_submitted():
+                try:
+                    title_value = self._valuespec.from_html_vars(varprefix)
+                except:
+                    pass
+            title = self._title_function(title_value)
         except:
             title = self._valuespec.title()
             if not title:
                 title = _("(no title)")
         html.begin_foldable_container("valuespec_foldable", varprefix, self._open, 
-                        title, False)
+                       title, False)
         html.help(self._valuespec.help())
         self._valuespec.render_input(varprefix, value)
         html.end_foldable_container()

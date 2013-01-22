@@ -1,4 +1,4 @@
-1.2.1i6:
+1.2.2b1:
     Core:
     * cmk --notify: added notification script to generate HTML mails including
       the performance graphs of hosts and services
@@ -7,7 +7,7 @@
       NOTIFY_NOTIFICATIONAUTHOR, NOTIFY_NOTIFICATIONAUTHORNAME, NOTIFY_NOTIFICATIONAUTHORALIAS
     * FIX: more robust deletion of precompiled files to ensure the correct 
       creation of the files (Thanks to Guido Günther)
-
+    * FIX: Inventory for cluster nodes who are part of multiple clusters 
 
     Checks & Agents:
     * winperf_processor now outputs float usage instead of integer

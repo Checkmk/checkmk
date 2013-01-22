@@ -820,21 +820,17 @@ def is_cluster(hostname):
             return True
     return False
 
-# If host is node of a cluster, return name of that cluster
-# (untagged). If not, return None. If a host belongs to
-# more than one cluster, then a random cluster is choosen.
-def cluster_of(hostname):
-    for clustername, nodes in clusters.items():
-        if hostname in nodes:
-            return strip_tags(clustername)
-    return None
+# If host is node of one or more clusters, return a list of the clusters
+# (untagged). If not, return an empty list. 
+def clusters_of(hostname):
+    return [ strip_tags(c) for c,n in clusters.items() if hostname in n ]
 
 # Determine wether a service (found on a physical host) is a clustered
 # service and - if yes - return the cluster host of the service. If
 # no, returns the hostname of the physical host.
 def host_of_clustered_service(hostname, servicedesc):
-    my_cluster = cluster_of(hostname)
-    if not my_cluster: # we are not a cluster node
+    the_clusters = clusters_of(hostname)
+    if not the_clusters:
         return hostname
 
     # 1. New style: explicitlely assigned services
@@ -850,9 +846,7 @@ def host_of_clustered_service(hostname, servicedesc):
     # 1. Old style: clustered_services assumes that each host belong to
     #    exactly on cluster
     if in_boolean_serviceconf_list(hostname, servicedesc, clustered_services):
-        cluster = cluster_of(hostname)
-        if cluster:
-            return cluster
+        return the_clusters[0]
 
     return hostname
 
@@ -2248,7 +2242,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                 info = get_realhost_info(hostname, ipaddress, checkname_base, inventory_max_cachefile_age)
                 # Add information about nodes if check wants this
                 if check_info[checkname]["node_info"]:
-                    if cluster_of(hostname):
+                    if clusters_of(hostname):
                         add_host = hostname
                     else:
                         add_host = None
@@ -4883,22 +4877,23 @@ if __name__ == "__main__":
                 # or are no valid hostnames are considered to be tags.
                 for host in hostnames:
                     remove_autochecks_of(host, checknames)
-                    clust = cluster_of(host)
-                    if clust:
-                        missing = []
+                    # If all nodes of a cluster are contained in the list, then
+                    # also remove the autochecks of that cluster. Beware: a host
+                    # can be part more multiple clusters
+                    for clust in clusters_of(host):
+                        missing = [] # collect nodes missing on the command line
                         for node in nodes_of(clust):
                             if node not in hostnames:
                                 missing.append(node)
+
                         if len(missing) == 0:
                             if opt_verbose:
                                 sys.stdout.write("All nodes of %s specified, dropping checks of %s, too.\n" % (clust, node))
                             remove_autochecks_of(clust, checknames)
+
                         else:
                             sys.stdout.write("Warning: %s is part of cluster %s, but you didn't specify %s as well.\nChecks on %s will be kept.\n" %
                             (host, clust, ",".join(missing), clust))
-                    # if the host is part of a cluster and
-                    # the other nodes of that cluster are
-                    # also present in the list, then we also # drop the checks of the clusters
 
             else:
                 for host in all_active_hosts() + all_active_clusters():

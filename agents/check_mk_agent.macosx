@@ -43,7 +43,7 @@ fi
 
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.1i6
+echo Version: 1.2.2b1
 echo AgentOS: macosx
 
 osver="$(uname -r)"

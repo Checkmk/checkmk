@@ -14,7 +14,6 @@
 
     Multisite:
     * Added comment painter to notification related views
->>>>>>> e75f82c19d125f6599dbc63b8defc4c589f7d363
 
     WATO:
     * Added hr_mem check to the memory checkgroup to make it configurable in WATO

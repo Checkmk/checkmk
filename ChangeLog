@@ -5,6 +5,8 @@
     * cmk --notify: added the macros NOTIFY_LASTHOSTSTATECHANGE, NOTIFY_HOSTSTATEID,
       NOTIFY_LASTSERVICESTATECHANGE, NOTIFY_SERVICESTATEID, NOTIFY_NOTIFICATIONCOMMENT,
       NOTIFY_NOTIFICATIONAUTHOR, NOTIFY_NOTIFICATIONAUTHORNAME, NOTIFY_NOTIFICATIONAUTHORALIAS
+    * FIX: more robust deletion of precompiled files to ensure the correct 
+      creation of the files (Thanks to Guido Günther)
 
 
     Checks & Agents:

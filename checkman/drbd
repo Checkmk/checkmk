@@ -28,5 +28,7 @@ inventory:
  devices with the connection state "Unconfigured" are skipped.
 
 [parameters]
-roles (list): The expected role of each node
-disk_states (list): The expected disk-state of each node
+roles (list): The expected role of each node. Can also be set to None to disable
+ alerting on this value.
+disk_states (list): The expected disk-state of each node. Can also be set to None
+ to disable alerting on this value.

@@ -5,6 +5,9 @@
     * cmk --notify: added the macros NOTIFY_LASTHOSTSTATECHANGE, NOTIFY_HOSTSTATEID,
       NOTIFY_LASTSERVICESTATECHANGE and NOTIFY_SERVICESTATEID
 
+    Checks & Agents:
+    * FIX: mssql_counters.file_sizes - Fixed wrong value for "Log Files" in output
+
     WATO:
     * Added hr_mem check to the memory checkgroup to make it configurable in WATO
     * FIX: Fixed some typos in ldap error messages

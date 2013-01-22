@@ -3,7 +3,9 @@
     * cmk --notify: added notification script to generate HTML mails including
       the performance graphs of hosts and services
     * cmk --notify: added the macros NOTIFY_LASTHOSTSTATECHANGE, NOTIFY_HOSTSTATEID,
-      NOTIFY_LASTSERVICESTATECHANGE, NOTIFY_SERVICESTATEID and NOTIFY_NOTIFICATIONCOMMENT
+      NOTIFY_LASTSERVICESTATECHANGE, NOTIFY_SERVICESTATEID, NOTIFY_NOTIFICATIONCOMMENT,
+      NOTIFY_NOTIFICATIONAUTHOR, NOTIFY_NOTIFICATIONAUTHORNAME, NOTIFY_NOTIFICATIONAUTHORALIAS
+
 
     Checks & Agents:
     * FIX: mssql_counters.file_sizes - Fixed wrong value for "Log Files" in output

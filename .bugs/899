@@ -1,0 +1,22 @@
+Title: Make negated values in "sections" possible
+Component: checks
+State: open
+Date: 2013-01-22 12:07:39
+Targetversion: 1.4.0
+Class: feature
+
+Recent windows agent ini files have a sections specification, where you can specify which sections to run.
+
+I would like to see the reverse of this – a sections-not – which would specify  sections NOT to run.   
+
+We have several machines that hang on once section or another for some reason.   It would be nice to be able to remove just that section, without have to manually specify all the other sections that we do want to run
+
+ 
+[global]
+                Sections-not = ps
+
+To not run ps, but to do run all other available sections.
+
+Or,  modify the existing one to accept a not (!)
+Global
+                Sections = !ps

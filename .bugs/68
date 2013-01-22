@@ -21,3 +21,7 @@ def lookup_ipaddress(hostname):
                 return sockaddr[0]
 Ausserdem kommt check_icmp damit nicht klar. Hier muss dann auf
 check_ping ausgewichen werden.
+
+Note: There were many discussions about this feature on the mailinglists. I
+also found some patches. When implementing this, please take a look at the
+lists for details / hints.

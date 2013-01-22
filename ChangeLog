@@ -3,8 +3,18 @@
     * cmk --notify: added notification script to generate HTML mails including
       the performance graphs of hosts and services
     * cmk --notify: added the macros NOTIFY_LASTHOSTSTATECHANGE, NOTIFY_HOSTSTATEID,
-      NOTIFY_LASTSERVICESTATECHANGE and NOTIFY_SERVICESTATEID
+      NOTIFY_LASTSERVICESTATECHANGE, NOTIFY_SERVICESTATEID, NOTIFY_NOTIFICATIONCOMMENT,
+      NOTIFY_NOTIFICATIONAUTHOR, NOTIFY_NOTIFICATIONAUTHORNAME, NOTIFY_NOTIFICATIONAUTHORALIAS
     * FIX: Inventory for cluster nodes who are part of multiple clusters 
+
+    Checks & Agents:
+    * FIX: mssql_counters.file_sizes - Fixed wrong value for "Log Files" in output
+    * FIX: drbd: Parameters for expected roles and disk states can now be set to 
+      None to disable alerting on changed values
+
+    Multisite:
+    * Added comment painter to notification related views
+>>>>>>> e75f82c19d125f6599dbc63b8defc4c589f7d363
 
     WATO:
     * Added hr_mem check to the memory checkgroup to make it configurable in WATO

@@ -1,4 +1,4 @@
-1.2.1i6:
+1.2.2b1:
     Core:
     * cmk --notify: added notification script to generate HTML mails including
       the performance graphs of hosts and services

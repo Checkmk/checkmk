@@ -10,6 +10,9 @@
     * FIX: drbd: Parameters for expected roles and disk states can now be set to 
       None to disable alerting on changed values
 
+    Multisite:
+    * Added comment painter to notification related views
+
     WATO:
     * Added hr_mem check to the memory checkgroup to make it configurable in WATO
     * FIX: Fixed some typos in ldap error messages

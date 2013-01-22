@@ -1679,6 +1679,20 @@ multisite_painters["log_options"] = {
     "paint"   : lambda row: ("", row["log_options"]),
 }
 
+def paint_log_comment(msg):
+    if ';' in msg:
+        parts = msg.split(';')
+        if len(parts) > 6:
+          return ("", parts[-1])
+    return ("", "")
+
+multisite_painters["log_comment"] = {
+    "title"   : _("Log: comment"),
+    "short"   : _("Comment"),
+    "columns" : ["log_options"],
+    "paint"   : lambda row: paint_log_comment(row['log_options']),
+}
+
 multisite_painters["log_time"] = {
     "title"   : _("Log: entry time"),
     "short"   : _("Time"),

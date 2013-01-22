@@ -1,0 +1,397 @@
+#!/usr/bin/python
+# HTML Emails with included Graphs
+# This script creates a very beautiful mail in multipart format with
+# attached graphs and such neat stuff. Sweet!
+
+import os, re, sys, subprocess
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from email.mime.image import MIMEImage
+
+tmpl_head_html = '''
+<html>
+<head>
+<title>$SUBJECT$</title>
+<style>
+body {
+    background-color: #426D8A;
+    padding: 5px;
+}
+table.data {
+    border-spacing: 0px;
+    margin: 0;
+    padding: 0;
+    border-collapse: collapse;
+    empty-cells: show;
+    width: 100%;
+}
+
+table.data {
+    color: black;
+}
+
+table.data th {
+    font-weight: normal;
+    border-right: 1px solid #ccc;
+    background-color: #999;
+    text-align: center;
+    color: #fff;
+    vertical-align: middle;
+    font-size: 9pt;
+    height: 14px;
+}
+table.data th:last-child {
+    border-right-style: none;
+}
+
+table.data tr.data > td {
+    border-right: 1px solid #ccc;
+    padding: 2px 4px;
+    height: 22px;
+    vertical-align: middle;
+}
+table.data tr.data td:last-child {
+    border-right-style: none;
+}
+
+table.data a {
+    text-decoration: none;
+    color: black;
+}
+table.data a:hover {
+    text-decoration: underline;
+}
+
+table.data.single {
+    margin-top: 5px;
+    border-spacing: 1px;
+    padding: 0;
+    border-collapse: collapse;
+    empty-cells: show;
+}
+
+table.data.single tr.data td {
+    padding-bottom: 4px;
+    padding: 4px 5px 2px 5px;
+    text-align: left;
+    height: 16px;
+    line-height: 14px;
+    vertical-align: top;
+    font-size: 9pt;
+}
+table.data.single tr.data td.left {
+    width: 10%;
+    white-space: nowrap;
+    vertical-align: top;
+    padding-right: 20px;
+}
+table.data.single tr.even0 td.left {
+    background-color: #bbb;
+}
+table.data.single tr.odd0 td.left {
+    background-color: #ccc;
+}
+
+tr.odd0  { background-color: #eee; }
+tr.even0 { background-color: #ddd; }
+
+td.odd0  { background-color: #eee; }
+td.even0 { background-color: #ddd; }
+
+tr.odd1  { background-color: #ffc; }
+tr.even1 { background-color: #ffa; }
+
+tr.odd2  { background-color: #fcc; }
+tr.even2 { background-color: #faa; }
+
+tr.odd3  { background-color: #ffe0a0; }
+tr.even3 { background-color: #ffefaf; }
+
+td.state {
+    text-align: center;
+    font-weight: bold;
+    width: 32px;
+}
+
+/* OK/UP */
+.state0, .hstate0, .state0 a, .hstate0 a {
+        background-color: #0b3; color: #fff;
+}
+
+.hstate {
+        white-space: nowrap;
+}
+/* WARN */
+.state1, .state1 a, tr.groupheader td.state1 {
+        background-color: #ff0; color: #000;
+}
+
+/* CRIT/DOWN */
+.state2, .hstate1, .state2 a, .hstate2 a {
+        background-color: #f00; color: #fff;
+}
+
+/* UNKNOWN / UNREACH */
+.state3, .hstate2, .state3 a, .hstate2 a {
+        background-color: #f80; color: #fff;
+}
+
+/* PENDING */
+.statep, .hstatep, .statep a, .hstatep a {
+        background-color: #888; color: #fff;
+}
+
+/* in DOWNTIME */
+.stated, .hstated, .stated a, .hstated a {
+        background-color: #0af; color: #fff;
+}
+
+td.graphs {
+    width: 617px;
+}
+
+td.graphs img {
+    margin: 10px;
+}
+</style>
+</head>
+<body>'''
+
+tmpl_foot_html = '''</body>
+</html>'''
+
+#
+# HOST TEMPLATES
+#
+
+tmpl_host_subject = 'Check_MK: $HOSTNAME$ - $NOTIFICATIONTYPE$'
+
+tmpl_host_txt = '''
+Host:     $HOSTNAME$ ($HOSTALIAS$)
+Address:  $HOSTADDRESS$
+
+State:    $LASTHOSTSTATE$ -> $HOSTSTATE$ ($NOTIFICATIONTYPE$)
+Output:   $HOSTOUTPUT$
+Perfdata: $HOSTPERFDATA$
+$LONGHOSTOUTPUT$
+'''
+
+tmpl_host_html = tmpl_head_html + '''
+<table class="data single">
+<tr class="data even0">
+    <th colspan=2>Object Information</th>
+</tr>
+<tr class="data odd0">
+    <td class=left>Name</td>
+    <td>$HOSTNAME$ ($HOSTALIAS$)</td>
+</tr>
+<tr class="data even0">
+    <td class=left>Address</td>
+    <td>$HOSTADDRESS$</td>
+</tr>
+<tr>
+    <th colspan=2>State</th>
+</tr>
+<tr class="data odd0">
+    <td class=left>State</td>
+    <td class="state hstate hstate$HOSTSTATEID$">$LASTHOSTSTATE$ -> $HOSTSTATE$ ($NOTIFICATIONTYPE$)</td>
+</tr>
+<tr class="data even0">
+    <td class="left">Output</td>
+    <td>$HOSTOUTPUT$</td>
+</tr>
+$GRAPH_CODE$
+</table>''' + tmpl_foot_html
+
+#
+# SERVICE TEMPLATES
+#
+
+tmpl_service_subject = 'Check_MK: $HOSTNAME$/$SERVICEDESC$ $NOTIFICATIONTYPE$'
+
+tmpl_service_txt = '''
+Host:     $HOSTNAME$ ($HOSTALIAS$)
+Address:  $HOSTADDRESS$
+
+Service:  $SERVICEDESC$
+State:    $LASTSERVICESTATE$ -> $SERVICESTATE$ ($NOTIFICATIONTYPE$)
+Output:   $SERVICEOUTPUT$
+Perfdata: $SERVICEPERFDATA$
+$LONGSERVICEOUTPUT$
+'''
+
+tmpl_service_html = tmpl_head_html + '''
+<table class="data single">
+<tr class="data even0">
+    <th colspan=2>Object Information</th>
+</tr>
+<tr class="data odd0">
+    <td class=left>Hostname</td>
+    <td>$HOSTNAME$ ($HOSTALIAS$)</td>
+</tr>
+<tr class="data even0">
+    <td class=left>Address</td>
+    <td>$HOSTADDRESS$</td>
+</tr>
+<tr class="data odd0">
+    <td class=left>Service description</td>
+    <td>$SERVICEDESC$</td>
+</tr>
+<tr>
+    <th colspan=2>State</th>
+</tr>
+<tr class="data odd0">
+    <td class=left>State</td>
+    <td class="state svcstate state$SERVICESTATEID$">$LASTSERVICESTATE$ -> $SERVICESTATE$ ($NOTIFICATIONTYPE$)</td>
+</tr>
+<tr class="data even0">
+    <td class="left">Output</td>
+    <td>$SERVICEOUTPUT$</td>
+</tr>
+$GRAPH_CODE$
+''' + tmpl_foot_html
+
+opt_debug = '-d' in sys.argv
+
+class GraphException(Exception):
+    pass
+
+def substitute_context(template, context):
+    # First replace all known variables
+    for varname, value in context.items():
+        template = template.replace('$'+varname+'$', value)
+
+    # Remove the rest of the variables and make them empty
+    template = re.sub("\$[A-Z]+\$", "", template)
+    return template
+
+def prepare_contents(context):
+    if context['WHAT'] == 'HOST':
+        tmpl_txt  = tmpl_host_txt
+        tmpl_html = tmpl_host_html
+    else:
+        tmpl_txt  = tmpl_service_txt
+        tmpl_html = tmpl_service_html
+
+    return substitute_context(tmpl_txt, context), \
+           substitute_context(tmpl_html, context)
+
+def multipart_mail(target, subject, content_txt, content_html, attach = []):
+    m = MIMEMultipart('related', _charset='utf-8')
+
+    alt = MIMEMultipart('alternative')
+
+    # The plain text part
+    txt = MIMEText(content_txt, 'plain', _charset='utf-8')
+    alt.attach(txt)
+
+    # The html text part
+    html = MIMEText(content_html, 'html', _charset='utf-8')
+    alt.attach(html)
+
+    m.attach(alt)
+
+    # Add all attachments
+    for what, name, contents, how in attach:
+        if what == 'img':
+            part = MIMEImage(contents, name = name)
+        else:
+            part = MIMEApplication(contents, name = name)
+        part.add_header('Content-ID', '<%s>' % name)
+        # how must be inline or attachment
+        part.add_header('Content-Disposition', how, filename = name)
+        m.attach(part)
+
+    m['Subject'] = subject
+    m['To']      = target
+
+    return m
+
+def send_mail(m, target):
+    p = subprocess.Popen(["/usr/sbin/sendmail", "-i", target ], stdin = subprocess.PIPE)
+    p.communicate(m.as_string())
+    return True
+
+def fetch_pnp_data(context, params):
+    return os.popen('REMOTE_USER="%s" php %s/share/pnp4nagios/htdocs/index.php "%s"' %
+                     (context['CONTACTNAME'], context['OMD_ROOT'], params)).read()
+
+def fetch_num_sources(context):
+    svc_desc = context['WHAT'] == 'HOST' and '_HOST_' or context['SERVICEDESC']
+    infos = fetch_pnp_data(context, '/json?host=%s&srv=%s&view=0' %
+                                     (context['HOSTNAME'], svc_desc))
+    if not infos.startswith('[{'):
+        raise GraphException('Unable to fetch graph infos, got: "%s"' % infos)
+
+    return infos.count('source=')
+
+def fetch_graph(context, source, view = 1):
+    svc_desc = context['WHAT'] == 'HOST' and '_HOST_' or context['SERVICEDESC']
+    graph = fetch_pnp_data(context, '/image?host=%s&srv=%s&view=%d&source=%d' %
+                                    (context['HOSTNAME'], svc_desc, view, source))
+
+    if graph[:8] != '\x89PNG\r\n\x1a\n':
+        raise GraphException('Unable to fetch the graph, got: "%s"' % graph)
+
+    return graph
+
+def main():
+    # gather all options from env
+    context = dict([
+        (var[7:], value.decode("utf-8"))
+        for (var, value)
+        in os.environ.items()
+        if var.startswith("NOTIFY_")])
+
+    # Fetch graphs for this object. It first tries to detect how many sources
+    # are available for this object. Then it loops through all sources and
+    # fetches retrieves the images. If a problem occurs, it is printed to
+    # stderr (-> notify.log) and the graph is not added to the mail.
+    try:
+        num_sources = fetch_num_sources(context)
+    except GraphException, e:
+        sys.stderr.write('Unable to fetch graph infos: %s\n' % e)
+        num_sources = 0
+
+    attachments = []
+    graph_code = ''
+    for source in range(0, num_sources):
+        try:
+            content = fetch_graph(context, source)
+        except GraphException, e:
+            sys.stderr.write('Unable to fetch graph: %s\n' % e)
+            continue
+
+        if context['WHAT'] == 'HOST':
+            svc_desc = '_HOST_'
+        else:
+            svc_desc = context['SERVICEDESC'].replace(' ', '_')
+        name = '%s-%s-%d.png' % (context['HOSTNAME'], svc_desc, source)
+
+        attachments.append(('img', name, content, 'inline'))
+
+        context['GRAPH_%d' % source] = name
+        graph_code += '<img src="cid:%s" />' % name
+
+    if graph_code:
+        context['GRAPH_CODE'] = (
+            '<tr><th colspan=2>Graphs</th></tr>'
+            '<tr class="data even0"><td colspan=2 class=graphs>%s</td></tr>' % graph_code
+        )
+
+    # Compute the subject of the mail
+    if context['WHAT'] == 'HOST':
+        context['SUBJECT'] = substitute_context(tmpl_host_subject, context)
+    else:
+        context['SUBJECT'] = substitute_context(tmpl_service_subject, context)
+
+    # Prepare the mail contents
+    content_txt, content_html = prepare_contents(context)
+
+    # Create the mail and send it
+    m = multipart_mail(context['CONTACTEMAIL'], context['SUBJECT'], content_txt,
+                       content_html, attachments)
+    send_mail(m, context['CONTACTEMAIL'])
+
+main()

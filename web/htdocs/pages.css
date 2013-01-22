@@ -623,10 +623,13 @@ table.nform tr.heading > td:hover {
     background-image: url("images/white_20percent.png");
 }
 
+table.nform > tbody > tr td {
+    color: black;
+}
+
 table.nform > tbody > tr > td {
     vertical-align: middle;
     height: 27px;
-    color: black;
 }
 
 table.nform > tbody > tr > td.simple {

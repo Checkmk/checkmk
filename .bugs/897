@@ -1,0 +1,9 @@
+Title: Add Windows-Agent as Zip-File to Download page
+Component: core
+State: open
+Date: 2013-01-21 16:46:19
+Targetversion: future
+Class: todo
+
+It is bad for windows users that there is no zip-download of the agent. There is the installer
+but someone might not want to use it.

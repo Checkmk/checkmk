@@ -216,10 +216,6 @@ def check_windows_services(item, params, info):
     return (best_state, infotext)
 
 
-
-# check_info['services'] = (check_windows_services, "service_%s", 0, inventory_windows_services)
-# checkgroup_of['services'] = 'services'
-
 factory_settings["services_default_levels"] = { 
     "states"      : [ ( "running", None, 0 ) ],
     "else"        : 2,

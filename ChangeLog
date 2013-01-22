@@ -1,4 +1,26 @@
 1.2.1i6:
+    Core:
+    * cmk --notify: added notification script to generate HTML mails including
+      the performance graphs of hosts and services
+    * cmk --notify: added the macros NOTIFY_LASTHOSTSTATECHANGE, NOTIFY_HOSTSTATEID,
+      NOTIFY_LASTSERVICESTATECHANGE, NOTIFY_SERVICESTATEID, NOTIFY_NOTIFICATIONCOMMENT,
+      NOTIFY_NOTIFICATIONAUTHOR, NOTIFY_NOTIFICATIONAUTHORNAME, NOTIFY_NOTIFICATIONAUTHORALIAS
+    * FIX: Inventory for cluster nodes who are part of multiple clusters 
+
+    Checks & Agents:
+    * FIX: mssql_counters.file_sizes - Fixed wrong value for "Log Files" in output
+    * FIX: drbd: Parameters for expected roles and disk states can now be set to 
+      None to disable alerting on changed values
+
+    Multisite:
+    * Added comment painter to notification related views
+
+    WATO:
+    * Added hr_mem check to the memory checkgroup to make it configurable in WATO
+    * FIX: Fixed some typos in ldap error messages
+    * FIX: Fixed problem on user profile page when no alias set for a user
+    * FIX: list valuespecs could not be extended after once saving
+    * FIX: fix title of foldable areas contained in list valuespecs
 
 1.2.1i5:
     Core:

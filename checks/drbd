@@ -254,12 +254,12 @@ def check_drbd_general(item, params, info):
         output = 'Connection State: %s' % parsed['cs']
 
         output += ', Roles: %s/%s' % (parsed['ro'][0], parsed['ro'][1])
-        if parsed['ro'] != params[0]:
+        if params[0] is not None and parsed['ro'] != params[0]:
             state = state < 2 and 2 or state
             output += ' (Expected: %s/%s)' % (params[0][0], params[0][1])
 
         output += ', Disk States: %s/%s' % (parsed['ds'][0], parsed['ds'][1])
-        if parsed['ds'] != params[1]:
+        if params[1] is not None and parsed['ds'] != params[1]:
             state = state < 2 and 2 or state
             output += ' (Expected: %s/%s)' % (params[1][0], params[1][1])
 

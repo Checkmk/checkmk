@@ -31,7 +31,7 @@ for i in range(numMessages):
         msg += line
     out = open(deamon_path, "w")
     timestamp = time.strftime("%b %d %H:%M:%S", time.localtime(time.time()))
-    out.write("<5>%s %s mail: %s" % (timestamp, host, msg))
+    out.write("<5>%s %s mail: %s\n" % (timestamp, host, msg))
     out.close()
     M.dele(i+1)
 M.quit()     

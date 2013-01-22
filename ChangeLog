@@ -4,6 +4,7 @@
       the performance graphs of hosts and services
     * cmk --notify: added the macros NOTIFY_LASTHOSTSTATECHANGE, NOTIFY_HOSTSTATEID,
       NOTIFY_LASTSERVICESTATECHANGE and NOTIFY_SERVICESTATEID
+    * FIX: Inventory for cluster nodes who are part of multiple clusters 
 
     WATO:
     * Added hr_mem check to the memory checkgroup to make it configurable in WATO

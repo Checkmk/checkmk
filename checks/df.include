@@ -149,8 +149,8 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
         crit_scaled = crit
 
     size_mb     = size_gb * 1024
-    warn_mb     = int(size_mb * warn_scaled / 100)
-    crit_mb     = int(size_mb * crit_scaled / 100)
+    warn_mb     = savefloat(size_mb * warn_scaled / 100)
+    crit_mb     = savefloat(size_mb * crit_scaled / 100)
     levels["levels_mb"] = (warn_mb, crit_mb)
     levels["levels_text"] = "(levels at %.1f/%.1f%%)" % (warn_scaled, crit_scaled)
     return levels

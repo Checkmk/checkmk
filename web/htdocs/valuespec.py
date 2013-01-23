@@ -484,13 +484,22 @@ class TextAreaUnicode(TextUnicode):
     def __init__(self, **kwargs):
         TextUnicode.__init__(self, **kwargs)
         self._cols = kwargs.get("cols", 60)
-        self._rows = kwargs.get("rows", 20)
+        self._rows = kwargs.get("rows", 20)  # Allowed: "auto" -> Auto resizing
 
     def value_to_text(self, value):
         return "<pre class=ve_textarea>%s</pre>" % value
 
     def render_input(self, varprefix, value):
-        html.text_area(varprefix, value, rows=self._rows, cols=self._cols)
+        if self._rows == "auto":
+            attrs = { "onkeyup" : 'valuespec_textarea_resize(this);' }
+            if html.has_var(varprefix):
+                rows = len(html.var(varprefix).splitlines())
+            else:
+                rows = len(value.splitlines())
+        else:
+            attrs = {}
+            rows = self._rows 
+        html.text_area(varprefix, value, rows=rows, cols=self._cols, attrs = attrs)
 
     # Overridded because we do not want to strip() here and remove '\r'
     def from_html_vars(self, varprefix):

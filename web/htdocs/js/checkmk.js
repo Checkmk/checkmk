@@ -1554,8 +1554,7 @@ function valuespec_cascading_change(oSelect, varprefix, count) {
 }
 
 function valuespec_textarea_resize(oArea) {
-    var rows = oArea.value.split(/\r?\n|\r/).length;
-    oArea.rows = rows;
+    oArea.style.height = oArea.scrollHeight + "px";
 }
 
 function valuespec_listof_add(varprefix, magic) {

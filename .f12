@@ -11,3 +11,4 @@ sed -e "s#@BINDIR@#/omd/sites/$SITE/bin#g" \
 
 sudo mv /tmp/check_mk_templates.cfg /omd/sites/$SITE/etc/nagios/conf.d
 sudo omd restart $SITE nagios
+echo 'location.reload();' | nc -w 0 localhost 32000

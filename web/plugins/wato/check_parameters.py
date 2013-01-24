@@ -745,6 +745,8 @@ checkgroups.append((
         allow_empty = True),
     "first"
 ))
+
+
 checkgroups.append((
     subgroup_os,
     "memory_pagefile_win",
@@ -2132,6 +2134,78 @@ syslog_facilities = [
     (22, "local6"),
     (23, "local7"),
 ]
+
+checkgroups.append((
+    subgroup_applications,
+    "jvm_memory",
+    _("JVM memory levels"),
+    Dictionary(
+        elements = [
+            ( "totalheap",
+               Alternative(
+                   title = _("Total Memory Levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Percentage levels of used space"),
+                           elements = [
+                               Percentage(title = _("Warning at"), label = _("% usage")),
+                               Percentage(title = _("Critical at"), label = _("% usage")),
+                           ]
+                       ),
+                       Tuple(
+                           title = _("Absolute free space in MB"),
+                           elements = [
+                                Integer(title = _("Warning lower than"), unit = _("MB")), 
+                                Integer(title = _("Critical lower than"), unit = _("MB")), 
+                           ]
+                        )
+                   ])),
+            ( "heap",
+               Alternative(
+                   title = _("Heap Memory Levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Percentage levels of used space"),
+                           elements = [
+                               Percentage(title = _("Warning at"), label = _("% usage")),
+                               Percentage(title = _("Critical at"), label = _("% usage")),
+                           ]
+                       ),
+                       Tuple(
+                           title = _("Absolute free space in MB"),
+                           elements = [
+                                Integer(title = _("Warning lower than"), unit = _("MB")),
+                                Integer(title = _("Critical lower than"), unit = _("MB")), 
+                           ]
+                        )
+                   ])),
+            ( "nonheap",
+               Alternative(
+                   title = _("Nonheap Memory Levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Percentage levels of used space"),
+                           elements = [
+                               Percentage(title = _("Warning at"), label = _("% usage")),
+                               Percentage(title = _("Critical at"), label = _("% usage")),
+                           ]
+                       ),
+                       Tuple(
+                           title = _("Absolute free space in MB"),
+                           elements = [
+                                Integer(title = _("Warning lower than"), unit = _("MB")), 
+                                Integer(title = _("Critical lower than"), unit = _("MB")), 
+                           ]
+                        )
+                   ])),
+        ]),
+    TextAscii(
+        title = _("Name of the virtual machine"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "dict"
+))
 
 checkgroups.append((
     subgroup_applications,

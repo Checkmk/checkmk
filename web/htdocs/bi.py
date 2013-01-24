@@ -1394,7 +1394,7 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
                     h += tree[2]["title"].replace(" ", "&nbsp;")
                 h += '</span> '
 
-            if not is_leaf:
+            if not is_leaf and not omit_content:
                 h += '<span class="bibox" style="%s">' % ((not is_open and not omit) and "display: none;" or "")
                 parts = []
                 for node in tree[3]:

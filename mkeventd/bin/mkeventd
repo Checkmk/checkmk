@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import socket, os, time, sys, getopt, signal, thread, pprint, re, \
-       select, subprocess
+       select, subprocess, stat
 from pwd import getpwnam
 from grp import getgrnam
 
@@ -683,7 +683,6 @@ class EventServer:
         return headers, [row]
 
     def create_pipe(self):
-        import stat
         try:
             if not stat.S_ISFIFO(os.stat(g_pipe_path).st_mode): 
                 os.remove(g_pipe_path)

@@ -22,56 +22,85 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-function bi_toggle_subtree(oImg)
+function bi_toggle_subtree(oImg, lazy)
 {
     var oSubtree = oImg.parentNode.childNodes[6];
     var url = "bi_save_treestate.py?path=" + escape(oSubtree.id);
+    var do_open;
 
     if (oSubtree.style.display == "none") {
         oSubtree.style.display = "";
         url += "&state=open";
         toggle_folding(oImg, 1);
+        do_open = true;
     }
     else {
         oSubtree.style.display = "none";
         url += "&state=closed";
         toggle_folding(oImg, 0);
+        do_open = false;
     }
     oSubtree = null;
-    get_url(url);
+    if (lazy && do_open)
+        get_url(url, bi_update_tree, oImg);
+    else
+        get_url(url);
+
 }
 
-function bi_toggle_box(oDiv)
+function bi_update_tree(oImg, code)
+{
+    // First find enclosding <div class=bi_tree_container>
+    var oDiv = oImg;
+    while (oDiv.className != "bi_tree_container") {
+        oDiv = oDiv.parentNode;
+    }
+    var url = "bi_render_tree.py?" + oDiv.id;
+    get_url(url, bi_update_tree_response, oDiv); 
+}
+
+function bi_update_tree_response(oDiv, code) {
+    oDiv.innerHTML = code;
+    executeJSbyObject(oDiv);
+}
+
+function bi_toggle_box(oDiv, lazy)
 {
     var url = "bi_save_treestate.py?path=" + escape(oDiv.id);
+    var do_open;
 
     if (oDiv.className.indexOf("open") >= 0) {
         oDiv.className = oDiv.className.replace(/open/, "closed");
         url += "&state=closed";
+        do_open = false;
     }
     else {
         oDiv.className = oDiv.className.replace(/closed/, "open");
         url += "&state=open";
+        do_open = true;
     }
 
-    get_url(url); // persist current folding
-
-    // find child nodes that belong to this node and 
-    // control visibility of those. Note: the BI child nodes
-    // are *no* child nodes in HTML but siblings!
-    var found = 0;
-    for (var i in oDiv.parentNode.childNodes) {
-        var onode = oDiv.parentNode.childNodes[i];
-        if (onode == oDiv) 
-            found = 1;
-        else if (found == 1) 
-            found ++;
-        else if (found) {
-            if (onode.style.display)
-                onode.style.display = "";
-            else
-                onode.style.display = "none";
-            return;
+    if (lazy && do_open)
+        get_url(url, bi_update_tree, oDiv);
+    else {
+        get_url(url);
+        // find child nodes that belong to this node and 
+        // control visibility of those. Note: the BI child nodes
+        // are *no* child nodes in HTML but siblings!
+        var found = 0;
+        for (var i in oDiv.parentNode.childNodes) {
+            var onode = oDiv.parentNode.childNodes[i];
+            if (onode == oDiv) 
+                found = 1;
+            else if (found == 1) 
+                found ++;
+            else if (found) {
+                if (onode.style.display)
+                    onode.style.display = "";
+                else
+                    onode.style.display = "none";
+                return;
+            }
         }
     }
 

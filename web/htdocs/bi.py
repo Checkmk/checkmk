@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, re, pprint, time
-import weblib
+import weblib, htmllib
 from lib import *
 
 
@@ -1314,6 +1314,9 @@ def ajax_save_treestate():
 def ajax_render_tree():
     aggr_group = html.var("group")
     aggr_title = html.var("title")
+    omit_root = not not html.var("omit_root")
+    boxes = not not html.var("boxes")
+    only_problems = not not html.var("only_problems")
 
     # Make sure that BI aggregates are available
     if config.bi_precompile_on_demand:
@@ -1333,8 +1336,10 @@ def ajax_render_tree():
     for tree in trees:
         if tree["title"] == aggr_title:
             row = create_aggregation_row(tree)
+            row["aggr_group"] = aggr_group
             # ZUTUN: omit_root, boxes, only_problems has HTML-Variablen
-            tdclass, htmlcode = render_tree_foldable(row, False, True, -1, False)
+            tdclass, htmlcode = render_tree_foldable(row, boxes=boxes, omit_root=omit_root, 
+                                             expansion_level=load_ex_level(), only_problems=only_problems, lazy=False)
             html.write(htmlcode)
             return
 
@@ -1342,22 +1347,13 @@ def ajax_render_tree():
 
 
     
-def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems):
-    row = {
-        "aggr_treestate" : row["aggr_treestate"],
-        "aggr_hosts" : row["aggr_hosts"],
-    }
+def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, lazy):
     saved_expansion_level = load_ex_level()
     treestate = weblib.get_tree_states('bi')
     if expansion_level != saved_expansion_level:
         treestate = {}
         weblib.set_tree_states('bi', treestate)
         weblib.save_tree_states()
-
-    mousecode = \
-       'onmouseover="this.style.cursor=\'pointer\';" ' \
-       'onmouseout="this.style.cursor=\'auto\';" ' \
-       'onclick="bi_toggle_%s(this);" ' % (boxes and "box" or "subtree")
 
     def render_subtree(tree, path, show_host):
         is_leaf = len(tree) == 3
@@ -1367,8 +1363,9 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems):
             is_open = len(path) <= expansion_level
 
         h = ""
-        
         state = tree[0]
+        omit_content = lazy and not is_open
+        mousecode = 'onclick="bi_toggle_%s(this, %d);" ' % (boxes and "box" or "subtree", omit_content)
 
         # Variant: BI-Boxes
         if boxes:
@@ -1426,13 +1423,13 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems):
             h += aggr_render_node(tree, tree[2]["title"], mc, show_host)
             if not is_empty:
                 h += '<ul id="%d:%s" %sclass="subtree">' % (expansion_level, path_id, style)
+                if not omit_content:
+                    for node in tree[3]:
+                        estate = node[1] != None and node[1] or node[0]
 
-                for node in tree[3]:
-                    estate = node[1] != None and node[1] or node[0]
-
-                    if not node[2].get("hidden"):
-                        new_path = path + [node[2]["title"]]
-                        h += '<li>' + render_subtree(node, new_path, show_host) + '</li>\n'
+                        if not node[2].get("hidden"):
+                            new_path = path + [node[2]["title"]]
+                            h += '<li>' + render_subtree(node, new_path, show_host) + '</li>\n'
                 h += '</ul>'
             return h + '</span>\n'
 
@@ -1441,7 +1438,19 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems):
         tree = filter_tree_only_problems(tree)
 
     affected_hosts = row["aggr_hosts"]
-    htmlcode = render_subtree(tree, [tree[2]["title"]], len(affected_hosts) > 1)
+    title = row["aggr_tree"]["title"]
+    group = row["aggr_group"]
+    url_id = htmllib.urlencode_vars([
+        ( "group", group ),
+        ( "title", title ),
+        ( "omit_root", omit_root and "yes" or ""),
+        ( "boxes", boxes and "yes" or ""),
+        ( "only_problems", only_problems and "yes" or ""),
+    ])
+        
+    htmlcode = '<div id="%s" class=bi_tree_container>' % htmllib.attrencode(url_id) + \
+               render_subtree(tree, [tree[2]["title"]], len(affected_hosts) > 1) + \
+               '</div>'
     return "aggrtree" + (boxes and "_box" or ""), htmlcode
 
 def aggr_render_node(tree, title, mousecode, show_host):
@@ -1535,6 +1544,22 @@ def render_bi_state(state):
              MISSING: _("MI"),
              UNAVAIL: _("NA"),
     }.get(state, _("??"))
+
+
+# Convert tree to tree contain only node in non-OK state
+def filter_tree_only_problems(tree):
+    state, assumed_state, node, subtrees = tree
+    # remove subtrees in state OK
+    new_subtrees = []
+    for subtree in subtrees:
+        effective_state = subtree[1] != None and subtree[1] or subtree[0]
+        if effective_state["state"] != OK:
+            if len(subtree) == 3:
+                new_subtrees.append(subtree)
+            else:
+                new_subtrees.append(filter_tree_only_problems(subtree))
+
+    return state, assumed_state, node, new_subtrees
 
 
 

@@ -180,22 +180,6 @@ multisite_painter_options["aggr_wrap"] = {
 
 
 
-# Convert tree to tree contain only node in non-OK state
-def filter_tree_only_problems(tree):
-    state, assumed_state, node, subtrees = tree
-    # remove subtrees in state OK
-    new_subtrees = []
-    for subtree in subtrees:
-        effective_state = subtree[1] != None and subtree[1] or subtree[0]
-        if effective_state["state"] != bi.OK:
-            if len(subtree) == 3:
-                new_subtrees.append(subtree)
-            else:
-                new_subtrees.append(filter_tree_only_problems(subtree))
-
-    return state, assumed_state, node, new_subtrees
-
-
 
 
 def paint_aggr_tree_ltr(row, mirror):
@@ -256,11 +240,11 @@ def paint_aggregated_tree_state(row):
     expansion_level = int(get_painter_option("aggr_expand"))
     only_problems = get_painter_option("aggr_onlyproblems") == "1"
     if treetype == "foldable":
-        return bi.render_tree_foldable(row,  False,  False, expansion_level, only_problems)
+        return bi.render_tree_foldable(row,  False,  False, expansion_level, only_problems, lazy=True)
     elif treetype == "boxes":
-        return bi.render_tree_foldable(row,  True, False, expansion_level, only_problems)
+        return bi.render_tree_foldable(row,  True, False, expansion_level, only_problems, lazy=True)
     elif treetype == "boxes-omit-root":
-        return bi.render_tree_foldable(row,  True,oTrue, expansion_level, only_problems)
+        return bi.render_tree_foldable(row,  True, True, expansion_level, only_problems, lazy=True)
     elif treetype == "bottom-up":
         return paint_aggr_tree_ltr(row, False)
     elif treetype == "top-down":

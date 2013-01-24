@@ -104,6 +104,11 @@ b.bullet {
     vertical-align:middle;
 }
 
+.aggrtree img.opentree:hover {
+    cursor: pointer;
+}
+
+
 table.aggrtree {
     border-collapse: collapse;
     width: 100%;

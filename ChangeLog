@@ -10,7 +10,7 @@
     Checks & Agents:
     * FIX: mssql_counters.file_sizes - Fixed wrong value for "Log Files" in output
     * FIX: drbd: Parameters for expected roles and disk states can now be set to 
-    * Add: Added check for ricon printer supply levels
+    * Add: Added check for ricoh printer supply levels
       None to disable alerting on changed values
 
     Multisite:

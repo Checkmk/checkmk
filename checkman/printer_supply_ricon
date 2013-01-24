@@ -1,0 +1,25 @@
+title: Measure remaining filling level of printer supplys for ricon printers
+agents: snmp
+author: Bastian Kuhn <bk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the remaining filling level in percent of a printers
+ supplys like toner or fuser. 
+ The default check levels are 20% (warning) and 10% of the full level
+ (critical).
+
+perfdata:
+ The remaining filling level in percent. 
+
+inventory:
+ One check is being created for each supply unit with a unique name.
+
+[parameters]
+warning(int): The supply level in percentage at which (and below) a warning is triggered
+critical(int): The supply level in percentage at which (and below) a critical state is reached.
+
+
+[configuration]
+printer_supply_ricon_default(int, int): Set global default levels for warning and critical
+

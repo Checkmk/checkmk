@@ -1,0 +1,61 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+printer_supply_ricon_default = ( 20, 10 ) 
+
+def inventory_printer_supply_ricon(info):
+    return [ (x[0], "printer_supply_ricon_default") for x in info ]
+
+def check_printer_supply_ricon(item, params, info):
+    warn, crit = params
+    for line in info:
+        if item == line[0]:
+            state = 0
+            label = ""
+            level = saveint(line[1])
+            remaining = 100 - level
+            if remaining < crit:
+                state = 2
+                label = "(!!)"
+            elif remaining < warn:
+                state = 1
+                label = "(!)"
+            message = " - Remaining: %s%%%s (levels at %d%%/%d%%) " % (remaining, label, warn, crit)
+            perfdata = [ ("level", level, warn, crit, 0, 100)]
+            return (state, nagios_state_names[state] + message, perfdata)
+    return(3, "Ukn: Supply not found in SNMP data")
+
+check_info['printer_supply_ricon'] = {
+  "inventory_function"  : inventory_printer_supply_ricon,
+  "check_function"      : check_printer_supply_ricon,
+  "service_description" : "Supply %s",
+  "has_perfdata"        : True,
+  "group"               : "printer_supply",
+  "snmp_info"           : ( ".1.3.6.1.4.1.367.3.2.1.2.24.1.1", [ 2, 5 ] ),
+  "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [ ".1.3.6.1.4.1.367.1.1" ] 
+                                                      
+}

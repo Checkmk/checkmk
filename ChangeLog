@@ -12,6 +12,8 @@
     * FIX: drbd: Parameters for expected roles and disk states can now be set to 
     * Add: Added check for ricoh printer supply levels
       None to disable alerting on changed values
+    * Add: jolokia_metrics now support warn/crit levels for heap, nonheap, totalheap
+    * Add: pnpgraph for jolokia_metrics
 
     Multisite:
     * Added comment painter to notification related views

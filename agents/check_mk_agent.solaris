@@ -171,6 +171,7 @@ then
 fi
 
 # Fileinfo-Check: put patterns for files into $MK_CONFDIR/fileinfo.cfg
+echo '<<<fileinfo:sep(124)>>>'
 if [ -f "$MK_CONFDIR/fileinfo.cfg" ] ; 
 then
     echo ''

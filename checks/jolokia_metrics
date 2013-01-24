@@ -209,6 +209,8 @@ def check_jolokia_metrics_mem(item, params, info):
                 elif value >= value_max * params[what][0] / 100.0:
                     param_state = 1
                     level_info = "%s(warn at %s%%)" % (state_sign[1], params[what][0])
+        else:
+            perfdata.append((what, value, "", "", "", value_max))
 
  
         info_list.append("%s: %0.fMB/%.1f%% used%s" % (what.title(), value, value/value_max*100, level_info))

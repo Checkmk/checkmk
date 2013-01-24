@@ -1,0 +1,21 @@
+Title: auth.serials are not created in manual installations
+Component: core
+State: open
+Date: 2013-01-24 17:36:24
+Targetversion: 1.2.2
+Class: todo
+
+Hello,
+
+after update from check_MK 1.2.0p3 to 1.2.1i4 I get in Multisite following error:
+
+Internal error:: [Errno 13] Permission denied: '/usr/local/nagios/etc/auth.serials' (Retry with debug mode)
+
+Here I have to do "touch /usr/local/nagios/etc/auth.serials" to get Multisite working again.
+
+I think the setup.sh script should create this file itself.
+
+I'm testing on CentOS 6.2 64bit.
+
+Best regards
+Wolfgang

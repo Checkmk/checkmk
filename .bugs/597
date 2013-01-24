@@ -1,9 +1,9 @@
 Title: Deal with Activate Changes of multiple users
 Component: wato
-State: open
+Class: todo
+State: closed
 Date: 2012-01-12 11:58:38
 Targetversion: 1.2.0
-Class: todo
 
 When multiple users make modifications then it's a problem
 if one users activates the changes while modifications of
@@ -23,3 +23,6 @@ changes of another user.
 * We modify the icon in the activate Changes button
 so that the user can see that foreign changes
 are pending.
+
+2013-01-24 10:42:40: changed state open -> closed
+Its allready implemented

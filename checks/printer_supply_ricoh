@@ -25,12 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 
-printer_supply_ricon_default = ( 20, 10 ) 
+printer_supply_ricoh_default = ( 20, 10 ) 
 
-def inventory_printer_supply_ricon(info):
-    return [ (x[0], "printer_supply_ricon_default") for x in info ]
+def inventory_printer_supply_ricoh(info):
+    return [ (x[0], "printer_supply_ricoh_default") for x in info ]
 
-def check_printer_supply_ricon(item, params, info):
+def check_printer_supply_ricoh(item, params, info):
     warn, crit = params
     for line in info:
         if item == line[0]:
@@ -49,9 +49,9 @@ def check_printer_supply_ricon(item, params, info):
             return (state, nagios_state_names[state] + message, perfdata)
     return(3, "Ukn: Supply not found in SNMP data")
 
-check_info['printer_supply_ricon'] = {
-  "inventory_function"  : inventory_printer_supply_ricon,
-  "check_function"      : check_printer_supply_ricon,
+check_info['printer_supply_ricoh'] = {
+  "inventory_function"  : inventory_printer_supply_ricoh,
+  "check_function"      : check_printer_supply_ricoh,
   "service_description" : "Supply %s",
   "has_perfdata"        : True,
   "group"               : "printer_supply",

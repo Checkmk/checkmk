@@ -1,0 +1,98 @@
+Title: Manual installion of EC without OMD
+Component: docu
+State: open
+Date: 2013-01-24 16:46:23
+Targetversion: 1.2.3
+Class: todo
+
+ch versuche mich gerade an der Event Console (mkeventd).
+Ich habe jedoch massive Probleme in einer nicht OMD Umgebung.
+
+Hier mal die Schritte welche ich durchgeführt habe.
+
+Check_MK 1.2.1i4 installiert
+
+mkeventd-1.2.1i4.tar.gz geladen und entpackt.
+cd mkevent
+rsync -av bin/* /usr/local/bin/
+rsync -av checks/* /usr/share/check_mk/checks/
+rsync -av lib/* /usr/local/nagios/libexec/
+rsync -av web/* /usr/share/check_mk/web/
+
+Multisite Integration:
+======================
+cat > /etc/check_mk/multisite.mk
+mkeventd_enabled = True
+EOF
+
+service httpd restart
+
+Leere Config Datei erstellen:
+=============================
+touch /etc/check_mk/mkeventd.mk
+
+
+WATO in Multisite geöffnet:
+===========================
+Multisite -> Event Console -> New Rule -> Save
+>>> Nun kommen einige Fehlermeldungen.
+Your web server cannot create the directory /etc/check_mk/mkeventd.d, or cannot set the group to nagcmd or cannot set the permissions to 0770. Please make sure that:
+the base directory is writable by the web server.
+Both Nagios and the web server are in the group nagcmd.
+Reason: [Errno 13] Permission denied: '/etc/check_mk/mkeventd.d'
+
+>>> Umgehungslösung:
+mkdir -p /etc/check_mk/mkeventd.d/wato
+touch /etc/check_mk/mkeventd.d/wato/global.mk
+chgrp -R apache /etc/check_mk/mkeventd.d/wato
+chmod g+w /etc/check_mk/mkeventd.d/wato/global.mk
+
+Internal error:: [Errno 13] Permission denied: '/etc/check_mk/mkeventd.d/wato/rules.mk' (Retry with debug mode)
+touch /etc/check_mk/mkeventd.d/wato/rules.mk
+chgrp -R apache /etc/check_mk/mkeventd.d/wato
+chmod g+w /etc/check_mk/mkeventd.d/wato/rules.mk
+
+Daemon start:
+=============
+mkeventd -P /var/run/mkeventd/events -S /var/run/mkeventd/status --pidfile /var/run/mkeventd/mkeventd.pid
+
+Multisite im Browser geöffnet:
+==============================
+Multisite -> Event Console -> Events
+
+>>> Nun kommt in Multisite folgende Meldung:
+Cannot connect to event daemon: [Errno 2] No such file or directory
+
+Ursache: Socket und Pipe Path unbekannt (run_dir Variable ist falsch)
+
+>>> Umgehungslösung:
+In der Datei /usr/share/check_mk/web/htdocs/mkeventd.py
+except:
+    run_dir = defaults.livestatus_unix_socket.rsplit("/",1)[0]
+    socket_path = run_dir + "/mkeventd/status"
+    pipe_path = run_dir + "/mkeventd/events"
+ändern auf
+    socket_path = "/var/run/mkeventd/status"
+    pipe_path = "/var/run/mkeventd/events"
+
+service httpd restart
+
+>>> Nun kommt in Multisite folgende Meldung:
+Cannot connect to event daemon: [Errno 13] Permission denied
+
+Ursache: Kann nicht in den Socket schreiben.
+
+>>> Umgehungslösung:
+chmod o+w /var/run/mkeventd/status
+
+Dies muss nach jeden Neustart des Daemons durchgeführt werden.
+
+
+Nun scheint alles so zu funktionieren wie es soll.
+
+Wäre toll wenn man die Umgehungslösungen in mkevent einpflegen könnte.
+
+
+Versionsinfos:
+CentOS 6.2
+check_MK 1.2.1i4

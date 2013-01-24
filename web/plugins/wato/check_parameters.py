@@ -1529,7 +1529,10 @@ checkgroups.append((
              Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
           ],
      ),
-      None, None))
+    TextAscii(
+        title = _("Database name"),
+        allow_empty = False),
+     None))
 
 checkgroups.append((
     subgroup_applications,

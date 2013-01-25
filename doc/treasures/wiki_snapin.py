@@ -19,7 +19,6 @@ def render_wiki():
                     html.write("</ul>")
                     start_ul = True
                     ul_started = False
-                html.write("<br />")
             elif line == "----":
                 html.write("<hr>")
 
@@ -85,6 +84,14 @@ sidebar_snapins["wiki"] = {
         margin-top: 3px;
         width: 222px;
     }
+    #snapin_container_wiki hr {
+        margin: 2px;
+        margin-bottom: 2.5px;
+    }
+    #snapin_container_wiki ul {
+        margin: 1px;
+    }
+
     """
 
 

@@ -19,3 +19,7 @@ I'm testing on CentOS 6.2 64bit.
 
 Best regards
 Wolfgang
+
+
+Resolution: We do not try to create this file but assume a serial
+number of 0 for all users in case that file is missing.

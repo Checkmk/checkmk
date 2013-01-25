@@ -6677,11 +6677,11 @@ def mode_edit_site(phase):
     
         save_sites(sites)
         
-        # Own site needs SYNCRESTART in any case
+        # Own site needs RESTART in any case
         update_replication_status(our_site_id(), { "need_restart" : True })
-
         if new:
-            update_replication_status(id, { "need_sync" : True, "need_restart" : True })
+            if not site_is_local(id):
+                update_replication_status(id, { "need_sync" : True, "need_restart" : True }) 
             log_pending(AFFECTED, None, "edit-sites", _("Created new connection to site %s" % id))
         else:
             log_pending(AFFECTED, None, "edit-sites", _("Modified site connection %s" % id))

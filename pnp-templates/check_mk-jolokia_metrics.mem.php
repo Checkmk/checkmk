@@ -32,17 +32,23 @@ $def[1] = ""
          . "CDEF:total=heap,nonheap,+ "
 
          . "AREA:heap#00c0ff:\"Heap\" "
-         . "LINE1:$WARN[1]#a0ad00:\"Heap WARN\" "
-         . "LINE1:$CRIT[1]#ad0000:\"Heap CRIT\" "
-         . "LINE1:$MAX[1]#003077:\"Heap MAX\" "
+         . "LINE1:$MAX[1]#003077:\"Heap MAX\" ";
+if ($CRIT[1]) {
+  $def[1] .= "LINE1:$WARN[1]#a0ad00:\"Heap WARN\" "
+           . "LINE1:$CRIT[1]#ad0000:\"Heap CRIT\" ";
+}
 
-         . "AREA:min_nonheap#3430bf:\"Nonheap\" "
-         . "LINE1:-$WARN[2]#adfd30:\"Nonheap WARN\" "
-         . "LINE1:-$CRIT[2]#ff0080:\"Nonheap CRIT\" "
-         . "LINE1:-$MAX[2]#003233:\"Nonheap MAX                             \" "
 
-         . "GPRINT:total:LAST:\"Total       %.2lfMB last\" "
+$def[1] .= "AREA:min_nonheap#3430bf:\"Nonheap\" "
+         . "LINE1:-$MAX[2]#003233:\"Nonheap MAX \" ";
+if ($CRIT[2]) {
+  $def[1] .= "LINE1:-$WARN[2]#adfd30:\"Nonheap WARN\" "
+           . "LINE1:-$CRIT[2]#ff0080:\"Nonheap CRIT\" ";
+} 
+
+
+$def[1] .= "GPRINT:total:LAST:\"Total %.2lfMB last\" "
          . "GPRINT:total:AVERAGE:\"%.2lfMB avg\" "
-         . "GPRINT:total:MAX:\"%.2lfMB max                      \" " 
-         . "";
+         . "GPRINT:total:MAX:\"%.2lfMB max \" " . "";
+
 ?>

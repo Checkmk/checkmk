@@ -653,6 +653,7 @@ class EventServer:
     def __init__(self):
         self._syslog = None
         self.create_pipe()
+        self.open_eventsocket()
         self.open_syslog()
         self._rules = []
         self._hash_stats = []
@@ -691,6 +692,7 @@ class EventServer:
         if not os.path.exists(g_pipe_path):
             os.mkfifo(g_pipe_path)
         os.chmod(g_pipe_path, 0666)
+        log("Created FIFO '%s' for receiving events" % g_pipe_path)
 
     def open_syslog(self):
         if opt_syslog:
@@ -707,6 +709,18 @@ class EventServer:
                     log("Opened builtin syslog server on UDP port 514")
             except Exception, e:
                 raise Exception("Cannot start builtin syslog server: %s" % e)
+
+    def open_eventsocket(self):
+        if g_eventsocket_path:
+            if os.path.exists(g_eventsocket_path):
+                os.remove(g_eventsocket_path)
+            self._eventsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self._eventsocket.bind(g_eventsocket_path)
+            self._eventsocket.listen(g_config['eventsocket_queue_len'])
+            log("Opened UNIX socket '%s' for receiving events" % g_eventsocket_path)
+        else:
+            self._eventsocket = None
+
 
     def run(self):
         if opt_profile.get("event"):
@@ -758,10 +772,60 @@ class EventServer:
         listen_list = [ pipe ]
         if self._syslog != None:
             listen_list.append(self._syslog.fileno())
-        
+        if self._eventsocket:
+            listen_list.append(self._eventsocket)
+
+        # Keep list of client connections via UNIX socket and 
+        # read data that is not yet processed. Map from
+        # fd to (fileobject, data)
+        client_sockets = {}
         while True:
-            readable = select.select(listen_list, [], [], None)[0]
+            readable = select.select(listen_list + client_sockets.keys(), [], [], None)[0]
             data = None
+
+            # Accept new connection on event unix socket
+            if self._eventsocket in readable:
+                client_socket, addr_info = self._eventsocket.accept()
+                client_sockets[client_socket.fileno()] = (client_socket, "")
+
+            # Read data from existing event unix socket connections
+            for fd, (cs, previous_data) in client_sockets.items():
+                if fd in readable:
+                    # Receive next part of data
+                    try:
+                        new_data = cs.recv(4096)
+                    except:
+                        new_data = ""
+
+                    # Put together with incomplete messages from last time
+                    data = previous_data + new_data
+
+                    # Do we have incomplete data? (if the socket has been
+                    # closed then we consider the pending message always
+                    # as complete, even if there was no trailing \n)
+                    if new_data and not data.endswith("\n"): # keep fragment
+                        # Do we have any complete messages?
+                        if '\n' in data:
+                            complete, rest = data.rsplit("\n", 1)
+                            self.process_event_data(complete + "\n")
+                        else:
+                            rest = data # keep for next time
+
+                    # Only complete messages
+                    else:
+                        if data:
+                            self.process_event_data(data)
+                        rest = ""
+
+                    # Connection still open?
+                    if new_data:
+                        client_sockets[fd] = (cs, rest)
+                    else:
+                        cs.close()
+                        del client_sockets[fd]
+                    
+
+            # Read data from pipe
             if pipe in readable:
                 try:
                     data = os.read(pipe, 4096)
@@ -783,40 +847,44 @@ class EventServer:
                         if data[-1] != '\n':
                             if '\n' in data: # at least one complete message contained
                                 messages, pipe_fragment = data.rsplit('\n', 1) 
-                                data = messages + '\n' # got lost in split
+                                self.process_event_data(messages + '\n') # got lost in split
                             else:
                                 pipe_fragment = data # keep beginning of message, wait for \n
-                                data = ""
-
+                        else:
+                            self.process_event_data(data)
 
                 except:
-                    data = None
-            elif self._syslog.fileno() in readable:
-                data = self._syslog.recv(4096)
+                    pass
 
-            if data:
-                lines = data.splitlines()
-                for line in lines:
-                    line = line.rstrip()
-                    # Convert to Unicode, first assume UTF-8, then latin-1
-                    try:
-                        line = line.decode("utf-8")
-                    except:
-                        line = line.decode("latin-1")
+            # Read events from builtin syslog server
+            if self._syslog.fileno() in readable:
+                self.process_event_data(self._syslog.recv(4096))
 
-                    if line:
-                        g_perfcounters.count("messages")
-                        before = time.time()
-                        # In replication slave mode (when not took over), ignore all events
-                        if not is_replication_slave() or g_slave_status["mode"] != "sync":
-                            self.process_event(line.rstrip())
-                        elif opt_debug:
-                            log("Replication: we are in slave mode, ignoring event")
-                        elapsed = time.time() - before
-                        g_perfcounters.count_time("processing", elapsed)
+            if opt_profile.get("event"):
+                return
 
-                    if opt_profile.get("event"):
-                        return
+
+    def process_event_data(self, data):
+        lines = data.splitlines()
+        for line in lines:
+            line = line.rstrip()
+            # Convert to Unicode, first assume UTF-8, then latin-1
+            try:
+                line = line.decode("utf-8")
+            except:
+                line = line.decode("latin-1")
+
+            if line:
+                g_perfcounters.count("messages")
+                before = time.time()
+                # In replication slave mode (when not took over), ignore all events
+                if not is_replication_slave() or g_slave_status["mode"] != "sync":
+                    self.process_event(line.rstrip())
+                elif opt_debug:
+                    log("Replication: we are in slave mode, ignoring event")
+                elapsed = time.time() - before
+                g_perfcounters.count_time("processing", elapsed)
+
 
     def do_housekeeping(self):
         with lock_eventstatus:
@@ -1522,6 +1590,7 @@ class StatusServer:
         os.kill(os.getpid(), 15)
 
     def serve(self):
+        connected_sockets = []
         while not self._should_terminate:
             try:
                 client_socket = None
@@ -2472,6 +2541,7 @@ def load_configuration():
         "history_rotation"      : "daily",
         "remote_status"         : None,
         "socket_queue_len"      : 10,
+        "eventsocket_queue_len" : 10,
     }
     main_file = g_config_dir + "/mkeventd.mk"
     if not os.path.exists(main_file):
@@ -2522,6 +2592,7 @@ def usage():
    --debug-locking      Debug locking and unlocking (thread communication)
    -C, --configdir      Path to directory where mkevent.mk lives
    -S, --socket P       Path to unix socket for querying status
+   -E, --eventsocket P  Path to unix socket for receiving events (optional)
    -P, --pipe P         Path to pipe for receiving events
    --syslog             Enable builtin syslog server
    --syslog-fd FD       Do not open UDP port 514, but inherit it via this FD
@@ -2534,12 +2605,13 @@ def usage():
         sys.stdout.write("""You are running OMD, which is generally a good idea. 
 The following defaults are set:
 
-  Config dir:  %(g_config_dir)s
-  Unix socket: %(g_socket_path)s
-  Pipe:        %(g_pipe_path)s
-  PID file:    %(g_pid_file)s
-  Log file:    %(g_logfile_path)s
-  Status dir:  %(g_state_dir)s
+  Config dir:   %(g_config_dir)s
+  Unix socket:  %(g_socket_path)s
+  Event socket: %(g_eventsocket_path)s
+  Event Pipe:   %(g_pipe_path)s
+  PID file:     %(g_pid_file)s
+  Log file:     %(g_logfile_path)s
+  Status dir:   %(g_state_dir)s
 
 """ % globals())
 
@@ -2572,23 +2644,25 @@ opt_syslog_fd     = None
 # Set default values for options
 omd_root = os.getenv("OMD_ROOT")
 if omd_root:
-    g_config_dir      = omd_root + "/etc/check_mk"
-    g_socket_path     = omd_root + "/tmp/run/mkeventd/status"
-    g_pipe_path       = omd_root + "/tmp/run/mkeventd/events"
-    g_pid_file        = omd_root + "/tmp/run/mkeventd/pid"
-    g_logfile_path    = omd_root + "/var/log/mkeventd.log"
-    g_state_dir       = omd_root + "/var/mkeventd"
+    g_config_dir       = omd_root + "/etc/check_mk"
+    g_socket_path      = omd_root + "/tmp/run/mkeventd/status"
+    g_eventsocket_path = omd_root + "/tmp/run/mkeventd/eventsocket"
+    g_pipe_path        = omd_root + "/tmp/run/mkeventd/events"
+    g_pid_file         = omd_root + "/tmp/run/mkeventd/pid"
+    g_logfile_path     = omd_root + "/var/log/mkeventd.log"
+    g_state_dir        = omd_root + "/var/mkeventd"
 else:
-    g_config_dir      = "/etc/check_mk"
-    g_socket_path     = None
-    g_pipe_path       = None
-    g_pid_file        = "/var/run/mkeventd.pid"
-    g_logfile_path    = "/var/log/mkeventd.log"
-    g_state_dir       = "/var/lib/mkeventd"
+    g_config_dir       = "/etc/check_mk"
+    g_socket_path      = None
+    g_eventsocket_path = None
+    g_pipe_path        = None
+    g_pid_file         = "/var/run/mkeventd.pid"
+    g_logfile_path     = "/var/log/mkeventd.log"
+    g_state_dir        = "/var/lib/mkeventd"
 
 
-short_options = "hvVgS:P:p:C:"
-long_options = [ "help", "version", "verbose", "debug", "foreground", "socket=", "pipe=",
+short_options = "hvVgS:P:p:C:E:"
+long_options = [ "help", "version", "verbose", "debug", "foreground", "socket=", "eventsocket=", "pipe=",
                  "pidfile=", "statedir=", "configdir", "profile-status", "profile-event", "debug-locking",
                  "syslog", "syslog-fd=" ]
 
@@ -2607,6 +2681,8 @@ try:
             opt_foreground = True
         elif o in [ '-S', '--socket' ]:
             g_socket_path = a
+        elif o in [ '-R', '--eventsocket' ]:
+            g_eventsocket_path = a
         elif o in [ '-P', '--pipe' ]:
             g_pipe_path = a
         elif o == '--syslog':
@@ -2655,6 +2731,8 @@ try:
 
     # Make sure paths exist
     make_parentdirs(g_socket_path)
+    if g_eventsocket_path:
+        make_parentdirs(g_eventsocket_path)
     make_parentdirs(g_pipe_path)
     make_parentdirs(g_logfile_path)
     make_parentdirs(g_state_dir + "/state")
@@ -2707,11 +2785,13 @@ try:
 
     g_event_status.save_status()
     os.remove(g_socket_path)
-    os.remove(g_pid_file)
+    if g_eventsocket_path:
+        os.remove(g_eventsocket_path)
 
     g_event_server.output_hash_stats()
 
     log("Successfully shut down.")
+    os.remove(g_pid_file)
     sys.exit(0)
 
 except Exception, e:

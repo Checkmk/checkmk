@@ -30,6 +30,9 @@
     * FIX: fix title of foldable areas contained in list valuespecs
     * FIX: Fixed bug where pending log was not removed in multisite setup
 
+    Event Console:
+    * Added UNIX socket for sending events to the EC
+
 1.2.1i5:
     Core:
     * Improved handling of CTRL+C (SIGINT) to terminate long runnining tasks 

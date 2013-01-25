@@ -1523,7 +1523,7 @@ if mkeventd_enabled:
             help = _("When the Multisite GUI or the active check check_mkevents connects "
                      "to the socket of the event daemon in order to retrieve information "
                      "about current and historic events then its connection request might "
-                     "be queued before being processed. This defines the number of unaccepted "
+                     "be queued before being processed. This setting defines the number of unaccepted "
                      "connections to be queued before refusing new connections."),
             minvalue = 1,
             default_value = 10,
@@ -1533,6 +1533,22 @@ if mkeventd_enabled:
         domain = "mkeventd"
     )
 
+    register_configvar(group,
+        "eventsocket_queue_len",
+        Integer(
+            title = _("Max. number of pending connections to the event socket"),
+            help = _("The event socket is an alternative way for sending events "
+                     "to the Event Console. It is used by the Check_MK logwatch check "
+                     "when forwarding log messages to the Event Console. "
+                     "This setting defines the number of unaccepted "
+                     "connections to be queued before refusing new connections."),
+            minvalue = 1,
+            default_value = 10,
+            label = "max.",
+            unit = "pending connections",
+        ),
+        domain = "mkeventd"
+    )
 
 # Settings that should also be avaiable on distributed Sites that
 # do not run an own eventd but want to query one or send notifications

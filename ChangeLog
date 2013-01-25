@@ -28,6 +28,7 @@
     * FIX: Fixed problem on user profile page when no alias set for a user
     * FIX: list valuespecs could not be extended after once saving
     * FIX: fix title of foldable areas contained in list valuespecs
+    * FIX: Fixed bug where pending log was not removed in multisite setup
 
 1.2.1i5:
     Core:

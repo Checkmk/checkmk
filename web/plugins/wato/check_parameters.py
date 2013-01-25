@@ -2222,7 +2222,7 @@ checkgroups.append((
                         title = _("Send events to local event console in same OMD site"),
                     ),
                     TextAscii(
-                        title = _("Send events to local event console into pipe"),
+                        title = _("Send events to local event console into unix socket"),
                         allow_empty = False,
                     ),
                     Tuple(

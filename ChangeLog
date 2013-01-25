@@ -10,10 +10,11 @@
     Checks & Agents:
     * FIX: mssql_counters.file_sizes - Fixed wrong value for "Log Files" in output
     * FIX: drbd: Parameters for expected roles and disk states can now be set to 
-    * Add: Added check for ricoh printer supply levels
-      None to disable alerting on changed values
-    * Add: jolokia_metrics now support warn/crit levels for heap, nonheap, totalheap
-    * Add: pnpgraph for jolokia_metrics
+           None to disable alerting on changed values
+    * printer_supply_ricoh: New check for Ricoh printer supply levels
+    * jolokia_metrics.mem: now supports warn/crit levels for heap, nonheap, totalheap
+    * jolokia_metrics.mem: add dedicated PNP graph
+    * FIX: logwatch.ec: use UNIX socket instead of Pipe for forwarding into EC 
 
     Multisite:
     * Added comment painter to notification related views

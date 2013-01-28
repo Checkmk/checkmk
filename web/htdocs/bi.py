@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, re, pprint, time
-import weblib
+import weblib, htmllib
 from lib import *
 
 
@@ -1310,6 +1310,257 @@ def ajax_save_treestate():
     weblib.save_tree_states()
 
     save_ex_level(current_ex_level)
+
+def ajax_render_tree():
+    aggr_group = html.var("group")
+    aggr_title = html.var("title")
+    omit_root = not not html.var("omit_root")
+    boxes = not not html.var("boxes")
+    only_problems = not not html.var("only_problems")
+
+    # Make sure that BI aggregates are available
+    if config.bi_precompile_on_demand:
+        compile_forest(config.user_id, only_groups = [ aggr_group ])
+    else:
+        compile_forest(config.user_id)
+
+    # Load current assumptions
+    load_assumptions()
+
+    # Now look for our aggregation
+    if aggr_group not in g_user_cache["forest"]:
+        raise MKGeneralException(_("Unknown BI Aggregation group %s. Available are: %s") % (
+            aggr_group, ", ".join(g_user_cache["forest"].keys())))
+        
+    trees = g_user_cache["forest"][aggr_group]
+    for tree in trees:
+        if tree["title"] == aggr_title:
+            row = create_aggregation_row(tree)
+            row["aggr_group"] = aggr_group
+            # ZUTUN: omit_root, boxes, only_problems has HTML-Variablen
+            tdclass, htmlcode = render_tree_foldable(row, boxes=boxes, omit_root=omit_root, 
+                                             expansion_level=load_ex_level(), only_problems=only_problems, lazy=False)
+            html.write(htmlcode)
+            return
+
+    raise MKGeneralException(_("Unknown BI Aggregation %s") % aggr_title)
+
+
+    
+def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, lazy):
+    saved_expansion_level = load_ex_level()
+    treestate = weblib.get_tree_states('bi')
+    if expansion_level != saved_expansion_level:
+        treestate = {}
+        weblib.set_tree_states('bi', treestate)
+        weblib.save_tree_states()
+
+    def render_subtree(tree, path, show_host):
+        is_leaf = len(tree) == 3
+        path_id = "/".join(path)
+        is_open = treestate.get(path_id)
+        if is_open == None:
+            is_open = len(path) <= expansion_level
+
+        h = ""
+        state = tree[0]
+        omit_content = lazy and not is_open
+        mousecode = 'onclick="bi_toggle_%s(this, %d);" ' % (boxes and "box" or "subtree", omit_content)
+
+        # Variant: BI-Boxes
+        if boxes:
+            # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
+            if tree[1] and tree[0] != tree[1]:
+                addclass = " " + _("assumed")
+                effective_state = tree[1]
+            else:
+                addclass = ""
+                effective_state = tree[0]
+
+            if is_leaf:
+                leaf = "leaf"
+                mc = ""
+            else:
+                leaf = "noleaf"
+                mc = mousecode
+
+            omit = omit_root and len(path) == 1
+            if not omit:
+                h += '<span id="%d:%s" %s class="bibox_box %s %s state state%s%s">' % (
+                        expansion_level, path_id, mc, leaf, is_open and "open" or "closed", effective_state["state"], addclass)
+                if is_leaf:
+                    h += aggr_render_leaf(tree, show_host, bare = True) # .replace(" ", "&nbsp;")
+                else:
+                    h += tree[2]["title"].replace(" ", "&nbsp;")
+                h += '</span> '
+
+            if not is_leaf and not omit_content:
+                h += '<span class="bibox" style="%s">' % ((not is_open and not omit) and "display: none;" or "")
+                parts = []
+                for node in tree[3]:
+                    new_path = path + [node[2]["title"]]
+                    h += render_subtree(node, new_path, show_host)
+                h += '</span>'
+            return h
+
+        # Variant: foldable trees
+        else:
+            if is_leaf: # leaf
+                return aggr_render_leaf(tree, show_host, bare = boxes)
+
+            h += '<span class=title>'
+            is_empty = len(tree[3]) == 0
+            if is_empty:
+                style = ''
+                mc = ''
+            elif is_open:
+                style = ''
+                mc = mousecode + 'src="images/tree_black_90.png" '
+            else:
+                style = 'style="display: none" '
+                mc = mousecode + 'src="images/tree_black_00.png" '
+
+            h += aggr_render_node(tree, tree[2]["title"], mc, show_host)
+            if not is_empty:
+                h += '<ul id="%d:%s" %sclass="subtree">' % (expansion_level, path_id, style)
+                if not omit_content:
+                    for node in tree[3]:
+                        estate = node[1] != None and node[1] or node[0]
+
+                        if not node[2].get("hidden"):
+                            new_path = path + [node[2]["title"]]
+                            h += '<li>' + render_subtree(node, new_path, show_host) + '</li>\n'
+                h += '</ul>'
+            return h + '</span>\n'
+
+    tree = row["aggr_treestate"]
+    if only_problems:
+        tree = filter_tree_only_problems(tree)
+
+    affected_hosts = row["aggr_hosts"]
+    title = row["aggr_tree"]["title"]
+    group = row["aggr_group"]
+    url_id = htmllib.urlencode_vars([
+        ( "group", group ),
+        ( "title", title ),
+        ( "omit_root", omit_root and "yes" or ""),
+        ( "boxes", boxes and "yes" or ""),
+        ( "only_problems", only_problems and "yes" or ""),
+    ])
+        
+    htmlcode = '<div id="%s" class=bi_tree_container>' % htmllib.attrencode(url_id) + \
+               render_subtree(tree, [tree[2]["title"]], len(affected_hosts) > 1) + \
+               '</div>'
+    return "aggrtree" + (boxes and "_box" or ""), htmlcode
+
+def aggr_render_node(tree, title, mousecode, show_host):
+    # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
+    if tree[1] and tree[0] != tree[1]:
+        addclass = " " + _("assumed")
+        effective_state = tree[1]
+    else:
+        addclass = ""
+        effective_state = tree[0]
+
+    h = '<span class="content state state%d%s">%s</span>\n' \
+         % (effective_state["state"], addclass, render_bi_state(effective_state["state"]))
+    if mousecode:
+        h += '<img class=opentree %s>' % mousecode
+        h += '<span class="content name">%s</span>' % title
+    else:
+        h += title
+
+    output = format_plugin_output(effective_state["output"])
+    if output:
+        output = "<b class=bullet>&diams;</b>" + output
+    else:
+        output = ""
+    h += '<span class="content output">%s</span>\n' % output
+    return h
+
+def render_assume_icon(site, host, service):
+    if service:
+        key = (site, host, service)
+    else:
+        key = (site, host)
+    ass = g_assumptions.get(key)
+    # TODO: Non-Ascii-Characters do not work yet!
+    mousecode = \
+       u'onmouseover="this.style.cursor=\'pointer\';" ' \
+       'onmouseout="this.style.cursor=\'auto\';" ' \
+       'title="%s" ' \
+       'onclick="toggle_assumption(this, \'%s\', \'%s\', \'%s\');" ' % \
+         (_("Assume another state for this item (reload page to activate)"),
+         # MIST: DAS HIER MUSS verfünftig für Javascript encodiert werden.
+         # Das Ausgangsmaterial sind UTF-8 kodierte str-Objekte.
+          site, host, service != None and service or '')
+    current = str(ass).lower()
+    return u'<img state="%s" class=assumption %s src="images/assume_%s.png">\n' % (current, mousecode, current)
+
+def aggr_render_leaf(tree, show_host, bare = False):
+    site, host = tree[2]["host"]
+    service = tree[2].get("service")
+    if bare:
+        content = u""
+    else:
+        content = u"" + render_assume_icon(site, host, service)
+
+    # Four cases:
+    # (1) zbghora17 . Host status   (show_host == True, service == None)
+    # (2) zbghora17 . CPU load      (show_host == True, service != None)
+    # (3) Host Status               (show_host == False, service == None)
+    # (4) CPU load                  (show_host == False, service != None)
+
+    if show_host or not service:
+        host_url = html.makeuri([("view_name", "hoststatus"), ("site", site), ("host", host)])
+
+    if service:
+        service_url = html.makeuri([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
+
+    if show_host:
+        content += '<a href="%s">%s</a><b class=bullet>&diams;</b>' % (host_url, host.replace(" ", "&nbsp;"))
+
+    if tree[1] and tree[0] != tree[1]:
+        addclass = ' class="state assumed"'
+    else:
+        addclass = ""
+
+    if not service:
+        content += '<a href="%s"%s>%s</a>' % (host_url, addclass, _("Host&nbsp;status"))
+    else:
+        content += '<a href="%s"%s>%s</a>' % (service_url, addclass, service.replace(" ", "&nbsp;"))
+
+    if bare:
+        return content
+    else:
+        return aggr_render_node(tree, content, None, show_host)
+
+def render_bi_state(state):
+    return { PENDING: _("PD"),
+             OK:      _("OK"),
+             WARN:    _("WA"),
+             CRIT:    _("CR"),
+             UNKNOWN: _("UN"),
+             MISSING: _("MI"),
+             UNAVAIL: _("NA"),
+    }.get(state, _("??"))
+
+
+# Convert tree to tree contain only node in non-OK state
+def filter_tree_only_problems(tree):
+    state, assumed_state, node, subtrees = tree
+    # remove subtrees in state OK
+    new_subtrees = []
+    for subtree in subtrees:
+        effective_state = subtree[1] != None and subtree[1] or subtree[0]
+        if effective_state["state"] != OK:
+            if len(subtree) == 3:
+                new_subtrees.append(subtree)
+            else:
+                new_subtrees.append(filter_tree_only_problems(subtree))
+
+    return state, assumed_state, node, new_subtrees
+
 
 
 #    ____        _

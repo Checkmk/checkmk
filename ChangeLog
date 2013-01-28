@@ -13,10 +13,18 @@
     * winperf_processor now outputs float usage instead of integer
     * FIX: mssql_counters.file_sizes - Fixed wrong value for "Log Files" in output
     * FIX: drbd: Parameters for expected roles and disk states can now be set to 
-      None to disable alerting on changed values
+           None to disable alerting on changed values
+    * printer_supply_ricoh: New check for Ricoh printer supply levels
+    * jolokia_metrics.mem: now supports warn/crit levels for heap, nonheap, totalheap
+    * jolokia_metrics.mem: add dedicated PNP graph
+    * FIX: logwatch.ec: use UNIX socket instead of Pipe for forwarding into EC 
 
     Multisite:
     * Added comment painter to notification related views
+
+    BI:
+    * Use Ajax to delay rendering of invisible parts of the tree (this
+      saves lots of HTML code)
 
     WATO:
     * Added hr_mem check to the memory checkgroup to make it configurable in WATO
@@ -24,6 +32,10 @@
     * FIX: Fixed problem on user profile page when no alias set for a user
     * FIX: list valuespecs could not be extended after once saving
     * FIX: fix title of foldable areas contained in list valuespecs
+    * FIX: Fixed bug where pending log was not removed in multisite setup
+
+    Event Console:
+    * Added UNIX socket for sending events to the EC
 
 1.2.1i5:
     Core:

@@ -28,29 +28,29 @@
 
 import os
 import sys
-
 try:
+    path = os.environ.pop('OMD_ROOT')
     datei = open(sys.argv[1],'r') 
-except IndexError:
-    print """Place this file in your Wato directory
+except:
+    print """Run this script inside a OMD site
     Usage: ./wato_import.py csvfile.csv
     CSV Example:
     wato_foldername;hostname;host_alias"""
     sys.exit()
 
+path = path + "/etc/check_mk/wato/"
 folders = {}
 for line in datei:
     ordner, name, alias = line.split(';')[:3]
     if ordner:
         try:
-            os.mkdir(ordner)
+            os.mkdirs(path+ordner)
         except os.error:
-            folder_exsits = True
+            pass
         folders.setdefault(ordner,[])
 
         folders[ordner].append((name,alias))
 datei.close()
-
 
 for folder in folders:
     all_hosts = "" 
@@ -59,7 +59,7 @@ for folder in folders:
         all_hosts += "'%s',\n" % (name)
         host_attributes += "'%s' : {'alias' : u'%s' },\n" % (name, alias)
 
-    ziel = open(folder + '/hosts.mk','w') 
+    ziel = open(path + folder + '/hosts.mk','w') 
     ziel.write('all_hosts += [')
     ziel.write(all_hosts)
     ziel.write(']\n\n')

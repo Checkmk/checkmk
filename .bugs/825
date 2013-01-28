@@ -1,0 +1,8 @@
+Title: BI: See all Nagios objects seems not to work
+Component: bi
+State: open
+Date: 2013-01-24 17:44:29
+Targetversion: 1.2.2
+Class: bug
+
+See Ticket 793881

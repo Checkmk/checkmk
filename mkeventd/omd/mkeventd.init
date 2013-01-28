@@ -31,13 +31,22 @@ case "$1" in
         if [ -z "$THE_PID" ] ; then
             echo 'Not running.'
         else
-            echo "killing $THE_PID..."
+            echo -n "killing $THE_PID..."
             kill $THE_PID
+            N=0
+            while [ -e "$PIDFILE" ] ; do
+                sleep 0.5
+                echo -n .
+                N=$((N + 1))
+                if [ $N -gt 20 ] ; then
+                    echo "PID file did not vanish."
+                    exit 1
+                fi
+            done
         fi
     ;;
     restart)
-	$0 stop
-	$0 start
+	$0 stop && $0 start
     ;;
     reload)
 	echo -n 'Reloading mkeventd...'

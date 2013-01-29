@@ -107,7 +107,8 @@ parameters (dict): Due to its complexity, this check now uses a dictionary as
 if_inventory_porttypes (list of strings): List of interface types the inventory should create checks for.
   Default is {[ '6', '32', '117' ]}, which means that all Ethernet, Frame Relay and Gigabit Ethernet ports
   will be monitored. Virtual and loopback ports will be ignored. Please look into the check implementation
-  of in the SNMP MIB description of {ifType} for a complete list of port types.
+  of in the SNMP MIB description of {ifType} for a complete list of port types. Another good source for possible
+  port types and their meanings might be http://www.iana.org/assignments/ianaiftype-mib/ianaiftype-mib.
 
 if_inventory_portstates (list of strings): Per default this variable is set to {['1']}, which means that
   only ports found in the state {up} are being added to the monitoring. If you set this to {['1', '2', '5']} then

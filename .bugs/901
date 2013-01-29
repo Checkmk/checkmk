@@ -1,0 +1,14 @@
+Title: uptime checks: add thresholds
+Component: checks
+State: open
+Date: 2013-01-22 14:53:09
+Targetversion: 1.4.0
+Class: feature
+
+The uptime checks should be consolidated to use the same check logics (uptime.include).
+
+Add the following:
+
+- Thresholds (warn/crit for upper and lower limits)
+- WATO valuespec
+- update the check manpage

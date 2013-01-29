@@ -2582,11 +2582,11 @@ def precompile_hostcheck(hostname):
 
     compiled_filename = precompiled_hostchecks_dir + "/" + hostname
     source_filename = compiled_filename + ".py"
-    try:
-        os.remove(compiled_filename)
-        os.remove(source_filename)
-    except:
-        pass
+    for fname in [ compiled_filename, source_filename ]:
+        try:
+            os.remove(fname)
+        except:
+            pass
 
     # check table, enriched with addition precompiled information.
     check_table = get_precompiled_check_table(hostname)

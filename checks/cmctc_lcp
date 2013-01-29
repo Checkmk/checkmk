@@ -1,128 +1,29 @@
 #!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
-# # +-----------------------------------------------------------------+
-# # |                                                                 |
-# # |        (  ___ \     | \    /\|\     /||\     /|( (    /|        |
-# # |        | (   ) )    |  \  / /| )   ( || )   ( ||  \  ( |        |
-# # |        | (__/ /     |  (_/ / | |   | || (___) ||   \ | |        |
-# # |        |  __ (      |   _ (  | |   | ||  ___  || (\ \) |        |
-# # |        | (  \ \     |  ( \ \ | |   | || (   ) || | \   |        |
-# # |        | )___) )_   |  /  \ \| (___) || )   ( || )  \  |        |
-# # |        |/ \___/(_)  |_/    \/(_______)|/     \||/    )_)        |
-# # |                                                                 |
-# # | Copyright Bastian Kuhn 2011                mail@bastian-kuhn.de | 
-# # +-----------------------------------------------------------------+
-# # cmc_psm_m
-# # Version 1.0 (07.04.2011)
-# #
-# # This file is a check Script for check_mk
-# # Information about me can be found at http://bastian-kuhn.de
-# # Information about check_mk at http://mathias-kettner.de/check_mk.
-# #
-# # This is free software;  you can redistribute it and/or modify it
-# # under the  terms of the  GNU General Public License  as published by
-# # the Free Software Foundation in version 2.  check_mk is  distributed
-# # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# # ails.  You should have  received  a copy of the  GNU  General Public
-# # License along with GNU Make; see the file  COPYING.  If  not,  write
-# # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# # Boston, MA 02110-1301 USA.
-# #
-# # Table columns:
-# # 0: index
-# # 1: sensor type (30 = Power PSM,)
-# # 2: sensor state (4 = ok)
-# # 3: current value (Ampere)
-# # 4: critical level 
-# # 5: warn low level 
-# # 6: warn level 
-# # 7: description 
-# 
-# # Sensor Type : [
-# # service_desc,
-# # extended desc, or None, 
-# # output text, (first %f for current val, then %s for extendet_output)
-# # extended output, or None, (=device Desc) 
-# # perfunit
-# # Current Value Division
-# # ]
-# 
-# 
-# # Idee hier: Wir machen Art von Sensor einen
-# # parameter in einem dict-basierten Parameter.
-# # cmc_lcp_default_levels = {
-# #     "server_in" : (25, 30),
-# #     "server_out" : (25, 30),
-# #     "water_in" : (20, 25),
-# #     "water_out" : (20, 25),
-# # }
-# # Wir ordnen dann jedem Sensortyp einen Parameter zu,
-# # oder keinen, wenn man den von außen nicht einstellen kann.
-# # Man kann dann mit nur einer Regel alles schön einstellen.
-# # Dann noch die Perfometer reparieren. Dazu wir der Name
-# # der Perfvariable genutzt. "rpm", "degree", "liters",
-# # "percent" und ein passendes Perf-O-Meter gemalt.
-# # PNP-Schablonen: Noch besser wären hier subchecks.
-# # cmc_lcp.degree
-# # cmc_lcp.liters
-# # Die könnte man ja evtl. auch automatisch generieren. Das
-# # mit den Levels könnte man auch machn, aber dann nur für
-# # die Temperatur.
-# 
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
-# 
-# def inventory_cmc_lcp(checkname, info):
-#    inventory = []
-#    for line in info:
-#      sensor_type  = saveint(line[1])
-#      if check_cmc_lcp_template.get(sensor_type):
-#        item = ""
-#        if check_cmc_lcp_template[sensor_type][0] != None:
-# 	 item = check_cmc_lcp_template[sensor_type][0]
-#        if check_cmc_lcp_template[sensor_type][1] != None:
-# 	 sensor_index = saveint(line[0].split(".")[1])
-# 	 item += " " + check_cmc_lcp_template[sensor_type][1][sensor_index] 
-#        inventory.append((item+" - "+line[0],None))
-#    return inventory
-# 
-# 
-# def check_cmc_lcp(item, no_params, info):
-#   
-#    item = item.split(" - ")
-#    item = item[1]
-#    perf = []
-#    output = "ERROR"
-#    
-#    for line in info: 
-#      if line[0] != item:
-#          continue
-#    
-#      service_desc,extended_desc,output_txt,extended_output, perf_var, devision = check_cmc_lcp_template[saveint(line[1])]
-#      
-#      view_val = float(line[3]) / devision
-#      if perf_var != None:
-#        perf = [(perf_var,view_val,"","","","")]
-#        
-#      if extended_output == None:
-#        extended_output = line[4]
-#      elif extended_output != False:
-#        sensor_index = saveint(line[0].split(".")[1])
-#        extended_output = extended_output[sensor_index] 
-#      else:
-#        extended_output = ""
-#      
-#      output = output_txt % (view_val,extended_output)
-#      
-#      status = saveint(line[2])
-#      if status == 4:
-#        return(0, "OK - "+output,perf)
-#      elif status == 7:
-#        return(1, "WARNING - "+output,perf)
-#      else:
-#        return(2, "CRIT - "+output,perf)
-#    return (3, "Sensor not found")
 
 cmctc_lcp_sensors = {       
        # Blower 

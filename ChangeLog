@@ -34,6 +34,7 @@
     * FIX: list valuespecs could not be extended after once saving
     * FIX: fix title of foldable areas contained in list valuespecs
     * FIX: Fixed bug where pending log was not removed in multisite setup
+    * Make page_header configurable in global settings
 
     Event Console:
     * Added UNIX socket for sending events to the EC

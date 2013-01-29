@@ -12,7 +12,7 @@ header ()
       printf "|%-66s|\n" "${line//@/ }"
     done
     echo '|                                                                  |'
-    echo '| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |'
+    echo '| Copyright Mathias Kettner 2013             mk@mathias-kettner.de |'
     echo '+------------------------------------------------------------------+'
 
     cat <<EOF

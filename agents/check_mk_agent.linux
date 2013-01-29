@@ -429,6 +429,22 @@ if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
     stat -c "%n|%s|%Y" $(cat "$MK_CONFDIR/fileinfo.cfg") 
 fi
 
+# Get stats about OMD monitoring cores running on this machine.
+# Since cd is a shell builtin the check does not affect the performance
+# on non-OMD machines. 
+if cd /omd/sites
+then
+    echo '<<<livestatus_status:sep(59)>>>'
+    for live in */tmp/run/live
+    do
+        if [ -S "$live" ] ; then
+            site=${live%%/*}
+            echo "[$site]"
+            echo -e "GET status" | /omd/sites/$site/bin/unixcat /omd/sites/$live
+        fi
+    done
+fi
+
 
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR

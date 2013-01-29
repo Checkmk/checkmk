@@ -435,12 +435,11 @@ fi
 if cd /omd/sites
 then
     echo '<<<livestatus_status:sep(59)>>>'
-    for live in */tmp/run/live
+    for site in *
     do
-        if [ -S "$live" ] ; then
-            site=${live%%/*}
+        if [ -d "$site" ] ; then
             echo "[$site]"
-            echo -e "GET status" | /omd/sites/$site/bin/unixcat /omd/sites/$live
+            echo -e "GET status" | /omd/sites/$site/bin/unixcat /omd/sites/$site/tmp/run/live
         fi
     done
 fi

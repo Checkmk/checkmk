@@ -21,6 +21,7 @@
     * FIX: logwatch.ec: use UNIX socket instead of Pipe for forwarding into EC 
     * FIX: logwatch.ec: fixed exception when forwarding "OK" lines
     * FIX: logwatch.ec: fixed forwarding of single log lines to event console
+    * Improved performance of logwatch.ec check in case of many messages
     * livestatus_status: new check for monitoring performance of monitoring
 
     Multisite:

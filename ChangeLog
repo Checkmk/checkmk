@@ -18,6 +18,7 @@
     * jolokia_metrics.mem: now supports warn/crit levels for heap, nonheap, totalheap
     * jolokia_metrics.mem: add dedicated PNP graph
     * FIX: logwatch.ec: use UNIX socket instead of Pipe for forwarding into EC 
+    * FIX: logwatch.ec: fixed exception when forwarding "OK" lines
 
     Multisite:
     * Added comment painter to notification related views

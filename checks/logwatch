@@ -403,7 +403,7 @@ def logwatch_to_prio(level):
         return 4
     elif level == 'C':
         return 2
-    elif level == '0':
+    elif level == 'O':
         return 5
     elif level == 'u':
         return 4

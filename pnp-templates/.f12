@@ -1,2 +1,4 @@
 sudo cp * /omd/versions/default/share/check_mk/pnp-templates
+echo 'location.reload();' | nc -w 0 localhost 32000
+
 

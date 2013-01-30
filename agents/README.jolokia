@@ -1,8 +1,0 @@
-We are currently preparing a new check agenst the Jolokia agent 
-(formerly known as j4p or JMX4Perl). This directory contains
-a new agent and matching checks.
-
-Put jolokia.cfg into /etc/check_mk and adapt it to your needs. Put
-the plugin into /usr/lib/check_mk_agent/plugins. Put the checks into
-~/local/share/check_mk/checks (OMD) or into you checks/ directory (manual
-installations).

@@ -8,6 +8,7 @@
     * FIX: more robust deletion of precompiled files to ensure the correct 
       creation of the files (Thanks to Guido Günther)
     * FIX: Inventory for cluster nodes who are part of multiple clusters 
+    * cmk --notify: added plugin for sms notification
 
     Checks & Agents:
     * winperf_processor now outputs float usage instead of integer
@@ -20,6 +21,7 @@
     * FIX: logwatch.ec: use UNIX socket instead of Pipe for forwarding into EC 
     * FIX: logwatch.ec: fixed exception when forwarding "OK" lines
     * FIX: logwatch.ec: fixed forwarding of single log lines to event console
+    * livestatus_status: new check for monitoring performance of monitoring
 
     Multisite:
     * Added comment painter to notification related views
@@ -35,6 +37,7 @@
     * FIX: list valuespecs could not be extended after once saving
     * FIX: fix title of foldable areas contained in list valuespecs
     * FIX: Fixed bug where pending log was not removed in multisite setup
+    * Make page_header configurable in global settings
 
     Event Console:
     * Added UNIX socket for sending events to the EC

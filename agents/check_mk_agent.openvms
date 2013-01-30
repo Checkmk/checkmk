@@ -5,7 +5,7 @@ $!# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
 $!# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 $!# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 $!# |                                                                  |
-$!# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+$!# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 $!# +------------------------------------------------------------------+
 $!#
 $!# This file is part of Check_MK.
@@ -21,7 +21,7 @@ $!# ails.  You should have  received  a copy of the  GNU  General Public
 $!# License along with GNU Make; see the file  COPYING.  If  not,  write
 $!# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 $!# Boston, MA 02110-1301 USA.
-$!#
+
 $!# Author:     Paul Aebersold, netPuls          info@netpuls.info
 $if p1 .nes. "" then set verify
 $msgOff := set message/nofacility/noseverity/noidentification/notext

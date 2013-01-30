@@ -12,7 +12,7 @@ header ()
       printf "|%-66s|\n" "${line//@/ }"
     done
     echo '|                                                                  |'
-    echo '| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |'
+    echo '| Copyright Mathias Kettner 2013             mk@mathias-kettner.de |'
     echo '+------------------------------------------------------------------+'
 
     cat <<EOF
@@ -57,6 +57,7 @@ headrify ()
   else
       bangpath=""
       case "${file##*/}" in
+          *.openvms) comment='$!# ' ;;
           *.php)    comment="# " ; bangpath="<?php"; ;;
           *.css)    comment="" ;  bangpath="/*"; lastline="*/" ;;
           *.h|*.c|*.cc|*.h.in|*.js) comment="// " ;;
@@ -99,6 +100,7 @@ if [ "$#" -gt 0 ] ; then
 else
   { find -not -type l -and -not -name "jquery*" -and \( \
       -name "Makefile" -or \
+      -name "*.cfg" -or \
       -name "Makefile.am" -or \
       -name "configure.ac" -or \
       -name "*.in" -or \

@@ -1,0 +1,23 @@
+title: Monitor performance of OMD monitoring core via Livestatus
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This checks retrieves performance data of an OMD monitoring core
+ by using MK Livestatus. It is always OK - even if the site is
+ currently down. It gets UNKNOWN only if the site is missing.
+
+ The purpose of this check is to learn how your monitoring
+ core performs (number of executed checks, Livestatus connections).
+
+item:
+ The name of the OMD site.
+
+perfdata:
+ Several values. At least the {host_checks} and {service_checks}. The exact
+ list might vary.
+
+inventory:
+ One check per running OMD site is being created.
+

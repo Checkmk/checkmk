@@ -1,0 +1,97 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<livestatus_status:sep(59)>>>
+# [downsite]
+# [mysite]
+# accept_passive_host_checks;accept_passive_service_checks;cached_log_messages;check_external_commands;check_host_freshness;check_service_freshness;connections;connections_rate;enable_event_handlers;enable_flap_detection;enable_notifications;execute_host_checks;execute_service_checks;external_command_buffer_max;external_command_buffer_slots;external_command_buffer_usage;external_commands;external_commands_rate;forks;forks_rate;host_checks;host_checks_rate;interval_length;last_command_check;last_log_rotation;livecheck_overflows;livecheck_overflows_rate;livechecks;livechecks_rate;livestatus_active_connections;livestatus_queued_connections;livestatus_threads;livestatus_version;log_messages;log_messages_rate;nagios_pid;neb_callbacks;neb_callbacks_rate;num_hosts;num_services;obsess_over_hosts;obsess_over_services;process_performance_data;program_start;program_version;requests;requests_rate;service_checks;service_checks_rate
+# 1;1;0;1;0;1;231;1.0327125668e-01;1;1;1;1;1;0;32768;0;0;0.0000000000e+00;0;0.0000000000e+00;0;0.0000000000e+00;60;1359471450;0;0;0.0000000000e+00;0;0.0000000000e+00;1;0;20;2013.01.23;0;0.0000000000e+00;15126;15263;6.5307324420e+00;0;0;0;0;1;1359469039;3.2.3;230;1.0327125668e-01;0;0.0000000000e+00
+
+def livestatus_status_parse(info):
+    parsed = {}
+    n = 0
+    while n < len(info):
+        site = info[n][0][1:-1]
+        if n == len(info) - 1 or info[n+1][0].startswith('['):
+            parsed[site] = None # Site is down
+            n += 1
+        else:
+            headers = info[n+1]
+            values = info[n+2]
+            parsed[site] = dict(zip(headers, values))
+            n += 3
+    return parsed
+
+def inventory_livestatus_status(info):
+    parsed = livestatus_status_parse(info)
+    return [ (site, {}) for (site, status) in parsed.items() if status != None ]
+
+livestatus_status_counters = [
+    ( "host_checks",    "Host Checks",         ),
+    ( "service_checks", "Service Checks",      ),
+    ( "forks",          "Process Creations",   ),
+    ( "connections",    "Livestatus Connects", ),
+    ( "requests",       "Livestatus Requests", ),
+    ( "log_messages",   "Log Messages",        ),
+]
+
+def check_livestatus_status(item, _no_params, info):
+    parsed = livestatus_status_parse(info)
+    if item not in parsed:
+        return (3, "UNKNOWN - Site does not exist")
+    status = parsed[item]
+
+    # Ignore down sites. This happens on a regular basis due to restarts
+    # of the core. The availability of a site is monitored with 'omd_status'.
+    if status == None:
+        return (0, "OK - Site is currently not running")
+
+    this_time = time.time()
+    perfdata = []
+    infos = []
+
+    for counter, title in livestatus_status_counters:
+        try:
+            timedif, rate = get_counter("livestatus_status.%s.%s" % (item, counter), this_time, saveint(status[counter]))
+            perfdata.append((counter, rate))
+            infos.append("%.1f %s/s" % (rate, title))
+        # If one counter wraps then *all* counters should wrap (because the core has
+        # been restarted)
+        except MKCounterWrapped:
+            wrapped = True
+
+    infos += [ "Core version: %s" % status["program_version"], 
+              "Livestatus version: %s" % status["livestatus_version"]]
+    return (0, "OK - " + ", ".join(infos), perfdata)
+ 
+
+check_info['livestatus_status'] = {
+    "check_function"          : check_livestatus_status,
+    "inventory_function"      : inventory_livestatus_status,
+    "service_description"     : "OMD %s performance",
+    "has_perfdata"            : True,
+}

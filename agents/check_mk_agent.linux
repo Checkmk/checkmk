@@ -6,7 +6,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -67,14 +67,14 @@ then
 fi
 
 # Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)
-# Heads up: NFS-mounts are generally supressed to avoid agent hangs. 
+# Heads up: NFS-mounts are generally supressed to avoid agent hangs.
 # If hard NFS mounts are configured or you have too large nfs retry/timeout
-# settings, accessing those mounts from the agent would leave you with 
+# settings, accessing those mounts from the agent would leave you with
 # thousands of agent processes and, ultimately, a dead monitored system.
 # These should generally be monitored on the NFS server, not on the clients.
 
 echo '<<<df>>>'
-# The exclusion list is getting a bit of a problem. -l should hide any remote FS but seems 
+# The exclusion list is getting a bit of a problem. -l should hide any remote FS but seems
 # to be all but working.
 excludefs="-x smbfs -x tmpfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs"
 df -PTlk $excludefs | sed 1d
@@ -156,7 +156,7 @@ if type ethtool > /dev/null
 then
     for eth in $(sed -e 1,2d < /proc/net/dev | cut -d':' -f1)
     do
-      echo "[$eth]" 
+      echo "[$eth]"
       ethtool $eth | egrep '(Speed|Duplex|Link detected|Auto-negotiation):'
     done
 fi
@@ -207,7 +207,7 @@ date +%s
 sed -e 1,2d -e 's/:/ /g' < /proc/net/dev
 
 
-if type ipmitool >/dev/null 
+if type ipmitool >/dev/null
 then
     echo '<<<ipmi>>>'
     IPMI_FILE=$MK_CONFDIR/ipmitool_sensors.cache
@@ -217,17 +217,17 @@ then
 
     # Do not use cache file after 20 minutes
     IPMI_MAXAGE=1200
-    
+   
     # Check if file exists and is recent enough
     if [ -s $IPMI_FILE ]
     then
         NOW=$(date +%s)
         MTIME=$(stat -c %Y $IPMI_FILE)
-        if [ $((NOW - MTIME)) -le $IPMI_MAXAGE ] ; then 
+        if [ $((NOW - MTIME)) -le $IPMI_MAXAGE ] ; then
             USE_IPMI_FILE=1
         fi
     fi
-    
+   
     if [ -s "$IPMI_FILE" ]
     then
         grep -v 'command failed' "$IPMI_FILE" \
@@ -235,7 +235,7 @@ then
         | egrep -v '^[^ ]+ na ' \
         | grep -v ' discrete '
     fi
-    
+   
     if [ -z "$USE_IPMI_FILE" -a ! -e "$IPMI_FILE.new" ]
     then
         setsid bash -c "set -o noclobber ; ipmitool sensor list > $IPMI_FILE.new && mv $IPMI_FILE.new $IPMI_FILE || rm -f $IPMI_FILE*" &
@@ -250,7 +250,7 @@ fi
 # that timeout, it leaves and empty cache file. We skip this check forever
 # if we find that empty cache file.
 sdrcache=/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1
-if type ipmi-sensors >/dev/null && [ ! -e "$sdrcache" -o -s "$sdrcache" ] 
+if type ipmi-sensors >/dev/null && [ ! -e "$sdrcache" -o -s "$sdrcache" ]
 then
     echo '<<<ipmi_sensors>>>'
     # No cache file existing? => Impose a high time limit. We do not suffice
@@ -268,7 +268,7 @@ then
 	WAITMAX=
     fi
     # Newer ipmi-sensors version have new output format; Legacy format can be used
-    if ipmi-sensors --help | grep -q legacy-output; then 
+    if ipmi-sensors --help | grep -q legacy-output; then
         IPMI_FORMAT="--legacy-output"
     else
         IPMI_FORMAT=""
@@ -276,16 +276,16 @@ then
     # Aquire lock with flock in order to avoid multiple runs of ipmi-sensors
     # in case of parallel or overlapping calls of the agent.
     (
-        flock -n 200 --wait 60 
+        flock -n 200 --wait 60
         # At least with ipmi-sensoirs 0.7.16 this group is Power_Unit instead of "Power Unit"
         for class in Temperature Power_Unit Fan
         do
             $WAITMAX ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
-            # In case of a timeout immediately leave loop. 
+            # In case of a timeout immediately leave loop.
         if [ $? = 255 ] ; then break ; fi
             WAITMAX="waitmax 3"
         done
-    ) 200>>"$sdrcache" 
+    ) 200>>"$sdrcache"
 fi
 
 # State of LSI MegaRAID controller via MegaCli. You can download that tool from:
@@ -295,7 +295,7 @@ if type MegaCli >/dev/null ; then
     echo '<<<megaraid_pdisks>>>'
     for part in $(MegaCli -EncInfo -aALL -NoLog < /dev/null \
         | sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
-        [ $part = adapter ] && echo "" 
+        [ $part = adapter ] && echo ""
         [ $part = 'Enclosure' ] && echo -ne "\ndev2enc"
         echo -n " $part"
     done
@@ -340,7 +340,7 @@ if type ntpq > /dev/null 2>&1 ; then
    waitmax 2 ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 fi
 
-if type nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ] 
+if type nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ]
 then
     echo '<<<nvidia>>>'
     for var in GPUErrors GPUCoreTemp
@@ -379,7 +379,7 @@ if type cl_status > /dev/null 2>&1; then
   for NODE in $(cl_status listnodes); do
     if [ $NODE != $(echo $HOSTNAME | tr 'A-Z' 'a-z') ]; then
       STATUS=$(cl_status nodestatus $NODE)
-      echo -n "$NODE $STATUS" 
+      echo -n "$NODE $STATUS"
       for LINK in $(cl_status listhblinks $NODE 2>/dev/null); do
         echo -n " $LINK $(cl_status hblinkstatus $NODE $LINK)"
       done
@@ -426,7 +426,22 @@ fi
 if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
     echo '<<<fileinfo:sep(124)>>>'
     date +%s
-    stat -c "%n|%s|%Y" $(cat "$MK_CONFDIR/fileinfo.cfg") 
+    stat -c "%n|%s|%Y" $(cat "$MK_CONFDIR/fileinfo.cfg")
+fi
+
+# Get stats about OMD monitoring cores running on this machine.
+# Since cd is a shell builtin the check does not affect the performance
+# on non-OMD machines.
+if cd /omd/sites
+then
+    echo '<<<livestatus_status:sep(59)>>>'
+    for site in *
+    do
+        if [ -d "$site" ] ; then
+            echo "[$site]"
+            echo -e "GET status" | /omd/sites/$site/bin/unixcat /omd/sites/$site/tmp/run/live
+        fi
+    done
 fi
 
 

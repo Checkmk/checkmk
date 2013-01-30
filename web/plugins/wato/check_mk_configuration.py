@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -182,6 +182,15 @@ register_configvar(group,
               default_value = "dashboard.py"),
     domain = "multisite")
 
+register_configvar(group,
+    "page_heading",
+    TextUnicode(title = _("HTML-Title of HTML Multisite GUI"),
+              help = _("This title will be displayed in your browser's title bar or tab. If you are "
+                       "using OMD then you can embed a <tt>%s</tt>. This will be replaced by the name "
+                       "of the OMD site."),
+              size = 80,
+              default_value = u"Check_MK %s"),
+    domain = "multisite")
 
 register_configvar(group,
     "wato_hide_filenames",

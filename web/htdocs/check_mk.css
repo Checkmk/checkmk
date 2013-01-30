@@ -72,6 +72,10 @@ button, input, td, th, select, textarea {
     font-size: 9pt;
 }
 
+input.number {
+    text-align: right;
+}
+
 /* Styling for input elements */
 input, select, textarea {
     padding: 3px;

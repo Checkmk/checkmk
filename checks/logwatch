@@ -468,7 +468,7 @@ def check_logwatch_ec(_unused, params, info):
             # instead of the pipe!
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             sock.connect(method)
-            sock.send('\n'.join(messages))
+            sock.send('\n'.join(messages) + '\n')
             sock.close()
 
         num_messages = len(messages)

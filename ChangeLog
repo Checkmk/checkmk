@@ -19,6 +19,7 @@
     * jolokia_metrics.mem: add dedicated PNP graph
     * FIX: logwatch.ec: use UNIX socket instead of Pipe for forwarding into EC 
     * FIX: logwatch.ec: fixed exception when forwarding "OK" lines
+    * FIX: logwatch.ec: fixed forwarding of single log lines to event console
 
     Multisite:
     * Added comment painter to notification related views

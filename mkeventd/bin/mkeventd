@@ -857,7 +857,7 @@ class EventServer:
                     pass
 
             # Read events from builtin syslog server
-            if self._syslog.fileno() in readable:
+            if self._syslog != None and self._syslog.fileno() in readable:
                 self.process_event_data(self._syslog.recv(4096))
 
             if opt_profile.get("event"):

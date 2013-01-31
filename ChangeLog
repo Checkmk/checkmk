@@ -46,6 +46,8 @@
     Event Console:
     * Added UNIX socket for sending events to the EC
     * Speed up rule matches in some special cases by factor of 100 and more
+    * Init-Script: Improved handling of stale pidfiles
+    * Init-Script: Detecting and reporting already running processes
 
 1.2.1i5:
     Core:

@@ -12,6 +12,7 @@ components = [
   ( "checks", "Checks and Agent plugins" ),
   ( "multisite", "Multisite GUI" ),
   ( "livestatus", "Livestatus" ),
+  ( "ec", "Event Console" ),
   ( "livecheck", "Livecheck part in Livestatus, livecheck helper" ),
   ( "wato", "Check_MK's Web Administration Tool" ),
   ( "bi", "BI - Business Intelligence" ),

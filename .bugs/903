@@ -1,0 +1,8 @@
+Title: Umlauts in regexes never match
+Component: ec
+State: open
+Date: 2013-01-31 11:14:47
+Targetversion: 1.2.2
+Class: bug
+
+When adding umlauts like ä to regex patterns, they do never match.

@@ -32,17 +32,24 @@ case "$1" in
             echo 'Not running.'
         else
             echo -n "killing $THE_PID..."
-            kill $THE_PID
-            N=0
-            while [ -e "$PIDFILE" ] ; do
-                sleep 0.5
-                echo -n .
-                N=$((N + 1))
-                if [ $N -gt 20 ] ; then
-                    echo "PID file did not vanish."
-                    exit 1
-                fi
-            done
+            kill $THE_PID 2>/dev/null
+            if [ $? -eq 0 ]; then
+                # Only wait for pidfile removal when the signal could be sent
+                N=0
+                while [ -e "$PIDFILE" ] ; do
+                    sleep 0.5
+                    echo -n .
+                    N=$((N + 1))
+                    if [ $N -gt 20 ] ; then
+                        echo "PID file did not vanish."
+                        exit 1
+                    fi
+                done
+            else
+                # Remove the stale pidfile to have a clean state after this
+                rm $PIDFILE
+            fi
+            echo 'OK'
         fi
     ;;
     restart)

@@ -1027,6 +1027,29 @@ checkgroups.append((
     "dict")
 )
 
+register_check_parameters(
+    subgroup_networking, 
+    "bonding", 
+    _("Status of Linux bonding interfaces"),
+    Dictionary(
+        elements = [
+            ( "expect_active",
+              DropdownChoice(
+                  title = _("Warn on unexpected active interface"),
+                  choices = [
+                     ( "ignore",   _("ignore which one is active") ),
+                     ( "primary", _("require primary interface to be active") ),
+                     ( "lowest",   _("require interface that sorts lowest alphabetically") ),
+                  ]
+              )
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the bonding interface"),
+    ),
+    "dict")
+
 checkgroups.append((
     subgroup_networking,
     "if",

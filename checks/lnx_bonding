@@ -114,54 +114,11 @@ def parse_lnx_bonding(info):
     return converted
             
 
-def inventory_lnx_bonding(info):
-    parsed = parse_lnx_bonding(info)
-    return [ (bond, { "primary" : status["primary"]}) for (bond, status) in parsed.items()
-             if status["status"] == "up" ]
-
-
-def check_lnx_bonding(item, params, info):
-    parsed = parse_lnx_bonding(info)
-    if item not in parsed:
-        return (3, "UNKNOWN - no such bonding interface")
-    status = parsed[item]
-    if status["status"] != "up":
-        return 2, "CRIT - interface is " + status["status"]
-
-    infos = []
-    state = 0
-    for eth, slave in status["interfaces"].items():
-        infos.append("%s/%s %s" % (eth, slave["hwaddr"], slave["status"]))
-        if slave["status"] != 'up':
-            state = 1
-            infos[-1] += "(!)"
-
-    primary = status.get("primary", params.get("primary"))
-    if primary:
-        infos.append("primary: " + primary)
-    active = status["active"]
-    if active:
-        infos.append("active: " + active)
-
-        expect = params.get("expect_active", "ignore")
-        if expect in [ "primary", "lowest" ]:
-            if expect == "primary":
-                expected_active = primary
-            else: # "lowest"
-                slaves = status["interfaces"].keys() 
-                slaves.sort()
-                expected_active = slaves[0]
-            if expected_active != active:
-                infos[-1] += "(!)"
-                infos.append("expected is %s" % expected_active)
-                state = 1
-
-    return state, nagios_state_names[state] + " - " + ", ".join(infos)
-
 
 check_info['lnx_bonding'] = {
-    "check_function"          : check_lnx_bonding,
-    "inventory_function"      : inventory_lnx_bonding,
+    "check_function"          : lambda item,params,info: check_bonding(item, params, parse_lnx_bonding(info)),
+    "inventory_function"      : lambda info: inventory_bonding(parse_lnx_bonding(info)),
     "service_description"     : "Bonding Interface %s",
     "group"                   : "bonding",
+    "includes"                : "bonding.include",
 }

@@ -168,6 +168,15 @@ if [ -e /proc/net/bonding ] ; then
     pushd /proc/net/bonding > /dev/null ; head -v -n 1000 * ; popd
 fi
 
+# Same for Open vSwitch bonding
+if type ovs-appctl > /dev/null ; then
+    echo '<<<ovs_bonding:sep(58)>>>'
+    for bond in $(ovs-appctl bond/list | sed -r -e 1d -e 's/^[^ ]* ([^ ]*) .*/\1/g') ; do
+        echo "[$bond]"
+        ovs-appctl bond/show $bond
+    done
+fi
+
 
 # Number of TCP connections in the various states
 echo '<<<tcp_conn_stats>>>'

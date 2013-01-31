@@ -1,0 +1,86 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<ovs_bonding:sep(58)>>>
+# [bond1]
+# bond_mode: active-backup
+# lacp: off
+# bond-detect-mode: carrier
+# updelay: 31000 ms
+# downdelay: 200 ms
+# 
+# slave eth5: enabled
+# 
+# slave eth1: enabled
+# active slave
+
+
+def parse_ovs_bonding(info):
+    bonds = {}
+    for line in info:
+        if line[0][0] == '[':
+            bond = line[0][1:-1]
+            bonds[bond] = {}
+        elif len(line) == 2:
+            left = line[0]
+            right = line[1].strip()
+            if left.startswith("slave"):
+                bonds[bond].setdefault("interfaces", {})
+                eth = left.split()[1]
+                bonds[bond]["interfaces"][eth] = {
+                    "status" : right == "enabled" and "up" or right,
+                }
+                last_interface = eth
+            else:
+                bonds[bond][left] = right
+        elif line[0] == 'active slave':
+            bonds[bond]["active"] = last_interface
+
+    parsed = {}
+    for bond, status in bonds.items():
+        all_down = True
+        for st in status["interfaces"].values():
+            if st["status"] == "up":
+                all_down = False
+                break
+
+        parsed[bond] = {
+            "status"     : all_down and "down" or "up",
+            "active"     : status["active"],
+            "mode"       : status["bond_mode"],
+            "interfaces" : status["interfaces"],
+        }
+
+    return parsed
+
+
+check_info['ovs_bonding'] = {
+    "check_function"          : lambda item,params,info: check_bonding(item, params, parse_ovs_bonding(info)),
+    "inventory_function"      : lambda info: inventory_bonding(parse_ovs_bonding(info)),
+    "service_description"     : "Bonding Interface %s",
+    "group"                   : "bonding",
+    "includes"                : "bonding.include",
+}

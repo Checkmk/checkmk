@@ -1,0 +1,12 @@
+Title: Create default rules
+Component: ec
+State: open
+Date: 2013-01-31 11:28:37
+Targetversion: 1.2.2
+Class: feature
+
+Create a set of default rules, at least one rule which should remain as 
+"last rule" which  simply drops all messages not handled by the rules
+above. When having a rule, it is possible to count the times this rule
+was used to maybe define better "catch & drop" rules at the beginning
+of the ruleset

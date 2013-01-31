@@ -6,7 +6,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -118,7 +118,7 @@ if (isset($DS[2])) {
     }
 
     if (isset($RRD["read_ql"])) {
-        $opt[] = "--vertical-label 'Queue Length' -X0 -u10 -l-10 --title \"Queue Length $hostname / $disk\" ";
+        $opt[] = "--vertical-label 'Queue Length' -X0 -u5 -l-5 --title \"Queue Length $hostname / $disk\" ";
         $def[] = ""
                 . "DEF:read=$RRD[read_ql] "
                 . "DEF:write=$RRD[write_ql] "

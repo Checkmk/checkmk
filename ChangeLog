@@ -23,6 +23,8 @@
     * FIX: logwatch.ec: fixed forwarding of single log lines to event console
     * Improved performance of logwatch.ec check in case of many messages
     * livestatus_status: new check for monitoring performance of monitoring
+    * FIX: diskstat.include: fix computation of queue length on windows
+      (thanks to K.H. Fiebig)
 
     Multisite:
     * Added comment painter to notification related views

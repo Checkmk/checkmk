@@ -161,6 +161,14 @@ then
     done
 fi
 
+
+# Current state of bonding interfaces
+if [ -e /proc/net/bonding ] ; then
+    echo '<<<lnx_bonding:sep(58)>>>'
+    pushd /proc/net/bonding > /dev/null ; head -v -n 1000 * ; popd
+fi
+
+
 # Number of TCP connections in the various states
 echo '<<<tcp_conn_stats>>>'
 netstat -nt | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'

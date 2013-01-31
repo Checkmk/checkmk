@@ -1,0 +1,32 @@
+#!/usr/bin/python
+# encoding: utf-8
+
+import socket, os, time, sys, getopt, signal, thread, pprint, re, select, subprocess, stat, pickle
+from pwd import getpwnam
+from grp import getgrnam
+
+if len(sys.argv) == 2:
+    filename = sys.argv[1]
+else:
+    filename = None
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.settimeout(10)
+sock.connect(("localhost", 7010))
+
+if not filename:
+    sock.send(pickle.dumps([1,2,3,5,6]))
+else:
+    sock.send(pickle.dumps(eval(file(filename).read())))
+
+response_text = ""
+while True:
+   chunk = sock.recv(8192)
+   response_text += chunk
+   if not chunk:
+       break
+
+print response_text
+
+
+

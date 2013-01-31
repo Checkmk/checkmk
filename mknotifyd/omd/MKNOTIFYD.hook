@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Alias: Start Daemon for Check_MK Notify
+# Menu: Addons
+# Description: 
+# This option enables mknotifyd
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable"
+        echo "off: disable"
+    ;;
+    set)
+        if [ "$2" = on ] ; then
+            enabled=True
+        else
+            enabled=False
+        fi
+        echo -e "# Set by OMD hook MKNOTIFYD, do not change here!\nmknotifyd_enabled = $enabled" \
+            > $OMD_ROOT/etc/check_mk/multisite.d/mknotifyd.mk
+    ;;
+esac

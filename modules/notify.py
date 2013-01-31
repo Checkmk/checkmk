@@ -200,8 +200,7 @@ def create_spoolfile(data):
     file_path = "%s/%0.2f_%s" % (target_dir, time.time(), uuid.uuid1()) 
     notify_log("Creating spoolfile: %s" % file_path)
     # TODO: pprint entfernen
-    # file(file_path,"w").write(pprint.pformat(data))
-    file(file_path,"w").write(data)
+    file(file_path,"w").write(pprint.pformat(data))
 
 def get_readable_rel_date(timestamp):
     try:

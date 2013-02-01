@@ -24,8 +24,8 @@
 # Boston, MA 02110-1301 USA.
 
 # Check Performance
-$site = explode("_", $servicedesc);
-$site = $site[1];
+$site_parts = explode("_", $servicedesc);
+$site = $site_parts[1];
 
 $opt[1] = "--vertical-label 'Checks per second' -X0 -l0  --title \"OMD site $site / Check performance\" ";
 $ds_name[1] = "Check performance";

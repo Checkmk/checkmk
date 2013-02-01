@@ -19,7 +19,14 @@
     * jolokia_metrics.mem: now supports warn/crit levels for heap, nonheap, totalheap
     * jolokia_metrics.mem: add dedicated PNP graph
     * FIX: logwatch.ec: use UNIX socket instead of Pipe for forwarding into EC 
+    * FIX: logwatch.ec: fixed exception when forwarding "OK" lines
+    * FIX: logwatch.ec: fixed forwarding of single log lines to event console
+    * Improved performance of logwatch.ec check in case of many messages
     * livestatus_status: new check for monitoring performance of monitoring
+    * FIX: diskstat.include: fix computation of queue length on windows
+      (thanks to K.H. Fiebig)
+    * lnx_bonding: new check for bonding interfaces on Linux
+    * ovs_bonding: new check for bonding interfaces on Linux / Open vSwitch
 
     Multisite:
     * Added comment painter to notification related views
@@ -39,6 +46,7 @@
 
     Event Console:
     * Added UNIX socket for sending events to the EC
+    * Speed up rule matches in some special cases by factor of 100 and more
 
 1.2.1i5:
     Core:

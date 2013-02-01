@@ -1,0 +1,33 @@
+title: Check state of Bonding network interface on Open vSwitch
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check checks the current state of a Open vSwitch bonding interface.
+ If the total bonding state of the interface is down, then the
+ check gets critical. If at least one slave interface is down
+ or not the expected slave is currently active, then the check
+ gets WARN.
+
+item:
+ The name of the bonding interface, etc {bond0}.
+
+inventory:
+ One check per {active} bonding interface will be created. During inventory
+ the currently active interface will be considered to be the primary
+ interface. This is only relevant if you configure a detection of 
+ a change in the active interface.
+
+[parameters]
+parameters (dict): Currently two parameters are available in this dict:
+
+ {"primary"}: The assumed primary interface. This is determined during
+ inventory since Opoen vSwitch does not allow to configure a primary
+ interface.
+
+ {"expect_active"}: Which interface should be expected active. This is one
+ of the following strings: {"primary"}: The interface set by the
+ parameter {"primary"}, {"lowest"}: The interface sorting lowest
+ alphabetically, {"ignore"}: Ignore which interace is active.
+

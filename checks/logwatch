@@ -403,7 +403,7 @@ def logwatch_to_prio(level):
         return 4
     elif level == 'C':
         return 2
-    elif level == '0':
+    elif level == 'O':
         return 5
     elif level == 'u':
         return 4
@@ -432,11 +432,12 @@ def check_logwatch_ec(_unused, params, info):
     # 2. create syslog message of each line
     # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasdad as
     # <facility+priority> timestamp hostname logfile: message
-    facility = params.get('facility', 17) # default to "local1"
+    facility = params.get('facility', 17) << 3 # default to "local1"
     messages = []
+    cur_time = syslog_time()
     for logfile, line in logs:
-        msg = '<%d>' % ((facility << 3) + logwatch_to_prio(line[0]),)
-        msg += '%s %s %s: %s' % (syslog_time(), g_hostname, logfile, line[2:])
+        msg = '<%d>' % (facility + logwatch_to_prio(line[0]),)
+        msg += '%s %s %s: %s' % (cur_time, g_hostname, logfile, line[2:])
         messages.append(msg)
 
     # 3. send lines to event console
@@ -468,7 +469,7 @@ def check_logwatch_ec(_unused, params, info):
             # instead of the pipe!
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             sock.connect(method)
-            sock.send('\n'.join(messages))
+            sock.send('\n'.join(messages) + '\n')
             sock.close()
 
         num_messages = len(messages)

@@ -1,0 +1,14 @@
+Title: mkeventd init script does not handle stale pidfiles correctly
+Component: ec
+State: open
+Date: 2013-01-31 16:36:01
+Targetversion: 1.2.2
+Class: bug
+
+When running etc/init.d/mkeventd stop when having a pidfile but no running
+process, the "kill $THE_PID" call results in an error message which should
+be supressed. Instead it should show "OK" and delete the stale pidfile.
+
+The status command also has this error message which should be suppressed.
+
+Restart is completely broken in this case.

@@ -1,0 +1,15 @@
+Title: logwatch.ec: Need some fallback mechanism if processing takes too long
+Component: checks
+State: open
+Date: 2013-01-31 11:23:38
+Targetversion: 1.2.2
+Class: bug
+
+Nagios kills Check_MK when it takes too long. When e.g. logwatch.ec is taking
+more than 60 seconds, the script is terminated and all unprocessed messages
+are lost. This results in data-loss and must be prevented!
+
+This is not only based on the amount of messages to be processed at once,
+when the event console is hanging or taking too long for any reason,
+the pending messages are lost. Just limiting the number of messages is
+no real solution.

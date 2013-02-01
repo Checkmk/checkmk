@@ -857,7 +857,7 @@ class EventServer:
                     pass
 
             # Read events from builtin syslog server
-            if self._syslog.fileno() in readable:
+            if self._syslog != None and self._syslog.fileno() in readable:
                 self.process_event_data(self._syslog.recv(4096))
 
             if opt_profile.get("event"):
@@ -1122,6 +1122,11 @@ class EventServer:
                     for key in [ "match", "match_ok", "match_host", "match_application" ]:
                         if key in rule:
                             value = rule[key].strip()
+                            # Remote leading .* from regex. This is redundant and 
+                            # dramatically destroys performance when doing an infix search.
+                            if key in [ "match", "match_ok" ]:
+                                while value.startswith(".*") and not value.startswith(".*?"):
+                                    value = value[2:]
                             if not value:
                                 del rule[key]
                                 continue

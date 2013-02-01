@@ -1,0 +1,8 @@
+Title: References like \1 \2 to regex groups do not work in "expect regular messages" mode
+Component: ec
+State: open
+Date: 2013-01-31 11:17:10
+Targetversion: 1.2.2
+Class: bug
+
+In this case, e.g. when rewriting the message text, it only shows \1 \2.

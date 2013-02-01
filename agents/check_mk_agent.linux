@@ -454,7 +454,7 @@ then
     echo '<<<livestatus_status:sep(59)>>>'
     for site in *
     do
-        if [ -d "$site" ] ; then
+        if [ -S "/omd/sites/$site/tmp/run/live" ] ; then
             echo "[$site]"
             echo -e "GET status" | /omd/sites/$site/bin/unixcat /omd/sites/$site/tmp/run/live
         fi

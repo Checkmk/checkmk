@@ -93,11 +93,11 @@ def inventory_if_common(info):
     seen_items = set([])
     duplicate = set([])
     
-    host_rules = host_extra_conf_merged(g_hostname, inventory_if_rules)
-    uses_description = host_rules.get('use_desc', if_inventory_uses_description)
-    uses_alias = host_rules.get('use_alias', if_inventory_uses_alias)
-    porttypes = host_rules.get('porttypes', if_inventory_porttypes)
-    portstates =  host_rules.get('portstates', if_inventory_portstates)
+    settings = host_extra_conf_merged(g_hostname, inventory_if_rules)
+    uses_description    = settings.get('use_desc', if_inventory_uses_description)
+    uses_alias          = settings.get('use_alias', if_inventory_uses_alias)
+    porttypes           = settings.get('porttypes', if_inventory_porttypes)
+    portstates          = settings.get('portstates', if_inventory_portstates)
 
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
             inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \

@@ -33,6 +33,7 @@ if_inventory_uses_alias = False
 if_inventory_pad_portnumbers = True
 if_inventory_monitor_speed = True
 if_inventory_monitor_state = True
+inventory_if_rules = []
 
 factory_settings["if_default_levels"] = {
     "errors" : (0.01, 0.1),
@@ -91,6 +92,12 @@ def inventory_if_common(info):
 
     seen_items = set([])
     duplicate = set([])
+    
+    host_rules = host_extra_conf_merged(g_hostname, inventory_if_rules)
+    uses_description = host_rules.get('use_desc', if_inventory_uses_description)
+    uses_alias = host_rules.get('use_alias', if_inventory_uses_alias)
+    porttypes = host_rules.get('porttypes', if_inventory_porttypes)
+    portstates =  host_rules.get('portstates', if_inventory_portstates)
 
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
             inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
@@ -101,9 +108,9 @@ def inventory_if_common(info):
 
         # compute item now - also for unmonitored ports - in order to see if it
         # is uninque.
-        if if_inventory_uses_description and ifDescr:
+        if uses_description and ifDescr:
             item = ifDescr
-        elif if_inventory_uses_alias and ifAlias:
+        elif uses_alias and ifAlias:
             item = ifAlias
         else:
             item = if_pad_with_zeroes(info, ifIndex)
@@ -112,7 +119,7 @@ def inventory_if_common(info):
             duplicate.add(item)
         seen_items.add(item)
 
-        if ifType in if_inventory_porttypes and ifOperStatus in if_inventory_portstates:
+        if ifType in porttypes and ifOperStatus in portstates:
             paramstring = "{"
 
             if if_inventory_monitor_state:

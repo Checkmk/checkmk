@@ -39,47 +39,47 @@
 typedef pair<string, string> HostServiceKey;
 
 struct HostServiceState {
-	bool    _is_host;
-	time_t  _time;
-	int     _lineno;
-	time_t  _from;
-	time_t  _until;
+    bool    _is_host;
+    time_t  _time;
+    int     _lineno;
+    time_t  _from;
+    time_t  _until;
 
-	time_t  _duration;
-	double  _duration_part;
+    time_t  _duration;
+    double  _duration_part;
 
-	// Do not change order within this block!
-	// These durations will be bzero'd
-	time_t  _duration_state_UNMONITORED;
-	double  _duration_part_UNMONITORED;
-	time_t  _duration_state_OK;
-	double  _duration_part_OK;
-	time_t  _duration_state_WARNING;
-	double  _duration_part_WARNING;
-	time_t  _duration_state_CRITICAL;
-	double  _duration_part_CRITICAL;
-	time_t  _duration_state_UNKNOWN;
-	double  _duration_part_UNKNOWN;
+    // Do not change order within this block!
+    // These durations will be bzero'd
+    time_t  _duration_state_UNMONITORED;
+    double  _duration_part_UNMONITORED;
+    time_t  _duration_state_OK;
+    double  _duration_part_OK;
+    time_t  _duration_state_WARNING;
+    double  _duration_part_WARNING;
+    time_t  _duration_state_CRITICAL;
+    double  _duration_part_CRITICAL;
+    time_t  _duration_state_UNKNOWN;
+    double  _duration_part_UNKNOWN;
 
-	// State information
-	int     _host_down;      // used if service
-	int     _state;			 // -1/0/1/2/3
-	int     _in_notification_period;
-	int     _in_downtime;
-	int     _in_host_downtime;
-	int     _is_flapping;
-
-
-	// Absent state handling
-	int		_no_longer_exists;
-	time_t  _last_known_time;
+    // State information
+    int     _host_down;      // used if service
+    int     _state;             // -1/0/1/2/3
+    int     _in_notification_period;
+    int     _in_downtime;
+    int     _in_host_downtime;
+    int     _is_flapping;
 
 
-	const char  *_debug_info;
-	// Pointer to dynamically allocated strings (strdup) that live here.
-	// These pointers are 0, if there is no output (e.g. downtime)
-	char        *_log_output;
-	char        *_notification_period;  // may be "": -> no period known, we assume "always"
+    // Absent state handling
+    int        _no_longer_exists;
+    time_t  _last_known_time;
+
+
+    const char  *_debug_info;
+    // Pointer to dynamically allocated strings (strdup) that live here.
+    // These pointers are 0, if there is no output (e.g. downtime)
+    char        *_log_output;
+    char        *_notification_period;  // may be "": -> no period known, we assume "always"
     host        *_host;
     service     *_service;
     const char  *_host_name;            // Fallback if host no longer exists
@@ -98,15 +98,15 @@ class TableStateHistory : public Table
     int      _since;
     int      _until;
 
-	// Notification periods information, name: active(1)/inactive(0)
+    // Notification periods information, name: active(1)/inactive(0)
     typedef map<string, int> _notification_periods_t;
     _notification_periods_t  _notification_periods;
 
     // Helper functions to traverse through logfiles
-    _logfiles_t::iterator _it_logs;
+    _logfiles_t::iterator         _it_logs;
     logfile_entries_t*            _entries;
     logfile_entries_t::iterator   _it_entries;
-    LogEntry*             _current_entry;
+    LogEntry*                     _current_entry;
 
 public:
     TableStateHistory();

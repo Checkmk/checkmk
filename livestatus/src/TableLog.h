@@ -47,7 +47,7 @@ public:
     Column *column(const char *colname); // override in order to handle current_
 
 private:
-   bool answerQuery(Query *, Logfile *, time_t, time_t);
+    bool answerQuery(Query *, Logfile *, time_t, time_t);
 };
 
 #endif // TableLog_h

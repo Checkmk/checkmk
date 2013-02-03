@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults, livestatus, htmllib, time, os, re, pprint, time, copy
-import weblib, traceback, forms
+import weblib, traceback, forms, valuespec
 from lib import *
 from pagefunctions import *
 
@@ -1207,6 +1207,19 @@ def show_view(view, show_heading = False, show_buttons = True,
         else:
             filterheaders += header
 
+    # Prepare limit:
+    # We had a problem with stats queries on the logtable where
+    # the limit was not applied on the resulting rows but on the
+    # lines of the log processed. This resulted in wrong stats.
+    # For these datasources we ignore the query limits.
+    limit = None
+    if not datasource.get('ignore_limit', False):
+        limit = get_limit()
+
+
+    if html.var("mode") == "availability":
+        return render_availability(view, datasource, filterheaders, display_options, only_sites, limit)
+
     query = filterheaders + view.get("add_headers", "")
 
     # Sorting - use view sorters and URL supplied sorters
@@ -1216,7 +1229,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     else:
         sorters = []
 
-    # Prepare gropuing information
+    # Prepare grouping information
     group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"] ]
 
     # Prepare columns to paint
@@ -1253,14 +1266,6 @@ def show_view(view, show_heading = False, show_buttons = True,
     if "site" in colset:
         colset.remove("site")
     columns = list(colset)
-
-    # We had a problem with stats queries on the logtable where
-    # the limit was not applied on the resulting rows but on the
-    # lines of the log processed. This resulted in wrong stats.
-    # For these datasources we ignore the query limits.
-    limit = None
-    if not datasource.get('ignore_limit', False):
-        limit = get_limit()
 
     # Get list of painter options we need to display (such as PNP time range
     # or the format being used for timestamp display)
@@ -1738,6 +1743,7 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
             url = "edit_view.py?clonefrom=%s&load_view=%s&back=%s" % \
                   (thisview["owner"], thisview["name"], backurl)
         html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show) 
+        html.context_button(_("Availability"), html.makeuri([("mode", "availability")]), "availability")
 
     if 'B' in display_options:
         execute_hooks('buttons-end')
@@ -1845,8 +1851,12 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
 
     # Remove columns which are implicitely added by the datasource
     columns = [ c for c in columns if c not in add_columns ]
-
     query = "GET %s\n" % tablename
+    return do_query_data(query, columns, add_columns, merge_column, 
+                         add_headers, only_sites, limit)
+
+def do_query_data(query, columns, add_columns, merge_column, 
+                  add_headers, only_sites, limit):
     query += "Columns: %s\n" % " ".join(columns)
     query += add_headers
     html.live.set_prepend_site(True)
@@ -1873,6 +1883,7 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
     rows = [ dict(zip(columns, row)) for row in data ]
 
     return rows
+
 
 
 # Merge all data rows with different sites but the same value

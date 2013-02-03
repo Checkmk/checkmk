@@ -1,0 +1,416 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+import table
+from valuespec import *
+
+# Function building the availability view
+def render_availability(view, datasource, filterheaders, display_options, 
+                        only_sites, limit):
+    title = _("Availability: ") + view_title(view)
+    if 'H' in display_options:
+        html.body_start(title, stylesheets=["pages","views","status"])
+    if 'T' in display_options:
+        html.top_heading(title)
+    if 'B' in display_options:
+        html.begin_context_buttons()
+        html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
+        html.end_context_buttons()
+
+    avoptions = render_availability_options()
+    if not html.has_user_errors():
+        do_render_availability(datasource, filterheaders, avoptions, only_sites, limit)
+
+    if 'Z' in display_options:
+        html.bottom_footer()
+    if 'H' in display_options:
+        html.body_end()
+
+avoption_entries = [
+  # Time range selection
+  ( "rangespec",
+    "double",
+    CascadingDropdown(
+        title = _("Time range"),
+        choices = [
+
+            ( "d0",  _("Today") ),
+            ( "d1",  _("Yesterday") ),
+
+            ( "w0",  _("This week") ),
+            ( "w1",  _("Last week") ),
+
+            ( "m0",  _("This month") ),
+            ( "m1",  _("Last month") ),
+
+            ( "y0",  _("This year") ),
+            ( "y1",  _("Last year") ),
+
+            ( "age", _("The last..."), Age() ),
+            ( "date", _("Explicit date..."), 
+                Tuple(
+                    orientation = "horizontal",
+                    title_br = False,
+                    elements = [
+                        AbsoluteDate(title = _("From:")),
+                        AbsoluteDate(title = _("To:")),
+                    ],
+                ),
+            ),
+        ],
+        default_value = "m1",
+    )
+  ),
+
+  # How to deal with downtimes, etc.
+  ( "consider", 
+    "double",
+    Dictionary( 
+       title = _("Status Classification"),
+       columns = 2,
+       elements = [
+           ( "downtime", 
+              Checkbox(label = _("Consider scheduled downtimes")),
+           ),
+           ( "host_down", 
+              Checkbox(label = _("Consider times where the host is down")),
+           ),
+           ( "notification_period", 
+              Checkbox(label = _("Consider notification period")),
+           ),
+           ( "unmonitored",
+              Checkbox(label = _("Consider unmonitored time")),
+           ),
+       ],
+       optional_keys = False,
+    ),
+  ),
+
+  # Format of numbers
+  ( "timeformat",
+    "single",
+    DropdownChoice(
+        title = _("Format time ranges as"),
+        choices = [
+            ("percentage_0", _("Percentage - XX %") ),
+            ("percentage_1", _("Percentage - XX.X %") ),
+            ("percentage_2", _("Percentage - XX.XX %") ),
+            ("percentage_3", _("Percentage - XX.XXX %") ),
+            ("seconds",      _("Seconds") ),
+            ("minutes",      _("Minutes") ),
+            ("hours",        _("Hours") ),
+            ("hhmmss",       _("HH:MM:SS") ),
+        ],
+    )
+  ),
+
+
+  # Optionally group some states togehter
+  ( "state_grouping", 
+    "single",
+    Dictionary( 
+       title = _("Status Grouping"),
+       columns = 2,
+       elements = [
+           ( "warn_is_ok", 
+              Checkbox(label = _("Consider WARN as OK")),
+           ),
+           ( "unknown_is_crit", 
+              Checkbox(label = _("Consider UNKNOWN as CRIT")),
+           ),
+       ],
+       optional_keys = False,
+    ),
+  ),
+]
+
+
+def render_availability_options():
+    avoptions = config.load_user_file("avoptions", {
+        "range"          : (time.time() - 86400, time.time()),
+        "consider"       : {
+            "downtime"            : True,
+            "host_down"           : True,
+            "notification_period" : True,
+            "unmonitored"         : True,
+        },
+        "timeformat"     : "percentage_2",
+        "rangespec"      : "d0",
+        "state_grouping" : {
+            "warn_is_ok"      : False,
+            "unknown_is_crit" : False,
+        },
+    })
+
+    html.begin_form("avoptions")
+    html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
+
+    if html.form_submitted():
+        for name, height, vs in avoption_entries:
+            try:
+                avoptions[name] = vs.from_html_vars("avo_" + name)
+            except MKUserError, e:
+                html.add_user_error(e.varname, e.message)
+    
+    try:
+        range, range_title = compute_range(avoptions["rangespec"])
+        avoptions["range"] = range, range_title
+    except MKUserError, e:
+        html.add_user_error(e.varname, e.message)
+
+    if html.has_user_errors():
+        html.show_user_errors()
+
+    for name, height, vs in avoption_entries:
+        html.write('<div class="floatfilter %s %s">' % (height, name))
+        html.write('<div class=legend>%s</div>' % vs.title())
+        html.write('<div class=content>')
+        vs.render_input("avo_" + name, avoptions.get(name))
+        html.write("</div>")
+        html.write("</div>")
+    
+    html.write("</td></tr>")
+
+    html.write("<tr><td>")
+    html.button("apply", _("Apply"), "submit")
+    html.write("</td></tr></table>")
+
+    html.hidden_fields()
+    html.end_form()
+
+    if html.form_submitted():
+        config.save_user_file("avoptions", avoptions)
+
+    return avoptions
+
+month_names = [
+  _("January"), _("February"), _("March"), _("April"),
+  _("May"), _("June"), _("July"), _("August"),
+  _("September"), _("October"), _("November"), _("December")
+]
+
+def compute_range(rangespec):
+    now = time.time()
+    if rangespec[0] == 'age':
+        from_time = now - rangespec[1]
+        until_time = now
+        title = _("The last ") + Age().value_to_text(rangespec[1])
+        return (from_time, until_time), title
+    elif rangespec[0] == 'date':
+        from_time, until_time = rangespec[1]
+        if from_time > until_time:
+            raise MKUserError("avo_rangespec_9_0_year", _("The end date must be after the start date"))
+        until_time += 86400 # Consider *end* of this day
+        title = AbsoluteDate().value_to_text(from_time) + " ... " + \
+                AbsoluteDate().value_to_text(until_time)
+        return (from_time, until_time), title
+
+    else:
+        # year, month, day_of_month, hour, minute, second, day_of_week, day_of_year, is_daylightsavingtime
+        broken = list(time.localtime(now))
+        broken[3:6] = 0, 0, 0 # set time to 00:00:00
+        midnight = time.mktime(broken)
+
+        until_time = now
+        if rangespec[0] == 'd': # this/last Day
+            from_time = time.mktime(broken)
+            titles = _("Today"), _("Yesterday")
+
+        elif rangespec[0] == 'w': # week
+            from_time = midnight - (broken[6] - 1) * 86400
+            titles = _("This week"), _("Last week")
+
+        elif rangespec[0] == 'm': # month
+            broken[2] = 1
+            from_time = time.mktime(broken)
+            titles = month_names[broken[1] - 1] + " " + str(broken[0]), \
+                     month_names[(broken[1] + 10) % 12] + " " + str(broken[0])
+
+        elif rangespec[0] == 'y': # year
+            broken[1:3] = [1, 1]
+            from_time = time.mktime(broken)
+            titles = str(broken[0]), str(broken[0]-1)
+
+        if rangespec[1] == '0':
+            return (from_time, now), titles[0]
+
+        else: # last (previous)
+            if rangespec[0] == 'd':
+                return (from_time - 86400, from_time), titles[1]
+            elif rangespec[0] == 'w':
+                return (from_time - 7 * 86400, from_time), titles[1]
+
+            until_time = from_time
+            from_broken = list(time.localtime(from_time))
+            if rangespec[0] == 'y':
+                from_broken[0] -= 1
+            else: # m
+                from_broken[1] -= 1
+                if from_broken[1] == 0:
+                    from_broken[1] = 12
+                    from_broken[0] -= 1
+            return (time.mktime(from_broken), until_time), titles[1]
+
+def get_availability_data(datasource, filterheaders, range, only_sites, limit):
+    av_filter = "Filter: time >= %d\nFilter: time <= %d\n" % range
+    query = "GET statehist\n" + av_filter
+
+    # Add Columns needed for object identification
+    columns = [ "host_name", "host_alias", "service_description" ]
+
+    # Columns for availability
+    columns += [
+      "duration", "from", "until", "state", "host_down", "in_downtime", 
+      "in_host_downtime", "in_notification_period", # "is_flapping", 
+      "log_output" ]
+
+    add_columns = datasource.get("add_columns", [])
+    rows = do_query_data(query, columns, add_columns, None, filterheaders, only_sites, limit)
+    return rows
+            
+
+availability_columns = [
+ ( "ok",                        "state0",        _("OK"),       None ),
+ ( "warn",                      "state1",        _("WARN"),     None ),
+ ( "crit",                      "state2",        _("CRIT"),     None ),
+ ( "unknown",                   "state3",        _("UNKNOWN"),  None ),
+ ( "host_down",                 "hostdown",      _("H.Down"),   _("The host was down") ),
+ ( "in_downtime",               "downtime",      _("Downtime"), _("The host or service was in a scheduled downtime") ),
+ ( "outof_notification_period", "",              _("OO/Notif"), _("Out of Notification Period") ),
+ ( "unmonitored",               "unmonitored",   _("N/A"),      _("During this time period no monitoring data is available") ),
+]
+
+def do_render_availability(datasource, filterheaders, avoptions, only_sites, limit):
+    range, range_title = avoptions["range"]
+    rows = get_availability_data(datasource, filterheaders, range, only_sites, limit)
+
+    # Sort by site/host and service, while keeping native order
+    by_host = {}
+    for row in rows:
+        site_host = row["site"], row["host_name"]
+        service = row["service_description"]
+        by_host.setdefault(site_host, {})
+        by_host[site_host].setdefault(service, []).append(row)
+
+    # Now compute availability table. We have the following possible states:
+    # 1. "unmonitored"
+    # 2. "monitored"
+    #    2.1 "outof_notification_period"
+    #    2.2 "in_notification_period"
+    #         2.2.1 "in_downtime" (also in_host_downtime)
+    #         2.2.2 "not_in_downtime"
+    #               2.2.2.1 "host_down"
+    #               2.2.2.2 "host not down"
+    #                    2.2.2.2.1 "ok"
+    #                    2.2.2.2.2 "warn"
+    #                    2.2.2.2.3 "crit"
+    #                    2.2.2.2.4 "unknown"
+    availability = []
+    for site_host, site_host_entry in by_host.iteritems():
+        for service, service_entry in site_host_entry.iteritems():
+            states = {}
+            considered_duration = 0
+            for span in service_entry:
+                state = span["state"]
+                if state == -1:
+                    s = "unmonitored"
+                    if not avoptions["consider"]["unmonitored"]:
+                        considered_duration -= span["duration"]
+                elif span["in_notification_period"] == 0 and avoptions["consider"]["notification_period"]:
+                    s = "outof_notification_period"
+                elif (span["in_downtime"] or span["in_host_downtime"]) and avoptions["consider"]["downtime"]:
+                    s = "in_downtime"
+                elif span["host_down"] and avoptions["consider"]["host_down"]:
+                    s = "host_down"
+                else:
+                    s = { 0: "ok", 1:"warn", 2:"crit", 3:"unknown" }[state]
+                    if avoptions["state_grouping"]["warn_is_ok"] and s == "warn":
+                        s = "ok"
+                    elif avoptions["state_grouping"]["unknown_is_crit"] and s == "unknown":
+                        s = "crit"
+
+                states.setdefault(s, 0)
+                states[s] += span["duration"]
+                considered_duration += span["duration"]
+            availability.append([site_host[0], site_host[1], service, states, considered_duration])
+
+    availability.sort()
+
+    # Render the stuff
+    from_time, until_time = range
+    duration = until_time - from_time
+    timeformat = avoptions["timeformat"]
+    if timeformat.startswith("percentage_"):
+        def render_number(n, d):
+            if not d:
+                return _("n/a")
+            else:
+                return ("%." + timeformat[11:] + "f%%") % ( float(n) / float(d) * 100.0)
+    elif timeformat == "seconds":
+        def render_number(n, d):
+            return "%d s" % n
+    elif timeformat == "minutes":
+        def render_number(n, d):
+            return "%d min" % (n / 60)
+    elif timeformat == "hours":
+        def render_number(n, d):
+            return "%d h" % (n / 3600)
+    else:
+        def render_number(n, d):
+            minn, sec = divmod(n, 60)
+            hours, minn = divmod(minn, 60)
+            return "%02d:%02d:%02d" % (hours, minn, sec)
+
+
+    table.begin(_("Availability Matrix") + " - " + range_title, css="availability")
+    for site, host, service, states, considered_duration in availability:
+        table.row()
+        table.cell(_("Host"), host)
+        table.cell(_("Service"), service)
+        for sid, css, sname, help in availability_columns:
+            if sid == "outof_notification_period" and not avoptions["consider"]["notification_period"]:
+                continue
+            elif sid == "in_downtime" and not avoptions["consider"]["downtime"]:
+                continue
+            elif sid == "host_down" and not avoptions["consider"]["host_down"]:
+                continue
+            elif sid == "unmonitored" and not avoptions["consider"]["unmonitored"]:
+                continue
+            elif sid == "warn" and avoptions["state_grouping"]["warn_is_ok"]:
+                continue
+            elif sid == "unknown" and avoptions["state_grouping"]["unknown_is_crit"]:
+                continue
+            number = states.get(sid, 0)
+            if not number:
+                css = ""
+            table.cell(sname, render_number(number, considered_duration), css="number " + css, help=help)
+    table.end()
+
+
+
+# Av Options:
+# Zeitspannen < X Minuten nicht werten
+# Verhalten bei Flapping

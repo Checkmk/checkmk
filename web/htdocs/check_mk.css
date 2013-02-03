@@ -413,6 +413,8 @@ table.valuespec_tuple span.title {
 
 table.vs_date {
     border-spacing: 0px;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 table.vs_date td {

@@ -6,4 +6,5 @@ echo "$C files copied"
 if [ "$SITE" != - ] ; then
     sudo omd restart $SITE apache
 fi
-echo 'location.reload();' | nc -w 0 localhost 32000
+echo "Using RemoteControl..."
+echo 'reload' | nc -w 0 localhost 32000

@@ -1364,7 +1364,7 @@ class AbsoluteDate(ValueSpec):
             except:
                 raise MKUserError(varname, _("Please enter a correct number"))
             if part < mmin or part > mmax:
-                raise MKUserError(varname, _("The value for %s must be between %d and %d" % (mmin, mmax)))
+                raise MKUserError(varname, _("The value for %s must be between %d and %d" % (_(what), mmin, mmax)))
             parts.append(part)
         parts += [0] * 6
         return time.mktime(tuple(parts))
@@ -1683,6 +1683,7 @@ class Tuple(ValueSpec):
         self._elements = kwargs["elements"]
         self._show_titles = kwargs.get("show_titles", True)
         self._orientation = kwargs.get("orientation", "vertical")
+        self._title_br = kwargs.get("title_br", True)
 
     def canonical_value(self):
         return tuple([x.canonical_value() for x in self._elements])
@@ -1720,7 +1721,11 @@ class Tuple(ValueSpec):
                 elif self._orientation == "horizontal":
                     html.write("<td class=tuple_td><span class=title>%s" % title)
                     html.help(element.help())
-                    html.write("</span><br>")
+                    html.write("</span>")
+                    if self._title_br:
+                        html.write("<br>")
+                    else:
+                        html.write(" ")
                 else:
                     html.write(" ")
                     html.help(element.help())

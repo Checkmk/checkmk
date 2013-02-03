@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import htmllib
+
 table = None
 mode = None
 next_func = None
@@ -77,12 +79,12 @@ def cell(*posargs, **kwargs):
     next_func = add_cell
     next_args = posargs, kwargs
 
-def add_cell(title, text="", css=None):
+def add_cell(title, text="", css=None, help=None):
     if type(text) != unicode:
         text = str(text)
     htmlcode = text + html.drain()
     if len(table["rows"]) == 1: # first row -> pick headers
-        table["headers"].append(title)
+        table["headers"].append((title, help))
     table["rows"][-1][0].append((htmlcode, css))
 
 def end():
@@ -105,8 +107,10 @@ def end():
         html.write(" %s" % table["css"])
     html.write('">\n')
     html.write("  <tr>")
-    for header in table["headers"]:
-        html.write("    <th>%s</th>\n" % header)
+    for header, help in table["headers"]:
+        if help:
+            header = '<span title="%s">%s</span>' % (htmllib.attrencode(help), header)
+        html.write("  <th>%s</th>\n" % header)
     html.write("  </tr>\n")
 
     odd = "even"

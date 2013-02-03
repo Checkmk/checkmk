@@ -70,6 +70,8 @@ div.floatfilter {
 
 div.floatfilter.double {
     height: 110px;
+    display: table-cell;
+    vertical-align: center;
 }
 
 div.floatfilter input[type=text] {
@@ -97,6 +99,9 @@ div.floatfilter .content {
     padding-left: 4px;
     text-align: left;
 }
+div.floatfilter.double .content {
+    height: 82px;
+}
 div.floatfilter .content > select {
     width: 300px;
 }
@@ -111,9 +116,6 @@ div.floatfilter .content .filtertime select {
     width: 136px;
 }
 
-div.floatfilter.double .content {
-    height: 72px;
-}
 table.filtertime td {
     vertical-align: middle;
 }
@@ -468,4 +470,37 @@ table.views td.buttons {
     padding: 3px;
     vertical-align: middle;
     background-color: #8EAEB8;
+}
+
+/* Availability */
+table.data.availability {
+    width: auto;
+}
+
+table.data.availability td.number {
+    width: 60px;
+}
+
+table.data.availability td.downtime {
+    background-color: #0af;
+}
+table.data.availability td.hostdown {
+    background-color: #048;
+    color: white;
+}
+table.data.availability td.unmonitored {
+    color: #888;
+}
+table.data.availability tr.odd0 td.number {
+    background-image: url("images/white_20percent.png"); 
+    background-repeat: repeat;
+}
+
+div.floatfilter.rangespec table.valuespec_tuple {
+    width: 100%;
+}
+
+div.floatfilter.rangespec table.valuespec_tuple span.title {
+    position: relative;
+    top: 7px;
 }

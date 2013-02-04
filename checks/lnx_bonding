@@ -120,5 +120,5 @@ check_info['lnx_bonding'] = {
     "inventory_function"      : lambda info: inventory_bonding(parse_lnx_bonding(info)),
     "service_description"     : "Bonding Interface %s",
     "group"                   : "bonding",
-    "includes"                : "bonding.include",
+    "includes"                : [ "bonding.include" ],
 }

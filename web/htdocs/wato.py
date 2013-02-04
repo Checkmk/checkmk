@@ -7751,6 +7751,9 @@ def mode_users(phase):
         if delid == config.user_id:
             raise MKUserError(None, _("You cannot delete your own account!"))
 
+        if delid not in users:
+            return None # The account does not exist (anymore), no deletion needed
+
         c = wato_confirm(_("Confirm deletion of user %s" % delid),
                          _("Do you really want to delete the user %s?" % delid))
         if c:

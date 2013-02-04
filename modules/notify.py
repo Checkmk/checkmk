@@ -40,6 +40,7 @@ notification_spooldir = var_dir + "/notify/spool"
 notification_log = notification_logdir + "/notify.log"
 notification_logging    = 0
 
+notification_spooling_enabled = False
 notification_forward_to = ""
 notification_forward_mode = "off"
 
@@ -218,7 +219,6 @@ def get_readable_rel_date(timestamp):
 def handle_spoolfile(spoolfile):
     if os.path.exists(spoolfile):
         try:
-            notify_log("handle spoolfile %s" % spoolfile)
             data = eval(file(spoolfile).read())
             if not "context" in data.keys():
                 return 2
@@ -226,13 +226,13 @@ def handle_spoolfile(spoolfile):
          #       plugin = 'email'
          #   else:
          #       plugin = data['plugin']
-            return process_context(data["context"], False, data.get("plugin"))
+            return process_context(data["context"], False, data.get("plugin", "email"))
         except Exception, e:
             notify_log("ERROR %s\n%s" % (e, format_exception()))
             return 2
         return 0
 
-def process_context(context, write_into_spoolfile, use_plugin = None):
+def process_context(context, write_into_spoolfile, use_method = None):
     # Get notification settings for the contact in question - if available.
     method = "email"
     contact = contacts.get(context["CONTACTNAME"])
@@ -242,25 +242,26 @@ def process_context(context, write_into_spoolfile, use_plugin = None):
         else:
             method = 'email'
 
-        if use_plugin:
-            if use_plugin == "email":
+        if use_method:
+            if use_method == "email":
                 method = "email" 
             elif method == "email":
-                # We are searching for a specific plugin
-                # but the only available is email... 
+                # We are searching for a specific
+                # but this contact does not offer any 
+                notify_log("ERROR: contact %r do not have any plugins (required: %s)" % (contact, use_method))
                 return 2
             else:
                 found_plugin = {} 
                 for item in method[1]:
-                    if item["plugin"] == use_plugin:
+                    if item["plugin"] == use_method:
                         found_plugin = item
                         break
                 if not found_plugin:
                     # Required plugin was not found for this contact
+                    notify_log("ERROR: contact %r do not have plugin %s" % (contact, use_method))
                     return 2
                 method = ('flexible', [found_plugin])
         
-        print "call method"
         if type(method) == tuple and method[0] == 'flexible':
             notify_flexible(context, method[1], write_into_spoolfile)
         else:
@@ -367,7 +368,11 @@ def do_notify(args):
             if notification_forward_mode == "forward_exclusive":
                 return 0
 
-        process_context(context, True)
+        try:
+            write_into_spoolfile = config.mknotifyd_enabled
+        except:
+            write_into_spoolfile = False
+        process_context(context, write_into_spoolfile)
     except Exception, e:
         if g_interactive:
             raise
@@ -379,11 +384,8 @@ def do_notify(args):
 
 def notify_via_email(context, write_into_spoolfile):
     if write_into_spoolfile:
-        create_spoolfile({"context": context, "plugin": None})
+        create_spoolfile({"context": context})
         return 0
-
-    # TODO: mail reaktivieren
-    return 0
 
     notify_log(substitute_context(notification_log_template, context))
 
@@ -534,7 +536,7 @@ def call_notification_script(plugin, parameters, context, write_into_spoolfile):
         return 2
     
 
-    # Create spoolfile
+    # Create spoolfile or actually call the plugin
     if write_into_spoolfile:
         create_spoolfile({"context": context, "plugin": plugin})
     else:

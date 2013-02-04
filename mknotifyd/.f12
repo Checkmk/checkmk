@@ -17,6 +17,6 @@ sudo touch $OMD_ROOT/etc/check_mk/mknotifyd.mk
 
 sudo chown -R $SITE.$SITE $OMD_ROOT/{etc,local,var}
 sudo omd restart $SITE apache
-sudo omd status $SITE mknotifyd && sudo omd restart $SITE mknotifyd
+# sudo omd status $SITE mknotifyd && sudo omd restart $SITE mknotifyd
 
 

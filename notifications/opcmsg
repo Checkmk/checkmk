@@ -48,7 +48,7 @@ def main():
             the_object += ":" + context["SERVICEDESC"]
 
         # msg_grp
-        msg_grp = os.getenv("NOTIFY_PARAMETER_1")
+        msg_grp = context['CONTACTNAME']
 
         # node
         node = context['MONITORING_HOST']

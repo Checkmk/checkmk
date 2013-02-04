@@ -154,9 +154,18 @@ def check_oracle_tablespaces(item, params, info):
     increment_size = 0
     free_space = 0
     
+<<<<<<< HEAD
     # Conversion of old autochecks params
     if type(params) == tuple: 
         params = { "autoextend" : params[0], "levels" : params[1:] }
+=======
+    if type(params) == tuple: 
+        autoext, warn, crit = params
+    else:
+        autoext    = params["autoextend"]
+        warn, crit = params["levels"]
+        # TODO: magic 
+>>>>>>> mknotifyd update
 
     autoext = params.get("autoextend")
     uses_default_increment = False
@@ -262,8 +271,12 @@ check_info['oracle_tablespaces'] = {
     "check_function"          : check_oracle_tablespaces,
     "inventory_function"      : inventory_oracle_tablespaces,
     "has_perfdata"            : True,
+<<<<<<< HEAD
     "group"                   : "oracle_tablespaces",
     "default_levels_variable" : "oracle_tablespaces_default_levels",
     "includes"                : [ "oracle.include" ]
+=======
+#    "default_levels_variable" : "oracle_tablespaces_default_levels"
+>>>>>>> mknotifyd update
 }
 check_config_variables.append("oracle_tablespaces_check_default_increment")

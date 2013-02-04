@@ -28,4 +28,7 @@ ln -sfn ../init.d/mknotifyd $OMD/skel/etc/rc.d/10-mknotifyd
 # Directly put into our test site
 if [ -n "$SITE" -a -e "/omd/sites/$SITE" ] ; then
     sudo install -o $SITE -g $SITE -v -m 755 omd/mknotifyd.init /omd/sites/$SITE/etc/init.d/mknotifyd
+    sudo install -o $SITE -g $SITE -v -m 644 omd/logrotate.conf /omd/sites/$SITE/etc/logrotate.d/mknotifyd
+    sudo sed -i "s@###ROOT###@/omd/sites/$SITE@g" /omd/sites/$SITE/etc/logrotate.d/mknotifyd
+    sudo install -d -o $SITE -g $SITE /omd/sites/$SITE/var/log/mknotifyd
 fi

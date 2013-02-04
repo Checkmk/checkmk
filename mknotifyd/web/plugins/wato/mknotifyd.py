@@ -40,20 +40,58 @@ def log_mkeventd(what, message):
 if mknotifyd_enabled:
     group = _("Notification")
     
-    # Check_MK vars
+    # Check_MK var
+    register_configvar(group,
+        "notification_spooling_enabled",
+        Checkbox(
+            title = _("Spool notifications"),
+            help = _("Here you can set if notifications are processed through a spooling mechanism."
+                     "Using notification spooling has the advantage that if there are problems on "
+                     "sending a notification, the system tries to resend it later on. This is configurable "
+                     "via the 'Notification fail retry interval'"),
+            default_value = False),
+        domain = "check_mk"
+    )
+    
+    # Daemon var
+    register_configvar_domain("mknotifyd", config_dir)
+    register_configvar(group,
+        "notification_deferred_retention_time",
+            Integer(
+                title = _("Notification fail retry interval"),
+                help = _("If the processing of a notification fails, the notify daemon "
+                         "retries to send the notification again after this time"),
+                minvalue = 10,
+                maxvalue = 86400,
+                default_value = 180,
+                unit = _("Seconds")
+            ),
+        domain = "mknotifyd"
+    )
+
+
+    # Check_MK var
     register_configvar(group,
         "notification_forward_mode",
         DropdownChoice(
             title = _("Forwarding mode"),
-            help = _("How notifications should be forwarded"),
+            help = _("How notifications should be forwarded<br>"
+                     "No Forwarding: Notifications are processed locally according to the contact settings<br>" 
+                     "Forward an process local: Notifications are forwarded to the configured remote site, "
+                     "but also processed locally according to the contacts settings<br>"
+                     "Exclusive forwarding: Notifications are forwarded to the configured remote site and "
+                     "never processed on the local site. This means that the configured notification plugins "
+                     "for the local contacts do not apply"
+                    ),
             choices = [
-                ('off',       _("Forwarding deactivated")),
-                ('forward' ,  _("Forward and process notifcations local")),
-                ('forward_exclusive', _("Only forward. No local processing")),
+                ('off',       _("No Forwarding")),
+                ('forward' ,  _("Forward and process local")),
+                ('forward_exclusive', _("Exclusive forwarding"))
                 ]),
         domain = "check_mk"
     )
     
+    # Check_MK var
     register_configvar(group,
         "notification_forward_to",
         Optional(
@@ -68,28 +106,13 @@ if mknotifyd_enabled:
         domain = "check_mk"
     )
     
-    # Daemon vars 
-    register_configvar_domain("mknotifyd", config_dir)
-    register_configvar(group,
-        "notification_deferred_retention_time",
-            Integer(
-                title = _("Notification fail retry interval"),
-                help = _("If the processing of a notification fails, the notify daemon can"
-                         "retry to send the notification again after this time"),
-                minvalue = 10,
-                maxvalue = 86400,
-                default_value = 180,
-                unit = _("Seconds")
-            ),
-        domain = "mknotifyd"
-    )
-
+    # Daemon var
     register_configvar(group,
         "notification_daemon_listen_port",
             Integer(
-                title = _("Notify daemon port number"),
+                title = _("Port for receiving notifications"),
                 help = _("Here you can set port at which the mknotifyd listens for forwarded"
-                         "notificaiton messages. Port number needs to be between 1025 and 65535"),
+                         "notification messages. The port number needs to be between 1025 and 65535"),
                 minvalue = 1025,
                 maxvalue = 65535,
                 default_value = 6555,

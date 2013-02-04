@@ -1,0 +1,10 @@
+#!/usr/bin/python
+# Testing script, that can be used as a datasource program
+# and creates a number of random services with random states
+
+import os, random
+
+print '<<<local>>>'
+for service in os.listdir('/'):
+    state = int(random.random() * 4)
+    print "%d Random_%s - Random Random Random" % (state, service)

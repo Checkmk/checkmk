@@ -1,11 +1,14 @@
 Title: mkeventd init script should detect "already running" on start
 Component: ec
-State: open
+Class: cleanup
+State: done
 Date: 2013-01-31 16:32:50
 Targetversion: 1.2.2
-Class: cleanup
 
 When the mkeventd is started using the init-script and already running,
 the init script should detect that and print something like:
 
 Starting mkeventd...Already running.
+
+2013-01-31 17:54:12: changed state open -> done
+Just implemented this.

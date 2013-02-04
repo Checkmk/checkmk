@@ -29,7 +29,8 @@
 import os
 import sys
 try:
-    path = os.environ.pop('OMD_ROOT')
+    pathlokal = "~/etc/check_mk/conf.d/wato/"
+    pathlokal = os.path.expanduser(pathlokal)
     datei = open(sys.argv[1],'r') 
 except:
     print """Run this script inside a OMD site
@@ -44,7 +45,7 @@ for line in datei:
     ordner, name, alias = line.split(';')[:3]
     if ordner:
         try:
-            os.mkdirs(path+ordner)
+            os.makedirs(pathlokal+ordner)
         except os.error:
             pass
         folders.setdefault(ordner,[])
@@ -59,7 +60,7 @@ for folder in folders:
         all_hosts += "'%s',\n" % (name)
         host_attributes += "'%s' : {'alias' : u'%s' },\n" % (name, alias)
 
-    ziel = open(path + folder + '/hosts.mk','w') 
+    ziel = open(pathlokal + folder + '/hosts.mk','w') 
     ziel.write('all_hosts += [')
     ziel.write(all_hosts)
     ziel.write(']\n\n')

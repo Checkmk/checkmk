@@ -82,5 +82,5 @@ check_info['ovs_bonding'] = {
     "inventory_function"      : lambda info: inventory_bonding(parse_ovs_bonding(info)),
     "service_description"     : "Bonding Interface %s",
     "group"                   : "bonding",
-    "includes"                : "bonding.include",
+    "includes"                : [ "bonding.include" ],
 }

@@ -252,7 +252,7 @@ _if_porttype_choices = [
   "fcipLink(224)" ), ("225", "rpr(225)" ), ("226", "qam(226)" ), ("227", "lmp(227)" ), ("228",
   "cblVectaStar(228)" ), ("229", "docsCableMCmtsDownstream(229)" ), ("230", "adsl2(230)" ), ]
 
-register_rule(group + '/' + subgroup_inventory,
+register_rule(group + '/' + subgroup_networking,
     varname   = "inventory_if_rules",
     title     = _("Network interface and switch port Inventory"),
     valuespec = Dictionary(
@@ -1909,6 +1909,41 @@ register_rule(
         default_value = [ 'summary' ],
     ),
     match="first")
+
+
+register_rule(group + '/' + subgroup_networking,
+    varname   = "if_groups",
+    title     = _('Network interface groups'),
+    help      = _('Normally the if checks create a single service for interface. '
+                  'By defining if-group patterns multiple interfaces can be combined together. '  
+                  'A single service is created for this interface group showing the total traffic amount '
+                  'of its members. You can configure if interfaces which are identified as group interfaces '
+                  'should not show up as single service'),
+    valuespec = ListOf(
+                    Dictionary(
+                        elements = [
+                            ("name",  
+                                   TextAscii(
+                                       title = _("Name of group"),
+                                       help  = _("Name of group in service description"),
+                                       allow_empty = False,
+                                   )),
+                            ("iftype", Integer(
+                                title = _("Interface port type"),
+                                help = _("The number of the port type. For example 53 (propVirtual)"),
+                                default_value = 0,
+                                minvalue = 1,
+                                maxvalue = 255,
+                            )),
+                            ("single", Checkbox(
+                                title = _("Do not list grouped interfaces separately"),
+                            )),
+                        ],
+                        required_keys = ["name", "iftype", "single"]),
+                    add_label = _("Add pattern")),  
+    match = 'list',
+)
+
 
 
 checkgroups.append((

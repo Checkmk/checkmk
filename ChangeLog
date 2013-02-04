@@ -9,6 +9,7 @@
       creation of the files (Thanks to Guido Günther)
     * FIX: Inventory for cluster nodes who are part of multiple clusters 
     * cmk --notify: added plugin for sms notification
+    * FIX: precompiled checks: correct handling of sys.exit() call when using python2.4 
 
     Checks & Agents:
     * winperf_processor now outputs float usage instead of integer
@@ -28,6 +29,8 @@
     * lnx_bonding: new check for bonding interfaces on Linux
     * ovs_bonding: new check for bonding interfaces on Linux / Open vSwitch
     * if: Inventory settings can now be set host based
+    * FIX: lnx_bonding/ovs_bonding: correct definition of bonding.include
+    * Add: if check now able to handle interface groups  (if_groups)
 
     Multisite:
     * Added comment painter to notification related views
@@ -38,16 +41,21 @@
 
     WATO:
     * Added hr_mem check to the memory checkgroup to make it configurable in WATO
+    * Make page_header configurable in global settings
     * FIX: Fixed some typos in ldap error messages
     * FIX: Fixed problem on user profile page when no alias set for a user
     * FIX: list valuespecs could not be extended after once saving
     * FIX: fix title of foldable areas contained in list valuespecs
     * FIX: Fixed bug where pending log was not removed in multisite setup
-    * Make page_header configurable in global settings
+    * FIX: Fixed generation of auth.php (Needed for NagVis Multisite Authorisation)
+    * FIX: Fixed missing general.* permissions in auth.php on slave sites in 
+      case of distributed WATO setups
 
     Event Console:
     * Added UNIX socket for sending events to the EC
     * Speed up rule matches in some special cases by factor of 100 and more
+    * Init-Script: Improved handling of stale pidfiles
+    * Init-Script: Detecting and reporting already running processes
 
 1.2.1i5:
     Core:

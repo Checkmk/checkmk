@@ -252,7 +252,7 @@ _if_porttype_choices = [
   "fcipLink(224)" ), ("225", "rpr(225)" ), ("226", "qam(226)" ), ("227", "lmp(227)" ), ("228",
   "cblVectaStar(228)" ), ("229", "docsCableMCmtsDownstream(229)" ), ("230", "adsl2(230)" ), ]
 
-register_rule(group + '/' + subgroup_inventory,
+register_rule(group + '/' + subgroup_networking,
     varname   = "inventory_if_rules",
     title     = _("Network interface and switch port Inventory"),
     valuespec = Dictionary(

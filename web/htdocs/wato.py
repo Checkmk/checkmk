@@ -11881,8 +11881,6 @@ def load_plugins():
     g_rulespec_group = {}
     g_rulespec_groups = []
 
-    hooks.unregister()
-
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))
 

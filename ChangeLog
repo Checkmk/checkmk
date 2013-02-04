@@ -36,12 +36,13 @@
 
     WATO:
     * Added hr_mem check to the memory checkgroup to make it configurable in WATO
+    * Make page_header configurable in global settings
     * FIX: Fixed some typos in ldap error messages
     * FIX: Fixed problem on user profile page when no alias set for a user
     * FIX: list valuespecs could not be extended after once saving
     * FIX: fix title of foldable areas contained in list valuespecs
     * FIX: Fixed bug where pending log was not removed in multisite setup
-    * Make page_header configurable in global settings
+    * FIX: Fixed generation of auth.php (Needed for NagVis Multisite Authorisation)
 
     Event Console:
     * Added UNIX socket for sending events to the EC

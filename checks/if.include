@@ -39,6 +39,15 @@ factory_settings["if_default_levels"] = {
     "errors" : (0.01, 0.1),
 }
 
+
+# Grouping of if ports
+#if_groups = [
+#   ( [{"name" : "VLAN", "iftype" : 53, "single" : True}], [ ], ALL_HOSTS ),
+#   ( [{"name" : "Group WLAN", "iftype" : 6, "single" : True}], [ "lan" ], ALL_HOSTS )
+#   ]
+#
+if_groups = []
+
 # Obsolete variable, but needed as contained in autochecks of
 # older checks. We need to keep this up for a few years...
 if_default_error_levels = factory_settings["if_default_levels"]["errors"]
@@ -88,17 +97,28 @@ def if_pad_with_zeroes(info, ifIndex):
 def inventory_if_common(info):
     if len(info) == 0 or len(info[0]) != 20:
         return []
-    pre_inventory = []
 
-    seen_items = set([])
-    duplicate = set([])
-    
     settings = host_extra_conf_merged(g_hostname, inventory_if_rules)
     uses_description    = settings.get('use_desc', if_inventory_uses_description)
     uses_alias          = settings.get('use_alias', if_inventory_uses_alias)
     porttypes           = settings.get('porttypes', if_inventory_porttypes)
     portstates          = settings.get('portstates', if_inventory_portstates)
 
+    pre_inventory        = []
+    pre_inventory_groups = []
+    group_patterns = {}
+
+    for line in host_extra_conf(g_hostname, if_groups):
+        for entry in line:
+            if str(entry["iftype"]) in porttypes:
+                group_patterns[entry["name"]] = entry
+
+    seen_items  = set([])
+    duplicate   = set([])
+    have_groups = {}
+    
+
+    # Determine whether single, grouped or both
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
             inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
             outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
@@ -106,8 +126,7 @@ def inventory_if_common(info):
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
-        # compute item now - also for unmonitored ports - in order to see if it
-        # is uninque.
+        # compute item now - also for unmonitored ports - in order to see if it is unique.
         if uses_description and ifDescr:
             item = ifDescr
         elif uses_alias and ifAlias:
@@ -115,23 +134,51 @@ def inventory_if_common(info):
         else:
             item = if_pad_with_zeroes(info, ifIndex)
 
-        if item in seen_items: # duplicate
-            duplicate.add(item)
-        seen_items.add(item)
+        # Prepare grouped interfaces
+        is_only_in_group = False
+        for group_name, pattern in group_patterns.items():
+            if pattern["iftype"] == saveint(ifType):
+                have_groups.setdefault(group_name, {"interfaces": []})["iftype"] = pattern["iftype"]
+                have_groups[group_name]["interfaces"].append((saveint(ifSpeed), ifOperStatus))
+                if pattern.get("single"):
+                    is_only_in_group = True
 
-        if ifType in porttypes and ifOperStatus in portstates:
-            paramstring = "{"
+        # Prepare single interfaces
+        if not is_only_in_group:
+            if item in seen_items: # duplicate
+                duplicate.add(item)
+            seen_items.add(item)
+            
+            if ifType in porttypes and ifOperStatus in portstates:
+                params = {}
+                if if_inventory_monitor_state:
+                    params["state"] = [ifOperStatus]
+    
+                if ifSpeed != "" and if_inventory_monitor_speed:
+                    params["speed"] = int(ifSpeed)
+                pre_inventory.append( (item, "%r" % params, int(ifIndex)) )
 
+    # create pseudo interfaces out of groups
+    for group_name, values in have_groups.items():
+        # total maximum speed of all interfaces in this group
+        total_speed = sum([pair[0] for pair in values["interfaces"]])
+        # operation status, default is down(2)
+        # if at least one is up(1) then up is considered as valid
+        one_up = "1" in [pair[1] for pair in values["interfaces"]]
+        group_operStatus = one_up and "1" or "2"
+
+        ifType = group_patterns[group_name]["iftype"]
+        if str(ifType) in porttypes and group_operStatus in portstates:
+            params = { "iftype": ifType, "aggregate": True }
             if if_inventory_monitor_state:
-                paramstring += '"state" : ["%s"],' % ifOperStatus
-
+                params["state"] = [ group_operStatus ]
+    
             if ifSpeed != "" and if_inventory_monitor_speed:
-                paramstring += '"speed" : %d,' % int(ifSpeed)
-            paramstring += "}"
-            pre_inventory.append( (item, paramstring, int(ifIndex)) )
+                params["speed"] = total_speed
+            pre_inventory.append( (group_name, "%r" % params, int(ifIndex)) )
 
-    # Check for duplicate items (e.g. when using Alias as item and the alias is not unique)
     inventory = []
+    # Check for duplicate items (e.g. when using Alias as item and the alias is not unique)
     for item, params, index in pre_inventory:
         if item in duplicate:
             new_item = "%s %d" % (item, index)
@@ -142,6 +189,114 @@ def inventory_if_common(info):
     return inventory
 
 def check_if_common(item, params, info):
+    # If this item is in an ifgroup create a pseudo interface and pass its data to the common instance
+    # This is done by simply adding the additional group_info data to the already existing info table
+    if params.get("aggregate"):
+        matching_interfaces = []
+        for element in info:
+            if params["iftype"] == saveint(element[2]):
+                matching_interfaces.append(element)
+
+        # Accumulate info over matching_interfaces
+        wrapped = False
+        this_time = time.time()
+
+        group_info = { 
+            "ifSpeed" : 0, "ifInOctets" : 0, "inucast" : 0, "inmcast" : 0 , "inbcast" : 0, 
+            "ifInDiscards" : 0, "ifInErrors" : 0, "ifOutOctets" : 0, "outucast" : 0, "outmcast" : 0, 
+            "outbcast" : 0, "ifOutDiscards" : 0, "ifOutErrors" : 0, "ifOutQLen" : 0
+        }
+
+        for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
+                inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
+                outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
+                ifOutQLen, ifAlias, ifPhysAddress in matching_interfaces:
+            if if_inventory_uses_description and ifDescr:
+                group_item = ifDescr
+            elif if_inventory_uses_alias and ifAlias:
+                group_item = ifAlias
+            else:
+                group_item = if_pad_with_zeroes(info, ifIndex)
+
+            perfdata = []
+
+            # Only these values are packed into counters
+            # We might need to enlarge this table
+            # However, more values leads to more MKCounterWrapped... 
+            for name, counter in [
+                ( "in",        ifInOctets),
+                ( "inucast",   inucast),
+                ( "inmcast",   inmcast),
+                ( "inbcast",   inbcast),
+                ( "indisc",    ifInDiscards),
+                ( "inerr",     ifInErrors),
+
+                ( "out",       ifOutOctets),
+                ( "outucast",  outucast),
+                ( "outmcast",  outmcast),
+                ( "outbcast",  outbcast),
+                ( "outdisc",   ifOutDiscards),
+                ( "outerr",    ifOutErrors) ]:
+                try:
+                    get_counter("if.%s.%s.%s" % (name, item, group_item), this_time, saveint(counter))
+                except MKCounterWrapped:
+                    wrapped = True
+                    # continue, other counters might wrap as well
+
+            # Add interface info to group info
+            group_info["ifSpeed"]       += saveint(ifSpeed)
+            group_info["ifInOctets"]    += saveint(ifInOctets)
+            group_info["inucast"]       += saveint(inucast)
+            group_info["inmcast"]       += saveint(inmcast)
+            group_info["inbcast"]       += saveint(inbcast)
+            group_info["ifInDiscards"]  += saveint(ifInDiscards)
+            group_info["ifInErrors"]    += saveint(ifInErrors)
+            group_info["ifOutOctets"]   += saveint(ifOutOctets) 
+            group_info["outucast"]      += saveint(outucast)
+            group_info["outmcast"]      += saveint(outmcast)
+            group_info["outbcast"]      += saveint(outbcast)
+            group_info["ifOutDiscards"] += saveint(ifOutDiscards)
+            group_info["ifOutErrors"]   += saveint(ifOutErrors)
+            group_info["ifOutQLen"]     += saveint(ifOutQLen)
+                
+                
+
+        # Append an additional entry to the info table containing the calculated group_info
+        one_up = "1" in [element[4] for element in matching_interfaces]
+        group_operStatus = one_up and "1" or "2"
+
+        group_entry = [ 
+                    "ifgroup%s" % item,         # ifIndex
+                    item,                       # ifDescr
+                    params["iftype"],           # ifType
+                    group_info["ifSpeed"],      # ifSpeed  
+                    group_operStatus,           # ifOperStatus
+                    group_info["ifInOctets"],   # ifInOctets
+                    group_info["inucast"],      # inucast 
+                    group_info["inmcast"],      # inmcast
+                    group_info["inbcast"],      # inbcast
+                    group_info["ifInDiscards"], # ifInDiscards
+                    group_info["ifInErrors"],   # ifInErrors
+
+                    group_info["ifOutOctets"],  # ifOutOctets
+                    group_info["outucast"],     # outucast 
+                    group_info["outmcast"],     # outmcast
+                    group_info["outbcast"],     # outbcast
+                    group_info["ifOutDiscards"],# ifOutDiscards
+                    group_info["ifOutErrors"],  # ifOutErrors
+                    group_info["ifOutQLen"],    # ifOutQLen
+                    "iftype %s" % params["iftype"],        # ifAlias
+                    "",                         # ifPhysAddress
+        ]
+        info.append(group_entry)
+        # If applicable, signal the check_if_common_single if the counter of the
+        # given interface has wrapped. Actually a wrap of the if group itself is unlikely,
+        # however any counter wrap of one of its members causes the accumulation being invalid
+        return check_if_common_single(item, params, info, wrapped)
+
+    return check_if_common_single(item, params,info)
+
+def check_if_common_single(item, params, info, force_counter_wrap = False):
     # Params now must be a dict. Some keys might
     # be set to None
     targetspeed        = params.get("speed")
@@ -206,6 +361,7 @@ def check_if_common(item, params, info):
 
             # prepare reference speed for computing relative bandwidth usage
             speed = saveint(ifSpeed)
+
             if speed:
                 ref_speed = speed / 8.0
             elif targetspeed:
@@ -273,6 +429,8 @@ def check_if_common(item, params, info):
 
                 try:
                     timedif, rate = get_counter("if.%s.%s" % (name, item), this_time, saveint(counter))
+                    if force_counter_wrap:
+                        raise MKCounterWrapped("if.%s.%s" % (name, item), "Forced counter wrap")
                     rates.append(rate)
                     perfdata.append( (name, rate, warn, crit, mmin, mmax) )
                 except MKCounterWrapped:
@@ -282,7 +440,7 @@ def check_if_common(item, params, info):
             # if at least one counter wrapped, we do not handle the counters at all
             if wrapped:
                 # If there is a threshold on the bandwidth, we cannot proceed
-                # futher (the check would be flapping to green on a wrap)
+                # further (the check would be flapping to green on a wrap)
                 if bw_crit != None:
                     raise MKCounterWrapped("", "Counter wrap, skipping checks this time") 
                 perfdata = []

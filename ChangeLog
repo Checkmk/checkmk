@@ -43,6 +43,8 @@
     * FIX: fix title of foldable areas contained in list valuespecs
     * FIX: Fixed bug where pending log was not removed in multisite setup
     * FIX: Fixed generation of auth.php (Needed for NagVis Multisite Authorisation)
+    * FIX: Fixed missing general.* permissions in auth.php on slave sites in 
+      case of distributed WATO setups
 
     Event Console:
     * Added UNIX socket for sending events to the EC

@@ -257,6 +257,12 @@ def handler(req, profiling = True):
         # Get page handler
         handler = pagehandlers.get(req.myfile, page_not_found)
 
+        # First initialization of the default permissions. Needs to be done before the auth_file
+        # (auth.php) ist written (it's done during showing the login page for the first time).
+        # Must be loaded before the "automation" call to have the general.* permissions available
+        # during automation action processing (e.g. hooks triggered by restart)
+        default_permissions.load()
+
         # Special handling for automation.py. Sorry, this must be hardcoded
         # here. Automation calls bybass the normal authentication stuff
         if req.myfile == "automation":
@@ -269,10 +275,6 @@ def handler(req, profiling = True):
         # Prepare output format
         output_format = html.var("output_format", "html")
         html.set_output_format(output_format)
-
-        # First initialization of the default permissions. Needs to be done before the auth_file
-        # (auth.php) ist written (it's done during showing the login page for the first time).
-        default_permissions.load()
 
         # Is the user set by the webserver? otherwise use the cookie based auth
         if not req.user or type(req.user) != str:

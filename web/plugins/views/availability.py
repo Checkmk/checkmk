@@ -281,7 +281,11 @@ def compute_range(rangespec):
             return (time.mktime(from_broken), until_time), titles[1]
 
 def get_availability_data(datasource, filterheaders, range, only_sites, limit):
+    has_service = "service" in datasource["infos"]
     av_filter = "Filter: time >= %d\nFilter: time <= %d\n" % range
+    if not has_service:
+        av_filter += "Filter: service_description =\n"
+
     query = "GET statehist\n" + av_filter
 
     # Add Columns needed for object identification
@@ -298,7 +302,16 @@ def get_availability_data(datasource, filterheaders, range, only_sites, limit):
     return rows
             
 
-availability_columns = [
+host_availability_columns = [
+ ( "up",                        "state0",        _("UP"),       None ),
+ ( "down",                      "state2",        _("DOWN"),     None ),
+ ( "unreach",                   "state3",        _("UNREACH"),  None ),
+ ( "in_downtime",               "downtime",      _("Downtime"), _("The host was in a scheduled downtime") ),
+ ( "outof_notification_period", "",              _("OO/Notif"), _("Out of Notification Period") ),
+ ( "unmonitored",               "unmonitored",   _("N/A"),      _("During this time period no monitoring data is available") ),
+]
+
+service_availability_columns = [
  ( "ok",                        "state0",        _("OK"),       None ),
  ( "warn",                      "state1",        _("WARN"),     None ),
  ( "crit",                      "state2",        _("CRIT"),     None ),
@@ -310,6 +323,9 @@ availability_columns = [
 ]
 
 def do_render_availability(datasource, filterheaders, avoptions, only_sites, limit):
+    # Is this a host or a service datasource?
+    has_service = "service" in datasource["infos"]
+
     range, range_title = avoptions["range"]
     rows = get_availability_data(datasource, filterheaders, range, only_sites, limit)
 
@@ -352,11 +368,15 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
                 elif span["host_down"] and avoptions["consider"]["host_down"]:
                     s = "host_down"
                 else:
-                    s = { 0: "ok", 1:"warn", 2:"crit", 3:"unknown" }[state]
+                    if has_service:
+                        s = { 0: "ok", 1:"warn", 2:"crit", 3:"unknown" }[state]
+                    else:
+                        s = { 0: "up", 1:"down", 2:"unreach"}[state]
                     if avoptions["state_grouping"]["warn_is_ok"] and s == "warn":
                         s = "ok"
                     elif avoptions["state_grouping"]["unknown_is_crit"] and s == "unknown":
                         s = "crit"
+                    # TODO: host_down as crit
 
                 states.setdefault(s, 0)
                 states[s] += span["duration"]
@@ -400,6 +420,10 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
         table.cell(_("Host"), '<a href="%s">%s</a>' % (host_url, host))
         service_url = "view.py?" + htmllib.urlencode_vars([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
         table.cell(_("Service"), '<a href="%s">%s</a>' % (service_url, service))
+        if has_service:
+            availability_columns = service_availability_columns
+        else:
+            availability_columns = host_availability_columns
         for sid, css, sname, help in availability_columns:
             if sid == "outof_notification_period" and not avoptions["consider"]["notification_period"]:
                 continue

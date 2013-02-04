@@ -7509,6 +7509,8 @@ def automation_push_snapshot():
                 raise MKGeneralException(message)
 
         tarcontent = html.var('snapshot')
+        if not tarcontent:
+            raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
         multitar.extract_from_buffer(tarcontent, replication_paths)
         log_commit_pending() # pending changes are lost
 
@@ -7939,8 +7941,8 @@ def mode_edit_user(phase):
             increase_serial = True # password changed, reflect in auth serial
 
         else:
-            password = html.var("password").strip()
-            password2 = html.var("password2").strip()
+            password = html.var("password", '').strip()
+            password2 = html.var("password2", '').strip()
 
             # Detect switch back from automation to password
             if "automation_secret" in new_user:
@@ -7962,14 +7964,14 @@ def mode_edit_user(phase):
             new_user['serial'] = new_user.get('serial', 0) + 1
 
         # Email address
-        email = html.var("email").strip()
+        email = html.var("email", '').strip()
         regex_email = '^[-a-zäöüÄÖÜA-Z0-9_.+%]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*$'
         if email and not re.match(regex_email, email):
             raise MKUserError("email", _("'%s' is not a valid email address." % email))
         new_user["email"] = email
 
         # Pager
-        pager = html.var("pager").strip()
+        pager = html.var("pager", '').strip()
         new_user["pager"] = pager
 
         # Roles

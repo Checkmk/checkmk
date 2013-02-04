@@ -45,7 +45,7 @@ for line in datei:
     ordner, name, alias = line.split(';')[:3]
     if ordner:
         try:
-            os.makedirs(path+ordner)
+            os.makedirs(pathlokal+ordner)
         except os.error:
             pass
         folders.setdefault(ordner,[])

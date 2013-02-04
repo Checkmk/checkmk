@@ -168,6 +168,15 @@ if [ -e /proc/net/bonding ] ; then
     pushd /proc/net/bonding > /dev/null ; head -v -n 1000 * ; popd
 fi
 
+# Same for Open vSwitch bonding
+if type ovs-appctl > /dev/null ; then
+    echo '<<<ovs_bonding:sep(58)>>>'
+    for bond in $(ovs-appctl bond/list | sed -e 1d | cut -f2) ; do
+        echo "[$bond]"
+        ovs-appctl bond/show $bond
+    done
+fi
+
 
 # Number of TCP connections in the various states
 echo '<<<tcp_conn_stats>>>'
@@ -445,7 +454,7 @@ then
     echo '<<<livestatus_status:sep(59)>>>'
     for site in *
     do
-        if [ -d "$site" ] ; then
+        if [ -S "/omd/sites/$site/tmp/run/live" ] ; then
             echo "[$site]"
             echo -e "GET status" | /omd/sites/$site/bin/unixcat /omd/sites/$site/tmp/run/live
         fi

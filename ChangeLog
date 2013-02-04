@@ -9,6 +9,7 @@
       creation of the files (Thanks to Guido Günther)
     * FIX: Inventory for cluster nodes who are part of multiple clusters 
     * cmk --notify: added plugin for sms notification
+    * FIX: precompiled checks: correct handling of sys.exit() call when using python2.4 
 
     Checks & Agents:
     * winperf_processor now outputs float usage instead of integer
@@ -25,7 +26,11 @@
     * livestatus_status: new check for monitoring performance of monitoring
     * FIX: diskstat.include: fix computation of queue length on windows
       (thanks to K.H. Fiebig)
-    * lnx_bonding: new check for checking bonding interfaces on Linux
+    * lnx_bonding: new check for bonding interfaces on Linux
+    * ovs_bonding: new check for bonding interfaces on Linux / Open vSwitch
+    * if: Inventory settings can now be set host based
+    * FIX: lnx_bonding/ovs_bonding: correct definition of bonding.include
+    * Add: if check now able to handle interface groups  (if_groups)
 
     Multisite:
     * Added comment painter to notification related views

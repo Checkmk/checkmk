@@ -1323,6 +1323,13 @@ def host_extra_conf(hostname, conf):
             items.append(item)
     return items
 
+def host_extra_conf_merged(hostname, conf):
+    rule_dict = {}
+    for rule in host_extra_conf(hostname, conf):
+        for key, value in rule.items():
+            rule_dict.setdefault(key, value)
+    return rule_dict
+
 def in_binary_hostlist(hostname, conf):
     # if we have just a list of strings just take it as list of (may be tagged) hostnames
     if len(conf) > 0 and type(conf[0]) == str:
@@ -2789,6 +2796,8 @@ no_inventory_possible = None
     # perform actual check with a general exception handler
     output.write("try:\n")
     output.write("    do_check(%r, %r)\n" % (hostname, ipaddress))
+    output.write("except SystemExit, e:\n")
+    output.write("    sys.exit(e.code)\n")
     output.write("except Exception, e:\n")
     output.write("    import traceback, pprint\n")
 

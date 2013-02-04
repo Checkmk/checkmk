@@ -1,0 +1,81 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def inventory_bonding(parsed):
+    inventory = []
+    for bond, status in parsed.items():
+        if status["status"] == "up":
+            # If no information about primary interface is available
+            # then assume currently active one as primary
+            if "primary" not in status and "active" in status:
+                params = { "primary" : status["active"]}
+            else:
+                params = {}
+            inventory.append((bond, params))
+    return inventory
+
+
+def check_bonding(item, params, parsed):
+    if item not in parsed:
+        return (3, "UNKNOWN - no such bonding interface")
+    status = parsed[item]
+    if status["status"] != "up":
+        return 2, "CRIT - interface is " + status["status"]
+
+    infos = [ "mode: " + status["mode"] ]
+    state = 0
+    for eth, slave in status["interfaces"].items():
+        if "hwaddr" in slave:
+            infos.append("%s/%s %s" % (eth, slave["hwaddr"], slave["status"]))
+        else:
+            infos.append("%s %s" % (eth, slave["status"]))
+        if slave["status"] != 'up':
+            state = 1
+            infos[-1] += "(!)"
+
+    primary = status.get("primary", params.get("primary"))
+    if primary:
+        infos.append("primary: " + primary)
+    active = status["active"]
+    if active:
+        infos.append("active: " + active)
+
+        expect = params.get("expect_active", "ignore")
+        if expect in [ "primary", "lowest" ]:
+            if expect == "primary":
+                expected_active = primary
+            else: # "lowest"
+                slaves = status["interfaces"].keys() 
+                slaves.sort()
+                expected_active = slaves[0]
+            if expected_active != None and expected_active != active:
+                infos[-1] += "(!)"
+                infos.append("expected is %s" % expected_active)
+                state = 1
+
+    return state, nagios_state_names[state] + " - " + ", ".join(infos)
+
+

@@ -37,6 +37,8 @@ def render_availability(view, datasource, filterheaders, display_options,
         html.top_heading(title)
     if 'B' in display_options:
         html.begin_context_buttons()
+        togglebutton("avoptions", False, "painteroptions", _("Configure details of the report"))
+
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
         html.end_context_buttons()
 
@@ -165,7 +167,10 @@ def render_availability_options():
         },
     })
 
+    is_open = False
     html.begin_form("avoptions")
+    html.write('<div class="view_form" id="avoptions" %s>' 
+            % (not is_open and 'style="display: none"' or '') )
     html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
 
     if html.form_submitted():
@@ -197,6 +202,7 @@ def render_availability_options():
     html.write("<tr><td>")
     html.button("apply", _("Apply"), "submit")
     html.write("</td></tr></table>")
+    html.write("</div>")
 
     html.hidden_fields()
     html.end_form()
@@ -385,11 +391,15 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
             return "%02d:%02d:%02d" % (hours, minn, sec)
 
 
-    table.begin(_("Availability Matrix") + " - " + range_title, css="availability")
+    table.begin(_("Availability") + " " + range_title, css="availability")
     for site, host, service, states, considered_duration in availability:
         table.row()
-        table.cell(_("Host"), host)
-        table.cell(_("Service"), service)
+        table.cell("", css="buttons")
+        html.icon_button("URL", _("Event History"), "history")
+        host_url = "view.py?" + htmllib.urlencode_vars([("view_name", "hoststatus"), ("site", site), ("host", host)])
+        table.cell(_("Host"), '<a href="%s">%s</a>' % (host_url, host))
+        service_url = "view.py?" + htmllib.urlencode_vars([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
+        table.cell(_("Service"), '<a href="%s">%s</a>' % (service_url, service))
         for sid, css, sname, help in availability_columns:
             if sid == "outof_notification_period" and not avoptions["consider"]["notification_period"]:
                 continue

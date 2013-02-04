@@ -1610,16 +1610,6 @@ def view_optiondial(view, option, choices, help):
 def view_optiondial_off(option):
     html.write('<div class="optiondial off %s"></div>' % option)
 
-
-def view_option_toggler(id, view, option, icon, help, hidden = False):
-    vo = view_options(view["name"])
-    value = vo.get(option, view.get(option, False))
-    html.begin_context_buttons() # just to be sure
-    hide = hidden and ' style="display:none"' or ''
-    html.write('<div id="%s_on" title="%s" class="togglebutton %s %s" '
-       'onclick="view_switch_option(this, \'%s\', \'%s\');"%s></div>' % (
-        id, help, icon, value and "down" or "up", view["name"], option, hide))
-
 def toggler(id, icon, help, onclick, value, hidden = False):
     html.begin_context_buttons() # just to be sure
     hide = hidden and ' style="display:none"' or ''

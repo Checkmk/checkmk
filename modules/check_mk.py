@@ -2796,6 +2796,8 @@ no_inventory_possible = None
     # perform actual check with a general exception handler
     output.write("try:\n")
     output.write("    do_check(%r, %r)\n" % (hostname, ipaddress))
+    output.write("except SystemExit, e:\n")
+    output.write("    sys.exit(e.code)\n")
     output.write("except Exception, e:\n")
     output.write("    import traceback, pprint\n")
 

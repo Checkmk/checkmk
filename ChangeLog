@@ -9,6 +9,7 @@
       creation of the files (Thanks to Guido Günther)
     * FIX: Inventory for cluster nodes who are part of multiple clusters 
     * cmk --notify: added plugin for sms notification
+    * FIX: precompiled checks: correct handling of sys.exit() call when using python2.4 
 
     Checks & Agents:
     * winperf_processor now outputs float usage instead of integer

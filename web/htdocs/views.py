@@ -1369,7 +1369,11 @@ def render_view(view, rows, datasource, group_painters, painters,
                        # Take into account: permissions, display_options
                        row_count > 0 and command_form,
                        # Take into account: layout capabilities
-                       can_display_checkboxes, show_checkboxes)
+                       can_display_checkboxes, show_checkboxes,
+                       # Show link to availability. This exists only for plain hosts
+                       # and services table. The grouping tables have columns that statehist
+                       # is missing. That way some of the filters might fail.
+                       datasource["table"] in [ "hosts", "services"] )
 
     # User errors in filters
     html.show_user_errors()
@@ -1653,7 +1657,8 @@ def togglebutton(id, isopen, icon, help, hidden = False):
                'onclick="view_toggle_form(this, \'%s\');"%s></div>' % (id, icon, cssclass, help, id, hide))
 
 def show_context_links(thisview, active_filters, show_filters, display_options, 
-                       painter_options, enable_commands, enable_checkboxes, show_checkboxes):
+                       painter_options, enable_commands, enable_checkboxes, show_checkboxes,
+                       show_availability):
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
     if 'B' in display_options:
@@ -1733,7 +1738,9 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
             url = "edit_view.py?clonefrom=%s&load_view=%s&back=%s" % \
                   (thisview["owner"], thisview["name"], backurl)
         html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show) 
-        html.context_button(_("Availability"), html.makeuri([("mode", "availability")]), "availability")
+
+        if show_availability:
+            html.context_button(_("Availability"), html.makeuri([("mode", "availability")]), "availability")
 
     if 'B' in display_options:
         execute_hooks('buttons-end')

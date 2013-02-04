@@ -1000,7 +1000,10 @@ class CascadingDropdown(ValueSpec):
         return "" # Nothing selected? Should never happen
 
     def from_html_vars(self, varprefix):
-        sel = int(html.var(varprefix + "_sel"))
+        try:
+            sel = int(html.var(varprefix + "_sel"))
+        except:
+            sel = 0
         val, title, vs = self._choices[sel]
         if vs:
             val = (val, vs.from_html_vars(varprefix + "_%d" % sel))

@@ -138,10 +138,10 @@ avoption_entries = [
        columns = 2,
        elements = [
            ( "warn_is_ok", 
-              Checkbox(label = _("Consider WARN as OK")),
+              Checkbox(label = _("Treat WARN as OK")),
            ),
            ( "unknown_is_crit", 
-              Checkbox(label = _("Consider UNKNOWN as CRIT")),
+              Checkbox(label = _("Treat UNKNOWN as CRIT")),
            ),
        ],
        optional_keys = False,
@@ -176,6 +176,7 @@ def render_availability_options():
     if html.form_submitted():
         for name, height, vs in avoption_entries:
             try:
+                html.debug(name)
                 avoptions[name] = vs.from_html_vars("avo_" + name)
             except MKUserError, e:
                 html.add_user_error(e.varname, e.message)
@@ -283,7 +284,9 @@ def compute_range(rangespec):
 def get_availability_data(datasource, filterheaders, range, only_sites, limit):
     has_service = "service" in datasource["infos"]
     av_filter = "Filter: time >= %d\nFilter: time <= %d\n" % range
-    if not has_service:
+    if has_service:
+        av_filter += "Filter: service_description !=\n"
+    else:
         av_filter += "Filter: service_description =\n"
 
     query = "GET statehist\n" + av_filter
@@ -415,7 +418,26 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
     for site, host, service, states, considered_duration in availability:
         table.row()
         table.cell("", css="buttons")
-        html.icon_button("URL", _("Event History"), "history")
+        history_url_vars = [
+            ("site", site),
+            ("host", host),
+            ("logtime_from_range", "unix"),  # absolute timestamp
+            ("logtime_until_range", "unix"), # absolute timestamp
+            ("logtime_from", str(int(from_time))),
+            ("logtime_until", str(int(until_time)))]
+        if has_service:
+            history_url_vars += [
+                ("service", service),
+                ("view_name", "svcevents"),
+            ]
+        else:
+            history_url_vars += [
+                ("view_name", "hostevents"),
+            ]
+
+        history_url = "view.py?" + htmllib.urlencode_vars(history_url_vars)
+
+        html.icon_button(history_url, _("Event History"), "history")
         host_url = "view.py?" + htmllib.urlencode_vars([("view_name", "hoststatus"), ("site", site), ("host", host)])
         table.cell(_("Host"), '<a href="%s">%s</a>' % (host_url, host))
         service_url = "view.py?" + htmllib.urlencode_vars([("view_name", "service"), ("site", site), ("host", host), ("service", service)])

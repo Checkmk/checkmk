@@ -374,10 +374,10 @@ class FilterTime(Filter):
         self.column = column
         self.name = name
         self.ranges = [ 
-           (86400, _("days")),
-           (3600,  _("hours")), 
-           (60,    _("min")), 
-           (1,     _("sec")), 
+           (86400,  _("days")),
+           (3600,   _("hours")), 
+           (60,     _("min")), 
+           (1,      _("sec")), 
         ]
         varnames = [ name + "_from", name + "_from_range",
                      name + "_until", name + "_until_range" ]
@@ -389,7 +389,8 @@ class FilterTime(Filter):
 
     def display(self):
         choices = [ (str(sec), title + " " + _("ago")) for sec, title in self.ranges ] + \
-                  [ ("abs", _("Date (YYYY-MM-DD)")) ]
+                  [ ("abs", _("Date (YYYY-MM-DD)")),
+                    ("unix", _("UNIX timestamp")) ]
 
         html.write("<table class=filtertime>")
         for what, whatname in [
@@ -431,6 +432,8 @@ class FilterTime(Filter):
                     except:
                         html.add_user_error(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
                         range.append(None)
+                elif rangename == "unix":
+                    range.append(int(count))
                 else:
                     try:
                         count = int(count)

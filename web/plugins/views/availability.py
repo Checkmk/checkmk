@@ -30,7 +30,18 @@ from valuespec import *
 # Function building the availability view
 def render_availability(view, datasource, filterheaders, display_options, 
                         only_sites, limit):
-    title = _("Availability: ") + view_title(view)
+    timeline = not not html.var("timeline")
+    if timeline:
+        tl_site = html.var("timeline_site")
+        tl_host = html.var("timeline_host")
+        tl_service = html.var("timeline_service")
+        title = _("Timeline of") + " " + tl_host
+        if tl_service:
+            title += ", " + tl_service
+        timeline = (tl_site, tl_host, tl_service)
+
+    else:
+        title = _("Availability: ") + view_title(view)
     if 'H' in display_options:
         html.body_start(title, stylesheets=["pages","views","status"])
     if 'T' in display_options:
@@ -38,13 +49,14 @@ def render_availability(view, datasource, filterheaders, display_options,
     if 'B' in display_options:
         html.begin_context_buttons()
         togglebutton("avoptions", False, "painteroptions", _("Configure details of the report"))
-
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
+        if timeline:
+            html.context_button(_("Availability"), html.makeuri([("timeline", "")]), "availability")
         html.end_context_buttons()
 
     avoptions = render_availability_options()
     if not html.has_user_errors():
-        do_render_availability(datasource, filterheaders, avoptions, only_sites, limit)
+        do_render_availability(datasource, filterheaders, avoptions, only_sites, limit, timeline)
 
     if 'Z' in display_options:
         html.bottom_footer()
@@ -176,7 +188,6 @@ def render_availability_options():
     if html.form_submitted():
         for name, height, vs in avoption_entries:
             try:
-                html.debug(name)
                 avoptions[name] = vs.from_html_vars("avo_" + name)
             except MKUserError, e:
                 html.add_user_error(e.varname, e.message)
@@ -247,7 +258,7 @@ def compute_range(rangespec):
             titles = _("Today"), _("Yesterday")
 
         elif rangespec[0] == 'w': # week
-            from_time = midnight - (broken[6] - 1) * 86400
+            from_time = midnight - (broken[6]) * 86400
             titles = _("This week"), _("Last week")
 
         elif rangespec[0] == 'm': # month
@@ -281,13 +292,19 @@ def compute_range(rangespec):
                     from_broken[0] -= 1
             return (time.mktime(from_broken), until_time), titles[1]
 
-def get_availability_data(datasource, filterheaders, range, only_sites, limit):
+def get_availability_data(datasource, filterheaders, range, only_sites, limit, timeline):
     has_service = "service" in datasource["infos"]
     av_filter = "Filter: time >= %d\nFilter: time <= %d\n" % range
-    if has_service:
+    if timeline:
+        tl_site, tl_host, tl_service = timeline
+        av_filter += "Filter: host_name = %s\nFilter: service_description = %s\n" % (
+                tl_host, tl_service)
+        only_sites = [ tl_site ]
+    elif has_service:
         av_filter += "Filter: service_description !=\n"
     else:
         av_filter += "Filter: service_description =\n"
+
 
     query = "GET statehist\n" + av_filter
 
@@ -299,6 +316,8 @@ def get_availability_data(datasource, filterheaders, range, only_sites, limit):
       "duration", "from", "until", "state", "host_down", "in_downtime", 
       "in_host_downtime", "in_notification_period", # "is_flapping", 
       "log_output" ]
+    if timeline:
+        columns.append("log_output")
 
     add_columns = datasource.get("add_columns", [])
     rows = do_query_data(query, columns, add_columns, None, filterheaders, only_sites, limit)
@@ -325,12 +344,12 @@ service_availability_columns = [
  ( "unmonitored",               "unmonitored",   _("N/A"),      _("During this time period no monitoring data is available") ),
 ]
 
-def do_render_availability(datasource, filterheaders, avoptions, only_sites, limit):
+def do_render_availability(datasource, filterheaders, avoptions, only_sites, limit, timeline):
     # Is this a host or a service datasource?
     has_service = "service" in datasource["infos"]
 
     range, range_title = avoptions["range"]
-    rows = get_availability_data(datasource, filterheaders, range, only_sites, limit)
+    rows = get_availability_data(datasource, filterheaders, range, only_sites, limit, timeline)
 
     # Sort by site/host and service, while keeping native order
     by_host = {}
@@ -354,6 +373,8 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
     #                    2.2.2.2.3 "crit"
     #                    2.2.2.2.4 "unknown"
     availability = []
+    timeline_rows = []
+    # Note: in case of timeline, we have data from exacly one host/service
     for site_host, site_host_entry in by_host.iteritems():
         for service, service_entry in site_host_entry.iteritems():
             states = {}
@@ -384,11 +405,12 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
                 states.setdefault(s, 0)
                 states[s] += span["duration"]
                 considered_duration += span["duration"]
+                if timeline:
+                    timeline_rows.append((span, s))
+            timeline_considered_duration = considered_duration
             availability.append([site_host[0], site_host[1], service, states, considered_duration])
 
-    availability.sort()
-
-    # Render the stuff
+    # Prepare number format function
     from_time, until_time = range
     duration = until_time - from_time
     timeformat = avoptions["timeformat"]
@@ -413,7 +435,84 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
             hours, minn = divmod(minn, 60)
             return "%02d:%02d:%02d" % (hours, minn, sec)
 
+    if timeline:
+        render_timeline(timeline_rows, from_time, until_time, considered_duration, timeline, range_title, render_number)
+    else:
+        render_availability_table(availability, from_time, until_time, range_title, has_service, avoptions, render_number)
 
+def render_timeline(timeline_rows, from_time, until_time, considered_duration, timeline, range_title, render_number):
+    # More rows with identical state
+    merge_timeline(timeline_rows)
+
+    # Timeformat: show date only if the displayed time range spans over
+    # more than one day.
+    format = "%H:%M:%S"
+    if time.localtime(from_time)[:3] != time.localtime(until_time-1)[:3]:
+        format = "%Y-%m-%d " + format
+    def render_date(ts):
+        return time.strftime(format, time.localtime(ts))
+
+    tl_site, tl_host, tl_service = timeline
+    title = _("Timeline of") + " " + tl_host
+    if tl_service:
+        title += ", " + tl_service
+        availability_columns = service_availability_columns
+    else:
+        availability_columns = host_availability_columns
+    title += " - " + range_title
+
+    # Render graphical representation
+    html.write('<h3>%s</h3>' % title)
+    # Make sure that each cell is visible, if possible
+    min_percentage = min(100.0 / len(timeline_rows), 1)
+    rest_percentage = 100 - len(timeline_rows) * min_percentage
+    html.write('<table class=timeline><tr>')
+    for row, state_id in timeline_rows:
+        for sid, css, sname, help in availability_columns:
+            if sid == state_id:
+                title = _("From %s until %s (%s) %s") % (
+                    render_date(row["from"]), render_date(row["until"]),
+                    render_number(row["duration"], considered_duration),
+                    sname)
+                if row["log_output"]:
+                    title += " - " + row["log_output"]
+                width = min_percentage + rest_percentage * row["duration"] / considered_duration
+                html.write('<td style="width: %.1f%%" title="%s" class="%s"></td>' % (width, title, css))
+    html.write('</tr></table>')
+
+
+    # Render Table
+    table.begin(_("Detailed list of states"), css="availability")
+    for row, state_id in timeline_rows:
+        table.row()
+        table.cell(_("From"), render_date(row["from"]), css="nobr narrow")
+        table.cell(_("Until"), render_date(row["until"]), css="nobr narrow")
+        table.cell(_("Duration"), render_number(row["duration"], considered_duration), css="number")
+        for sid, css, sname, help in availability_columns:
+            if sid == state_id:
+                table.cell(_("State"), sname, css=css + " state narrow")
+        table.cell(_("Plugin output"), row["log_output"])
+
+        # table.cell("TEST")
+        # html.write(repr(row))
+    table.end()
+
+
+# Merge consecutive rows with same state
+def merge_timeline(entries):
+    n = 1
+    while n < len(entries):
+        if entries[n][1] == entries[n-1][1]:
+            entries[n-1][0]["duration"] += entries[n][0]["duration"]
+            entries[n-1][0]["until"] = entries[n][0]["until"]
+            del entries[n]
+        else:
+            n += 1
+
+
+def render_availability_table(availability, from_time, until_time, range_title, has_service, avoptions, render_number):
+    # Render the stuff
+    availability.sort()
     table.begin(_("Availability") + " " + range_title, css="availability")
     for site, host, service, states, considered_duration in availability:
         table.row()
@@ -435,8 +534,13 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
                 ("view_name", "hostevents"),
             ]
 
+        timeline_url = html.makeuri([
+               ("timeline", "yes"), 
+               ("timeline_site", site), 
+               ("timeline_host", host), 
+               ("timeline_service", service)])
+        html.icon_button(timeline_url, _("Timeline"), "timeline")
         history_url = "view.py?" + htmllib.urlencode_vars(history_url_vars)
-
         html.icon_button(history_url, _("Event History"), "history")
         host_url = "view.py?" + htmllib.urlencode_vars([("view_name", "hoststatus"), ("site", site), ("host", host)])
         table.cell(_("Host"), '<a href="%s">%s</a>' % (host_url, host))

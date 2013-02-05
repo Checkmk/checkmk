@@ -481,14 +481,15 @@ table.data.availability td.number {
     width: 60px;
 }
 
-table.data.availability td.downtime {
+table.data.availability td.downtime, table.timeline td.downtime {
     background-color: #0af;
 }
-table.data.availability td.hostdown {
+table.data.availability td.hostdown, table.timeline td.hostdown {
     background-color: #048;
     color: white;
 }
-table.data.availability td.unmonitored {
+table.data.availability td.unmonitored, table.timeline td.unmonitored {
+    background-color: #ddd;
     color: #888;
 }
 table.data.availability tr.odd0 td.number {
@@ -507,4 +508,20 @@ div.floatfilter.rangespec table.valuespec_tuple span.title {
 
 div#avoptions_on {
     margin-right: 132px;
+}
+
+table.timeline {
+    width: 100%;
+    margin-bottom: 20px;
+    box-shadow: 0.5px 0.5px 3px #000;
+    height: 30px;
+    border-spacing: 0px;
+    border-collapse: collapse;
+}
+
+table.timeline td {
+    display: inline-box;
+    height: 30px;
+    padding: 0px;
+    border: 1px solid #444;
 }

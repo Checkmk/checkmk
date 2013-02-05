@@ -510,6 +510,11 @@ div#avoptions_on {
     margin-right: 132px;
 }
 
+table.availability tr.hilite {
+    background-color: #6ab;
+    color: white;
+}
+
 table.timeline {
     width: 100%;
     margin-bottom: 20px;
@@ -520,8 +525,7 @@ table.timeline {
 }
 
 table.timeline td {
-    display: inline-box;
-    height: 30px;
     padding: 0px;
     border: 1px solid #444;
 }
+

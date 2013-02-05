@@ -467,7 +467,7 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration, t
     min_percentage = min(100.0 / len(timeline_rows), 1)
     rest_percentage = 100 - len(timeline_rows) * min_percentage
     html.write('<table class=timeline><tr>')
-    for row, state_id in timeline_rows:
+    for row_nr, (row, state_id) in enumerate(timeline_rows):
         for sid, css, sname, help in availability_columns:
             if sid == state_id:
                 title = _("From %s until %s (%s) %s") % (
@@ -477,13 +477,14 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration, t
                 if row["log_output"]:
                     title += " - " + row["log_output"]
                 width = min_percentage + rest_percentage * row["duration"] / considered_duration
-                html.write('<td style="width: %.1f%%" title="%s" class="%s"></td>' % (width, title, css))
+                html.write('<td onmouseover="timeline_hover(%d, 1);" onmouseout="timeline_hover(%d, 0);" '
+                           'style="width: %.1f%%" title="%s" class="%s"></td>' % (
+                           row_nr, row_nr, width, title, css))
     html.write('</tr></table>')
-
 
     # Render Table
     table.begin(_("Detailed list of states"), css="availability")
-    for row, state_id in timeline_rows:
+    for row_nr, (row, state_id) in enumerate(timeline_rows):
         table.row()
         table.cell(_("From"), render_date(row["from"]), css="nobr narrow")
         table.cell(_("Until"), render_date(row["until"]), css="nobr narrow")
@@ -493,8 +494,6 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration, t
                 table.cell(_("State"), sname, css=css + " state narrow")
         table.cell(_("Plugin output"), row["log_output"])
 
-        # table.cell("TEST")
-        # html.write(repr(row))
     table.end()
 
 

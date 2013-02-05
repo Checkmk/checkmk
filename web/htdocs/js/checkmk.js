@@ -1864,3 +1864,25 @@ function view_switch_option(oDiv, viewname, option, choices) {
 
     handleReload('');
 }
+
+
+// .-Availability----------------------------------------------------------.
+// |             _             _ _       _     _ _ _ _                     |
+// |            / \__   ____ _(_) | __ _| |__ (_) (_) |_ _   _             |
+// |           / _ \ \ / / _` | | |/ _` | '_ \| | | | __| | | |            |
+// |          / ___ \ V / (_| | | | (_| | |_) | | | | |_| |_| |            |
+// |         /_/   \_\_/ \__,_|_|_|\__,_|_.__/|_|_|_|\__|\__, |            |
+// |                                                     |___/             |
+// '-----------------------------------------------------------------------'
+
+function timeline_hover(row_nr, onoff)
+{
+    var table = document.getElementsByClassName("availability")[0];
+    var row = table.children[0].children[row_nr+1];
+    if (onoff)
+        add_class(row, 'hilite');
+    else {
+        remove_class(row, 'hilite');
+    }
+}
+

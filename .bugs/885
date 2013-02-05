@@ -1,10 +1,13 @@
 Title: Password field in personal settings must not be prefilled by browser
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2013-01-21 15:55:44
 Targetversion: 1.2.2
-Class: bug
 
 If the browser enters a possible previous password then after saving
 (because of changes to the notifications) the user password gets
 changed and the user logged out - forever.
+
+2013-02-05 15:36:48: changed state open -> done
+Just implemented. Added "autocomplete=off" attribute to input fields.

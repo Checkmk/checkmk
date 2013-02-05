@@ -36,6 +36,7 @@
     * Added comment painter to notification related views
     * Added compatibility code to use hashlib.md5() instead of md5.md5(), which
       is deprecated in python > 2.5 to prevent warning messages in apache error log
+    * FIX: Preventing autocomplete in password fields of "edit profile" dialog
 
     BI:
     * Use Ajax to delay rendering of invisible parts of the tree (this

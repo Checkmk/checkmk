@@ -10956,10 +10956,10 @@ def page_user_profile():
 
     if config.may('general.change_password') and not is_locked('password'):
         forms.section(_("Password"))
-        html.password_input('password')
+        html.password_input('password', autocomplete = "off")
 
         forms.section(_("Password confirmation"))
-        html.password_input('password2')
+        html.password_input('password2', autocomplete = "off")
 
     if config.may('general.edit_profile'):
         select_language(config.get_language(''))

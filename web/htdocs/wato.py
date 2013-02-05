@@ -125,30 +125,6 @@ snapshot_dir       = var_dir + "snapshots/"
 sync_snapshot_file = defaults.tmp_dir + "/sync_snapshot.tar.gz"
 repstatus_file     = var_dir + "replication_status.mk"
 
-# Directories and files to synchronize during replication
-replication_paths = [
-  ( "dir",  "check_mk",   root_dir ),
-  ( "dir",  "multisite",  multisite_dir ),
-  ( "file", "htpasswd",   defaults.htpasswd_file ),
-  ( "file", "auth.secret",  '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file) ),
-  ( "file", "auth.serials", '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file) ),
-  # Also replicate the user-settings of Multisite? While the replication
-  # as such works pretty well, the count of pending changes will not
-  # know.
-  ( "dir", "usersettings", defaults.var_dir + "/web" ),
-]
-
-
-# Directories and files for backup & restore
-backup_paths = replication_paths + [
-  ( "file", "sites",      sites_mk)
-  # autochecks are a site-local ressource. This does only make
-  # sense for single-site installations. How should we handle
-  # this?
-  # ( "dir", "autochecks", defaults.autochecksdir ),
-
-]
-
 
 ALL_HOSTS    = [ '@all' ]
 ALL_SERVICES = [ "" ]
@@ -10956,10 +10932,10 @@ def page_user_profile():
 
     if config.may('general.change_password') and not is_locked('password'):
         forms.section(_("Password"))
-        html.password_input('password')
+        html.password_input('password', autocomplete = "off")
 
         forms.section(_("Password confirmation"))
-        html.password_input('password2')
+        html.password_input('password2', autocomplete = "off")
 
     if config.may('general.edit_profile'):
         select_language(config.get_language(''))
@@ -11885,6 +11861,30 @@ def load_plugins():
     g_rulespecs = {}
     g_rulespec_group = {}
     g_rulespec_groups = []
+
+    # Directories and files to synchronize during replication
+    global replication_paths, backup_paths
+    replication_paths = [
+        ( "dir",  "check_mk",   root_dir ),
+        ( "dir",  "multisite",  multisite_dir ),
+        ( "file", "htpasswd",   defaults.htpasswd_file ),
+        ( "file", "auth.secret",  '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file) ),
+        ( "file", "auth.serials", '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file) ),
+        # Also replicate the user-settings of Multisite? While the replication
+        # as such works pretty well, the count of pending changes will not
+        # know.
+        ( "dir", "usersettings", defaults.var_dir + "/web" ),
+    ]
+
+    # Directories and files for backup & restore
+    backup_paths = replication_paths + [
+        ( "file", "sites",      sites_mk)
+        # autochecks are a site-local ressource. This does only make
+        # sense for single-site installations. How should we handle
+        # this?
+        # ( "dir", "autochecks", defaults.autochecksdir ),
+    ]
+
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))

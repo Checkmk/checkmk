@@ -1,0 +1,20 @@
+Title: More comfortable handling of "Performance Counters" monitoring
+Component: checks
+State: open
+Date: 2013-02-05 16:14:01
+Targetversion: 1.2.3
+Class: feature
+
+At the moment the ids of performancecounters must be scanned and configured
+manually (http://mathias-kettner.de/checkmk_windows.html#H1:Performance%20Counters,%20monitoring%20MS%20Exchange%20%3Cb%20class=new%3E1.1.11i1%3C/b%3E)
+
+This is not very comfortable and also no auto detection. It would be nice to have
+a functionality where we can deliver a default config or one user could create
+his own config like:
+
+[winperf]
+    counters = $MSExchangeTransport Queues$:msx_queues
+
+Then, on agent startup the variable would be used to scan for the id automatically.
+The localization problem has to be fixed when implementing this. Maybe there is
+something like LANG=c ...?

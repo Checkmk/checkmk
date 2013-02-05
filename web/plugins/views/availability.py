@@ -374,6 +374,7 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
     #                    2.2.2.2.4 "unknown"
     availability = []
     timeline_rows = []
+    timeline_considered_duration = 0
     # Note: in case of timeline, we have data from exacly one host/service
     for site_host, site_host_entry in by_host.iteritems():
         for service, service_entry in site_host_entry.iteritems():
@@ -384,7 +385,7 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
                 if state == -1:
                     s = "unmonitored"
                     if not avoptions["consider"]["unmonitored"]:
-                        considered_duration -= span["duration"]
+                        continue
                 elif span["in_notification_period"] == 0 and avoptions["consider"]["notification_period"]:
                     s = "outof_notification_period"
                 elif (span["in_downtime"] or span["in_host_downtime"]) and avoptions["consider"]["downtime"]:
@@ -436,11 +437,15 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
             return "%02d:%02d:%02d" % (hours, minn, sec)
 
     if timeline:
-        render_timeline(timeline_rows, from_time, until_time, considered_duration, timeline, range_title, render_number)
+        render_timeline(timeline_rows, from_time, until_time, timeline_considered_duration, timeline, range_title, render_number)
     else:
         render_availability_table(availability, from_time, until_time, range_title, has_service, avoptions, render_number)
 
 def render_timeline(timeline_rows, from_time, until_time, considered_duration, timeline, range_title, render_number):
+    if not timeline_rows:
+        html.write('<div class=info>%s</div>' % _("No information available"))
+        return
+
     # More rows with identical state
     merge_timeline(timeline_rows)
 
@@ -464,7 +469,7 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration, t
     # Render graphical representation
     html.write('<h3>%s</h3>' % title)
     # Make sure that each cell is visible, if possible
-    min_percentage = min(100.0 / len(timeline_rows), 1)
+    min_percentage = min(100.0 / len(timeline_rows), 2)
     rest_percentage = 100 - len(timeline_rows) * min_percentage
     html.write('<table class=timeline><tr>')
     for row_nr, (row, state_id) in enumerate(timeline_rows):

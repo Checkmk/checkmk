@@ -1,3 +1,0 @@
-Put the file reporting.py into the omd-site directory local/share/check_mk/web/plugins/views
-This file registers a datasource which queries the livestatus table statehist.
-Additionally some painters and filters are registered for the new view "Availability statistics" which is visible to all users.

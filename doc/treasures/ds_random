@@ -1,10 +1,63 @@
 #!/usr/bin/python
 # Testing script, that can be used as a datasource program
-# and creates a number of random services with random states
+# and creates a number of random services with random states.
+# Call it with the hostname as the first argument.
 
-import os, random
+import os, random, sys, time
+
+try:
+    hostname = sys.argv[1]
+except:
+    hostname = "unknown"
+
+state_dir = os.getenv("OMD_ROOT", "") + "/tmp/check_mk/ds_random/"
+if not os.path.exists(state_dir):
+    os.makedirs(state_dir)
+state_file = state_dir + hostname
+try:
+    history = eval(file(state_file).read())
+except:
+    history = {}
+
+services = [
+  "Gnarz Usage",
+  "Fnorz Utilization",
+  "Average Grumblage",
+  "Snarks 011",
+  "Snarks 012",
+  "Snarks 022",
+  "Gnogomatic Turbler",
+  "Gnogomatic Murbler",
+  "Gnogomatic Garglebox",
+]
+
+
 
 print '<<<local>>>'
-for service in os.listdir('/'):
-    state = int(random.random() * 4)
-    print "%d Random_%s - Random Random Random" % (state, service)
+state_names = [ "OK", "WARN", "CRIT", "UNKNOWN" ]
+state_texts = [ 
+  "Everying is OK now",
+  "The freibl might go slisk",
+  "Bad luck, everything is broken",
+  "Something really weird happened",
+]
+
+now = time.time()
+for service in services:
+    last_change, last_state = history.get(service, (now - 600, 0))
+    p_state_change = ((now - last_change) / 60) + 1
+    if last_state == 0:
+        p_state_change += 10
+    if int(random.random() * p_state_change) == 0:
+        if last_state != 0 and random.random() < 0.7:
+            new_state = 0
+        else:
+            new_state = 1 + int(random.random() * 3)
+        if new_state != last_state:
+            history[service] = (now, new_state)
+    else:
+        new_state = last_state
+    print "%d %s - %s - %s" % (
+       new_state, service.replace(" ", "_"), state_names[new_state], state_texts[new_state])
+
+file(state_file, "w").write("%r\n" % history)

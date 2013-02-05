@@ -53,6 +53,7 @@
     * FIX: Fixed generation of auth.php (Needed for NagVis Multisite Authorisation)
     * FIX: Fixed missing general.* permissions in auth.php on slave sites in 
       case of distributed WATO setups
+    * FIX: Fixed synchronisation of mkeventd configs in distributed WATO setups
 
     Event Console:
     * Added UNIX socket for sending events to the EC

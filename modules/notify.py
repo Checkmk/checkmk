@@ -360,8 +360,9 @@ def notify_flexible(contact, context, notification_table):
         # Check notification type
         event, allowed_events = check_notification_type(context, entry["host_events"], entry["service_events"])
         if event not in allowed_events:
-            notify_log(" - Skipping: wrong notification type %s, only %s are allowed" % 
-                (event, ",".join(allowed_events)) )
+            notification_type = context.get("NOTIFICATIONTYPE","")
+            notify_log(" - Skipping: wrong notification type %s (%s), only %s are allowed" % 
+                (event, notification_type, ",".join(allowed_events)) )
             continue
 
         # Check notification number (in case of repeated notifications/escalations)

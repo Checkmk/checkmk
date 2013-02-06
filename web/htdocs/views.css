@@ -510,15 +510,10 @@ div#avoptions_on {
     margin-right: 3px;
 }
 
-table.availability tr.hilite {
-    background-color: #6ab;
-    color: white;
-}
-
 table.timeline {
-    width: 100%;
+    width: 800px;
     margin-bottom: 20px;
-    box-shadow: 0.5px 0.5px 3px #000;
+    box-shadow: 0px 0px 1px #ccf;
     height: 30px;
     border-spacing: 0px;
     border-collapse: collapse;
@@ -529,3 +524,22 @@ table.timeline td {
     border: 1px solid #444;
 }
 
+table.timelineevents {
+    width: 800px;
+}
+table.timelineevents tr.hilite {
+    background-color: #6ab;
+    color: white;
+}
+div.timelinerange {
+    width: 800px;
+    float: none;
+}
+div.timelinerange div {
+    width: 300px;
+    float: left;
+}
+div.timelinerange div.until {
+    text-align: right;
+    float: right;
+}

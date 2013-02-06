@@ -468,11 +468,15 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration, t
     title += " - " + range_title
 
     # Render graphical representation
-    html.write('<h3>%s</h3>' % title)
     # Make sure that each cell is visible, if possible
-    min_percentage = min(100.0 / len(timeline_rows), 2)
+    min_percentage = min(100.0 / len(timeline_rows), 1)
     rest_percentage = 100 - len(timeline_rows) * min_percentage
-    html.write('<table class=timeline><tr>')
+    html.write('<div class=timelinerange>')
+    html.write('<div class=from>%s</div><div class=until>%s</div></div>' % (
+        render_date(from_time), render_date(until_time)))
+    
+    html.write('<table class=timeline>')
+    html.write('<tr class=timeline>')
     for row_nr, (row, state_id) in enumerate(timeline_rows):
         for sid, css, sname, help in availability_columns:
             if sid == state_id:
@@ -489,7 +493,7 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration, t
     html.write('</tr></table>')
 
     # Render Table
-    table.begin(_("Detailed list of states"), css="availability")
+    table.begin("", css="timelineevents")
     for row_nr, (row, state_id) in enumerate(timeline_rows):
         table.row()
         table.cell(_("From"), render_date(row["from"]), css="nobr narrow")

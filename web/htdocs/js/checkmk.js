@@ -1877,7 +1877,7 @@ function view_switch_option(oDiv, viewname, option, choices) {
 
 function timeline_hover(row_nr, onoff)
 {
-    var table = document.getElementsByClassName("availability")[0];
+    var table = document.getElementsByClassName("timelineevents")[0];
     var row = table.children[0].children[row_nr+1];
     if (onoff)
         add_class(row, 'hilite');

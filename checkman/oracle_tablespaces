@@ -23,7 +23,7 @@ description:
 
  {Increment size}: If the configuration parameter
  {oracle_tablespaces_check_default_increment} is set to
- {True} (which is the defaut), then the check will warn
+ {True} (which is the default), then the check will warn
  you, if the increment size is set to the ORACLE default
  value of {1} (which is generally considered as a non-optimal
  setting).
@@ -52,8 +52,13 @@ item:
 
 examples:
  # Set levels for free space to 20% (WARN) and 10% (CRIT)
- # of maximum tablespace size
- oracle_tablespaces_default_levels = (20.0, 10.0)
+ # of maximum tablespace size and deactivate check of autoextend
+
+
+ oracle_tablespaces_default_levels = {
+        "levels" : (20.0, 10.0),
+        "autoextend" : None
+ }
 
 perfdata:
  Three values in bytes: the current size, the used size of the tablespace
@@ -64,18 +69,29 @@ inventory:
  which is {ONLINE}.
 
 [parameters]
-autoextend(bool): Either {True} or {False} - depending on
- wether auto extension is expected to be on or off.
-warn(int / float): Warning level for free space. If this is a float,
- it is considered as percentage of the maximum size of the tablespace.
- If it is an integer, it is considered to be MB of free space. If the
- space drops to this level or below, the check will get into warning state.
-crit(int / float): The critical level for free space.
+parameters (dict):
+
+ {"autoextend"}: Either {True} or {False} - depending on whether auto extension is
+ expected to be on or off
+
+ {"levels"}: A tuple containing the warn and crit levels for free space.
+ Supported types (int / float). If this is a float, it is considered as
+ percentage of the maximum size of the tablespace. If it is an integer,
+ it is considered to be MB of free space. If the space drops to this level or below,
+ the check will get into warning state. Default is {(10.0, 5.0)}
+
+ {"magic"}: The magic number, which scales the levels according to the tablespace size.
+ Default is a factor of 1.0, which does no adaptation. A factor less than 1.0 raises the levels
+ for large tablespaces and lowers them for small ones. Please look at online documentation
+ for more details about magic factor.
+
+ {"magic_normsize"}: Norm size of a tablespace for the magic computation
+ The default for this is {1000}. It is measured in {MB}.
+
+ {"levels_low"}: Minimum levels if using magic factor. The warn / crit levels will never fall below
+ these numbers. The preset is set to (0.0, 0.0) (deactivated)
 
 [configuration]
-oracle_tablespaces_default_levels(int/float, int/float): The default warning and critical levels
- used for inventorized checks. This is preset to {(10.0, 5.0)}.
-
 oracle_tablespaces_check_autoext(bool): This boolean setting determines, whether
  inventory should activate monitoring of the auto extension setting. Per default
  this is set to {True}, so the current state of the auto extension will be

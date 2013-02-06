@@ -1086,6 +1086,13 @@ def mkeventd_reload():
         pass # ignore not existing logfile
     log_audit(None, "mkeventd-activate", _("Activated changes of event console configuration"))
 
+# This hook is executed when one applies the pending configuration changes
+# related to the mkeventd via WATO on the local system. The hook is called
+# without parameters.
+def call_hook_mkeventd_activate_changes():
+    if hooks.registered('mkeventd-activate-changes'):
+        hooks.call("mkeventd-activate-changes")
+
 def mode_mkeventd_changes(phase):
     if phase == "title":
         return _("Event Console - Pending Changes")
@@ -1100,6 +1107,7 @@ def mode_mkeventd_changes(phase):
     elif phase == "action":
         if html.check_transaction():
             mkeventd_reload()
+            call_hook_mkeventd_activate_changes()
             return "mkeventd_rules", _("Changes successfully activated.")
 
     else:

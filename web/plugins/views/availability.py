@@ -181,11 +181,12 @@ def render_availability_options():
 
     is_open = False
     html.begin_form("avoptions")
+    html.hidden_field("avoptions", "set")
     html.write('<div class="view_form" id="avoptions" %s>' 
             % (not is_open and 'style="display: none"' or '') )
     html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
 
-    if html.form_submitted():
+    if html.var("avoptions") == "set":
         for name, height, vs in avoption_entries:
             try:
                 avoptions[name] = vs.from_html_vars("avo_" + name)

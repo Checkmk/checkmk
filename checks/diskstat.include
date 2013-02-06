@@ -130,17 +130,25 @@ def check_diskstat_line(this_time, item, params, line):
     if average_range != None:
         perfdata = [ perfdata[0], perfdata[2], perfdata[1], perfdata[3] ]
 
-    # Do Latency computation if this information is available:
-    if len(line) >= 6 and line[3] >= 0:
-        reads, writes, timems = map(int, line[3:6])
-        ios = reads + writes 
+    # Process IOs when available
+    if line[3] >= 0 and line[4] > 0:
+        reads, writes = map(int, line[3:5])
+        ios = reads + writes
         timedif, ios_per_sec = get_counter(countername + ".ios", this_time, ios)
+        infos.append("IOs: %.2f/sec" % ios_per_sec)
+
+        if params.get("latency_perfdata"):
+            perfdata.append(("ios", ios_per_sec))
+
+    # Do Latency computation if this information is available:
+    if len(line) >= 6 and line[5] >= 0:
+        timems = int(line[5])
         timedif, timems_per_sec = get_counter(countername + ".time", this_time, timems)
         if not ios_per_sec:
             latency = 0.0
         else:
             latency = timems_per_sec / ios_per_sec
-        infos.append("IOs: %.2f/sec, Latency: %.2fms" % (ios_per_sec, latency))
+        infos.append("Latency: %.2fms" % latency)
         if "latency" in params:
             warn, crit = params["latency"]
             if latency >= crit:
@@ -153,7 +161,6 @@ def check_diskstat_line(this_time, item, params, line):
             warn, crit = None, None
 
         if params.get("latency_perfdata"):
-            perfdata.append(("ios", ios_per_sec))
             perfdata.append(("latency", latency, warn, crit))
 
     # Queue Lengths (currently only Windows). Windows uses counters here.

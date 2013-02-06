@@ -32,6 +32,7 @@
     * if: Inventory settings can now be set host based
     * FIX: lnx_bonding/ovs_bonding: correct definition of bonding.include
     * Add: if check now able to handle interface groups  (if_groups)
+    * Add: winperf_phydisk can now output IOPS
     * Add: oracle_tablespace now with flexible warn/crit levels(magic number)
 
     Multisite:
@@ -63,6 +64,10 @@
     * Speed up rule matches in some special cases by factor of 100 and more
     * Init-Script: Improved handling of stale pidfiles
     * Init-Script: Detecting and reporting already running processes
+    * WATO: Added hook to make the mkeventd reload in distributed WATO setups
+      during "activate changes" process
+    * Added hook mkeventd-activate-changes to add custom actions to the mkeventd
+      "activate changes" GUI function
 
 1.2.1i5:
     Core:

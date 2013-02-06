@@ -106,6 +106,9 @@ avoption_entries = [
        title = _("Status Classification"),
        columns = 2,
        elements = [
+           ( "flapping", 
+              Checkbox(label = _("Consider periods of flapping states")),
+           ),
            ( "downtime", 
               Checkbox(label = _("Consider scheduled downtimes")),
            ),
@@ -166,6 +169,7 @@ def render_availability_options():
     avoptions = config.load_user_file("avoptions", {
         "range"          : (time.time() - 86400, time.time()),
         "consider"       : {
+            "flapping"            : True,
             "downtime"            : True,
             "host_down"           : True,
             "notification_period" : True,
@@ -315,7 +319,7 @@ def get_availability_data(datasource, filterheaders, range, only_sites, limit, t
     # Columns for availability
     columns += [
       "duration", "from", "until", "state", "host_down", "in_downtime", 
-      "in_host_downtime", "in_notification_period", # "is_flapping", 
+      "in_host_downtime", "in_notification_period", "is_flapping", 
       "log_output" ]
     if timeline:
         columns.append("log_output")
@@ -329,6 +333,7 @@ host_availability_columns = [
  ( "up",                        "state0",        _("UP"),       None ),
  ( "down",                      "state2",        _("DOWN"),     None ),
  ( "unreach",                   "state3",        _("UNREACH"),  None ),
+ ( "flapping",                  "flapping",      _("Flapping"), None ),
  ( "in_downtime",               "downtime",      _("Downtime"), _("The host was in a scheduled downtime") ),
  ( "outof_notification_period", "",              _("OO/Notif"), _("Out of Notification Period") ),
  ( "unmonitored",               "unmonitored",   _("N/A"),      _("During this time period no monitoring data is available") ),
@@ -339,6 +344,7 @@ service_availability_columns = [
  ( "warn",                      "state1",        _("WARN"),     None ),
  ( "crit",                      "state2",        _("CRIT"),     None ),
  ( "unknown",                   "state3",        _("UNKNOWN"),  None ),
+ ( "flapping",                  "flapping",      _("Flapping"), None ),
  ( "host_down",                 "hostdown",      _("H.Down"),   _("The host was down") ),
  ( "in_downtime",               "downtime",      _("Downtime"), _("The host or service was in a scheduled downtime") ),
  ( "outof_notification_period", "",              _("OO/Notif"), _("Out of Notification Period") ),
@@ -393,6 +399,8 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
                     s = "in_downtime"
                 elif span["host_down"] and avoptions["consider"]["host_down"]:
                     s = "host_down"
+                elif span["is_flapping"] and avoptions["consider"]["flapping"]:
+                    s = "flapping"
                 else:
                     if has_service:
                         s = { 0: "ok", 1:"warn", 2:"crit", 3:"unknown" }[state]

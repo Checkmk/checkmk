@@ -481,14 +481,20 @@ table.data.availability td.number {
     width: 60px;
 }
 
-table.data.availability td.downtime, table.timeline td.downtime {
+table.data td.flapping, table.timeline td.flapping {
+    background-image: url("images/bg_flapping.png"); 
+    background-repeat: repeat;
+    background-color: #f0f;
+}
+
+table.data td.downtime, table.timeline td.downtime {
     background-color: #0af;
 }
-table.data.availability td.hostdown, table.timeline td.hostdown {
+table.data td.hostdown, table.timeline td.hostdown {
     background-color: #048;
     color: white;
 }
-table.data.availability td.unmonitored, table.timeline td.unmonitored {
+table.data td.unmonitored, table.timeline td.unmonitored {
     background-color: #ddd;
     color: #888;
 }

@@ -105,3 +105,5 @@ oracle_tablespaces_check_default_increment(bool): This setting does not
  all checks, not only newly inventorized ones. Per default it is set to
  {True}. That way the check will warn if the table space has its increment
  size set to {1} (the ORACLE default value).
+
+oracle_tablespaces_default_levels(dict): A dictionary with the optional keys mentioned in parameters

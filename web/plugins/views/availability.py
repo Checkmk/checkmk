@@ -573,7 +573,7 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
         for sid, css, sname, help in availability_columns:
             if sid == state_id:
                 table.cell(_("State"), sname, css=css + " state narrow")
-        table.cell(_("Status Text"), row["log_output"])
+        table.cell(_("Additional information"), row["log_output"])
 
     table.end()
 

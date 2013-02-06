@@ -119,13 +119,58 @@ avoption_entries = [
               Checkbox(label = _("Consider notification period")),
            ),
            ( "unmonitored",
-              Checkbox(label = _("Consider unmonitored time")),
+              Checkbox(label = _("Include unmonitored time")),
            ),
        ],
        optional_keys = False,
     ),
   ),
 
+  # Optionally group some states togehter
+  ( "state_grouping", 
+    "double",
+    Dictionary( 
+       title = _("Status Grouping"),
+       columns = 2,
+       elements = [
+           ( "warn", 
+              DropdownChoice(
+                  label = _("Treat Warning as: "),
+                  choices = [ 
+                    ( "ok",      _("OK") ),
+                    ( "warn",    _("WARN") ),
+                    ( "crit",    _("CRIT") ),
+                    ( "unknown", _("UNKNOWN") ),
+                  ]
+                ),
+           ),
+           ( "unknown", 
+              DropdownChoice(
+                  label = _("Treat Unknown as: "),
+                  choices = [ 
+                    ( "ok",      _("OK") ),
+                    ( "warn",    _("WARN") ),
+                    ( "crit",    _("CRIT") ),
+                    ( "unknown", _("UNKNOWN") ),
+                  ]
+                ),
+           ),
+           ( "host_down", 
+              DropdownChoice(
+                  label = _("Treat Host Down as: "),
+                  choices = [ 
+                    ( "ok",        _("OK") ),
+                    ( "warn",      _("WARN") ),
+                    ( "crit",      _("CRIT") ),
+                    ( "unknown",   _("UNKNOWN") ),
+                    ( "host_down", _("Host Down") ),
+                  ]
+                ),
+           ),
+       ],
+       optional_keys = False,
+    ),
+  ),
   # Format of numbers
   ( "timeformat",
     "single",
@@ -145,21 +190,14 @@ avoption_entries = [
   ),
 
 
-  # Optionally group some states togehter
-  ( "state_grouping", 
+  # Short time intervals
+  ( "short_intervals",
     "single",
-    Dictionary( 
-       title = _("Status Grouping"),
-       columns = 2,
-       elements = [
-           ( "warn_is_ok", 
-              Checkbox(label = _("Treat WARN as OK")),
-           ),
-           ( "unknown_is_crit", 
-              Checkbox(label = _("Treat UNKNOWN as CRIT")),
-           ),
-       ],
-       optional_keys = False,
+    Integer(
+        title = _("Short Time Intervalls"),
+        minvalue = 0,
+        unit = _("sec"),
+        label = _("Ignore intervals shorter or equal"),
     ),
   ),
 ]
@@ -178,9 +216,11 @@ def render_availability_options():
         "timeformat"     : "percentage_2",
         "rangespec"      : "d0",
         "state_grouping" : {
-            "warn_is_ok"      : False,
-            "unknown_is_crit" : False,
+            "warn"      : "warn",
+            "unknown"   : "unknown",
+            "host_down" : "host_down",
         },
+        "short_intervals" : 0,
     })
 
     is_open = False
@@ -380,12 +420,12 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
     #                    2.2.2.2.3 "crit"
     #                    2.2.2.2.4 "unknown"
     availability = []
-    timeline_rows = []
-    timeline_considered_duration = 0
     # Note: in case of timeline, we have data from exacly one host/service
     for site_host, site_host_entry in by_host.iteritems():
         for service, service_entry in site_host_entry.iteritems():
-            states = {}
+
+            # First compute timeline
+            timeline_rows = []
             considered_duration = 0
             for span in service_entry:
                 state = span["state"]
@@ -406,19 +446,31 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
                         s = { 0: "ok", 1:"warn", 2:"crit", 3:"unknown" }[state]
                     else:
                         s = { 0: "up", 1:"down", 2:"unreach"}[state]
-                    if avoptions["state_grouping"]["warn_is_ok"] and s == "warn":
-                        s = "ok"
-                    elif avoptions["state_grouping"]["unknown_is_crit"] and s == "unknown":
-                        s = "crit"
-                    # TODO: host_down as crit
+                    if s == "warn":
+                        s = avoptions["state_grouping"]["warn"]
+                    elif s == "unknown": 
+                        s = avoptions["state_grouping"]["unknown"]
+                    elif s == "host_down":
+                        s = avoptions["state_grouping"]["host_down"]
 
+                considered_duration += span["duration"]
+                timeline_rows.append((span, s))
+
+            # Now merge consecutive rows with identical state
+            merge_timeline(timeline_rows)
+
+            # Melt down short intervals
+            if avoptions["short_intervals"]:
+                melt_short_intervals(timeline_rows, avoptions["short_intervals"])
+
+            # Condense into availability
+            states = {}
+            for span, s in timeline_rows:
                 states.setdefault(s, 0)
                 states[s] += span["duration"]
-                considered_duration += span["duration"]
-                if timeline:
-                    timeline_rows.append((span, s))
-            timeline_considered_duration = considered_duration
+
             availability.append([site_host[0], site_host[1], service, states, considered_duration])
+
 
     # Prepare number format function
     from_time, until_time = range
@@ -446,7 +498,7 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
             return "%02d:%02d:%02d" % (hours, minn, sec)
 
     if timeline:
-        render_timeline(timeline_rows, from_time, until_time, timeline_considered_duration, timeline, range_title, render_number)
+        render_timeline(timeline_rows, from_time, until_time, considered_duration, timeline, range_title, render_number)
     else:
         render_availability_table(availability, from_time, until_time, range_title, has_service, avoptions, render_number)
 
@@ -454,9 +506,6 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration, t
     if not timeline_rows:
         html.write('<div class=info>%s</div>' % _("No information available"))
         return
-
-    # More rows with identical state
-    merge_timeline(timeline_rows)
 
     # Timeformat: show date only if the displayed time range spans over
     # more than one day.
@@ -526,8 +575,26 @@ def merge_timeline(entries):
         else:
             n += 1
 
+def melt_short_intervals(entries, duration):
+    n = 1
+    need_merge = False
+    while n < len(entries) - 1:
+        if entries[n][0]["duration"] <= duration and \
+            entries[n-1][1] == entries[n+1][1]:
+            entries[n] = (entries[n][0], entries[n-1][1])
+            need_merge = True
+        n += 1
+
+    # Due to melting, we need to merge again
+    if need_merge:
+        merge_timeline(entries)
+        melt_short_intervals(entries, duration)
 
 def render_availability_table(availability, from_time, until_time, range_title, has_service, avoptions, render_number):
+    # Some columns might be unneeded due to state treatment options
+    sg = avoptions["state_grouping"]
+    sgs = [ sg["warn"], sg["unknown"], sg["host_down"] ]
+
     # Render the stuff
     availability.sort()
     table.begin(_("Availability") + " " + range_title, css="availability")
@@ -572,13 +639,9 @@ def render_availability_table(availability, from_time, until_time, range_title, 
                 continue
             elif sid == "in_downtime" and not avoptions["consider"]["downtime"]:
                 continue
-            elif sid == "host_down" and not avoptions["consider"]["host_down"]:
-                continue
             elif sid == "unmonitored" and not avoptions["consider"]["unmonitored"]:
                 continue
-            elif sid == "warn" and avoptions["state_grouping"]["warn_is_ok"]:
-                continue
-            elif sid == "unknown" and avoptions["state_grouping"]["unknown_is_crit"]:
+            elif sid in [ "warn", "unknown", "host_down" ] and sid not in sgs:
                 continue
             number = states.get(sid, 0)
             if not number:

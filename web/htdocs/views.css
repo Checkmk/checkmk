@@ -482,8 +482,8 @@ table.data.availability td.number {
 }
 
 table.data td.flapping, table.timeline td.flapping {
-    background-image: url("images/bg_flapping.png"); 
-    background-repeat: repeat;
+    /* background-image: url("images/bg_flapping.png"); 
+    background-repeat: repeat; */
     background-color: #f0f;
 }
 
@@ -499,7 +499,7 @@ table.data td.unmonitored, table.timeline td.unmonitored {
     color: #888;
 }
 table.data.availability tr.odd0 td.number {
-    background-image: url("images/white_20percent.png"); 
+    background-image: url("images/white_30percent.png"); 
     background-repeat: repeat;
 }
 

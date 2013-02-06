@@ -549,3 +549,8 @@ div.timelinerange div.until {
     text-align: right;
     float: right;
 }
+
+table.data.timewarp {
+    width: 800px;
+    margin-bottom: 20px;
+}

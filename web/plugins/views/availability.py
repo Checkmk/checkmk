@@ -58,8 +58,8 @@ def render_availability(view, datasource, filterheaders, display_options,
     if not html.has_user_errors():
         range, range_title = avoptions["range"]
         rows = get_availability_data(datasource, filterheaders, range, only_sites, limit, timeline)
-        has_service = "service" in datasource["infos"]
-        do_render_availability(rows, has_service, avoptions, timeline)
+        what == "service" in datasource["infos"] and "service" or "host"
+        do_render_availability(rows, what, avoptions, timeline, "")
 
     if 'Z' in display_options:
         html.bottom_footer()
@@ -402,7 +402,7 @@ bi_availability_columns = [
  ( "unmonitored",               "unmonitored",   _("N/A"),      _("During this time period no monitoring data is available") ),
 ]
 
-def do_render_availability(rows, has_service, avoptions, timeline):
+def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
     # Sort by site/host and service, while keeping native order
     by_host = {}
     for row in rows:
@@ -447,7 +447,7 @@ def do_render_availability(rows, has_service, avoptions, timeline):
                 elif span["is_flapping"] and avoptions["consider"]["flapping"]:
                     s = "flapping"
                 else:
-                    if has_service:
+                    if what in [ "service", "bi" ]:
                         s = { 0: "ok", 1:"warn", 2:"crit", 3:"unknown" }[state]
                     else:
                         s = { 0: "up", 1:"down", 2:"unreach"}[state]
@@ -504,11 +504,12 @@ def do_render_availability(rows, has_service, avoptions, timeline):
             return "%02d:%02d:%02d" % (hours, minn, sec)
 
     if timeline:
-        render_timeline(timeline_rows, from_time, until_time, considered_duration, timeline, range_title, render_number)
+        render_timeline(timeline_rows, from_time, until_time, considered_duration, timeline, range_title, render_number, what, timewarpcode)
     else:
-        render_availability_table(availability, from_time, until_time, range_title, has_service, avoptions, render_number)
+        render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number)
 
-def render_timeline(timeline_rows, from_time, until_time, considered_duration, timeline, range_title, render_number):
+def render_timeline(timeline_rows, from_time, until_time, considered_duration, 
+                    timeline, range_title, render_number, what, timewarpcode):
     if not timeline_rows:
         html.write('<div class=info>%s</div>' % _("No information available"))
         return
@@ -523,17 +524,12 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration, t
 
     if type(timeline) == tuple:
         tl_site, tl_host, tl_service = timeline
-        title = _("Timeline of") + " " + tl_host
         if tl_service:
-            title += ", " + tl_service
             availability_columns = service_availability_columns
         else:
             availability_columns = host_availability_columns
     else:
-        title = "BI Aggregate " + timeline
         availability_columns = bi_availability_columns
-
-    title += " - " + range_title
 
     # Render graphical representation
     # Make sure that each cell is visible, if possible
@@ -560,17 +556,24 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration, t
                            row_nr, row_nr, width, title, css))
     html.write('</tr></table>')
 
+    # Render timewarped BI aggregate (might be empty)
+    html.write(timewarpcode)
+
     # Render Table
     table.begin("", css="timelineevents")
     for row_nr, (row, state_id) in enumerate(timeline_rows):
         table.row()
+        if what == "bi":
+            table.cell(_("Links"), css="buttons")
+            url = html.makeuri([("timewarp", str(int(row["from"])))])
+            html.icon_button(url, _("Time warp - show BI aggregate during this time period"), "timewarp")
         table.cell(_("From"), render_date(row["from"]), css="nobr narrow")
         table.cell(_("Until"), render_date(row["until"]), css="nobr narrow")
-        table.cell(_("Duration"), render_number(row["duration"], considered_duration), css="number")
+        table.cell(_("Duration"), render_number(row["duration"], considered_duration), css="narrow number")
         for sid, css, sname, help in availability_columns:
             if sid == state_id:
                 table.cell(_("State"), sname, css=css + " state narrow")
-        table.cell(_("Plugin output"), row["log_output"])
+        table.cell(_("Status Text"), row["log_output"])
 
     table.end()
 
@@ -601,7 +604,7 @@ def melt_short_intervals(entries, duration):
         merge_timeline(entries)
         melt_short_intervals(entries, duration)
 
-def render_availability_table(availability, from_time, until_time, range_title, has_service, avoptions, render_number):
+def render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number):
     # Some columns might be unneeded due to state treatment options
     sg = avoptions["state_grouping"]
     sgs = [ sg["warn"], sg["unknown"], sg["host_down"] ]
@@ -611,40 +614,50 @@ def render_availability_table(availability, from_time, until_time, range_title, 
     table.begin(_("Availability") + " " + range_title, css="availability")
     for site, host, service, states, considered_duration in availability:
         table.row()
-        table.cell("", css="buttons")
-        history_url_vars = [
-            ("site", site),
-            ("host", host),
-            ("logtime_from_range", "unix"),  # absolute timestamp
-            ("logtime_until_range", "unix"), # absolute timestamp
-            ("logtime_from", str(int(from_time))),
-            ("logtime_until", str(int(until_time)))]
-        if has_service:
-            history_url_vars += [
-                ("service", service),
-                ("view_name", "svcevents"),
-            ]
-        else:
-            history_url_vars += [
-                ("view_name", "hostevents"),
-            ]
 
-        timeline_url = html.makeuri([
-               ("timeline", "yes"), 
-               ("timeline_site", site), 
-               ("timeline_host", host), 
-               ("timeline_service", service)])
-        html.icon_button(timeline_url, _("Timeline"), "timeline")
-        history_url = "view.py?" + htmllib.urlencode_vars(history_url_vars)
-        html.icon_button(history_url, _("Event History"), "history")
+        if what != "bi":
+            history_url_vars = [
+                ("site", site),
+                ("host", host),
+                ("logtime_from_range", "unix"),  # absolute timestamp
+                ("logtime_until_range", "unix"), # absolute timestamp
+                ("logtime_from", str(int(from_time))),
+                ("logtime_until", str(int(until_time)))]
+            if what == "service":
+                history_url_vars += [
+                    ("service", service),
+                    ("view_name", "svcevents"),
+                ]
+            elif what == "host":
+                history_url_vars += [
+                    ("view_name", "hostevents"),
+                ]
+
+            table.cell("", css="buttons")
+            history_url = "view.py?" + htmllib.urlencode_vars(history_url_vars)
+            html.icon_button(history_url, _("Event History"), "history")
+
+            timeline_url = html.makeuri([
+                   ("timeline", "yes"), 
+                   ("timeline_site", site), 
+                   ("timeline_host", host), 
+                   ("timeline_service", service)])
+            html.icon_button(timeline_url, _("Timeline"), "timeline")
+
         host_url = "view.py?" + htmllib.urlencode_vars([("view_name", "hoststatus"), ("site", site), ("host", host)])
-        table.cell(_("Host"), '<a href="%s">%s</a>' % (host_url, host))
-        service_url = "view.py?" + htmllib.urlencode_vars([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
-        table.cell(_("Service"), '<a href="%s">%s</a>' % (service_url, service))
-        if has_service:
-            availability_columns = service_availability_columns
+        if what == "bi":
+            bi_url = "view.py?" + htmllib.urlencode_vars([("view_name", "aggr_single"), ("aggr_name", service)])
+            table.cell(_("Aggregate"), '<a href="%s">%s</a>' % (bi_url, service))
+            availability_columns = bi_availability_columns
         else:
-            availability_columns = host_availability_columns
+            table.cell(_("Host"), '<a href="%s">%s</a>' % (host_url, host))
+            if what == "service":
+                service_url = "view.py?" + htmllib.urlencode_vars([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
+                table.cell(_("Service"), '<a href="%s">%s</a>' % (service_url, service))
+                availability_columns = service_availability_columns
+            else:
+                availability_columns = host_availability_columns
+
         for sid, css, sname, help in availability_columns:
             if sid == "outof_notification_period" and not avoptions["consider"]["notification_period"]:
                 continue
@@ -668,7 +681,7 @@ def render_bi_availability(tree):
     reqhosts = tree["reqhosts"]
     timeline = html.var("timeline")
     title = _("Availability of ") + tree["title"]
-    html.body_start(title, stylesheets=["pages","views","status"])
+    html.body_start(title, stylesheets=["pages","views","status", "bi"], javascripts=['bi'])
     html.top_heading(title)
     html.begin_context_buttons()
     togglebutton("avoptions", False, "painteroptions", _("Configure details of the report"))
@@ -683,13 +696,47 @@ def render_bi_availability(tree):
 
     avoptions = render_availability_options()
     if not html.has_user_errors():
-        rows = get_bi_timeline(tree, avoptions)
-        do_render_availability(rows, True, avoptions, timeline)
+        try:
+            timewarp = int(html.var("timewarp"))
+        except:
+            timewarp = None
+        rows, tree_state = get_bi_timeline(tree, avoptions, timewarp)
+        if timewarp:
+            state, assumed_state, node, subtrees = tree_state
+            eff_state = state
+            if assumed_state != None:
+                eff_state = assumed_state
+            row = {
+                    "aggr_tree"            : tree,
+                    "aggr_treestate"       : tree_state,
+                    "aggr_state"           : state,          # state disregarding assumptions
+                    "aggr_assumed_state"   : assumed_state,  # is None, if there are no assumptions
+                    "aggr_effective_state" : eff_state,      # is assumed_state, if there are assumptions, else real state
+                    "aggr_name"            : node["title"],
+                    "aggr_output"          : eff_state["output"],
+                    "aggr_hosts"           : node["reqhosts"],
+                    "aggr_function"        : node["func"],
+                    "aggr_group"           : html.var("aggr_group"),
+            }
+            tdclass, htmlcode = bi.render_tree_foldable(row, boxes=False, omit_root=False, 
+                                     expansion_level=bi.load_ex_level(), only_problems=False, lazy=False)
+            html.plug()
+            html.write('<h3>')
+            html.icon_button(html.makeuri([("timewarp", "")]), _("Close Timewarp"), "close")
+            timewarpcode = html.drain()
+            html.unplug()
+            timewarpcode += '%s %s</h3>' % (_("Timewarp to "), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timewarp))) + \
+                           '<table class="data table timewarp"><tr class="data odd0"><td class="%s">' % tdclass + \
+                           htmlcode + \
+                           '</td></tr></table>'
+        else:
+            timewarpcode = ""
+        do_render_availability(rows, "bi", avoptions, timeline, timewarpcode)
 
     html.bottom_footer()
     html.body_end()
 
-def get_bi_timeline(tree, avoptions):
+def get_bi_timeline(tree, avoptions, timewarp):
     range, range_title = avoptions["range"]
     # Get state history of all hosts and services contained in the tree.
     # In order to simplify the query, we always fetch the information for
@@ -749,6 +796,10 @@ def get_bi_timeline(tree, avoptions):
     # of the query range.
     tree_state = compute_tree_state(tree, states)
     tree_time = range[0]
+    if timewarp == int(tree_time):
+        timewarp_state = tree_state
+    else:
+        timewarp_state = None
 
     timeline = []
     def append_to_timeline(from_time, until_time, tree_state):
@@ -775,12 +826,13 @@ def get_bi_timeline(tree, avoptions):
         append_to_timeline(tree_time, from_time, tree_state)
         tree_state = next_tree_state
         tree_time = from_time
+        if timewarp == tree_time:
+            timewarp_state = tree_state
 
     # Add one last entry - for the state until the end of the interval
     append_to_timeline(tree_time, range[1], tree_state)
 
-    # html.debug(timeline)
-    return timeline
+    return timeline, timewarp_state
 
 def compute_tree_state(tree, status):
     # Convert our status format into that needed by BI
@@ -805,7 +857,7 @@ def compute_tree_state(tree, status):
 
 
     # Finally we can execute the tree
-    bi.g_assumptions = {}
+    bi.load_assumptions()
     tree_state = bi.execute_tree(tree, status_info)
     return tree_state
 

@@ -58,7 +58,7 @@ def render_availability(view, datasource, filterheaders, display_options,
     if not html.has_user_errors():
         range, range_title = avoptions["range"]
         rows = get_availability_data(datasource, filterheaders, range, only_sites, limit, timeline)
-        what == "service" in datasource["infos"] and "service" or "host"
+        what = "service" in datasource["infos"] and "service" or "host"
         do_render_availability(rows, what, avoptions, timeline, "")
 
     if 'Z' in display_options:

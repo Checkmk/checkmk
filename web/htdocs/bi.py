@@ -1512,23 +1512,18 @@ def aggr_render_leaf(tree, show_host, bare = False):
     # (4) CPU load                  (show_host == False, service != None)
 
     if show_host or not service:
-        host_url = html.makeuri([("view_name", "hoststatus"), ("site", site), ("host", host)])
+        host_url = "view.py?" + htmllib.urlencode_vars([("view_name", "hoststatus"), ("site", site), ("host", host)])
 
     if service:
-        service_url = html.makeuri([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
+        service_url = "view.py?" + htmllib.urlencode_vars([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
 
     if show_host:
         content += '<a href="%s">%s</a><b class=bullet>&diams;</b>' % (host_url, host.replace(" ", "&nbsp;"))
 
-    if tree[1] and tree[0] != tree[1]:
-        addclass = ' class="state assumed"'
-    else:
-        addclass = ""
-
     if not service:
-        content += '<a href="%s"%s>%s</a>' % (host_url, addclass, _("Host&nbsp;status"))
+        content += '<a href="%s">%s</a>' % (host_url, _("Host&nbsp;status"))
     else:
-        content += '<a href="%s"%s>%s</a>' % (service_url, addclass, service.replace(" ", "&nbsp;"))
+        content += '<a href="%s">%s</a>' % (service_url, service.replace(" ", "&nbsp;"))
 
     if bare:
         return content

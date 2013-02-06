@@ -28,6 +28,8 @@ description:
  it possible to ignore short "peaks" and only trigger and longer
  phases of high disk activity.
 
+ The check also gives info on the IOPS.
+
 item:
  Either {"SUMMARY"} for a summarized check of alls disks or the
  name of the disk device, e.g. {"C:"}.
@@ -61,6 +63,8 @@ perfdata:
 
   In the legacy mode only one variable: the throughput since the last check
   in in bytes(!) per second, either for read or for write.
+
+  The IOPS are returned if {"latency_perfdata"} is set to True.
 
 inventory:
   The inventory is configured via {diskstat_inventory_mode}. If this is set

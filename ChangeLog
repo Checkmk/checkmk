@@ -32,6 +32,7 @@
     * if: Inventory settings can now be set host based
     * FIX: lnx_bonding/ovs_bonding: correct definition of bonding.include
     * Add: if check now able to handle interface groups  (if_groups)
+    * Add: winperf_phydisk can now output IOPS
 
     Multisite:
     * Added comment painter to notification related views

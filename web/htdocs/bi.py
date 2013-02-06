@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, re, pprint, time
+import config, re, pprint, time, views
 import weblib, htmllib
 from lib import *
 
@@ -1561,6 +1561,27 @@ def filter_tree_only_problems(tree):
 
     return state, assumed_state, node, new_subtrees
 
+
+def page_availability():
+    aggr_group = html.var("aggr_group")
+    aggr_name = html.var("aggr_name")
+
+    # First compile the required BI aggregates.
+    if config.bi_precompile_on_demand:
+        compile_forest(config.user_id, only_groups = [ aggr_group ])
+    else:
+        compile_forest(config.user_id)
+
+    # In the resulting collection of BI aggregates find
+    # our tree
+    for tree in g_user_cache["forest"][aggr_group]:
+        if tree["title"] == aggr_name:
+            break
+    else:
+        raise MKGeneralException("No aggregation with the name %s" % 
+            aggr_name)
+
+    views.render_bi_availability(tree)
 
 
 #    ____        _

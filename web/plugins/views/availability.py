@@ -56,7 +56,10 @@ def render_availability(view, datasource, filterheaders, display_options,
 
     avoptions = render_availability_options()
     if not html.has_user_errors():
-        do_render_availability(datasource, filterheaders, avoptions, only_sites, limit, timeline)
+        range, range_title = avoptions["range"]
+        rows = get_availability_data(datasource, filterheaders, range, only_sites, limit, timeline)
+        has_service = "service" in datasource["infos"]
+        do_render_availability(rows, has_service, avoptions, timeline)
 
     if 'Z' in display_options:
         html.bottom_footer()
@@ -354,7 +357,7 @@ def get_availability_data(datasource, filterheaders, range, only_sites, limit, t
     query = "GET statehist\n" + av_filter
 
     # Add Columns needed for object identification
-    columns = [ "host_name", "host_alias", "service_description" ]
+    columns = [ "host_name", "service_description" ]
 
     # Columns for availability
     columns += [
@@ -391,13 +394,15 @@ service_availability_columns = [
  ( "unmonitored",               "unmonitored",   _("N/A"),      _("During this time period no monitoring data is available") ),
 ]
 
-def do_render_availability(datasource, filterheaders, avoptions, only_sites, limit, timeline):
-    # Is this a host or a service datasource?
-    has_service = "service" in datasource["infos"]
+bi_availability_columns = [
+ ( "ok",                        "state0",        _("OK"),       None ),
+ ( "warn",                      "state1",        _("WARN"),     None ),
+ ( "crit",                      "state2",        _("CRIT"),     None ),
+ ( "unknown",                   "state3",        _("UNKNOWN"),  None ),
+ ( "unmonitored",               "unmonitored",   _("N/A"),      _("During this time period no monitoring data is available") ),
+]
 
-    range, range_title = avoptions["range"]
-    rows = get_availability_data(datasource, filterheaders, range, only_sites, limit, timeline)
-
+def do_render_availability(rows, has_service, avoptions, timeline):
     # Sort by site/host and service, while keeping native order
     by_host = {}
     for row in rows:
@@ -473,6 +478,7 @@ def do_render_availability(datasource, filterheaders, avoptions, only_sites, lim
 
 
     # Prepare number format function
+    range, range_title = avoptions["range"]
     from_time, until_time = range
     duration = until_time - from_time
     timeformat = avoptions["timeformat"]
@@ -515,13 +521,18 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration, t
     def render_date(ts):
         return time.strftime(format, time.localtime(ts))
 
-    tl_site, tl_host, tl_service = timeline
-    title = _("Timeline of") + " " + tl_host
-    if tl_service:
-        title += ", " + tl_service
-        availability_columns = service_availability_columns
+    if type(timeline) == tuple:
+        tl_site, tl_host, tl_service = timeline
+        title = _("Timeline of") + " " + tl_host
+        if tl_service:
+            title += ", " + tl_service
+            availability_columns = service_availability_columns
+        else:
+            availability_columns = host_availability_columns
     else:
-        availability_columns = host_availability_columns
+        title = "BI Aggregate " + timeline
+        availability_columns = bi_availability_columns
+
     title += " - " + range_title
 
     # Render graphical representation
@@ -651,6 +662,157 @@ def render_availability_table(availability, from_time, until_time, range_title, 
 
 
 
+# Render availability of an BI aggregate. This is currently
+# no view and does not support display options
+def render_bi_availability(tree):
+    reqhosts = tree["reqhosts"]
+    timeline = html.var("timeline")
+    title = _("Availability of ") + tree["title"]
+    html.body_start(title, stylesheets=["pages","views","status"])
+    html.top_heading(title)
+    html.begin_context_buttons()
+    togglebutton("avoptions", False, "painteroptions", _("Configure details of the report"))
+    html.context_button(_("Status View"), "view.py?" + 
+            htmllib.urlencode_vars([("view_name", "aggr_single"),
+              ("aggr_name", tree["title"])]), "showbi")
+    if timeline:
+        html.context_button(_("Availability"), html.makeuri([("timeline", "")]), "availability")
+    else:
+        html.context_button(_("Timeline"), html.makeuri([("timeline", "1")]), "timeline")
+    html.end_context_buttons()
+
+    avoptions = render_availability_options()
+    if not html.has_user_errors():
+        rows = get_bi_timeline(tree, avoptions)
+        do_render_availability(rows, True, avoptions, timeline)
+
+    html.bottom_footer()
+    html.body_end()
+
+def get_bi_timeline(tree, avoptions):
+    range, range_title = avoptions["range"]
+    # Get state history of all hosts and services contained in the tree.
+    # In order to simplify the query, we always fetch the information for
+    # all hosts of the aggregates.
+    only_sites = set([])
+    hosts = []
+    for site, host in tree["reqhosts"]:
+        only_sites.add(site)
+        hosts.append(host)
+
+    columns = [ "host_name", "service_description", "from", "log_output", "state" ]
+    html.live.set_only_sites(list(only_sites))
+    html.live.set_prepend_site(True)
+    html.live.set_limit() # removes limit
+    query = "GET statehist\n" + \
+            "Columns: " + " ".join(columns) + "\n" +\
+            "Filter: time >= %d\nFilter: time <= %d\n" % range
+
+    for host in hosts:
+        query += "Filter: host_name = %s\n" % host
+    query += "Or: %d\n" % len(hosts)
+    data = html.live.query(query)
+    html.live.set_prepend_site(False)
+    html.live.set_only_sites(None)
+    columns = ["site"] + columns
+    rows = [ dict(zip(columns, row)) for row in data ]
+
+    # Now comes the tricky part: recompute the state of the aggregate
+    # for each step in the state history and construct a timeline from
+    # it. As a first step we need the start state for each of the
+    # hosts/services. They will always be the first consecute rows
+    # in the statehist table
+
+    # First partition the rows into sequences with equal start time
+    phases = {}
+    for row in rows:
+        from_time = row["from"]
+        phases.setdefault(from_time, []).append(row)
+
+    # Convert phases to sorted list
+    sorted_times = phases.keys()
+    sorted_times.sort()
+    phases_list = []
+    for from_time in sorted_times:
+        phases_list.append((from_time, phases[from_time]))
+
+    states = {}
+    def update_states(phase_entries):
+        for row in phase_entries:
+            service = row["service_description"]
+            key = row["site"], row["host_name"], service
+            states[key] = row["state"], row["log_output"]
+
+
+    update_states(phases_list[0][1])
+    # states does now reflect the host/services states at the beginning
+    # of the query range.
+    tree_state = compute_tree_state(tree, states)
+    tree_time = range[0]
+
+    timeline = []
+    def append_to_timeline(from_time, until_time, tree_state):
+        timeline.append({"state" : tree_state[0]['state'],
+                         "log_output" : tree_state[0]['output'],
+                         "from" : from_time,
+                         "until" : until_time,
+                         "site" : "",
+                         "host_name" : "",
+                         "service_description" : tree['title'],
+                         "in_notification_period" : 1,
+                         "in_downtime" : 0,
+                         "in_host_downtime" : 0,
+                         "host_down" : 0,
+                         "is_flapping" : 0,
+                         "duration" : until_time - from_time,
+        })
+
+
+    for from_time, phase in phases_list[1:]:
+        update_states(phase)
+        next_tree_state = compute_tree_state(tree, states)
+        duration = from_time - tree_time
+        append_to_timeline(tree_time, from_time, tree_state)
+        tree_state = next_tree_state
+        tree_time = from_time
+
+    # Add one last entry - for the state until the end of the interval
+    append_to_timeline(tree_time, range[1], tree_state)
+
+    # html.debug(timeline)
+    return timeline
+
+def compute_tree_state(tree, status):
+    # Convert our status format into that needed by BI
+    services_by_host = {}
+    hosts = {}
+    for site_host_service, state_output in status.items():
+        site_host = site_host_service[:2]
+        service = site_host_service[2]
+        if service:
+            services_by_host.setdefault(site_host, []).append((
+                service, state_output[0], 1, state_output[1]))
+        else:
+            hosts[site_host] = state_output
+
+    status_info = {}
+    for site_host, state_output in hosts.items():
+        status_info[site_host] = [
+            state_output[0],
+            state_output[1],
+            services_by_host[site_host]
+        ]
+
+
+    # Finally we can execute the tree
+    bi.g_assumptions = {}
+    tree_state = bi.execute_tree(tree, status_info)
+    return tree_state
+
+
 # Av Options:
 # Zeitspannen < X Minuten nicht werten
 # Verhalten bei Flapping
+
+# Idee:
+# Bei OK während Downtime OK Vorrang lassen (einstellbar)

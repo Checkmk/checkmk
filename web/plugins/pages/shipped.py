@@ -36,6 +36,7 @@ import weblib
 import dashboard
 import login
 import help
+import bi
 
 # map URLs to page rendering functions
 
@@ -75,5 +76,6 @@ pagehandlers.update({
    "dashlet_servicestats"     : dashboard.dashlet_servicestats,
    "dashlet_pnpgraph"         : dashboard.dashlet_pnpgraph,
    "dashlet_nodata"           : dashboard.dashlet_nodata,
+   "bi_availability"          : bi.page_availability,
 })
 

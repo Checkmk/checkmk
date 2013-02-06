@@ -68,6 +68,27 @@ multisite_datasources["bi_hostname_aggregations"] = {
 #    |_|   \__,_|_|_| |_|\__\___|_|  |___/
 #
 
+def paint_bi_icons(row):
+    html.plug()
+    single_url = "view.py?" + htmllib.urlencode_vars([
+            ("view_name", "aggr_single"),
+            ("aggr_name", row["aggr_name"])])
+    html.icon_button(single_url, _("Show only this aggregation"), "showbi")
+    avail_url = "bi_availability.py?" + htmllib.urlencode_vars([
+            ("aggr_group", row["aggr_group"]),
+            ("aggr_name",  row["aggr_name"])])
+    html.icon_button(avail_url, _("Analyse availability of this aggregation"), "availability")
+    code = html.drain()
+    html.unplug()
+    return "buttons", code
+
+multisite_painters["aggr_icons"] = {
+    "title" : _("Links"),
+    "columns" : [ "aggr_group", "aggr_name" ],
+    "paint" : paint_bi_icons,
+}
+
+
 def paint_aggr_state_short(state, assumed = False):
     if state == None:
         return "", ""

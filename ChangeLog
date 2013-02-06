@@ -61,6 +61,8 @@
     * Speed up rule matches in some special cases by factor of 100 and more
     * Init-Script: Improved handling of stale pidfiles
     * Init-Script: Detecting and reporting already running processes
+    * WATO: Added hook to make the mkeventd reload in distributed WATO setups
+      during "activate changes" process
 
 1.2.1i5:
     Core:

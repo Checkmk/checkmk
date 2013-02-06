@@ -15,8 +15,18 @@ perfdata:
 inventory:
  One service per Phase 
 
+examples:
+ pdu_gude_default_levels = {
+        "V"    : ( 220, 210 ),
+        "A"    : ( 15, 16 ),
+        "W"    : ( 3500, 3600 ),
+    }
+
 [parameters]
-Warning and Critical levels as tuple for Items kWh, W, A, V, VA in dict
+parameters(dict): Warning and Critical levels as tuple for Items kWh, W, A, V, VA in dict
 
 [configuration]
 pdu_gude_default_levels (dict): Default warning and critical level for each value
+
+
+

@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -47,9 +47,19 @@
 # 11. status of the table space
 # 12. free space in the datafile
 
+
+# This definition needs to be removed at a later stage
+# A previous version of this check didn't write the parameter
+# name into the autochecks file, but the parameter itself
 # default levels for *free* space. float: percent,
 # integer: MB.
 oracle_tablespaces_default_levels = (10.0, 5.0)
+
+factory_settings["oracle_tablespaces_default_levels"] = {
+    "levels"         : (10.0, 5.0),
+    "magic_normsize" : 1000,
+    "levels_low"     : (0.0, 0.0)
+}
 
 # Whether to check auto extend settings
 oracle_tablespaces_check_autoext = True
@@ -75,9 +85,61 @@ def inventory_oracle_tablespaces(info):
             ae = t in autoextensible
         else:
             ae = None # means: ignore, only display setting
-        inventory.append( ("%s.%s" % t,
-       "(%s, oracle_tablespaces_default_levels[0], oracle_tablespaces_default_levels[1])" % ae))
+
+        parameters = { "autoextend" : ae }
+        inventory.append(("%s.%s" % t, parameters))
     return inventory
+
+
+def get_tablespace_levels_in_bytes(size_bytes, params):
+    # If the magic factor is used, take table size and magic factor
+    # into account in order to move levels
+    magic      = params.get("magic")
+    warn, crit = params.get("levels")
+
+    if magic:
+        # convert warn/crit to percentage
+        if type(warn) != float:
+            warn = savefloat(warn * 1024 * 1024 / float(size_bytes)) * 100
+        if type(crit) != float:
+            crit = savefloat(crit * 1024 * 1024 / float(size_bytes)) * 100
+
+        normsize = params["magic_normsize"]
+        hbytes_size = size_bytes / (float(normsize) * 1024 * 1024)
+        felt_size = hbytes_size ** magic
+        scale = felt_size / hbytes_size
+        warn_scaled = 100 - (( 100 - warn ) * scale)
+        crit_scaled = 100 - (( 100 - crit ) * scale)
+
+        # Make sure, levels do never get too low due to magic factor
+        lowest_warning_level, lowest_critical_level = params["levels_low"]
+        if warn_scaled < lowest_warning_level:
+            warn_scaled = lowest_warning_level
+        if crit_scaled < lowest_critical_level:
+            crit_scaled = lowest_critical_level
+        warn_bytes = savefloat(size_bytes * warn_scaled / 100)
+        crit_bytes = savefloat(size_bytes * crit_scaled / 100)
+    else:
+        # warn/crit level are float => percentages of max size, otherwise MB
+        if type(warn) == float:
+            warn_bytes = warn / 100.0 * size_bytes
+        else:
+            warn_bytes = warn * 1024 * 1024
+
+        if type(crit) == float:
+            crit_bytes = crit / 100.0 * size_bytes
+        else:
+            crit_bytes = crit * 1024 * 1024
+
+        warn_scaled = savefloat(warn_bytes / size_bytes * 100)
+        crit_scaled = savefloat(crit_bytes / size_bytes * 100)
+
+
+    levels = {}
+    levels["levels_bytes"] = (warn_bytes, crit_bytes)
+    levels["levels_text"] = "(levels at %.1f/%.1f%%)" % (warn_scaled, crit_scaled)
+    return levels
+
 
 def check_oracle_tablespaces(item, params, info):
     sid, tbsname = item.split('.')
@@ -91,7 +153,12 @@ def check_oracle_tablespaces(item, params, info):
     num_increments = 0
     increment_size = 0
     free_space = 0
+    
+    # Conversion of old autochecks params
+    if type(params) == tuple: 
+        params = { "autoextend" : params[0], "levels" : params[1:] }
 
+    autoext = params.get("autoextend")
     uses_default_increment = False
 
     for line in info:
@@ -132,6 +199,8 @@ def check_oracle_tablespaces(item, params, info):
 
     if ts_status == None:
         return (3, "UNKNOWN - Tablespace not found")
+        
+
 
     infotext = " - %s, size %s, used %s" % \
        (ts_status,
@@ -144,7 +213,6 @@ def check_oracle_tablespaces(item, params, info):
             (num_increments, get_bytes_human_readable(increment_size))
 
     status = 0
-    autoext, warn, crit = params
 
     # Check increment size, should not be set to default (1)
     if oracle_tablespaces_check_default_increment:
@@ -165,16 +233,9 @@ def check_oracle_tablespaces(item, params, info):
     else:
         infotext += ", no autoextend"
 
-    # warn/crit level are float => percentages of max size, otherwise MB
-    if type(warn) == float:
-        warn = warn / 100.0 * max_size
-    else:
-        warn *= 1024 * 1024
 
-    if type(crit) == float:
-        crit = crit / 100.0 * max_size
-    else:
-        crit *= 1024 * 1024
+    level_info = get_tablespace_levels_in_bytes(max_size, params)
+    warn, crit = level_info.get("levels_bytes")
 
     # Check free space, but only if status is not READONLY
     if ts_status != "READONLY":
@@ -196,6 +257,13 @@ def check_oracle_tablespaces(item, params, info):
 
     return (status, nagios_state_names[status] + infotext, perfdata)
 
-check_info['oracle_tablespaces'] = (check_oracle_tablespaces, "ORA %s Tablespace", 1,  inventory_oracle_tablespaces )
+check_info['oracle_tablespaces'] = {
+    "service_description"     : "ORA %s Tablespace",
+    "check_function"          : check_oracle_tablespaces,
+    "inventory_function"      : inventory_oracle_tablespaces,
+    "has_perfdata"            : True,
+    "group"                   : "oracle_tablespaces",
+    "default_levels_variable" : "oracle_tablespaces_default_levels",
+    "includes"                : [ "oracle.include" ]
+}
 check_config_variables.append("oracle_tablespaces_check_default_increment")
-check_includes['oracle_tablespaces'] = [ "oracle.include" ]

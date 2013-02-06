@@ -1413,6 +1413,62 @@ checkgroups.append((
 
 checkgroups.append((
     subgroup_applications,
+    "oracle_tablespaces",
+    _("Oracle Tablespaces"),
+    Dictionary(
+        elements = [
+            ( "levels",
+               Alternative(
+                   title = _("Total Memory Levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Percentage levels of free maximum space"),
+                           elements = [
+                               Percentage(title = _("Warning at"), label = _("free")),
+                               Percentage(title = _("Critical at"), label = _("free")),
+                           ]
+                       ),
+                       Tuple(
+                           title = _("Absolute free space"),
+                           elements = [
+                                Integer(title = _("Warning lower than"), unit = _("MB")), 
+                                Integer(title = _("Critical lower than"), unit = _("MB")), 
+                           ]
+                        )
+                   ])),
+            (  "magic",
+               Float(
+                  title = _("Magic factor (automatic level adaptation for large tablespaces)"),
+                  minvalue = 0.1,
+                  maxvalue = 1.0)),
+            (  "magic_normsize",
+               Integer(
+                   title = _("Reference size for magic factor"),
+                   minvalue = 1,
+                   default_value = 1000,
+                   label = _("MB"))),
+            ( "levels_low",
+              Tuple(
+                  title = _("Minimum levels if using magic factor"),
+                  help = _("The tablespace levels will never fall below these values, when using "
+                           "the magic factor and the tablespace is very small."),
+                  elements = [
+                      Percentage(title = _("Warning at"),  label = _("usage"), allow_int = True),
+                      Percentage(title = _("Critical at"), label = _("usage"), allow_int = True)])),
+            ( "autoextend",
+                Checkbox(
+                  title = _("Autoextend"),
+                  label = _("Autoextension is expected"),
+                  help = _(""))),
+                   ]),
+    TextAscii(
+        title = _("Service descriptions"),
+        allow_empty = False),
+     None))
+
+
+checkgroups.append((
+    subgroup_applications,
     "oracle_logswitches",
     _("Oracle Logswitches"),
     Tuple(

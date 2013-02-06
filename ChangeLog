@@ -33,6 +33,7 @@
     * FIX: lnx_bonding/ovs_bonding: correct definition of bonding.include
     * Add: if check now able to handle interface groups  (if_groups)
     * Add: winperf_phydisk can now output IOPS
+    * Add: oracle_tablespace now with flexible warn/crit levels(magic number)
 
     Multisite:
     * Added comment painter to notification related views
@@ -55,6 +56,7 @@
     * FIX: Fixed generation of auth.php (Needed for NagVis Multisite Authorisation)
     * FIX: Fixed missing general.* permissions in auth.php on slave sites in 
       case of distributed WATO setups
+    * Added oracle_tablespaces configuration to the application checkgroup
     * FIX: Fixed synchronisation of mkeventd configs in distributed WATO setups
 
     Event Console:

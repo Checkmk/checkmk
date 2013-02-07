@@ -10965,7 +10965,7 @@ def page_user_profile():
     html.footer()
 
 #.
-#   .--Sampleconfig--------------------------------------------------------.
+#   .-Sampleconfig---------------------------------------------------------.
 #   |   ____                        _                       __ _           |
 #   |  / ___|  __ _ _ __ ___  _ __ | | ___  ___ ___  _ __  / _(_) __ _     |
 #   |  \___ \ / _` | '_ ` _ \| '_ \| |/ _ \/ __/ _ \| '_ \| |_| |/ _` |    |
@@ -11047,7 +11047,7 @@ def create_sample_config():
     save_rulesets(g_root_folder, rulesets)
 
 #.
-#   .--Pattern Editor------------------------------------------------------.
+#   .-Pattern Editor-------------------------------------------------------.
 #   |   ____       _   _                    _____    _ _ _                 |
 #   |  |  _ \ __ _| |_| |_ ___ _ __ _ __   | ____|__| (_) |_ ___  _ __     |
 #   |  | |_) / _` | __| __/ _ \ '__| '_ \  |  _| / _` | | __/ _ \| '__|    |
@@ -11262,7 +11262,89 @@ def mode_pattern_editor(phase):
         html.write('</table>\n')
         html.end_foldable_container()
 
+#.
+#   .--BI Rules------------------------------------------------------------.
+#   |                 ____ ___   ____        _                             |
+#   |                | __ )_ _| |  _ \ _   _| | ___  ___                   |
+#   |                |  _ \| |  | |_) | | | | |/ _ \/ __|                  |
+#   |                | |_) | |  |  _ <| |_| | |  __/\__ \                  |
+#   |                |____/___| |_| \_\\__,_|_|\___||___/                  |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Editor for the Rules of BI                                          |
+#   '----------------------------------------------------------------------'
+def mode_bi_rules(phase):
+    if phase == "title":
+        return _("BI - Business Intelligence")
+    
+    elif phase == "buttons":
+        global_buttons()
+        return
 
+    elif phase == "actions":
+        return
+
+    aggregations, aggregation_rules = load_bi_rules()
+    save_bi_rules(aggregations, aggregation_rules)
+    html.debug(aggregation_rules)
+
+# We need to replace the BI constants internally with something
+# that we can replace back after writing the BI-Rules out
+# with pprint.pformat
+bi_constants = {
+  'ALL_HOSTS'       : 'f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'HOST_STATE'      : '7e521edf-122c-4013-b135-669e2673bcfa',
+  'HIDDEN'          : '87c5fea7-d8fd-4ccf-b3ac-72c3d048cd3b',
+  'FOREACH_HOST'    : '907b2cdd-07ac-4439-bb4e-1f16eddfdb27',
+  'FOREACH_CHILD'   : 'd6b000f4-ba42-4638-a5f8-2d07f33940de',
+  'FOREACH_PARENT'  : 'a18f5691-c929-420c-9ee2-bcf2bd358319',
+  'FOREACH_SERVICE' : 'a18f5691-c929-420c-9ee2-bcf2bd358319',
+  'REMAINING'       : '8f716937-de9c-44b2-bf9a-ec6f6e1d820e',
+}
+
+# returns aggregations, aggregation_rules
+def load_bi_rules():
+    filename = multisite_dir + "bi.mk"
+    if not os.path.exists(filename):
+        return [], {}
+
+    try:
+        vars = { "aggregation_rules" : {},
+                 "aggregations"      : [],
+               }
+        vars.update(bi_constants)
+        execfile(filename, vars, vars)
+        return vars["aggregations"], vars["aggregation_rules"]
+
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                          (filename, e)))
+        return [], {}
+
+def save_bi_rules(aggregations, aggregation_rules):
+    def replace_constants(s):
+        for name, uuid in bi_constants.items():
+            while True:
+                n = s.replace("'%s'" % uuid, name)
+                if n != s:
+                    s = n
+                else:
+                    break
+        return s[0] + '\n ' + s[1:-1] + '\n' + s[-1]
+
+    make_nagios_directory(multisite_dir)
+    out = create_user_file(multisite_dir + "bi.mk", "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+    for ruleid, rule in aggregation_rules.items():
+        out.write('aggregation_rules["%s"] = %s\n\n' % 
+                ( ruleid, replace_constants(pprint.pformat(rule, width=50))))
+    out.write('\n')
+    out.write("aggregations += %s\n" % 
+            replace_constants(pprint.pformat(aggregations)))
+
+
+#.
 #   .-Hooks-&-API----------------------------------------------------------.
 #   |       _   _             _           ___        _    ____ ___         |
 #   |      | | | | ___   ___ | | _____   ( _ )      / \  |  _ \_ _|        |
@@ -11837,7 +11919,8 @@ modes = {
    "hosttags"           : (["hosttags"], mode_hosttags),
    "edit_hosttag"       : (["hosttags"], mode_edit_hosttag),
    "edit_auxtag"        : (["hosttags"], mode_edit_auxtag),
-   "pattern_editor"     : (["pattern_editor"], mode_pattern_editor)
+   "pattern_editor"     : (["pattern_editor"], mode_pattern_editor),
+   "bi_rules"           : (["bi_rules"], mode_bi_rules),
 }
 
 loaded_with_language = False
@@ -12069,6 +12152,11 @@ def load_plugins():
          _("Logfile Pattern Analyzer"),
          _("Access to the module for analyzing and validating logfile patterns."),
          [ "admin", "user" ])
+
+    config.declare_permission("wato.bi_rules",
+        _("Business Intelligence Rules"),
+        _("Edit the rules for the BI aggregations."),
+         [ "admin" ])
 
 
     load_web_plugins("wato", globals())

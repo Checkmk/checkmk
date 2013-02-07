@@ -680,6 +680,16 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
         global g_remaining_refs
         g_remaining_refs = []
 
+    # Convert new dictionary style rule into old tuple based
+    # format
+    if type(rule) == dict:
+        rule = (
+            rule.get("title", _("Untitled BI rule")),
+            rule.get("params", []),
+            rule.get("aggregation", "worst"),
+            rule.get("nodes", [])
+        )
+
     if len(rule) != 4:
         raise MKConfigError(_("<h3>Invalid aggregation rule</h1>"
                 "Aggregation rules must contain four elements: description, argument list, "

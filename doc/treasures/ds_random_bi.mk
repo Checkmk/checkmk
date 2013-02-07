@@ -1,14 +1,26 @@
 
-aggregation_rules["host"] = (
-  "Host $HOST$",
-  [ "HOST" ],
-  "worst",
-  [
+# aggregation_rules["host"] = (
+#   "Host $HOST$",
+#   [ "HOST" ],
+#   "worst",
+#   [
+#       ( "snarks",      [ "$HOST$" ] ),
+#       ( "gnogo",       [ "$HOST$" ] ),
+#       ( "other",       [ "$HOST$" ] ),
+#   ]
+# )
+
+aggregation_rules["host"] = {
+    "title"       : "Host $HOST$",
+    "params"      : [ "HOST" ],
+    "aggregation" : "worst",
+    "nodes"       : [
       ( "snarks",      [ "$HOST$" ] ),
       ( "gnogo",       [ "$HOST$" ] ),
       ( "other",       [ "$HOST$" ] ),
   ]
-)
+}
+
 
 aggregation_rules["snarks"] = (
   "Snarks", 

@@ -62,6 +62,12 @@ modules = [
       _("Timeperiods restrict notifications and other things to certain periods of "
         "the day.") ),
 
+      ( "pattern_editor", _("Logfile Pattern Analyzer"), "analyze", "pattern_editor",
+        _("Analyze logfile pattern rules and validate logfile patterns against custom text.")),
+
+      ( "bi_rules", _("BI - Business Intelligence"), "aggr", "bi_rules",
+      _("Configuration of Check_MK's Business Intelligence component.")),
+
       ( "sites",  _("Distributed Monitoring"), "sites", "sites",
       _("Distributed monitoring via Multsite, distributed configuration via WATO")),
 
@@ -71,7 +77,5 @@ modules = [
       ( "snapshot", _("Backup & Restore"), "backup", "snapshots",
         _("Make snapshots of your configuration, download, upload and restore snapshots.")),
 
-      ( "pattern_editor", _("Logfile Pattern Analyzer"), "analyze", "pattern_editor",
-        _("Analyze logfile pattern rules and validate logfile patterns against custom text.")),
     ]
 

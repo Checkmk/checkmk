@@ -54,6 +54,8 @@ def render_wato(mini):
                 html.icon_button(url, title, icon, target="main")
             else:
                 iconlink(title, url, icon)
+        else:
+            html.debug("HIRN")
 
     num_pending = wato.api.num_pending_changes()
     if num_pending:

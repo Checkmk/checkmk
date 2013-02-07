@@ -167,7 +167,9 @@ def ldap_bind(username, password, catch = True):
     ldap_log('LDAP_BIND %s' % username)
     try:
         ldap_connection.simple_bind_s(username, password)
+        ldap_log('  SUCCESS')
     except ldap.LDAPError, e:
+        ldap_log('  FAILED (%s)' % e)
         if catch:
             raise MKLDAPException(_('Unable to authenticate with LDAP (%s)' % e))
         else:

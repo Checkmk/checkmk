@@ -42,6 +42,7 @@
     * Added host filter for "last host state change" and "last host check"
     * FIX: Preventing autocomplete in password fields of "edit profile" dialog
     * The ldap member attribute of groups is now configruable via WATO
+    * Added option to enforce lower User-IDs during LDAP sync
 
     BI:
     * Use Ajax to delay rendering of invisible parts of the tree (this

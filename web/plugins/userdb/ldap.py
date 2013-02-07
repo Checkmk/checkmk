@@ -84,7 +84,7 @@ ldap_filter_map = {
 
 def ldap_log(s):
     if config.ldap_debug_log is not None:
-        file(config.ldap_debug_log, "a").write('%s\n' % s)
+        file(ldap_replace_macros(config.ldap_debug_log), "a").write('%s\n' % s)
 
 class MKLDAPException(MKGeneralException):
     pass
@@ -289,6 +289,10 @@ def ldap_get_users(add_filter = None):
             raise MKLDAPException(_('The configured User-ID attribute "%s" does not '
                                     'exist for the user "%s"') % (ldap_user_id_attr(), dn))
         user_id = ldap_user[ldap_user_id_attr()][0]
+
+        if config.ldap_userspec.get('lower_user_ids', False):
+            user_id = user_id.lower()
+
         result[user_id] = ldap_user
 
     return result

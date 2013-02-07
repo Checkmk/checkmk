@@ -43,6 +43,7 @@
     * FIX: Preventing autocomplete in password fields of "edit profile" dialog
     * The ldap member attribute of groups is now configruable via WATO
     * Added option to enforce lower User-IDs during LDAP sync
+    * Improved debug logging of ldap syncs (Now writing duration of queries to log)
 
     BI:
     * Use Ajax to delay rendering of invisible parts of the tree (this

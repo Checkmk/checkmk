@@ -187,6 +187,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
         scope = ldap.SCOPE_ONELEVEL
 
     ldap_log('LDAP_SEARCH "%s" "%s" "%s" "%r"' % (base, scope, filt, columns))
+    start_time = time.time()
 
     # Convert all keys to lower case!
     result = []
@@ -210,7 +211,8 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
                                 'incomplete results. You should change the scope of operation '
                                 'within the ldap or adapt the limit settings of the LDAP server.'))
 
-    ldap_log('  RESULT length: %d' % len(result))
+    duration = time.time() - start_time
+    ldap_log('  RESULT length: %d, duration: %0.3f' % (len(result), duration))
     return result
     #return ldap_connection.search_s(base, scope, filter, columns)
     #for dn, obj in ldap_connection.search_s(base, scope, filter, columns):
@@ -596,6 +598,8 @@ def ldap_sync(add_to_changelog, only_username):
     g_ldap_user_cache = {}
     g_ldap_group_cache = {}
 
+    start_time = time.time()
+
     ldap_connect()
 
     # Unused at the moment, always sync all users
@@ -650,6 +654,9 @@ def ldap_sync(add_to_changelog, only_username):
             wato.log_pending(wato.SYNCRESTART, None, "edit-users",
                  _("LDAP Connector: Modified user %s (Added: %s, Removed: %s, Changed: %s)" %
                     (user_id, ', '.join(added), ', '.join(removed), ', '.join(changed))))
+
+    duration = time.time() - start_time
+    ldap_log('SYNC FINISHED - Duration: %0.3f sec' % duration)
 
     save_users(users)
 

@@ -793,7 +793,6 @@ def mode_folder(phase):
 
     elif phase == "buttons":
         global_buttons()
-        # html.write("<br><br><hr>")
         if config.may("wato.rulesets") or config.may("wato.seeall"):
             html.context_button(_("Rulesets"),        make_link([("mode", "ruleeditor")]), "rulesets")
         html.context_button(_("Folder Properties"), make_link_to([("mode", "editfolder")], g_folder), "edit")
@@ -11279,14 +11278,40 @@ def mode_bi_rules(phase):
     
     elif phase == "buttons":
         global_buttons()
-        return
-
-    elif phase == "actions":
+        html.context_button(_("New Rule"), make_link([("mode", "bi_edit_rule")]), "new")
         return
 
     aggregations, aggregation_rules = load_bi_rules()
-    save_bi_rules(aggregations, aggregation_rules)
-    html.debug(aggregation_rules)
+
+    if phase == "action":
+        save_bi_rules(aggregations, aggregation_rules)
+        return
+
+    rules = aggregation_rules.items()
+    rules.sort(cmp = lambda a,b: cmp(a[1]["title"], b[1]["title"]))
+    
+    table.begin(_("BI Rules"))
+    for ruleid, rule in rules:
+        table.row()
+        table.cell(_("Actions"), css="buttons")
+        edit_url = make_link([("mode", "bi_edit_rule"), ("id", ruleid)]) 
+        html.icon_button(edit_url, _("Edit this rule"), "edit")
+        num_references = count_bi_rule_references(aggregations, aggregation_rules, ruleid)
+        if num_references == 0:
+            delete_url = make_action_link([("mode", "bi_rules"), ("_delete", ruleid)])
+            html.icon_button(delete_url, _("Delete this rule"), "delete")
+        table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, ruleid))
+        table.cell(_("Parameters"), " ".join(rule["params"]))
+        table.cell(_("Title"), rule["title"])
+        table.cell(_("Aggregation"), rule["aggregation"])
+        table.cell(_("Nodes"), len(rule["nodes"]), css="number")
+        table.cell(_("Usages"), num_references, css="number")
+        table.cell(_("Comment"), rule.get("comment", ""))
+    table.end()
+
+def count_bi_rule_references(aggregations, aggregation_rules, ruleid):
+    import random
+    return int(2*random.random())
 
 # We need to replace the BI constants internally with something
 # that we can replace back after writing the BI-Rules out
@@ -11314,6 +11339,15 @@ def load_bi_rules():
                }
         vars.update(bi_constants)
         execfile(filename, vars, vars)
+        # Convert rules from old-style tuples to new-style dicts
+        for ruleid, rule in vars["aggregation_rules"].items():
+            if type(rule) == tuple:
+                vars["aggregation_rules"][ruleid] = {
+                    "title"       : rule[0],
+                    "params"      : rule[1],
+                    "aggregation" : rule[2],
+                    "nodes"       : rule[3],
+                }
         return vars["aggregations"], vars["aggregation_rules"]
 
     except Exception, e:
@@ -11342,6 +11376,186 @@ def save_bi_rules(aggregations, aggregation_rules):
     out.write('\n')
     out.write("aggregations += %s\n" % 
             replace_constants(pprint.pformat(aggregations)))
+
+bi_aggregation_functions = {}
+
+def mode_bi_edit_rule(phase):
+    ruleid = html.var("id")
+    new = not ruleid
+
+    if phase == "title":
+        if new:
+            return _("BI - Create New Rule")
+        else:
+            return _("BI - Edit Rule") + " " + ruleid
+    
+    elif phase == "buttons":
+        html.context_button(_("Abort"), make_link([("mode", "bi_rules")]), "abort")
+        return
+
+    aggregations, aggregation_rules = load_bi_rules()
+
+    # Not in global context, so that l10n will happen again
+    rule_choices = [ 
+           (key, key + " - " + rule["title"]) 
+           for (key, rule) 
+           in aggregation_rules.items() ]
+
+    vs_bi_node = CascadingDropdown(
+       choices = [
+          ( "host", _("State a host"),
+             Tuple(
+                 elements = [
+                    TextUnicode(title = _("Host (regex):"), allow_empty = False),
+                 ])
+          ),
+          ( "service", _("State of a service"),
+            Tuple(
+                elements = [
+                    TextUnicode(title = _("Host (regex):"), allow_empty = False),
+                    TextUnicode(title = _("Service (regex):")),
+                ]
+            ),
+          ),
+          ( "rule", _("Call a Rule"),
+            Tuple(
+                elements = [
+                    DropdownChoice(
+                        title = _("Rule"),
+                        choices = rule_choices,
+                    ),
+                    ListOfStrings(
+                        title = _("Arguments"),
+                    ),
+                ]
+            ),
+         ),
+         ( "remaining", _("Alle Remaining Services of a host") ),
+       ]
+    )
+    
+    aggregation_choices = []
+    for aid, ainfo in bi_aggregation_functions.items():
+        aggregation_choices.append((
+            aid,
+            ainfo["title"],
+            ainfo["valuespec"],
+        ))
+
+    elements = [
+        ( "title", 
+           TextUnicode(
+               title = _("Rule Title"),
+               help = _("The Description of the aggregation node. This will be "
+                        "displayed as the name of the node in the BI view. For "
+                        "top level nodes this title must be unique. You can insert "
+                        "rule parameters like <tt>$FOO$</tt> or <tt>$BAR$</tt> here."),
+               allow_empty = False,
+               size = 64,
+           ),
+        ),
+
+        ( "comment", 
+           TextUnicode(
+               title = _("Comment"),
+               help = _("An arbitrary comment of this rule for you."),
+               size = 64,
+           ),
+        ),
+        ( "params",
+          ListOfStrings(
+              title = _("Parameters"),
+              orientation = "horizontal",
+              valuespec = TextAscii(
+                size = 12,
+                regex = '[A-Za-z_][A-Za-z0-9_]*',
+                regex_error = _("Parameters must contain only A-Z, a-z, 0-9 and _ "
+                                "and must not begin with a digit."),
+              )
+          )
+        ),
+        ( "aggregation",
+          CascadingDropdown(
+            title = _("Aggregation Function"),
+            html_separator = "",
+            separator = "OEWIFJ",
+            choices = aggregation_choices,
+          )
+        ),
+        ( "nodes",
+          ListOf(
+              vs_bi_node,
+              title = _("Nodes that are aggregated by this rule"),
+          ),
+        ),
+    ]
+
+
+    if new:
+        elements = [
+        ( "id",
+          TextAscii(
+              title = _("Unique Rule ID"),
+              help = _("The ID of the rule must be a unique text."),
+              allow_empty = False,
+              size = 12,
+          ),
+        )] + elements
+
+    vs_bi_rule = Dictionary(
+        title = _("Rule Properties"),
+        optional_keys = False,
+        render = "form",
+        elements = elements,
+        headers = [
+            ( _("General Properties"), [ "id", "title", "comment", "params" ]),
+            ( _("Aggregation Function"), [ "aggregation" ], ),
+            ( _("Nodes"),              [ "nodes" ] ),
+        ]
+    )
+
+
+    if phase == "action":
+        new_rule = vs_bi_rule.from_html_vars('rule')
+        vs_bi_rule.validate_value(new_rule, 'rule')
+        new_rule["aggregation"] = "!".join(
+                [ new_rule["aggregation"][0] ] + map(str, new_rule["aggregation"][1]))
+        if new:
+            ruleid = new_rule["id"]
+        if new and ruleid in aggregation_rules:
+            raise MKUserError('rule_p_id', 
+                _("There is already a rule with the id <b>%s</b>" % ruleid))
+        if new:
+            del new_rule["id"]
+            aggregation_rules[ruleid] = new_rule
+            log_audit(None, "bi-new-rule", _("Create new BI rule %s") % ruleid)
+        else:
+            aggregation_rules[ruleid].update(new_rule)
+            log_audit(None, "bi-edit-rule", _("Modified BI rule %s") % ruleid)
+
+        save_bi_rules(aggregations, aggregation_rules)
+        return "bi_rules"
+
+
+    if new:
+        rule = {}
+    else:
+        rule = aggregation_rules[ruleid]
+        # Convert aggregation function description from "worst!2!1"
+        # into typed tuple ("worst", (2,1))
+        parts = rule["aggregation"].split("!")
+        rule["aggregation"] = (parts[0], tuple(map(saveint, parts[1:])))
+
+    html.begin_form("birule")
+    vs_bi_rule.render_input("rule", rule)
+    forms.end()
+    html.hidden_fields()
+    html.button("_save", new and _("Create Rule") or _("Save"), "submit")
+    if new:
+        html.set_focus("rule_p_id")
+    else:
+        html.set_focus("rule_p_title")
+    html.end_form()
 
 
 #.
@@ -11921,6 +12135,7 @@ modes = {
    "edit_auxtag"        : (["hosttags"], mode_edit_auxtag),
    "pattern_editor"     : (["pattern_editor"], mode_pattern_editor),
    "bi_rules"           : (["bi_rules"], mode_bi_rules),
+   "bi_edit_rule"       : (["bi_rules"], mode_bi_edit_rule),
 }
 
 loaded_with_language = False

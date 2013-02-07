@@ -34,6 +34,10 @@
     * Add: if check now able to handle interface groups  (if_groups)
     * Add: winperf_phydisk can now output IOPS
     * Add: oracle_tablespace now with flexible warn/crit levels(magic number)
+    
+    Livestatus:
+    * Add: new column in hosts/services table: comments_with_extra_info
+    Adds the entry type and entry time
 
     Multisite:
     * Added comment painter to notification related views

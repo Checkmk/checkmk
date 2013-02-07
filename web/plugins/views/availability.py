@@ -862,9 +862,12 @@ def compute_tree_state(tree, status):
     return tree_state
 
 
-# Av Options:
-# Zeitspannen < X Minuten nicht werten
-# Verhalten bei Flapping
-
 # Idee:
 # Bei OK während Downtime OK Vorrang lassen (einstellbar)
+
+# Probleme:
+# Timeline z.B. OK --> Flapping start --> CRIT -->  Flapping stop.
+# => Bei dem Zeitabschnitt, zu dem das Flapping endet, ist der
+# Plugin output vom CRIT-Ereignis verschwunden. Soll man das so
+# lassen?
+

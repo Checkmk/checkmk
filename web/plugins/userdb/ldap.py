@@ -531,7 +531,7 @@ def ldap_list_roles_with_group_dn():
                       "be defined within the scope of the "
                       "<a href=\"wato.py?mode=edit_configvar&varname=ldap_groupspec\">LDAP Group Settings</a>."),
             size  = 80,
-            enforce_suffix = ldap_replace_macros(config.ldap_groupspec['dn']),
+            enforce_suffix = ldap_replace_macros(config.ldap_groupspec.get('dn', '')),
         )))
     return elements
 

@@ -1,9 +1,12 @@
 Title: Host views miss filter "Last host state change"
 Component: multisite
-State: open
+Class: feature
+State: done
 Date: 2013-02-05 08:57:08
 Targetversion: 1.2.3
-Class: feature
 
 The service views have such a filter for the service state.
 It would be nice to have it also in host views.
+
+2013-02-07 08:49:46: changed state open -> done
+Just implemented this.

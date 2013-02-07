@@ -60,6 +60,7 @@
     * Added oracle_tablespaces configuration to the application checkgroup
     * FIX: Fixed synchronisation of mkeventd configs in distributed WATO setups
     * FIX: "Sync & Restart" did not perform restart in distributed WATO setups
+    * FIX: Fixed exception in editing code of ldap group to rule plugin
 
     Event Console:
     * Added UNIX socket for sending events to the EC

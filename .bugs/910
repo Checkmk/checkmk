@@ -1,0 +1,9 @@
+Title: Distributed WATO - activate changes bad dialog handling
+Component: wato
+State: open
+Date: 2013-02-04 10:03:33
+Targetversion: 1.2.2
+Class: bug
+
+When having a change pending, clicking "sync & restart", the sync is done, but no
+restart is triggered. The restart has to be done again by clicking "restart".

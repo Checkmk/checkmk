@@ -1078,6 +1078,21 @@ def mode_mkeventd_edit_rule(phase):
     html.hidden_fields()
     html.end_form()
 
+def mkeventd_reload():
+    mkeventd.query("COMMAND RELOAD")
+    try:
+        os.remove(log_dir + "mkeventd.log")
+    except OSError:
+        pass # ignore not existing logfile
+    log_audit(None, "mkeventd-activate", _("Activated changes of event console configuration"))
+
+# This hook is executed when one applies the pending configuration changes
+# related to the mkeventd via WATO on the local system. The hook is called
+# without parameters.
+def call_hook_mkeventd_activate_changes():
+    if hooks.registered('mkeventd-activate-changes'):
+        hooks.call("mkeventd-activate-changes")
+
 def mode_mkeventd_changes(phase):
     if phase == "title":
         return _("Event Console - Pending Changes")
@@ -1088,14 +1103,13 @@ def mode_mkeventd_changes(phase):
         if config.may("mkeventd.activate") and parse_audit_log("mkeventd") and mkeventd.daemon_running():
             html.context_button(_("Activate Changes!"),
                     html.makeactionuri([("_activate", "now")]), "apply", hot=True)
-    
+
     elif phase == "action":
         if html.check_transaction():
-            mkeventd.query("COMMAND RELOAD")
-            os.remove(log_dir + "mkeventd.log")
-            log_audit(None, "mkeventd-activate", _("Activated changes of event console configuration"))
+            mkeventd_reload()
+            call_hook_mkeventd_activate_changes()
             return "mkeventd_rules", _("Changes successfully activated.")
-                
+
     else:
         if not mkeventd.daemon_running():
             warning = _("The Event Console Daemon is currently not running. ")
@@ -1863,4 +1877,8 @@ define command {
 """ % { "group" : contactgroup, "facility" : facility, "remote" : remote_console })
 
 api.register_hook("pre-activate-changes", mkeventd_update_notifiation_configuration)
+
+# Only register the reload hook when mkeventd is enabled
+if mkeventd_enabled:
+    api.register_hook("activate-changes", lambda hosts: mkeventd_reload())
 

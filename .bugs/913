@@ -1,0 +1,13 @@
+Title: Painter contents should be aligned vertically top when one painter is higher than others
+Component: multisite
+State: open
+Date: 2013-02-04 11:33:52
+Targetversion: 1.2.2
+Class: cleanup
+
+The default vertical alignment is middle. This is ok and should be kept for regular
+layouts where every painter fits in one row (text should be aligned middle to the
+images and perfometers).
+
+But in case there is very long status output which wraps to several lines, the other
+painter contents should be aligned to top.

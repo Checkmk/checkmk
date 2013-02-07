@@ -125,30 +125,6 @@ snapshot_dir       = var_dir + "snapshots/"
 sync_snapshot_file = defaults.tmp_dir + "/sync_snapshot.tar.gz"
 repstatus_file     = var_dir + "replication_status.mk"
 
-# Directories and files to synchronize during replication
-replication_paths = [
-  ( "dir",  "check_mk",   root_dir ),
-  ( "dir",  "multisite",  multisite_dir ),
-  ( "file", "htpasswd",   defaults.htpasswd_file ),
-  ( "file", "auth.secret",  '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file) ),
-  ( "file", "auth.serials", '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file) ),
-  # Also replicate the user-settings of Multisite? While the replication
-  # as such works pretty well, the count of pending changes will not
-  # know.
-  ( "dir", "usersettings", defaults.var_dir + "/web" ),
-]
-
-
-# Directories and files for backup & restore
-backup_paths = replication_paths + [
-  ( "file", "sites",      sites_mk)
-  # autochecks are a site-local ressource. This does only make
-  # sense for single-site installations. How should we handle
-  # this?
-  # ( "dir", "autochecks", defaults.autochecksdir ),
-
-]
-
 
 ALL_HOSTS    = [ '@all' ]
 ALL_SERVICES = [ "" ]
@@ -7509,6 +7485,8 @@ def automation_push_snapshot():
                 raise MKGeneralException(message)
 
         tarcontent = html.var('snapshot')
+        if not tarcontent:
+            raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
         multitar.extract_from_buffer(tarcontent, replication_paths)
         log_commit_pending() # pending changes are lost
 
@@ -7749,6 +7727,9 @@ def mode_users(phase):
         if delid == config.user_id:
             raise MKUserError(None, _("You cannot delete your own account!"))
 
+        if delid not in users:
+            return None # The account does not exist (anymore), no deletion needed
+
         c = wato_confirm(_("Confirm deletion of user %s" % delid),
                          _("Do you really want to delete the user %s?" % delid))
         if c:
@@ -7939,8 +7920,8 @@ def mode_edit_user(phase):
             increase_serial = True # password changed, reflect in auth serial
 
         else:
-            password = html.var("password").strip()
-            password2 = html.var("password2").strip()
+            password = html.var("password", '').strip()
+            password2 = html.var("password2", '').strip()
 
             # Detect switch back from automation to password
             if "automation_secret" in new_user:
@@ -7962,14 +7943,14 @@ def mode_edit_user(phase):
             new_user['serial'] = new_user.get('serial', 0) + 1
 
         # Email address
-        email = html.var("email").strip()
+        email = html.var("email", '').strip()
         regex_email = '^[-a-zäöüÄÖÜA-Z0-9_.+%]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*$'
         if email and not re.match(regex_email, email):
             raise MKUserError("email", _("'%s' is not a valid email address." % email))
         new_user["email"] = email
 
         # Pager
-        pager = html.var("pager").strip()
+        pager = html.var("pager", '').strip()
         new_user["pager"] = pager
 
         # Roles
@@ -10951,10 +10932,10 @@ def page_user_profile():
 
     if config.may('general.change_password') and not is_locked('password'):
         forms.section(_("Password"))
-        html.password_input('password')
+        html.password_input('password', autocomplete = "off")
 
         forms.section(_("Password confirmation"))
-        html.password_input('password2')
+        html.password_input('password2', autocomplete = "off")
 
     if config.may('general.edit_profile'):
         select_language(config.get_language(''))
@@ -11881,7 +11862,29 @@ def load_plugins():
     g_rulespec_group = {}
     g_rulespec_groups = []
 
-    hooks.unregister()
+    # Directories and files to synchronize during replication
+    global replication_paths, backup_paths
+    replication_paths = [
+        ( "dir",  "check_mk",   root_dir ),
+        ( "dir",  "multisite",  multisite_dir ),
+        ( "file", "htpasswd",   defaults.htpasswd_file ),
+        ( "file", "auth.secret",  '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file) ),
+        ( "file", "auth.serials", '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file) ),
+        # Also replicate the user-settings of Multisite? While the replication
+        # as such works pretty well, the count of pending changes will not
+        # know.
+        ( "dir", "usersettings", defaults.var_dir + "/web" ),
+    ]
+
+    # Directories and files for backup & restore
+    backup_paths = replication_paths + [
+        ( "file", "sites",      sites_mk)
+        # autochecks are a site-local ressource. This does only make
+        # sense for single-site installations. How should we handle
+        # this?
+        # ( "dir", "autochecks", defaults.autochecksdir ),
+    ]
+
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))

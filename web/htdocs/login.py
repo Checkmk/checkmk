@@ -27,7 +27,12 @@
 import defaults, htmllib, config, userdb
 from lib import *
 from mod_python import apache
-import os, md5, time
+import os, time
+
+try:
+    from hashlib import md5
+except ImportError:
+    from md5 import md5 # deprecated with python 2.5
 
 def site_cookie_name(site_id = None):
     if not site_id:
@@ -54,7 +59,7 @@ def load_secret():
 
     # Create new secret when this installation has no secret
     if secret == '':
-        secret = md5.md5(str(time.time())).hexdigest()
+        secret = md5(str(time.time())).hexdigest()
         file(secret_path, 'w').write(secret + "\n")
 
     return secret
@@ -69,7 +74,7 @@ def load_serial(user_id):
 # Generates the hash to be added into the cookie value
 def generate_hash(username, now, serial):
     secret = load_secret()
-    return md5.md5(username + now + str(serial) + secret).hexdigest()
+    return md5(username + now + str(serial) + secret).hexdigest()
 
 def del_auth_cookie():
     name = site_cookie_name()

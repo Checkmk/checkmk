@@ -19,9 +19,17 @@ case "$1" in
     start)
         if [ "$CONFIG_MKEVENTD_SYSLOG" = on ] ; then
             echo -n 'Starting mkeventd with integrated syslog...'
+            if kill -0 $THE_PID >/dev/null 2>&1; then
+              echo 'Already running.'
+              exit 0
+            fi
             ${DAEMON}_open514 --syslog --syslog-fd 3 $OPTS
         else
             echo -n 'Starting mkeventd...'
+            if kill -0 $THE_PID >/dev/null 2>&1; then
+              echo 'Already running.'
+              exit 0
+            fi
             $DAEMON $OPTS
         fi
         echo OK

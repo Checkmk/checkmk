@@ -36,9 +36,10 @@ class DownCommColumn : public ListColumn
 {
     bool _is_downtime;
     bool _with_info;
+    bool _with_extra_info; // provides date and type
 public:
-    DownCommColumn(string name, string description, int indirect_offset, bool is_downtime, bool with_info)
-        : ListColumn(name, description, indirect_offset), _is_downtime(is_downtime), _with_info(with_info) {}
+    DownCommColumn(string name, string description, int indirect_offset, bool is_downtime, bool with_info, bool with_extra_info)
+        : ListColumn(name, description, indirect_offset), _is_downtime(is_downtime), _with_info(with_info), _with_extra_info(with_extra_info) {}
     int type() { return COLTYPE_LIST; }
     void output(void *, Query *);
     void *getNagiosObject(char *name);

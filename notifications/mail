@@ -314,8 +314,12 @@ def send_mail(m, target):
     return True
 
 def fetch_pnp_data(context, params):
-    return os.popen('REMOTE_USER="%s" php %s/share/pnp4nagios/htdocs/index.php "%s"' %
-                     (context['CONTACTNAME'], context['OMD_ROOT'], params)).read()
+    try:
+        prefix_url = "%s/share" % context['OMD_ROOT']
+    except:
+        # Non-omd environment
+        prefix_url = ""
+    return os.popen('REMOTE_USER="%s" php %s/pnp4nagios/htdocs/index.php "%s"' %  (context['CONTACTNAME'], prefix_url, params)).read()
 
 def fetch_num_sources(context):
     svc_desc = context['WHAT'] == 'HOST' and '_HOST_' or context['SERVICEDESC']

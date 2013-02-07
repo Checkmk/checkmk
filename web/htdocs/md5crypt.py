@@ -35,15 +35,18 @@
 
 # This port adds no further stipulations.  I forfeit any copyright interest.
 
-import md5
+try:
+    from hashlib import md5
+except ImportError:
+    from md5 import md5 # deprecated with python 2.5
 
 def md5crypt(password, salt, magic='$1$'):
     # /* The password first, since that is what is most unknown */ /* Then our magic string */ /* Then the raw salt */
-    m = md5.new()
+    m = md5()
     m.update(password + magic + salt)
 
     # /* Then just as many characters of the MD5(pw,salt,pw) */
-    mixin = md5.md5(password + salt + password).digest()
+    mixin = md5(password + salt + password).digest()
     for i in range(0, len(password)):
         m.update(mixin[i % 16])
 
@@ -61,7 +64,7 @@ def md5crypt(password, salt, magic='$1$'):
 
     # /* and now, just to make sure things don't run too fast */
     for i in range(1000):
-        m2 = md5.md5()
+        m2 = md5()
         if i & 1:
             m2.update(password)
         else:

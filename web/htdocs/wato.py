@@ -3462,7 +3462,7 @@ def mode_changelog(phase):
                     # can be optimized in future but is the save way for now.
                     site = config.site(site_id)
                     if action in [ "sync", "sync_restart" ]:
-                        response = synchronize_site(site, restart = action == "restart")
+                        response = synchronize_site(site, restart = action == "sync_restart")
                     else:
                         try:
                             restart_site(site)

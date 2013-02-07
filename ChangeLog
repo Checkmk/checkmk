@@ -58,6 +58,7 @@
       case of distributed WATO setups
     * Added oracle_tablespaces configuration to the application checkgroup
     * FIX: Fixed synchronisation of mkeventd configs in distributed WATO setups
+    * FIX: "Sync & Restart" did not perform restart in distributed WATO setups
 
     Event Console:
     * Added UNIX socket for sending events to the EC

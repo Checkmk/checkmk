@@ -41,6 +41,7 @@
       is deprecated in python > 2.5 to prevent warning messages in apache error log
     * Added host filter for "last host state change" and "last host check"
     * FIX: Preventing autocomplete in password fields of "edit profile" dialog
+    * The ldap member attribute of groups is now configruable via WATO
 
     BI:
     * Use Ajax to delay rendering of invisible parts of the tree (this

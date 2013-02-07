@@ -246,6 +246,9 @@ def ldap_replace_macros(tmpl):
 def ldap_user_id_attr():
     return config.ldap_userspec.get('user_id', ldap_attr('user_id'))
 
+def ldap_member_attr():
+    return config.ldap_groupspec.get('member', ldap_attr('member'))
+
 def ldap_get_user(username, no_escape = False):
     if username in g_ldap_user_cache:
         return g_ldap_user_cache[username]
@@ -303,7 +306,7 @@ def ldap_user_groups(username, attr = 'cn'):
 
     # Apply configured group ldap filter and only reply with groups
     # having the current user as member
-    filt = '(&%s(%s=%s))' % (ldap_filter('groups'), ldap_attr('member'),
+    filt = '(&%s(%s=%s))' % (ldap_filter('groups'), ldap_member_attr(),
                              ldap.filter.escape_filter_chars(user_dn))
     # First get all groups
     groups_cn = []

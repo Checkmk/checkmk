@@ -1,0 +1,74 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+db2_mem_default_levels = ( 10.0, 5.0 )
+
+def inventory_db2_mem(info):
+    return [ (x[1], db2_mem_default_levels ) for x in info if x[0] == "Instance"]
+
+def check_db2_mem(item, params, info):
+    warn, crit = params
+    hit = 0
+    values = []
+    perf = []
+    state = 3
+    message = " - Instance not found"
+    for line in info:
+        if hit > 0 and hit <= 2:
+            hit += 1
+            values.append(saveint(line[-2]))
+            if len(values) == 2:
+                limit, usage = values
+                left = limit - usage
+                perc_level =  ( 100.0 / limit ) * left
+                label = ", Warn/Crit %d%%/%d%%" % (warn, crit)
+                if perc_level <= crit:
+                    state = 2
+                elif perc_level <= warn:
+                    state = 1
+                else:
+                    label = ""
+                    state = 0
+
+                message = " - Max: %s, Used: %s (%.2d%% Free%s) " % \
+                (get_bytes_human_readable(limit), get_bytes_human_readable(usage), perc_level, label) 
+                perf = [("mem", usage, 0, 0, 0, limit )]
+                
+        if line[1] == item:
+            hit = 1
+
+
+    return state, nagios_state_names[state] + message, perf 
+
+
+check_info['db2_mem'] = {
+    "check_function"          : check_db2_mem,
+    "inventory_function"      : inventory_db2_mem,
+    "service_description"     : "Mem of %s",
+    "has_perfdata"            : True,
+    "group"                   : "db2_mem"
+}
+

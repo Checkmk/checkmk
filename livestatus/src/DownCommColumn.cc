@@ -69,6 +69,12 @@ void DownCommColumn::output(void *data, Query *query)
                     query->outputString(dt->_author_name);
                     query->outputSublistSeparator();
                     query->outputString(dt->_comment);
+                    query->outputSublistSeparator();
+                    if(_with_extra_info && !_is_downtime) {
+                        query->outputInteger(((Comment*)dt)->_entry_type);
+                        query->outputSublistSeparator();
+                        query->outputTime(dt->_entry_time);
+                    }
                     query->outputEndSublist();
                 }
                 else

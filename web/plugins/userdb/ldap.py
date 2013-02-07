@@ -268,6 +268,9 @@ def ldap_get_user(username, no_escape = False):
         dn = result[0][0]
         user_id = result[0][1][ldap_user_id_attr()][0]
 
+        if config.ldap_userspec.get('lower_user_ids', False):
+            user_id = user_id.lower()
+
         g_ldap_user_cache[username] = (dn, user_id)
 
         if no_escape:

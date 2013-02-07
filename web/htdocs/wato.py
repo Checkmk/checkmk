@@ -7714,8 +7714,10 @@ def mode_users(phase):
         return
 
     # Execute all connectors synchronisations of users. This must be done before
-    # loading the users, because it might modify the users list
-    userdb.hook_sync(add_to_changelog = True)
+    # loading the users, because it might modify the users list. But don't execute
+    # it during actions, this should save some time.
+    if phase != "action":
+        userdb.hook_sync(add_to_changelog = True)
 
     roles = userdb.load_roles()
     users = filter_hidden_users(userdb.load_users())

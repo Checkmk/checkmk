@@ -1,16 +1,9 @@
-Title: Unresolvable host prevents loading configuration (bad behaviour)
-Component: core
+Title: Make "site" infos available e.g. as group header in "Events ..." views
+Component: ec
 State: open
-Date: 2013-01-22 09:44:36
-Targetversion: 1.4.0
-Class: nastiness
+Date: 2013-02-07 16:27:32
+Targetversion: 1.2.2
+Class: cleanup
 
-It seems strange, I am able to add a host to Check_MK by the host name and
-while the name can be resolved everything is OK. But once the name is not
-resolvable anymore (for whatever reason), the monitoring still works but
-if I want to rewrite the config and restart nagios, the process is blocked
-by that unresolvable host.
-
-This seems a bit nasty. It would be better to have a warning message or just
-no message while applying the config. The monitoring will show me the fact
-that the host is not resolvable.
+The hostname and so on are available and filled, the "site" info can be selected
+for the view, but there is no data rendered for the site. Should be added.

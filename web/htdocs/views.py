@@ -1429,13 +1429,17 @@ def render_view(view, rows, datasource, group_painters, painters,
             if show_buttons:
                 update_context_links(
                     # don't take display_options into account here ('c' is set during reload)
-                    row_count > 0 and should_show_command_form('C', datasource),
+                    row_count > 0 and should_show_command_form('C', datasource) \
+                    and not html.do_actions(),
                     can_display_checkboxes
                 )
 
         # Play alarm sounds, if critical events have been displayed
         if 'S' in display_options and view.get("play_sounds"):
             play_alarm_sounds()
+    else:
+        # Always hide action related context links in this situation
+        update_context_links(False, False)
 
     # In multi site setups error messages of single sites do not block the
     # output and raise now exception. We simply print error messages here.

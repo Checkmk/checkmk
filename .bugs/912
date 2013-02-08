@@ -3,7 +3,7 @@ Component: wato
 State: open
 Date: 2013-02-04 10:08:08
 Targetversion: 1.2.2
-Class: bug
+Class: nastiness
 
 When clicking on "restart" for a single site, no background action with a 
 progress bar is started. Instead, the browser only shows a loading mouse pointer.

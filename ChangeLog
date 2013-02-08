@@ -83,6 +83,9 @@
       during "activate changes" process
     * Added hook mkeventd-activate-changes to add custom actions to the mkeventd
       "activate changes" GUI function
+    * FIX: When a single rule matching raises an exception, the line is now
+      matched agains the following rules instead of being skipped. The
+      exception is logged to mkeventd.log
 
 1.2.1i5:
     Core:

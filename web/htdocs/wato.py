@@ -11303,7 +11303,7 @@ def mode_bi_rules(phase):
         table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, ruleid))
         table.cell(_("Parameters"), " ".join(rule["params"]))
         table.cell(_("Title"), rule["title"])
-        table.cell(_("Aggregation"), rule["aggregation"])
+        table.cell(_("Aggregation"), rule["aggregation"][0] + "/" + "/".join(map(str, rule["aggregation"][1])))
         table.cell(_("Nodes"), len(rule["nodes"]), css="number")
         table.cell(_("Usages"), num_references, css="number")
         table.cell(_("Comment"), rule.get("comment", ""))
@@ -11317,14 +11317,14 @@ def count_bi_rule_references(aggregations, aggregation_rules, ruleid):
 # that we can replace back after writing the BI-Rules out
 # with pprint.pformat
 bi_constants = {
-  'ALL_HOSTS'       : 'f41e728b-0bce-40dc-82ea-51091d034fc3',
-  'HOST_STATE'      : '7e521edf-122c-4013-b135-669e2673bcfa',
-  'HIDDEN'          : '87c5fea7-d8fd-4ccf-b3ac-72c3d048cd3b',
-  'FOREACH_HOST'    : '907b2cdd-07ac-4439-bb4e-1f16eddfdb27',
-  'FOREACH_CHILD'   : 'd6b000f4-ba42-4638-a5f8-2d07f33940de',
-  'FOREACH_PARENT'  : 'a18f5691-c929-420c-9ee2-bcf2bd358319',
-  'FOREACH_SERVICE' : 'a18f5691-c929-420c-9ee2-bcf2bd358319',
-  'REMAINING'       : '8f716937-de9c-44b2-bf9a-ec6f6e1d820e',
+  'ALL_HOSTS'       : 'ALL_HOSTS-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'HOST_STATE'      : 'HOST_STATE-7e521edf-122c-4013-b135-669e2673bcfa',
+  'HIDDEN'          : 'HIDDEN-87c5fea7-d8fd-4ccf-b3ac-72c3d048cd3b',
+  'FOREACH_HOST'    : 'FOREACH_HOST-907b2cdd-07ac-4439-bb4e-1f16eddfdb27',
+  'FOREACH_CHILD'   : 'FOREACH_CHILD-d6b000f4-ba42-4638-a5f8-2d07f33940de',
+  'FOREACH_PARENT'  : 'FOREACH_PARENT-a18f5691-c929-420c-9ee2-bcf2bd358319',
+  'FOREACH_SERVICE' : 'FOREACH_SERVICE-a18f5691-c929-420c-9ee2-bcf2bd358319',
+  'REMAINING'       : 'REMAINING-8f716937-de9c-44b2-bf9a-ec6f6e1d820e',
 }
 
 # returns aggregations, aggregation_rules
@@ -11341,13 +11341,7 @@ def load_bi_rules():
         execfile(filename, vars, vars)
         # Convert rules from old-style tuples to new-style dicts
         for ruleid, rule in vars["aggregation_rules"].items():
-            if type(rule) == tuple:
-                vars["aggregation_rules"][ruleid] = {
-                    "title"       : rule[0],
-                    "params"      : rule[1],
-                    "aggregation" : rule[2],
-                    "nodes"       : rule[3],
-                }
+            vars["aggregation_rules"][ruleid] = convert_rule_from_bi(rule)
         return vars["aggregations"], vars["aggregation_rules"]
 
     except Exception, e:
@@ -11371,6 +11365,7 @@ def save_bi_rules(aggregations, aggregation_rules):
     out = create_user_file(multisite_dir + "bi.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     for ruleid, rule in aggregation_rules.items():
+        rule = convert_rule_to_bi(rule)
         out.write('aggregation_rules["%s"] = %s\n\n' % 
                 ( ruleid, replace_constants(pprint.pformat(rule, width=50))))
     out.write('\n')
@@ -11378,6 +11373,95 @@ def save_bi_rules(aggregations, aggregation_rules):
             replace_constants(pprint.pformat(aggregations)))
 
 bi_aggregation_functions = {}
+
+# Make some conversions so that the format of the
+# valuespecs is matched
+def convert_rule_from_bi(rule):
+    if type(rule) == tuple:
+        rule = {
+            "title"       : rule[0],
+            "params"      : rule[1],
+            "aggregation" : rule[2],
+            "nodes"       : rule[3],
+        }
+    crule = {}
+    crule.update(rule)
+    crule["nodes"] = map(convert_node_from_bi, rule["nodes"])
+    parts = rule["aggregation"].split("!")
+    crule["aggregation"] = (parts[0], tuple(map(saveint, parts[1:])))
+    return crule
+    
+def convert_rule_to_bi(rule):
+    brule = {}
+    brule.update(rule)
+    brule["nodes"] = map(convert_node_to_bi, rule["nodes"])
+    brule["aggregation"] = "!".join(
+                [ rule["aggregation"][0] ] + map(str, rule["aggregation"][1]))
+    return brule
+
+# Convert node-Tuple into format used by CascadingDropdown
+def convert_node_from_bi(node):
+    if len(node) == 2:
+        if type(node[1]) == list:
+            return ("call", node)
+        elif node[1] == bi_constants['HOST_STATE']:
+            return ("host", (node[0],))
+        elif node[1] == bi_constants['REMAINING']:
+            return ("remaining", (node[0],))
+        else:
+            return ("service", node)
+
+    else: # FOREACH_...
+
+        if type(node[1]) == list:
+            tags = node[1]
+            node = node[0:1] + node[2:]
+        else:
+            tags = []
+        spec = node[1]
+        if spec == bi_constants['ALL_HOSTS']:
+            spec = None
+        if node[0] == bi_constants['FOREACH_SERVICE']:
+            service = node[2]
+            subnode = convert_node_from_bi(node[3:])
+            return ("foreach_service", (tags, spec, service, subnode))
+        else:
+            subnode = convert_node_from_bi(node[2:])
+            if node[0] == bi_constants['FOREACH_HOST']:
+                what = "host"
+            elif node[0] == bi_constants['FOREACH_CHILD']:
+                what = "child"
+            elif node[0] == bi_constants['FOREACH_PARENT']:
+                what = "parent"
+            return ("foreach_host", (what, tags, spec, subnode))
+
+
+def convert_node_to_bi(node):
+    if node[0] == "call":
+        return node[1]
+    elif node[0] == "host":
+        return (node[1][0], bi_constants['HOST_STATE'])
+    elif node[0] == "remaining":
+        return (node[1][0], bi_constants['REMAINING'])
+    elif node[0] == "service":
+        return node[1]
+    elif node[0] == "foreach_host":
+        what = node[1][0]
+        tags = node[1][1]
+        if node[1][2]:
+            spec = node[1][2]
+        else:
+            spec = bi_constants['ALL_HOSTS']
+        return (bi_constants["FOREACH_" + what.upper()], tags, spec) + convert_node_to_bi(node[1][3])
+    elif node[0] == "foreach_service":
+        tags = node[1][0]
+        if node[1][1]:
+            spec = node[1][1]
+        else:
+            spec = bi_constants['ALL_HOSTS']
+        service = node[1][2]
+        return (bi_constants["FOREACH_SERVICE"], tags, spec, service) + convert_node_to_bi(node[1][3])
+
 
 def mode_bi_edit_rule(phase):
     ruleid = html.var("id")
@@ -11401,9 +11485,8 @@ def mode_bi_edit_rule(phase):
            for (key, rule) 
            in aggregation_rules.items() ]
 
-    vs_bi_node = CascadingDropdown(
-       choices = [
-          ( "host", _("State a host"),
+    vs_bi_node_simplechoices = [
+          ( "host", _("State of a host"),
              Tuple(
                  elements = [
                     TextUnicode(title = _("Host (regex):"), allow_empty = False),
@@ -11417,20 +11500,92 @@ def mode_bi_edit_rule(phase):
                 ]
             ),
           ),
-          ( "rule", _("Call a Rule"),
+          ( "remaining", _("State of remaining services"),
+             Tuple(
+                 elements = [
+                    TextUnicode(title = _("Host (regex):"), allow_empty = False),
+                 ])
+          ),
+          ( "call", _("Call a Rule"),
             Tuple(
                 elements = [
                     DropdownChoice(
-                        title = _("Rule"),
+                        title = _("Rule:"),
                         choices = rule_choices,
                     ),
                     ListOfStrings(
-                        title = _("Arguments"),
+                        orientation = "horizontal",
+                        size = 12,
+                        title = _("Arguments:"),
                     ),
                 ]
             ),
          ),
-         ( "remaining", _("Alle Remaining Services of a host") ),
+    ]
+
+    vs_bi_node = CascadingDropdown(
+       choices = vs_bi_node_simplechoices + [
+          ( "foreach_host", _("Create nodes based on a host search"), 
+             Tuple(
+                 elements = [
+                    DropdownChoice(
+                        title = _("Refer to:"),
+                        choices = [
+                            ( 'host',   _("The found hosts themselves") ),
+                            ( 'child',  _("The found hosts' childs") ),
+                            ( 'parent', _("The found hosts' parents") ),
+                        ]
+                    ),
+                    ListOfStrings(
+                        title = _("Host Tags:"),
+                        orientation = "horizontal",
+                        size = 10,
+                    ),
+                    OptionalDropdownChoice(
+                        title = _("Host Name:"),
+                        choices = [ 
+                            ( None, _("All Hosts")),
+                        ],
+                        explicit = TextAscii(),
+                        otherlabel = _("Regex for host name"),
+                        default_value = None,
+                    ),
+                    CascadingDropdown(
+                        title = _("Nodes to create:"),
+                        choices = vs_bi_node_simplechoices
+                    ),
+                 ]
+            )
+          ),
+          ( "foreach_service", _("Create nodes based on a service search"), 
+             Tuple(
+                 elements = [
+                    ListOfStrings(
+                        title = _("Host Tags:"),
+                        orientation = "horizontal",
+                        size = 10,
+                    ),
+                    OptionalDropdownChoice(
+                        title = _("Host Name:"),
+                        choices = [ 
+                            ( None, _("All Hosts")),
+                        ],
+                        explicit = TextAscii(),
+                        otherlabel = _("Regex for host name"),
+                        default_value = None,
+                    ),
+                    TextAscii(
+                        title = _("Service Regex:"),
+                        help = _("Subexpressions enclosed in <tt>(</tt> and <tt>)</tt> will be available "
+                                 "as arguments <tt>$2$</tt>, <tt>$3$</tt>, etc."),
+                    ),
+                    CascadingDropdown(
+                        title = _("Nodes to create:"),
+                        choices = vs_bi_node_simplechoices
+                    ),
+                 ]
+            )
+          )
        ]
     )
     
@@ -11516,35 +11671,30 @@ def mode_bi_edit_rule(phase):
 
 
     if phase == "action":
-        new_rule = vs_bi_rule.from_html_vars('rule')
-        vs_bi_rule.validate_value(new_rule, 'rule')
-        new_rule["aggregation"] = "!".join(
-                [ new_rule["aggregation"][0] ] + map(str, new_rule["aggregation"][1]))
-        if new:
-            ruleid = new_rule["id"]
-        if new and ruleid in aggregation_rules:
-            raise MKUserError('rule_p_id', 
-                _("There is already a rule with the id <b>%s</b>" % ruleid))
-        if new:
-            del new_rule["id"]
-            aggregation_rules[ruleid] = new_rule
-            log_audit(None, "bi-new-rule", _("Create new BI rule %s") % ruleid)
-        else:
-            aggregation_rules[ruleid].update(new_rule)
-            log_audit(None, "bi-edit-rule", _("Modified BI rule %s") % ruleid)
+        if html.check_transaction():
+            new_rule = vs_bi_rule.from_html_vars('rule')
+            vs_bi_rule.validate_value(new_rule, 'rule')
+            if new:
+                ruleid = new_rule["id"]
 
-        save_bi_rules(aggregations, aggregation_rules)
+            if new and ruleid in aggregation_rules:
+                raise MKUserError('rule_p_id', 
+                    _("There is already a rule with the id <b>%s</b>" % ruleid))
+            if new:
+                del new_rule["id"]
+                aggregation_rules[ruleid] = new_rule
+                log_audit(None, "bi-new-rule", _("Create new BI rule %s") % ruleid)
+            else:
+                aggregation_rules[ruleid].update(new_rule)
+                log_audit(None, "bi-edit-rule", _("Modified BI rule %s") % ruleid)
+
+            save_bi_rules(aggregations, aggregation_rules)
         return "bi_rules"
-
 
     if new:
         rule = {}
     else:
         rule = aggregation_rules[ruleid]
-        # Convert aggregation function description from "worst!2!1"
-        # into typed tuple ("worst", (2,1))
-        parts = rule["aggregation"].split("!")
-        rule["aggregation"] = (parts[0], tuple(map(saveint, parts[1:])))
 
     html.begin_form("birule")
     vs_bi_rule.render_input("rule", rule)

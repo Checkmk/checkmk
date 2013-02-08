@@ -541,7 +541,12 @@ class Filename(TextAscii):
 class ListOfStrings(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._valuespec = kwargs.get("valuespec", TextAscii())
+        if "valuespec" in kwargs:
+            self._valuespec = kwargs.get("valuespec")
+        elif "size" in kwargs:
+            self._valuespec = TextAscii(size=kwargs["size"])
+        else:
+            self._valuespec = TextAscii()
         self._vertical = kwargs.get("orientation", "vertical") == "vertical"
         self._allow_empty = kwargs.get("allow_empty", True)
 

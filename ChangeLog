@@ -49,6 +49,8 @@
     * The ldap member attribute of groups is now configruable via WATO
     * Added option to enforce lower User-IDs during LDAP sync
     * Improved debug logging of ldap syncs (Now writing duration of queries to log)
+    * Displaying date/time of comments in comment icon hover menu (Please
+      note: You need to update your livestatus to current version to make this work)
 
     BI:
     * Use Ajax to delay rendering of invisible parts of the tree (this

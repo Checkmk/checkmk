@@ -1025,3 +1025,57 @@ table.multisite_conn_method td {
 table.multisite_conn_method td input {
     height: 18px;
 }
+
+/* BI Editor */
+
+.wato .biruletree div {
+    float: none;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.wato .biruletree .birule {
+    background-color: #ccc;
+    border: 1px solid #666;
+    box-shadow: 0.5px 0.5px 2px #000;
+    color: black;
+    width: 150px;
+    border-radius: 4px;
+    padding-left: 4px;
+    height: 20px;
+    margin-bottom: 3px;
+    padding-top: 2px;
+    margin-top: 5px;
+}
+
+.wato .biruletree .birule img {
+    position: relative;
+    top: -1px;
+}
+
+
+.wato .biruletree .birule:hover {
+    background-color: #eee;
+}
+
+.wato .biruletree .birule a {
+    color: black;
+    text-decoration: none;
+    display: block;
+}
+
+.wato .biruletree .arrow {
+    border-style: none none solid solid;
+    border-color: #134;
+    border-width: 2px;
+    margin-left: 40px;
+    margin-right: 3px;
+    width: 50px;
+    height: 16px;
+    border-radius: 0px 10px;
+}
+
+.wato .biruletree .node {
+    margin-top: 0px;
+}
+

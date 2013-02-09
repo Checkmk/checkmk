@@ -11279,7 +11279,7 @@ def mode_bi_rules(phase):
     aggregations, aggregation_rules = load_bi_rules()
 
     if phase == "buttons":
-        global_buttons()
+        html.context_button(_("Main Menu"), make_link([("mode", "main")]), "home")
         if aggregation_rules:
             html.context_button(_("New Aggregation"), 
                       make_link([("mode", "bi_edit_aggregation")]), "new")
@@ -11343,6 +11343,9 @@ def mode_bi_rules(phase):
         edit_url = make_link([("mode", "bi_edit_rule"), ("id", ruleid)]) 
         html.icon_button(edit_url, _("Edit this rule"), "edit")
         aggr_refs, rule_refs = count_bi_rule_references(aggregations, aggregation_rules, ruleid)
+        if rule_refs == 0:
+            tree_url = make_link([("mode", "bi_rule_tree"), ("id", ruleid)]) 
+            html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"), "aggr")
         refs = aggr_refs + rule_refs
         if refs == 0:
             delete_url = make_action_link([("mode", "bi_rules"), ("_del_rule", ruleid)])
@@ -11355,6 +11358,46 @@ def mode_bi_rules(phase):
         table.cell(_("Usages"), refs, css="number")
         table.cell(_("Comment"), rule.get("comment", ""))
     table.end()
+
+def mode_bi_rule_tree(phase):
+    ruleid = html.var("id")
+
+    if phase == "title":
+        return _("BI - Rule Tree of") + " " + ruleid
+    
+    aggregations, aggregation_rules = load_bi_rules()
+
+    if phase == "buttons":
+        html.context_button(_("Main Menu"), make_link([("mode", "main")]), "home")
+        html.context_button(_("Back"), make_link([("mode", "bi_rules")]), "back")
+        return
+
+    if phase == "action":
+        return
+    
+    aggr_refs, rule_refs = count_bi_rule_references(aggregations, aggregation_rules, ruleid)
+    if rule_refs == 0:
+        render_rule_tree(aggregation_rules, ruleid)
+
+def render_rule_tree(aggregation_rules, ruleid):
+    rule = aggregation_rules[ruleid]
+    html.write('<div class=biruletree><div class=birule>')
+    edit_url = make_link([("mode", "bi_edit_rule"), ("id", ruleid)]) 
+    html.write('<a href="%s">' % edit_url)
+    html.icon(rule.get("comment", rule["title"]), "aggr")
+    html.write(" " + ruleid + "</a>")
+    html.write('</div>')
+    for node in rule["nodes"]:
+        r = bi_called_rule(node)
+        if r:
+            subnode_id = r[0]
+            html.write('<br><div class=arrow></div>')
+            html.write('<div class=node>')
+            render_rule_tree(aggregation_rules, subnode_id)
+            html.write('</div>')
+    html.write('</div>')
+
+
 
 def bi_called_rule(node):
     if node[0] == "call":
@@ -11492,7 +11535,8 @@ def convert_rule_from_bi(rule, ruleid):
 def convert_rule_to_bi(rule):
     brule = {}
     brule.update(rule)
-    del brule["id"]
+    if "id" in brule:
+        del brule["id"]
     brule["nodes"] = map(convert_node_to_bi, rule["nodes"])
     brule["aggregation"] = "!".join(
                 [ rule["aggregation"][0] ] + map(str, rule["aggregation"][1]))
@@ -12670,6 +12714,7 @@ modes = {
    "edit_auxtag"        : (["hosttags"], mode_edit_auxtag),
    "pattern_editor"     : (["pattern_editor"], mode_pattern_editor),
    "bi_rules"           : (["bi_rules"], mode_bi_rules),
+   "bi_rule_tree"       : (["bi_rules"], mode_bi_rule_tree),
    "bi_edit_rule"       : (["bi_rules"], mode_bi_edit_rule),
    "bi_edit_aggregation": (["bi_rules"], mode_bi_edit_aggregation),
 }

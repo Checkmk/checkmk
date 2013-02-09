@@ -85,15 +85,6 @@ aggregation_rules["networking"] = (
   ]
 )
 
-aggregation_rules["nic"] = (
-  "NIC $NIC$", 
-  [ "HOST", "NIC" ],
-  "worst",
-  [
-      ( "$HOST$", "NIC $NIC$" ),
-  ]
-)
-
 aggregation_rules["checkmk"] = (
   "Check_MK", 
   [ "HOST" ],

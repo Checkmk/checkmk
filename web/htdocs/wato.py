@@ -10472,7 +10472,10 @@ def mode_edit_rule(phase, new = False):
     html.end_form()
 
 # Render HTML input fields for editing a tag based condition
-def render_condition_editor(tag_specs):
+def render_condition_editor(tag_specs, varprefix=""):
+    if varprefix:
+        varprefix += "_"
+
     if len(config.wato_aux_tags) + len(config.wato_host_tags) == 0:
         html.write(_("You have not configured any <a href=\"wato.py?mode=hosttags\">host tags</a>."))
         return
@@ -10504,18 +10507,20 @@ def render_condition_editor(tag_specs):
     # of div that is switched visible by is/isnot
     def tag_condition_dropdown(tagtype, deflt, id):
         html.write("<td>")
-        html.select(tagtype + "_" + id, [
+        html.select(varprefix + tagtype + "_" + id, [
             ("ignore", _("ignore")),
             ("is",     _("is")),
             ("isnot",  _("isnot"))], deflt,
-            onchange="valuespec_toggle_dropdownn(this, 'tag_sel_%s');" % id)
+            onchange="valuespec_toggle_dropdownn(this, '%stag_sel_%s');" % \
+                    (varprefix, id)
+        )
         html.write("</td><td class=\"tag_sel\">")
         if html.form_submitted():
             div_is_open = html.var(tagtype + "_" + id, "ignore") != "ignore"
         else:
             div_is_open = deflt != "ignore"
-        html.write('<div id="tag_sel_%s" style="%s">' % (
-            id, not div_is_open and "display: none;" or ""))
+        html.write('<div id="%stag_sel_%s" style="%s">' % (
+            varprefix, id, not div_is_open and "display: none;" or ""))
 
     # Show main tags
     html.write("<table>")
@@ -10525,7 +10530,7 @@ def render_condition_editor(tag_specs):
             html.write("<tr><td>%s: &nbsp;</td>" % title)
             default_tag, deflt = current_tag_setting(choices)
             tag_condition_dropdown("tag", deflt, id)
-            html.select("tagvalue_" + id, 
+            html.select(varprefix + "tagvalue_" + id, 
                 [t[0:2] for t in choices if t[0] != None], deflt=default_tag)
             html.write("</div>")
             html.write("</td></tr>")
@@ -10545,13 +10550,15 @@ def render_condition_editor(tag_specs):
 
 
 # Retrieve current tag condition settings from HTML variables
-def get_tag_conditions():
+def get_tag_conditions(varprefix=""):
+    if varprefix:
+        varprefix += "_"
     # Main tags
     tag_list = []
     for entry in config.wato_host_tags:
         id, title, tags = entry[:3]
-        mode = html.var("tag_" + id)
-        tagvalue = html.var("tagvalue_" + id)
+        mode = html.var(varprefix + "tag_" + id)
+        tagvalue = html.var(varprefix + "tagvalue_" + id)
         if mode == "is":
             tag_list.append(tagvalue)
         elif mode == "isnot":
@@ -10559,7 +10566,7 @@ def get_tag_conditions():
 
     # Auxiliary tags
     for id, title in config.wato_aux_tags:
-        mode = html.var("auxtag_" + id)
+        mode = html.var(varprefix + "auxtag_" + id)
         if mode == "is":
             tag_list.append(id)
         elif mode == "isnot":
@@ -11408,14 +11415,14 @@ def bi_called_rule(node):
         return node[1][0], _("Explicit call ") + args
     elif node[0] == "foreach_host":
         subnode = node[1][-1]
-        # if subnode[0] == 'call':  # MUST always be 'call'
-        if node[1][0] == 'host':
-            info = _("Called for all hosts...")
-        elif node[1][0] == 'child':
-            info = _("Called for each child of...")
-        else:
-            info = _("Called for each parent of...")
-        return subnode[1][0], info 
+        if subnode[0] == 'call':
+            if node[1][0] == 'host':
+                info = _("Called for all hosts...")
+            elif node[1][0] == 'child':
+                info = _("Called for each child of...")
+            else:
+                info = _("Called for each parent of...")
+            return subnode[1][0], info 
     elif node[0] == "foreach_service":
         subnode = node[1][-1]
         return subnode[1][0], _("Called for each service...")
@@ -11447,6 +11454,43 @@ def bi_rule_uses_rule(aggregation_rules, rule, ruleid):
             elif bi_rule_uses_rule(aggregation_rules, aggregation_rules[ru_id], ruleid):
                 return True
     return False
+
+
+# ValueSpec for editing a tag-condition
+class HostTagCondition(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+
+    def render_input(self, varprefix, value):
+        render_condition_editor(value, varprefix)
+
+    def from_html_vars(self, varprefix):
+        return get_tag_conditions(varprefix=varprefix)
+
+    def canonical_value(self):
+        return []
+
+    def value_to_text(self, value):
+        return "|".join(value)
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) != list:
+            raise MKUserError(varprefix, _("The list of host tags must be a list, but "
+                                           "is %r") % type(value))
+        for x in value:
+            if type(x) != str:
+                raise MKUserError(varprefix, _("The list of host tags must only contain strings "
+                                           "but also contains %r") % x)
+
+
+
+    def validate_value(self, value, varprefix):
+        pass
+
+
+
+
+    
 
 # We need to replace the BI constants internally with something
 # that we can replace back after writing the BI-Rules out
@@ -11691,10 +11735,8 @@ def declare_bi_valuespecs(aggregation_rules):
                             ( 'parent', _("The found hosts' parents") ),
                         ]
                     ),
-                    ListOfStrings(
-                        title = _("Host Tags:"),
-                        orientation = "horizontal",
-                        size = 10,
+                    HostTagCondition(
+                        title = _("Host Tags:")
                     ),
                     OptionalDropdownChoice(
                         title = _("Host Name:"),
@@ -11715,10 +11757,8 @@ def declare_bi_valuespecs(aggregation_rules):
           ( "foreach_service", _("Create nodes based on a service search"), 
              Tuple(
                  elements = [
-                    ListOfStrings(
-                        title = _("Host Tags:"),
-                        orientation = "horizontal",
-                        size = 10,
+                    HostTagCondition(
+                        title = _("Host Tags:")
                     ),
                     OptionalDropdownChoice(
                         title = _("Host Name:"),
@@ -11956,11 +11996,6 @@ def mode_bi_edit_rule(phase):
     else:
         html.set_focus("rule_p_title")
     html.end_form()
-
-# TODO BI:
-# - Host Tags richtig editieren, nicht mit ListOfStrings.
-#   Dazu ein ValueSpec machen und dies dann auch im Regel-
-#   editor verwenden.
 
 #.
 #   .-Hooks-&-API----------------------------------------------------------.

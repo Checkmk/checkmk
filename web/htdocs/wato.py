@@ -11919,7 +11919,7 @@ def mode_bi_edit_rule(phase):
     if phase == "action":
         if html.check_transaction():
             new_rule = vs_rule.from_html_vars('rule')
-            vs_main.validate_value(new_rule, 'rule')
+            vs_rule.validate_value(new_rule, 'rule')
             if new:
                 ruleid = new_rule["id"]
 
@@ -11932,6 +11932,10 @@ def mode_bi_edit_rule(phase):
                 log_audit(None, "bi-new-rule", _("Create new BI rule %s") % ruleid)
             else:
                 aggregation_rules[ruleid].update(new_rule)
+                new_rule["id"] = ruleid
+                if bi_rule_uses_rule(aggregation_rules, new_rule, new_rule["id"]):
+                    raise MKUserError(None, _("There is a cycle in your rules. This rule calls itself - "
+                                              "either directly or indirectly."))
                 log_audit(None, "bi-edit-rule", _("Modified BI rule %s") % ruleid)
 
             save_bi_rules(aggregations, aggregation_rules)
@@ -11954,9 +11958,6 @@ def mode_bi_edit_rule(phase):
     html.end_form()
 
 # TODO BI:
-# - Prüfung auf Zyklen in den Regeln. Bzw. die Auswahlbox
-#   darf nur Regeln zeigen, die die aktuelle Regel nicht
-#   brauchen.
 # - Host Tags richtig editieren, nicht mit ListOfStrings.
 #   Dazu ein ValueSpec machen und dies dann auch im Regel-
 #   editor verwenden.

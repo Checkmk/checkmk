@@ -11626,7 +11626,7 @@ def convert_aggregation_to_bi(aggr):
 
 # Not in global context, so that l10n will happen again
 def declare_bi_valuespecs(aggregation_rules):
-    global vs_aggregation
+    global vs_aggregation, aggregation_choices, vs_bi_node
 
     rule_choices = [ 
            (key, key + " - " + rule["title"]) 
@@ -11801,7 +11801,6 @@ def mode_bi_edit_aggregation(phase):
     if phase == "action":
         if html.check_transaction():
             new_aggr = vs_aggregation.from_html_vars('aggr')
-            html.debug(new_aggr)
             vs_aggregation.validate_value(new_aggr, 'aggr')
             if len(new_aggr["groups"]) == 0:
                 raise MKUserError('rule_p_groups_0', _("Please define at least one aggregation group"))
@@ -11830,21 +11829,12 @@ def mode_bi_edit_aggregation(phase):
 def mode_bi_edit_rule(phase):
     ruleid = html.var("id") # In case of Aggregations: index in list
     new = not ruleid
-    what = html.var("what", "rule")
-    if what == "aggregation":
-        ruleid = int(ruleid)
 
     if phase == "title":
-        if what == "rule":
-            if new:
-                return _("BI - Create New Rule")
-            else:
-                return _("BI - Edit Rule") + " " + ruleid
+        if new:
+            return _("BI - Create New Rule")
         else:
-            if new:
-                return _("BI - Create New Aggregation")
-            else:
-                return _("BI - Edit Aggregation")
+            return _("BI - Edit Rule") + " " + ruleid
 
     
     elif phase == "buttons":
@@ -11852,278 +11842,112 @@ def mode_bi_edit_rule(phase):
         return
 
     aggregations, aggregation_rules = load_bi_rules()
+    declare_bi_valuespecs(aggregation_rules)
 
-    # Not in global context, so that l10n will happen again
-    rule_choices = [ 
-           (key, key + " - " + rule["title"]) 
-           for (key, rule) 
-           in aggregation_rules.items() ]
+    elements = [
+        ( "title", 
+           TextUnicode(
+               title = _("Rule Title"),
+               help = _("The Description of the aggregation node. This will be "
+                        "displayed as the name of the node in the BI view. For "
+                        "top level nodes this title must be unique. You can insert "
+                        "rule parameters like <tt>$FOO$</tt> or <tt>$BAR$</tt> here."),
+               allow_empty = False,
+               size = 64,
+           ),
+        ),
 
-
-    vs_call_rule = Tuple(
-        elements = [
-            DropdownChoice(
-                title = _("Rule:"),
-                choices = rule_choices,
-            ),
-            ListOfStrings(
-                orientation = "horizontal",
+        ( "comment", 
+           TextUnicode(
+               title = _("Comment"),
+               help = _("An arbitrary comment of this rule for you."),
+               size = 64,
+           ),
+        ),
+        ( "params",
+          ListOfStrings(
+              title = _("Parameters"),
+              orientation = "horizontal",
+              valuespec = TextAscii(
                 size = 12,
-                title = _("Arguments:"),
-            ),
+                regex = '[A-Za-z_][A-Za-z0-9_]*',
+                regex_error = _("Parameters must contain only A-Z, a-z, 0-9 and _ "
+                                "and must not begin with a digit."),
+              )
+          )
+        ),
+        ( "aggregation",
+          CascadingDropdown(
+            title = _("Aggregation Function"),
+            html_separator = "",
+            choices = aggregation_choices,
+          )
+        ),
+        ( "nodes",
+          ListOf(
+              vs_bi_node,
+              title = _("Nodes that are aggregated by this rule"),
+          ),
+        ),
+    ]
+
+
+    if new:
+        elements = [
+        ( "id",
+          TextAscii(
+              title = _("Unique Rule ID"),
+              help = _("The ID of the rule must be a unique text."),
+              allow_empty = False,
+              size = 12,
+          ),
+        )] + elements
+
+    vs_rule = Dictionary(
+        title = _("Rule Properties"),
+        optional_keys = False,
+        render = "form",
+        elements = elements,
+        headers = [
+            ( _("General Properties"), [ "id", "title", "comment", "params" ]),
+            ( _("Aggregation Function"), [ "aggregation" ], ),
+            ( _("Nodes"),              [ "nodes" ] ),
         ]
     )
-
-    vs_bi_node_simplechoices = [
-          ( "host", _("State of a host"),
-             Tuple(
-                 elements = [
-                    TextUnicode(title = _("Host (regex):"), allow_empty = False),
-                 ])
-          ),
-          ( "service", _("State of a service"),
-            Tuple(
-                elements = [
-                    TextUnicode(title = _("Host (regex):"), allow_empty = False),
-                    TextUnicode(title = _("Service (regex):")),
-                ]
-            ),
-          ),
-          ( "remaining", _("State of remaining services"),
-             Tuple(
-                 elements = [
-                    TextUnicode(title = _("Host (regex):"), allow_empty = False),
-                 ])
-          ),
-          ( "call", _("Call a Rule"), vs_call_rule ),
-    ]
-
-    vs_bi_node_foreach_choices = [
-      ( "foreach_host", _("Create nodes based on a host search"), 
-         Tuple(
-             elements = [
-                DropdownChoice(
-                    title = _("Refer to:"),
-                    choices = [
-                        ( 'host',   _("The found hosts themselves") ),
-                        ( 'child',  _("The found hosts' childs") ),
-                        ( 'parent', _("The found hosts' parents") ),
-                    ]
-                ),
-                ListOfStrings(
-                    title = _("Host Tags:"),
-                    orientation = "horizontal",
-                    size = 10,
-                ),
-                OptionalDropdownChoice(
-                    title = _("Host Name:"),
-                    choices = [ 
-                        ( None, _("All Hosts")),
-                    ],
-                    explicit = TextAscii(),
-                    otherlabel = _("Regex for host name"),
-                    default_value = None,
-                ),
-                CascadingDropdown(
-                    title = _("Nodes to create:"),
-                    choices = vs_bi_node_simplechoices
-                ),
-             ]
-        )
-      ),
-      ( "foreach_service", _("Create nodes based on a service search"), 
-         Tuple(
-             elements = [
-                ListOfStrings(
-                    title = _("Host Tags:"),
-                    orientation = "horizontal",
-                    size = 10,
-                ),
-                OptionalDropdownChoice(
-                    title = _("Host Name:"),
-                    choices = [ 
-                        ( None, _("All Hosts")),
-                    ],
-                    explicit = TextAscii(),
-                    otherlabel = _("Regex for host name"),
-                    default_value = None,
-                ),
-                TextAscii(
-                    title = _("Service Regex:"),
-                    help = _("Subexpressions enclosed in <tt>(</tt> and <tt>)</tt> will be available "
-                             "as arguments <tt>$2$</tt>, <tt>$3$</tt>, etc."),
-                ),
-                CascadingDropdown(
-                    title = _("Nodes to create:"),
-                    choices = vs_bi_node_simplechoices
-                ),
-             ]
-        )
-      )
-    ]
-
-    vs_aggr_node_choices = [ ( "call", _("Call a Rule"), vs_call_rule ) ] + \
-         vs_bi_node_foreach_choices
-
-    vs_bi_node = CascadingDropdown(
-       choices = vs_bi_node_simplechoices + vs_bi_node_foreach_choices
-    ) 
-
-    aggregation_choices = []
-    for aid, ainfo in bi_aggregation_functions.items():
-        aggregation_choices.append((
-            aid,
-            ainfo["title"],
-            ainfo["valuespec"],
-        ))
-
-    if what == "aggregation":
-        elements = [
-            ( "groups",
-              ListOfStrings(
-                  title = _("Aggregation Groups"),
-                  help = _("List of groups in which to show this aggregation. Usually "
-                           "each aggregation is only in one group. Group names are arbitrary "
-                           "texts. At least one group is mandatory."),
-                  valuespec = TextUnicode(),
-              ),
-            ),
-            ( "node",
-              CascadingDropdown(
-                      title = _("Rule to call"),
-                      choices = vs_aggr_node_choices
-              )
-            ),
-        ]
-            
-    else:
-        elements = [
-            ( "title", 
-               TextUnicode(
-                   title = _("Rule Title"),
-                   help = _("The Description of the aggregation node. This will be "
-                            "displayed as the name of the node in the BI view. For "
-                            "top level nodes this title must be unique. You can insert "
-                            "rule parameters like <tt>$FOO$</tt> or <tt>$BAR$</tt> here."),
-                   allow_empty = False,
-                   size = 64,
-               ),
-            ),
-
-            ( "comment", 
-               TextUnicode(
-                   title = _("Comment"),
-                   help = _("An arbitrary comment of this rule for you."),
-                   size = 64,
-               ),
-            ),
-            ( "params",
-              ListOfStrings(
-                  title = _("Parameters"),
-                  orientation = "horizontal",
-                  valuespec = TextAscii(
-                    size = 12,
-                    regex = '[A-Za-z_][A-Za-z0-9_]*',
-                    regex_error = _("Parameters must contain only A-Z, a-z, 0-9 and _ "
-                                    "and must not begin with a digit."),
-                  )
-              )
-            ),
-            ( "aggregation",
-              CascadingDropdown(
-                title = _("Aggregation Function"),
-                html_separator = "",
-                separator = "OEWIFJ",
-                choices = aggregation_choices,
-              )
-            ),
-            ( "nodes",
-              ListOf(
-                  vs_bi_node,
-                  title = _("Nodes that are aggregated by this rule"),
-              ),
-            ),
-        ]
-
-
-        if new:
-            elements = [
-            ( "id",
-              TextAscii(
-                  title = _("Unique Rule ID"),
-                  help = _("The ID of the rule must be a unique text."),
-                  allow_empty = False,
-                  size = 12,
-              ),
-            )] + elements
-
-    if what == "aggregation":
-        vs_main = Dictionary(
-            title = _("Aggregation Properties"),
-            optional_keys = False,
-            render = "form",
-            elements = elements,
-        )
-    else:
-        vs_main = Dictionary(
-            title = _("Rule Properties"),
-            optional_keys = False,
-            render = "form",
-            elements = elements,
-            headers = [
-                ( _("General Properties"), [ "id", "title", "comment", "params" ]),
-                ( _("Aggregation Function"), [ "aggregation" ], ),
-                ( _("Nodes"),              [ "nodes" ] ),
-            ]
-        )
 
 
     if phase == "action":
         if html.check_transaction():
-            new_rule = vs_main.from_html_vars('rule')
+            new_rule = vs_rule.from_html_vars('rule')
             vs_main.validate_value(new_rule, 'rule')
-            if what == "aggregation":
-                if len(new_rule["groups"]) == 0:
-                    raise MKUserError('rule_p_groups_0', _("Please define at least one aggregation group"))
-                if new:
-                    aggregations.append(new_rule)
-                    log_audit(None, "bi-new-aggregation", _("Created new BI aggregation %d") % (len(aggregations)))
-                else:
-                    aggregations[ruleid] = new_rule
-                    log_audit(None, "bi-new-aggregation", _("Modified BI aggregation %d") % (ruleid+1))
-            else:
-                if new:
-                    ruleid = new_rule["id"]
+            if new:
+                ruleid = new_rule["id"]
 
-                if new and ruleid in aggregation_rules:
-                    raise MKUserError('rule_p_id', 
-                        _("There is already a rule with the id <b>%s</b>" % ruleid))
-                if new:
-                    del new_rule["id"]
-                    aggregation_rules[ruleid] = new_rule
-                    log_audit(None, "bi-new-rule", _("Create new BI rule %s") % ruleid)
-                else:
-                    aggregation_rules[ruleid].update(new_rule)
-                    log_audit(None, "bi-edit-rule", _("Modified BI rule %s") % ruleid)
+            if new and ruleid in aggregation_rules:
+                raise MKUserError('rule_p_id', 
+                    _("There is already a rule with the id <b>%s</b>" % ruleid))
+            if new:
+                del new_rule["id"]
+                aggregation_rules[ruleid] = new_rule
+                log_audit(None, "bi-new-rule", _("Create new BI rule %s") % ruleid)
+            else:
+                aggregation_rules[ruleid].update(new_rule)
+                log_audit(None, "bi-edit-rule", _("Modified BI rule %s") % ruleid)
 
             save_bi_rules(aggregations, aggregation_rules)
         return "bi_rules"
 
     if new:
         value = {}
-    elif what == "rule":
-        value = aggregation_rules[ruleid]
     else:
-        value = aggregations[ruleid]
+        value = aggregation_rules[ruleid]
 
     html.begin_form("birule")
-    vs_main.render_input("rule", value)
+    vs_rule.render_input("rule", value)
     forms.end()
     html.hidden_fields()
     html.button("_save", new and _("Create") or _("Save"), "submit")
-    if what == "aggregation":
-        html.set_focus("rule_p_groups_0")
-    elif new:
+    if new:
         html.set_focus("rule_p_id")
     else:
         html.set_focus("rule_p_title")

@@ -45,8 +45,8 @@
 # -24 1638326933 1638326933 average_timer
 # -24 18448 18448 average_base
 # -22 36283 36283 counter
-# -20 17835 17835 counter
-# -18 18448 18448 counter
+# -20 17835 17835 counter                     ----> Disk Reads/sec
+# -18 18448 18448 counter                     ----> Disk Writes/sec
 # -16 1315437056 1315437056 bulk_count
 # -14 672711680 672711680 bulk_count          ----> Disk Read Bytes/sec
 # -12 642725376 642725376 bulk_count          ----> Disk Write Bytes/sec
@@ -66,11 +66,15 @@ def winperf_phydisk_convert(info):
     disks = [ d.split('_')[-1] for d in info[1][2:-1] ]
     for line in info[2:]:
         if line[0] == '-14':
-            disk_reads = [ int(x) / 512 for x in line[1:-2] ]
+            disk_read_bytes  = [ int(x) / 512 for x in line[1:-2] ]
         elif line[0] == '-12':
-            disk_writes = [ int(x) / 512 for x in line[1:-2] ]
+            disk_write_bytes = [ int(x) / 512 for x in line[1:-2] ]
+        elif line[0] == '-20':
+            disk_reads       = [ int(x) for x in line[1:-2] ]
+        elif line[0] == '-18':
+            disk_writes      = [ int(x) for x in line[1:-2] ]
         elif line[0] == '1168': # Average Disk Read Queue Length
-            disk_readq_ctrs = [ int(x) for x in line[1:-2] ]
+            disk_readq_ctrs  = [ int(x) for x in line[1:-2] ]
         elif line[0] == '1170': # Average Disk Read Queue Length
             disk_writeq_ctrs = [ int(x) for x in line[1:-2] ]
 
@@ -78,7 +82,7 @@ def winperf_phydisk_convert(info):
     # information)
     empty = [ -1 for x in disks ]
 
-    return zip(disks, disk_reads, disk_writes, empty, empty, empty, disk_readq_ctrs, disk_writeq_ctrs)
+    return zip(disks, disk_read_bytes, disk_write_bytes, disk_reads, disk_writes, empty, disk_readq_ctrs, disk_writeq_ctrs)
 
 def inventory_winperf_phydisk(info):
     return inventory_diskstat_generic(winperf_phydisk_convert(info))

@@ -43,7 +43,7 @@ def parse_ovs_bonding(info):
     for line in info:
         if line[0][0] == '[':
             bond = line[0][1:-1]
-            bonds[bond] = {}
+            bonds[bond] = {"active" : None}
         elif len(line) == 2:
             left = line[0]
             right = line[1].strip()

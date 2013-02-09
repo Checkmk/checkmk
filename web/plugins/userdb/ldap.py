@@ -84,7 +84,7 @@ ldap_filter_map = {
 
 def ldap_log(s):
     if config.ldap_debug_log is not None:
-        file(config.ldap_debug_log, "a").write('%s\n' % s)
+        file(ldap_replace_macros(config.ldap_debug_log), "a").write('%s\n' % s)
 
 class MKLDAPException(MKGeneralException):
     pass
@@ -167,7 +167,9 @@ def ldap_bind(username, password, catch = True):
     ldap_log('LDAP_BIND %s' % username)
     try:
         ldap_connection.simple_bind_s(username, password)
+        ldap_log('  SUCCESS')
     except ldap.LDAPError, e:
+        ldap_log('  FAILED (%s)' % e)
         if catch:
             raise MKLDAPException(_('Unable to authenticate with LDAP (%s)' % e))
         else:
@@ -187,6 +189,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
         scope = ldap.SCOPE_ONELEVEL
 
     ldap_log('LDAP_SEARCH "%s" "%s" "%s" "%r"' % (base, scope, filt, columns))
+    start_time = time.time()
 
     # Convert all keys to lower case!
     result = []
@@ -210,7 +213,8 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
                                 'incomplete results. You should change the scope of operation '
                                 'within the ldap or adapt the limit settings of the LDAP server.'))
 
-    ldap_log('  RESULT length: %d' % len(result))
+    duration = time.time() - start_time
+    ldap_log('  RESULT length: %d, duration: %0.3f' % (len(result), duration))
     return result
     #return ldap_connection.search_s(base, scope, filter, columns)
     #for dn, obj in ldap_connection.search_s(base, scope, filter, columns):
@@ -246,6 +250,9 @@ def ldap_replace_macros(tmpl):
 def ldap_user_id_attr():
     return config.ldap_userspec.get('user_id', ldap_attr('user_id'))
 
+def ldap_member_attr():
+    return config.ldap_groupspec.get('member', ldap_attr('member'))
+
 def ldap_get_user(username, no_escape = False):
     if username in g_ldap_user_cache:
         return g_ldap_user_cache[username]
@@ -262,6 +269,9 @@ def ldap_get_user(username, no_escape = False):
     if result:
         dn = result[0][0]
         user_id = result[0][1][ldap_user_id_attr()][0]
+
+        if config.ldap_userspec.get('lower_user_ids', False):
+            user_id = user_id.lower()
 
         g_ldap_user_cache[username] = (dn, user_id)
 
@@ -286,6 +296,10 @@ def ldap_get_users(add_filter = None):
             raise MKLDAPException(_('The configured User-ID attribute "%s" does not '
                                     'exist for the user "%s"') % (ldap_user_id_attr(), dn))
         user_id = ldap_user[ldap_user_id_attr()][0]
+
+        if config.ldap_userspec.get('lower_user_ids', False):
+            user_id = user_id.lower()
+
         result[user_id] = ldap_user
 
     return result
@@ -303,7 +317,7 @@ def ldap_user_groups(username, attr = 'cn'):
 
     # Apply configured group ldap filter and only reply with groups
     # having the current user as member
-    filt = '(&%s(%s=%s))' % (ldap_filter('groups'), ldap_attr('member'),
+    filt = '(&%s(%s=%s))' % (ldap_filter('groups'), ldap_member_attr(),
                              ldap.filter.escape_filter_chars(user_dn))
     # First get all groups
     groups_cn = []
@@ -531,7 +545,7 @@ def ldap_list_roles_with_group_dn():
                       "be defined within the scope of the "
                       "<a href=\"wato.py?mode=edit_configvar&varname=ldap_groupspec\">LDAP Group Settings</a>."),
             size  = 80,
-            enforce_suffix = ldap_replace_macros(config.ldap_groupspec['dn']),
+            enforce_suffix = ldap_replace_macros(config.ldap_groupspec.get('dn', '')),
         )))
     return elements
 
@@ -589,6 +603,8 @@ def ldap_sync(add_to_changelog, only_username):
     g_ldap_user_cache = {}
     g_ldap_group_cache = {}
 
+    start_time = time.time()
+
     ldap_connect()
 
     # Unused at the moment, always sync all users
@@ -643,6 +659,9 @@ def ldap_sync(add_to_changelog, only_username):
             wato.log_pending(wato.SYNCRESTART, None, "edit-users",
                  _("LDAP Connector: Modified user %s (Added: %s, Removed: %s, Changed: %s)" %
                     (user_id, ', '.join(added), ', '.join(removed), ', '.join(changed))))
+
+    duration = time.time() - start_time
+    ldap_log('SYNC FINISHED - Duration: %0.3f sec' % duration)
 
     save_users(users)
 

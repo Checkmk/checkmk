@@ -32,13 +32,26 @@
     * if: Inventory settings can now be set host based
     * FIX: lnx_bonding/ovs_bonding: correct definition of bonding.include
     * Add: if check now able to handle interface groups  (if_groups)
+    * Add: New check for DB2 instance memory levels
+    * Add: winperf_phydisk can now output IOPS
     * Add: oracle_tablespace now with flexible warn/crit levels(magic number)
+    
+    Livestatus:
+    * Add: new column in hosts/services table: comments_with_extra_info
+    Adds the entry type and entry time
 
     Multisite:
     * Added comment painter to notification related views
     * Added compatibility code to use hashlib.md5() instead of md5.md5(), which
       is deprecated in python > 2.5 to prevent warning messages in apache error log
+    * Added host filter for "last host state change" and "last host check"
     * FIX: Preventing autocomplete in password fields of "edit profile" dialog
+    * The ldap member attribute of groups is now configruable via WATO
+    * Added option to enforce lower User-IDs during LDAP sync
+    * Improved debug logging of ldap syncs (Now writing duration of queries to log)
+    * Displaying date/time of comments in comment icon hover menu (Please
+      note: You need to update your livestatus to current version to make this work)
+    * FIX: Making "action" context link unclickable during handling actions / confirms
 
     BI:
     * Use Ajax to delay rendering of invisible parts of the tree (this
@@ -57,12 +70,22 @@
       case of distributed WATO setups
     * Added oracle_tablespaces configuration to the application checkgroup
     * FIX: Fixed synchronisation of mkeventd configs in distributed WATO setups
+    * FIX: "Sync & Restart" did not perform restart in distributed WATO setups
+    * FIX: Fixed exception in editing code of ldap group to rule plugin
+    * FIX: Don't execute ldap sync while performing actions on users page
 
     Event Console:
     * Added UNIX socket for sending events to the EC
     * Speed up rule matches in some special cases by factor of 100 and more
     * Init-Script: Improved handling of stale pidfiles
     * Init-Script: Detecting and reporting already running processes
+    * WATO: Added hook to make the mkeventd reload in distributed WATO setups
+      during "activate changes" process
+    * Added hook mkeventd-activate-changes to add custom actions to the mkeventd
+      "activate changes" GUI function
+    * FIX: When a single rule matching raises an exception, the line is now
+      matched agains the following rules instead of being skipped. The
+      exception is logged to mkeventd.log
 
 1.2.1i5:
     Core:

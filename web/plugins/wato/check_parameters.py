@@ -2438,6 +2438,22 @@ checkgroups.append((
 
 checkgroups.append((
     subgroup_applications,
+    "db2_mem",
+    _("Memory levels for DB2 memory usage"),
+    Tuple(
+        elements = [
+                Percentage(title = _("Memory left warning at")),
+                Percentage(title = _("Memory left critical at")),
+              ],
+    ),
+    TextAscii(
+        title = _("Instance name"),
+        allow_empty = True),
+    "first"))
+
+
+checkgroups.append((
+    subgroup_applications,
     "logwatch_ec",
     _('Logwatch Event Console Forwarding'),
     Dictionary(

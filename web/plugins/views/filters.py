@@ -460,6 +460,9 @@ class FilterTime(Filter):
 declare_filter(250, FilterTime("service", "svc_last_state_change", _("Last service state change"), "service_last_state_change"))
 declare_filter(251, FilterTime("service", "svc_last_check", _("Last service check"), "service_last_check"))
 
+declare_filter(250, FilterTime("host", "host_last_state_change", _("Last host state change"), "host_last_state_change"))
+declare_filter(251, FilterTime("host", "host_last_check", _("Last host check"), "host_last_check"))
+
 #    _
 #   | |    ___   __ _
 #   | |   / _ \ / _` |

@@ -318,17 +318,18 @@ multisite_icons.append({
 #   +----------------------------------------------------------------------+
 
 def paint_comments(what, row, tags, custom_vars):
-    comments = row[what+ "_comments_with_info"]
+    comments = row[what+ "_comments_with_extra_info"]
     if len(comments) > 0:
         text = ""
-        for id, author, comment in comments:
-            text += "%s: \"%s\" \n" % (author, comment)
+        for c in comments:
+            id, author, comment, ty, timestamp = c
+            text += "%s %s: \"%s\" \n" % (paint_age(timestamp, True, 0, 'abs')[1], author, comment)
         return link_to_view('<img class=icon title=\'%s\' ' \
                             'src="images/icon_comment.gif">' %
                                  text, row, 'comments_of_' + what)
 
 multisite_icons.append({
-    'columns':         [ 'comments_with_info' ],
+    'columns':         [ 'comments_with_extra_info' ],
     'paint':           paint_comments,
 })
 

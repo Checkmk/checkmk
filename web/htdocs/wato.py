@@ -11391,6 +11391,8 @@ def count_bi_rule_references(aggregations, aggregation_rules, ruleid):
 
     return aggr_refs, rule_refs
 
+# Checks if the rule 'rule' uses either directly
+# or indirectly the rule with the id 'ruleid'
 def bi_rule_uses_rule(aggregation_rules, rule, ruleid):
     for node in rule["nodes"]:
         r = bi_called_rule(node)
@@ -11398,8 +11400,9 @@ def bi_rule_uses_rule(aggregation_rules, rule, ruleid):
             ru_id, info = r
             if ru_id == ruleid: # Rule is directly being used
                 return True
-            else:
-                return bi_rule_uses_rule(aggregation_rules, aggregation_rules[ru_id], ruleid) # Check if lower rules use it
+            # Check if lower rules use it
+            elif bi_rule_uses_rule(aggregation_rules, aggregation_rules[ru_id], ruleid):
+                return True
     return False
 
 # We need to replace the BI constants internally with something
@@ -11431,7 +11434,7 @@ def load_bi_rules():
         # Convert rules from old-style tuples to new-style dicts
         rules = {}
         for ruleid, rule in vars["aggregation_rules"].items():
-            rules[ruleid] = convert_rule_from_bi(rule)
+            rules[ruleid] = convert_rule_from_bi(rule, ruleid)
         aggregations = []
         for aggregation in vars["aggregations"]:
             aggregations.append(convert_aggregation_from_bi(aggregation))
@@ -11470,7 +11473,7 @@ bi_aggregation_functions = {}
 
 # Make some conversions so that the format of the
 # valuespecs is matched
-def convert_rule_from_bi(rule):
+def convert_rule_from_bi(rule, ruleid):
     if type(rule) == tuple:
         rule = {
             "title"       : rule[0],
@@ -11483,11 +11486,13 @@ def convert_rule_from_bi(rule):
     crule["nodes"] = map(convert_node_from_bi, rule["nodes"])
     parts = rule["aggregation"].split("!")
     crule["aggregation"] = (parts[0], tuple(map(saveint, parts[1:])))
+    crule["id"] = ruleid
     return crule
     
 def convert_rule_to_bi(rule):
     brule = {}
     brule.update(rule)
+    del brule["id"]
     brule["nodes"] = map(convert_node_to_bi, rule["nodes"])
     brule["aggregation"] = "!".join(
                 [ rule["aggregation"][0] ] + map(str, rule["aggregation"][1]))
@@ -12080,6 +12085,13 @@ def mode_bi_edit_rule(phase):
         html.set_focus("rule_p_title")
     html.end_form()
 
+# TODO BI:
+# - Prüfung auf Zyklen in den Regeln. Bzw. die Auswahlbox
+#   darf nur Regeln zeigen, die die aktuelle Regel nicht
+#   brauchen.
+# - Host Tags richtig editieren, nicht mit ListOfStrings.
+#   Dazu ein ValueSpec machen und dies dann auch im Regel-
+#   editor verwenden.
 
 #.
 #   .-Hooks-&-API----------------------------------------------------------.

@@ -11323,6 +11323,15 @@ def mode_bi_rules(phase):
 
         return
 
+    if not aggregations and not aggregation_rules:
+        menu_items = [
+            ("bi_edit_rule", _("Create aggregation rule"), "new", "bi_rules",
+              _("Rules are the nodes in BI aggregations. "
+                "Each aggregation has one rule as its root."))
+        ]
+        render_main_menu(menu_items)
+        return
+
     rules = aggregation_rules.items()
     rules.sort(cmp = lambda a,b: cmp(a[1]["title"], b[1]["title"]))
 
@@ -11692,28 +11701,44 @@ def declare_bi_valuespecs(aggregation_rules):
         ]
     )
 
+    host_re_help = _("Either an exact host name or a regular expression exactly matching the host "
+                     "name. Example: <tt>srv.*p</tt> will match <tt>srv4711p</tt> but not <tt>xsrv4711p2</tt>. ")
+    vs_host_re = TextUnicode(
+        title = _("Host:"), 
+        help = host_re_help,
+        allow_empty = False,
+    )
+
     # Configuration of leaf nodes
     vs_bi_node_simplechoices = [
-          ( "host", _("State of a host"),
-             Tuple(
-                 elements = [
-                    TextUnicode(title = _("Host (regex):"), allow_empty = False),
-                 ])
+        ( "host", _("State of a host"),
+           Tuple(
+               help = _("Will create child nodes representing the state of hosts (usually the "
+                        "host check is done via ping)."),
+               elements = [ vs_host_re, ]
+           )
+        ),
+        ( "service", _("State of a service"),
+          Tuple(
+              help = _("Will create child nodes representing the state of services."),
+              elements = [
+                  vs_host_re,
+                  TextUnicode(
+                      title = _("Service:"),
+                      help = _("A regular expression matching the <b>beginning</b> of a service description. You can "
+                               "use a trailing <tt>$</tt> in order to define an exact match. For each "
+                               "matching service on the specified hosts one child node will be created. "),
+                  ),
+              ]
           ),
-          ( "service", _("State of a service"),
-            Tuple(
-                elements = [
-                    TextUnicode(title = _("Host (regex):"), allow_empty = False),
-                    TextUnicode(title = _("Service (regex):")),
-                ]
-            ),
-          ),
-          ( "remaining", _("State of remaining services"),
-             Tuple(
-                 elements = [
-                    TextUnicode(title = _("Host (regex):"), allow_empty = False),
-                 ])
-          ),
+        ),
+        ( "remaining", _("State of remaining services"),
+          Tuple(
+              help = _("Create a child node for each service on the specified hosts that is not "
+                       "contained in any other node of the aggregation."),
+              elements = [ vs_host_re ],
+          )
+        ),
     ]
 
     # Configuration of explicit rule call
@@ -11888,7 +11913,7 @@ def mode_bi_edit_rule(phase):
         ( "title", 
            TextUnicode(
                title = _("Rule Title"),
-               help = _("The Description of the aggregation node. This will be "
+               help = _("The title of the BI nodes that are created from that rule. This will be "
                         "displayed as the name of the node in the BI view. For "
                         "top level nodes this title must be unique. You can insert "
                         "rule parameters like <tt>$FOO$</tt> or <tt>$BAR$</tt> here."),
@@ -11907,6 +11932,14 @@ def mode_bi_edit_rule(phase):
         ( "params",
           ListOfStrings(
               title = _("Parameters"),
+              help = _("Parameters are used in order to make rules more flexible. The must "
+                       "be named like variables in programming languages. For example you can "
+                       "make your rule have the two parameters <tt>HOST</tt> and <tt>INST</tt>. "
+                       "When calling the rule - from an aggergation or a higher level rule - "
+                       "you will then specify two arbitrary values for that parameters. In the "
+                       "title of the rule, the host and service names you can then insert the "
+                       "actual value of the parameters by <tt>$HOST$</tt> and <tt>$INST$</tt> "
+                       "(enclosed in dollar signs)."),
               orientation = "horizontal",
               valuespec = TextAscii(
                 size = 12,
@@ -11919,6 +11952,8 @@ def mode_bi_edit_rule(phase):
         ( "aggregation",
           CascadingDropdown(
             title = _("Aggregation Function"),
+            help = _("The aggregation function decides how the status of a node "
+                     "is constructed from the states of the child nodes."),
             html_separator = "",
             choices = aggregation_choices,
           )
@@ -11926,6 +11961,7 @@ def mode_bi_edit_rule(phase):
         ( "nodes",
           ListOf(
               vs_bi_node,
+              add_label = _("Add child node generator"),
               title = _("Nodes that are aggregated by this rule"),
           ),
         ),
@@ -11937,7 +11973,9 @@ def mode_bi_edit_rule(phase):
         ( "id",
           TextAscii(
               title = _("Unique Rule ID"),
-              help = _("The ID of the rule must be a unique text."),
+              help = _("The ID of the rule must be a unique text. It will be used as an internal key "
+                       "when rules refer to each other. The rule IDs will not be visible in the status "
+                       "GUI. They are just used within the configuration."),
               allow_empty = False,
               size = 12,
           ),
@@ -11949,9 +11987,9 @@ def mode_bi_edit_rule(phase):
         render = "form",
         elements = elements,
         headers = [
-            ( _("General Properties"), [ "id", "title", "comment", "params" ]),
-            ( _("Aggregation Function"), [ "aggregation" ], ),
-            ( _("Nodes"),              [ "nodes" ] ),
+            ( _("General Properties"),     [ "id", "title", "comment", "params" ]),
+            ( _("Aggregation Function"),   [ "aggregation" ], ),
+            ( _("Child Node Generation"),  [ "nodes" ] ),
         ]
     )
 
@@ -11966,6 +12004,10 @@ def mode_bi_edit_rule(phase):
             if new and ruleid in aggregation_rules:
                 raise MKUserError('rule_p_id', 
                     _("There is already a rule with the id <b>%s</b>" % ruleid))
+            if not new_rule["nodes"]:
+                raise MKUserError(None,
+                    _("Please add at least one child node. Empty rules are useless."))
+
             if new:
                 del new_rule["id"]
                 aggregation_rules[ruleid] = new_rule

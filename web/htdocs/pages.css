@@ -436,11 +436,15 @@ input[type=text], input[type=password] {
     vertical-align: middle;
 }
 select {
-    height: 20px;
-    border-style: solid none;
+    height: 24px;
+    /* border-style: solid none;
     border-width: 2px;
-    border-color: white;
-    box-shadow: 0.5px 0.5px 1px #CCCCCC;
+    border-color: red; */
+    box-shadow: 0.1px 1.2px 1.8px 0 #888 inset;
+    vertical-align: middle;
+    padding-top: 4px;
+    /* padding: 1px 3px; */
+
 }
 
 input[type=radio] {
@@ -448,10 +452,6 @@ input[type=radio] {
 }
 input[type=checkbox] {
     margin-left: 0px; 
-}
-
-select {
-    padding: 1px 3px;
 }
 
 

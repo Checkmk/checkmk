@@ -990,6 +990,7 @@ class CascadingDropdown(ValueSpec):
                         def_val_2 = vs.default_value()
                         disp = "none"
                 html.write('<span id="%s_%s_sub" style="display: %s">' % (varprefix, nr, disp))
+                html.help(vs.help())
                 vs.render_input(vp, def_val_2)
                 html.write('</span>')
 

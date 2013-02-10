@@ -29,11 +29,18 @@ bi_aggregation_functions["worst"] = {
     "valuespec" : Tuple(
         elements = [
             Integer(
-                label = _("Take n'th worst state for n = "),
+                help = _("Normally this value is <tt>1</tt>, which means that the worst state "
+                         "of all child nodes is being used as the total state. If you set it for example "
+                         "to <tt>2</tt>, then the node with the worst state is not being regarded. "
+                         "If the states of the child nodes would be CRIT, WARN and OK, then to total "
+                         "state would be WARN."),
+                title = _("Take n'th worst state for n = "),
                 default_value = 1,
                 min_value = 1),
             MonitoringState(
-                label = _("Restrict severity to at worst"),
+                title = _("Restrict severity to at worst"),
+                help = _("Here you can have the node the state WARN, even if some of the child nodes "
+                         "are CRIT."),
                 default_value = 2,
             ),
         ]),
@@ -44,11 +51,18 @@ bi_aggregation_functions["best"] = {
     "valuespec" : Tuple(
         elements = [
             Integer(
-                label = _("Take n'th best state for n = "),
+                help = _("Normally this value is <tt>1</tt>, which means that the best state "
+                         "of all child nodes is being used as the total state. If you set it for example "
+                         "to <tt>2</tt>, then the node with the best state is not being regarded. "
+                         "If the states of the child nodes would be CRIT, WARN and OK, then to total "
+                         "state would be WARN."),
+                title = _("Take n'th best state for n = "),
                 default_value = 1,
                 min_value = 1),
             MonitoringState(
-                label = _("Restrict severity to at worst"),
+                title = _("Restrict severity to at worst "),
+                help = _("Here you can have the node the state WARN, even if some of the child nodes "
+                         "are CRIT."),
                 default_value = 2,
             ),
         ]),

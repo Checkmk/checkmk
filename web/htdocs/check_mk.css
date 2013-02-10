@@ -397,6 +397,14 @@ table.data tr td table.vs_dict_text > tbody > tr > td {
     vertical-align: top;
 }
 
+table.valuespec_tuple {
+    border-spacing: 2px;
+}
+
+table.valuespec_tuple td {
+    padding: 0px;
+}
+
 table.valuespec_tuple td.tuple_left {
     padding-right: 8px;
     padding-top: 5px;
@@ -404,7 +412,7 @@ table.valuespec_tuple td.tuple_left {
 
 table.valuespec_tuple td.tuple_right,
 table.valuespec_tuple td.tuple_left {
-    padding-bottom: 3px;
+    /* padding-bottom: 3px; */
 }
 
 table.valuespec_tuple span.title {

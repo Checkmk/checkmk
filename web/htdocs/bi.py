@@ -306,6 +306,9 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     single_affected_hosts = []
     for aggr_type, aggregations in aggr_list:
         for entry in aggregations:
+            if entry[0] == config.DISABLED:
+                continue
+
             if len(entry) < 3:
                 raise MKConfigError(_("<h1>Invalid aggregation <tt>%s</tt>'</h1>"
                                       "Must have at least 3 entries (has %d)") % (entry, len(entry)))

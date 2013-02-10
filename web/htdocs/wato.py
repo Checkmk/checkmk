@@ -11332,8 +11332,6 @@ def mode_bi_rules(phase):
         render_main_menu(menu_items)
         return
 
-    rules = aggregation_rules.items()
-    rules.sort(cmp = lambda a,b: cmp(a[1]["title"], b[1]["title"]))
 
     table.begin(_("Aggregations"))
     for nr, aggregation in enumerate(aggregations):
@@ -11344,6 +11342,11 @@ def mode_bi_rules(phase):
         delete_url = make_action_link([("mode", "bi_rules"), ("_del_aggr", nr)])
         html.icon_button(delete_url, _("Delete this aggregation"), "delete")
         table.cell(_("Nr."), nr+1, css="number")
+        table.cell(_(""), css="buttons")
+        if aggregation["disabled"]:
+            html.icon(_("This aggregation is currently disabled."), "disabled")
+        if aggregation["single_host"]:
+            html.icon(_("This aggregation covers only data from a single host."), "host")
         table.cell(_("Groups"), ", ".join(aggregation["groups"]))
         ruleid, description = bi_called_rule(aggregation["node"])
         edit_url = make_link([("mode", "bi_edit_rule"), ("id", ruleid)]) 
@@ -11352,13 +11355,18 @@ def mode_bi_rules(phase):
 
     table.end()
     
+    rules = aggregation_rules.items()
+    # Sort rules according to nesting level, and then to id
+    rules_refs = [ (ruleid, rule, count_bi_rule_references(aggregations, aggregation_rules, ruleid))
+                   for (ruleid, rule) in rules ]
+    rules_refs.sort(cmp = lambda a,b: cmp(a[2][2], b[2][2]) or cmp(a[1]["title"], b[1]["title"]))
+
     table.begin(_("Rules"))
-    for ruleid, rule in rules:
+    for ruleid, rule, (aggr_refs, rule_refs, level) in rules_refs:
         table.row()
         table.cell(_("Actions"), css="buttons")
         edit_url = make_link([("mode", "bi_edit_rule"), ("id", ruleid)]) 
         html.icon_button(edit_url, _("Edit this rule"), "edit")
-        aggr_refs, rule_refs = count_bi_rule_references(aggregations, aggregation_rules, ruleid)
         if rule_refs == 0:
             tree_url = make_link([("mode", "bi_rule_tree"), ("id", ruleid)]) 
             html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"), "aggr")
@@ -11366,10 +11374,11 @@ def mode_bi_rules(phase):
         if refs == 0:
             delete_url = make_action_link([("mode", "bi_rules"), ("_del_rule", ruleid)])
             html.icon_button(delete_url, _("Delete this rule"), "delete")
+        table.cell(_("Lvl"), level, css="number")
         table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, ruleid))
         table.cell(_("Parameters"), " ".join(rule["params"]))
         table.cell(_("Title"), rule["title"])
-        table.cell(_("Aggregation"), rule["aggregation"][0] + "/" + "/".join(map(str, rule["aggregation"][1])))
+        table.cell(_("Aggregation"),  "/".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1])))
         table.cell(_("Nodes"), len(rule["nodes"]), css="number")
         table.cell(_("Usages"), refs, css="number")
         table.cell(_("Comment"), rule.get("comment", ""))
@@ -11391,7 +11400,7 @@ def mode_bi_rule_tree(phase):
     if phase == "action":
         return
     
-    aggr_refs, rule_refs = count_bi_rule_references(aggregations, aggregation_rules, ruleid)
+    aggr_refs, rule_refs, level = count_bi_rule_references(aggregations, aggregation_rules, ruleid)
     if rule_refs == 0:
         render_rule_tree(aggregation_rules, ruleid)
 
@@ -11443,25 +11452,31 @@ def count_bi_rule_references(aggregations, aggregation_rules, ruleid):
         if called_rule_id == ruleid:
             aggr_refs += 1
 
+    level = 0
     rule_refs = 0
     for rid, rule in aggregation_rules.items():
-        if bi_rule_uses_rule(aggregation_rules, rule, ruleid):
+        l = bi_rule_uses_rule(aggregation_rules, rule, ruleid)
+        level = max(l, level)
+        if l == 1:
             rule_refs += 1
 
-    return aggr_refs, rule_refs
+    return aggr_refs, rule_refs, level
 
 # Checks if the rule 'rule' uses either directly
-# or indirectly the rule with the id 'ruleid'
-def bi_rule_uses_rule(aggregation_rules, rule, ruleid):
+# or indirectly the rule with the id 'ruleid'. In
+# case of success, returns the nesting level
+def bi_rule_uses_rule(aggregation_rules, rule, ruleid, level=0):
     for node in rule["nodes"]:
         r = bi_called_rule(node)
         if r:
             ru_id, info = r
             if ru_id == ruleid: # Rule is directly being used
-                return True
+                return level + 1
             # Check if lower rules use it
-            elif bi_rule_uses_rule(aggregation_rules, aggregation_rules[ru_id], ruleid):
-                return True
+            else:
+                l = bi_rule_uses_rule(aggregation_rules, aggregation_rules[ru_id], ruleid, level + 1)
+                if l:
+                    return l
     return False
 
 
@@ -11506,34 +11521,39 @@ class HostTagCondition(ValueSpec):
 # with pprint.pformat
 bi_constants = {
   'ALL_HOSTS'       : 'ALL_HOSTS-f41e728b-0bce-40dc-82ea-51091d034fc3',
-  'HOST_STATE'      : 'HOST_STATE-7e521edf-122c-4013-b135-669e2673bcfa',
-  'HIDDEN'          : 'HIDDEN-87c5fea7-d8fd-4ccf-b3ac-72c3d048cd3b',
-  'FOREACH_HOST'    : 'FOREACH_HOST-907b2cdd-07ac-4439-bb4e-1f16eddfdb27',
-  'FOREACH_CHILD'   : 'FOREACH_CHILD-d6b000f4-ba42-4638-a5f8-2d07f33940de',
-  'FOREACH_PARENT'  : 'FOREACH_PARENT-a18f5691-c929-420c-9ee2-bcf2bd358319',
-  'FOREACH_SERVICE' : 'FOREACH_SERVICE-a18f5691-c929-420c-9ee2-bcf2bd358319',
-  'REMAINING'       : 'REMAINING-8f716937-de9c-44b2-bf9a-ec6f6e1d820e',
+  'HOST_STATE'      : 'HOST_STATE-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'HIDDEN'          : 'HIDDEN-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'FOREACH_HOST'    : 'FOREACH_HOST-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'FOREACH_CHILD'   : 'FOREACH_CHILD-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'FOREACH_PARENT'  : 'FOREACH_PARENT-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'FOREACH_SERVICE' : 'FOREACH_SERVICE-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'REMAINING'       : 'REMAINING-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'DISABLED'        : 'DISABLED-f41e728b-0bce-40dc-82ea-51091d034fc3',
 }
 
 # returns aggregations, aggregation_rules
 def load_bi_rules():
     filename = multisite_dir + "bi.mk"
-    if not os.path.exists(filename):
-        return [], {}
-
     try:
         vars = { "aggregation_rules" : {},
                  "aggregations"      : [],
+                 "host_aggregations" : [],
                }
         vars.update(bi_constants)
-        execfile(filename, vars, vars)
+        if os.path.exists(filename):
+            execfile(filename, vars, vars)
+        else:
+            exec(bi_example, vars, vars)
+
         # Convert rules from old-style tuples to new-style dicts
         rules = {}
         for ruleid, rule in vars["aggregation_rules"].items():
             rules[ruleid] = convert_rule_from_bi(rule, ruleid)
         aggregations = []
         for aggregation in vars["aggregations"]:
-            aggregations.append(convert_aggregation_from_bi(aggregation))
+            aggregations.append(convert_aggregation_from_bi(aggregation, single_host = False))
+        for aggregation in vars["host_aggregations"]:
+            aggregations.append(convert_aggregation_from_bi(aggregation, single_host = True))
         return aggregations, rules
 
     except Exception, e:
@@ -11562,8 +11582,13 @@ def save_bi_rules(aggregations, aggregation_rules):
         out.write('aggregation_rules["%s"] = %s\n\n' % 
                 ( ruleid, replace_constants(pprint.pformat(rule, width=50))))
     out.write('\n')
-    out.write("aggregations += %s\n" % 
-            replace_constants(pprint.pformat(map(convert_aggregation_to_bi, aggregations))))
+    for aggregation in aggregations:
+        if aggregation["single_host"]:
+            out.write("host_aggregations.append(\n")
+        else:
+            out.write("aggregations.append(\n")
+        out.write(replace_constants(pprint.pformat(convert_aggregation_to_bi(aggregation))))
+        out.write(")\n")
 
 bi_aggregation_functions = {}
 
@@ -11658,15 +11683,23 @@ def convert_node_to_bi(node):
         service = node[1][2]
         return (bi_constants["FOREACH_SERVICE"], tags, spec, service) + convert_node_to_bi(node[1][3])
 
-def convert_aggregation_from_bi(aggr):
+def convert_aggregation_from_bi(aggr, single_host):
+    if aggr[0] == bi_constants["DISABLED"]:
+        disabled = True
+        aggr = aggr[1:]
+    else:
+        disabled = False
+
     if type(aggr[0]) != list:
         groups = [aggr[0]]
     else:
         groups = aggr[0]
     node = convert_node_from_bi(aggr[1:])
     return {
-        "groups" : groups,
-        "node" : node,
+        "disabled"    : disabled,
+        "groups"      : groups,
+        "node"        : node,
+        "single_host" : single_host,
     }
 
 def convert_aggregation_to_bi(aggr):
@@ -11675,7 +11708,10 @@ def convert_aggregation_to_bi(aggr):
     else:
         conv = (aggr["groups"],)
     node = convert_node_to_bi(aggr["node"])
-    return conv + node
+    convaggr = conv + node
+    if aggr["disabled"]:
+        convaggr = (bi_constants["DISABLED"],) + convaggr
+    return convaggr
 
 # Not in global context, so that l10n will happen again
 def declare_bi_valuespecs(aggregation_rules):
@@ -11837,9 +11873,26 @@ def declare_bi_valuespecs(aggregation_rules):
         ),
         ( "node",
           CascadingDropdown(
-                  title = _("Rule to call"),
-                  choices = vs_bi_node_call_choices + foreach_choices(vs_bi_node_call_choices)
+              title = _("Rule to call"),
+              choices = vs_bi_node_call_choices + foreach_choices(vs_bi_node_call_choices)
           )
+        ),
+        ( "disabled",
+          Checkbox(
+              title = _("Disabled"),
+              label = _("Currently disable this aggregation"),
+          )
+        ),
+        ( "single_host",
+          Checkbox(
+              title = _("Optimization"),
+              label = _("The aggregation covers data from only one host and its parents."),
+              help = _("If you have a large number of aggregations that cover only one host and "
+                       "maybe its parents (such as Check_MK cluster hosts), "
+                       "then please enable this optimization. It reduces the time for the "
+                       "computation. Do <b>not</b> enable this for aggregations that contain "
+                       "data of more than one host!"),
+          ),
         ),
       ]
     )
@@ -11879,7 +11932,7 @@ def mode_bi_edit_aggregation(phase):
         return "bi_rules"
 
     if new:
-        value = {}
+        value = { "groups" : [ _("Main") ] }
     else:
         value = aggregations[nr]
 

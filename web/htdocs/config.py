@@ -79,6 +79,7 @@ class FOREACH_CHILD: pass
 class FOREACH_PARENT: pass
 class FOREACH_SERVICE: pass
 class REMAINING: pass
+class DISABLED: pass
 
 # Has to be declared here once since the functions can be assigned in
 # bi.py and also in multisite.mk. "Double" declarations are no problem

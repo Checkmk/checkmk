@@ -283,7 +283,8 @@ multisite_painters["aggr_treestate_boxed"] = {
     "title"   : _("Aggregation: simplistic boxed layout"),
     "short"   : _("Tree"),
     "columns" : [ "aggr_treestate", "aggr_hosts" ],
-    "paint"   : lambda row: paint_aggr_tree_foldable(row, boxes = True, omit_root = True),
+    "paint"   : lambda row: bi.render_tree_foldable(row, boxes=True, omit_root=True,
+                expansion_level=bi.load_ex_level(), only_problems=False, lazy=True),
 }
 
 #     _____ _ _ _

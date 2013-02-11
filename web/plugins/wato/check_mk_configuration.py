@@ -424,14 +424,20 @@ register_configvar(group,
                 default_value = lambda: userdb.ldap_filter('users', False),
             )),
             ("user_id", TextAscii(
-                title = _("User-ID Attrubute"),
+                title = _("User-ID Attribute"),
                 help  = _("The attribute used to identify the individual users. It must have "
                           "unique values to make an user identifyable by the value of this "
                           "attribute."),
                 default_value = lambda: userdb.ldap_attr('user_id'),
             )),
+            ("lower_user_ids", FixedValue(
+                title  = _("Lower Case User-IDs"),
+                help   = _("Convert imported User-IDs to lower case during synchronisation."),
+                value  = True,
+                totext = _("Enforce lower case User-IDs."),
+            )),
         ],
-        optional_keys = ['scope', 'filter', 'user_id'],
+        optional_keys = ['scope', 'filter', 'user_id', 'lower_user_ids'],
     ),
     domain = "multisite",
 )
@@ -469,8 +475,13 @@ register_configvar(group,
                 size = 80,
                 default_value = lambda: userdb.ldap_filter('groups', False),
             )),
+            ("member", TextAscii(
+                title = _("Member Attribute"),
+                help  = _("The attribute used to identify users group memberships."),
+                default_value = lambda: userdb.ldap_attr('member'),
+            )),
         ],
-        optional_keys = ['scope', 'filter'],
+        optional_keys = ['scope', 'filter', 'member'],
     ),
     domain = "multisite",
 )

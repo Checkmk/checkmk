@@ -24,3 +24,10 @@ items.
 Once a number (subpatter) is received for the first time, the expection counter
 must start and raise an event for this single number if it has not been received
 for about a minute.
+
+Loesung: Dies wird ausserhalb der EC geloest durch eine EC-Aktion, die
+von einer Regel aufgerufen wird, die auf obigen Text matcht. Diese fuegt
+autoamtisch eine neue EC-Regel direkt vor der Generator-Regel ein, die
+dann auf den speziellen Host wartet. Danach muss die EC neu geladen werden.
+Frage ist, ob das aus einer Aktion heraus sauber geht. Wahrscheinlich ja.
+

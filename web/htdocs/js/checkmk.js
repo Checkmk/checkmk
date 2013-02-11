@@ -1437,8 +1437,7 @@ function unhide_context_buttons(oA)
     var oTd = oA.parentNode.parentNode;
     for (var i in oTd.childNodes) {
         oNode = oTd.childNodes[i];
-        if (oNode.tagName == "DIV" && oNode.id != "toggle"
-            && oNode.id.substr(oNode.id.length - 4) != "_off") 
+        if (oNode.tagName == "DIV" && !has_class(oNode, "togglebutton"))
             oNode.style.display = "";
     }
     oA.parentNode.style.display = "none";

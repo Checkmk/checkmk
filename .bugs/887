@@ -1,0 +1,9 @@
+Title: Name regex groups in EC
+Component: ec
+State: open
+Date: 2013-02-11 10:51:28
+Targetversion: 1.2.2
+Class: feature
+
+A new config field "Regex group name" as a ListOfStrings.
+That way one can use \foo instead of \1 alternatively.

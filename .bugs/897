@@ -1,9 +1,12 @@
-Title: Add Windows-Agent as Zip-File to Download page
-Component: core
+Title: Add some security mechanism to prevent accidential removal of ldap users profile
+Component: multisite
 State: open
-Date: 2013-01-21 16:46:19
-Targetversion: future
-Class: todo
+Date: 2013-02-07 16:13:52
+Targetversion: 1.2.2
+Class: nastiness
 
-It is bad for windows users that there is no zip-download of the agent. There is the installer
-but someone might not want to use it.
+It might happen that users are not visible to the ldap sync (maybe by temporary
+misconfiguration). When a sync detects that one user is suddenly missing, it
+removes the user from the configuration as also the htpasswd mechanism does.
+This could lead in bad situations where customized things in multisite get lost,
+maybe we find a way to prevent this somehow...?

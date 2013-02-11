@@ -82,7 +82,7 @@ def winperf_phydisk_convert(info):
     # information)
     empty = [ -1 for x in disks ]
 
-    return zip(disks, disk_read_bytes, disk_write_bytes, empty, empty, empty, disk_readq_ctrs, disk_writeq_ctrs)
+    return zip(disks, disk_read_bytes, disk_write_bytes, disk_reads, disk_writes, empty, disk_readq_ctrs, disk_writeq_ctrs)
 
 def inventory_winperf_phydisk(info):
     return inventory_diskstat_generic(winperf_phydisk_convert(info))

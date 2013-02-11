@@ -1019,7 +1019,7 @@ def execute_leaf_node(node, status_info):
         return ({"state":MISSING, "output": _("This host has no such service")}, None, node)
 
     else:
-        aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN}[host_state]
+        aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN, -1:PENDING}[host_state]
         state = {"state":aggr_state, "output" : host_output}
         if state_assumption != None:
             assumed_state = {"state": state_assumption,

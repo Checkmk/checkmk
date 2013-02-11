@@ -1,9 +1,15 @@
 Title: Distributed WATO - activate changes not transid secured
 Component: wato
-State: open
+Class: bug
+State: works4me
 Date: 2013-02-04 10:06:34
 Targetversion: 1.2.2
-Class: bug
 
 When one hits F5 during global activate changes, the table is re-rendered and all
 sites do sync & restart again. This should be prevented by transids.
+
+---
+
+ Can not reproduce here. Closing...
+
+2013-02-08 10:25:47: changed state open -> works4me

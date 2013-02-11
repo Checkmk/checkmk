@@ -11,6 +11,8 @@
     * cmk --notify: added plugin for sms notification
     * FIX: precompiled checks: correct handling of sys.exit() call when using python2.4 
     * cmk --notify: improved logging on wrong notification type
+    * RPM: Added check_mk-agent-scriptless package (Same as normal agent rpm,
+      but without RPM post scripts)
 
     Checks & Agents:
     * winperf_processor now outputs float usage instead of integer
@@ -44,7 +46,14 @@
     * Added comment painter to notification related views
     * Added compatibility code to use hashlib.md5() instead of md5.md5(), which
       is deprecated in python > 2.5 to prevent warning messages in apache error log
+    * Added host filter for "last host state change" and "last host check"
     * FIX: Preventing autocomplete in password fields of "edit profile" dialog
+    * The ldap member attribute of groups is now configruable via WATO
+    * Added option to enforce lower User-IDs during LDAP sync
+    * Improved debug logging of ldap syncs (Now writing duration of queries to log)
+    * Displaying date/time of comments in comment icon hover menu (Please
+      note: You need to update your livestatus to current version to make this work)
+    * FIX: Making "action" context link unclickable during handling actions / confirms
 
     BI:
     * Use Ajax to delay rendering of invisible parts of the tree (this
@@ -63,6 +72,9 @@
       case of distributed WATO setups
     * Added oracle_tablespaces configuration to the application checkgroup
     * FIX: Fixed synchronisation of mkeventd configs in distributed WATO setups
+    * FIX: "Sync & Restart" did not perform restart in distributed WATO setups
+    * FIX: Fixed exception in editing code of ldap group to rule plugin
+    * FIX: Don't execute ldap sync while performing actions on users page
 
     Event Console:
     * Added UNIX socket for sending events to the EC
@@ -73,6 +85,9 @@
       during "activate changes" process
     * Added hook mkeventd-activate-changes to add custom actions to the mkeventd
       "activate changes" GUI function
+    * FIX: When a single rule matching raises an exception, the line is now
+      matched agains the following rules instead of being skipped. The
+      exception is logged to mkeventd.log
 
 1.2.1i5:
     Core:

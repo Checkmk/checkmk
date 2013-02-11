@@ -1218,7 +1218,11 @@ class EventServer:
            rule_candidates = self._rules
         
         for rule in rule_candidates:
-            result = self.event_rule_matches(rule, event)
+            try:
+                result = self.event_rule_matches(rule, event)
+            except Exception:
+                log('  Exception during matching:\n%s' % format_exception())
+                result = False
             if result:
                 g_perfcounters.count("rule_hits")
                 cancelling, groups = result
@@ -1280,7 +1284,6 @@ class EventServer:
                             do_rule_actions(rule, event)
                     return
 
-
     # Checks if an event matches a rule. Returns either False (no match)
     # or a pair of matchtype, groups, where matchtype is False for a
     # normal match and True for a cancelling match and the groups is a tuple
@@ -1307,7 +1310,7 @@ class EventServer:
                     log("  did not match because of wrong application '%s' (need '%s')" % 
                             (event["application"], pattern(rule.get("match_application"))))
                 return False
-            
+
             if "match_facility" in rule and event["facility"] != rule["match_facility"]:
                 if debug:
                     log("  did not match because of wrong syslog facility")

@@ -100,14 +100,18 @@ if mknotifyd_enabled:
     # Daemon var
     register_configvar(group,
         "notification_daemon_listen_port",
+        Optional(
             Integer(
-                title = _("Port for receiving notifications"),
-                help = _("Here you can set port at which the notification spooler listens for forwarded"
-                         "notification messages from spoolers on remote sites."),
                 minvalue = 1,
                 maxvalue = 65535,
                 default_value = 6555,
             ),
+            help = _("Here you can set the port at which the notification spooler listens for forwarded"
+                     "notification messages from spoolers on remote sites."),
+            title = _("Port for receiving notifications"),
+            label = _("Receive notifications from remote sites"),
+            none_label = _("(Do not receive notifications)"),
+        ),
         domain = "mknotifyd"
     )
     

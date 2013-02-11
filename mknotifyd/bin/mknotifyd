@@ -88,6 +88,7 @@ class SpoolfilesHandler:
         self._is_running = False
     
     def run(self):
+        log("Starting SpoolfilesHandler")
         self._is_running = True
         try: 
             while not self._should_terminate:
@@ -180,25 +181,33 @@ class TcpServer:
         self._tcp_socket = None
         self._should_terminate = False
         self._is_running = False
-        self.open_sockets()
+        self._reopen_sockets = False
 
     def open_sockets(self):
-        if opt_verbose:
-            verbose("open tcp sockets", 2)
-
-        self._tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self._tcp_socket.bind(("0.0.0.0", g_config["notification_daemon_listen_port"]))
-        # TODO: listen limit ?
-        self._tcp_socket.listen(200)
+        listen_port = g_config["notification_daemon_listen_port"]
+        log("Listen for remote notifications at port %d" % listen_port)
+        try:
+            self._tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self._tcp_socket.bind(("0.0.0.0", listen_port))
+            # TODO: listen limit ?
+            self._tcp_socket.listen(200)
+        except:
+            log("Error opening socket.\n%s" % format_exception())
+            self._should_terminate = True
 
     def close_sockets(self):
         if self._tcp_socket:
             self._tcp_socket.close()
             self._tcp_socket = None
+            log("No longer listen for remote notificiations")
 
     def run(self):
+        self._should_terminate = False
         self._is_running = True
+        log("Starting TcpServer")
+        self.open_sockets()
+
         handled_connections = 0 # Debug info
         while not self._should_terminate:
             readable = select.select([self._tcp_socket], [], [], 0.5)[0]
@@ -214,15 +223,14 @@ class TcpServer:
                     if "context" in content:  
                         context = content["context"]
                         if not context["CONTACTNAME"]:
-                            log("ERROR: Unable to process data from %s %d" % (addr_info[0], addr_info[1]))
+                            log("Error: Unable to process data from %s %d" % (addr_info[0], addr_info[1]))
                             client_socket.send("ERROR")
                         else:
                             contact_dir = "%s/%s" % (g_spool_dir, context["CONTACTNAME"])
                             if not os.path.exists(contact_dir):
                                 os.makedirs(contact_dir)
                             spoolfile = "%s/%0.2f_%s" % (contact_dir, time.time(), uuid.uuid1())
-                            file(spoolfile,"w").write("%r" % content)
-                            #file(spoolfile,"w").write(pprint.pformat(content))
+                            file(spoolfile,"w").write(pprint.pformat(content))
                             verbose("client data processed - sending OK", 2)
                             client_socket.send("OK")
                 except Exception, e:
@@ -236,6 +244,11 @@ class TcpServer:
                         pass
                 # TODO: wirklich ohne socket.close()
                 client_socket = None
+            if self._reopen_sockets:
+                log("Reopen tcp socket")
+                self.close_sockets()
+                self.open_sockets()    
+                self._reopen_sockets = False
 
         log("Stopping TcpServer")
         self.close_sockets()
@@ -303,22 +316,18 @@ def daemonize(user=0, group=0):
 
 
 def load_configuration():
-    global g_config, g_config_last_reload
-    g_config = {
-        "notification_daemon_listen_port": 6555,
-        "notification_deferred_retention_time": 180,
-        "notification_forward_to": "",
-    }
+    global g_config, g_config_changed
+    last_config = g_config.copy()
+    config_file = "%s/mknotifyd.d/wato/global.mk" % g_config_dir
+    try:
+        execfile(config_file, {}, g_config)
+    except:
+        g_config = last_config
 
-    list_of_files = reduce(lambda a,b: a+b,
-         [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")]
-             for d, sb, fs in os.walk(g_config_dir + "/mknotifyd.d" ) ], [])
+    if last_config != g_config:
+        log("Configuration has changed")
+        g_config_changed = True
 
-    list_of_files.sort()
-    for path in list_of_files:
-        execfile(path, g_config, g_config)
-
-    g_last_config_reload = time.time()
 
 def usage():
     sys.stdout.write("""Usage: mknotifyd [OPTIONS]
@@ -346,6 +355,7 @@ def run_thread(run_function, args=()):
 def run_notifyd():
     global g_tpc_server, g_spoolfiles_handler 
     global g_spool_dir, g_deferred_dir
+    global g_config_changed
         
     g_spool_dir    = "%s/notify/spool" % g_var_dir
     g_deferred_dir = "%s/notify/deferred" % g_var_dir
@@ -357,17 +367,33 @@ def run_notifyd():
         os.makedirs(g_deferred_dir)
 
     # Start worker threads
-    run_thread(g_tcp_server.run) 
+    if g_config["notification_daemon_listen_port"]:
+        run_thread(g_tcp_server.run)
+
     run_thread(g_spoolfiles_handler.run)
 
     while True:
         try:
-            time.sleep(2)
+            time.sleep(1)
+            # Read configuration again an check for changes
+            # Our tcp server might need a restart after its config has changed
+            load_configuration()
+            if g_config_changed:
+                if g_config["notification_daemon_listen_port"]:
+                    if not g_tcp_server._is_running: 
+                        run_thread(g_tcp_server.run)
+                    else:
+                        g_tcp_server._reopen_sockets = True
+                else:
+                    g_tcp_server._should_terminate = True
+                g_config_changed = False
+                time.sleep(0.2) 
+
             # Check if worker threads are still running
-            # and restart them if something strange happened
-            if not g_tcp_server._is_running:
+            if g_config["notification_daemon_listen_port"] and not g_tcp_server._is_running:
                 log("TcpServer thread crashed. Restarting...")
                 run_thread(g_tcp_server.run)
+
             if not g_spoolfiles_handler._is_running:
                 log("SpoolfilesHandler thread crashed. Restarting...")
                 run_thread(g_spoolfiles_handler.run)
@@ -429,8 +455,12 @@ else:
     g_pid_file        = "/var/run/mknotifyd.pid"
     g_logfile_path    = "/var/log/mknotifyd.log"
 
-tcp_socket = None
-reopen_sockets = False
+
+g_config = {
+    "notification_daemon_listen_port": None,
+    "notification_deferred_retention_time": 180,
+    "notification_forward_to": "",
+}
 
 short_options = "hVvgs"
 long_options = [ "help", "version", "verbose", "foreground", "single" ]
@@ -464,6 +494,7 @@ try:
     log("mknotifyd version %s starting" % VERSION)
 
     load_configuration()
+    g_config_changed = False # Of course its changed on startup...
 
     if os.path.exists(g_pid_file):
         old_pid = int(file(g_pid_file).read())
@@ -475,6 +506,7 @@ try:
 
     # Make sure paths exist
     make_parentdirs(g_logfile_path)
+    make_parentdirs(g_pid_file)
 
     # Create worker classes
     g_tcp_server         = TcpServer()

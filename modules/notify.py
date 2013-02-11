@@ -363,12 +363,11 @@ def do_notify(args):
                              "that are prefixed with NOTIFY_\n")
             sys.exit(1)
 
-        notify_log("forward mode %s" % notification_forward_mode)
-        # TODO: Umbauen auf neue Parameter
-        if notification_forward_mode in ["forward", "forward_exclusive"]:
+        if notification_spooling:
             # Create spoolfile
-            create_spoolfile({"context": context, "forward": notification_forward_to})
-            if notification_forward_mode == "forward_only":
+            target_site = "%s:%s" % notification_spool_to[0:2]
+            create_spoolfile({"context": context, "forward": target_site})
+            if not notification_spool_to[2]:
                 return 0
 
         process_context(context, notification_spooling)

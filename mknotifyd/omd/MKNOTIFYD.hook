@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Alias: Start Daemon for Check_MK Notify
+# Alias: Start Check_MK Notification Spooler
 # Menu: Addons
 # Description: 
-# This option enables mknotifyd
+# This option enables the Check_MK notification spooler
 
 case "$1" in
     default)

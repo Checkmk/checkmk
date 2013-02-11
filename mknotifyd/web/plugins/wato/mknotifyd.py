@@ -29,6 +29,7 @@ import config
 try:
     mknotifyd_enabled = config.mknotifyd_enabled
 except:
+    # Non OMD-users: always show Spooling options
     mknotifyd_enabled = True
 
 config_dir = defaults.default_config_dir + "/mknotifyd.d/wato/"

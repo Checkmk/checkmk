@@ -42,6 +42,11 @@ notification_spooldir = var_dir + "/notify/spool"
 notification_log = notification_logdir + "/notify.log"
 notification_logging    = 0
 
+# Notification Spooling
+notification_spooling = False
+notification_spool_to = None
+
+
 notification_log_template = \
     u"$CONTACTNAME$ - $NOTIFICATIONTYPE$ - " \
     u"$HOSTNAME$ $HOSTSTATE$ - " \
@@ -175,7 +180,7 @@ def notify_usage():
     sys.stderr.write("""Usage: check_mk --notify
        check_mk --notify fake-service <plugin>
        check_mk --notify fake-host <plugin>
-       check_mk --notify filename <spool_filename>
+       check_mk --notify spoolfile <filename>
 
 Normally the notify module is called without arguments to send real
 notification. But there are situations where this module is called with
@@ -186,8 +191,8 @@ Available commands:
                                     notification data of a service notification.
     fake-host <plugin>          ... Calls the given notification plugin with fake
                                     notification data of a host notification.
-    spoolfile <spool_filename>   ... Reads the given spoolfile and creates a
-                                    notification event out of its data
+    spoolfile <filename>        ... Reads the given spoolfile and creates a
+                                    notification out of its data
 """)
 
 
@@ -198,7 +203,6 @@ def create_spoolfile(data):
         os.makedirs(target_dir)
     file_path = "%s/%0.2f_%s" % (target_dir, time.time(), uuid.uuid1()) 
     notify_log("Creating spoolfile: %s" % file_path)
-    # TODO: pprint entfernen
     file(file_path,"w").write(pprint.pformat(data))
 
 def get_readable_rel_date(timestamp):
@@ -360,18 +364,14 @@ def do_notify(args):
             sys.exit(1)
 
         notify_log("forward mode %s" % notification_forward_mode)
-        # TODO:
+        # TODO: Umbauen auf neue Parameter
         if notification_forward_mode in ["forward", "forward_exclusive"]:
             # Create spoolfile
             create_spoolfile({"context": context, "forward": notification_forward_to})
             if notification_forward_mode == "forward_only":
                 return 0
 
-        try:
-            write_into_spoolfile = config.mknotifyd_enabled
-        except:
-            write_into_spoolfile = False
-        process_context(context, write_into_spoolfile)
+        process_context(context, notification_spooling)
     except Exception, e:
         if g_interactive:
             raise

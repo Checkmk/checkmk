@@ -264,6 +264,7 @@ check_parameters                     = []
 checkgroup_parameters                = {}
 legacy_checks                        = [] # non-WATO variant of legacy checks
 active_checks                        = {} # WATO variant for fully formalized checks
+special_agents                       = {} # WATO variant for datasource_programs
 custom_checks                        = [] # WATO variant for free-form custom checks without formalization
 all_hosts                            = []
 host_paths                           = {}
@@ -333,6 +334,7 @@ check_config_variables             = [] # variables (names) in checks/* needed f
 snmp_info                          = {} # whichs OIDs to fetch for which check (for tabular information)
 snmp_scan_functions                = {} # SNMP autodetection
 active_check_info                  = {} # definitions of active "legacy" checks
+special_agent_info                 = {}
 
 
 # Now include the other modules. They contain everything that is needed
@@ -991,7 +993,17 @@ def get_sorted_check_table(hostname):
 
 # Determine, which program to call to get data. Should
 # be None in most cases -> to TCP connect on port 6556
+# HACK:
+special_agent_dir = agents_dir + "/special"
 def get_datasource_program(hostname, ipaddress):
+    # First check WATO-style special_agent rules
+    for agentname, ruleset in special_agents.items():
+        params = host_extra_conf(hostname, ruleset)
+        if params: # rule match! 
+            # Create command line using the special_agent_info
+            cmd_arguments = special_agent_info[agentname](params[0], hostname)
+            return '%s/agent_%s %s' % ( special_agent_dir, agentname, cmd_arguments)
+
     programs = host_extra_conf(hostname, datasource_programs)
     if len(programs) == 0:
         return None

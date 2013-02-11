@@ -12081,7 +12081,7 @@ def mode_bi_edit_rule(phase):
     else:
         value = aggregation_rules[ruleid]
 
-    html.begin_form("birule")
+    html.begin_form("birule", method="POST")
     vs_rule.render_input("rule", value)
     forms.end()
     html.hidden_fields()

@@ -1,3 +1,5 @@
+1.2.3i1:
+
 1.2.2b1:
     Core:
     * cmk --notify: added notification script to generate HTML mails including

@@ -178,7 +178,6 @@ class SpoolfilesHandler:
 class TcpServer:
     def __init__(self):
         self._tcp_socket = None
-        self._reopen_sockets = False
         self._should_terminate = False
         self._is_running = False
         self.open_sockets()

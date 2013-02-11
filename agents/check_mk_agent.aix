@@ -40,7 +40,7 @@ LOCALDIR=$MK_LIBDIR/local
 export LC_NUMERIC="en_US"
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.0p3
+echo Version: 1.2.0p4
 echo AgentOS: aix
 
 echo '<<<df>>>'

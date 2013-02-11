@@ -6,3 +6,19 @@ Targetversion: 1.2.2
 Class: bug
 
 When adding umlauts like ä to regex patterns, they do never match.
+
+Was machen wir eigentlich, wenn die Enkodierung der eingehenden
+Events nicht klar ist? Vorschlag:
+
+Wir kodieren grundsatzlich von UTF-8 nach intern Unicode. Dabei
+dann aufpassen, dass auch die Konfiguration der Regeln immer
+Unicode verwendet (nicht TextAscii, sondern TextUnicode()).
+
+Wenn beim Enkodieren ein Fehler auftritt, dann nehmen wir 
+latin1 an (bzw. Einstellbar als globale Option).
+
+try:
+    text = text.decode('utf-8'
+except:
+    text = text.decode(conifg.ec_fallback_encoding)
+

@@ -11,6 +11,8 @@
     * cmk --notify: added plugin for sms notification
     * FIX: precompiled checks: correct handling of sys.exit() call when using python2.4 
     * cmk --notify: improved logging on wrong notification type
+    * RPM: Added check_mk-agent-scriptless package (Same as normal agent rpm,
+      but without RPM post scripts)
 
     Checks & Agents:
     * winperf_processor now outputs float usage instead of integer

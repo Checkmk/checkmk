@@ -47,11 +47,25 @@ Requires:  xinetd
 Summary: Linux-Agent for check_mk
 AutoReq:   off
 AutoProv:  off
-Conflicts: check_mk-caching-agent
+Conflicts: check_mk-caching-agent check_mk-agent-scriptless
 %description agent
 This package contains the agent for check_mk. Install this on
 all Linux machines you want to monitor via check_mk. You'll need
 xinetd to run this agent.
+
+%package agent-scriptless
+Group:     System/Monitoring
+Requires:  xinetd
+Summary: Linux-Agent for check_mk
+AutoReq:   off
+AutoProv:  off
+Conflicts: check_mk-caching-agent check_mk-agent
+%description agent-scriptless
+This package contains the agent for check_mk. Install this on
+all Linux machines you want to monitor via check_mk. You'll need
+xinetd to run this agent. This package does not run any scripts during
+installation. You will need to manage the xinetd configuration on your
+own.
 
 %package caching-agent
 Group:     System/Monitoring
@@ -59,7 +73,7 @@ Requires:  xinetd
 Summary: Caching Linux-Agent for check_mk
 AutoReq:   off
 AutoProv:  off
-Conflicts: check_mk-agent
+Conflicts: check_mk-agent agent-scriptless
 %description caching-agent
 This package contains the agent for check_mk with an xinetd
 configuration that wrap the agent with the check_mk_caching_agent
@@ -164,6 +178,14 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/check_mk/livecheck
 
 %files agent
+%config(noreplace) /etc/xinetd.d/check_mk
+/usr/bin/check_mk_agent
+/usr/bin/waitmax
+/usr/share/doc/check_mk_agent
+%dir /usr/lib/check_mk_agent/local
+%dir /usr/lib/check_mk_agent/plugins
+
+%files agent-scriptless
 %config(noreplace) /etc/xinetd.d/check_mk
 /usr/bin/check_mk_agent
 /usr/bin/waitmax

@@ -1,9 +1,9 @@
-Title: execute action but directly drop message afterwards
+Title: execute action but directly delete message afterwards
 Component: ec
 State: open
 Date: 2013-01-31 11:13:50
 Targetversion: 1.2.2
 Class: feature
 
-We need to be able to execute actions but directly drop the message
-afterwards without creating an event from it.
+We need to be able to execute actions but directly delete the event
+afterwards.

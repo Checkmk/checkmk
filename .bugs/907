@@ -10,3 +10,8 @@ Create a set of default rules, at least one rule which should remain as
 above. When having a rule, it is possible to count the times this rule
 was used to maybe define better "catch & drop" rules at the beginning
 of the ruleset
+
+Solution: We create one rule with count(1) that create *one* open
+counting event per host. This rule is created if the file rules.mk
+does not exist when entering the event editor. This can simply be
+done in WATO: EC load_rules.

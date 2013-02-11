@@ -319,6 +319,12 @@ host_attributes                      = {} # needed by WATO, ignored by Check_MK
 ping_levels                          = [] # special parameters for host/PING check_command
 check_periods                        = []
 
+# Notification Spooling
+notification_spooling = False
+notification_spool_to = None
+
+
+
 # global variables used to cache temporary values (not needed in check_mk_base)
 ip_to_hostname_cache = None
 
@@ -340,7 +346,7 @@ special_agent_info                 = {}
 # Now include the other modules. They contain everything that is needed
 # at check time (and many of that is also needed at administration time).
 try:
-    modules =  [ 'check_mk_base', 'snmp', 'notify' ]
+    modules =  [ 'check_mk_base', 'snmp' ]
     for module in modules:
         filename = modules_dir + "/" + module + ".py"
         execfile(filename)
@@ -4856,6 +4862,7 @@ if __name__ == "__main__":
                 do_automation(a, args)
                 done = True
             elif o == '--notify':
+                execfile(modules_dir + "/notify.py")
                 sys.exit(do_notify(args))
 
     except MKGeneralException, e:

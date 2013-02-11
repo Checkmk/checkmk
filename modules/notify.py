@@ -33,16 +33,14 @@
 # encoded one) and can use any of the variables contact, email,
 # hostname, servicedesc, hoststate, servicestate, output in
 # the form %(variable)s
+
 import pprint, uuid
+
 # Default settings
 notification_logdir   = var_dir + "/notify"
 notification_spooldir = var_dir + "/notify/spool"
 notification_log = notification_logdir + "/notify.log"
 notification_logging    = 0
-
-notification_spooling_enabled = False
-notification_forward_to = ""
-notification_forward_mode = "off"
 
 notification_log_template = \
     u"$CONTACTNAME$ - $NOTIFICATIONTYPE$ - " \
@@ -362,10 +360,11 @@ def do_notify(args):
             sys.exit(1)
 
         notify_log("forward mode %s" % notification_forward_mode)
+        # TODO:
         if notification_forward_mode in ["forward", "forward_exclusive"]:
             # Create spoolfile
             create_spoolfile({"context": context, "forward": notification_forward_to})
-            if notification_forward_mode == "forward_exclusive":
+            if notification_forward_mode == "forward_only":
                 return 0
 
         try:

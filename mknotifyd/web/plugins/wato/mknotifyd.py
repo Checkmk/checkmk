@@ -29,20 +29,16 @@ import config
 try:
     mknotifyd_enabled = config.mknotifyd_enabled
 except:
-    mknotifyd_enabled = False
+    mknotifyd_enabled = True
 
 config_dir = defaults.default_config_dir + "/mknotifyd.d/wato/"
-
-def log_mkeventd(what, message): 
-    log_entry(None, what, message, "audit.log")     # central WATO audit log 
-    log_entry(None, what, message, "mknotify.log")  # pending changes for mknotifyd
 
 if mknotifyd_enabled:
     group = _("Notification")
     
     # Check_MK var
     register_configvar(group,
-        "notification_spooling_enabled",
+        "notification_spooling",
         Checkbox(
             title = _("Spool notifications"),
             help = _("Here you can set if notifications are processed through a spooling mechanism."
@@ -50,6 +46,36 @@ if mknotifyd_enabled:
                      "sending a notification, the system tries to resend it later on. This is configurable "
                      "via the 'Notification fail retry interval'"),
             default_value = False),
+        domain = "check_mk"
+    )
+    
+    # Check_MK var
+    register_configvar(group,
+        "notification_spool_to",
+        Optional(
+            Tuple(
+                elements = [
+                    TextAscii(
+                        title = _("Remote host"),
+                    ),
+                    Integer(
+                        title = _("TCP port"),
+                        minvalue = 1,
+                        maxvalue = 65535,
+                        default_value = 6555,
+                    ),
+                    Checkbox(
+                        title = _("Local processing"),
+                        label = _("Also process notification locally"),
+                    ),
+                ]),
+            title = _("Remote notification spooling"),
+            help = _("This option allows you to forward notifications to another Check_MK site. "
+                     "That site must have the notification spooler running and TCP listening enabled. "
+                     "This allows you to create a centralized notification handling."),
+            label = _("Spool notifications to remote site"),
+            none_label = _("(Do not spool to remote site)"),
+        ),
         domain = "check_mk"
     )
     
@@ -70,50 +96,14 @@ if mknotifyd_enabled:
     )
 
 
-    # Check_MK var
-    register_configvar(group,
-        "notification_forward_mode",
-        DropdownChoice(
-            title = _("Forwarding mode"),
-            help = _("How notifications should be forwarded<br>"
-                     "No Forwarding: Notifications are processed locally according to the contact settings<br>" 
-                     "Forward an process local: Notifications are forwarded to the configured remote site, "
-                     "but also processed locally according to the contacts settings<br>"
-                     "Exclusive forwarding: Notifications are forwarded to the configured remote site and "
-                     "never processed on the local site. This means that the configured notification plugins "
-                     "for the local contacts do not apply"
-                    ),
-            choices = [
-                ('off',       _("No Forwarding")),
-                ('forward' ,  _("Forward and process local")),
-                ('forward_exclusive', _("Exclusive forwarding"))
-                ]),
-        domain = "check_mk"
-    )
-    
-    # Check_MK var
-    register_configvar(group,
-        "notification_forward_to",
-        Optional(
-            TextAscii(
-                title = _("{Host}:{Port}")
-            ),
-            title = _("Forward notifications to remote host"),
-            help = _("This will forward notifications to a remote site"),
-            label = _("Forward to remote host"),
-            none_label = _("Do not send to remote host"),
-        ),
-        domain = "check_mk"
-    )
-    
     # Daemon var
     register_configvar(group,
         "notification_daemon_listen_port",
             Integer(
                 title = _("Port for receiving notifications"),
-                help = _("Here you can set port at which the mknotifyd listens for forwarded"
-                         "notification messages. The port number needs to be between 1025 and 65535"),
-                minvalue = 1025,
+                help = _("Here you can set port at which the notification spooler listens for forwarded"
+                         "notification messages from spoolers on remote sites."),
+                minvalue = 1,
                 maxvalue = 65535,
                 default_value = 6555,
             ),

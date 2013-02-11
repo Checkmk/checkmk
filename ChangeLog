@@ -1,3 +1,7 @@
+1.2.2b2:
+    BI:
+    * FIX: fix exception in BI-Boxes views of host groups
+
 1.2.2b1:
     Core:
     * cmk --notify: added notification script to generate HTML mails including

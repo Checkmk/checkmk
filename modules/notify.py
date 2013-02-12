@@ -265,9 +265,9 @@ def process_context(context, write_into_spoolfile, use_method = None):
                 method = ('flexible', [found_plugin])
         
         if type(method) == tuple and method[0] == 'flexible':
-            notify_flexible(context, method[1], write_into_spoolfile)
+            return notify_flexible(context, method[1], write_into_spoolfile)
         else:
-            notify_via_email(context, write_into_spoolfile)
+            return notify_via_email(context, write_into_spoolfile)
     except Exception, e:
         notify_log("ERROR: %s\n%s" % (e, format_exception()))
         sys.stderr.write("ERROR: %s\n" % e)

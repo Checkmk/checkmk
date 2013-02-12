@@ -1,7 +1,9 @@
 #!/usr/bin/python
 # Create message for HPOpenView
-# This plugin forwards the notification to the 
+# This notification plugin forwards the notification to the 
 # local HPOpenView instance
+#
+# Note: Some paths are still hardcoded here.
 
 import os, sys, re
 

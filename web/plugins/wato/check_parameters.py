@@ -1463,6 +1463,7 @@ checkgroups.append((
     TextAscii(
         title = _("Explicit tablespaces"),
         help = _("Here you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"),
+        regex = '.+\..+',
         allow_empty = False),
      None))
 

@@ -319,6 +319,7 @@ host_attributes                      = {} # needed by WATO, ignored by Check_MK
 ping_levels                          = [] # special parameters for host/PING check_command
 check_periods                        = []
 
+
 # global variables used to cache temporary values (not needed in check_mk_base)
 ip_to_hostname_cache = None
 
@@ -4856,9 +4857,7 @@ if __name__ == "__main__":
                 do_automation(a, args)
                 done = True
             elif o == '--notify':
-                do_notify(args)
-                done = True
-
+                sys.exit(do_notify(args))
 
     except MKGeneralException, e:
         sys.stderr.write("%s\n" % e)

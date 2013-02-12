@@ -34,10 +34,19 @@
 # hostname, servicedesc, hoststate, servicestate, output in
 # the form %(variable)s
 
+import pprint, uuid
+
 # Default settings
-notification_logdir = var_dir + "/notify"
+notification_logdir   = var_dir + "/notify"
+notification_spooldir = var_dir + "/notify/spool"
 notification_log = notification_logdir + "/notify.log"
-notification_logging = 0
+notification_logging    = 0
+
+# Notification Spooling
+notification_spooling = False
+notification_spool_to = None
+
+
 notification_log_template = \
     u"$CONTACTNAME$ - $NOTIFICATIONTYPE$ - " \
     u"$HOSTNAME$ $HOSTSTATE$ - " \
@@ -171,17 +180,30 @@ def notify_usage():
     sys.stderr.write("""Usage: check_mk --notify
        check_mk --notify fake-service <plugin>
        check_mk --notify fake-host <plugin>
+       check_mk --notify spoolfile <filename>
 
 Normally the notify module is called without arguments to send real
 notification. But there are situations where this module is called with
 COMMANDS to e.g. support development of notification plugins.
 
 Available commands:
-    fake-service <plugin> ... Calls the given notification plugin with fake
-                              notification data of a service notification.
-    fake-host <plugin>    ... Calls the given notification plugin with fake
-                              notification data of a host notification.
+    fake-service <plugin>       ... Calls the given notification plugin with fake
+                                    notification data of a service notification.
+    fake-host <plugin>          ... Calls the given notification plugin with fake
+                                    notification data of a host notification.
+    spoolfile <filename>        ... Reads the given spoolfile and creates a
+                                    notification out of its data
 """)
+
+
+def create_spoolfile(data):
+    contactname = data["context"]["CONTACTNAME"]
+    target_dir = "%s/%s" % (notification_spooldir, contactname)
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
+    file_path = "%s/%0.2f_%s" % (target_dir, time.time(), uuid.uuid1()) 
+    notify_log("Creating spoolfile: %s" % file_path)
+    file(file_path,"w").write(pprint.pformat(data))
 
 def get_readable_rel_date(timestamp):
     try:
@@ -196,21 +218,94 @@ def get_readable_rel_date(timestamp):
     days = rem / 1440
     return '%dd %02d:%02d:%02d' % (days, hours, minutes, seconds)
 
+def handle_spoolfile(spoolfile):
+    if os.path.exists(spoolfile):
+        try:
+            data = eval(file(spoolfile).read())
+            if not "context" in data.keys():
+                return 2
+         #   if data["plugin"] == None:
+         #       plugin = 'email'
+         #   else:
+         #       plugin = data['plugin']
+            return process_context(data["context"], False, data.get("plugin", "email"))
+        except Exception, e:
+            notify_log("ERROR %s\n%s" % (e, format_exception()))
+            return 2
+        return 0
+
+def process_context(context, write_into_spoolfile, use_method = None):
+    # Get notification settings for the contact in question - if available.
+    method = "email"
+    contact = contacts.get(context["CONTACTNAME"])
+    try:
+        if contact:
+            method = contact.get("notification_method")
+        else:
+            method = 'email'
+
+        if use_method:
+            if use_method == "email":
+                method = "email" 
+            elif method == "email":
+                # We are searching for a specific
+                # but this contact does not offer any 
+                notify_log("ERROR: contact %r do not have any plugins (required: %s)" % (contact, use_method))
+                return 2
+            else:
+                found_plugin = {} 
+                for item in method[1]:
+                    if item["plugin"] == use_method:
+                        found_plugin = item
+                        break
+                if not found_plugin:
+                    # Required plugin was not found for this contact
+                    notify_log("ERROR: contact %r do not have plugin %s" % (contact, use_method))
+                    return 2
+                method = ('flexible', [found_plugin])
+        
+        if type(method) == tuple and method[0] == 'flexible':
+            notify_flexible(context, method[1], write_into_spoolfile)
+        else:
+            notify_via_email(context, write_into_spoolfile)
+    except Exception, e:
+        notify_log("ERROR: %s\n%s" % (e, format_exception()))
+        sys.stderr.write("ERROR: %s\n" % e)
+        if notification_log:
+            sys.stderr.write("Details have been logged to %s.\n" % notification_log)
+        sys.exit(2)
+
 def do_notify(args):
     try:
         mode = 'notify'
         if args:
-            if len(args) != 2 or args[0] not in ['fake-service', 'fake-host']:
+            if len(args) != 2 or args[0] not in ['fake-service', 'fake-host', 'spoolfile']:
                 sys.stderr.write("ERROR: Invalid call to check_mk --notify.\n\n")
                 notify_usage()
                 sys.exit(1)
 
-            mode, plugin = args
-            global g_interactive
-            g_interactive = True
+            mode, argument = args
+            if mode in ['fake-service', 'fake-host']:
+                plugin = argument
+            if mode in ['spoolfile']:
+               filename = argument
+
+            if mode in ['fake-service', 'fake-host']:
+                global g_interactive
+                g_interactive = True
 
         if not os.path.exists(notification_logdir):
             os.makedirs(notification_logdir)
+        if not os.path.exists(notification_spooldir):
+            os.makedirs(notification_spooldir)
+
+        # If the mode is set to 'spoolfile' we try to parse the given spoolfile
+        # This spoolfile contains a python dictionary 
+        # { context: { Dictionary of environment variables }, plugin: "Plugin name" }
+        # Any problems while reading the spoolfile results in returning 2
+        # -> mknotifyd deletes this file
+        if mode == "spoolfile":
+            return handle_spoolfile(filename)
 
         # Hier müssen wir erstmal rausfinden, an wen die Notifikation gehen soll.
         # Das sollte hoffentlich als Env-Variable da sein. Wenn nicht in check_mk_templates.cfg
@@ -249,11 +344,11 @@ def do_notify(args):
         # Handle interactive calls
         if mode == 'fake-service':
             set_fake_env('service', context)
-            sys.exit(call_notification_script(plugin, [], context))
+            sys.exit(call_notification_script(plugin, [], context, True))
 
         elif mode == 'fake-host':
             set_fake_env('host', context)
-            sys.exit(call_notification_script(plugin, [], context))
+            sys.exit(call_notification_script(plugin, [], context, True))
 
         context['LASTHOSTSTATECHANGE_REL'] = get_readable_rel_date(context['LASTHOSTSTATECHANGE'])
         if context['WHAT'] != 'HOST':
@@ -268,27 +363,14 @@ def do_notify(args):
                              "that are prefixed with NOTIFY_\n")
             sys.exit(1)
 
-        # Get notification settings for the contact in question - if available.
-        method = "email"
-        contact = contacts.get(context["CONTACTNAME"])
+        if notification_spooling:
+            # Create spoolfile
+            target_site = "%s:%s" % notification_spool_to[0:2]
+            create_spoolfile({"context": context, "forward": target_site})
+            if not notification_spool_to[2]:
+                return 0
 
-        try:
-            if contact:
-                method = contact.get("notification_method")
-            else:
-                method = 'email'
-            if type(method) == tuple and method[0] == 'flexible':
-                notify_flexible(contact, context, method[1])
-            else:
-                notify_via_email(context)
-
-        except Exception, e:
-            notify_log("ERROR: %s\n%s" % (e, format_exception()))
-            sys.stderr.write("ERROR: %s\n" % e)
-            if notification_log:
-                sys.stderr.write("Details have been logged to %s.\n" % notification_log)
-            sys.exit(1)
-
+        process_context(context, notification_spooling)
     except Exception, e:
         if g_interactive:
             raise
@@ -298,7 +380,11 @@ def do_notify(args):
         file(crash_dir + "/crash.log", "a").write("CRASH:\n%s\n\n" % format_exception())
 
 
-def notify_via_email(context):
+def notify_via_email(context, write_into_spoolfile):
+    if write_into_spoolfile:
+        create_spoolfile({"context": context})
+        return 0
+
     notify_log(substitute_context(notification_log_template, context))
 
     if "SERVICEDESC" in context:
@@ -323,84 +409,102 @@ def notify_via_email(context):
     os.putenv("LANG", "C.UTF-8")
     if notification_logging >= 2:
         file(var_dir + "/notify/body.log", "w").write(body.encode("utf-8"))
-    os.popen(command_utf8, "w").write(body.encode("utf-8"))
+    return os.popen(command_utf8, "w").write(body.encode("utf-8"))
 
 
-def notify_flexible(contact, context, notification_table):
-    notify_log("Flexible notification for %s" % context["CONTACTNAME"])
+
+
+# may return
+# 0  : everything fine   -> proceed
+# 1  : currently not OK  -> try to process later on
+# >=2: invalid           -> discard
+def check_prerequisite(context, entry):
+    # Check disabling
+    if entry.get("disabled"):
+        notify_log("- Skipping: it is disabled for this user")
+        return 2
+        
+    # Check host, if configured
+    if entry.get("only_hosts"):
+        hostname = context.get("HOSTNAME")
+        if hostname not in entry["only_hosts"]:
+            notify_log(" - Skipping: host '%s' matches non of %s" % (hostname, ", ".join(entry["only_hosts"])))
+            return 2
+
+    # Check service, if configured
+    if entry.get("only_services"):
+        servicedesc = context.get("SERVICEDESC")
+        if not servicedesc:
+            notify_log(" - Skipping: limited to certain services, but this is a host notification")
+        for s in entry["only_services"]:
+            if re.match(s, servicedesc):
+                break
+        else:
+            notify_log(" - Skipping: service '%s' matches non of %s" % (
+                servicedesc, ", ".join(entry["only_services"])))
+            return 2
+
+    # Check notification type
+    event, allowed_events = check_notification_type(context, entry["host_events"], entry["service_events"])
+    if event not in allowed_events:
+        notify_log(" - Skipping: wrong notification type %s (%s), only %s are allowed" % 
+            (event, notification_type, ",".join(allowed_events)) )
+        return 2
+
+    # Check notification number (in case of repeated notifications/escalations)
+    if "escalation" in entry:
+        from_number, to_number = entry["escalation"]
+        if context["WHAT"] == "HOST":
+            notification_number = int(context.get("HOSTNOTIFICATIONNUMBER", 1))
+        else:
+            notification_number = int(context.get("SERVICENOTIFICATIONNUMBER", 1))
+        if notification_number < from_number or notification_number > to_number:
+            notify_log(" - Skipping: notification number %d does not lie in range %d ... %d" %
+                (notification_number, from_number, to_number))
+            return 2
+
+    if "timeperiod" in entry:
+        timeperiod = entry["timeperiod"]
+        if timeperiod and timeperiod != "24X7":
+            if not check_timeperiod(timeperiod):
+                notify_log(" - Skipping: time period %s is currently not active" % timeperiod)
+                return 1
+    return 0
+
+
+def notify_flexible(context, notification_table, write_into_spoolfile):
+    result = 2
     for entry in notification_table:
         plugin = entry["plugin"]
         notify_log("Plugin: %s" % plugin)
-
-        # Check disabling
-        if entry.get("disabled"):
-            notify_log("- Skipping: it is disabled for this user")
+        
+        result = check_prerequisite(context, notification_table[0])
+        if result > 0:
             continue
-
-        # Check host, if configured
-        if entry.get("only_hosts"):
-            hostname = context.get("HOSTNAME")
-            if hostname not in entry["only_hosts"]:
-                notify_log(" - Skipping: host '%s' matches non of %s" % (hostname, ", ".join(entry["only_hosts"])))
-                continue
-
-        # Check service, if configured
-        if entry.get("only_services"):
-            servicedesc = context.get("SERVICEDESC")
-            if not servicedesc:
-                notify_log(" - Skipping: limited to certain services, but this is a host notification")
-            for s in entry["only_services"]:
-                if re.match(s, servicedesc):
-                    break
-            else:
-                notify_log(" - Skipping: service '%s' matches non of %s" % (
-                    servicedesc, ", ".join(entry["only_services"])))
-                continue
-
-        # Check notification type
-        event, allowed_events = check_notification_type(context, entry["host_events"], entry["service_events"])
-        if event not in allowed_events:
-            notification_type = context.get("NOTIFICATIONTYPE","")
-            notify_log(" - Skipping: wrong notification type %s (%s), only %s are allowed" % 
-                (event, notification_type, ",".join(allowed_events)) )
-            continue
-
-        # Check notification number (in case of repeated notifications/escalations)
-        if "escalation" in entry:
-            from_number, to_number = entry["escalation"]
-            if context["WHAT"] == "HOST":
-                notification_number = int(context.get("HOSTNOTIFICATIONNUMBER", 1))
-            else:
-                notification_number = int(context.get("SERVICENOTIFICATIONNUMBER", 1))
-            if notification_number < from_number or notification_number > to_number:
-                notify_log(" - Skipping: notification number %d does not lie in range %d ... %d" %
-                    (notification_number, from_number, to_number))
-                continue
-
-        if "timeperiod" in entry:
-            timeperiod = entry["timeperiod"]
-            if timeperiod and timeperiod != "24X7":
-                if not check_timeperiod(timeperiod):
-                    notify_log(" - Skipping: time period %s is currently not active" % timeperiod)
-                    continue
 
         if plugin is None:
-            notify_via_email(context)
+            result = notify_via_email(context, write_into_spoolfile)
         else:
-            call_notification_script(plugin, entry.get("parameters", []), context)
+            result = call_notification_script(plugin, entry.get("parameters", []), context, write_into_spoolfile)
+
+    # The exit_code is only relevant when processing spoolfiles
+    return result
 
 
-def call_notification_script(plugin, parameters, context):
+
+def call_notification_script(plugin, parameters, context, write_into_spoolfile):
     # Prepare environment
     os.putenv("NOTIFY_PARAMETERS", " ".join(parameters))
     for nr, value in enumerate(parameters):
         os.putenv("NOTIFY_PARAMETER_%d" % (nr + 1), value)
     os.putenv("NOTIFY_LOGDIR", notification_logdir)
 
-    for key in [ 'WHAT', 'OMD_ROOT', 'OMD_SITE',
-                 'MAIL_COMMAND', 'LASTHOSTSTATECHANGE_REL' ]:
-        if key in context:
-            os.putenv('NOTIFY_' + key, context[key])
+    #for key in [ 'WHAT', 'OMD_ROOT', 'OMD_SITE',
+    #             'MAIL_COMMAND', 'LASTHOSTSTATECHANGE_REL' ]:
+    #    if key in context:
+    #        os.putenv('NOTIFY_' + key, context[key])
+    for key in context:
+        os.putenv('NOTIFY_' + key, context[key])
 
     # Remove service macros for host notifications
     if context['WHAT'] == 'HOST':
@@ -427,16 +531,21 @@ def call_notification_script(plugin, parameters, context):
         notify_log("  not in %s" % notifications_dir)
         if local_notifications_dir:
             notify_log("  and not in %s" % local_notifications_dir)
-        return
+        return 2
+    
 
-    notify_log("Executing %s" % path)
-    out = os.popen(path + " 2>&1 </dev/null")
-    for line in out:
-        notify_log("Output: %s" % line.rstrip())
-    exitcode = out.close()
-    if exitcode: 
-        notify_log("Plugin exited with code %d" % (exitcode >> 8))
-        return exitcode
+    # Create spoolfile or actually call the plugin
+    if write_into_spoolfile:
+        create_spoolfile({"context": context, "plugin": plugin})
+    else:
+        notify_log("Executing %s" % path)
+        out = os.popen(path + " 2>&1 </dev/null")
+        for line in out:
+            notify_log("Output: %s" % line.rstrip())
+        exitcode = out.close()
+        if exitcode: 
+            notify_log("Plugin exited with code %d" % (exitcode >> 8))
+            return exitcode
     return 0
 
 

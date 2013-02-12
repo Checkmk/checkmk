@@ -679,7 +679,6 @@ checkgroups.append((
     "first"
 ))
 
-
 register_rule(group + '/' + subgroup_storage,
     varname   = "filesystem_groups",
     title     = _('Filesystem grouping patterns'),
@@ -1485,6 +1484,42 @@ checkgroups.append((
         allow_empty = False),
      None))
 
+#checkgroups.append((
+#    subgroup_applications,
+#    "oracle_tablespaces",
+#    _("Oracle Tablespaces"),
+#    Dictionary(
+#        elements = [
+#            ( "levels",
+#               Alternative(
+#                   title = _("Total Memory Levels"),
+#                   elements = [
+#                       Tuple(
+#                           title = _("Percentage levels of used space"),
+#                           elements = [
+#                               Percentage(title = _("Warning at"), label = _("% usage")),
+#                               Percentage(title = _("Critical at"), label = _("% usage")),
+#                           ]
+#                       ),
+#                       Tuple(
+#                           title = _("Absolute free space in MB"),
+#                           elements = [
+#                                Integer(title = _("Warning lower than"), unit = _("MB")), 
+#                                Integer(title = _("Critical lower than"), unit = _("MB")), 
+#                           ]
+#                        )
+#                   ])),
+#            ( "autoextend",
+#                Checkbox(
+#                  title = _("Autoextend"),
+#                  label = _("Autoextension is expected")
+#                  help = _(""))),
+#
+#                   ]),
+#    TextAscii(
+#        title = _("Service descriptions"),
+#        allow_empty = False),
+#     None))
 
 checkgroups.append((
     subgroup_applications,

@@ -55,7 +55,7 @@ examples:
  # of maximum tablespace size and deactivate check of autoextend
 
 
- oracle_tablespaces_default_levels = {
+ oracle_tablespaces_defaults = {
         "levels" : (20.0, 10.0),
         "autoextend" : None
  }
@@ -106,4 +106,4 @@ oracle_tablespaces_check_default_increment(bool): This setting does not
  {True}. That way the check will warn if the table space has its increment
  size set to {1} (the ORACLE default value).
 
-oracle_tablespaces_default_levels(dict): A dictionary with the optional keys mentioned in parameters
+oracle_tablespaces_defaults(dict): A dictionary with the optional keys mentioned in parameters

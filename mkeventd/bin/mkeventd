@@ -2301,7 +2301,7 @@ def do_rule_action(action, event, user=""):
             log_event_history(event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
             execute_script(substitute_event_tags(settings["script"], event))
-            log_event_history(event, "SCRIPT", user, action)
+            log_event_history(event, "SCRIPT", user, action['id'])
         else:
             log("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
     except Exception, e:

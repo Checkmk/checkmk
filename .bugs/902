@@ -1,9 +1,11 @@
 Title: execute action but directly delete message afterwards
 Component: ec
-State: open
+Class: feature
+State: done
 Date: 2013-01-31 11:13:50
 Targetversion: 1.2.2
-Class: feature
 
 We need to be able to execute actions but directly delete the event
 afterwards.
+
+2013-02-12 18:17:11: changed state open -> done

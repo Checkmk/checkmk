@@ -456,8 +456,8 @@ vs_mkeventd_rule = Dictionary(
                   Age(),
                   ListChoice(
                     choices = [
-                      ( "open", _("Expire events that are in state <i>open</i>") ),
-                      ( "ack", _("Expire events thar are in state <i>acknowledged</i>") ),
+                      ( "open", _("Expire events that are in the state <i>open</i>") ),
+                      ( "ack", _("Expire events that are in the state <i>acknowledged</i>") ),
                     ],
                     default_value = [ "open" ],
                   )

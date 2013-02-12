@@ -2,6 +2,9 @@
     BI:
     * FIX: fix exception in BI-Boxes views of host groups
 
+    Event Console:
+    * FIX: Fixed exception when logging actions exectuted by mkeventd
+
 1.2.2b1:
     Core:
     * cmk --notify: added notification script to generate HTML mails including

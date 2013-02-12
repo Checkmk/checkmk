@@ -55,7 +55,7 @@
 # integer: MB.
 oracle_tablespaces_default_levels = (10.0, 5.0)
 
-factory_settings["oracle_tablespaces_default_levels"] = {
+factory_settings["oracle_tablespaces_defaults"] = {
     "levels"         : (10.0, 5.0),
     "magic_normsize" : 1000,
     "levels_low"     : (0.0, 0.0)
@@ -263,7 +263,7 @@ check_info['oracle_tablespaces'] = {
     "inventory_function"      : inventory_oracle_tablespaces,
     "has_perfdata"            : True,
     "group"                   : "oracle_tablespaces",
-    "default_levels_variable" : "oracle_tablespaces_default_levels",
+    "default_levels_variable" : "oracle_tablespaces_defaults",
     "includes"                : [ "oracle.include" ]
 }
 check_config_variables.append("oracle_tablespaces_check_default_increment")

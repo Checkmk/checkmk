@@ -1015,6 +1015,7 @@ if mkeventd_enabled:
         ],
         'sorters': [
             ('history_time', False),
+            ('history_line', True),
         ],
     })
     
@@ -1088,6 +1089,7 @@ if mkeventd_enabled:
         ],
         'sorters': [
             ('history_time', False),
+            ('history_line', True),
         ],
     })
 
@@ -1141,5 +1143,6 @@ if mkeventd_enabled:
         ],
         'sorters': [
             ('history_time', False),
+            ('history_line', True),
         ],
     })

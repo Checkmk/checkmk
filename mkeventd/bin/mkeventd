@@ -961,6 +961,10 @@ class EventServer:
                     log_event_history(event, "DELAYOVER")
                     if rule:
                         do_rule_actions(rule, event)
+                        if rule.get("autodelete"):
+                            events_to_delete.append(nr)
+                            log_event_history(event, "AUTODELETE")
+                            
                     else:
                         log("Cannot do rule action: rule %s not present anymore." % event["rule_id"])
 
@@ -1095,6 +1099,10 @@ class EventServer:
             g_event_status.new_event(event)
             log_event_history(event, "COUNTFAILED")
             do_rule_actions(rule, event)
+            if rule.get("autodelete"):
+                log_event_history(event, "AUTODELETE")
+                g_event_status.remove_event(event)
+
 
 
     # Precompile regular expressions and similar stuff
@@ -1270,7 +1278,14 @@ class EventServer:
                                 existing_event["phase"] = "delayed"
                             else:
                                 do_rule_actions(rule, existing_event)
+
                             log_event_history(existing_event, "COUNTREACHED")
+
+                            if "delay" not in rule and rule.get("autodelete"):
+                                log_event_history(existing_event, "AUTODELETE")
+                                with lock_eventstatus:
+                                    g_event_status.remove_event(existing_event)
+
 
                     elif "expect" in rule:
                         g_event_status.count_expected_event(event)
@@ -1287,6 +1302,10 @@ class EventServer:
                             g_event_status.new_event(event)
                         if event["phase"] == "open":
                             do_rule_actions(rule, event)
+                            if rule.get("autodelete"):
+                                log_event_history(event, "AUTODELETE")
+                                with lock_eventstatus:
+                                    g_event_status.remove_event(event)
                     return
 
     # Checks if an event matches a rule. Returns either False (no match)
@@ -2114,6 +2133,13 @@ class EventStatus():
         self._next_event_id += 1
         self._events.append(event)
         log_event_history(event, "NEW")
+
+    def remove_event(self, event):
+        try:
+            self._events.remove(event);
+        except Exception, e:
+            log("Cannot remove event %d: not present" % event["id"])
+        
 
     # Cancel all events the belong to a certain rule id and are
     # of the same "breed" as a new event.

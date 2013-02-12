@@ -234,7 +234,7 @@ vs_mkeventd_rule = Dictionary(
           Checkbox(
             title = _("Drop Message"),
             help = _("With this option all messages matching this rule will be silently dropped."),
-            label = _("Silently drop messages, do no actions"),
+            label = _("Silently drop message, do no actions"),
           )
         ),
         ( "state",
@@ -255,6 +255,12 @@ vs_mkeventd_rule = Dictionary(
             title = _("Actions"),
             help = _("Actions to automatically perform when this event occurs"),
             choices = mkeventd.action_choices,
+          )
+        ),
+        ( "autodelete",
+          Checkbox(
+            title = _("Automatic Deletion"),
+            label = _("Delete event immediately after the actions"),
           )
         ),
         ( "count",
@@ -613,7 +619,7 @@ vs_mkeventd_rule = Dictionary(
         ( _("General Properties"), [ "id", "description", "disabled" ] ),
         ( _("Matching Criteria"), [ "match", "match_host", "match_application", "match_priority", "match_facility", 
                                     "match_sl", "match_ok", "cancel_priority" ]),
-        ( _("Outcome &amp; Action"), [ "state", "sl", "actions", "drop" ]),
+        ( _("Outcome &amp; Action"), [ "state", "sl", "actions", "drop", "autodelete" ]),
         ( _("Counting &amp; Timing"), [ "count", "expect", "delay", "livetime", ]),
         ( _("Rewriting"), [ "set_text", "set_host", "set_application", "set_comment", "set_contact" ]),
     ],

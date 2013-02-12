@@ -341,6 +341,20 @@ class TextAscii(ValueSpec):
             if not self._regex.match(value):
                 raise MKUserError(varprefix, self._regex_error)
 
+class TextUnicode(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+
+    def render_input(self, varprefix, value):
+        html.text_input(varprefix, value, size = self._size)
+
+    def from_html_vars(self, varprefix):
+        return html.var_utf8(varprefix, "").strip()
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) not in [ str, unicode ]:
+            raise MKUserError(varprefix, _("The value must be of type str or unicode, but it has type %s") % type(value))
+
 # Internal ID as used in many places (for contact names, group name,
 # an so on)
 class ID(TextAscii):
@@ -360,7 +374,20 @@ class RegExp(TextAscii):
         try:
             re.compile(value)
         except sre_constants.error, e:
-            raise MKUserError(varprefix, _('Invalid regex: %s') % e)
+            raise MKUserError(varprefix, _('Invalid regular expression: %s') % e)
+
+class RegExpUnicode(TextUnicode):
+    def __init__(self, **kwargs):
+        TextUnicode.__init__(self, attrencode = True, **kwargs)
+
+    def validate_value(self, value, varprefix):
+        TextUnicode.validate_value(self, value, varprefix)
+
+        # Check if the string is a valid regex
+        try:
+            re.compile(value)
+        except sre_constants.error, e:
+            raise MKUserError(varprefix, _('Invalid regular expression: %s') % e)
 
 class EmailAddress(TextAscii):
     def __init__(self, **kwargs):
@@ -465,20 +492,6 @@ class HTTPUrl(TextAscii):
             (self._target and 'target="%s" ' % self._target or ""),
             url, text)
 
-
-class TextUnicode(TextAscii):
-    def __init__(self, **kwargs):
-        TextAscii.__init__(self, **kwargs)
-
-    def render_input(self, varprefix, value):
-        html.text_input(varprefix, value, size = self._size)
-
-    def from_html_vars(self, varprefix):
-        return html.var_utf8(varprefix, "").strip()
-
-    def validate_datatype(self, value, varprefix):
-        if type(value) not in [ str, unicode ]:
-            raise MKUserError(varprefix, _("The value must be of type str or unicode, but it has type %s") % type(value))
 
 class TextAreaUnicode(TextUnicode):
     def __init__(self, **kwargs):

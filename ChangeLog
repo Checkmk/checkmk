@@ -4,6 +4,15 @@
     BI:
     * FIX: fix exception in BI-Boxes views of host groups
 
+    Event Console:
+    * FIX: support non-Ascii characters in matching expressions. Note:
+           you need to edit and save each affected rule once in order
+           to make the fix work.
+    * FIX: Fixed exception when logging actions exectuted by mkeventd
+
+    Multisite:
+    * FIX: Fixed several minor IE7 related layout bugs
+
 1.2.2b1:
     Core:
     * cmk --notify: added notification script to generate HTML mails including

@@ -171,12 +171,15 @@ def regex(reg):
 # neccessary to use regular expression logic in order
 # to match it.
 def is_regex(text):
-    return text != text.translate(None, ".*?[](){}\\^$+|")
+    for c in text:
+        if c in ".*?[](){}\\^$+|":
+            return True
+    return False
 
 def match(pattern, text, complete = True):
     if pattern == None:
         return True
-    elif type(pattern) == str:
+    elif type(pattern) in [ str, unicode ]:
         if complete:
             return pattern == text.lower()
         else:
@@ -1135,9 +1138,11 @@ class EventServer:
                             else:
                                 rule[key] = rule[key].lower()
                 except Exception, e:
+                    if opt_debug:
+                        raise
                     rule["disabled"] = True
                     count_disabled += 1
-                    log("Ignoring rule %s because of an invalid regex (%s)." % 
+                    log("Ignoring rule '%s' because of an invalid regex (%s)." % 
                             (rule["id"], e))
 
                 if g_config["rule_optimizer"]:
@@ -1231,7 +1236,7 @@ class EventServer:
 
                 g_event_status.count_rule_match(rule["id"])
                 if g_config["log_rulehits"]:
-                    log("Rule %s hit by message %s/%s - '%s'." % (
+                    log("Rule '%s' hit by message %s/%s - '%s'." % (
                         rule["id"],
                         syslog_facilities[event["facility"]], syslog_priorities[event["priority"]],
                         event["text"]))
@@ -2296,7 +2301,7 @@ def do_rule_action(action, event, user=""):
             log_event_history(event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
             execute_script(substitute_event_tags(settings["script"], event))
-            log_event_history(event, "SCRIPT", user, action)
+            log_event_history(event, "SCRIPT", user, action['id'])
         else:
             log("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
     except Exception, e:

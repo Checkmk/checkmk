@@ -69,6 +69,12 @@ Boston, MA 02110-1301 USA.
     width: 1px;
 }
 
+.wato table.data td.buttons,
+.wato table.data td.buttons a,
+.wato table.data td.buttons img {
+    white-space: nowrap;
+}
+
 .wato th.right {
     border-right-style: none;
     border-radius: 0px 4px 0px 0px;
@@ -640,9 +646,10 @@ form#form_timeperiod td.vlof_content {
 }
 
 /* main menu */
-.wato div.mainmenu {
-    display: table-cell;
-    margin-bottom: 10px;
+
+form.search {
+    padding-top: 10px;
+    clear: both;
 }
 
 .wato div.mainmenu a {

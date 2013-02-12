@@ -679,7 +679,6 @@ checkgroups.append((
     "first"
 ))
 
-
 register_rule(group + '/' + subgroup_storage,
     varname   = "filesystem_groups",
     title     = _('Filesystem grouping patterns'),
@@ -1419,7 +1418,7 @@ checkgroups.append((
         elements = [
             ( "levels",
                Alternative(
-                   title = _("Total Memory Levels"),
+                   title = _("Total tablespace size"),
                    elements = [
                        Tuple(
                            title = _("Percentage levels of free maximum space"),
@@ -1462,7 +1461,8 @@ checkgroups.append((
                   help = _(""))),
                    ]),
     TextAscii(
-        title = _("Service descriptions"),
+        title = _("Explicit tablespaces"),
+        help = _("Here you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"),
         allow_empty = False),
      None))
 

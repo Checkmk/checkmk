@@ -859,7 +859,7 @@ class html:
         self.write('<a href="#" onfocus="if (this.blur) this.blur();" '
                    'onclick="this.innerHTML=\'%s\'; document.location.reload();">%s</a></td>' % 
                    (_("Reloading..."), title))
-        self.write('<td width=240 class=right><span id=headinfo></span>%s &nbsp; <b id=headertime>%s</b>' % 
+        self.write('<td style="min-width:240px" class=right><span id=headinfo></span>%s &nbsp; <b id=headertime>%s</b>' % 
                    (login_text, time.strftime("%H:%M")))
         try:
             self.help_visible = config.load_user_file("help", False)  # cache for later usage 

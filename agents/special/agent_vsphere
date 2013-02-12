@@ -1,17 +1,56 @@
 #!/usr/bin/python
 # encoding: utf-8
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
 import sys
+import argparse
 
-# Beispiel für Kommandozeile
-# agent_vsphere -p 4711 -C hostsystem,virtualmachine -u 'mrwatson' -s '(W*$JFMV(W' 'srv123'
-# Auswerten mit getopt.
+parser = argparse.ArgumentParser(description='Check_MK vSphere Agent')
+group = parser.add_argument_group()
+group.add_argument('-p', type=int, help="Port Number of vSphere Server")
+group.add_argument('-i', help="Check the hostsystem and or virtualmachine. Comma separated")
+parser.add_argument('-u', help="Username")
+parser.add_argument('-s', help="Secret")
+parser.add_argument('Hostname', help="Hostname")
 
-
-from pysphere import VIServer, VIProperty, MORTypes
-from pysphere.resources import VimService_services as VI
+params = vars(parser.parse_args())
+try:
+    from pysphere import VIServer, VIProperty, MORTypes
+    from pysphere.resources import VimService_services as VI
+except: 
+    print "<<<agent_msg>>>"
+    print "CRIT pysphere API not found. Please install and make a reinventory"
+    sys.exit(1)
 
 host = VIServer()
-host.connect(server, access[server][0], access[server][1])
+try:
+    host.connect(params['hostname'], params['u'], params['s'])
+except:
+    print "<<<agent_msg>>>"
+    print "CRIT Cant connect to vSphere  Server. May the wrong credentials. Please correct and make a reinventory"
+    sys.exit(1)
 
 def output_mors(what, properties): 
     if what == "hostsystem":
@@ -29,9 +68,10 @@ def output_mors(what, properties):
 
         # Get the name of this Host/VirtualMachine
         name = data["name"]
-
-        # Output multiplexed Check_MK Agent output (new in version 1.2.3i1)
-        print '<<<<%s>>>>' % name
+        
+        # Not yet
+        ## Output multiplexed Check_MK Agent output (new in version 1.2.3i1)
+        #print '<<<<%s>>>>' % name
         print '<<<esx_vsphere_%s>>>' % what
         for name, value in data.items():
             print '%s %s' % (name, value)
@@ -40,37 +80,40 @@ def output_mors(what, properties):
 def conv_multipath(value):
     return " ".join(["%s %s" % (p.Name, p.PathState) for p in value.value.HostMultipathStateInfoPath])
 
+if params['C'] == None:
+    check = [ 'hostsystem', 'virtualmachine' ]
+else:
+    check = params['C'].split(',')
 
+if "hostsystem" in check:
+    output_mors("hostsystem", {
+      "name": str,
+      "overallStatus": str,
+      "summary.quickStats.overallCpuUsage": str,
+      "summary.quickStats.overallMemoryUsage":     str,
+      "summary.quickStats.uptime": str,
+      "runtime.powerState": str,
+      "runtime.inMaintenanceMode": str,
+      "hardware.memorySize": str,
+      "hardware.cpuInfo.numCpuCores": str,
+      "hardware.cpuInfo.numCpuPackages": str,
+      "hardware.cpuInfo.numCpuThreads": str,
+      "config.multipathState.path": conv_multipath,
+    })
 
-if ... in ...:
-output_mors("hostsystem", {
-  "name": str,
-  "overallStatus": str,
-  "summary.quickStats.overallCpuUsage": str,
-  "summary.quickStats.overallMemoryUsage":     str,
-  "summary.quickStats.uptime": str,
-  "runtime.powerState": str,
-  "runtime.inMaintenanceMode": str,
-  "hardware.memorySize": str,
-  "hardware.cpuInfo.numCpuCores": str,
-  "hardware.cpuInfo.numCpuPackages": str,
-  "hardware.cpuInfo.numCpuThreads": str,
-  "config.multipathState.path": conv_multipath,
-})
-
-if ... in ...:
-output_mors("virtualmachine", {
- "name": str,
- "guestHeartbeatStatus": str,
- "summary.quickStats.overallCpuUsage": str,
- "summary.quickStats.uptimeSeconds": str,
- "summary.quickStats.guestMemoryUsage": str,
- "summary.quickStats.hostMemoryUsage": str,
- "summary.quickStats.overallCpuUsage": str,
- "summary.runtime.powerState": str,
- "config.hardware.memoryMB": str,
- "config.hardware.numCPU": str,
-})
+if "virtualmachine" in check:
+    output_mors("virtualmachine", {
+     "name": str,
+     "guestHeartbeatStatus": str,
+     "summary.quickStats.overallCpuUsage": str,
+     "summary.quickStats.uptimeSeconds": str,
+     "summary.quickStats.guestMemoryUsage": str,
+     "summary.quickStats.hostMemoryUsage": str,
+     "summary.quickStats.overallCpuUsage": str,
+     "summary.runtime.powerState": str,
+     "config.hardware.memoryMB": str,
+     "config.hardware.numCPU": str,
+    })
 
 
 

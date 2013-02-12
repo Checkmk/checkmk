@@ -646,9 +646,10 @@ form#form_timeperiod td.vlof_content {
 }
 
 /* main menu */
-.wato div.mainmenu {
-    display: table-cell;
-    margin-bottom: 10px;
+
+form.search {
+    padding-top: 10px;
+    clear: both;
 }
 
 .wato div.mainmenu a {

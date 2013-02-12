@@ -172,6 +172,7 @@ td.perfometer img.glass {
    height: 22px;
    margin-bottom: 1px;
    z-index: 30;
+   display: block;
 }
 
 

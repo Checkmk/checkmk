@@ -142,7 +142,11 @@ def get_tablespace_levels_in_bytes(size_bytes, params):
 
 
 def check_oracle_tablespaces(item, params, info):
-    sid, tbsname = item.split('.')
+    try:
+        sid, tbsname = item.split('.')
+    except ValueError:
+        return (3, 'UNKNOWN - Invalid check item given (must be <SID>.<tablespace>)')
+
     ts_status = None
     num_files = 0
     num_avail = 0
@@ -199,7 +203,6 @@ def check_oracle_tablespaces(item, params, info):
 
     if ts_status == None:
         return (3, "UNKNOWN - Tablespace not found")
-        
 
 
     infotext = " - %s, size %s, used %s" % \

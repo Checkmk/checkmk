@@ -7,6 +7,7 @@
            you need to edit and save each affected rule once in order
            to make the fix work.
     * FIX: Fixed exception when logging actions exectuted by mkeventd
+    * FIX: etc/init.d/mkeventd flush did not work when mkeventd was stopped
 
     Multisite:
     * FIX: Fixed several minor IE7 related layout bugs

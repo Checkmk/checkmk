@@ -215,7 +215,7 @@ class TcpServer:
                 client_socket, addr_info = s.accept()
                 client_data = client_socket.recv(8192)
                 if opt_verbose > 1:
-                    verbose("Received notification %d from %s" % ( handled_connection, pprint.pformat(addr_info), 2)) 
+                    verbose("Received notification %d from %s" % ( handled_connections, pprint.pformat(addr_info)), 2)
                     handled_connections = handled_connections + 1
 
                 try:

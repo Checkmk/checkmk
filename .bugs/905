@@ -1,9 +1,9 @@
 Title: We need an option to make "expect messages" based on subregexes possible
 Component: ec
-State: open
+Class: feature
+State: done
 Date: 2013-01-31 11:18:44
 Targetversion: 1.2.2
-Class: feature
 
 For example, when having several logentries which are sent regularly, like
 
@@ -31,3 +31,6 @@ autoamtisch eine neue EC-Regel direkt vor der Generator-Regel ein, die
 dann auf den speziellen Host wartet. Danach muss die EC neu geladen werden.
 Frage ist, ob das aus einer Aktion heraus sauber geht. Wahrscheinlich ja.
 
+
+2013-02-12 13:40:26: changed state open -> done
+solved.

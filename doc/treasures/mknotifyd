@@ -190,7 +190,6 @@ class TcpServer:
             self._tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self._tcp_socket.bind(("0.0.0.0", listen_port))
-            # TODO: listen limit ?
             self._tcp_socket.listen(200)
         except:
             log("Error opening socket.\n%s" % format_exception())
@@ -242,7 +241,6 @@ class TcpServer:
                             client_socket = None
                     except:
                         pass
-                # TODO: wirklich ohne socket.close()
                 client_socket = None
             if self._reopen_sockets:
                 log("Reopen tcp socket")

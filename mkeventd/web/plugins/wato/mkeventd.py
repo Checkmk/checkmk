@@ -687,7 +687,6 @@ vs_mkeventd_event = Dictionary(
 
 def load_mkeventd_rules():
     filename = mkeventd_config_dir + "rules.mk"
-    html.write(filename)
     if not os.path.exists(filename):
         return []
     try:

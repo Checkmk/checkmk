@@ -17,6 +17,10 @@
     * FIX: Fixed several minor IE7 related layout bugs
     * Cleanup form for executing commands on hosts/services
 
+    WATO:
+    * FIX: Fixed layout of rulelist table in IE*
+    * FIX: Fixed adding explicit host names to rules in IE7
+
 1.2.2b1:
     Core:
     * cmk --notify: added notification script to generate HTML mails including

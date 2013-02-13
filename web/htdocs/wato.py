@@ -9802,8 +9802,6 @@ def mode_edit_ruleset(phase):
         html.write("<div class=info>" + _("There are no rules defined in this set.") + "</div>")
 
     else:
-        html.write('<table class="data ruleset">')
-
         alread_matched = False
         match_keys = set([]) # in case if match = "dict"
         last_folder = None

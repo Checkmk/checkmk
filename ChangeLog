@@ -12,6 +12,9 @@
     Multisite:
     * FIX: Fixed several minor IE7 related layout bugs
 
+    WATO:
+    * FIX: Fixed layout of rulelist table in IE*
+
 1.2.2b1:
     Core:
     * cmk --notify: added notification script to generate HTML mails including

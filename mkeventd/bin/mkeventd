@@ -2327,7 +2327,7 @@ def send_email(to, subject, body):
     os.popen("mail -s '%s' '%s'" % (shell_escape(subject), shell_escape(to)), "w").write(body)
 
 def execute_script(body):
-    os.popen("/bin/bash", "w").write(body)
+    os.popen("/bin/bash", "w").write(body.encode('utf-8'))
 
 
 #.

@@ -32,15 +32,15 @@ except:
     mkeventd_enabled = False
 
 # main_config_file = defaults.check_mk_configdir + "/mkeventd.mk"
-config_dir       = defaults.default_config_dir + "/mkeventd.d/wato/"
+mkeventd_config_dir  = defaults.default_config_dir + "/mkeventd.d/wato/"
 if defaults.omd_root:
-    status_file      = defaults.omd_root + "/var/mkeventd/status"
+    mkeventd_status_file = defaults.omd_root + "/var/mkeventd/status"
 
 # Include rule configuration into backup/restore/replication. Current
 # status is not backed up.
 if mkeventd_enabled:
-    replication_paths.append(( "dir", "mkeventd", config_dir ))
-    backup_paths.append(( "dir", "mkeventd", config_dir ))
+    replication_paths.append(( "dir", "mkeventd", mkeventd_config_dir ))
+    backup_paths.append(( "dir", "mkeventd", mkeventd_config_dir ))
 
 #.
 #   .--ValueSpecs----------------------------------------------------------.
@@ -686,7 +686,8 @@ vs_mkeventd_event = Dictionary(
 #   '----------------------------------------------------------------------'
 
 def load_mkeventd_rules():
-    filename = config_dir + "rules.mk"
+    filename = mkeventd_config_dir + "rules.mk"
+    html.write(filename)
     if not os.path.exists(filename):
         return []
     try:
@@ -695,8 +696,8 @@ def load_mkeventd_rules():
         # If we are running on OMD then we know the path to
         # the state retention file of mkeventd and can read
         # the rule statistics directly from that file.
-        if defaults.omd_root and os.path.exists(status_file):
-            mkeventd_status = eval(file(status_file).read())
+        if defaults.omd_root and os.path.exists(mkeventd_status_file):
+            mkeventd_status = eval(file(mkeventd_status_file).read())
             rule_stats = mkeventd_status["rule_stats"]
             for rule in vars["rules"]:
                 rule["hits"] = rule_stats.get(rule["id"], 0)
@@ -718,8 +719,8 @@ def load_mkeventd_rules():
 
 def save_mkeventd_rules(rules):
     make_nagios_directory(defaults.default_config_dir + "/mkeventd.d")
-    make_nagios_directory(config_dir)
-    out = create_user_file(config_dir + "rules.mk", "w")
+    make_nagios_directory(mkeventd_config_dir)
+    out = create_user_file(mkeventd_config_dir + "rules.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     try:
         if config.mkeventd_pprint_rules:
@@ -1280,7 +1281,7 @@ if mkeventd_enabled:
 
 
 if mkeventd_enabled:
-    register_configvar_domain("mkeventd", config_dir, lambda msg: log_mkeventd('config-change', msg))
+    register_configvar_domain("mkeventd", mkeventd_config_dir, lambda msg: log_mkeventd('config-change', msg))
     group = _("Event Console")
 
     register_configvar(group,

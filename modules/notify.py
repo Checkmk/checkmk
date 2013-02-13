@@ -255,8 +255,9 @@ def do_notify(args):
             set_fake_env('host', context)
             sys.exit(call_notification_script(plugin, [], context))
 
-        context['LASTHOSTSTATECHANGE_REL'] = get_readable_rel_date(context['LASTHOSTSTATECHANGE'])
-        if context['WHAT'] != 'HOST':
+        if 'LASTHOSTSTATECHANGE' in context:
+            context['LASTHOSTSTATECHANGE_REL'] = get_readable_rel_date(context['LASTHOSTSTATECHANGE'])
+        if context['WHAT'] != 'HOST' and 'LASTSERVICESTATECHANGE' in context:
             context['LASTSERVICESTATECHANGE_REL'] = get_readable_rel_date(context['LASTSERVICESTATECHANGE'])
 
         if notification_logging >= 2:

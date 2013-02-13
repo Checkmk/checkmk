@@ -42,29 +42,30 @@ try:
 except: 
     print "<<<agent_msg>>>"
     print "CRIT pysphere API not found. Please install and make a reinventory"
-    sys.exit(1)
+    sys.exit(0)
 
 host = VIServer()
+
 try:
-    host.connect(params['hostname'], params['u'], params['s'])
+    host.connect(params['Hostname'], params['u'], params['s'])
 except:
     print "<<<agent_msg>>>"
     print "CRIT Cant connect to vSphere  Server. May the wrong credentials. Please correct and make a reinventory"
-    sys.exit(1)
+    sys.exit(0)
 
 def output_mors(what, properties): 
     if what == "hostsystem":
         obj_type = MORTypes.HostSystem
     else:
         obj_type = MORTypes.VirtualMachine
-    
-    for mor in host._retrieve_properties_traversal(property_names=properties.keys, obj_type=obj_type):
+
+    for mor in host._retrieve_properties_traversal(property_names=properties.keys(), obj_type=obj_type):
         # Parse result into a dictionary. Key is the property name,
         # value is the value (some custom Python classes)
         data = {}
         for p in mor.PropSet:
             # Convert property value using specified conversion function
-            data[mor.Obj][p.Name] = properties[p.Name](p.Val)
+            data[p.Name] = properties[p.Name](p.Val)
 
         # Get the name of this Host/VirtualMachine
         name = data["name"]
@@ -78,43 +79,51 @@ def output_mors(what, properties):
 
 
 def conv_multipath(value):
-    return " ".join(["%s %s" % (p.Name, p.PathState) for p in value.value.HostMultipathStateInfoPath])
+    return " ".join(["%s %s" % (p.Name, p.PathState) for p in value.HostMultipathStateInfoPath])
 
-if params['C'] == None:
+if params['i'] == None:
     check = [ 'hostsystem', 'virtualmachine' ]
 else:
-    check = params['C'].split(',')
+    check = params['i'].split(',')
 
 if "hostsystem" in check:
     output_mors("hostsystem", {
       "name": str,
-      "overallStatus": str,
-      "summary.quickStats.overallCpuUsage": str,
+
       "summary.quickStats.overallMemoryUsage":     str,
-      "summary.quickStats.uptime": str,
+      "hardware.memorySize": str,
+
+
+      "overallStatus": str,
       "runtime.powerState": str,
       "runtime.inMaintenanceMode": str,
-      "hardware.memorySize": str,
+
+      "summary.quickStats.overallCpuUsage": str,
       "hardware.cpuInfo.numCpuCores": str,
-      "hardware.cpuInfo.numCpuPackages": str,
-      "hardware.cpuInfo.numCpuThreads": str,
+      "hardware.cpuInfo.hz": str,
+
       "config.multipathState.path": conv_multipath,
+
+      #"hardware.cpuInfo.numCpuPackages": str,
+      #"hardware.cpuInfo.numCpuThreads": str,
+      #"summary.quickStats.uptime": str,
     })
 
-if "virtualmachine" in check:
-    output_mors("virtualmachine", {
-     "name": str,
-     "guestHeartbeatStatus": str,
-     "summary.quickStats.overallCpuUsage": str,
-     "summary.quickStats.uptimeSeconds": str,
-     "summary.quickStats.guestMemoryUsage": str,
-     "summary.quickStats.hostMemoryUsage": str,
-     "summary.quickStats.overallCpuUsage": str,
-     "summary.runtime.powerState": str,
-     "config.hardware.memoryMB": str,
-     "config.hardware.numCPU": str,
-    })
-
-
+# Not yet
+#if "virtualmachine" in check:
+#    output_mors("virtualmachine", {
+#     "name": str,
+#     "guestHeartbeatStatus": str,
+#     "summary.quickStats.overallCpuUsage": str,
+#     "summary.quickStats.uptimeSeconds": str,
+#     "summary.quickStats.guestMemoryUsage": str,
+#     "summary.quickStats.hostMemoryUsage": str,
+#     "summary.quickStats.overallCpuUsage": str,
+#     "summary.runtime.powerState": str,
+#     "config.hardware.memoryMB": str,
+#     "config.hardware.numCPU": str,
+#    })
+#
+#
 
 host.disconnect()

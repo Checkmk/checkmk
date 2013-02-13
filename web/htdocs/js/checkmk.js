@@ -1529,8 +1529,12 @@ function list_of_strings_extend(oInput, j) {
         oDiv = oDiv.parentNode;
     var oContainer = oDiv.parentNode;
 
+    alert(oDiv.innerHTML);
+
     var oNewDiv = document.createElement("DIV");
     oNewDiv.innerHTML = oDiv.innerHTML.replace('"' + oldName + '"', '"' + newName + '"');
+    // IE7 does not have quotes in innerHTML, trying to workaround this here.
+    oNewDiv.innerHTML = oDiv.innerHTML.replace('=' + oldName + ' ', '=' + newName + ' ');
     oContainer.appendChild(oNewDiv);
 
     /* Move focus function from old last to new last input field */

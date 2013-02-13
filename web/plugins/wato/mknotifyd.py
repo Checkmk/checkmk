@@ -32,7 +32,7 @@ except:
     # Non OMD-users: must enable this explicitely, sorry
     mknotifyd_enabled = False
 
-config_dir = defaults.default_config_dir + "/mknotifyd.d/wato/"
+mknotifyd_config_dir = defaults.default_config_dir + "/mknotifyd.d/wato/"
 
 if mknotifyd_enabled:
     group = _("Notification")
@@ -81,7 +81,7 @@ if mknotifyd_enabled:
     )
     
     # Daemon var
-    register_configvar_domain("mknotifyd", config_dir)
+    register_configvar_domain("mknotifyd", mknotifyd_config_dir)
     register_configvar(group,
         "notification_deferred_retention_time",
             Integer(

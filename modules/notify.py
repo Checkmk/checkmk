@@ -224,11 +224,7 @@ def handle_spoolfile(spoolfile):
             data = eval(file(spoolfile).read())
             if not "context" in data.keys():
                 return 2
-         #   if data["plugin"] == None:
-         #       plugin = 'email'
-         #   else:
-         #       plugin = data['plugin']
-            return process_context(data["context"], False, data.get("plugin", "email"))
+            return process_context(data["context"], False)
         except Exception, e:
             notify_log("ERROR %s\n%s" % (e, format_exception()))
             return 2

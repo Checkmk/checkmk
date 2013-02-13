@@ -2066,19 +2066,22 @@ def show_command_form(is_open, datasource):
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
     # html.write('<table class="form">')
-    forms.header(_("Commands"), narrow=True)
 
-    # Commands are defined in plugins/views/commands.py. Iterate
-    # over all command definitions and render HTML input fields.
+    # Show command forms, grouped by (optional) command group
+    by_group = {}
     for command in multisite_commands:
         if what in command["tables"] and config.may(command["permission"]):
-            forms.section(command["title"])
-            # html.write('<tr><td class=legend>%s</td>\n' % command["title"])
-            # html.write('<td class=content>')
-            command["render"]()
-            # html.write('</td></tr>')
+            group = command.get("group", _("Various Commands"))
+            by_group.setdefault(group, []).append(command)
 
-    # html.write("</table>")
+    groups = by_group.keys()
+    groups.sort()
+    for group in groups:
+        forms.header(group, narrow=True)
+        for command in by_group[group]:
+            forms.section(command["title"])
+            command["render"]()
+
     forms.end()
     html.end_form()
     html.write("</div>")

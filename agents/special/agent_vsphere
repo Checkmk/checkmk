@@ -76,9 +76,8 @@ def output_mors(what, properties):
         # Get the name of this Host/VirtualMachine
         name = data["name"]
         
-        # Not yet
         ## Output multiplexed Check_MK Agent output (new in version 1.2.3i1)
-        #print '<<<<%s>>>>' % name
+        print '<<<<%s>>>>' % name
         print '<<<esx_vsphere_%s>>>' % what
         for name, value in data.items():
             print '%s %s' % (name, value)

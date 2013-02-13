@@ -10,7 +10,7 @@ Ich habe jetzt eine neue Idee, die das ganze vor allem für den Agenten
 vereinfacht und die Intelligenz ins zentrale Check_MK verlagert. Es 
 funktioniert so:
 
-Es wird eine neue Sektions-Option eingeführt (die zweite nach sep(...)).
+Es wird eine neue Sektions-Option eingeführt (analog zu sep(...)).
 Diese sagt dem Check_MK, dass eine Sektion bis zu einem bestimmten
 Zeitpunkt gültig ist und (maximal) solange vom Agenten nicht mehr neu gesendet
 werden wird.
@@ -27,7 +27,7 @@ Warnung ausgegeben werden, dass Daten vom Agenten fehlen.
 
 Check_MK muss jetzt so vorgehen: Wenn es feststellt, dass eine Sektion fehlt
 (und nur dann!), lädt es die Cache-Datei. Wenn nicht vorhanden, gilt die
-Sektion als endgültig fehlend. Falls sie vorhanden ist, wird der Sektion
+Sektion als endgültig fehlend. Falls sie vorhanden ist, wird die Sektion
 aus der Cache-Datei geholt. Wenn der Zeitstempel noch nicht erreicht ist,
 wird die Sektion genommen und zur Ausgabe des Agenten hinzugefügt und auch
 an die dann neu erstellte Cache-Datei wieder angehängt.
@@ -44,7 +44,7 @@ wird ferner die Möglichkeit eingeführt, Sektionsoptionen anonym für
 zukünftige Sektionen zu setzen:
 
 <<<:valid(1353854778)>>> --> Gilt für alle zukünftigen Sektionen
-<<<:valid(0)>>> --> Löscht die Option wieder
+<<<:valid()>>> --> Löscht die Option wieder
 
 Implementierung im Agenten (Linux):
 
@@ -62,12 +62,13 @@ des plugins selbst als Indikator, wann es das letzte mal aufgerufen wurde):
 # Execute timed plugins
 cd $PLUGINS_DIR
 for dir in $(find -type d) ; do
-    cd $dir
+    pushd $dir
     date '+<<<:valid(%s)>>>' -d "now + $dir min"
     for plugin in $(find -cmin +$dir) ; do
         touch $plugin
         ./plugin
     done
+    popd
 done
 
 Frage ist noch, wie man das effizient bei eingebauten Plugins machen
@@ -107,7 +108,7 @@ Um das hinzubekommen, könnte man mit Zeitstempeln auf den Check_MK
 Cachefiles arbeiten. Diese sind ja pro Checktyp separat. Also könnte
 das gehen.
 
-Noch ein Problem gibt es: wenn ein manuelles reschedule ausgeführt wurde,
+Noch ein Problem gibt es: wenn ein manuelles Reschedule ausgeführt wurde,
 wäre es natürlich schön, wenn das Intervall jetzt nicht berücksichtigt
 würde. Dazu müsste man bei SNMP Checks das Intervall ignorieren und bei den
 Agenten-Checks zumindest auf die Daten aus dem Cache-File zugreifen und doch

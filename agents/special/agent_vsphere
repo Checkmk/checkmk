@@ -56,7 +56,7 @@ except:
     sys.exit(0)
 
 print "<<<check_mk>>>"
-print "Version: vSphere Api Version %s " % host.get_api_version()
+print "Version: %s" % host.get_api_version()
 print "AgentOs: %s " % host.get_server_type()
 
 def output_mors(what, properties): 

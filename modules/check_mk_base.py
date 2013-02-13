@@ -389,7 +389,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age):
         raise MKAgentError("Too short output from agent: '%s'" % output)
 
     lines = [ l.strip() for l in output.split('\n') ]
-    info, piggybacked = parse_info(lines)
+    info, piggybacked = parse_info(lines, hostname)
     store_piggyback_info(hostname, piggybacked)
     store_cached_hostinfo(hostname, info)
 
@@ -607,7 +607,7 @@ def store_cached_checkinfo(hostname, checkname, table):
         g_infocache[hostname] = { checkname: table }
 
 # Split agent output in chunks, splits lines by whitespaces
-def parse_info(lines):
+def parse_info(lines, hostname):
     info = {}
     piggybacked = {} # unparsed info for other hosts
     host = None
@@ -617,7 +617,7 @@ def parse_info(lines):
     for line in lines:
         if line[:4] == '<<<<' and line[-4:] == '>>>>':
             host = line[4:-4]
-            if not host:
+            if not host or host == hostname:
                 host = None # unpiggybacked "normal" host
         elif host: # processing data for an other host
             piggybacked.setdefault(host, []).append(line)

@@ -11,6 +11,7 @@
 
     Multisite:
     * FIX: Fixed several minor IE7 related layout bugs
+    * Cleanup form for executing commands on hosts/services
 
 1.2.2b1:
     Core:

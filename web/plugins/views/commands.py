@@ -261,6 +261,7 @@ multisite_commands.append({
         html.write(_("Comment") + ": ") == \
         html.text_input("_ack_comment", size=48),
     "action"      : command_acknowledgement,
+    "group"       : _("Acknowledge"),
 })
 
 
@@ -450,6 +451,7 @@ multisite_commands.append({
     "title"       : _("Schedule downtimes"),
     "render"      : lambda: paint_downtime_buttons("host"),
     "action"      : command_downtime,
+    "group"       : _("Downtimes"),
 })
 
 multisite_commands.append({
@@ -458,6 +460,7 @@ multisite_commands.append({
     "title"       : _("Schedule downtimes"),
     "render"      : lambda: paint_downtime_buttons("service"),
     "action"      : command_downtime,
+    "group"       : _("Downtimes"),
 })
 
 # REMOVE DOWNTIMES (table downtimes)

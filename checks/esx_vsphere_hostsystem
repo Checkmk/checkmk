@@ -1,0 +1,164 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def esx_vsphere_hostsystem_convert(info):
+    data = {}
+    for line in info:
+        data[line[0]] = line[1:]
+    return data
+
+esx_host_mem_default = ( 80.0, 90.0 )
+
+def inventory_esx_vsphere_hostsystem_mem(info):
+    data = esx_vsphere_hostsystem_convert(info).keys()
+    if 'summary.quickStats.overallMemoryUsage' in data and 'hardware.memorySize' in data:
+        return [(None, esx_host_mem_default)]
+
+def check_esx_vsphere_hostsystem_mem(item, params, info):
+    data = esx_vsphere_hostsystem_convert(info)
+    memory_usage = savefloat(data['summary.quickStats.overallMemoryUsage'][0]) * 1024 * 1024
+    memory_size  = savefloat(data['hardware.memorySize'][0]) 
+    level = memory_usage / memory_size * 100
+    warn, crit = params
+    state = 0
+    label = ''
+    if level > crit:
+        state = 2
+        label = "(!!) (Levels at %d%%/%d%%)" % (warn, crit)
+    elif level > warn:
+        state = 1
+        label = "(!) (Levels at %d%%/%d%%)" % (warn, crit)
+
+    message = " - Memory usage: %d%%%s %s/%s" % \
+    (level, label, get_bytes_human_readable(memory_usage), get_bytes_human_readable(memory_size))
+    perf = [("usage", memory_usage, warn, crit, 0, memory_size)] 
+    return(state, nagios_state_names[state] + message, perf)
+
+
+check_info['esx_vsphere_hostsystem.mem_usage'] = {
+  "inventory_function"  : inventory_esx_vsphere_hostsystem_mem,
+  "check_function"      : check_esx_vsphere_hostsystem_mem,
+  "service_description" : "ESX Memory usage",
+  "group"               : "memory",
+  "has_perfdata"        : True
+}
+
+
+def inventory_esx_vsphere_hostsystem_state(info):
+    data = esx_vsphere_hostsystem_convert(info).keys()
+    if 'runtime.inMaintenanceMode' in data:
+        return [(None, None)]
+
+def check_esx_vsphere_hostsystem_state(item, params, info):
+    data = esx_vsphere_hostsystem_convert(info)
+    state = 0
+    label = {}
+    messages = []
+    label['Status'] = ""
+    overallStatus = str(data['overallStatus'][0])
+    if overallStatus == "yellow":
+        state = 1
+        label['Status'] = "(!)"
+    elif overallStatus in [ "red", "gray"]:
+        state = 2
+        label['Satus'] = "(!!)"
+    messages.append("Enity state: %s%s" % (overallStatus, label['Status']))
+
+    label['powerState'] = ''
+    powerState = str(data['runtime.powerState'][0]) 
+    if powerState in ['poweredOff', 'unknown']:
+        state = 2
+        label['powerState'] = "(!!)"
+    elif powerState == 'standBy':
+        state = max(state, 1)
+        label['powerState'] = "(!)"
+    messages.append("Power state: %s%s" % (powerState, label['powerState']))
+    
+    if str(data['runtime.inMaintenanceMode'][0]) == 'True':
+        messages.append("System is in maintenance(!!)")
+        
+    return(state, nagios_state_names[state] + " - " + ", ".join(messages))
+
+check_info['esx_vsphere_hostsystem.state'] = {
+  "inventory_function"  : inventory_esx_vsphere_hostsystem_state,
+  "check_function"      : check_esx_vsphere_hostsystem_state,
+  "service_description" : "ESX State",
+}
+
+def inventory_esx_vsphere_hostsystem_multipath(info):
+    data = esx_vsphere_hostsystem_convert(info)
+    if 'config.multipathState.path' in data.keys():
+        return [(None, None)]
+
+def check_esx_vsphere_hostsystem_multipath(item, params, info):
+    dead = 0
+    disabled = 0
+    standby = 0
+    unknown = 0
+    active = 0
+    state = 0 
+    dead_label = ""
+    disabled_label = ""
+    standby_label = ""
+    unknow_label = ""
+
+    data = esx_vsphere_hostsystem_convert(info)
+    paths = data['config.multipathState.path']
+
+    for path_state in paths[1::2]:
+        if path_state == "active":
+            active += 1
+        elif path_state == "dead":
+            dead += 1
+            dead_label = "(!!)"
+            state = 2
+
+        elif path_state == "disabled":
+            disabled += 1
+            disabled_label = "(!)"
+            state = max(1, state)
+
+        elif path_state == "standby":
+            standby += 1
+            standby_label = "(!)"
+            state = max(1, state)
+
+        elif path_state == "unknown":
+            state = 2
+            unknow_label = "(!!)"
+            unknown += 1
+
+    message = "%d active, %d dead%s, %d disabled%s, %d standby%s, %s unknown%s" % \
+    (active, dead, dead_label, disabled, disabled_label, standby, standby_label, unknown, unknow_label )
+       
+    return(state, nagios_state_names[state] + " - " + message )
+
+check_info['esx_vsphere_hostsystem.multipath'] = {
+  "inventory_function"  : inventory_esx_vsphere_hostsystem_multipath,
+  "check_function"      : check_esx_vsphere_hostsystem_multipath,
+  "service_description" : "ESX Multipaths",
+}
+

@@ -61,8 +61,7 @@ def main():
 
         # Execute the command
         print "executing command" , command
-        file("/tmp/opc","w").write(command)
-        #    return os.system(command)
+        os.system(command)
     except Exception, e:
         sys.stdout.write("ERROR %r" % e)
         sys.exit(1)

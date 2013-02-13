@@ -253,7 +253,6 @@ def submit_check_mk_aggregation(hostname, status, output):
 # and thus do no network activity at all...
 
 def get_host_info(hostname, ipaddress, checkname):
-
     # If the check want's the node info, we add an additional
     # column (as the first column) with the name of the node
     # or None (in case of non-clustered nodes). On problem arises,
@@ -310,6 +309,10 @@ def get_host_info(hostname, ipaddress, checkname):
 # What makes the thing a bit tricky is the fact, that data
 # might have to be fetched via SNMP *and* TCP for one host
 # (even if this is unlikeyly)
+# 
+# What makes the thing even more tricky is the new piggyback
+# function, that allows one host's agent to send data for another
+# host.
 #
 # This function assumes, that each check type is queried
 # only once for each host.
@@ -350,24 +353,106 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age):
         return table
 
     # No SNMP check. Then we must contact the check_mk_agent. Have we already
-    # to get data from the agent? If yes we must not do that again! Even if
-    # no cache file is present
+    # tries to get data from the agent? If yes we must not do that again! Even if
+    # no cache file is present.
     if g_agent_already_contacted.has_key(hostname):
 	raise MKAgentError("")
 
     g_agent_already_contacted[hostname] = True
     store_cached_hostinfo(hostname, []) # leave emtpy info in case of error
 
-    output = get_agent_info(hostname, ipaddress, max_cache_age)
+    # If we have piggyback data for that host from another host,
+    # then we prepend this data and also tolerate a failing
+    # normal Check_MK Agent access.
+    piggy_output = get_piggyback_info(hostname)
+    output = ""
+    agent_failed = False
+    if is_tcp_host(hostname):
+        try:
+            output = get_agent_info(hostname, ipaddress, max_cache_age)
+        except:
+            agent_failed = True
+            # Remove piggybacked information from the host (in the 
+            # role of the pig here). Why? We definitely haven't
+            # reached that host so its data from the last time is
+            # not valid any more.
+            remove_piggyback_info_from(hostname)
+
+            if not piggy_output:
+                raise
+
+    output += piggy_output
+
     if len(output) == 0:
         raise MKAgentError("Empty output from agent")
     elif len(output) < 16:
         raise MKAgentError("Too short output from agent: '%s'" % output)
 
     lines = [ l.strip() for l in output.split('\n') ]
-    info = parse_info(lines)
+    info, piggybacked = parse_info(lines)
+    store_piggyback_info(hostname, piggybacked)
     store_cached_hostinfo(hostname, info)
-    return info.get(check_type, []) # return only data for specified check
+
+    # If the agent has failed and the information we seek is
+    # not contained in the piggy data, raise an exception
+    if check_type not in info:
+        if agent_failed:
+            raise MKAgentError("Cannot get information from agent, processing only piggyback data.")
+        else:
+            return []
+
+    return info[check_type] # return only data for specified check
+
+
+def get_piggyback_info(hostname):
+    output = ""
+    dir = tmp_dir + "/piggyback/" + hostname
+    if os.path.exists(dir):
+        for sourcehost in os.listdir(dir):
+            if sourcehost not in ['.', '..'] \
+                and not sourcehost.startswith(".new."):
+                if opt_debug:
+                    sys.stderr.write("Using piggyback information from host %s.\n" % 
+                      sourcehost) 
+                output += file(dir + "/" + sourcehost).read()
+    return output
+
+
+def store_piggyback_info(sourcehost, piggybacked):
+    piggyback_path = tmp_dir + "/piggyback/" 
+    for backedhost, lines in piggybacked.items():
+        if opt_debug:
+            sys.stderr.write("Storing piggyback data for %s.\n" % backedhost)
+        dir = piggyback_path + backedhost
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+        out = file(dir + "/.new." + sourcehost, "w")
+        for line in lines:
+            out.write("%s\n" % line)
+        os.rename(dir + "/.new." + sourcehost,dir + "/" + sourcehost)
+
+    # Remove piggybacked information that is not
+    # being sent this turn
+    remove_piggyback_info_from(sourcehost, keep=piggybacked)
+
+def remove_piggyback_info_from(sourcehost, keep=[]):
+    removed = 0
+    piggyback_path = tmp_dir + "/piggyback/" 
+    for backedhost in os.listdir(piggyback_path):
+        if backedhost not in ['.', '..'] and backedhost not in keep:
+            path = piggyback_path + backedhost + "/" + sourcehost
+            if os.path.exists(path):
+                if opt_debug:
+                    sys.stderr.write("Removing stale piggyback file %s\n" % path)
+                os.remove(path)
+                removed += 1
+                
+            # Remove directory if empty
+            try:
+                os.rmdir(piggyback_path + backedhost)
+            except:
+                pass
+    return removed
 
 
 def read_cache_file(relpath, max_cache_age):
@@ -469,6 +554,9 @@ def get_agent_info_tcp(hostname, ipaddress):
             s.settimeout(tcp_connect_timeout)
         except:
             pass # some old Python versions lack settimeout(). Better ignore than fail
+        if opt_debug:
+            sys.stderr.write("Connecting via TCP to %s:%d.\n" % (
+                    ipaddress, agent_port_of(hostname)))
         s.connect((ipaddress, agent_port_of(hostname)))
         try:
             s.setblocking(1)
@@ -521,11 +609,19 @@ def store_cached_checkinfo(hostname, checkname, table):
 # Split agent output in chunks, splits lines by whitespaces
 def parse_info(lines):
     info = {}
+    piggybacked = {} # unparsed info for other hosts
+    host = None
     chunk = []
     chunkoptions = {}
     separator = None
     for line in lines:
-        if line[:3] == '<<<' and line[-3:] == '>>>':
+        if line[:4] == '<<<<' and line[-4:] == '>>>>':
+            host = line[4:-4]
+            if not host:
+                host = None # unpiggybacked "normal" host
+        elif host: # processing data for an other host
+            piggybacked.setdefault(host, []).append(line)
+        elif line[:3] == '<<<' and line[-3:] == '>>>':
             chunkheader = line[3:-3]
             # chunk header has format <<<name:opt1(args):opt2:opt3(args)>>>
             headerparts = chunkheader.split(":")
@@ -550,7 +646,7 @@ def parse_info(lines):
                 separator = None
         elif line != '':
             chunk.append(line.split(separator))
-    return info
+    return info, piggybacked
 
 
 def cachefile_age(filename):

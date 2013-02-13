@@ -1415,7 +1415,7 @@ class EventServer:
             event["comment"] = replace_groups(rule["set_comment"], event.get("comment", ""), groups)
         if "set_application" in rule:
             event["application"] = replace_groups(rule["set_application"], event["application"], groups)
-        if "set_contact" in rule and "contact" not in event:
+        if "set_contact" in rule:
             event["contact"] = replace_groups(rule["set_contact"], event.get("contact", ""), groups)
 
     def parse_monitoring_info(self, line):
@@ -2330,10 +2330,10 @@ def do_rule_action(action, event, user=""):
             log_event_history(event, "SCRIPT", user, action['id'])
         else:
             log("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
-    except Exception, e:
+    except Exception:
         if opt_debug:
             raise
-        log("Error during execution of action %s: %s" % (action["id"], e))
+        log("Error during execution of action %s: %s" % (action["id"], format_exception()))
 
 def substitute_event_tags(text, event):
     groups = [("match_group_%d" % (nr+1), g) for (nr, g) in enumerate(event.get("match_groups", ()))]
@@ -2353,7 +2353,7 @@ def send_email(to, subject, body):
     os.popen("mail -s '%s' '%s'" % (shell_escape(subject), shell_escape(to)), "w").write(body)
 
 def execute_script(body):
-    os.popen("/bin/bash", "w").write(body)
+    os.popen("/bin/bash", "w").write(body.encode('utf-8'))
 
 
 #.

@@ -39,7 +39,7 @@ g_profile_path = 'profile.out'
 
 if __name__ == "__main__":
     opt_debug        = '--debug' in sys.argv[1:]
-    opt_verbose      = opt_debug or '-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]
+    opt_verbose      = '-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]
     if '--profile' in sys.argv[1:]:
         import cProfile
         g_profile = cProfile.Profile()
@@ -2210,13 +2210,10 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
             if is_snmp_check and not is_snmp_host(host):
                 continue
 
-            # Skip TCP checks on non-TCP hosts
-            if not is_snmp_check and not is_tcp_host(host):
-                continue
-
-            # Skip checktypes which are generally ignored for this host
-            # DONE LATER: if checktype_ignored_for_host(host, checkname):
-            #    continue
+            # The decision wether to contact the agent via TCP
+            # is done in get_realhost_info(). This is due to
+            # the possibility that piggiback data from other 
+            # hosts is available.
 
             if is_cluster(host):
                 sys.stderr.write("%s is a cluster host and cannot be inventorized.\n" % host)
@@ -2650,7 +2647,7 @@ no_inventory_possible = None
                  'perfdata_format', 'aggregation_output_format',
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
                  'check_result_path', 'check_submission',
-                 'var_dir', 'counters_directory', 'tcp_cache_dir',
+                 'var_dir', 'counters_directory', 'tcp_cache_dir', 'tmp_dir',
                  'snmpwalks_dir', 'check_mk_basedir', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
                  'simulation_mode', 'agent_simulator', 'aggregate_check_mk', 'debug_log',
@@ -3400,6 +3397,12 @@ def do_flush(hosts):
             elif d > 1:
                 sys.stdout.write(tty_bold + tty_green + " cache(%d)" % d)
             sys.stdout.flush()
+
+        # piggy files from this as source host
+        d = remove_piggyback_info_from(host)
+        if d:
+            sys.stdout.write(tty_bold + tty_magenta  + " piggyback(%d)" % d)
+
 
         # logfiles
         dir = logwatch_dir + "/" + host

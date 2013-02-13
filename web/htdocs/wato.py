@@ -11004,7 +11004,7 @@ def create_sample_config():
        ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
        ('snmp-v1', u'Legacy SNMP device (using V1)', ['snmp']),
        ('snmp-tcp', u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
-       ('ping', u'Only PING this device', [])]),
+       ('ping', u'No Agent', [])]),
      ('criticality',
       u'Criticality',
       [('prod', u'Productive system', []),

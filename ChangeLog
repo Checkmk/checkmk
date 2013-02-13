@@ -6,6 +6,11 @@
     Event Console:
     * New rule feature: automatically delete after action
 
+    Checks & Agents:
+    Add: Memory and Swap for Solaris Agent
+    Add: Monitoring of ESX (VMware) Hosts
+
+
 1.2.2b2:
     BI:
     * FIX: fix exception in BI-Boxes views of host groups

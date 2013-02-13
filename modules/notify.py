@@ -259,7 +259,7 @@ def process_context(context, write_into_spoolfile, use_method = None):
                     notify_log("ERROR: contact %r do not have plugin %s" % (contact, use_method))
                     return 2
                 method = ('flexible', [found_plugin])
-        
+
         if type(method) == tuple and method[0] == 'flexible':
             return notify_flexible(context, method[1], write_into_spoolfile)
         else:
@@ -444,7 +444,7 @@ def check_prerequisite(context, entry):
     event, allowed_events = check_notification_type(context, entry["host_events"], entry["service_events"])
     if event not in allowed_events:
         notify_log(" - Skipping: wrong notification type %s (%s), only %s are allowed" % 
-            (event, notification_type, ",".join(allowed_events)) )
+            (event, context["NOTIFICATIONTYPE"], ",".join(allowed_events)) )
         return 2
 
     # Check notification number (in case of repeated notifications/escalations)
@@ -473,7 +473,7 @@ def notify_flexible(context, notification_table, write_into_spoolfile):
     for entry in notification_table:
         plugin = entry["plugin"]
         notify_log("Plugin: %s" % plugin)
-        
+
         result = check_prerequisite(context, notification_table[0])
         if result > 0:
             continue
@@ -495,10 +495,8 @@ def call_notification_script(plugin, parameters, context, write_into_spoolfile):
         os.putenv("NOTIFY_PARAMETER_%d" % (nr + 1), value)
     os.putenv("NOTIFY_LOGDIR", notification_logdir)
 
-    #for key in [ 'WHAT', 'OMD_ROOT', 'OMD_SITE',
-    #             'MAIL_COMMAND', 'LASTHOSTSTATECHANGE_REL' ]:
-    #    if key in context:
-    #        os.putenv('NOTIFY_' + key, context[key])
+    # Export complete context to have all vars in environment.
+    # Existing vars are replaced, some already existing might remain
     for key in context:
         os.putenv('NOTIFY_' + key, context[key])
 
@@ -528,7 +526,6 @@ def call_notification_script(plugin, parameters, context, write_into_spoolfile):
         if local_notifications_dir:
             notify_log("  and not in %s" % local_notifications_dir)
         return 2
-    
 
     # Create spoolfile or actually call the plugin
     if write_into_spoolfile:
@@ -539,7 +536,7 @@ def call_notification_script(plugin, parameters, context, write_into_spoolfile):
         for line in out:
             notify_log("Output: %s" % line.rstrip())
         exitcode = out.close()
-        if exitcode: 
+        if exitcode:
             notify_log("Plugin exited with code %d" % (exitcode >> 8))
             return exitcode
     return 0

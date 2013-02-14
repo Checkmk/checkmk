@@ -36,6 +36,8 @@ parser.add_argument('-s', help="Secret")
 parser.add_argument('Hostname', help="Hostname")
 
 params = vars(parser.parse_args())
+
+
 try:
     from pysphere import VIServer, VIProperty, MORTypes
     from pysphere.resources import VimService_services as VI
@@ -52,6 +54,10 @@ except:
     print "<<<agent_msg>>>"
     print "CRIT Cant connect to vSphere  Server. May the wrong credentials. Please correct and make a reinventory"
     sys.exit(0)
+
+print "<<<check_mk>>>"
+print "Version: %s" % host.get_api_version()
+print "AgentOs: %s " % host.get_server_type()
 
 def output_mors(what, properties): 
     if what == "hostsystem":
@@ -70,9 +76,8 @@ def output_mors(what, properties):
         # Get the name of this Host/VirtualMachine
         name = data["name"]
         
-        # Not yet
         ## Output multiplexed Check_MK Agent output (new in version 1.2.3i1)
-        #print '<<<<%s>>>>' % name
+        print '<<<<%s>>>>' % name
         print '<<<esx_vsphere_%s>>>' % what
         for name, value in data.items():
             print '%s %s' % (name, value)

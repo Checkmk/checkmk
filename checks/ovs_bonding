@@ -31,9 +31,9 @@
 # bond-detect-mode: carrier
 # updelay: 31000 ms
 # downdelay: 200 ms
-# 
+#
 # slave eth5: enabled
-# 
+#
 # slave eth1: enabled
 # active slave
 

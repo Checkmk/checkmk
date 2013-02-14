@@ -126,7 +126,7 @@ def check_printer_alerts(_not_used, _not_used1, info):
 
         sum_txt.append(info_text)
     if len(sum_txt) == 0:
-        sum_txt.append("OK - No alerts found") 
+        sum_txt.append("OK - No alerts found")
     return (sum_state, ', '.join(sum_txt))
 
 check_info['printer_alerts'] = (check_printer_alerts, "Alerts", 0, inventory_printer_alerts)

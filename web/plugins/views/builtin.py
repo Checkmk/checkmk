@@ -2813,7 +2813,7 @@ multisite_builtin_views.update({
                                           ('log_plugin_output', ''),
                                           ('logtime_from_range', '86400'),
                                           ('logtime_from', '90'),
-                                         ], 
+                                         ],
                       'hidden': True,
                       'hide_filters': ['site', 'service', 'host'],
                       'hidebutton': False,

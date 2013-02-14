@@ -373,15 +373,15 @@ class FilterTime(Filter):
     def __init__(self, info, name, title, column):
         self.column = column
         self.name = name
-        self.ranges = [ 
+        self.ranges = [
            (86400,  _("days")),
-           (3600,   _("hours")), 
-           (60,     _("min")), 
-           (1,      _("sec")), 
+           (3600,   _("hours")),
+           (60,     _("min")),
+           (1,      _("sec")),
         ]
         varnames = [ name + "_from", name + "_from_range",
                      name + "_until", name + "_until_range" ]
-            
+
         Filter.__init__(self, name, title, info, varnames, [column])
 
     def double_height(self):
@@ -404,7 +404,7 @@ class FilterTime(Filter):
             html.select(varprefix + "_range", choices, "3600")
             html.write("</td></tr>")
         html.write("</table>")
-            
+
 
     def filter(self, infoname):
         fromsecs, untilsecs = self.get_time_range()
@@ -442,7 +442,7 @@ class FilterTime(Filter):
                     except:
                         range.append(None)
                         html.set_var(varprefix, "")
-            
+
         return range
 
     # I'm not sure if this function is useful or ever been called.

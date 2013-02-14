@@ -27,16 +27,16 @@
 # <<<lnx_bonding:sep(58)>>>
 # ==> bond0 <==
 # Ethernet Channel Bonding Driver: v3.7.1 (April 27, 2011)
-# 
+#
 # Bonding Mode: load balancing (round-robin)
 # MII Status: down
 # MII Polling Interval (ms): 0
 # Up Delay (ms): 0
 # Down Delay (ms): 0
-# 
+#
 # ==> bond1 <==
 # Ethernet Channel Bonding Driver: v3.2.5 (March 21, 2008)
-# 
+#
 # Bonding Mode: fault-tolerance (active-backup)
 # Primary Slave: eth0
 # Currently Active Slave: eth0
@@ -44,12 +44,12 @@
 # MII Polling Interval (ms): 100
 # Up Delay (ms): 0
 # Down Delay (ms): 0
-# 
+#
 # Slave Interface: eth4
 # MII Status: up
 # Link Failure Count: 0
 # Permanent HW addr: 00:1b:21:49:d4:e4
-# 
+#
 # Slave Interface: eth0
 # MII Status: up
 # Link Failure Count: 1
@@ -64,7 +64,7 @@ def parse_lnx_bonding(info):
         bond = lines.next()[0].split()[1]
         bonds[bond] = {}
         while True:
-            # ==> bond0 <== 
+            # ==> bond0 <==
             lines.next() # Skip Channel Bonding Driver
 
             # Parse global part
@@ -112,7 +112,7 @@ def parse_lnx_bonding(info):
             "interfaces"  : interfaces,
         }
     return converted
-            
+
 
 
 check_info['lnx_bonding'] = {

@@ -6,13 +6,13 @@ distribution: check_mk
 description:
  This check monitors the mirror state of LVM logical volumes in the
  root volumegroup on AIX.
- 
- It makes sure that all logical volumes are in the the {open,syncd} 
+
+ It makes sure that all logical volumes are in the the {open,syncd}
  state. If a LV is in state {closed}, the check will give a {WARN}
  message to inform you.
  Exception: LVs of type {boot} are OK if they are in state {closed}
 
- It detects mirrored LVs and alerts with a {WARN} state, if there are 
+ It detects mirrored LVs and alerts with a {WARN} state, if there are
  obvious allocation errors, or a {CRIT} state, if the volume state is
  not {syncd}.
 

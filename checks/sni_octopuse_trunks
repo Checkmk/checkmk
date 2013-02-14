@@ -54,12 +54,12 @@ def check_octopus_trunks(item, _no_params, info):
         portdesc = "%s/%s" % (cardindex, portindex)
         if item == portdesc:
             # There are two relevant card states, we use the one from
-            # octoPortTable 
+            # octoPortTable
             if   portstate == "1":
                 return (2, "CRIT - Port [%s] is inactive" % porttype)
             else:
                 return (0, "OK - Port [%s] is active" % porttype)
-        
+
     return (3, "UNKW - unknown data received from agent")
 
 check_info['sni_octopuse_trunks'] = {
@@ -69,12 +69,12 @@ check_info['sni_octopuse_trunks'] = {
     'has_perfdata'       : False,
     'snmp_scan_function' : lambda oid: "agent for hipath" in \
                                   oid(".1.3.6.1.2.1.1.1.0").lower(),
-    'snmp_info'          : [ (".1.3.6.1.4.1.231.7.2.9.3.8.1", [ 
+    'snmp_info'          : [ (".1.3.6.1.4.1.231.7.2.9.3.8.1", [
                                  "1", # portIndex
                                  "2", # port card index (slot)
                                  "3", # PortType
-                                 "4", # Port State 
-                                 ]), 
+                                 "4", # Port State
+                                 ]),
                             ]
 }
 

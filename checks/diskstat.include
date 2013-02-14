@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -35,7 +35,7 @@ diskstat_default_levels = {
 }
 
 # Rule for controlling diskstat inventory more fine grained
-diskstat_inventory = [] 
+diskstat_inventory = []
 
 # Example
 # diskstat_inventory = [
@@ -55,7 +55,7 @@ def inventory_diskstat_generic(info):
             modes = hits[0]
         else:
             modes = [ "summary" ]
-    
+
     elif diskstat_inventory_mode == "single":
         modes = [ "physical" ]
     elif diskstat_inventory_mode == "summary":
@@ -71,18 +71,18 @@ def inventory_diskstat_generic(info):
         inventory += [ ( "read", None ), ( "write", None ) ]
 
     if "physical" in modes:
-        inventory += [ (line[0], "diskstat_default_levels") 
-                       for line in info 
+        inventory += [ (line[0], "diskstat_default_levels")
+                       for line in info
                        if not ' ' in line[0] ]
 
     if "lvm" in modes:
-        inventory += [ (line[0], "diskstat_default_levels") 
-                       for line in info 
+        inventory += [ (line[0], "diskstat_default_levels")
+                       for line in info
                        if line[0].startswith("LVM ") ]
 
     if "vxvm" in modes:
-        inventory += [ (line[0], "diskstat_default_levels") 
-                       for line in info 
+        inventory += [ (line[0], "diskstat_default_levels")
+                       for line in info
                        if line[0].startswith("VxVM ") ]
 
     return inventory
@@ -95,7 +95,7 @@ def check_diskstat_line(this_time, item, params, line):
     infos = []
     status = 0
     for what, ctr in [ ("read",  line[1]), ("write", line[2]) ]:
-        countername = "diskstat.%s.%s" % (item, what) 
+        countername = "diskstat.%s.%s" % (item, what)
 
         # unpack levels now, need also for perfdata
         levels = params.get(what)
@@ -167,7 +167,7 @@ def check_diskstat_line(this_time, item, params, line):
     # I have not understood, why....
     if len(line) >= 8:
         for what, ctr in [ ("read",  line[6]), ("write", line[7]) ]:
-            countername = "diskstat.%s.ql.%s" % (item, what) 
+            countername = "diskstat.%s.ql.%s" % (item, what)
             levels = params.get(what + "_ql")
             if levels:
                 warn, crit = levels

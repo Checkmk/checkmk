@@ -38,7 +38,7 @@ def inventory_aix_multipath(info):
         # too, but those have incomplete status => false positives
         if disk.startswith("hdisk"):
             disks[disk] = disks.get(disk, 0) + 1
-    return [(disk, {'paths' : disks[disk]}) for disk in disks.keys()] 
+    return [(disk, {'paths' : disks[disk]}) for disk in disks.keys()]
 
 def check_aix_multipath(item, params, info):
     path_count = 0
@@ -46,13 +46,13 @@ def check_aix_multipath(item, params, info):
     message = []
     state_count = 0
 
-    #Collecting all paths and there states 
+    #Collecting all paths and there states
     for disk, controller, status in info:
         if disk == item:
             path_count += 1
             if status != 'Enabled':
                 state_count += 1
-                
+
     #How many Paths are not enabled
     if state_count != 0 and (100 / path_count *  state_count ) < 50:
         state = 1
@@ -61,14 +61,14 @@ def check_aix_multipath(item, params, info):
         state = 2
         message.append('%d paths not enabled (!!)' % (state_count))
 
-    #Are some paths missing?             
-    path_message = "%d paths total" % path_count 
-    if path_count != params['paths']: 
+    #Are some paths missing?
+    path_message = "%d paths total" % path_count
+    if path_count != params['paths']:
         state = max(state, 1)
         message.append(path_message + ' (should be: %d (!))' % (params['paths']))
     else:
         message.append(path_message)
-    
+
     return (state, nagios_state_names[state] + " - " + ", ".join(message))
 
 

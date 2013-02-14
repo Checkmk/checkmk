@@ -102,7 +102,7 @@ aggregation_rules["host"] = (
 )
 
 aggregation_rules["general"] = (
-  "General State", 
+  "General State",
   [ "HOST" ],
   "worst",
   [
@@ -113,7 +113,7 @@ aggregation_rules["general"] = (
 )
 
 aggregation_rules["filesystems"] = (
-  "Disk & Filesystems", 
+  "Disk & Filesystems",
   [ "HOST" ],
   "worst",
   [
@@ -124,7 +124,7 @@ aggregation_rules["filesystems"] = (
 )
 
 aggregation_rules["filesystem"] = (
-  "$FS$", 
+  "$FS$",
   [ "HOST", "FS" ],
   "worst",
   [
@@ -134,7 +134,7 @@ aggregation_rules["filesystem"] = (
 )
 
 aggregation_rules["multipathing"] = (
-  "Multipathing", 
+  "Multipathing",
   [ "HOST" ],
   "worst",
   [
@@ -143,7 +143,7 @@ aggregation_rules["multipathing"] = (
 )
 
 aggregation_rules["performance"] = (
-  "Performance", 
+  "Performance",
   [ "HOST" ],
   "worst",
   [
@@ -152,7 +152,7 @@ aggregation_rules["performance"] = (
 )
 
 aggregation_rules["hardware"] = (
-  "Hardware", 
+  "Hardware",
   [ "HOST" ],
   "worst",
   [
@@ -161,7 +161,7 @@ aggregation_rules["hardware"] = (
 )
 
 aggregation_rules["networking"] = (
-  "Networking", 
+  "Networking",
   [ "HOST" ],
   "worst",
   [
@@ -170,7 +170,7 @@ aggregation_rules["networking"] = (
 )
 
 aggregation_rules["checkmk"] = (
-  "Check_MK", 
+  "Check_MK",
   [ "HOST" ],
   "worst",
   [
@@ -179,7 +179,7 @@ aggregation_rules["checkmk"] = (
 )
 
 aggregation_rules["logfiles"] = (
-  "Logfiles", 
+  "Logfiles",
   [ "HOST" ],
   "worst",
   [
@@ -187,7 +187,7 @@ aggregation_rules["logfiles"] = (
   ]
 )
 aggregation_rules["applications"] = (
-  "Applications", 
+  "Applications",
   [ "HOST" ],
   "worst",
   [
@@ -196,7 +196,7 @@ aggregation_rules["applications"] = (
 )
 
 aggregation_rules["other"] = (
-  "Other", 
+  "Other",
   [ "HOST" ],
   "worst",
   [

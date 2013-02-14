@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-ups_in_voltage_default_levels = (210, 180) # warning / critical 
+ups_in_voltage_default_levels = (210, 180) # warning / critical
 
 def inventory_ups_in_voltage(info):
     if len(info) > 0:
@@ -38,7 +38,7 @@ def check_ups_in_voltage(item, params, info):
 	    power = int(line[1])
 	    perfdata = [ ( "in_voltage", power, warn, crit, 150 ) ]
 	    infotext = " - current in voltage: %dV, (warn/crit at %dV/%dV)" % \
-	 	(power, warn, crit)	
+	 	(power, warn, crit)
 
 	    if power <= crit:
 		return (2, "CRIT" + infotext, perfdata)
@@ -46,7 +46,7 @@ def check_ups_in_voltage(item, params, info):
 		return (1, "WARN" + infotext, perfdata)
 	    else:
 		return (0, "OK" + infotext, perfdata)
-	    
+
     return (3, "UNKNOWN - Phase %s not found in SNMP output" % item)
 
 check_info['ups_in_voltage'] = {

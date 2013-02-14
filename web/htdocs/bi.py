@@ -149,7 +149,7 @@ def load_services(cache, only_hosts):
     html.live.set_auth_domain('bi')
     data = html.live.query("GET hosts\n"
                            +filter_txt+
-                           "Columns: name custom_variable_names custom_variable_values services childs parents\n") 
+                           "Columns: name custom_variable_names custom_variable_values services childs parents\n")
     html.live.set_prepend_site(False)
     html.live.set_auth_domain('read')
 
@@ -1129,7 +1129,7 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
     html.live.set_prepend_site(True)
 
     data = html.live.query(query)
-    
+
     html.live.set_prepend_site(False)
     html.live.set_only_sites(None)
 
@@ -1344,14 +1344,14 @@ def ajax_render_tree():
     if aggr_group not in g_user_cache["forest"]:
         raise MKGeneralException(_("Unknown BI Aggregation group %s. Available are: %s") % (
             aggr_group, ", ".join(g_user_cache["forest"].keys())))
-        
+
     trees = g_user_cache["forest"][aggr_group]
     for tree in trees:
         if tree["title"] == aggr_title:
             row = create_aggregation_row(tree)
             row["aggr_group"] = aggr_group
             # ZUTUN: omit_root, boxes, only_problems has HTML-Variablen
-            tdclass, htmlcode = render_tree_foldable(row, boxes=boxes, omit_root=omit_root, 
+            tdclass, htmlcode = render_tree_foldable(row, boxes=boxes, omit_root=omit_root,
                                              expansion_level=load_ex_level(), only_problems=only_problems, lazy=False)
             html.write(htmlcode)
             return
@@ -1359,7 +1359,7 @@ def ajax_render_tree():
     raise MKGeneralException(_("Unknown BI Aggregation %s") % aggr_title)
 
 
-    
+
 def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, lazy):
     saved_expansion_level = load_ex_level()
     treestate = weblib.get_tree_states('bi')
@@ -1374,6 +1374,10 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
         is_open = treestate.get(path_id)
         if is_open == None:
             is_open = len(path) <= expansion_level
+
+        # Make sure that in case of BI Boxes (omit root) the root level is *always* visible
+        if not is_open and omit_root and len(path) == 1:
+           is_open = True
 
         h = ""
         state = tree[0]
@@ -1460,7 +1464,7 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
         ( "boxes", boxes and "yes" or ""),
         ( "only_problems", only_problems and "yes" or ""),
     ])
-        
+
     htmlcode = '<div id="%s" class=bi_tree_container>' % htmllib.attrencode(url_id) + \
                render_subtree(tree, [tree[2]["title"]], len(affected_hosts) > 1) + \
                '</div>'
@@ -1586,7 +1590,7 @@ def page_availability():
         if tree["title"] == aggr_name:
             break
     else:
-        raise MKGeneralException("No aggregation with the name %s" % 
+        raise MKGeneralException("No aggregation with the name %s" %
             aggr_name)
 
     views.render_bi_availability(tree)
@@ -1730,9 +1734,9 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
             status_info = None
         else:
             aggrs = g_user_cache["host_aggregations"].get((site, host), [])
-            status_info = { (site, host) : [ 
-                hostrow["state"], 
-                hostrow["plugin_output"], 
+            status_info = { (site, host) : [
+                hostrow["state"],
+                hostrow["plugin_output"],
                 hostrow["services_with_info"] ] }
 
         for group, aggregation in aggrs:

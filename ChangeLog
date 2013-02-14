@@ -7,13 +7,18 @@
     * New rule feature: automatically delete after action
 
     Checks & Agents:
-    Add: Memory and Swap for Solaris Agent
-    Add: Monitoring of ESX (VMware) Hosts
+    * Add: Memory and Swap for Solaris Agent
+    * Add: Monitoring of ESX (VMware) Hosts
 
 
 1.2.2b2:
+    Checks & Agents:
+    * Added dynamic thresholds to the oracle_tablespace check depending on the
+      size of the tablespaces.
+
     BI:
     * FIX: fix exception in BI-Boxes views of host groups
+    * FIX: fix problem where BI-Boxes were invisible if not previously unfolded
 
     Event Console:
     * FIX: support non-Ascii characters in matching expressions. Note:
@@ -24,6 +29,7 @@
 
     Multisite:
     * FIX: Fixed several minor IE7 related layout bugs
+    * FIX: title of pages was truncated and now isn't anymore
     * Cleanup form for executing commands on hosts/services
 
     WATO:

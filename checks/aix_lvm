@@ -46,12 +46,12 @@
 # hd5 which contains the boot kernel is normally always closed (but it doesn't
 # matter IF it's closed.
 
-# row3: 1 means it alloceted one lvm logical extent (called partition on AIX), so 
-# it's likely 256MB in size. 
+# row3: 1 means it alloceted one lvm logical extent (called partition on AIX), so
+# it's likely 256MB in size.
 # row4: 2 means it uses two physical extents. So if it uses two physical for
 # one logical ... yeah, a mirror
 
-# row5: 2 means that the volume uses two physical volumes to store those 
+# row5: 2 means that the volume uses two physical volumes to store those
 # extents. So the mirror isn't on the same disk if it dies.
 
 # row6: here open/syncd is OK for every active volume
@@ -64,7 +64,7 @@
 #}
 
 def parse_aix_lvm(info):
-    lvmconf = {} 
+    lvmconf = {}
     for line in info:
        if len(line) == 1:
            vgname = line[0][:-1]
@@ -75,8 +75,8 @@ def parse_aix_lvm(info):
            activation, mirror = act_state.split("/")
            if mountpoint == "N/A":
                mountpoint = None
-           lvmconf[vgname].update( { 
-                   lv : (lvtype, int(num_lp), int(num_pp), int(num_pv), 
+           lvmconf[vgname].update( {
+                   lv : (lvtype, int(num_lp), int(num_pp), int(num_pv),
                          activation, mirror, mountpoint)
                    })
     return lvmconf
@@ -121,29 +121,29 @@ def check_aix_lvm(item, _no_params, info):
             if activation != "open": # and activation != target_activation:
                 msgtxt.append("LV is not opened(!)")
                 state = max(state, 1)
-        
+
         # Detect any, not just mirrored, volumes, that have stale PPs.
         # This means either a disk write failure causing a mirror to go stale
         # or some kind of split mirror backup.
         if mirror != "syncd":
-            
+
             msgtxt.append("LV is not in sync state(!!)")
             state = max(state, 2)
-            
+
         if state == 0:
             msgtxt = "LV is open/syncd"
         else:
             msgtxt = ", ".join(msgtxt)
         return (state, nagios_state_names[state] + " - " + msgtxt)
-    
-    
+
+
     return (3, "UNKNOWN - no such volume found")
 
 
 check_info['aix_lvm'] = {
     "check_function"     : check_aix_lvm,
     "inventory_function" : inventory_aix_lvm,
-    "service_description": "Logical Volume %s", 
+    "service_description": "Logical Volume %s",
     "has_perfdata"       : False,
    # "group"              : "",
    # "default_levels_variable" : "services_default_levels",

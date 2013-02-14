@@ -29,14 +29,14 @@
 
 def check_blade_bx_powermod(item, _no_param, info):
     power_status = {
-        1 : "unknow", 
-        2 : "ok",  
-        3 : "not-present", 
-        4 : "error",  
-        5 : "critical", 
-        6 : "off", 
+        1 : "unknow",
+        2 : "ok",
+        3 : "not-present",
+        4 : "error",
+        5 : "critical",
+        6 : "off",
         7 : "dummy"
-        } 
+        }
 
     for index, status, product_name in info:
         status = saveint(status)
@@ -45,7 +45,7 @@ def check_blade_bx_powermod(item, _no_param, info):
         if status != 2:
             state = 2
 
-        return (state, nagios_state_names[state] + " - %s Status is %s" % (product_name, power_status[status]) ) 
+        return (state, nagios_state_names[state] + " - %s Status is %s" % (product_name, power_status[status]) )
 
     return (3, "Module %s not found in SNMP info" % index)
 
@@ -55,9 +55,9 @@ check_info['blade_bx_powermod'] = {
     "service_description" : "Power Module %s",
     "has_perfdata" : False,
     "snmp_info" : (".1.3.6.1.4.1.7244.1.1.1.3.2.4.1", [
-                                                      1, # index 
+                                                      1, # index
                                                       2, # status
-                                                      4, # product name 
+                                                      4, # product name
    ]),
    "snmp_scan_function" : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0"),
 }

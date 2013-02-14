@@ -40,7 +40,7 @@ def inventory_esx_vsphere_hostsystem_mem(info):
 def check_esx_vsphere_hostsystem_mem(item, params, info):
     data = esx_vsphere_hostsystem_convert(info)
     memory_usage = savefloat(data['summary.quickStats.overallMemoryUsage'][0]) * 1024 * 1024
-    memory_size  = savefloat(data['hardware.memorySize'][0]) 
+    memory_size  = savefloat(data['hardware.memorySize'][0])
     level = memory_usage / memory_size * 100
     warn, crit = params
     state = 0
@@ -54,7 +54,7 @@ def check_esx_vsphere_hostsystem_mem(item, params, info):
 
     message = " - Memory usage: %d%%%s %s/%s" % \
     (level, label, get_bytes_human_readable(memory_usage), get_bytes_human_readable(memory_size))
-    perf = [("usage", memory_usage, warn, crit, 0, memory_size)] 
+    perf = [("usage", memory_usage, warn, crit, 0, memory_size)]
     return(state, nagios_state_names[state] + message, perf)
 
 
@@ -88,7 +88,7 @@ def check_esx_vsphere_hostsystem_state(item, params, info):
     messages.append("Enity state: %s%s" % (overallStatus, label['Status']))
 
     label['powerState'] = ''
-    powerState = str(data['runtime.powerState'][0]) 
+    powerState = str(data['runtime.powerState'][0])
     if powerState in ['poweredOff', 'unknown']:
         state = 2
         label['powerState'] = "(!!)"
@@ -96,10 +96,10 @@ def check_esx_vsphere_hostsystem_state(item, params, info):
         state = max(state, 1)
         label['powerState'] = "(!)"
     messages.append("Power state: %s%s" % (powerState, label['powerState']))
-    
+
     if str(data['runtime.inMaintenanceMode'][0]) == 'True':
         messages.append("System is in maintenance(!!)")
-        
+
     return(state, nagios_state_names[state] + " - " + ", ".join(messages))
 
 check_info['esx_vsphere_hostsystem.state'] = {
@@ -132,7 +132,7 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
     standby = 0
     unknown = 0
     active = 0
-    state = 0 
+    state = 0
     dead_label = ""
     disabled_label = ""
     standby_label = ""

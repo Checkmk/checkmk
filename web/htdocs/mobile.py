@@ -79,7 +79,7 @@ def mobile_html_foot():
     html.write("</body></html>\n")
 
 def jqm_header_button(pos, url, title, icon=""):
-    html.write('<a href="%s" class="ui-btn-%s" data-direction="reverse" data-icon="%s" data-iconpos="notext"  title="%s" ></a>' % (url, pos, icon, title )) 
+    html.write('<a href="%s" class="ui-btn-%s" data-direction="reverse" data-icon="%s" data-iconpos="notext"  title="%s" ></a>' % (url, pos, icon, title ))
 
 def jqm_page_header(title, id=None, left_button=None, right_button=None):
     idtxt = id and (' id="%s"' % id) or ''
@@ -126,23 +126,23 @@ def jqm_page_navfooter(items, current, page_id):
     html.write('</div>') # close page-div
 
 
-def jqm_page_index(title, items): 
-    manual_sort = [_("Hosts"), _("Services"), _("Events")] 
-    
+def jqm_page_index(title, items):
+    manual_sort = [_("Hosts"), _("Services"), _("Events")]
+
     items.sort(cmp = lambda a,b: cmp((a[0],a[2]),(b[0],b[2])))
     for topic in manual_sort:
-        jqm_page_index_topic_renderer(topic, items) 
-    
+        jqm_page_index_topic_renderer(topic, items)
+
     other_topics = list(set([ x[0] for x in items if x[0] not in manual_sort]))
 
     for topic in other_topics:
-        jqm_page_index_topic_renderer(topic, items) 
+        jqm_page_index_topic_renderer(topic, items)
 
 
-def jqm_page_index_topic_renderer(topic, items): 
+def jqm_page_index_topic_renderer(topic, items):
     for top, href, title in items:
         if top == topic:
-            html.write('<p>%s</p><ul data-role="listview" data-inset="true">\n' % topic) 
+            html.write('<p>%s</p><ul data-role="listview" data-inset="true">\n' % topic)
             for top, href, title in items:
                 if top == topic:
                     html.write('<li><a data-ajax="false" data-transition="flip" href="%s">%s</a></li>\n' % (href, title))
@@ -193,7 +193,7 @@ def page_index():
     for view_name, view in html.available_views.items():
         if view.get("mobile") and not view.get("hidden"):
             url = "mobile_view.py?view_name=%s" % view_name
-            count = "" 
+            count = ""
             if not view.get("mustsearch"):
 	        count = views.show_view(view, only_count = True)
                 count = '<span class="ui-li-count">%d</span>' % count
@@ -220,7 +220,7 @@ def page_view():
     view = html.available_views.get(view_name)
     if not view:
         raise MKGeneralException("No view defined with the name '%s'." % view_name)
-        
+
     title = views.view_title(view)
     mobile_html_head(title)
 

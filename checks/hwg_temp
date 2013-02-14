@@ -43,16 +43,16 @@ def check_hwg_temp(item, params, info):
         "3" : "°K",
         "4" : "%",
         }
-    for line in info: 
+    for line in info:
         if line[0] == item:
             descr, status, current, current_m, unit = line[1:]
             current_state = savefloat(current_m)/10
-            
+
             state = 0
             if current_state >= crit:
                 state = 2
             elif current_state >= warn:
-                state = 1        
+                state = 1
             elif status in (4, 2):
                 state = 1
             elif status == 3:
@@ -62,7 +62,7 @@ def check_hwg_temp(item, params, info):
             unit = unit_text.get(unit)
             status = status_text.get(status, "UNKOWN")
             return(state, nagios_state_names[state] + " - %s at %s%s (warn/crit at %s%s/%s%s), Status is %s" % \
-            (descr, current, unit, warn, unit, crit, unit, status), perfdata) 
+            (descr, current, unit, warn, unit, crit, unit, status), perfdata)
 
     return (3, "UNKNOWN - Sensor %s not found in SNMP data %s" % (item) )
 

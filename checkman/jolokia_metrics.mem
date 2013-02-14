@@ -21,7 +21,7 @@ item:
 examples:
  jolokia_metrics_mem_default_levels = {
     "heap"    : (2000,1000),    # heap warning when 2000MB left, heap crit when 1000 MB left
-    "nonheap" : (75.0, 95.7),   # nonheap warning at 75.0% usage, nonheap crit at 95.7% usage   
+    "nonheap" : (75.0, 95.7),   # nonheap warning at 75.0% usage, nonheap crit at 95.7% usage
     "totalheap" : (3000, 2200), # totalheap warning at 3000MB left, totalheap crit at 2200MB left
  }
 
@@ -51,5 +51,5 @@ parameters (dict): This check requires a dictionary with the following keys.
 
 
 [configuration]
-jolokia_metrics_mem_default_levels (dict): Default warn/crit levels for heap, nonheap and totalheap 
+jolokia_metrics_mem_default_levels (dict): Default warn/crit levels for heap, nonheap and totalheap
 

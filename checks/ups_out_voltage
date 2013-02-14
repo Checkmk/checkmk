@@ -38,7 +38,7 @@ def check_ups_out_voltage(item, params, info):
 	    power = int(line[1])
 	    perfdata = [ ( "out_voltage", power, warn, crit, 200, 240 ) ]
 	    infotext = " - current in voltage: %dV (warn/crit at %dV/%dV)" % \
-	 	(power, warn, crit)	
+	 	(power, warn, crit)
 
 	    if power <= crit:
 		return (2, "CRIT" + infotext, perfdata)
@@ -46,7 +46,7 @@ def check_ups_out_voltage(item, params, info):
 		return (1, "WARN" + infotext, perfdata)
 	    else:
 		return (0, "OK" + infotext, perfdata)
-	    
+
     return (3, "UNKNOWN - Phase %s not found in SNMP output" % item)
 
 check_info['ups_out_voltage'] = {

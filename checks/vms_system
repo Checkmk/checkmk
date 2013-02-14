@@ -24,14 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from agent 
+# Example output from agent
 # Columns:
 # 1. Direct IOs / sec   (on hardware)
 # 2. Buffered IOs / sec (queued)
 # 3. Number of currently existing processes (averaged)
 
 # <<<vms_system>>>
-# 0.00 0.00 15.00 
+# 0.00 0.00 15.00
 
 def inventory_vms_system(info):
     if len(info) > 0:

@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check allows to monitor the number of current connections to
  a JVM application (i.e. /host-manager or /my-web-app)
- 
+
  To use this plugin, Jolokia and the agent plugin need to be installed
  on the monitored server.
 
@@ -21,7 +21,7 @@ perfdata:
  The number of sessions along with the upper (high) alert levels.
 
 inventory:
- One check is created for each application running inside an Jolokia 
+ One check is created for each application running inside an Jolokia
  instance sent by the agent.
 
 

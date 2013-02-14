@@ -212,7 +212,7 @@ def perfometer_ipmi_sensors(row, check_command, perf_data):
         unit = "°C"
     else:
         unit = ""
-    return (u"%d%s" % (int(value), unit)), h 
+    return (u"%d%s" % (int(value), unit)), h
 
 perfometers["check_mk-ipmi_sensors"] = perfometer_ipmi_sensors
 
@@ -277,7 +277,7 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit = "B"):
     # make logarithmic perf-o-meter
     MB = 1000000.0
     text = "%s/s&nbsp;&nbsp;&nbsp;%s/s" % (
-        number_human_readable(in_traffic * traffic_multiplier, 1, unit), number_human_readable(out_traffic * traffic_multiplier, 1, unit)) 
+        number_human_readable(in_traffic * traffic_multiplier, 1, unit), number_human_readable(out_traffic * traffic_multiplier, 1, unit))
 
     return text, perfometer_logarithmic_dual(
                  in_traffic, "#0e6", out_traffic, "#2af", 1000000, 5)
@@ -354,7 +354,7 @@ def perfometer_cpu_utilization(row, check_command, perf_data):
 perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-winperf_processor.util"] = perfometer_cpu_utilization
 
-def perfometer_hpux_snmp_cs_cpu(row, check_command, perf_data): 
+def perfometer_hpux_snmp_cs_cpu(row, check_command, perf_data):
     h = '<table><tr>'
     h += perfometer_td(float(perf_data[0][1]), "#60f020")
     h += perfometer_td(float(perf_data[1][1]), "#ff6000")
@@ -362,7 +362,7 @@ def perfometer_hpux_snmp_cs_cpu(row, check_command, perf_data):
     h += perfometer_td(float(perf_data[3][1]), "#ffffff")
     h += '</tr></table>'
     sum = float(perf_data[0][1]) + float(perf_data[1][1]) + float(perf_data[2][1])
-    return "%.0f%%" % sum, h 
+    return "%.0f%%" % sum, h
 
 perfometers["check_mk-hpux_snmp_cs.cpu"] = perfometer_hpux_snmp_cs_cpu
 
@@ -463,7 +463,7 @@ def perfometer_fileinfo_groups(row, check_command, perf_data):
     h = '<div class="stacked">'
     texts = []
     for i, color, base, scale, verbfunc in [
-        ( 2, "#aabb50", 10000, 10, lambda v: ("%d Tot") % v ), # count 
+        ( 2, "#aabb50", 10000, 10, lambda v: ("%d Tot") % v ), # count
         ( 1, "#ccff50", 3600, 10, age_human_readable )]: #age_newest
         val = float(perf_data[i][1])
         h += perfometer_logarithmic(val, base, scale, color)
@@ -557,7 +557,7 @@ def perfometer_mysql_capacity(row, check_command, perf_data):
     # put the vertical middle at 40GB DB size, this makes small databases look small
     # and big ones big. raise every 18 months by Moore's law :)
     median = 40 * 1024 * 1024 * 1024
-    
+
     return "%s" % number_human_readable(size), perfometer_logarithmic(size, median, 10, color)
 
 perfometers['check_mk-mysql_capacity'] = perfometer_mysql_capacity
@@ -596,7 +596,7 @@ def perfometer_carel_uniflair_cooling(row, check_command, perf_data):
 perfometers['check_mk-carel_uniflair_cooling'] = perfometer_carel_uniflair_cooling
 
 def perfometer_eaton(row, command, perf):
-    return u"%s°C" % str(perf[0][1]), perfometer_linear(float(perf[0][1]), 'silver') 
+    return u"%s°C" % str(perf[0][1]), perfometer_linear(float(perf[0][1]), 'silver')
 
 perfometers['check_mk-ups_eaton_enviroment'] = perfometer_eaton
 
@@ -604,7 +604,7 @@ perfometers['check_mk-ups_eaton_enviroment'] = perfometer_eaton
 def perfometer_ups_capacity(row, command, perf):
     return "%0.2f%%" % float(perf[1][1]), perfometer_linear(float(perf[1][1]), '#B2FF7F')
 
-perfometers['check_mk-ups_capacity'] = perfometer_ups_capacity 
+perfometers['check_mk-ups_capacity'] = perfometer_ups_capacity
 
 def perfometer_genu_screen(row, command, perf):
     value = saveint(perf[0][1])

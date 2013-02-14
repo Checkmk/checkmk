@@ -25,13 +25,13 @@
 # Boston, MA 02110-1301 USA.
 
 # MB warn, crit
-#jolokia_metrics_mem_default_levels = (2000, 3000) # 
+#jolokia_metrics_mem_default_levels = (2000, 3000) #
 
 # Number of threads warn, crit
-jolokia_metrics_threads_default_levels  = (80, 100) 
+jolokia_metrics_threads_default_levels  = (80, 100)
 
 # Number of sessions low crit, low warn, high warn, high crit
-jolokia_metrics_app_sess_default_levels = (-1, -1, 800, 1000) 
+jolokia_metrics_app_sess_default_levels = (-1, -1, 800, 1000)
 
 # Number of requests low crit, low warn, high warn, high crit
 jolokia_metrics_serv_req_default_levels = (-1, -1, 5000, 6000)
@@ -88,7 +88,7 @@ def inventory_jolokia_metrics(info, what):
     levels = None
 
     if what == 'mem':
-        levels = {} 
+        levels = {}
     elif what == 'threads':
         levels = 'jolokia_metrics_threads_default_levels'
 
@@ -163,11 +163,11 @@ def check_jolokia_metrics_mem(item, params, info):
     if item not in parsed:
         return (3, "UNKNOWN - data not found in agent output")
 
- 
+
     # convert old parameter version ( warn, crit )
     # represented levels of total heap
     if type(params) == tuple:
-        params = {"totalheap": params}    
+        params = {"totalheap": params}
 
     d = parsed[item]
     mb = 1024 * 1024.0
@@ -175,7 +175,7 @@ def check_jolokia_metrics_mem(item, params, info):
     heapmax = saveint(d["HeapMemoryMax"]) / mb
     nonheap = saveint(d["NonHeapMemoryUsage"]) / mb
     nonheapmax = saveint(d["NonHeapMemoryMax"]) / mb
-    total = heap + nonheap 
+    total = heap + nonheap
     totalmax = heapmax + nonheapmax
 
     state_sign = { 0: "", 1: "(!)", 2: "(!!)" }
@@ -212,13 +212,13 @@ def check_jolokia_metrics_mem(item, params, info):
         else:
             perfdata.append((what, value, "", "", "", value_max))
 
- 
+
         info_list.append("%s: %0.fMB/%.1f%% used%s" % (what.title(), value, value/value_max*100, level_info))
-        worst_state = max(param_state, worst_state) 
+        worst_state = max(param_state, worst_state)
 
     infotext = nagios_state_names[worst_state] + " - " + ', '.join(info_list)
     return (worst_state, infotext, perfdata)
- 
+
 def check_jolokia_metrics_threads(item, params, info):
     warn, crit = params
     parsed = jolokia_metrics_parse(info)
@@ -307,7 +307,7 @@ def check_jolokia_metrics_app_sess(item, params, info):
         app = jolokia_metrics_serv(info, item.split())
     elif len (item.split()) == 2:
         app = jolokia_metrics_app(info, item.split())
-    if not app: 
+    if not app:
         return (3, "UNKNOWN - application not found")
     sessions = app.get('Sessions', app.get('activeSessions', app.get('OpenSessionsCurrentCount')))
     if sessions == None:
@@ -331,7 +331,7 @@ def check_jolokia_metrics_app_sess(item, params, info):
         status_txt = ' (Above or equal %d)' % lo_crit
 
     if maxActive and maxActive > 0:
-        status_txt += " (max active sessions: %d)" % maxActive	
+        status_txt += " (max active sessions: %d)" % maxActive
 
     return (status, '%s - %d Sessions%s' % (nagios_state_names[status], sess, status_txt),
             [('sessions', sess, hi_warn, hi_crit)])
@@ -378,7 +378,7 @@ def check_jolokia_metrics_serv_req(item, params, info):
 
 def check_jolokia_metrics_bea_queue(item, params, info):
     app = jolokia_metrics_app(info, item.split())
-    if not app: 
+    if not app:
         return (3, "UNKNOWN - application not found")
     if "QueueLength" not in app:
         return (3, "UNKNOWN - data not found in agent output")
@@ -390,7 +390,7 @@ def check_jolokia_metrics_bea_queue(item, params, info):
         status = 2
     elif queuelength >= warn:
         status = 1
-    return (status, nagios_state_names[status] + ' - queue length is %d' % queuelength, 
+    return (status, nagios_state_names[status] + ' - queue length is %d' % queuelength,
              [("length", queuelength, warn, crit)])
 
 
@@ -399,7 +399,7 @@ def check_jolokia_metrics_bea_queue(item, params, info):
 # A candidate for 1.2.1 overhaul
 def check_jolokia_metrics_bea_requests(item, _no_params, info):
     app = jolokia_metrics_app(info, item.split())
-    if not app: 
+    if not app:
         return (3, "UNKNOWN - application not found")
 
     for nk in [ "CompletedRequestCount", "requestCount" ]:
@@ -413,12 +413,12 @@ def check_jolokia_metrics_bea_requests(item, _no_params, info):
 
 def check_jolokia_metrics_bea_threads(item, _no_params, info):
     app = jolokia_metrics_app(info, item.split())
-    if not app: 
+    if not app:
         return (3, "UNKNOWN - application not found")
 
     perfdata = []
     infos = []
-    for varname, title in [ 
+    for varname, title in [
         ( "ExecuteThreadTotalCount", "total" ),
         ( "ExecuteThreadIdleCount", "idle" ),
         ( "StandbyThreadCount", "standby" ),

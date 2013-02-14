@@ -1416,26 +1416,56 @@ checkgroups.append((
     _("Oracle Tablespaces"),
     Dictionary(
         elements = [
-            ( "levels",
-               Alternative(
-                   title = _("Total tablespace size"),
-                   elements = [
-                       Tuple(
-                           title = _("Percentage levels of free maximum space"),
-                           elements = [
-                               Percentage(title = _("Warning at"), label = _("free")),
-                               Percentage(title = _("Critical at"), label = _("free")),
-                           ]
-                       ),
-                       Tuple(
-                           title = _("Absolute free space"),
-                           elements = [
-                                Integer(title = _("Warning lower than"), unit = _("MB")), 
-                                Integer(title = _("Critical lower than"), unit = _("MB")), 
-                           ]
-                        )
-                   ])),
-            (  "magic",
+            ("levels",
+                Alternative(
+                    title = _("Levels for the Tablespace size"),
+                    elements = [
+                        Tuple(
+                            title = _("Percentage free space"),
+                            elements = [
+                                Percentage(title = _("Warning below"), label = _("free")),
+                                Percentage(title = _("Critical below"), label = _("free")),
+                            ]
+                        ),
+                        Tuple(
+                            title = _("Absolute free space"),
+                            elements = [
+                                 Integer(title = _("Warning lower than"), unit = _("MB")),
+                                 Integer(title = _("Critical lower than"), unit = _("MB")),
+                            ]
+                        ),
+                        ListOf(
+                            Tuple(
+                                orientation = "horizontal",
+                                elements = [
+                                    Filesize(title = _("Tablespace larger than")),
+                                    Alternative(
+                                        title = _("Levels for the Tablespace size"),
+                                        elements = [
+                                            Tuple(
+                                                title = _("Percentage free space"),
+                                                elements = [
+                                                    Percentage(title = _("Warning below"), label = _("free")),
+                                                    Percentage(title = _("Critical below"), label = _("free")),
+                                                ]
+                                            ),
+                                            Tuple(
+                                                title = _("Absolute free space"),
+                                                elements = [
+                                                     Integer(title = _("Warning lower than"), unit = _("MB")),
+                                                     Integer(title = _("Critical lower than"), unit = _("MB")),
+                                                ]
+                                            ),
+                                        ]
+                                    ),
+                                ],
+                            ),
+                            title = _('Dynamic levels'),
+                        ),
+                    ]
+                )
+            ),
+            ("magic",
                Float(
                   title = _("Magic factor (automatic level adaptation for large tablespaces)"),
                   minvalue = 0.1,

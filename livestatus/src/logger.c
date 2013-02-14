@@ -69,7 +69,7 @@ void logger(int priority, const char *loginfo, ...)
             char timestring[64];
             time_t now_t = time(0);
             struct tm now; localtime_r(&now_t, &now);
-            strftime(timestring, 64, "%F %T ", &now); 
+            strftime(timestring, 64, "%F %T ", &now);
             fputs(timestring, g_logfile);
 
             /* write log message */

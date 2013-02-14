@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def convert_vms_if(info):
-    # Due to signed 32-bit arithmetics we sometimes get negative values. Those 
+    # Due to signed 32-bit arithmetics we sometimes get negative values. Those
     # must be converted to positive ones.
     def wrap_negative(c):
         if c < 0:
@@ -55,8 +55,8 @@ def convert_vms_if(info):
             ifInBroadcastPkts,
             ifInDiscards,
             ifInErrors,
-            ifOutOctets, 
-            ifOutUcastPkts, 
+            ifOutOctets,
+            ifOutUcastPkts,
             ifOutMulticastPkts,
             ifOutBroadcastPkts,
             ifOutDiscards,

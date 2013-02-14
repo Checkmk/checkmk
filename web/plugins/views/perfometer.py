@@ -94,7 +94,7 @@ def number_human_readable(n, precision=1, unit="B"):
     n = float(n)
     f = "%." + str(precision) + "f"
     if abs(n) > 1024 * 1024 * 1024:
-        return (f + "G%s") % (n / (1024.0 * 1024 * 1024), unit) 
+        return (f + "G%s") % (n / (1024.0 * 1024 * 1024), unit)
     elif abs(n) > 1024 * 1024:
         return (f + "M%s") % (n / (1024.0 * 1024), unit)
     elif abs(n) > 1024:
@@ -136,7 +136,7 @@ def paint_perfometer(row):
     perf_painter = perfometers.get(check_command)
     if not perf_painter:
         return "", ""
-    
+
     # Python's isdigit() works only on str. We deal with unicode since
     # we deal with data coming from Livestatus
     def isdigit(x):

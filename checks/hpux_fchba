@@ -57,7 +57,7 @@ def parse_hpux_fchba(info):
 def inventory_hpux_fchba(info):
     parsed = parse_hpux_fchba(info)
     return [ (name, None) for name, hba in parsed.items()
-             if hba["Driver state"] == "ONLINE" ] 
+             if hba["Driver state"] == "ONLINE" ]
 
 def check_hpux_fchba(item, _no_params, info):
     parsed = parse_hpux_fchba(info)
@@ -77,7 +77,7 @@ def check_hpux_fchba(item, _no_params, info):
         infos[-1] += "(!!)"
 
     infos.append("Topology: %s" % hba.get("Topology", "(none)"))
-    if hba.get("Topology") not in [ 
+    if hba.get("Topology") not in [
             "PTTOPT_FABRIC", "PRIVATE_LOOP", "PUBLIC_LOOP", ]:
         state = 2
         infos[-1] += "(!!)"
@@ -86,7 +86,7 @@ def check_hpux_fchba(item, _no_params, info):
         infos.append("Driver-Firmware Dump Available(!!)")
         state = 2
 
-            
+
 
     infotext = ", ".join(infos)
     return state, nagios_state_names[state] + " - " + infotext

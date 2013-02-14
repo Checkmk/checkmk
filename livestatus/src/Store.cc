@@ -117,7 +117,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
     int r = input->readRequest();
     if (r != IB_REQUEST_READ) {
         if (r != IB_END_OF_FILE)
-            output->setError(RESPONSE_CODE_INCOMPLETE_REQUEST, 
+            output->setError(RESPONSE_CODE_INCOMPLETE_REQUEST,
                 "Client connection terminated while request still incomplete");
         return false;
     }

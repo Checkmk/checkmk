@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-pdu_gude_default_levels = { 
+pdu_gude_default_levels = {
         "V"    : ( 220, 210 ),
         "A"    : ( 15, 16 ),
         "W"    : ( 3500, 3600 ),
@@ -35,12 +35,12 @@ def inventory_pdu_gude(info):
         return [(x + 1, "pdu_gude_default_levels") for x in xrange(len(info))]
 
 def check_pdu_gude(item, params, info):
-        try: 
+        try:
             values = info[item - 1]
         except ValueError:
             return (3, "UKN - Item not found")
 
-        units = { 
+        units = {
             0 : ("kWh", 1000),
             1 : ("W", False ),
             2 : ("A", 1000),
@@ -76,4 +76,4 @@ def check_pdu_gude(item, params, info):
             message.append("%.2f%s%s" % (value, unit, label))
 
         return(state, nagios_state_names[0] + " - " + ", ".join(message), perf)
- 
+

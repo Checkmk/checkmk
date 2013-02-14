@@ -28,7 +28,7 @@ import table
 from valuespec import *
 
 # Function building the availability view
-def render_availability(view, datasource, filterheaders, display_options, 
+def render_availability(view, datasource, filterheaders, display_options,
                         only_sites, limit):
     timeline = not not html.var("timeline")
     if timeline:
@@ -87,7 +87,7 @@ avoption_entries = [
             ( "y1",  _("Last year") ),
 
             ( "age", _("The last..."), Age() ),
-            ( "date", _("Explicit date..."), 
+            ( "date", _("Explicit date..."),
                 Tuple(
                     orientation = "horizontal",
                     title_br = False,
@@ -103,22 +103,22 @@ avoption_entries = [
   ),
 
   # How to deal with downtimes, etc.
-  ( "consider", 
+  ( "consider",
     "double",
-    Dictionary( 
+    Dictionary(
        title = _("Status Classification"),
        columns = 2,
        elements = [
-           ( "flapping", 
+           ( "flapping",
               Checkbox(label = _("Consider periods of flapping states")),
            ),
-           ( "downtime", 
+           ( "downtime",
               Checkbox(label = _("Consider scheduled downtimes")),
            ),
-           ( "host_down", 
+           ( "host_down",
               Checkbox(label = _("Consider times where the host is down")),
            ),
-           ( "notification_period", 
+           ( "notification_period",
               Checkbox(label = _("Consider notification period")),
            ),
            ( "unmonitored",
@@ -130,16 +130,16 @@ avoption_entries = [
   ),
 
   # Optionally group some states togehter
-  ( "state_grouping", 
+  ( "state_grouping",
     "double",
-    Dictionary( 
+    Dictionary(
        title = _("Status Grouping"),
        columns = 2,
        elements = [
-           ( "warn", 
+           ( "warn",
               DropdownChoice(
                   label = _("Treat Warning as: "),
-                  choices = [ 
+                  choices = [
                     ( "ok",      _("OK") ),
                     ( "warn",    _("WARN") ),
                     ( "crit",    _("CRIT") ),
@@ -147,10 +147,10 @@ avoption_entries = [
                   ]
                 ),
            ),
-           ( "unknown", 
+           ( "unknown",
               DropdownChoice(
                   label = _("Treat Unknown as: "),
-                  choices = [ 
+                  choices = [
                     ( "ok",      _("OK") ),
                     ( "warn",    _("WARN") ),
                     ( "crit",    _("CRIT") ),
@@ -158,10 +158,10 @@ avoption_entries = [
                   ]
                 ),
            ),
-           ( "host_down", 
+           ( "host_down",
               DropdownChoice(
                   label = _("Treat Host Down as: "),
-                  choices = [ 
+                  choices = [
                     ( "ok",        _("OK") ),
                     ( "warn",      _("WARN") ),
                     ( "crit",      _("CRIT") ),
@@ -229,7 +229,7 @@ def render_availability_options():
     is_open = False
     html.begin_form("avoptions")
     html.hidden_field("avoptions", "set")
-    html.write('<div class="view_form" id="avoptions" %s>' 
+    html.write('<div class="view_form" id="avoptions" %s>'
             % (not is_open and 'style="display: none"' or '') )
     html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
 
@@ -239,7 +239,7 @@ def render_availability_options():
                 avoptions[name] = vs.from_html_vars("avo_" + name)
             except MKUserError, e:
                 html.add_user_error(e.varname, e.message)
-    
+
     try:
         range, range_title = compute_range(avoptions["rangespec"])
         avoptions["range"] = range, range_title
@@ -256,7 +256,7 @@ def render_availability_options():
         vs.render_input("avo_" + name, avoptions.get(name))
         html.write("</div>")
         html.write("</div>")
-    
+
     html.write("</td></tr>")
 
     html.write("<tr><td>")
@@ -361,8 +361,8 @@ def get_availability_data(datasource, filterheaders, range, only_sites, limit, t
 
     # Columns for availability
     columns += [
-      "duration", "from", "until", "state", "host_down", "in_downtime", 
-      "in_host_downtime", "in_notification_period", "is_flapping", 
+      "duration", "from", "until", "state", "host_down", "in_downtime",
+      "in_host_downtime", "in_notification_period", "is_flapping",
       "log_output" ]
     if timeline:
         columns.append("log_output")
@@ -370,7 +370,7 @@ def get_availability_data(datasource, filterheaders, range, only_sites, limit, t
     add_columns = datasource.get("add_columns", [])
     rows = do_query_data(query, columns, add_columns, None, filterheaders, only_sites, limit)
     return rows
-            
+
 
 host_availability_columns = [
  ( "up",                        "state0",        _("UP"),       None ),
@@ -453,7 +453,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
                         s = { 0: "up", 1:"down", 2:"unreach"}[state]
                     if s == "warn":
                         s = avoptions["state_grouping"]["warn"]
-                    elif s == "unknown": 
+                    elif s == "unknown":
                         s = avoptions["state_grouping"]["unknown"]
                     elif s == "host_down":
                         s = avoptions["state_grouping"]["host_down"]
@@ -508,7 +508,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
     else:
         render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number)
 
-def render_timeline(timeline_rows, from_time, until_time, considered_duration, 
+def render_timeline(timeline_rows, from_time, until_time, considered_duration,
                     timeline, range_title, render_number, what, timewarpcode):
     if not timeline_rows:
         html.write('<div class=info>%s</div>' % _("No information available"))
@@ -538,7 +538,7 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
     html.write('<div class=timelinerange>')
     html.write('<div class=from>%s</div><div class=until>%s</div></div>' % (
         render_date(from_time), render_date(until_time)))
-    
+
     html.write('<table class=timeline>')
     html.write('<tr class=timeline>')
     for row_nr, (row, state_id) in enumerate(timeline_rows):
@@ -638,9 +638,9 @@ def render_availability_table(availability, from_time, until_time, range_title, 
             html.icon_button(history_url, _("Event History"), "history")
 
             timeline_url = html.makeuri([
-                   ("timeline", "yes"), 
-                   ("timeline_site", site), 
-                   ("timeline_host", host), 
+                   ("timeline", "yes"),
+                   ("timeline_site", site),
+                   ("timeline_host", host),
                    ("timeline_service", service)])
             html.icon_button(timeline_url, _("Timeline"), "timeline")
 
@@ -685,7 +685,7 @@ def render_bi_availability(tree):
     html.top_heading(title)
     html.begin_context_buttons()
     togglebutton("avoptions", False, "painteroptions", _("Configure details of the report"))
-    html.context_button(_("Status View"), "view.py?" + 
+    html.context_button(_("Status View"), "view.py?" +
             htmllib.urlencode_vars([("view_name", "aggr_single"),
               ("aggr_name", tree["title"])]), "showbi")
     if timeline:
@@ -718,7 +718,7 @@ def render_bi_availability(tree):
                     "aggr_function"        : node["func"],
                     "aggr_group"           : html.var("aggr_group"),
             }
-            tdclass, htmlcode = bi.render_tree_foldable(row, boxes=False, omit_root=False, 
+            tdclass, htmlcode = bi.render_tree_foldable(row, boxes=False, omit_root=False,
                                      expansion_level=bi.load_ex_level(), only_problems=False, lazy=False)
             html.plug()
             html.write('<h3>')

@@ -39,8 +39,8 @@ def check_statgrab_load(item, params, info):
             load_15 = float(value)
 
     warn, crit = params
-    perfdata = [ ('load' + str(z), l, warn, crit, 0 ) 
-                 for (z,l) in 
+    perfdata = [ ('load' + str(z), l, warn, crit, 0 )
+                 for (z,l) in
                  [ (1, load_1), (5, load_5), (15, load_15) ] ]
 
     if load_15 >= crit:
@@ -53,4 +53,4 @@ def check_statgrab_load(item, params, info):
 
 
 check_info['statgrab_load'] = (check_statgrab_load, "CPU load", 1, inventory_statgrab_load)
-checkgroup_of['statgrab_load'] = "cpu_load" 
+checkgroup_of['statgrab_load'] = "cpu_load"

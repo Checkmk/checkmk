@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -163,9 +163,9 @@ def check_oracle_tablespaces(item, params, info):
     num_increments = 0
     increment_size = 0
     free_space = 0
-    
+
     # Conversion of old autochecks params
-    if type(params) == tuple: 
+    if type(params) == tuple:
         params = { "autoextend" : params[0], "levels" : params[1:] }
 
     autoext = params.get("autoextend")

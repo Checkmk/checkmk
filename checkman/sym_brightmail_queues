@@ -4,7 +4,7 @@ author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check is used to monitor successful email delivery through 
+ This check is used to monitor successful email delivery through
  Symantec Brightmail Scanner appliances.
  The check allows to define levels for all parameters the device supports.
  It will report an {OK} state if either no level was defined or the threshold

@@ -121,7 +121,7 @@ sidebar_snapins["search"] = {
     font-size: 8pt;
     width: 194px;
     height: 25px;
-    background-image: url("images/quicksearch_field_bg.png"); 
+    background-image: url("images/quicksearch_field_bg.png");
     background-repeat: no-repeat;
     -moz-border-radius: 0px;
     border-style: none;
@@ -151,5 +151,5 @@ sidebar_snapins["search"] = {
     background-color: #BFBFBF;
 }
 
-""" 
+"""
 }

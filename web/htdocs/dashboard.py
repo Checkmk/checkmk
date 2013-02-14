@@ -173,7 +173,7 @@ set_dashboard_size();
 window.onresize = function () { set_dashboard_size(); }
 window.onload = function () { set_dashboard_size(); }
 dashboard_scheduler(1);
-    """ % (header_height, screen_margin, title_height, dashlet_padding, 
+    """ % (header_height, screen_margin, title_height, dashlet_padding,
            corner_overlap, refresh_dashlets, name))
 
     html.body_end() # omit regular footer with status icons, etc.
@@ -597,7 +597,7 @@ def render_statistics(pie_id, what, table, filter):
         remaining_part = 1.0 # keep track of remaining part, 1.0 = 100%
 
         # Loop over classes, begin with most outer sphere. Inner spheres show
-        # worse states and appear larger to the user (which is the reason we 
+        # worse states and appear larger to the user (which is the reason we
         # are doing all this stuff in the first place)
         for (name, color, viewurl, q), value in pies[::1]:
             if value > 0 and remaining_part > 0: # skip empty classes

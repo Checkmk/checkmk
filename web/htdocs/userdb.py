@@ -579,7 +579,7 @@ def hook_page():
                 raise
             else:
                 import traceback
-                html.log('Exception (%s, page handler): %s' % 
+                html.log('Exception (%s, page handler): %s' %
                             (connector['id'], traceback.format_exc()))
 
     general_page_hook()

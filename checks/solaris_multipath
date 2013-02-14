@@ -29,7 +29,7 @@
 
 def check_solaris_multipath(item, params, info):
     for line in info:
-        if line[0].split('/')[-1] == item: 
+        if line[0].split('/')[-1] == item:
             total, ok = map(int, line[1:3])
             if total == ok:
                 return(0, "OK - %d paths up" % total)

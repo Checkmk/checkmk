@@ -48,13 +48,13 @@
 # index and item part.
 megaraid_pdisks_legacy_mode = False
 # This makes service descriptions backward compatible to match
-# inventory made by older versions that didn't support multiple 
+# inventory made by older versions that didn't support multiple
 # controllers
 megaraid_pdisks_adapterstr  = ['e','f','g','h','i','j','k','l']
 
-def megaraid_pdisks_parse(info): 
+def megaraid_pdisks_parse(info):
     adapters = { 0: {} }
-    current_adapter = adapters[0] 
+    current_adapter = adapters[0]
     return_var = []
     adapter = 0
     enclosure_devid = 0
@@ -69,7 +69,7 @@ def megaraid_pdisks_parse(info):
             current_adapter = adapters[int(line[1][1:])] # Raute weglassen
             adapter = int(line[1][1:])
         elif line[0] == "Enclosure" and line[1] == "Device":
-            try:    
+            try:
 	        enclosure_devid = int(line[-1])
                 # this should fix inventory problems.
                 adapters[adapter][enclosure_devid] = enclosure_devid
@@ -77,7 +77,7 @@ def megaraid_pdisks_parse(info):
 	    except: # no enclosure device
 	 	enclosure_devid = 0
 		adapters[adapter][0] = 0
-                
+
         elif line[0] == "Slot":
             slot = int(line[-1])
         elif line[0] == "Firmware" and line[1] == "state:":
@@ -85,18 +85,18 @@ def megaraid_pdisks_parse(info):
         elif line[0] == "Inquiry" and line[1] == "Data:":
             name = " ".join(line[2:])
             #Adapter, Enclosure, Encolsure Device ID, Slot, State, Name
-            return_var.append((megaraid_pdisks_adapterstr[adapter], 
-                               adapters[adapter][enclosure_devid], 
+            return_var.append((megaraid_pdisks_adapterstr[adapter],
+                               adapters[adapter][enclosure_devid],
                                enclosure_devid, slot, state, name))
     return return_var
 
 
 def inventory_megaraid_pdisks(info):
-    
+
     info = megaraid_pdisks_parse(info)
     inventory = []
     for adapter, enclosure, enc_dev_id, slot, state, name  in info:
-        inventory.append(("%s%s/%s" % (adapter, enclosure, slot), repr(state))) 
+        inventory.append(("%s%s/%s" % (adapter, enclosure, slot), repr(state)))
     return inventory
 
 def check_megaraid_pdisks(item, target_state, info):

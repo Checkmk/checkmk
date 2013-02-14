@@ -6,14 +6,14 @@ distribution: check_mk
 description:
   This check is used to track the status of objects in Veritas VxVM.
   Currently, it can only track the status of {v} - Volume level objects.
-  It will be {OK} if a volume is an active status, or if it was 
+  It will be {OK} if a volume is an active status, or if it was
   dismounted/stopped cleanly by admin action. If any other status is
   detected, it will go to {CRIT}.
 
   If a diskgroup goes to {disabled} by catastrophic failure or admin
   error, the check can no longer report the volume status, as the
   volumes as objects become unavailable.
- 
+
   The check should be extensible for tracking status in multiple layers.
 
 

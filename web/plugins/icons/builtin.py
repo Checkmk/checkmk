@@ -173,12 +173,12 @@ def pnp_url(row, what, how = 'graph'):
     else:
         svc = pnp_cleanup(row["service_description"])
     site = html.site_status[sitename]["site"]
-    if html.mobile: 
+    if html.mobile:
         url = site["url_prefix"] + ("pnp4nagios/index.php?kohana_uri=/mobile/%s/%s/%s" % \
-            (how, htmllib.urlencode(host), htmllib.urlencode(svc))) 
+            (how, htmllib.urlencode(host), htmllib.urlencode(svc)))
     else:
         url = site["url_prefix"] + ("pnp4nagios/index.php/%s?host=%s&srv=%s" % \
-            (how, htmllib.urlencode(host), htmllib.urlencode(svc))) 
+            (how, htmllib.urlencode(host), htmllib.urlencode(svc)))
 
     if how == 'graph':
         url += "&theme=multisite&baseurl=%scheck_mk/" % \

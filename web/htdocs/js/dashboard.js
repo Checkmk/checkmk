@@ -45,7 +45,7 @@ function resize_dashlets(id, code)
         oDash = document.getElementById("dashlet_title_" + d_number);
         if (oDash) {
             //if browser window to small prevent js error
-            if(d_width <= 20){ 
+            if(d_width <= 20){
                 d_width = 21;
             }
             oDash.style.width  = d_width - 20 + "px";
@@ -145,7 +145,7 @@ function dashboard_scheduler(force) {
 function dashboard_update_contents(id, code) {
     // Update the header time
     updateHeaderTime();
-    
+
     // Call the generic function to replace the dashlet inner code
     updateContents(id, code);
 }

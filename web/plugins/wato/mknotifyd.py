@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config 
+import config
 
 try:
     mknotifyd_enabled = config.mknotifyd_enabled
@@ -36,7 +36,7 @@ mknotifyd_config_dir = defaults.default_config_dir + "/mknotifyd.d/wato/"
 
 if mknotifyd_enabled:
     group = _("Notification")
-    
+
     # Check_MK var
     register_configvar(group,
         "notification_spooling",
@@ -49,7 +49,7 @@ if mknotifyd_enabled:
             default_value = False),
         domain = "check_mk"
     )
-    
+
     # Check_MK var
     register_configvar(group,
         "notification_spool_to",
@@ -79,7 +79,7 @@ if mknotifyd_enabled:
         ),
         domain = "check_mk"
     )
-    
+
     # Daemon var
     register_configvar_domain("mknotifyd", mknotifyd_config_dir)
     register_configvar(group,
@@ -114,4 +114,4 @@ if mknotifyd_enabled:
         ),
         domain = "mknotifyd"
     )
-    
+

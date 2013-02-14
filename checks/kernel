@@ -48,8 +48,8 @@ def inventory_kernel(info):
 def check_kernel(item, params, info):
     this_time = int(info[0][0])
 
-    hits = [ (line[0], line[1]) 
-             for line in info[1:] 
+    hits = [ (line[0], line[1])
+             for line in info[1:]
              if line[0] == item or kernel_counter_names.get(line[0], line[0]) == item ]
     if len(hits) == 0:
         return (3, "UNKNOWN - item '%s' not found in agent output" % item)

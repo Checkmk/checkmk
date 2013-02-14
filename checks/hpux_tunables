@@ -36,7 +36,7 @@ hpux_tunables_nkthread_default_levels = (80.0, 85.0)
 # Usage:          0
 # Setting:        1
 # Percentage:     0.0
-# 
+#
 # Tunable:        maxdsiz
 # Usage:          176676864
 # Setting:        1073741824
@@ -55,7 +55,7 @@ def parse_hpux_tunables(info):
             threshold = saveint(line[1])
             parsed[key] = (usage, threshold)
     return parsed
-        
+
 
 def inventory_hpux_tunables(info, hpux_tunable):
     if hpux_tunable in parse_hpux_tunables(info):
@@ -93,7 +93,7 @@ def check_hpux_tunables(item, params, info, hpux_tunable, thingname):
 
     return (state, nagios_state_names[state] + \
          " - %.2f%% used" % pct + state * "!" + " (%d/%d %s) " % (usage, threshold, thingname), perfdata)
-    
+
 
 
 check_info["hpux_tunables.nkthread"] = {

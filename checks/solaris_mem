@@ -42,10 +42,10 @@ def check_solaris_mem_used(_no_item, params, info):
         if data[value][-1] == 'G':
             data[value] = saveint(data[value][:-1]) * 1024 * 1024
         elif data[value][-1] == 'M':
-            data[value] = saveint(data[value][:-1]) * 1024 
+            data[value] = saveint(data[value][:-1]) * 1024
 
     #SwapTotal is Swap in use, so we have to add SwapFree
-    data['SwapTotal'] = data['SwapTotal'] + data['SwapFree']        
+    data['SwapTotal'] = data['SwapTotal'] + data['SwapFree']
 
     return check_memory(params, data)
 

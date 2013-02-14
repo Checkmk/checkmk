@@ -201,7 +201,7 @@ def create_spoolfile(data):
     target_dir = "%s/%s" % (notification_spooldir, contactname)
     if not os.path.exists(target_dir):
         os.makedirs(target_dir)
-    file_path = "%s/%0.2f_%s" % (target_dir, time.time(), uuid.uuid1()) 
+    file_path = "%s/%0.2f_%s" % (target_dir, time.time(), uuid.uuid1())
     notify_log("Creating spoolfile: %s" % file_path)
     file(file_path,"w").write(pprint.pformat(data))
 
@@ -242,14 +242,14 @@ def process_context(context, write_into_spoolfile, use_method = None):
 
         if use_method:
             if use_method == "email":
-                method = "email" 
+                method = "email"
             elif method == "email":
                 # We are searching for a specific
-                # but this contact does not offer any 
+                # but this contact does not offer any
                 notify_log("ERROR: contact %r do not have any plugins (required: %s)" % (contact, use_method))
                 return 2
             else:
-                found_plugin = {} 
+                found_plugin = {}
                 for item in method[1]:
                     if item["plugin"] == use_method:
                         found_plugin = item
@@ -296,7 +296,7 @@ def do_notify(args):
             os.makedirs(notification_spooldir)
 
         # If the mode is set to 'spoolfile' we try to parse the given spoolfile
-        # This spoolfile contains a python dictionary 
+        # This spoolfile contains a python dictionary
         # { context: { Dictionary of environment variables }, plugin: "Plugin name" }
         # Any problems while reading the spoolfile results in returning 2
         # -> mknotifyd deletes this file
@@ -420,7 +420,7 @@ def check_prerequisite(context, entry):
     if entry.get("disabled"):
         notify_log("- Skipping: it is disabled for this user")
         return 2
-        
+
     # Check host, if configured
     if entry.get("only_hosts"):
         hostname = context.get("HOSTNAME")
@@ -444,7 +444,7 @@ def check_prerequisite(context, entry):
     # Check notification type
     event, allowed_events = check_notification_type(context, entry["host_events"], entry["service_events"])
     if event not in allowed_events:
-        notify_log(" - Skipping: wrong notification type %s (%s), only %s are allowed" % 
+        notify_log(" - Skipping: wrong notification type %s (%s), only %s are allowed" %
             (event, context["NOTIFICATIONTYPE"], ",".join(allowed_events)) )
         return 2
 
@@ -558,7 +558,7 @@ def check_notification_type(context, host_events, service_events):
         event = events[state]
     elif notification_type == "RECOVERY":
         event = 'r'
-    elif notification_type in [ "FLAPPINGSTART", "FLAPPINGSTOP", "FLAPPINGDISABLED" ]: 
+    elif notification_type in [ "FLAPPINGSTART", "FLAPPINGSTOP", "FLAPPINGDISABLED" ]:
         event = 'f'
     elif notification_type in [ "DOWNTIMESTART", "DOWNTIMEEND", "DOWNTIMECANCELLED"]:
         event = 's'

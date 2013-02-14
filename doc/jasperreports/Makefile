@@ -27,4 +27,4 @@ all:
 	jar cf livestatus.jar -C classes .
 
 clean:
-	rm -rf classes/* 
+	rm -rf classes/*

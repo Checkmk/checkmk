@@ -25,7 +25,7 @@ examples:
  fileinfo_groups = [
      ([("Auth_group",r"/var/log/auth*")], ALL_HOSTS),
      ([("Message_group", r"/var/log/messages*")], ['test2'], ALL_HOSTS),
- ] 
+ ]
 
  check_parameters = [
   ({
@@ -56,7 +56,7 @@ parameters (dict): This check uses dictionary based
 
 
  {"minage_oldest"}: A pair of integers for the warning and
- critical level of the minimum file age in seconds 
+ critical level of the minimum file age in seconds
  for the oldest file found with the file group pattern.
  A missing key or {None} disables the minimum age
  checking. The borders itself always belong to the

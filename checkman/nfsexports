@@ -17,7 +17,7 @@ item:
  The name of the NFS export, which is the name of the exported filesystem.
 
 perfdata:
-  This check does not provide performance data. 
+  This check does not provide performance data.
 
 inventory:
   All NFS exportss are found automatically. This is done

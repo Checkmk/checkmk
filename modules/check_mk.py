@@ -624,7 +624,7 @@ def snmp_base_command(what, hostname):
     # Configuration of timing and retries
     settings = snmp_timing_of(hostname)
     if "timeout" in settings:
-        options += " -t %d" % settings["timeout"] 
+        options += " -t %d" % settings["timeout"]
     if "retries" in settings:
         options += " -r %d" % settings["retries"]
 
@@ -824,7 +824,7 @@ def is_cluster(hostname):
     return False
 
 # If host is node of one or more clusters, return a list of the clusters
-# (untagged). If not, return an empty list. 
+# (untagged). If not, return an empty list.
 def clusters_of(hostname):
     return [ strip_tags(c) for c,n in clusters.items() if hostname in n ]
 
@@ -1000,7 +1000,7 @@ def get_datasource_program(hostname, ipaddress):
     # First check WATO-style special_agent rules
     for agentname, ruleset in special_agents.items():
         params = host_extra_conf(hostname, ruleset)
-        if params: # rule match! 
+        if params: # rule match!
             # Create command line using the special_agent_info
             cmd_arguments = special_agent_info[agentname](params[0], ipaddress)
             return '%s/agent_%s %s' % ( special_agent_dir, agentname, cmd_arguments)
@@ -2144,7 +2144,7 @@ def create_nagios_config_contacts(outfile):
 def inventorable_checktypes(what): # snmp, tcp, all
     checknames = [ k for k in check_info.keys()
                    if check_info[k]["inventory_function"] != None
-                   and (what == "all" 
+                   and (what == "all"
                         or check_uses_snmp(k) == (what == "snmp"))
                  ]
     checknames.sort()
@@ -2212,7 +2212,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
 
             # The decision wether to contact the agent via TCP
             # is done in get_realhost_info(). This is due to
-            # the possibility that piggiback data from other 
+            # the possibility that piggiback data from other
             # hosts is available.
 
             if is_cluster(host):
@@ -2534,7 +2534,7 @@ def reread_autochecks():
 
 # Find files to be included in precompile host check for a certain
 # check (for example df or mem.used). In case of checks with a period
-# (subchecks) we might have to include both "mem" and "mem.used". The 
+# (subchecks) we might have to include both "mem" and "mem.used". The
 # subcheck *may* be implemented in a separate file.
 def find_check_plugins(checktype):
     if '.' in checktype:
@@ -4178,7 +4178,7 @@ def do_scan_parents(hosts):
     sys.stdout.write("\nWrote %s\n" % outfilename)
 
 def gateway_reachable_via_ping(ip, probes):
-    return 0 == os.system("ping -q -i 0.2 -l 3 -c %d -W 5 '%s' >/dev/null 2>&1" % 
+    return 0 == os.system("ping -q -i 0.2 -l 3 -c %d -W 5 '%s' >/dev/null 2>&1" %
       (probes, ip)) >> 8
 
 def scan_parents_of(hosts, silent=False, settings={}):
@@ -4216,7 +4216,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
             sys.stdout.write(tty_bold + color + dot + tty_normal)
             sys.stdout.flush()
 
-    # Now all run and we begin to read the answers. For each host 
+    # Now all run and we begin to read the answers. For each host
     # we add a triple to gateways: the gateway, a scan state  and a diagnostig output
     gateways = []
     for host, ip, proc in procs:
@@ -4307,7 +4307,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
                 continue
             # Do (optional) PING check in order to determine if that
             # gateway can be monitored via the standard host check
-            if ping_probes:            
+            if ping_probes:
                 if not gateway_reachable_via_ping(r, ping_probes):
                     if opt_verbose:
                         sys.stderr.write("(not using %s, not reachable)\n" % r)
@@ -4390,7 +4390,7 @@ def marks_hosts_with_path(old, all, filename):
 # configuration files. The following two rules are implemented:
 # 1. *.mk files in the same directory will be read
 #    according to their lexical order.
-# 2. subdirectories in the same directory will be 
+# 2. subdirectories in the same directory will be
 #    scanned according to their lexical order.
 # 3. subdirectories of a directory will always be read *after*
 #    the *.mk files in that directory.

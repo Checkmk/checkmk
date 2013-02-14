@@ -7,7 +7,7 @@ description:
  Check the speed of the water flow of a Rittal CMC-TC LCP.
 
 item:
- A descriptive name of the sensor, followed by " - ", followed by 
+ A descriptive name of the sensor, followed by " - ", followed by
  the combination of IO unit number (3-6) and sensors index (1-4).
  Example: {"3.2"} for first IO unit and second sensor.
 

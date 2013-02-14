@@ -40,7 +40,7 @@
 #
 # merge_by:
 #  1. Results in fetching these columns from the datasource.
-#  2. Rows from different sites are merged together. For example members 
+#  2. Rows from different sites are merged together. For example members
 #     of hostgroups which exist on different sites are merged together to
 #     show the user one big hostgroup.
 #
@@ -48,7 +48,7 @@
 #
 # add_headers: additional livestatus headers to add to each call
 #
-# keys: columns which must be fetched in order to execute commands on 
+# keys: columns which must be fetched in order to execute commands on
 # the items (= in order to identify the items and gather all information
 # needed for constructing Nagios commands)
 # those columns are always fetched from the datasource for each item
@@ -59,7 +59,7 @@
 # join: A view can display e.g. host-rows and include information from e.g.
 #       the service table to create a column which shows e.g. the state of one
 #       service.
-#       With this attibute it is configured which tables can be joined into 
+#       With this attibute it is configured which tables can be joined into
 #       this table and by which attribute. It must be given as tuple, while
 #       the first argument is the name of the table to be joined and the second
 #       argument is the column in the master table (in this case hosts) which

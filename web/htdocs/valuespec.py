@@ -164,7 +164,7 @@ class Age(ValueSpec):
             return (
                    saveint(html.var(varprefix+'_days')) * 3600 * 24
                  + saveint(html.var(varprefix+'_hours')) * 3600
-                 + saveint(html.var(varprefix+'_minutes')) * 60 
+                 + saveint(html.var(varprefix+'_minutes')) * 60
                  + saveint(html.var(varprefix+'_seconds'))
             )
 
@@ -191,7 +191,7 @@ class Integer(ValueSpec):
         self._thousand_sep   = kwargs.get("thousand_sep")
         self._display_format = kwargs.get("display_format", "%d")
         self._align          = kwargs.get("align", "left")
-        
+
         if "size" not in kwargs and "maxvalue" in kwargs:
             self._size = 1 + int(math.log10(self._maxvalue)) + \
                (type(self._maxvalue) == float and 3 or 0)
@@ -414,7 +414,7 @@ class IPv4Network(TextAscii):
                 raise MKUserError(varprefix, _("Please use the syntax X.X.X.X/YY"))
         else:
             network = value
-            bits = 32 
+            bits = 32
 
         if bits < 0 or bits > 32:
             raise MKUserError(varprefix, _("Invalid number of bits. Must be in range 1 ... 32"))
@@ -511,7 +511,7 @@ class TextAreaUnicode(TextUnicode):
                 rows = len(value.splitlines())
         else:
             attrs = {}
-            rows = self._rows 
+            rows = self._rows
         html.text_area(varprefix, value, rows=rows, cols=self._cols, attrs = attrs)
 
     # Overridded because we do not want to strip() here and remove '\r'
@@ -655,7 +655,7 @@ class ListOf(ValueSpec):
 
         # Beware: the 'value' is only the default value in case the form
         # has not yet been filled in. In the complain phase we must
-        # ignore 'value' but reuse the input from the HTML variables - 
+        # ignore 'value' but reuse the input from the HTML variables -
         # even if they are not syntactically correct. Calling from_html_vars
         # here is *not* an option since this might not work in case of
         # a wrong user input.
@@ -670,7 +670,7 @@ class ListOf(ValueSpec):
             self.move_button(varprefix, self._magic, "down")
         html.write('</td><td class=vlof_content>')
         self._valuespec.render_input(
-            varprefix + "_" + self._magic, 
+            varprefix + "_" + self._magic,
             self._valuespec.default_value())
         html.write('</td></tr></table>')
 
@@ -800,7 +800,7 @@ class Percentage(Float):
     def validate_datatype(self, value, varprefix):
         if self._allow_int:
             if type(value) not in [ int, float ]:
-                raise MKUserError(varprefix, _("The value %r has type %s, but must be either float or int") 
+                raise MKUserError(varprefix, _("The value %r has type %s, but must be either float or int")
                                 % (value, type(value)))
         else:
             Float.validate_datatype(self, value, varprefix)
@@ -904,7 +904,7 @@ class DropdownChoice(ValueSpec):
             if val == value:
                 return
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
-            (value, ", ".join([v for (v,t) in self.choices()]))) 
+            (value, ", ".join([v for (v,t) in self.choices()])))
 
 
 # Special conveniance variant for monitoring states
@@ -924,7 +924,7 @@ class MonitoringState(DropdownChoice):
 # the value None. It is also allowed to leave out the
 # value spec for some of the choices (which is the same as
 # using None).
-# The resulting value is either a single value (if no 
+# The resulting value is either a single value (if no
 # value spec is defined for the selected entry) or a pair
 # of (x, y) where x is the value of the selected entry and
 # y is the value of the valuespec assigned to that entry.
@@ -937,8 +937,8 @@ class CascadingDropdown(ValueSpec):
             if len(entry) == 2: # plain entry with no sub-valuespec
                 entry = entry + (None,) # normlize to three entries
             self._choices.append(entry)
-        self._separator = kwargs.get("separator", ", ") 
-        self._html_separator = kwargs.get("html_separator", "<br>") 
+        self._separator = kwargs.get("separator", ", ")
+        self._html_separator = kwargs.get("html_separator", "<br>")
         self._sorted = kwargs.get("sorted", True)
 
     def canonical_value(self):
@@ -1035,7 +1035,7 @@ class CascadingDropdown(ValueSpec):
                 if vs:
                     if type(value) != tuple or len(value) != 2:
                         raise MKUserError(varprefix + "_sel", _("Value must a tuple with two elements."))
-                    vs.validate_datatype(value[1], varprefix + "_%d" % nr) 
+                    vs.validate_datatype(value[1], varprefix + "_%d" % nr)
                 return
         raise MKUserError(_("Value %r is not allowed here.") % value)
 
@@ -1076,7 +1076,7 @@ class RadioChoice(DropdownChoice):
             if self._columns != None:
                 html.write("</td>")
                 if (n+1) % self._columns == 0 and (n+1) < len(self._choices)-1:
-                    html.write("<tr></tr>") 
+                    html.write("<tr></tr>")
             else:
                 html.write("&nbsp;")
         if self._columns != None:
@@ -1096,7 +1096,7 @@ class ListChoice(ValueSpec):
         self._columns = kwargs.get("columns", 1)
         self._allow_empty = kwargs.get("allow_empty", True)
         self._loaded_at = None
-        self._render_function = kwargs.get("render_function", 
+        self._render_function = kwargs.get("render_function",
                   lambda id, val: val)
 
     # In case of overloaded functions with dynamic elements
@@ -1250,7 +1250,7 @@ class OptionalDropdownChoice(ValueSpec):
 
 
 # Input of date with optimization for nearby dates
-# in the future. Useful for example for alarms. The 
+# in the future. Useful for example for alarms. The
 # date is represented by a UNIX timestamp where the
 # seconds are silently ignored.
 def round_date(t):
@@ -1393,7 +1393,7 @@ class AbsoluteDate(ValueSpec):
 
     def validate_datatype(self, value, varprefix):
         if type(value) not in [ int, float ]:
-            raise MKUserError(varprefix, _("The type of the timestamp must be int or float, but is %s") % 
+            raise MKUserError(varprefix, _("The type of the timestamp must be int or float, but is %s") %
                               type(value))
 
     def validate_value(self, value, varprefix):
@@ -1476,9 +1476,9 @@ class TimeofdayRange(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._allow_empty = kwargs.get("allow_empty", True)
         self._bounds = (
-            Timeofday(allow_empty = self._allow_empty, 
+            Timeofday(allow_empty = self._allow_empty,
                       allow_24_00 = True),
-            Timeofday(allow_empty = self._allow_empty, 
+            Timeofday(allow_empty = self._allow_empty,
                       allow_24_00 = True),
         )
 
@@ -1511,7 +1511,7 @@ class TimeofdayRange(ValueSpec):
 
     def validate_datatype(self, value, varprefix):
         if self._allow_empty and value == None:
-            return 
+            return
 
         if type(value) != tuple:
             raise MKUserError(varprefix, _("The datatype must be tuple, but ist %s" % type(value)))
@@ -1761,7 +1761,7 @@ class Tuple(ValueSpec):
                     html.write("</tr>")
         if self._orientation == "horizontal":
             html.write("</tr>")
-        if self._orientation != "float": 
+        if self._orientation != "float":
             html.write("</table>")
 
     def set_focus(self, varprefix):
@@ -1801,7 +1801,7 @@ class Dictionary(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
         self._empty_text = kwargs.get("empty_text", _("(no parameters)"))
-        self._required_keys = kwargs.get("required_keys", []) 
+        self._required_keys = kwargs.get("required_keys", [])
         if "optional_keys" in kwargs:
             ok = kwargs["optional_keys"]
             if type(ok) == list:
@@ -1937,8 +1937,8 @@ class Dictionary(ValueSpec):
 
     def canonical_value(self):
         return dict([
-            (name, vs.canonical_value()) 
-             for (name, vs) 
+            (name, vs.canonical_value())
+             for (name, vs)
              in self._get_elements()
              if name in self._required_keys or not self._optional_keys])
 
@@ -2106,7 +2106,7 @@ class Foldable(ValueSpec):
             title = self._valuespec.title()
             if not title:
                 title = _("(no title)")
-        html.begin_foldable_container("valuespec_foldable", varprefix, self._open, 
+        html.begin_foldable_container("valuespec_foldable", varprefix, self._open,
                        title, False)
         html.help(self._valuespec.help())
         self._valuespec.render_input(varprefix, value)
@@ -2227,7 +2227,7 @@ class PasswordSpec(TextAscii):
     def render_input(self, varprefix, value):
         TextAscii.render_input(self, varprefix, value)
         if not value:
-            html.icon_button("#", _(u"Randomize password"), "random", 
+            html.icon_button("#", _(u"Randomize password"), "random",
                 onclick="vs_passwordspec_randomize(this);")
 
 

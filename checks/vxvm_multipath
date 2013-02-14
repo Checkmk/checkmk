@@ -38,9 +38,9 @@ def check_vxvm_multipath(item, params, info):
         if disk == item:
             if paths_act != paths and float(paths_act) >= float(paths) / 2:
                 state = 1
-            elif int(paths_inact) > 0 and float(paths_inact) > float(paths) /2: 
+            elif int(paths_inact) > 0 and float(paths_inact) > float(paths) /2:
                 state = 2
-            return(state, nagios_state_names[state] + " - " + "Status: %s, (%d/%d) Paths to enclosure %s enabled" % (status_txt, int(paths_act), int(paths), enclosure  )) 
+            return(state, nagios_state_names[state] + " - " + "Status: %s, (%d/%d) Paths to enclosure %s enabled" % (status_txt, int(paths_act), int(paths), enclosure  ))
 
     return(3, "UKN - Item not found")
 

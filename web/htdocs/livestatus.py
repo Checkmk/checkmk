@@ -232,7 +232,7 @@ class BaseConnection:
                         time.sleep(sleep_interval)
                         sleep_interval *= 1.5
                         continue
-                
+
                 self.socket = None
                 raise MKLivestatusSocketError("Cannot connect to '%s': %s" % (self.socketurl, e))
 

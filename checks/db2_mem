@@ -54,14 +54,14 @@ def check_db2_mem(item, params, info):
                     state = 0
 
                 message = " - Max: %s, Used: %s (%.2d%% Free%s) " % \
-                (get_bytes_human_readable(limit), get_bytes_human_readable(usage), perc_level, label) 
+                (get_bytes_human_readable(limit), get_bytes_human_readable(usage), perc_level, label)
                 perf = [("mem", usage, 0, 0, 0, limit )]
-                
+
         if line[1] == item:
             hit = 1
 
 
-    return state, nagios_state_names[state] + message, perf 
+    return state, nagios_state_names[state] + message, perf
 
 
 check_info['db2_mem'] = {

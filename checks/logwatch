@@ -44,7 +44,7 @@ def inventory_logwatch(info):
     for l in info:
         line = " ".join(l)
         if len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]" \
-           and ':missing' not in line and ':cannotopen' not in line: 
+           and ':missing' not in line and ':cannotopen' not in line:
             inventory.append((line[3:-3], "", '""'))
     return inventory
 

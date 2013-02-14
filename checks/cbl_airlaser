@@ -33,7 +33,7 @@
 
 
 # Migrate to factory settings?
-airlaser_default_levels = { 
+airlaser_default_levels = {
      "opttxTempValue"   : (60, 80),
      "chassisTempValue" : (60, 70),
      "chassisFrontScreenTempValue" : (40, 55),
@@ -42,8 +42,8 @@ airlaser_default_levels = {
 
 
 def parse_cbl_airlaser(info):
-    
-    airlaser_status_names = { 0: 'undefined', 1: 'active', 2: 'standby', 
+
+    airlaser_status_names = { 0: 'undefined', 1: 'active', 2: 'standby',
                     3 : 'warning', 4: 'failure', 5: 'not_installed' }
 
 
@@ -58,7 +58,7 @@ def parse_cbl_airlaser(info):
           "chassisTempStatus"              : ( None, "2.1.8.0",  7 ),
           "chassisTempValue"               : ( None, "2.1.9.0",  8 ),
           "chassisFan1Status"              : ( None, "2.1.10.0", 9 ),
-          "chassisFan2Status"              : ( None, "2.1.12.0", 11), 
+          "chassisFan2Status"              : ( None, "2.1.12.0", 11),
              },
        "power"    : {
           "psStatus48V"                    : ( None, "2.2.2.0",  1),
@@ -108,8 +108,8 @@ def parse_cbl_airlaser(info):
             # we could remove the offset hack by parsing our OID
             sub_oid   = airlaser_sensors[hwclass][sensor][1]
             offset    = airlaser_sensors[hwclass][sensor][2]
-            
-            
+
+
             if "Status" in sensor:
                 value = airlaser_status_names[int(data[hwclass][offset][0])]
             else:

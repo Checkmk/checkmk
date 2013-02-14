@@ -97,7 +97,6 @@ def get_tablespace_levels_in_bytes(size_bytes, params):
     magic  = params.get("magic")
 
     # Use tablespace size dependent dynamic levels or static levels
-    size_bytes = 1031 * 1024 * 1024 * 1024
     if type(params.get("levels")) == tuple:
         warn, crit = params.get("levels")
     else:

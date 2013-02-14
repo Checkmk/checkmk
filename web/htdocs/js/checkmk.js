@@ -103,7 +103,7 @@ if (!document.getElementsByClassName) {
         }
     }
     return _nodeList;
-}
+  }
 }
 
 function getTarget(event) {
@@ -514,9 +514,15 @@ function pnp_hover_contents(url) {
 function textinput_enter_submit(e, submit) {
     var keyCode = e.which || e.keyCode;
     if (keyCode == 13) {
-        /* alert(submit); */
+        if (submit) {
+            var button = document.getElementById(submit);
+            if (button)
+                button.click();
+        }
+        if (e.preventDefault) e.preventDefault();
         e.returnValue = false;
         e.cancelBubble = true;
+        return false;
     }
 }
 

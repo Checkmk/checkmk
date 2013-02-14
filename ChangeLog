@@ -1,3 +1,5 @@
+1.2.2b3:
+
 1.2.2b2:
     Checks & Agents:
     * Added dynamic thresholds to the oracle_tablespace check depending on the

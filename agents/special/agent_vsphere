@@ -48,6 +48,8 @@ except:
 
 host = VIServer()
 
+object_collection = {} 
+
 try:
     host.connect(params['Hostname'], params['u'], params['s'])
 except:
@@ -80,9 +82,7 @@ def output_mors(what, properties):
         if params['lower']:
             name = name.lower()
 
-        print "<<<local>>>"
-        print "0 %s-%s - INFO - Collecting data for %s." % \
-        (what, name, name)
+        object_collection[name] = (what, data['name'])
         
         ## Output multiplexed Check_MK Agent output (new in version 1.2.3i1)
         print '<<<<%s>>>>' % name
@@ -136,6 +136,10 @@ if "virtualmachine" in check:
      "config.hardware.numCPU": str,
     })
 
+print "<<<<>>>>"
+print "<<<local>>>"
+for name, data in object_collection.items():
+    print "0 %s-%s - INFO: Collecting data for %s" % (data[0], name, data[1])
 
 
 host.disconnect()

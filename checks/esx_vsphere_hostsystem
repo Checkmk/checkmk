@@ -108,10 +108,23 @@ check_info['esx_vsphere_hostsystem.state'] = {
   "service_description" : "ESX State",
 }
 
-def inventory_esx_vsphere_hostsystem_multipath(info):
+
+
+def esx_vsphere_multipath_convert(info):
     data = esx_vsphere_hostsystem_convert(info)
-    if 'config.multipathState.path' in data.keys():
-        return [(None, None)]
+    data = data['config.multipathState.path']
+    data = zip(data[::2], data[1::2])
+    paths = {}
+    for path, state in data:
+        path_type, path_id = path.split('-')[-1].split('.')
+        if path_type in ['naa', 'eui']:
+            paths.setdefault(path_id, [])
+            paths[path_id].append((state, path_type))
+    return paths
+
+def inventory_esx_vsphere_hostsystem_multipath(info):
+    data = esx_vsphere_multipath_convert(info).items() 
+    return [ (x, y ) for x, y  in data]
 
 def check_esx_vsphere_hostsystem_multipath(item, params, info):
     dead = 0
@@ -125,40 +138,38 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
     standby_label = ""
     unknow_label = ""
 
-    data = esx_vsphere_hostsystem_convert(info)
-    paths = data['config.multipathState.path']
+    for path, states in  esx_vsphere_multipath_convert(info).items():
+        if path == item:
+            for path_state, path_type in states:
+                if path_state == "active":
+                    active += 1
+                elif path_state == "dead":
+                    dead += 1
+                    dead_label = "(!!)"
+                    state = 2
 
-    for path_state in paths[1::2]:
-        if path_state == "active":
-            active += 1
-        elif path_state == "dead":
-            dead += 1
-            dead_label = "(!!)"
-            state = 2
+                elif path_state == "disabled":
+                    disabled += 1
+                    disabled_label = "(!)"
+                    state = max(1, state)
 
-        elif path_state == "disabled":
-            disabled += 1
-            disabled_label = "(!)"
-            state = max(1, state)
+                elif path_state == "standby":
+                    standby += 1
+                    standby_label = "(!)"
+                    state = max(1, state)
 
-        elif path_state == "standby":
-            standby += 1
-            standby_label = "(!)"
-            state = max(1, state)
+                elif path_state == "unknown":
+                    state = 2
+                    unknow_label = "(!!)"
+                    unknown += 1
 
-        elif path_state == "unknown":
-            state = 2
-            unknow_label = "(!!)"
-            unknown += 1
-
-    message = "%d active, %d dead%s, %d disabled%s, %d standby%s, %s unknown%s" % \
-    (active, dead, dead_label, disabled, disabled_label, standby, standby_label, unknown, unknow_label )
-       
-    return(state, nagios_state_names[state] + " - " + message )
+            message = "Type %s, %d active, %d dead%s, %d disabled%s, %d standby%s, %s unknown%s" % \
+    (path_type, active, dead, dead_label, disabled, disabled_label, standby, standby_label, unknown, unknow_label )
+    return (state, nagios_state_names[state] + " - " + message)
 
 check_info['esx_vsphere_hostsystem.multipath'] = {
   "inventory_function"  : inventory_esx_vsphere_hostsystem_multipath,
   "check_function"      : check_esx_vsphere_hostsystem_multipath,
-  "service_description" : "ESX Multipaths",
+  "service_description" : "ESX Multipath %s",
 }
 

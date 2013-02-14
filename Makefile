@@ -75,9 +75,9 @@ check-uncommitted:
 	@if git status --porcelain | grep . ; then false ; else true ; fi
 
 check-version:
-	@sed -n 1p ChangeLog | fgrep -x '$(VERSION):' || \
+	@sed -n 1p ChangeLog | fgrep -qx '$(VERSION):' || { \
 	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
-	    false
+	    false ; }
 
 
 check: check-spaces check-permissions check-binaries check-version

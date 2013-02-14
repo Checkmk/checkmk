@@ -658,9 +658,9 @@ register_configvar(group,
     Checkbox(title = _("Check_MK with times performance data"),
              label = _("Return process times within performance data"),
              help = _("Enabling this option results in additional performance data "
-                      "for the Check_MK output, giving information regarding the process times. "  
+                      "for the Check_MK output, giving information regarding the process times. "
                       "It provides the following fields: user_time, system_time, children_user_time "
-                      "and children_system_time")), 
+                      "and children_system_time")),
     need_restart = True)
 
 group = _("Inventory - automatic service detection")
@@ -950,7 +950,7 @@ register_configvar(group,
 #   | Declaration of rules to be defined in main.mk or in folders          |
 #   +----------------------------------------------------------------------+
 
-register_rulegroup("grouping", _("Grouping"), 
+register_rulegroup("grouping", _("Grouping"),
    _("Assignment of host &amp; services to host, service and contacts groups. "))
 group = "grouping"
 
@@ -985,7 +985,7 @@ register_rule(group,
     itemtype = "service")
 
 
-register_rulegroup("monconf", _("Monitoring Configuration"), 
+register_rulegroup("monconf", _("Monitoring Configuration"),
     _("Intervals for checking, retries, clustering, configuration for inventory and similar"))
 
 group = "monconf/" + _("Service Checks")
@@ -1325,7 +1325,7 @@ register_rule(group,
              "which services of a node should be assigned to the cluster and "
              "which services to the physical node. This is done by this ruleset. "
              "Please note that the rule will be applied to the <i>nodes</i>, not "
-             "to the cluster.<br><br>Please make sure that you re-inventorize the " 
+             "to the cluster.<br><br>Please make sure that you re-inventorize the "
              "cluster and the physical nodes after changing this ruleset."),
     itemtype = "service")
 group = "monconf/" + _("Various")
@@ -1479,7 +1479,7 @@ register_rule(group,
         help = _("Some devices send texts in non-ASCII characters. Check_MK"
                  " always assumes UTF-8 encoding. You can declare other "
                  " other encodings here"),
-        choices = [ 
+        choices = [
            ("utf-8", _("UTF-8 (default)") ),
            ("latin1" ,_("latin1")),
            ]
@@ -1517,7 +1517,7 @@ register_rule(group,
                   help = _("The default is 1 sec."),
                   default_value = 1,
                   minvalue = 1,
-                  maxvalue = 60, 
+                  maxvalue = 60,
                   unit = _("sec"),
               ),
             ),

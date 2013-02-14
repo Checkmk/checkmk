@@ -16,10 +16,10 @@ perfdata:
  The actual temperature in degree
 
 inventory:
- One check for each sensor is created by the inventory 
+ One check for each sensor is created by the inventory
 
 [parameters]
-parameters (tuple): A pair of numbers for warning and critical level 
+parameters (tuple): A pair of numbers for warning and critical level
 
  warning (int): The temperature that triggers an WARNING state
 

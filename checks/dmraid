@@ -72,7 +72,7 @@ def check_dmraid_ldisks(item, _no_params, info):
                 if   status == "ok":
                     return(0, "OK - state is %s" % status)
                 else:
-                    return(2, "CRIT - %s" % status) 
+                    return(2, "CRIT - %s" % status)
         if line[0] == "name" and line[2] == item:
             LDISK_FOUND=True
 

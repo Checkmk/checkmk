@@ -30,13 +30,13 @@
 
 # <<<zfsget>>>
 # bpool   name    bpool   -
-# bpool   quota   0       default 
+# bpool   quota   0       default
 # bpool   used    21947036798826  -
 # bpool   available       11329512075414  -
 # bpool   mountpoint      /bpool  default
 # bpool   type    filesystem      -
 # bpool/acs_fs    name    bpool/acs_fs    -
-# bpool/acs_fs    quota   0       default 
+# bpool/acs_fs    quota   0       default
 # bpool/acs_fs    used    4829131610      -
 # bpool/acs_fs    available       11329512075414  -
 # bpool/acs_fs    mountpoint      /backup/acs     local
@@ -107,7 +107,7 @@ def zfsget_parse_df_info(entries, info):
     new_entries = {}
 
     for device, kbytes, used, avail, percent, mountpoint in info:
-        # ignore entries already contained in zfsget and also 
+        # ignore entries already contained in zfsget and also
         # entries for virtual filesystems (like swap)
         if device.startswith("/") and mountpoint not in entries:
             entry = {}
@@ -160,14 +160,14 @@ def inventory_zfsget(info):
 
 def check_zfsget(item, params, info):
     entries = parse_zfsget(info)
-    # ist item drin -> OK, ansonsten gleich hier 
+    # ist item drin -> OK, ansonsten gleich hier
     fslist = []
     for mountpoint, entry in entries.items():
         if "patterns" in params or item == mountpoint:
-            # 1. Filesystems with a quota 
+            # 1. Filesystems with a quota
             if "quota" in entry:
                 used_mb = entry["used"]
-                total_mb = entry["quota"] 
+                total_mb = entry["quota"]
                 avail_mb = total_mb - used_mb
             # 2. Normal filesystems.
             else:

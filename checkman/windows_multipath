@@ -7,7 +7,7 @@ description:
  This check monitors number of active multipaths on a Windows host.
  If this number equals the number recorded at inventory time,
  the check will return {OK}, or otherwise {WARN} if there are still
- more than 50% of paths left operative. 
+ more than 50% of paths left operative.
  Anything less than 50% of working paths will turn into a {CRIT} state.
 
 
@@ -17,5 +17,5 @@ item:
 
 inventory:
  One service is created if there's a number of paths returned from the
- API. In our tests this was only if the system had actual storage assigned. 
+ API. In our tests this was only if the system had actual storage assigned.
 

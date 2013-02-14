@@ -4,16 +4,16 @@ author: Florian Heigl <fh@mathias-kettner.de>
 license: GPLv3
 distribution: check_mk
 description:
-  Cisco routers support virtual redundant interfaces by using HSRP 
+  Cisco routers support virtual redundant interfaces by using HSRP
   (Hot Standby Router Protocol).
-  HSRP is configured by assigning IP interfaces to a group that has a 
+  HSRP is configured by assigning IP interfaces to a group that has a
   "floating" virtual IP.
-  If, for example, a router has an interface failure on either of the routed 
+  If, for example, a router has an interface failure on either of the routed
   interfaces, the protocol lowers the routers priority, and if that priority
   drops too low, it will fail over the virtual IP.
 
 
-  The check returns {OK} if the HSRP status is a good one ("active", 
+  The check returns {OK} if the HSRP status is a good one ("active",
   "standby") and the same as during inventory.
   If the states flip from "active" to "standby" or vice-versa, the check goes
   to {WARN}, assuming that HSRP is doing it's job.

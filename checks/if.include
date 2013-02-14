@@ -116,7 +116,7 @@ def inventory_if_common(info):
     seen_items  = set([])
     duplicate   = set([])
     have_groups = {}
-    
+
 
     # Determine whether single, grouped or both
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
@@ -148,12 +148,12 @@ def inventory_if_common(info):
             if item in seen_items: # duplicate
                 duplicate.add(item)
             seen_items.add(item)
-            
+
             if ifType in porttypes and ifOperStatus in portstates:
                 params = {}
                 if if_inventory_monitor_state:
                     params["state"] = [ifOperStatus]
-    
+
                 if ifSpeed != "" and if_inventory_monitor_speed:
                     params["speed"] = int(ifSpeed)
                 pre_inventory.append( (item, "%r" % params, int(ifIndex)) )
@@ -172,7 +172,7 @@ def inventory_if_common(info):
             params = { "iftype": ifType, "aggregate": True }
             if if_inventory_monitor_state:
                 params["state"] = [ group_operStatus ]
-    
+
             if ifSpeed != "" and if_inventory_monitor_speed:
                 params["speed"] = total_speed
             pre_inventory.append( (group_name, "%r" % params, int(ifIndex)) )
@@ -201,9 +201,9 @@ def check_if_common(item, params, info):
         wrapped = False
         this_time = time.time()
 
-        group_info = { 
-            "ifSpeed" : 0, "ifInOctets" : 0, "inucast" : 0, "inmcast" : 0 , "inbcast" : 0, 
-            "ifInDiscards" : 0, "ifInErrors" : 0, "ifOutOctets" : 0, "outucast" : 0, "outmcast" : 0, 
+        group_info = {
+            "ifSpeed" : 0, "ifInOctets" : 0, "inucast" : 0, "inmcast" : 0 , "inbcast" : 0,
+            "ifInDiscards" : 0, "ifInErrors" : 0, "ifOutOctets" : 0, "outucast" : 0, "outmcast" : 0,
             "outbcast" : 0, "ifOutDiscards" : 0, "ifOutErrors" : 0, "ifOutQLen" : 0
         }
 
@@ -222,7 +222,7 @@ def check_if_common(item, params, info):
 
             # Only these values are packed into counters
             # We might need to enlarge this table
-            # However, more values leads to more MKCounterWrapped... 
+            # However, more values leads to more MKCounterWrapped...
             for name, counter in [
                 ( "in",        ifInOctets),
                 ( "inucast",   inucast),
@@ -251,35 +251,35 @@ def check_if_common(item, params, info):
             group_info["inbcast"]       += saveint(inbcast)
             group_info["ifInDiscards"]  += saveint(ifInDiscards)
             group_info["ifInErrors"]    += saveint(ifInErrors)
-            group_info["ifOutOctets"]   += saveint(ifOutOctets) 
+            group_info["ifOutOctets"]   += saveint(ifOutOctets)
             group_info["outucast"]      += saveint(outucast)
             group_info["outmcast"]      += saveint(outmcast)
             group_info["outbcast"]      += saveint(outbcast)
             group_info["ifOutDiscards"] += saveint(ifOutDiscards)
             group_info["ifOutErrors"]   += saveint(ifOutErrors)
             group_info["ifOutQLen"]     += saveint(ifOutQLen)
-                
-                
+
+
 
         # Append an additional entry to the info table containing the calculated group_info
         one_up = "1" in [element[4] for element in matching_interfaces]
         group_operStatus = one_up and "1" or "2"
 
-        group_entry = [ 
+        group_entry = [
                     "ifgroup%s" % item,         # ifIndex
                     item,                       # ifDescr
                     params["iftype"],           # ifType
-                    group_info["ifSpeed"],      # ifSpeed  
+                    group_info["ifSpeed"],      # ifSpeed
                     group_operStatus,           # ifOperStatus
                     group_info["ifInOctets"],   # ifInOctets
-                    group_info["inucast"],      # inucast 
+                    group_info["inucast"],      # inucast
                     group_info["inmcast"],      # inmcast
                     group_info["inbcast"],      # inbcast
                     group_info["ifInDiscards"], # ifInDiscards
                     group_info["ifInErrors"],   # ifInErrors
 
                     group_info["ifOutOctets"],  # ifOutOctets
-                    group_info["outucast"],     # outucast 
+                    group_info["outucast"],     # outucast
                     group_info["outmcast"],     # outmcast
                     group_info["outbcast"],     # outbcast
                     group_info["ifOutDiscards"],# ifOutDiscards
@@ -401,7 +401,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
                 if bw_crit != None and type(bw_crit) == float:
                     bw_crit = None
 
-            # Even if the measurement unit is set to "bit" the WARN and CRIT levels are 
+            # Even if the measurement unit is set to "bit" the WARN and CRIT levels are
             # still reported as bytes to stay compatible with older rrd data
             if unit == "Bit":
                 if bw_crit and bw_crit != None:
@@ -442,7 +442,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
                 # If there is a threshold on the bandwidth, we cannot proceed
                 # further (the check would be flapping to green on a wrap)
                 if bw_crit != None:
-                    raise MKCounterWrapped("", "Counter wrap, skipping checks this time") 
+                    raise MKCounterWrapped("", "Counter wrap, skipping checks this time")
                 perfdata = []
             else:
                 perfdata.append(("outqlen", saveint(ifOutQLen),"","", unit == "Bit" and "0.0" or "0"))

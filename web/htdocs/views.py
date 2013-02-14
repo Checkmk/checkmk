@@ -103,7 +103,7 @@ def show_filter(f):
 
 def show_filter_form(is_open, filters):
     # Table muss einen anderen Namen, als das Formular
-    html.write('<div class="view_form" id="filters" %s>' 
+    html.write('<div class="view_form" id="filters" %s>'
             % (not is_open and 'style="display: none"' or '') )
 
     html.begin_form("filter")
@@ -382,11 +382,11 @@ def page_edit_views(msg=None):
 
             # Edit
             if owner == config.user_id:
-                html.icon_button("edit_view.py?load_view=%s" % viewname, _("Edit"), "edit") 
+                html.icon_button("edit_view.py?load_view=%s" % viewname, _("Edit"), "edit")
 
             # Clone / Customize
             buttontext = not owner and _("Customize this view") \
-                         or _("Create a clone of this view") 
+                         or _("Create a clone of this view")
             backurl = htmllib.urlencode(html.makeuri([]))
             clone_url = "edit_view.py?clonefrom=%s&load_view=%s&back=%s" \
                         % (owner, viewname, backurl)
@@ -394,16 +394,16 @@ def page_edit_views(msg=None):
 
             # Delete
             if owner == config.user_id:
-                html.icon_button("edit_views.py?_delete=%s" 
+                html.icon_button("edit_views.py?_delete=%s"
                                  % viewname, _("Delete this view!"), "delete")
             html.write('</td>')
 
             # Link name
-            html.write('<td>%s</td>' % viewname) 
+            html.write('<td>%s</td>' % viewname)
 
             # Title
             html.write('<td>')
-            if not view["hidden"]: 
+            if not view["hidden"]:
                 html.write("<a href=\"view.py?view_name=%s\">%s</a>"
                            % (viewname, view["title"]))
             else:
@@ -575,7 +575,7 @@ def page_edit_view():
     html.write("<br />\n")
     html.checkbox("mustsearch", label=_('show data only on search') + "<br>")
     html.checkbox("hidebutton", label=_('do not show a context button to this view'))
-    
+
     forms.section(_("Browser reload"))
     html.write(_("Reload page every "))
     html.number_input("browser_reload", 0)
@@ -623,7 +623,7 @@ def page_edit_view():
         if not shown_help:
             html.help(_("Please configure, which of the available filters will be used in this "
                   "view. <br><br><b>Show to user</b>: the user will be able to see and modify these "
-                  "filters. You can define default values. <br><br><b>Hardcode</b>: these filters " 
+                  "filters. You can define default values. <br><br><b>Hardcode</b>: these filters "
                   "will be in effect but not visible to the user. <br><br><b>Use for linking</b>: "
                   "These filters (usually site, host name and service) are needed for views "
                   "that have a context (such as a host or a service). Such views can be used "
@@ -711,9 +711,9 @@ def page_edit_view():
     if html.var("column_headers") == 'perpage':
         html.set_var("column_headers", 'pergroup')
 
-    html.select("column_headers", [ 
-        ("off",      _("off")), 
-        ("pergroup", _("once per group")), 
+    html.select("column_headers", [
+        ("off",      _("off")),
+        ("pergroup", _("once per group")),
         ("repeat",   _("repeat every 20'th row")) ])
 
     forms.section(_('Sortable by user'), simple=True)
@@ -1316,7 +1316,7 @@ def show_view(view, show_heading = False, show_buttons = True,
             layout = multisite_layouts["json"]
 
     # Until now no single byte of HTML code has been output.
-    # Now let's render the view. The render_function will be 
+    # Now let's render the view. The render_function will be
     # replaced by the mobile interface for an own version.
     if not render_function:
         render_function = render_view
@@ -1457,7 +1457,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     if show_footer:
         pid = os.getpid()
         if html.live.successfully_persisted():
-            html.add_status_icon("persist", _("Reused persistent livestatus connection from earlier request (PID %d)") % pid) 
+            html.add_status_icon("persist", _("Reused persistent livestatus connection from earlier request (PID %d)") % pid)
         if bi.reused_compilation():
             html.add_status_icon("aggrcomp", _("Reused cached compiled BI aggregations (PID %d)") % pid)
 
@@ -1657,7 +1657,7 @@ def togglebutton(id, isopen, icon, help, hidden = False):
     html.write('<div id="%s_on" class="togglebutton %s %s" title="%s" '
                'onclick="view_toggle_form(this, \'%s\');"%s></div>' % (id, icon, cssclass, help, id, hide))
 
-def show_context_links(thisview, active_filters, show_filters, display_options, 
+def show_context_links(thisview, active_filters, show_filters, display_options,
                        painter_options, enable_commands, enable_checkboxes, show_checkboxes):
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
@@ -1704,7 +1704,7 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
 
         if 'R' in display_options and config.may("general.view_option_refresh"):
             choices = [ [x, {0:_("off")}.get(x,str(x) + "s") + (x and "" or "")] for x in config.view_option_refreshes ]
-            view_optiondial(thisview, "refresh", choices, _("Change the refresh rate")) 
+            view_optiondial(thisview, "refresh", choices, _("Change the refresh rate"))
         else:
             view_optiondial_off("refresh")
 
@@ -1737,7 +1737,7 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
         else:
             url = "edit_view.py?clonefrom=%s&load_view=%s&back=%s" % \
                   (thisview["owner"], thisview["name"], backurl)
-        html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show) 
+        html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show)
 
     if 'B' in display_options:
         execute_hooks('buttons-end')

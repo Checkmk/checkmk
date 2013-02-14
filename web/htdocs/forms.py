@@ -45,7 +45,7 @@ def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None, 
     new_value = value.copy()
     if html.var("filled_in") == "form" and html.check_transaction():
         messages = []
-        for name, vs in entries: 
+        for name, vs in entries:
             try:
                 v = vs.from_html_vars(name)
                 vs.validate_value(v, name)
@@ -79,7 +79,7 @@ def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None, 
         vs.render_input(name, v)
         if (not focus and first) or (name == focus):
             vs.set_focus(name)
-            first = False 
+            first = False
 
     end()
     if buttontext == None:
@@ -133,7 +133,7 @@ def container():
     global g_section_open
     if g_section_open:
         html.write('</td></tr>')
-    html.write('<tr class="%s"><td colspan=2 class=container>' % 
+    html.write('<tr class="%s"><td colspan=2 class=container>' %
          (g_section_isopen and "open" or "closed"))
     g_section_open = True
 
@@ -148,7 +148,7 @@ def section(title = None, checkbox = None, id = "", simple=False, hide = False):
              hide and ' style="display:none;"' or '',
              simple and " simple" or ""))
     if title:
-        html.write('<div class="title%s">%s<span class="dots">%s</span></div>' % 
+        html.write('<div class="title%s">%s<span class="dots">%s</span></div>' %
                   (checkbox and " withcheckbox" or "", title, "."*100))
     if checkbox:
         html.write('<div class=checkbox>')
@@ -169,7 +169,7 @@ def end():
     if g_section_open:
         html.write('</td></tr>')
     html.end_foldable_container()
-    html.write('<tr class="bottom %s"><td colspan=2></td></tr>' 
+    html.write('<tr class="bottom %s"><td colspan=2></td></tr>'
             % (g_section_isopen and "open" or "closed"))
     html.write('</table>')
 

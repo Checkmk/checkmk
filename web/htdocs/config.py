@@ -156,7 +156,7 @@ def declare_permission(name, title, description, defaults):
     # Detect if this permission has already been declared before
     # The dict value is replaced automatically but the list value
     # to be replaced -> INPLACE!
-    # FIXME: permissions_by_order is bad. Remove this and add a "sort" 
+    # FIXME: permissions_by_order is bad. Remove this and add a "sort"
     # attribute to the permissions_by_name dict. This would be much cleaner.
     replaced = False
     for index, test_perm in enumerate(permissions_by_order):
@@ -414,14 +414,14 @@ def save_site_config():
 # that we read multisite.mk (because of mod_python
 # makes those persist during HTTP requests).
 def load_default_values(into):
-    #    ____       _           
-    #   |  _ \ ___ | | ___  ___ 
+    #    ____       _
+    #   |  _ \ ___ | | ___  ___
     #   | |_) / _ \| |/ _ \/ __|
     #   |  _ < (_) | |  __/\__ \
     #   |_| \_\___/|_|\___||___/
-    #                           
+    #
     into["roles"] = {} # User supplied roles
-    
+
     # define default values for all settings
     into["debug"]             = False
     into["profile"]           = False
@@ -429,17 +429,17 @@ def load_default_values(into):
     into["admin_users"]       = []
     into["guest_users"]       = []
     into["default_user_role"] = "user"
-    
+
     # New style, used by WATO
     into["multisite_users"] = {}
-    
+
     #    ____  _     _      _
     #   / ___|(_) __| | ___| |__   __ _ _ __
     #   \___ \| |/ _` |/ _ \ '_ \ / _` | '__|
     #    ___) | | (_| |  __/ |_) | (_| | |
     #   |____/|_|\__,_|\___|_.__/ \__,_|_|
     #
-    
+
     into["sidebar"] = \
     [('tactical_overview', 'open'),
      ('search',            'open'),
@@ -447,24 +447,24 @@ def load_default_values(into):
      ('bookmarks',         'open'),
      ('admin',             'open'),
      ('master_control',    'closed')]
-    
+
     #    _     _           _ _
     #   | |   (_)_ __ ___ (_) |_ ___
     #   | |   | | '_ ` _ \| | __/ __|
     #   | |___| | | | | | | | |_\__ \
     #   |_____|_|_| |_| |_|_|\__|___/
     #
-    
+
     into["soft_query_limit"] = 1000
     into["hard_query_limit"] = 5000
-    
+
     #    ____                        _
     #   / ___|  ___  _   _ _ __   __| |___
     #   \___ \ / _ \| | | | '_ \ / _` / __|
     #    ___) | (_) | |_| | | | | (_| \__ \
     #   |____/ \___/ \__,_|_| |_|\__,_|___/
     #
-    
+
     into["sound_url"] = "sounds/"
     into["enable_sounds"] = False
     into["sounds"] = [
@@ -472,85 +472,85 @@ def load_default_values(into):
      ( "critical", "critical.wav" ),
      ( "unknown",  "unknown.wav" ),
      ( "warning",  "warning.wav" ),
-    # ( None,       "ok.wav" ), 
+    # ( None,       "ok.wav" ),
     ]
-    
-    
+
+
     #   __     ___                             _   _
     #   \ \   / (_) _____      __   ___  _ __ | |_(_) ___  _ __  ___
     #    \ \ / /| |/ _ \ \ /\ / /  / _ \| '_ \| __| |/ _ \| '_ \/ __|
     #     \ V / | |  __/\ V  V /  | (_) | |_) | |_| | (_) | | | \__ \
     #      \_/  |_|\___| \_/\_/    \___/| .__/ \__|_|\___/|_| |_|___/
     #                                   |_|
-    
+
     into["view_option_refreshes"] = [ 30, 60, 90, 0 ]
     into["view_option_columns"]   = [ 1, 2, 3, 4, 5, 6, 8 ]
-    
+
     # MISC
     into["doculink_urlformat"] = "http://mathias-kettner.de/checkmk_%s.html";
-    
-    
+
+
     #   ____          _                    _     _       _
     #  / ___|   _ ___| |_ ___  _ __ ___   | |   (_)_ __ | | _____
     # | |  | | | / __| __/ _ \| '_ ` _ \  | |   | | '_ \| |/ / __|
     # | |__| |_| \__ \ || (_) | | | | | | | |___| | | | |   <\__ \
     #  \____\__,_|___/\__\___/|_| |_| |_| |_____|_|_| |_|_|\_\___/
     #
-    
+
     into["custom_links"] = {}
-    
+
     #  __     __         _
     #  \ \   / /_ _ _ __(_) ___  _   _ ___
     #   \ \ / / _` | '__| |/ _ \| | | / __|
     #    \ V / (_| | |  | | (_) | |_| \__ \
     #     \_/ \__,_|_|  |_|\___/ \__,_|___/
     #
-    
+
     into["debug_livestatus_queries"] = False
-    
+
     # Show livestatus errors in multi site setup if some sites are
     # not reachable.
     into["show_livestatus_errors"] = True
-    
+
     # Set this to a list in order to globally control which views are
     # being displayed in the sidebar snapin "Views"
     into["visible_views"] = None
-    
+
     # Set this list in order to actively hide certain views
     into["hidden_views"] = None
-    
+
     # Custom user stylesheet to load (resides in htdocs/)
     into["custom_style_sheet"] = None
-    
+
     # URL for start page in main frame (welcome page)
     into["start_url"] = "dashboard.py"
-    
+
     # Page heading for main frame set
-    into["page_heading"] = "Check_MK %s" 
-    
+    into["page_heading"] = "Check_MK %s"
+
     # Timeout for rescheduling of host- and servicechecks
     into["reschedule_timeout"] = 10.0
-    
+
     # Number of columsn in "Filter" form
     into["filter_columns"] = 2
-    
+
     # Default language for l10n
     into["default_language"] = None
 
     # Hide these languages from user selection
     into['hide_languages'] = []
-    
+
     # Default timestamp format to be used in multisite
     into["default_ts_format"] = 'mixed'
-    
+
     # Default authentication type. Can be changed to e.g. "cookie" for
     # using the cookie auth
     into["auth_type"] = 'basic'
-    
+
     # Show only most used buttons, set to None if you want
     # always all buttons to be shown
     into["context_buttons_to_show"] = 5
-    
+
     # Buffering of HTML output stream
     into["buffered_http_stream"] = True
 

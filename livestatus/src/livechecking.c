@@ -72,7 +72,7 @@ void start_livecheck_helper(struct live_helper *lh)
         for (i=3; i<1024; i++) {
             close(i);
         }
-        
+
         char ht[32];
         snprintf(ht, sizeof(ht), "%u", host_check_timeout);
         char st[32];
@@ -195,7 +195,7 @@ struct live_helper *get_free_live_helper()
             g_live_helpers[i].status = LH_READY;
             free_helper = &g_live_helpers[i]; // could be a candidate
     }
-    
+
     // use last found free helper. Do not forget to set this to BUSY!
     // (this was a bug in previous versions)
     free_helper->status = LH_BUSY;

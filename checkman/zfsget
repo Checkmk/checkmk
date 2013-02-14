@@ -21,7 +21,7 @@ description:
 
  Lets say we have a pool P of the size 10GB where the filesystems A and B
  live. Lets assume that A currently uses 2GB and B uses 7GB. That makes 1GB
- left available in the pool. Reporting 20% usage for A would be misleading 
+ left available in the pool. Reporting 20% usage for A would be misleading
  in such a case, because you would assume 80% (i.e. 8GB) of free space. But
  in fact just 1GB is left free for futher files. For that reason our {zfsget}
  check reports the current usage plus the available pool space as total size

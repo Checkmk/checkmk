@@ -198,7 +198,7 @@ def automation_try_inventory_node(hostname):
                     raise MKSNMPError("Cannot get system description via SNMP. "
                                       "SNMP agent is not responding. Probably wrong "
                                       "community or wrong SNMP version.")
-                
+
         except Exception, e:
             if not dual_host:
                 raise
@@ -328,7 +328,7 @@ def automation_try_inventory_node(hostname):
         if snmp_error:
             error = "Error getting data via SNMP: %s" % snmp_error
         if tcp_error:
-            if error: 
+            if error:
                 error += ", "
             error += "Error getting data from Check_MK agent: %s" % tcp_error
         raise MKAutomationError(error)
@@ -494,8 +494,8 @@ def automation_restart(job="restart"):
             if backup_path:
                 os.remove(backup_path)
             do_precompile_hostchecks()
-            if job == 'restart': 
-                do_restart_nagios(False) 
+            if job == 'restart':
+                do_restart_nagios(False)
             elif job == 'reload':
                 do_restart_nagios(True)
         else:
@@ -543,7 +543,7 @@ def automation_scan_parents(args):
         "max_ttl"     : int(args[2]),
         "ping_probes" : int(args[3]),
     }
-    hostnames = args[4:] 
+    hostnames = args[4:]
     traceroute_prog = find_bin_in_path('traceroute')
     if not traceroute_prog:
         raise MKAutomationError("Cannot find binary <tt>traceroute</tt> in search path.")

@@ -284,7 +284,7 @@ class html:
         days = hours / 24
         return "%d days" % days
 
-    def begin_form(self, name, action = None, method = "GET", 
+    def begin_form(self, name, action = None, method = "GET",
                    onsubmit = None, add_transid = True):
         self.form_vars = []
         if action == None:
@@ -429,7 +429,7 @@ class html:
             url = "javascript:void(0)"
 
         if style:
-            style = 'style="%s" ' % style 
+            style = 'style="%s" ' % style
 
         if target:
             target = 'target="%s" ' % target
@@ -537,7 +537,7 @@ class html:
             if not id:
                 id = "ti_%s" % varname
             self.final_javascript('document.getElementById("%s").onkeydown = '
-                             'function(e) { if (!e) e = window.event; textinput_enter_submit(e, "%s"); };' 
+                             'function(e) { if (!e) e = window.event; textinput_enter_submit(e, "%s"); };'
                              % (id, submit))
 
         value = self.req.vars.get(varname, default_value)
@@ -602,7 +602,7 @@ class html:
 
     def icon_select(self, varname, options, deflt=""):
         current = self.var(varname, deflt)
-        self.write("<select class=icon name=\"%s\" id=\"%s\" size=\"1\">\n" % 
+        self.write("<select class=icon name=\"%s\" id=\"%s\" size=\"1\">\n" %
                     (varname, varname))
         for value, text, icon in options:
             if value == None: value = ""
@@ -652,7 +652,7 @@ class html:
         error = self.user_errors.get(varname)
         if error:
             self.write("<x class=inputerror>")
-            
+
         self.write("<span class=checkbox>")
         # Problem with checkboxes: The browser will add the variable
         # only to the URL if the box is checked. So in order to detect
@@ -731,7 +731,7 @@ class html:
                         submit=submit)
 
     def date_input(self, varname, year, month, day, submit=None):
-        self.text_input(varname, "%04d-%02d-%02d" % (year, month, day), 
+        self.text_input(varname, "%04d-%02d-%02d" % (year, month, day),
                         cssclass="date", size=11, submit=submit)
 
     def get_datetime_input(self, varname):
@@ -852,12 +852,12 @@ class html:
             login_text = _("not logged in")
         self.write('<table class=header><tr><td width="*" class=heading>')
         self.write('<a href="#" onfocus="if (this.blur) this.blur();" '
-                   'onclick="this.innerHTML=\'%s\'; document.location.reload();">%s</a></td>' % 
+                   'onclick="this.innerHTML=\'%s\'; document.location.reload();">%s</a></td>' %
                    (_("Reloading..."), title))
-        self.write('<td style="min-width:240px" class=right><span id=headinfo></span>%s &nbsp; <b id=headertime>%s</b>' % 
+        self.write('<td style="min-width:240px" class=right><span id=headinfo></span>%s &nbsp; <b id=headertime>%s</b>' %
                    (login_text, time.strftime("%H:%M")))
         try:
-            self.help_visible = config.load_user_file("help", False)  # cache for later usage 
+            self.help_visible = config.load_user_file("help", False)  # cache for later usage
         except:
             self.help_visible = False
 
@@ -866,9 +866,9 @@ class html:
             cssclass)
         self.write("%s</td></tr></table>" %
                    _("<a href=\"http://mathias-kettner.de\"><img src=\"images/mk_logo_small.gif\"/></a>"))
-        self.write("<hr class=header>\n") 
-        if config.debug: 
-            self.write("<div class=urldebug>%s</div>" % self.makeuri([])) 
+        self.write("<hr class=header>\n")
+        if config.debug:
+            self.write("<div class=urldebug>%s</div>" % self.makeuri([]))
 
     def body_start(self, title='', **args):
         self.html_head(title, **args)
@@ -893,7 +893,7 @@ class html:
             corner_text = ""
             corner_text += '<div style="display: %s" id=foot_refresh>%s</div>' % (
                 (self.browser_reload and "inline-block" or "none",
-                 _("refresh: <div id=foot_refresh_time>%s</div> secs") % self.browser_reload)) 
+                 _("refresh: <div id=foot_refresh_time>%s</div> secs") % self.browser_reload))
             if self.render_headfoot:
                 si = self.render_status_icons()
                 self.write("<table class=footer><tr>"
@@ -921,7 +921,7 @@ class html:
         h = ""
         if True: # self.req.method == "GET":
             h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
-                 (self.makeuri([]), _("URL to this frame")) 
+                 (self.makeuri([]), _("URL to this frame"))
             h += '<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="%s"></a>\n' % \
                  ("index.py?" + urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar"))
         for img, tooltip in self.status_icons.items():

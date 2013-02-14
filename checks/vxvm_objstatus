@@ -35,7 +35,7 @@
 def vxvm_objstatus_disks(info):
     groups = {}
     found_groups = []
-    for dg_type, dg_name, name, admin_state, kernel_state in info: 
+    for dg_type, dg_name, name, admin_state, kernel_state in info:
         if dg_type == 'v':
             if dg_name not in found_groups:
                 groups[dg_name] = [(name, admin_state, kernel_state)]
@@ -51,10 +51,10 @@ def inventory_vxvm_objstatus(info):
 def check_vxvm_objstatus(item, params, info):
     groups = vxvm_objstatus_disks(info)
     volumes = groups.get(item)
-    if volumes != None: 
+    if volumes != None:
         state = 0
         messages = []
-        for volume, admin_state, kernel_state in volumes: 
+        for volume, admin_state, kernel_state in volumes:
             text = []
             error = False
             if admin_state != "CLEAN" and admin_state != 'ACTIVE':
@@ -63,10 +63,10 @@ def check_vxvm_objstatus(item, params, info):
                 error = True
             if kernel_state != 'ENABLED' and kernel_state != 'DISABLED':
                 state = 2
-                text.append("%s: Kernel state is %s(!!)" % (volume, kernel_state)) 
+                text.append("%s: Kernel state is %s(!!)" % (volume, kernel_state))
                 error = True
             if error == False:
-                text = ["%s: OK" % volume] 
+                text = ["%s: OK" % volume]
             messages.append(", ".join(text))
         return(state, nagios_state_names[state] + ' - ' + ', '.join(messages))
 

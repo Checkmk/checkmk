@@ -43,21 +43,21 @@ inventory:
 
  {Grouping:} In some situations you do not want to monitor a single
  interface but a group of interfaces that together form a pool.
- The {if} check supports such pools by defining groups. 
- For each group you specify a name and the interface port type which 
+ The {if} check supports such pools by defining groups.
+ For each group you specify a name and the interface port type which
  all members of the group must share. The data of all members
  is accumulated and put together in a single grouped interface service
 
- You can specify the groups with the ruleset {if_groups}. 
- Groups are defined as list of dictionaries. 
+ You can specify the groups with the ruleset {if_groups}.
+ Groups are defined as list of dictionaries.
 
  The keys are:
 
   {"name"}:   String. Name of the group within the service description
 
-  {"iftype"}: Integer. Interface port type as integer 
+  {"iftype"}: Integer. Interface port type as integer
 
-  {"single"}(optional): Bool. Interfaces in this group do not show up 
+  {"single"}(optional): Bool. Interfaces in this group do not show up
   as single service if "single" is set to True (Default: False)
 
   For example: if_groups = ([{"name" : "Group WLAN", "iftype" : 6, "single" : True}], ["lan"], ALL_HOSTS )
@@ -65,7 +65,7 @@ inventory:
 examples:
  Definition for grouped interfaces
  if_groups = [
-   ( [{"name" : "VLAN", "iftype" : 53, "single" : True }, 
+   ( [{"name" : "VLAN", "iftype" : 53, "single" : True },
       {"name" : "voiceDID", "iftype" : 213}], [], ALL_HOSTS ),
    ( [{ "name" : "Group WLAN", "iftype" : 6, "single" : True }], [ "lan" ], ALL_HOSTS )
  ]
@@ -130,7 +130,7 @@ parameters (dict): Due to its complexity, this check now uses a dictionary as
 
                    {"unit"} - the measurement unit which can be set to "bit" or "byte".
                    Depending on this choice the limits set in the {"traffic"} parameter are regarded
-                   as bits or bytes, too. When this parameter is set to "bit" any traffic related plugin output 
+                   as bits or bytes, too. When this parameter is set to "bit" any traffic related plugin output
                    is reported in bits instead of bytes(default).
 
 [configuration]

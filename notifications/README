@@ -2,7 +2,7 @@ Put your custom notification scripts here. All executable files will be read in.
 If you want your scripts to have user readable aliasses then put those into
 a comment into the second line, e.g.:
 
-#!/usr/bin/foolang 
+#!/usr/bin/foolang
 # Notify via Loudspeaker
 ...
 

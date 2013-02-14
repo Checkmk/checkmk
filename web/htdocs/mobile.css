@@ -162,7 +162,7 @@ body.mobile table.data td.perfometer td.inner {
 }
 
 .ui-header .ui-title, .ui-footer .ui-title {
-        margin: .6em 46px .8em; 
+        margin: .6em 46px .8em;
 }
 
 /*-------------------------------------------------------------------------.
@@ -223,7 +223,7 @@ td.icons img {
     width: 40px;
 }
 
-td.icons a { 
+td.icons a {
     padding-left: 8px;
 }
 

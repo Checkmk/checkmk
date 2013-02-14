@@ -328,7 +328,7 @@ function mkSearchAddSearchResults(aSearchObjects, objType, val) {
     var numHits = 0;
 
     // First check, if all matched items have the same
-    // site. If not, we will display the site name in 
+    // site. If not, we will display the site name in
     // brackets after the item
     var the_only_site = null;
     var show_site = false;

@@ -138,12 +138,12 @@ def load():
     )
 
     config.declare_permission("general.ignore_soft_limit",
-         _("Ignore soft query limit"), 
-         _("Allows to ignore the soft query limit imposed upon the number of datasets returned by a query"), 
+         _("Ignore soft query limit"),
+         _("Allows to ignore the soft query limit imposed upon the number of datasets returned by a query"),
          [ "admin", "user" ])
 
     config.declare_permission("general.ignore_hard_limit",
-         _("Ignore hard query limit"), 
+         _("Ignore hard query limit"),
          _("Allows to ignore the hard query limit imposed upon the number of datasets returned by a query"),
          [ "admin" ])
 

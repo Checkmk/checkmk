@@ -56,7 +56,7 @@ function bi_update_tree(oImg, code)
         oDiv = oDiv.parentNode;
     }
     var url = "bi_render_tree.py?" + oDiv.id;
-    get_url(url, bi_update_tree_response, oDiv); 
+    get_url(url, bi_update_tree_response, oDiv);
 }
 
 function bi_update_tree_response(oDiv, code) {
@@ -84,15 +84,15 @@ function bi_toggle_box(oDiv, lazy)
         get_url(url, bi_update_tree, oDiv);
     else {
         get_url(url);
-        // find child nodes that belong to this node and 
+        // find child nodes that belong to this node and
         // control visibility of those. Note: the BI child nodes
         // are *no* child nodes in HTML but siblings!
         var found = 0;
         for (var i in oDiv.parentNode.childNodes) {
             var onode = oDiv.parentNode.childNodes[i];
-            if (onode == oDiv) 
+            if (onode == oDiv)
                 found = 1;
-            else if (found == 1) 
+            else if (found == 1)
                 found ++;
             else if (found) {
                 if (onode.style.display)

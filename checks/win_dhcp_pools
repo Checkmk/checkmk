@@ -99,7 +99,7 @@ def inventory_win_dhcp_pools(info):
             used, free, pending = pool_stats
             size = used + free + pending
             if size > 0 or win_dhcp_pools_inventorize_empty:
-                inventory.append((last_pool, 'win_dhcp_pools_default_levels'))  
+                inventory.append((last_pool, 'win_dhcp_pools_default_levels'))
     return inventory
 
 def check_win_dhcp_pools(item, params, info):

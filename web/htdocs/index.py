@@ -161,13 +161,13 @@ def connect_to_livestatus(html):
         if config.may("general.see_all") and not config.user.get("force_authuser"):
             use_livestatus_auth = False
     else:
-        if config.may("general.see_all") and not config.user.get("force_authuser_webservice"): 
+        if config.may("general.see_all") and not config.user.get("force_authuser_webservice"):
             use_livestatus_auth = False
-            
+
     if use_livestatus_auth == True:
         html.live.set_auth_user('read',   config.user_id)
         html.live.set_auth_user('action', config.user_id)
-        
+
 
     # May the user see all objects in BI aggregations or only some?
     if not config.may("bi.see_all"):

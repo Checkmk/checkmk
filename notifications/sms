@@ -22,7 +22,7 @@ if os.environ['NOTIFY_WHAT'] == 'SERVICE':
     message += os.environ['NOTIFY_SERVICEDESC'][:avail_len] + " "
     avail_len = max_len - len(message)
     message += os.environ['NOTIFY_SERVICEOUTPUT'][:avail_len]
-    
+
 else:
     message += "is " + os.environ['NOTIFY_HOSTSTATE']
 

@@ -113,17 +113,17 @@ def parse_cisco_temp_sensor(info):
 
     # Create dict of sensor descriptions
     descriptions = dict(description_info)
-    
+
     # Create dict with thresholds
     thresholds = {}
     for id, sensortype, value, sensorstate in state_info:
        thresholds.setdefault(id, [])
-    
+
     for endoid, level in levels_info:
        # endoid is e.g. 21549.9 or 21459.10
        id, subid = endoid.split('.')
        thresholds.setdefault(id, []).append(saveint(level))
-    
+
     # Create main dictionary (only of temperature sensors)
     sensors = []
     for id, sensortype, value, sensorstate in state_info:
@@ -135,9 +135,9 @@ def parse_cisco_temp_sensor(info):
 def inventory_cisco_temp_sensor(info):
     sensors = parse_cisco_temp_sensor(info)
     # Use all temperature sensors with a non-empty description and valid threshold
-    return [ (entry[1], None) for entry 
-              in sensors if entry[1] != None 
-                            and entry[2] == '8' 
+    return [ (entry[1], None) for entry
+              in sensors if entry[1] != None
+                            and entry[2] == '8'
                             and len(entry[5]) == 2 ]
 
 def check_cisco_temp_sensor(item, _no_params, info):
@@ -163,7 +163,7 @@ check_info['cisco_temp_sensor'] = (check_cisco_temp_sensor, "Temperature %s", 1,
 
 snmp_info['cisco_temp_sensor'] = [
    # Description of sensors
-   ( ".1.3.6.1.2.1.47.1.1.1.1", [ 
+   ( ".1.3.6.1.2.1.47.1.1.1.1", [
      OID_END,
      2, # Description of the sensor
    ]),

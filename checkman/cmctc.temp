@@ -7,7 +7,7 @@ description:
  This check polls the state of temperature sensors
  attached to a ComputerMultiControl-TopConcept unit.
  Per default warning and critical levels are read via SNMP and
- need to be configured in Check_Mk. Configure them 
+ need to be configured in Check_Mk. Configure them
  in your CMC unit. It is also possible to configure
  levels. That way the state and levels from the SNMP
  output are being ignored.

@@ -10,7 +10,7 @@ description:
  is the number of errors and collisions compared
  to the number of packets transmitted during one check interval.
 
- Note: this check is deprecated. Better use {lnx_if}. 
+ Note: this check is deprecated. Better use {lnx_if}.
 item:
  The name of the network interface as shown by {ifconfig},
  for example {"eth0"}

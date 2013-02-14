@@ -110,7 +110,7 @@ select.icon option {
 input.buttonlink {
     padding: 1px;
     font-size: 8pt;
-} 
+}
 
 input.button {
     border-color: #86A9B8 #22404D #22414D #86A9B8;
@@ -192,10 +192,10 @@ label.image_button input:active {
 }
 label.image_button input[type="submit"]::-moz-focus-inner {
     border: 0px;
-} 
+}
 /*for IE8 */
 input[type="submit"]:focus {
-    outline: none; 
+    outline: none;
 }
 
 input:hover, select:hover, textarea:hover {
@@ -355,7 +355,7 @@ div.warning a {
 |           \ \ / / _` | | | | |/ _ \___ \| '_ \ / _ \/ __|                |
 |            \ V / (_| | | |_| |  __/___) | |_) |  __/ (__                 |
 |             \_/ \__,_|_|\__,_|\___|____/| .__/ \___|\___|                |
-|                                         |_|                              | 
+|                                         |_|                              |
 +--------------------------------------------------------------------------+
 | Styles needed for HTML code produced by valuespec.py.                    |
 '-------------------------------------------------------------------------*/

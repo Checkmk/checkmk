@@ -28,13 +28,13 @@
 # Agent output not included since it has almost 100 lines
 # it's available in our archive or fh's bitbucket
 
-# Load a fake controller with known good values for the most 
+# Load a fake controller with known good values for the most
 # important parameters only and try to define their importance
 megaraid_bbu_refvalues = {
     'Remaining Capacity Low'                    : ('No', 1),    # nolearn
     'I2c Errors Detected'                       : ('No', 1),
-    'Temperature'                               : ('OK', 2), 
-    'Pack is about to fail & should be replaced': ('No', 1), 
+    'Temperature'                               : ('OK', 2),
+    'Pack is about to fail & should be replaced': ('No', 1),
     'Charging Status'                           : ('None', 1),  # nolearn
     'Battery State'                             : ('Operational', 2),  # nolearn
     'Learn Cycle Status'                        : ('OK', 1),
@@ -54,13 +54,13 @@ def megaraid_bbu_parse(info):
         name, data = " ".join(line).split(":")
         name = name.strip()
         data = data.strip()
-        
-        # Scan each controller into its own dictionary 
+
+        # Scan each controller into its own dictionary
         if name == "BBU status for Adapter":
             current_hba = {}
             controllers[data] = current_hba
         else:
-            # We lose the numerical temperature here 
+            # We lose the numerical temperature here
             # (same key is used twice in output of megacli)
             current_hba[name] = data
     return controllers
@@ -98,12 +98,12 @@ def check_megaraid_bbu(item, _no_params, info):
 
     if controller["Learn Cycle Active"] == "Yes":
         return (0, "OK - no states to check (controller is in learn cycle)" + charge)
-    # return assembled info 
+    # return assembled info
     elif broken:
 	return (state, nagios_state_names[state] + " - " + ", ".join(broken) + charge)
     else:
 	return (0, "OK - all states as expected" + charge)
-	     
+
     return (3, "UNKNOWN - Check not implemented")
 
 

@@ -78,17 +78,17 @@ sidebar_snapins["admin_mini"] = {
 #snapin_admin_mini {
     padding-top: 6px;
 }
-#snapin_admin_mini img { 
-    margin-right: 3.9px; 
+#snapin_admin_mini img {
+    margin-right: 3.9px;
     margin-bottom: 4px;
-    width: 18px; 
+    width: 18px;
     height: 18px;
     position: relative;
     left: 3px;
     padding: 0;
 }
 
-#snapin_admin_mini div.footnotelink { 
+#snapin_admin_mini div.footnotelink {
     margin-top: -14px;
 }
 """,

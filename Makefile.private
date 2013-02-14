@@ -9,6 +9,7 @@ foo:
 release:
 	@$(MAKE) check-uncommitted
 	@$(MAKE) check
+	@$(MAKE) mrproper
 	@$(MAKE) dist
 	
 

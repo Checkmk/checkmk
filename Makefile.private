@@ -17,6 +17,8 @@ release:
 	@$(MAKE) -C ../mkde update-checkmk
 	@cd ../mkde ; ./cmk_version_eintragen $(VERSION) > check_mk.inc.neu && \
           mv check_mk.inc.neu htdocs/check_mk.inc
+	@figlet SUPER.
+	git tag -am 'Official Release $(VERSION)' v$(VERSION)
 
 
 check-uncommitted:

@@ -509,6 +509,19 @@ function pnp_hover_contents(url) {
 }
 
 // ----------------------------------------------------------------------------
+// Handle Enter key in textfields
+// ----------------------------------------------------------------------------
+function textinput_enter_submit(e, submit) {
+    var keyCode = e.which || e.keyCode;
+    if (keyCode == 13) {
+        /* alert(submit); */
+        e.returnValue = false;
+        e.cancelBubble = true;
+    }
+}
+
+
+// ----------------------------------------------------------------------------
 // Synchronous action handling
 // ----------------------------------------------------------------------------
 // Protocol is:

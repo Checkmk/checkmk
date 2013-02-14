@@ -18,12 +18,12 @@ release:
 	@cd ../mkde ; ./cmk_version_eintragen $(VERSION) > check_mk.inc.neu && \
           mv check_mk.inc.neu htdocs/check_mk.inc && \
           for version in $$(cat oldversions) ; do \
-             mv -v htdocs/download/*[-_]$$version[-_.]* /var/www/80/archive.mathias-kettner.de/check_mk/ && \
+             mv -v htdocs/download/*[-_]$$version[-_.]* /var/www/80/archive.mathias-kettner.de/check_mk/ 2>/dev/null && \
              git rm htdocs/download/*[-_]$$version[-_.]* || true ; \
           done ; rm -f oldversion ; \
-          git add htdocs/download/*$$version* ; \
-	@figlet SUPER.
-	git tag -am 'Official Release $(VERSION)' v$(VERSION)
+          git add htdocs/download
+	figlet SUPER.
+	git tag -f -am 'Official Release $(VERSION)' v$(VERSION)
 
 
 check-uncommitted:

@@ -128,11 +128,16 @@ if "virtualmachine" in check:
      "guestHeartbeatStatus": str,
      "summary.quickStats.overallCpuUsage": str,
      "summary.quickStats.uptimeSeconds": str,
+
+     #"config.hardware.memoryMB": str,
      "summary.quickStats.guestMemoryUsage": str,
      "summary.quickStats.hostMemoryUsage": str,
+     "summary.quickStats.balloonedMemory": str,
+     "summary.quickStats.privateMemory": str,
+     "summary.quickStats.sharedMemory": str,
+
      "summary.quickStats.overallCpuUsage": str,
      "summary.runtime.powerState": str,
-     "config.hardware.memoryMB": str,
      "config.hardware.numCPU": str,
     })
 

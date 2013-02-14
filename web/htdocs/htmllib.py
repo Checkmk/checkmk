@@ -512,7 +512,7 @@ class html:
     def add_form_var(self, varname):
         self.form_vars.append(varname)
 
-    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None, **args):
+    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None, submit = None, **args):
         if default_value == None:
             default_value = ""
         addprops = ""
@@ -532,6 +532,12 @@ class html:
             addprops += " style=\"%s%s\"" % (add_style, args["style"])
         elif add_style:
             addprops += " style=\"%s\"" % add_style
+
+        if submit:
+            addprops += " id='hirn' "
+            self.final_javascript('document.getElementById("hirn").onkeydown = '
+                             'function(e) { if (!e) e = window.event; textinput_enter_submit(e, "%s"); };' % submit)
+            
 
         value = self.req.vars.get(varname, default_value)
         error = self.user_errors.get(varname)

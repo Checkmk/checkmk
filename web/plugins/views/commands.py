@@ -259,7 +259,7 @@ multisite_commands.append({
         html.checkbox("_ack_persistent", False, label=_('persistent comment')) == \
         html.write("<hr>") == \
         html.write(_("Comment") + ": ") == \
-        html.text_input("_ack_comment", size=48),
+        html.text_input("_ack_comment", size=48, submit="_acknowledge"),
     "action"      : command_acknowledgement,
     "group"       : _("Acknowledge"),
 })

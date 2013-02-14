@@ -503,8 +503,8 @@ class html:
         self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % what)
         self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink%s.png\")";' ''' % what)
 
-    def number_input(self, varname, deflt = "", size=8, style=""):
-        self.text_input(varname, str(deflt), "number", size=size, style=style)
+    def number_input(self, varname, deflt = "", size=8, style="", submit=None):
+        self.text_input(varname, str(deflt), "number", size=size, style=style, submit=submit)
 
 
     # Needed if input elements are put into forms without the helper
@@ -512,7 +512,7 @@ class html:
     def add_form_var(self, varname):
         self.form_vars.append(varname)
 
-    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None, **args):
+    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None, submit = None, **args):
         if default_value == None:
             default_value = ""
         addprops = ""
@@ -532,6 +532,13 @@ class html:
             addprops += " style=\"%s%s\"" % (add_style, args["style"])
         elif add_style:
             addprops += " style=\"%s\"" % add_style
+
+        if submit != None:
+            if not id:
+                id = "ti_%s" % varname
+            self.final_javascript('document.getElementById("%s").onkeydown = '
+                             'function(e) { if (!e) e = window.event; textinput_enter_submit(e, "%s"); };' 
+                             % (id, submit))
 
         value = self.req.vars.get(varname, default_value)
         error = self.user_errors.get(varname)
@@ -701,7 +708,7 @@ class html:
             # Form filled in but variable missing -> Checkbox not checked
             return False
 
-    def datetime_input(self, varname, default_value):
+    def datetime_input(self, varname, default_value, submit=None):
         try:
             t = self.get_datetime_input(varname)
         except:
@@ -713,31 +720,19 @@ class html:
             self.set_focus(varname + "_date")
 
         br = time.localtime(t)
-        self.date_input(varname + "_date", br.tm_year, br.tm_mon, br.tm_mday)
+        self.date_input(varname + "_date", br.tm_year, br.tm_mon, br.tm_mday, submit=submit)
         self.write(" ")
-        self.time_input(varname + "_time", br.tm_hour, br.tm_min)
+        self.time_input(varname + "_time", br.tm_hour, br.tm_min, submit=submit)
         self.form_vars.append(varname + "_date")
         self.form_vars.append(varname + "_time")
 
-    def time_input(self, varname, hours, mins):
-        error = self.user_errors.get(varname)
-        if error:
-            self.write("<x class=inputerror>")
-        self.write("<input type=text size=5 class=time name=%s value=\"%02d:%02d\">" %
-                   (varname, hours, mins))
-        if error:
-            self.write("</x>")
-        self.form_vars.append(varname)
+    def time_input(self, varname, hours, mins, submit=None):
+        self.text_input(varname, "%02d:%02d" % (hours, mins), cssclass="time", size=5,
+                        submit=submit)
 
-    def date_input(self, varname, year, month, day):
-        error = self.user_errors.get(varname)
-        if error:
-            self.write("<x class=inputerror>")
-        self.write("<input type=text size=10 class=date name=%s value=\"%04d-%02d-%02d\">" %
-                   (varname, year, month, day))
-        if error:
-            self.write("</x>")
-        self.form_vars.append(varname)
+    def date_input(self, varname, year, month, day, submit=None):
+        self.text_input(varname, "%04d-%02d-%02d" % (year, month, day), 
+                        cssclass="date", size=11, submit=submit)
 
     def get_datetime_input(self, varname):
         t = self.var(varname + "_time")

@@ -141,8 +141,12 @@ if `svcs |grep ntp > /dev/null`; then
     # use ntpq instead, xntpdc gives less info.
     #xntpdc -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
     ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+fi
 
-    
+#Memory 
+if [ -x /usr/bin/top ]; then
+    echo "<<<solaris_mem>>>"
+    /usr/bin/top | grep Memory
 fi
 
 # TCP Connection stats

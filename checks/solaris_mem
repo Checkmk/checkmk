@@ -1,0 +1,61 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#<<<solaris_mem>>>
+#Memory: 256G real, 54G free, 257G swap in use, 86G swap free
+
+def inventory_solaris_mem_used(info):
+    return [(None, "memused_default_levels")]
+
+def check_solaris_mem_used(_no_item, params, info):
+    values = ['MemTotal', 'MemFree', 'SwapTotal', 'SwapFree']
+    data = {}
+    data['MemTotal'] = info[0][1]
+    data['MemFree'] = info[0][3]
+    data['SwapTotal'] = info[0][5] #swap in use
+    data['SwapFree'] = info[0][9]
+
+    for value in values:
+        if data[value][-1] == 'G':
+            data[value] = saveint(data[value][:-1]) * 1024 * 1024
+        elif data[value][-1] == 'M':
+            data[value] = saveint(data[value][:-1]) * 1024 
+
+    #SwapTotal is Swap in use, so we have to add SwapFree
+    data['SwapTotal'] = data['SwapTotal'] + data['SwapFree']        
+
+    return check_memory(params, data)
+
+check_info['solaris_mem'] = {
+    "check_function"         : check_solaris_mem_used,
+    "inventory_function"     : inventory_solaris_mem_used,
+    "service_description"    : "Memory used",
+    "has_perfdata"           : True,
+    "group"                  : "memory",
+    "check_config_variables" : [ "mem_extended_perfdata" ],
+    "includes"               : [ "mem.include" ],
+}
+

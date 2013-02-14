@@ -103,7 +103,7 @@ if (!document.getElementsByClassName) {
         }
     }
     return _nodeList;
-}
+  }
 }
 
 function getTarget(event) {
@@ -507,6 +507,25 @@ function pnp_hover_contents(url) {
     }
     return c;
 }
+
+// ----------------------------------------------------------------------------
+// Handle Enter key in textfields
+// ----------------------------------------------------------------------------
+function textinput_enter_submit(e, submit) {
+    var keyCode = e.which || e.keyCode;
+    if (keyCode == 13) {
+        if (submit) {
+            var button = document.getElementById(submit);
+            if (button)
+                button.click();
+        }
+        if (e.preventDefault) e.preventDefault();
+        e.returnValue = false;
+        e.cancelBubble = true;
+        return false;
+    }
+}
+
 
 // ----------------------------------------------------------------------------
 // Synchronous action handling

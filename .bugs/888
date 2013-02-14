@@ -1,0 +1,16 @@
+Title: EC Forwarding: Nagios fails if contactgroup is empty
+Component: wato
+State: open
+Date: 2013-02-14 10:12:11
+Targetversion: 1.2.3
+Class: nastiness
+
+The problem is that Check_MK does not create a contact group
+if no hosts and services are assigned to it. We could check
+if empty contact groups are possible and change that. If we
+are in OMD context we could add a patch in Nagios that changes
+that and make Check_MK behave like that in OMD context.
+
+For WATO it is not easily possible to savely know wether a 
+contact group will be empty, since many aspects are involved
+(only_hosts, D-WATO, manual confiugration out of WATO, etc.)

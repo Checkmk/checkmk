@@ -1396,7 +1396,7 @@ class EventServer:
             event["comment"] = replace_groups(rule["set_comment"], event.get("comment", ""), groups)
         if "set_application" in rule:
             event["application"] = replace_groups(rule["set_application"], event["application"], groups)
-        if "set_contact" in rule:
+        if "set_contact" in rule and "contact" not in event:
             event["contact"] = replace_groups(rule["set_contact"], event.get("contact", ""), groups)
 
     def parse_monitoring_info(self, line):

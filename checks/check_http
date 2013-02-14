@@ -100,7 +100,7 @@ def check_http_arguments(params):
     if "post_data" in settings:
         data, content_type = settings["post_data"]
         args += ' -P %s -T %s' % \
-                (quote_shell_string(data), 
+                (quote_shell_string(data),
                  quote_shell_string(content_type))
 
     if "method" in settings:

@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # {
-#     'tcp_port': 4711, 
+#     'tcp_port': 4711,
 #     'secret': 'wef',
 #     'infos': ['hostsystem', 'virtualmachine'],
 #     'user': 'wefwef'
@@ -36,8 +36,8 @@ def agent_vsphere_arguments(params, ipaddress):
     if "tcp_port" in params:
         args += " -p %d" % params["tcp_port"]
 
-    args += " -u " + quote_shell_string(params["user"]) 
-    args += " -s " + quote_shell_string(params["secret"]) 
+    args += " -u " + quote_shell_string(params["user"])
+    args += " -s " + quote_shell_string(params["secret"])
     args += " -i " + ",".join(params["infos"])
     args += " " + quote_shell_string(ipaddress)
     return args

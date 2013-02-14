@@ -9,12 +9,12 @@ description:
  The CBL Airlaser is a device to transparently transport Gigabit Ethernet
  over an optical link with optional microwave fallback.
 
- The status of the AirLaser should usually be normal. 
- After power up the system performs some self-tests. 
- This check aquires the results from the sysStatus OID in the 
+ The status of the AirLaser should usually be normal.
+ After power up the system performs some self-tests.
+ This check aquires the results from the sysStatus OID in the
  {CBL-AIRLASOR-IP1000-MIB}
 
- Minor airlaser problems are reported as a warning condition, major failures 
+ Minor airlaser problems are reported as a warning condition, major failures
  as "anything failed"
 
  snmp-Status    to     nagios-status:
@@ -29,7 +29,7 @@ description:
 
 
 inventory:
- A service will be generated if the CBL-AIRLASOR-IP1000 MIB is supported by 
+ A service will be generated if the CBL-AIRLASOR-IP1000 MIB is supported by
  the remote device.
- 
- 
+
+

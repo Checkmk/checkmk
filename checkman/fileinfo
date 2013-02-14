@@ -18,8 +18,8 @@ description:
  Currently the linux and windows agents supports this type
  of check.
 
- For windows, the configuration is done in {check_mk.ini} in 
- the section {[fileinfo]}. Put one or more entries of the 
+ For windows, the configuration is done in {check_mk.ini} in
+ the section {[fileinfo]}. Put one or more entries of the
  format {path = C:\Some Dir\*.log} into this
  section. The agent will send all files that match
  the pattern. Wildcards are only allowed in the

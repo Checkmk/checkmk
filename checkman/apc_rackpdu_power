@@ -1,4 +1,4 @@
-title: APC PDU units 
+title: APC PDU units
 agents: snmp
 author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL

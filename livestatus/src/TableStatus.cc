@@ -180,11 +180,11 @@ TableStatus::TableStatus()
                 "The current number of log messages MK Livestatus keeps in memory", &num_cached_log_messages ));
     addColumn(new StringPointerColumn("livestatus_version",
                 "The version of the MK Livestatus module", (char *)VERSION));
-    addColumn(new IntPointerColumn("livestatus_active_connections", 
+    addColumn(new IntPointerColumn("livestatus_active_connections",
                 "The current number of active connections to MK Livestatus", &g_num_active_connections));
-    addColumn(new IntPointerColumn("livestatus_queued_connections", 
+    addColumn(new IntPointerColumn("livestatus_queued_connections",
                 "The current number of queued connections to MK Livestatus (that wait for a free thread)", &g_num_queued_connections));
-    addColumn(new IntPointerColumn("livestatus_threads", 
+    addColumn(new IntPointerColumn("livestatus_threads",
                 "The maximum number of connections to MK Livestatus that can be handled in parallel", &g_num_clientthreads));
 
 

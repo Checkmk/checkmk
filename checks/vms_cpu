@@ -66,5 +66,5 @@ check_info['vms_cpu'] = {
     "inventory_function" :  inventory_vms_cpu,
     "service_description" : "CPU utilization",
     "has_perfdata" :        True,
-    "group" :               "cpu_iowait", 
+    "group" :               "cpu_iowait",
 }

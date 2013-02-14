@@ -174,7 +174,7 @@ function get_url_sync(url) {
 
     AJAX.open("GET", url, false);
     AJAX.send(null);
-    return AJAX.responseText; 
+    return AJAX.responseText;
 }
 
 function post_url(url, params) {
@@ -889,7 +889,7 @@ function handleReload(url) {
             window.location.reload(false);
         else
             window.location.href = url;
-    } 
+    }
     else {
         // Enforce specific display_options to get only the content data.
         // All options in "opts" will be forced. Existing upper-case options will be switched.
@@ -984,7 +984,7 @@ function remove_class(o, cn) {
     var parts = o.className.split(' ');
     var new_parts = Array();
     for (x=0; x<parts.length; x++) {
-        if (parts[x] != cn) 
+        if (parts[x] != cn)
             new_parts.push(parts[x]);
     }
     o.className = new_parts.join(" ");
@@ -1074,7 +1074,7 @@ function find_checkbox(oTd) {
             if(allTds[a] == oTd) { /* that's me */
                 found = true;
             }
-            else 
+            else
                 continue;
         }
 
@@ -1561,14 +1561,14 @@ function list_of_strings_extend(oInput, j) {
     oInput.onfocus = null;
 }
 
-function valuespec_cascading_change(oSelect, varprefix, count) { 
+function valuespec_cascading_change(oSelect, varprefix, count) {
     var nr = parseInt(oSelect.value);
 
     for (var i=0; i<count; i++) {
-        var oDiv = document.getElementById(varprefix + "_" + i + "_sub"); 
+        var oDiv = document.getElementById(varprefix + "_" + i + "_sub");
         if (oDiv) {
             if (nr == i) {
-                oDiv.style.display = ""; 
+                oDiv.style.display = "";
             }
             else
                 oDiv.style.display = "none";
@@ -1595,15 +1595,15 @@ function valuespec_listof_add(varprefix, magic) {
       oTbody = document.createElement('tbody');
       oTable.appendChild(oTbody);
   }
-  
+
   // Hack for IE. innerHTML does not work on tbody/tr correctly.
   var container = document.createElement('div');
   container.innerHTML = '<table><tbody><tr>' + htmlcode + '</tr></tbody></tr>';
   var oTr = container.childNodes[0].childNodes[0].childNodes[0] // TR
   oTbody.appendChild(oTr);
-  
+
   executeJSbyObject(oTable.lastChild);
-  
+
   valuespec_listof_fixarrows(oTbody);
 }
 
@@ -1758,8 +1758,8 @@ function view_toggle_form(oButton, idForm) {
     for (var i=0; i<allbuttons.length; i++) {
         var b = allbuttons[i];
         if (b != oButton && !has_class(b, "empth") && !has_class(b, "checkbox")) {
-            remove_class(b, "down") 
-            add_class(b, "up") 
+            remove_class(b, "down")
+            add_class(b, "up")
         }
     }
     remove_class(oButton, "down");
@@ -1772,12 +1772,12 @@ function init_optiondial(id) {
     make_unselectable(oDiv);
 
     var eventname = (/Firefox/i.test(navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel"
-     
+
      if (oDiv.attachEvent) //if IE (and Opera depending on user setting)
              oDiv.attachEvent("on" + eventname, optiondial_wheel)
      else if (oDiv.addEventListener) //WC3 browsers
              oDiv.addEventListener(eventname, optiondial_wheel, false)
-    
+
 }
 
 var dial_direction = 1;
@@ -1805,7 +1805,7 @@ function optiondial_wheel(e) {
         evt.preventDefault();
     else
         return false;
- 
+
 }
 
 // used for refresh und num_columns
@@ -1819,23 +1819,23 @@ function view_dial_option(oDiv, viewname, option, choices) {
         if (has_class(oDiv, "val_" + val)) {
             var new_choice = choices[(c + choices.length + dial_direction) % choices.length];
             change_class(oDiv, "val_" + val, "val_" + new_choice[0]);
-            break; 
+            break;
         }
     }
 
     // Start animation
     step = 0;
     speed = 10;
-    for (var way = 0; way <= 10; way +=1) { 
+    for (var way = 0; way <= 10; way +=1) {
         step += speed;
         setTimeout("turn_dial('" + option + "', '', " + way + "," + dial_direction + ")", step);
     }
-    for (var way = -10; way <= 0; way +=1) { 
+    for (var way = -10; way <= 0; way +=1) {
         step += speed;
         setTimeout("turn_dial('" + option + "', '" + new_choice[1] + "', " + way + "," + dial_direction + ")", step);
     }
-    
-    get_url_sync("ajax_set_viewoption.py?view_name=" + viewname + 
+
+    get_url_sync("ajax_set_viewoption.py?view_name=" + viewname +
             "&option=" + option + "&value=" + new_choice[0]);
     if (option == "refresh")
         setReload(new_choice[0]);
@@ -1876,7 +1876,7 @@ function view_switch_option(oDiv, viewname, option, choices) {
     }
     new_choice = [ new_value, '' ];
 
-    get_url_sync("ajax_set_viewoption.py?view_name=" + viewname + 
+    get_url_sync("ajax_set_viewoption.py?view_name=" + viewname +
             "&option=" + option + "&value=" + new_choice[0]);
 
     if (option == "refresh") {

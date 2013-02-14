@@ -33,7 +33,7 @@ raritan_emx_sensors = {
 
 def inventory_raritan_emx(info):
     return [ (x[0] + " " + raritan_emx_sensors[saveint(x[2])] + " " +x[1], None) \
-    for x in info if x[1] != "-1"] 
+    for x in info if x[1] != "-1"]
 
 def check_raritan_emx(item, params, info):
     units = {
@@ -59,7 +59,7 @@ def check_raritan_emx(item, params, info):
     }
     state = 3
     message = "Sensor not found"
-    perfdata = [] 
+    perfdata = []
     for line in info:
         if line[0] + " " + raritan_emx_sensors[saveint(line[2])] + " " + line[1] == item:
             value, unit, sensor_state = map(saveint, line[3:6])
@@ -73,11 +73,11 @@ def check_raritan_emx(item, params, info):
             #Temperature
             if unit == 7:
                 value = value / 10.0
-                
+
             if units[unit] != "":
                 perfdata = [(units[unit], value)]
 
-            message = "%s%s State: %s" % (str(value), units[unit],sensor_states[sensor_state]) 
+            message = "%s%s State: %s" % (str(value), units[unit],sensor_states[sensor_state])
 
     return (state, nagios_state_names[state] + " - " + message, perfdata)
 
@@ -93,6 +93,6 @@ check_info['raritan_emx'] = {
                                                         "1.4.1.1.5",  #Unit
                                                         "2.1.1.2",  #State
                                                         ] ),
-  "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.13742.8"] 
-                                                      
+  "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.13742.8"]
+
 }

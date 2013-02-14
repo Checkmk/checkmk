@@ -91,8 +91,8 @@ def validate_host_parents(effective_host):
             if effective_host["site"] !=  parent["site"]:
                 raise MKUserError(None, _("The parent '%s' is monitored on site '%s' while the host itself "
                   "is monitored on site '%s'. Both must be monitored on the same site. Remember: The parent/child "
-                  "relation is used to describe the reachability of hosts by one monitoring daemon.") % 
-                    (parentname, parent["site"], effective_host["site"])) 
-    
+                  "relation is used to describe the reachability of hosts by one monitoring daemon.") %
+                    (parentname, parent["site"], effective_host["site"]))
+
 api.register_hook('validate-host', validate_host_parents)
 

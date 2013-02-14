@@ -1,4 +1,4 @@
-title: Check the memory usage in solaris 
+title: Check the memory usage in solaris
 agents: solaris
 author: Bastian Kuhn <bk@mathias-kettner.de>
 license: GPL
@@ -7,7 +7,7 @@ description:
  This Check is compatible to the default memory check.
  Look in the documentation from mem for more informationen
  About the Agent:
- On the target system the top command is needed 
+ On the target system the top command is needed
  to get the memory information. The Agent will look in /usr/bin
  for it.
 

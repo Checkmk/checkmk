@@ -56,5 +56,5 @@ def check_oracle_logswitches(item, params, info):
     return (3, "UNKNOWN - Database not existing or not running")
 
 check_info['oracle_logswitches'] = (check_oracle_logswitches, "ORA %s Logswitches", 1,  inventory_oracle_logswitches )
-checkgroup_of['oracle_logswitches'] = "oracle_logswitches" 
+checkgroup_of['oracle_logswitches'] = "oracle_logswitches"
 check_includes['oracle_logswitches'] = [ "oracle.include" ]

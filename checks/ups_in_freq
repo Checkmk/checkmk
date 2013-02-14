@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-ups_in_freq_default_levels = (45, 40) # warning / critical 
+ups_in_freq_default_levels = (45, 40) # warning / critical
 
 def inventory_ups_in_freq(info):
     if len(info) > 0:
@@ -35,10 +35,10 @@ def check_ups_in_freq(item, params, info):
     warn, crit = params
     for line in info:
 	if line[0] == item:
-	    power = int(line[1]) / 10 
+	    power = int(line[1]) / 10
 	    perfdata = [ ( "in_freq", power, warn, crit, 30, 70 ) ]
 	    infotext = " - current in freq: %dHz (warn/crit at %d/%d Hz)" % \
-	 	(power, warn, crit)	
+	 	(power, warn, crit)
 
 	    if power <= crit:
 		return (2, "CRIT" + infotext, perfdata)
@@ -46,7 +46,7 @@ def check_ups_in_freq(item, params, info):
 		return (1, "WARN" + infotext, perfdata)
 	    else:
 		return (0, "OK" + infotext, perfdata)
-	    
+
     return (3, "UNKNOWN - Phase %s not found in SNMP output" % item)
 
 

@@ -185,11 +185,11 @@ multisite_painter_options["aggr_onlyproblems"] = {
 multisite_painter_options["aggr_treetype"] = {
  "title"   : _("Type of tree layout"),
  "default" : "foldable",
- "values"  : [ 
-    ("foldable",     _("foldable")), 
+ "values"  : [
+    ("foldable",     _("foldable")),
     ("boxes",        _("boxes")),
     ("boxes-omit-root", _("boxes (omit root)")),
-    ("bottom-up",    _("bottom up")), 
+    ("bottom-up",    _("bottom up")),
     ("top-down",     _("top down"))]
 }
 
@@ -429,7 +429,7 @@ class BIStatusFilter(Filter):
             defval = ""
         else:
             defval = "on"
-        for varend, text in [('0', 'OK'), ('1', 'WARN'), ('2', 'CRIT'), 
+        for varend, text in [('0', 'OK'), ('1', 'WARN'), ('2', 'CRIT'),
                              ('3', 'UNKN'), ('-1', 'PENDING'), ('n', _('no assumed state set'))]:
             if self.code != 'a' and varend == 'n':
                 continue # no unset for read and effective state

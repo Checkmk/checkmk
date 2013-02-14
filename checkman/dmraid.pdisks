@@ -7,10 +7,10 @@ description:
  This check monitors the state of physical disks (RAID arrays) of a BIOS-controlled software raid,
  that is managed using the dmraid utility. The types of supported arrays can be listed using {dmraid -l}.
  The Linux agent detects such array if the {dmraid} command line utility  is found in the shell
- search path. 
+ search path.
 
  The utility {dmraid} is available/installable in all linux distributions.
- 
+
  The check will return CRITICAL if a disk is failed or missing/removed. Otherwise it will return OK.
 
 item:

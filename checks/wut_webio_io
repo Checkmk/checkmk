@@ -54,7 +54,7 @@ def parse_webio_io_inputs(info):
         state = int(state)
         input_index = str(int(input_index) - 1)
         if len(input_index) < 2:
-            input_index  = "0" + input_index 
+            input_index  = "0" + input_index
 
         if input_desc.startswith("Input"):
             input_desc = input_index
@@ -85,11 +85,11 @@ def check_wut_webio_io_inputs(item, params, info):
             # Compare to the state of the IO port at inventory.
             if state != params:
                 return (2, "CRITICAL - state should be %s but is %s (!!)" % (
-                           webio_state_names[params], 
+                           webio_state_names[params],
                            webio_state_names[state]))
             else:
                 return (0, "OK - state is %s" % webio_state_names[state])
- 
+
 
     return (3, "UNKNOWN - Item not found in agent output")
 
@@ -97,13 +97,13 @@ def check_wut_webio_io_inputs(item, params, info):
 check_info['wut_webio_io.inputs'] = {
     "check_function"     : check_wut_webio_io_inputs,
     "inventory_function" : inventory_wut_webio_io_inputs,
-    "service_description": "INPUT %s", 
+    "service_description": "INPUT %s",
     "has_perfdata"       : False,
    # "group"              : "",
    # "default_levels_variable" : "services_default_levels",
     # first check we have a vendor mib from W&T, then check for the model in their MIB.
     "snmp_scan_function" : lambda oid:  \
-         ".1.3.6.1.4.1.5040" in oid("1.3.6.1.2.1.1.2.0") and 
+         ".1.3.6.1.4.1.5040" in oid("1.3.6.1.2.1.1.2.0") and
          oid(".1.3.6.1.4.1.5040.1.2.4.3.3.5.0").lower().startswith("web-io"),
     "snmp_info"          : (".1.3.6.1.4.1.5040.1.2.4", [
          "3.1.5.2.1.1",    # io port index. (bugged)

@@ -363,9 +363,9 @@ def parse_file(host, file, hidecontext = False):
                 elif line[0] == 'C':
                     line_level = 2
                     line_class = 'CRIT'
-                
-                elif line[0] == 'O': 
-                    line_level = 0 
+
+                elif line[0] == 'O':
+                    line_level = 0
                     line_class = 'OK'
 
                 elif not hidecontext:

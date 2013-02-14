@@ -69,8 +69,8 @@ def inventory_zpool_status(info):
 
 def check_zpool_status(_no_item, _no_params, info):
     if " ".join(info[0]) == "all pools are healthy":
-        return(0, "OK - All pools are healthy") 
-    
+        return(0, "OK - All pools are healthy")
+
     start_pool = False
     last_pool = None
     error_pools = {}
@@ -84,19 +84,19 @@ def check_zpool_status(_no_item, _no_params, info):
         if line[0] == "NAME":
             start_pool = True
             continue
-        
+
         if line[0] == "errors:":
-            start_pool = False  
+            start_pool = False
             pool_messages[last_pool] = " ".join(line[1:])
             continue
-        
+
         if line[0] == "spares":
-            start_pool = False  
+            start_pool = False
             continue
 
-        if start_pool == True: 
-            if line[1] != "ONLINE": 
-                error_pools[line[0]] = tuple(line[1:]) 
+        if start_pool == True:
+            if line[1] != "ONLINE":
+                error_pools[line[0]] = tuple(line[1:])
                 continue
 
             if saveint(line[4]) != 0:
@@ -108,11 +108,11 @@ def check_zpool_status(_no_item, _no_params, info):
 
     for pool in warning_pools.keys():
         state = 1
-        message.append("%s CKSUM:%d(!)" % (pool, saveint(warning_pools[pool][3]))) 
+        message.append("%s CKSUM:%d(!)" % (pool, saveint(warning_pools[pool][3])))
 
     for pool in error_pools.keys():
         state = 2
-        message.append("%s State:%s(!!)" % (pool, error_pools[pool][0])) 
+        message.append("%s State:%s(!!)" % (pool, error_pools[pool][0]))
     if len(message) == 0:
         message = ['No critical errors']
     return (state, nagios_state_names[state] + " - " + ", ".join(message))

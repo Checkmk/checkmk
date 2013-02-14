@@ -45,16 +45,16 @@ register_rule(group,
               TextAscii(
                   title = _("vSphere secret"),
                   allow_empty = False,
-              )  
+              )
             ),
             ( "tcp_port",
               Integer(
                    title = _("TCP Port number"),
                    help = _("Port number for connecting to vSphere"),
-                   default_value = 4711, 
+                   default_value = 4711,
                    minvalue = 1,
                    maxvalue = 65535,
-              )  
+              )
             ),
             ( "infos",
               ListChoice(

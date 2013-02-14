@@ -65,11 +65,11 @@ register_rule(group,
                          title = _("Expected response time"),
                          elements = [
                              Float(
-                                 title = _("Warning at"), 
+                                 title = _("Warning at"),
                                  unit = "sec",
                                  default_value = 1),
                              Float(
-                                 title = _("Critical at"), 
+                                 title = _("Critical at"),
                                  unit = "sec",
                                  default_value = 2),
                          ])
@@ -110,11 +110,11 @@ register_rule(group,
                          title = _("Expected response time"),
                          elements = [
                              Float(
-                                 title = _("Warning at"), 
+                                 title = _("Warning at"),
                                  unit = "ms",
                                  default_value = 100.0),
                              Float(
-                                 title = _("Critical at"), 
+                                 title = _("Critical at"),
                                  unit = "ms",
                                  default_value = 200.0),
                          ])
@@ -200,7 +200,7 @@ register_rule(group,
                           value = True,
                           totext = _("use SSL"),
                           title = _("Use SSL for the connection."))
-                      
+
                     ),
                     ( "cert_days",
                       Integer(
@@ -274,10 +274,10 @@ register_rule(group,
                                allow_empty = False,
                                default_value = "/")
                            ),
-                           ( "port", 
+                           ( "port",
                              Integer(
-                               title = _("TCP Port"), 
-                               minvalue = 1, 
+                               title = _("TCP Port"),
+                               minvalue = 1,
                                maxvalue = 65535,
                                default_value = 80)
                            ),
@@ -299,11 +299,11 @@ register_rule(group,
                                  title = _("Expected response time"),
                                  elements = [
                                      Float(
-                                         title = _("Warning at"), 
+                                         title = _("Warning at"),
                                          unit = "ms",
                                          default_value = 100.0),
                                      Float(
-                                         title = _("Critical at"), 
+                                         title = _("Critical at"),
                                          unit = "ms",
                                          default_value = 200.0),
                                  ])
@@ -466,10 +466,10 @@ register_rule(group,
                                  unit = _("days"),
                              )
                           ),
-                           ( "cert_host", 
+                           ( "cert_host",
                              TextAscii(
-                               title = _("Check Cerficate on diffrent IP/ DNS Name"), 
-                               help = _("For each SSL cerficate on a host, a diffrent IP address is needed. " 
+                               title = _("Check Cerficate on diffrent IP/ DNS Name"),
+                               help = _("For each SSL cerficate on a host, a diffrent IP address is needed. "
                                         "Here you can specify there address if it differs from the  "
                                         "address from the host primary address."),
                             )
@@ -532,11 +532,11 @@ register_rule(group,
                         ]
                       )
                    ),
-                   ( "port", 
+                   ( "port",
                      Integer(
-                       title = _("TCP Port"), 
+                       title = _("TCP Port"),
                        help = _("Default is 389 for normal connetions and 636 for SSL connections."),
-                       minvalue = 1, 
+                       minvalue = 1,
                        maxvalue = 65535,
                        default_value = 389)
                    ),
@@ -546,7 +546,7 @@ register_rule(group,
                           totext = _("Use SSL"),
                           title = _("Use LDAPS (SSL)"),
                           help = _("Use LDAPS (LDAP SSLv2 method). This sets the default port number to 636"))
-                      
+
                    ),
                    ( "version",
                      DropdownChoice(
@@ -565,11 +565,11 @@ register_rule(group,
                          title = _("Expected response time"),
                          elements = [
                              Float(
-                                 title = _("Warning at"), 
+                                 title = _("Warning at"),
                                  unit = "ms",
                                  default_value = 1000.0),
                              Float(
-                                 title = _("Critical at"), 
+                                 title = _("Critical at"),
                                  unit = "ms",
                                  default_value = 2000.0),
                          ])
@@ -740,7 +740,7 @@ register_rule(group,
                  "checks that are fed with data from external sources via the Nagios "
                  "command pipe."),
         elements = [
-            ( "service_description", 
+            ( "service_description",
               TextUnicode(
                   title = _("Service description"),
                   help = _("Please make sure that this is unique per host "

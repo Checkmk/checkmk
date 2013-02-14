@@ -27,7 +27,7 @@
 cisco_cpu_default_levels = (80.0, 90.0)
 
 def check_cisco_cpu(item, params, info):
-    util = float(info[0][0]) 
+    util = float(info[0][0])
     infotext = " - %2.1f%% utilization in last 5minutes" % util
     warn, crit = params
     perfdata = [("util", util, warn, crit, 0, 100)]

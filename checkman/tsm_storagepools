@@ -4,7 +4,7 @@ author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check is used on servers running Tivoli storage manager to 
+ This check is used on servers running Tivoli storage manager to
  get and track information about the capacity stored in storage pools.
  It reports based on the LOGICAL_MB used field of the TSM database, but converts it to human-readable units.
 
@@ -18,4 +18,4 @@ inventory:
 
 perfdata:
   The used capacity in Megabytes.
- 
+

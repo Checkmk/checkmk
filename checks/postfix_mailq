@@ -51,7 +51,7 @@
 #                                          lm@larsmichelsen.com
 #
 # -- 1 Kbytes in 1 Request.
-# 
+#
 # Yet another one (I believe, this is from sendmail, though:)
 # <<<postfix_mailq>>>
 #       8BITMIME   (Deferred: Connection refused by mail.gargl.com.)
@@ -60,7 +60,7 @@
 #                  (Deferred: 451 Try again later)
 #                                          <wrdlpfrmpft@karl-valentin.com>
 #                 Total requests: 2
-# 
+#
 
 # WARN num, CRIT num
 postfix_mailq_default_levels = (10, 20)

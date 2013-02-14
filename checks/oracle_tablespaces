@@ -164,9 +164,9 @@ def check_oracle_tablespaces(item, params, info):
     num_increments = 0
     increment_size = 0
     free_space = 0
-    
+
     # Conversion of old autochecks params
-    if type(params) == tuple: 
+    if type(params) == tuple:
         params = { "autoextend" : params[0], "levels" : params[1:] }
 
     autoext = params.get("autoextend")

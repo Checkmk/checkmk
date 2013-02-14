@@ -36,8 +36,8 @@ check_info['pdu_gude_8301'] = {
     'inventory_function' : inventory_pdu_gude,
     'snmp_scan_function' : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.28507.26"],
     'service_description' : 'Phase %s',
-    'group' : 'pdu_gude', 
+    'group' : 'pdu_gude',
     'has_perfdata' : True,
-    'snmp_info' : ( '.1.3.6.1.4.1.28507.26.1.5.1.2.1', [3, 4, 5, 6,10] ), 
+    'snmp_info' : ( '.1.3.6.1.4.1.28507.26.1.5.1.2.1', [3, 4, 5, 6,10] ),
     'includes' : ["pdu_gude.include"],
 }

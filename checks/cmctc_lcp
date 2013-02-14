@@ -25,26 +25,26 @@
 # Boston, MA 02110-1301 USA.
 
 
-cmctc_lcp_sensors = {       
-       # Blower 
-       40 : ("1", "blower", ),  
-       41 : ("2", "blower", ),  
-       42 : ("3", "blower", ),  
-       43 : ("4", "blower", ),  
-       44 : ("5", "blower", ),  
-       45 : ("6", "blower", ),  
-       
+cmctc_lcp_sensors = {
+       # Blower
+       40 : ("1", "blower", ),
+       41 : ("2", "blower", ),
+       42 : ("3", "blower", ),
+       43 : ("4", "blower", ),
+       44 : ("5", "blower", ),
+       45 : ("6", "blower", ),
+
        # Server in/out
        48 : ("Server in 1",           "temp", ),
        49 : ("Server out 1",          "temp", ),
        50 : ("Server in 2",           "temp", ),
        51 : ("Server out 2",          "temp", ),
        52 : ("Server in 3",           "temp", ),
-       53 : ("Server out 3",          "temp", ),       
+       53 : ("Server out 3",          "temp", ),
 
        # Overview Server
-       56 : ("Overview Server in",    "temp", ), 
-       57 : ("Overview Server out",   "temp", ), 
+       56 : ("Overview Server in",    "temp", ),
+       57 : ("Overview Server out",   "temp", ),
 
        # Water
        58 : ("Water in",     "temp", ),
@@ -64,13 +64,13 @@ cmctc_lcp_sensortypes = {
     "regulator" :   ( "%",     "Regulator" ),
 }
 
-def inventory_cmctc_lcp(info, sensortype): 
+def inventory_cmctc_lcp(info, sensortype):
     inventory = []
     for index, typeid, status, value, description in info:
         typeid = saveint(typeid)
-        if typeid in cmctc_lcp_sensors: 
+        if typeid in cmctc_lcp_sensors:
             item, st = cmctc_lcp_sensors[typeid]
-            if st == sensortype: 
+            if st == sensortype:
                 if item:
                     item = item + " - " + index
                 else:
@@ -115,7 +115,7 @@ snmp_scan_functions["cmctc_lcp"] = \
 snmp_info["cmctc_lcp"] = (
    ".1.3.6.1.4.1.2606.4.2",
    ["3", "4", "5", "6"],
-   [  
+   [
      "5.2.1.1", # Index
      "5.2.1.2", # Sensor Type
      "5.2.1.4", # Status
@@ -123,7 +123,7 @@ snmp_info["cmctc_lcp"] = (
      "7.2.1.2", # Description
    ]
 )
-    
+
 
 for s, i in cmctc_lcp_sensortypes.items():
     check_info['cmctc_lcp.' + s] = {

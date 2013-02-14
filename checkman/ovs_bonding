@@ -16,7 +16,7 @@ item:
 inventory:
  One check per {active} bonding interface will be created. During inventory
  the currently active interface will be considered to be the primary
- interface. This is only relevant if you configure a detection of 
+ interface. This is only relevant if you configure a detection of
  a change in the active interface.
 
 [parameters]

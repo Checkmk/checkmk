@@ -1,4 +1,8 @@
 1.2.2b2:
+    Checks & Agents:
+    * Added dynamic thresholds to the oracle_tablespace check depending on the
+      size of the tablespaces.
+
     BI:
     * FIX: fix exception in BI-Boxes views of host groups
 

@@ -70,10 +70,6 @@ check-binaries:
 	    echo -n "Checking precompiled binaries..." && file agents/waitmax | grep 32-bit >/dev/null && echo OK ; \
 	fi
 
-check-uncommitted:
-	@echo -n "Checking for uncommitted changes..."
-	@if git status --porcelain | grep . ; then false ; else true ; fi
-
 check-version:
 	@sed -n 1p ChangeLog | fgrep -qx '$(VERSION):' || { \
 	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \

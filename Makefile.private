@@ -17,6 +17,10 @@ release:
 	@$(MAKE) -C ../mkde update-checkmk
 
 
+check-uncommitted:
+	@echo -n "Checking for uncommitted changes..."
+	@if git status --porcelain | grep . ; then false ; else true ; fi
+
 check-git:
 	@BRANCH=$$(cat .git/HEAD | cut -d/ -f3) ; echo $$BRANCH && \
           git fetch origin $$BRANCH && \

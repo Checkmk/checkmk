@@ -1084,7 +1084,6 @@ class EventServer:
                 "last"         : now,
                 "comment"      : "",
                 "host"         : "",
-                "contact"      : "",
                 "application"  : "", 
                 "pid"          : 0,
                 "priority"     : 3,

@@ -3,10 +3,14 @@ CHECKMANDIR	= ~/git/mkde/htdocs/checkmk
 # These are targets only needed by the maintainers of 
 # the official distribution of Check_MK
 
-upload:
-	scp $(DISTNAME).tar.gz mathias-kettner.de:/var/www/80/mathias-kettner.de/download/
-	diff <(curl -s $(DOWNLOADURL)) $(DISTNAME).tar.gz
-	@echo "Alles OK. URL ist: $(DOWNLOADURL)"
+foo:
+	@echo "Possible targets: release mkde"
+
+release:
+	@$(MAKE) check-uncommitted
+	@$(MAKE) check
+	@$(MAKE) dist
+	
 
 mkde:
 	cp -v agents/windows/install_agent.exe check-mk-agent-$(VERSION).exe

@@ -106,7 +106,6 @@ def get_tablespace_levels_in_bytes(size_bytes, params):
         found = False
         for to_size, this_levels in params.get("levels"):
             if size_bytes > to_size:
-                print 'match', to_size, this_levels
                 warn, crit = this_levels
                 found = True
         if not found:

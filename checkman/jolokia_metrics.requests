@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check allows to track the number and rate of incoming requests to
  a JVM application server on BEA weblogic.
- 
+
  To use this plugin, Jolokia and the agent plugin need to be deployed
  on the monitored server in each application container.
 

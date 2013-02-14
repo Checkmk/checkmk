@@ -76,7 +76,7 @@ def check_tsm_drives(item, params, info):
                 else:
                     serial = None
                     infotext = ""
-                
+
                 monstate = 0
                 infotext += "state: %s" % state
                 if state in [ "UNAVAILABLE", "UNKNOWN" ]:

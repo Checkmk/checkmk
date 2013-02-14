@@ -3,28 +3,28 @@ agents: linux
 author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk
-description: 
- This check monitors the existance and status of battery backup units on controllers 
- that are based on the mid- and highend LSI Megaraid chipsets. The entry chipsets do 
- not support BBUs. The Linux agent will try find any existing BBUs - if {MegaCli} is 
+description:
+ This check monitors the existance and status of battery backup units on controllers
+ that are based on the mid- and highend LSI Megaraid chipsets. The entry chipsets do
+ not support BBUs. The Linux agent will try find any existing BBUs - if {MegaCli} is
  found in your search path.
- The BBUs might come in various types {(iBBU, BBU)} and also some other vendors are 
+ The BBUs might come in various types {(iBBU, BBU)} and also some other vendors are
  using this RAID chip. It is tested against Intel, Dell, IBM and FSC models.
- 
- The check works by matching the agent output against a dictionary of expected values. 
- If you have MegaCli installed  and some values are not detected, it might be neccessary 
+
+ The check works by matching the agent output against a dictionary of expected values.
+ If you have MegaCli installed  and some values are not detected, it might be neccessary
  to update your version of MegaCli.
 
- {MegaCli} can be downloaded from LSI at the following URL 
- {http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip} 
+ {MegaCli} can be downloaded from LSI at the following URL
+ {http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip}
 
- It would be possible to make the warning / critical levels user specifiable. 
+ It would be possible to make the warning / critical levels user specifiable.
  See the check source for this if you have a need to influence those parameters.
- Most controllers run a "battery learn cycle" periodically or on user request. 
+ Most controllers run a "battery learn cycle" periodically or on user request.
  The check detects this learn cycle and suppresses all errors while this cycle is active.
  This affects all models that do not have a flash / capacitor based BBU system.
 
-item: 
+item:
   A string "RAID Adapter/BBU" followed by the ID of the adapter as reported by MegaCli.
 
 inventory:

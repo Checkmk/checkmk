@@ -1,4 +1,4 @@
-title: Gude PDU units 
+title: Gude PDU units
 agents: snmp
 author: Bastian Kuhn <bk@mathias-kettner.de>
 license: GPL
@@ -13,7 +13,7 @@ perfdata:
  kWh, W, A, V, VA
 
 inventory:
- One service per Phase 
+ One service per Phase
 
 examples:
  pdu_gude_default_levels = {

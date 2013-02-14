@@ -442,7 +442,7 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
                     state = row.get("service_state", 0)
             else:
                 state = 0
-            
+
             odd = odd == "odd" and "even" or "odd"
             html.write('<tr class="data %s %s%d">' % (num_columns > 1 and "multicolumn" or "", odd, state))
 

@@ -540,26 +540,26 @@ table.tacticaloverview {
    width: %dpx;
    margin-top: -7px;
 }
-table.tacticaloverview th { 
-    font-size: 8pt; 
+table.tacticaloverview th {
+    font-size: 8pt;
     line-height: 7pt;
-    text-align: left; 
-    color: #123a4a; 
-    font-weight: normal; 
-    padding: 0; 
-    padding-top: 2px; 
+    text-align: left;
+    color: #123a4a;
+    font-weight: normal;
+    padding: 0;
+    padding-top: 2px;
     vertical-align: bottom;
 }
-table.tacticaloverview td { 
-    width: 33.3%%; 
-    text-align: right; 
+table.tacticaloverview td {
+    width: 33.3%%;
+    text-align: right;
     /* border: 1px solid #123a4a; */
     background-color: #6da1b8;
-    padding: 0px; 
-    height: 14px; 
+    padding: 0px;
+    height: 14px;
     /* box-shadow: 1px 0px 1px #386068; */
 }
-table.tacticaloverview td.prob { 
+table.tacticaloverview td.prob {
     box-shadow: 0px 0px 4px #ffd000;
 }
 table.tacticaloverview a { display: block; margin-right: 2px; }
@@ -909,7 +909,7 @@ def render_master_control():
             url = defaults.url_prefix + ("check_mk/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
             onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
             html.write("<tr><td class=left>%s</td><td>" % title)
-            html.icon_button("#", _("Switch %s %s") % (title, colvalue and "off" or "on"), 
+            html.icon_button("#", _("Switch %s %s") % (title, colvalue and "off" or "on"),
                              "snapin_switch_" + (colvalue and "on" or "off"), onclick=onclick)
             html.write("</td></tr>")
             # html.write("<a onclick=\"%s\" href=\"#\">%s</a></td></tr>\n" % (title, enabled, onclick, enabled))
@@ -949,7 +949,7 @@ div.snapin table.master_control td img.iconbutton {
     height: 16px;
 }
 
-""" 
+"""
 }
 
 # ---------------------------------------------------------

@@ -4,7 +4,7 @@ author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check checks for available updates via {zypper} and SLES 
+ This check checks for available updates via {zypper} and SLES
  and OPENSUSE distributions. You need to install the plugin {mk_zypper}
  into the {plugins} directory of your agent.
 

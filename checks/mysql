@@ -79,7 +79,7 @@ def parse_mysql(info):
 
 # params:
 # { "running" : (20, 40),
-#    "total" : (100, 400), 
+#    "total" : (100, 400),
 #    "connections" : (3, 5 ),
 # }
 
@@ -96,7 +96,7 @@ def check_mysql_sessions(_no_item, params, info):
     infos = []
     perfdata = []
     status = 0
-    
+
     for value, what, format, unit in [
         ( total_sessions,   "total",       "%d",   "" ),
         ( running_sessions, "running",     "%d",   "" ),
@@ -115,7 +115,7 @@ def check_mysql_sessions(_no_item, params, info):
         perfdata.append((what, value, warn, crit))
 
     infotext = " - " + ", ".join(infos)
-    return (status, nagios_state_names[status] + infotext, perfdata) 
+    return (status, nagios_state_names[status] + infotext, perfdata)
 
 
 check_info['mysql.sessions'] = {

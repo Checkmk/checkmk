@@ -615,7 +615,7 @@ table.validationerror img {
     width: 360px;
 }
 
-/* Special styling for Timeperiods editor */ 
+/* Special styling for Timeperiods editor */
 .wato table.timeperiod td.name {
     width: 195px;
 }
@@ -672,7 +672,7 @@ form.search {
 }
 
 .wato div.mainmenu div {
-    text-decoration: none; 
+    text-decoration: none;
     color: white;
 }
 .wato div.mainmenu img {
@@ -1027,7 +1027,7 @@ table.logwatch span.match {
 table.multisite_conn_method td {
     padding: 0px;
     height: 22px;
-    vertical-align: top; 
+    vertical-align: top;
 }
 table.multisite_conn_method td input {
     height: 18px;

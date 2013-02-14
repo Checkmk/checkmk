@@ -55,7 +55,7 @@ function wato_toggle_attribute(oCheckbox, attrname) {
     var oEntry =   document.getElementById("attr_entry_" + attrname);
     var oDefault = document.getElementById("attr_default_" + attrname);
 
-    // Permanent invisible attributes do 
+    // Permanent invisible attributes do
     // not have attr_entry / attr_default
     if( !oEntry ){
        return;
@@ -118,7 +118,7 @@ function wato_fix_visibility() {
     /* Now loop over all attributes that have conditions. Those are
        stored in the global variable wato_depends_on_tags, which is filled
        during the creation of the web page. */
-    
+
     for (var i in wato_check_attributes) {
         var attrname = wato_check_attributes[i];
         /* Now comes the tricky part: decide whether that attribute should
@@ -130,7 +130,7 @@ function wato_fix_visibility() {
             display = "none";
         }
 
-        // Visibility depends on roles 
+        // Visibility depends on roles
         if( display == "" && attrname in wato_depends_on_roles){
             for (var i in wato_depends_on_roles[attrname]) {
                 var role = wato_depends_on_roles[attrname][i];
@@ -143,8 +143,8 @@ function wato_fix_visibility() {
                 }
             }
         }
-        
-        // Visibility depends on tags 
+
+        // Visibility depends on tags
         if( display == "" && attrname in wato_depends_on_tags){
             for (var i in wato_depends_on_tags[attrname]) {
                 var tag = wato_depends_on_tags[attrname][i];
@@ -517,7 +517,7 @@ function wato_activation_result(siteid, code) {
     } else {
         oState.innerHTML = '';
         oMsg.innerHTML = code;
-        
+
         // Show the activate changes button again
         var button = document.getElementById('act_changes_button');
         if(button) {
@@ -577,8 +577,8 @@ function wato_replication_result(siteid, code) {
 
 function wato_replication_finish() {
     // check if we have a sidebar-main frame setup
-    if (this.parent && parent && parent.frames[1] == this) 
-        parent.frames[0].location.reload(); // reload sidebar 
+    if (this.parent && parent && parent.frames[1] == this)
+        parent.frames[0].location.reload(); // reload sidebar
 
     // always reload main
     // this.location.reload();
@@ -635,7 +635,7 @@ function wato_toggle_folder(event, oDiv, on) {
             node = node.parentNode;
         }
     }
-    
+
     var obj = oDiv.parentNode;
     var id = obj.id.substr(7);
 

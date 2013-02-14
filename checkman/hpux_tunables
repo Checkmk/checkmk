@@ -8,7 +8,7 @@ description:
  systems that support the {"kcusage"} command. The command should be available
  from HP-UX 11.20 to the current 11.31.
 
- Typical tunables are the number of running processes or the number of 
+ Typical tunables are the number of running processes or the number of
  semaphores for applications using IPC.
  The check can alert you if the usage of a certain tunable element exceeds
  a configurable threshold, which is set as a percentage.
@@ -26,7 +26,7 @@ item:
  {None}
 
 inventory:
- {hpux_tunables} generates one check per host for each of the supported 
+ {hpux_tunables} generates one check per host for each of the supported
  tunables.
 
 examples:
@@ -40,7 +40,7 @@ examples:
  ]
 
 perfdata:
-  The name of the tunable along with it's usage, threshold and warning / 
+  The name of the tunable along with it's usage, threshold and warning /
   crit levels.
 
 [parameters]
@@ -58,7 +58,7 @@ hpux_tunables_nproc_default_levels (float, float):
   processes.
 
 hpux_tunables_nkthread_default_levels (float, float):
-  The percentage of threads of running processes compared to the kernel limit 
+  The percentage of threads of running processes compared to the kernel limit
   for running threads.
 
 

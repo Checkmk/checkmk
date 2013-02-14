@@ -84,10 +84,10 @@ def check_livestatus_status(item, _no_params, info):
         except MKCounterWrapped:
             wrapped = True
 
-    infos += [ "Core version: %s" % status["program_version"], 
+    infos += [ "Core version: %s" % status["program_version"],
               "Livestatus version: %s" % status["livestatus_version"]]
     return (0, "OK - " + ", ".join(infos), perfdata)
- 
+
 
 check_info['livestatus_status'] = {
     "check_function"          : check_livestatus_status,

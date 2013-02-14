@@ -83,8 +83,8 @@ parameters (dict):
  apply thresholds to tablespace checks depending on their size, just like using the
  magic factor, but more simple do configure. To configure thi, you have to set this
  variable to a list of tuples, where the first element is an integer representing
- the minimum tablespace size in bytes to apply these thresholds to and a tuple 
- containing the thresholds as described above. 
+ the minimum tablespace size in bytes to apply these thresholds to and a tuple
+ containing the thresholds as described above.
 
  {"magic"}: The magic number, which scales the levels according to the tablespace size.
  Default is a factor of 1.0, which does no adaptation. A factor less than 1.0 raises the levels

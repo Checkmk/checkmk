@@ -136,7 +136,7 @@ def sidebar_head():
 def sidebar_foot():
     html.write('<div id="side_footer">')
     if config.may("general.configure_sidebar"):
-        html.icon_button("sidebar_add_snapin.py", _("Add snapin to the sidebar"), "sidebar_addsnapin", 
+        html.icon_button("sidebar_add_snapin.py", _("Add snapin to the sidebar"), "sidebar_addsnapin",
                          target="main")
     if config.may("general.edit_profile") or config.may("general.change_password"):
         html.icon_button("user_profile.py", _("Edit your personal settings, change your password"), "sidebar_settings",
@@ -231,7 +231,7 @@ def render_snapin(name, state):
     if config.may("general.configure_sidebar"):
         # Button for closing (removing) a snapin
         html.write('<div class="closesnapin">')
-        iconbutton("closesnapin", "sidebar_openclose.py?name=%s&state=off" % name, 
+        iconbutton("closesnapin", "sidebar_openclose.py?name=%s&state=off" % name,
                    "side", "removeSnapin", 'snapin_'+name)
         html.write('</div>')
 

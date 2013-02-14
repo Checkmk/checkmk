@@ -156,9 +156,9 @@ int main(int argc, char **argv)
                 int bytes_read = 0;
                 char *ptr_output = output;
                 const char *ptr_end = output + sizeof(output) - 1;
-                while ((bytes_read = read(fd[0], ptr_output, ptr_end - ptr_output)) != 0) { 
+                while ((bytes_read = read(fd[0], ptr_output, ptr_end - ptr_output)) != 0) {
                     ptr_output += bytes_read;
-                    if (ptr_output == ptr_end) 
+                    if (ptr_output == ptr_end)
                         break;
                 }
                 *ptr_output = 0;
@@ -245,7 +245,7 @@ int main(int argc, char **argv)
     }
 }
 
-static char **parse_into_arguments(char *command) 
+static char **parse_into_arguments(char *command)
 {
     static char *arguments[128];
     char *c = command;

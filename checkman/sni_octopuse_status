@@ -4,14 +4,14 @@ author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check queries the global status of local PBX supporting the 
+ This check queries the global status of local PBX supporting the
  SNI-OCTOPUS-E Mib.
  Most common example is the Siemens HiPath 3000 and 5000 series.
  The device uses this status to reflect the worst state of all parts that do
  report such a status. (It is not documented which those are)
- It knows 5 different states ranging from "normal" to "critical", which are 
+ It knows 5 different states ranging from "normal" to "critical", which are
  mapped into corresponding Nagios states.
- 
+
 
 
 inventory:

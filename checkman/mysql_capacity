@@ -4,21 +4,21 @@ author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check verifies the space used by MySQL databases as 
- returned from MySQL. The information is built by summing up 
+ This check verifies the space used by MySQL databases as
+ returned from MySQL. The information is built by summing up
  the space for indices and tables of a given database.
 
  It relies on the information returned from MySQL, which can be incorrect
  as MySQL does not always account for all database information.
 
- In practice, the check works well for {InnoDB}. 
+ In practice, the check works well for {InnoDB}.
  This should even include InnoDB on raw partitions.
 
  {MyISAM} reporting is not possible as MySQL does not make the
  data available. (See the dirsize checks as a workaround should you
  really use MyISAM)
 
- The check will go to {WARN} or {CRIT} levels if a user-specified 
+ The check will go to {WARN} or {CRIT} levels if a user-specified
  limit is exceeded.
 
 inventory:

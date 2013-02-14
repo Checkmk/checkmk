@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-ups_power_default_levels = (20, 1) # warning / critical 
+ups_power_default_levels = (20, 1) # warning / critical
 
 def inventory_ups_power(info):
     if len(info) > 0:

@@ -257,7 +257,7 @@ def get_host_info(hostname, ipaddress, checkname):
     # If the check want's the node info, we add an additional
     # column (as the first column) with the name of the node
     # or None (in case of non-clustered nodes). On problem arises,
-    # if we deal with subchecks. We assume that all subchecks 
+    # if we deal with subchecks. We assume that all subchecks
     # have the same setting here. If not, let's raise an exception.
     add_nodeinfo = check_info.get(checkname, {}).get("node_info", False)
 
@@ -776,7 +776,7 @@ def convert_check_info():
                 "snmp_info"               : snmp_info.get(check_type),
                 # Sometimes the scan function is assigned to the check_type
                 # rather than to the base name.
-                "snmp_scan_function"      : 
+                "snmp_scan_function"      :
                     snmp_scan_functions.get(check_type,
                         snmp_scan_functions.get(basename)),
                 "default_levels_variable" : check_default_levels.get(check_type),
@@ -809,7 +809,7 @@ def convert_check_info():
                raise MKGeneralException("Invalid check implementation: node_info for %s and %s are different." % (
                    (base_check, check_type)))
 
-    # Now gather snmp_info and snmp_scan_function back to the 
+    # Now gather snmp_info and snmp_scan_function back to the
     # original arrays. Note: these information is tied to a "agent section",
     # not to a check. Several checks may use the same SNMP info and scan function.
     for check_type, info in check_info.iteritems():
@@ -839,11 +839,11 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
         period = check_period_of(hostname, description)
         if period and not check_timeperiod(period):
             if opt_debug:
-                sys.stderr.write("Skipping service %s: currently not in timeperiod %s.\n" % 
+                sys.stderr.write("Skipping service %s: currently not in timeperiod %s.\n" %
                         (description, period))
             continue
         elif period and opt_debug:
-            sys.stderr.write("Service %s: timeperiod %s is currently active.\n" % 
+            sys.stderr.write("Service %s: timeperiod %s is currently active.\n" %
                     (description, period))
 
         # In case of a precompiled check table info is the aggrated
@@ -1145,7 +1145,7 @@ def savefloat(f):
 
 # Takes bytes as integer and returns a string which represents the bytes in a
 # more human readable form scaled to GB/MB/KB
-# The unit parameter simply changes the returned string, but does not interfere 
+# The unit parameter simply changes the returned string, but does not interfere
 # with any calcluations
 def get_bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
     # Handle negative bytes correctly
@@ -1157,11 +1157,11 @@ def get_bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
     if b >= base * base * base * base:
         return '%s%.2fT%s' % (prefix, b / base / base / base / base, unit)
     elif b >= base * base * base:
-        return '%s%.2fG%s' % (prefix, b / base / base / base, unit) 
+        return '%s%.2fG%s' % (prefix, b / base / base / base, unit)
     elif b >= base * base:
-        return '%s%.2fM%s' % (prefix, b / base / base, unit) 
+        return '%s%.2fM%s' % (prefix, b / base / base, unit)
     elif b >= base:
-        return '%s%.2fk%s' % (prefix, b / base, unit) 
+        return '%s%.2fk%s' % (prefix, b / base, unit)
     elif bytefrac:
         return '%s%.2f%s' % (prefix, b, unit)
     else: # Omit byte fractions

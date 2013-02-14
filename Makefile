@@ -60,7 +60,7 @@ dist: mk-livestatus mk-eventd
 	if [ -z "$(SKIP_SANITY_CHECKS)" ]; then \
 	    echo -n "Checking precompiled binaries..." && file agents/waitmax | grep 32-bit >/dev/null && echo OK ; \
 	fi
-	
+
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)

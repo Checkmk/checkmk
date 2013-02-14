@@ -28,7 +28,7 @@
 # snmp_scan_function
 #.1.3.6.1.2.1.1.4.0 = STRING: x.name@green-cooling.de < green-cooling match
 #.1.3.6.1.2.1.1.5.0 = STRING: pCOWeb                    < pcoweb match
-#.1.3.6.1.4.1.9839.1                                    < exists 
+#.1.3.6.1.4.1.9839.1                                    < exists
 
 # snmp_info
 #.1.3.6.1.4.1.9839.2.1.1.31.0 = INTEGER: 0   < Waterloss
@@ -77,6 +77,6 @@ check_info["carel_uniflair_cooling"]  = {
                                "1.31.0",    # Waterloss
                                "1.51.0",    # Global
                                "1.67.0",    # Unit in Emergency operation
-                               "2.6.0",     # Relative Humidity 
+                               "2.6.0",     # Relative Humidity
                                ]),
 }

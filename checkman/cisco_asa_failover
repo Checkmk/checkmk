@@ -3,26 +3,26 @@ agents: snmp
 author: Florian Heigl <fh@mathias-kettner.de>
 license: GPLv3
 distribution: check_mk
-description: 
- The Cisco "Adaptive Security Appliances" (ASA) support to run as a failover 
+description:
+ The Cisco "Adaptive Security Appliances" (ASA) support to run as a failover
  cluster.
- This check allows to monitor whether such a cluster is running normal, or 
+ This check allows to monitor whether such a cluster is running normal, or
  if it has failed over to the partner device for any reason.
 
  The check will report {OK} as long as the correct unit has the role "active" or "standby".
  If a failover has occured, the check will report a {WARNING} status.
 
- If an unknown status is encountered (other than 9 or 10 in the status OIDs) 
+ If an unknown status is encountered (other than 9 or 10 in the status OIDs)
  it will go to {UNKNOWN}.
 
  The check is not tested against un-clustered ASA devices.
- 
+
 
 perfdata:
   none
 
 
-item: 
+item:
   No item is generated.
 
 

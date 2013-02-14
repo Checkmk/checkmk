@@ -40,12 +40,12 @@ def begin(title=None, **kwargs):
         "headers" : [],
         "rows" : [],
     }
-    if kwargs.get("empty_text"): 
+    if kwargs.get("empty_text"):
         table["empty_text"] = kwargs["empty_text"]
     else:
         table["empty_text"] = _("No entries.")
-    
-    if kwargs.get("help"):  
+
+    if kwargs.get("help"):
         table["help"] = kwargs["help"]
 
     if kwargs.get("css"):

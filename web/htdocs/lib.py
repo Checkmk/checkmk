@@ -173,10 +173,10 @@ def get_languages():
 
     for lang_dir in get_language_dirs():
         try:
-            languages += [ (val, get_language_alias(val)) 
+            languages += [ (val, get_language_alias(val))
                 for val in os.listdir(lang_dir) if not '.' in val ]
         except OSError:
-            # Catch "OSError: [Errno 2] No such file or 
+            # Catch "OSError: [Errno 2] No such file or
             # directory:" when directory not exists
             pass
 

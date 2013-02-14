@@ -7,7 +7,7 @@ description:
  The CBL Airlaser is a device to transparently transport Gigabit Ethernet
  over an optical link with optional microwave fallback.
 
- The check queries a list containing all known power and temperature "status" 
+ The check queries a list containing all known power and temperature "status"
  information from the device.
  If one of the status OIDs indicates an error, the check will go to {WARN} or
  {CRIT} according to the error reported.
@@ -17,9 +17,9 @@ description:
  Note: Monitoring rx/tx attentuation will be added after more testing.
 
 inventory:
- A service will be generated if the CBL-AIRLASOR-IP1000 MIB is supported by 
+ A service will be generated if the CBL-AIRLASOR-IP1000 MIB is supported by
  the remote device.
- 
+
 perfdata:
  the check automatically generates performance data for all sensors that
  monitor a temperature.

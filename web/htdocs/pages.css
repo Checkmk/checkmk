@@ -67,7 +67,7 @@ body.main {
     font-size: 9pt;
     margin: 0;
     /* avoid white background shining through in case of unaligned image in zoomed browser view */
-    background-color: #426D8A; 
+    background-color: #426D8A;
 }
 
 body.main div.main {
@@ -448,7 +448,7 @@ input[type=radio] {
     margin-left: 0px;
 }
 input[type=checkbox] {
-    margin-left: 0px; 
+    margin-left: 0px;
 }
 
 select {
@@ -654,7 +654,7 @@ table.nform td.legend.simple {
 table.nform.narrow td.legend {
     height: 18px;
 }
-    
+
 table.nform.narrow td.content {
     height: 18px;
     padding-bottom: 2px;
@@ -713,7 +713,7 @@ div.really, div.success, div.error, div.message, div.warning {
     border-radius: 1ex;
     padding: 1em 2em;
     box-shadow: 0 0 3px #444;
-    /* border-width: 2px; 
+    /* border-width: 2px;
     border-style: solid;*/
 }
 
@@ -764,10 +764,10 @@ div.togglebutton.checkbox.down {
 }
 
 div.togglebutton.checkbox         { background-image: url("images/button_checkbox_lo.png"); }
-div.togglebutton.checkbox:hover   { background-image: url("images/button_checkbox_hi.png"); } 
+div.togglebutton.checkbox:hover   { background-image: url("images/button_checkbox_hi.png"); }
 div.togglebutton.checkbox.down       { background-image: url("images/button_checkbox_down_lo.png"); }
-div.togglebutton.checkbox.down:hover { background-image: url("images/button_checkbox_down_hi.png"); } 
-div.togglebutton.checkbox.off      { background-image: url("images/button_checkbox_off.png"); } 
+div.togglebutton.checkbox.down:hover { background-image: url("images/button_checkbox_down_hi.png"); }
+div.togglebutton.checkbox.off      { background-image: url("images/button_checkbox_off.png"); }
 
 
 /*-------------------------------------------------------------------------.

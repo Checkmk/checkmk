@@ -2065,7 +2065,6 @@ def show_command_form(is_open, datasource):
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
-    # html.write('<table class="form">')
 
     # Show command forms, grouped by (optional) command group
     by_group = {}

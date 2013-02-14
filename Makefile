@@ -74,7 +74,13 @@ check-uncommitted:
 	@echo -n "Checking for uncommitted changes..."
 	@if git status --porcelain | grep . ; then false ; else true ; fi
 
-check: check-spaces check-permissions check-binaries
+check-version:
+	@sed -n 1p ChangeLog | fgrep -x '$(VERSION):' || \
+	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
+	    false
+
+
+check: check-spaces check-permissions check-binaries check-version
 
 dist: mk-livestatus mk-eventd
 	@echo "Making $(DISTNAME)"

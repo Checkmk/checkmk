@@ -3,15 +3,30 @@ CHECKMANDIR	= ~/git/mkde/htdocs/checkmk
 # These are targets only needed by the maintainers of 
 # the official distribution of Check_MK
 
-foo:
-	@echo "Possible targets: release mkde"
-
 release:
+	@if [ -e /var/www/80/mathias-kettner.de/download/check_mk-$(VERSION).tar.gz -o \
+              -e /var/www/80/archive.mathias-kettner.de/check_mk/check_mk-$(VERSION).tar.gz ] ; then \
+            echo "Diese Release existiert schon!" ; \
+	    false ; \
+        fi
 	@$(MAKE) check-uncommitted
 	@$(MAKE) check
 	@$(MAKE) mrproper
-	@$(MAKE) dist
-	
+	@$(MAKE) dist rpm deb
+	@figlet "Fertig. Auf ins mkde..."
+
+
+check-git:
+	@BRANCH=$$(cat .git/HEAD | cut -d/ -f3) ; echo $$BRANCH && \
+          git fetch origin $$BRANCH && \
+	  fetch_head=$$(cut -d'	' -f1 .git/FETCH_HEAD) && \
+	  head=$$(cat .git/refs/heads/$$BRANCH) && \
+          [ "$$fetch_head" = "$$head" ] || { \
+	     echo "Local git branch $$BRANCH is not up-to-date!" ; \
+             echo "FETCH_HEAD: [$$fetch_head]" ; \
+	     echo "local $$BRANCH: [$$head]" ; \
+             false ; \
+          }
 
 mkde:
 	cp -v agents/windows/install_agent.exe check-mk-agent-$(VERSION).exe

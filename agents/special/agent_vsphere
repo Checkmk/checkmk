@@ -42,8 +42,8 @@ try:
     from pysphere import VIServer, VIProperty, MORTypes
     from pysphere.resources import VimService_services as VI
 except: 
-    print "<<<agent_msg>>>"
-    print "CRIT pysphere API not found. Please install and make a reinventory"
+    print "<<<local>>>"
+    print "2 Agent_error - pysphere API not found. Please install and make a reinventory"
     sys.exit(0)
 
 host = VIServer()
@@ -52,7 +52,7 @@ try:
     host.connect(params['Hostname'], params['u'], params['s'])
 except:
     print "<<<agent_msg>>>"
-    print "CRIT Cant connect to vSphere  Server. May the wrong credentials. Please correct and make a reinventory"
+    print "2 Agent_error - Cant connect to vSphere  Server. May the wrong credentials. Please correct and make a reinventory"
     sys.exit(0)
 
 print "<<<check_mk>>>"
@@ -75,6 +75,9 @@ def output_mors(what, properties):
 
         # Get the name of this Host/VirtualMachine
         name = data["name"]
+        print "<<<local>>>"
+        print "0 %s-%s - INFO - Collecting data for %s." % \ 
+        (what, name, name)
         
         ## Output multiplexed Check_MK Agent output (new in version 1.2.3i1)
         print '<<<<%s>>>>' % name

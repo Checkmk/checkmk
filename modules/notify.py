@@ -499,7 +499,7 @@ def call_notification_script(plugin, parameters, context, write_into_spoolfile):
     # Export complete context to have all vars in environment.
     # Existing vars are replaced, some already existing might remain
     for key in context:
-        os.putenv('NOTIFY_' + key, context[key])
+        os.putenv('NOTIFY_' + key, context[key].encode('utf-8'))
 
     # Remove service macros for host notifications
     if context['WHAT'] == 'HOST':

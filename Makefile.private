@@ -14,6 +14,7 @@ release:
 	@$(MAKE) mrproper
 	@$(MAKE) dist rpm deb
 	@figlet "Fertig. Auf ins mkde..."
+	@$(MAKE) -C ../mkde update-checkmk
 
 
 check-git:

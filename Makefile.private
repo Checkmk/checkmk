@@ -9,7 +9,7 @@ release:
             echo "Diese Release existiert schon!" ; \
 	    false ; \
         fi
-	@$(MAKE) check-uncommitted
+	@$(MAKE) check-uncommitted check-git
 	@$(MAKE) check
 	@$(MAKE) mrproper
 	@$(MAKE) dist rpm deb

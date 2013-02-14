@@ -438,6 +438,9 @@ def store_piggyback_info(sourcehost, piggybacked):
 def remove_piggyback_info_from(sourcehost, keep=[]):
     removed = 0
     piggyback_path = tmp_dir + "/piggyback/" 
+    if not os.path.exists(piggyback_path):
+        return # Nothing to do
+
     for backedhost in os.listdir(piggyback_path):
         if backedhost not in ['.', '..'] and backedhost not in keep:
             path = piggyback_path + backedhost + "/" + sourcehost

@@ -74,11 +74,17 @@ parameters (dict):
  {"autoextend"}: Either {True} or {False} - depending on whether auto extension is
  expected to be on or off
 
- {"levels"}: A tuple containing the warn and crit levels for free space.
+ {"levels"}: By default a tuple containing the warn and crit levels for free space.
  Supported types (int / float). If this is a float, it is considered as
  percentage of the maximum size of the tablespace. If it is an integer,
  it is considered to be MB of free space. If the space drops to this level or below,
- the check will get into warning state. Default is {(10.0, 5.0)}
+ the check will get into warning state. Default is {(10.0, 5.0)}.
+ This check also supports some kind of dynamic level definition. Using this you can
+ apply thresholds to tablespace checks depending on their size, just like using the
+ magic factor, but more simple do configure. To configure thi, you have to set this
+ variable to a list of tuples, where the first element is an integer representing
+ the minimum tablespace size in bytes to apply these thresholds to and a tuple 
+ containing the thresholds as described above. 
 
  {"magic"}: The magic number, which scales the levels according to the tablespace size.
  Default is a factor of 1.0, which does no adaptation. A factor less than 1.0 raises the levels

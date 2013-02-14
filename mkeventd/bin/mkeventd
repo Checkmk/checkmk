@@ -1088,7 +1088,6 @@ class EventServer:
                 "last"         : now,
                 "comment"      : "",
                 "host"         : "",
-                "contact"      : "",
                 "application"  : "", 
                 "pid"          : 0,
                 "priority"     : 3,
@@ -1415,7 +1414,7 @@ class EventServer:
             event["comment"] = replace_groups(rule["set_comment"], event.get("comment", ""), groups)
         if "set_application" in rule:
             event["application"] = replace_groups(rule["set_application"], event["application"], groups)
-        if "set_contact" in rule:
+        if "set_contact" in rule and "contact" not in event:
             event["contact"] = replace_groups(rule["set_contact"], event.get("contact", ""), groups)
 
     def parse_monitoring_info(self, line):
@@ -2353,7 +2352,19 @@ def send_email(to, subject, body):
     os.popen("mail -s '%s' '%s'" % (shell_escape(subject), shell_escape(to)), "w").write(body)
 
 def execute_script(body):
-    os.popen("/bin/bash", "w").write(body.encode('utf-8'))
+    p = subprocess.Popen(
+        body.encode('utf-8'),
+        shell = True,
+        executable = '/bin/bash',
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
+    output = p.stdout.read()
+    exitcode = p.wait()
+
+    if g_config["debug_rules"]:
+        if output:
+            log('  Output: %s' % output)
+        log('  Exitcode: %d' % exitcode)
 
 
 #.

@@ -94,8 +94,22 @@ def inventory_oracle_tablespaces(info):
 def get_tablespace_levels_in_bytes(size_bytes, params):
     # If the magic factor is used, take table size and magic factor
     # into account in order to move levels
-    magic      = params.get("magic")
-    warn, crit = params.get("levels")
+    magic  = params.get("magic")
+
+    # Use tablespace size dependent dynamic levels or static levels
+    size_bytes = 1031 * 1024 * 1024 * 1024
+    if type(params.get("levels")) == tuple:
+        warn, crit = params.get("levels")
+    else:
+        # A list of levels. Choose the correct one depending on the
+        # size of the current tablespace
+        found = False
+        for to_size, this_levels in params.get("levels"):
+            if size_bytes > to_size:
+                warn, crit = this_levels
+                found = True
+        if not found:
+            return (None, None)
 
     if magic:
         # convert warn/crit to percentage
@@ -131,14 +145,7 @@ def get_tablespace_levels_in_bytes(size_bytes, params):
         else:
             crit_bytes = crit * 1024 * 1024
 
-        warn_scaled = savefloat(warn_bytes / size_bytes * 100)
-        crit_scaled = savefloat(crit_bytes / size_bytes * 100)
-
-
-    levels = {}
-    levels["levels_bytes"] = (warn_bytes, crit_bytes)
-    levels["levels_text"] = "(levels at %.1f/%.1f%%)" % (warn_scaled, crit_scaled)
-    return levels
+    return warn_bytes, crit_bytes
 
 
 def check_oracle_tablespaces(item, params, info):
@@ -237,12 +244,12 @@ def check_oracle_tablespaces(item, params, info):
         infotext += ", no autoextend"
 
 
-    level_info = get_tablespace_levels_in_bytes(max_size, params)
-    warn, crit = level_info.get("levels_bytes")
+    warn, crit = get_tablespace_levels_in_bytes(max_size, params)
 
     # Check free space, but only if status is not READONLY
     if ts_status != "READONLY":
-        if free_space <= crit or free_space <= warn:
+        if (crit is not None and free_space <= crit) \
+           or (warn is not None and free_space <= warn):
             infotext += ", only %s left" % get_bytes_human_readable(free_space)
             infotext += " (levels at %s/%s)" % (
              get_bytes_human_readable(warn), get_bytes_human_readable(crit))

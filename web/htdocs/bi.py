@@ -1362,6 +1362,10 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
         if is_open == None:
             is_open = len(path) <= expansion_level
 
+        # Make sure that in case of BI Boxes (omit root) the root level is *always* visible
+        if not is_open and omit_root and len(path) == 1:
+           is_open = True
+
         h = ""
         state = tree[0]
         omit_content = lazy and not is_open

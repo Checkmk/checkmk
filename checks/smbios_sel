@@ -143,7 +143,7 @@ def check_smbios_sel(_no_item, _no_params, info):
                     sum_status = smbios_sel_msg_types[type][1]
 
             # Save the date when the current entry is newer
-            dt = datetime.datetime(*time.strptime(isodate, "%Y-%m-%d %H:%M:%S")[0:5])
+            dt = datetime.datetime(*time.strptime(isodate, "%Y-%m-%d %H:%M:%S")[:6])
             if smbios_sel_msg_types[type][3] == None or smbios_sel_msg_types[type][3] < dt:
                 smbios_sel_msg_types[type][3] = dt;
         else:

@@ -6,7 +6,7 @@ import socket, os, time, sys, getopt, signal, thread, pprint, re, \
 from pwd import getpwnam
 from grp import getgrnam
 
-VERSION="1.2.2b1"
+VERSION="1.2.2b3"
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -171,12 +171,15 @@ def regex(reg):
 # neccessary to use regular expression logic in order
 # to match it.
 def is_regex(text):
-    return text != text.translate(None, ".*?[](){}\\^$+|")
+    for c in text:
+        if c in ".*?[](){}\\^$+|":
+            return True
+    return False
 
 def match(pattern, text, complete = True):
     if pattern == None:
         return True
-    elif type(pattern) == str:
+    elif type(pattern) in [ str, unicode ]:
         if complete:
             return pattern == text.lower()
         else:
@@ -1081,7 +1084,6 @@ class EventServer:
                 "last"         : now,
                 "comment"      : "",
                 "host"         : "",
-                "contact"      : "",
                 "application"  : "", 
                 "pid"          : 0,
                 "priority"     : 3,
@@ -1135,9 +1137,11 @@ class EventServer:
                             else:
                                 rule[key] = rule[key].lower()
                 except Exception, e:
+                    if opt_debug:
+                        raise
                     rule["disabled"] = True
                     count_disabled += 1
-                    log("Ignoring rule %s because of an invalid regex (%s)." % 
+                    log("Ignoring rule '%s' because of an invalid regex (%s)." % 
                             (rule["id"], e))
 
                 if g_config["rule_optimizer"]:
@@ -1231,7 +1235,7 @@ class EventServer:
 
                 g_event_status.count_rule_match(rule["id"])
                 if g_config["log_rulehits"]:
-                    log("Rule %s hit by message %s/%s - '%s'." % (
+                    log("Rule '%s' hit by message %s/%s - '%s'." % (
                         rule["id"],
                         syslog_facilities[event["facility"]], syslog_priorities[event["priority"]],
                         event["text"]))
@@ -2299,10 +2303,10 @@ def do_rule_action(action, event, user=""):
             log_event_history(event, "SCRIPT", user, action['id'])
         else:
             log("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
-    except Exception, e:
+    except Exception:
         if opt_debug:
             raise
-        log("Error during execution of action %s: %s" % (action["id"], e))
+        log("Error during execution of action %s: %s" % (action["id"], format_exception()))
 
 def substitute_event_tags(text, event):
     groups = [("match_group_%d" % (nr+1), g) for (nr, g) in enumerate(event.get("match_groups", ()))]
@@ -2322,7 +2326,19 @@ def send_email(to, subject, body):
     os.popen("mail -s '%s' '%s'" % (shell_escape(subject), shell_escape(to)), "w").write(body)
 
 def execute_script(body):
-    os.popen("/bin/bash", "w").write(body)
+    p = subprocess.Popen(
+        body.encode('utf-8'),
+        shell = True,
+        executable = '/bin/bash',
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
+    output = p.stdout.read()
+    exitcode = p.wait()
+
+    if g_config["debug_rules"]:
+        if output:
+            log('  Output: %s' % output)
+        log('  Exitcode: %d' % exitcode)
 
 
 #.

@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check works on the number of threads running in a JVM.
  time.
- 
+
  To use this plugin, Jolokia and the agent plugin need to be installed
  on the monitored server.
 

@@ -32,7 +32,7 @@ description:
 
  {Grouping:} In some situations you do not want to monitor a single
  filesystem but a group of filesystems that together form a pool.
- It is not relevant if some filesystems of the pool are 
+ It is not relevant if some filesystems of the pool are
  full but only the total usage of the pool as whole. The {df} check supports such pools
  by defining groups. For each group you specify a name and a list
  of globbing patterns (path patterns containing {*} and {?}). The name
@@ -108,7 +108,7 @@ examples:
    # The group SAP contains filesystems containing SAP or sap, but only
    # on hosts with the tags "sap" and "linux":
    ( [('SAP', '*SAP*'), ('SAP', '*sap*')], [ 'sap', 'linux' ], ALL_HOSTS),
- ] 
+ ]
 
 
 
@@ -188,7 +188,7 @@ parameters (dict): This check supports two types of parameters. The
  and the trend.
 
  {"patterns"}: If this is contained in the dictionary then it
- must be a list of path patterns (using * and ?).  Instead of a 
+ must be a list of path patterns (using * and ?).  Instead of a
  single filesystem all filesystems matching one of the patterns
  are taken into consideration and their sizes and usages are
  summed up.

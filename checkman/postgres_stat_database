@@ -4,25 +4,25 @@ author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
-  This check handles the metrics returned from PostgreSQL's statistics 
+  This check handles the metrics returned from PostgreSQL's statistics
   functions {pg_stat_database} and {pg_database_size}.
-  It allows monitoring of {disk blocks read}, but PostgreSQL seems to not 
-  have a simple "written bytes" or "write IOs" counter, meaning this 
+  It allows monitoring of {disk blocks read}, but PostgreSQL seems to not
+  have a simple "written bytes" or "write IOs" counter, meaning this
   information cannot be directly monitored.
 
   Instead, the check allows more fine-grained monitoring of database activity
   by tracking what the queries really do.
-  You can monitor both "read statements" like {fetches}, as well as 
-  "write statements as {update/delete/insert}. Finally it allows monitoring of 
+  You can monitor both "read statements" like {fetches}, as well as
+  "write statements as {update/delete/insert}. Finally it allows monitoring of
   {commits}, which PostgreSQL tracks down to the sub-transaction level.
 
   You can then define levels on the per-second amount of the statements.
 
   This check relies on data reported by the agent-side plugin {mk_postgres}
-  
+
 inventory:
   One item is generated per database.
 
 perfdata:
-  The numbers for disk blocks read, and the number of transactions per 
+  The numbers for disk blocks read, and the number of transactions per
   transaction type.

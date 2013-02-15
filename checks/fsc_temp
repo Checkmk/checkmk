@@ -31,7 +31,7 @@
 # 6:  warning level
 # 8:  critical level
 
-def inventory_fsc_temp(info): 
+def inventory_fsc_temp(info):
     # Ignore non-connected sensors
     return [ (line[0], None) for line in info if int(line[1]) < 500 ]
 

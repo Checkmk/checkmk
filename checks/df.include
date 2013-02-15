@@ -38,7 +38,7 @@ inventory_df_exclude_mountpoints   = [ '/dev' ]
 # Example:
 # filesystem_groups = [
 #     ( [ ( "Storage pool", "/data/pool*" ) ], [ 'linux', 'prod' ], ALL_HOSTS ),
-#     ( [ ( "Backup space 1", "/usr/backup/*.xyz" ), 
+#     ( [ ( "Backup space 1", "/usr/backup/*.xyz" ),
 #         ( "Backup space 2", "/usr/backup2/*.xyz" ) ], ALL_HOSTS ),
 # ]
 filesystem_groups = []
@@ -84,7 +84,7 @@ def df_inventory(mplist):
                     break
         if not in_group:
             inventory.append((mp, {}))
-    
+
     for group_name in have_groups:
         inventory.append((group_name, { "patterns" : group_patterns[group_name] }))
 
@@ -188,7 +188,7 @@ def df_check_filesystem_list(item, params, fslist):
             if mp == item:
                 return df_check_filesystem_single(g_hostname, mp, size_mb, avail_mb, params)
         return (3, "UNKNOWN - filesystem not found")
-    
+
 
 def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
     if size_mb == 0:
@@ -297,9 +297,9 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
                 # MB / 24 hours. The same holds for the warn and crit information.
                 # It is configured in MB / trend range but in the performance data
                 # it's sent as MB / 24h.
-                perfdata.append(("trend", rate_avg * H24, 
-                                warn_perf != None and (warn_perf / range_sec * H24) or None, 
-                                crit_perf != None and (crit_perf / range_sec * H24) or None, 
+                perfdata.append(("trend", rate_avg * H24,
+                                warn_perf != None and (warn_perf / range_sec * H24) or None,
+                                crit_perf != None and (crit_perf / range_sec * H24) or None,
                                 0, size_mb / range))
 
             # compute time until filesystem is full (only for positive trend, of course)

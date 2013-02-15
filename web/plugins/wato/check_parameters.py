@@ -653,20 +653,20 @@ checkgroups.append((
                 )
             ),
             ("minsize",
-                Tuple( 
+                Tuple(
                     title = _("Minimal size"),
-                    elements = [ 
-                      Filesize(title = _("Warning lower as")), 
-                      Filesize(title = _("Critical lower as")), 
+                    elements = [
+                      Filesize(title = _("Warning lower as")),
+                      Filesize(title = _("Critical lower as")),
                     ]
                 )
             ),
             ("maxsize",
-                Tuple( 
+                Tuple(
                     title = _("Maximal size"),
-                    elements = [ 
-                      Filesize(title = _("Warning higher as")), 
-                      Filesize(title = _("Critical higher as")), 
+                    elements = [
+                      Filesize(title = _("Warning higher as")),
+                      Filesize(title = _("Critical higher as")),
                     ]
                 )
             )
@@ -784,38 +784,38 @@ checkgroups.append((
                 )
             ),
             ("minsize",
-                Tuple( 
+                Tuple(
                     title = _("Minimal size"),
-                    elements = [ 
-                      Filesize(title = _("Warning lower as")), 
-                      Filesize(title = _("Critical lower as")), 
+                    elements = [
+                      Filesize(title = _("Warning lower as")),
+                      Filesize(title = _("Critical lower as")),
                     ]
                 )
             ),
             ("maxsize",
-                Tuple( 
+                Tuple(
                     title = _("Maximal size"),
-                    elements = [ 
-                      Filesize(title = _("Warning higher as")), 
-                      Filesize(title = _("Critical higher as")), 
+                    elements = [
+                      Filesize(title = _("Warning higher as")),
+                      Filesize(title = _("Critical higher as")),
                     ]
                 )
             ),
             ("mincount",
-                Tuple( 
+                Tuple(
                     title = _("Minimal file count"),
-                    elements = [ 
-                      Integer(title = _("Warning lower as")), 
-                      Integer(title = _("Critical lower as")), 
+                    elements = [
+                      Integer(title = _("Warning lower as")),
+                      Integer(title = _("Critical lower as")),
                     ]
                 )
             ),
             ("maxcount",
-                Tuple( 
+                Tuple(
                     title = _("Maximal file count"),
-                    elements = [ 
-                      Integer(title = _("Warning higher as")), 
-                      Integer(title = _("Critical higher as")), 
+                    elements = [
+                      Integer(title = _("Warning higher as")),
+                      Integer(title = _("Critical higher as")),
                     ]
                 )
             ),
@@ -834,20 +834,20 @@ checkgroups.append((
     Dictionary(
         elements = [
             ("read",
-                Tuple( 
+                Tuple(
                     title = _("Read"),
-                    elements = [ 
-                      Filesize(title = _("Warning lower as")), 
-                      Filesize(title = _("Critical lower as")), 
+                    elements = [
+                      Filesize(title = _("Warning lower as")),
+                      Filesize(title = _("Critical lower as")),
                     ]
                 )
             ),
             ("write",
-                Tuple( 
+                Tuple(
                     title = _("Write"),
-                    elements = [ 
-                      Filesize(title = _("Warning higher as")), 
-                      Filesize(title = _("Critical higher as")), 
+                    elements = [
+                      Filesize(title = _("Warning higher as")),
+                      Filesize(title = _("Critical higher as")),
                     ]
                 )
             )
@@ -881,8 +881,8 @@ checkgroups.append((
                        Tuple(
                            title = _("Absolute levels"),
                            elements = [
-                                Filesize(title = _("Warning higher as")), 
-                                Filesize(title = _("Critical higher as")), 
+                                Filesize(title = _("Warning higher as")),
+                                Filesize(title = _("Critical higher as")),
                            ]
                         )
                    ])),
@@ -900,8 +900,8 @@ checkgroups.append((
                        Tuple(
                            title = _("Absolute levels"),
                            elements = [
-                                Filesize(title = _("Warning higher as")), 
-                                Filesize(title = _("Critical higher as")), 
+                                Filesize(title = _("Warning higher as")),
+                                Filesize(title = _("Critical higher as")),
                            ]
                         )
                    ])),
@@ -1057,10 +1057,10 @@ checkgroups.append((
                      "Active Remote Delivery<br>Active Mailbox Delivery<br>"
                      "Retry Remote Delivery<br>Poison Queue Length<br>"),
            choices = [
-              ( "Active Remote Delivery",  _("Active Remote Delivery") ), 
+              ( "Active Remote Delivery",  _("Active Remote Delivery") ),
               ( "Retry Remote Delivery",   _("Retry Remote Delivery") ),
               ( "Active Mailbox Delivery", _("Active Mailbox Delivery") ),
-              ( "Poison Queue Length",     _("Poison Queue Length") ), 
+              ( "Poison Queue Length",     _("Poison Queue Length") ),
               ],
            otherlabel = _("specify manually ->"),
            explicit = TextAscii(allow_empty = False)),
@@ -1142,8 +1142,8 @@ checkgroups.append((
 )
 
 register_check_parameters(
-    subgroup_networking, 
-    "bonding", 
+    subgroup_networking,
+    "bonding",
     _("Status of Linux bonding interfaces"),
     Dictionary(
         elements = [
@@ -1216,7 +1216,7 @@ checkgroups.append((
              ),
              ( "unit",
                RadioChoice(
-                   title = _("Measurement unit"), 
+                   title = _("Measurement unit"),
                    help = _("Here you can specifiy the measurement unit of the network interface"),
                    default_value = "byte",
                    choices = [
@@ -1397,7 +1397,7 @@ checkgroups.append((
     "akcp_humidity",
     _("AKCP Humidity Levels"),
     Tuple(
-          help = _("This Rulset sets the threshold limits for humidity sensors attached to " 
+          help = _("This Rulset sets the threshold limits for humidity sensors attached to "
                    "AKCP Sensor Probe "),
           elements = [
               Integer(title = _("Critical if moisture lower than")),
@@ -1416,26 +1416,56 @@ checkgroups.append((
     _("Oracle Tablespaces"),
     Dictionary(
         elements = [
-            ( "levels",
-               Alternative(
-                   title = _("Total tablespace size"),
-                   elements = [
-                       Tuple(
-                           title = _("Percentage levels of free maximum space"),
-                           elements = [
-                               Percentage(title = _("Warning at"), label = _("free")),
-                               Percentage(title = _("Critical at"), label = _("free")),
-                           ]
-                       ),
-                       Tuple(
-                           title = _("Absolute free space"),
-                           elements = [
-                                Integer(title = _("Warning lower than"), unit = _("MB")), 
-                                Integer(title = _("Critical lower than"), unit = _("MB")), 
-                           ]
-                        )
-                   ])),
-            (  "magic",
+            ("levels",
+                Alternative(
+                    title = _("Levels for the Tablespace size"),
+                    elements = [
+                        Tuple(
+                            title = _("Percentage free space"),
+                            elements = [
+                                Percentage(title = _("Warning below"), label = _("free")),
+                                Percentage(title = _("Critical below"), label = _("free")),
+                            ]
+                        ),
+                        Tuple(
+                            title = _("Absolute free space"),
+                            elements = [
+                                 Integer(title = _("Warning lower than"), unit = _("MB")),
+                                 Integer(title = _("Critical lower than"), unit = _("MB")),
+                            ]
+                        ),
+                        ListOf(
+                            Tuple(
+                                orientation = "horizontal",
+                                elements = [
+                                    Filesize(title = _("Tablespace larger than")),
+                                    Alternative(
+                                        title = _("Levels for the Tablespace size"),
+                                        elements = [
+                                            Tuple(
+                                                title = _("Percentage free space"),
+                                                elements = [
+                                                    Percentage(title = _("Warning below"), label = _("free")),
+                                                    Percentage(title = _("Critical below"), label = _("free")),
+                                                ]
+                                            ),
+                                            Tuple(
+                                                title = _("Absolute free space"),
+                                                elements = [
+                                                     Integer(title = _("Warning lower than"), unit = _("MB")),
+                                                     Integer(title = _("Critical lower than"), unit = _("MB")),
+                                                ]
+                                            ),
+                                        ]
+                                    ),
+                                ],
+                            ),
+                            title = _('Dynamic levels'),
+                        ),
+                    ]
+                )
+            ),
+            ("magic",
                Float(
                   title = _("Magic factor (automatic level adaptation for large tablespaces)"),
                   minvalue = 0.1,
@@ -1463,6 +1493,7 @@ checkgroups.append((
     TextAscii(
         title = _("Explicit tablespaces"),
         help = _("Here you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"),
+        regex = '.+\..+',
         allow_empty = False),
      None))
 
@@ -1472,7 +1503,7 @@ checkgroups.append((
     "oracle_logswitches",
     _("Oracle Logswitches"),
     Tuple(
-          help = _("This check monitors the number of log switches of an ORACLE " 
+          help = _("This check monitors the number of log switches of an ORACLE "
                    "database instance in the last 60 minutes. You can set levels for upper and lower bounds."),
           elements = [
               Integer(title = _("Critical if fewer than"), unit=_("log switches")),
@@ -1573,11 +1604,11 @@ checkgroups.append((
          help = _("This check monitors the current number of active sessions to the MySQL "
                   "database server as well as the connection rate."),
          elements = [
-             ( "total", 
+             ( "total",
                Tuple(
                    title = _("Number of current sessions"),
                    elements = [
-                       Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100), 
+                       Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100),
                        Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
                     ],
                ),
@@ -1587,7 +1618,7 @@ checkgroups.append((
                    title = _("Number of currently running sessions"),
                    help = _("Levels for the number of sessions that are currently active"),
                    elements = [
-                       Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 10), 
+                       Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 10),
                        Integer(title = _("Critical at"), unit = _("sessions"), default_value = 20),
                     ],
                ),
@@ -1596,7 +1627,7 @@ checkgroups.append((
                Tuple(
                    title = _("Number of new connections per second"),
                    elements = [
-                       Integer(title = _("Warning at"),  unit = _("connection/sec"), default_value = 20), 
+                       Integer(title = _("Warning at"),  unit = _("connection/sec"), default_value = 20),
                        Integer(title = _("Critical at"), unit = _("connection/sec"), default_value = 40),
                     ],
                ),
@@ -1688,11 +1719,11 @@ checkgroups.append((
     Dictionary(
          help = _("This check monitors the current number of active and idle sessions on PostgreSQL"),
          elements = [
-             ( "total", 
+             ( "total",
                Tuple(
                    title = _("Number of current sessions"),
                    elements = [
-                       Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100), 
+                       Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100),
                        Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
                     ],
                ),
@@ -1702,7 +1733,7 @@ checkgroups.append((
                    title = _("Number of currently running sessions"),
                    help = _("Levels for the number of sessions that are currently active"),
                    elements = [
-                       Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 10), 
+                       Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 10),
                        Integer(title = _("Critical at"), unit = _("sessions"), default_value = 20),
                     ],
                ),
@@ -1721,7 +1752,7 @@ checkgroups.append((
          title = _("Number of active sessions"),
          help = _("This check monitors the current number of active sessions on Oracle"),
          elements = [
-             Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100), 
+             Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100),
              Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
           ],
      ),
@@ -1736,7 +1767,7 @@ checkgroups.append((
     _("PostgreSQL Database Statistics"),
     Dictionary(
         help = _("This check monitors how often database objects in a PostgreSQL Database are accessed"),
-        elements = [ 
+        elements = [
             ( "blocks_read",
                 Tuple(
                    title = _("Blocks read"),
@@ -1746,7 +1777,7 @@ checkgroups.append((
                    ],
                 ),
             ),
-            ( "xact_commit", 
+            ( "xact_commit",
                 Tuple(
                    title = _("Commits"),
                    elements = [
@@ -1755,7 +1786,7 @@ checkgroups.append((
                    ],
                 ),
             ),
-            ( "tup_fetched", 
+            ( "tup_fetched",
                 Tuple(
                    title = _("Fetches"),
                    elements = [
@@ -1763,8 +1794,8 @@ checkgroups.append((
                       Float(title = _("Critical at"), unit = _("/s")),
                    ],
                 ),
-            ),    
-            ( "tup_deleted", 
+            ),
+            ( "tup_deleted",
                 Tuple(
                    title = _("Deletes"),
                    elements = [
@@ -1773,7 +1804,7 @@ checkgroups.append((
                    ],
                 ),
             ),
-            ( "tup_updated", 
+            ( "tup_updated",
                 Tuple(
                    title = _("Updates"),
                    elements = [
@@ -1782,7 +1813,7 @@ checkgroups.append((
                    ],
                 ),
             ),
-            ( "tup_inserted", 
+            ( "tup_inserted",
                 Tuple(
                    title = _("Inserts"),
                    elements = [
@@ -1833,7 +1864,7 @@ checkgroups.append((
     Optional(
         Tuple(
               elements = [
-                  Integer(title = _("Warning at"), unit = _("processes"), default_value = 100), 
+                  Integer(title = _("Warning at"), unit = _("processes"), default_value = 100),
                   Integer(title = _("Critical at"), unit = _("processes"), default_value = 200)]),
         title = _("Impose levels on number of processes"),
     ),
@@ -1895,7 +1926,7 @@ checkgroups.append((
                            "and write will be applied to the average instead of the current "
                            "value."),
                  unit = "min")),
-            ( "latency", 
+            ( "latency",
               Tuple(
                   title = _("IO Latency"),
                   elements = [
@@ -1910,14 +1941,14 @@ checkgroups.append((
                            "cause incompatibilities with existing historical data "
                            "if you are running PNP4Nagios in SINGLE mode.")),
             ),
-            ( "read_ql", 
+            ( "read_ql",
               Tuple(
                   title = _("Read Queue-Length"),
                   elements = [
                       Float(title = _("warning at"),  default_value = 80.0),
                       Float(title = _("critical at"), default_value = 90.0),
              ])),
-            ( "write_ql", 
+            ( "write_ql",
               Tuple(
                   title = _("Write Queue-Length"),
                   elements = [
@@ -1955,7 +1986,7 @@ register_rule(
         title = _("Inventory mode for Disk IO check"),
         help = _("This rule controls which and how many checks will be created "
                  "for monitoring individual physical and logical disks."),
-        choices = [ 
+        choices = [
            ( "summary",  _("Create a summary over all physical disks") ),
            ( "legacy",   _("Create a summary for all read, one for write") ),
            ( "physical", _("Create a separate check for each physical disk") ),
@@ -1971,14 +2002,14 @@ register_rule(group + '/' + subgroup_networking,
     varname   = "if_groups",
     title     = _('Network interface groups'),
     help      = _('Normally the if checks create a single service for interface. '
-                  'By defining if-group patterns multiple interfaces can be combined together. '  
+                  'By defining if-group patterns multiple interfaces can be combined together. '
                   'A single service is created for this interface group showing the total traffic amount '
                   'of its members. You can configure if interfaces which are identified as group interfaces '
                   'should not show up as single service'),
     valuespec = ListOf(
                     Dictionary(
                         elements = [
-                            ("name",  
+                            ("name",
                                    TextAscii(
                                        title = _("Name of group"),
                                        help  = _("Name of group in service description"),
@@ -1996,7 +2027,7 @@ register_rule(group + '/' + subgroup_networking,
                             )),
                         ],
                         required_keys = ["name", "iftype", "single"]),
-                    add_label = _("Add pattern")),  
+                    add_label = _("Add pattern")),
     match = 'list',
 )
 
@@ -2098,7 +2129,7 @@ checkgroups.append((
     _("Windows Services"),
     Dictionary(
         elements = [
-            ( "states", 
+            ( "states",
               ListOf(
                 Tuple(
                     orientation = "horizontal",
@@ -2127,7 +2158,7 @@ checkgroups.append((
                     default_value = ( "running", "auto", 0)),
                 title = _("Services states"),
                 help = _("You can specify a separate monitoring state for each possible "
-                         "combination of service state and start type. If you do not use " 
+                         "combination of service state and start type. If you do not use "
                          "this parameter, then only running/auto will be assumed to be OK."),
             )),
         ( "else",
@@ -2384,8 +2415,8 @@ checkgroups.append((
                        Tuple(
                            title = _("Absolute free space in MB"),
                            elements = [
-                                Integer(title = _("Warning lower than"), unit = _("MB")), 
-                                Integer(title = _("Critical lower than"), unit = _("MB")), 
+                                Integer(title = _("Warning lower than"), unit = _("MB")),
+                                Integer(title = _("Critical lower than"), unit = _("MB")),
                            ]
                         )
                    ])),
@@ -2404,7 +2435,7 @@ checkgroups.append((
                            title = _("Absolute free space in MB"),
                            elements = [
                                 Integer(title = _("Warning lower than"), unit = _("MB")),
-                                Integer(title = _("Critical lower than"), unit = _("MB")), 
+                                Integer(title = _("Critical lower than"), unit = _("MB")),
                            ]
                         )
                    ])),
@@ -2422,8 +2453,8 @@ checkgroups.append((
                        Tuple(
                            title = _("Absolute free space in MB"),
                            elements = [
-                                Integer(title = _("Warning lower than"), unit = _("MB")), 
-                                Integer(title = _("Critical lower than"), unit = _("MB")), 
+                                Integer(title = _("Warning lower than"), unit = _("MB")),
+                                Integer(title = _("Critical lower than"), unit = _("MB")),
                            ]
                         )
                    ])),
@@ -2545,7 +2576,7 @@ checkgroups.append((
             Integer(title = _("Memory warning at"), unit = "MB"),
             Integer(title = _("Memory critical at"), unit = "MB"),
             Integer(title = _("Pagefile warning at"), unit = "MB"),
-            Integer(title = _("Pagefile critical at"), unit = "MB"), 
+            Integer(title = _("Pagefile critical at"), unit = "MB"),
             Percentage(title = _("CPU usage warning at")),
             Percentage(title = _("CPU usage critical at")),
         ],

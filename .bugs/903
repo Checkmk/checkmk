@@ -1,9 +1,9 @@
 Title: Umlauts in regexes never match
 Component: ec
-State: open
+Class: bug
+State: done
 Date: 2013-01-31 11:14:47
 Targetversion: 1.2.2
-Class: bug
 
 When adding umlauts like ä to regex patterns, they do never match.
 
@@ -22,3 +22,7 @@ try:
 except:
     text = text.decode(conifg.ec_fallback_encoding)
 
+
+2013-02-12 16:51:02: changed state open -> done
+Die mit dem try/except war eh schon drin. Allerdings hart-kodiert
+auf latin1.Denke wir lassen das vorerst so.

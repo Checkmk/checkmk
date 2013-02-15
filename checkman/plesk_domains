@@ -8,12 +8,12 @@ description:
  manage multiple independent webspace instances including domains and
  so on.
 
- This check simply outputs all domains configured in a local plesk 
+ This check simply outputs all domains configured in a local plesk
  installation. It raises a {WARNING} state when no domain is configured,
  otherwise the plugin is always reporting an {OK} state.
 
  To make this check work you need to install the agent plugin
- {plesk_domains} on the host wich runs Plesk in the 
+ {plesk_domains} on the host wich runs Plesk in the
  directory {/usr/lib/check_mk_agent/plugins}.
 
 inventory:

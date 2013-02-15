@@ -87,7 +87,7 @@ def check_plesk_backups(item, params, info):
                 status_txt = ' (!)'
 
         backup_time = time.strftime("%c", time.localtime(timestamp))
-        output.append('Age: %s (%dd %02d:%02d:%02d)%s' % 
+        output.append('Age: %s (%dd %02d:%02d:%02d)%s' %
              (backup_time, days, hours, minutes, seconds, status_txt))
         perfdata.append(('last_backup_age', age_seconds, warn, crit))
 

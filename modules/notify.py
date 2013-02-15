@@ -255,8 +255,9 @@ def do_notify(args):
             set_fake_env('host', context)
             sys.exit(call_notification_script(plugin, [], context))
 
-        context['LASTHOSTSTATECHANGE_REL'] = get_readable_rel_date(context['LASTHOSTSTATECHANGE'])
-        if context['WHAT'] != 'HOST':
+        if 'LASTHOSTSTATECHANGE' in context:
+            context['LASTHOSTSTATECHANGE_REL'] = get_readable_rel_date(context['LASTHOSTSTATECHANGE'])
+        if context['WHAT'] != 'HOST' and 'LASTSERVICESTATECHANGE' in context:
             context['LASTSERVICESTATECHANGE_REL'] = get_readable_rel_date(context['LASTSERVICESTATECHANGE'])
 
         if notification_logging >= 2:
@@ -361,7 +362,7 @@ def notify_flexible(contact, context, notification_table):
         event, allowed_events = check_notification_type(context, entry["host_events"], entry["service_events"])
         if event not in allowed_events:
             notification_type = context.get("NOTIFICATIONTYPE","")
-            notify_log(" - Skipping: wrong notification type %s (%s), only %s are allowed" % 
+            notify_log(" - Skipping: wrong notification type %s (%s), only %s are allowed" %
                 (event, notification_type, ",".join(allowed_events)) )
             continue
 
@@ -434,7 +435,7 @@ def call_notification_script(plugin, parameters, context):
     for line in out:
         notify_log("Output: %s" % line.rstrip())
     exitcode = out.close()
-    if exitcode: 
+    if exitcode:
         notify_log("Plugin exited with code %d" % (exitcode >> 8))
         return exitcode
     return 0
@@ -455,7 +456,7 @@ def check_notification_type(context, host_events, service_events):
         event = events[state]
     elif notification_type == "RECOVERY":
         event = 'r'
-    elif notification_type in [ "FLAPPINGSTART", "FLAPPINGSTOP", "FLAPPINGDISABLED" ]: 
+    elif notification_type in [ "FLAPPINGSTART", "FLAPPINGSTOP", "FLAPPINGDISABLED" ]:
         event = 'f'
     elif notification_type in [ "DOWNTIMESTART", "DOWNTIMEEND", "DOWNTIMECANCELLED"]:
         event = 's'

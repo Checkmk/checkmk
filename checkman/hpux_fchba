@@ -4,10 +4,10 @@ author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check is intended to alert you of problems in a servers SAN 
- connection. It can differentiate different FC Login states and 
+ This check is intended to alert you of problems in a servers SAN
+ connection. It can differentiate different FC Login states and
  different driver states. If a port looses connectivity, you will
- be getting a {"CRIT"} status. 
+ be getting a {"CRIT"} status.
 
  The check will go to {"UNKNOWN"} if the HBA is removed, or to
  {"WARNING"} if it detects a Firmware crashdump.
@@ -21,8 +21,8 @@ item:
 
 
 inventory:
- One item for every HBA using the {"fcd"} driver that had an 
+ One item for every HBA using the {"fcd"} driver that had an
  active SAN connection at the time of inventory.
- Older {"td"} / {"fcms"} based HBAs are not reported from the 
+ Older {"td"} / {"fcms"} based HBAs are not reported from the
  agent per default.
 

@@ -26,12 +26,12 @@
 
 
 def check_blade_bx_temp(item, params, info):
-    blade_bx_status = { 1 : "unknow", 
-                        2 : "sensor-disabled", 
-                        3 : "ok", 
-                        4 : "sensor-faild", 
-                        5 : "warning-temp", 
-                        6 : "critical-temp", 
+    blade_bx_status = { 1 : "unknow",
+                        2 : "sensor-disabled",
+                        3 : "ok",
+                        4 : "sensor-faild",
+                        5 : "warning-temp",
+                        6 : "critical-temp",
                         7 : "not-available" }
     unit = "°C"
     for index, status, descr, level_warn, level_crit, temp, crit_react in info:
@@ -70,7 +70,7 @@ check_info['blade_bx_temp'] = {
                                                       2, # status
                                                       3, # desc
                                                       4, # level warn
-                                                      5, # level crit 
+                                                      5, # level crit
                                                       6, # temp
                                                       7, # crit react
    ]),

@@ -212,7 +212,7 @@ multisite_commands.append({
     "title"       : _("Custom notification"),
     "render"      : lambda: \
         html.write(_('Comment') + ": ") == \
-        html.text_input("_cusnot_comment", "TEST", size=20) == \
+        html.text_input("_cusnot_comment", "TEST", size=20, submit="_customnotification") == \
         html.write(" &nbsp; ") == \
         html.checkbox("_cusnot_forced", False, label=_("forced")) == \
         html.checkbox("_cusnot_broadcast", False, label=_("broadcast")) == \
@@ -259,8 +259,9 @@ multisite_commands.append({
         html.checkbox("_ack_persistent", False, label=_('persistent comment')) == \
         html.write("<hr>") == \
         html.write(_("Comment") + ": ") == \
-        html.text_input("_ack_comment", size=48),
+        html.text_input("_ack_comment", size=48, submit="_acknowledge"),
     "action"      : command_acknowledgement,
+    "group"       : _("Acknowledge"),
 })
 
 
@@ -286,7 +287,7 @@ multisite_commands.append({
     "title"       : _("Add comment"),
     "render"      : lambda: \
         html.write(_('Comment')+": ") == \
-        html.text_input("_comment", size=33) == \
+        html.text_input("_comment", size=33, submit="_add_comment") == \
         html.write(" &nbsp; ") == \
         html.button("_add_comment", _("Add comment")),
     "action"      : command_comment,
@@ -414,7 +415,7 @@ def get_child_hosts(site, hosts, recurse):
 
 def paint_downtime_buttons(what):
     html.write(_('Downtime Comment')+": ")
-    html.text_input("_down_comment", size=40)
+    html.text_input("_down_comment", size=40, submit="")
     html.write("<hr>")
     html.button("_down_2h", _("2 hours"))
     html.button("_down_today", _("Today"))
@@ -425,13 +426,13 @@ def paint_downtime_buttons(what):
     html.button("_down_remove", _("Remove all"))
     html.write("<hr>")
     html.button("_down_custom", _("Custom time range"))
-    html.datetime_input("_down_from", time.time())
+    html.datetime_input("_down_from", time.time(), submit="_down_custom")
     html.write("&nbsp; "+_('to')+" &nbsp;")
-    html.datetime_input("_down_to", time.time() + 7200)
+    html.datetime_input("_down_to", time.time() + 7200, submit="_down_custom")
     html.write("<hr>")
     html.button("_down_from_now", _("From now for"))
     html.write("&nbsp;")
-    html.number_input("_down_minutes", 60, size=4, style="text-align: right")
+    html.number_input("_down_minutes", 60, size=4, submit="_down_from_now")
     html.write("&nbsp; " + _("minutes"))
     html.write("<hr>")
     html.checkbox("_down_flexible", False, label=_('flexible with max. duration')+" ")
@@ -450,6 +451,7 @@ multisite_commands.append({
     "title"       : _("Schedule downtimes"),
     "render"      : lambda: paint_downtime_buttons("host"),
     "action"      : command_downtime,
+    "group"       : _("Downtimes"),
 })
 
 multisite_commands.append({
@@ -458,6 +460,7 @@ multisite_commands.append({
     "title"       : _("Schedule downtimes"),
     "render"      : lambda: paint_downtime_buttons("service"),
     "action"      : command_downtime,
+    "group"       : _("Downtimes"),
 })
 
 # REMOVE DOWNTIMES (table downtimes)

@@ -176,7 +176,7 @@ def check_windows_services(item, params, info):
         params = factory_settings["services_default_levels"];
 
     # A service may appear more than once (due to clusters).
-    # First make a list of all matching entries with their 
+    # First make a list of all matching entries with their
     # states
     found = []
     for line in info:
@@ -199,8 +199,8 @@ def check_windows_services(item, params, info):
     for running_on, state, start_type, desc in found:
         for t_state, t_start_type, mon_state in params["states"]:
             if (t_state == None or t_state == state) \
-             and (t_start_type == None or t_start_type == start_type): 
-                this_state = mon_state 
+             and (t_start_type == None or t_start_type == start_type):
+                this_state = mon_state
                 break
         else:
             this_state = params["else"]
@@ -216,7 +216,7 @@ def check_windows_services(item, params, info):
     return (best_state, infotext)
 
 
-factory_settings["services_default_levels"] = { 
+factory_settings["services_default_levels"] = {
     "states"      : [ ( "running", None, 0 ) ],
     "else"        : 2,
 }

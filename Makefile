@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.2.2b1
+VERSION        	= 1.2.2b3
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -34,7 +34,6 @@ LIBDIR	       	= $(PREFIX)/lib/$(NAME)
 DISTNAME       	= $(NAME)-$(VERSION)
 TAROPTS        	= --owner=root --group=root --exclude=.svn --exclude=*~ \
 		  --exclude=.gitignore --exclude=.*.swp
-DOWNLOADURL     = http://mathias-kettner.de/download/$(DISTNAME).tar.gz
 LIVESTATUS_SOURCES = configure aclocal.m4 config.guess config.h.in config.sub \
 		     configure.ac ltmain.sh Makefile.am Makefile.in missing \
 		     nagios/README nagios/*.h src/*.{h,c,cc} src/Makefile.{in,am} \
@@ -54,13 +53,32 @@ help:
 	@echo "make headers                   --> create/update fileheades"
 	@echo "make healspaces                --> remove trailing spaces in code"
 
-dist: mk-livestatus mk-eventd
-	@echo "--------------------------------------------------------------------------"
+check-spaces:
+	@echo -n "Checking for trailing spaces..."
+	@grep -q '[[:space:]]$$' $(SOURCE_FILES) && { echo $$? ; figlet "Space error" \
+          && echo "Aborting due to trailing spaces. Please use 'make healspaces' to repair." \
+          && echo "Affected files: " \
+          && grep -l '[ 	]$$' $(SOURCE_FILES) \
+          && false ; } || true
+	@echo OK
+
+check-permissions:
 	@echo -n "Checking permissions... with find -not -perm -444..." && [ -z "$$(find -not -perm -444)" ] && echo OK
-	if [ -z "$(SKIP_SANITY_CHECKS)" ]; then \
+
+check-binaries:
+	@if [ -z "$(SKIP_SANITY_CHECKS)" ]; then \
 	    echo -n "Checking precompiled binaries..." && file agents/waitmax | grep 32-bit >/dev/null && echo OK ; \
 	fi
-	
+
+check-version:
+	@sed -n 1p ChangeLog | fgrep -qx '$(VERSION):' || { \
+	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
+	    false ; }
+
+
+check: check-spaces check-permissions check-binaries check-version
+
+dist: mk-livestatus mk-eventd
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -201,23 +219,17 @@ clean:
 mrproper:
 	git clean -xfd -e .bugs 2>/dev/null || git clean -xfd
 
-check:
-	@set -e ; for checkfile in *.HS ; do \
-	  echo -n "Checking config output of $${checkfile%.HS}..." ; \
-	  diff -u <(./check_mk -c $${checkfile%.HS} -HS | grep -v 'created by check_mk') \
-	          <(grep -v 'created by check_mk' < $$checkfile) && echo OK || { \
-	    echo "ERROR. Update reference with:" ; \
-	    echo "./check_mk -c $${checkfile%.HS} -HS > $$checkfile" ; \
-            exit 1 ; } ; \
-	done
 
-healspaces:
-	@echo "Removing trailing spaces from code lines..."
-	@sed -ri 's/[ 	]+$$//g' checkman/* modules/* checks/* notifications/* $$(find -name Makefile) \
+SOURCE_FILES = checkman/* modules/* checks/* notifications/* $$(find -name Makefile) \
           livestatus/src/*{cc,c,h} web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
           doc/helpers/* $(find -type f pnp-templates/*.php)
 
+healspaces:
+	@echo "Removing trailing spaces from code lines..."
+	@sed -ri 's/[ 	]+$$//g' $(SOURCE_FILES)
+
 setup:
+
 	$(MAKE) dist
 	rm -rf $(DISTNAME)
 	tar xzf $(DISTNAME).tar.gz

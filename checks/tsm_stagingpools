@@ -66,7 +66,7 @@ def check_tsm_stagingpools(item, params, info):
     state = 0
     infotext = "total tapes: %d, tapes less then %d%% full: %d" % \
                (num_tapes, params["free_below"], num_free_tapes)
-    infotext += ', utilization: %.1f tapes' % utilization 
+    infotext += ', utilization: %.1f tapes' % utilization
     if "levels" in params:
         warn, crit = params["levels"]
         if num_free_tapes < crit:
@@ -82,9 +82,9 @@ def check_tsm_stagingpools(item, params, info):
         state = 3
         infotext = "no tapes in this pool or pool not existant"
 
-    perfdata = [ 
-           ("tapes", num_tapes), 
-           ("free", num_free_tapes, warn, crit), 
+    perfdata = [
+           ("tapes", num_tapes),
+           ("free", num_free_tapes, warn, crit),
            ("util", utilization) ]
 
     return (state, nagios_state_names[state] + " - " + infotext, perfdata)

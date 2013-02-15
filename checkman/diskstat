@@ -37,7 +37,7 @@ item:
 
  In order to support configurations
  up to version 1.1.10 also the items {"read"} and {"write"} are supported.
- 
+
 
 examples:
  # switch inventory behaviour to 1.1.10 mode
@@ -65,14 +65,14 @@ examples:
  ]
 
  # New way:
- 
+
  # Enable and configure the inventory behaviour based with rule-based settings
  diskstat_inventory_mode = "rule"
  diskstat_inventory += [
   ( ['summary', 'lvm', 'vxvm'], [], ALL_HOSTS ),
  ]
 
- # Then configure levels for 50/90MB/s read IO over 10 Minutes and a bit less for 
+ # Then configure levels for 50/90MB/s read IO over 10 Minutes and a bit less for
  # writes. Next put levels on IO latency exceeding 80ms / 160ms.
  checkgroup_parameters['disk_io'] += [
    ( {'read': (50.0, 90.0), 'write': (40.0, 60.0), 'average': 10, 'latency_perfdata': True, 'latency': (80.0, 160.0)}, [], ALL_HOSTS, ALL_SERVICES ),
@@ -133,10 +133,10 @@ diskstat_inventory_mode(string): By default this is now set to {"rule"} for
 
 
 diskstat_inventory(list): This is a list of block device types to track.
- Possible values are {"summary"}, which creates a summary item showing the IO 
+ Possible values are {"summary"}, which creates a summary item showing the IO
  rate of all disks, but not other block devices.
  If you want statistics for every single disk, you can use {"phyiscal"}.
- Enabling {"lvm"} will generate one item for each LVM volume, including snapshot 
+ Enabling {"lvm"} will generate one item for each LVM volume, including snapshot
  volumes.
- Enabling {"vxvm"} will generate one item for each volume managed by VxVM, 
+ Enabling {"vxvm"} will generate one item for each volume managed by VxVM,
  including layered volumes.

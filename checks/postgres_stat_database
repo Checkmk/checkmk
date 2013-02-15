@@ -37,7 +37,7 @@
 # one commit in their live.
 def inventory_postgres_stat_database(info):
     parsed = parse_postgres_stat(info)
-    return [ (k, {}) for k in parsed.keys() 
+    return [ (k, {}) for k in parsed.keys()
              if parsed[k]["xact_commit"] > 0 ]
 
 def parse_postgres_stat(info):
@@ -119,7 +119,7 @@ def check_postgres_stat_database_size(item, _no_params, info):
     stats = parsed[item]
     size = stats["datsize"]
 
-    return (0, "OK - Size is %s" % get_bytes_human_readable(size), [("size", size)]) 
+    return (0, "OK - Size is %s" % get_bytes_human_readable(size), [("size", size)])
 
 
 check_info['postgres_stat_database.size'] = {

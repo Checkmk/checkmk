@@ -8,7 +8,7 @@ description:
  OpenVMS system. The number of CPUs is taken into account so that
  maximum percentage is 100% is refers to the total CPUs available.
 
- A level can be set only on {wait} (disk wait). 
+ A level can be set only on {wait} (disk wait).
 
 perfdata:
  Three variables: The percentage of time spent in {user}, {system} and {wait}

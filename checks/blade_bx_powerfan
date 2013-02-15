@@ -75,7 +75,7 @@ check_info['blade_bx_powerfan'] = {
                                                       5, #max_speed
                                                       6, #speed
                                                       7 # ctrlstate
-                                                        
+
    ]),
    "snmp_scan_function" : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0"),
 }

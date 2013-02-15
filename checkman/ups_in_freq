@@ -1,4 +1,4 @@
-title: Show the In frequenz of ups devices 
+title: Show the In frequenz of ups devices
 agents: snmp
 author: Bastian Kuhn <bk@mathias-kettner.de>
 license: GPL
@@ -16,7 +16,7 @@ inventory:
  One service per phase will be created
 
 [parameters]
-parameters (tuple): A pair of numbers for warning and critical level 
+parameters (tuple): A pair of numbers for warning and critical level
 
  warning (int): The lower limit which triggers an WARNING state
 

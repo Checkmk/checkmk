@@ -62,7 +62,7 @@ def check_postgres_sessions(_no_item, params, info):
         perfdata.append((what, value, warn, crit))
 
     infotext = " - " + ", ".join(infos)
-    return (status, nagios_state_names[status] + infotext, perfdata) 
+    return (status, nagios_state_names[status] + infotext, perfdata)
 
 
 check_info['postgres_sessions'] = {

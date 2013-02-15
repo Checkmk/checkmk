@@ -456,8 +456,8 @@ vs_mkeventd_rule = Dictionary(
                   Age(),
                   ListChoice(
                     choices = [
-                      ( "open", _("Expire events that are in state <i>open</i>") ),
-                      ( "ack", _("Expire events thar are in state <i>acknowledged</i>") ),
+                      ( "open", _("Expire events that are in the state <i>open</i>") ),
+                      ( "ack", _("Expire events that are in the state <i>acknowledged</i>") ),
                     ],
                     default_value = [ "open" ],
                   )
@@ -465,7 +465,7 @@ vs_mkeventd_rule = Dictionary(
           ),
         ),
         ( "match",
-          RegExp(
+          RegExpUnicode(
             title = _("Text to match"),
             help = _("The rules does only apply when the given regular expression matches "
                      "the message text (infix search)."),
@@ -473,7 +473,7 @@ vs_mkeventd_rule = Dictionary(
           ) 
         ),
         ( "match_host",
-          RegExp(
+          RegExpUnicode(
             title = _("Match host"),
             help = _("The rules does only apply when the given regular expression matches "
                      "the host name the message originates from. Note: in some cases the "
@@ -481,7 +481,7 @@ vs_mkeventd_rule = Dictionary(
           ) 
         ),
         ( "match_application",
-          RegExp(
+          RegExpUnicode(
               title = _("Match syslog application (tag)"),
               help = _("Regular expression for matching the syslog tag (case insenstive)"),
           )
@@ -521,7 +521,7 @@ vs_mkeventd_rule = Dictionary(
           ),
         ),
         ( "match_ok",
-          RegExp(
+          RegExpUnicode(
             title = _("Text to cancel event"),
             help = _("If a matching message appears with this text, then an event created "
                      "by this rule will automatically be cancelled (if host, application and match groups match). "),

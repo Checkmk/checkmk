@@ -65,9 +65,9 @@ def localize_usage(err = ''):
     sys.stdout.write("""Usage: check_mk [-v] --localize COMMAND [ARGS]
 
 Available commands are:
-  update  LANG [ALIAS] ... Creates or updates a .po file for the given 
-                           language. The alias is an optional attribute 
-                           which will be used as display string in the 
+  update  LANG [ALIAS] ... Creates or updates a .po file for the given
+                           language. The alias is an optional attribute
+                           which will be used as display string in the
                            Multisite GUI.
   compile LANG         ... Compiles the .po file into a .mo file which can
                            be used by gettext.

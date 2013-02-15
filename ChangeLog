@@ -1,13 +1,30 @@
+1.2.2b3:
+
 1.2.2b2:
+    Checks & Agents:
+    * Added dynamic thresholds to the oracle_tablespace check depending on the
+      size of the tablespaces.
+
     BI:
     * FIX: fix exception in BI-Boxes views of host groups
+    * FIX: fix problem where BI-Boxes were invisible if not previously unfolded
 
     Event Console:
+    * FIX: support non-Ascii characters in matching expressions. Note:
+           you need to edit and save each affected rule once in order
+           to make the fix work.
     * FIX: Fixed exception when logging actions exectuted by mkeventd
+    * FIX: etc/init.d/mkeventd flush did not work when mkeventd was stopped
 
     Multisite:
     * FIX: Fixed several minor IE7 related layout bugs
     * Add: Improved navigation convenience when plugin output contains [running on ... ]
+    * FIX: title of pages was truncated and now isn't anymore
+    * Cleanup form for executing commands on hosts/services
+
+    WATO:
+    * FIX: Fixed layout of rulelist table in IE*
+    * FIX: Fixed adding explicit host names to rules in IE7
 
 1.2.2b1:
     Core:

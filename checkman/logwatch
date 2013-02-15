@@ -26,7 +26,7 @@ item:
 
 inventory:
  All logfiles sent by the agent are automatically inventorized when the option {logwatch_forward_to_ec}
- is not configured or set to {False}. Please use standard inventory configuration methods if 
+ is not configured or set to {False}. Please use standard inventory configuration methods if
  you want to ignore certain log files.
 
 
@@ -89,6 +89,6 @@ logwatch_dir (string): Directory where log messages are
  replaced by backslashes.
 
 logwatch_service_output (string): Change the output of the service to ony
- show the count of events whitout the last error message.  Default is {default} which 
+ show the count of events whitout the last error message.  Default is {default} which
  shows the last error message and the count,  use {count} if
- you only want to see the count. 
+ you only want to see the count.

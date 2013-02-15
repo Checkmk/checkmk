@@ -68,7 +68,7 @@ def check_bonding(item, params, parsed):
             if expect == "primary":
                 expected_active = primary
             else: # "lowest"
-                slaves = status["interfaces"].keys() 
+                slaves = status["interfaces"].keys()
                 slaves.sort()
                 expected_active = slaves[0]
             if expected_active != None and expected_active != active:

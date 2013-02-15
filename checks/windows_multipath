@@ -53,7 +53,7 @@ def check_windows_multipath(item, params, info):
 
 
     return (state, nagios_state_names[state] + " - paths reported %d, expected paths %d" % (num_paths, all_paths) + state * "!")
-    
+
 
 
     return (3, "UNKNOWN - Data not in agent output")

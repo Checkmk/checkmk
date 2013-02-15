@@ -35,6 +35,7 @@
     WATO:
     * FIX: Fixed layout of rulelist table in IE*
     * FIX: Fixed adding explicit host names to rules in IE7
+    * Add: Improved navigation convenience when plugin output contains [running on ... ]
 
 1.2.2b1:
     Core:

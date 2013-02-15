@@ -40,17 +40,25 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 	public static void main(String[] args){
 		try {
 			//new LivestatusQueryExecuter("localhost 6561\nGET services\nColumns: host_name check_command").createDatasource();
-			String query = "localhost 6561\n"+
-			"GET statehist\n" +
-			"Columns: host_name service_description\n"+
-			"Filter: time >= 1344195720\n"+
-			"Filter: time <= 1344195776\n"+
-			"Filter: host_name = localhost\n"+
-			"Stats: sum duration_ok\n"+
-			"Stats: sum duration_warning\n"+
-			"Stats: sum duration_critical";
-						
+//			String query = "localhost 6557\n"+
+//			"GET statehist\n" +
+//			"Columns: host_name service_description\n"+
+//			"Filter: time >= 1344195720\n"+
+//			"Filter: time <= 1344195776\n"+
+//			"Filter: host_name = localhost\n"+
+//			"Stats: sum duration_ok\n"+
+//			"Stats: sum duration_warning\n"+
+//			"Stats: sum duration_critical";
+			String query = 	"localhost 6557\n"+
+					"GET statehist\n" +
+					"Columns: service_description time state duration duration_part log_output\n" +
+//					"Filter: service_description ~ /fshome" +
+					"Filter: time >= 1351724400";
+
+			
 			JRDataSource sourci = new LivestatusQueryExecuter(query, null).createDatasource();
+			
+			
 		} catch (JRException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -61,12 +69,13 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 	public LivestatusQueryExecuter(String query, Map parameters) {
 		this.jasper_query = query;
 		this.parameters = new HashMap<String,String>();
-		for ( Object key : parameters.keySet() ) {
-			if ( parameters.get(key) == null ) {
-				continue;
+		if (parameters != null)
+			for ( Object key : parameters.keySet() ) {
+				if ( parameters.get(key) == null ) {
+					continue;
+				}
+				this.parameters.put(key.toString(), parameters.get(key).toString());
 			}
-			this.parameters.put(key.toString(), parameters.get(key).toString());
-		}
 		
 //		LivestatusQueryExecuterFactory.logFile(this.jasper_query);
 //		for (String key : this.parameters.keySet())
@@ -161,7 +170,6 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 			// setup socket and in/output streams
 			setupSocket();
 			
-			
 			// query the column types and their descriptions
 			String table_name = livestatus_query.split("\n")[0].split(" ")[1];
 			String desc_query = String.format("GET columns\nFilter: table = %s\nColumnHeaders: off\nResponseHeader: fixed16\nOutputFormat: csv\nSeparators:  10 1 44 124\nKeepAlive: on\n\n", table_name);
@@ -219,7 +227,7 @@ public class LivestatusQueryExecuter implements JRQueryExecuter{
 				if( line == null )
 					break;
 				ArrayList<String> tmp_array = new ArrayList<String>();
-				for( String field : line.split("\001") ){
+				for( String field : line.split("\001",-1) ){
 					tmp_array.add(field);
 				}
 				livestatus_data.add(tmp_array);

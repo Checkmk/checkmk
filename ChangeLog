@@ -7,6 +7,7 @@
 
     Multisite:
     * FIX: Fixed several minor IE7 related layout bugs
+    * Add: Improved navigation convenience when plugin output contains [running on ... ]
 
 1.2.2b1:
     Core:

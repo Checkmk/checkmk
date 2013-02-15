@@ -1105,20 +1105,6 @@ multisite_painters["host_services"] = {
     "paint"   : lambda row: paint_service_list(row, "host_services_with_state"),
 }
 
-def paint_host_list(site, hosts):
-    h = ""
-    first = True
-    for host in hosts:
-        if first:
-            first = False
-        else:
-            h += ", "
-        link = "view.py?view_name=hoststatus&site=%s&host=%s" % (htmllib.urlencode(site), htmllib.urlencode(host))
-        if html.var("display_options"):
-            link += "&display_options=%s" % html.var("display_options")
-        h += "<a href=\"%s\">%s</a></div>" % (link, host)
-    return "", h
-
 multisite_painters["host_parents"] = {
     "title"   : _("Host's parents"),
     "short"   : _("Parents"),

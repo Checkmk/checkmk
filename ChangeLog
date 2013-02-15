@@ -2,6 +2,7 @@
     Checks & Agents:
     * FIX: Fixed date parsing code ignoring the seconds value in several checks
            (ad_replication, cups_queues, heartbeat_crm, mssql_backup, smbios_sel)
+    * FIX: Fixed pnp template for apc_symmetra check when using multiple rrds
 
     Multisite:
     * FIX: Removed uuid module dependency to be compatible to python < 2.5

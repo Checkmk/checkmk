@@ -46,7 +46,6 @@ check_info["h3c_lanswitch_sensors"] = (check_h3c_lanswitch_sensors, "%s", 0, inv
 
 def h3c_lanswitch_genitem(endoid):
     deviceclass, one, id = endoid.split(".")
-#     print ("%s %s %s" % (deviceclass, one, id))
     if deviceclass == "1":
         hwLswdev = "Fan"
     else:

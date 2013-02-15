@@ -47,7 +47,6 @@
 def inventory_vmware_state(info):
     inventory = []
     for line in info:
-     #  print "LINE IS %s" % line[0]
         if line[0].startswith("name:"):
             vm_name = line[0][5:]
         if line[0].startswith("ipaddr:"):

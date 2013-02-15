@@ -82,7 +82,7 @@ def check_cups_queues(item, params, info):
         elif line[0].startswith(item+'-'):
             # This is a queue item count the number of items and check the max age
             numJobs += 1
-            dt = datetime.datetime(*time.strptime(' '.join(line[3:]), '%a %b %d %H:%M:%S %Y')[0:5])
+            dt = datetime.datetime(*time.strptime(' '.join(line[3:]), '%a %b %d %H:%M:%S %Y')[:6])
             if dt < oldest:
                 oldest = dt
 

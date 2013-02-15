@@ -23,7 +23,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-$opt[1] = "--vertical-label \"Celsius\"  -l 0 -u 60 --title \"Battery temperature\" ";
+$opt[1] = "--vertical-label \"Celsius\" -l 0 -u 60 --title \"Battery temperature\" ";
 
 $color = sprintf("ff%02x80", $ACT[2] * 3, $ACT[2] * 2);
 
@@ -44,21 +44,20 @@ $def[2] .= "GPRINT:var2:MAX:\"(Max\: %2.0lf%%,\" ";
 $def[2] .= "GPRINT:var2:AVERAGE:\"Avg\: %2.0lf%%)\" ";
 $def[2] .= "HRULE:$CRIT[1]#FF0000:\"Critical\: $CRIT[1]%\" ";
 
-$opt[3] = "--vertical-label \"Ampere\" -l -0.5 --title \"Currencies\" ";
-$def[3] = "DEF:batcur=$RRDFILE[1]:$DS[3]:MAX ";
-$def[3] .= "DEF:outcur=$RRDFILE[1]:$DS[5]:MAX ";
+$opt[3] = "--vertical-label \"Ampere\" -l -0 --title \"Currencies\" ";
+$def[3] = "DEF:batcur=$RRDFILE[3]:$DS[3]:MAX ";
+$def[3] .= "DEF:outcur=$RRDFILE[5]:$DS[5]:MAX ";
 $def[3] .= "LINE:batcur#c0c000:\"Battery Currency\:\" ";
 $def[3] .= "GPRINT:batcur:LAST:\"%2.0lfA\" ";
 $def[3] .= "LINE:outcur#00c0c0:\"Output Currency\:\" ";
 $def[3] .= "GPRINT:outcur:LAST:\"%2.0lfA\" ";
 
 $opt[4] = "--vertical-label \"Volt\" -l 0 -u 250 --title \"Output Voltage\" ";
-$def[4] = "DEF:volt=$RRDFILE[1]:$DS[4]:MIN ";
+$def[4] = "DEF:volt=$RRDFILE[4]:$DS[4]:MIN ";
 $def[4] .= "GPRINT:volt:LAST:\"%2.0lfV\" ";
 $def[4] .= "LINE1:volt#408040:\"\" ";
 $def[4] .= "GPRINT:volt:MIN:\"(min\: %2.0lfV,\" ";
 $def[4] .= "GPRINT:volt:AVERAGE:\"avg\: %2.0lfV)\" ";
 $def[4] .= "HRULE:$CRIT[4]#FF0000:\"Critical\: $CRIT[4]V\" ";
-
 
 ?>

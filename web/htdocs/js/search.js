@@ -396,7 +396,6 @@ function mkSearch(e, oField) {
     var aSearchObjects = mkSearchGetSearchObjects(objType);
 
     if (!aSearchObjects || !aSearchObjects[0]) {
-        // alert("No objects to search for");
         return;
     }
 

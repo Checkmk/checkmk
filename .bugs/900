@@ -1,12 +1,34 @@
-Title: Make multisite optional username from configured environment vars
+Title: Check_MK does not handle interval_length != 60 correctly
 Component: multisite
 State: open
-Date: 2013-01-22 14:49:10
-Targetversion: 1.4.0
-Class: feature
+Date: 2013-02-15 14:30:58
+Targetversion: future
+Class: nastiness
 
-For example X_FORWARDED_USER or REMOTE_USER should be usable as "user" within
-multisite. At the moment we only use req.user, which seem only to be set, when
-one really authenticated with the local webserver.
-In case of some reverse proxy setups and single sign on environments, this is
-not possible. Make it configurable, disabled by default!
+Reveived via feedback@:
+
+I'm normally using Nagios with the parameter "interval_length" set to
+"1". Despite the warnings in the config file I haven't expected problems
+with Nagios at all after adjusting all relevant parameters to reflect
+this change - but I'm now able to check services at a higher rate then
+only 1 minute.
+
+But IMHO check_mk does not reflect this change when displaying the
+service details. It seems that the values for " Service normal/retry
+check interval" are not correctly multiplied with the configured value
+for "interval_length" but (hardcoded?) with the default value of "60".
+So in my environment all values are too high as by factor 60:
+
+Example given:
+
+interval_length = 1
+
+check_interval = 10--> check every 10 seconds
+
+retry_interval = 3--> retry after 3 seconds
+
+results in display within check_mk GUI:
+
+Service normal/retry check interval600s/180s
+
+It seems to be a bug in the display only, checks are running correctly.

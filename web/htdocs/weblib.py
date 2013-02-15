@@ -90,7 +90,7 @@ def ajax_tree_openclose():
 #   | Saves and loads selected row information of the current user         |
 #   +----------------------------------------------------------------------+
 
-import uuid, os, time
+import os, time
 from lib import make_nagios_directory
 
 def init_selection():
@@ -116,7 +116,8 @@ def cleanup_old_selections():
 # Generates a selection id or uses the given one
 def selection_id():
     if not html.has_var('selection'):
-        html.add_var('selection', str(uuid.uuid1())) # generate when not set
+        sel_id = file('/proc/sys/kernel/random/uuid').read().strip()
+        html.add_var('selection', sel_id)
     return html.var('selection')
 
 def get_rowselection(ident):

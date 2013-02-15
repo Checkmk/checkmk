@@ -10,6 +10,8 @@
     * Add: Memory and Swap for Solaris Agent
     * Add: Monitoring of ESX (VMware) Hosts
 
+1.2.2b3
+    * Multisite: Removed uuid module dependency to be compatible to python < 2.5
 
 1.2.2b2:
     Checks & Agents:

@@ -11,7 +11,9 @@
     * Add: Monitoring of ESX (VMware) Hosts
 
 1.2.2b3
-    * Multisite: Removed uuid module dependency to be compatible to python < 2.5
+    Multisite:
+    * FIX: Removed uuid module dependency to be compatible to python < 2.5
+    * FIX: Removed debug output in WATO list of strings
 
 1.2.2b2:
     Checks & Agents:

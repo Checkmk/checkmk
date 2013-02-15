@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.2.2b2
+VERSION        	= 1.2.2b3
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -70,11 +70,13 @@ check-binaries:
 	    echo -n "Checking precompiled binaries..." && file agents/waitmax | grep 32-bit >/dev/null && echo OK ; \
 	fi
 
-check-uncommitted:
-	@echo -n "Checking for uncommitted changes..."
-	@if git status --porcelain | grep . ; then false ; else true ; fi
+check-version:
+	@sed -n 1p ChangeLog | fgrep -qx '$(VERSION):' || { \
+	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
+	    false ; }
 
-check: check-spaces check-permissions check-binaries
+
+check: check-spaces check-permissions check-binaries check-version
 
 dist: mk-livestatus mk-eventd
 	@echo "Making $(DISTNAME)"

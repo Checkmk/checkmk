@@ -3,14 +3,44 @@ CHECKMANDIR	= ~/git/mkde/htdocs/checkmk
 # These are targets only needed by the maintainers of 
 # the official distribution of Check_MK
 
-foo:
-	@echo "Possible targets: release mkde"
-
 release:
-	@$(MAKE) check-uncommitted
+	@if [ -e /var/www/80/mathias-kettner.de/download/check_mk-$(VERSION).tar.gz -o \
+              -e /var/www/80/archive.mathias-kettner.de/check_mk/check_mk-$(VERSION).tar.gz ] ; then \
+            echo "Diese Release existiert schon!" ; \
+	    false ; \
+        fi
+	@$(MAKE) check-uncommitted check-git
 	@$(MAKE) check
-	@$(MAKE) dist
-	
+	@$(MAKE) mrproper
+	@$(MAKE) dist rpm deb
+	@figlet "Fertig. Auf ins mkde..."
+	@$(MAKE) -C ../mkde update-checkmk
+	@cd ../mkde ; ./cmk_version_eintragen $(VERSION) > check_mk.inc.neu && \
+          mv check_mk.inc.neu htdocs/check_mk.inc && \
+          for version in $$(cat oldversions) ; do \
+             mv -v htdocs/download/*[-_]$$version[-_.]* /var/www/80/archive.mathias-kettner.de/check_mk/ 2>/dev/null && \
+             git rm htdocs/download/*[-_]$$version[-_.]* || true ; \
+          done ; rm -f oldversions ; \
+          git add htdocs/download
+	figlet SUPER.
+	git tag -f -am 'Official Release $(VERSION)' v$(VERSION)
+
+
+check-uncommitted:
+	@echo -n "Checking for uncommitted changes..."
+	@if git status --porcelain | grep . ; then false ; else true ; fi
+
+check-git:
+	@BRANCH=$$(cat .git/HEAD | cut -d/ -f3) ; echo $$BRANCH && \
+          git fetch origin $$BRANCH && \
+	  fetch_head=$$(cut -d'	' -f1 .git/FETCH_HEAD) && \
+	  head=$$(cat .git/refs/heads/$$BRANCH) && \
+          [ "$$fetch_head" = "$$head" ] || { \
+	     echo "Local git branch $$BRANCH is not up-to-date!" ; \
+             echo "FETCH_HEAD: [$$fetch_head]" ; \
+	     echo "local $$BRANCH: [$$head]" ; \
+             false ; \
+          }
 
 mkde:
 	cp -v agents/windows/install_agent.exe check-mk-agent-$(VERSION).exe

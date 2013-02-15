@@ -26,6 +26,7 @@
 
 import grp, defaults, pprint, os, errno, gettext, marshal, fcntl, __builtin__
 
+
 nagios_state_names = { -1: "NODATA", 0: "OK", 1: "WARNING", 2: "CRITICAL", 3: "UNKNOWN", 4: "DEPENDENT" }
 nagios_short_state_names = { -1: "PEND", 0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKN", 4: "DEP" }
 nagios_short_host_state_names = { 0: "UP", 1: "DOWN", 2: "UNREACH" }
@@ -58,6 +59,7 @@ class MKUserError(Exception):
 class MKInternalError(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)
+
 
 # Create directory owned by common group of Nagios and webserver,
 # and make it writable for the group
@@ -115,6 +117,7 @@ def savefloat(f):
         return float(f)
     except:
         return 0.0
+
 
 
 # Load all files below share/check_mk/web/plugins/WHAT into a
@@ -216,17 +219,31 @@ warn_marker    = '<b class="stmark state1">WARN</b>'
 crit_marker    = '<b class="stmark state2">CRIT</b>'
 unknown_marker = '<b class="stmark state3">UNKN</b>'
 
+def paint_host_list(site, hosts):
+    from htmllib import urlencode
+    h = ""
+    first = True
+    for host in hosts:
+        if first:
+            first = False
+        else:
+            h += ", "
+        link = "view.py?view_name=hoststatus&site=%s&host=%s" % (urlencode(site), urlencode(host))
+        if html.var("display_options"):
+            link += "&display_options=%s" % html.var("display_options")
+        h += "<a href=\"%s\">%s</a></div>" % (link, host)
+    return "", h
+
 def format_plugin_output(output, row = None):
     output =  output.replace("(!)", warn_marker) \
               .replace("(!!)", crit_marker) \
               .replace("(?)", unknown_marker)
-    # TODO: reimplement, but considering correct paint_host_list call
-    #if row and "[running on" in output:
-    #    a = output.index("[running on")
-    #    e = output.index("]", a)
-    #    hosts = output[a+12:e].replace(" ","").split(",")
-    #    css, h = paint_host_list(row["site"], hosts)
-    #    output = output[:a] + "running on " + h + output[e+1:]
+    if row and "[running on" in output:
+        a = output.index("[running on")
+        e = output.index("]", a)
+        hosts = output[a+12:e].replace(" ","").split(",")
+        css, h = paint_host_list(row["site"], hosts)
+        output = output[:a] + "running on " + h + output[e+1:]
 
     return output
 

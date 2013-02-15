@@ -19,6 +19,7 @@
 
     Multisite:
     * FIX: Fixed several minor IE7 related layout bugs
+    * Add: Improved navigation convenience when plugin output contains [running on ... ]
     * FIX: title of pages was truncated and now isn't anymore
     * Cleanup form for executing commands on hosts/services
 

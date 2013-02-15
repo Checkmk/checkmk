@@ -35,6 +35,8 @@ def agent_vsphere_arguments(params, ipaddress):
     args = ''
     if "tcp_port" in params:
         args += " -p %d" % params["tcp_port"]
+    if "lower" in params:
+        args += " -lower"
 
     args += " -u " + quote_shell_string(params["user"])
     args += " -s " + quote_shell_string(params["secret"])

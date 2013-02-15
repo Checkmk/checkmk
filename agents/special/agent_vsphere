@@ -31,10 +31,10 @@ parser = argparse.ArgumentParser(description='Check_MK vSphere Agent')
 group = parser.add_argument_group()
 group.add_argument('-p', type=int, help="Port Number of vSphere Server")
 group.add_argument('-i', help="Check the hostsystem and or virtualmachine. Comma separated")
+group.add_argument('-lower', action="store_true", help="Convert the name attributes of each MOR to lower case")
 parser.add_argument('-u', help="Username")
 parser.add_argument('-s', help="Secret")
 parser.add_argument('Hostname', help="Hostname")
-
 params = vars(parser.parse_args())
 
 
@@ -42,17 +42,19 @@ try:
     from pysphere import VIServer, VIProperty, MORTypes
     from pysphere.resources import VimService_services as VI
 except: 
-    print "<<<agent_msg>>>"
-    print "CRIT pysphere API not found. Please install and make a reinventory"
+    print "<<<local>>>"
+    print "2 Agent_error - pysphere API not found. Please install and make a reinventory"
     sys.exit(0)
 
 host = VIServer()
 
+object_collection = {} 
+
 try:
     host.connect(params['Hostname'], params['u'], params['s'])
 except:
-    print "<<<agent_msg>>>"
-    print "CRIT Cant connect to vSphere  Server. May the wrong credentials. Please correct and make a reinventory"
+    print "<<<local>>>"
+    print "2 Agent_error - Cant connect to vSphere  Server. May the wrong credentials. Please correct and make a reinventory"
     sys.exit(0)
 
 print "<<<check_mk>>>"
@@ -73,8 +75,14 @@ def output_mors(what, properties):
             # Convert property value using specified conversion function
             data[p.Name] = properties[p.Name](p.Val)
 
+
         # Get the name of this Host/VirtualMachine
-        name = data["name"]
+        # May there a comments in the field, so split at whitespace
+        name = data["name"].split()[0]
+        if params['lower']:
+            name = name.lower()
+
+        object_collection[name] = (what, data['name'])
         
         ## Output multiplexed Check_MK Agent output (new in version 1.2.3i1)
         print '<<<<%s>>>>' % name
@@ -114,21 +122,29 @@ if "hostsystem" in check:
       #"summary.quickStats.uptime": str,
     })
 
-# Not yet
-#if "virtualmachine" in check:
-#    output_mors("virtualmachine", {
-#     "name": str,
-#     "guestHeartbeatStatus": str,
-#     "summary.quickStats.overallCpuUsage": str,
-#     "summary.quickStats.uptimeSeconds": str,
-#     "summary.quickStats.guestMemoryUsage": str,
-#     "summary.quickStats.hostMemoryUsage": str,
-#     "summary.quickStats.overallCpuUsage": str,
-#     "summary.runtime.powerState": str,
-#     "config.hardware.memoryMB": str,
-#     "config.hardware.numCPU": str,
-#    })
-#
-#
+if "virtualmachine" in check:
+    output_mors("virtualmachine", {
+     "name": str,
+     "guestHeartbeatStatus": str,
+     "summary.quickStats.overallCpuUsage": str,
+     "summary.quickStats.uptimeSeconds": str,
+
+     #"config.hardware.memoryMB": str,
+     "summary.quickStats.guestMemoryUsage": str,
+     "summary.quickStats.hostMemoryUsage": str,
+     "summary.quickStats.balloonedMemory": str,
+     "summary.quickStats.privateMemory": str,
+     "summary.quickStats.sharedMemory": str,
+
+     "summary.quickStats.overallCpuUsage": str,
+     "summary.runtime.powerState": str,
+     "config.hardware.numCPU": str,
+    })
+
+print "<<<<>>>>"
+print "<<<local>>>"
+for name, data in object_collection.items():
+    print "0 %s-%s - INFO: Collecting data for %s" % (data[0], name, data[1])
+
 
 host.disconnect()

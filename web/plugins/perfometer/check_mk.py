@@ -620,3 +620,4 @@ def perfometer_simple_mem_usage(row, command, perf):
 
 perfometers['check_mk-db2_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-esx_vsphere_hostsystem.mem_usage'] = perfometer_simple_mem_usage
+perfometers['check_mk-esx_vsphere_virtualmachine.mem_usage'] = perfometer_simple_mem_usage

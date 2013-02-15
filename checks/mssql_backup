@@ -40,7 +40,7 @@ def check_mssql_backup(item, params, info):
     for line in info:
         inst, tablespace, last_backup_date, last_backup_time = line
         if item == inst + ' ' + tablespace:
-            dt = datetime.datetime(*time.strptime(last_backup_date + ' ' + last_backup_time, '%Y-%m-%d %H:%M:%S')[0:5])
+            dt = datetime.datetime(*time.strptime(last_backup_date + ' ' + last_backup_time, '%Y-%m-%d %H:%M:%S')[:6])
 
             state = 0
             # Would be so nice to use delta.total_seconds(). But we must care about python < 2.7

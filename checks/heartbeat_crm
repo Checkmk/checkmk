@@ -95,7 +95,7 @@ def check_heartbeat_crm(item, params, info):
 
         # Check the freshness of the crm_mon output and terminate with CRITICAL
         # when too old information are found
-        dt = int(datetime.datetime(*time.strptime(lastUpdated, '%a %b %d %H:%M:%S %Y')[0:5]).strftime("%s"))
+        dt = int(datetime.datetime(*time.strptime(lastUpdated, '%a %b %d %H:%M:%S %Y')[:6]).strftime("%s"))
         now = time.time()
         delta = now - dt
         if delta > param_max_age:

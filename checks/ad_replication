@@ -44,7 +44,7 @@ def parse_ad_replication_dates(s):
     if s == '0' or s == '(never)':
         return None
     else:
-        return datetime.datetime(*time.strptime(s, '%Y-%m-%d %H:%M:%S')[0:5])
+        return datetime.datetime(*time.strptime(s, '%Y-%m-%d %H:%M:%S')[:6])
 
 def parse_ad_replication_info(info):
     lines = []

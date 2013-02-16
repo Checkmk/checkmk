@@ -1,4 +1,4 @@
-1.2.2b3
+1.2.2b3:
     Checks & Agents:
     * FIX: Fixed date parsing code ignoring the seconds value in several checks
            (ad_replication, cups_queues, heartbeat_crm, mssql_backup, smbios_sel)

@@ -19,6 +19,7 @@
     Multisite:
     * FIX: Removed uuid module dependency to be compatible to python < 2.5
     * FIX: remove Javascript debug popup from multi-string input fields
+    * FIX: list of strings (e.g. host list in rule editor) didn't work anymore
 
 1.2.2b2:
     Checks & Agents:

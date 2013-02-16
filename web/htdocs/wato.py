@@ -10160,7 +10160,7 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
     if host_list != ALL_HOSTS:
         condition = None
         if host_list == []:
-            condition = _("This rule does <b>never</b> apply!")
+            condition = _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
         elif host_list[-1] != ALL_HOSTS[0]:
             tt_list = []
             for h in host_list:

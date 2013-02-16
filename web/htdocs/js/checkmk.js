@@ -1503,9 +1503,8 @@ function valuespec_toggle_dropdownn(oDropdown, divid) {
 
 /* This function is called after the table with of input elements
    has been rendered. It attaches the onFocus-function to the last
-   of the input elements. The reason is, that ListOfString does not render
-   the input fields itself. This does so other ValueSpec element
-   where we have no access to */
+   of the input elements. That function will append another
+   input field as soon as the user focusses the last field. */
 function list_of_strings_init(divid) {
     var oContainer = document.getElementById(divid);
     var numChilds = oContainer.childNodes.length;
@@ -1551,7 +1550,7 @@ function list_of_strings_extend(oInput, j) {
     var oNewDiv = document.createElement("DIV");
     oNewDiv.innerHTML = oDiv.innerHTML.replace('"' + oldName + '"', '"' + newName + '"');
     // IE7 does not have quotes in innerHTML, trying to workaround this here.
-    oNewDiv.innerHTML = oDiv.innerHTML.replace('=' + oldName + ' ', '=' + newName + ' ');
+    oNewDiv.innerHTML = oNewDiv.innerHTML.replace('=' + oldName + ' ', '=' + newName + ' ');
     oContainer.appendChild(oNewDiv);
 
     /* Move focus function from old last to new last input field */

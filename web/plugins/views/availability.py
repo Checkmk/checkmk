@@ -102,6 +102,30 @@ avoption_entries = [
     )
   ),
 
+  # How to deal with downtimes
+  ( "downtimes",
+    "double",
+    Dictionary(
+        title = _("Scheduled Downtimes"),
+        columns = 2,
+        elements = [
+            ( "include",
+              DropdownChoice(
+                  choices = [
+                    ( "honor", _("Honor scheduled downtimes") ),
+                    ( "ignore", _("Ignore scheduled downtimes") ),
+                    ( "exclude", _("Exclude scheduled downtimes" ) ),
+                 ]
+              )
+            ),
+            ( "exclude_ok", 
+              Checkbox(label = _("Treat phases of UP/OK as non-downtime"))
+            ),
+        ],
+        optional_keys = False,
+    )
+  ),
+
   # How to deal with downtimes, etc.
   ( "consider",
     "double",
@@ -111,9 +135,6 @@ avoption_entries = [
        elements = [
            ( "flapping",
               Checkbox(label = _("Consider periods of flapping states")),
-           ),
-           ( "downtime",
-              Checkbox(label = _("Consider scheduled downtimes")),
            ),
            ( "host_down",
               Checkbox(label = _("Consider times where the host is down")),
@@ -202,6 +223,14 @@ avoption_entries = [
         unit = _("sec"),
         label = _("Ignore intervals shorter or equal"),
     ),
+  ),
+
+  # Merging
+  ( "dont_merge",
+    "single",
+    Checkbox(
+        title = _("Phase Merging"),
+        label = _("Do not merge consecutive phases with equal state")),
   ),
 ]
 
@@ -440,8 +469,13 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
                         continue
                 elif span["in_notification_period"] == 0 and avoptions["consider"]["notification_period"]:
                     s = "outof_notification_period"
-                elif (span["in_downtime"] or span["in_host_downtime"]) and avoptions["consider"]["downtime"]:
-                    s = "in_downtime"
+                elif (span["in_downtime"] or span["in_host_downtime"]) and not \
+                    (avoptions["downtimes"]["exclude_ok"] and state == 0) and not \
+                    avoptions["downtimes"]["include"] == "ignore":
+                    if avoptions["downtimes"]["include"] == "exclude":
+                        continue
+                    else:
+                        s = "in_downtime"
                 elif span["host_down"] and avoptions["consider"]["host_down"]:
                     s = "host_down"
                 elif span["is_flapping"] and avoptions["consider"]["flapping"]:
@@ -462,11 +496,12 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
                 timeline_rows.append((span, s))
 
             # Now merge consecutive rows with identical state
-            merge_timeline(timeline_rows)
+            if not avoptions["dont_merge"]:
+                merge_timeline(timeline_rows)
 
             # Melt down short intervals
             if avoptions["short_intervals"]:
-                melt_short_intervals(timeline_rows, avoptions["short_intervals"])
+                melt_short_intervals(timeline_rows, avoptions["short_intervals"], avoptions["dont_merge"])
 
             # Condense into availability
             states = {}
@@ -589,7 +624,7 @@ def merge_timeline(entries):
         else:
             n += 1
 
-def melt_short_intervals(entries, duration):
+def melt_short_intervals(entries, duration, dont_merge):
     n = 1
     need_merge = False
     while n < len(entries) - 1:
@@ -600,9 +635,9 @@ def melt_short_intervals(entries, duration):
         n += 1
 
     # Due to melting, we need to merge again
-    if need_merge:
+    if need_merge and not dont_merge:
         merge_timeline(entries)
-        melt_short_intervals(entries, duration)
+        melt_short_intervals(entries, duration, dont_merge)
 
 def render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number):
     # Some columns might be unneeded due to state treatment options
@@ -661,7 +696,7 @@ def render_availability_table(availability, from_time, until_time, range_title, 
         for sid, css, sname, help in availability_columns:
             if sid == "outof_notification_period" and not avoptions["consider"]["notification_period"]:
                 continue
-            elif sid == "in_downtime" and not avoptions["consider"]["downtime"]:
+            elif sid == "in_downtime" and avoptions["downtimes"]["include"] == "ignore":
                 continue
             elif sid == "unmonitored" and not avoptions["consider"]["unmonitored"]:
                 continue

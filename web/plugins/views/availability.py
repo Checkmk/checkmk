@@ -706,7 +706,7 @@ def render_availability_table(availability, from_time, until_time, range_title, 
                 continue
             number = states.get(sid, 0)
             if not number:
-                css = ""
+                css = "unused"
             table.cell(sname, render_number(number, considered_duration), css="number " + css, help=help)
     table.end()
 

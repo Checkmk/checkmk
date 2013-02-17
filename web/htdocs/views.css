@@ -480,6 +480,11 @@ table.data.availability td.number {
     width: 60px;
 }
 
+table.data.availability td.unused {
+    color: #888;
+    text-shadow: 1px 1px 0.5px #fff;
+}
+
 table.data td.flapping, table.timeline td.flapping {
     /* background-image: url("images/bg_flapping.png");
     background-repeat: repeat; */

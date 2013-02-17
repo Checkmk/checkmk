@@ -642,7 +642,7 @@ def melt_short_intervals(entries, duration, dont_merge):
 def render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number):
     # Some columns might be unneeded due to state treatment options
     sg = avoptions["state_grouping"]
-    sgs = [ sg["warn"], sg["unknown"], sg["host_down"] ]
+    state_groups = [ sg["warn"], sg["unknown"], sg["host_down"] ]
 
     # Render the stuff
     availability.sort()
@@ -700,7 +700,9 @@ def render_availability_table(availability, from_time, until_time, range_title, 
                 continue
             elif sid == "unmonitored" and not avoptions["consider"]["unmonitored"]:
                 continue
-            elif sid in [ "warn", "unknown", "host_down" ] and sid not in sgs:
+            elif sid == "flapping" and not avoptions["consider"]["flapping"]:
+                continue
+            elif sid in [ "warn", "unknown", "host_down" ] and sid not in state_groups:
                 continue
             number = states.get(sid, 0)
             if not number:

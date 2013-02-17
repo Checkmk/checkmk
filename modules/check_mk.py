@@ -1002,7 +1002,7 @@ def get_datasource_program(hostname, ipaddress):
         params = host_extra_conf(hostname, ruleset)
         if params: # rule match!
             # Create command line using the special_agent_info
-            cmd_arguments = special_agent_info[agentname](params[0], ipaddress)
+            cmd_arguments = special_agent_info[agentname](params[0], hostname, ipaddress)
             return '%s/agent_%s %s' % ( special_agent_dir, agentname, cmd_arguments)
 
     programs = host_extra_conf(hostname, datasource_programs)

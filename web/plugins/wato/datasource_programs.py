@@ -82,3 +82,15 @@ register_rule(group,
     match = 'first')
 
 
+register_rule(group,
+    "special_agents:random",
+     FixedValue(
+        {},
+        title = _("Create random monitoring data"),
+        help = _("By configuring this rule for a host - instead of the normal "
+                 "Check_MK agent random monitoring data will be created."),
+        totext = _("No configuration neccessary."),
+    ),
+    match = 'first')
+
+

@@ -1,14 +1,20 @@
 1.2.3i1:
     Core:
-    * New feature: agents can send data for other hosts
-      "piggyback".
+    * Agents can send data for other hosts "piggyback". This is being
+      used by the vSphere and SAP plugins
 
     Event Console:
-    * New rule feature: automatically delete after action
+    * New rule feature: automatically delete event after actions
 
     Checks & Agents:
-    * Add: Memory and Swap for Solaris Agent
-    * Add: Monitoring of ESX (VMware) Hosts
+    * solaris_mem: New check for memory and swap for Solaris agent
+    * New special agent agent_vsphere for monitoring ESX (VMware) Hosts
+      via vSphere interface
+    * new special agent agent_random for creating random monitoring data
+
+    WATO:
+    * Configuration of datasource programs via dedicated rules
+
 
 1.2.2b3
     Checks & Agents:

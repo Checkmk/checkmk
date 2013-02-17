@@ -31,17 +31,7 @@
 #     'user': 'wefwef'
 # }
 
-def agent_vsphere_arguments(params, hostname, ipaddress):
-    args = ''
-    if "tcp_port" in params:
-        args += " -p %d" % params["tcp_port"]
-    if "lower" in params:
-        args += " -lower"
+def agent_random_arguments(params, hostname, ipaddress):
+    return hostname
 
-    args += " -u " + quote_shell_string(params["user"])
-    args += " -s " + quote_shell_string(params["secret"])
-    args += " -i " + ",".join(params["infos"])
-    args += " " + quote_shell_string(ipaddress)
-    return args
-
-special_agent_info['vsphere'] = agent_vsphere_arguments
+special_agent_info['random'] = agent_random_arguments

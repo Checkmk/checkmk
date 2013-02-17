@@ -3,6 +3,9 @@
     * Agents can send data for other hosts "piggyback". This is being
       used by the vSphere and SAP plugins
 
+    Multisite:
+    * New availability view for arbitrary host/service collections
+
     Event Console:
     * New rule feature: automatically delete event after actions
 
@@ -12,8 +15,12 @@
       via vSphere interface
     * new special agent agent_random for creating random monitoring data
 
+    BI:
+    * Integrated availability computing, including nifty time warp feature
+
     WATO:
     * Configuration of datasource programs via dedicated rules
+    * New editor for Business Intelligence rules
 
 
 1.2.2b3

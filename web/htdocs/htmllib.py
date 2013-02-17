@@ -260,6 +260,7 @@ class html:
             return ''
 
     def unplug(self):
+        self.flush()
         self.plugged = False
 
     def heading(self, text):

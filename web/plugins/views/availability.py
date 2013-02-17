@@ -30,6 +30,15 @@ from valuespec import *
 # Function building the availability view
 def render_availability(view, datasource, filterheaders, display_options,
                         only_sites, limit):
+
+    # We need the availability options now, but cannot display the
+    # form code for that yet.
+    html.plug()
+    avoptions = render_availability_options()
+    range, range_title = avoptions["range"]
+    avoptions_html = html.drain()
+    html.unplug()
+
     timeline = not not html.var("timeline")
     if timeline:
         tl_site = html.var("timeline_site")
@@ -48,15 +57,16 @@ def render_availability(view, datasource, filterheaders, display_options,
         html.top_heading(title)
     if 'B' in display_options:
         html.begin_context_buttons()
-        togglebutton("avoptions", False, "painteroptions", _("Configure details of the report"))
+        togglebutton("avoptions", html.has_user_errors(), "painteroptions", _("Configure details of the report"))
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
         if timeline:
             html.context_button(_("Availability"), html.makeuri([("timeline", "")]), "availability")
+            history_url = history_url_of(tl_site, tl_host, tl_service, range[0], range[1])
+            html.context_button(_("History"), history_url, "history")
         html.end_context_buttons()
 
-    avoptions = render_availability_options()
+    html.write(avoptions_html)
     if not html.has_user_errors():
-        range, range_title = avoptions["range"]
         rows = get_availability_data(datasource, filterheaders, range, only_sites, limit, timeline)
         what = "service" in datasource["infos"] and "service" or "host"
         do_render_availability(rows, what, avoptions, timeline, "")
@@ -258,16 +268,13 @@ def render_availability_options():
     is_open = False
     html.begin_form("avoptions")
     html.hidden_field("avoptions", "set")
-    html.write('<div class="view_form" id="avoptions" %s>'
-            % (not is_open and 'style="display: none"' or '') )
-    html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
-
     if html.var("avoptions") == "set":
         for name, height, vs in avoption_entries:
             try:
                 avoptions[name] = vs.from_html_vars("avo_" + name)
             except MKUserError, e:
                 html.add_user_error(e.varname, e.message)
+                is_open = True
 
     try:
         range, range_title = compute_range(avoptions["rangespec"])
@@ -277,6 +284,10 @@ def render_availability_options():
 
     if html.has_user_errors():
         html.show_user_errors()
+
+    html.write('<div class="view_form" id="avoptions" %s>'
+            % (not is_open and 'style="display: none"' or '') )
+    html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
 
     for name, height, vs in avoption_entries:
         html.write('<div class="floatfilter %s %s">' % (height, name))
@@ -639,6 +650,26 @@ def melt_short_intervals(entries, duration, dont_merge):
         merge_timeline(entries)
         melt_short_intervals(entries, duration, dont_merge)
 
+def history_url_of(site, host, service, from_time, until_time):
+    history_url_vars = [
+        ("site", site),
+        ("host", host),
+        ("logtime_from_range", "unix"),  # absolute timestamp
+        ("logtime_until_range", "unix"), # absolute timestamp
+        ("logtime_from", str(int(from_time))),
+        ("logtime_until", str(int(until_time)))]
+    if service:
+        history_url_vars += [
+            ("service", service),
+            ("view_name", "svcevents"),
+        ]
+    else:
+        history_url_vars += [
+            ("view_name", "hostevents"),
+        ]
+
+    return "view.py?" + htmllib.urlencode_vars(history_url_vars)
+
 def render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number):
     # Some columns might be unneeded due to state treatment options
     sg = avoptions["state_grouping"]
@@ -651,25 +682,8 @@ def render_availability_table(availability, from_time, until_time, range_title, 
         table.row()
 
         if what != "bi":
-            history_url_vars = [
-                ("site", site),
-                ("host", host),
-                ("logtime_from_range", "unix"),  # absolute timestamp
-                ("logtime_until_range", "unix"), # absolute timestamp
-                ("logtime_from", str(int(from_time))),
-                ("logtime_until", str(int(until_time)))]
-            if what == "service":
-                history_url_vars += [
-                    ("service", service),
-                    ("view_name", "svcevents"),
-                ]
-            elif what == "host":
-                history_url_vars += [
-                    ("view_name", "hostevents"),
-                ]
-
             table.cell("", css="buttons")
-            history_url = "view.py?" + htmllib.urlencode_vars(history_url_vars)
+            history_url = history_url_of(site, host, service, from_time, until_time)
             html.icon_button(history_url, _("Event History"), "history")
 
             timeline_url = html.makeuri([

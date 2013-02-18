@@ -1,15 +1,37 @@
 1.2.3i1:
     Core:
-    * New feature: agents can send data for other hosts "piggyback".
+    * Agents can send data for other hosts "piggyback". This is being
+      used by the vSphere and SAP plugins
+
+    Multisite:
+    * New availability view for arbitrary host/service collections
 
     Event Console:
-    * New rule feature: automatically delete after action
+    * New rule feature: automatically delete event after actions
 
     Checks & Agents:
-    * Add: Memory and Swap for Solaris Agent
-    * Add: Monitoring of ESX (VMware) Hosts
+    * solaris_mem: New check for memory and swap for Solaris agent
+    * New special agent agent_vsphere for monitoring ESX (VMware) Hosts
+      via vSphere interface
+    * new special agent agent_random for creating random monitoring data
 
-1.2.2b3
+    BI:
+    * Integrated availability computing, including nifty time warp feature
+
+    WATO:
+    * Configuration of datasource programs via dedicated rules
+    * New editor for Business Intelligence rules
+
+1.2.2b4:
+    Checks & Agents:
+    * Linux agent: limit netstat to 10 seconds
+    * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
+      reordering of matched groups
+
+    BI:
+    * FIX: fixed invalid links to hosts and services in BI tree view
+
+1.2.2b3:
     Checks & Agents:
     * FIX: Fixed date parsing code ignoring the seconds value in several checks
            (ad_replication, cups_queues, heartbeat_crm, mssql_backup, smbios_sel)
@@ -18,6 +40,7 @@
     Multisite:
     * FIX: Removed uuid module dependency to be compatible to python < 2.5
     * FIX: remove Javascript debug popup from multi-string input fields
+    * FIX: list of strings (e.g. host list in rule editor) didn't work anymore
 
 1.2.2b2:
     Checks & Agents:

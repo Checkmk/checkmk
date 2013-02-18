@@ -71,7 +71,6 @@ div.floatfilter {
 div.floatfilter.double {
     height: 110px;
     display: table-cell;
-    vertical-align: center;
 }
 
 div.floatfilter input[type=text] {
@@ -94,10 +93,10 @@ div.floatfilter .content {
     height: 30px;
     margin-top: 0px;
     margin-left: 0px;
-    vertical-align: middle;
     display: table-cell;
     padding-left: 4px;
     text-align: left;
+    padding-top: 5px;
 }
 div.floatfilter.double .content {
     height: 82px;
@@ -479,6 +478,11 @@ table.data.availability {
 
 table.data.availability td.number {
     width: 60px;
+}
+
+table.data.availability td.unused {
+    color: #888;
+    text-shadow: 1px 1px 0.5px #fff;
 }
 
 table.data td.flapping, table.timeline td.flapping {

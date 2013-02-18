@@ -293,14 +293,17 @@ register_rule(group + '/' + subgroup_inventory,
         elements = [
             ('descr', TextAscii(
                 title = _('Service Description'),
-                help  = _('<p>The service description may contain one or more occurances of %s. If you do this, then the pattern must be a regular '
+                help  = _('<p>The service description may contain one or more occurances of <tt>%s</tt>. If you do this, then the pattern must be a regular '
                           'expression and be prefixed with ~. For each %s in the description, the expression has to contain one "group". A group '
-                          'is a subexpression enclosed in brackets, for example (.*) or ([a-zA-Z]+) or (...). When the inventory finds a process '
+                          'is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory finds a process '
                           'matching the pattern, it will substitute all such groups with the actual values when creating the check. That way one '
                           'rule can create several checks on a host.</p>'
-                          '<p>If the pattern contains more groups thenoccurrances of %s in the service  description then only the first matching '
+                          '<p>If the pattern contains more groups then occurrances of <tt>%s</tt> in the service description then only the first matching '
                           'subexpressions  are used for the  service descriptions. The matched substrings corresponding to the remaining groups '
-                          'are copied into the regular expression, nevertheless.</p>'),
+                          'are copied into the regular expression, nevertheless.</p>'
+                          '<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, <tt>%2</tt>, etc. '
+                          'These will be replaced by the first, second, ... matching group. This allows you to reorder things.</p>'
+                          ),
             )),
             ('match', Alternative(
                 title = _("Process Matching"),

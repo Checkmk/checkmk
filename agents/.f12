@@ -1,4 +1,5 @@
-sudo cp -r * /omd/versions/default/share/check_mk/agents/
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+sudo cp -r * /omd/sites/$SITE/share/check_mk/agents/
 if [ -e /etc/check_mk ] 
 then
     sudo install -m 644 logwatch.cfg /etc/check_mk/

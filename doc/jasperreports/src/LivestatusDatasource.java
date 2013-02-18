@@ -60,7 +60,7 @@ public class LivestatusDatasource implements JRDataSource, JRRewindableDataSourc
 		if( column < 0 || column >= data.get(0).size() ) {
 			throw new JRException("Unknown Field:" + fieldname);
 		}
-
+		
 		String value = (data.get(m_nIdx)).get(column);
 		// Cast string value according to type
 		if( map_fieldtypes.containsKey(fieldname) ){

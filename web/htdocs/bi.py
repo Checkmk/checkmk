@@ -1516,10 +1516,10 @@ def aggr_render_leaf(tree, show_host, bare = False):
     # (4) CPU load                  (show_host == False, service != None)
 
     if show_host or not service:
-        host_url = html.makeuri([("view_name", "hoststatus"), ("site", site), ("host", host)])
+        host_url = html.makeuri([("view_name", "hoststatus"), ("site", site), ("host", host)], filename="view.py")
 
     if service:
-        service_url = html.makeuri([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
+        service_url = html.makeuri([("view_name", "service"), ("site", site), ("host", host), ("service", service)], filename="view.py")
 
     if show_host:
         content += '<a href="%s">%s</a><b class=bullet>&diams;</b>' % (host_url, host.replace(" ", "&nbsp;"))

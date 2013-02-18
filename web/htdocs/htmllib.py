@@ -357,15 +357,17 @@ class html:
         self.global_vars += varnames
 
     # [('varname1', value1), ('varname2', value2) ]
-    def makeuri(self, addvars, remove_prefix = None):
+    def makeuri(self, addvars, remove_prefix = None, filename=None):
         vars = [ (v, self.var(v)) for v in self.req.vars if v[0] != "_" ]
         if remove_prefix != None:
             vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]
         vars = vars + addvars
+        if filename == None:
+            filename = self.req.myfile + ".py"
         if vars:
-            return self.req.myfile + ".py?" + urlencode_vars(vars)
+            return filename + "?" + urlencode_vars(vars)
         else:
-            return self.req.myfile + ".py"
+            return filename
 
     def makeactionuri(self, addvars):
         return self.makeuri(addvars + [("_transid", self.fresh_transid())])

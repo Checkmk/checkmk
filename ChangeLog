@@ -22,8 +22,11 @@
     * Configuration of datasource programs via dedicated rules
     * New editor for Business Intelligence rules
 
+1.2.2b4:
+    BI:
+    * FIX: fixed invalid links to hosts and services in BI tree view
 
-1.2.2b3
+1.2.2b3:
     Checks & Agents:
     * FIX: Fixed date parsing code ignoring the seconds value in several checks
            (ad_replication, cups_queues, heartbeat_crm, mssql_backup, smbios_sel)

@@ -1,4 +1,7 @@
 1.2.2b4:
+    Checks & Agents:
+    * Linux agent: limit netstat to 10 seconds
+
     BI:
     * FIX: fixed invalid links to hosts and services in BI tree view
 

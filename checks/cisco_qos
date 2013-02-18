@@ -120,7 +120,6 @@ def cisco_qos_get_ifs_by_class_id(config, class_id):
     return [ if_index.split('.') for if_index, value in config.iteritems() if value == class_id ]
 
 def inventory_cisco_qos(info):
-    print pprint.pformat(info)
     if len(info) == 8:
         ifs = dict(info[0])
         config = dict([ ('.'.join(oid.split('.')[-2:]), value) for oid, value in info[3] ])

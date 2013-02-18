@@ -140,7 +140,6 @@ double file_time(const FILETIME *filetime);
 void open_crash_log();
 void close_crash_log();
 void crash_log(const char *format, ...);
-void crash_log_wchar(const WCHAR *text);
 
 //  .----------------------------------------------------------------------.
 //  |                    ____ _       _           _                        |
@@ -926,7 +925,6 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
     if (dll)
         dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
 
-    crash_log("     --> FormatMessage flags %x dll %x eventID %x type %c logname %s source_name %s", dwFlags, dll, event->EventID, type_char, logname, source_name);
     DWORD len = FormatMessageW(
     // DWORD len = FormatMessage(
         dwFlags,
@@ -941,11 +939,9 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
     if (dll)
 	FreeLibrary(dll);
 
-    crash_log("     --> FormatMessage len: %d", len);
     if (len) 
     {
         // convert message to UTF-8
-        crash_log_wchar(wmsgbuffer);
         len = WideCharToMultiByte(CP_UTF8, 0, wmsgbuffer, -1, msgbuffer, sizeof(msgbuffer), NULL, NULL);
     }
 
@@ -963,11 +959,9 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
 	char *w = msgbuffer;
 	int sizeleft = sizeof(msgbuffer) - 1; // leave one byte for termination
 	int n = 0;
-    crash_log("wchar strings<start>");
 	while (strings[n]) // string array is zero terminated
 	{
 	    WCHAR *s = strings[n];
-            crash_log_wchar(s);
             DWORD len = WideCharToMultiByte(CP_UTF8, 0, s, -1, w, sizeleft, NULL, NULL);
             if (!len)
                 break;
@@ -979,7 +973,6 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
             if (strings[n]) 
                 *w++ = ' ';
 	}
-    crash_log("wchar strings<end>");
     }
 
     // replace newlines with spaces. check_mk expects one message each line.
@@ -2413,26 +2406,6 @@ void close_crash_log()
         fclose(g_connectionlog_file);
         unlink(g_success_log);
         rename(g_connection_log, g_success_log);
-    }
-}
-
-void crash_log_wchar(const WCHAR *text)
-{
-    struct timeval tv;
-
-    if (g_connectionlog_file) {
-        gettimeofday(&tv, 0);
-        long int ellapsed_usec = tv.tv_usec - g_crashlog_start.tv_usec;
-        long int ellapsed_sec  = tv.tv_sec - g_crashlog_start.tv_sec;
-        if (ellapsed_usec < 0) {
-            ellapsed_usec += 1000000;
-            ellapsed_sec --;
-        }
-
-        fprintf(g_connectionlog_file, "%ld.%06ld ", ellapsed_sec, ellapsed_usec);
-        fwprintf(g_connectionlog_file, text);
-        fputs("\n", g_connectionlog_file);
-        fflush(g_connectionlog_file);
     }
 }
 

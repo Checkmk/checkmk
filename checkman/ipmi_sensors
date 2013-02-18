@@ -17,8 +17,8 @@ item:
  {Fan_FAN2_CPU} for a sensor of the group {Fan} with the name {FAN2 CPU}.
 
 perfdata:
- One variable: the current value of the sensor. Only temperature and
- fan sensors send performance data.
+ One variable: the current value of the sensor. Only temperature sensors
+ send performance data.
 
 inventory:
  All sensors that are not in the state {[Unknown]} are automatically

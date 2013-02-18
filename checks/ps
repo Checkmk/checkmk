@@ -120,6 +120,11 @@ def inventory_ps_common(invdata, info, handle_perfdata = False):
                     i_userspec = userspec
                     i_servicedesc = servicedesc
 
+                # New in 1.2.2b4: Alle %1, %2, etc. to be replaced with first, second, ...
+                # group. This allows a reordering of the matched groups
+                for nr, group in enumerate(matches):
+                    i_servicedesc = i_servicedesc.replace("%%%d" % (nr+1), group)
+
                 # It is allowed (1.1.4) that the pattern contains more subexpressions then the
                 # service description. In that case only the first subexpressions are used as
                 # item.

@@ -44,6 +44,10 @@ inventory:
  are used for the service descriptions. The matched substrings corresponding
  to the remaining groups are copied into the regular expression, nevertheless.
 
+ New in version 1.2.2: As an alternative to {%s} you may also use {%1}, {%2},
+ etc. These will be replaced by the first, second, ... matching group. This
+ allows you to reorder things.
+
  Wildcards not enclosed by brackets are simply copied verbatim to the created
  checks. Please refer to the examples for more details.
 

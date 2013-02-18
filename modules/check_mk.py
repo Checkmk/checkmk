@@ -219,6 +219,7 @@ aggr_summary_hostname              = "%s-s"
 agent_min_version                  = 0 # warn, if plugin has not at least version
 check_max_cachefile_age            = 0 # per default do not use cache files when checking
 cluster_max_cachefile_age          = 90   # secs.
+piggyback_max_cachefile_age        = 900  # secs
 simulation_mode                    = False
 agent_simulator                    = False
 perfdata_format                    = "pnp" # also possible: "standard"
@@ -2650,6 +2651,7 @@ no_inventory_possible = None
                  'var_dir', 'counters_directory', 'tcp_cache_dir', 'tmp_dir',
                  'snmpwalks_dir', 'check_mk_basedir', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
+                 'piggyback_max_cachefile_age',
                  'simulation_mode', 'agent_simulator', 'aggregate_check_mk', 'debug_log',
                  'check_mk_perfdata_with_times', 'livestatus_unix_socket',
                  ]:

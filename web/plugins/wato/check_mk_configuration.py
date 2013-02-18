@@ -640,6 +640,15 @@ register_configvar(group,
     need_restart = True)
 
 register_configvar(group,
+    "piggyback_max_cachefile_age",
+    Integer(title = _("Maximum age for piggyback files"),
+            label = _("seconds"),
+            help = _("The number of seconds a piggyback file may be old to be valid for monitoring. "
+                     "Older files are deleted before processing them.")),
+    need_restart = True)
+
+
+register_configvar(group,
     "check_submission",
     DropdownChoice(
         title = _("Check submission method"),

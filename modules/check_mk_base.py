@@ -370,7 +370,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age):
     if is_tcp_host(hostname):
         try:
             output = get_agent_info(hostname, ipaddress, max_cache_age)
-        except:
+        except Exception, e:
             agent_failed = True
             # Remove piggybacked information from the host (in the
             # role of the pig here). Why? We definitely haven't
@@ -410,11 +410,18 @@ def get_piggyback_info(hostname):
     if os.path.exists(dir):
         for sourcehost in os.listdir(dir):
             if sourcehost not in ['.', '..'] \
-                and not sourcehost.startswith(".new."):
+               and not sourcehost.startswith(".new."):
+                file_path = dir + "/" + sourcehost
+
+                if cachefile_age(file_path) > piggyback_max_cachefile_age:
+                    os.remove(file_path)
+                    continue
+
                 if opt_debug:
                     sys.stderr.write("Using piggyback information from host %s.\n" %
                       sourcehost)
-                output += file(dir + "/" + sourcehost).read()
+
+                output += file(file_path).read()
     return output
 
 
@@ -433,7 +440,7 @@ def store_piggyback_info(sourcehost, piggybacked):
 
     # Remove piggybacked information that is not
     # being sent this turn
-    remove_piggyback_info_from(sourcehost, keep=piggybacked)
+    remove_piggyback_info_from(sourcehost, keep=piggybacked.keys())
 
 def remove_piggyback_info_from(sourcehost, keep=[]):
     removed = 0

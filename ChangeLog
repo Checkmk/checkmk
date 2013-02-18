@@ -1,7 +1,6 @@
 1.2.3i1:
     Core:
-    * New feature: agents can send data for other hosts
-      "piggyback".
+    * New feature: agents can send data for other hosts "piggyback".
 
     Event Console:
     * New rule feature: automatically delete after action

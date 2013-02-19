@@ -33,7 +33,7 @@
 
 def inventory_windows_broadcom_bonding(info):
    inventory = []
-   for line in info[1:]
+   for line in info[1:]:
       inventory.append( (" ".join(line[:-1]), "", None) )
    return inventory
 

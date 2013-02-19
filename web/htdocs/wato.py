@@ -7575,6 +7575,8 @@ def load_notification_scripts():
     choices = scripts.items()
     choices.append((None, _("Plain Text Email (using configured templates)")))
     choices.sort(cmp = lambda a,b: cmp(a[1], b[1]))
+    # Make choices localizable
+    choices = [ (k, _(v)) for k, v in choices ]
     return choices
 
 def notification_script_title(name):

@@ -10,9 +10,13 @@
     * Linux agent: limit netstat to 10 seconds
     * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
       reordering of matched groups
+    * mysql: fixed crash on computing IO information
 
     BI:
     * FIX: fixed invalid links to hosts and services in BI tree view
+    * FIX: fix exception in top/down and bottom/up views
+    * FIX: fix styling of top/down and bottom/up views (borders, padding)
+    * Make titles of non-leaf tree nodes klickable
 
 1.2.2b3:
     Checks & Agents:

@@ -197,14 +197,14 @@ def paint_aggr_tree_ltr(row, mirror):
             return gen_node(tree, height, show_host)
 
     def gen_leaf(tree, height, show_host):
-        return [(aggr_render_leaf(tree, show_host), height, [])]
+        return [(bi.aggr_render_leaf(tree, show_host), height, [])]
 
     def gen_node(tree, height, show_host):
         leaves = []
         for node in tree[3]:
             if not node[2].get("hidden"):
                 leaves += gen_table(node, height - 1, show_host)
-        h = '<div class="aggr tree">' + aggr_render_node(tree, tree[2]["title"], '', show_host) + "</div>"
+        h = '<div class="aggr tree">' + bi.aggr_render_node(tree, tree[2]["title"], '', show_host) + "</div>"
         if leaves:
             leaves[0][2].append((len(leaves), h))
         return leaves
@@ -214,7 +214,7 @@ def paint_aggr_tree_ltr(row, mirror):
         tree = filter_tree_only_problems(tree)
     depth = bi.status_tree_depth(tree)
     leaves = gen_table(tree, depth, row["aggr_hosts"] > 1)
-    h = '<table class="aggrtree">'
+    h = '<table class="aggrtree ltr">'
     odd = "odd"
     for code, colspan, parents in leaves:
         h += '<tr>\n'

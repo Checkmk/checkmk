@@ -186,6 +186,7 @@ def load_all_plugins():
             pass
         except Exception:
             raise
+__builtin__.load_all_plugins = load_all_plugins
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)
 def handler(req, profiling = True):

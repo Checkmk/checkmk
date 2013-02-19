@@ -248,8 +248,9 @@ class html:
         self.plugged_text = ''
 
     def flush(self):
-        self.lowlevel_write(self.plugged_text)
-        self.plugged_text = ''
+        if self.plugged:
+            self.lowlevel_write(self.plugged_text)
+            self.plugged_text = ''
 
     def drain(self):
         if self.plugged:

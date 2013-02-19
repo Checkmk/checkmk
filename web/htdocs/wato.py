@@ -2563,12 +2563,13 @@ def mode_bulk_inventory(phase):
             except Exception, e:
                 result = repr([ 'failed', 1, 1, 0, 0, 0, 0, ]) + "\n"
                 if site_id:
-                    msg = _("Error during inventory of %s on site %s: %s") % (hostname, site_id, e)
+                    msg = _("Error during inventory of %s on site %s<div class=exc>%s</div") % \
+                                     (hostname, site_id, e)
                 else:
-                    msg = _("Error during inventory of %s: %s") % (hostname, e)
+                    msg = _("Error during inventory of %s<div class=exc>%s</div>") % (hostname, e)
                 if config.debug:
-                    msg += "<br><pre>%s</pre>" % format_exception().replace("\n", "<br>")
-                result += msg + "\n<br>"
+                    msg += "<br><pre>%s</pre><br>" % format_exception().replace("\n", "<br>")
+                result += msg
                 if not host.get("inventory_failed"):
                     host["inventory_failed"] = True
                     save_hosts(folder)

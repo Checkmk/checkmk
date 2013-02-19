@@ -894,7 +894,7 @@ div.varname {
 }
 
 /* Log window */
-.wato table.progress td.log div {
+.wato table.progress td.log > div {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
     border: 1px solid #fff;
@@ -907,6 +907,12 @@ div.varname {
 .wato table.progress td.log {
     font-family: monospace, sans-serif;
     padding: 12px 12px 0px 12px;
+}
+
+.wato table.progress td.log div.exc {
+    border: 1px solid #ff0000;
+    margin: 10px;
+    padding: 5px;
 }
 
 /* progress bar */

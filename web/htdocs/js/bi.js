@@ -24,6 +24,9 @@
 
 function bi_toggle_subtree(oImg, lazy)
 {
+    if (oImg.tagName == "SPAN") { // clicked on title,
+        oImg = oImg.previousSibling;
+    }
     var oSubtree = oImg.parentNode.childNodes[6];
     var url = "bi_save_treestate.py?path=" + escape(oSubtree.id);
     var do_open;

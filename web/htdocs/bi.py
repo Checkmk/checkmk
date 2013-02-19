@@ -1470,7 +1470,7 @@ def aggr_render_node(tree, title, mousecode, show_host):
          % (effective_state["state"], addclass, render_bi_state(effective_state["state"]))
     if mousecode:
         h += '<img class=opentree %s>' % mousecode
-        h += '<span class="content name">%s</span>' % title
+        h += '<span class="content name" %s>%s</span>' % (mousecode, title) 
     else:
         h += title
 

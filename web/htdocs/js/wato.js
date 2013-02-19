@@ -279,7 +279,10 @@ function progress_handle_response(data, code, http_code) {
                 header.push(0);
             }
         }
-        body = 'HTTP-Request failed (' + http_code + ', ' + data + ')'
+        body = 'Inventory of ' + item + ' failed\n'
+              +'<div class=exc><h1>HTTP-Request failed</h1>'
+              +'HTTP-Code: ' + http_code + '<br />'
+              +'Parameters: ' + data + '</div>\n';
     } else {
         // Regular response processing
         try {

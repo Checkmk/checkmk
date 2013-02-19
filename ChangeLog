@@ -5,6 +5,7 @@
     Multisite:
     * FIX: Fixed problem with error during localization scanning
     * FIX: Fixed wrong localization right after a user changed its language
+    * FIX: Improved handling of error messages in bulk inventory
 
     Checks & Agents:
     * Linux agent: limit netstat to 10 seconds

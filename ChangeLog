@@ -2,6 +2,7 @@
     Checks & Agents:
     * FIX: smart - not trying to parse unhandled lines to prevent errors
     * FIX: WATO configuration of filesystem trends: it's hours, not days!
+    * FIX: winperf_processor - fixed wrong calculations of usage
 
     Multisite:
     * FIX: Fixed problem with error during localization scanning
@@ -20,6 +21,9 @@
     * FIX: fix exception in top/down and bottom/up views
     * FIX: fix styling of top/down and bottom/up views (borders, padding)
     * Make titles of non-leaf tree nodes klickable
+
+    WATO:
+    * FIX: flexible notification valuespec is now localizable
 
 1.2.2b3:
     Checks & Agents:

@@ -1,4 +1,7 @@
 1.2.2b4:
+    Checks & Agents:
+    * FIX: smart - not trying to parse unhandled lines to prevent errors
+
     Multisite:
     * FIX: Fixed problem with error during localization scanning
     * FIX: Fixed wrong localization right after a user changed its language

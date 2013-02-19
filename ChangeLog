@@ -27,6 +27,7 @@
 1.2.2b4:
     Checks & Agents:
     * FIX: smart - not trying to parse unhandled lines to prevent errors
+    * FIX: winperf_processor - fixed wrong calculations of usage
 
     Multisite:
     * FIX: Fixed problem with error during localization scanning

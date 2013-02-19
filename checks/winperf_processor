@@ -61,7 +61,7 @@ def check_winperf_util(item, params, info):
                 #
                 # 1 tick = 100ns, convert to seconds
                 cpusecs_per_sec = ticks_per_sec / 10000000.0
-                used_perc = (100.0 * num_cpus) * (1 - cpusecs_per_sec)
+                used_perc = 100 * (1 - cpusecs_per_sec)
 
             if used_perc < 0:
                 used_perc = 0

@@ -45,6 +45,9 @@
     * FIX: fix styling of top/down and bottom/up views (borders, padding)
     * Make titles of non-leaf tree nodes klickable
 
+    WATO:
+    * FIX: flexible notification valuespec is now localizable
+
 1.2.2b3:
     Checks & Agents:
     * FIX: Fixed date parsing code ignoring the seconds value in several checks

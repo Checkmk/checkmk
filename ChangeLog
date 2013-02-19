@@ -25,6 +25,9 @@
     * New editor for Business Intelligence rules
 
 1.2.2b4:
+    Multisite:
+    * FIX: Fixed problem with error during localization scanning
+
     Checks & Agents:
     * Linux agent: limit netstat to 10 seconds
     * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows

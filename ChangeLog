@@ -28,6 +28,7 @@
     Checks & Agents:
     * FIX: smart - not trying to parse unhandled lines to prevent errors
     * FIX: winperf_processor - fixed wrong calculations of usage
+    * FIX: WATO configuration of filesystem trends: it's hours, not days!
 
     Multisite:
     * FIX: Fixed problem with error during localization scanning

@@ -3,7 +3,8 @@
     * Linux agent: limit netstat to 10 seconds
     * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
       reordering of matched groups
-    * mysql: fixed crash on computing IO information
+    * FIX: mysql: fixed crash on computing IO information
+    * FIX: diskstat: fix local variable 'ios_per_sec' referenced before assignment
 
     BI:
     * FIX: fixed invalid links to hosts and services in BI tree view

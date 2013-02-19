@@ -131,6 +131,7 @@ def check_diskstat_line(this_time, item, params, line):
         perfdata = [ perfdata[0], perfdata[2], perfdata[1], perfdata[3] ]
 
     # Process IOs when available
+    ios_per_sec = None
     if len(line) >= 5 and line[3] >= 0 and line[4] > 0:
         reads, writes = map(int, line[3:5])
         ios = reads + writes

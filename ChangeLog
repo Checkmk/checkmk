@@ -33,6 +33,9 @@
 
     BI:
     * FIX: fixed invalid links to hosts and services in BI tree view
+    * FIX: fix exception in top/down and bottom/up views
+    * FIX: fix styling of top/down and bottom/up views (borders, padding)
+    * Make titles of non-leaf tree nodes klickable
 
 1.2.2b3:
     Checks & Agents:

@@ -63,6 +63,10 @@ tr.even0 .aggrtree ul.subtree {
     padding-bottom: 1px;
 }
 
+.aggrtree span.title span.content.name {
+    cursor: pointer;
+}
+
 .aggrtree span.state {
     margin-right: 3px;
     width: 34px;
@@ -148,4 +152,7 @@ td.aggrtree_box {
 .bibox {
     padding: 0px;
 }
-
+table.aggrtree.ltr td {
+    border: 1px solid #ccc;
+    padding: 3px;
+}

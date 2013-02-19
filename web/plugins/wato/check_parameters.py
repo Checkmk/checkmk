@@ -1491,7 +1491,7 @@ checkgroups.append((
                 Checkbox(
                   title = _("Autoextend"),
                   label = _("Autoextension is expected"),
-                  help = _(""))),
+                  help = "")),
                    ]),
     TextAscii(
         title = _("Explicit tablespaces"),

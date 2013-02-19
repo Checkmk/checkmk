@@ -86,21 +86,20 @@ def check_smart_stats(item, params, info):
         if len(line) != 13 or line[0] != item:
             continue
 
-        value = int(line[12].split("/", 1)[0])
-        for val, uom, lab, txt, thresh in [
-                      (value, ' hours', 'Power_On_Hours',          'Powered on',           None),
-                      (value, '',       'Power_Cycle_Count',       'Power cycles',         None),
-                      (value, '',       'Reallocated_Sector_Ct',   'Reallocated sectors',  'realloc_sectors'),
-                      (value, '',       'Reallocated_Event_Count', 'Reallocated events',   'realloc_events'),
-                      (value, '',       'Spin_Retry_Count',        'Spin retries',         'spin_retries'),
-                      (value, '',       'Current_Pending_Sector',  'Pending sectors',      'pending_sectors'),
-                      (value, '',       'Command_Timeout',         'Command timeouts',     'cmd_timeouts'),
-                      (value, '',       'End-to-End_Error',        'End-to-End errors',    'e2e_errs'),
-                      (value, '',       'Reported_Uncorrect',      'Uncorrectable errors', 'uncorr_errs'),
-                      (value, '',       'UDMA_CRC_Error_Count',    'UDMA CRC errors',      'udma_crcs'),
+        for uom, lab, txt, thresh in [
+                      (' hours', 'Power_On_Hours',          'Powered on',           None),
+                      ('',       'Power_Cycle_Count',       'Power cycles',         None),
+                      ('',       'Reallocated_Sector_Ct',   'Reallocated sectors',  'realloc_sectors'),
+                      ('',       'Reallocated_Event_Count', 'Reallocated events',   'realloc_events'),
+                      ('',       'Spin_Retry_Count',        'Spin retries',         'spin_retries'),
+                      ('',       'Current_Pending_Sector',  'Pending sectors',      'pending_sectors'),
+                      ('',       'Command_Timeout',         'Command timeouts',     'cmd_timeouts'),
+                      ('',       'End-to-End_Error',        'End-to-End errors',    'e2e_errs'),
+                      ('',       'Reported_Uncorrect',      'Uncorrectable errors', 'uncorr_errs'),
+                      ('',       'UDMA_CRC_Error_Count',    'UDMA CRC errors',      'udma_crcs'),
                    ]:
-
             if line[4] == lab:
+                value = int(line[12].split("/", 1)[0])
                 warn, crit, cur_status, thresh_out = None, None, 0, ''
                 if thresh in params and value >= params[thresh][1]:
                     cur_status = 2
@@ -109,8 +108,8 @@ def check_smart_stats(item, params, info):
                     cur_status = 1
                     thresh_out = '(!)'
 
-                perfdata.append((lab, val, thresh and params[thresh][0] or None, thresh and params[thresh][1] or None))
-                output.append('%s: %d%s%s' % (txt, val, uom, thresh_out))
+                perfdata.append((lab, value, thresh and params[thresh][0] or None, thresh and params[thresh][1] or None))
+                output.append('%s: %d%s%s' % (txt, value, uom, thresh_out))
                 status = max(status, cur_status)
 
     if not output:

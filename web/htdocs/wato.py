@@ -11342,7 +11342,7 @@ def mode_bi_rules(phase):
         delete_url = make_action_link([("mode", "bi_rules"), ("_del_aggr", nr)])
         html.icon_button(delete_url, _("Delete this aggregation"), "delete")
         table.cell(_("Nr."), nr+1, css="number")
-        table.cell(_(""), css="buttons")
+        table.cell("", css="buttons")
         if aggregation["disabled"]:
             html.icon(_("This aggregation is currently disabled."), "disabled")
         if aggregation["single_host"]:

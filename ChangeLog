@@ -1,6 +1,7 @@
 1.2.2b4:
     Checks & Agents:
     * FIX: smart - not trying to parse unhandled lines to prevent errors
+    * FIX: WATO configuration of filesystem trends: it's hours, not days!
 
     Multisite:
     * FIX: Fixed problem with error during localization scanning

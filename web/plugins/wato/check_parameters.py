@@ -1126,8 +1126,8 @@ checkgroups.append((
                Tuple(
                    title = _("Levels on the time left until the filesystem gets full"),
                    elements = [
-                       Integer(title = _("Warning at"), label = _("days left")),
-                       Integer(title = _("Critical at"), label = _("days left"))
+                       Integer(title = _("Warning at"), label = _("hours left")),
+                       Integer(title = _("Critical at"), label = _("hours left"))
                    ])),
             ( "trend_perfdata",
               Checkbox(

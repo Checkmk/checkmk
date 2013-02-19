@@ -248,9 +248,12 @@ avoption_entries = [
 def render_availability_options():
     avoptions = config.load_user_file("avoptions", {
         "range"          : (time.time() - 86400, time.time()),
+        "downtimes"      : {
+            "include" : "honor",
+            "exclude_ok" : False,
+        },
         "consider"       : {
             "flapping"            : True,
-            "downtime"            : True,
             "host_down"           : True,
             "notification_period" : True,
             "unmonitored"         : True,
@@ -263,6 +266,7 @@ def render_availability_options():
             "host_down" : "host_down",
         },
         "short_intervals" : 0,
+        "dont_merge" : False,
     })
 
     is_open = False

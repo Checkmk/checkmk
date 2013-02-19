@@ -113,6 +113,10 @@
 # Parent ID:
 # .1.3.6.1.4.1.9.9.166.1.5.1.1.4.258.6184 258
 
+
+# get cbQosQueueingCfgBandwidth
+# .1.3.6.1.4.1.9.9.166.1.9.1.1.1.1608 3094
+
 # post_warn, post_crit, drop warn, drop crit
 cisco_qos_default_levels = (None, None, 0.01, 0.01)
 
@@ -120,7 +124,7 @@ def cisco_qos_get_ifs_by_class_id(config, class_id):
     return [ if_index.split('.') for if_index, value in config.iteritems() if value == class_id ]
 
 def inventory_cisco_qos(info):
-    if len(info) == 8:
+    if len(info) == 11:
         ifs = dict(info[0])
         config = dict([ ('.'.join(oid.split('.')[-2:]), value) for oid, value in info[3] ])
         if_names = dict(info[6])
@@ -137,7 +141,7 @@ def inventory_cisco_qos(info):
 
 def check_cisco_qos(item, params, info):
     post_warn, post_crit, drop_warn, drop_crit = params
-
+    
     # Load values and format them
     ifs = dict(info[0])
     policies= dict(info[1])
@@ -147,7 +151,10 @@ def check_cisco_qos(item, params, info):
     drop_bytes = dict([ ('.'.join(oid.split('.')[-2:]), value) for oid, value in info[5] ])
     if_names = dict(info[6])
     if_speeds = dict(info[7])
-
+    parents = dict(info[8])
+    if_qos_bandwidth = dict(info[9])
+    parents_type = dict(info[10])
+    
     if_name, class_name = item.split(': ')
 
     # Gather the class id by class_name
@@ -174,9 +181,15 @@ def check_cisco_qos(item, params, info):
     post_b      = post_bytes[policy_if_id+'.'+policy_if_id2]
     drop_b      = drop_bytes[policy_if_id+'.'+policy_if_id2]
     speed       = saveint(if_speeds[if_id])
-    # Bandwidth needs to be in bytes for later calculations
-    bw          = speed / 8.0
 
+    for key, value in parents.items():
+        if value == policy_if_id2:
+            if parents_type[key] == "4":
+                speed = saveint(if_qos_bandwidth[config[key]]) * 1000
+       
+    # Bandwidth needs to be in bytes for later calculations
+    bw = speed / 8.0
+    
     # Handle counter values
     state = 0
     infotext = ''
@@ -186,7 +199,6 @@ def check_cisco_qos(item, params, info):
     perfdata = []
     for name, counter, warn, crit, min, max in [ ( "post", post_b, post_warn, post_crit, 0, bw),
                                                  ( "drop", drop_b, drop_warn, drop_crit, 0, bw) ]:
-
         try:
             timedif, rate = get_counter("cisco_qos.%s.%s" % (name, item), this_time, saveint(counter))
             rates.append(rate)
@@ -221,6 +233,9 @@ snmp_info['cisco_qos']  = [ ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '1.1.1.4' 
                             ( '.1.3.6.1.4.1.9.9.166.1', [ OID_STRING, '15.1.1.16' ] ), # qosDropBytes
                             ( '.1.3.6.1.2.1.2.2.1',     [ OID_END,    '2' ]),          # ifNames
                             ( '.1.3.6.1.2.1.2.2.1',     [ OID_END,    '5' ]),          # ifSpeeds
+                            ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '5.1.1.4' ]),    # cbQosParentObjectsIndex
+                            ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '9.1.1.1' ]),    # qosQueueingConfigBandwidth
+                            ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '5.1.1.3' ]),    # cbQosObjectsType
                           ]
 snmp_scan_functions['cisco_qos'] = lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
                                    oid(".1.3.6.1.4.1.9.9.166.1.1.1.1.4.*")

@@ -42,6 +42,7 @@
     * FIX: Fixed problem with error during localization scanning
     * FIX: Fixed wrong localization right after a user changed its language
     * FIX: Improved handling of error messages in bulk inventory
+    * FIX: fixed focus bug in transform valuespec class
 
     BI:
     * FIX: fixed invalid links to hosts and services in BI tree view
@@ -51,6 +52,8 @@
 
     WATO:
     * FIX: flexible notification valuespec is now localizable
+    * FIX: Alias values of host/service/contact groups need to be set and unique
+           within the group
 
 1.2.2b3:
     Checks & Agents:

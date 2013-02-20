@@ -2171,7 +2171,7 @@ class Transform(ValueSpec):
     def render_input(self, varprefix, value):
         self._valuespec.render_input( varprefix, self.forth(value))
 
-    def set_focus(*args):
+    def set_focus(self, *args):
         self._valuespec.set_focus(*args)
 
     def canonical_value(self):

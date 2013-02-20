@@ -3654,11 +3654,11 @@ def dump_host(hostname):
 
     agenttypes = []
     if is_tcp_host(hostname):
-        agenttypes.append("TCP (port: %d)" % agent_port_of(hostname))
-    else:
         dapg = get_datasource_program(hostname, ipaddress)
         if dapg:
             agenttypes.append("Datasource program: %s" % dapg)
+        else:
+            agenttypes.append("TCP (port: %d)" % agent_port_of(hostname))
 
     if is_snmp_host(hostname):
         if is_usewalk_host(hostname):

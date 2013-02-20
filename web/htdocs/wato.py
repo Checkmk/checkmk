@@ -10727,7 +10727,7 @@ def register_rule(group, varname, valuespec = None, title = None,
         "itemname"  : itemname, # e.g. "mount point"
         "itemhelp"  : itemhelp, # a description of the item, only rarely used
         "itemenum"  : itemenum, # possible fixed values for items
-        "match"     : match,
+        "match"     : match,    # used by WATO rule analyzer (green and grey balls)
         "title"     : title or valuespec.title(),
         "help"      : help or valuespec.help(),
         "optional"  : optional, # rule may be None (like only_hosts)

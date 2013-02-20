@@ -5786,6 +5786,11 @@ def mode_edit_group(phase, what):
     if phase == "action":
         if html.check_transaction():
             alias = html.var_utf8("alias").strip()
+            if not alias:
+                raise MKUserError("alias", _("Please specify an alias name."))
+            for key, value in groups.items():
+                if alias == value and name != key:
+                    raise MKUserError("alias", _("This alias is already used in the group %s ." % key))
             if new:
                 name = html.var("name").strip()
                 if len(name) == 0:

@@ -34,6 +34,7 @@
     * FIX: Fixed problem with error during localization scanning
     * FIX: Fixed wrong localization right after a user changed its language
     * FIX: Improved handling of error messages in bulk inventory
+    * FIX: fixed focus bug in transform valuespec class
 
     Checks & Agents:
     * Linux agent: limit netstat to 10 seconds

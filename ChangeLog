@@ -37,6 +37,7 @@
     * Linux agent: limit netstat to 10 seconds
     * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
       reordering of matched groups
+    * FIX: multipath: ignore warning messages in agent due to invalid multipath.conf
 
     Multisite:
     * FIX: Fixed problem with error during localization scanning

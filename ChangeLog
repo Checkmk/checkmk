@@ -50,6 +50,8 @@
 
     WATO:
     * FIX: flexible notification valuespec is now localizable
+    * FIX: Alias values of host/service/contact groups need to be set and unique
+           within the group
 
 1.2.2b3:
     Checks & Agents:

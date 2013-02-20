@@ -364,7 +364,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age):
     # If we have piggyback data for that host from another host,
     # then we prepend this data and also tolerate a failing
     # normal Check_MK Agent access.
-    piggy_output = get_piggyback_info(hostname)
+    piggy_output = get_piggyback_info(hostname) + get_piggyback_info(ipaddress)
     output = ""
     agent_failed = False
     if is_tcp_host(hostname):

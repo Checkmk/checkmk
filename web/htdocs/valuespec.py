@@ -366,28 +366,36 @@ class ID(TextAscii):
 class RegExp(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, attrencode = True, **kwargs)
+        self._mingroups = kwargs.get("mingroups", 0)
+        self._maxgroups = kwargs.get("maxgroups")
 
     def validate_value(self, value, varprefix):
         TextAscii.validate_value(self, value, varprefix)
 
         # Check if the string is a valid regex
         try:
-            re.compile(value)
+            compiled = re.compile(value)
         except sre_constants.error, e:
             raise MKUserError(varprefix, _('Invalid regular expression: %s') % e)
 
-class RegExpUnicode(TextUnicode):
+        if compiled.groups < self._mingroups:
+            raise MKUserError(varprefix, _("Your regular expression containes <b>%d</b> groups. "
+                 "You need at least <b>%d</b> groups.") % (compiled.groups, self._mingroups))
+        if self._maxgroups != None and compiled.groups > self._maxgroups:
+            raise MKUserError(varprefix, _("Your regular expression containes <b>%d</b> groups. "
+                 "It must have at most <b>%d</b> groups.") % (compiled.groups, self._maxgroups))
+
+
+
+class RegExpUnicode(TextUnicode, RegExp):
     def __init__(self, **kwargs):
         TextUnicode.__init__(self, attrencode = True, **kwargs)
+        RegExp.__init__(self, **kwargs)
 
     def validate_value(self, value, varprefix):
         TextUnicode.validate_value(self, value, varprefix)
+        RegExp.validate_value(self, value, varprefix)
 
-        # Check if the string is a valid regex
-        try:
-            re.compile(value)
-        except sre_constants.error, e:
-            raise MKUserError(varprefix, _('Invalid regular expression: %s') % e)
 
 class EmailAddress(TextAscii):
     def __init__(self, **kwargs):

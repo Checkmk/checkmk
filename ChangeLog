@@ -25,23 +25,24 @@
     * New editor for Business Intelligence rules
 
 1.2.2b4:
+    Core:
+    * FIX: Fix output of cmk -D: datasource programs were missing
+
     Checks & Agents:
     * FIX: smart - not trying to parse unhandled lines to prevent errors
     * FIX: winperf_processor - fixed wrong calculations of usage
     * FIX: WATO configuration of filesystem trends: it's hours, not days!
+    * FIX: mysql: fixed crash on computing IO information
+    * FIX: diskstat: fix local variable 'ios_per_sec' referenced before assignment
+    * Linux agent: limit netstat to 10 seconds
+    * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
+      reordering of matched groups
 
     Multisite:
     * FIX: Fixed problem with error during localization scanning
     * FIX: Fixed wrong localization right after a user changed its language
     * FIX: Improved handling of error messages in bulk inventory
     * FIX: fixed focus bug in transform valuespec class
-
-    Checks & Agents:
-    * Linux agent: limit netstat to 10 seconds
-    * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
-      reordering of matched groups
-    * FIX: mysql: fixed crash on computing IO information
-    * FIX: diskstat: fix local variable 'ios_per_sec' referenced before assignment
 
     BI:
     * FIX: fixed invalid links to hosts and services in BI tree view

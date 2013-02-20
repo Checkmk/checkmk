@@ -156,8 +156,6 @@ void Store::answerCommandRequest(const char *command)
 void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const char *tablename)
 {
     output->reset();
-    if (g_debug_level > 0)
-        logger(LG_INFO, "Time to process request");
     if (!tablename[0]) {
         output->setError(RESPONSE_CODE_INVALID_REQUEST, "Invalid GET request, missing tablename");
     }

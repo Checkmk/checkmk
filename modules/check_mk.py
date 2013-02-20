@@ -3473,20 +3473,23 @@ def output_plain_hostinfo(hostname):
     if info:
         sys.stdout.write(info)
         return
-    try:
-        ipaddress = lookup_ipaddress(hostname)
-        sys.stdout.write(get_agent_info(hostname, ipaddress, 0))
-    except MKAgentError, e:
-        sys.stderr.write("Problem contacting agent: %s\n" % (e,))
-        sys.exit(3)
-    except MKGeneralException, e:
-        sys.stderr.write("General problem: %s\n" % (e,))
-        sys.exit(3)
-    except socket.gaierror, e:
-        sys.stderr.write("Network error: %s\n" % e)
-    except Exception, e:
-        sys.stderr.write("Unexpected exception: %s\n" % (e,))
-        sys.exit(3)
+    if is_tcp_host(hostname):
+        try:
+            ipaddress = lookup_ipaddress(hostname)
+            sys.stdout.write(get_agent_info(hostname, ipaddress, 0))
+        except MKAgentError, e:
+            sys.stderr.write("Problem contacting agent: %s\n" % (e,))
+            sys.exit(3)
+        except MKGeneralException, e:
+            sys.stderr.write("General problem: %s\n" % (e,))
+            sys.exit(3)
+        except socket.gaierror, e:
+            sys.stderr.write("Network error: %s\n" % e)
+        except Exception, e:
+            sys.stderr.write("Unexpected exception: %s\n" % (e,))
+            sys.exit(3)
+
+    sys.stdout.write(get_piggyback_info(hostname))
 
 def do_snmpwalk(hostnames):
     if len(hostnames) == 0:

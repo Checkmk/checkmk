@@ -6,32 +6,12 @@ distribution: check_mk
 description:
  This check checks the current state of a Windows broadcom bonding interface.
  If the total bonding state of the interface is down, then the
- check gets critical. If at least one slave interface is down
- or not the expected slave is currently active, then the check
+ check gets critical. If at least one slave interface is down the check
  gets WARN.
 
 item:
  The name of the bonding interface, etc {Bond_10.4}.
 
-examples:
- # On windows hosts the lowest numbered eth interface should be
- # the active one.
- check_parameters = [
-    ( { "expect_active" : "lowest" }, [ 'windows'], ALL_HOSTS, ALL_SERVICES )
- ]
-
 inventory:
  One check per {active} bonding interface will be created.
-
-[parameters]
-parameters (dict): Currently two parameters are available in this dict:
-
- {"primary"}: The assumed primary interface. This is for agents that do
- not provide this information. In that case this is set automatically
- by the inventory to the currently active interface.
-
- {"expect_active"}: Which interface should be expected active. This is one
- of the following strings: {"primary"}: The interface set by the
- parameter {"primary"}, {"lowest"}: The interface sorting lowest
- alphabetically, {"ignore"}: Ignore which interace is active.
 

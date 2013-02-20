@@ -220,6 +220,7 @@ agent_min_version                  = 0 # warn, if plugin has not at least versio
 check_max_cachefile_age            = 0 # per default do not use cache files when checking
 cluster_max_cachefile_age          = 90   # secs.
 piggyback_max_cachefile_age        = 900  # secs
+piggyback_translation              = [] # Ruleset for translating piggyback host names
 simulation_mode                    = False
 agent_simulator                    = False
 perfdata_format                    = "pnp" # also possible: "standard"
@@ -1100,6 +1101,16 @@ def service_description(check_type, item):
         return (descr_format % (item,)).strip()
     else:
         return descr_format.strip()
+
+
+# Get rules for piggyback translation for that hostname
+def get_piggyback_translation(hostname):
+    rules = host_extra_conf(hostname, piggyback_translation)
+    translations = {}
+    for rule in rules[::-1]:
+        translations.update(rule)
+    return translations
+
 
 #   +----------------------------------------------------------------------+
 #   |    ____             __ _                     _               _       |
@@ -2213,7 +2224,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
 
             # The decision wether to contact the agent via TCP
             # is done in get_realhost_info(). This is due to
-            # the possibility that piggiback data from other
+            # the possibility that piggyback data from other
             # hosts is available.
 
             if is_cluster(host):
@@ -2787,6 +2798,9 @@ no_inventory_possible = None
     # TCP and SNMP port of agent
     output.write("def agent_port_of(hostname):\n    return %d\n\n" % agent_port_of(hostname))
     output.write("def snmp_port_spec(hostname):\n    return %r\n\n" % snmp_port_spec(hostname))
+
+    # Piggyback translations
+    output.write("def get_piggyback_translation(hostname):\n    return %r\n\n" % get_piggyback_translation(hostname))
 
     # SNMP character encoding
     output.write("def get_snmp_character_encoding(hostname):\n    return %r\n\n"

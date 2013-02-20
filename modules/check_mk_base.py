@@ -436,11 +436,12 @@ def store_piggyback_info(sourcehost, piggybacked):
         out = file(dir + "/.new." + sourcehost, "w")
         for line in lines:
             out.write("%s\n" % line)
-        os.rename(dir + "/.new." + sourcehost,dir + "/" + sourcehost)
+        os.rename(dir + "/.new." + sourcehost, dir + "/" + sourcehost)
 
     # Remove piggybacked information that is not
     # being sent this turn
     remove_piggyback_info_from(sourcehost, keep=piggybacked.keys())
+
 
 def remove_piggyback_info_from(sourcehost, keep=[]):
     removed = 0
@@ -463,6 +464,37 @@ def remove_piggyback_info_from(sourcehost, keep=[]):
             except:
                 pass
     return removed
+
+def translate_piggyback_host(sourcehost, backedhost):
+    translation = get_piggyback_translation(sourcehost)
+
+    # 1. Case conversion
+    caseconf = translation.get("case")
+    if caseconf == "upper":
+        backedhost = backedhost.upper()
+    elif caseconf == "lower":
+        backedhost = backedhost.lower()
+
+    # 2. Regular expression conversion
+    if "regex" in translation:
+        regex, subst = translation.get("regex")
+        if not regex.endswith('$'):
+            regex += '$'
+        rcomp = get_regex(regex)
+        mo = rcomp.match(backedhost)
+        if mo:
+            backedhost = subst
+            for nr, text in enumerate(mo.groups()):
+                backedhost = translated.replace("\\%d" % (nr+1), text)
+
+    # 3. Explicity mapping
+    for from_host, to_host in translation.get("mapping", []):
+        if from_host == backedhost:
+            backedhost = to_host
+            break
+
+    return backedhost
+
 
 
 def read_cache_file(relpath, max_cache_age):
@@ -627,8 +659,12 @@ def parse_info(lines, hostname):
     for line in lines:
         if line[:4] == '<<<<' and line[-4:] == '>>>>':
             host = line[4:-4]
-            if not host or host == hostname:
-                host = None # unpiggybacked "normal" host
+            if not host: 
+                host = None
+            else:
+                host = translate_piggyback_host(hostname, host)
+                if host == hostname:
+                    host = None # unpiggybacked "normal" host
         elif host: # processing data for an other host
             piggybacked.setdefault(host, []).append(line)
         elif line[:3] == '<<<' and line[-3:] == '>>>':

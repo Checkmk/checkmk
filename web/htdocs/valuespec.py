@@ -929,23 +929,27 @@ class CascadingDropdown(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
 
         if type(kwargs["choices"]) == list:
-            self._choices = []
-            for entry in kwargs["choices"]:
-                if len(entry) == 2: # plain entry with no sub-valuespec
-                    entry = entry + (None,) # normlize to three entries
-                self._choices.append(entry)
+            self._choices = self.normalize_choices(kwargs["choices"])
         else:
-            self._choices = kwargs["choices"] # function
+            self._choices = kwargs["choices"] # function, store for later
 
         self._separator = kwargs.get("separator", ", ")
         self._html_separator = kwargs.get("html_separator", "<br>")
         self._sorted = kwargs.get("sorted", True)
 
+    def normalize_choices(self, choices):
+        new_choices = []
+        for entry in choices:
+            if len(entry) == 2: # plain entry with no sub-valuespec
+                entry = entry + (None,) # normlize to three entries
+            new_choices.append(entry)
+        return new_choices
+
     def choices(self):
         if type(self._choices) == list:
             return self._choices
         else:
-            return self._choices()
+            return self.normalize_choices(self._choices())
 
     def canonical_value(self):
         choices = self.choices()

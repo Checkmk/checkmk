@@ -659,8 +659,8 @@ checkgroups.append((
                 Tuple(
                     title = _("Minimal size"),
                     elements = [
-                      Filesize(title = _("Warning lower as")),
-                      Filesize(title = _("Critical lower as")),
+                      Filesize(title = _("Warning when lower then")),
+                      Filesize(title = _("Critical when lower then")),
                     ]
                 )
             ),
@@ -668,8 +668,8 @@ checkgroups.append((
                 Tuple(
                     title = _("Maximal size"),
                     elements = [
-                      Filesize(title = _("Warning higher as")),
-                      Filesize(title = _("Critical higher as")),
+                      Filesize(title = _("Warning when higher then")),
+                      Filesize(title = _("Critical when higher then")),
                     ]
                 )
             )
@@ -790,8 +790,8 @@ checkgroups.append((
                 Tuple(
                     title = _("Minimal size"),
                     elements = [
-                      Filesize(title = _("Warning lower as")),
-                      Filesize(title = _("Critical lower as")),
+                      Filesize(title = _("Warning when lower then")),
+                      Filesize(title = _("Critical when lower then")),
                     ]
                 )
             ),
@@ -799,8 +799,8 @@ checkgroups.append((
                 Tuple(
                     title = _("Maximal size"),
                     elements = [
-                      Filesize(title = _("Warning higher as")),
-                      Filesize(title = _("Critical higher as")),
+                      Filesize(title = _("Warning when higher then")),
+                      Filesize(title = _("Critical when higher then")),
                     ]
                 )
             ),
@@ -808,8 +808,8 @@ checkgroups.append((
                 Tuple(
                     title = _("Minimal file count"),
                     elements = [
-                      Integer(title = _("Warning lower as")),
-                      Integer(title = _("Critical lower as")),
+                      Integer(title = _("Warning when lower then")),
+                      Integer(title = _("Critical when lower then")),
                     ]
                 )
             ),
@@ -817,8 +817,8 @@ checkgroups.append((
                 Tuple(
                     title = _("Maximal file count"),
                     elements = [
-                      Integer(title = _("Warning higher as")),
-                      Integer(title = _("Critical higher as")),
+                      Integer(title = _("Warning when higher then")),
+                      Integer(title = _("Critical when higher then")),
                     ]
                 )
             ),
@@ -840,8 +840,8 @@ checkgroups.append((
                 Tuple(
                     title = _("Read"),
                     elements = [
-                      Filesize(title = _("Warning lower as")),
-                      Filesize(title = _("Critical lower as")),
+                      Filesize(title = _("Warning when lower then")),
+                      Filesize(title = _("Critical when lower then")),
                     ]
                 )
             ),
@@ -849,8 +849,8 @@ checkgroups.append((
                 Tuple(
                     title = _("Write"),
                     elements = [
-                      Filesize(title = _("Warning higher as")),
-                      Filesize(title = _("Critical higher as")),
+                      Filesize(title = _("Warning when higher then")),
+                      Filesize(title = _("Critical when higher then")),
                     ]
                 )
             )
@@ -884,8 +884,8 @@ checkgroups.append((
                        Tuple(
                            title = _("Absolute levels"),
                            elements = [
-                                Filesize(title = _("Warning higher as")),
-                                Filesize(title = _("Critical higher as")),
+                                Filesize(title = _("Warning when higher then")),
+                                Filesize(title = _("Critical when higher then")),
                            ]
                         )
                    ])),
@@ -903,8 +903,8 @@ checkgroups.append((
                        Tuple(
                            title = _("Absolute levels"),
                            elements = [
-                                Filesize(title = _("Warning higher as")),
-                                Filesize(title = _("Critical higher as")),
+                                Filesize(title = _("Warning when higher then")),
+                                Filesize(title = _("Critical when higher then")),
                            ]
                         )
                    ])),

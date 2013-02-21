@@ -27,6 +27,7 @@
 1.2.2b4:
     Core:
     * FIX: Fix output of cmk -D: datasource programs were missing
+    * New configuration variable contactgroup_members
 
     Checks & Agents:
     * FIX: smart - not trying to parse unhandled lines to prevent errors

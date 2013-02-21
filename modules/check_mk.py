@@ -289,6 +289,7 @@ parents                              = []
 define_hostgroups                    = None
 define_servicegroups                 = None
 define_contactgroups                 = None
+contactgroup_members                 = {}
 contacts                             = {}
 timeperiods                          = {} # needed for WATO
 clusters                             = {}
@@ -2044,8 +2045,11 @@ def create_nagios_config_contactgroups(outfile):
                 alias = name
             outfile.write("\ndefine contactgroup {\n"
                     "  contactgroup_name\t\t%s\n"
-                    "  alias\t\t\t\t%s\n"
-                    "}\n" % (name, make_utf8(alias)))
+                    "  alias\t\t\t\t%s\n" % (name, make_utf8(alias)))
+            members = contactgroup_members.get(name)
+            if members:
+                outfile.write("  members\t\t\t%s\n" % ",".join(members))
+            outfile.write("}\n")
 
 
 def create_nagios_config_commands(outfile):

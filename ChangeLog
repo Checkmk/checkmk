@@ -1,6 +1,7 @@
 1.2.2b4:
     Core:
     * FIX: Fix output of cmk -D: datasource programs were missing
+    * FIX: allow unicode encoded extra_service_conf
     * New configuration variable contactgroup_members
 
     Checks & Agents:

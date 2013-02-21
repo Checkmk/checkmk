@@ -1148,6 +1148,7 @@ def savefloat(f):
 # The unit parameter simply changes the returned string, but does not interfere
 # with any calcluations
 def get_bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
+    base = float(base)
     # Handle negative bytes correctly
     prefix = ''
     if b < 0:

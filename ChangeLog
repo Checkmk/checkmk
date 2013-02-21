@@ -9,10 +9,10 @@
     * FIX: winperf_processor - fixed wrong calculations of usage
     * FIX: mysql: fixed crash on computing IO information
     * FIX: diskstat: fix local variable 'ios_per_sec' referenced before assignment
+    * FIX: multipath: ignore warning messages in agent due to invalid multipath.conf
     * Linux agent: limit netstat to 10 seconds
     * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
       reordering of matched groups
-    * FIX: multipath: ignore warning messages in agent due to invalid multipath.conf
 
     Multisite:
     * FIX: Fixed problem with error during localization scanning
@@ -24,6 +24,7 @@
     * FIX: fixed invalid links to hosts and services in BI tree view
     * FIX: fix exception in top/down and bottom/up views
     * FIX: fix styling of top/down and bottom/up views (borders, padding)
+    * FIX: fix style of mouse pointer over BI boxes
     * Make titles of non-leaf tree nodes klickable
 
     WATO:

@@ -38,19 +38,24 @@ def render_wiki():
     start_ul = True
     ul_started = False
     try:
+        title = None
         for line in file(filename).readlines():
             line = line.strip()
             if line == "":
                 if ul_started == True:
-                    html.write("</ul>")
+                    html.end_foldable_container()
                     start_ul = True
                     ul_started = False
+            elif line.endswith(":"):
+                title = line[:-1]
             elif line == "----":
-                html.write("<hr>")
+                pass
+                # html.write("<br>")
 
             elif line.startswith("*"):
                 if start_ul == True:
-                    html.write("<ul>")
+                    if title:
+                         html.begin_foldable_container("wikisnapin", title, True, title, indent=True)
                     start_ul = False
                     ul_started = True
 
@@ -67,9 +72,7 @@ def render_wiki():
 
 
                 if link.startswith("http://") or link.startswith("https://"):
-                    html.write('<li>')
                     simplelink(name, link, "_blank")
-                    html.write('</li>')
                 else:
                     erg = name.split(':')
                     if len(erg) > 0:
@@ -99,27 +102,28 @@ def render_wiki():
     html.text_input("search", "", id="wikisearch_input", )
     html.end_form()
 
-
-sidebar_snapins["wiki"] = {
-    "title" : _("Wiki"),
-    "description" : _("Shows the Wiki Navigation of the OMD Site"),
-    "render" : render_wiki,
-    "allowed" : [ "admin", "user", "guest" ],
-    "styles" : """
-    input#wikisearch_input {
-        margin-top: 3px;
-        width: 222px;
+if defaults.omd_root:
+    sidebar_snapins["wiki"] = {
+        "title" : _("Wiki"),
+        "description" : _("Shows the Wiki Navigation of the OMD Site"),
+        "render" : render_wiki,
+        "allowed" : [ "admin", "user", "guest" ],
+        "styles" : """
+        #snapin_container_wiki div.content {
+            font-weight: bold;
+            color: white;
+        }
+        input#wikisearch_input {
+            margin-top: 3px;
+            width: 222px;
+        }
+        #snapin_container_wiki hr {
+            margin: 5px 2px;
+        }
+        #snapin_container_wiki ul {
+            margin: 1px;
+        }
+    
+        """
     }
-    #snapin_container_wiki hr {
-        margin: 2px;
-        margin-bottom: 2.5px;
-    }
-    #snapin_container_wiki ul {
-        margin: 1px;
-    }
-
-    """
-
-
-}
-
+    

@@ -1,0 +1,22 @@
+title: SAP Dialog Statistics Monitoring
+agents: linux
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check uses the data provided by the {mk_sap} agent plugin, which uses
+ RFC calls to retrieve monitoring information from SAP R/3 systems. To make
+ this check work, you have to deploy the {mk_sap} agent plugin on a host.
+
+ This checks monitors the data of the nodes within the path
+ {SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time}. This might
+ be the {UsersLoggedIn}, {FrontEndNetTime} and {ResponseTime}. The check
+ is always in state {OK}, there are no thresholds. It simply outputs the
+ values and creates performance graphs.
+
+item:
+ The SAP system ID.
+
+inventory:
+ The check creates a check for each SAP system ID which at least provides
+ the {SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime}.

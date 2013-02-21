@@ -389,6 +389,41 @@ register_rule(group + '/' + subgroup_inventory,
     match = 'list',
 )
 
+register_rule(group + '/' + subgroup_inventory,
+    varname   = "inventory_sap_values",
+    title     = _('SAP Single Value Inventory'),
+    valuespec = Dictionary(
+        elements = [
+            ('match', Alternative(
+                title = _("Node Path Matching"),
+                elements = [
+                    TextAscii(
+                        title = _("Exact path of the node"),
+                        size = 100,
+                    ),
+                    Transform(
+                        RegExp(size = 100),
+                        title = _("Regular expression matching the path"),
+                        help = _("This regex must match the <i>beginning</i> of the complete "
+                                 "path of the node as reported by the agent"),
+                        forth = lambda x: x[1:],   # remove ~
+                        back  = lambda x: "~" + x, # prefix ~
+                    ),
+                    FixedValue(
+                        None,
+                        totext = "",
+                        title = _("Match all nodes"),
+                    )
+                ],
+                match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0),
+                default_value = 'SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime',
+            )),
+        ],
+        optional_keys = [],
+    ),
+    match = 'list',
+)
+
 checkgroups = []
 
 checkgroups.append((

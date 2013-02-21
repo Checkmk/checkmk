@@ -546,6 +546,15 @@ function removeSnapin(id, code) {
   var myparent = container.parentNode;
   myparent.removeChild(container);
 
+  // remove this snapin from the refresh list, if it is contained
+  for (var i in refresh_snapins) {
+      var name    = refresh_snapins[i][0];
+      if (id == "snapin_" + name) {
+          refresh_snapins.splice(i, 1);
+          break;
+      }
+  }
+
   // reload main frame if it is just displaying the "add snapin" page
   var href = escape(parent.frames[1].location);
   if (href.indexOf("sidebar_add_snapin.py") > -1)
@@ -642,7 +651,7 @@ function sidebar_scheduler() {
         var name    = refresh_snapins[i][0];
         var refresh = refresh_snapins[i][1];
         var url = "sidebar_snapin.py?name=" + name;
-        if(refresh_snapins[i][2] != '')
+        if (refresh_snapins[i][2] != '')
             url = refresh_snapins[i][2];
 
         if (timestamp % refresh == 0) {

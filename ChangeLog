@@ -45,6 +45,7 @@
     * FIX: Fixed wrong localization right after a user changed its language
     * FIX: Improved handling of error messages in bulk inventory
     * FIX: fixed focus bug in transform valuespec class
+    * FIX: stop doing snapin refreshes after they have been removed
 
     BI:
     * FIX: fixed invalid links to hosts and services in BI tree view

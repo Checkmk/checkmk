@@ -99,7 +99,7 @@ def render_wiki():
     }
     """ % defaults.omd_site)
     html.begin_form("wikisearch", onsubmit="wiki_search();")
-    html.text_input("search", "", id="wikisearch_input", )
+    html.text_input("wikisearch", "", id="wikisearch_input", )
     html.end_form()
 
 if defaults.omd_root:

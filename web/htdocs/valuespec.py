@@ -511,6 +511,8 @@ class TextAreaUnicode(TextUnicode):
         return "<pre class=ve_textarea>%s</pre>" % value
 
     def render_input(self, varprefix, value):
+        if value == None:
+            value = "" # should never happen, but avoids exception for invalid input
         if self._rows == "auto":
             attrs = { "onkeyup" : 'valuespec_textarea_resize(this);' }
             if html.has_var(varprefix):
@@ -940,34 +942,52 @@ class MonitoringState(DropdownChoice):
 class CascadingDropdown(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._choices = []
-        for entry in kwargs["choices"]:
-            if len(entry) == 2: # plain entry with no sub-valuespec
-                entry = entry + (None,) # normlize to three entries
-            self._choices.append(entry)
+
+        if type(kwargs["choices"]) == list:
+            self._choices = self.normalize_choices(kwargs["choices"])
+        else:
+            self._choices = kwargs["choices"] # function, store for later
+
         self._separator = kwargs.get("separator", ", ")
         self._html_separator = kwargs.get("html_separator", "<br>")
         self._sorted = kwargs.get("sorted", True)
 
-    def canonical_value(self):
-        if self._choices[0][2]:
-            return (self._choices[0][0], self._choices[0][2].canonical_value())
+    def normalize_choices(self, choices):
+        new_choices = []
+        for entry in choices:
+            if len(entry) == 2: # plain entry with no sub-valuespec
+                entry = entry + (None,) # normlize to three entries
+            new_choices.append(entry)
+        return new_choices
+
+    def choices(self):
+        if type(self._choices) == list:
+            return self._choices
         else:
-            return self._choices[0][0]
+            return self.normalize_choices(self._choices())
+
+    def canonical_value(self):
+        choices = self.choices()
+        if choices[0][2]:
+            return (choices[0][0], choices[0][2].canonical_value())
+        else:
+            return choices[0][0]
 
     def default_value(self):
         try:
             return self._default_value
         except:
-            if self._choices[0][2]:
-                return (self._choices[0][0], self._choices[0][2].default_value())
+            choices = self.choices()
+            if choices[0][2]:
+                return (choices[0][0], choices[0][2].default_value())
             else:
-                return self._choices[0][0]
+                return choices[0][0]
 
     def render_input(self, varprefix, value):
         def_val = '0'
         options = []
-        for nr, (val, title, vs) in enumerate(self._choices):
+        choices = self.choices()
+        for nr, (val, title, vs) in enumerate(choices):
             options.append((str(nr), title))
             # Determine the default value for the select, so the
             # the dropdown pre-selects the line corresponding with value.
@@ -979,7 +999,7 @@ class CascadingDropdown(ValueSpec):
                 def_val = str(nr)
 
         vp = varprefix + "_sel"
-        onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(self._choices))
+        onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(choices))
         if self._sorted:
             html.select(vp, options, def_val, onchange=onchange)
         else:
@@ -992,7 +1012,7 @@ class CascadingDropdown(ValueSpec):
         cur_val = html.var(vp)
 
         html.write(self._html_separator)
-        for nr, (val, title, vs) in enumerate(self._choices):
+        for nr, (val, title, vs) in enumerate(choices):
             if vs:
                 vp = varprefix + "_%d" % nr
                 # Form already submitted once (and probably in complain state)
@@ -1016,7 +1036,8 @@ class CascadingDropdown(ValueSpec):
                 html.write('</span>')
 
     def value_to_text(self, value):
-        for val, title, vs in self._choices:
+        choices = self.choices()
+        for val, title, vs in choices:
             if (vs and value[0] == val) or \
                (value == val):
                 if not vs:
@@ -1027,17 +1048,19 @@ class CascadingDropdown(ValueSpec):
         return "" # Nothing selected? Should never happen
 
     def from_html_vars(self, varprefix):
+        choices = self.choices()
         try:
             sel = int(html.var(varprefix + "_sel"))
         except:
             sel = 0
-        val, title, vs = self._choices[sel]
+        val, title, vs = choices[sel]
         if vs:
             val = (val, vs.from_html_vars(varprefix + "_%d" % sel))
         return val
 
     def validate_datatype(self, value, varprefix):
-        for nr, (val, title, vs) in enumerate(self._choices):
+        choices = self.choices()
+        for nr, (val, title, vs) in enumerate(choices):
             if value == val or (
                 type(value) == tuple and value[0] == val):
                 if vs:
@@ -1048,7 +1071,8 @@ class CascadingDropdown(ValueSpec):
         raise MKUserError(_("Value %r is not allowed here.") % value)
 
     def validate_value(self, value, varprefix):
-        for nr, (val, title, vs) in enumerate(self._choices):
+        choices = self.choices()
+        for nr, (val, title, vs) in enumerate(choices):
             if value == val or (
                 type(value) == tuple and value[0] == val):
                 if vs:

@@ -289,6 +289,7 @@ parents                              = []
 define_hostgroups                    = None
 define_servicegroups                 = None
 define_contactgroups                 = None
+contactgroup_members                 = {}
 contacts                             = {}
 timeperiods                          = {} # needed for WATO
 clusters                             = {}
@@ -1744,7 +1745,7 @@ def create_nagios_servicedefs(outfile, hostname):
 }
 
 """ % ( template, hostname, description, logwatch,
-        extra_service_conf_of(hostname, description), checkname ))
+        extra_service_conf_of(hostname, description).encode("utf-8"), checkname ))
 
         checknames_to_define.add(checkname)
         have_at_least_one_service = True
@@ -1806,7 +1807,7 @@ define service {
   host_name\t\t\t%s
 %s  service_description\t\tCheck_MK
 }
-""" % (active_service_template, hostname, extra_service_conf_of(hostname, "Check_MK")))
+""" % (active_service_template, hostname, extra_service_conf_of(hostname, "Check_MK").encode("utf-8")))
         # Inventory checks - if user has configured them. Not for clusters.
         if inventory_check_interval and not is_cluster(hostname):
             outfile.write("""
@@ -2044,8 +2045,11 @@ def create_nagios_config_contactgroups(outfile):
                 alias = name
             outfile.write("\ndefine contactgroup {\n"
                     "  contactgroup_name\t\t%s\n"
-                    "  alias\t\t\t\t%s\n"
-                    "}\n" % (name, make_utf8(alias)))
+                    "  alias\t\t\t\t%s\n" % (name, make_utf8(alias)))
+            members = contactgroup_members.get(name)
+            if members:
+                outfile.write("  members\t\t\t%s\n" % ",".join(members))
+            outfile.write("}\n")
 
 
 def create_nagios_config_commands(outfile):

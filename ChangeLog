@@ -23,6 +23,7 @@
     WATO:
     * Configuration of datasource programs via dedicated rules
     * New editor for Business Intelligence rules
+    * Valuespec: CascadingDropdown now able to process choice values from functions
 
 1.2.2b4:
     Core:

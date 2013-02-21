@@ -511,6 +511,8 @@ class TextAreaUnicode(TextUnicode):
         return "<pre class=ve_textarea>%s</pre>" % value
 
     def render_input(self, varprefix, value):
+        if value == None:
+            value = "" # should never happen, but avoids exception for invalid input
         if self._rows == "auto":
             attrs = { "onkeyup" : 'valuespec_textarea_resize(this);' }
             if html.has_var(varprefix):

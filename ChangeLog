@@ -45,6 +45,8 @@
     * FIX: mysql: fixed crash on computing IO information
     * FIX: diskstat: fix local variable 'ios_per_sec' referenced before assignment
     * FIX: multipath: ignore warning messages in agent due to invalid multipath.conf
+    * FIX: megaraid_bbu: deal with broken output ("Adpater"), found in Open-E
+    * FIX: megaraid_pdisk: deal with special output of Open-E
     * FIX: jolokia_metrics.mem: renamed parameter totalheap to total
     * FIX: megaraid_bbu: deal with broken output ("Adpater")
     * Linux agent: limit netstat to 10 seconds

@@ -92,7 +92,9 @@ def inventory_sap_value(info):
     return inv
 
 def sap_value_path_matches(path, pattern):
-    if pattern[0] != '~' and path == pattern:
+    if pattern is None:
+        return True
+    elif pattern[0] != '~' and path == pattern:
         # exact path match
         return True
     elif pattern[0] == '~':
@@ -105,8 +107,6 @@ def sap_value_path_matches(path, pattern):
         matchobject = reg.match(path)
         if matchobject:
             return True
-    elif pattern is None:
-        return True
     return False
 
 def check_sap_value(item, params, info):

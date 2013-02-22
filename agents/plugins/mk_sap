@@ -1,5 +1,28 @@
 #!/usr/bin/python
 # encoding: utf-8
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 #
 # This agent plugin has been built to collect information from SAP R/3 systems
 # using RFC calls. It needs the python module sapnwrfc (available in Check_MK
@@ -171,27 +194,27 @@ def query(what, params, debug = False):
     ret = f.RETURN.value
     if ret['TYPE'] == 'E':
         sys.stderr.write("ERROR: %s\n" % ret['MESSAGE'].strip())
-    
+
     return f
 
 def login():
     f = query('BAPI_XMI_LOGON', {
-        'EXTCOMPANY': 'Mathias Kettner GmbH',  
-        'EXTPRODUCT': 'Check_MK SAP Agent',  
-        'INTERFACE':  'XAL',  
-        'VERSION':    '1.0',  
+        'EXTCOMPANY': 'Mathias Kettner GmbH',
+        'EXTPRODUCT': 'Check_MK SAP Agent',
+        'INTERFACE':  'XAL',
+        'VERSION':    '1.0',
     })
     #print f.RETURN
     return f.SESSIONID.value
 
 def logout():
     query('BAPI_XMI_LOGOFF', {
-        'INTERFACE':  'XAL',  
+        'INTERFACE':  'XAL',
     })
 
 def mon_list():
     f = query("BAPI_SYSTEM_MON_GETLIST", {
-        'EXTERNAL_USER_NAME': cfg['user'],  
+        'EXTERNAL_USER_NAME': cfg['user'],
     })
     l = []
     for mon in f.MONITOR_NAMES.value:
@@ -200,7 +223,7 @@ def mon_list():
 
 def ms_list():
     f = query("BAPI_SYSTEM_MS_GETLIST", {
-        'EXTERNAL_USER_NAME': cfg['user'],  
+        'EXTERNAL_USER_NAME': cfg['user'],
     })
     l = []
     for ms in f.MONITOR_SETS.value:
@@ -337,7 +360,7 @@ for ms_name, mon_name in mon_list():
     path = ms_name + SEPARATOR + mon_name
     if not to_be_monitored(path, True):
         continue
-    
+
     tree = mon_tree(ms_name, mon_name)
     for node in tree:
         if not to_be_monitored(node['PATH']):
@@ -381,7 +404,7 @@ for ms_name, mon_name in mon_list():
                 dt = parse_dt(last_alert["ALERTDATE"], last_alert["ALERTTIME"])
                 alert_state, alert_msg = alert_details(last_alert)
                 last_msg = '%s: %s - %s' % (dt, STATE_VALUE_MAP[alert_state['VALUE']][1], alert_msg)
-            
+
                 status_details = '%d Messages, Last: %s' % (len(alerts), last_msg)
             else:
                 status_details = 'The log is empty'
@@ -394,7 +417,7 @@ for ms_name, mon_name in mon_list():
             sid     = node["MTSYSID"].strip() or 'Other'
             context = node["MTMCNAME"].strip() or 'Other'
             path    = node["PATH"]
-            
+
             sap_data.setdefault(sid, [])
             sap_data[sid].append("%s\t%d\t%3d\t%s\t%s\t%s\t%s" % (context, state['VALUE'],
                                                          state['SEVERITY'], path, perfvalue, uom, status_details))

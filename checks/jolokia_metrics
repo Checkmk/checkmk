@@ -167,7 +167,13 @@ def check_jolokia_metrics_mem(item, params, info):
     # convert old parameter version ( warn, crit )
     # represented levels of total heap
     if type(params) == tuple:
-        params = {"totalheap": params}
+        params = {"total": params}
+
+    # rename totalheap to total
+    # this block can be removed in the future (today 22.02.13)
+    if "totalheap" in params:
+        params["total"] = params["totalheap"]
+        del params["totalheap"]
 
     d = parsed[item]
     mb = 1024 * 1024.0
@@ -186,13 +192,13 @@ def check_jolokia_metrics_mem(item, params, info):
     for (what, value, value_max) in [
             ("heap", heap, heapmax),
             ("nonheap",  nonheap, nonheapmax),
-            ("totalheap",  total, totalmax),
+            ("total",  total, totalmax),
         ]:
         param_state = 0
         level_info = ""
         if params.get(what):
             if type(params[what][0]) == int:
-                if what != "totalheap":
+                if what != "total":
                     perfdata.append((what, value, value_max - params[what][0], value_max - params[what][1], "", value_max))
                 if value_max - value <= params[what][1]:
                     param_state = 2
@@ -201,7 +207,7 @@ def check_jolokia_metrics_mem(item, params, info):
                     param_state = 1
                     level_info = "%s(warn at %sMB free)" % (state_sign[1], params[what][0])
             else:
-                if what != "totalheap":
+                if what != "total":
                     perfdata.append((what, value, value_max * params[what][0] / 100.0, value_max * params[what][1] / 100.0, "", value_max))
                 if value >= value_max * params[what][1] / 100.0:
                     param_state = 2

@@ -3,6 +3,7 @@
     * FIX: Fix output of cmk -D: datasource programs were missing
     * FIX: allow unicode encoded extra_service_conf
     * FIX: no default PING service if custom checks are defined
+    * FIX: check_mk_base: fixed rounding error in get_bytes_human_readable
     * New configuration variable contactgroup_members
 
     Checks & Agents:
@@ -12,10 +13,10 @@
     * FIX: mysql: fixed crash on computing IO information
     * FIX: diskstat: fix local variable 'ios_per_sec' referenced before assignment
     * FIX: multipath: ignore warning messages in agent due to invalid multipath.conf
+    * FIX: megaraid_bbu: deal with broken output ("Adpater")
     * Linux agent: limit netstat to 10 seconds
     * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
       reordering of matched groups
-    * FIX: check_mk_base: fixed rounding error in get_bytes_human_readable
 
     Multisite:
     * FIX: Fixed problem with error during localization scanning

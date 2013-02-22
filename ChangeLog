@@ -54,6 +54,7 @@
     * FIX: Improved handling of error messages in bulk inventory
     * FIX: fixed focus bug in transform valuespec class
     * FIX: stop doing snapin refreshes after they have been removed
+    * FIX: sidebar snapins which refresh do not register for restart detection anymore
 
     BI:
     * FIX: fixed invalid links to hosts and services in BI tree view

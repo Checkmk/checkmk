@@ -250,7 +250,6 @@ sidebar_snapins["hosts"] = {
     "render" : lambda: render_hosts("hosts"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
-    "restart":     True,
     "styles" : snapin_allhosts_styles,
 }
 
@@ -260,7 +259,6 @@ sidebar_snapins["summary_hosts"] = {
     "render" : lambda: render_hosts("summary"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
-    "restart":     True,
     "styles" : snapin_allhosts_styles,
 }
 
@@ -270,7 +268,6 @@ sidebar_snapins["problem_hosts"] = {
     "render" : lambda: render_hosts("problems"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
-    "restart":     True,
     "styles" : snapin_allhosts_styles,
 }
 

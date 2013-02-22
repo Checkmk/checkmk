@@ -2,6 +2,7 @@
     Core:
     * FIX: Fix output of cmk -D: datasource programs were missing
     * FIX: allow unicode encoded extra_service_conf
+    * FIX: no default PING service if custom checks are defined
     * New configuration variable contactgroup_members
 
     Checks & Agents:
@@ -36,6 +37,7 @@
            within the group
     * Suggest use default value for filesystem levels that make sense
     * Valuespec: CascadingDropdown now able to process choice values from functions
+    * Freshness checking for classical passive Nagios checks (custom_checks)
 
 1.2.2b3:
     Checks & Agents:

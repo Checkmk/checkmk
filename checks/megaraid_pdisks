@@ -57,7 +57,7 @@ def megaraid_pdisks_parse(info):
     current_adapter = adapters[0]
     return_var = []
     adapter = 0
-    enclosure_devid = 0
+    enclosure_devid = -181
     for line in  info:
         if line[0] == 'adapter':
             current_adapter = {}
@@ -77,6 +77,11 @@ def megaraid_pdisks_parse(info):
 	    except: # no enclosure device
 	 	enclosure_devid = 0
 		adapters[adapter][0] = 0
+        elif line[0] == "Enclosure" and line[1] == "Number:":
+            for devid, number in current_adapter.items():
+                if number == int(line[-1]):
+                    enclosure_devid = devid
+                    break
 
         elif line[0] == "Slot":
             slot = int(line[-1])
@@ -88,6 +93,7 @@ def megaraid_pdisks_parse(info):
             return_var.append((megaraid_pdisks_adapterstr[adapter],
                                adapters[adapter][enclosure_devid],
                                enclosure_devid, slot, state, name))
+
     return return_var
 
 

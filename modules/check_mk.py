@@ -286,6 +286,7 @@ parents                              = []
 define_hostgroups                    = None
 define_servicegroups                 = None
 define_contactgroups                 = None
+contactgroup_members                 = {}
 contacts                             = {}
 timeperiods                          = {} # needed for WATO
 clusters                             = {}
@@ -1719,7 +1720,7 @@ def create_nagios_servicedefs(outfile, hostname):
 }
 
 """ % ( template, hostname, description, logwatch,
-        extra_service_conf_of(hostname, description), checkname ))
+        extra_service_conf_of(hostname, description).encode("utf-8"), checkname ))
 
         checknames_to_define.add(checkname)
         have_at_least_one_service = True
@@ -1781,7 +1782,7 @@ define service {
   host_name\t\t\t%s
 %s  service_description\t\tCheck_MK
 }
-""" % (active_service_template, hostname, extra_service_conf_of(hostname, "Check_MK")))
+""" % (active_service_template, hostname, extra_service_conf_of(hostname, "Check_MK").encode("utf-8")))
         # Inventory checks - if user has configured them. Not for clusters.
         if inventory_check_interval and not is_cluster(hostname):
             outfile.write("""
@@ -1878,10 +1879,10 @@ define service {
 
 
     # Legacy checks via custom_checks
-    entries = host_extra_conf(hostname, custom_checks)
-    if entries:
+    custchecks = host_extra_conf(hostname, custom_checks)
+    if custchecks:
         outfile.write("\n\n# Custom checks\n")
-        for entry in entries:
+        for entry in custchecks:
             # entries are dicts with the following keys:
             # "service_description"        Service description to use
             # "command_line"  (optional)   Unix command line for executing the check
@@ -1905,6 +1906,13 @@ define service {
                                 break
                     except:
                         pass
+            
+            if "freshness" in entry:
+                freshness = "  check_freshness\t\t1\n" + \
+                            "  freshness_threshold\t\t%d\n" % (60 * entry["freshness"]["interval"])
+                command_line = "echo %s && exit %d" % (
+                       quote_shell_string(entry["freshness"]["output"]), entry["freshness"]["state"]) 
+
 
             custom_commands_to_define.add(command_name)
 
@@ -1928,9 +1936,9 @@ define service {
   service_description\t\t%s
   check_command\t\t\t%s
   active_checks_enabled\t\t%d
-%s}
+%s%s}
 """ % (template, hostname, description, simulate_command(command),
-       command_line and 1 or 0, extraconf))
+       (command_line and not "freshness") and 1 or 0, extraconf, freshness))
 
     # Levels for host check
     if is_cluster(hostname):
@@ -1939,7 +1947,7 @@ define service {
         ping_command = 'check-mk-ping'
 
     # No check_mk service, no legacy service -> create PING service
-    if not have_at_least_one_service and not legchecks and not actchecks:
+    if not have_at_least_one_service and not legchecks and not actchecks and not custchecks:
         outfile.write("""
 define service {
   use\t\t\t\t%s
@@ -2019,8 +2027,11 @@ def create_nagios_config_contactgroups(outfile):
                 alias = name
             outfile.write("\ndefine contactgroup {\n"
                     "  contactgroup_name\t\t%s\n"
-                    "  alias\t\t\t\t%s\n"
-                    "}\n" % (name, make_utf8(alias)))
+                    "  alias\t\t\t\t%s\n" % (name, make_utf8(alias)))
+            members = contactgroup_members.get(name)
+            if members:
+                outfile.write("  members\t\t\t%s\n" % ",".join(members))
+            outfile.write("}\n")
 
 
 def create_nagios_config_commands(outfile):

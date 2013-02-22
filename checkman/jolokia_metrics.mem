@@ -22,7 +22,7 @@ examples:
  jolokia_metrics_mem_default_levels = {
     "heap"    : (2000,1000),    # heap warning when 2000MB left, heap crit when 1000 MB left
     "nonheap" : (75.0, 95.7),   # nonheap warning at 75.0% usage, nonheap crit at 95.7% usage
-    "totalheap" : (3000, 2200), # totalheap warning at 3000MB left, totalheap crit at 2200MB left
+    "total" : (3000, 2200), # total warning at 3000MB left, total crit at 2200MB left
  }
 
 perfdata:
@@ -45,11 +45,11 @@ parameters (dict): This check requires a dictionary with the following keys.
  Integer numbers are interpreted as remaining nonheap memory
  Float numbers are interpreted as available nonheap memory usage
 
- {"totalheap"} - A pair of two values to be used as WARN/CRIT levels
- Integer numbers are interpreted as remaining totalheap memory
- Float numbers are interpreted as available totalheap memory usage
+ {"total"} - A pair of two values to be used as WARN/CRIT levels
+ Integer numbers are interpreted as remaining total memory
+ Float numbers are interpreted as available total memory usage
 
 
 [configuration]
-jolokia_metrics_mem_default_levels (dict): Default warn/crit levels for heap, nonheap and totalheap
+jolokia_metrics_mem_default_levels (dict): Default warn/crit levels for heap, nonheap and total
 

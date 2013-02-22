@@ -1,6 +1,9 @@
 1.2.2b4:
     Core:
     * FIX: Fix output of cmk -D: datasource programs were missing
+    * FIX: allow unicode encoded extra_service_conf
+    * FIX: no default PING service if custom checks are defined
+    * New configuration variable contactgroup_members
 
     Checks & Agents:
     * FIX: smart - not trying to parse unhandled lines to prevent errors
@@ -8,9 +11,12 @@
     * FIX: winperf_processor - fixed wrong calculations of usage
     * FIX: mysql: fixed crash on computing IO information
     * FIX: diskstat: fix local variable 'ios_per_sec' referenced before assignment
+    * FIX: multipath: ignore warning messages in agent due to invalid multipath.conf
     * Linux agent: limit netstat to 10 seconds
     * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
       reordering of matched groups
+    * FIX: check_mk_base: fixed rounding error in get_bytes_human_readable
+    * FIX: jolokia_metrics.mem: renamed parameter totalheap to total
 
     Multisite:
     * FIX: Fixed problem with error during localization scanning
@@ -18,17 +24,22 @@
     * FIX: Improved handling of error messages in bulk inventory
     * FIX: fixed focus bug in transform valuespec class
     * FIX: sidebar snapins which refresh do not register for restart detection anymore
+    * FIX: stop doing snapin refreshes after they have been removed
 
     BI:
     * FIX: fixed invalid links to hosts and services in BI tree view
     * FIX: fix exception in top/down and bottom/up views
     * FIX: fix styling of top/down and bottom/up views (borders, padding)
+    * FIX: fix style of mouse pointer over BI boxes
     * Make titles of non-leaf tree nodes klickable
 
     WATO:
     * FIX: flexible notification valuespec is now localizable
     * FIX: Alias values of host/service/contact groups need to be set and unique
            within the group
+    * Suggest use default value for filesystem levels that make sense
+    * Valuespec: CascadingDropdown now able to process choice values from functions
+    * Freshness checking for classical passive Nagios checks (custom_checks)
 
 1.2.2b3:
     Checks & Agents:

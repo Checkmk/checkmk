@@ -1904,10 +1904,10 @@ define service {
 
 
     # Legacy checks via custom_checks
-    entries = host_extra_conf(hostname, custom_checks)
-    if entries:
+    custchecks = host_extra_conf(hostname, custom_checks)
+    if custchecks:
         outfile.write("\n\n# Custom checks\n")
-        for entry in entries:
+        for entry in custchecks:
             # entries are dicts with the following keys:
             # "service_description"        Service description to use
             # "command_line"  (optional)   Unix command line for executing the check
@@ -1931,6 +1931,13 @@ define service {
                                 break
                     except:
                         pass
+            
+            if "freshness" in entry:
+                freshness = "  check_freshness\t\t1\n" + \
+                            "  freshness_threshold\t\t%d\n" % (60 * entry["freshness"]["interval"])
+                command_line = "echo %s && exit %d" % (
+                       quote_shell_string(entry["freshness"]["output"]), entry["freshness"]["state"]) 
+
 
             custom_commands_to_define.add(command_name)
 
@@ -1954,9 +1961,9 @@ define service {
   service_description\t\t%s
   check_command\t\t\t%s
   active_checks_enabled\t\t%d
-%s}
+%s%s}
 """ % (template, hostname, description, simulate_command(command),
-       command_line and 1 or 0, extraconf))
+       (command_line and not "freshness") and 1 or 0, extraconf, freshness))
 
     # Levels for host check
     if is_cluster(hostname):
@@ -1965,7 +1972,7 @@ define service {
         ping_command = 'check-mk-ping'
 
     # No check_mk service, no legacy service -> create PING service
-    if not have_at_least_one_service and not legchecks and not actchecks:
+    if not have_at_least_one_service and not legchecks and not actchecks and not custchecks:
         outfile.write("""
 define service {
   use\t\t\t\t%s

@@ -56,7 +56,7 @@ def megaraid_bbu_parse(info):
         data = data.strip()
 
         # Scan each controller into its own dictionary
-        if name == "BBU status for Adapter":
+        if name in [ "BBU status for Adapter", "BBU status for Adpater" ]:
             current_hba = {}
             controllers[data] = current_hba
         else:
@@ -80,7 +80,7 @@ def check_megaraid_bbu(item, _no_params, info):
     state  = 0
     # get current charge level
     if 'Relative State of Charge' not in controller:
-        charge = ", No charge information were reported for this controller"
+        charge = ", No charge information reported for this controller"
     else:
         charge = ", Charge is %s" % controller['Relative State of Charge']
 
@@ -96,7 +96,7 @@ def check_megaraid_bbu(item, _no_params, info):
         except:
             pass
 
-    if controller["Learn Cycle Active"] == "Yes":
+    if controller.get("Learn Cycle Active") == "Yes":
         return (0, "OK - no states to check (controller is in learn cycle)" + charge)
     # return assembled info
     elif broken:

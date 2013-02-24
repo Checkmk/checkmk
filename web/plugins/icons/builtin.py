@@ -208,6 +208,36 @@ multisite_icons.append({
 })
 
 #   +----------------------------------------------------------------------+
+#   |            ____               _ _      _   _                         |
+#   |           |  _ \ _ __ ___  __| (_) ___| |_(_) ___  _ __              |
+#   |           | |_) | '__/ _ \/ _` | |/ __| __| |/ _ \| '_ \             |
+#   |           |  __/| | |  __/ (_| | | (__| |_| | (_) | | | |            |
+#   |           |_|   |_|  \___|\__,_|_|\___|\__|_|\___/|_| |_|            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+def paint_prediction_icon(what, row, tags, custom_vars):
+    if what == "service":
+        parts = row[what + "_perf_data"].split()
+        for p in parts:
+            if p.startswith("predict_"):
+                varname, value = p.split("=")
+                dsname = varname[8:]
+                sitename = row["site"]
+                site = html.site_status[sitename]["site"]
+                url = site["url_prefix"] + "check_mk/prediction_graph.py?" + htmllib.urlencode_vars([
+                    ( "host", row["host_name"] ),
+                    ( "service", row["service_description"] ),
+                    ( "dsname", dsname ) ])
+                title = _("Analyse predictive monitoring for this service")
+                return '<a href="%s"><img class=icon title="%s" src="images/icon_prediction.png"></a>' % (url, title)
+
+multisite_icons.append({
+    'columns' : [ 'perf_data' ],
+    'paint'   : paint_prediction_icon,
+})
+
+
+#   +----------------------------------------------------------------------+
 #   |           _        _   _                   _   _ ____  _             |
 #   |          / \   ___| |_(_) ___  _ __       | | | |  _ \| |            |
 #   |         / _ \ / __| __| |/ _ \| '_ \ _____| | | | |_) | |            |

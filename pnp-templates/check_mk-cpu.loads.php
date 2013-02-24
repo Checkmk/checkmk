@@ -23,19 +23,45 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-$opt[1] = "--vertical-label Load -l0  -u 1 --title \"CPU Load for $hostname / $servicedesc\" ";
+# The number of data source various due to different
+# settings (such as averaging). We rather work with names
+# than with numbers.
+$RRD = array();
+foreach ($NAME as $i => $n) {
+    $RRD[$n] = "$RRDFILE[$i]:$DS[$i]:MAX";
+    $WARN[$n] = $WARN[$i];
+    $CRIT[$n] = $CRIT[$i];
+    $MIN[$n]  = $MIN[$i];
+    $MAX[$n]  = $MAX[$i];
+}
 
-$def[1] =  "DEF:var1=$RRDFILE[1]:$DS[1]:MAX " ;
-$def[1] .= "DEF:var2=$RRDFILE[2]:$DS[2]:MAX " ;
-$def[1] .= "DEF:var3=$RRDFILE[3]:$DS[3]:MAX " ;
-$def[1] .= "HRULE:$WARN[1]#FFFF00 ";
-$def[1] .= "HRULE:$CRIT[1]#FF0000 ";
-$def[1] .= "AREA:var1#60c0e0:\"Load average  1 min \" " ;
-$def[1] .= "GPRINT:var1:LAST:\"%6.2lf last\" " ;
-$def[1] .= "GPRINT:var1:AVERAGE:\"%6.2lf avg\" " ;
-$def[1] .= "GPRINT:var1:MAX:\"%6.2lf max\\n\" ";
-$def[1] .= "LINE:var3#004080:\"Load average 15 min \" " ;
-$def[1] .= "GPRINT:var3:LAST:\"%6.2lf last\" " ;
-$def[1] .= "GPRINT:var3:AVERAGE:\"%6.2lf avg\" " ;
-$def[1] .= "GPRINT:var3:MAX:\"%6.2lf max\\n\" " ;
+$opt[1] = "--vertical-label 'Load average' -l0  -u 1 --title \"CPU Load for $hostname\" ";
+
+$def[1] =  ""
+         . "DEF:load1=$RRD[load1] "
+         . "AREA:load1#60c0e0:\"Load average  1 min \" " 
+         . "GPRINT:load1:LAST:\"%6.2lf last\" " 
+         . "GPRINT:load1:AVERAGE:\"%6.2lf avg\" " 
+         . "GPRINT:load1:MAX:\"%6.2lf max\\n\" "
+
+         . "DEF:load15=$RRD[load15] "
+         . "LINE:load15#004080:\"Load average 15 min \" " 
+         . "GPRINT:load15:LAST:\"%6.2lf last\" " 
+         . "GPRINT:load15:AVERAGE:\"%6.2lf avg\" " 
+         . "GPRINT:load15:MAX:\"%6.2lf max\\n\" " 
+         . "";
+
+if ($WARN[1]) {
+    $def[1] .= ""
+         . "HRULE:$WARN[1]#FFFF00 "
+         . "HRULE:$CRIT[1]#FF0000 "
+         . "";
+}
+
+if (isset($RRD["predict_load15"])) {
+    $def[1] .= ""
+         . "DEF:predict=$RRD[predict_load15] "
+         . "LINE:predict#ff0000:\"Reference for prediction \\n\" " 
+         . "";
+}
 ?>

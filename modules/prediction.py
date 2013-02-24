@@ -29,27 +29,37 @@
 # Export data from an RRD file. This requires an up-to-date
 # version of the rrdtools.
 
-def rrd_export(filename, ds, fromtime, untiltime, rrdcached=None):
+def rrd_export(filename, ds, cf, fromtime, untiltime, rrdcached=None):
     # rrdtool xport --json -s 1361554418 -e 1361640814 --step 60 DEF:x=/omd/sites/heute/X.rrd:1:AVERAGE XPORT:x:HIRNI
     cmd = "rrdtool xport --json -s %d -e %d --step 60 " % (fromtime, untiltime)
-    if rrdcached:
+    if rrdcached and os.path.exists(rrdcached):
         cmd += "--daemon '%s' " % rrdcached
-    cmd += " DEF:x=%s:%s:AVERAGE XPORT:x 2>&1" % (filename, ds)
-    if opt_debug:
-        sys.stderr.write("Running %s\n" % cmd)
+    cmd += " DEF:x=%s:%s:%s XPORT:x 2>&1" % (filename, ds, cf)
+    # if opt_debug:
+    #     sys.stderr.write("Running %s\n" % cmd)
     f = os.popen(cmd)
     output = f.read()
     exit_code = f.close()
     if exit_code:
         raise MKGeneralException("Cannot fetch RRD data: %s" % output)
+
     # Parse without json module (this is not always available)
-    # Our data begins at "data: [..."
-    begin = output.index("data:")
-    data_part = output[begin + 5:-2]
-    data = eval(data_part, { "null" : None })
-    # rrdtool xport create a list for each datapoint (because you
-    # can fetch several value at once)
-    return [ x[0] for x in data ]
+    # Our data begins at "data: [...". The sad thing: names are not
+    # quoted here. Don't know why. We fake this by defining variables.
+    about = "about"
+    meta = "meta"
+    start = "start"
+    step = "step"
+    end = "end"
+    legend = "legend"
+    data = "data"
+    null = None
+
+    # begin = output.index("data:")
+    # data_part = output[begin + 5:-2]
+    data = eval(output)
+
+    return data["meta"]["step"], [ x[0] for x in data["data"] ]
 
 def pnp_cleanup(s):
     return s \
@@ -58,28 +68,205 @@ def pnp_cleanup(s):
         .replace('/',  '_') \
         .replace('\\', '_')
 
-def get_rrd_data(hostname, service_description, varname, fromtime, untiltime):
+def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime):
     global rrdcached_socket
     rrd_file = "%s/%s/%s_%s.rrd" % (
             rrd_path, pnp_cleanup(hostname), pnp_cleanup(service_description), pnp_cleanup(varname))
     if omd_root and not rrdcached_socket:
         rrdcached_socket = omd_root + "/tmp/run/rrdcached.sock"
-    return rrd_export(rrd_file, 1, fromtime, untiltime, rrdcached_socket)
+    return rrd_export(rrd_file, 1, cf, fromtime, untiltime, rrdcached_socket)
+
+daynames = [ "monday", "tuesday", "wednesday", "thursday", 
+             "friday", "saturday", "sunday"]
+
+def group_by_wday(t):
+    wday = time.localtime(t).tm_wday
+    day_of_epoch, rel_time = divmod(t - time.timezone, 86400)
+    return daynames[wday], rel_time
+
+def group_by_hour(t):
+    return "%02d" % ((t % 86400) / 3600), t % 3600
+
+prediction_periods = {
+    "wday" : {
+        "slice" : 86400,
+        "groupby" : group_by_wday,
+        "valid" : 7,
+    },
+    "hour" : {
+        "slice" : 3600,
+        "groupby" : group_by_hour,
+        "valid" : 24,
+    }
+}
+
+
+def get_prediction_timegroup(t, period_info):
+    # Convert to local timezone
+    timegroup, rel_time = period_info["groupby"](t)
+    from_time = t - rel_time
+    until_time = t - rel_time + period_info["slice"]
+    return timegroup, from_time, until_time, rel_time
+
+def compute_prediction(pred_file, timegroup, params, period_info, from_time, dsname, cf):
+    import math
+
+    # Collect all slices back into the past until the time horizon
+    # is reached
+    begin = from_time
+    slices = []
+    absolute_begin = from_time - params["horizon"] * 86400
+    # The resolution of the different time ranges differs. We interpolate
+    # to the best resolution. We assume that the youngest slice has the
+    # finest resolution. We also assume, that step step is always dividable
+    # by the smallest step.
+    smallest_step = None
+    while begin >= absolute_begin:
+        tg, fr, un, rel = get_prediction_timegroup(begin, period_info)
+        if tg == timegroup:
+            step, data = get_rrd_data(g_hostname, g_service_description, 
+                                      dsname, cf, fr, un-1)
+            if smallest_step == None:
+                smallest_step = step
+            slices.append((fr, step / smallest_step, data))
+        begin -= period_info["slice"] 
+
+    # Now we have all the RRD data we need. The next step is to consolidate
+    # all that data into one new array. 
+    num_points = len(slices[0][2])
+    consolidated = []
+    for i in xrange(num_points):
+        point_line = []
+        for from_time, scale, data in slices:
+            date_str = time.strftime("%Y-%m-%d %H:%M", time.localtime(from_time))
+            d = data[i / scale]
+            if d != None:
+                point_line.append(d)
+        if point_line:
+            average = sum(point_line) / len(point_line)
+            consolidated.append([
+                 average,
+                 min(point_line),
+                 max(point_line),
+                 stdev(point_line, average),
+            ])
+        else:
+            consolidated.append((None, None, None))
+
+    result = {
+        "num_points" : num_points,
+        "step"       : smallest_step,
+        "columns"    : [ "average", "min", "max", "stdev" ],
+        "points"     : consolidated,
+    }
+    return result
+
+def stdev(point_line, average):
+    return math.sqrt(sum([ (p-average)**2 for p in point_line ]) / len(point_line))
+
+
+# cf: consilidation function (MAX, MIN, AVERAGE)
+def get_predictive_levels(dsname, params, cf):
+    # Compute timegroup
+    now = time.time()
+    period_info = prediction_periods[params["period"]]
+
+    # timegroup: name of the group, like 'monday' or '12'
+    # from_time: absolute epoch time of the first second of the
+    # current slice.
+    # until_time: absolute epoch of the first second *not* in the slice
+    # rel_time: seconds offset of now in the current slice
+    timegroup, from_time, until_time, rel_time = \
+       get_prediction_timegroup(now, period_info)
+
+    # Compute directory for prediction data
+    dir = "%s/prediction/%s/%s/%s" % (var_dir, g_hostname, 
+             pnp_cleanup(g_service_description), pnp_cleanup(dsname))
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
+    pred_file = "%s/%s" % (dir, timegroup)
+    info_file = pred_file + ".info"
+
+    # Check, if we need to (re-)compute the prediction file. This is
+    # the case if:
+    # - no prediction has been done yet for this time group
+    # - the prediction from the last time is outdated
+    # - the prediction from the last time has done with other parameters
+    try:
+        last_info = eval(file(info_file).read())
+        for k, v in params.items():
+            if last_info[k] != v:
+                if opt_debug:
+                    sys.stderr.write("Prediction parameters have changed.\n")
+                last_info = None
+                break
+    except Exception, e:
+        if opt_debug:
+            sys.stderr.write("No previous prediction for group %s available: %s.\n" % (timegroup, e))
+        last_info = None
+
+    if last_info and last_info["time"] + period_info["valid"] * period_info["slice"] < now:
+        if opt_debug:
+            sys.stderr.write("Prediction of %s outdated.\n" % timegroup)
+            last_info = None
+
+    if last_info:
+        # TODO: faster file format. Binary encoded?
+        prediction = eval(file(pred_file).read())
+
+    else:
+        if opt_debug:
+            sys.stderr.write("Computing prediction for time group %s.\n" % timegroup)
+        prediction = compute_prediction(pred_file, timegroup, params, period_info, from_time, dsname, cf)
+        info = { 
+            "time"    : now,
+        }
+        info.update(params)
+        file(info_file, "w").write("%r\n" % info)
+        file(pred_file, "w").write("%r\n" % prediction)
+
+    # Find reference value in prediction
+    index = int(rel_time / prediction["step"])
+    # print "rel_time: %d, step: %d, Index: %d, num_points: %d" % (rel_time, prediction["step"], index, prediction["num_points"])
+    # print prediction.keys()
+    reference = dict(zip(prediction["columns"], prediction["points"][index]))
+    # print "Reference: %s" % reference
+    ref_value = reference["average"]
+    stdev = reference["stdev"]
+    levels = []
+    for what, sig in [ ( "upper", 1 ), ( "lower", -1 )]:
+        p = "levels_" + what
+        if p in params:
+            how, (warn, crit) = params[p]
+            if how == "absolute":
+                levels.append((ref_value + (sig * warn), ref_value + (sig * crit)))
+            elif how == "relative":
+                levels.append((ref_value + sig * (ref_value * warn / 100), 
+                               ref_value + sig * (ref_value * crit / 100)))
+            else: #  how == "stdev":
+                levels.append((ref_value + sig * (stdev * warn),
+                              ref_value + sig * (stdev * crit)))
+        else:
+            levels.append((None, None))
+
+    # print levels
+    return ref_value, levels
 
 
 ### TEST CODE
-import os, time, sys, pprint
-class MKGeneralException(Exception):
-    def __init__(self, reason):
-        self.reason = reason
-    def __str__(self):
-        return self.reason
-omd_root = os.getenv("OMD_ROOT") 
-rrdcached_socket = None
-execfile(omd_root + "/etc/check_mk/defaults")
-opt_debug = True
-data = get_rrd_data("test_1", "Check_MK", "execution_time", time.time() - 86400, time.time())
-pprint.pprint(data)
+# import os, time, sys, pprint
+# class MKGeneralException(Exception):
+#     def __init__(self, reason):
+#         self.reason = reason
+#     def __str__(self):
+#         return self.reason
+# omd_root = os.getenv("OMD_ROOT") 
+# rrdcached_socket = None
+# execfile(omd_root + "/etc/check_mk/defaults")
+# opt_debug = True
+# data = get_rrd_data("test_1", "Check_MK", "execution_time", time.time() - 86400, time.time())
+# pprint.pprint(data)
 
 # HINWEISE für nicht-OMD-Nutzer
 # - RRD_STORAGE_TYPE muss MULTIPLE sein - single wird nicht unterstützt. Sonst

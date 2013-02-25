@@ -51,6 +51,8 @@ def check_ldap_arguments(params):
     if settings.get("ssl"):
         args += ' --ssl'
 
+    args += ' -H $HOSTADDRESS$'
+
     return args
 
 

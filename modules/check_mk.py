@@ -112,7 +112,7 @@ nagios_binary                      = '/usr/sbin/nagios'
 nagios_config_file                 = '/etc/nagios/nagios.cfg'
 logwatch_notes_url                 = "/nagios/logwatch.php?host=%s&file=%s"
 rrdcached_socket                   = None # used by prediction.py
-rrd_path                           = none # used by prediction.py
+rrd_path                           = None # used by prediction.py
 
 def verbose(t):
     if opt_verbose:

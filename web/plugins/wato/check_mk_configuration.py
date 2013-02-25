@@ -677,10 +677,10 @@ register_configvar(group,
 
 register_configvar(group,
     "piggyback_max_cachefile_age",
-    Integer(title = _("Maximum age for piggyback files"),
-            label = _("seconds"),
-            help = _("The number of seconds a piggyback file may be old to be valid for monitoring. "
-                     "Older files are deleted before processing them.")),
+    Age(title = _("Maximum age for piggyback files"),
+            help = _("The maximum age for piggy back data from another host to be valid for monitoring. "
+                     "Older files are deleted before processing them. Please make sure that this age is "
+                     "at least as large as you normal check interval for piggy hosts.")),
     need_restart = True)
 
 

@@ -414,6 +414,9 @@ def get_piggyback_info(hostname):
                 file_path = dir + "/" + sourcehost
 
                 if cachefile_age(file_path) > piggyback_max_cachefile_age:
+                    if opt_debug:
+                        sys.stderr.write("Piggyback file %s is outdated by %d seconds. Deleting it.\n" %
+                            (file_path, cachefile_age(file_path) - piggyback_max_cachefile_age))
                     os.remove(file_path)
                     continue
 

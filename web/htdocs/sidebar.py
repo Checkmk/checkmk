@@ -167,13 +167,13 @@ def page_side():
     for name, state in user_config:
         if not name in sidebar_snapins or not config.may("sidesnap." + name):
             continue
-        refresh_url  = render_snapin(name, state)
-        refresh_time = sidebar_snapins.get(name).get("refresh", 0)
-        if refresh_time > 0:
-            refresh_snapins.append([name, refresh_time, refresh_url])
-
-        restart = sidebar_snapins.get(name, {}).get('restart', False)
-        if restart:
+        # Performs the initial rendering and might return an optional refresh url,
+        # when the snapin contents are refreshed from an external source
+        refresh_url = render_snapin(name, state)
+        if sidebar_snapins.get(name).get("refresh", False):
+            refresh_snapins.append([name, refresh_url])
+        elif sidebar_snapins.get(name).get("restart", False):
+            refresh_snapins.append([name, refresh_url])
             restart_snapins.append(name)
     html.write('</div>')
     sidebar_foot()
@@ -182,16 +182,15 @@ def page_side():
     html.write("<script language=\"javascript\">\n")
     if restart_snapins:
         html.write("sidebar_restart_time = %s\n" % time.time())
+    html.write("sidebar_update_interval = %0.2f;\n" % config.sidebar_update_interval)
     html.write("registerEdgeListeners();\n")
     html.write("setSidebarHeight();\n")
     html.write("refresh_snapins = %r;\n" % refresh_snapins)
     html.write("restart_snapins = %r;\n" % restart_snapins)
     html.write("sidebar_scheduler();\n")
     html.write("window.onresize = function() { setSidebarHeight(); }\n")
-    # html.write("window.onload = function() { setSidebarHeight(); }\n")
     html.write("</script>\n")
 
-    # html.write("</div>\n")
     html.write("</body>\n</html>")
 
 def render_snapin(name, state):
@@ -266,17 +265,6 @@ def snapin_exception(e):
                 "<h2>%s</h2>\n"
                 "<p>%s</p></div>" % (_('Error'), e))
 
-def ajax_nagios_restarted():
-    # Tells the requestor the "since" time or the program start time
-    # of the newest running instance depending on which is newer
-    since = float(html.var('since', 0))
-    newest = since
-    for site in html.site_status.values():
-        prog_start = site.get("program_start", 0)
-        if prog_start > newest:
-            newest = prog_start
-    html.write(str(newest))
-
 def ajax_openclose():
     config = load_user_config()
     new_config = []
@@ -289,13 +277,46 @@ def ajax_openclose():
 
 def ajax_snapin():
     snapname = html.var("name")
-    if not config.may("sidesnap." + snapname):
-        return
-    snapin = sidebar_snapins.get(snapname)
+    if snapname:
+        snapnames = [ snapname ]
+    else:
+        snapnames = html.var('names', '').split(',')
+
+    html.plug()
+    snapin_code = []
     try:
-        snapin["render"]()
-    except Exception, e:
-        snapin_exception(e)
+        for snapname in snapnames:
+            if not config.may("sidesnap." + snapname):
+                continue
+            snapin = sidebar_snapins.get(snapname)
+
+            # When restart snapins are about to be refreshed, only render
+            # them, when core restarted after they have been redendered
+            # before
+            if not snapin.get('refresh') and snapin.get('restart'):
+                since = float(html.var('since', 0))
+                newest = since
+                for site in html.site_status.values():
+                    prog_start = site.get("program_start", 0)
+                    if prog_start > newest:
+                        newest = prog_start
+                if newest <= since:
+                    # no restart
+                    snapin_code.append('')
+                    continue
+
+            try:
+                snapin["render"]()
+            except Exception, e:
+                snapin_exception(e)
+            snapin_code.append(html.drain())
+
+        html.unplug()
+        html.write(repr(snapin_code))
+    except:
+        html.flush()
+        html.unplug()
+        raise
 
 def move_snapin():
     if not config.may("general.configure_sidebar"):

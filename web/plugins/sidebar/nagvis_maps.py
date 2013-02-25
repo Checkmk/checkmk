@@ -43,6 +43,6 @@ sidebar_snapins["nagvis_maps"] = {
                    "a NagVis map in the browser. After this the maplist should be filled."),
     "render":      render_nagvis_maps,
     "allowed":     [ "user", "admin", "guest" ],
-    "refresh":     30,
+    "refresh":     True,
     "styles":      ""
 }

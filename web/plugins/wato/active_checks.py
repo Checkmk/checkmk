@@ -786,6 +786,43 @@ register_rule(group,
                   totext = _("process performance data"),
               )
             ),
+            ( "freshness",
+              Dictionary(
+                  title = _("Check freshness"),
+                  help = _("Freshness checking is only useful for passive checks. It makes sure that passive "
+                           "check results are submitted on a regular base. If not, the check is being set to "
+                           "warning, critical or unknown."),
+                  optional_keys = False,
+                  elements = [ 
+                      ( "interval",
+                        Integer(
+                            title = _("Expected update interval"),
+                            label = _("Updates are expected at least every"),
+                            unit = _("minutes"),
+                            minvalue = 1,
+                            default_value = 10,
+                      )),
+                      ( "state",
+                        DropdownChoice(
+                            title = _("State in case of absent updates"),
+                            choices =  [
+                               ( 1, _("WARN") ),
+                               ( 2, _("CRIT") ),
+                               ( 3, _("UNKNOWN") ),
+                            ],
+                            default_value = 3,
+                      )),
+                      ( "output",
+                        TextUnicode(
+                            title = _("Plugin output in case of absent abdates"),
+                            size = 40,
+                            allow_empty = False,
+                            default_value = _("Check result did not arrive in time")
+                      )),
+                  ],
+               )
+            ),
+
         ],
         required_keys = [ "service_description" ],
     ),

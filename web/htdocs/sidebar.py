@@ -142,7 +142,7 @@ def sidebar_foot():
         html.icon_button("user_profile.py", _("Edit your personal settings, change your password"), "sidebar_settings",
                          target="main")
         # html.write('<li><a class=profile target="main" href="user_profile.py" title="%s"></a></li>' % _('Edit user profile'))
-    if config.may("general.logout"):
+    if config.may("general.logout") and not config.auth_by_http_header:
         html.icon_button("logout.py", _("Log out"), "sidebar_logout", target="_top")
         # html.write('<li><a class=logout target="_top" href="logout.py" title="%s"></a></li>' % _('Logout'))
     html.write('</ul>')

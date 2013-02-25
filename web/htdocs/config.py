@@ -561,6 +561,9 @@ def load_default_values(into):
     # Maximum livetime of unmodified selections
     into["selection_livetime"]  = 3600
 
+    # Configure HTTP header to read usernames from
+    into["auth_by_http_header"] = False
+
     #     ____ ___
     #    | __ )_ _|
     #    |  _ \| |

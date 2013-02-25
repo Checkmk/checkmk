@@ -297,6 +297,29 @@ register_configvar(group,
                    "details for each executed compilation.")),
     domain = "multisite")
 
+register_configvar(group,
+    "auth_by_http_header",
+    Optional(
+        TextAscii(
+            label   = _("HTTP Header Variable"),
+            help    = _("Configure the name of the environment variable to read "
+                        "from the incoming HTTP requests"),
+            default_value = 'REMOTE_USER',
+        ),
+        title = _("Authenticate users by incoming HTTP requests"),
+        label = _("Activate HTTP header authentication (Warning: Only activate "
+                  "in trusted environments, see help for details)"),
+        help  = _("If this option is enabled, multisite reads the configured HTTP header "
+                  "variable from the incoming HTTP request and simply takes the string "
+                  "in this variable as name of the authenticated user. "
+                  "Be warned: Only allow access from trusted ip addresses "
+                  "(Apache <tt>Allow from</tt>), like proxy "
+                  "servers, to this webpage. A user with access to this page could simply fake "
+                  "the authentication information. This option can be useful to "
+                  " realize authentication in reverse proxy environments.")
+    ),
+    domain = "multisite")
+
 #   .----------------------------------------------------------------------.
 #   |          _   _                 __  __                 _              |
 #   |         | | | |___  ___ _ __  |  \/  | __ _ _ __ ___ | |_            |

@@ -91,6 +91,14 @@ def set_auth_cookie(username, serial):
 def get_cookie_value():
     return auth_cookie_value(config.user_id, load_serial(config.user_id))
 
+def renew_cookie(cookie_name, username, serial):
+    # Do not renew if:
+    # a) The _ajaxid var is set
+    # b) A logout is requested
+    if (html.req.myfile != 'logout' or html.has_var('_ajaxid')) \
+       and cookie_name == site_cookie_name():
+        set_auth_cookie(username, serial)
+
 def check_auth_cookie(cookie_name):
     username, issue_time, cookie_hash = html.cookie(cookie_name, '::').split(':', 2)
 
@@ -110,12 +118,7 @@ def check_auth_cookie(cookie_name):
         raise MKAuthException(_('Invalid credentials'))
 
     # Once reached this the cookie is a good one. Renew it!
-    # Do not renew if:
-    # a) The _ajaxid var is set
-    # b) A logout is requested
-    if (html.req.myfile != 'logout' or html.has_var('_ajaxid')) \
-       and cookie_name == site_cookie_name():
-        set_auth_cookie(username, serial)
+    renew_cookie(cookie_name, username, serial)
 
     # Return the authenticated username
     return username
@@ -134,6 +137,15 @@ def check_auth_automation():
 def check_auth():
     if html.var("_secret"):
         return check_auth_automation()
+
+    # When http header auth is enabled, try to read the username from the var
+    # and when there is some available, set the auth cookie (for other addons) and proceed.
+    if config.auth_by_http_header:
+        username = html.req.headers_in.get(config.auth_by_http_header, None)
+        if username:
+            serial = load_serial(username)
+            renew_cookie(site_cookie_name(), username, serial)
+            return username
 
     for cookie_name in html.get_cookie_names():
         if cookie_name.startswith('auth_'):

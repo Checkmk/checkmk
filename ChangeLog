@@ -5,6 +5,8 @@
 
     Multisite:
     * New availability view for arbitrary host/service collections
+    * New option auth_by_http_header to use the value of a HTTP header
+    variable for authentication (Useful in reverse proxy environments)
 
     Event Console:
     * New rule feature: automatically delete event after actions

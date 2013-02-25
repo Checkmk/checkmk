@@ -21,6 +21,7 @@
       systems to retrieve monitoring information for this or other machines.
     * sap.dialog: Monitors SAP dialog statistics like the response time
     * sap.value: Simply processes information provided by SAP to Nagios
+    * openvpn_clients: new check for OpenVPN connections
 
     BI:
     * Integrated availability computing, including nifty time warp feature

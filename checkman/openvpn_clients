@@ -1,0 +1,27 @@
+title: Check status of OpenVPN client connection
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check uses the status file created by OpenVPN in order
+ to check the state of the client connections and also to measure
+ the inbound and outbound traffic. The traffic is measured raw - 
+ i.e. including keepalive packages and headers - not just the payload.
+
+ Currently the linux agent is expecting the status file at 
+ {/etc/openvpn/openvpn-status.log}. You can specify the path where
+ OpenVPN should create this file with the directive {status =} in you
+ {openvpn.conf}.
+
+item:
+ The name of the OpenVPN connection (first column in the status file).
+
+perfdata:
+ Two variables: the number of bytes per second inbound and outbound traffic.
+ Note: the check output, PNP template and Perf-O-Meter convert this to MBit/sec.
+
+inventory:
+ One service per active connection will be created. Please use
+ {ignored_services} if you want to restrict this.
+

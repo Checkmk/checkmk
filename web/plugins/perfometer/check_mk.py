@@ -397,6 +397,16 @@ perfometers["check_mk-winperf_phydisk"] = perfometer_check_mk_diskstat
 perfometers["check_mk-hpux_lunstats"] = perfometer_check_mk_diskstat
 perfometers["check_mk-mysql.innodb_io"] = perfometer_check_mk_diskstat
 
+def perfometer_in_out_mb_per_sec(row, check_command, perf_data):
+    read_mbit = float(perf_data[0][1]) / 131072
+    write_mbit = float(perf_data[1][1]) / 131072
+
+    text = "%-.2fMb/s  %-.2fMb/s" % (read_mbit, write_mbit)
+
+    return text, perfometer_logarithmic_dual(
+            read_mbit, "#30d050", write_mbit, "#0060c0", 100, 10)
+perfometers["check_mk-openvpn_clients"] = perfometer_in_out_mb_per_sec
+
 
 def perfometer_check_mk_printer_supply(row, check_command, perf_data):
     left = savefloat(perf_data[0][1])

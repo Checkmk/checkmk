@@ -244,10 +244,23 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "sidebar_update_interval",
+    Float(title = _("Interval of sidebar status updates"),
+          help = _("The information provided by the sidebar snapins is refreshed in a regular "
+                   "interval. You can change the refresh interval to fit your needs here. This "
+                   "value means that all snapnis which request a regular refresh are updated "
+                   "in this interval."),
+          minvalue = 10.0,
+          default_value = 30.0,
+          unit = "sec",
+          display_format = "%.1f"),
+    domain = "multisite")
+
+register_configvar(group,
     "wato_activation_method",
     DropdownChoice(
-        title = _("Wato restart mode for Nagios"),
-        help = _("Should Wato restart or reload Nagios when activating changes"),
+        title = _("WATO restart mode for Nagios"),
+        help = _("Should WATO restart or reload Nagios when activating changes"),
         choices = [
             ('restart', _("Restart")),
             ('reload' , _("Reload") ),

@@ -532,6 +532,9 @@ def load_default_values(into):
     # Timeout for rescheduling of host- and servicechecks
     into["reschedule_timeout"] = 10.0
 
+    # Interval of snapin updates in seconds
+    into["sidebar_update_interval"] = 30.0
+
     # Number of columsn in "Filter" form
     into["filter_columns"] = 2
 

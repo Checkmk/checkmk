@@ -249,7 +249,7 @@ sidebar_snapins["hosts"] = {
     "description" : _("A summary state of each host with a link to the view showing its services"),
     "render" : lambda: render_hosts("hosts"),
     "allowed" : [ "user", "admin", "guest" ],
-    "refresh" : 60,
+    "refresh" : True,
     "styles" : snapin_allhosts_styles,
 }
 
@@ -258,7 +258,7 @@ sidebar_snapins["summary_hosts"] = {
     "description" : _("A summary state of all summary hosts (summary hosts hold aggregated service states and are a feature of Check_MK)"),
     "render" : lambda: render_hosts("summary"),
     "allowed" : [ "user", "admin", "guest" ],
-    "refresh" : 60,
+    "refresh" : True,
     "styles" : snapin_allhosts_styles,
 }
 
@@ -267,7 +267,7 @@ sidebar_snapins["problem_hosts"] = {
     "description" : _("A summary state of all hosts that have problem, with links to problems of those hosts"),
     "render" : lambda: render_hosts("problems"),
     "allowed" : [ "user", "admin", "guest" ],
-    "refresh" : 60,
+    "refresh" : True,
     "styles" : snapin_allhosts_styles,
 }
 
@@ -351,7 +351,7 @@ sidebar_snapins["hostmatrix"] = {
     "description" : _("A matrix showing a colored square for each host"),
     "render"      : render_hostmatrix,
     "allowed"     : [ "user", "admin", "guest" ],
-    "refresh"     : 10,
+    "refresh"     : True,
     "styles"      : """
 table.hostmatrix { border-spacing: 0;  }
 table.hostmatrix tr { padding: 0; border-spacing: 0; }
@@ -421,7 +421,7 @@ sidebar_snapins["sitestatus"] = {
   "description" : _("Connection state of each site and button for enabling and disabling the site connection"),
   "render" : render_sitestatus,
   "allowed" : [ "user", "admin" ],
-  "refresh" : 90,
+  "refresh" : True,
   "styles" : """
 table.sitestate {
     width: %dpx;
@@ -523,7 +523,7 @@ def render_tactical_overview():
 sidebar_snapins["tactical_overview"] = {
     "title" : _("Tactical Overview"),
     "description" : _("The total number of hosts and service with and without problems"),
-    "refresh" : 10,
+    "refresh" : True,
     "render" : render_tactical_overview,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
@@ -608,7 +608,7 @@ def render_performance():
 sidebar_snapins["performance"] = {
     "title" : _("Server performance"),
     "description" : _("Live monitor of the overall performance of all monitoring servers"),
-    "refresh" : 15,
+    "refresh" : True,
     "render" : render_performance,
     "allowed" : [ "admin", ],
     "styles" : """
@@ -789,7 +789,7 @@ def render_current_time():
 sidebar_snapins["time"] = {
     "title" : _("Server time"),
     "description" : _("A large clock showing the current time of the web server"),
-    "refresh" : 30,
+    "refresh" : True,
     "render" : render_current_time,
     "allowed" : [ "user", "admin", "guest", ],
     "styles" : """

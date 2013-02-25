@@ -127,7 +127,7 @@ function get_url(url, handler, data, errorHandler) {
     }
 
     // Dynamic part to prevent caching
-    var dyn = "_ajaxid="+Date.parse(new Date());
+    var dyn = "_ajaxid="+Math.floor(Date.parse(new Date()) / 1000);
     if (url.indexOf('\?') !== -1) {
         dyn = "&"+dyn;
     } else {
@@ -210,7 +210,24 @@ function post_url(url, params) {
     AJAX.send(params);
 }
 
-// Updates the contents of a snapin container after get_url
+function bulkUpdateContents(ids, codes) {
+    var codes = eval(codes);
+    for (var i = 0, len = ids.length; i < len; i++) {
+        if (restart_snapins.indexOf(ids[i].replace('snapin_', '')) !== -1) {
+            // Snapins which rely on the restart time of nagios receive
+            // an empty code here when nagios has not been restarted
+            // since sidebar rendering or last update, skip it
+            if(codes[i] != '') {
+                updateContents(ids[i], codes[i]);
+                sidebar_restart_time = Math.floor(Date.parse(new Date()) / 1000);
+            }
+        } else {
+            updateContents(ids[i], codes[i]);
+        }
+    }
+}
+
+// Updates the contents of a snapin or dashboard container after get_url
 function updateContents(id, code) {
   var obj = document.getElementById(id);
   if (obj) {

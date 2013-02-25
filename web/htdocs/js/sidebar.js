@@ -530,15 +530,14 @@ function scrollWheel(event){
 // Sidebar ajax stuff
 //
 
-// TODO: The sidebar cannot longer be embedded. We can use relative
-// links again and do not need to know the base url any longer :-)
-
 // The refresh snapins do reload after a defined amount of time
 refresh_snapins = null;
 // The restart snapins are notified about the restart of the nagios instance(s)
 restart_snapins = null;
 // Contains a timestamp which holds the time of the last nagios restart handling
 sidebar_restart_time = null;
+// Configures the number of seconds to reload all snapins which request it
+sidebar_update_interval = null;
 
 // Removes a snapin from the sidebar without reloading anything
 function removeSnapin(id, code) {
@@ -619,45 +618,44 @@ function switch_site(switchvar) {
        everything is affected by the switch */
 }
 
-/*
- * Is called as response handler of the generic nagios process restarted
- * check. If an instance start time is newer than the current stored time
- * the function triggers a reload of all snapins which have been registered
- * as restart snapins.
- */
-function handle_nagios_restarted(_unused, response) {
-    var t = parseFloat(response);
-    if(sidebar_restart_time == t)
-        return;
-    // Some instance has been restarted. Trigger the snapins
-    for (var i in restart_snapins) {
-        var name = restart_snapins[i];
-        get_url("sidebar_snapin.py?name=" + name, updateContents, "snapin_" + name);
-    }
-    sidebar_restart_time = t;
-}
-
 function sidebar_scheduler() {
     var timestamp = Date.parse(new Date()) / 1000;
     var newcontent = "";
-
-    // One generic request to detect if nagios instance(s) have been restarted
-    // For testing hardcoded interval of 30 seconds
-    if(timestamp % 30 == 0 && sidebar_restart_time !== null)
-        get_url('nagios_restarted.py?since=' + escape(sidebar_restart_time),
-                                                       handle_nagios_restarted);
+    var to_be_updated = [];
 
     for (var i in refresh_snapins) {
-        var name    = refresh_snapins[i][0];
-        var refresh = refresh_snapins[i][1];
-        var url = "sidebar_snapin.py?name=" + name;
-        if (refresh_snapins[i][2] != '')
-            url = refresh_snapins[i][2];
+        var name = refresh_snapins[i][0];
+        if (refresh_snapins[i][1] != '') {
+            // Special handling for snapins like the nagvis maps snapin which request
+            // to be updated from a special URL, use direct update of those snapins
+            // from this url
+            var url = refresh_snapins[i][1];
 
-        if (timestamp % refresh == 0) {
-            get_url(url, updateContents, "snapin_" + name);
+            if (timestamp % sidebar_update_interval == 0) {
+                get_url(url, updateContents, "snapin_" + name);
+            }
+        } else {
+            // Internal update handling, use bulk update
+            to_be_updated.push(name);
         }
     }
+
+    // Are there any snapins to be bulk updates?
+    if(to_be_updated.length > 0) {
+        if (timestamp % sidebar_update_interval == 0) {
+            var url = 'sidebar_snapin.py?names=' + to_be_updated.join(',');
+            if (sidebar_restart_time !== null)
+                url += '&since=' + sidebar_restart_time;
+
+            var ids = [];
+            for (var i = 0, len = to_be_updated.length; i < len; i++) {
+                ids.push('snapin_' + to_be_updated[i]);
+            }
+
+            get_url(url, bulkUpdateContents, ids);
+        }
+    }
+
     // Detect page changes and re-register the mousemove event handler
     // in the content frame. another bad hack ... narf
     if (contentFrameAccessible() && contentLocation != parent.frames[1].document.location) {

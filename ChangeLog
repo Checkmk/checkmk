@@ -24,6 +24,7 @@
     * sap.dialog: Monitors SAP dialog statistics like the response time
     * sap.value: Simply processes information provided by SAP to Nagios
     * openvpn_clients: new check for OpenVPN connections
+    * check_disk_smb: WATO formalization for active check check_disk_smb
 
     BI:
     * Integrated availability computing, including nifty time warp feature

@@ -4,6 +4,7 @@
     * FIX: allow unicode encoded extra_service_conf
     * FIX: no default PING service if custom checks are defined
     * FIX: check_mk_base: fixed rounding error in get_bytes_human_readable
+    * FIX: check_mk: improved support of utf-8 characters in extra_service_conf
     * New configuration variable contactgroup_members
 
     Checks & Agents:

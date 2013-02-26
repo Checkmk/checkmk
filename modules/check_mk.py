@@ -1226,7 +1226,7 @@ def extra_service_conf_of(hostname, description):
         if define_servicegroups:
             servicegroups_to_define.update(sergr)
     conf += extra_conf_of(extra_service_conf, hostname, description)
-    return conf
+    return conf.encode("utf-8")
 
 def extra_summary_service_conf_of(hostname, description):
     return extra_conf_of(extra_summary_service_conf, hostname, description)
@@ -1720,7 +1720,7 @@ def create_nagios_servicedefs(outfile, hostname):
 }
 
 """ % ( template, hostname, description, logwatch,
-        extra_service_conf_of(hostname, description).encode("utf-8"), checkname ))
+        extra_service_conf_of(hostname, description), checkname ))
 
         checknames_to_define.add(checkname)
         have_at_least_one_service = True
@@ -1782,7 +1782,7 @@ define service {
   host_name\t\t\t%s
 %s  service_description\t\tCheck_MK
 }
-""" % (active_service_template, hostname, extra_service_conf_of(hostname, "Check_MK").encode("utf-8")))
+""" % (active_service_template, hostname, extra_service_conf_of(hostname, "Check_MK")))
         # Inventory checks - if user has configured them. Not for clusters.
         if inventory_check_interval and not is_cluster(hostname):
             outfile.write("""

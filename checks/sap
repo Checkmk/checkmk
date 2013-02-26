@@ -24,6 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# This map converts between the SAP color codes (key values) and the
+# nagios state codes
+sap_nagios_state_map = [
+    0, # GRAY  (inactive or no current info available) -> OK
+    0, # GREEN  -> OK
+    1, # YELLOW -> WARNING
+    2, # RED    -> CRITICAL
+]
+
 def inventory_sap_dialog(info):
     inv = []
     for line in info:

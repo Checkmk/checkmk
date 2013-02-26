@@ -122,6 +122,8 @@ class FixedValue(ValueSpec):
     def value_to_text(self, value):
         if self._totext != None:
             return self._totext
+        elif type(value) == unicode:
+            return value
         else:
             return str(value)
 

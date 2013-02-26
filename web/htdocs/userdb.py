@@ -140,22 +140,27 @@ def reset_user_attributes():
     user_attributes = {}
 
 def load_users():
-    # First load monitoring contacts from Check_MK's world
     filename = root_dir + "contacts.mk"
-    if os.path.exists(filename):
-        try:
-            vars = { "contacts" : {} }
-            execfile(filename, vars, vars)
-            contacts = vars["contacts"]
-        except Exception, e:
-            if config.debug:
-                raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                              (filename, e)))
-            else:
-                html.log('load_users: Problem while loading contacts (%s - %s). '
-                         'Initializing structure...' % (filename, e))
-            contacts = {}
-    else:
+
+    # Make sure that the file exists without modifying it, *if* it exists.
+    # Note the lock will be released at end of page request automatically.
+    file(filename, "a")
+    aquire_lock(filename)
+
+    # First load monitoring contacts from Check_MK's world. If this is
+    # the first time, then the file will be empty, which is no problem.
+    # Execfile will the simply leave contacts = {} unchanged.
+    try:
+        vars = { "contacts" : {} }
+        execfile(filename, vars, vars)
+        contacts = vars["contacts"]
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                          (filename, e)))
+        else:
+            html.log('load_users: Problem while loading contacts (%s - %s). '
+                     'Initializing structure...' % (filename, e))
         contacts = {}
 
     # Now add information about users from the Web world
@@ -261,6 +266,7 @@ def load_users():
 def split_dict(d, keylist, positive):
     return dict([(k,v) for (k,v) in d.items() if (k in keylist) == positive])
 
+
 def save_users(profiles):
     custom_values = user_attributes.keys()
 
@@ -300,19 +306,9 @@ def save_users(profiles):
                             if p in multisite_keys + multisite_attributes(profile.get('connector'))])
 
     filename = root_dir + "contacts.mk"
-    locked = False
-    if os.path.exists(filename):
-        # When the file exists, lock the file before opening (and truncating) it
-        aquire_lock(filename)
-        locked = True
 
     # Check_MK's monitoring contacts
     out = create_user_file(filename, "w")
-
-    # In create mode lock the file after creation
-    if not locked:
-        aquire_lock(filename)
-
     out.write("# Written by Multisite UserDB\n# encoding: utf-8\n\n")
     out.write("contacts.update(\n%s\n)\n" % pprint.pformat(contacts))
     out.close()

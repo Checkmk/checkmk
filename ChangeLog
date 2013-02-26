@@ -25,6 +25,10 @@
     * sap.value: Simply processes information provided by SAP to Nagios
     * openvpn_clients: new check for OpenVPN connections
     * check_disk_smb: WATO formalization for active check check_disk_smb
+    
+    Livestatus:
+    * Table statehist: Improved detection of vanished hosts and services.
+                       Now able to detect and remove nonsense check plugin output 
 
     BI:
     * Integrated availability computing, including nifty time warp feature

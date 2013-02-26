@@ -100,6 +100,10 @@ bool LogEntry::handleStatusEntry()
 			_logclass = LOGCLASS_ALERT;
 			_type     = ALERT_HOST;
 		}
+		else if(_text[0] == 'I') {
+			_logclass = LOGCLASS_STATE;
+			_type     = STATE_HOST_INITIAL;
+		}
 		else{
 			_logclass = LOGCLASS_STATE;
 			_type     = STATE_HOST;
@@ -151,6 +155,10 @@ bool LogEntry::handleStatusEntry()
 		if (_text[0] == 'S'){
 			_logclass = LOGCLASS_ALERT;
 			_type     = ALERT_SERVICE;
+		}
+		else if(_text[0] == 'I') {
+			_logclass = LOGCLASS_STATE;
+			_type     = STATE_SERVICE_INITIAL;
 		}
 		else{
 			_logclass = LOGCLASS_STATE;

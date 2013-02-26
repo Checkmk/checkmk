@@ -48,10 +48,10 @@ extern Store *g_store;
 
 #define CLASSMASK_STATEHIST 70
 
+
 // Debugging logging is hard if debug messages are logged themselves...
 void debug_statehist(const char *loginfo, ...)
 {
-    return;
     FILE *x = fopen("/tmp/livestatus_state.log", "a+");
     va_list ap;
     va_start(ap, loginfo);
@@ -61,10 +61,11 @@ void debug_statehist(const char *loginfo, ...)
     fclose(x);
 }
 
+
 // Debug output of HostServiceState struct
 void log_hst(HostServiceState *state)
 {
-    debug_statehist("STATE INFO");
+    debug_statehist("\n++++++++++++++\nSTATE INFO");
     if (state->_host_name)
         debug_statehist("host name %s", state->_host_name);
     if (state->_service_description)
@@ -100,7 +101,7 @@ TableStateHistory::TableStateHistory()
             "Start time of state (seconds since 1/1/1970)", (char *)&(ref->_from) - (char *)ref, -1));
     addColumn(new OffsetTimeColumn("until",
             "End time of state (seconds since 1/1/1970)", (char *)&(ref->_until) - (char *)ref, -1));
-    addColumn(new OffsetTimeColumn("duration",
+    addColumn(new OffsetIntColumn("duration",
             "Duration of state (until - from)", (char *)&(ref->_duration) - (char *)ref, -1));
     addColumn(new OffsetDoubleColumn("duration_part",
             "Duration part in regard to the query timeframe", (char *)(&ref->_duration_part) - (char *)ref, -1));
@@ -126,27 +127,27 @@ TableStateHistory::TableStateHistory()
             "Description of the service", (char *)&(ref->_service_description) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("log_output",
             "Logfile output relevant for this state", (char *)&(ref->_log_output) - (char *)ref, -1));
-    addColumn(new OffsetTimeColumn("duration_ok",
+    addColumn(new OffsetIntColumn("duration_ok",
             "OK duration of state ( until - from )", (char *)&(ref->_duration_state_OK) - (char *)ref, -1));
     addColumn(new OffsetDoubleColumn("duration_part_ok",
             "OK duration part in regard to the query timeframe", (char *)(&ref->_duration_part_OK) - (char *)ref, -1));
 
-    addColumn(new OffsetTimeColumn("duration_warning",
+    addColumn(new OffsetIntColumn("duration_warning",
             "WARNING duration of state (until - from)", (char *)&(ref->_duration_state_WARNING) - (char *)ref, -1));
     addColumn(new OffsetDoubleColumn("duration_part_warning",
             "WARNING duration part in regard to the query timeframe", (char *)(&ref->_duration_part_WARNING) - (char *)ref, -1));
 
-    addColumn(new OffsetTimeColumn("duration_critical",
+    addColumn(new OffsetIntColumn("duration_critical",
             "CRITICAL duration of state (until - from)", (char *)&(ref->_duration_state_CRITICAL) - (char *)ref, -1));
     addColumn(new OffsetDoubleColumn("duration_part_critical",
             "CRITICAL duration part in regard to the query timeframe", (char *)(&ref->_duration_part_CRITICAL) - (char *)ref, -1));
 
-    addColumn(new OffsetTimeColumn("duration_unknown",
+    addColumn(new OffsetIntColumn("duration_unknown",
             "UNKNOWN duration of state (until - from)", (char *)&(ref->_duration_state_UNKNOWN) - (char *)ref, -1));
     addColumn(new OffsetDoubleColumn("duration_part_unknown",
             "UNKNOWN duration part in regard to the query timeframe", (char *)(&ref->_duration_part_UNKNOWN) - (char *)ref, -1));
 
-    addColumn(new OffsetTimeColumn("duration_unmonitored",
+    addColumn(new OffsetIntColumn("duration_unmonitored",
             "UNMONITORED duration of state (until - from)", (char *)&(ref->_duration_state_UNMONITORED) - (char *)ref, -1));
     addColumn(new OffsetDoubleColumn("duration_part_unmonitored",
             "UNMONITORED duration part in regard to the query timeframe", (char *)(&ref->_duration_part_UNMONITORED) - (char *)ref, -1));
@@ -226,8 +227,9 @@ void TableStateHistory::answerQuery(Query *query)
     --_it_logs;
 
     // Now find the log where 'since' starts.
-    while (_it_logs != g_store->logCache()->logfiles()->begin() && _it_logs->first >= _since)
+    while (_it_logs != g_store->logCache()->logfiles()->begin() && _it_logs->first >= _since) {
         --_it_logs; // go back in history
+    }
 
     // Check if 'until' is within these logfiles
     if (_it_logs->first > _until) {
@@ -266,6 +268,7 @@ void TableStateHistory::answerQuery(Query *query)
 
     HostServiceKey key;
     bool only_update = true;
+    bool in_nagios_initial_states = false;
     while (0 != (entry = getNextLogentry()))
     {
         if (entry->_time >= _until) {
@@ -276,11 +279,29 @@ void TableStateHistory::answerQuery(Query *query)
             // Reached start of query timeframe. From now on let's produce real output
             only_update = false;
         }
+
+        if (in_nagios_initial_states && !(entry->_type == STATE_SERVICE_INITIAL || entry->_type == STATE_HOST_INITIAL)) {
+            // Set still unknown hosts / services to unmonitored
+            state_info_t::iterator it_hst = state_info.begin();
+            while (it_hst != state_info.end())
+            {
+                HostServiceState* hst = it_hst->second;
+                if (hst->_may_no_longer_exist) {
+                	hst->_has_vanished = true;
+                }
+                it_hst++;
+            }
+
+            in_nagios_initial_states = false;
+        }
+
         switch (entry->_type) {
         case DOWNTIME_ALERT_SERVICE:
         case DOWNTIME_ALERT_HOST:
         case STATE_SERVICE:
+        case STATE_SERVICE_INITIAL:
         case STATE_HOST:
+        case STATE_HOST_INITIAL:
         case ALERT_SERVICE:
         case ALERT_HOST:
         case FLAPPING_HOST:
@@ -367,14 +388,15 @@ void TableStateHistory::answerQuery(Query *query)
             // If log_initial_states is set, each nagios startup logs the initial states of all known
             // hosts and services. Therefore we can detect if a host is no longer available after
             // a nagios startup. If it still exists an INITIAL HOST/SERVICE state entry will follow up shortly.
-            // If it reappaers again after multiple nagios restarts an unmonitored state entry is generated
             state_info_t::iterator it_hst = state_info.begin();
             while (it_hst != state_info.end()) {
-                if (it_hst->second->_no_longer_exists == 0)
-                    it_hst->second->_last_known_time = entry->_time;
-                it_hst->second->_no_longer_exists++;
+            	if (!it_hst->second->_has_vanished) {
+            		it_hst->second->_last_known_time = entry->_time;
+            		it_hst->second->_may_no_longer_exist = true;
+            	}
                 it_hst++;
             }
+            in_nagios_initial_states = true;
             break;
         }
         }
@@ -385,19 +407,21 @@ void TableStateHistory::answerQuery(Query *query)
     while (it_hst != state_info.end())
     {
         HostServiceState* hst = it_hst->second;
-        //hst->_debug_info = "LOG FINAL";
 
         // No trace since the last two nagios startup -> host/service has vanished
-        if (hst->_no_longer_exists > 1) {
-            // Log last known state up to nagios restart
+        if (hst->_may_no_longer_exist) {
+        	// Log last known state up to nagios restart
             hst->_time  = hst->_last_known_time;
             hst->_until = hst->_last_known_time;
             process(query, hst);
 
-            // Log absent state
+            // Set absent state
             hst->_state = -1;
             hst->_until = hst->_time;
             hst->_debug_info = "UNMONITORED";
+            if (hst->_log_output)
+                free(hst->_log_output);
+            hst->_log_output = 0;
         }
 
         hst->_time  = _until - 1;
@@ -409,25 +433,26 @@ void TableStateHistory::answerQuery(Query *query)
     g_store->logCache()->unlockLogCache();
 }
 
-
 void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *hs_state, const bool only_update){
-    // Handle UNMONITORED states
-    if (entry->_type != TIMEPERIOD_TRANSITION && hs_state->_no_longer_exists > 1)
+    // Revive host / service if it was unmonitored
+    if (entry->_type != TIMEPERIOD_TRANSITION && hs_state->_has_vanished)
     {
-        // Create existing entry for last known existance
-        hs_state->_until = hs_state->_last_known_time;
-        if (!only_update) {
-            process(query, hs_state);
-        }
+    	hs_state->_time  = hs_state->_last_known_time;
+    	hs_state->_until = hs_state->_last_known_time;
+    	process(query, hs_state);
 
-        // Reanimate this host/service, cleanup any invalid data
-        if (hs_state->_log_output)
-            free(hs_state->_log_output);
-        hs_state->_log_output  = 0;
-        hs_state->_in_downtime = 0;
-        hs_state->_is_flapping = 0;
+    	hs_state->_may_no_longer_exist = false;
+    	hs_state->_has_vanished = false;
+    	// Set absent state
+    	hs_state->_state = -1;
+    	hs_state->_debug_info = "UNMONITORED";
+    	hs_state->_in_downtime = 0;
+    	hs_state->_in_notification_period = 0;
+    	hs_state->_is_flapping = 0;
+    	if (hs_state->_log_output)
+    		free(hs_state->_log_output);
+    	hs_state->_log_output = 0;
 
-        hs_state->_debug_info = "UNMONITORED";
         // Apply latest notification period information and set the host_state to unmonitored
         _notification_periods_t::const_iterator it_status = _notification_periods.find(hs_state->_notification_period);
         if (it_status != _notification_periods.end()) {
@@ -435,8 +460,6 @@ void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *ent
         }
         else // No notification period information available -> within notification period
             hs_state->_in_notification_period = 1;
-
-        hs_state->_state = -1;
     }
 
     // Update basic information
@@ -444,13 +467,14 @@ void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *ent
     hs_state->_lineno = entry->_lineno;
     hs_state->_until  = entry->_time;
 
-    // A timeperiod entry never brings an absent host into existance..
+    // A timeperiod entry never brings an absent host or service into existence..
     if (entry->_type != TIMEPERIOD_TRANSITION)
-        hs_state->_no_longer_exists = 0;
+        hs_state->_may_no_longer_exist = false;
 
     switch (entry->_type)
     {
     case STATE_HOST:
+    case STATE_HOST_INITIAL:
     case ALERT_HOST:
     {
         if (hs_state->_is_host) {
@@ -473,6 +497,7 @@ void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *ent
         break;
     }
     case STATE_SERVICE:
+    case STATE_SERVICE_INITIAL:
     case ALERT_SERVICE:
     {
         if (hs_state->_state != entry->_state) {
@@ -537,9 +562,17 @@ void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *ent
     }
     }
 
-    if (hs_state->_log_output)
-        free(hs_state->_log_output);
-    hs_state->_log_output = entry->_check_output ? strdup(entry->_check_output) : 0;
+    if (entry->_type != TIMEPERIOD_TRANSITION) {
+        if (hs_state->_log_output)
+            free(hs_state->_log_output);
+
+        if ( (entry->_type == STATE_HOST_INITIAL || entry->_type == STATE_SERVICE_INITIAL) &&
+             (entry->_check_output != 0 && !strcmp(entry->_check_output, "(null)")) )
+            hs_state->_log_output = 0;
+
+        else
+            hs_state->_log_output = entry->_check_output ? strdup(entry->_check_output) : 0;
+    }
 }
 
 
@@ -575,8 +608,8 @@ void TableStateHistory::process(Query *query, HostServiceState *hs_state)
         break;
     }
 
-    if (hs_state->_duration > 0)
-        query->processDataset(hs_state);
+    // if (hs_state->_duration > 0)
+    query->processDataset(hs_state);
     hs_state->_from = hs_state->_until;
 };
 

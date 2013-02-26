@@ -71,7 +71,8 @@ struct HostServiceState {
 
 
     // Absent state handling
-    int        _no_longer_exists;
+    bool    _may_no_longer_exist;
+    bool    _has_vanished;
     time_t  _last_known_time;
 
 

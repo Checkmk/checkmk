@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def check_ldap_arguments(params):
+    print params
     name, basedn, settings = params
     args = ' -b %s' % quote_shell_string(basedn)
 
@@ -47,6 +48,13 @@ def check_ldap_arguments(params):
 
     if "port" in settings:
         args += ' -p %d' % settings["port"]
+
+    if "version" in settings:
+        args += {
+            "v2" : " -2",
+            "v3" : " -3",
+            "v3tls" : " -3 -T",
+        }[settings["version"]]
 
     if settings.get("ssl"):
         args += ' --ssl'

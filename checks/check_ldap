@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 def check_ldap_arguments(params):
-    print params
     name, basedn, settings = params
     args = ' -b %s' % quote_shell_string(basedn)
 

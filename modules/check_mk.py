@@ -1939,6 +1939,8 @@ define service {
                             "  freshness_threshold\t\t%d\n" % (60 * entry["freshness"]["interval"])
                 command_line = "echo %s && exit %d" % (
                        quote_shell_string(entry["freshness"]["output"]), entry["freshness"]["state"]) 
+            else:
+                freshness = ""
 
 
             custom_commands_to_define.add(command_name)

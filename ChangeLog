@@ -23,6 +23,12 @@
       systems to retrieve monitoring information for this or other machines.
     * sap.dialog: Monitors SAP dialog statistics like the response time
     * sap.value: Simply processes information provided by SAP to Nagios
+    * openvpn_clients: new check for OpenVPN connections
+    * check_disk_smb: WATO formalization for active check check_disk_smb
+    
+    Livestatus:
+    * Table statehist: Improved detection of vanished hosts and services.
+                       Now able to detect and remove nonsense check plugin output 
 
     BI:
     * Integrated availability computing, including nifty time warp feature
@@ -51,6 +57,8 @@
     * FIX: megaraid_pdisk: deal with special output of Open-E
     * FIX: jolokia_metrics.mem: renamed parameter totalheap to total
     * FIX: megaraid_bbu: deal with broken output ("Adpater")
+    * FIX: check_ldap: added missing host address (check didn't work at all)
+    * FIX: check_ldap: added missing version option -2, -3, -3 -T (TLS)
     * Linux agent: limit netstat to 10 seconds
     * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
       reordering of matched groups

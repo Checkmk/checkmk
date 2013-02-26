@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,49 +23,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_ldap_arguments(params):
-    name, basedn, settings = params
-    args = ' -b %s' % quote_shell_string(basedn)
+$parts = explode("_",$servicedesc);
+$channel = $parts[2];
 
-    if "response_time" in settings:
-        args += ' -w %f -c %f' % (
-            settings["response_time"][0]/1000.0,
-            settings["response_time"][1]/1000.0)
+$opt[1] = "--vertical-label \"MBit per secound\" -X0 -l0  --title \"VPN-Traffic (raw) $hostname / $channel\" ";
 
-    if "timeout" in settings:
-        args += ' -t %d' % settings["timeout"]
-
-    if "attribute" in settings:
-        args += ' -a %s' % quote_shell_string(settings["attribute"])
-
-    if "authentication" in settings:
-        binddn, password = settings["authentication"]
-        args += ' -D %s -P %s' % (
-            quote_shell_string(binddn),
-            quote_shell_string(password))
-
-    if "port" in settings:
-        args += ' -p %d' % settings["port"]
-
-    if "version" in settings:
-        args += {
-            "v2" : " -2",
-            "v3" : " -3",
-            "v3tls" : " -3 -T",
-        }[settings["version"]]
-
-    if settings.get("ssl"):
-        args += ' --ssl'
-
-    args += ' -H $HOSTADDRESS$'
-
-    return args
-
-
-active_check_info['ldap'] = {
-    "command_line"        : '$USER1$/check_ldap -H $HOSTADDRESS$ $ARG1$',
-    "argument_function"   : check_ldap_arguments,
-    "service_description" : lambda args: "LDAP " + args[0],
-    "has_perfdata"        : True,
-}
+$def[1] =  "DEF:in=$RRDFILE[1]:$DS[1]:MAX " ;
+$def[1] .= "DEF:out=$RRDFILE[2]:$DS[2]:MAX " ;
+$def[1] .= "CDEF:mb_out=out,131072,/ " ;
+$def[1] .= "CDEF:mb_out_n=mb_out,-1,* " ;
+$def[1] .= "CDEF:mb_in=in,131072,/ " ;
+$def[1] .= "AREA:mb_in#30d050:\"Inbound  \" " ;
+$def[1] .= "GPRINT:mb_in:LAST:\"%6.2lf MBit/s last\" " ;
+$def[1] .= "GPRINT:mb_in:AVERAGE:\"%6.2lf MBit/s avg\" " ;
+$def[1] .= "GPRINT:mb_in:MAX:\"%6.2lf MBit/s max\\n\" ";
+$def[1] .= "AREA:mb_out_n#0060c0:\"Outbound \" " ;
+$def[1] .= "GPRINT:mb_out:LAST:\"%6.2lf MBit/s last\" " ;
+$def[1] .= "GPRINT:mb_out:AVERAGE:\"%6.2lf MBit/s avg\" " ;
+$def[1] .= "GPRINT:mb_out:MAX:\"%6.2lf MBit/s max\\n\" " ;
+?>
 

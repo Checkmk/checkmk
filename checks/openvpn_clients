@@ -1,0 +1,70 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<openvpn_clients:sep(44)>>>
+# wilhelmshilfe-hups1,84.161.206.33:58371,11267978,8134524,Sun Mar 10 14:02:27 2013
+# wilhelmshilfe-hups365,84.161.206.33:59737,924198,809268,Sun Mar 10 13:59:14 2013
+# wilhelmshilfe-bartenbach-redu,78.43.52.102:40411,492987861,516066364,Sun Mar 10 03:55:01 2013
+# wilhelmshilfe-hups3,84.161.206.33:58512,8224815,6189879,Sun Mar 10 11:32:40 2013
+# wilhelmshilfe-heiningen,46.5.209.251:3412,461581486,496901007,Fri Mar  8 10:02:38 2013
+# wilhelmshilfe-hups5,84.161.206.33:60319,721646,336190,Sun Mar 10 14:23:30 2013
+# wilhelmshilfe-suessen,92.198.38.212:3077,857194558,646128778,Fri Mar  8 10:02:38 2013
+# wilhelmshilfe-hups6,84.161.206.33:61410,3204103,2793366,Sun Mar 10 11:59:13 2013
+# wilhelmshilfe-gw-fau1,217.92.99.180:55683,109253134,96735180,Sun Mar 10 10:11:44 2013
+# wilhelmshilfe-bendig,78.47.146.190:34475,5787319,19395097,Sat Mar  9 10:02:52 2013
+# wilhelmshilfe-ursenwang,46.223.206.6:47299,747919254,922426625,Fri Mar  8 10:02:38 2013
+# vpn-wilhelmshilfe.access.lihas.de,79.204.249.30:59046,12596972,31933023,Sun Mar 10 09:32:22 2013
+# wilhelmshilfe-karlshof,92.198.38.214:3078,810996228,716994592,Fri Mar  8 10:02:39 2013 
+
+def inventory_openvpn_clients(info):
+    return [ (l[0], None) for l in info ]
+
+def check_openvpn_clients(item, _no_params, info):
+    for line in info:
+        if line[0] == item:
+            infos = [ "Channel is up" ]
+            perfdata = []
+            name, address, inbytes, outbytes, date = line
+            this_time = time.time()
+            for what, val in [
+                ( "in", int(inbytes) ),
+                ( "out", int(outbytes) )]:
+                countername = "openvpn_clients.%s.%s" % (item, what)
+                timedif, bytes_per_sec = get_counter(countername, this_time, val)
+                infos.append("%s: %s/sec" % (what, get_bytes_human_readable(bytes_per_sec)))
+                perfdata.append((what, bytes_per_sec))
+            return 0, "OK - " + ", ".join(infos), perfdata
+
+    return 3, "UNKNOWN - Client connection not found"
+
+check_info["openvpn_clients"] = {
+    "check_function"        : check_openvpn_clients,
+    "inventory_function"    : inventory_openvpn_clients,
+    "service_description"   : "OpenVPN Client %s",
+    "has_perfdata"          : True,
+}
+

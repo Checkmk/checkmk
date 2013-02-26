@@ -350,6 +350,12 @@ if type VBoxControl > /dev/null 2>&1 ; then
     [ ${PIPESTATUS[0]} = 0 ] || echo "ERROR"
 fi
 
+# OpenVPN Clients. Currently we assume that the configuration # is in
+# /etc/openvpn. We might find a safer way to find the configuration later.
+if [ -e /etc/openvpn/openvpn-status.log ] ; then
+    echo '<<<openvpn_clients:sep(44)>>>'
+    sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' < /etc/openvpn/openvpn-status.log  | sed -e 1,3d -e '$d' 
+fi
 
 if type ntpq > /dev/null 2>&1 ; then
    echo '<<<ntp>>>'

@@ -24,49 +24,31 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_ldap_arguments(params):
-    name, basedn, settings = params
-    args = ' -b %s' % quote_shell_string(basedn)
+def check_disk_smb_arguments(params):
+    args = ' -a $HOSTADDRESS$ -s %s' % quote_shell_string(params["share"])
+    args += ' -w%d%% -c%d%%' % params["levels"]
 
-    if "response_time" in settings:
-        args += ' -w %f -c %f' % (
-            settings["response_time"][0]/1000.0,
-            settings["response_time"][1]/1000.0)
+    if "workgroup" in params:
+        args += ' -W %s' % quote_shell_string(params["workgroup"])
 
-    if "timeout" in settings:
-        args += ' -t %d' % settings["timeout"]
+    if "port" in params:
+        args += ' -p %d' % params["port"]
 
-    if "attribute" in settings:
-        args += ' -a %s' % quote_shell_string(settings["attribute"])
+    if "auth" in params:
+        args += ' -u %s -p %s' % tuple(map(quote_shell_string, params["auth"]))
 
-    if "authentication" in settings:
-        binddn, password = settings["authentication"]
-        args += ' -D %s -P %s' % (
-            quote_shell_string(binddn),
-            quote_shell_string(password))
-
-    if "port" in settings:
-        args += ' -p %d' % settings["port"]
-
-    if "version" in settings:
-        args += {
-            "v2" : " -2",
-            "v3" : " -3",
-            "v3tls" : " -3 -T",
-        }[settings["version"]]
-
-    if settings.get("ssl"):
-        args += ' --ssl'
-
-    args += ' -H $HOSTADDRESS$'
+    if "host" in params:
+        args += ' -H %s' % quote_shell_string(params["host"])
+    else:
+        args += ' -H $HOSTADDRESS$'
 
     return args
 
 
-active_check_info['ldap'] = {
-    "command_line"        : '$USER1$/check_ldap -H $HOSTADDRESS$ $ARG1$',
-    "argument_function"   : check_ldap_arguments,
-    "service_description" : lambda args: "LDAP " + args[0],
+active_check_info['disk_smb'] = {
+    "command_line"        : '$USER1$/check_disk_smb $ARG1$',
+    "argument_function"   : check_disk_smb_arguments,
+    "service_description" : lambda params: "SMB Share " + params["share"],
     "has_perfdata"        : True,
 }
 

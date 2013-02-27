@@ -1,14 +1,9 @@
-#!/bin/bash
-SITE=${SITE:-$(omd sites --bare | head -n 1)}
-set -xe
-
-sed -e "s#@BINDIR@#/omd/sites/$SITE/bin#g" \
-    -e "s#@VARDIR@#/omd/sites/$SITE/var/check_mk#g" \
-    -e "s#@CHECK_ICMP@#/omd/sites/$SITE/lib/nagios/plugins/check_icmp#g" \
-    -e "s#@PNPURL@#/$SITE/pnp4nagios/#g" \
-    -e "s#@CGIURL@#/$SITE/nagios/cgi-bin#g" \
-    < check_mk_templates.cfg > /tmp/check_mk_templates.cfg
-
-sudo mv /tmp/check_mk_templates.cfg /omd/sites/$SITE/etc/nagios/conf.d
-sudo omd restart $SITE nagios
-echo 'location.reload();' | nc -w 0 localhost 32000
+(cd web ; bash .f12)
+(cd modules ; bash .f12)
+(cd checks ; bash .f12)
+(cd checkman ; bash .f12)
+(cd mkeventd ; bash .f12)
+(cd notifications ; bash .f12)
+(cd agents ; bash .f12)
+(cd livestatus ; bash .f12)
+(cd pnp-templates ; bash .f12)

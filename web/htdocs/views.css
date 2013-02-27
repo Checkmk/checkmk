@@ -485,6 +485,17 @@ table.data.availability td.unused {
     text-shadow: 1px 1px 0.5px #fff;
 }
 
+table.data.availability tr.summary {
+    background-color: #bbb;
+}
+table.data.availability tr.summary td {
+    border-top: 1px solid black;
+    font-weight: bold;
+    border-bottom-style: none;
+    padding-bottom: 1px;
+    padding-top: 1px;
+}
+
 table.data td.flapping, table.timeline td.flapping {
     /* background-image: url("images/bg_flapping.png");
     background-repeat: repeat; */
@@ -519,6 +530,7 @@ div.floatfilter.rangespec table.valuespec_tuple span.title {
 div#avoptions_on {
     margin-right: 3px;
 }
+
 
 table.timeline {
     width: 800px;

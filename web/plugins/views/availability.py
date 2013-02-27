@@ -242,6 +242,21 @@ avoption_entries = [
         title = _("Phase Merging"),
         label = _("Do not merge consecutive phases with equal state")),
   ),
+
+  # Summary line
+  ( "summary",
+    "single",
+    DropdownChoice(
+        title = _("Summary line"),
+        choices = [
+            ( None,      _("Do not show a summary line") ),
+            ( "sum",     _("Display total sum (for % the average)") ),
+            ( "average", _("Display average") ),
+        ],
+        default_value = sum,
+    )
+  ),
+
 ]
 
 
@@ -267,6 +282,7 @@ def render_availability_options():
         },
         "short_intervals" : 0,
         "dont_merge" : False,
+        "summary" : "sum",
     })
 
     is_open = False
@@ -679,8 +695,25 @@ def render_availability_table(availability, from_time, until_time, range_title, 
     sg = avoptions["state_grouping"]
     state_groups = [ sg["warn"], sg["unknown"], sg["host_down"] ]
 
+    # Helper function, needed in row and in summary line
+    def cell_active(sid):
+        if sid == "outof_notification_period" and not avoptions["consider"]["notification_period"]:
+            return False
+        elif sid == "in_downtime" and avoptions["downtimes"]["include"] == "ignore":
+            return False
+        elif sid == "unmonitored" and not avoptions["consider"]["unmonitored"]:
+            return False
+        elif sid == "flapping" and not avoptions["consider"]["flapping"]:
+            return False
+        elif sid in [ "warn", "unknown", "host_down" ] and sid not in state_groups:
+            return False
+        else:
+            return True
+    
     # Render the stuff
     availability.sort()
+    show_summary = what != "bi" and avoptions.get("summary")
+    summary = {}
     table.begin(_("Availability") + " " + range_title, css="availability")
     for site, host, service, states, considered_duration in availability:
         table.row()
@@ -712,20 +745,32 @@ def render_availability_table(availability, from_time, until_time, range_title, 
                 availability_columns = host_availability_columns
 
         for sid, css, sname, help in availability_columns:
-            if sid == "outof_notification_period" and not avoptions["consider"]["notification_period"]:
-                continue
-            elif sid == "in_downtime" and avoptions["downtimes"]["include"] == "ignore":
-                continue
-            elif sid == "unmonitored" and not avoptions["consider"]["unmonitored"]:
-                continue
-            elif sid == "flapping" and not avoptions["consider"]["flapping"]:
-                continue
-            elif sid in [ "warn", "unknown", "host_down" ] and sid not in state_groups:
+            if not cell_active(sid):
                 continue
             number = states.get(sid, 0)
             if not number:
                 css = "unused"
+            elif show_summary:
+                summary.setdefault(sid, 0.0)
+                summary[sid] += number
             table.cell(sname, render_number(number, considered_duration), css="number " + css, help=help)
+
+    if show_summary:
+        table.row(css="summary")
+        table.cell("")
+        table.cell("", _("Summary"))
+        if what == "service":
+            table.cell("", "")
+        considered_duration = until_time - from_time
+
+        for sid, css, sname, help in availability_columns:
+            number = summary.get(sid, 0)
+            if show_summary == "average" or avoptions["timeformat"].startswith("percentage"):
+                number /= len(availability)
+            if not number:
+                css = "unused"
+            table.cell(sname, render_number(number, considered_duration), css="number " + css, help=help)
+
     table.end()
 
 

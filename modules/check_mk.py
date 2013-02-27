@@ -1940,7 +1940,7 @@ define service {
   active_checks_enabled\t\t%d
 %s%s}
 """ % (template, hostname, description, simulate_command(command),
-       (command_line and not "freshness") and 1 or 0, extraconf, freshness))
+       (command_line and not freshness) and 1 or 0, extraconf, freshness))
 
     # Levels for host check
     if is_cluster(hostname):

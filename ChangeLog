@@ -49,6 +49,7 @@
     * FIX: check_mk_base: fixed rounding error in get_bytes_human_readable
     * FIX: check_mk: improved support of utf-8 characters in extra_service_conf
     * New configuration variable contactgroup_members
+    * FIX: livestatus: table statehist now able to check AuthUser permissions
 
     Checks & Agents:
     * FIX: smart - not trying to parse unhandled lines to prevent errors

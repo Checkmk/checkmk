@@ -615,21 +615,14 @@ void TableStateHistory::process(Query *query, HostServiceState *hs_state)
 
 bool TableStateHistory::isAuthorized(contact *ctc, void *data)
 {
-    LogEntry *entry = (LogEntry *)data;
+    HostServiceState *entry = (HostServiceState *)data;
     service *svc = entry->_service;
     host *hst = entry->_host;
 
     if (hst || svc)
         return is_authorized_for(ctc, hst, svc);
-    // suppress entries for messages that belong to
-    // hosts that do not exist anymore.
-    else if (entry->_logclass == LOGCLASS_ALERT
-            || entry->_logclass == LOGCLASS_NOTIFICATION
-            || entry->_logclass == LOGCLASS_PASSIVECHECK
-            || entry->_logclass == LOGCLASS_STATE)
-        return false;
     else
-        return true;
+        return false;
 }
 
 Column *TableStateHistory::column(const char *colname)

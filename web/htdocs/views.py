@@ -2199,6 +2199,11 @@ def do_actions(view, what, action_rows, backurl):
     if message:
         if html.output_format == "html": # sorry for this hack
             message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
+            if html.var("show_checkboxes") == "1":
+                html.del_var("selection")
+                weblib.selection_id()
+                backurl += "&selection=" + html.var("selection")
+                message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view with checkboxes reset'))
         html.message(message)
 
     return True

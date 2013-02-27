@@ -6,9 +6,11 @@
     Multisite:
     * New availability view for arbitrary host/service collections
     * New option auth_by_http_header to use the value of a HTTP header
-    variable for authentication (Useful in reverse proxy environments)
+      variable for authentication (Useful in reverse proxy environments)
     * New permission that is needed for seeing views that other users
       have defined (per default this is contained in all roles)
+    * New path back to the view after command exection with all
+      checkboxes cleared
 
     Event Console:
     * New rule feature: automatically delete event after actions

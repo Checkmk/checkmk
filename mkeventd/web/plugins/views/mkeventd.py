@@ -292,7 +292,7 @@ if mkeventd_enabled:
             for name, title in self._choices:
                 c += 1
                 html.checkbox(self._name + "_" + str(name), True, label=title)
-                if c == 3:
+                if c == 4:
                     html.write("<br>")
                     c = 0
             html.end_checkbox_group()

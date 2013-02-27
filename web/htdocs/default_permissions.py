@@ -67,6 +67,11 @@ def load():
          _("Make views visible and usable for other users"),
          [ "admin", "user" ])
 
+    config.declare_permission("general.see_user_views",
+         _("See user views"),
+         _("Is needed for seeing views that other users have created."),
+         [ "admin", "user", "guest" ])
+
     config.declare_permission("general.force_views",
          _("Modify builtin views"),
          _("Make own published views override builtin views for all users"),

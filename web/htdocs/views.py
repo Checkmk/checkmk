@@ -293,15 +293,17 @@ def available_views():
             views[n] = view
 
     # 4. other users views, if public. Sill make sure we honor permission
-    #    for builtin views
-    for (u, n), view in html.multisite_views.items():
-        if n not in views and view["public"] and config.user_may(u, "general.publish_views"):
-            # Is there a builtin view with the same name? If yes, honor permissions.
-            permname = "view.%s" % n
-            if config.permission_exists(permname) \
-                and not config.may(permname):
-                continue
-            views[n] = view
+    #    for builtin views. Also the permission "general.see_user_views" is
+    #    necessary.
+    if config.may("general.see_user_views"):
+        for (u, n), view in html.multisite_views.items():
+            if n not in views and view["public"] and config.user_may(u, "general.publish_views"):
+                # Is there a builtin view with the same name? If yes, honor permissions.
+                permname = "view.%s" % n
+                if config.permission_exists(permname) \
+                    and not config.may(permname):
+                    continue
+                views[n] = view
 
     return views
 

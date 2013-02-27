@@ -7,9 +7,12 @@
     * New availability view for arbitrary host/service collections
     * New option auth_by_http_header to use the value of a HTTP header
     variable for authentication (Useful in reverse proxy environments)
+    * New permission that is needed for seeing views that other users
+      have defined (per default this is contained in all roles)
 
     Event Console:
     * New rule feature: automatically delete event after actions
+    * New filter for maximum services level (minimum already existed)
 
     Checks & Agents:
     * solaris_mem: New check for memory and swap for Solaris agent

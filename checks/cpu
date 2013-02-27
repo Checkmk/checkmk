@@ -56,7 +56,10 @@ def check_cpu_load(item, params, info):
     else:
         ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
             get_predictive_levels('load15', params, "MAX")
-        infotext += ", predicted reference: %.2f" % ref_value
+        if ref_value:
+            infotext += ", predicted reference: %.2f" % ref_value
+        else:
+            infotext += ", no reference for prediction yet"
 
     perfdata = [ ('load' + str(z), l, warn_upper, crit_upper, 0, num_cpus ) for (z,l) in [ (1,load[0]), (5,load[1]), (15, load[2]) ] ]
     if ref_value:

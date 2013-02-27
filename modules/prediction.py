@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
+
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -28,6 +29,9 @@
 
 # Export data from an RRD file. This requires an up-to-date
 # version of the rrdtools.
+
+def debug(x):
+    import pprint ; pprint.pprint(x)
 
 def rrd_export(filename, ds, cf, fromtime, untiltime, rrdcached=None):
     # rrdtool xport --json -s 1361554418 -e 1361640814 --step 60 DEF:x=/omd/sites/heute/X.rrd:1:AVERAGE XPORT:x:HIRNI
@@ -136,12 +140,16 @@ def compute_prediction(pred_file, timegroup, params, period_info, from_time, dsn
     num_points = len(slices[0][2])
     consolidated = []
     for i in xrange(num_points):
+        # print "PUNKT %d --------------------------------------" % i
         point_line = []
         for from_time, scale, data in slices:
-            date_str = time.strftime("%Y-%m-%d %H:%M", time.localtime(from_time))
-            d = data[i / scale]
+            d = data[int(i / float(scale))] 
             if d != None:
                 point_line.append(d)
+            # else:
+            #     date_str = time.strftime("%Y-%m-%d %H:%M", time.localtime(fr + ((un - fr) * i / float(num_points))))
+            #     print "Keine Daten fur %s / %d/%s/ %.2f " % (date_str, i, float(scale),i/float(scale))
+
         if point_line:
             average = sum(point_line) / len(point_line)
             consolidated.append([
@@ -151,7 +159,7 @@ def compute_prediction(pred_file, timegroup, params, period_info, from_time, dsn
                  stdev(point_line, average),
             ])
         else:
-            consolidated.append((None, None, None))
+            consolidated.append([None, None, None, None])
 
     result = {
         "num_points" : num_points,
@@ -235,40 +243,23 @@ def get_predictive_levels(dsname, params, cf):
     ref_value = reference["average"]
     stdev = reference["stdev"]
     levels = []
-    for what, sig in [ ( "upper", 1 ), ( "lower", -1 )]:
-        p = "levels_" + what
-        if p in params:
-            how, (warn, crit) = params[p]
-            if how == "absolute":
-                levels.append((ref_value + (sig * warn), ref_value + (sig * crit)))
-            elif how == "relative":
-                levels.append((ref_value + sig * (ref_value * warn / 100), 
-                               ref_value + sig * (ref_value * crit / 100)))
-            else: #  how == "stdev":
-                levels.append((ref_value + sig * (stdev * warn),
-                              ref_value + sig * (stdev * crit)))
-        else:
-            levels.append((None, None))
+    if not ref_value: # No reference data available
+        levels = ((None, None), (None, None))
+    else:
+        for what, sig in [ ( "upper", 1 ), ( "lower", -1 )]:
+            p = "levels_" + what
+            if p in params:
+                how, (warn, crit) = params[p]
+                if how == "absolute":
+                    levels.append((ref_value + (sig * warn), ref_value + (sig * crit)))
+                elif how == "relative":
+                    levels.append((ref_value + sig * (ref_value * warn / 100), 
+                                   ref_value + sig * (ref_value * crit / 100)))
+                else: #  how == "stdev":
+                    levels.append((ref_value + sig * (stdev * warn),
+                                  ref_value + sig * (stdev * crit)))
+            else:
+                levels.append((None, None))
 
     # print levels
     return ref_value, levels
-
-
-### TEST CODE
-# import os, time, sys, pprint
-# class MKGeneralException(Exception):
-#     def __init__(self, reason):
-#         self.reason = reason
-#     def __str__(self):
-#         return self.reason
-# omd_root = os.getenv("OMD_ROOT") 
-# rrdcached_socket = None
-# execfile(omd_root + "/etc/check_mk/defaults")
-# opt_debug = True
-# data = get_rrd_data("test_1", "Check_MK", "execution_time", time.time() - 86400, time.time())
-# pprint.pprint(data)
-
-# HINWEISE für nicht-OMD-Nutzer
-# - RRD_STORAGE_TYPE muss MULTIPLE sein - single wird nicht unterstützt. Sonst
-#   müssten wir noch das XML-File auswerten. 
-# - rrdcached_socket muss in main.mk definiert werden, wenn rrdcached verwendet wird.

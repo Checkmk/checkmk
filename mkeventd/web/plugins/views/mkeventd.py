@@ -333,30 +333,35 @@ if mkeventd_enabled:
     
     
     class EventFilterDropdown(Filter):
-        def __init__(self, name, title, choices, operator = '='):
-            Filter.__init__(self, "event_" + name, title, "event", [ "event_" + name ], [ "event_" + name ])
-            self._choices = choices
-            self._varname = "event_" + name
+        def __init__(self, name, title, choices, operator = '=', column=None):
+            if column == None:
+                column = name
+            self._varname = "event_" + name 
+            Filter.__init__(self, "event_" + name, title, "event", [ self._varname ], [ "event_" + column ]) 
+            self._choices = choices 
+            self._column = column
             self._operator = operator
-    
+
         def display(self):
             if type(self._choices) == list:
                 choices = self._choices
             else:
                 choices = self._choices()
             html.select(self._varname, [ ("", "") ] + [(str(n),t) for (n,t) in choices])
-    
+
         def filter(self, infoname):
             return ""
-    
+
         def event_headers(self):
-            val = html.var(self._varname)
+            val = html.var(self._varname) 
             if val:
-                return "Filter: %s %s %s\n" % (self._varname, self._operator, val)
+                return "Filter: event_%s %s %s\n" % (self._column, self._operator, val)
+
     
     
     declare_filter(210, EventFilterDropdown("facility", _("Syslog Facility"), mkeventd.syslog_facilities))
     declare_filter(211, EventFilterDropdown("sl", _("Service Level at least"), mkeventd.service_levels, operator='>='))
+    declare_filter(211, EventFilterDropdown("sl_max", _("Service Level at most"), mkeventd.service_levels, operator='<=', column="sl"))
     
     #.
     #   .--Painters------------------------------------------------------------.
@@ -841,6 +846,7 @@ if mkeventd_enabled:
             'event_priority',
             'event_facility',
             'event_sl',
+            'event_sl_max',
             'hostregex',
         ],
         'hard_filtervars': [
@@ -883,6 +889,7 @@ if mkeventd_enabled:
             'event_priority',
             'event_facility',
             'event_sl',
+            'event_sl_max',
         ],
         'hide_filters': [
             'site',
@@ -921,6 +928,7 @@ if mkeventd_enabled:
             'event_priority',
             'event_facility',
             'event_sl',
+            'event_sl_max',
         ],
         'hide_filters': [
             'site',
@@ -1005,6 +1013,7 @@ if mkeventd_enabled:
             'event_priority',
             'event_facility',
             'event_sl',
+            'event_sl_max',
             'history_time',
             'history_who',
             'history_what',
@@ -1120,6 +1129,7 @@ if mkeventd_enabled:
             'event_priority',
             'event_facility',
             'event_sl',
+            'event_sl_max',
             'history_time',
             'history_who',
             'history_what',

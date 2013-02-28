@@ -61,19 +61,11 @@ register_rule(group,
                  title = _("Retrieve information about..."),
                  choices = [
                      ( "hostsystem",     _("Host Systems") ),
-                     ( "virtualmachine", _("'Virtual Machines") ),
+                     ( "virtualmachine", _("Virtual Machines") ),
+                     ( "storage",        _("Storage") ),
                  ],
                  default_value = [ "hostsystem", "virtualmachine" ],
                  allow_empty = False,
-               )
-             ),
-            ( "lower",
-              Checkbox(
-                 title = _("Change case of names to lower"),
-                 help = _("Check_MK tries to provide the collected information to "
-                          "the other Hosts in the monitoring. The Name of the vSphere "
-                          "Objects need to be the same as the host name ."),
-                 allow_empty = True,
                )
              ),
         ],

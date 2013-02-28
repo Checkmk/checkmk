@@ -31,7 +31,6 @@ parser = argparse.ArgumentParser(description='Check_MK vSphere Agent')
 group = parser.add_argument_group()
 group.add_argument('-p', type=int, help="Port Number of vSphere Server")
 group.add_argument('-i', help="Check the hostsystem and or virtualmachine. Comma separated")
-group.add_argument('-lower', action="store_true", help="Convert the name attributes of each MOR to lower case")
 parser.add_argument('-u', help="Username")
 parser.add_argument('-s', help="Secret")
 parser.add_argument('Hostname', help="Hostname")
@@ -79,8 +78,6 @@ def output_mors(what, properties):
         # Get the name of this Host/VirtualMachine
         # May there a comments in the field, so split at whitespace
         name = data["name"].split()[0]
-        if params['lower']:
-            name = name.lower()
 
         object_collection[name] = (what, data['name'])
         

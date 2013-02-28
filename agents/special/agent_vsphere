@@ -42,9 +42,8 @@ try:
     from pysphere import VIServer, VIProperty, MORTypes
     from pysphere.resources import VimService_services as VI
 except: 
-    print "<<<local>>>"
-    print "2 Agent_error - pysphere API not found. Please install and make a reinventory"
-    sys.exit(0)
+    sys.stderr.write("pysphere API not found. Please install and try again.\n")
+    sys.exit(1)
 
 host = VIServer()
 
@@ -53,9 +52,8 @@ object_collection = {}
 try:
     host.connect(params['Hostname'], params['u'], params['s'])
 except:
-    print "<<<local>>>"
-    print "2 Agent_error - Cant connect to vSphere  Server. May the wrong credentials. Please correct and make a reinventory"
-    sys.exit(0)
+    sys.stderr.write("Cannot connect to vSphere Server. May the wrong credentials. Please correct and make a reinventory.")
+    sys.exit(1)
 
 print "<<<check_mk>>>"
 print "Version: %s" % host.get_api_version()
@@ -142,9 +140,5 @@ if "virtualmachine" in check:
     })
 
 print "<<<<>>>>"
-print "<<<local>>>"
-for name, data in object_collection.items():
-    print "0 %s-%s - INFO: Collecting data for %s" % (data[0], name, data[1])
-
 
 host.disconnect()

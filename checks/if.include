@@ -300,6 +300,8 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
     # Params now must be a dict. Some keys might
     # be set to None
     targetspeed        = params.get("speed")
+    assumed_speed_in   = params.get("assumed_speed_in")
+    assumed_speed_out  = params.get("assumed_speed_out")
     targetstate        = params.get("state")
     average            = params.get("average")
     unit               = params.get("unit") in ["Bit", "bit"] and "Bit" or "B"
@@ -313,9 +315,9 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
 
     # Traffic checking might be turned off
     if "traffic" in params:
-        bw_warn, bw_crit = params["traffic"]
+        bw_warn_param, bw_crit_param = params["traffic"]
     else:
-        bw_warn, bw_crit = None, None
+        bw_warn_param, bw_crit_param = None, None
 
 
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets,  \
@@ -361,13 +363,13 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
 
             # prepare reference speed for computing relative bandwidth usage
             speed = saveint(ifSpeed)
-
             if speed:
                 ref_speed = speed / 8.0
             elif targetspeed:
                 ref_speed = targetspeed / 8.0
             else:
                 ref_speed = None
+            
 
 	    if ifPhysAddress:
                 mac = ":".join(["%02s" % hex(ord(m))[2:] for m in ifPhysAddress]).replace(' ', '0')
@@ -384,30 +386,56 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
                 infotext += "assuming %s" % get_nic_speed_human_readable(targetspeed)
             else:
                 infotext += "speed unknown"
+            
+        
+            bw_warn, bw_crit = bw_warn_param, bw_crit_param
+            # If the measurement unit is set to bit and the bw levels
+            # are of type int convert these 'bit' entries to byte
+            # still reported as bytes to stay compatible with older rrd data
+            if unit == "Bit":
+                if type(bw_warn_param) == int:
+                    bw_warn = bw_warn / 8
+                if type(bw_crit_param) == int:
+                    bw_crit = bw_crit / 8
 
             # convert percentages to absolute values if levels are float
             # this is only possible if a reference speed is available.
             if ref_speed:
-                if bw_warn != None and type(bw_warn) == float:
-                    bw_warn = bw_warn / 100.0 * ref_speed * unit_multiplier
-                if bw_crit != None and type(bw_crit) == float:
-                    bw_crit = bw_crit / 100.0 * ref_speed * unit_multiplier
-
+                if type(bw_warn_param) == float:
+                    bw_warn = bw_warn_param / 100.0 * ref_speed # bytes
+                if type(bw_crit_param) == float:
+                    bw_crit = bw_crit_param / 100.0 * ref_speed # bytes
             # Ignore percentual levels if no reference speed is available
             else:
-                if bw_warn != None and type(bw_warn) == float:
+                if type(bw_warn_param) == float:
                     bw_warn = None
-
-                if bw_crit != None and type(bw_crit) == float:
+                if type(bw_crit_param) == float:
                     bw_crit = None
 
-            # Even if the measurement unit is set to "bit" the WARN and CRIT levels are
-            # still reported as bytes to stay compatible with older rrd data
-            if unit == "Bit":
-                if bw_crit and bw_crit != None:
-                    bw_crit = bw_crit / 8
-                if bw_warn and bw_warn != None:
-                    bw_warn = bw_warn / 8
+            
+            bw_warn_in, bw_crit_in, bw_warn_out, bw_crit_out = [bw_warn, bw_crit] * 2
+            for speed_in in [ assumed_speed_in, assumed_speed_out ]:
+                if not speed_in:
+                    continue
+                if type(bw_warn_param) == float:
+                    bw_warn_in = bw_warn_param / 100.0 * speed_in / 8
+                if type(bw_crit_param) == float:
+                    bw_crit_in = bw_crit_param / 100.0 * speed_in / 8
+                break
+
+            for speed_out in [ assumed_speed_out, assumed_speed_in ]:
+                if not speed_out:
+                    continue
+                if type(bw_warn_param) == float:
+                    bw_warn_out = bw_warn_param / 100.0 * speed_out / 8
+                if type(bw_crit_param) == float:
+                    bw_crit_out = bw_crit_param / 100.0 * speed_out / 8
+                break
+
+
+            # Speed in bytes
+            speed_b_in  = assumed_speed_in  and assumed_speed_in / 8  or ref_speed
+            speed_b_out = assumed_speed_out and assumed_speed_out / 8 or ref_speed
 
             # Performance counters
             this_time = time.time()
@@ -415,13 +443,13 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
             wrapped = False
             perfdata = []
             for name, counter, warn, crit, mmin, mmax in [
-                ( "in",        ifInOctets, bw_warn, bw_crit, 0, ref_speed),
+                ( "in",        ifInOctets, bw_warn_in, bw_crit_in, 0, speed_b_in),
                 ( "inucast",   inucast, None, None, None, None),
                 ( "innucast",  saveint(inmcast) + saveint(inbcast), None, None, None, None),
                 ( "indisc",    ifInDiscards, None, None, None, None),
                 ( "inerr",     ifInErrors, err_warn, err_crit, None, None),
 
-                ( "out",       ifOutOctets, bw_warn, bw_crit, 0, ref_speed),
+                ( "out",       ifOutOctets, bw_warn_out, bw_crit_out, 0, speed_b_out),
                 ( "outucast",  outucast, None, None, None, None),
                 ( "outnucast", saveint(outmcast) + saveint(outbcast), None, None, None, None),
                 ( "outdisc",   ifOutDiscards, None, None, None, None),
@@ -446,31 +474,37 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
                 perfdata = []
             else:
                 perfdata.append(("outqlen", saveint(ifOutQLen),"","", unit == "Bit" and "0.0" or "0"))
-                get_human_readable = lambda traffic: get_bytes_human_readable(traffic * unit_multiplier, 1024, True, unit)
-                for what, errorrate, okrate, traffic in \
-                   [ ("in",  rates[4], rates[1] + rates[2], rates[0]),
-                     ("out", rates[9], rates[6] + rates[7], rates[5]) ]:
+                def format_value(value):
+                    if unit == "Bit":
+                        value = value * 8
+                        return get_nic_speed_human_readable(value)
+                    else:
+                        return "%s/s" % get_bytes_human_readable(value)
 
-                    infotext += ", %s: %s/s" % (what, get_human_readable(traffic))
+                for what, errorrate, okrate, traffic, speed, bw_warn, bw_crit in \
+                   [ ("in",  rates[4], rates[1] + rates[2], rates[0], speed_in, bw_warn_in, bw_crit_in),
+                     ("out", rates[9], rates[6] + rates[7], rates[5], speed_out, bw_warn_out, bw_crit_out) ]:
 
-                    if ref_speed:
-                        perc_used = 100.0 * traffic / ref_speed
+                    infotext += ", %s: %s" % (what, format_value(traffic))
+
+                    if speed:
+                        perc_used = 100.0 * traffic / speed
                         infotext += "(%.1f%%)" % perc_used
 
                     # handle computation of average
                     if average:
                         timedif, traffic_avg = get_average("if.%s.%s.avg" % (what, item), this_time, traffic, average)
-                        infotext += ", %dmin avg: %s/s" % (average, get_human_readable(traffic_avg))
-                        perfdata.append( ("%s_avg_%d" % (what, average), traffic_avg, bw_warn, bw_crit, 0, ref_speed) )
+                        infotext += ", %dmin avg: %s" % (average, format_value(traffic_avg))
+                        perfdata.append( ("%s_avg_%d" % (what, average), traffic_avg, bw_warn, bw_crit, 0, speed) )
                         traffic = traffic_avg # apply levels to average traffic
 
                     # Check bandwidth thresholds
                     if bw_crit != None and traffic >= bw_crit:
                         state = 2
-                        infotext += ' (!!) >= ' + get_human_readable(bw_crit / unit_multiplier) + "/s"
+                        infotext += ' (!!) >= ' + format_value(bw_crit)
                     elif bw_warn != None and traffic >= bw_warn:
                         state = max(state, 1)
-                        infotext += ' (!) >= ' + get_human_readable(bw_warn / unit_multiplier) + "/s"
+                        infotext += ' (!) >= ' + format_value(bw_warn)
 
                     pacrate = okrate + errorrate
                     if pacrate > 0.0: # any packets transmitted?
@@ -479,7 +513,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
                         if errperc > 0:
                             infotext += ", %s-errors: %.2f%%" % (what, errperc)
 
-                        if   err_crit != None and errperc >= err_crit:
+                        if err_crit != None and errperc >= err_crit:
                             state = 2
                             infotext += "(!!) >= " + str(err_crit)
                         elif err_warn != None and errperc >= err_warn:

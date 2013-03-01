@@ -1,14 +1,69 @@
-Title: uptime checks: add thresholds
-Component: checks
+Title: fix logwatch in mk_logwatch & check_mk_caching_agent & zei monitoring servers
+Component: core
 State: open
-Date: 2013-01-22 14:53:09
-Targetversion: 1.4.0
-Class: feature
+Date: 2013-03-01 12:39:47
+Targetversion: future
+Class: bug
 
-The uptime checks should be consolidated to use the same check logics (uptime.include).
+Wir setzen omd 0.56 ein. Dabei haben wir eine test und eine prod
+instanz und transportieren config änderungen per svn von test nach prod.
 
-Add the following:
+Da wir diese zwei instanzen haben benutzen wir check_mk_caching_agent.
 
-- Thresholds (warn/crit for upper and lower limits)
-- WATO valuespec
-- update the check manpage
+Leider habe ich festgestellt, dass es unter bestimmten umständen
+sein kann, dass bei der verwendung von mk_logwatch die prod instanz
+ein log event "verpasst" weil die test instanz sich das schon abgeholt hat
+und zufälliger weise der agentcache expired war.
+
+Wir haben uns jetzt so beholfen, das wir die environment variable per ssh
+über sudo mit ans mk_logwatch weitereichen, aber das ist alles andere als schön
+und es muss sehr viel konfiguriert werden, habt ihr da eine bessere idee ?
+
+
+
+danke & gruss
+jodok
+
+
+
+
+Hier unser Workaround
+
+Es es werden pro monitoring instanz ein /etc/check_mk/logwatch.state.$OMD
+_SITE gepflegt.
+Dies ist leider sehr aufwändig, da die Umgebungsvariable OMD_SITE muss vom server an den client durchgereicht werden muss,
+d.h. ssh-agent statt xinetd (durch flag „ssh-agent“), anpassen von /etc/ssh/sshd_config, anpassen von /etc/sudoers, patchen von mk_logwatch
+
+Anpassungen
+
+Auf dem Nagios Server in ~/.ssh/config für die monitoring instanz (test,prod)
+
+SendEnv OMD_SITE
+
+Auf dem Client in /etc/ssh/sshd_config
+
+AcceptEnv OMD_SITE
+
+Auf dem Client in der /etc/sudoers (visudo)
+
+Defaults always_set_home
+Defaults env_reset
+Defaults env_keep += "OMD_SITE"
+...
+nagios ALL=(root) NOPASSWD: /usr/bin/check_mk_caching_agent
+
+/usr/lib/check_mk_agent/plugins/mk_logwatch patchen
+
+58c58
+<
+---
+> site = str(os.environ.get("OMD_SITE"))
+60c60
+< status_filename = logwatch_dir + "/logwatch.state"
+---
+> status_filename = logwatch_dir + "/logwatch.state." + site
+
+
+
+PS wir machen in user ~nagios/.ssh/authorized_keys sowas:
+command="/usr/bin/sudo /usr/bin/check_mk_caching_agent" ssh-rsa AAAAB3Nz

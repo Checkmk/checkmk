@@ -32,17 +32,17 @@ On Error Resume Next
 ' MSSQL >= 10
 ' try SQL Server 2012:
 Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement11")
-If Err.Number 0 Then
+If Err.Number <> 0 Then
     Err.Clear()
 
     ' try SQL Server 2008
     Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement10")
-    If Err.Number 0 Then
+    If Err.Number <> 0 Then
         Err.Clear()
 
         ' try MSSQL < 10
         Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement")
-        If Err.Number 0 Then
+        If Err.Number <> 0 Then
             wscript.echo "Error: " & Err.Number & " " & Err.Description
             Err.Clear()
             wscript.quit()

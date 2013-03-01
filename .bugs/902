@@ -1,11 +1,14 @@
-Title: execute action but directly delete message afterwards
-Component: ec
-Class: feature
-State: done
-Date: 2013-01-31 11:13:50
-Targetversion: 1.2.2
+Title: Problem with check_mk notify in manually setup check_mk
+Component: core
+State: open
+Date: 2013-03-01 12:42:36
+Targetversion: future
+Class: bug
 
-We need to be able to execute actions but directly delete the event
-afterwards.
-
-2013-02-12 18:17:11: changed state open -> done
+When enable "Debug notifications" from wato (Global settings/Noificatoins)
+no notification email are sent, and no debug info is written.
+Looks like a file creation/permission problem in directory
+/var/lib/check_mk.
+If I mkdir /var/lib/check_mk/notify and chmod nagios.nagios
+/var/lib/check_mk/notify it works.
+Environment: check_mk 1.2.0p3, 1.2.2b1, ubuntu 12.10

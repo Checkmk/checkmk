@@ -373,12 +373,18 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                         # in the list of required nodes.
                         # Before the latest change this used the last item of the req_hosts. I think it
                         # would be better to register this for all hosts mentioned in req_hosts. Give it a try...
+                        # ASSERT: len(req_hosts) == 1!
                         for host in req_hosts:
                             if not only_hosts or host in only_hosts:
                                 cache["host_aggregations"].setdefault(host, []).append((group, aggr))
 
                                 # construct a list of compiled single-host aggregations for cached registration
                                 single_affected_hosts.append(host)
+
+                    # Also all other aggregations that contain exactly one hosts are considered to
+                    # be "single host aggregations"
+                    elif len(req_hosts) == 1:
+                        cache["host_aggregations"].setdefault(req_hosts[0], []).append((group, aggr))
 
                     # All aggregations containing a specific host
                     for h in req_hosts:

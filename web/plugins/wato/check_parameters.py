@@ -1222,7 +1222,6 @@ checkgroups.append((
                       Percentage(title = _("Warning at"), label = _("errors")),
                       Percentage(title = _("Critical at"), label = _("errors"))
                   ])),
-
              ( "speed",
                OptionalDropdownChoice(
                    title = _("Operating speed"),
@@ -1234,9 +1233,10 @@ checkgroups.append((
                             "traffic monitoring (see below)."),
                   choices = [
                      ( None,       _("ignore speed") ),
-                     ( 10000000,   "10 MBit/s" ),
-                     ( 100000000,  "100 MBit/s" ),
-                     ( 1000000000, "1 GBit/s" ) ],
+                     ( 10000000,    "10 MBit/s" ),
+                     ( 100000000,   "100 MBit/s" ),
+                     ( 1000000000,  "1 GBit/s" ),
+                     ( 10000000000, "10 GBit/s" ) ],
                   otherlabel = _("specify manually ->"),
                   explicit = \
                       Integer(title = _("Other speed in bits per second"),
@@ -1254,6 +1254,40 @@ checkgroups.append((
                     label = _("Ignore the operational state"),
                     none_label = _("ignore"),
                     negate = True)
+             ),
+             ( "assumed_speed_in",
+               OptionalDropdownChoice(
+                        title = _("Assumed input speed"),
+                        help = _("If the automatic detection of the incoming link speed does not work "
+                                 "or the switch's capabilities are throttled because of the network setup "
+                                 "you can set the assummend incoming speed here."),
+                  choices = [
+                     ( None,       _("ignore speed") ),
+                     ( 10000000,    "10 MBit/s" ),
+                     ( 100000000,   "100 MBit/s" ),
+                     ( 1000000000,  "1 GBit/s" ),
+                     ( 10000000000, "10 GBit/s" ) ],
+                  otherlabel = _("specify manually ->"),
+                  explicit = \
+                      Integer(title = _("Other speed in bits per second"),
+                              label = _("Bits per second")))
+             ),
+             ( "assumed_speed_out",
+               OptionalDropdownChoice(
+                        title = _("Assumed output speed"),
+                        help = _("If the automatic detection of the outgoing speed does not work "
+                                 "or the switch's capabilities are throttled because of the network setup "
+                                 "you can set the assummend outgoing speed here."),
+                  choices = [
+                     ( None,       _("ignore speed") ),
+                     ( 10000000,    "10 MBit/s" ),
+                     ( 100000000,   "100 MBit/s" ),
+                     ( 1000000000,  "1 GBit/s" ),
+                     ( 10000000000, "10 GBit/s" ) ],
+                  otherlabel = _("specify manually ->"),
+                  explicit = \
+                      Integer(title = _("Other speed in bits per second"),
+                              label = _("Bits per second")))
              ),
              ( "unit",
                RadioChoice(
@@ -1301,6 +1335,73 @@ checkgroups.append((
                ),
 
 
+           ]),
+    TextAscii(
+        title = _("port specification"),
+        allow_empty = False),
+    "dict",
+    ))
+
+checkgroups.append((
+    subgroup_networking,
+    "cisco_qos",
+    _("Cisco quality of service"),
+    Dictionary(
+        elements = [
+             ( "unit",
+               RadioChoice(
+                   title = _("Measurement unit"),
+                   help = _("Here you can specifiy the measurement unit of the network interface"),
+                   default_value = "bit",
+                   choices = [
+                       ( "bit",  _("Bits") ),
+                       ( "byte", _("Bytes") ),],
+               )),
+             ( "post",
+               Alternative(
+                   title = _("Used bandwidth (traffic)"),
+                   help = _("Settings levels on the used bandwidth is optional. If you do set "
+                            "levels you might also consider using an averaging."),
+                   elements = [
+                       Tuple(
+                           title = _("Percentual levels (in relation to policy speed)"),
+                           elements = [
+                               Percentage(title = _("Warning at"), label = _("% of port speed")),
+                               Percentage(title = _("Critical at"), label = _("% of port speed")),
+                           ]
+                       ),
+                       Tuple(
+                           title = _("Absolute levels in bits or bytes per second"),
+                           help = _("Depending on the measurement unit (defaults to bit) the absolute levels are set in bit or byte"),
+                           elements = [
+                               Integer(title = _("Warning at"), size = 10, label = _("bits / bytes per second")),
+                               Integer(title = _("Critical at"), size = 10, label = _("bits / bytes per second")),
+                           ]
+                        )
+                   ])
+               ),
+               ( "average",
+                 Integer(
+                     title = _("Average values"),
+                     help = _("By activating the computation of averages, the levels on "
+                              "errors and traffic are applied to the averaged value. That "
+                              "way you can make the check react only on long-time changes, "
+                              "not on one-minute events."),
+                     label = _("minutes"),
+                     minvalue = 1,
+                 )
+               ),
+               ( "drop",
+                 Tuple(
+                     title = _("Number of dropped bits or bytes per second"),
+                     help = _("Depending on the measurement unit (defaults to bit) you can set the warn and crit "
+                              "levels for the number of dropped bits or bytes"),
+                     elements = [
+                         Float(title = _("Warning at"), size = 6, label = _("bits / bytes per second")),
+                         Float(title = _("Critical at"), size = 6, label = _("bits / bytes per second")),
+                     ]
+                  )
+               ),
            ]),
     TextAscii(
         title = _("port specification"),

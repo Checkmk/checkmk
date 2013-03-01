@@ -5821,16 +5821,18 @@ def mode_edit_group(phase, what):
         html.text_input("name", clone_group or "")
         html.set_focus("name")
     else:
+        clone_group = None
         html.write(name)
         html.set_focus("alias")
 
     forms.section(_("Alias"))
     html.help(_("An Alias or description of this group."))
     alias = groups.get(name, "")
-    if not alias and clone_group:
-        alias = groups.get(clone_group, "")
     if not alias:
-        alias = name
+        if clone_group:
+            alias = groups.get(clone_group, "")
+        else:
+            alias = name
     html.text_input("alias", alias)
     forms.end()
     html.button("save", _("Save"))

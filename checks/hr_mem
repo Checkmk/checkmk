@@ -74,8 +74,8 @@ def check_hr_mem(item, params, info):
 
         warn, crit = params
         if type(warn) == float:
-            perfdata.append(('memused', str(totalused_mb)+'MB', int(warn/100.0 * totalmem_mb),
-                        int(crit/100.0 * totalmem_mb), 0, totalvirt_mb))
+            perfdata.append(('memused', str(totalused_mb)+'MB', int(warn/100.0 * totalram_mb),
+                        int(crit/100.0 * totalram_mb), 0, totalvirt_mb))
             if totalused_perc >= crit:
                 return (2, 'CRIT - %s, critical at %.1f%%' % (infotext, crit), perfdata)
             elif totalused_perc >= warn:
@@ -83,7 +83,7 @@ def check_hr_mem(item, params, info):
             else:
                 return (0, 'OK - %s' % infotext, perfdata)
         else:
-            perfdata.append(('memused', str(totalused_mb)+'MB', warn, crit, 0, totalvirt_mb))
+            perfdata.append(('memused', str(totalused_mb)+'MB', warn, crit, 0, totalram_mb))
             if totalused_mb >= crit:
                 return (2, 'CRIT - %s, critical at %.2f GB' % (infotext, crit / 1024.0), perfdata)
             elif totalused_mb >= warn:

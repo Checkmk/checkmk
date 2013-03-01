@@ -81,6 +81,14 @@ parameters (dict): Due to its complexity, this check now uses a dictionary as
                    are weighted higher than older values and that even values out of the configured
                    time range are - to a low degree - represented in the average. If you configure
                    an average, then the traffic levels are applied to the averaged values.
+                   
+                   {"assumed_speed_in"} - the assumed port input speed as an integer of the bits per second (not
+                   the bytes!). If this value is not set the check takes the value configured in {speed}
+                   before using the automatically detected port speed
+
+                   {"assumed_speed_out"} - the assumed port output speed as an integer of the bits per second (not
+                   the bytes!). If this value is not set the check takes the value configured in {speed}
+                   before using the automatically detected port speed
 
                    {"state"} - the expected operational status of the interface (as string or list of strings. If this
                    is {None} then the state is not checked. Possible values for the

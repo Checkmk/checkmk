@@ -1,13 +1,13 @@
-Title: Password field in personal settings must not be prefilled by browser
+Title: Fewer mouseclicks in commands and actions
 Component: multisite
-Class: bug
-State: done
-Date: 2013-01-21 15:55:44
-Targetversion: 1.2.2
+State: open
+Date: 2013-03-01 10:02:56
+Targetversion: 1.2.3
+Class: feature
 
-If the browser enters a possible previous password then after saving
-(because of changes to the notifications) the user password gets
-changed and the user logged out - forever.
+Two ideas in order to ease the user actions:
 
-2013-02-05 15:36:48: changed state open -> done
-Just implemented. Added "autocomplete=off" attribute to input fields.
+1. Make a user setting the completely disabled all confirms in Multisite and WATO.
+2. When a user has done an action on hosts/services, do not display a separate
+result page, but directly to back to the view. The result of the action is then
+displayed in a floating div, that goes away if you hover over.

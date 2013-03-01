@@ -67,6 +67,7 @@
     * FIX: megaraid_bbu: deal with broken output ("Adpater")
     * FIX: check_ldap: added missing host address (check didn't work at all)
     * FIX: check_ldap: added missing version option -2, -3, -3 -T (TLS)
+    * FIX: mssql: Agent plugin now supports MSSQL Server 2012
     * Linux agent: limit netstat to 10 seconds
     * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
       reordering of matched groups

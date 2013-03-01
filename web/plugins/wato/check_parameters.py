@@ -1397,8 +1397,8 @@ checkgroups.append((
                      help = _("Depending on the measurement unit (defaults to bit) you can set the warn and crit "
                               "levels for the number of dropped bits or bytes"),
                      elements = [
-                         Float(title = _("Warning at"), size = 6, label = _("bits / bytes per second")),
-                         Float(title = _("Critical at"), size = 6, label = _("bits / bytes per second")),
+                         Float(title = _("Warning at"), size = 8, label = _("bits / bytes per second")),
+                         Float(title = _("Critical at"), size = 8, label = _("bits / bytes per second")),
                      ]
                   )
                ),

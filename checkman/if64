@@ -127,6 +127,14 @@ parameters (dict): Due to its complexity, this check now uses a dictionary as
                    {"speed"} - the expected port speed as an integer of the bits per second (not
                    the bytes!). If you set this to {None}, then the port speed is not checked.
                    The default is to remember and enforce the port speed found during inventory.
+                   
+                   {"assumed_speed_in"} - the assumed port input speed as an integer of the bits per second (not
+                   the bytes!). If this value is not set the check takes the value configured in {speed}
+                   before using the automatically detected port speed
+
+                   {"assumed_speed_out"} - the assumed port output speed as an integer of the bits per second (not
+                   the bytes!). If this value is not set the check takes the value configured in {speed}
+                   before using the automatically detected port speed
 
                    {"unit"} - the measurement unit which can be set to "bit" or "byte".
                    Depending on this choice the limits set in the {"traffic"} parameter are regarded

@@ -31,6 +31,10 @@
     * openvpn_clients: new check for OpenVPN connections
     * check_disk_smb: WATO formalization for active check check_disk_smb
     * if.include: new configurable parameters for assumed input and output speed
+    * cisco_qos: new param unit:    switches between bit/byte display
+                 new param average: average the values over the given minute
+                 new param post can now be configured via int and float, now
+                                supports percentage values
     
     Livestatus:
     * Table statehist: Improved detection of vanished hosts and services.
@@ -43,6 +47,7 @@
     * Configuration of datasource programs via dedicated rules
     * New editor for Business Intelligence rules
     * Valuespec: CascadingDropdown now able to process choice values from functions
+    * cisco_qos parameters now configurable via WATO
 
 1.2.2b4:
     Core:
@@ -100,6 +105,7 @@
     * FIX: flexible notification valuespec is now localizable
     * FIX: Alias values of host/service/contact groups need to be set and unique
            within the group
+    * FIX: Fixed exception when editing contactgroups without alias
     * Suggest use default value for filesystem levels that make sense
     * Valuespec: CascadingDropdown now able to process choice values from functions
     * Freshness checking for classical passive Nagios checks (custom_checks)

@@ -25,15 +25,34 @@ inventory:
 perfdata:
  {post}: The number of outbound bytes after executing the QoS.
  {drop}: The number of dropped bytes.
-
-[parameters]
-post_warn (float): The post QoS bytes per second to raise a warning state. Default is None.
-post_crit (float): The post QoS bytes per second to raise a critical state. Default is None.
-drop_warn (float): The number of dropped bytes per second to raise a warning state. Default is 0.01.
-drop_crit (float): The number of dropped bytes per second to raise a critical state. Default is 0.01.
+ {post_avg_?}: The average number of outbound bytes after executing the QoS over a longer range of time
+ {drop_avg_?}: The averagebe number of dropped bytes over a longer range of time
 
 [configuration]
-if_default_levels (float, float, float, float): Warning and critical rates for post QoS in bytes/s.
-                                                Warning and critical rates for dropped traffic in bytes/s.
-                                                Default is {(None, None, 0.01, 0.01)}
+cisco_qos_default_values (dict): Dictionary with the values specified in parameters
+
+[parameters] 
+parameters (dict): This check requires a dictionary with the following keys. 
+                    
+ {"post"} - A pair of two values to be used as WARN/CRIT levels 
+            Integer numbers are interpreted as absolute levels
+            Float numbers are interpreted as percentage of used qos policy bandwidth
+ 
+ {"drop"} - A pair of two values to be used as WARN/CRIT levels 
+            Integer/Float numbers are interpreted as dropped bytes per second
+ 
+ {"average"} - if you set this key to a number, then it is interpreted as
+ a time in minutes. The check will then compute the averaged used post and drop bytes
+ over approximately that range of time. Note: The algorithm used here is
+ the same as Linux uses for the CPU load. This means that more recent values
+ are weighted higher than older values and that even values out of the configured
+ time range are - to a low degree - represented in the average. If you configure
+ an average, then the levels are applied to the averaged values.
+
+ {"unit"} - the measurement unit which can be set to "bit" or "byte".
+ Depending on this choice the limits set in the {"post"} parameter are regarded
+ as bits or bytes, too. When this parameter is set to "bit" any traffic related plugin output
+ is reported in bits instead of bytes(default).
+
+ 
 

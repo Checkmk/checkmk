@@ -30,19 +30,26 @@ Set instIds = CreateObject("Scripting.Dictionary")
 ' Try different trees to handle different versions of MSSQL
 On Error Resume Next
 ' MSSQL >= 10
-Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement10")
-If Err.Number <> 0 Then
+' try SQL Server 2012:
+Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement11")
+If Err.Number 0 Then
     Err.Clear()
-    
-    ' MSSQL < 10
-    Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement")
-    If Err.Number <> 0 Then
-        wscript.echo "Error: " & Err.Number & " " & Err.Description
+
+    ' try SQL Server 2008
+    Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement10")
+    If Err.Number 0 Then
         Err.Clear()
-        wscript.quit()
+
+        ' try MSSQL < 10
+        Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement")
+        If Err.Number 0 Then
+            wscript.echo "Error: " & Err.Number & " " & Err.Description
+            Err.Clear()
+            wscript.quit()
+        End If
     End If
 End If
-On Error Goto 0 
+On Error Goto 0
 
 For Each prop In WMI.ExecQuery("SELECT * FROM SqlServiceAdvancedProperty WHERE " & _
                                "SQLServiceType = 1 AND PropertyName = 'VERSION'")

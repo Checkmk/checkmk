@@ -19,14 +19,6 @@ Wir haben uns jetzt so beholfen, das wir die environment variable per ssh
 über sudo mit ans mk_logwatch weitereichen, aber das ist alles andere als schön
 und es muss sehr viel konfiguriert werden, habt ihr da eine bessere idee ?
 
-
-
-danke & gruss
-jodok
-
-
-
-
 Hier unser Workaround
 
 Es es werden pro monitoring instanz ein /etc/check_mk/logwatch.state.$OMD

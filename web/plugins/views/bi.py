@@ -211,7 +211,7 @@ def paint_aggr_tree_ltr(row, mirror):
 
     tree = row["aggr_treestate"]
     if get_painter_option("aggr_onlyproblems") == "1":
-        tree = filter_tree_only_problems(tree)
+        tree = bi.filter_tree_only_problems(tree)
     depth = bi.status_tree_depth(tree)
     leaves = gen_table(tree, depth, row["aggr_hosts"] > 1)
     h = '<table class="aggrtree ltr">'

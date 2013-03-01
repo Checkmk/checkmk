@@ -91,6 +91,7 @@
     * FIX: list of BI aggregates was incomplete in some cases
     * FIX: single host aggregations didn't work for aggregations += [...]
     * FIX: top-down and bottom-up was broken in case of "only problems"
+    * Do not handle PENDING as "problem" anymore
     * Make titles of non-leaf tree nodes klickable
 
     WATO:

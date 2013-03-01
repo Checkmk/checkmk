@@ -1579,7 +1579,7 @@ def filter_tree_only_problems(tree):
     new_subtrees = []
     for subtree in subtrees:
         effective_state = subtree[1] != None and subtree[1] or subtree[0]
-        if effective_state["state"] != OK:
+        if effective_state["state"] not in [ OK, PENDING ]:
             if len(subtree) == 3:
                 new_subtrees.append(subtree)
             else:

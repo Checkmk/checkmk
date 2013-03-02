@@ -246,20 +246,8 @@ def get_predictive_levels(dsname, params, cf):
                 if opt_debug:
                     sys.stderr.write("Prediction parameters have changed.\n")
                 last_info = None
-                # Remove all prediction files that result from other
-                # prediction periods. This is e.g. needed if the user switches
-                # the parameter from 'wday' to 'day'.
-                for f in os.listdir(dir):
-                    if f.endswith(".info"):
-                        try:
-                            info = eval(file(dir + "/" + f).read())
-                            if info["period"] != params["period"]:
-                                os.remove(dir + "/" + f)
-                                os.remove(dir + "/" + f[:-5])
-                        except:
-                            pass
                 break
-    except Exception, e:
+    except IOError:
         if opt_debug:
             sys.stderr.write("No previous prediction for group %s available.\n" % timegroup)
         last_info = None
@@ -274,6 +262,21 @@ def get_predictive_levels(dsname, params, cf):
         prediction = eval(file(pred_file).read())
 
     else:
+        # Remove all prediction files that result from other
+        # prediction periods. This is e.g. needed if the user switches
+        # the parameter from 'wday' to 'day'.
+        for f in os.listdir(dir):
+            if f.endswith(".info"):
+                try:
+                    info = eval(file(dir + "/" + f).read())
+                    if info["period"] != params["period"]:
+                        if opt_debug:
+                            sys.stderr.write("Removing obsolete prediction %s\n" % f[:-5])
+                        os.remove(dir + "/" + f)
+                        os.remove(dir + "/" + f[:-5])
+                except:
+                    pass
+
         if opt_debug:
             sys.stderr.write("Computing prediction for time group %s.\n" % timegroup)
         prediction = compute_prediction(pred_file, timegroup, params, period_info, from_time, dsname, cf)

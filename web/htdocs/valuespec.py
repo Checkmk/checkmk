@@ -1690,7 +1690,7 @@ class Alternative(ValueSpec):
             if vs == mvs:
                 val = value
             else:
-                val = vs.canonical_value()
+                val = vs.default_value()
             vs.render_input(varprefix + "_%d" % nr, val)
             if title:
                 html.write("</ul>\n")
@@ -1836,6 +1836,7 @@ class Dictionary(ValueSpec):
         self._elements = kwargs["elements"]
         self._empty_text = kwargs.get("empty_text", _("(no parameters)"))
         self._required_keys = kwargs.get("required_keys", [])
+        self._default_keys = kwargs.get("default_keys", []) # keys present in default value
         if "optional_keys" in kwargs:
             ok = kwargs["optional_keys"]
             if type(ok) == list:
@@ -1852,7 +1853,15 @@ class Dictionary(ValueSpec):
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
         self._render = kwargs.get("render", "normal") # also: "form" -> use forms.section()
         self._form_narrow = kwargs.get("form_narrow", False) # used if render == "form"
-        self._headers = kwargs.get("headers") # "sup" -> small headers in online mode
+        self._headers = kwargs.get("headers") # "sup" -> small headers in oneline mode
+        self._migrate = kwargs.get("migrate") # value migration from old tuple version
+        self._indent = kwargs.get("indent", True)
+
+    def migrate(self, value):
+        if self._migrate:
+            return self._migrate(value)
+        else:
+            return value
 
     def _get_elements(self):
         if type(self._elements) == list:
@@ -1861,6 +1870,7 @@ class Dictionary(ValueSpec):
             return self._elements()
 
     def render_input(self, varprefix, value):
+        value = self.migrate(value)
         if type(value) != dict:
             value = {} # makes code simpler in complain phase
         if self._render == "form":
@@ -1908,7 +1918,8 @@ class Dictionary(ValueSpec):
                 if not oneline:
                     html.write("<br>")
 
-            html.write('<div class=dictelement id="%s" style="display: %s">' % (
+            html.write('<div class="dictelement%s" id="%s" style="display: %s">' % (
+                ((self._indent and self._columns == 1) and " indent" or ""), 
                 div_id, not visible and "none" or (oneline and "inline-block" or "")))
             if self._columns == 1:
                 html.help(vs.help())
@@ -1979,12 +1990,13 @@ class Dictionary(ValueSpec):
     def default_value(self):
         def_val = {}
         for name, vs in self._get_elements():
-            if name in self._required_keys or not self._optional_keys:
+            if name in self._required_keys or not self._optional_keys or name in self._default_keys:
                 def_val[name] = vs.default_value()
 
         return def_val
 
     def value_to_text(self, value):
+        value = self.migrate(value)
         oneline = self._render == "oneline"
         if not value:
             return self._empty_text
@@ -2018,6 +2030,8 @@ class Dictionary(ValueSpec):
         return value
 
     def validate_datatype(self, value, varprefix):
+        value = self.migrate(value)
+
         if type(value) != dict:
             raise MKUserError(varprefix, _("The type must be a dictionary, but it is a %s") % type(value))
 
@@ -2039,6 +2053,8 @@ class Dictionary(ValueSpec):
                         (param, ", ".join(allowed_keys)))
 
     def validate_value(self, value, varprefix):
+        value = self.migrate(value)
+
         for param, vs in self._get_elements():
             if param in value:
                 vp = varprefix + "_p_" + param

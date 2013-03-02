@@ -980,6 +980,10 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
         if only_check_types != None and checkname not in only_check_types:
             continue
 
+        # Make service description globally available 
+        global g_service_description
+        g_service_description = description
+
         # Skip checks that are not in their check period
         period = check_period_of(hostname, description)
         if period and not check_timeperiod(period):

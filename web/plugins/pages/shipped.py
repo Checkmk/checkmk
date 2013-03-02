@@ -30,6 +30,7 @@ import config
 import main
 import logwatch
 import views
+import prediction
 import sidebar
 import actions
 import weblib
@@ -54,6 +55,7 @@ pagehandlers.update({
    "ajax_set_viewoption"      : views.ajax_set_viewoption,
    "ajax_set_rowselection"    : weblib.ajax_set_rowselection,
    "view"                     : views.page_view,
+   "prediction_graph"         : prediction.page_graph,
    "logwatch"                 : logwatch.page_show,
    "side"                     : sidebar.page_side,
    "sidebar_add_snapin"       : sidebar.page_add_snapin,

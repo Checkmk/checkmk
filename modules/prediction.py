@@ -270,6 +270,7 @@ def get_predictive_levels(dsname, params, cf):
             "range"        : (from_time, until_time),
             "cf"           : cf,
             "dsname"       : dsname,
+            "slice"        : period_info["slice"],
         }
         info.update(params)
         file(info_file, "w").write("%r\n" % info)

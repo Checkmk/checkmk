@@ -26,6 +26,8 @@
 
 import defaults
 import os
+import time
+
 from lib import *
 
 graph_size = 2000, 700
@@ -39,59 +41,90 @@ def page_graph():
             javascripts=["prediction"],
             stylesheets=["pages", "prediction"])
 
+    # Get current value from perf_data via Livestatus
+    current_value = \
+       get_current_perfdata(host, service, dsname)
+
     dir = "%s/prediction/%s/%s/%s" % (
             defaults.var_dir, host, pnp_cleanup(service), pnp_cleanup(dsname))
 
     # Load all prediction information, sort by time of generation
+    tg_name = html.var("timegroup")
+    timegroup = None
     timegroups = []
     for f in os.listdir(dir):
         if f.endswith(".info"):
             tg_info = eval(file(dir + "/" + f).read())
             tg_info["name"] = f[:-5]
             timegroups.append(tg_info)
+            if tg_info["name"] == tg_name:
+                timegroup = tg_info
 
     timegroups.sort(cmp = lambda a,b: cmp(a["range"], b["range"]))
-    for tg_info in timegroups:
-        title = _("Prediction for %s") % tg_info["name"]
-        # time_range aus info-Datei holen
-        # v_range ermitteln
-        tg_data = eval(file(dir + "/" + tg_info["name"]).read())
-        swapped = swap_and_compute_levels(tg_data, tg_info)
-        vertical_range = compute_vertical_range(swapped)
-        legend = [
-           ( "#ff0000", _("Critical area") ),
-           ( "#ffff00", _("Warning area") ),
-           ( "#ffffff", _("OK area") ),
-           ( "#000000", _("Reference") ),
-        ]
-        create_graph(tg_info["name"], title, graph_size, tg_info["range"], vertical_range, legend)
+    choices = [ (tg_info["name"], tg_info["name"].title())
+                for tg_info in timegroups ]
 
-        if "levels_upper" in tg_info:
-            render_dual_area(swapped["upper_warn"], swapped["upper_crit"], "#fff000", 0.4)
-            render_area_reverse(swapped["upper_crit"], "#ff0000", 0.1)
+    html.begin_form("prediction")
+    html.write(_("Show prediction for "))
+    html.select("timegroup", choices, choices[0], onchange="document.prediction.submit();")
+    html.hidden_fields()
+    html.end_form()
 
-        if "levels_lower" in tg_info:
-            render_dual_area(swapped["lower_crit"], swapped["lower_warn"], "#fff000", 0.4)
-            render_area(swapped["lower_crit"], "#ff0000", 0.1)
+    title = _("Prediction for %s") % timegroup["name"]
+    # time_range aus info-Datei holen
+    # v_range ermitteln
+    tg_data = eval(file(dir + "/" + timegroup["name"]).read())
+    swapped = swap_and_compute_levels(tg_data, timegroup)
+    vertical_range = compute_vertical_range(swapped)
+    legend = [
+       ( "#000000", _("Reference") ),
+       ( "#ffffff", _("OK area") ),
+       ( "#ffff00", _("Warning area") ),
+       ( "#ff0000", _("Critical area") ),
+    ]
+    if current_value != None:
+        legend.append( ("#0000ff", _("Current value: %.2f") % current_value) )
 
-        vert_scala = [ [x, "%.1f" % x] for x in range(int(vertical_range[0]), int(vertical_range[1] + 1)) ]
-        time_scala = [ [tg_info["range"][0] + i*3600, "%02d:00" % i] for i in range(0, 25, 2) ] 
-        render_coordinates(vert_scala, time_scala);
+    create_graph(timegroup["name"], title, graph_size, timegroup["range"], vertical_range, legend)
 
-        if "levels_lower" in tg_info:
-            render_dual_area(swapped["average"], swapped["lower_warn"], "#ffffff", 0.5)
-            render_curve(swapped["lower_warn"], "#e0e000")
-            render_curve(swapped["lower_crit"], "#j0b0a0")
+    if "levels_upper" in timegroup:
+        render_dual_area(swapped["upper_warn"], swapped["upper_crit"], "#fff000", 0.4)
+        render_area_reverse(swapped["upper_crit"], "#ff0000", 0.1)
 
-        if "levels_upper" in tg_info:
-            render_dual_area(swapped["upper_warn"], swapped["average"], "#ffffff", 0.5)
-            render_curve(swapped["upper_warn"], "#e0e000")
-            render_curve(swapped["upper_crit"], "#f0b0b0")
-        render_curve(swapped["average"], "#000000")
-        render_curve(swapped["average"], "#000000")
-        # render_curve(stack(swapped["average"], swapped["stdev"], -1),  "#008040")
+    if "levels_lower" in timegroup:
+        render_dual_area(swapped["lower_crit"], swapped["lower_warn"], "#fff000", 0.4)
+        render_area(swapped["lower_crit"], "#ff0000", 0.1)
+
+    vert_scala = [ [x, "%.1f" % x] for x in range(int(vertical_range[0]), int(vertical_range[1] + 1)) ]
+    time_scala = [ [timegroup["range"][0] + i*3600, "%02d:00" % i] for i in range(0, 25, 2) ] 
+    render_coordinates(vert_scala, time_scala);
+
+    if "levels_lower" in timegroup:
+        render_dual_area(swapped["average"], swapped["lower_warn"], "#ffffff", 0.5)
+        render_curve(swapped["lower_warn"], "#e0e000")
+        render_curve(swapped["lower_crit"], "#j0b0a0")
+
+    if "levels_upper" in timegroup:
+        render_dual_area(swapped["upper_warn"], swapped["average"], "#ffffff", 0.5)
+        render_curve(swapped["upper_warn"], "#e0e000")
+        render_curve(swapped["upper_crit"], "#f0b0b0")
+    render_curve(swapped["average"], "#000000")
+    render_curve(swapped["average"], "#000000")
+    # render_curve(stack(swapped["average"], swapped["stdev"], -1),  "#008040")
+
+    if current_value != None:
+        rel_time = time.time() % timegroup["slice"] 
+        render_point(timegroup["range"][0] + rel_time, current_value, "#0000ff")
 
     html.footer()
+
+def get_current_perfdata(host, service, dsname):
+    perf_data = html.live.query_value("GET services\nFilter: host_name = %s\nFilter: description = %s\nColumns: perf_data" % (
+            host, service))
+    for part in perf_data.split():
+        name, rest = part.split("=")
+        if name == dsname:
+            return float(rest.split(";")[0])
 
 # Compute check levels from prediction data and check parameters
 def swap_and_compute_levels(tg_data, tg_info):
@@ -164,6 +197,9 @@ def render_coordinates(v_scala, t_scala):
 
 def render_curve(points, color):
     html.javascript('render_curve(%r, %r);' % (points, color))
+
+def render_point(t, v, color):
+    html.javascript('render_point(%r, %r, %r);' % (t, v, color))
 
 def render_area(points, color, alpha=1.0):
     html.javascript('render_area(%r, %r, %f);' % (points, color, alpha))

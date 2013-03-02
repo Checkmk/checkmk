@@ -183,6 +183,22 @@ function line(c, t0, v0, t1, v1)
     c.stroke();
 }
 
+function render_point(t, v, color)
+{
+    var canvas = document.getElementById(canvas_id);
+    var c = canvas.getContext('2d');
+    var p = point(t, v);
+    c.beginPath();
+    c.lineWidth = 4;
+    c.strokeStyle = color;
+    c.moveTo(p[0]-6, p[1]-6);
+    c.lineTo(p[0]+6, p[1]+6);
+    c.moveTo(p[0]+6, p[1]-6);
+    c.lineTo(p[0]-6, p[1]+6);
+    c.stroke();
+}
+
+
 function render_curve(points, color)
 {
     var canvas = document.getElementById(canvas_id);

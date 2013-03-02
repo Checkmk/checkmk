@@ -25,8 +25,41 @@ Boston, MA 02110-1301 USA.
 
 */
 
+table.prediction canvas {
+    margin: 0px;
+}
 
-div.prediction canvas {
+table.prediction {
     border: 1px solid black;
+    box-shadow: 0.5px 0.5px 2px #888;
+    border-spacing: 0px;
+    background-color: #eeeeee;
+}
+table.prediction td {
+    padding: 0px;
+}
+
+table.prediction td.legend {
+    padding-left: 43px;
+    color: #000000;
+    padding-bottom: 9px;
+    padding-top: 2px;
+}
+
+table.prediction td.legend div {
+    display: inline-block;
+    float: none;
+}
+
+table.prediction td.legend div.color {
+    border: 1px solid black;
+    height: 14px;
+    width: 14px;
+    vertical-align: middle;
+    display: inline-block;
     box-shadow: 0.5px 0.5px 1px #888;
+}
+table.prediction td.legend div.entry {
+    margin-right: 20px;
+    margin-left: 5px;
 }

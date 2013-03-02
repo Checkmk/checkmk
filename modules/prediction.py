@@ -72,13 +72,51 @@ def pnp_cleanup(s):
         .replace('/',  '_') \
         .replace('\\', '_')
 
+def find_ds_in_pnp_xmlfile(xml_file, varname):
+    ds = None
+    name = None
+    for line in file(xml_file):
+        line = line.strip()
+        if line.startswith("<DS>"):
+            ds = line[4:].split('<')[0]
+            if name == varname:
+                return int(ds)
+        elif line.startswith("<NAME>"):
+            name = line[6:].split('<')[0]
+            if ds and name == varname:
+                return int(ds)
+            else:
+                ds = None
+        elif line == '<DATASOURCE>':
+            ds = None
+            name = None
+
 def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime):
     global rrdcached_socket
-    rrd_file = "%s/%s/%s_%s.rrd" % (
-            rrd_path, pnp_cleanup(hostname), pnp_cleanup(service_description), pnp_cleanup(varname))
+    rrd_base = "%s/%s/%s" % (rrd_path, pnp_cleanup(hostname),
+             pnp_cleanup(service_description))
+    # First try PNP storage type MULTIPLE
+    rrd_file = rrd_base + "_%s.rrd" % pnp_cleanup(varname)
+    ds = 1
+    if not os.path.exists(rrd_file):
+        # We need to look into the XML file of PNP in order to
+        # find the correct DS number.
+        xml_file = rrd_base + ".xml"
+        if not os.path.exists(xml_file):
+            raise MKGeneralException("Cannot do prediction: XML file %s missing" % xml_file)
+        rrd_file = rrd_base + ".rrd"
+        if not os.path.exists(rrd_file):
+            raise MKGeneralException("Cannot do prediction: RRD file missing")
+
+        # Let's parse the XML file in a silly, but fast way, that does
+        # not need any further module.
+        ds = find_ds_in_pnp_xmlfile(xml_file, varname)
+        if ds == None:
+            raise MKGeneralException("Cannot do prediction: variable %s not known" % varname)
+
     if omd_root and not rrdcached_socket:
         rrdcached_socket = omd_root + "/tmp/run/rrdcached.sock"
-    return rrd_export(rrd_file, 1, cf, fromtime, untiltime, rrdcached_socket)
+    return rrd_export(rrd_file, ds, cf, fromtime, untiltime, rrdcached_socket)
 
 daynames = [ "monday", "tuesday", "wednesday", "thursday", 
              "friday", "saturday", "sunday"]
@@ -211,7 +249,7 @@ def get_predictive_levels(dsname, params, cf):
                 break
     except Exception, e:
         if opt_debug:
-            sys.stderr.write("No previous prediction for group %s available: %s.\n" % (timegroup, e))
+            sys.stderr.write("No previous prediction for group %s available.\n" % timegroup)
         last_info = None
 
     if last_info and last_info["time"] + period_info["valid"] * period_info["slice"] < now:
@@ -228,7 +266,10 @@ def get_predictive_levels(dsname, params, cf):
             sys.stderr.write("Computing prediction for time group %s.\n" % timegroup)
         prediction = compute_prediction(pred_file, timegroup, params, period_info, from_time, dsname, cf)
         info = { 
-            "time"    : now,
+            "time"         : now,
+            "range"        : (from_time, until_time),
+            "cf"           : cf,
+            "dsname"       : dsname,
         }
         info.update(params)
         file(info_file, "w").write("%r\n" % info)

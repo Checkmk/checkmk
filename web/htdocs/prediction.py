@@ -140,7 +140,7 @@ def page_graph():
     render_curve(rrd_data, "#0000ff", 2)
 
     if current_value != None:
-        rel_time = time.time() % timegroup["slice"] 
+        rel_time = (time.time() - time.timezone) % timegroup["slice"] 
         render_point(timegroup["range"][0] + rel_time, current_value, "#0000ff")
 
     html.footer()

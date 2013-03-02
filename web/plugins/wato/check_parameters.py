@@ -1413,7 +1413,7 @@ checkgroups.append((
                                 title = _("Base prediction on"),
                                 choices = [
                                     ( "wday", _("Day of the week (00:00 - 24:00 in local time)") ),
-                                    ( "hour", _("Hour of the day") ),
+                                    ( "day", _("Hour of the day") ),
                                 ]
                          )),
                          ( "horizon",

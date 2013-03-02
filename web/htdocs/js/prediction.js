@@ -37,6 +37,8 @@ var right_border  = 50;
 var top_border    = 40;
 var bottom_border = 50;
 
+var None = null; // make us compatible with Python repr()
+
 function create_graph(cid, ft, ut, vmi, vma)
 {
     // Keep important data as global variables, needed by 
@@ -199,21 +201,30 @@ function render_point(t, v, color)
 }
 
 
-function render_curve(points, color)
+function render_curve(points, color, w)
 {
     var canvas = document.getElementById(canvas_id);
     var c = canvas.getContext('2d');
 
     c.beginPath();
     c.strokeStyle = color;
-    c.lineWidth = 1;
+    c.lineWidth = w;
 
-    var p0 = point(points[0][0], points[0][1]);
     var time_step = (until_time - from_time) / points.length;
-    c.moveTo(p0[0], p0[1]);
+    var first = true;
     for (i=0; i<points.length; i++) {
+        if (points[i] == null) {
+            c.stroke();
+            first = true;
+            continue;
+        }
         var p = point(from_time + time_step * i, points[i]);
-        c.lineTo(p[0], p[1]);
+        if (first) {
+            c.moveTo(p[0], p[1]);
+            first = false;
+        }
+        else
+            c.lineTo(p[0], p[1]);
     }
     c.stroke();
 }

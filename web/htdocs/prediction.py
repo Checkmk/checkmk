@@ -32,6 +32,25 @@ from lib import *
 
 graph_size = 2000, 700
 
+# Import helper functions from check_mk module prediction.py. Maybe we should
+# find some more clean way some day for creating common Python code between
+# Check_MK CCE and Multisite.
+execfile(defaults.modules_dir + "/prediction.py")
+rrd_path = defaults.rrd_path
+rrdcached_socket = None
+omd_root = None
+try:
+    omd_root = default.omd_root
+    if omd_root:
+        rrdcached_socket = omd_root + "/tmp/run/rrdcached.sock"
+    else:
+        try:
+            rrdcached_socket = config.rrdcached_socket
+        except:
+            pass
+except:
+    pass
+
 def page_graph():
     host = html.var("host")
     service = html.var("service")
@@ -61,6 +80,9 @@ def page_graph():
                 timegroup = tg_info
 
     timegroups.sort(cmp = lambda a,b: cmp(a["range"], b["range"]))
+    if not timegroup:
+        timegroup  = timegroups[0]
+
     choices = [ (tg_info["name"], tg_info["name"].title())
                 for tg_info in timegroups ]
 
@@ -70,9 +92,7 @@ def page_graph():
     html.hidden_fields()
     html.end_form()
 
-    title = _("Prediction for %s") % timegroup["name"]
-    # time_range aus info-Datei holen
-    # v_range ermitteln
+    # Get prediction data
     tg_data = eval(file(dir + "/" + timegroup["name"]).read())
     swapped = swap_and_compute_levels(tg_data, timegroup)
     vertical_range = compute_vertical_range(swapped)
@@ -85,7 +105,7 @@ def page_graph():
     if current_value != None:
         legend.append( ("#0000ff", _("Current value: %.2f") % current_value) )
 
-    create_graph(timegroup["name"], title, graph_size, timegroup["range"], vertical_range, legend)
+    create_graph(timegroup["name"], graph_size, timegroup["range"], vertical_range, legend)
 
     if "levels_upper" in timegroup:
         render_dual_area(swapped["upper_warn"], swapped["upper_crit"], "#fff000", 0.4)
@@ -96,13 +116,15 @@ def page_graph():
         render_area(swapped["lower_crit"], "#ff0000", 0.1)
 
     vert_scala = [ [x, "%.1f" % x] for x in range(int(vertical_range[0]), int(vertical_range[1] + 1)) ]
+    while len(vert_scala) > 15:
+        vert_scala = vert_scala[::2]
     time_scala = [ [timegroup["range"][0] + i*3600, "%02d:00" % i] for i in range(0, 25, 2) ] 
     render_coordinates(vert_scala, time_scala);
 
     if "levels_lower" in timegroup:
         render_dual_area(swapped["average"], swapped["lower_warn"], "#ffffff", 0.5)
         render_curve(swapped["lower_warn"], "#e0e000")
-        render_curve(swapped["lower_crit"], "#j0b0a0")
+        render_curve(swapped["lower_crit"], "#f0b0a0")
 
     if "levels_upper" in timegroup:
         render_dual_area(swapped["upper_warn"], swapped["average"], "#ffffff", 0.5)
@@ -111,6 +133,11 @@ def page_graph():
     render_curve(swapped["average"], "#000000")
     render_curve(swapped["average"], "#000000")
     # render_curve(stack(swapped["average"], swapped["stdev"], -1),  "#008040")
+
+    # Try to get current RRD data and render it also
+    from_time, until_time = timegroup["range"]
+    rrd_step, rrd_data = get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
+    render_curve(rrd_data, "#0000ff", 2)
 
     if current_value != None:
         rel_time = time.time() % timegroup["slice"] 
@@ -178,8 +205,7 @@ def compute_vertical_range(swapped):
         mmin = min(mmin, min(points))
     return mmin, mmax
 
-def create_graph(name, title, size, range, v_range, legend):
-    html.write('<h3 class=prediction>%s</h3>' % title)
+def create_graph(name, size, range, v_range, legend):
     html.write('<table class=prediction><tr><td>')
     html.write('<canvas class=prediction id="content_%s" style="width: %dpx; height: %dpx;" width=%d height=%d></canvas>' % (
        name, size[0]/2, size[1]/2, size[0], size[1]))
@@ -195,8 +221,8 @@ def render_coordinates(v_scala, t_scala):
     html.javascript('render_coordinates(%r, %r);' % (v_scala, t_scala))
 
 
-def render_curve(points, color):
-    html.javascript('render_curve(%r, %r);' % (points, color))
+def render_curve(points, color, width=1):
+    html.javascript('render_curve(%r, %r, %d);' % (points, color, width))
 
 def render_point(t, v, color):
     html.javascript('render_point(%r, %r, %r);' % (t, v, color))

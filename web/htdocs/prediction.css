@@ -30,6 +30,7 @@ table.prediction canvas {
 }
 
 table.prediction {
+    margin-top: 10px;
     border: 1px solid black;
     box-shadow: 0.5px 0.5px 2px #888;
     border-spacing: 0px;
@@ -53,9 +54,9 @@ table.prediction td.legend div {
 
 table.prediction td.legend div.color {
     border: 1px solid black;
-    height: 14px;
-    width: 14px;
-    vertical-align: middle;
+    height: 12px;
+    width: 12px;
+    vertical-align: bottom;
     display: inline-block;
     box-shadow: 0.5px 0.5px 1px #888;
 }

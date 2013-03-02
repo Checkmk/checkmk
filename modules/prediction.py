@@ -126,8 +126,8 @@ def group_by_wday(t):
     day_of_epoch, rel_time = divmod(t - time.timezone, 86400)
     return daynames[wday], rel_time
 
-def group_by_hour(t):
-    return "%02d" % ((t % 86400) / 3600), t % 3600
+def group_by_day(t):
+    return "everyday", (t - time.timezone) % 86400
 
 prediction_periods = {
     "wday" : {
@@ -135,10 +135,10 @@ prediction_periods = {
         "groupby" : group_by_wday,
         "valid" : 7,
     },
-    "hour" : {
-        "slice" : 3600,
-        "groupby" : group_by_hour,
-        "valid" : 24,
+    "day" : {
+        "slice" : 86400,
+        "groupby" : group_by_day,
+        "valid" : 1,
     }
 }
 
@@ -246,6 +246,18 @@ def get_predictive_levels(dsname, params, cf):
                 if opt_debug:
                     sys.stderr.write("Prediction parameters have changed.\n")
                 last_info = None
+                # Remove all prediction files that result from other
+                # prediction periods. This is e.g. needed if the user switches
+                # the parameter from 'wday' to 'day'.
+                for f in os.listdir(dir):
+                    if f.endswith(".info"):
+                        try:
+                            info = eval(file(dir + "/" + f).read())
+                            if info["period"] != params["period"]:
+                                os.remove(dir + "/" + f)
+                                os.remove(dir + "/" + f[:-5])
+                        except:
+                            pass
                 break
     except Exception, e:
         if opt_debug:

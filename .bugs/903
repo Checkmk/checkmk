@@ -1,28 +1,22 @@
-Title: Umlauts in regexes never match
-Component: ec
-Class: bug
-State: done
-Date: 2013-01-31 11:14:47
-Targetversion: 1.2.2
+Title: Add user setting "low bandwidth mode"
+Component: multisite
+State: open
+Date: 2013-03-01 12:52:57
+Targetversion: future
+Class: feature
 
-When adding umlauts like ä to regex patterns, they do never match.
+die genutzten Background-Images im Multisite und PNP4Nagios schauen
+zwar schick aus, sorgen aber für reichlich Traffic bzw.
+Darstellungsverzögerung in unserer
+Windows-Terminal-Services/Citrix-Umgebung. Dies kann man z.B. auch beim
+VNC-Nutzung oder x-via-ssh reproduzieren.
 
-Was machen wir eigentlich, wenn die Enkodierung der eingehenden
-Events nicht klar ist? Vorschlag:
-
-Wir kodieren grundsatzlich von UTF-8 nach intern Unicode. Dabei
-dann aufpassen, dass auch die Konfiguration der Regeln immer
-Unicode verwendet (nicht TextAscii, sondern TextUnicode()).
-
-Wenn beim Enkodieren ein Fehler auftritt, dann nehmen wir 
-latin1 an (bzw. Einstellbar als globale Option).
-
-try:
-    text = text.decode('utf-8'
-except:
-    text = text.decode(conifg.ec_fallback_encoding)
-
-
-2013-02-12 16:51:02: changed state open -> done
-Die mit dem try/except war eh schon drin. Allerdings hart-kodiert
-auf latin1.Denke wir lassen das vorerst so.
+Die Background-Images habe ich an folgenden Orten entfernt:
+./share/check_mk/web/htdocs/sidebar.css und dort background-color
+hinzugefügt (weil sonst weiß)
+./share/check_mk/web/htdocs/pages.css
+./share/pnp4nagios/htdocs/media/css/ui-multisite/jquery-ui.css
+Damit komme ich soweit zurecht.
+Vielleicht baut Ihr ja irgendwo einen Schalter ein, mittels dem die GUI
+leicht zwischen unterschiedlichen Grafik-Layouts umgeschalten werden
+kann.

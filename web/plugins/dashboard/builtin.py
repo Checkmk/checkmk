@@ -27,13 +27,6 @@
 builtin_dashboards["main"] = {
     "title" : _("Main Overview"),
     "dashlets" : [
-#         {
-#             "url"        : "dashlet_mk_logo.py",
-#             "position"   : (1, 1),
-#             "size"       : (4, 5),
-#             "shadow"     : False,
-#             "background" : False,
-#         },
         {
             "title"      : _("Host Statistics"),
             "url"        : "dashlet_hoststats.py",
@@ -55,38 +48,23 @@ builtin_dashboards["main"] = {
         {
             "title"      : _("Host Problems (unhandled)"),
             "title_url"  : "view.py?view_name=hostproblems&is_host_acknowledged=0",
-            "view"       : "hostproblems_dash", # "view.py?view_name=hostproblems_dash&display_options=SIXHR&_body_class=dashlet",
+            "view"       : "hostproblems_dash", 
             "position"   : (-1, 1),
             "size"       : (GROW, 18),
         },
         {
             "title"      : _("Service Problems (unhandled)"),
             "title_url"  : "view.py?view_name=svcproblems&is_service_acknowledged=0",
-            "view"       : "svcproblems_dash", # "view.py?view_name=svcproblems_dash&display_options=SIXHR&_body_class=dashlet",
+            "view"       : "svcproblems_dash", 
             "position"   : (1, 19),
             "size"       : (GROW, MAX),
         },
         {
             "title"      : _("Events of recent 4 hours"),
             "title_url"  : "view.py?view_name=events_dash",
-            "view"       : "events_dash", # "view.py?view_name=events_dash&display_options=SIXHR&_body_class=dashlet",
+            "view"       : "events_dash", 
             "position"   : (-1, -1),
             "size"       : (GROW, GROW),
         },
-        # {
-        #     "title"    : "CPU load of Nagios",
-        #     # "url"      : "http://localhost/dk/pnp4nagios/index.php/image?host=DerNagiosSelbst&srv=fs__var&view=0",
-        #     "url"      : "http://localhost/dk/pnp4nagios/index.php/popup?host=localhost&srv=CPU_load&view=0&source=2",
-        #     "position" : (1, -1),
-        #     "size"     : (11, 5),
-        # },
-        # {
-        #     "title"    : "CPU utilization of Nagios",
-        #     # "url"      : "http://localhost/dk/pnp4nagios/index.php/image?host=DerNagiosSelbst&srv=fs__var&view=0",
-        #     "url"      : "http://localhost/dk/pnp4nagios/index.php/popup?host=localhost&srv=CPU_utilization&view=0&source=2",
-        #     "position" : (12, -1),
-        #     "size"     : (11, 5),
-        # },
-        # {
     ]
 }

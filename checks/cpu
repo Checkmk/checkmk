@@ -61,7 +61,8 @@ def check_cpu_load(item, params, info):
         else:
             infotext += ", no reference for prediction yet"
 
-    perfdata = [ ('load' + str(z), l, warn_upper, crit_upper, 0, num_cpus ) for (z,l) in [ (1,load[0]), (5,load[1]), (15, load[2]) ] ]
+    perfdata = [ ('load' + str(z), l, warn_upper, crit_upper, 0, num_cpus ) 
+                 for (z,l) in [ (1,load[0]), (5,load[1]), (15, load[2]) ] ]
     if ref_value:
         perfdata.append(('predict_load15', ref_value))
 

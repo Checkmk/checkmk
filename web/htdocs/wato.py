@@ -10808,6 +10808,101 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, 
         match = "all")
 
 
+# The following function looks like a value spec and in fact
+# can be used like one (but take no parameters)
+def PredictiveLevels(**args):
+    dif = args.get("default_difference", (2.0, 4.0))
+    return Dictionary(
+        title = _("Predictive Levels"),
+        optional_keys = [ "weight", "levels_upper", "levels_lower" ],
+        default_keys = [ "levels_upper" ],
+        columns = 1,
+        headers = "sup",
+        elements = [
+             ( "period", 
+                DropdownChoice(
+                    title = _("Base prediction on"),
+                    choices = [
+                        ( "wday", _("Day of the week (00:00 - 24:00 in local time)") ),
+                        ( "day", _("Hour of the day") ),
+                    ]
+             )),
+             ( "horizon",
+               Integer(
+                   title = _("Time horizon"),
+                   unit = _("days"),
+                   minvalue = 1,
+                   default_value = 90,
+             )),
+             ( "weight",
+               Percentage(
+                   title = _("Raise weight of recent time"),
+                   label = _("by"),
+                   default_value = 0,
+             )),
+             ( "levels_upper",
+               CascadingDropdown(
+                   title = _("Dynamic levels (upper bound)"),
+                   choices = [
+                       ( "absolute", 
+                         _("Absolute difference from prediction"),
+                         Tuple(
+                             elements = [
+                                 Float(title = _("Warning at"), unit = _("above predicted value"), default_value = dif[0]),
+                                 Float(title = _("Critical at"), unit = _("above predicted value"), default_value = dif[1]),
+                             ]
+                      )),
+                      ( "relative", 
+                        _("Relative difference from prediction"),
+                         Tuple(
+                             elements = [
+                                 Percentage(title = _("Warning at"), unit = _("% above predicted value"), default_value = 10),
+                                 Percentage(title = _("Critical at"), unit = _("% above predicted value"), default_value = 20),
+                             ]
+                      )),
+                      ( "stdev", 
+                        _("In relation to standard deviation"),
+                         Tuple(
+                             elements = [
+                                 Percentage(title = _("Warning at"), unit = _("times the standard deviation above the predicted value"), default_value = 2),
+                                 Percentage(title = _("Critical at"), unit = _("times the standard deviation above the predicted value"), default_value = 4),
+                             ]
+                      )),
+                   ]
+             )),
+             ( "levels_lower",
+               CascadingDropdown(
+                   title = _("Dynamic levels (lower bound)"),
+                   choices = [
+                       ( "absolute", 
+                         _("Absolute difference from prediction"),
+                         Tuple(
+                             elements = [
+                                 Float(title = _("Warning at"), unit = _("below predicted value"), default_value = 2.0),
+                                 Float(title = _("Critical at"), unit = _("below predicted value"), default_value = 4.0),
+                             ]
+                      )),
+                      ( "relative", 
+                        _("Relative difference from prediction"),
+                         Tuple(
+                             elements = [
+                                 Percentage(title = _("Warning at"), unit = _("% below predicted value"), default_value = 10),
+                                 Percentage(title = _("Critical at"), unit = _("% below predicted value"), default_value = 20),
+                             ]
+                      )),
+                      ( "stdev", 
+                        _("In relation to standard deviation"),
+                         Tuple(
+                             elements = [
+                                 Percentage(title = _("Warning at"), unit = _("times the standard deviation below the predicted value"), default_value = 2),
+                                 Percentage(title = _("Critical at"), unit = _("times the standard deviation below the predicted value"), default_value = 4),
+                             ]
+                      )),
+                   ]
+             )),
+
+        ]
+    )
 
 
 

@@ -1,7 +1,7 @@
 Title: Settings in multisite.mk without default values persist in browser cache
 Component: multisite
 Class: bug
-State: wontfix
+State: open
 Date: 2012-09-13 17:42:33
 Targetversion: 1.2.3
 
@@ -11,6 +11,3 @@ must not modify files of the main distribution). If it once sets a value in
 multisite.mk and that is later removed (factory settings) then the positive
 settings survives in the browser cache. We need to find a method how extension
 modules can define or declare default values for settings in multisite.mk
-
-2013-03-04 12:24:04: changed state open -> wontfix
-Wont fix this in 1.2.2.

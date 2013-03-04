@@ -58,27 +58,19 @@ def check_kernel(item, params, info):
 
     counter = hits[0][0]
     this_val = int(hits[0][1])
-    timedif, per_sec = get_counter("kernel." + item, this_time, this_val)
-    infotext = " - %.0f/s in last %d secs" % (per_sec, timedif)
+    timedif, per_sec = get_counter("kernel." + counter, this_time, this_val)
 
-    if params == None:
-        return (0, "OK" + infotext, [ (counter, per_sec) ])
-
-    warn, crit = params
-    perfdata = [ (counter, per_sec, warn, crit) ]
-    if warn == None and crit != None:
-        infotext += " (critical at %.0f/s)" % crit
-    elif warn != None and crit == None:
-        infotext += " (warning at %.0f/s)" % warn
-    elif warn != None:
-        infotext += " (warn/crit at %.0f/%.0f per sec)" % (warn, crit)
-
-    if crit != None and per_sec >= crit:
-        return (2, "CRIT" + infotext, perfdata)
-    elif warn != None and per_sec >= warn:
-        return (1, "WARN" + infotext, perfdata)
+    if type(params) == tuple:
+        warn, crit = params
     else:
-        return (0, "OK" + infotext, perfdata)
+        warn, crit = None, None
+    perfdata = [ (counter, per_sec, warn, crit) ]
+    state, text, extraperf = check_levels(per_sec, counter, params)
+    perfdata += extraperf
+    infotext = "%.0f/s in last %d secs" % (per_sec, timedif)
+    if text:
+        infotext += ", " + text
+    return state, infotext, perfdata
 
 kernel_util_default_levels = None
 

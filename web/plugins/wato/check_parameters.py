@@ -1366,8 +1366,8 @@ checkgroups.append((
                        Tuple(
                            title = _("Percentual levels (in relation to policy speed)"),
                            elements = [
-                               Percentage(title = _("Warning at"), label = _("% of port speed")),
-                               Percentage(title = _("Critical at"), label = _("% of port speed")),
+                               Percentage(title = _("Warning at"), max_value=1000, label = _("% of port speed")),
+                               Percentage(title = _("Critical at"), max_value=1000, label = _("% of port speed")),
                            ]
                        ),
                        Tuple(
@@ -1485,7 +1485,7 @@ checkgroups.append((
     subgroup_os,
     "cpu_load",
     _("CPU load (not utilization!)"),
-    Tuple(
+    Levels(
           help = _("The CPU load of a system is the number of processes currently being "
                    "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
                    "for one. The <u>load average</u> is the averaged CPU load over the last 1, "
@@ -1494,9 +1494,11 @@ checkgroups.append((
                    "those levels. The configured levels are multiplied with the number of "
                    "CPUs, so you should configure the levels based on the value you want to "
                    "be warned \"per CPU\"."),
-          elements = [
-              Float(title = _("Warning at a load of")),
-              Float(title = _("Critical at a load of"))]),
+          unit = "per core",
+          default_difference = (2.0, 4.0),
+          default_levels = (5.0, 10.0),
+    ),
+
     None, None))
 
 checkgroups.append((
@@ -2016,22 +2018,16 @@ checkgroups.append((
     subgroup_os,
     "vm_counter",
     _("Number of kernel events per second"),
-    Tuple(
+    Levels(
           help = _("This ruleset applies to several similar checks measing various kernel "
                    "events like context switches, process creations and major page faults. "
                    "Please create separate rules for each type of kernel counter you "
                    "want to set levels for."),
-          show_titles = False,
-          elements = [
-              Optional(
-                 Float(label = _("events per second")),
-                 title = _("Set warning level:"),
-                 sameline = True),
-              Optional(
-                 Float(label = _("events per second")),
-                 title = _("Set critical level:"),
-                 sameline = True)]),
-
+          unit = _("events per second"),
+          default_levels = (1000, 5000),
+          default_difference = (500.0, 1000.0),
+          default_value = None,
+    ),
     DropdownChoice(
         title = _("kernel counter"),
         choices = [
@@ -2047,19 +2043,17 @@ checkgroups.append((
     Dictionary(
         elements = [
             ( "read",
-              Tuple(
+              Levels(
                   title = _("Read throughput"),
-                  elements = [
-                      Float(title = _("warning at"), unit = _("MB/s")),
-                      Float(title = _("critical at"), unit = _("MB/s"))
-                  ])),
+                  unit = _("MB/s"),
+                  default_value = None,
+                  default_levels = (50.0, 100.0))),
             ( "write",
-              Tuple(
+              Levels(
                   title = _("Write throughput"),
-                  elements = [
-                      Float(title = _("warning at"), unit = _("MB/s")),
-                      Float(title = _("critical at"), unit = _("MB/s"))
-                  ])),
+                  unit = _("MB/s"),
+                  default_value = None,
+                  default_levels = (50.0, 100.0))),
             ( "average",
               Integer(
                   title = _("Average"),

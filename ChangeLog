@@ -2,6 +2,8 @@
     Core:
     * Agents can send data for other hosts "piggyback". This is being
       used by the vSphere and SAP plugins
+    * Checks can now omit the typical "OK - " or "WARN -". This text
+      will be added automatically if missing.
 
     Multisite:
     * New availability view for arbitrary host/service collections
@@ -40,6 +42,7 @@
                                 supports percentage values
     * logwatch.ec: Added optional spooling to the check to prevent dataloss
       when processing of current lines needs more time than max execution time
+    * mounts: ignore multiple occurrances of the same device
     
     Livestatus:
     * Table statehist: Improved detection of vanished hosts and services.
@@ -113,6 +116,7 @@
     * FIX: Alias values of host/service/contact groups need to be set and unique
            within the group
     * FIX: Fixed exception when editing contactgroups without alias
+    * FIX: Fix localization of rule options
     * Suggest use default value for filesystem levels that make sense
     * Valuespec: CascadingDropdown now able to process choice values from functions
     * Freshness checking for classical passive Nagios checks (custom_checks)

@@ -379,12 +379,15 @@ td.dictleft div.dictelement * {
 }
 td.dictleft div.dictelement {
     font-size: 8pt;
-    padding-left: 10px;
-    border-left: 2px solid #ccc;
-    margin-left: 8px;
     margin-bottom: 10px;
     margin-top: 3px;
     float: none;
+    margin-left: 0px;
+}
+td.dictleft div.dictelement.indent {
+    padding-left: 10px;
+    border-left: 2px solid #ccc;
+    margin-left: 8px;
 }
 
 table.vs_dict_text {

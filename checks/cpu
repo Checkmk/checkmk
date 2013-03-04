@@ -44,17 +44,20 @@ def check_cpu_load(item, params, info):
     else:
         num_cpus = 1
 
-    warn, crit = params # apply on 15min average, relative to number of CPUs
-    warn = warn * num_cpus
-    crit = crit * num_cpus
-    perfdata = [ ('load' + str(z), l, warn, crit, 0, num_cpus ) for (z,l) in [ (1,load[0]), (5,load[1]), (15, load[2]) ] ]
-
-    if load[2] >= crit:
-        return (2, "CRIT - 15min load %.2f at %s CPUs (critical at %.2f)" % (load[2], num_cpus, crit), perfdata)
-    elif load[2] >= warn:
-        return (1, "WARN - 15min load %.2f at %s CPUs (warning at %.2f)" % (load[2], num_cpus, warn), perfdata)
+    # Prepare performance data
+    if type(params) == tuple:
+        warn, crit = [ p*num_cpus for p in params ]
     else:
-        return (0, "OK - 15min load %.2f at %s CPUs" % (load[2], num_cpus), perfdata)
+        warn, crit = None, None
+    perfdata = [ ('load' + str(z), l, warn, crit, 0, num_cpus ) 
+                 for (z,l) in [ (1,load[0]), (5,load[1]), (15, load[2]) ] ]
+
+    state, text, perf = check_levels(load[2], 'load15', params, factor = num_cpus)
+    perfdata += perf
+    infotext = "15min load %.2f at %d CPUs" % (load[2], num_cpus)
+    if text:
+        infotext += ", " + text
+    return state, infotext, perfdata
 
 def inventory_cpu_threads(info):
     if len(info) == 1 and len(info[0]) >= 5:
@@ -75,11 +78,11 @@ def check_cpu_threads(item, params, info):
         return (0, "OK - %d threads" % (nthreads,), perfdata)
 
 check_info["cpu.loads"] = {
-    "check_function"        : check_cpu_load,
-    "inventory_function"    : inventory_cpu_load,
-    "service_description"   : "CPU load",
-    "has_perfdata"          : True,
-    "group"                 : "cpu_load",
+    "check_function"          : check_cpu_load,
+    "inventory_function"      : inventory_cpu_load,
+    "service_description"     : "CPU load",
+    "has_perfdata"            : True,
+    "group"                   : "cpu_load",
 }
 
 check_info["cpu.threads"] = {

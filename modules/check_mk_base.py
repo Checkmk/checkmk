@@ -980,6 +980,10 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
         if only_check_types != None and checkname not in only_check_types:
             continue
 
+        # Make service description globally available 
+        global g_service_description
+        g_service_description = description
+
         # Skip checks that are not in their check period
         period = check_period_of(hostname, description)
         if period and not check_timeperiod(period):
@@ -1018,13 +1022,13 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
         if info or info == []:
             num_success += 1
             try:
-                check_funktion = check_info[checkname]["check_function"]
+                check_function = check_info[checkname]["check_function"]
             except:
-                check_funktion = check_unimplemented
+                check_function = check_unimplemented
 
             try:
                 dont_submit = False
-                result = check_funktion(item, params, info)
+                result = check_function(item, params, info)
             # handle check implementations that do not yet support the
             # handling of wrapped counters via exception. Do not submit
             # any check result in that case:
@@ -1033,7 +1037,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
                     print "Counter wrapped, not handled by check, ignoring this check result: %s" % e
                 dont_submit = True
             except Exception, e:
-                result = (3, "UNKNOWN - invalid output from agent, invalid check parameters or error in implementation of check %s. Please set <tt>debug_log</tt> to a filename in <tt>main.mk</tt> for enabling exception logging." % checkname)
+                result = (3, "invalid output from agent, invalid check parameters or error in implementation of check %s. Please set <tt>debug_log</tt> to a filename in <tt>main.mk</tt> for enabling exception logging." % checkname)
                 if debug_log:
                     try:
                         import traceback, pprint
@@ -1141,19 +1145,31 @@ def convert_perf_data(p):
 
 
 def submit_check_result(host, servicedesc, result, sa):
+    if len(result) >= 3:
+        state, infotext, perfdata = result[:3]
+    else:
+        state, infotext = result
+        perfdata = None
+
+    if not (
+        infotext.startswith("OK -") or
+        infotext.startswith("WARN -") or
+        infotext.startswith("CRIT -") or
+        infotext.startswith("UNKNOWN -")):
+        infotext = nagios_state_names[state] + " - " + infotext
+
     global nagios_command_pipe
     # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
 
     # Aggregated service -> store for later
     if sa != "":
-        store_aggregated_service_result(host, servicedesc, sa, result[0], result[1])
+        store_aggregated_service_result(host, servicedesc, sa, state, infotext)
 
     # performance data - if any - is stored in the third part of the result
     perftexts = [];
     perftext = ""
 
-    if len(result) > 2:
-        perfdata = result[2]
+    if perfdata:
         # Check may append the name of the check command to the
         # list of perfdata. It is of type string. And it might be
         # needed by the graphing tool in order to choose the correct
@@ -1173,15 +1189,15 @@ def submit_check_result(host, servicedesc, result, sa):
             perftext = "|" + (" ".join(perftexts))
 
     if not opt_dont_submit:
-        submit_to_nagios(host, servicedesc, result[0], result[1] + perftext)
+        submit_to_nagios(host, servicedesc, state, infotext + perftext)
 
     if opt_verbose:
         if opt_showperfdata:
             p = ' (%s)' % (" ".join(perftexts))
         else:
             p = ''
-        color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[result[0]]
-        print "%-20s %s%s%-56s%s%s" % (servicedesc, tty_bold, color, result[1], tty_normal, p)
+        color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[state]
+        print "%-20s %s%s%-56s%s%s" % (servicedesc, tty_bold, color, infotext, tty_normal, p)
 
 
 def submit_to_nagios(host, service, state, output):
@@ -1253,6 +1269,64 @@ def nodes_of(hostname):
 #   |                                                                      |
 #   | These functions are used in some of the checks.                      |
 #   +----------------------------------------------------------------------+
+
+# Generic function for checking a value against levels. This also support
+# predictive levels.
+def check_levels(value, dsname, params, unit = "", factor = 1.0, statemarkers=False):
+
+    if params == None or params == (None, None):
+        return 0, "", []
+
+    perfdata = []
+    infotext = ""
+
+    # Pair of numbers -> static levels
+    if type(params) == tuple:
+        warn_upper, crit_upper = params[0] * factor, params[1] * factor,
+        warn_lower, crit_lower = None, None
+        ref_value = None
+
+    # Dictionary -> predictive levels
+    else:
+        try:
+            ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
+                get_predictive_levels(dsname, params, "MAX", levels_factor=factor)
+            if ref_value:
+                infotext += "predicted reference: %.2f%s" % (ref_value * factor, unit)
+            else:
+                infotext += "no reference for prediction yet"
+        except Exception, e:
+            return 3, "%s" % e, []
+
+    if ref_value:
+        perfdata.append(('predict_' + dsname, ref_value))
+
+    # Critical cases
+    if crit_upper != None and value >= crit_upper:
+        state = 2
+        infotext += " (critical level at %.2f)" % crit_upper
+    elif crit_lower != None and value <= crit_lower:
+        state = 2
+        infotext += " (too low: critical level at %.2f)" % crit_lower
+
+    # Warning cases
+    elif warn_upper != None and value >= warn_upper:
+        state = 1
+        infotext += " (warning level at %.2f)" % warn_upper
+    elif warn_lower != None and value <= warn_lower:
+        state = 1
+        infotext += " (too low: warning level at %.2f)" % warn_lower
+
+    # OK
+    else:
+        state = 0
+
+    if state and statemarkers:
+        if state == 1:
+            infotext += "(!)"
+        else:
+            infotext += "(!!)"
+    return state, infotext, perfdata
 
 
 # check range, values might be negative!

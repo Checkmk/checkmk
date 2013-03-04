@@ -135,8 +135,6 @@ if len(sys.argv) >= 2 and sys.argv[1] == '--defaults':
 elif __name__ == "__main__":
     defaults_path = os.path.dirname(sys.argv[0]) + "/defaults"
 
-if opt_debug:
-    sys.stderr.write("Reading default settings from %s\n" % defaults_path)
 try:
     execfile(defaults_path)
 except Exception, e:
@@ -346,7 +344,7 @@ special_agent_info                 = {}
 # Now include the other modules. They contain everything that is needed
 # at check time (and many of that is also needed at administration time).
 try:
-    modules =  [ 'check_mk_base', 'snmp', 'notify' ]
+    modules =  [ 'check_mk_base', 'snmp', 'notify', 'prediction' ]
     for module in modules:
         filename = modules_dir + "/" + module + ".py"
         execfile(filename)
@@ -2658,6 +2656,10 @@ if os.path.islink(%(dst)r):
 
     output.write(stripped_python_file(modules_dir + "/check_mk_base.py"))
 
+    # TODO: can we avoid adding this module if no predictive monitoring
+    # is being used?
+    output.write(stripped_python_file(modules_dir + "/prediction.py"))
+
     # initialize global variables
     output.write("""
 # very simple commandline parsing: only -v and -d are supported
@@ -2675,7 +2677,8 @@ no_inventory_possible = None
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
                  'check_result_path', 'check_submission',
                  'var_dir', 'counters_directory', 'tcp_cache_dir', 'tmp_dir',
-                 'snmpwalks_dir', 'check_mk_basedir', 'nagios_user',
+                 'snmpwalks_dir', 'check_mk_basedir', 'nagios_user', 'rrd_path', 'rrdcached_socket',
+                 'omd_root',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
                  'piggyback_max_cachefile_age',
                  'simulation_mode', 'agent_simulator', 'aggregate_check_mk', 'debug_log',
@@ -4473,8 +4476,6 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
         if '--scan-parents' in sys.argv and _f.endswith("/parents.mk"):
             continue
         try:
-            if opt_debug:
-                sys.stderr.write("Reading config file %s...\n" % _f)
             _old_all_hosts = all_hosts[:]
             _old_clusters = clusters.keys()
             # Make the config path available as a global variable to

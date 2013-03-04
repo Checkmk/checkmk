@@ -94,12 +94,13 @@ def check_diskstat_line(this_time, item, params, line):
     perfdata = []
     infos = []
     status = 0
+    prediction_perf = []
     for what, ctr in [ ("read",  line[1]), ("write", line[2]) ]:
         countername = "diskstat.%s.%s" % (item, what)
 
         # unpack levels now, need also for perfdata
         levels = params.get(what)
-        if levels:
+        if type(levels) == tuple:
             warn, crit = levels
         else:
             warn, crit = None, None
@@ -109,22 +110,22 @@ def check_diskstat_line(this_time, item, params, line):
         bytes_per_sec = sectors_per_sec * 512
         infos.append("%s/sec %s" % (get_bytes_human_readable(bytes_per_sec), what))
         perfdata.append( (what, bytes_per_sec, warn, crit) )
+        dsname = what
 
         # compute average of the rate over ___ minutes
         if average_range != None:
             timedif, avg = get_average(countername + ".avg", this_time, bytes_per_sec, average_range)
-            perfdata.append( (what + ".avg", avg) )
+            dsname = what + ".avg"
+            perfdata.append( (dsname, avg) )
             bytes_per_sec = avg
 
         # check levels
-        if levels != None:
-            mb_per_sec = bytes_per_sec / 1048576
-            if mb_per_sec >= crit:
-                status = 2
-                infos[-1] += "(!!)"
-            elif mb_per_sec >= warn:
-                status = max(status, 1)
-                infos[-1] += "(!)"
+        state, text, extraperf = check_levels(bytes_per_sec, dsname, levels, 
+                                              unit = "MB/s", factor = 1.0 / 1048576, statemarkers=True)
+        if text:
+            infos.append(text)
+        status = max(state, status)
+        prediction_perf += extraperf
 
     # Add performance data for averaged IO
     if average_range != None:
@@ -191,8 +192,9 @@ def check_diskstat_line(this_time, item, params, line):
             if params.get("ql_perfdata"):
                 perfdata.append((what + "_ql", ql))
 
+    perfdata += prediction_perf
 
-    return (status, nagios_state_names[status] + " - " + ", ".join(infos) , perfdata)
+    return (status, ", ".join(infos) , perfdata)
 
 
 def check_diskstat_generic(item, params, this_time, info):

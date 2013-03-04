@@ -201,7 +201,7 @@ function render_point(t, v, color)
 }
 
 
-function render_curve(points, color, w)
+function render_curve(points, color, w, square)
 {
     var canvas = document.getElementById(canvas_id);
     var c = canvas.getContext('2d');
@@ -210,6 +210,7 @@ function render_curve(points, color, w)
     c.strokeStyle = color;
     c.lineWidth = w;
 
+    var op;
     var time_step = (until_time - from_time) / points.length;
     var first = true;
     for (i=0; i<points.length; i++) {
@@ -223,8 +224,12 @@ function render_curve(points, color, w)
             c.moveTo(p[0], p[1]);
             first = false;
         }
-        else
+        else {
+            if (square)
+                c.lineTo(p[0], op[1]);
             c.lineTo(p[0], p[1]);
+        }
+        op = p;
     }
     c.stroke();
 }

@@ -124,13 +124,13 @@ def page_graph():
 
     if "levels_lower" in timegroup:
         render_dual_area(swapped["average"], swapped["lower_warn"], "#ffffff", 0.5)
-        render_curve(swapped["lower_warn"], "#e0e000")
-        render_curve(swapped["lower_crit"], "#f0b0a0")
+        render_curve(swapped["lower_warn"], "#e0e000", square=True)
+        render_curve(swapped["lower_crit"], "#f0b0a0", square=True)
 
     if "levels_upper" in timegroup:
         render_dual_area(swapped["upper_warn"], swapped["average"], "#ffffff", 0.5)
-        render_curve(swapped["upper_warn"], "#e0e000")
-        render_curve(swapped["upper_crit"], "#f0b0b0")
+        render_curve(swapped["upper_warn"], "#e0e000", square=True)
+        render_curve(swapped["upper_crit"], "#f0b0b0", square=True)
     render_curve(swapped["average"], "#000000")
     render_curve(swapped["average"], "#000000")
     # render_curve(stack(swapped["average"], swapped["stdev"], -1),  "#008040")
@@ -168,14 +168,22 @@ def compute_vertical_scala(low, high):
 
     v = 0
     vert_scala = []
+    steps = (max(0, high) - min(0, low)) / factor
+    if steps < 3:
+        step = 0.2 * factor
+    elif steps < 6:
+        step = 0.5 * factor
+    else:
+        step = factor
+
     while v <= max(0, high):
         vert_scala.append( [v, "%.1f%s" % (v / factor, letter)] )
-        v += factor
+        v += step
 
     v = -factor
     while v >= min(0, low):
         vert_scala = [ [v, "%.1f%s" % (v / factor, letter)] ] + vert_scala
-        v -= factor
+        v -= step
 
     return vert_scala
 
@@ -255,8 +263,9 @@ def render_coordinates(v_scala, t_scala):
     html.javascript('render_coordinates(%r, %r);' % (v_scala, t_scala))
 
 
-def render_curve(points, color, width=1):
-    html.javascript('render_curve(%r, %r, %d);' % (points, color, width))
+def render_curve(points, color, width=1, square=False):
+    html.javascript('render_curve(%r, %r, %d, %d);' % (
+              points, color, width, square and 1 or 0))
 
 def render_point(t, v, color):
     html.javascript('render_point(%r, %r, %r);' % (t, v, color))

@@ -1272,7 +1272,11 @@ def nodes_of(hostname):
 
 # Generic function for checking a value against levels. This also support
 # predictive levels.
-def check_levels(value, dsname, params, factor = 1.0):
+def check_levels(value, dsname, params, unit = "", factor = 1.0, statemarkers=False):
+
+    if params == None or params == (None, None):
+        return 0, "", []
+
     perfdata = []
     infotext = ""
 
@@ -1287,12 +1291,12 @@ def check_levels(value, dsname, params, factor = 1.0):
         ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
             get_predictive_levels(dsname, params, "MAX", levels_factor=factor)
         if ref_value:
-            infotext += ", predicted reference: %.2f" % ref_value
+            infotext += "predicted reference: %.2f%s" % (ref_value * factor, unit)
         else:
-            infotext += ", no reference for prediction yet"
+            infotext += "no reference for prediction yet"
 
     if ref_value:
-        perfdata.append(('predict_load15', ref_value))
+        perfdata.append(('predict_' + dsname, ref_value))
 
     # Critical cases
     if crit_upper != None and value >= crit_upper:
@@ -1314,6 +1318,11 @@ def check_levels(value, dsname, params, factor = 1.0):
     else:
         state = 0
 
+    if state and statemarkers:
+        if state == 1:
+            infotext += "(!)"
+        else:
+            infotext += "(!!)"
     return state, infotext, perfdata
 
 

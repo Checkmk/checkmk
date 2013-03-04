@@ -2043,19 +2043,17 @@ checkgroups.append((
     Dictionary(
         elements = [
             ( "read",
-              Tuple(
+              Levels(
                   title = _("Read throughput"),
-                  elements = [
-                      Float(title = _("warning at"), unit = _("MB/s")),
-                      Float(title = _("critical at"), unit = _("MB/s"))
-                  ])),
+                  unit = _("MB/s"),
+                  default_value = None,
+                  default_levels = (50.0, 100.0))),
             ( "write",
-              Tuple(
+              Levels(
                   title = _("Write throughput"),
-                  elements = [
-                      Float(title = _("warning at"), unit = _("MB/s")),
-                      Float(title = _("critical at"), unit = _("MB/s"))
-                  ])),
+                  unit = _("MB/s"),
+                  default_value = None,
+                  default_levels = (50.0, 100.0))),
             ( "average",
               Integer(
                   title = _("Average"),

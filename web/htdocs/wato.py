@@ -10824,7 +10824,8 @@ def PredictiveLevels(**args):
                     title = _("Base prediction on"),
                     choices = [
                         ( "wday", _("Day of the week (00:00 - 24:00 in local time)") ),
-                        ( "day", _("Hour of the day") ),
+                        ( "day",  _("Hour of the day") ),
+                        ( "hour", _("Minute of the hour (00-59)") ),
                     ]
              )),
              ( "horizon",
@@ -10907,10 +10908,19 @@ def PredictiveLevels(**args):
 
 # To be used as ValueSpec for levels on numeric values, with
 # prediction
+def match_levels_alternative(v):
+    if type(v) == dict:
+        return 2
+    elif type(v) == tuple and v != (None, None):
+        return 1
+    else:
+        return 0
+
 def Levels(**kwargs):
     help = kwargs.get("help")
     unit = kwargs.get("unit")
-    default_levels = kwargs.get("default_levels", (None, None))
+    title = kwargs.get("title")
+    default_levels = kwargs.get("default_levels", (0.0, 0.0))
     default_difference = kwargs.get("default_difference", (0,0))
     if "default_value" in kwargs:
         default_value = kwargs["default_value"]
@@ -10918,6 +10928,7 @@ def Levels(**kwargs):
         default_value = default_levels and default_levels or None
 
     return Alternative(
+          title = title,
           help = help,
           show_titles = False,
           elements = [
@@ -10937,6 +10948,7 @@ def Levels(**kwargs):
                   default_difference = default_difference,
               ),
           ],
+          match = match_levels_alternative,
           default_value = default_value,
     )
 

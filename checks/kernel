@@ -67,7 +67,9 @@ def check_kernel(item, params, info):
     perfdata = [ (counter, per_sec, warn, crit) ]
     state, text, extraperf = check_levels(per_sec, counter, params)
     perfdata += extraperf
-    infotext = "%.0f/s in last %d secs%s" % (per_sec, timedif, text)
+    infotext = "%.0f/s in last %d secs" % (per_sec, timedif)
+    if text:
+        infotext += ", " + text
     return state, infotext, perfdata
 
 kernel_util_default_levels = None

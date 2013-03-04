@@ -54,7 +54,9 @@ def check_cpu_load(item, params, info):
 
     state, text, perf = check_levels(load[2], 'load15', params, factor = num_cpus)
     perfdata += perf
-    infotext = "15min load %.2f at %d CPUs%s" % (load[2], num_cpus, text)
+    infotext = "15min load %.2f at %d CPUs" % (load[2], num_cpus)
+    if text:
+        infotext += ", " + text
     return state, infotext, perfdata
 
 def inventory_cpu_threads(info):

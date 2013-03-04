@@ -129,6 +129,9 @@ def group_by_wday(t):
 def group_by_day(t):
     return "everyday", (t - time.timezone) % 86400
 
+def group_by_everyhour(t):
+    return "everyhour", (t - time.timezone) % 3600
+
 prediction_periods = {
     "wday" : {
         "slice" : 86400,
@@ -138,6 +141,11 @@ prediction_periods = {
     "day" : {
         "slice" : 86400,
         "groupby" : group_by_day,
+        "valid" : 1,
+    },
+    "hour" : {
+        "slice" : 3600,
+        "groupby" : group_by_everyhour,
         "valid" : 1,
     }
 }

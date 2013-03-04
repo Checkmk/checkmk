@@ -4,3 +4,4 @@ if [ -e /etc/check_mk ]
 then
     sudo install -m 644 logwatch.cfg /etc/check_mk/
 fi
+sudo install -m 755 check_mk_agent.linux /usr/bin/check_mk_agent

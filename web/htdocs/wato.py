@@ -5647,16 +5647,10 @@ def save_configuration_vars(vars, filename):
 #   | Mode for editing host-, service- and contact groups                  |
 #   '----------------------------------------------------------------------'
 
-# Check if a group is currently in use and cannot be deleted
-# Returns a list of occurrances.
-# Possible usages:
-# - 1. rules: host to contactgroups, services to contactgroups
-# - 2. user memberships
-def find_usage_of_contact_groups(name):
-    # Part 1: Rules
+def find_usages_of_group_in_rules(name, varnames):
     used_in = []
     rulesets = load_all_rulesets()
-    for varname in [ 'host_contactgroups', 'service_contactgroups' ]:
+    for varname in varnames:
         ruleset  = rulesets[varname]
         rulespec = g_rulespecs[varname]
         for folder, rule in ruleset:
@@ -5664,6 +5658,16 @@ def find_usage_of_contact_groups(name):
             if value == name:
                 used_in.append(("%s: %s" % (_("Ruleset"), g_rulespecs[varname]["title"]),
                                make_link([("mode", "edit_ruleset"), ("varname", varname)])))
+    return used_in
+
+# Check if a group is currently in use and cannot be deleted
+# Returns a list of occurrances.
+# Possible usages:
+# - 1. rules: host to contactgroups, services to contactgroups
+# - 2. user memberships
+def find_usages_of_contact_group(name):
+    # Part 1: Rules
+    used_in = find_usages_of_group_in_rules(name, [ 'host_contactgroups', 'service_contactgroups' ])
 
     # Is the contactgroup assigned to a user?
     users = filter_hidden_users(userdb.load_users())
@@ -5698,6 +5702,12 @@ def find_usage_of_contact_groups(name):
 
     return used_in
 
+def find_usages_of_host_group(name):
+    return find_usages_of_group_in_rules(name, [ 'host_groups' ])
+
+def find_usages_of_service_group(name):
+    return find_usages_of_group_in_rules(name, [ 'service_groups' ])
+
 def mode_groups(phase, what):
     if what == "host":
         what_name = _("host groups")
@@ -5727,23 +5737,24 @@ def mode_groups(phase, what):
         delname = html.var("_delete")
 
         if what == 'contact':
-            usages = find_usage_of_contact_groups(delname)
-            if usages:
-                message = "<b>%s</b><br>%s:<ul>" % \
-                            (_("You cannot delete this contactgroup."),
-                             _("It is still in use by"))
-                for title, link in usages:
-                    message += '<li><a href="%s">%s</a></li>\n' % (link, title)
-                message += "</ul>"
-                raise MKUserError(None, message)
+            usages = find_usages_of_contact_group(delname)
+        elif what == 'host':
+            usages = find_usages_of_host_group(delname)
+        elif what == 'service':
+            usages = find_usages_of_service_group(delname)
 
-            confirm_txt = _('Do you really want to delete the %s group %s?') % (what, delname)
-        else:
-            confirm_txt = _("Do you really want to delete the %s group %s? If there are still objects "
-                            "assigned to that group, the group will kept up (but without an alias). "
-                            "Removing all objects from the will make the group disappear completely. ") % (what, delname)
+        if usages:
+            message = "<b>%s</b><br>%s:<ul>" % \
+                        (_("You cannot delete this %s group.") % what,
+                         _("It is still in use by"))
+            for title, link in usages:
+                message += '<li><a href="%s">%s</a></li>\n' % (link, title)
+            message += "</ul>"
+            raise MKUserError(None, message)
 
-        c = wato_confirm(_("Confirm deletion of group %s" % delname), confirm_txt)
+        confirm_txt = _('Do you really want to delete the %s group "%s"?') % (what, delname)
+
+        c = wato_confirm(_("Confirm deletion of group \"%s\"" % delname), confirm_txt)
         if c:
             del groups[delname]
             save_group_information(all_groups)
@@ -5952,7 +5963,7 @@ def mode_timeperiods(phase):
     if phase == "action":
         delname = html.var("_delete")
         if html.transaction_valid():
-            usages = find_usage_of_timeperiod(delname)
+            usages = find_usages_of_timeperiod(delname)
             if usages:
                 message = "<b>%s</b><br>%s:<ul>" % \
                             (_("You cannot delete this timeperiod."),
@@ -6296,7 +6307,7 @@ class TimeperiodSelection(ElementSelection):
 # - 1. rules: service/host-notification/check-period
 # - 2. user accounts (notification period)
 # - 3. excluded by other timeperiods
-def find_usage_of_timeperiod(tpname):
+def find_usages_of_timeperiod(tpname):
 
     # Part 1: Rules
     used_in = []

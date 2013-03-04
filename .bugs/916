@@ -1,9 +1,9 @@
 Title: Contactgroup deletion does not affect rules / Rules break on next save
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2013-02-07 11:10:41
 Targetversion: 1.2.2
-Class: bug
 
 When having a contactgroup and a rule which assignes the group,
 then deleting the group, the rule still points to the group.
@@ -12,3 +12,6 @@ When opening the edit dialog for that rule, the configured
 value can not be selected anymore, since the value does not
 exist in the dropdown field. The first element is selected
 . When saving this rule it changes the value! this is bad.
+
+2013-03-04 12:06:07: changed state open -> done
+Added checks to find all places where this contactgroup could be referenced

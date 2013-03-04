@@ -5647,6 +5647,67 @@ def save_configuration_vars(vars, filename):
 #   | Mode for editing host-, service- and contact groups                  |
 #   '----------------------------------------------------------------------'
 
+def find_usages_of_group_in_rules(name, varnames):
+    used_in = []
+    rulesets = load_all_rulesets()
+    for varname in varnames:
+        ruleset  = rulesets[varname]
+        rulespec = g_rulespecs[varname]
+        for folder, rule in ruleset:
+            value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
+            if value == name:
+                used_in.append(("%s: %s" % (_("Ruleset"), g_rulespecs[varname]["title"]),
+                               make_link([("mode", "edit_ruleset"), ("varname", varname)])))
+    return used_in
+
+# Check if a group is currently in use and cannot be deleted
+# Returns a list of occurrances.
+# Possible usages:
+# - 1. rules: host to contactgroups, services to contactgroups
+# - 2. user memberships
+def find_usages_of_contact_group(name):
+    # Part 1: Rules
+    used_in = find_usages_of_group_in_rules(name, [ 'host_contactgroups', 'service_contactgroups' ])
+
+    # Is the contactgroup assigned to a user?
+    users = filter_hidden_users(userdb.load_users())
+    entries = users.items()
+    entries.sort(cmp = lambda a, b: cmp(a[1].get("alias"), b[1].get("alias")))
+    for userid, user in entries:
+        cgs = user.get("contactgroups", [])
+        if name in cgs:
+            used_in.append(('%s: %s' % (_('User'), user.get('alias')),
+                make_link([('mode', 'edit_user'), ('edit', userid)])))
+
+    global_config = load_configuration_settings()
+
+    # Used in default_user_profile?
+    domain, valuespec, need_restart, allow_reset = g_configvars['default_user_profile']
+    configured = global_config.get('default_user_profile', {})
+    default_value = valuespec.default_value()
+    if (configured and name in configured['contactgroups']) \
+       or name in  default_value['contactgroups']:
+        used_in.append(('%s' % (_('Default User Profile')),
+            make_link([('mode', 'edit_configvar'), ('varname', 'default_user_profile')])))
+
+    # Is the contactgroup used in mkeventd notify (if available)?
+    if 'mkeventd_notify_contactgroup' in g_configvars:
+        domain, valuespec, need_restart, allow_reset = g_configvars['mkeventd_notify_contactgroup']
+        configured = global_config.get('mkeventd_notify_contactgroup')
+        default_value = valuespec.default_value()
+        if (configured and name == configured) \
+           or name == default_value:
+            used_in.append(('%s' % (valuespec.title()),
+                make_link([('mode', 'edit_configvar'), ('varname', 'mkeventd_notify_contactgroup')])))
+
+    return used_in
+
+def find_usages_of_host_group(name):
+    return find_usages_of_group_in_rules(name, [ 'host_groups' ])
+
+def find_usages_of_service_group(name):
+    return find_usages_of_group_in_rules(name, [ 'service_groups' ])
+
 def mode_groups(phase, what):
     if what == "host":
         what_name = _("host groups")
@@ -5676,30 +5737,24 @@ def mode_groups(phase, what):
         delname = html.var("_delete")
 
         if what == 'contact':
-            # Is the contactgroup in use?
-            member_links = []
-            users = filter_hidden_users(userdb.load_users())
-            entries = users.items()
-            entries.sort(cmp = lambda a, b: cmp(a[1].get("alias"), b[1].get("alias")))
-            for id, user in entries:
-                cgs   = user.get("contactgroups", [])
-                if delname in cgs:
-                    member_links.append('<a href="%s">%s</a>' %
-                        (make_link([('mode', 'edit_user'), ('edit', id)]), user.get('alias')))
+            usages = find_usages_of_contact_group(delname)
+        elif what == 'host':
+            usages = find_usages_of_host_group(delname)
+        elif what == 'service':
+            usages = find_usages_of_service_group(delname)
 
-            if member_links:
-                raise MKUserError(None,
-                    _('Unable to delete the group %s. It still has the following members: %s. '
-                      ' You must first remove all members from the group to be able to delete the group.') %
-                                                         (delname, ', '.join(member_links)))
+        if usages:
+            message = "<b>%s</b><br>%s:<ul>" % \
+                        (_("You cannot delete this %s group.") % what,
+                         _("It is still in use by"))
+            for title, link in usages:
+                message += '<li><a href="%s">%s</a></li>\n' % (link, title)
+            message += "</ul>"
+            raise MKUserError(None, message)
 
-            confirm_txt = _('Do you really want to delete the %s group %s?') % (what, delname)
-        else:
-            confirm_txt = _("Do you really want to delete the %s group %s? If there are still objects "
-                            "assigned to that group, the group will kept up (but without an alias). "
-                            "Removing all objects from the will make the group disappear completely. ") % (what, delname)
+        confirm_txt = _('Do you really want to delete the %s group "%s"?') % (what, delname)
 
-        c = wato_confirm(_("Confirm deletion of group %s" % delname), confirm_txt)
+        c = wato_confirm(_("Confirm deletion of group \"%s\"" % delname), confirm_txt)
         if c:
             del groups[delname]
             save_group_information(all_groups)
@@ -5908,7 +5963,7 @@ def mode_timeperiods(phase):
     if phase == "action":
         delname = html.var("_delete")
         if html.transaction_valid():
-            usages = find_usage_of_timeperiod(delname)
+            usages = find_usages_of_timeperiod(delname)
             if usages:
                 message = "<b>%s</b><br>%s:<ul>" % \
                             (_("You cannot delete this timeperiod."),
@@ -6252,7 +6307,7 @@ class TimeperiodSelection(ElementSelection):
 # - 1. rules: service/host-notification/check-period
 # - 2. user accounts (notification period)
 # - 3. excluded by other timeperiods
-def find_usage_of_timeperiod(tpname):
+def find_usages_of_timeperiod(tpname):
 
     # Part 1: Rules
     used_in = []

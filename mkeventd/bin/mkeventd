@@ -782,8 +782,9 @@ class EventServer:
         # read data that is not yet processed. Map from
         # fd to (fileobject, data)
         client_sockets = {}
+        select_timeout = 1
         while True:
-            readable = select.select(listen_list + client_sockets.keys(), [], [], None)[0]
+            readable = select.select(listen_list + client_sockets.keys(), [], [], select_timeout)[0]
             data = None
 
             # Accept new connection on event unix socket
@@ -826,7 +827,6 @@ class EventServer:
                     else:
                         cs.close()
                         del client_sockets[fd]
-                    
 
             # Read data from pipe
             if pipe in readable:
@@ -862,6 +862,20 @@ class EventServer:
             # Read events from builtin syslog server
             if self._syslog != None and self._syslog.fileno() in readable:
                 self.process_event_data(self._syslog.recv(4096))
+
+            # check wether or not spool files are available
+            spool_dir = g_state_dir + "/spool"
+            if os.path.exists(spool_dir):
+                spool_files = [ f for f in os.listdir(spool_dir) if f[0] != '.' ]
+                if spool_files:
+                    # progress the first spool file we get
+                    this_path = spool_dir + '/' + spool_files.pop()
+                    self.process_event_data(file(this_path).read())
+                    os.remove(this_path)
+                    if spool_files:
+                        select_timeout = 0 # enable fast processing to process further files
+                else:
+                    select_timeout = 1 # restore default select timeout
 
             if opt_profile.get("event"):
                 return

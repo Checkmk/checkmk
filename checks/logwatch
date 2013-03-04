@@ -414,7 +414,7 @@ def syslog_time():
     value = time.strftime("%b %%d %H:%M:%S", localtime)
     return value % day
 
-def check_logwatch_ec(_unused, params, info):
+def check_logwatch_ec(item, params, info):
     # 1. Parse lines in info and separate by logfile
     logs = []
     logfile = None
@@ -446,36 +446,52 @@ def check_logwatch_ec(_unused, params, info):
     # c) remote via udp
     # d) remote via tcp
     method = params.get('method')
-    if method == None:
+    if not method:
         method = os.getenv('OMD_ROOT') + "/tmp/run/mkeventd/eventsocket"
+    elif method == 'spool:':
+        method += os.getenv('OMD_ROOT') + "/var/mkeventd/spool"
 
+    num_messages = len(messages)
     try:
-        if isinstance(method, tuple):
-            # connect either via tcp or udp
-            if method[0] == 'udp':
-                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        if messages:
+            if isinstance(method, tuple):
+                # connect either via tcp or udp
+                if method[0] == 'udp':
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                else:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.connect((method[1], method[2]))
+                for message in messages:
+                    sock.send(message)
+                sock.close()
+
+            elif not method.startswith('spool:'):
+                # write into local event pipe
+                # Important: When the event daemon is stopped, then the pipe
+                # is *not* existing! This prevents us from hanging in such
+                # situations. So we must make sure that we do not create a file
+                # instead of the pipe!
+                sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                sock.connect(method)
+                sock.send('\n'.join(messages) + '\n')
+                sock.close()
+
             else:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((method[1], method[2]))
-            for message in messages:
-                sock.send(message)
-            sock.close()
+                # Spool the log messages to given spool directory.
+                # First write a file which is not read into ec, then
+                # perform the move to make the file visible for ec
+                spool_path = method[6:]
+                file_name  = '.%s_%s%d' % (g_hostname, item and item.replace('/', '\\') + '_' or '', time.time())
+                print spool_path
+                if not os.path.exists(spool_path):
+                    os.makedirs(spool_path)
+                file('%s/%s' % (spool_path, file_name), 'w').write('\n'.join(messages) + '\n')
+                os.rename('%s/%s' % (spool_path, file_name), '%s/%s' % (spool_path, file_name[1:]))
 
-        else:
-            # write into local event pipe
-            # Important: When the event daemon is stopped, then the pipe
-            # is *not* existing! This prevents us from hanging in such
-            # situations. So we must make sure that we do not create a file
-            # instead of the pipe!
-            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            sock.connect(method)
-            sock.send('\n'.join(messages) + '\n')
-            sock.close()
-
-        num_messages = len(messages)
         return (0, 'OK - Forwarded %d messages to event console' % num_messages, [('messages', num_messages)])
     except Exception, e:
-        return (2, 'CRITICAL - Unable to forward messages to event console (%s)' % e)
+        return (2, 'CRITICAL - Unable to forward messages to event console (%s). Lost %d messages.' %
+                (e, num_messages))
 
 check_info['logwatch.ec'] = {
     'check_function':      check_logwatch_ec,

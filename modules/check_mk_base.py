@@ -1288,12 +1288,15 @@ def check_levels(value, dsname, params, unit = "", factor = 1.0, statemarkers=Fa
 
     # Dictionary -> predictive levels
     else:
-        ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
-            get_predictive_levels(dsname, params, "MAX", levels_factor=factor)
-        if ref_value:
-            infotext += "predicted reference: %.2f%s" % (ref_value * factor, unit)
-        else:
-            infotext += "no reference for prediction yet"
+        try:
+            ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
+                get_predictive_levels(dsname, params, "MAX", levels_factor=factor)
+            if ref_value:
+                infotext += "predicted reference: %.2f%s" % (ref_value * factor, unit)
+            else:
+                infotext += "no reference for prediction yet"
+        except Exception, e:
+            return 3, "%s" % e, []
 
     if ref_value:
         perfdata.append(('predict_' + dsname, ref_value))

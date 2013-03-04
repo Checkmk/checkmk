@@ -26,8 +26,10 @@
 
 def inventory_mounts(info):
     inventory = []
+    devices = []
     for dev, mp, fstype, options, dump, fsck in info:
-        if fstype not in [ 'tmpfs' ]:
+        if fstype not in [ 'tmpfs' ] and dev not in devices:
+            devices.append(dev) 
             opts = options.split(",")
             opts.sort()
             inventory.append( (mp, opts) )

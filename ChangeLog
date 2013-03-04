@@ -1,4 +1,8 @@
 1.2.2b5:
+    Core:
+    * Checks can now omit the typical "OK - " or "WARN -". This text
+      will be added automatically if missing.
+
     livestatus:
     * FIX: possible crash with VERY long downtime comments
 

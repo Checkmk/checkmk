@@ -34,6 +34,7 @@
     * FIX: sidebar snapins which refresh do not register for restart detection anymore
     * FIX: stop doing snapin refreshes after they have been removed
     * FIX: fix user database corruption in case of a race condition
+    * FIX: added checks wether or not a contactgroup can be deleted
     * Changed sidebar snapin reload to a global interval (option:
       sidebar_update_interval), defaults to 30 seconds
     * Sidebar snapins are now bulk updated with one HTTP request each interval

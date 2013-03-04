@@ -1,10 +1,13 @@
 Title: function paint_aggr_tree_foldable is not defiened
 Component: bi
-State: open
+Class: bug
+State: done
 Date: 2013-02-01 11:33:32
 Targetversion: 1.2.2
-Class: bug
 
 View painter paint_aggr_tree_foldable is used:
 web/plugins/views/bi.py:    "paint"   : lambda row: paint_aggr_tree_foldable(row, boxes = True, omit_root = True),
 but nowhere defined
+
+2013-03-04 10:57:06: changed state open -> done
+already solved. This code does not exist anymore.

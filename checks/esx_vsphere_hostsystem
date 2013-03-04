@@ -30,6 +30,47 @@ def esx_vsphere_hostsystem_convert(info):
         data[line[0]] = line[1:]
     return data
 
+
+esx_host_cpu_default = ( 80.0, 90.0 )
+
+def inventory_esx_vsphere_hostsystem_cpu(info):
+    data = esx_vsphere_hostsystem_convert(info).keys()
+    if 'summary.quickStats.overallCpuUsage' in data \
+        and 'hardware.cpuInfo.hz' in data\
+        and 'hardware.cpuInfo.numCpuCores' in data:
+        return [(None, esx_host_cpu_default)]
+
+def check_esx_vsphere_hostsystem_cpu(item, params, info):
+    data = esx_vsphere_hostsystem_convert(info)
+    cpu_usage = savefloat(data['summary.quickStats.overallCpuUsage'][0]) * 1024 * 1024
+    cpu_size  = savefloat(data['hardware.cpuInfo.hz'][0]) * savefloat(data['hardware.cpuInfo.numCpuCores'][0])
+    level = cpu_usage / cpu_size * 100
+    warn, crit = params
+    state = 0
+    label = ''
+    if level > crit:
+        state = 2
+        label = "(!!) (Levels at %d%%/%d%%)" % (warn, crit)
+    elif level > warn:
+        state = 1
+        label = "(!) (Levels at %d%%/%d%%)" % (warn, crit)
+
+    message = " - CPU usage: %d%%%s %s/%s" % \
+    (level, label, get_bytes_human_readable(cpu_usage,1000,True,"Hz"), get_bytes_human_readable(cpu_size,1000,True,"Hz"))
+    perf = [("usage", cpu_usage, warn, crit, 0, cpu_size)]
+    return(state, nagios_state_names[state] + message, perf)
+
+
+check_info['esx_vsphere_hostsystem.cpu_usage'] = {
+   "inventory_function"  : inventory_esx_vsphere_hostsystem_cpu,
+   "check_function"      : check_esx_vsphere_hostsystem_cpu,
+   "service_description" : "ESX CPU usage",
+   "group"               : "cpu_utilization",
+   "has_perfdata"        : True
+}
+
+
+
 esx_host_mem_default = ( 80.0, 90.0 )
 
 def inventory_esx_vsphere_hostsystem_mem(info):
@@ -119,6 +160,7 @@ def esx_vsphere_multipath_convert(info):
         path_type, path_id = path.split('-')[-1].split('.')
         if path_type in ['naa', 'eui']:
             paths.setdefault(path_id, [])
+            path_type = "%s/%s" % (path_type, path.split('.')[0])
             paths[path_id].append((state, path_type))
     return paths
 

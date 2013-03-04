@@ -26,10 +26,7 @@
 
 import mkeventd
 
-try:
-    mkeventd_enabled = config.mkeventd_enabled
-except:
-    mkeventd_enabled = False
+mkeventd_enabled = config.mkeventd_enabled
 
 # main_config_file = defaults.check_mk_configdir + "/mkeventd.mk"
 mkeventd_config_dir  = defaults.default_config_dir + "/mkeventd.d/wato/"
@@ -1833,20 +1830,9 @@ register_rule(
 #   | Stuff for sending monitoring notifications into the event console.   |
 #   '----------------------------------------------------------------------'
 def mkeventd_update_notifiation_configuration(hosts):
-    try:
-        contactgroup = config.mkeventd_notify_contactgroup
-    except:
-        contactgroup = None
+    contactgroup   = config.mkeventd_notify_contactgroup
+    remote_console = config.mkeventd_notify_remotehost
 
-    try:
-        facility = config.mkeventd_notify_facility
-    except:
-        facility = 16
-
-    try:
-        remote_console = config.mkeventd_notify_remotehost
-    except:
-        remote_console = None
     if not remote_console:
         remote_console = ""
 
@@ -1880,7 +1866,7 @@ define command {
     command_name                   mkeventd-notify-service
     command_line                   mkevent -n %(facility)s '%(remote)s' $SERVICESTATEID$ '$HOSTNAME$' '$SERVICEDESC$' '$SERVICEOUTPUT$' '$_SERVICEEC_SL$' '$_SERVICEEC_CONTACT$' '$_HOSTEC_SL$' '$_HOSTEC_CONTACT$' 
 }
-""" % { "group" : contactgroup, "facility" : facility, "remote" : remote_console })
+""" % { "group" : contactgroup, "facility" : config.mkeventd_notify_facility, "remote" : remote_console })
 
 api.register_hook("pre-activate-changes", mkeventd_update_notifiation_configuration)
 

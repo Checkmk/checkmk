@@ -123,7 +123,7 @@ def load_config():
     modification_timestamps = []
 
     # Set default values for all user-changable configuration settings
-    load_default_values(globals())
+    load_plugins()
 
     # First load main file
     include("multisite.mk")
@@ -408,213 +408,22 @@ def read_site_config():
 def save_site_config():
     save_user_file("siteconfig", user_siteconf)
 
+# Datastructures and functions needed before plugins can be loaded
+loaded_with_language = False
 
-# This function is used for loading default values
-# into *global* variables. We need this here, since
-# we need to re-initialize these values every time
-# that we read multisite.mk (because of mod_python
-# makes those persist during HTTP requests).
-def load_default_values(into):
-    #    ____       _
-    #   |  _ \ ___ | | ___  ___
-    #   | |_) / _ \| |/ _ \/ __|
-    #   |  _ < (_) | |  __/\__ \
-    #   |_| \_\___/|_|\___||___/
-    #
-    into["roles"] = {} # User supplied roles
+# Load all view plugins
+def load_plugins():
+    global loaded_with_language
+    if loaded_with_language == current_language:
+        return
 
-    # define default values for all settings
-    into["debug"]             = False
-    into["profile"]           = False
-    into["users"]             = []
-    into["admin_users"]       = []
-    into["guest_users"]       = []
-    into["default_user_role"] = "user"
+    load_web_plugins("config", globals())
 
-    # New style, used by WATO
-    into["multisite_users"] = {}
-
-    #    ____  _     _      _
-    #   / ___|(_) __| | ___| |__   __ _ _ __
-    #   \___ \| |/ _` |/ _ \ '_ \ / _` | '__|
-    #    ___) | | (_| |  __/ |_) | (_| | |
-    #   |____/|_|\__,_|\___|_.__/ \__,_|_|
-    #
-
-    into["sidebar"] = \
-    [('tactical_overview', 'open'),
-     ('search',            'open'),
-     ('views',             'open'),
-     ('bookmarks',         'open'),
-     ('admin',             'open'),
-     ('master_control',    'closed')]
-
-    #    _     _           _ _
-    #   | |   (_)_ __ ___ (_) |_ ___
-    #   | |   | | '_ ` _ \| | __/ __|
-    #   | |___| | | | | | | | |_\__ \
-    #   |_____|_|_| |_| |_|_|\__|___/
-    #
-
-    into["soft_query_limit"] = 1000
-    into["hard_query_limit"] = 5000
-
-    #    ____                        _
-    #   / ___|  ___  _   _ _ __   __| |___
-    #   \___ \ / _ \| | | | '_ \ / _` / __|
-    #    ___) | (_) | |_| | | | | (_| \__ \
-    #   |____/ \___/ \__,_|_| |_|\__,_|___/
-    #
-
-    into["sound_url"] = "sounds/"
-    into["enable_sounds"] = False
-    into["sounds"] = [
-     ( "down",     "down.wav" ),
-     ( "critical", "critical.wav" ),
-     ( "unknown",  "unknown.wav" ),
-     ( "warning",  "warning.wav" ),
-    # ( None,       "ok.wav" ),
-    ]
-
-
-    #   __     ___                             _   _
-    #   \ \   / (_) _____      __   ___  _ __ | |_(_) ___  _ __  ___
-    #    \ \ / /| |/ _ \ \ /\ / /  / _ \| '_ \| __| |/ _ \| '_ \/ __|
-    #     \ V / | |  __/\ V  V /  | (_) | |_) | |_| | (_) | | | \__ \
-    #      \_/  |_|\___| \_/\_/    \___/| .__/ \__|_|\___/|_| |_|___/
-    #                                   |_|
-
-    into["view_option_refreshes"] = [ 30, 60, 90, 0 ]
-    into["view_option_columns"]   = [ 1, 2, 3, 4, 5, 6, 8 ]
-
-    # MISC
-    into["doculink_urlformat"] = "http://mathias-kettner.de/checkmk_%s.html";
-
-
-    #   ____          _                    _     _       _
-    #  / ___|   _ ___| |_ ___  _ __ ___   | |   (_)_ __ | | _____
-    # | |  | | | / __| __/ _ \| '_ ` _ \  | |   | | '_ \| |/ / __|
-    # | |__| |_| \__ \ || (_) | | | | | | | |___| | | | |   <\__ \
-    #  \____\__,_|___/\__\___/|_| |_| |_| |_____|_|_| |_|_|\_\___/
-    #
-
-    into["custom_links"] = {}
-
-    #  __     __         _
-    #  \ \   / /_ _ _ __(_) ___  _   _ ___
-    #   \ \ / / _` | '__| |/ _ \| | | / __|
-    #    \ V / (_| | |  | | (_) | |_| \__ \
-    #     \_/ \__,_|_|  |_|\___/ \__,_|___/
-    #
-
-    into["debug_livestatus_queries"] = False
-
-    # Show livestatus errors in multi site setup if some sites are
-    # not reachable.
-    into["show_livestatus_errors"] = True
-
-    # Set this to a list in order to globally control which views are
-    # being displayed in the sidebar snapin "Views"
-    into["visible_views"] = None
-
-    # Set this list in order to actively hide certain views
-    into["hidden_views"] = None
-
-    # Custom user stylesheet to load (resides in htdocs/)
-    into["custom_style_sheet"] = None
-
-    # URL for start page in main frame (welcome page)
-    into["start_url"] = "dashboard.py"
-
-    # Page heading for main frame set
-    into["page_heading"] = "Check_MK %s"
-
-    # Timeout for rescheduling of host- and servicechecks
-    into["reschedule_timeout"] = 10.0
-
-    # Interval of snapin updates in seconds
-    into["sidebar_update_interval"] = 30.0
-
-    # Number of columsn in "Filter" form
-    into["filter_columns"] = 2
-
-    # Default language for l10n
-    into["default_language"] = None
-
-    # Hide these languages from user selection
-    into['hide_languages'] = []
-
-    # Default timestamp format to be used in multisite
-    into["default_ts_format"] = 'mixed'
-
-    # Default authentication type. Can be changed to e.g. "cookie" for
-    # using the cookie auth
-    into["auth_type"] = 'basic'
-
-    # Show only most used buttons, set to None if you want
-    # always all buttons to be shown
-    into["context_buttons_to_show"] = 5
-
-    # Buffering of HTML output stream
-    into["buffered_http_stream"] = True
-
-    # Maximum livetime of unmodified selections
-    into["selection_livetime"]  = 3600
-
-    # Configure HTTP header to read usernames from
-    into["auth_by_http_header"] = False
-
-    #     ____ ___
-    #    | __ )_ _|
-    #    |  _ \| |
-    #    | |_) | |
-    #    |____/___|
-    #
-    into["aggregation_rules"] = {}
-    into["aggregations"] = []
-    into["host_aggregations"] = []
-    into['bi_compile_log'] = None
-    into['bi_precompile_on_demand'] = False
-
-    #    __        ___  _____ ___
-    #    \ \      / / \|_   _/ _ \
-    #     \ \ /\ / / _ \ | || | | |
-    #      \ V  V / ___ \| || |_| |
-    #       \_/\_/_/   \_\_| \___/
-    #
-
-    into["wato_enabled"] = True
-    into["wato_host_tags"] = []
-    into["wato_aux_tags"] = []
-    into["wato_hide_filenames"] = True
-    into["wato_hide_hosttags"] = False
-    into["wato_hide_varnames"] = True
-    into["wato_max_snapshots"] = 50
-    into["wato_num_hostspecs"] = 12
-    into["wato_num_itemspecs"] = 15
-    into["wato_activation_method"] = 'restart'
-    into["wato_write_nagvis_auth"] = False
-    into["wato_hidden_users"] = []
-
-    #     _   _               ____  ____
-    #    | | | |___  ___ _ __|  _ \| __ )
-    #    | | | / __|/ _ \ '__| | | |  _ \
-    #    | |_| \__ \  __/ |  | |_| | |_) |
-    #     \___/|___/\___|_|  |____/|____/
-    #
-
-    into["user_connectors"]      = ['htpasswd']
-    into["ldap_connection"]      = {}
-    into["ldap_userspec"]        = {}
-    into["ldap_groupspec"]       = {}
-    into["ldap_active_plugins"]  = {'email': {}, 'alias': {}, 'auth_expire': {}}
-    into["ldap_cache_livetime"]  = 300
-    into['ldap_debug_log']       = None
-    into["default_user_profile"] = {
-        'roles': ['user'],
-    }
+    # This must be set after plugin loading to make broken plugins raise
+    # exceptions all the time and not only the first time (when the plugins
+    # are loaded).
+    loaded_with_language = current_language
 
 # Make sure, we have all values set right now - until
 # the configuration will be loaded
-load_default_values(globals())
-
+load_plugins()

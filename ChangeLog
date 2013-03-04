@@ -11,6 +11,9 @@
       have defined (per default this is contained in all roles)
     * New path back to the view after command exection with all
       checkboxes cleared
+    * Added plugins to config module to make registration of default values
+      possible for addons like mkeventd - reset to default values works now
+      correctly even for multisite related settings
 
     Event Console:
     * New rule feature: automatically delete event after actions

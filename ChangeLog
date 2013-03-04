@@ -38,6 +38,7 @@
                  new param post can now be configured via int and float, now
                                 supports percentage values
     * mounts: ignore multiple occurrances of the same device
+    * Linux agent: allow cached local/plugins checks (see docu)
     
     Livestatus:
     * Table statehist: Improved detection of vanished hosts and services.

@@ -489,7 +489,11 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
 
                     if speed:
                         perc_used = 100.0 * traffic / speed
-                        infotext += "(%.1f%%)" % perc_used
+                        
+                        assumed_info = ""
+                        if assumed_speed_in or assumed_speed_out:
+                            assumed_info = "/" + format_value(speed / 8)
+                        infotext += "(%.1f%%%s)" % (perc_used, assumed_info)
 
                     # handle computation of average
                     if average:

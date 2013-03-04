@@ -1366,8 +1366,8 @@ checkgroups.append((
                        Tuple(
                            title = _("Percentual levels (in relation to policy speed)"),
                            elements = [
-                               Percentage(title = _("Warning at"), label = _("% of port speed")),
-                               Percentage(title = _("Critical at"), label = _("% of port speed")),
+                               Percentage(title = _("Warning at"), max_value=1000, label = _("% of port speed")),
+                               Percentage(title = _("Critical at"), max_value=1000, label = _("% of port speed")),
                            ]
                        ),
                        Tuple(

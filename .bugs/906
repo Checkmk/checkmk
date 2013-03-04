@@ -1,9 +1,9 @@
 Title: logwatch.ec: Need some fallback mechanism if processing takes too long
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-01-31 11:23:38
 Targetversion: 1.2.2
-Class: bug
 
 Nagios kills Check_MK when it takes too long. When e.g. logwatch.ec is taking
 more than 60 seconds, the script is terminated and all unprocessed messages
@@ -25,3 +25,6 @@ logwatch.ec: Add a third message processing mode, which writes a file into
 this spool directory named ".<hostname>_<item>_timestamp". Escape the "/"
 with "\" in the file name. After writing rename the file to the same name
 without the leading dot.
+
+2013-03-04 19:45:21: changed state open -> done
+Has been implemented.

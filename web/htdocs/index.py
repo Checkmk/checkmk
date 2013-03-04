@@ -34,8 +34,9 @@ __builtin__.current_language = None
 from mod_python import apache, util, Cookie
 import sys, os, pprint
 from lib import *
-import livestatus
-import defaults, config, htmllib, login, userdb, hooks, default_permissions
+import livestatus, defaults, config
+config.load_plugins()
+import htmllib, login, userdb, hooks, default_permissions
 
 # Load page handlers
 pagehandlers = {}

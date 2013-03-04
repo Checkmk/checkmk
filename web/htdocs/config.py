@@ -411,7 +411,6 @@ def save_site_config():
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 
-# Load all view plugins
 def load_plugins():
     global loaded_with_language
     if loaded_with_language == current_language:
@@ -423,7 +422,3 @@ def load_plugins():
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
     loaded_with_language = current_language
-
-# Make sure, we have all values set right now - until
-# the configuration will be loaded
-load_plugins()

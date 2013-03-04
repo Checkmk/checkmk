@@ -1485,7 +1485,7 @@ checkgroups.append((
     subgroup_os,
     "cpu_load",
     _("CPU load (not utilization!)"),
-    Alternative(
+    Levels(
           help = _("The CPU load of a system is the number of processes currently being "
                    "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
                    "for one. The <u>load average</u> is the averaged CPU load over the last 1, "
@@ -1494,18 +1494,9 @@ checkgroups.append((
                    "those levels. The configured levels are multiplied with the number of "
                    "CPUs, so you should configure the levels based on the value you want to "
                    "be warned \"per CPU\"."),
-          elements = [
-                Tuple(
-                    title = _("Fixed Levels"),
-                    elements = [
-                          Float(title = _("Warning at a load of"), unit = _("per CPU"), default_value = 5.0),
-                          Float(title = _("Critical at a load of"), unit = _("per CPU"), default_value = 10.0),
-                ]),
-                PredictiveLevels(),
-         ],
-         default_value = (5.0, 10.0),
-         match = lambda v: type(v) != tuple and 1 or 0,
-         # migrate = lambda v: type(v) == tuple and { "levels" : v } or v,
+          unit = "per core",
+          default_difference = (2.0, 4.0),
+          default_levels = (5.0, 10.0),
     ),
 
     None, None))
@@ -2027,28 +2018,14 @@ checkgroups.append((
     subgroup_os,
     "vm_counter",
     _("Number of kernel events per second"),
-    Alternative(
+    Levels(
           help = _("This ruleset applies to several similar checks measing various kernel "
                    "events like context switches, process creations and major page faults. "
                    "Please create separate rules for each type of kernel counter you "
                    "want to set levels for."),
-          show_titles = False,
-          elements = [
-              FixedValue(
-                  None,
-                  title = _("No Levels"),
-                  totext = _("Do not impose levels, always be OK"),
-              ),
-              Tuple(
-                  title = _("Fixed Levels"),
-                  elements = [
-                      Float(unit = _("events per second"), title = _("Warning at"), default_value = 1000),
-                      Float(unit = _("events per second"), title = _("Critical at"), default_value = 5000),
-                  ],
-              ),
-              PredictiveLevels(
-                  default_difference = (500.0, 1000.0)),
-          ],
+          unit = _("events per second"),
+          default_levels = (1000, 5000),
+          default_difference = (500.0, 1000.0),
           default_value = None,
     ),
     DropdownChoice(

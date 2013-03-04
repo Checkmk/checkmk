@@ -59,45 +59,16 @@ def check_kernel(item, params, info):
     counter = hits[0][0]
     this_val = int(hits[0][1])
     timedif, per_sec = get_counter("kernel." + counter, this_time, this_val)
-    infotext = " - %.0f/s in last %d secs" % (per_sec, timedif)
-
-    if params == None:
-        return (0, "OK" + infotext, [ (counter, per_sec) ])
 
     if type(params) == tuple:
         warn, crit = params
     else:
-        ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
-            get_predictive_levels(counter, params, "MAX")
-        if ref_value:
-            infotext += ", predicted reference: %.2f" % ref_value
-        else:
-            infotext += ", no reference for prediction yet"
-
-    perfdata = [ (counter, per_sec, warn_upper, crit_upper) ]
-
-    # Critical cases
-    if crit_upper != None and per_sec >= crit_upper:
-        state = 2
-        infotext += " (level at %.2f)" % crit_upper
-    elif crit_lower != None and per_sec <= crit_lower:
-        state = 2
-        infotext += " (too low: level at %.2f)" % crit_lower
-
-    # Warning cases
-    elif warn_upper != None and per_sec >= warn_upper:
-        state = 1
-        infotext += " (level at %.2f)" % warn_upper
-    elif warn_lower != None and per_sec <= warn_lower:
-        state = 1
-        infotext += " (too low: level at %.2f)" % warn_lower
-
-    # OK
-    else:
-        state = 0
-
-    return state, nagios_state_names[state] + infotext, perfdata
-
+        warn, crit = None, None
+    perfdata = [ (counter, per_sec, warn, crit) ]
+    state, text, extraperf = check_levels(per_sec, counter, params)
+    perfdata += extraperf
+    infotext = "%.0f/s in last %d secs%s" % (per_sec, timedif, text)
+    return state, infotext, perfdata
 
 kernel_util_default_levels = None
 

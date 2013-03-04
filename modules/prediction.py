@@ -212,7 +212,10 @@ def stdev(point_line, average):
 
 
 # cf: consilidation function (MAX, MIN, AVERAGE)
-def get_predictive_levels(dsname, params, cf):
+# levels_factor: this multiplies all absolute levels. Usage for example
+# in the cpu.loads check the multiplies the levels by the number of CPU
+# cores.
+def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
     # Compute timegroup
     now = time.time()
     period_info = prediction_periods[params["period"]]
@@ -308,7 +311,7 @@ def get_predictive_levels(dsname, params, cf):
             if p in params:
                 how, (warn, crit) = params[p]
                 if how == "absolute":
-                    levels.append((ref_value + (sig * warn), ref_value + (sig * crit)))
+                    levels.append((ref_value + (sig * warn * levels_factor), ref_value + (sig * crit * levels_factor)))
                 elif how == "relative":
                     levels.append((ref_value + sig * (ref_value * warn / 100), 
                                    ref_value + sig * (ref_value * crit / 100)))

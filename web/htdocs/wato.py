@@ -10905,6 +10905,41 @@ def PredictiveLevels(**args):
     )
 
 
+# To be used as ValueSpec for levels on numeric values, with
+# prediction
+def Levels(**kwargs):
+    help = kwargs.get("help")
+    unit = kwargs.get("unit")
+    default_levels = kwargs.get("default_levels", (None, None))
+    default_difference = kwargs.get("default_difference", (0,0))
+    if "default_value" in kwargs:
+        default_value = kwargs["default_value"]
+    else:
+        default_value = default_levels and default_levels or None
+
+    return Alternative(
+          help = help,
+          show_titles = False,
+          elements = [
+              FixedValue(
+                  None,
+                  title = _("No Levels"),
+                  totext = _("Do not impose levels, always be OK"),
+              ),
+              Tuple(
+                  title = _("Fixed Levels"),
+                  elements = [
+                      Float(unit = unit, title = _("Warning at"), default_value = default_levels[0]),
+                      Float(unit = unit, title = _("Critical at"), default_value = default_levels[1]),
+                  ],
+              ),
+              PredictiveLevels(
+                  default_difference = default_difference,
+              ),
+          ],
+          default_value = default_value,
+    )
+
 
 #
 # User profile edit page

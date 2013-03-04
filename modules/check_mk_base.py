@@ -1270,6 +1270,52 @@ def nodes_of(hostname):
 #   | These functions are used in some of the checks.                      |
 #   +----------------------------------------------------------------------+
 
+# Generic function for checking a value against levels. This also support
+# predictive levels.
+def check_levels(value, dsname, params, factor = 1.0):
+    perfdata = []
+    infotext = ""
+
+    # Pair of numbers -> static levels
+    if type(params) == tuple:
+        warn_upper, crit_upper = params[0] * factor, params[1] * factor,
+        warn_lower, crit_lower = None, None
+        ref_value = None
+
+    # Dictionary -> predictive levels
+    else:
+        ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
+            get_predictive_levels(dsname, params, "MAX", levels_factor=factor)
+        if ref_value:
+            infotext += ", predicted reference: %.2f" % ref_value
+        else:
+            infotext += ", no reference for prediction yet"
+
+    if ref_value:
+        perfdata.append(('predict_load15', ref_value))
+
+    # Critical cases
+    if crit_upper != None and value >= crit_upper:
+        state = 2
+        infotext += " (critical level at %.2f)" % crit_upper
+    elif crit_lower != None and value <= crit_lower:
+        state = 2
+        infotext += " (too low: critical level at %.2f)" % crit_lower
+
+    # Warning cases
+    elif warn_upper != None and value >= warn_upper:
+        state = 1
+        infotext += " (warning level at %.2f)" % warn_upper
+    elif warn_lower != None and value <= warn_lower:
+        state = 1
+        infotext += " (too low: warning level at %.2f)" % warn_lower
+
+    # OK
+    else:
+        state = 0
+
+    return state, infotext, perfdata
+
 
 # check range, values might be negative!
 # returns True, if value is inside the interval

@@ -44,49 +44,18 @@ def check_cpu_load(item, params, info):
     else:
         num_cpus = 1
 
-    infotext = " - 15min load %.2f at %s CPUs" % (load[2], num_cpus)
-
-    # Pair of numbers -> static levels
+    # Prepare performance data
     if type(params) == tuple:
-        warn_upper, crit_upper = params[0] * num_cpus, params[1] * num_cpus
-        warn_lower, crit_lower = None, None
-        ref_value = None
-
-    # Dictionary -> predictive levels
+        warn, crit = [ p*num_cpus for p in params ]
     else:
-        ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
-            get_predictive_levels('load15', params, "MAX")
-        if ref_value:
-            infotext += ", predicted reference: %.2f" % ref_value
-        else:
-            infotext += ", no reference for prediction yet"
-
-    perfdata = [ ('load' + str(z), l, warn_upper, crit_upper, 0, num_cpus ) 
+        warn, crit = None, None
+    perfdata = [ ('load' + str(z), l, warn, crit, 0, num_cpus ) 
                  for (z,l) in [ (1,load[0]), (5,load[1]), (15, load[2]) ] ]
-    if ref_value:
-        perfdata.append(('predict_load15', ref_value))
 
-    # Critical cases
-    if crit_upper != None and load[2] >= crit_upper:
-        state = 2
-        infotext += " (level at %.2f)" % crit_upper
-    elif crit_lower != None and load[2] <= crit_lower:
-        state = 2
-        infotext += " (too low: level at %.2f)" % crit_lower
-
-    # Warning cases
-    elif warn_upper != None and load[2] >= warn_upper:
-        state = 1
-        infotext += " (level at %.2f)" % warn_upper
-    elif warn_lower != None and load[2] <= warn_lower:
-        state = 1
-        infotext += " (too low: level at %.2f)" % warn_lower
-
-    # OK
-    else:
-        state = 0
-
-    return state, nagios_state_names[state] + infotext, perfdata
+    state, text, perf = check_levels(load[2], 'load15', params, factor = num_cpus)
+    perfdata += perf
+    infotext = "15min load %.2f at %d CPUs%s" % (load[2], num_cpus, text)
+    return state, infotext, perfdata
 
 def inventory_cpu_threads(info):
     if len(info) == 1 and len(info[0]) >= 5:

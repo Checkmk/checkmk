@@ -2634,14 +2634,33 @@ checkgroups.append((
             ('method', Alternative(
                 title = _("Forwarding Method"),
                 elements = [
-                    FixedValue(
-                        None,
-                        totext = "",
-                        title = _("Send events to local event console in same OMD site"),
-                    ),
-                    TextAscii(
-                        title = _("Send events to local event console into unix socket"),
-                        allow_empty = False,
+                    Alternative(
+                        title = _("Send events to local event console"),
+                        elements = [
+                            FixedValue(
+                                "",
+                                totext = "Directly forward to event console",
+                                title = _("Send events to local event console in same OMD site"),
+                            ),
+                            TextAscii(
+                                title = _("Send events to local event console into unix socket"),
+                                allow_empty = False,
+                            ),
+
+                            FixedValue(
+                                "spool:",
+                                totext = "Spool to event console",
+                                title = _("Spooling: Send events to local event console in same OMD site"),
+                            ),
+                            Transform(
+                                TextAscii(),
+                                title = _("Spooling: Send events to local event console into given spool directory"),
+                                allow_empty = False,
+                                forth = lambda x: x[6:],        # remove prefix
+                                back  = lambda x: "spool:" + x, # add prefix
+                            ),
+                        ],
+                        match = lambda x: x and (x == 'spool:' and 2 or x.startswith('spool:') and 3 or 1) or 0
                     ),
                     Tuple(
                         title = _("Send events to remote syslog host"),

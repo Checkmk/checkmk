@@ -38,6 +38,8 @@
                  new param average: average the values over the given minute
                  new param post can now be configured via int and float, now
                                 supports percentage values
+    * logwatch.ec: Added optional spooling to the check to prevent dataloss
+      when processing of current lines needs more time than max execution time
     
     Livestatus:
     * Table statehist: Improved detection of vanished hosts and services.

@@ -13,3 +13,15 @@ This is not only based on the amount of messages to be processed at once,
 when the event console is hanging or taking too long for any reason,
 the pending messages are lost. Just limiting the number of messages is
 no real solution.
+
+Solution:
+
+Implement a new interface to the event console - a spool directory. In OMD
+this is located in var/mkeventd/spool. After the select() loop of the 
+sockets, process one file which name is not starting with a "." from this
+directory (if available).
+
+logwatch.ec: Add a third message processing mode, which writes a file into
+this spool directory named ".<hostname>_<item>_timestamp". Escape the "/"
+with "\" in the file name. After writing rename the file to the same name
+without the leading dot.

@@ -2,6 +2,8 @@
     Core:
     * Agents can send data for other hosts "piggyback". This is being
       used by the vSphere and SAP plugins
+    * Checks can now omit the typical "OK - " or "WARN -". This text
+      will be added automatically if missing.
 
     Multisite:
     * New availability view for arbitrary host/service collections

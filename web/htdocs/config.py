@@ -408,17 +408,7 @@ def read_site_config():
 def save_site_config():
     save_user_file("siteconfig", user_siteconf)
 
-# Datastructures and functions needed before plugins can be loaded
-loaded_with_language = False
-
 def load_plugins():
-    global loaded_with_language
-    if loaded_with_language == current_language:
-        return
-
     load_web_plugins("config", globals())
 
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = current_language
+load_plugins()

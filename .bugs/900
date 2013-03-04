@@ -1,12 +1,15 @@
 Title: Make multisite optional username from configured environment vars
 Component: multisite
-State: open
+Class: feature
+State: done
 Date: 2013-01-22 14:49:10
 Targetversion: 1.4.0
-Class: feature
 
 For example X_FORWARDED_USER or REMOTE_USER should be usable as "user" within
 multisite. At the moment we only use req.user, which seem only to be set, when
 one really authenticated with the local webserver.
 In case of some reverse proxy setups and single sign on environments, this is
 not possible. Make it configurable, disabled by default!
+
+2013-03-04 12:14:22: changed state open -> done
+has been implemented in current git master

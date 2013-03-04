@@ -91,6 +91,7 @@ def page_graph():
     html.select("timegroup", choices, choices[0], onchange="document.prediction.submit();")
     html.hidden_fields()
     html.end_form()
+    html.log("HIRN")
 
     # Get prediction data
     tg_data = eval(file(dir + "/" + timegroup["name"]).read())
@@ -115,9 +116,9 @@ def page_graph():
         render_dual_area(swapped["lower_crit"], swapped["lower_warn"], "#fff000", 0.4)
         render_area(swapped["lower_crit"], "#ff0000", 0.1)
 
-    vert_scala = [ [x, "%.1f" % x] for x in range(int(vertical_range[0]), int(vertical_range[1] + 1)) ]
-    while len(vert_scala) > 15:
-        vert_scala = vert_scala[::2]
+    vscala_low = vertical_range[0]
+    vscala_high = vertical_range[1]
+    vert_scala = compute_vertical_scala(vscala_low, vscala_high)
     time_scala = [ [timegroup["range"][0] + i*3600, "%02d:00" % i] for i in range(0, 25, 2) ] 
     render_coordinates(vert_scala, time_scala);
 
@@ -144,6 +145,39 @@ def page_graph():
         render_point(timegroup["range"][0] + rel_time, current_value, "#0000ff")
 
     html.footer()
+
+vranges = [
+ ( 'n', 1024.0**-3 ),
+ ( 'u', 1024.0**-2 ),
+ ( 'm', 1024.0**-1 ),
+ ( '',  1024.0**0 ),
+ ( 'K', 1024.0**1 ),
+ ( 'M', 1024.0**2 ),
+ ( 'G', 1024.0**3 ),
+ ( 'T', 1024.0**4 ),
+]
+
+def compute_vertical_scala(low, high):
+    m = max(abs(low), abs(high))
+    for letter, factor in vranges:
+        if m <= 15 * factor:
+            break
+    else:
+        letter = 'P'
+        factor = 1024.0**5
+
+    v = 0
+    vert_scala = []
+    while v <= max(0, high):
+        vert_scala.append( [v, "%.1f%s" % (v / factor, letter)] )
+        v += factor
+
+    v = -factor
+    while v >= min(0, low):
+        vert_scala = [ [v, "%.1f%s" % (v / factor, letter)] ] + vert_scala
+        v -= factor
+
+    return vert_scala
 
 def get_current_perfdata(host, service, dsname):
     perf_data = html.live.query_value("GET services\nFilter: host_name = %s\nFilter: description = %s\nColumns: perf_data" % (

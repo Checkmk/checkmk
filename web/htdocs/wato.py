@@ -9470,40 +9470,6 @@ def change_host_tags_in_rules(folder, operations, mode):
 #   | from main.mk.                                                        |
 #   '----------------------------------------------------------------------'
 
-vs_rule_options = Dictionary(
-    title = _("Additional options"),
-    optional_keys = False,
-    render = "form",
-    elements = [
-        ( "comment",
-          TextUnicode(
-            title = _("Comment"),
-            help = _("An optional comment that helps you documenting the purpose of  "
-                     "this rule"),
-            size = 80,
-            attrencode = True,
-          )
-        ),
-        ( "docu_url",
-          TextAscii(
-            title = _("Documentation-URL"),
-            help = _("An optional URL pointing to documentation or any other page. This will be displayed "
-                     "as an icon <img class=icon src='images/button_url_lo.png'> and open a new page when clicked. "
-                     "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
-                     "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."),
-            size = 80,
-          ),
-        ),
-        ( "disabled",
-          Checkbox(
-              title = _("Rule activation"),
-              help = _("Disabled rules are kept in the configuration but are not applied."),
-              label = _("do not apply this rule"),
-          )
-        ),
-    ]
-)
-
 def mode_ruleeditor(phase):
     only_host = html.var("host", "")
     only_local = "" # html.var("local")
@@ -10310,6 +10276,41 @@ def get_rule_conditions(ruleset):
 
 
 def mode_edit_rule(phase, new = False):
+    # Due to localization this cannot be defined in the global context!
+    vs_rule_options = Dictionary(
+        title = _("Additional options"),
+        optional_keys = False,
+        render = "form",
+        elements = [
+            ( "comment",
+              TextUnicode(
+                title = _("Comment"),
+                help = _("An optional comment that helps you documenting the purpose of  "
+                         "this rule"),
+                size = 80,
+                attrencode = True,
+              )
+            ),
+            ( "docu_url",
+              TextAscii(
+                title = _("Documentation-URL"),
+                help = _("An optional URL pointing to documentation or any other page. This will be displayed "
+                         "as an icon <img class=icon src='images/button_url_lo.png'> and open a new page when clicked. "
+                         "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
+                         "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."),
+                size = 80,
+              ),
+            ),
+            ( "disabled",
+              Checkbox(
+                  title = _("Rule activation"),
+                  help = _("Disabled rules are kept in the configuration but are not applied."),
+                  label = _("do not apply this rule"),
+              )
+            ),
+        ]
+    )
+
     varname = html.var("varname")
     rulespec = g_rulespecs[varname]
 

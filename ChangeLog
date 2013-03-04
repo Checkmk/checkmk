@@ -56,6 +56,7 @@
     * FIX: Alias values of host/service/contact groups need to be set and unique
            within the group
     * FIX: Fixed exception when editing contactgroups without alias
+    * FIX: Fix localization of rule options
     * Suggest use default value for filesystem levels that make sense
     * Valuespec: CascadingDropdown now able to process choice values from functions
     * Freshness checking for classical passive Nagios checks (custom_checks)

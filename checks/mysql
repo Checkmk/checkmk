@@ -166,7 +166,7 @@ check_info['mysql.innodb_io'] = {
 
 def inventory_mysql_connections(info):
     values = parse_mysql(info)
-    if 'Max_used_connections' in values:
+    if 'Max_used_connections' in values and 'max_connections' in values:
         return [(None, {})]
 
 def check_mysql_connections(item, params, info):

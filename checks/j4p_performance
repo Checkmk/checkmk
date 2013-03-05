@@ -130,6 +130,16 @@ def check_j4p_performance_mem(item, params, info):
     else:
         return (0, "OK - " + infotext, perfdata)
 
+check_info["j4p_performance.mem"] = {'check_function': check_j4p_performance_mem,
+ 'default_levels_variable': None,
+ 'group': 'j4p_performance.mem',
+ 'has_perfdata': True,
+ 'inventory_function': lambda i: inventory_j4p_performance(i, "mem"),
+ 'node_info': False,
+ 'service_description': 'JMX %s Memory',
+ 'snmp_info': None,
+ 'snmp_scan_function': None}
+
 
 def check_j4p_performance_threads(item, params, info):
     warn, crit = params
@@ -168,6 +178,17 @@ def check_j4p_performance_threads(item, params, info):
     else:
         return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
 
+check_info["j4p_performance.threads"] = {'check_function': check_j4p_performance_threads,
+ 'default_levels_variable': None,
+ 'group': 'j4p_performance.threads',
+ 'has_perfdata': True,
+ 'inventory_function': lambda i: inventory_j4p_performance(i, "threads"),
+ 'node_info': False,
+ 'service_description': 'JMX %s Threads',
+ 'snmp_info': None,
+ 'snmp_scan_function': None}
+
+
 def check_j4p_performance_uptime(item, _unused, info):
     parsed = j4p_performance_parse(info)
     if item not in parsed:
@@ -183,6 +204,16 @@ def check_j4p_performance_uptime(item, _unused, info):
     since = time.strftime("%c", time.localtime(now - uptime))
     return (0, "OK - up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
 
+check_info["j4p_performance.uptime"] = {'check_function': check_j4p_performance_uptime,
+ 'default_levels_variable': None,
+ 'group': 'j4p_performance.uptime',
+ 'has_perfdata': True,
+ 'inventory_function': lambda i: inventory_j4p_performance(i, "uptime"),
+ 'node_info': False,
+ 'service_description': 'JMX %s Uptime',
+ 'snmp_info': None,
+ 'snmp_scan_function': None}
+
 
 def check_j4p_performance_app_state(item, _unused, info):
     app = j4p_performance_app(info, item.split())
@@ -193,6 +224,17 @@ def check_j4p_performance_app_state(item, _unused, info):
         return (0, 'OK - application is running')
     else:
         return (2, 'CRIT - application is not running (Running: %s)')
+
+
+check_info["j4p_performance.app_state"] = {'check_function': check_j4p_performance_app_state,
+ 'default_levels_variable': None,
+ 'group': 'j4p_performance.app_state',
+ 'has_perfdata': False,
+ 'inventory_function': lambda i: inventory_j4p_performance_apps(i, "app_state"),
+ 'node_info': False,
+ 'service_description': 'JMX %s State',
+ 'snmp_info': None,
+ 'snmp_scan_function': None}
 
 
 def check_j4p_performance_app_sess(item, params, info):
@@ -219,6 +261,16 @@ def check_j4p_performance_app_sess(item, params, info):
 
     return (status, '%s - %d Sessions%s' % (nagios_state_names[status], sess, status_txt),
             [('sessions', sess, hi_warn, hi_crit)])
+
+check_info["j4p_performance.app_sess"] = {'check_function': check_j4p_performance_app_sess,
+ 'default_levels_variable': None,
+ 'group': 'j4p_performance.app_sess',
+ 'has_perfdata': True,
+ 'inventory_function': lambda i: inventory_j4p_performance_apps(i, "app_sess"),
+ 'node_info': False,
+ 'service_description': 'JMX %s Sessions',
+ 'snmp_info': None,
+ 'snmp_scan_function': None}
 
 
 def check_j4p_performance_serv_req(item, params, info):
@@ -259,13 +311,12 @@ def check_j4p_performance_serv_req(item, params, info):
     else:
         return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
 
-
-# General JVM checks
-check_info["j4p_performance.mem"]       = ( check_j4p_performance_mem,       "JMX %s Memory",   1, lambda i: inventory_j4p_performance(i, "mem"))
-check_info["j4p_performance.threads"]   = ( check_j4p_performance_threads,   "JMX %s Threads",  1, lambda i: inventory_j4p_performance(i, "threads"))
-check_info["j4p_performance.uptime"]    = ( check_j4p_performance_uptime,    "JMX %s Uptime",   1, lambda i: inventory_j4p_performance(i, "uptime"))
-# App specific checks
-check_info["j4p_performance.app_state"] = ( check_j4p_performance_app_state, "JMX %s State",    0, lambda i: inventory_j4p_performance_apps(i, "app_state"))
-check_info["j4p_performance.app_sess"]  = ( check_j4p_performance_app_sess,  "JMX %s Sessions", 1, lambda i: inventory_j4p_performance_apps(i, "app_sess"))
-# Servlet specific checks
-check_info["j4p_performance.serv_req"]  = ( check_j4p_performance_serv_req,  "JMX %s Requests", 1, lambda i: inventory_j4p_performance_serv(i, "serv_req"))
+check_info["j4p_performance.serv_req"] = {'check_function': check_j4p_performance_serv_req,
+ 'default_levels_variable': None,
+ 'group': 'j4p_performance.serv_req',
+ 'has_perfdata': True,
+ 'inventory_function': lambda i: inventory_j4p_performance_serv(i, "serv_req"),
+ 'node_info': False,
+ 'service_description': 'JMX %s Requests',
+ 'snmp_info': None,
+ 'snmp_scan_function': None}

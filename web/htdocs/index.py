@@ -236,6 +236,7 @@ def handler(req, profiling = True):
             retcode = cProfile.run("import index; from mod_python import apache; index.handler(apache._profiling_req, False)", profilefile)
             file(profilefile + ".py", "w").write("#!/usr/bin/python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
             os.chmod(profilefile + ".py", 0755)
+            release_all_locks()
             return apache.OK
 
         # Make sure all plugins are avaiable as early as possible. At least
@@ -271,6 +272,7 @@ def handler(req, profiling = True):
                 handler()
             except Exception, e:
                 html.write(str(e))
+            release_all_locks()
             return apache.OK
 
         # Prepare output format
@@ -300,6 +302,7 @@ def handler(req, profiling = True):
                     req.myfile = req.uri.split("/")[-1][:-3]
                     handler = pagehandlers.get(req.myfile, page_not_found)
                 else:
+                    release_all_locks()
                     return result
 
         # Call userdb page hooks which are executed on a regular base to e.g. syncronize

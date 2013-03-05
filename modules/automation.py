@@ -254,6 +254,8 @@ def automation_try_inventory_node(hostname):
         params = None
         if state_type not in [ 'legacy', 'active' ]:
             descr = service_description(ct, item)
+            global g_service_description
+            g_service_description = descr
             infotype = ct.split('.')[0]
             opt_use_cachefile = True
             opt_no_tcp = True

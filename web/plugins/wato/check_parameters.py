@@ -131,7 +131,7 @@ register_rule(group + '/' + subgroup_applications,
       add_label = _("Add pattern"),
     ),
     itemtype = 'item',
-    itemname = 'logfile',
+    itemname = 'Logfile',
     itemhelp = _("Put the item names of the logfiles here. For example \"System$\" "
                  "to select the service \"LOG System\"."),
     match = 'list',
@@ -2619,82 +2619,104 @@ checkgroups.append((
     "first"))
 
 
-checkgroups.append((
-    subgroup_applications,
+register_check_parameters(subgroup_applications,
     "logwatch_ec",
     _('Logwatch Event Console Forwarding'),
-    Dictionary(
+    Alternative(
+        title = _("Forwarding"),
+        help = _("Instead of using the regular logwatch check all lines received by logwatch can "
+                 "be forwarded to a Check_MK event console daemon to be processed. The target event "
+                 "console can be configured for each host in a separate rule."),
         elements = [
-            ('method', Alternative(
-                title = _("Forwarding Method"),
+            FixedValue(
+                None,
+                totext = "Messages are handled by logwatch.",
+                title = _("No forwarding"),
+            ),
+            Dictionary(
+                title = _('Forward Messages to Event Console'),
                 elements = [
-                    Alternative(
-                        title = _("Send events to local event console"),
+                    ('restrict_logfiles',
+                        ListOfStrings(
+                            title = _('Restrict Logfiles (Prefix matching regular expressions)'),
+                            help  = _("Put the item names of the logfiles here. For example \"System$\" "
+                                      "to select the service \"LOG System\". You can use regular expressions "
+                                      "here which must match the beginning of the logfile name."),
+                        ),
+                    ),
+                    ('method', Alternative(
+                        title = _("Forwarding Method"),
                         elements = [
-                            FixedValue(
-                                "",
-                                totext = "Directly forward to event console",
-                                title = _("Send events to local event console in same OMD site"),
-                            ),
-                            TextAscii(
-                                title = _("Send events to local event console into unix socket"),
-                                allow_empty = False,
-                            ),
+                            Alternative(
+                                title = _("Send events to local event console"),
+                                elements = [
+                                    FixedValue(
+                                        "",
+                                        totext = "Directly forward to event console",
+                                        title = _("Send events to local event console in same OMD site"),
+                                    ),
+                                    TextAscii(
+                                        title = _("Send events to local event console into unix socket"),
+                                        allow_empty = False,
+                                    ),
 
-                            FixedValue(
-                                "spool:",
-                                totext = "Spool to event console",
-                                title = _("Spooling: Send events to local event console in same OMD site"),
+                                    FixedValue(
+                                        "spool:",
+                                        totext = "Spool to event console",
+                                        title = _("Spooling: Send events to local event console in same OMD site"),
+                                    ),
+                                    Transform(
+                                        TextAscii(),
+                                        title = _("Spooling: Send events to local event console into given spool directory"),
+                                        allow_empty = False,
+                                        forth = lambda x: x[6:],        # remove prefix
+                                        back  = lambda x: "spool:" + x, # add prefix
+                                    ),
+                                ],
+                                match = lambda x: x and (x == 'spool:' and 2 or x.startswith('spool:') and 3 or 1) or 0
                             ),
-                            Transform(
-                                TextAscii(),
-                                title = _("Spooling: Send events to local event console into given spool directory"),
-                                allow_empty = False,
-                                forth = lambda x: x[6:],        # remove prefix
-                                back  = lambda x: "spool:" + x, # add prefix
+                            Tuple(
+                                title = _("Send events to remote syslog host"),
+                                elements = [
+                                    DropdownChoice(
+                                        choices = [
+                                            ('udp', _('UDP')),
+                                            ('tcp', _('TCP')),
+                                        ],
+                                        title = _("Protocol"),
+                                    ),
+                                    TextAscii(
+                                        title = _("Address"),
+                                        allow_empty = False,
+                                    ),
+                                    Integer(
+                                        title = _("Port"),
+                                        allow_empty = False,
+                                        default_value = 514,
+                                        minvalue = 1,
+                                        maxvalue = 65535,
+                                        size = 6,
+                                    ),
+                                ]
                             ),
                         ],
-                        match = lambda x: x and (x == 'spool:' and 2 or x.startswith('spool:') and 3 or 1) or 0
-                    ),
-                    Tuple(
-                        title = _("Send events to remote syslog host"),
-                        elements = [
-                            DropdownChoice(
-                                choices = [
-                                    ('udp', _('UDP')),
-                                    ('tcp', _('TCP')),
-                                ],
-                                title = _("Protocol"),
-                            ),
-                            TextAscii(
-                                title = _("Address"),
-                                allow_empty = False,
-                            ),
-                            Integer(
-                                title = _("Port"),
-                                allow_empty = False,
-                                default_value = 514,
-                                minvalue = 1,
-                                maxvalue = 65535,
-                                size = 6,
-                            ),
-                        ]
-                    ),
+                    )),
+                    ('facility', DropdownChoice(
+                        title = _("Syslog facility for forwarded messages"),
+                        help = _("When forwarding messages and no facility can be extracted from the "
+                                 "message this facility is used."),
+                        choices = syslog_facilities,
+                        default_value = 17, # local1
+                    )),
                 ],
-            )),
-            ('facility', DropdownChoice(
-                title = _("Syslog facility for forwarded messages"),
-                help = _("When forwarding messages and no facility can be extracted from the "
-                         "message this facility is used."),
-                choices = syslog_facilities,
-                default_value = 17, # local1
-            )),
+                optional_keys = ['restrict_logfiles'],
+            ),
         ],
-        optional_keys = [],
+        default_value = '',
     ),
     None,
-    'first'
-))
+    'first',
+)
 
 # Create rules for check parameters of inventorized checks
 for subgroup, checkgroup, title, valuespec, itemspec, matchtype in checkgroups:

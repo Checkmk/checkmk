@@ -56,6 +56,9 @@
     * New editor for Business Intelligence rules
     * Valuespec: CascadingDropdown now able to process choice values from functions
     * cisco_qos parameters now configurable via WATO
+    * Removed global option logwatch_forward_to_ec, moved this to the
+      logwatch_ec ruleset. With this option the forwarding can now be enabled
+      for each logfile on a host
 
 1.2.2b4:
     Core:

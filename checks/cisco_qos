@@ -157,14 +157,6 @@ def check_cisco_qos(item, params, info):
     post_warn, post_crit = params.get("post",(None, None))
     drop_warn, drop_crit = params.get("drop",(None, None))
 
-    # Convert the drop levels to byte
-    if unit == "bit":
-        # But only if our params where already provided in the new format
-        if not had_legacy_params: 
-            if type(drop_warn) == int:
-                drop_warn = drop_warn / 8.0 
-            if type(drop_crit) == int:
-                drop_crit = drop_crit / 8.0 
  
     # Load values and format them
     ifs = dict(info[0])
@@ -230,6 +222,20 @@ def check_cisco_qos(item, params, info):
             post_warn = post_warn / 8
             post_crit = post_crit / 8
 
+    # Determine drop warn/crit levels
+    if type(drop_warn) == float and not had_legacy_params:
+        drop_warn = bw / 100.0 * drop_warn
+        drop_crit = bw / 100.0 * drop_crit
+    # Convert the drop levels to byte
+    elif unit == "bit":
+        # But only if our params where already provided in the new format
+        if not had_legacy_params: 
+            if type(drop_warn) == int:
+                drop_warn = drop_warn / 8.0 
+            if type(drop_crit) == int:
+                drop_crit = drop_crit / 8.0 
+    
+
     # Handle counter values
     state = 0
     infotext = ''
@@ -240,17 +246,17 @@ def check_cisco_qos(item, params, info):
     perfdata_avg = []
 
     min_value = ("0", "0.0")[unit == 'bit']
-    for name, counter, warn, crit, min, max in [ ( "post", post_b, post_warn, post_crit, min_value, bw),
+    for name, counter, warn, crit, min_val, max_val in [ ( "post", post_b, post_warn, post_crit, min_value, bw),
                                                  ( "drop", drop_b, drop_warn, drop_crit, min_value, bw) ]:
         try:
             timedif, rate = get_counter("cisco_qos.%s.%s" % (name, item), this_time, saveint(counter))
             rates.append(rate)
-            perfdata.append( (name, rate, warn, crit, min, max) )
+            perfdata.append( (name, rate, warn, crit, min_val, max_val) )
            
             if average: 
                 timedif, avg_value = get_average("cisco_qos.%s.%s.avg" % (name, item), this_time, rate, average)
                 rates.append(avg_value)
-                perfdata_avg.append( ("%s_avg_%d" % (name, average), avg_value, warn, crit, min, max) )
+                perfdata_avg.append( ("%s_avg_%d" % (name, average), avg_value, warn, crit, min_val, max_val) )
         except MKCounterWrapped, e:
             wrapped = True
     
@@ -273,14 +279,15 @@ def check_cisco_qos(item, params, info):
         else:
             post_rate = rates[0]
             drop_rate = rates[1]
+    
         for what, rate, warn, crit in [ ("post",  post_rate, post_warn, post_crit),
                                         ("drop",  drop_rate, drop_warn, drop_crit) ]:
             infotext += ', %s: %s' % (what, format_value(rate)) 
             if crit is not None and rate >= crit:
-                state = 2
+                state = max(2, state)
                 infotext += '(!!)'
             elif warn is not None and rate >= warn:
-                state = 1
+                state = max(1, state)
                 infotext += '(!)'
 
     infotext += ', Policy-Name: %s, Int-Bandwidth: %s' % (policy_name, format_value(bw))

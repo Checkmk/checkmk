@@ -1390,15 +1390,25 @@ register_check_parameters(
                  )
                ),
                ( "drop",
-                 Tuple(
+                 Alternative(
                      title = _("Number of dropped bits or bytes per second"),
                      help = _("Depending on the measurement unit (defaults to bit) you can set the warn and crit "
                               "levels for the number of dropped bits or bytes"),
                      elements = [
-                         Float(title = _("Warning at"), size = 8, label = _("bits / bytes per second")),
-                         Float(title = _("Critical at"), size = 8, label = _("bits / bytes per second")),
-                     ]
-                  )
+                         Tuple(
+                             title = _("Percentual levels (in relation to policy speed)"),
+                             elements = [
+                                 Percentage(title = _("Warning at"), max_value=1000, label = _("% of port speed")),
+                                 Percentage(title = _("Critical at"), max_value=1000, label = _("% of port speed")),
+                             ]
+                         ),
+                         Tuple(
+                             elements = [
+                                 Integer(title = _("Warning at"), size = 8, label = _("bits / bytes per second")),
+                                 Integer(title = _("Critical at"), size = 8, label = _("bits / bytes per second")),
+                             ]
+                          )
+                     ])
                ),
            ]),
     TextAscii(

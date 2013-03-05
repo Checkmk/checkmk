@@ -12,7 +12,7 @@ description:
  but it fetches interesting performance data.
 
  As a preparation you need to install the agent plugin {apache_status}
- into you agent's plugins directory (usually {/usr/lib/check_mk_agent/plugins}).
+ into your agent's plugins directory (usually {/usr/lib/check_mk_agent/plugins}).
  The plugin tries to autodetect all running apache servers. If that fails
  for some reason you need to create the configuration file
  {/etc/check_mk/apache_status.cfg} and list your servers here. Write

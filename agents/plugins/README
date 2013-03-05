@@ -1,0 +1,17 @@
+These plugins can be installed in the plugins directory of the
+Linux agent in /usr/lib/check_mk_agent/plugins/. Please only install
+the plugins that you really need.
+
+If you want a plugin to be run asynchronously and also in
+a larger interval then the normal check interval, then you can
+copy it to a subdirectory named after a number of seconds,
+e.g.:
+
+/usr/lib/check_mk_agent/plugins/3600/mk_zypper
+
+In that case the agent will:
+
+ - Run this plugin in the background and wait not for it to finish.
+ - Store the result of the plugin in a cache file below /etc/check_mk/cache.
+ - Use that file for 300 seconds before running the script again.
+

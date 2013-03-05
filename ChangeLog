@@ -38,11 +38,12 @@
     * if.include: new configurable parameters for assumed input and output speed
     * cisco_qos: new param unit:    switches between bit/byte display
                  new param average: average the values over the given minute
-                 new param post can now be configured via int and float, now
-                                supports percentage values
+                 new params post/drop can be configured via int and float
+                 fixed incorrect worst state if different parameters exceed limit
     * logwatch.ec: Added optional spooling to the check to prevent dataloss
       when processing of current lines needs more time than max execution time
     * mounts: ignore multiple occurrances of the same device
+    * Linux agent: allow cached local/plugins checks (see docu)
     
     Livestatus:
     * Table statehist: Improved detection of vanished hosts and services.

@@ -52,6 +52,33 @@ else
     exec <&- 2>/dev/null
 fi
 
+# Runs a command asynchronous by use of a cache file
+function run_cached () {
+    if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
+    local NAME=$1
+    local MAXAGE=$2
+    shift 2
+    local CMDLINE="$section$@"
+
+    if [ ! -d $MK_CONFDIR/cache ]; then mkdir -p $MK_CONFDIR/cache ; fi
+    CACHEFILE="$MK_CONFDIR/cache/$NAME.cache"
+
+    # Check if cache file exists and is recent enough
+    if [ -s "$CACHEFILE" ] ; then
+        local NOW=$(date +%s)
+        local MTIME=$(stat -c %Y "$CACHEFILE")
+        if [ $((NOW - MTIME)) -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
+        # Output the file in any case, even if it is
+        # outdated. The new file will not yet be available
+        cat "$CACHEFILE"
+    fi
+
+    # Cache file outdated and new job not yet running? Start it
+    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
+        echo "$CMDLINE" | setsid bash -o noclobber > $CACHEFILE.new && mv $CACHEFILE.new $CACHEFILE || rm -f $CACHEFILE $CACHEFILE.new &
+    fi
+}
+
 echo '<<<check_mk>>>'
 echo Version: 1.2.3i1
 echo AgentOS: linux
@@ -224,39 +251,10 @@ date +%s
 sed -e 1,2d -e 's/:/ /g' < /proc/net/dev
 
 
-if type ipmitool >/dev/null
+# Hardware sensors via IPMI (need ipmitool)
+if type ipmitool > /dev/null
 then
-    echo '<<<ipmi>>>'
-    IPMI_FILE=$MK_CONFDIR/ipmitool_sensors.cache
-    if [ ! -d $MK_CONFDIR ]; then
-        mkdir -p $MK_CONFDIR
-    fi
-
-    # Do not use cache file after 20 minutes
-    IPMI_MAXAGE=1200
-   
-    # Check if file exists and is recent enough
-    if [ -s $IPMI_FILE ]
-    then
-        NOW=$(date +%s)
-        MTIME=$(stat -c %Y $IPMI_FILE)
-        if [ $((NOW - MTIME)) -le $IPMI_MAXAGE ] ; then
-            USE_IPMI_FILE=1
-        fi
-    fi
-   
-    if [ -s "$IPMI_FILE" ]
-    then
-        grep -v 'command failed' "$IPMI_FILE" \
-        | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
-        | egrep -v '^[^ ]+ na ' \
-        | grep -v ' discrete '
-    fi
-   
-    if [ -z "$USE_IPMI_FILE" -a ! -e "$IPMI_FILE.new" ]
-    then
-        setsid bash -c "set -o noclobber ; ipmitool sensor list > $IPMI_FILE.new && mv $IPMI_FILE.new $IPMI_FILE || rm -f $IPMI_FILE*" &
-    fi
+    run_cached -s ipmi 300 "ipmitool sensor list | grep -v 'command failed' | sed -e 's/ *| */|/g' -e 's/ /_/g' -e 's/_*"'$'"//' -e 's/|/ /g' | egrep -v '^[^ ]+ na ' | grep -v ' discrete '"
 fi
 
 
@@ -358,9 +356,8 @@ if [ -e /etc/openvpn/openvpn-status.log ] ; then
 fi
 
 if type ntpq > /dev/null 2>&1 ; then
-   echo '<<<ntp>>>'
-   # remote heading, make first column space separated
-   waitmax 2 ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+   # remove heading, make first column space separated
+   run_cached -s ntp 30 "waitmax 5 ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'"
 fi
 
 if type nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ]
@@ -431,8 +428,7 @@ fi
 # Check status of OMD sites
 if type omd >/dev/null
 then
-   echo '<<<omd_status>>>'
-   omd status --bare --auto
+    run_cached omd_status 60 "echo '<<<omd_status>>>' ; omd status --bare --auto"
 fi
 
 
@@ -467,30 +463,6 @@ then
     done
 fi
 
-
-# Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
-if cd $PLUGINSDIR
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
-        ./$skript
-    fi
-  done
-fi
-
-# Lokale Einzelchecks
-echo '<<<local>>>'
-if cd $LOCALDIR
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
-        ./$skript
-    fi
-  done
-fi
-
 # MK's Remote Plugin Executor
 if [ -e "$MK_CONFDIR/mrpe.cfg" ]
 then
@@ -504,3 +476,37 @@ then
         echo
     done
 fi
+
+
+# Local checks
+echo '<<<local>>>'
+if cd $LOCALDIR ; then
+    for skript in $(ls) ; do
+        if [ -f "$skript" -a -x "$skript" ] ; then
+            ./$skript
+        fi
+    done
+    # Call some plugins only every X'th minute
+    for skript in [1-9]*/* ; do
+        if [ -x "$skript" ] ; then
+            run_cached local_${skript//\//\\} ${skript%/*} "$skript"
+        fi
+    done
+fi
+
+# Plugins
+if cd $PLUGINSDIR ; then
+    for skript in $(ls) ; do
+        if [ -f "$skript" -a -x "$skript" ] ; then
+            ./$skript
+        fi
+    done
+    # Call some plugins only every X'th minute
+    for skript in [1-9]*/* ; do
+        if [ -x "$skript" ] ; then
+            run_cached plugins_${skript//\//\\} ${skript%/*} "$skript"
+        fi
+    done
+fi
+
+

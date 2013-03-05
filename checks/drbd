@@ -267,6 +267,16 @@ def check_drbd_general(item, params, info):
 
     return (3, "UNKNOWN - Undefined state")
 
+check_info["drbd"] = {'check_function': check_drbd_general,
+ 'default_levels_variable': None,
+ 'group': 'drbd',
+ 'has_perfdata': True,
+ 'inventory_function': lambda info: inventory_drbd(info, "drbd"),
+ 'node_info': False,
+ 'service_description': 'DRBD %s status',
+ 'snmp_info': None,
+ 'snmp_scan_function': None}
+
 def drbd_get_counters(list):
     now = time.time()
     output = ''
@@ -293,6 +303,16 @@ def check_drbd_net(item, params, info):
 
     return (3, "UNKNOWN - Undefined state")
 
+check_info["drbd.net"] = {'check_function': check_drbd_net,
+ 'default_levels_variable': None,
+ 'group': 'drbd.net',
+ 'has_perfdata': True,
+ 'inventory_function': lambda info: inventory_drbd(info, "drbd.net"),
+ 'node_info': False,
+ 'service_description': 'DRBD %s net',
+ 'snmp_info': None,
+ 'snmp_scan_function': None}
+
 def check_drbd_disk(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd.disk')
     if not parsed is None:
@@ -304,6 +324,16 @@ def check_drbd_disk(item, params, info):
         return (0, "OK -%s" % output, perfdata)
 
     return (3, "UNKNOWN - Undefined state")
+
+check_info["drbd.disk"] = {'check_function': check_drbd_disk,
+ 'default_levels_variable': None,
+ 'group': 'drbd.disk',
+ 'has_perfdata': True,
+ 'inventory_function': lambda info: inventory_drbd(info, "drbd.disk"),
+ 'node_info': False,
+ 'service_description': 'DRBD %s disk',
+ 'snmp_info': None,
+ 'snmp_scan_function': None}
 
 def check_drbd_stats(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd.stats')
@@ -326,7 +356,12 @@ def check_drbd_stats(item, params, info):
 
     return (3, "UNKNOWN - Undefined state")
 
-check_info['drbd']         = (check_drbd_general, "DRBD %s status",  1, lambda info: inventory_drbd(info, "drbd"))
-check_info['drbd.net']     = (check_drbd_net,     "DRBD %s net",     1, lambda info: inventory_drbd(info, "drbd.net"))
-check_info['drbd.disk']    = (check_drbd_disk,    "DRBD %s disk",    1, lambda info: inventory_drbd(info, "drbd.disk"))
-check_info['drbd.stats']   = (check_drbd_stats,   "DRBD %s stats",   1, lambda info: inventory_drbd(info, "drbd.stats"))
+check_info["drbd.stats"] = {'check_function': check_drbd_stats,
+ 'default_levels_variable': None,
+ 'group': 'drbd.stats',
+ 'has_perfdata': True,
+ 'inventory_function': lambda info: inventory_drbd(info, "drbd.stats"),
+ 'node_info': False,
+ 'service_description': 'DRBD %s stats',
+ 'snmp_info': None,
+ 'snmp_scan_function': None}

@@ -10891,12 +10891,12 @@ def PredictiveLevels(**args):
                    minvalue = 1,
                    default_value = 90,
              )),
-             ( "weight",
-               Percentage(
-                   title = _("Raise weight of recent time"),
-                   label = _("by"),
-                   default_value = 0,
-             )),
+             # ( "weight",
+             #   Percentage(
+             #       title = _("Raise weight of recent time"),
+             #       label = _("by"),
+             #       default_value = 0,
+             # )),
              ( "levels_upper",
                CascadingDropdown(
                    title = _("Dynamic levels (upper bound)"),

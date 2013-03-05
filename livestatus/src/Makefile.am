@@ -5,7 +5,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -22,14 +22,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-bin_PROGRAMS = unixcat
+bin_PROGRAMS = unixcat livecheck
 unixcat_SOURCES = unixcat.c
 unixcat_LDADD = -lpthread
 
 livecheck_SOURCES = livecheck.c strutil.cc check_icmp.c
 
 pkglib_LIBRARIES = livestatus.so 
-pkglib_PROGRAMS = livecheck
+
 livestatus_so_SOURCES = \
 	AndingFilter.cc ClientQueue.cc Column.cc ColumnsColumn.cc CustomVarsExplicitColumn.cc \
 	ContactsColumn.cc CustomVarsColumn.cc CustomVarsFilter.cc DoubleColumn.cc \
@@ -72,6 +72,8 @@ install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(pkglibdir)
 	$(INSTALL_PROGRAM) livestatus.o $(DESTDIR)$(pkglibdir)
 	rm -f $(DESTDIR)$(pkglibdir)/livestatus.so
+	$(INSTALL_PROGRAM) livecheck $(DESTDIR)$(pkglibdir)
+	rm -f $(DESTDIR)$(bindir)/livecheck
 
 clean-local:
 	rm -f *~

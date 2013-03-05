@@ -117,6 +117,16 @@ def check_smart_stats(item, params, info):
 
     return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
 
+check_info["smart.stats"] = {'check_function': check_smart_stats,
+ 'default_levels_variable': None,
+ 'group': 'smart.stats',
+ 'has_perfdata': True,
+ 'inventory_function': lambda info: inventory_smart("smart.stats", info),
+ 'node_info': False,
+ 'service_description': 'SMART %s Stats',
+ 'snmp_info': None,
+ 'snmp_scan_function': None}
+
 
 # Written by Benjamin Odenthal
 # http://exchange.check-mk.org/index.php?option=com_remository&Itemid=53&func=fileinfo&id=1
@@ -135,7 +145,12 @@ def check_smart_temp(item, params, info):
                 return (0, "OK - Temperature is %dC" % celsius, perfdata)
     return (3, "UNKNOWN - Temperature_Celsius not found in agent output for disk %s" % item)
 
-
-check_info['smart.stats'] = (check_smart_stats, "SMART %s Stats",       1, lambda info: inventory_smart("smart.stats", info))
-check_info['smart.temp']  = (check_smart_temp,  "Temperature SMART %s", 1, lambda info: inventory_smart("smart.temp", info))
-checkgroup_of['smart.temp'] = "hw_temperature"
+check_info["smart.temp"] = {'check_function': check_smart_temp,
+ 'default_levels_variable': None,
+ 'group': 'hw_temperature',
+ 'has_perfdata': True,
+ 'inventory_function': lambda info: inventory_smart("smart.temp", info),
+ 'node_info': False,
+ 'service_description': 'Temperature SMART %s',
+ 'snmp_info': None,
+ 'snmp_scan_function': None}

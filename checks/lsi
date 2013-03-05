@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-
 def inventory_lsi(check_type, info):
 
     # convert [ 0, 1, 2, 3, 4, 5, ...] into [ (0,1), (2,3), (4,5), ... ]
@@ -46,6 +44,7 @@ def inventory_lsi(check_type, info):
     else:
         return [(id, '"%s"' % state) for (id, state) in disks]
 
+
 def check_lsi_array(item, _no_params, info):
     volumeid = -1
     for line in info:
@@ -58,6 +57,16 @@ def check_lsi_array(item, _no_params, info):
             else:
                 return (2, 'CRIT - Status is %s' % (status,))
     return (2, 'CRIT - RAID volume %d not existing' % item)
+
+check_info["lsi.array"] = {'check_function': check_lsi_array,
+ 'default_levels_variable': None,
+ 'group': 'raid',
+ 'has_perfdata': False,
+ 'inventory_function': lambda info: inventory_lsi('lsi.array', info),
+ 'node_info': False,
+ 'service_description': 'RAID array %s',
+ 'snmp_info': None,
+ 'snmp_scan_function': None}
 
 
 def check_lsi_disk(item, target_state, info):
@@ -73,9 +82,12 @@ def check_lsi_disk(item, target_state, info):
                 return (2, 'CRIT - disk has state %s (should be %s)' % (state, target_state))
     return (2, 'CRIT - disk not present')
 
-
-check_info['lsi.array'] = (check_lsi_array, "RAID array %s", 0,  lambda info: inventory_lsi('lsi.array', info))
-checkgroup_of['lsi.array'] = "raid"
-
-check_info['lsi.disk'] = (check_lsi_disk, "RAID disk %s", 0,  lambda info: inventory_lsi('lsi.disk', info))
-checkgroup_of['lsi.disk'] = "raid_disk"
+check_info["lsi.disk"] = {'check_function': check_lsi_disk,
+ 'default_levels_variable': None,
+ 'group': 'raid_disk',
+ 'has_perfdata': False,
+ 'inventory_function': lambda info: inventory_lsi('lsi.disk', info),
+ 'node_info': False,
+ 'service_description': 'RAID disk %s',
+ 'snmp_info': None,
+ 'snmp_scan_function': None}

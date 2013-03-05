@@ -424,9 +424,7 @@ register_rule(group + '/' + subgroup_inventory,
     match = 'list',
 )
 
-checkgroups = []
-
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "ad_replication",
     _("Active Directory Replication"),
@@ -442,9 +440,9 @@ checkgroups.append((
         help = _("The name of the replication partner (Destination DC Site/Destination DC)."),
     ),
     "first"
-))
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "plesk_backups",
     _("Plesk Backups"),
@@ -488,9 +486,10 @@ checkgroups.append((
         title = _("Service descriptions"),
         allow_empty = False
     ),
-    None))
+    None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_storage,
     "brocade_fcport",
     _("Brocade FC FibreChannel ports"),
@@ -632,9 +631,9 @@ checkgroups.append((
         help = _("The name of the switch port"),
     ),
     "first"
-))
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_storage,
     "fs_mount_options",
     _("Filesystem mount options (Linux/UNIX)"),
@@ -647,11 +646,10 @@ checkgroups.append((
     TextAscii(
         title = _("Mount point"),
         allow_empty = False),
-    "first"))
+    "first"
+)
 
-
-
-checkgroups.append((
+register_check_parameters(
    subgroup_os,
     "systemtime",
     _("Windows system time offset"),
@@ -664,9 +662,9 @@ checkgroups.append((
     ),
     None,
     "first"
-))
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_storage,
     "fileinfo",
     _("Size and age of single files"),
@@ -715,7 +713,7 @@ checkgroups.append((
         title = _("File name"),
         allow_empty = True),
     "first"
-))
+)
 
 register_rule(group + '/' + subgroup_storage,
     varname   = "filesystem_groups",
@@ -778,8 +776,7 @@ register_rule(group + '/' + subgroup_storage,
     match = 'list',
 )
 
-
-checkgroups.append((
+register_check_parameters(
     subgroup_storage,
     "fileinfo-groups",
     _("Size, age and count of file groups"),
@@ -863,9 +860,9 @@ checkgroups.append((
         title = _("Filegroup Name"),
         allow_empty = True),
     "first"
-))
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_storage,
     "netapp_fcprtio",
     _("Netapp FC Port throughput"),
@@ -896,10 +893,10 @@ checkgroups.append((
         title = _("File name"),
         allow_empty = True),
     "first"
-))
+)
 
 
-checkgroups.append((
+register_check_parameters(
     subgroup_os,
     "memory_pagefile_win",
     _("Memory and pagefile levels for Windows"),
@@ -946,9 +943,9 @@ checkgroups.append((
         ]),
     None,
     "dict"
-))
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_networking,
     "tcp_conn_stats",
     ("TCP connection stats"),
@@ -1076,9 +1073,9 @@ checkgroups.append((
     ),
     None,
     "first"
-))
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "msx_queues",
     _("MS Exchange message queues"),
@@ -1102,10 +1099,10 @@ checkgroups.append((
               ],
            otherlabel = _("specify manually ->"),
            explicit = TextAscii(allow_empty = False)),
-    "first")
+    "first"
 )
 
-checkgroups.append((
+register_check_parameters(
     subgroup_storage,
     "filesystem",
     _("Filesystems (used space and growth)"),
@@ -1179,7 +1176,7 @@ checkgroups.append((
         help = _("For Linux/UNIX systems, specify the mount point, for Windows systems "
                  "the drive letter uppercase followed by a colon, e.g. <tt>C:</tt>"),
         allow_empty = False),
-    "dict")
+    "dict"
 )
 
 register_check_parameters(
@@ -1203,9 +1200,10 @@ register_check_parameters(
     TextAscii(
         title = _("Name of the bonding interface"),
     ),
-    "dict")
+    "dict"
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_networking,
     "if",
     _("Network interfaces and switch ports"),
@@ -1340,9 +1338,9 @@ checkgroups.append((
         title = _("port specification"),
         allow_empty = False),
     "dict",
-    ))
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_networking,
     "cisco_qos",
     _("Cisco quality of service"),
@@ -1407,9 +1405,9 @@ checkgroups.append((
         title = _("port specification"),
         allow_empty = False),
     "dict",
-    ))
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_os,
     "cisco_mem",
     _("Cisco Memory Usage"),
@@ -1436,9 +1434,9 @@ checkgroups.append((
         allow_empty = False
     ),
     None
-))
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_os,
     "memory",
     _("Main memory usage (Linux / UNIX / Other Devices)"),
@@ -1462,9 +1460,10 @@ checkgroups.append((
                   Integer(title = _("Warning at"), unit = _("MB")),
                   Integer(title = _("Critical at"), unit = _("MB"))]),
             ]),
-    None, None))
+    None, None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_printing,
     "printer_supply",
     _("Printer cardridge levels"),
@@ -1479,9 +1478,9 @@ checkgroups.append((
         allow_empty = True
     ),
     None,
-    ))
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_os,
     "cpu_load",
     _("CPU load (not utilization!)"),
@@ -1498,10 +1497,10 @@ checkgroups.append((
           default_difference = (2.0, 4.0),
           default_levels = (5.0, 10.0),
     ),
+    None, None
+)
 
-    None, None))
-
-checkgroups.append((
+register_check_parameters(
     subgroup_os,
     "cpu_utilization",
     _("CPU utilization (percentual)"),
@@ -1514,9 +1513,10 @@ checkgroups.append((
         help = _("The CPU utilization sums up the percentages of CPU time that is used "
                  "for user processes and kernel routines over all available cores within "
                  "the last check interval. The possible range is from 0% to 100%")),
-    None, None))
+    None, None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_os,
     "cpu_iowait",
     _("CPU utilization (disk wait)"),
@@ -1534,9 +1534,10 @@ checkgroups.append((
                  "for data coming from or going to disk. If you have a significant disk wait "
                  "the the bottleneck of your server is IO. Please note that depending on the "
                  "applications being run this might or might not be totally normal.")),
-    None, None))
+    None, None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_environment,
     "akcp_humidity",
     _("AKCP Humidity Levels"),
@@ -1552,9 +1553,10 @@ checkgroups.append((
     TextAscii(
         title = _("Service descriptions"),
         allow_empty = False),
-     None))
+     None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "oracle_tablespaces",
     _("Oracle Tablespaces"),
@@ -1639,10 +1641,10 @@ checkgroups.append((
         help = _("Here you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"),
         regex = '.+\..+',
         allow_empty = False),
-     None))
+     None
+)
 
-
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "oracle_logswitches",
     _("Oracle Logswitches"),
@@ -1658,10 +1660,10 @@ checkgroups.append((
     TextAscii(
         title = _("Service descriptions"),
         allow_empty = False),
-     None))
+     None
+)
 
-
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "mssql_backup",
     _("MSSQL Backups"),
@@ -1682,9 +1684,10 @@ checkgroups.append((
     TextAscii(
         title = _("Service descriptions"),
         allow_empty = False),
-     None))
+     None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "mssql_counters_locks",
     _("MSSQL Locks"),
@@ -1737,10 +1740,10 @@ checkgroups.append((
         title = _("Service descriptions"),
         allow_empty = False
     ),
-    None))
+    None
+)
 
-
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "mysql_sessions",
     _("MySQL Sessions & Connections"),
@@ -1779,9 +1782,10 @@ checkgroups.append((
          ]
     ),
     None,
-    None))
+    None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "mysql_innodb_io",
     _("MySQL InnoDB Throughput"),
@@ -1811,9 +1815,10 @@ checkgroups.append((
                  unit = "min"))
         ]),
     None,
-    "dict"))
+    "dict"
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "mysql_connections",
     _("MySQL Connections"),
@@ -1835,9 +1840,10 @@ checkgroups.append((
             ),
         ]),
     None,
-    "dict"))
+    "dict"
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "dbsize",
     _("Size of MySQL/PostgresQL databases"),
@@ -1854,9 +1860,10 @@ checkgroups.append((
     TextAscii(
         title = _("Name of the database"),
     ),
-    "first"))
+    "first"
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "postgres_sessions",
     _("PostgreSQL Sessions"),
@@ -1885,10 +1892,11 @@ checkgroups.append((
          ]
     ),
     None,
-    None))
+    None
+)
 
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "oracle_sessions",
     _("Oracle Sessions"),
@@ -1903,9 +1911,10 @@ checkgroups.append((
     TextAscii(
         title = _("Database name"),
         allow_empty = False),
-     None))
+     None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "postgres_stat_database",
     _("PostgreSQL Database Statistics"),
@@ -1971,9 +1980,10 @@ checkgroups.append((
     TextAscii(
         title = _("Database name"),
         allow_empty = False),
-    None))
+    None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "win_dhcp_pools",
     _("Windows DHCP Pool"),
@@ -1987,9 +1997,10 @@ checkgroups.append((
     TextAscii(
         title = _("Service descriptions"),
         allow_empty = False),
-     None))
+     None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_os,
     "threads",
     _("Number of threads"),
@@ -1999,9 +2010,10 @@ checkgroups.append((
           elements = [
               Integer(title = _("Warning at"), unit = _("threads"), default_value = 1000),
               Integer(title = _("Critical at"), unit = _("threads"), default_value = 2000)]),
-    None, None))
+    None, None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "vms_procs",
     _("Number of processes on OpenVMS"),
@@ -2012,9 +2024,10 @@ checkgroups.append((
                   Integer(title = _("Critical at"), unit = _("processes"), default_value = 200)]),
         title = _("Impose levels on number of processes"),
     ),
-    None, None))
+    None, None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_os,
     "vm_counter",
     _("Number of kernel events per second"),
@@ -2034,9 +2047,10 @@ checkgroups.append((
            ( "Context Switches",  _("Context Switches") ),
            ( "Process Creations", _("Process Creations") ),
            ( "Major Page Faults", _("Major Page Faults") )]),
-    "first"))
+    "first"
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_storage,
     "disk_io",
     _("Levels on disk IO (throughput)"),
@@ -2112,7 +2126,8 @@ checkgroups.append((
                  "sum of read or write throughput write <tt>read</tt> or <tt>write</tt> resp. "
                  "A per-disk IO is specified by the drive letter and a colon on Windows "
                  "(e.g. <tt>C:</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")),
-    "first"))
+    "first"
+)
 
 
 register_rule(
@@ -2167,9 +2182,7 @@ register_rule(group + '/' + subgroup_networking,
     match = 'list',
 )
 
-
-
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "mailqueue_length",
     _("Number of mails in outgoing mail queue"),
@@ -2179,37 +2192,42 @@ checkgroups.append((
           elements = [
               Integer(title = _("Warning at"), label = _("mails")),
               Integer(title = _("Critical at"), label = _("mails"))]),
-    None, None))
+    None, None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_os,
     "uptime",
     _("Display the system's uptime as a check"),
     None,
-    None, None))
+    None, None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_storage,
     "zpool_status",
     _("ZFS storage pool status"),
     None,
-    None, None))
+    None, None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_virt,
     "vm_state",
     _("Overall state of a virtual machine"),
     None,
-    None, None))
+    None, None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_hardware,
     "hw_errors",
     _("Simple checks for BIOS/Hardware errors"),
     None,
-    None, None))
+    None, None
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "omd_status",
     _("OMD site status"),
@@ -2217,9 +2235,10 @@ checkgroups.append((
     TextAscii(
         title = _("Name of the OMD site"),
         help = _("The name of the OMD site to check the status for")),
-    "first"))
+    "first"
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_storage,
     "network_fs",
     _("Network filesystem - overall status (e.g. NFS)"),
@@ -2227,9 +2246,10 @@ checkgroups.append((
     TextAscii(
         title = _("Name of the mount point"),
         help = _("For NFS enter the name of the mount point.")),
-    "first"))
+    "first"
+)
 
-checkgroups.append((
+register_check_parameters(
      subgroup_storage,
     "multipath",
     _("Multipathing - health of a multipath LUN"),
@@ -2240,9 +2260,10 @@ checkgroups.append((
         help = _("For Linux multipathing this is either the UUID (e.g. "
                  "60a9800043346937686f456f59386741), or the configured "
                  "alias.")),
-    "first"))
+    "first"
+)
 
-checkgroups.append((
+register_check_parameters(
      subgroup_storage,
     "hpux_multipath",
     _("Multipathing on HPUX - state of paths of a LUN"),
@@ -2256,10 +2277,10 @@ checkgroups.append((
         ]),
     TextAscii(
         title = _("WWID of the LUN")),
-    "first"))
+    "first"
+)
 
-
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "services",
     _("Windows Services"),
@@ -2314,9 +2335,10 @@ checkgroups.append((
          "do not mix up the service name with the display name of the service."
          "The latter one is just being displayed as a further information."),
         allow_empty = False),
-    "first"))
+    "first"
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_storage,
     "raid",
     _("RAID: overall state"),
@@ -2326,9 +2348,10 @@ checkgroups.append((
         help = _("For Linux MD specify the device name without the "
                  "<tt>/dev/</tt>, e.g. <tt>md0</tt>, for hardware raids "
                  "please refer to the manual of the actual check being used.")),
-    "first"))
+    "first"
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_storage,
     "raid_disk",
     _("RAID: state of a single disk"),
@@ -2342,9 +2365,10 @@ checkgroups.append((
         title = _("Number or ID of the disk"),
         help = _("How the disks are named depends on the type of hardware being "
                  "used. Please look at already inventorized checks for examples.")),
-    "first"))
+    "first"
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_environment,
     "room_temperature",
     _("Room temperature (external thermal sensors)"),
@@ -2359,9 +2383,10 @@ checkgroups.append((
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identificator of the themal sensor.")),
-    "first"))
+    "first"
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_environment,
     "eaton_enviroment",
     _("Temperature and Humidity for Eaton UPS"),
@@ -2390,10 +2415,10 @@ checkgroups.append((
                   ])),
             ]),
             None,
-    "first"))
+    "first"
+)
 
-
-checkgroups.append((
+register_check_parameters(
     subgroup_environment,
     "pdu_gude",
     _("Levels for Gude PDU Devices"),
@@ -2438,10 +2463,11 @@ checkgroups.append((
     TextAscii(
         title = _("Phase Number"),
         help = _("The Number of the power Phase.")),
-    "first"))
+    "first"
+)
 
 
-checkgroups.append((
+register_check_parameters(
     subgroup_environment,
     "temperature_auto",
     _("Temperature sensors with builtin levels"),
@@ -2449,9 +2475,10 @@ checkgroups.append((
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identificator of the themal sensor.")),
-    "first"))
+    "first"
+)
 
-checkgroups.append((
+register_check_parameters(
    subgroup_os,
     "ntp_time",
     _("State of NTP time synchronisation"),
@@ -2478,9 +2505,9 @@ checkgroups.append((
     ),
     None,
     "first"
-))
+)
 
-checkgroups.append((
+register_check_parameters(
    subgroup_os,
     "apc_symentra",
     _("Levels for APC Symentra Check"),
@@ -2506,7 +2533,7 @@ checkgroups.append((
     ),
     None,
     "first"
-))
+)
 
 syslog_facilities = [
     (0, "kern"),
@@ -2531,7 +2558,7 @@ syslog_facilities = [
     (23, "local7"),
 ]
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "jvm_memory",
     _("JVM memory levels"),
@@ -2601,9 +2628,9 @@ checkgroups.append((
         allow_empty = False,
     ),
     "dict"
-))
+)
 
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "db2_mem",
     _("Memory levels for DB2 memory usage"),
@@ -2616,8 +2643,8 @@ checkgroups.append((
     TextAscii(
         title = _("Instance name"),
         allow_empty = True),
-    "first"))
-
+    "first"
+)
 
 register_check_parameters(subgroup_applications,
     "logwatch_ec",
@@ -2718,12 +2745,6 @@ register_check_parameters(subgroup_applications,
     'first',
 )
 
-# Create rules for check parameters of inventorized checks
-for subgroup, checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
-    register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, matchtype)
-
-checkgroups = []
-
 register_rule(
     group + "/" + subgroup_networking,
     "if_disable_if64_hosts",
@@ -2740,7 +2761,7 @@ register_rulegroup("static", _("Manual Checks"),
 
 
 # wmic_process does not support inventory at the moment
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "wmic_process",
     _("Memory and CPU of processes on Windows"),
@@ -2761,10 +2782,11 @@ checkgroups.append((
     TextAscii(
         title = _("Process name for usage in the Nagios service description"),
         allow_empty = False),
-    "first"))
+    "first", False
+)
 
 # Add checks that have parameters but are only configured as manual checks
-checkgroups.append((
+register_check_parameters(
     subgroup_applications,
     "ps",
     _("State and count of processes"),
@@ -2823,9 +2845,5 @@ checkgroups.append((
         regex_error = _("Please use only a-z, A-Z, 0-9, space, underscore, "
                         "dot and hyphon for your service description"),
     ),
-    "first"))
-
-
-for subgroup, checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
-    register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, matchtype, False)
-
+    "first", False
+)

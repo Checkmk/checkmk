@@ -793,7 +793,7 @@ register_rule(group,
                            "check results are submitted on a regular base. If not, the check is being set to "
                            "warning, critical or unknown."),
                   optional_keys = False,
-                  elements = [ 
+                  elements = [
                       ( "interval",
                         Integer(
                             title = _("Expected update interval"),

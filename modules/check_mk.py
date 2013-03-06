@@ -1906,12 +1906,12 @@ define service {
                                 break
                     except:
                         pass
-            
+
             if "freshness" in entry:
                 freshness = "  check_freshness\t\t1\n" + \
                             "  freshness_threshold\t\t%d\n" % (60 * entry["freshness"]["interval"])
                 command_line = "echo %s && exit %d" % (
-                       quote_shell_string(entry["freshness"]["output"]), entry["freshness"]["state"]) 
+                       quote_shell_string(entry["freshness"]["output"]), entry["freshness"]["state"])
             else:
                 freshness = ""
 

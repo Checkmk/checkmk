@@ -239,7 +239,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
     # Try to get data from per-user cache:
     # make sure, BI permissions have not changed since last time.
-    # g_user_cache is a global variable for all succeeding functions, so 
+    # g_user_cache is a global variable for all succeeding functions, so
     # that they do not need to check the user again
     cache = g_cache.get(user)
     if cache:
@@ -1487,7 +1487,7 @@ def aggr_render_node(tree, title, mousecode, show_host):
          % (effective_state["state"], addclass, render_bi_state(effective_state["state"]))
     if mousecode:
         h += '<img class=opentree %s>' % mousecode
-        h += '<span class="content name" %s>%s</span>' % (mousecode, title) 
+        h += '<span class="content name" %s>%s</span>' % (mousecode, title)
     else:
         h += title
 

@@ -504,7 +504,7 @@
     * if-checks now support "bit" as measurement unit
     * winperf_phydisk: monitor average queue length for read/write
 
-1.2.0p6:
+1.2.0p5:
     Checks & Agents:
     * FIX: windows agent: fixed possible crash in eventlog section
 

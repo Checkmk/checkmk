@@ -24,6 +24,9 @@
     * FIX: hr_mem: fix max value in performance data (thanks to Michaël COQUARD)
     * FIX: f5_bigip_psu: fix inventory function (returned list instead of tuple)
     * FIX: mysql.connections: avoid crash on legacy agent output
+    * FIX: tcp_conn_stats: use /proc/net/tcp instead of netstat -tn. This
+           should avoid massive performance problems on system with many
+           connections
     * Linux agent: limit netstat to 10 seconds
     * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
       reordering of matched groups

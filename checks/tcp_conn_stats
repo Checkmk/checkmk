@@ -25,17 +25,17 @@
 # Boston, MA 02110-1301 USA.
 
 tcp_conn_stats_states = [
-"ESTABLISHED",  # connection up and passing data
-"SYN_SENT",     # session has been requested by us; waiting for reply from remote endpoint
-"SYN_RECV",     # session has been requested by a remote endpoint for a socket on which we were listening
-"LAST_ACK",     # our socket is closed; remote endpoint has also shut down; we are waiting for a final acknowledgement
-"CLOSE_WAIT",   # remote endpoint has shut down; the kernel is waiting for the application to close the socket
-"TIME_WAIT",    # socket is waiting after closing for any packets left on the network
-"CLOSED",       # socket is not being used (FIXME. What does mean?)
-"CLOSING",      # our socket is shut down; remote endpoint is shut down; not all data has been sent
-"FIN_WAIT1",    # our socket has closed; we are in the process of tearing down the connection
-"FIN_WAIT2",    # the connection has been closed; our socket is waiting for the remote endpoint to shut down
-"BOUND",        # Socket did a bound() but TCP stack not yet active (Solaris)
+ ( "ESTABLISHED", "01"),  # connection up and passing data
+ ( "SYN_SENT",    "02"),  # session has been requested by us; waiting for reply from remote endpoint
+ ( "SYN_RECV",    "03"),  # session has been requested by a remote endpoint for a socket on which we were listening
+ ( "LAST_ACK",    "09"),  # our socket is closed; remote endpoint has also shut down; we are waiting for a final acknowledgement
+ ( "CLOSE_WAIT",  "08"),  # remote endpoint has shut down; the kernel is waiting for the application to close the socket
+ ( "TIME_WAIT",   "06"),  # socket is waiting after closing for any packets left on the network
+ ( "CLOSED",      "07"),  # socket is not being used (FIXME. What does mean?)
+ ( "CLOSING",     "0B"),  # our socket is shut down; remote endpoint is shut down; not all data has been sent
+ ( "FIN_WAIT1",   "04"),  # our socket has closed; we are in the process of tearing down the connection
+ ( "FIN_WAIT2",   "05"),  # the connection has been closed; our socket is waiting for the remote endpoint to shut down
+ ( "BOUND",       None),  # Socket did a bound() but TCP stack not yet active (Solaris)
 ]
 
 
@@ -50,8 +50,8 @@ def check_tcp_conn_stats(item, params, info):
     worst_state = 0
     info = []
     perfdata = []
-    for state in tcp_conn_stats_states:
-        num = int(stats.get(state, 0))
+    for state, hex in tcp_conn_stats_states:
+        num = int(stats.get(state, stats.get(hex, 0)))
         if num > 0:
             infotext = "%s: %d" % (state, num)
         else:

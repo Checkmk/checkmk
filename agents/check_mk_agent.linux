@@ -180,7 +180,9 @@ fi
 
 # Number of TCP connections in the various states
 echo '<<<tcp_conn_stats>>>'
-waitmax 10 netstat -nt | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
+# waitmax 10 netstat -nt | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
+# New implementation: netstat is very slow for large TCP tables
+awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }' < /proc/net/tcp
 
 # Platten- und RAID-Status von LSI-Controlleren, falls vorhanden
 if type cfggen > /dev/null ; then

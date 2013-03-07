@@ -140,5 +140,5 @@ print "<<<<>>>>"
 
 print "<<<local>>>"
 for name, data in object_collection.items():
-    print "0 %s-%s - INFO: collecting piggyu data for %s" % (data[0], name, data[1])
+    print "0 %s-%s - INFO: collecting piggyback data for %s" % (data[0], name, data[1])
 host.disconnect()

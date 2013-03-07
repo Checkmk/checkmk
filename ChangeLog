@@ -91,6 +91,7 @@
     * Linux agent: limit netstat to 10 seconds
     * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
       reordering of matched groups
+    * FIX: f5_bigip_psu - fixed inventory function
 
     Multisite:
     * FIX: Fixed problem with error during localization scanning

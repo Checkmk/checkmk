@@ -58,7 +58,7 @@ printer_supply_some_remaining_status = 1
 def printer_supply_fix_infos(info):
     colors = []
     new_info = []
-    for line in info:
+    for index, line in enumerate(info):
         line_0 = snmp_decode_string(line[0]) # give chance for latin1->utf8 decoding
         if line_0.startswith('Toner Cartridge') \
            or line_0.startswith('Image Drum Unit'):

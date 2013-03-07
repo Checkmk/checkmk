@@ -92,6 +92,7 @@
     * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
       reordering of matched groups
     * FIX: f5_bigip_psu - fixed inventory function
+    * FIX: printer_supply - fixed inventory function for some kind of OKI printers
 
     Multisite:
     * FIX: Fixed problem with error during localization scanning

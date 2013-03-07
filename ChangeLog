@@ -61,6 +61,10 @@
       logwatch_ec ruleset. With this option the forwarding can now be enabled
       for each logfile on a host
 
+1.2.2b5:
+    livestatus:
+    * FIX: possible crash with VERY long downtime comments
+
 1.2.2b4:
     Core:
     * FIX: Fix output of cmk -D: datasource programs were missing

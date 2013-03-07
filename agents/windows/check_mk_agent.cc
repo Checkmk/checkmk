@@ -1051,7 +1051,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 	    char *w = source_name;
 	    while (*w) {
 		if (*w == ' ') *w = '_';
-		*w++;
+		    w++;
 	    }
 
 	    // prepare array of zero terminated strings to be inserted

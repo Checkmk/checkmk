@@ -46,8 +46,8 @@ def check_esx_vsphere_virtualmachine_mem(item, params, info):
     host_memory_usage   = savefloat(data["summary.quickStats.hostMemoryUsage"][0]) * 1024 * 1024
     #size of the balloon driver in the VM
     ballooned_memory    = savefloat(data["summary.quickStats.balloonedMemory"][0]) * 1024 * 1024
-    #The portion of memory, in MB, that is granted to this VM from non-shared host memory
-    private_memory      = savefloat(data["summary.quickStats.privateMemory"][0]) * 1024 * 1024
+    #The portion of memory, in MB, that is granted to this VM from non-shared host memor(musst not be set)
+    private_memory      = savefloat(data.get("summary.quickStats.privateMemory",[0])[0]) * 1024 * 1024
     #The portion of memory, in MB, that is granted to this VM from host memory that is shared between VMs.
     shared_memory       = savefloat(data["summary.quickStats.sharedMemory"][0]) * 1024 * 1024
 

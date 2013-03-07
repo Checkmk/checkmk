@@ -9516,12 +9516,16 @@ def mode_ruleeditor(phase):
         if main_group not in groupnames:
             groupnames.append(main_group)
     menu = []
-    for groupname in groupnames + ["used"]:
+    for groupname in groupnames + ["used", "unused"]:
         url = make_link([("mode", "rulesets"), ("group", groupname),
                          ("host", only_host), ("local", only_local)])
         if groupname == "used":
             title = _("Used Rulesets")
             help = _("Show only modified rulesets<br>(all rulesets with at least one rule)")
+            icon = "usedrulesets"
+        elif groupname == "unused":
+            title = _("Unused Rulesets")
+            help = _("Show only modified rulesets<br>that do not match any host")
             icon = "usedrulesets"
         else:
             title, help = g_rulegroups.get(groupname, (groupname, ""))
@@ -9548,16 +9552,32 @@ def rule_search_form():
     html.write("<br>")
 
 
+def rule_is_unused(rule, rule_folder, rulespec, hosts):
+    value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
+    found_match = False
+    for (hostname, hostvalues) in hosts.items():
+        reason = rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list, rule_folder, hostvalues[".folder"], hostname, NO_ITEM)
+        if reason == True:
+            found_match = True
+            break
+    return not found_match
+
 def mode_rulesets(phase):
     group = html.var("group") # obligatory
     search = html.var("search")
     if search != None:
         search = search.strip().lower()
 
+    only_unused = False
     if group == "used":
         title = _("Used Rulesets")
         help = _("Non-empty rulesets")
         only_used = True
+    elif group == "unused":
+        title = _("Unused Rulesets")
+        help = _("Rulesets which do not match to any host")
+        only_used   = True
+        only_unused = True
     elif search != None:
         title = _("Rules matching ") + search
         help = _("All rules that contain '%s' in their name") % search
@@ -9591,7 +9611,7 @@ def mode_rulesets(phase):
     elif phase == "action":
         return
 
-    if not only_host:
+    if not only_host and not only_unused:
         render_folder_path(keepvarnames = ["mode", "local", "group"])
 
     if search != None:
@@ -9613,14 +9633,21 @@ def mode_rulesets(phase):
         if only_used:
             all_rulesets = dict([ r for r in all_rulesets.items() if len(r[1]) > 0 ])
 
+
     # Select matching rule groups while keeping their configured order
     groupnames = [ gn for gn, rulesets in g_rulespec_groups
-                   if only_used or search != None or gn == group or gn.startswith(group + "/") ]
+                   if only_used or only_unused or search != None or gn == group or gn.startswith(group + "/") ]
+
 
     something_shown = False
     html.write('<div class=rulesets>')
     # Loop over all ruleset groups
     title_shown = False
+
+
+    if only_unused:
+        all_hosts = load_all_hosts()
+
     for groupname in groupnames:
         # Show information about a ruleset
         # Sort rulesets according to their title
@@ -9636,6 +9663,20 @@ def mode_rulesets(phase):
             num_rules = len(rules)
             if num_rules == 0 and (only_used or only_local):
                 continue
+
+            unused_rules = [] 
+            if only_unused:
+                current_rule_folder = None
+                for f, rule in rules:
+                    if current_rule_folder == None or current_rule_folder != f:
+                        current_rule_folder = f
+                        rulenr = 0
+                    else:
+                        rulenr = rulenr + 1
+                    if rule_is_unused(rule, f, rulespec, all_hosts):
+                        unused_rules.append( (rulenr, (f,rule)) )
+                if len(unused_rules) == 0:
+                    continue
 
             # handle search
             if search != None \
@@ -9675,17 +9716,82 @@ def mode_rulesets(phase):
 
             something_shown = True
 
-            url_vars = [("mode", "edit_ruleset"), ("varname", varname)]
-            if only_host:
-                url_vars.append(("host", only_host))
-            view_url = make_link(url_vars)
+            if not unused_rules: 
+                url_vars = [("mode", "edit_ruleset"), ("varname", varname)]
+                if only_host:
+                    url_vars.append(("host", only_host))
+                view_url = make_link(url_vars)
+                html.write('<div class=ruleset><div class=text>')
+                html.write('<a class="%s" href="%s">%s</a>' %
+                          (num_rules and "nonzero" or "zero", view_url, rulespec["title"]))
+                html.write('<span class=dots>%s</span></div>' % ("." * 100))
+                html.write('<div class="rulecount %s" title="%s">%d</div>' %
+                          (num_rules and "nonzero" or "zero", title, num_rules))
+            else:
+                html.write("<div style='padding-left: 10px;'>")
+                table.begin(title = _("Unused Rules for %s") % rulespec["title"], css="ruleset")
+                for rel_rulenr, (f, rule) in unused_rules:
+                    value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
+                    table.row()
+                    
+                    # Actions
+                    table.cell("Actions", css="ruleset")
+                    edit_url = make_link([
+                        ("mode", "edit_rule"),
+                        ("varname", varname),
+                        ("rulenr", rel_rulenr),
+                        ("rule_folder", f[".path"])])
+                    html.icon_button(edit_url, _("Edit this rule"), "edit")
+                    
+                    delete_url = make_action_link([
+                        ("mode", "edit_ruleset"),
+                        ("varname", varname),
+                        ("_action", "delete"),
+                        ("_folder", f[".path"]),
+                        ("_rulenr", rel_rulenr)])
+                    html.icon_button(delete_url, _("Delete this rule"), "delete")
 
-            html.write('<div class=ruleset><div class=text>')
-            html.write('<a class="%s" href="%s">%s</a>' %
-                      (num_rules and "nonzero" or "zero", view_url, rulespec["title"]))
-            html.write('<span class=dots>%s</span></div>' % ("." * 100))
-            html.write('<div class="rulecount %s" title="%s">%d</div>' %
-                    (num_rules and "nonzero" or "zero", title, num_rules))
+                    # Rule folder
+                    table.cell(_("Rule folder"))
+                    html.write(get_folder_aliaspath(f, show_main = False))
+
+                    # Conditions
+                    table.cell(_("Conditions"), css="condition")
+                    render_conditions(rulespec, tag_specs, host_list, item_list, varname, f)
+        
+                    # Value
+                    table.cell(_("Value"))
+                    if rulespec["valuespec"]:
+                        try:
+                            value_html = rulespec["valuespec"].value_to_text(value)
+                        except:
+                            try:
+                                reason = ""
+                                rulespec["valuespec"].validate_datatype(value, "")
+                            except Exception, e:
+                                reason = str(e)
+    
+                            value_html = '<img src="images/icon_alert.png" class=icon>' \
+                                       + _("The value of this rule is not valid. ") \
+                                       + reason
+                    else:
+                        img = value and "yes" or "no"
+                        title = value and _("This rule results in a positive outcome.") \
+                                      or  _("this rule results in a negative outcome.")
+                        value_html = '<img align=absmiddle class=icon title="%s" src="images/rule_%s.png">' \
+                                        % (title, img)
+                    html.write(value_html)
+                    
+                    # Comment
+                    table.cell(_("Comment"))
+                    url = rule_options.get("docu_url")
+                    if url:
+                        html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
+                        html.write("&nbsp;")
+                    html.write(htmllib.attrencode(rule_options.get("comment", "")))
+
+                table.end()
+                html.write("</div>")
             html.write('</div>')
 
     if something_shown:
@@ -9695,7 +9801,10 @@ def mode_rulesets(phase):
         if only_host:
             html.write("<div class=info>" + _("There are no rules with an exception for the host <b>%s</b>.") % only_host + "</div>")
         else:
-            html.write("<div class=info>" + _("There are no rules defined in this folder.") + "</div>")
+            if only_unused:
+                html.write("<div class=info>" + _("There are no unused rules.") + "</div>")
+            else:
+                html.write("<div class=info>" + _("There are no rules defined in this folder.") + "</div>")
 
     html.write('</div>')
 
@@ -9759,6 +9868,8 @@ def mode_edit_ruleset(phase):
               make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
         html.context_button(_("Used Rulesets"),
               make_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
+        html.context_button(_("Unsed Rulesets"),
+              make_link([("mode", "rulesets"), ("group", "unused")]), "usedrulesets")
         if hostname:
             html.context_button(_("Services"),
                  make_link([("mode", "inventory"), ("host", hostname)]), "back")

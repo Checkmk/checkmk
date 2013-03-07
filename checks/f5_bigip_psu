@@ -46,7 +46,7 @@ def inventory_f5_bigip_psu(info):
         psu, state = line[0]
         # inventorize the PSU unless it's in state 2 (notpresent)
         if state != "2":
-            inventory.append([("%s" % psu), None])
+            inventory.append(psu, None)
     return inventory
 
 

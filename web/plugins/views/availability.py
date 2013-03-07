@@ -149,9 +149,6 @@ avoption_entries = [
            ( "host_down",
               Checkbox(label = _("Consider times where the host is down")),
            ),
-           ( "notification_period",
-              Checkbox(label = _("Consider notification period")),
-           ),
            ( "unmonitored",
               Checkbox(label = _("Include unmonitored time")),
            ),
@@ -205,6 +202,20 @@ avoption_entries = [
        optional_keys = False,
     ),
   ),
+
+  # How to deal with times out of the notification period
+  ( "notification_period",
+    "single",
+     DropdownChoice(
+         title = _("Notification Period"),
+         choices = [
+            ( "honor", _("Honor notification period") ),
+            ( "ignore", _("Ignore notification period") ),
+            ( "exclude", _("Exclude notification period" ) ),
+         ]
+     )
+  ),
+
   # Format of numbers
   ( "timeformat",
     "single",
@@ -267,10 +278,10 @@ def render_availability_options():
             "include" : "honor",
             "exclude_ok" : False,
         },
+        "notification_period" : "honor",
         "consider"       : {
             "flapping"            : True,
             "host_down"           : True,
-            "notification_period" : True,
             "unmonitored"         : True,
         },
         "timeformat"     : "percentage_2",
@@ -284,6 +295,9 @@ def render_availability_options():
         "dont_merge" : False,
         "summary" : "sum",
     })
+    # Make sure that parameters are set that have not been present in the
+    # original version. This code can be dropped in a couple of years.
+    avoptions.setdefault("notification_period", "honor")
 
     is_open = False
     html.begin_form("avoptions")
@@ -498,7 +512,9 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
                     s = "unmonitored"
                     if not avoptions["consider"]["unmonitored"]:
                         continue
-                elif span["in_notification_period"] == 0 and avoptions["consider"]["notification_period"]:
+                elif span["in_notification_period"] == 0 and avoptions["notification_period"] == "exclude":
+                    continue
+                elif span["in_notification_period"] == 0 and avoptions["notification_period"] == "honor":
                     s = "outof_notification_period"
                 elif (span["in_downtime"] or span["in_host_downtime"]) and not \
                     (avoptions["downtimes"]["exclude_ok"] and state == 0) and not \
@@ -697,9 +713,9 @@ def render_availability_table(availability, from_time, until_time, range_title, 
 
     # Helper function, needed in row and in summary line
     def cell_active(sid):
-        if sid == "outof_notification_period" and not avoptions["consider"]["notification_period"]:
+        if sid == "outof_notification_period" and avoptions["notification_period"] != "honor":
             return False
-        elif sid == "in_downtime" and avoptions["downtimes"]["include"] == "ignore":
+        elif sid == "in_downtime" and avoptions["downtimes"]["include"] != "honor":
             return False
         elif sid == "unmonitored" and not avoptions["consider"]["unmonitored"]:
             return False
@@ -764,6 +780,8 @@ def render_availability_table(availability, from_time, until_time, range_title, 
         considered_duration = until_time - from_time
 
         for sid, css, sname, help in availability_columns:
+            if not cell_active(sid):
+                continue
             number = summary.get(sid, 0)
             if show_summary == "average" or avoptions["timeformat"].startswith("percentage"):
                 number /= len(availability)

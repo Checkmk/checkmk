@@ -86,6 +86,8 @@
     * FIX: check_ldap: added missing version option -2, -3, -3 -T (TLS)
     * FIX: mssql: Agent plugin now supports MSSQL Server 2012
     * FIX: hr_mem: fix max value in performance data (thanks to Michaël COQUARD)
+    * FIX: f5_bigip_psu: fix inventory function (returned list instead of tuple)
+    * FIX: mysql.connections: avoid crash on legacy agent output
     * Linux agent: limit netstat to 10 seconds
     * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
       reordering of matched groups
@@ -565,6 +567,13 @@
       allow monitoring Siemens HiPath 3000/5000 series PBX.
     * if-checks now support "bit" as measurement unit
     * winperf_phydisk: monitor average queue length for read/write
+
+1.2.0p5:
+    Checks & Agents:
+    * FIX: windows agent: fixed possible crash in eventlog section
+
+    BI:
+    * FIX: fixed bug in aggregation count (thanks Neil) 
 
 1.2.0p4:
     WATO:

@@ -352,6 +352,9 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age):
         write_cache_file(cache_relpath, repr(table) + "\n")
         return table
 
+    # Note: even von SNMP-tagged hosts TCP based checks can be used, if
+    # the data comes piggyback!
+
     # No SNMP check. Then we must contact the check_mk_agent. Have we already
     # tries to get data from the agent? If yes we must not do that again! Even if
     # no cache file is present.
@@ -383,8 +386,10 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age):
 
     output += piggy_output
 
-    if len(output) == 0:
+    if len(output) == 0 and is_tcp_host(hostname):
         raise MKAgentError("Empty output from agent")
+    elif len(output) == 0:
+        return
     elif len(output) < 16:
         raise MKAgentError("Too short output from agent: '%s'" % output)
 

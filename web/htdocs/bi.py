@@ -1219,7 +1219,7 @@ config.aggregation_functions["worst"] = aggr_worst
 config.aggregation_functions["best"]  = aggr_best
 
 def aggr_countok_convert(num, count):
-    if num.endswith('%'):
+    if str(num).endswith('%'):
         return int(num[:-1]) / 100.0 * count
     else:
         return int(num)

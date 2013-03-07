@@ -450,67 +450,67 @@ int broker_program(int event_type __attribute__ ((__unused__)), void *data __att
 
 char* get_downtime_comment(char* host_name, char* svc_desc)
 {
-	char* comment;
-	int matches = 0;
-	scheduled_downtime* dt_list = scheduled_downtime_list;
-	while (dt_list != NULL) {
-		if (dt_list->type == HOST_DOWNTIME) {
-			if (strcmp(dt_list->host_name, host_name) == 0) {
-				matches++;
-				comment = dt_list->comment;
-			}
-		}
-		if (svc_desc != NULL && dt_list->type == SERVICE_DOWNTIME) {
-			if( strcmp(dt_list->host_name, host_name) == 0
-					&& strcmp(dt_list->service_description, svc_desc) == 0) {
-				matches++;
-				comment = dt_list->comment;
-			}
-		}
-		dt_list = dt_list->next;
-	}
-	return matches == 0 ? "No comment" : matches > 1 ? "Multiple Downtime Comments" : comment;
+    char* comment;
+    int matches = 0;
+    scheduled_downtime* dt_list = scheduled_downtime_list;
+    while (dt_list != NULL) {
+        if (dt_list->type == HOST_DOWNTIME) {
+            if (strcmp(dt_list->host_name, host_name) == 0) {
+                matches++;
+                comment = dt_list->comment;
+            }
+        }
+        if (svc_desc != NULL && dt_list->type == SERVICE_DOWNTIME) {
+            if( strcmp(dt_list->host_name, host_name) == 0
+                    && strcmp(dt_list->service_description, svc_desc) == 0) {
+                matches++;
+                comment = dt_list->comment;
+            }
+        }
+        dt_list = dt_list->next;
+    }
+    return matches == 0 ? "No comment" : matches > 1 ? "Multiple Downtime Comments" : comment;
 }
 
-void livestatus_log_initial_states(){
-	// Log DOWNTIME hosts
-	host *h = (host *)host_list;
-	char buffer[8192];
+void livestatus_log_initial_states()
+{
+    // Log DOWNTIME hosts
+    host *h = (host *)host_list;
+    char buffer[8192];
 
-	while (h) {
-		if (h->scheduled_downtime_depth > 0) {
-			sprintf(buffer,"HOST DOWNTIME ALERT: %s;STARTED;%s", h->name, get_downtime_comment(h->name, NULL));
-			write_to_all_logs(buffer, LG_INFO);
-
-		}
-		h = h->next;
-	}
-	// Log DOWNTIME services
-	service *s = (service *)service_list;
-	while (s) {
-		if (s->scheduled_downtime_depth > 0) {
-			sprintf(buffer,"SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name, s->description,
-					get_downtime_comment(s->host_name, s->description));
-			write_to_all_logs(buffer, LG_INFO);
-		}
-		s = s->next;
-	}
-	// Log TIMERPERIODS
-	log_timeperiods_cache();
+    while (h) {
+        if (h->scheduled_downtime_depth > 0) {
+            snprintf(buffer, sizeof(buffer), "HOST DOWNTIME ALERT: %s;STARTED;%s", h->name, get_downtime_comment(h->name, NULL));
+            write_to_all_logs(buffer, LG_INFO);
+        }
+        h = h->next;
+    }
+    // Log DOWNTIME services
+    service *s = (service *)service_list;
+    while (s) {
+        if (s->scheduled_downtime_depth > 0) {
+            snprintf(buffer, sizeof(buffer), "SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name, s->description,
+                    get_downtime_comment(s->host_name, s->description));
+            write_to_all_logs(buffer, LG_INFO);
+        }
+        s = s->next;
+    }
+    // Log TIMERPERIODS
+    log_timeperiods_cache();
 }
 
 
 int broker_event(int event_type __attribute__ ((__unused__)), void *data)
 {
-	g_counters[COUNTER_NEB_CALLBACKS]++;
-	struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
-    if( ts->event_type == EVENT_LOG_ROTATION){
-    	if( g_thread_running == 1 ){
-    		livestatus_log_initial_states();
-        } else if (log_initial_states == 1)
-        	write_to_all_logs("logging intitial states", LG_INFO);
+    g_counters[COUNTER_NEB_CALLBACKS]++;
+    struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
+    if (ts->event_type == EVENT_LOG_ROTATION)
+    { 
+        if (g_thread_running == 1 )
+            livestatus_log_initial_states();
+        else if (log_initial_states == 1) // initi
+            write_to_all_logs("logging intitial states", LG_INFO); // initial info during startup
     }
-
     update_timeperiods_cache(ts->timestamp.tv_sec);
     return 0;
 }

@@ -699,7 +699,7 @@ def render_availability_table(availability, from_time, until_time, range_title, 
     def cell_active(sid):
         if sid == "outof_notification_period" and not avoptions["consider"]["notification_period"]:
             return False
-        elif sid == "in_downtime" and avoptions["downtimes"]["include"] == "ignore":
+        elif sid == "in_downtime" and avoptions["downtimes"]["include"] != "honor":
             return False
         elif sid == "unmonitored" and not avoptions["consider"]["unmonitored"]:
             return False
@@ -764,6 +764,8 @@ def render_availability_table(availability, from_time, until_time, range_title, 
         considered_duration = until_time - from_time
 
         for sid, css, sname, help in availability_columns:
+            if not cell_active(sid):
+                continue
             number = summary.get(sid, 0)
             if show_summary == "average" or avoptions["timeformat"].startswith("percentage"):
                 number /= len(availability)

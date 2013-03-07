@@ -48,24 +48,17 @@ def check_lgp_pdu_info(item, params, info):
 
     return (3, 'Device can not be found in SNMP output.')
 
-check_info['lgp_pdu_info'] = (check_lgp_pdu_info, 'Liebert PDU Info %s', 0, inventory_lgp_pdu_info)
-
-snmp_info['lgp_pdu_info'] = ('.1.3.6.1.4.1.476.1.42.3.8.20.1', [
-    5,  # LIEBERT-GP-PDU-MIB::lgpPduEntryId
-    10, # LIEBERT-GP-PDU-MIB::lgpPduEntryUsrLabel
-    15, # LIEBERT-GP-PDU-MIB::lgpPduEntrySysAssignLabel
-    45, # LIEBERT-GP-PDU-MIB::lgpPduEntrySerialNumber
-    50, # LIEBERT-GP-PDU-MIB::lgpPduEntryRbCount
-])
-
-snmp_scan_functions['lgp_pdu_info'] = lambda oid: oid('.1.3.6.1.2.1.1.2.0') == \
-                                                         '.1.3.6.1.4.1.476.1.42'
-
-#check_info["lgp_pdu_info"] = {
-#    "check_function"        : check_lgp_pdu_info,
-#    "inventory_function"    : inventory_lgp_pdu_info,
-#    "service_description"   : "Liebert Info",
-#    "has_perfdata"          : False,
-#    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == \
-#                                          ".1.3.6.1.4.1.476.1.42"
-#}
+check_info["lgp_pdu_info"] = {
+    'check_function':          check_lgp_pdu_info,
+    'inventory_function':      inventory_lgp_pdu_info,
+    'service_description':     'Liebert PDU Info %s',
+    'snmp_info':               ('.1.3.6.1.4.1.476.1.42.3.8.20.1', [
+                                    5,  # LIEBERT-GP-PDU-MIB::lgpPduEntryId
+                                    10, # LIEBERT-GP-PDU-MIB::lgpPduEntryUsrLabel
+                                    15, # LIEBERT-GP-PDU-MIB::lgpPduEntrySysAssignLabel
+                                    45, # LIEBERT-GP-PDU-MIB::lgpPduEntrySerialNumber
+                                    50, # LIEBERT-GP-PDU-MIB::lgpPduEntryRbCount
+                                ]),
+    'snmp_scan_function':      lambda oid: oid('.1.3.6.1.2.1.1.2.0') == \
+                                                          '.1.3.6.1.4.1.476.1.42',
+}

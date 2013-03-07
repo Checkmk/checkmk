@@ -44,13 +44,18 @@ def check_hp_proliant_cpu(item, params, info):
                          (nagios_state_names[status], index, name, slot, snmp_status))
     return (3, "UNKNOWN - item not found in snmp data")
 
-
-check_info['hp_proliant_cpu'] = (check_hp_proliant_cpu, "HW CPU %s", 0,  inventory_hp_proliant_cpu)
-snmp_info['hp_proliant_cpu']  = ( ".1.3.6.1.4.1.232.1.2.2.1.1", [ "1", # cpqSeCpuUnitIndex
-                                                                  "2", # cpqSeCpuSlot
-                                                                  "3", # cpqSeCpuName
-                                                                  "6", # cpqSeCpuStatus
-                                                                ] )
-
-snmp_scan_functions['hp_proliant_cpu'] = \
-    lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower()
+check_info["hp_proliant_cpu"] = {
+    'check_function':          check_hp_proliant_cpu,
+    'inventory_function':      inventory_hp_proliant_cpu,
+    'service_description':     'HW CPU %s',
+    'snmp_info':               (
+        '.1.3.6.1.4.1.232.1.2.2.1.1', [
+            '1', # cpqSeCpuUnitIndex
+            '2', # cpqSeCpuSlot
+            '3', # cpqSeCpuName
+            '6', # cpqSeCpuStatus
+        ]
+    ),
+    'snmp_scan_function':      \
+         lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower(),
+}

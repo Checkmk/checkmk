@@ -74,7 +74,6 @@ check_info['mem.used'] = {
 #   +----------------------------------------------------------------------+
 
 # Special memory and page file check for Windows
-check_default_levels['mem.win'] = "memory_win_default_levels"
 factory_settings["memory_win_default_levels"] = {
     "memory"   : ( 80.0, 90.0 ),
     "pagefile" : ( 50.0, 70.0 ),
@@ -127,10 +126,14 @@ def check_mem_windows(item, params, info):
     return (worststate, "%s - %s" %
             (nagios_state_names[worststate], ", ".join(infotxts)), perfdata)
 
-
-check_info['mem.win'] = (check_mem_windows, "Memory and pagefile", 1, inventory_mem_win)
-checkgroup_of['mem.win'] = "memory_pagefile_win"
-
+check_info["mem.win"] = {
+    'check_function':          check_mem_windows,
+    'inventory_function':      inventory_mem_win,
+    'service_description':     'Memory and pagefile',
+    'has_perfdata':            True,
+    'group':                   'memory_pagefile_win',
+    'default_levels_variable': 'memory_win_default_levels',
+}
 
 #   +----------------------------------------------------------------------+
 #   |                                                   _ _                |
@@ -197,4 +200,9 @@ def check_mem_vmalloc(item, params, info):
         perfdata.append( (var, v, w_mb, c_mb, 0, total_mb) )
     return (state, nagios_state_names[state] + (" - total %.1f MB, " % total_mb) + ", ".join(infotxts), perfdata)
 
-check_info["mem.vmalloc"] = (check_mem_vmalloc, "Vmalloc address space", 1, inventory_mem_vmalloc)
+check_info["mem.vmalloc"] = {
+    'check_function':          check_mem_vmalloc,
+    'inventory_function':      inventory_mem_vmalloc,
+    'service_description':     'Vmalloc address space',
+    'has_perfdata':            True,
+}

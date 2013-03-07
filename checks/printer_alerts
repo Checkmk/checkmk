@@ -129,18 +129,20 @@ def check_printer_alerts(_not_used, _not_used1, info):
         sum_txt.append("OK - No alerts found")
     return (sum_state, ', '.join(sum_txt))
 
-check_info['printer_alerts'] = (check_printer_alerts, "Alerts", 0, inventory_printer_alerts)
-
-snmp_info['printer_alerts'] = ( ".1.3.6.1.2.1.43.18.1.1", [
-                                                     '2', #prtAlertSeverityLevel
-                                                     '4', #prtAlertGroup
-                                                     '5', #prtAlertGroupIndex
-                                                     '7', #prtAlertCode
-                                                     '8', #prtAlertDescription
- ] )
-
 check_config_variables.append("printer_alerts_state_map")
 check_config_variables.append("printer_alerts_text_map")
 
-snmp_scan_functions['printer_alerts'] = \
-    lambda oid: oid(".1.3.6.1.2.1.43.11.1.1.6.1.1") != None
+check_info["printer_alerts"] = {
+    'check_function':          check_printer_alerts,
+    'inventory_function':      inventory_printer_alerts,
+    'service_description':     'Alerts',
+    'snmp_info':               ('.1.3.6.1.2.1.43.18.1.1', [
+                                   '2', # prtAlertSeverityLevel
+                                   '4', # prtAlertGroup
+                                   '5', # prtAlertGroupIndex
+                                   '7', # prtAlertCode
+                                   '8', # prtAlertDescription
+                                ]),
+    'snmp_scan_function':      \
+     lambda oid: oid(".1.3.6.1.2.1.43.11.1.1.6.1.1") != None,
+}

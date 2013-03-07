@@ -116,14 +116,18 @@ def check_netapp_volumes(item, _not_used, info):
 
     return (ret_state, "%s - %s" % (nagios_state_names[ret_state], output))
 
-check_info["netapp_volumes"] = (check_netapp_volumes, "NetApp Vol %s", 0, inventory_netapp_volumes)
-snmp_info["netapp_volumes"] = ( ".1.3.6.1.4.1.789.1.5.8.1", ["2",  # volName
-                                                             "3",  # volFSID
-                                                             "4",  # volOwningHost
-                                                             "5",  # volState
-                                                             "6",  # volStatus
-                                                       ] )
-
-snmp_scan_functions['netapp_volumes'] = \
-    lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith('NetApp Release') or \
-                oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.789")
+check_info["netapp_volumes"] = {
+    'check_function':          check_netapp_volumes,
+    'inventory_function':      inventory_netapp_volumes,
+    'service_description':     'NetApp Vol %s',
+    'snmp_info':               ('.1.3.6.1.4.1.789.1.5.8.1', [
+                                    '2', # volName
+                                    '3', # volFSID
+                                    '4', # volOwningHost
+                                    '5', # volState
+                                    '6', # volStatus
+                                ]),
+    'snmp_scan_function':      \
+         lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith('NetApp Release') or \
+                     oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.789"),
+}

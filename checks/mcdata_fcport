@@ -79,23 +79,25 @@ def inventory_mcdata_fcport(info):
 def check_mcdata_fcport(item, params, info):
     return check_if_common(item, params, mcdata_fcport_convert_to_if64(info))
 
-check_info['mcdata_fcport'] = (check_mcdata_fcport, "Port %s", 1,  inventory_mcdata_fcport)
 check_includes['mcdata_fcport'] = [ "if.include" ]
-check_default_levels['mcdata_fcport'] = "if_default_levels"
-
-snmp_info['mcdata_fcport'] = \
-  ( ".1.3.6.1.4.1.289.2.1.1.2.3.1.1", [
-      1,                  # EF-6000-MIB::ef6000PortIndex
-      3,                  # EF-6000-MIB::ef6000PortOpStatus
-      11,                 # EF-6000-MIB::ef6000PortSpeed
-      67,                 # EF-6000-MIB::ef6000PortTxWords64
-      68,                 # EF-6000-MIB::ef6000PortRxWords64
-      69,                 # EF-6000-MIB::ef6000PortTxFrames64
-      70,                 # EF-6000-MIB::ef6000PortRxFrames64
-      83,                 # EF-6000-MIB::ef6000PortC3Discards64
-      65,                 # EF-6000-MIB::ef6000PortCrcs
-  ] )
-
-# check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
-snmp_scan_functions['mcdata_fcport'] = \
-        lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.289.")
+check_info["mcdata_fcport"] = {
+    'check_function':          check_mcdata_fcport,
+    'inventory_function':      inventory_mcdata_fcport,
+    'service_description':     'Port %s',
+    'has_perfdata':            True,
+    'snmp_info':               ('.1.3.6.1.4.1.289.2.1.1.2.3.1.1', [
+                                    1,  # EF-6000-MIB::ef6000PortIndex
+                                    3,  # EF-6000-MIB::ef6000PortOpStatus
+                                    11, # EF-6000-MIB::ef6000PortSpeed
+                                    67, # EF-6000-MIB::ef6000PortTxWords64
+                                    68, # EF-6000-MIB::ef6000PortRxWords64
+                                    69, # EF-6000-MIB::ef6000PortTxFrames64
+                                    70, # EF-6000-MIB::ef6000PortRxFrames64
+                                    83, # EF-6000-MIB::ef6000PortC3Discards64
+                                    65, # EF-6000-MIB::ef6000PortCrcs
+                                ]),
+    # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
+    'snmp_scan_function':      \
+         lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.289."),
+    'default_levels_variable': 'if_default_levels',
+}

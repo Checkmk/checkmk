@@ -85,17 +85,18 @@ def check_mbg_lantime_state(item, params, info):
 
     return (3, 'UNKNOWN - Got no state information')
 
-
-check_info['mbg_lantime_state'] = ( check_mbg_lantime_state, "LANTIME State", 1, inventory_mbg_lantime_state )
-snmp_info['mbg_lantime_state'] = ( ".1.3.6.1.4.1.5597.3.1", [
-                                                           2, # MBG-SNMP-MIB::mbgLtNtpCurrentStateVal
-                                                           3, # MBG-SNMP-MIB::mbgLtNtpNtpStratum
-                                                           4, # MBG-SNMP-MIB::mbgLtNtpActiveRefclockId
-                                                           5, # MBG-SNMP-MIB::mbgLtNtpActiveRefclockName
-                                                           7, # MBG-SNMP-MIB::mbgLtNtpActiveRefclockOffsetVal
-                                                         ])
-
-
-
-snmp_scan_functions['mbg_lantime_state'] \
-        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.3"
+check_info["mbg_lantime_state"] = {
+    'check_function':          check_mbg_lantime_state,
+    'inventory_function':      inventory_mbg_lantime_state,
+    'service_description':     'LANTIME State',
+    'has_perfdata':            True,
+    'snmp_info':               ('.1.3.6.1.4.1.5597.3.1', [
+                                    2, # MBG-SNMP-MIB::mbgLtNtpCurrentStateVal
+                                    3, # MBG-SNMP-MIB::mbgLtNtpNtpStratum
+                                    4, # MBG-SNMP-MIB::mbgLtNtpActiveRefclockId
+                                    5, # MBG-SNMP-MIB::mbgLtNtpActiveRefclockName
+                                    7, # MBG-SNMP-MIB::mbgLtNtpActiveRefclockOffsetVal
+                                ]),
+    'snmp_scan_function':      \
+          lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.3",
+}

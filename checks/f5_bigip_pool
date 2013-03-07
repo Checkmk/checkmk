@@ -64,17 +64,16 @@ def check_f5_bigip_pool(item, params, info):
                 return (3, "UNKNOWN output for pool %s" % item)
     return (3, "UNKNOWN - unexpected Output from SNMP Agent")
 
-
-snmp_info["f5_bigip_pool"] = \
-    ( ".1.3.6.1.4.1.3375.2.2.5.1.2.1", [
-        1,   # ltmPoolEntry
-        8,   # ltmPoolActiveMemberCnt
-        23,  # ltmPoolMemberCnt
-      ])
-
-
-check_info["f5_bigip_pool"] = (check_f5_bigip_pool, "Load Balancing Pool %s", 0, inventory_f5_bigip_pool )
-
-
-snmp_scan_functions["f5_bigip_pool"] = \
-    lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower()
+check_info["f5_bigip_pool"] = {
+    'check_function':          check_f5_bigip_pool,
+    'inventory_function':      inventory_f5_bigip_pool,
+    'service_description':     'Load Balancing Pool %s',
+    'snmp_info':               ('.1.3.6.1.4.1.3375.2.2.5.1.2.1', [
+         1, # ltmPoolEntry
+         8, # ltmPoolActiveMemberCnt
+        23, # ltmPoolMemberCnt
+    ]),
+    'snmp_scan_function':      \
+     lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") \
+        and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
+}

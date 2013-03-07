@@ -112,21 +112,24 @@ def check_hp_sts_drvbox(item, _no_params, info):
             return (sum_state, '%s - %s' % (nagios_state_names[sum_state], ', '.join(output)))
     return (3, "UNKNOWN - Controller not found in snmp data")
 
-
-check_info['hp_sts_drvbox'] = (check_hp_sts_drvbox, "Drive Box %s", 0,  inventory_hp_sts_drvbox)
-snmp_info['hp_sts_drvbox']  = ( ".1.3.6.1.4.1.232.8.2.1.1", [
-     "1", # cpqSsBoxCntlrIndex
-     "2", # cpqSsBoxBusIndex
-     "3", # cpqSsBoxType
-     "4", # cpqSsBoxModel
-     "7", # cpqSsBoxFanStatus
-     "8", # cpqSsBoxCondition
-     "9", # cpqSsBoxTempStatus
-    "10", # cpqSsBoxSidePanelStatus
-    "11", # cpqSsBoxFltTolPwrSupplyStatus
-    "17", # cpqSsBoxSerialNumber
-    "23", # cpqSsBoxLocationString
-] )
-
-snmp_scan_functions['hp_sts_drvbox'] = \
-    lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower()
+check_info["hp_sts_drvbox"] = {
+    'check_function':          check_hp_sts_drvbox,
+    'inventory_function':      inventory_hp_sts_drvbox,
+    'service_description':     'Drive Box %s',
+    'snmp_info':               (
+        '.1.3.6.1.4.1.232.8.2.1.1', [
+             '1', # cpqSsBoxCntlrIndex
+             '2', # cpqSsBoxBusIndex
+             '3', # cpqSsBoxType
+             '4', # cpqSsBoxModel
+             '7', # cpqSsBoxFanStatus
+             '8', # cpqSsBoxCondition
+             '9', # cpqSsBoxTempStatus
+            '10', # cpqSsBoxSidePanelStatus
+            '11', # cpqSsBoxFltTolPwrSupplyStatus
+            '17', # cpqSsBoxSerialNumber
+            '23', # cpqSsBoxLocationString
+        ]),
+    'snmp_scan_function':      \
+     lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower(),
+}

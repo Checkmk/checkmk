@@ -65,18 +65,15 @@ def check_f5_bigip_vserver(item, _no_params, info):
                     return (3, "UNKNOWN")
     return (3, "UNKNOWN - Virtual Server %s not found in SNMP output" % item)
 
-
-
-snmp_info["f5_bigip_vserver"] = \
-    ( ".1.3.6.1.4.1.3375.2.2.10.1.2.1", [
+check_info["f5_bigip_vserver"] = {
+    'check_function':          check_f5_bigip_vserver,
+    'inventory_function':      inventory_f5_bigip_vserver,
+    'service_description':     'Virtual Server %s',
+    'snmp_info':               ('.1.3.6.1.4.1.3375.2.2.10.1.2.1', [
         1, # Name
         2, # Status
-      ])
-
-
-
-check_info["f5_bigip_vserver"] = (check_f5_bigip_vserver, "Virtual Server %s", 0, inventory_f5_bigip_vserver )
-
-
-snmp_scan_functions["f5_bigip_vserver"] = \
-    lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower()
+    ]),
+    'snmp_scan_function':      \
+     lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") \
+        and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
+}

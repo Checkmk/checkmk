@@ -49,8 +49,12 @@ def check_nvidia_temp(item, params, info):
                 return (0, "OK" + infotext, perfdata)
     return (3, 'UNKNOWN - sensor not found in agent output')
 
-check_info['nvidia.temp'] =   ( check_nvidia_temp, "Temperature NVIDIA %s", 1, inventory_nvidia_temp )
-
+check_info["nvidia.temp"] = {
+    'check_function':          check_nvidia_temp,
+    'inventory_function':      inventory_nvidia_temp,
+    'service_description':     'Temperature NVIDIA %s',
+    'has_perfdata':            True,
+}
 
 
 def inventory_nvidia_errors(info):
@@ -68,6 +72,9 @@ def check_nvidia_errors(_no_item, _no_params, info):
                 return (2, "CRIT - %d GPU errors" % errors)
     return (3, "UNKNOWN - incomplete output from agent")
 
-
-check_info['nvidia.errors'] = ( check_nvidia_errors, "NVIDIA GPU Errors", 0, inventory_nvidia_errors )
-checkgroup_of['nvidia.errors'] = 'hw_errors'
+check_info["nvidia.errors"] = {
+    'check_function':          check_nvidia_errors,
+    'inventory_function':      inventory_nvidia_errors,
+    'service_description':     'NVIDIA GPU Errors',
+    'group':                   'hw_errors',
+}

@@ -67,7 +67,12 @@ def check_lparstat(item, params, info):
 
     return (0, "OK - AIX lparstat, user=%s%% sys=%s%% wait=%s%% idle=%s%% physc=%s app=%s" % (user,sys,wait,idle,physc,app),perfdata )
 
-check_info['lparstat_aix'] = (check_lparstat, "lparstat", 1,  inventory_lparstat )
+check_info["lparstat_aix"] = {
+    'check_function':          check_lparstat,
+    'inventory_function':      inventory_lparstat,
+    'service_description':     'lparstat',
+    'has_perfdata':            True,
+}
 
 # Utilization and IO/Wait
 kernel_util_default_levels = None
@@ -101,8 +106,6 @@ def check_lparstat_aix_cpu(_no_item, params, info):
         pass
 
     return (result, nagios_state_names[result] + infotext, perfdata)
-
-
 
 check_info['lparstat_aix.cpu_util'] = {
     "check_function"         : check_lparstat_aix_cpu,

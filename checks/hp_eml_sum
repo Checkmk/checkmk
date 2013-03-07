@@ -49,14 +49,18 @@ def check_hp_eml_sum(_no_item, _no_param, info):
                     'Model: %s, Serial: %s, Version: %s' %
              (nagios_state_names[status], status_txt, manufacturer, model, serial, version))
 
-check_info['hp_eml_sum'] = (check_hp_eml_sum, "Summary Status", 0,  inventory_hp_eml_sum)
-snmp_info['hp_eml_sum'] = (".1.3.6.1.4.1.11.2.36.1.1.5.1.1", [
-    3,  # op_status
-    7,  # manufacturer
-    9,  # model
-    10, # serial
-    11, # version
-])
-
-snmp_scan_functions['hp_eml_sum'] \
-        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.11.10.2.1.3.20"
+check_info["hp_eml_sum"] = {
+    'check_function':          check_hp_eml_sum,
+    'inventory_function':      inventory_hp_eml_sum,
+    'service_description':     'Summary Status',
+    'snmp_info':               (
+         ".1.3.6.1.4.1.11.2.36.1.1.5.1.1", [
+            3,  # op_status
+            7,  # manufacturer
+            9,  # model
+            10, # serial
+            11, # version
+    ]),
+    'snmp_scan_function':      \
+          lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.11.10.2.1.3.20",
+}

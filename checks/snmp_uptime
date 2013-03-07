@@ -49,9 +49,15 @@ def check_snmp_uptime(checktype, _no_params, info):
     else:
         return (3, "UNKNOWN - No data retrieved")
 
-check_info['snmp_uptime'] = (check_snmp_uptime, "Uptime", 1, inventory_snmp_uptime)
-snmp_info['snmp_uptime']  = ( ".1.3.6.1.2.1.1", [ '3.0' ] ) # DISMAN-EVENT-MIB::sysUpTime
-checkgroup_of["snmp_uptime"] = "uptime"
 
-# This check works on all SNMP hosts
-snmp_scan_functions['snmp_uptime'] = lambda oid: oid(".1.3.6.1.2.1.1.1.0") != None
+check_info["snmp_uptime"] = {
+    'check_function':          check_snmp_uptime,
+    'inventory_function':      inventory_snmp_uptime,
+    'service_description':     'Uptime',
+    'has_perfdata':            True,
+    # DISMAN-EVENT-MIB::sysUpTime
+    'snmp_info':               ('.1.3.6.1.2.1.1', ['3.0']),
+    # This check works on all SNMP hosts
+    'snmp_scan_function':      lambda oid: oid(".1.3.6.1.2.1.1.1.0") != None,
+    'group':                   'uptime',
+}

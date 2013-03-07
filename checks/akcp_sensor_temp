@@ -72,25 +72,25 @@ def check_akcp_sensor_temp(item, params, info):
                     return (3, "UNKNOWN - Sensor is offline")
     return (3, "UNKNOWN - Sensor not found")
 
-
-check_info['akcp_sensor_temp'] = ( check_akcp_sensor_temp, "Temperature %s", 1, inventory_akcp_sensor_temp)
-
-snmp_info['akcp_sensor_temp'] = (
-    ".1.3.6.1.4.1.3854.1.2.2.1.16.1", [
-        1, #sensorProbeTempDescription
-        3, #sensorProbeTempDegree
-        4, #sensorProbeTempStatus
-        5, #sensorProbeTempOnline - online(1), offline(2)
-        12, #sensorProbeTempDegreeType - The degrees are in fahrenheit(0) or in celsius(1)
-        14, #sensorProbeTempDegreeRaw - SP Only: The raw degree data from the temperature sensor, slightly higher resolution
-    ],
-)
-
 # possible values for sensorProbeTempStatus:
 # noStatus(1), normal(2), highWarning(3), highCritical(4),
 # lowWarning(5), lowCritical(6), sensorError(7)
-
-
-snmp_scan_functions['akcp_sensor_temp'] = \
-        lambda oid: "AKCP" in oid(".1.3.6.1.4.1.3854.1.1.6.0") and "sensorProbe" in oid(".1.3.6.1.4.1.3854.1.1.8.0")
-checkgroup_of['akcp_sensor_temp'] = "room_temperature"
+check_info["akcp_sensor_temp"] = {
+    'check_function':          check_akcp_sensor_temp,
+    'inventory_function':      inventory_akcp_sensor_temp,
+    'service_description':     'Temperature %s',
+    'has_perfdata':            True,
+    'snmp_info':               (
+        ".1.3.6.1.4.1.3854.1.2.2.1.16.1", [
+            1, #sensorProbeTempDescription
+            3, #sensorProbeTempDegree
+            4, #sensorProbeTempStatus
+            5, #sensorProbeTempOnline - online(1), offline(2)
+            12, #sensorProbeTempDegreeType - The degrees are in fahrenheit(0) or in celsius(1)
+            14, #sensorProbeTempDegreeRaw - SP Only: The raw degree data from the temperature sensor, slightly hig
+        ],
+    ),
+    'snmp_scan_function':      \
+         lambda oid: "AKCP" in oid(".1.3.6.1.4.1.3854.1.1.6.0") and "sensorProbe" in oid(".1.3.6.1.4.1.3854.1.1.8.0"),
+    'group':                   'room_temperature',
+}

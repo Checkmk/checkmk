@@ -480,9 +480,8 @@ void livestatus_log_initial_states()
 
     while (h) {
         if (h->scheduled_downtime_depth > 0) {
-            sprintf(buffer,"HOST DOWNTIME ALERT: %s;STARTED;%s", h->name, get_downtime_comment(h->name, NULL));
+            snprintf(buffer, sizeof(buffer), "HOST DOWNTIME ALERT: %s;STARTED;%s", h->name, get_downtime_comment(h->name, NULL));
             write_to_all_logs(buffer, LG_INFO);
-
         }
         h = h->next;
     }
@@ -490,7 +489,7 @@ void livestatus_log_initial_states()
     service *s = (service *)service_list;
     while (s) {
         if (s->scheduled_downtime_depth > 0) {
-            sprintf(buffer,"SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name, s->description,
+            snprintf(buffer, sizeof(buffer), "SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name, s->description,
                     get_downtime_comment(s->host_name, s->description));
             write_to_all_logs(buffer, LG_INFO);
         }
@@ -509,8 +508,8 @@ int broker_event(int event_type __attribute__ ((__unused__)), void *data)
     { 
         if (g_thread_running == 1 )
             livestatus_log_initial_states();
-        else if (log_initial_states == 1)
-            write_to_all_logs("logging intitial states", LG_INFO);
+        else if (log_initial_states == 1) // initi
+            write_to_all_logs("logging intitial states", LG_INFO); // initial info during startup
     }
     update_timeperiods_cache(ts->timestamp.tv_sec);
     return 0;

@@ -54,4 +54,10 @@ def check_hpux_cpu_load(item, params, info):
     else:
         return (0, "OK - 15min Load %.2f at %s CPUs" % (load[2], num_cpus), perfdata)
 
-check_info['hpux_cpu'] = (check_hpux_cpu_load, "CPU load", 1,  inventory_hpux_cpu_load )
+
+check_info["hpux_cpu"] = {
+    'check_function':          check_hpux_cpu_load,
+    'inventory_function':      inventory_hpux_cpu_load,
+    'service_description':     'CPU load',
+    'has_perfdata':            True,
+}

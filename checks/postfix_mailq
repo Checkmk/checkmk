@@ -105,5 +105,11 @@ def check_postfix_mailq(item, params, info):
 
     return (3, 'UNKNOWN - Could not find summarizing line in output')
 
-check_info['postfix_mailq'] = (check_postfix_mailq, "Postfix Queue", 1, inventory_postfix_mailq)
-checkgroup_of["postfix_mailq"] = "mailqueue_length"
+
+check_info["postfix_mailq"] = {
+    'check_function':          check_postfix_mailq,
+    'inventory_function':      inventory_postfix_mailq,
+    'service_description':     'Postfix Queue',
+    'has_perfdata':            True,
+    'group':                   'mailqueue_length',
+}

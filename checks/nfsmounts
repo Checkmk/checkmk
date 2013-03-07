@@ -53,5 +53,10 @@ def check_nfsmounts(item, _no_params, info):
                 return (2, "CRIT - server not responding")
     return (3, "UNKNOWN - not mounted")
 
-check_info['nfsmounts'] = (check_nfsmounts, "NFS mount %s", 0, inventory_nfsmounts)
-checkgroup_of['nfsmounts'] = 'network_fs'
+
+check_info["nfsmounts"] = {
+    'check_function':          check_nfsmounts,
+    'inventory_function':      inventory_nfsmounts,
+    'service_description':     'NFS mount %s',
+    'group':                   'network_fs',
+}

@@ -159,6 +159,22 @@ def check_statgrab_net_ctr(nic, _no_params, info):
 
 
 
-check_info['statgrab_net.link'] = (check_statgrab_net_link,   "NIC %s link",        0,  inventory_statgrab_net_link)
-check_info['statgrab_net.ctr'] = (check_statgrab_net_ctr,    "NIC %s counters",    1,  inventory_statgrab_net_ctr)
-check_info['statgrab_net.params'] =  (check_statgrab_net_params, "NIC %s parameter",   0,  inventory_statgrab_net_params)
+
+check_info["statgrab_net.ctr"] = {
+    'check_function':          check_statgrab_net_ctr,
+    'inventory_function':      inventory_statgrab_net_ctr,
+    'service_description':     'NIC %s counters',
+    'has_perfdata':            True,
+}
+
+check_info["statgrab_net.link"] = {
+    'check_function':          check_statgrab_net_link,
+    'inventory_function':      inventory_statgrab_net_link,
+    'service_description':     'NIC %s link',
+}
+
+check_info["statgrab_net.params"] = {
+    'check_function':          check_statgrab_net_params,
+    'inventory_function':      inventory_statgrab_net_params,
+    'service_description':     'NIC %s parameter',
+}

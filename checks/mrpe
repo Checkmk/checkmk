@@ -83,8 +83,10 @@ def check_mrpe(item, params, info):
 	return best_result
 
 
-check_info['mrpe'] = (
-        check_mrpe,
-        "%s",
-        1,
-        inventory_mrpe)
+
+check_info["mrpe"] = {
+    'check_function':          check_mrpe,
+    'inventory_function':      inventory_mrpe,
+    'service_description':     '%s',
+    'has_perfdata':            True,
+}

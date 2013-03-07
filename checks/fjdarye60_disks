@@ -25,20 +25,30 @@
 # Boston, MA 02110-1301 USA.
 
 # 1. Summary version of check -> all disks into one service
-check_info['fjdarye60_disks.summary'] = (check_fjdarye_disks_summary, "Disk summary", 0,  inventory_fjdarye_disks_summary)
 check_includes['fjdarye60_disks.summary'] = ["fjdarye.include"]
-snmp_info['fjdarye60_disks.summary'] = (".1.3.6.1.4.1.211.1.21.1.60.2.12.2.1", [ 1, 3 ])
-snmp_scan_functions['fjdarye60_disks.summary'] \
-        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60"
 
 # --------------------------------------------------------------------------------
 # 2. Single disk version of check -> one check for each disk
 
 
-check_info['fjdarye60_disks'] = (check_fjdarye_disks, "Disk %s", 0,  inventory_fjdarye_disks)
 check_includes['fjdarye60_disks'] = ["fjdarye.include"]
-snmp_info['fjdarye60_disks'] = (".1.3.6.1.4.1.211.1.21.1.60.2.12.2.1", [ 1, 3 ])
-checkgroup_of['fjdarye60_disks'] = "raid_disk"
 
-snmp_scan_functions['fjdarye60_disks'] \
-        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60"
+
+check_info["fjdarye60_disks"] = {
+    'check_function':          check_fjdarye_disks,
+    'inventory_function':      inventory_fjdarye_disks,
+    'service_description':     'Disk %s',
+    'snmp_info':               ('.1.3.6.1.4.1.211.1.21.1.60.2.12.2.1', [1, 3]),
+    'snmp_scan_function':      \
+          lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60",
+    'group':                   'raid_disk',
+}
+
+check_info["fjdarye60_disks.summary"] = {
+    'check_function':          check_fjdarye_disks_summary,
+    'inventory_function':      inventory_fjdarye_disks_summary,
+    'service_description':     'Disk summary',
+    'snmp_info':               ('.1.3.6.1.4.1.211.1.21.1.60.2.12.2.1', [1, 3]),
+    'snmp_scan_function':      \
+          lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60",
+}

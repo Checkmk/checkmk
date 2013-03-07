@@ -49,4 +49,9 @@ def check_vmstat_aix(item, params, info):
         return (3, "UNKNOWN - invalid output from plugin")
 
 
-check_info['vmstat_aix'] = (check_vmstat_aix, "vmstat %s", 1,  no_inventory_possible)
+
+check_info["vmstat_aix"] = {
+    'check_function':          check_vmstat_aix,
+    'service_description':     'vmstat %s',
+    'has_perfdata':            True,
+}

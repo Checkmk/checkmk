@@ -45,6 +45,12 @@ def check_oracle_asm_diskgroup(item, params, info):
                                        int(free_mb), params)
     return (3, "UNKNOWN - Disk group not found")
 
-check_info["oracle_asm_diskgroup"] = (check_oracle_asm_diskgroup, "ASM Diskgroup %s", 1, inventory_oracle_asm_diskgroup)
-checkgroup_of['oracle_asm_diskgroup']        = "fs"
-check_default_levels["oracle_asm_diskgroup"] = "filesystem_default_levels"
+
+check_info["oracle_asm_diskgroup"] = {
+    'check_function':          check_oracle_asm_diskgroup,
+    'inventory_function':      inventory_oracle_asm_diskgroup,
+    'service_description':     'ASM Diskgroup %s',
+    'has_perfdata':            True,
+    'group':                   'fs',
+    'default_levels_variable': 'filesystem_default_levels',
+}

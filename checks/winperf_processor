@@ -88,5 +88,11 @@ def check_winperf_util(item, params, info):
 
     return (3, "UNKNOWN - counter for CPU (6) not found")
 
-check_info['winperf_processor.util'] = (check_winperf_util, "CPU utilization", 1, inventory_winperf_util)
-checkgroup_of['winperf_processor.util'] = "cpu_utilization"
+
+check_info["winperf_processor.util"] = {
+    'check_function':          check_winperf_util,
+    'inventory_function':      inventory_winperf_util,
+    'service_description':     'CPU utilization',
+    'has_perfdata':            True,
+    'group':                   'cpu_utilization',
+}

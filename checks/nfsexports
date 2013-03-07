@@ -68,4 +68,9 @@ def check_nfsexports(item, _no_params, info):
 
 
 
-check_info['nfsexports'] = (check_nfsexports, "NFS export %s", 0, inventory_nfsexports)
+
+check_info["nfsexports"] = {
+    'check_function':          check_nfsexports,
+    'inventory_function':      inventory_nfsexports,
+    'service_description':     'NFS export %s',
+}

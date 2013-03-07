@@ -40,7 +40,13 @@ def check_decru_cpu(item, _no_params, info):
     return (0, "OK - user %.0f%%, sys %.0f%%, interrupt %.0f%%, idle %.0f%%"
          % (user, system, interrupt, idle), perfdata)
 
-check_info['decru_cpu'] = (check_decru_cpu, "CPU utilization", 1, inventory_decru_cpu)
-snmp_info['decru_cpu'] = ( ".1.3.6.1.4.1.12962.1.1", [ 8 ] )
-snmp_scan_functions['decru_cpu'] = \
-    lambda oid: "datafort" in oid('.1.3.6.1.2.1.1.1.0').lower()
+
+check_info["decru_cpu"] = {
+    'check_function':          check_decru_cpu,
+    'inventory_function':      inventory_decru_cpu,
+    'service_description':     'CPU utilization',
+    'has_perfdata':            True,
+    'snmp_info':               ('.1.3.6.1.4.1.12962.1.1', [8]),
+    'snmp_scan_function':      \
+     lambda oid: "datafort" in oid('.1.3.6.1.2.1.1.1.0').lower(),
+}

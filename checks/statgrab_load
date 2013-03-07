@@ -52,5 +52,11 @@ def check_statgrab_load(item, params, info):
 
 
 
-check_info['statgrab_load'] = (check_statgrab_load, "CPU load", 1, inventory_statgrab_load)
-checkgroup_of['statgrab_load'] = "cpu_load"
+
+check_info["statgrab_load"] = {
+    'check_function':          check_statgrab_load,
+    'inventory_function':      inventory_statgrab_load,
+    'service_description':     'CPU load',
+    'has_perfdata':            True,
+    'group':                   'cpu_load',
+}

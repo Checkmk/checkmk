@@ -79,9 +79,17 @@ def check_dmraid_ldisks(item, _no_params, info):
     return (3, "UNKNOWN - incomplete data from agent")
 
 
-check_info['dmraid.pdisks'] = \
-      (check_dmraid_pdisks, "RAID PDisk %s", 0, inventory_dmraid)
 
 
-check_info['dmraid.ldisks'] = \
-      (check_dmraid_ldisks, "RAID LDisk %s", 0, inventory_dmraid)
+
+check_info["dmraid.ldisks"] = {
+    'check_function':          check_dmraid_ldisks,
+    'inventory_function':      inventory_dmraid,
+    'service_description':     'RAID LDisk %s',
+}
+
+check_info["dmraid.pdisks"] = {
+    'check_function':          check_dmraid_pdisks,
+    'inventory_function':      inventory_dmraid,
+    'service_description':     'RAID PDisk %s',
+}

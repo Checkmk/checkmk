@@ -146,8 +146,20 @@ def check_cpu_utilization(item, params, info):
 
     return (result, nagios_state_names[result] + infotext, perfdata)
 
-check_info['kernel.util'] = (check_cpu_utilization, "CPU utilization", 1,  inventory_cpu_utilization)
-checkgroup_of['kernel.util'] = "cpu_iowait"
 
-check_info['kernel'] = (check_kernel, "Kernel %s", 1,  inventory_kernel)
-checkgroup_of['kernel'] = "vm_counter"
+
+check_info["kernel.util"] = {
+    'check_function':          check_cpu_utilization,
+    'inventory_function':      inventory_cpu_utilization,
+    'service_description':     'CPU utilization',
+    'has_perfdata':            True,
+    'group':                   'cpu_iowait',
+}
+
+check_info["kernel"] = {
+    'check_function':          check_kernel,
+    'inventory_function':      inventory_kernel,
+    'service_description':     'Kernel %s',
+    'has_perfdata':            True,
+    'group':                   'vm_counter',
+}

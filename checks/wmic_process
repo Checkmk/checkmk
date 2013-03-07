@@ -94,4 +94,9 @@ def check_wmic_process(item, params, info):
     infotext = "".join(infos)
     return (state, nagios_state_names[state] + infotext, perfdata)
 
-check_info['wmic_process'] = (check_wmic_process, "proc_%s", 1, no_inventory_possible)
+
+check_info["wmic_process"] = {
+    'check_function':          check_wmic_process,
+    'service_description':     'proc_%s',
+    'has_perfdata':            True,
+}

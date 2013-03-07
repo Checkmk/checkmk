@@ -79,9 +79,15 @@ def checkfunc(item, _no_params, info):
 
     return (3, "UNKNOWN - No RLUN %s in SNMP output" % item)
 
-check_info['fjdarye100_rluns'] = (checkfunc, "RLUN %s", 0,  inventoryfunc)
 # 2: fjdaryRluInfoTable0
-snmp_info['fjdarye100_rluns'] = (".1.3.6.1.4.1.211.1.21.1.100.3.4.2.1", [ 0, "2" ])
 
-snmp_scan_functions['fjdarye100_rluns'] \
-        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.100"
+
+check_info["fjdarye100_rluns"] = {
+    'check_function':          checkfunc,
+    'inventory_function':      inventoryfunc,
+    'service_description':     'RLUN %s',
+    # 2: fjdaryRluInfoTable0
+    'snmp_info':               ('.1.3.6.1.4.1.211.1.21.1.100.3.4.2.1', [0, '2']),
+    'snmp_scan_function':      \
+          lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.100",
+}

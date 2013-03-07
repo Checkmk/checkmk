@@ -27,6 +27,11 @@
 def check_brocade_port(portno, params, info):
     return (3, "UKNOWN - This check has been removed. Please use brocade_fcport instead.")
 
-check_info['fc_brocade_port'] = (check_brocade_port, "PORT %s", 1, no_inventory_possible)
-snmp_info['fc_brocade_port'] = []
-snmp_scan_functions['fc_brocade_port'] = lambda oid: False
+
+check_info["fc_brocade_port"] = {
+    'check_function':          check_brocade_port,
+    'service_description':     'PORT %s',
+    'has_perfdata':            True,
+    'snmp_info':               [],
+    'snmp_scan_function':      lambda oid: False,
+}

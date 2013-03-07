@@ -121,4 +121,10 @@ def check_freeipmi(item, _no_params, info):
     return (3, "UNKNOWN - item %s not found" % item)
 
 
-check_info['ipmi_sensors'] = (check_freeipmi, "IPMI Sensor %s", 1, inventory_freeipmi)
+
+check_info["ipmi_sensors"] = {
+    'check_function':          check_freeipmi,
+    'inventory_function':      inventory_freeipmi,
+    'service_description':     'IPMI Sensor %s',
+    'has_perfdata':            True,
+}

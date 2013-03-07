@@ -116,4 +116,10 @@ def check_sylo(item, params, info):
     return (3, "UNKNOWN - Invalid hint file contents: " % info)
 
 
-check_info['sylo'] = (check_sylo, "Sylo", 1, inventory_sylo)
+
+check_info["sylo"] = {
+    'check_function':          check_sylo,
+    'inventory_function':      inventory_sylo,
+    'service_description':     'Sylo',
+    'has_perfdata':            True,
+}

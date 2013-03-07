@@ -116,5 +116,11 @@ def check_megaraid_pdisks(item, target_state, info):
                return (2, "CRIT" + infotext)
     return (3, "UNKNOWN - No disk in encl/slot %s found" % item)
 
-check_info['megaraid_pdisks'] = (check_megaraid_pdisks, "RAID PDisk Adapt/Enc/Sl %s", 1, inventory_megaraid_pdisks)
-checkgroup_of['megaraid_pdisks'] = "raid_disk"
+
+check_info["megaraid_pdisks"] = {
+    'check_function':          check_megaraid_pdisks,
+    'inventory_function':      inventory_megaraid_pdisks,
+    'service_description':     'RAID PDisk Adapt/Enc/Sl %s',
+    'has_perfdata':            True,
+    'group':                   'raid_disk',
+}

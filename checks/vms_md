@@ -75,4 +75,9 @@ def check_vms_md(item, params, info):
           ", ".join(errors)))
 
 
-check_info['vms_md'] = ( check_vms_md, "Shadowsets", 0, inventory_vms_md )
+
+check_info["vms_md"] = {
+    'check_function':          check_vms_md,
+    'inventory_function':      inventory_vms_md,
+    'service_description':     'Shadowsets',
+}

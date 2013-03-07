@@ -172,6 +172,18 @@ def check_win_dhcp_pools_stats(item, params, info):
             output = 'In last %d secs: %s' % (timedif, output)
         return (0, "OK - %s" % (output.rstrip(', ')), perfdata)
 
-check_info['win_dhcp_pools'] = (check_win_dhcp_pools, "DHCP Pool %s",  1, inventory_win_dhcp_pools)
-check_info['win_dhcp_pools.stats'] = (check_win_dhcp_pools_stats, "DHCP Stats",  1, inventory_win_dhcp_pools_stats)
-checkgroup_of['win_dhcp_pools'] = "win_dhcp_pools"
+
+check_info["win_dhcp_pools"] = {
+    'check_function':          check_win_dhcp_pools,
+    'inventory_function':      inventory_win_dhcp_pools,
+    'service_description':     'DHCP Pool %s',
+    'has_perfdata':            True,
+    'group':                   'win_dhcp_pools',
+}
+
+check_info["win_dhcp_pools.stats"] = {
+    'check_function':          check_win_dhcp_pools_stats,
+    'inventory_function':      inventory_win_dhcp_pools_stats,
+    'service_description':     'DHCP Stats',
+    'has_perfdata':            True,
+}

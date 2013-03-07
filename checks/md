@@ -103,5 +103,10 @@ def check_md(item, _no_params, info):
     return (2, 'CRIT - no raid device %s' % item)
 
 
-check_info['md'] = (check_md, "MD Softraid %s", 0, inventory_md)
-checkgroup_of['md'] = "raid"
+
+check_info["md"] = {
+    'check_function':          check_md,
+    'inventory_function':      inventory_md,
+    'service_description':     'MD Softraid %s',
+    'group':                   'raid',
+}

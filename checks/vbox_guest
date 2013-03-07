@@ -55,5 +55,10 @@ def inventory_vbox_guest(info):
     if len(info) > 0:
         return [(None, None)]
 
-check_info["vbox_guest"] = ( check_vbox_guest, "VBox Guest Additions", 0, inventory_vbox_guest)
-checkgroup_of["vbox_guest"] = "vm_state"
+
+check_info["vbox_guest"] = {
+    'check_function':          check_vbox_guest,
+    'inventory_function':      inventory_vbox_guest,
+    'service_description':     'VBox Guest Additions',
+    'group':                   'vm_state',
+}

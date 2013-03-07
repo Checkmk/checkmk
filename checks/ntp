@@ -152,8 +152,20 @@ def check_ntp_summary(item, params, info):
             return (state, text, perfdata)
     return (2, "CRIT - found %d peers, but none is suitable" % len(info))
 
-check_info['ntp']       = (check_ntp,         "NTP Peer %s", 1, inventory_ntp)
-checkgroup_of['ntp'] = 'ntp_time'
 
-check_info['ntp.time']  = (check_ntp_summary, "NTP Time",    1, inventory_ntp_summary)
-checkgroup_of['ntp.time'] = 'ntp_time'
+
+check_info["ntp"] = {
+    'check_function':          check_ntp,
+    'inventory_function':      inventory_ntp,
+    'service_description':     'NTP Peer %s',
+    'has_perfdata':            True,
+    'group':                   'ntp_time',
+}
+
+check_info["ntp.time"] = {
+    'check_function':          check_ntp_summary,
+    'inventory_function':      inventory_ntp_summary,
+    'service_description':     'NTP Time',
+    'has_perfdata':            True,
+    'group':                   'ntp_time',
+}

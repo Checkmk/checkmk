@@ -73,5 +73,11 @@ def check_tcp_conn_stats(item, params, info):
             info.append(infotext)
     return (worst_state, "%s - %s" % (nagios_state_names[worst_state], ", ".join(info)), perfdata)
 
-check_info['tcp_conn_stats'] = (check_tcp_conn_stats, "TCP Connections", 1, inventory_tcp_conn_stats)
-checkgroup_of['tcp_conn_stats'] = "tcp_conn_stats"
+
+check_info["tcp_conn_stats"] = {
+    'check_function':          check_tcp_conn_stats,
+    'inventory_function':      inventory_tcp_conn_stats,
+    'service_description':     'TCP Connections',
+    'has_perfdata':            True,
+    'group':                   'tcp_conn_stats',
+}

@@ -28,8 +28,8 @@
 def check_blade_misc(item, params, info):
     return (3, "UNKNOWN - Sorry. Check not implemented in this version.")
 
-check_info['blade_misc'] = (
-    check_blade_misc,
-    "%s",
-    0,
-    no_inventory_possible)
+
+check_info["blade_misc"] = {
+    'check_function':          check_blade_misc,
+    'service_description':     '%s',
+}

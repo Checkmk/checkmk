@@ -124,6 +124,18 @@ def check_win_diskstat(item, params, info):
             (read_per_sec / 1048576, write_per_sec / 1048576, read_timedif), perfdata)
 
 
-check_info['winperf.diskstat'] = (check_win_diskstat, "Disk IO", 1,  inventory_win_diskstat)
-check_info['winperf.cpuusage'] = (check_win_cpuusage, "CPU Usage", 1, inventory_win_cpuusage)
 check_config_variables.append("winperf_cpu_default_levels")
+
+check_info["winperf.cpuusage"] = {
+    'check_function':          check_win_cpuusage,
+    'inventory_function':      inventory_win_cpuusage,
+    'service_description':     'CPU Usage',
+    'has_perfdata':            True,
+}
+
+check_info["winperf.diskstat"] = {
+    'check_function':          check_win_diskstat,
+    'inventory_function':      inventory_win_diskstat,
+    'service_description':     'Disk IO',
+    'has_perfdata':            True,
+}

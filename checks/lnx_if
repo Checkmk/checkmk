@@ -148,6 +148,12 @@ def inventory_lnx_if(info):
 def check_lnx_if(item, params, info):
     return check_if_common(item, params, if_lnx_convert_to_if64(info))
 
-check_info['lnx_if'] = (check_lnx_if, "Interface %s", 1,  inventory_lnx_if)
-checkgroup_of['lnx_if'] = "if"
-check_default_levels['lnx_if'] = "if_default_levels"
+
+check_info["lnx_if"] = {
+    'check_function':          check_lnx_if,
+    'inventory_function':      inventory_lnx_if,
+    'service_description':     'Interface %s',
+    'has_perfdata':            True,
+    'group':                   'if',
+    'default_levels_variable': 'if_default_levels',
+}

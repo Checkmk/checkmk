@@ -47,8 +47,10 @@ def check_tsm_stgpool(item, params, info):
     return (3, "No such storage pool found")
 
 
-check_info['tsm_stgpool'] = (
-    check_tsm_stgpool,
-    "Storage Pool %s",
-    1,
-    inventory_tsm_stgpool)
+
+check_info["tsm_stgpool"] = {
+    'check_function':          check_tsm_stgpool,
+    'inventory_function':      inventory_tsm_stgpool,
+    'service_description':     'Storage Pool %s',
+    'has_perfdata':            True,
+}

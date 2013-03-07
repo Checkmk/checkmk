@@ -91,4 +91,9 @@ def check_only_from(item, param, info):
     return (3, "UNKNOWN - Agent does not send OnlyFrom: header")
 
 
-check_info['check_mk.only_from'] = (check_only_from, "Check_MK Agent Access", 0, inventory_only_from)
+
+check_info["check_mk.only_from"] = {
+    'check_function':          check_only_from,
+    'inventory_function':      inventory_only_from,
+    'service_description':     'Check_MK Agent Access',
+}

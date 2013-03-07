@@ -40,5 +40,11 @@ def check_uptime(_no_item, _no_params, info):
     return (0, "OK - up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
 
 
-check_info["uptime"] = (check_uptime, "Uptime", 1, inventory_uptime)
-checkgroup_of["uptime"] = "uptime"
+
+check_info["uptime"] = {
+    'check_function':          check_uptime,
+    'inventory_function':      inventory_uptime,
+    'service_description':     'Uptime',
+    'has_perfdata':            True,
+    'group':                   'uptime',
+}

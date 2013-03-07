@@ -42,9 +42,15 @@ def check_printer_pages(item, params, info):
 
     return (3, 'UNKNOWN - not found')
 
-check_info['printer_pages'] = (check_printer_pages, "Pages %s", 1, inventory_printer_pages)
 
-snmp_info['printer_pages'] = ( ".1.3.6.1.2.1.43.10.2.1.4.1", [ 0, 1 ] )
 
-snmp_scan_functions['printer_pages'] = \
-    lambda oid: oid(".1.3.6.1.2.1.43.10.2.1.4.1.1") != None
+
+check_info["printer_pages"] = {
+    'check_function':          check_printer_pages,
+    'inventory_function':      inventory_printer_pages,
+    'service_description':     'Pages %s',
+    'has_perfdata':            True,
+    'snmp_info':               ('.1.3.6.1.2.1.43.10.2.1.4.1', [0, 1]),
+    'snmp_scan_function':      \
+     lambda oid: oid(".1.3.6.1.2.1.43.10.2.1.4.1.1") != None,
+}

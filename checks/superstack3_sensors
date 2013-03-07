@@ -39,11 +39,15 @@ def check_superstack3_sensors(item, params, info):
     return (3, "UNKOWN - sensor not found")
 
 
-check_info["superstack3_sensors"] = (check_superstack3_sensors, "%s", 0, inventory_superstack3_sensors )
-
-snmp_info["superstack3_sensors"] = \
-    ( ".1.3.6.1.4.1.43.43.1.1", [ "7", "10" ] )
 
 
-snmp_scan_functions["superstack3_sensors"] = \
-    lambda oid: "3com superstack 3" in oid (".1.3.6.1.2.1.1.1.0").lower()
+
+
+check_info["superstack3_sensors"] = {
+    'check_function':          check_superstack3_sensors,
+    'inventory_function':      inventory_superstack3_sensors,
+    'service_description':     '%s',
+    'snmp_info':               ('.1.3.6.1.4.1.43.43.1.1', ['7', '10']),
+    'snmp_scan_function':      \
+     lambda oid: "3com superstack 3" in oid (".1.3.6.1.2.1.1.1.0").lower(),
+}

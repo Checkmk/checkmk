@@ -80,4 +80,10 @@ def check_windows_updates(_unused, params, info):
 
     return (3, 'UNKNOWN - No windows update information provided')
 
-check_info['windows_updates'] = (check_windows_updates, "System Updates",  1, inventory_windows_updates)
+
+check_info["windows_updates"] = {
+    'check_function':          check_windows_updates,
+    'inventory_function':      inventory_windows_updates,
+    'service_description':     'System Updates',
+    'has_perfdata':            True,
+}

@@ -67,4 +67,10 @@ def check_statgrab_cpu(item, params, info):
           ( "wait",   "%.3f" % wait_perc ) ]
     return (0, "OK - user: %2.0f%%, system: %2.0f%%, wait: %2.0f%%" % (user_perc, system_perc, wait_perc), perfdata)
 
-check_info['statgrab_cpu'] = (check_statgrab_cpu, "CPU utilization", 1, inventory_statgrab_cpu)
+
+check_info["statgrab_cpu"] = {
+    'check_function':          check_statgrab_cpu,
+    'inventory_function':      inventory_statgrab_cpu,
+    'service_description':     'CPU utilization',
+    'has_perfdata':            True,
+}

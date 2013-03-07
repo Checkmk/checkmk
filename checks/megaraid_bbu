@@ -108,4 +108,9 @@ def check_megaraid_bbu(item, _no_params, info):
 
 
 
-check_info["megaraid_bbu"] = (check_megaraid_bbu, "RAID Adapter/BBU %s", 0, inventory_megaraid_bbu)
+
+check_info["megaraid_bbu"] = {
+    'check_function':          check_megaraid_bbu,
+    'inventory_function':      inventory_megaraid_bbu,
+    'service_description':     'RAID Adapter/BBU %s',
+}

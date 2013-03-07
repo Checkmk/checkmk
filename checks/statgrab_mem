@@ -77,4 +77,10 @@ def check_statgrab_mem(item, params, info):
                     (totalused_mb, totalused_perc), perfdata)
 
 
-check_info['statgrab_mem'] = (check_statgrab_mem, "Memory used", 1, inventory_statgrab_mem)
+
+check_info["statgrab_mem"] = {
+    'check_function':          check_statgrab_mem,
+    'inventory_function':      inventory_statgrab_mem,
+    'service_description':     'Memory used',
+    'has_perfdata':            True,
+}

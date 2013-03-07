@@ -68,7 +68,12 @@ def check_hp_blade_manager(item, params, info):
     return (3, "UNKNOWN - item not found in snmp data")
 
 
-check_info['hp_blade_manager'] = (check_hp_blade_manager, "Manager %s", 0,  inventory_hp_blade_manager)
-snmp_info['hp_blade_manager']  = ( ".1.3.6.1.4.1.232.22.2.3.1.6.1", [ "3", "10", "12", "9", "8" ] )
-snmp_scan_functions['hp_blade_manager'] = \
-    lambda oid: ".11.5.7.1.2" in oid(".1.3.6.1.2.1.1.2.0")
+
+check_info["hp_blade_manager"] = {
+    'check_function':          check_hp_blade_manager,
+    'inventory_function':      inventory_hp_blade_manager,
+    'service_description':     'Manager %s',
+    'snmp_info':               ('.1.3.6.1.4.1.232.22.2.3.1.6.1', ['3', '10', '12', '9', '8']),
+    'snmp_scan_function':      \
+     lambda oid: ".11.5.7.1.2" in oid(".1.3.6.1.2.1.1.2.0"),
+}

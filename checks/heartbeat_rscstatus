@@ -44,4 +44,9 @@ def check_heartbeat_rscstatus(item, expected_state, info):
     else:
         return (3, "UNKNOWN - Got no information from agent")
 
-check_info['heartbeat_rscstatus'] = (check_heartbeat_rscstatus, "Heartbeat Ressource Status",  0, inventory_heartbeat_rscstatus)
+
+check_info["heartbeat_rscstatus"] = {
+    'check_function':          check_heartbeat_rscstatus,
+    'inventory_function':      inventory_heartbeat_rscstatus,
+    'service_description':     'Heartbeat Ressource Status',
+}

@@ -99,5 +99,10 @@ def check_vmware_state(item, _no_params, info):
                     return (0, "OK - machine is up (%s)" % ip_addr)
     return (3, "UNKNOWN - no such machine")
 
-check_info['vmware_state'] = (check_vmware_state, "VM %s", 0, inventory_vmware_state)
-checkgroup_of['vmware_state'] = 'vm_state'
+
+check_info["vmware_state"] = {
+    'check_function':          check_vmware_state,
+    'inventory_function':      inventory_vmware_state,
+    'service_description':     'VM %s',
+    'group':                   'vm_state',
+}

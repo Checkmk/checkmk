@@ -48,4 +48,10 @@ def check_vms_netif(item, params, info):
 
     return (3, "UNKNOWN - network inteface not present")
 
-check_info['vms_netif'] = (check_vms_netif, "NIC %s", 1, inventory_vms_netif)
+
+check_info["vms_netif"] = {
+    'check_function':          check_vms_netif,
+    'inventory_function':      inventory_vms_netif,
+    'service_description':     'NIC %s',
+    'has_perfdata':            True,
+}

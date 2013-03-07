@@ -96,4 +96,10 @@ def check_cups_queues(item, params, info):
 
     return (state, nagios_state_names[state] + " - " + output + " - " + jobOutput, [ ("jobs", numJobs, warnNum, critNum, 0) ])
 
-check_info['cups_queues'] = (check_cups_queues, "CUPS Queue %s", 1, inventory_cups_queues)
+
+check_info["cups_queues"] = {
+    'check_function':          check_cups_queues,
+    'inventory_function':      inventory_cups_queues,
+    'service_description':     'CUPS Queue %s',
+    'has_perfdata':            True,
+}

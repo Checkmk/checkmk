@@ -52,6 +52,12 @@ def check_vms_df(item, params, info):
 
     return (3, "Disk %s not found" % (item,))
 
-check_info['vms_df']  = ( check_vms_df, "fs_%s", 1, inventory_vms_df )
-checkgroup_of["vms_df"] = "filesystem"
-check_default_levels['vms_df'] = "filesystem_default_levels"
+
+check_info["vms_df"] = {
+    'check_function':          check_vms_df,
+    'inventory_function':      inventory_vms_df,
+    'service_description':     'fs_%s',
+    'has_perfdata':            True,
+    'group':                   'filesystem',
+    'default_levels_variable': 'filesystem_default_levels',
+}

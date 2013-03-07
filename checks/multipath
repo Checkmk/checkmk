@@ -281,10 +281,11 @@ def check_multipath(item, target_numpaths, info):
         return (0, "OK - " + info)
 
 
-check_info['multipath'] = (
-    check_multipath,
-    "Multipath %s",
-    0,
-    inventory_multipath)
 
-checkgroup_of['multipath'] = 'multipath'
+
+check_info["multipath"] = {
+    'check_function':          check_multipath,
+    'inventory_function':      inventory_multipath,
+    'service_description':     'Multipath %s',
+    'group':                   'multipath',
+}

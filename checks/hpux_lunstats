@@ -71,6 +71,12 @@ def check_hpux_lunstats(item, params, info):
 def inventory_hpux_lunstats(info):
     return inventory_diskstat_generic(hpux_lunstats_convert(info))
 
-check_info['hpux_lunstats'] = (check_hpux_lunstats, "Disk IO %s", 1, inventory_hpux_lunstats)
 checkgroup_of["diskstat"] = "disk_io"
 
+
+check_info["hpux_lunstats"] = {
+    'check_function':          check_hpux_lunstats,
+    'inventory_function':      inventory_hpux_lunstats,
+    'service_description':     'Disk IO %s',
+    'has_perfdata':            True,
+}

@@ -36,4 +36,9 @@ def check_mssql_versions(item, _unused, info):
             return (0, 'OK - Server is running Version %s' % line[1])
     return (2, "UNKNOWN - Server objance not existing or not running")
 
-check_info['mssql_versions'] = (check_mssql_versions, "%s Version", 0,  inventory_mssql_versions )
+
+check_info["mssql_versions"] = {
+    'check_function':          check_mssql_versions,
+    'inventory_function':      inventory_mssql_versions,
+    'service_description':     '%s Version',
+}

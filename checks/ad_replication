@@ -110,5 +110,10 @@ def check_ad_replication(item, params, info):
     else:
         return (status, 'OK - All replications are OK.')
 
-check_info['ad_replication'] = (check_ad_replication, "AD Replication %s",  0, inventory_ad_replication)
-checkgroup_of['ad_replication']        = "ad_replication"
+
+check_info["ad_replication"] = {
+    'check_function':          check_ad_replication,
+    'inventory_function':      inventory_ad_replication,
+    'service_description':     'AD Replication %s',
+    'group':                   'ad_replication',
+}

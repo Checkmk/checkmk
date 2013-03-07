@@ -69,13 +69,18 @@ def check_f5_bigip_psu(item, _no_params, info):
 
 
 # Get ID and status from the SysChassisPowerSupplyTable
-snmp_info["f5_bigip_psu"] = \
-    [ (".1.3.6.1.4.1.3375.2.1.3.2.2.2.1", [ 1, 2 ]), ]
 
 
-check_info["f5_bigip_psu"] = (check_f5_bigip_psu, "PSU %s", 0, inventory_f5_bigip_psu )
 
 
 # Check using the vendor mib Id and verify it's a loadbalancer
-snmp_scan_functions["f5_bigip_psu"] = \
-    lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower()
+
+check_info["f5_bigip_psu"] = {
+    'check_function':          check_f5_bigip_psu,
+    'inventory_function':      inventory_f5_bigip_psu,
+    'service_description':     'PSU %s',
+    # Get ID and status from the SysChassisPowerSupplyTable
+    'snmp_info':               [('.1.3.6.1.4.1.3375.2.1.3.2.2.2.1', [1, 2])],
+    'snmp_scan_function':      \
+     lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
+}

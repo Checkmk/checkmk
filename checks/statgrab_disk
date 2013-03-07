@@ -46,4 +46,10 @@ def check_statgrab_disk(item, params, info):
     return (0, "OK - %s/s (in last %d secs)" % (get_bytes_human_readable(per_sec), timedif), perfdata)
 
 
-check_info['statgrab_disk'] = (check_statgrab_disk, "Disk IO %s", 1,  inventory_statgrab_disk)
+
+check_info["statgrab_disk"] = {
+    'check_function':          check_statgrab_disk,
+    'inventory_function':      inventory_statgrab_disk,
+    'service_description':     'Disk IO %s',
+    'has_perfdata':            True,
+}

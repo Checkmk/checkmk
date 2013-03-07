@@ -192,9 +192,15 @@ def check_ipmi_summarized(info):
     return (worst_status, "%s - %s" % (statname, ' - '.join(infotext)), perfdata)
 
 
-check_info['ipmi'] = (check_ipmi, "IPMI Sensor %s", 1,  inventory_ipmi)
 
 # Make sure, configuration variables needed during check time are present
 # in precompiled code
 check_config_variables.append("ipmi_ignore_nr")
 check_config_variables.append("ipmi_ignored_sensors")
+
+check_info["ipmi"] = {
+    'check_function':          check_ipmi,
+    'inventory_function':      inventory_ipmi,
+    'service_description':     'IPMI Sensor %s',
+    'has_perfdata':            True,
+}

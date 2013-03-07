@@ -53,7 +53,13 @@ def check_hp_procurve_cpu(item, params, info):
     return (3, "UNKNOWN - Invalid  information in snmp data")
 
 
-check_info['hp_procurve_cpu'] = (check_hp_procurve_cpu, "CPU utilization", 1,  inventory_hp_procurve_cpu)
-snmp_info['hp_procurve_cpu']  = ( ".1.3.6.1.4.1.11.2.14.11.5.1.9.6", [ "1" ] )
-snmp_scan_functions['hp_procurve_cpu'] = \
-    lambda oid: ".11.2.3.7.11" in oid(".1.3.6.1.2.1.1.2.0")
+
+check_info["hp_procurve_cpu"] = {
+    'check_function':          check_hp_procurve_cpu,
+    'inventory_function':      inventory_hp_procurve_cpu,
+    'service_description':     'CPU utilization',
+    'has_perfdata':            True,
+    'snmp_info':               ('.1.3.6.1.4.1.11.2.14.11.5.1.9.6', ['1']),
+    'snmp_scan_function':      \
+     lambda oid: ".11.2.3.7.11" in oid(".1.3.6.1.2.1.1.2.0"),
+}

@@ -121,5 +121,11 @@ def check_netctr_combined(nic, params, info):
     return (3, "UNKNOWN - NIC is not present")
 
 
-check_info['netctr.combined'] = (check_netctr_combined, "NIC %s counters", 1,  inventory_netctr_combined )
 check_config_variables.append("netctr_counters")
+
+check_info["netctr.combined"] = {
+    'check_function':          check_netctr_combined,
+    'inventory_function':      inventory_netctr_combined,
+    'service_description':     'NIC %s counters',
+    'has_perfdata':            True,
+}

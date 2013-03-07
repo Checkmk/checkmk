@@ -54,6 +54,12 @@ def check_oracle_sessions(item, params, info):
                 return (0, "OK" + infotext, perfdata)
     return (3, "UNKNOWN - Database not existing or not running")
 
-check_info['oracle_sessions'] = (check_oracle_sessions, "ORA %s Sessions", 1,  inventory_oracle_sessions )
 check_includes['oracle_sessions'] = [ "oracle.include" ]
-checkgroup_of["oracle_sessions"] = "oracle_sessions"
+
+check_info["oracle_sessions"] = {
+    'check_function':          check_oracle_sessions,
+    'inventory_function':      inventory_oracle_sessions,
+    'service_description':     'ORA %s Sessions',
+    'has_perfdata':            True,
+    'group':                   'oracle_sessions',
+}

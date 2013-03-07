@@ -178,7 +178,6 @@ def check_zfsget(item, params, info):
 
     return df_check_filesystem_list(item, params, fslist)
 
-
 check_info['zfsget'] = {
     "check_function"          : check_zfsget,
     "inventory_function"      : inventory_zfsget,

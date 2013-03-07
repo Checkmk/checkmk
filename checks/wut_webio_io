@@ -99,15 +99,13 @@ check_info['wut_webio_io.inputs'] = {
     "inventory_function" : inventory_wut_webio_io_inputs,
     "service_description": "INPUT %s",
     "has_perfdata"       : False,
-   # "group"              : "",
-   # "default_levels_variable" : "services_default_levels",
-    # first check we have a vendor mib from W&T, then check for the model in their MIB.
-    "snmp_scan_function" : lambda oid:  \
-         ".1.3.6.1.4.1.5040" in oid("1.3.6.1.2.1.1.2.0") and
-         oid(".1.3.6.1.4.1.5040.1.2.4.3.3.5.0").lower().startswith("web-io"),
     "snmp_info"          : (".1.3.6.1.4.1.5040.1.2.4", [
          "3.1.5.2.1.1",    # io port index. (bugged)
          "3.2.1.1.1",      # user defined description.
          "1.3.1.4",        # the low/high state.
-        ]),
+    ]),
+    # first check we have a vendor mib from W&T, then check for the model in their MIB.
+    "snmp_scan_function" : lambda oid:  \
+         ".1.3.6.1.4.1.5040" in oid("1.3.6.1.2.1.1.2.0") and
+         oid(".1.3.6.1.4.1.5040.1.2.4.3.3.5.0").lower().startswith("web-io"),
 }

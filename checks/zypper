@@ -79,10 +79,8 @@ def check_zypper(_no_item, _no_params, info):
 
     return state, nagios_state_names[state] + infotext
 
-
 check_info['zypper'] = {
     "check_function"          : check_zypper,
     "inventory_function"      : inventory_zypper,
     "service_description"     : "Zypper Updates",
 }
-

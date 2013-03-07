@@ -116,7 +116,6 @@ def check_zpool_status(_no_item, _no_params, info):
     if len(message) == 0:
         message = ['No critical errors']
     return (state, nagios_state_names[state] + " - " + ", ".join(message))
-#
 
 check_info["zpool_status"] = {
     'check_function':          check_zpool_status,

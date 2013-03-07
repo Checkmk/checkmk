@@ -2,6 +2,9 @@
     Checks & Agents:
     * FIX: windows agent: fixed possible crash in eventlog section
 
+    BI:
+    * FIX: fixed bug in aggregation count (thanks Neil) 
+
 1.2.0p4:
     WATO:
     * FIX: fixed detection of existing groups when creating new groups

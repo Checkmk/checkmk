@@ -91,7 +91,7 @@ def inventory_apache_status(info):
 def check_apache_status(item, _no_params, info):
     all_data = apache_status_parse(info)
     if item not in all_data:
-        return (3, 'UNKNOWN - Unable to find instance in agent output')
+        return (3, 'Unable to find instance in agent output')
     data_dict = all_data[item]
     data = data_dict.items()
 
@@ -128,7 +128,7 @@ def check_apache_status(item, _no_params, info):
         output.append('%s: %s' % (key, display_value))
         perfdata.append((key.replace(' ', '_'), value))
 
-    return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
+    return (status, ', '.join(output), perfdata)
 
 check_info['apache_status'] = {
     "check_function" :      check_apache_status,

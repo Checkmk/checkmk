@@ -73,10 +73,10 @@ def check_3ware_disks(item, _no_params, info):
             infotext = "%s (unit: %s, size: %s,%s, type: %s, model: %s)" % \
                        (status, unit_type, size, size_type, disk_type, model)
             if status == "OK":
-                return (0, "OK - disk status is " + infotext)
+                return (0, "disk status is " + infotext)
             else:
-                return (2, "CRIT - disk status is " + infotext)
-    return (3, "UNKNOWN - disk %s not found in agent output" % item)
+                return (2, "disk status is " + infotext)
+    return (3, "disk %s not found in agent output" % item)
 
 # declare the check to Check_MK
 

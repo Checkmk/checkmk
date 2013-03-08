@@ -35,16 +35,15 @@ def check_decru_fans(item, params, info):
             rpm = int(fan[1])
             crit, warn = params
             perfdata = [("rpm", rpm, 0, "", warn, crit)]
-            infotxt = " - %d RPM" % rpm
+            infotxt = "%d RPM" % rpm
             if rpm < crit:
-                return (2, "CRIT" + infotxt, perfdata)
+                return (2, infotxt, perfdata)
             elif rpm < warn:
-                return (1, "WARN" + infotxt, perfdata)
+                return (1, infotxt, perfdata)
             else:
-                return (0, "OK" + infotxt, perfdata)
+                return (0, infotxt, perfdata)
 
-    return (3, "UNKNOWN - fan not found")
-
+    return (3, "fan not found")
 
 
 check_info["decru_fans"] = {

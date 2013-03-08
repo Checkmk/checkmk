@@ -34,15 +34,15 @@ def check_decru_temps(item, params, info):
             temp = to_celsius(int(temp[1]))
             warn, crit = params
             perfdata = [("temp", temp, "", "", warn, crit)]
-            infotxt = " - %d C (levels at %d/%d)" % (temp, warn, crit)
+            infotxt = "%d C (levels at %d/%d)" % (temp, warn, crit)
             if temp >= crit:
-                return (2, "CRIT" + infotxt, perfdata)
+                return (2, infotxt, perfdata)
             elif temp >= warn:
-                return (1, "WARN" + infotxt, perfdata)
+                return (1, infotxt, perfdata)
             else:
-                return (0, "OK" + infotxt, perfdata)
+                return (0, infotxt, perfdata)
 
-    return (3, "UNKNOWN - sensor not found")
+    return (3, "sensor not found")
 
 
 

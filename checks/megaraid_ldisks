@@ -55,10 +55,10 @@ def check_megaraid_ldisks(item, _no_params, info):
             state = " ".join(line[1:]).replace(': ', '')
             infotext = "state is %s" % state
             if state == "Optimal":
-                return (0, "OK - " + infotext)
+                return (0, infotext)
             else:
-                return (2, "CRIT - " + infotext)
-    return (3, "UNKNOWN - no such adapter/logical disk found")
+                return (2, infotext)
+    return (3, "no such adapter/logical disk found")
 
 
 check_info["megaraid_ldisks"] = {

@@ -34,7 +34,7 @@ def check_memory(params, meminfo):
         # Buffers and Cached are optional (not supported on Windows yet)
         caches   = meminfo.get('Buffers', 0) + meminfo.get('Cached', 0)
     except:
-        return (3, "UNKNOWN - invalid output from plugin")
+        return (3, "invalid output from plugin")
 
     # Add extended memory performance data, if this is
     # enabled and the agent provides that information.
@@ -80,19 +80,19 @@ def check_memory(params, meminfo):
                         int(crit/100.0 * totalmem_mb), 0, totalvirt_mb))
         perfdata += extended_perf
         if totalused_perc >= crit:
-            return (2, 'CRIT - %s, critical at %.1f%%' % (infotext, crit), perfdata)
+            return (2, '%s, critical at %.1f%%' % (infotext, crit), perfdata)
         elif totalused_perc >= warn:
-            return (1, 'WARN - %s, warning at %.1f%%' % (infotext, warn), perfdata)
+            return (1, '%s, warning at %.1f%%' % (infotext, warn), perfdata)
         else:
-            return (0, 'OK - %s' % infotext, perfdata)
+            return (0, '%s' % infotext, perfdata)
 
     else:
         perfdata.append(('memused', str(totalused_mb)+'MB', warn, crit, 0, totalvirt_mb))
         perfdata += extended_perf
         if totalused_mb >= crit:
-            return (2, 'CRIT - %s, critical at %.2f GB' % (infotext, crit / 1024.0), perfdata)
+            return (2, '%s, critical at %.2f GB' % (infotext, crit / 1024.0), perfdata)
         elif totalused_mb >= warn:
-            return (1, 'WARN - %s, warning at %.2f GB' % (infotext, warn / 1024.0), perfdata)
+            return (1, '%s, warning at %.2f GB' % (infotext, warn / 1024.0), perfdata)
         else:
-            return (0, 'OK - %s' % infotext, perfdata)
+            return (0, '%s' % infotext, perfdata)
 

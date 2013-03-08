@@ -60,7 +60,7 @@ def check_vms_md(item, params, info):
                 errors.append("%s: unknown" % name)
             shadowsets.append(name)
     except:
-        return (3, "UNKNOWN - invalid output from plugin")
+        return (3, "invalid output from plugin")
 
     # check for missing shadowsets
     for name in params:
@@ -68,11 +68,9 @@ def check_vms_md(item, params, info):
             errorlevel = 2
             errors.append("%s: missing" % name)
     if errorlevel == 0:
-        return (0, "OK - %d shadowsets in normal state" % len(shadowsets))
+        return (0, "%d shadowsets in normal state" % len(shadowsets))
     else:
-        return (errorlevel, "%s - %s" % (
-          { 1: "WARNING", 2: "CRITICAL" }[errorlevel],
-          ", ".join(errors)))
+        return (errorlevel, ", ".join(errors))
 
 
 

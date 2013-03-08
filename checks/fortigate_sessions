@@ -39,7 +39,7 @@ def check_fortigate_sessions(item, params, info):
 	icon = "(!!)"
 
     perf = [("session", current, warn, crit)]
-    return(state, nagios_state_names[state] + " - %d Session%s (levels at %d/%d)" % (current, icon, warn, crit), perf)
+    return(state, "%d Session%s (levels at %d/%d)" % (current, icon, warn, crit), perf)
 
 check_info["fortigate_sessions"] = {
     "check_function"        : check_fortigate_sessions,

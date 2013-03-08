@@ -81,9 +81,9 @@ def check_mbg_lantime_state(item, params, info):
 
         perfdata = [('offset', refclock_offset, params[2], params[3])]
 
-        return (state, '%s - %s' % (nagios_state_names[state], ', '.join(state_txt)), perfdata)
+        return (state, ', '.join(state_txt), perfdata)
 
-    return (3, 'UNKNOWN - Got no state information')
+    return (3, 'Got no state information')
 
 check_info["mbg_lantime_state"] = {
     'check_function':          check_mbg_lantime_state,

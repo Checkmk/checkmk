@@ -34,10 +34,10 @@ def check_bluecoat_sensors(item, params, info):
             value = int(line[1]) * 10 ** int(line[3])
             perfdata = [("value", value) ]
             if line[2] == '1':
-                return (0, "OK - %s" % (value,), perfdata)
+                return (0, "%s" % (value,), perfdata)
             else:
-                return (2, "CRIT - %s" % (value, ), perfdata)
-    return (3, "UNKNOWN - item not found in SNMP data")
+                return (2, "%s" % (value, ), perfdata)
+    return (3, "item not found in SNMP data")
 
 
 

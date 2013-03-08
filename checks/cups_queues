@@ -57,7 +57,7 @@ def inventory_cups_queues(info):
 def check_cups_queues(item, params, info):
     warnNum, critNum, warnAge, critAge = params
     state   = 3
-    output  = "UNKNOWN - Queue not found"
+    output  = "Queue not found"
     numJobs = 0
     now     = datetime.datetime.now()
     oldest  = now
@@ -94,7 +94,7 @@ def check_cups_queues(item, params, info):
             state = 1
         jobOutput += ', Oldest job is from %s' % oldest
 
-    return (state, nagios_state_names[state] + " - " + output + " - " + jobOutput, [ ("jobs", numJobs, warnNum, critNum, 0) ])
+    return (state, output + " - " + jobOutput, [ ("jobs", numJobs, warnNum, critNum, 0) ])
 
 
 check_info["cups_queues"] = {

@@ -114,8 +114,7 @@ def check_mysql_sessions(_no_item, params, info):
             warn, crit = None, None
         perfdata.append((what, value, warn, crit))
 
-    infotext = " - " + ", ".join(infos)
-    return (status, nagios_state_names[status] + infotext, perfdata)
+    return (status, ", ".join(infos), perfdata)
 
 
 check_info['mysql.sessions'] = {
@@ -172,7 +171,7 @@ def inventory_mysql_connections(info):
 def check_mysql_connections(item, params, info):
     values = parse_mysql(info)
     if 'Max_used_connections' not in values:
-        return (3, 'UNKNOWN - Connection information are missing')
+        return (3, 'Connection information are missing')
 
     # The maximum number of connections that have been in use simultaneously
     # since the server started.
@@ -194,8 +193,8 @@ def check_mysql_connections(item, params, info):
             status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
                          'has been reached at least once since program start)' % params['perc_used'][0]
 
-    return (status, '%s - Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' %
-        (nagios_state_names[status], conn, max_conn, perc_used, status_txt))
+    return (status, 'Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' %
+        (conn, max_conn, perc_used, status_txt))
 
 
 check_info['mysql.connections'] = {

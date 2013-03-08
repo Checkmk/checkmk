@@ -47,10 +47,10 @@ def check_aironet_clients(item, params, info):
     info = [ line for line in info if line[0] != '' ]
 
     if len(info) == 0:
-        return (0, "OK - No clients currently logged in")
+        return (0, "No clients currently logged in")
 
     if item == "clients":
-        return (0, "OK - %d clients currently logged in" % len(info),
+        return (0, "%d clients currently logged in" % len(info),
                 [("clients", len(info), None, None, 0, None)])
 
     # item = "quality" or "strength"
@@ -70,15 +70,15 @@ def check_aironet_clients(item, params, info):
     avg = sum([saveint(line[index]) for line in info]) / float(len(info))
     warn, crit = params
     perfdata = [(item, avg, warn, crit, mmin, mmax)]
-    infotxt = " - signal %s at %.1f%s (warn/crit at %s%s/%s%s)" % \
+    infotxt = "signal %s at %.1f%s (warn/crit at %s%s/%s%s)" % \
         (item, avg, unit, warn, unit, crit, unit)
 
     if neg * avg <= neg * crit:
-        return (2, "CRIT" + infotxt, perfdata)
+        return (2, infotxt, perfdata)
     elif neg * avg <= neg * warn:
-        return (1, "WARN" + infotxt, perfdata)
+        return (1, infotxt, perfdata)
     else:
-        return (0, "OK" + infotxt, perfdata)
+        return (0, infotxt, perfdata)
 
 check_info["aironet_clients"] = {
     'check_function':          check_aironet_clients,

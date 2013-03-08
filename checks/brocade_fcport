@@ -281,7 +281,7 @@ def check_brocade_fcport(item, params, info):
             summarystate = 2
     output.append("Adm:%s(%d)%s" % (brocade_fcport_admstates[admstate], admstate, errorflag))
 
-    return (summarystate, '%s - %s' % (nagios_state_names[summarystate], ', '.join(output)), perfdata)
+    return (summarystate, ', '.join(output), perfdata)
 
 check_info["brocade_fcport"] = {
     'check_function':          check_brocade_fcport,

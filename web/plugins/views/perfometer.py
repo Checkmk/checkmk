@@ -91,14 +91,18 @@ def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right
 
 
 def number_human_readable(n, precision=1, unit="B"):
+    base = 1024.0
+    if unit == "Bit":
+        base = 1000.0
+    
     n = float(n)
     f = "%." + str(precision) + "f"
-    if abs(n) > 1024 * 1024 * 1024:
-        return (f + "G%s") % (n / (1024.0 * 1024 * 1024), unit)
-    elif abs(n) > 1024 * 1024:
-        return (f + "M%s") % (n / (1024.0 * 1024), unit)
-    elif abs(n) > 1024:
-        return (f + "k%s") % (n / 1024.0, unit)
+    if abs(n) > base * base * base:
+        return (f + "G%s") % (n / (base * base * base), unit)
+    elif abs(n) > base * base:
+        return (f + "M%s") % (n / (base * base), unit)
+    elif abs(n) > base:
+        return (f + "k%s") % (n / base, unit)
     else:
         return (f + "%s") % (n, unit)
 

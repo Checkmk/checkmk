@@ -58,12 +58,12 @@ def check_esx_vsphere_virtualmachine_mem(item, params, info):
         ("shared_memory", shared_memory ),
     ] 
 
-    message = " - Consumed: %s, Active: %s, " \
+    message = "Consumed: %s, Active: %s, " \
               "Ballooned: %s, Private: %s, Shared: %s" % \
     (get_bytes_human_readable(host_memory_usage), \
      get_bytes_human_readable(guest_memory_usage), get_bytes_human_readable(ballooned_memory), \
      get_bytes_human_readable(private_memory), get_bytes_human_readable(shared_memory) )
-    return(0, nagios_state_names[0] + message, perf)
+    return(0, message, perf)
 
 
 check_info['esx_vsphere_virtualmachine.mem_usage'] = {
@@ -81,7 +81,7 @@ def inventory_esx_vsphere_virtualmachine_name(info):
 
 def check_esx_vsphere_virtualmachine_name(item, params, info):
     data = esx_vsphere_virtualmachine_convert(info)
-    return(0, "INFO - %s" % " ".join(data['name']))
+    return(0, " ".join(data['name']))
 
 
 check_info['esx_vsphere_virtualmachine.name'] = {
@@ -108,7 +108,7 @@ def check_esx_vsphere_virtualmachine_hb_status(item, params, info):
         state = 2 
     elif vm_status == 'yellow':
         state = 1
-    return(state, nagios_state_names[state] + " - Hearbeat status is %s" % vm_status)
+    return(state, "Hearbeat status is %s" % vm_status)
 
 
 check_info['esx_vsphere_virtualmachine.heartbeatStatus'] = {

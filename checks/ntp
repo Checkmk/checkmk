@@ -135,14 +135,14 @@ def check_ntp(item, params, info):
             else:
                 state, text = state
                 perfdata = []
-            return (state, nagios_state_names[state] + " - " + text, perfdata)
+            return (state, text, perfdata)
 
-    return (3, "UNKNOWN - peer not found")
+    return (3, "peer not found")
 
 def check_ntp_summary(item, params, info):
     # No information at all? NTP daemon not running or timeout in ntpq -p
     if len(info) == 0:
-        return (3, "UNKNOWN - no information from NTP: timeout in ntpq -p or NTP daemon not running")
+        return (3, "no information from NTP: timeout in ntpq -p or NTP daemon not running")
 
     # We only are interested in our system peer or pulse per second source (pps)
     for line in info:
@@ -150,7 +150,7 @@ def check_ntp_summary(item, params, info):
             state, text, perfdata = check_ntp(line[1], params, [line])
             text += " (synchronized on %s)" % line[1]
             return (state, text, perfdata)
-    return (2, "CRIT - found %d peers, but none is suitable" % len(info))
+    return (2, "found %d peers, but none is suitable" % len(info))
 
 
 

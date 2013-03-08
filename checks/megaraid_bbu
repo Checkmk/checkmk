@@ -73,7 +73,7 @@ def inventory_megaraid_bbu(info):
 def check_megaraid_bbu(item, _no_params, info):
     controllers = megaraid_bbu_parse(info)
     if item not in controllers:
-        return (3, "UNKNOWN - Controller data not found in agent output")
+        return (3, "Controller data not found in agent output")
 
     controller = controllers[item]
     broken = []
@@ -97,14 +97,14 @@ def check_megaraid_bbu(item, _no_params, info):
             pass
 
     if controller.get("Learn Cycle Active") == "Yes":
-        return (0, "OK - no states to check (controller is in learn cycle)" + charge)
+        return (0, "no states to check (controller is in learn cycle)" + charge)
     # return assembled info
     elif broken:
-	return (state, nagios_state_names[state] + " - " + ", ".join(broken) + charge)
+	return (state, ", ".join(broken) + charge)
     else:
-	return (0, "OK - all states as expected" + charge)
+	return (0, "all states as expected" + charge)
 
-    return (3, "UNKNOWN - Check not implemented")
+    return (3, "Check not implemented")
 
 
 

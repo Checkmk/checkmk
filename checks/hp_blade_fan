@@ -48,15 +48,13 @@ def check_hp_blade_fan(item, params, info):
         if line[0] == item:
             present_state = hp_blade_present_map[int(line[1])]
             if present_state != 'present':
-                return (2, 'CRIT - FAN was present but is not available anymore.'
-                           ' (Present state: %s' % present_state)
+                return (2, 'FAN was present but is not available anymore'
+                           ' (Present state: %s)' % present_state)
 
             snmp_state = hp_blade_status_map[int(line[2])]
             status     = hp_blade_status2nagios_map[snmp_state]
-            return (status, '%s - FAN condition is %s' % (nagios_state_names[status], snmp_state))
-    return (3, "UNKNOWN - item not found in snmp data")
-
-
+            return (status, 'FAN condition is %s' % (snmp_state))
+    return (3, "item not found in snmp data")
 
 check_info["hp_blade_fan"] = {
     'check_function':          check_hp_blade_fan,

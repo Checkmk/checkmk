@@ -37,7 +37,7 @@ def check_uptime(_no_item, _no_params, info):
     days = rem / 1440
     now = int(time.time())
     since = time.strftime("%c", time.localtime(now - uptime))
-    return (0, "OK - up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
+    return (0, "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
 
 
 

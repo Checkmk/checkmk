@@ -51,13 +51,10 @@ def check_hp_procurve_mem(item, params, info):
                 status = 1
                 output = ' (Above %d%%)' % params[0]
 
-            return (status, '%s - Memory usage is %d%% %s' %
-                        (nagios_state_names[status], perc, output),
+            return (status, 'Memory usage is %d%% %s' % (perc, output),
                    [('bytes_used', '%db' % mem_used, params[0], params[1], 0, mem_total)])
 
-    return (3, "UNKNOWN - Invalid information in snmp data")
-
-
+    return (3, "Invalid information in snmp data")
 
 check_info["hp_procurve_mem"] = {
     'check_function':          check_hp_procurve_mem,

@@ -71,7 +71,7 @@ def check_tcp_conn_stats(item, params, info):
         perfdata.append(perf)
         if infotext:
             info.append(infotext)
-    return (worst_state, "%s - %s" % (nagios_state_names[worst_state], ", ".join(info)), perfdata)
+    return (worst_state, ", ".join(info), perfdata)
 
 
 check_info["tcp_conn_stats"] = {

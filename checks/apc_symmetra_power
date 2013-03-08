@@ -35,17 +35,17 @@ def check_apc_power(item, params, info):
         if line[0] == item:
             power = int(line[1])
             perfdata = [ ( "power", power, warn, crit, 0 ) ]
-            infotext = " - current power: %d W, warn/crit at and below %d/%d W" % \
+            infotext = "current power: %d W, warn/crit at and below %d/%d W" % \
                 (power, warn, crit)
 
             if power != -1 and power <= crit:
-                return (2, "CRIT" + infotext, perfdata)
+                return (2, infotext, perfdata)
             elif power != -1 and power <= warn:
-                return (1, "WARN" + infotext, perfdata)
+                return (1, infotext, perfdata)
             else:
-                return (0, "OK" + infotext, perfdata)
+                return (0, infotext, perfdata)
 
-    return (3, "UNKNOWN - Phase %s not found in SNMP output" % item)
+    return (3, "Phase %s not found in SNMP output" % item)
 
 
 check_info["apc_symmetra_power"] = {

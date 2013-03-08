@@ -48,12 +48,12 @@ def check_netapp_vfiler(item, _no_params, info):
         vfName, vfState = vfEntry
         if vfName == item:
             if vfState == "2":
-                return (0, "OK - vFiler is running")
+                return (0, "vFiler is running")
             elif vfState == "1":
-                return (2, "CRIT - vFiler is stopped")
+                return (2, "vFiler is stopped")
             else:
                 return (3, "UNKOWN - vFiler status unknown")
-    return (3, "UNKNOWN - vFiler not found in SNMP output")
+    return (3, "vFiler not found in SNMP output")
 
 
 # get the vfName and vfState from the vfEntry table

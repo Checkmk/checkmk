@@ -171,9 +171,9 @@ def check_lgp_pdu_aux(item, params, info):
                 else:
                     output.append('Door is %s' % lgp_pdu_aux_states[pdu['DoorState']])
 
-            return (state, '%s - %s' % (nagios_state_names[state], ', '.join(output)), perfdata)
+            return (state, ', '.join(output), perfdata)
 
-    return (3, 'UNKNOWN - Could not find given PDU.')
+    return (3, 'Could not find given PDU.')
 
 check_info['lgp_pdu_aux'] = (check_lgp_pdu_aux, 'Liebert PDU AUX %s', 1, inventory_lgp_pdu_aux)
 

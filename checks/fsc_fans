@@ -38,13 +38,13 @@ def check_fsc_fans(item, params, info):
         perfdata = [ ( 'rpm', rpm, warn, crit, 0 ) ]
         infotext = "%d RPM" % rpm
         if rpm < crit:
-            return (2, "CRIT - %s" % infotext, perfdata)
+            return (2, "%s" % infotext, perfdata)
         elif rpm < warn:
-            return (1, "WARN - %s" % infotext, perfdata)
+            return (1, "%s" % infotext, perfdata)
         else:
-            return (0, "OK - %s" % infotext, perfdata)
+            return (0, "%s" % infotext, perfdata)
 
-    return (3, "UNKNOWN - FAN %s not found in SNMP data" % item)
+    return (3, "FAN %s not found in SNMP data" % item)
 
 
 check_info["fsc_fans"] = {

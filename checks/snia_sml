@@ -26,7 +26,7 @@
 
 
 def check_snia_sml(item, params, info):
-    return (3, "UNKNOWN - Sorry. Check not implemented in this version.")
+    return (3, "Sorry. Check not implemented in this version.")
 
 
 

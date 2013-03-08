@@ -46,11 +46,10 @@ def check_hp_procurve_cpu(item, params, info):
                 status = 1
                 output = ' (Above %d%%)' % params[0]
 
-            return (status, '%s - CPU utilization is %d%% %s' %
-                        (nagios_state_names[status], cpu_util, output),
+            return (status, 'CPU utilization is %d%% %s' % (cpu_util, output),
                    [('util', '%d%%' % cpu_util, params[0], params[1], 0, 100)])
 
-    return (3, "UNKNOWN - Invalid  information in snmp data")
+    return (3, "Invalid information in snmp data")
 
 
 

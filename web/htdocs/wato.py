@@ -9868,7 +9868,7 @@ def mode_edit_ruleset(phase):
               make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
         html.context_button(_("Used Rulesets"),
               make_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
-        html.context_button(_("Unsed Rulesets"),
+        html.context_button(_("Unused Rulesets"),
               make_link([("mode", "rulesets"), ("group", "unused")]), "usedrulesets")
         if hostname:
             html.context_button(_("Services"),

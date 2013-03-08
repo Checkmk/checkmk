@@ -78,14 +78,14 @@ def check_cisco_temp_perf(item, _no_params, info):
             state = int(line[3])
             statename = cisco_temp_perf_envmon_states.get(state, "(invalid)")
             if state == 1:
-                return (0, "OK - state is normal%s" % temptext, perfdata)
+                return (0, "state is normal%s" % temptext, perfdata)
             elif state == 2:
-                return (1, "WARN - state is %s%s" % (statename, temptext), perfdata)
+                return (1, "state is %s%s" % (statename, temptext), perfdata)
             elif state in [ 5, 6 ]:
-                return (3, "UNKNOWN - state is %s" % statename)
+                return (3, "state is %s" % statename)
             else:
-                return (2, "CRIT - state is %s%s" % (statename, temptext), perfdata)
-    return (3, "UNKNOWN - Item %s not found in SNMP data" % item)
+                return (2, "state is %s%s" % (statename, temptext), perfdata)
+    return (3, "Item %s not found in SNMP data" % item)
 
 check_info['cisco_temp_perf'] = (check_cisco_temp_perf, "Temperature %s", 1,  inventory_cisco_temp_perf)
 snmp_info['cisco_temp_perf'] = ( ".1.3.6.1.4.1.9.9.13.1.3.1", [ 2, 3, 4, 6, OID_END ] ) # CISCO-SMI

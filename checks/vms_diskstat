@@ -47,7 +47,7 @@ def check_vms_diskstat_fs(item, params, info):
             avail_mb = int(used) * 512 / (1024.0 * 1024.0)
             return df_check_filesystem(g_hostname, item, size_mb, avail_mb, params)
 
-    return (3, "UNKNOWN - no such disk")
+    return (3, "no such disk")
 
 
 check_info['vms_diskstat.df'] = {

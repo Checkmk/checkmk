@@ -42,14 +42,14 @@ def check_windows_broadcom_bonding(item, params, info):
       if " ".join(line[:-1]) == item:
          status = int(line[-1])
          if status == 5:
-            return (2, "CRITICAL - Bond not working")
+            return (2, "Bond not working")
          elif status == 4:
-            return (1, "WARNING - Bond partly working")
+            return (1, "Bond partly working")
          elif status == 2:
-            return (0, "OK - Bond fully working")
+            return (0, "Bond fully working")
          else:
-            return (3, "UNKNOWN - Bond status cannot be recognized")
-   return (3, "UNKNOWN - Bond %s not found in agent output" % item)
+            return (3, "Bond status cannot be recognized")
+   return (3, "Bond %s not found in agent output" % item)
 
 check_info['windows_broadcom_bonding'] = {
     "check_function"          : check_windows_broadcom_bonding,

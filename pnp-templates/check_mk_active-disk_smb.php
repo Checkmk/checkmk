@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,38 +23,41 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
+setlocale(LC_ALL, "POSIX");
 
-hp_proliant_status_map = { 1: "unknown", 2: "ok", 3: "degraded", 4: "failed", 5: "disabled" }
-hp_proliant_status2nagios_map = { 'unknown': 3, 'ok': 0, 'degraded': 2, 'failed': 2, 'disabled': 1 }
+# RRDtool Options
+#$servicedes=$NAGIOS_SERVICEDESC
 
-def inventory_hp_proliant_cpu(info):
-    if len(info) > 0:
-        return [ (line[0], None) for line in info ]
+$fsname = str_replace("_", "/", substr($servicedesc, 3));
+$fstitle = $fsname;
 
-def check_hp_proliant_cpu(item, params, info):
-    for line in info:
-        if line[0] == item:
-            index, slot, name, status = line
-            snmp_status = hp_proliant_status_map[int(status)]
-            status      = hp_proliant_status2nagios_map[snmp_status]
-
-            return (status, 'CPU%s "%s" in slot %s is in state "%s"' %
-                         (index, name, slot, snmp_status))
-    return (3, "item not found in snmp data")
-
-check_info["hp_proliant_cpu"] = {
-    'check_function':          check_hp_proliant_cpu,
-    'inventory_function':      inventory_hp_proliant_cpu,
-    'service_description':     'HW CPU %s',
-    'snmp_info':               (
-        '.1.3.6.1.4.1.232.1.2.2.1.1', [
-            '1', # cpqSeCpuUnitIndex
-            '2', # cpqSeCpuSlot
-            '3', # cpqSeCpuName
-            '6', # cpqSeCpuStatus
-        ]
-    ),
-    'snmp_scan_function':      \
-         lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower(),
+# Hack for windows: replace C// with C:\
+if (strlen($fsname) == 3 && substr($fsname, 1, 2) == '//') {
+    $fsname = $fsname[0] . "\:\\\\";
+    $fstitle = $fsname[0] . ":\\";
 }
+
+$mega  = 1024.0 * 1024.0;
+$giga  = 1024.0 * 1024.0 * 1024.0;
+$sizegb = sprintf("%.1f", $MAX[1] / $giga);
+$maxgb  = $MAX[1]  / $giga;
+$warngb = $WARN[1] / $giga;
+$critgb = $CRIT[1] / $giga;
+$warngbtxt = sprintf("%.1f", $warngb);
+$critgbtxt = sprintf("%.1f", $critgb);
+
+$opt[1] = "--vertical-label GB -l 0 -u $maxgb -b 1024 --title '$hostname: Filesystem $fstitle ($sizegb GB)' ";
+
+# First graph show current filesystem usage
+$def[1] = "DEF:used_bytes=$RRDFILE[1]:$DS[1]:MAX "; 
+$def[1] .= "CDEF:var1=used_bytes,$giga,/ ";
+$def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\\n\" "; 
+$def[1] .= "LINE1:var1#226600: "; 
+$def[1] .= "HRULE:$maxgb#003300:\"Size ($sizegb GB) \" ";
+$def[1] .= "HRULE:$warngb#ffff00:\"Warning at $warngbtxt GB \" ";
+$def[1] .= "HRULE:$critgb#ff0000:\"Critical at $critgbtxt GB \\n\" ";
+$def[1] .= "GPRINT:var1:LAST:\"current\: %6.2lf GB\" ";
+$def[1] .= "GPRINT:var1:MAX:\"max\: %6.2lf GB \" ";
+$def[1] .= "GPRINT:var1:AVERAGE:\"avg\: %6.2lf GB\" ";
+
+?>

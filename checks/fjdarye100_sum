@@ -46,13 +46,13 @@ def check_fjdarye100_sum(index, _no_param, info):
             text = "Status is %s" % fjdarye100_sum_status[status]
 
             if status == 3:
-                return (0, "OK - %s" % text)
+                return (0, "%s" % text)
             elif status == 4:
-                return (1, "WARN - %s" % text)
+                return (1, "%s" % text)
             else:
-                return (2, "CRIT - %s" % text)
+                return (2, "%s" % text)
 
-    return (3, "UNKNOWN - No status summary present" )
+    return (3, "No status summary present" )
 
 # 1: fjdaryUnitStatus
 

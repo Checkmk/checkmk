@@ -37,16 +37,15 @@ def check_aironet_errors(item, params, info):
             timedif, persec = get_counter("aironet_errors.%s" % item, this_time, value)
             warn, crit = params
             perfdata = [("errors", persec, None, None, warn, crit)]
-            infotxt = " - %.2f errors/s in last %d secs" % (persec, int(timedif))
+            infotxt = "%.2f errors/s in last %d secs" % (persec, int(timedif))
             if persec >= crit:
-                return (2, "CRIT" + infotxt, perfdata)
+                return (2, infotxt, perfdata)
             elif persec >= warn:
-                return (1, "WARN" + infotxt, perfdata)
+                return (1, infotxt, perfdata)
             else:
-                return (0, "OK" + infotxt, perfdata)
+                return (0, infotxt, perfdata)
 
-
-    return (3, "UNKNOW - No radio %s available" % item)
+    return (3, "No radio %s available" % item)
 
 
 check_info["aironet_errors"] = {

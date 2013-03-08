@@ -53,10 +53,10 @@ def check_lsi_array(item, _no_params, info):
         elif line[0] == 'Statusofvolume' and volumeid == item:
             status = line[1]
             if status == 'Okay(OKY)':
-                return (0, 'OK - Status is Okay (OKY)')
+                return (0, 'Status is Okay (OKY)')
             else:
-                return (2, 'CRIT - Status is %s' % (status,))
-    return (2, 'CRIT - RAID volume %d not existing' % item)
+                return (2, 'Status is %s' % (status,))
+    return (2, 'RAID volume %d not existing' % item)
 
 check_info["lsi.array"] = {'check_function': check_lsi_array,
  'default_levels_variable': None,
@@ -77,10 +77,10 @@ def check_lsi_disk(item, target_state, info):
         elif line[0] == 'State' and target_id == item:
             state = line[1].split('(')[-1][:-1]
             if state == target_state:
-                return (0, 'OK - disk has state %s' % state)
+                return (0, 'disk has state %s' % state)
             else:
-                return (2, 'CRIT - disk has state %s (should be %s)' % (state, target_state))
-    return (2, 'CRIT - disk not present')
+                return (2, 'disk has state %s (should be %s)' % (state, target_state))
+    return (2, 'disk not present')
 
 check_info["lsi.disk"] = {'check_function': check_lsi_disk,
  'default_levels_variable': None,

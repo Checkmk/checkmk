@@ -52,14 +52,14 @@ def check_omd_status(item, _no_params, info):
         elif active:
             if line[0] == 'OVERALL':
                 if line[1] == '0':
-                    return (0, 'OK - all services are running')
+                    return (0, 'all services are running')
                 elif line[1] == '1':
-                    return (2, 'CRIT - site is stopped')
+                    return (2, 'site is stopped')
                 else:
-                    return (2, 'CRIT - partially running! stopped services: %s' % ", ".join(stopped))
+                    return (2, 'partially running! stopped services: %s' % ", ".join(stopped))
             elif line[1] != '0':
                 stopped.append(line[0])
-    return (3, "UNKNOWN - site not existing or AUTOSTART off")
+    return (3, "site not existing or AUTOSTART off")
 
 
 

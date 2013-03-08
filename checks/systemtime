@@ -32,7 +32,7 @@ def inventory_systemtime(info):
 
 def check_systemtime(item, params, info):
     if len(info) == 0:
-        return (3, "UNKNOWN - no information sent by agent")
+        return (3, "no information sent by agent")
 
     systemtime = int(info[0][0])
     ourtime = time.time()
@@ -42,11 +42,11 @@ def check_systemtime(item, params, info):
     perfdata = [ ("offset", offset, warn, crit, 0) ]
 
     if abs(offset) >= crit:
-        return (2, "CRIT - " + infotext, perfdata)
+        return (2, infotext, perfdata)
     elif abs(offset) >= warn:
-        return (1, "WARN - " + infotext, perfdata)
+        return (1, infotext, perfdata)
     else:
-        return (0, "OK - " + infotext, perfdata)
+        return (0, infotext, perfdata)
 
 
 check_info["systemtime"] = {

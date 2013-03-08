@@ -44,11 +44,9 @@ def check_apc_powerswitch(item, params, info):
                 r_state = 1
             if state in apc_powerswitch_critical_states:
                 r_state = 2
-            return(r_state, nagios_state_names[r_state] + '- Port %s has status %s' % (line[1], state_name[state]))
+            return(r_state, 'Port %s has status %s' % (line[1], state_name[state]))
 
     return False
-
-
 
 check_info['apc_powerswitch'] = {
     'check_function' : check_apc_powerswitch,

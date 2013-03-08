@@ -85,7 +85,7 @@ def check_printer_alerts(_not_used, _not_used1, info):
     # Filter out empty status lines (e.g. sent by Brother)
     info = [ i for i in info if i[1:5] != [ "0", "0", "0", "" ] ]
     if not info:
-        return (0, 'OK - No alerts present')
+        return (0, 'No alerts present')
 
     sum_state  = 0
     sum_txt    = []
@@ -96,7 +96,7 @@ def check_printer_alerts(_not_used, _not_used1, info):
             state = printer_alerts_text_map[desc]
             if state != 0:
                 sum_state = max(state, sum_state)
-                sum_txt.append("%s - %s" % (nagios_state_names[state], desc))
+                sum_txt.append(desc)
             continue
 
         code = saveint(code)
@@ -120,13 +120,13 @@ def check_printer_alerts(_not_used, _not_used1, info):
         elif state > sum_state:
             sum_state = max(state, sum_state)
 
-        info_text = '%s - %s - %s' % (nagios_state_names[state], group_txt, desc)
+        info_text = '%s - %s' % (group_txt, desc)
         if state == 3 and code != -1:
             info_text += " (code: %d)" % code
 
         sum_txt.append(info_text)
     if len(sum_txt) == 0:
-        sum_txt.append("OK - No alerts found")
+        sum_txt.append("No alerts found")
     return (sum_state, ', '.join(sum_txt))
 
 check_config_variables.append("printer_alerts_state_map")

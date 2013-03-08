@@ -44,15 +44,15 @@ def check_oracle_sessions(item, params, info):
 
             warn, crit = params
             sessions = int(line[1])
-            infotext = " - %d active sessions (levels at %d/%d)" % (sessions, warn, crit)
+            infotext = "%d active sessions (levels at %d/%d)" % (sessions, warn, crit)
             perfdata = [("sessions", sessions, warn, crit)]
             if sessions >= crit:
-                return (2, "CRIT" + infotext, perfdata)
+                return (2, infotext, perfdata)
             elif sessions >= warn:
-                return (1, "WARN" + infotext, perfdata)
+                return (1, infotext, perfdata)
             else:
-                return (0, "OK" + infotext, perfdata)
-    return (3, "UNKNOWN - Database not existing or not running")
+                return (0, infotext, perfdata)
+    return (3, "Database not existing or not running")
 
 check_includes['oracle_sessions'] = [ "oracle.include" ]
 

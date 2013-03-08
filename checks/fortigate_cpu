@@ -33,17 +33,17 @@ def check_fortigate_cpu(item, params, info):
         util += int(line[0])
         num_cpus += 1
     if num_cpus == 0:
-        return (3, "UNKNOWN - no data found in SNMP output")
+        return (3, "no data found in SNMP output")
     util = float(util) / num_cpus
-    infotext = " - %2.1f%% utilization at %d CPUs" % (util, num_cpus)
+    infotext = "%2.1f%% utilization at %d CPUs" % (util, num_cpus)
     warn, crit = params
     perfdata = [("util", util, warn, crit, 0, 100)]
     if util >= crit:
-        return (2, "CRIT" + infotext + " (critical at %d%%)" % crit, perfdata)
+        return (2, infotext + " (critical at %d%%)" % crit, perfdata)
     elif util >= warn:
-        return (1, "WARN" + infotext + " (warning at %d%%)" % warn, perfdata)
+        return (1, infotext + " (warning at %d%%)" % warn, perfdata)
     else:
-        return (0, "OK" + infotext, perfdata)
+        return (0, infotext, perfdata)
 
 check_info["fortigate_cpu"] = {
     "check_function"        : check_fortigate_cpu,

@@ -57,15 +57,15 @@ def check_apc_temp(item, params, info):
             temp = int(line[1])
             warn, crit = params
             perfdata = [ ("temp", temp, warn, crit) ]
-            infotext = " - %.1f C (warn/crit at %.1f/%.1f C)" % (temp, warn, crit)
+            infotext = "%.1f C (warn/crit at %.1f/%.1f C)" % (temp, warn, crit)
             if temp >= crit:
-                return (2, "CRIT" + infotext, perfdata)
+                return (2, infotext, perfdata)
             elif temp >= warn:
-                return (1, "WARN" + infotext, perfdata)
+                return (1, infotext, perfdata)
             else:
-                return (0, "OK" + infotext, perfdata)
+                return (0, infotext, perfdata)
 
-    return (3, "UNKNOWN - sensor not found in SNMP data")
+    return (3, "sensor not found in SNMP data")
 
 
 check_info["apc_symmetra_temp"] = {

@@ -58,14 +58,11 @@ def inventory_fsc_ipmi_mem_status(info):
 def check_fsc_ipmi_mem_status(name, _no_params, info):
     for line in info:
         if line[0] == 'E':
-            return (3, "UNKNOWN: Error in agent plugin output (%s)" % " ".join(line[1:]))
+            return (3, "Error in agent plugin output (%s)" % " ".join(line[1:]))
         elif line[1] == name:
-            level = int(line[2])
-            return (fsc_ipmi_mem_status_levels[level][0], "%s: %s" % (
-                          nagios_state_names[fsc_ipmi_mem_status_levels[level][0]],
-                          fsc_ipmi_mem_status_levels[level][1]))
+            return fsc_ipmi_mem_status_levels[int(line[2])]
 
-    return (3, "UNKNOWN - item %s not found" % name)
+    return (3, "item %s not found" % name)
 
 
 check_info["fsc_ipmi_mem_status"] = {

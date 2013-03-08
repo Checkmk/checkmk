@@ -52,9 +52,9 @@ def check_kernel(item, params, info):
              for line in info[1:]
              if line[0] == item or kernel_counter_names.get(line[0], line[0]) == item ]
     if len(hits) == 0:
-        return (3, "UNKNOWN - item '%s' not found in agent output" % item)
+        return (3, "item '%s' not found in agent output" % item)
     elif len(hits) > 1:
-        return (3, "UNKNOWN - item '%s' not unique (found %d times)" % (item, len(hits)))
+        return (3, "item '%s' not unique (found %d times)" % (item, len(hits)))
 
     counter = hits[0][0]
     this_val = int(hits[0][1])
@@ -94,7 +94,7 @@ def check_cpu_utilization(item, params, info):
     # Look for entry beginning with "cpu"
     f = [ l for l in info if l[0] == "cpu" ]
     if len(f) != 1:
-        return (3, "UNKNOWN - invalid output from plugin")
+        return (3, "invalid output from plugin")
     line = f[0]
     if len(line) < 8:
         line = line + ['0', '0', '0', '0'] # needed for Linux 2.4
@@ -115,7 +115,7 @@ def check_cpu_utilization(item, params, info):
 
     sum_jiffies = sum(diff_values[0:7]) # do not account for steal!
     if sum_jiffies == 0:
-        return (0, "OK - too short interval")
+        return (0, "too short interval")
     user        = diff_values[0] + diff_values[1] # add user + nice
     system      = diff_values[2]
     wait        = diff_values[4]
@@ -127,7 +127,7 @@ def check_cpu_utilization(item, params, info):
           ( "system", "%.3f" % system_perc ),
           ( "wait",   "%.3f" % wait_perc ) ]
 
-    infotext = " - user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user_perc, system_perc, wait_perc)
+    infotext = "user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user_perc, system_perc, wait_perc)
 
     # You may set a warning/critical level on the io wait
     # percentage. This can be done by setting params to
@@ -144,7 +144,7 @@ def check_cpu_utilization(item, params, info):
     except:
         pass
 
-    return (result, nagios_state_names[result] + infotext, perfdata)
+    return (result, infotext, perfdata)
 
 
 

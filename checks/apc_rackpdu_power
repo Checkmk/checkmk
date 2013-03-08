@@ -41,10 +41,10 @@ def check_apc_rackpdu_power(item, _no_params, info):
       if host == item:
          perfdata = [ ( "amperage", amperage, max ) ]
          if amperage >= max:
-            return (2, "CRIT - Amperage: %f - Overload possible" % amperage, perfdata)
+            return (2, "Amperage: %f - Overload possible" % amperage, perfdata)
          else:
-            return (0, "OK - Amperage: %f" % amperage, perfdata)
-   return (3, "UNKNOWN - Something went wrong")
+            return (0, "Amperage: %f" % amperage, perfdata)
+   return (3, "Something went wrong")
 
 
 

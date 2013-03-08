@@ -44,11 +44,11 @@ def check_statgrab_load(item, params, info):
                  [ (1, load_1), (5, load_5), (15, load_15) ] ]
 
     if load_15 >= crit:
-        return (2, "CRIT - 15min load %.2f (critical at %.2f)" % (load_15, crit), perfdata)
+        return (2, "15min load %.2f (critical at %.2f)" % (load_15, crit), perfdata)
     elif load_15 >= warn:
-        return (1, "WARN - 15min load %.2f (warning at %.2f)" % (load_15, warn), perfdata)
+        return (1, "15min load %.2f (warning at %.2f)" % (load_15, warn), perfdata)
     else:
-        return (0, "OK - 15min load %.2f" % load_15, perfdata)
+        return (0, "15min load %.2f" % load_15, perfdata)
 
 
 

@@ -35,12 +35,12 @@ def check_cisco_fan(item, params, info):
         if line[0] == item:
             state = saveint(line[1])
             if state == 1:
-                return (0, "OK (State is: %s (%d))" % (cisco_fan_states[state], state))
+                return (0, "State is: %s (%d)" % (cisco_fan_states[state], state))
             elif state == 2:
-                return (1, "WARNING (state is %s (%d))" % (cisco_fan_states[state], state))
+                return (1, "State is %s (%d)" % (cisco_fan_states[state], state))
             else:
-                return (2, "CRITICAL (state is %s (%d))" % (cisco_fan_states[state], state))
-    return (3, "UNKNOWN - item not found in snmp data")
+                return (2, "State is %s (%d)" % (cisco_fan_states[state], state))
+    return (3, "item not found in snmp data")
 
 
 check_info["cisco_fan"] = {

@@ -61,21 +61,17 @@ def check_f5_bigip_fans(item, _no_params, info):
             if f5_bigip_fans_genitem(fanentry[0]) == item:
                 speed = int(fanentry[1])
                 warn, crit = f5_bigip_fans_default_levels
-                msgtxt = " - speed is %d rpm" % speed
+                msgtxt = "speed is %d rpm" % speed
                 if speed > warn:
-                    return (0, "OK" + msgtxt)
+                    return (0, msgtxt)
                 elif speed < crit:
-                    return (2, "CRITCAL" + msgtxt)
+                    return (2, msgtxt)
                 elif speed < warn:
-                    return (1, "WARNING" + msgtxt)
+                    return (1, msgtxt)
                 else:
-                    return (3, "UNKNOWN - could not detect speed")
+                    return (3, "could not detect speed")
 
-    return (3, "UNKNOWN - item not found in SNMP output")
-
-
-
-
+    return (3, "item not found in SNMP output")
 
 
 # Get ID and Speed from the CPU and chassis fan tables

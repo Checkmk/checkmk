@@ -51,8 +51,8 @@ def check_fjdarye_item(index, _no_param, info):
                 code = 1
             else:
                 code = 2
-            return(code, "%s - Status is %s" % (nagios_state_names[code], fjdarye_item_status[status]))
-    return(3, 'UNKNOWN - No status for item %d present' % index )
+            return(code, "Status is %s" % (fjdarye_item_status[status]))
+    return(3, 'No status for item %d present' % index )
 
 # --------------------------------------------------------------------------------
 # disk checks:
@@ -85,9 +85,9 @@ def fjdarye_disks_printstates(state):
 
 def check_fjdarye_disks_summary(index, expected_status, info):
     current_state = fjdarye_disks_summary(info)
-    infotext = " - " + fjdarye_disks_printstates(current_state)
+    infotext = fjdarye_disks_printstates(current_state)
     if current_state == expected_status:
-        return (0, "OK" + infotext)
+        return (0, infotext)
 
     result = 1
     for ename, ecount in expected_status.items():
@@ -95,7 +95,7 @@ def check_fjdarye_disks_summary(index, expected_status, info):
             result = 2
             break
 
-    return (result, nagios_state_names[result] + infotext + \
+    return (result, infotext + \
             " (expected was: %s)" % fjdarye_disks_printstates(expected_status))
 
 # --------------------------------------------------------------------------------
@@ -109,9 +109,9 @@ def check_fjdarye_disks(index, expected_status, info):
             status = fjdarye_disks_status[int(line[1])]
 
             if status == expected_status:
-                return (0, "OK - Status is %s" % status)
+                return (0, "Status is %s" % status)
             else:
-                return (2, "CRIT - Status is %s (expected status is %s)" % (status, expected_status))
+                return (2, "Status is %s (expected status is %s)" % (status, expected_status))
 
-    return (3, "UNKNOWN - No status for disk number %d present" % index)
+    return (3, "No status for disk number %d present" % index)
 

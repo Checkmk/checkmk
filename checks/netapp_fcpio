@@ -56,10 +56,10 @@ def check_netapp_fcpio(item, params, info):
 	write_msg = ' (!!)'
 
 
-    infotext = " - %s read%s, %s write%s in last %d sec" % (get_filesize_human_readable(avg_read), \
+    infotext = "%s read%s, %s write%s in last %d sec" % (get_filesize_human_readable(avg_read), \
     read_msg, get_filesize_human_readable(avg_write), write_msg, timedif)
 
-    return(state, nagios_state_names[state] + infotext, perfdata)
+    return(state, infotext, perfdata)
 
 
 check_info["netapp_fcpio"] = {

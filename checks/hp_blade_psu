@@ -71,7 +71,7 @@ def check_hp_blade_psu(item, params, info):
         if line[0] == item:
             present_state = hp_blade_present_map[int(line[1])]
             if present_state != 'present':
-                return (2, 'CRIT - PSU was present but is not available anymore.'
+                return (2, 'PSU was present but is not available anymore.'
                            ' (Present state: %s' % present_state)
 
             snmp_state = hp_blade_status_map[int(line[2])]
@@ -86,9 +86,9 @@ def check_hp_blade_psu(item, params, info):
 
             perfdata = [ ('output', line[3]) ]
 
-            return (status, '%s - PSU is %s%s (S/N: %s)' %
-                         (nagios_state_names[status], snmp_state, detail_output, line[6]), perfdata)
-    return (3, "UNKNOWN - item not found in snmp data")
+            return (status, 'PSU is %s%s (S/N: %s)' %
+                         (snmp_state, detail_output, line[6]), perfdata)
+    return (3, "item not found in snmp data")
 
 
 

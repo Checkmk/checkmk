@@ -46,15 +46,15 @@ def check_fsc_temp(item, _no_params, info):
         perfdata = [ ("temp", current, warn, crit, 0 ) ]
 
         if current == -1 or current == 4294967295:
-            return(3, "UNKNOWN - Problem with sensor")
+            return(3, "Problem with sensor")
         elif current >= crit and crit > 0:
-            return (2, "CRIT - %s" % infotext, perfdata)
+            return (2, "%s" % infotext, perfdata)
         elif current >= warn and warn > 0:
-            return (1, "WARN - %s" % infotext, perfdata)
+            return (1, "%s" % infotext, perfdata)
         else:
-            return (0, "OK - %s" % infotext, perfdata)
+            return (0, "%s" % infotext, perfdata)
 
-    return (3, "UNKNOWN - Sensor %s not found in SNMP data" % item)
+    return (3, "Sensor %s not found in SNMP data" % item)
 
 check_info['fsc_temp'] = {
     "inventory_function"    : inventory_fsc_temp,

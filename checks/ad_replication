@@ -81,7 +81,7 @@ def check_ad_replication(item, params, info):
 
             if int(numFailures) > maxFailuresWarn:
                 status = 1
-                output += 'WARNING: %s/%s replication of context %s reached ' \
+                output += '(!) %s/%s replication of context %s reached ' \
                           ' the threshold of maxmimum failures (%s) (Last Success: %s, ' \
                           'LastFailure: %s NumFailures: %s Status: %s), ' % \
                          (sourceSite, sourceDC, namingContext, maxFailuresWarn, timeLastFailure,
@@ -89,7 +89,7 @@ def check_ad_replication(item, params, info):
 
             if int(numFailures) > maxFailuresCrit:
                 status = 2
-                output += 'CRITICAL: %s/%s replication of context %s reached ' \
+                output += '(!!) %s/%s replication of context %s reached ' \
                           ' the threshold of maxmimum failures (%s) (Last Success: %s, ' \
                           'LastFailure: %s NumFailures: %s Status: %s), ' % \
                          (sourceSite, sourceDC, namingContext, maxFailuresCrit, timeLastFailure,
@@ -98,17 +98,17 @@ def check_ad_replication(item, params, info):
             if timeLastFailure is not None and timeLastSuccess is not None \
                and timeLastFailure > timeLastSuccess:
                 status = 2
-                output += 'CRITICAL: %s/%s replication of context %s failed ' \
+                output += '(!!) %s/%s replication of context %s failed ' \
                          '(Last Success: %s, LastFailure: %s NumFailures: %s Status: %s), ' % \
                          (sourceSite, sourceDC, namingContext, timeLastFailure,
                           timeLastSuccess, numFailures, statusLastFailure)
     if not foundLine:
-        return (3, 'UNKNOWN - Replication information for %s not found' % item)
+        return (3, 'Replication information for %s not found' % item)
 
     if status != 0:
         return (status, output.rstrip(', '))
     else:
-        return (status, 'OK - All replications are OK.')
+        return (status, 'All replications are OK.')
 
 
 check_info["ad_replication"] = {

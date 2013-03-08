@@ -80,9 +80,9 @@ def check_mssql_tablespaces(item, params, info):
             output.append('%s: %s' % (label, get_bytes_human_readable(val_bytes)))
             perfdata.append((key, val_bytes))
 
-        return (0, 'OK - %s' % ', '.join(output), perfdata)
+        return (0, '%s' % ', '.join(output), perfdata)
 
-    return (3, 'UNKNOWN - Tablespace %s could not be found' % item)
+    return (3, 'Tablespace %s could not be found' % item)
 
 check_info['mssql_tablespaces'] = {
     'check_function':      check_mssql_tablespaces,

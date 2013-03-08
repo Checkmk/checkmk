@@ -64,32 +64,32 @@ def check_netapp_cluster(item, _no_params, info):
     # first handle all critical states.
     # "dead" and "thisNodeDead"
     if   cfState == "1" or cfSettings == "5":
-        return (2, "CRIT - Node is declared dead by cluster")
+        return (2, "Node is declared dead by cluster")
     elif cfPartnerStatus in [1, 3]:
-        return (2, "CRIT - Partner Status is dead or maybeDown")
+        return (2, "Partner Status is dead or maybeDown")
     elif cfInterconnectStatus == "2":
-        return (2, "CRIT - Cluster Interconnect failure")
+        return (2, "Cluster Interconnect failure")
 
 
     # then handle warnings.
     elif cfSettings in [3, 4] or cfState == "3":
-        return (1, "WARN - Cluster takeover is disabled")
+        return (1, "Cluster takeover is disabled")
     elif cfInterconnectStatus == "partialFailure":
-        return (1, "WARN - Cluster interconnect partially failed")
+        return (1, "Cluster interconnect partially failed")
 
     # if the partner name has changed, we'd like to issue a warning
     if cfPartnerName != item:
-        return (1, "WARN - Partner Name %s instead of %s") % (cfPartnerName, item)
+        return (1, "Partner Name %s instead of %s") % (cfPartnerName, item)
 
     # OK - Cluster enabled, Cluster can takeover and the partner is OK and the
     # infiniband interconnect is working.
     if cfSettings == "2" and cfState == "2" \
         and cfCannotTakeoverCause == "1" and cfPartnerStatus == "2" \
         and cfInterconnectStatus == "4":
-        return (0, "OK - Cluster Status is OK")
+        return (0, "Cluster Status is OK")
 
     # if we reach here, we hit an unknown case.
-    return (3, "UNKNOWN")
+    return (3, "Got unhandled information")
 
 check_info["netapp_cluster"] = {
     'check_function':          check_netapp_cluster,

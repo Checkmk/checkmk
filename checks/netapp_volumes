@@ -94,7 +94,7 @@ def check_netapp_volumes(item, _not_used, info):
     info = [ line for line in info if line[0] == item ][0]
 
     if len(info) != 5:
-        return (3, "UNKNOWN - Invalid SNMP response")
+        return (3, "Invalid SNMP response")
 
     name, fsid, owner, state, status = info
 
@@ -114,7 +114,7 @@ def check_netapp_volumes(item, _not_used, info):
         ret_state = 2
         output += '(!!)'
 
-    return (ret_state, "%s - %s" % (nagios_state_names[ret_state], output))
+    return (ret_state, output)
 
 check_info["netapp_volumes"] = {
     'check_function':          check_netapp_volumes,

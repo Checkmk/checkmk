@@ -34,26 +34,26 @@ def inventory_netif_link(info):
 def check_netif_link(item, targetstate, info):
     links = [ i[4] for i in info if i[0] == item ]
     if len(links) == 0:
-        return (2, "CRIT - unknown network device")
+        return (2, "unknown network device")
     elif len(links) != 1:
-        return (3, "UNKNOWN - network devices listed more than once")
+        return (3, "network devices listed more than once")
     if links[0] == 'yes':
         link = True
     elif links[0] == 'no':
         link = False
     else:
-        return (3, "UNKNOWN - invalid link state '%s'" % link)
+        return (3, "invalid link state '%s'" % link)
 
     if link == targetstate:
         if link:
-            return (0, "OK - Link is up")
+            return (0, "Link is up")
         else:
-            return (0, "OK - no link / NIC unused")
+            return (0, "no link / NIC unused")
     else:
         if link:
-            return (1, "WARN - Link is up, NIC should be unused")
+            return (1, "Link is up, NIC should be unused")
         else:
-            return (2, "CRIT - no link")
+            return (2, "no link")
 
 
 def inventory_netif_params(info):
@@ -64,14 +64,14 @@ def inventory_netif_params(info):
 def check_netif_params(item, params, info):
     infolist = [ i[1:4] for i in info if i[0] == item ]
     if len(infolist) == 0:
-        return (2, "CRIT - unknown network device")
+        return (2, "unknown network device")
     elif len(infolist) != 1:
-        return (3, "UNKNOWN - network devices listed more than once")
+        return (3, "network devices listed more than once")
     act_params = tuple(infolist[0])
     if act_params == params:
-        return (0, "OK - %s" % (",".join(act_params),) )
+        return (0, "%s" % (",".join(act_params),) )
     else:
-        return (2, "CRIT - %s (should be %s)" %
+        return (2, "%s (should be %s)" %
             (",".join(act_params), ",".join(params)))
 
 

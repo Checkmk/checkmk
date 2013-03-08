@@ -53,7 +53,7 @@ def inventory_sylo(info):
 
 def check_sylo(item, params, info):
     if len(info) != 1:
-        return (2, "CRIT - No hint file (sylo probably never ran on this system)")
+        return (2, "No hint file (sylo probably never ran on this system)")
 
     if len(info[0]) == 4:
         msg = ""
@@ -73,7 +73,7 @@ def check_sylo(item, params, info):
         age = now - mtime
         if age > alive_report:
             status = 2
-            return (2, "CRIT - Sylo not running (Hintfile too old: last update %d secs ago)" % age)
+            return (2, "Sylo not running (Hintfile too old: last update %d secs ago)" % age)
 
         # Current fill state
         if inOffset == outOffset:
@@ -111,9 +111,9 @@ def check_sylo(item, params, info):
             ('used', '%f' % used_mb, warn_mb, crit_mb, 0, size_mb)
         ]
 
-        return (status, "%s - %s" % (['OK','WARN', 'CRIT'][status], msg) , perfdata)
+        return (status, msg, perfdata)
 
-    return (3, "UNKNOWN - Invalid hint file contents: " % info)
+    return (3, "Invalid hint file contents: " % info)
 
 
 

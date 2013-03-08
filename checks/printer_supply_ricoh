@@ -44,9 +44,9 @@ def check_printer_supply_ricoh(item, params, info):
             elif remaining < warn:
                 state = 1
                 label = "(!)"
-            message = " - Remaining: %s%%%s (levels at %d%%/%d%%) " % (remaining, label, warn, crit)
+            message = "Remaining: %s%%%s (levels at %d%%/%d%%) " % (remaining, label, warn, crit)
             perfdata = [ ("level", level, warn, crit, 0, 100)]
-            return (state, nagios_state_names[state] + message, perfdata)
+            return (state, message, perfdata)
     return(3, "Ukn: Supply not found in SNMP data")
 
 check_info['printer_supply_ricoh'] = {

@@ -31,11 +31,11 @@ def check_decru_power(item, params, info):
     for power in info:
         if power[0] == item:
             if power[1] != "1":
-                return (2, "CRIT - power supply in state %s" % power[1])
+                return (2, "power supply in state %s" % power[1])
             else:
-                return (0, "OK - power supply ok")
+                return (0, "power supply ok")
 
-    return (3, "UNKNOWN - power supply not found")
+    return (3, "power supply not found")
 
 
 

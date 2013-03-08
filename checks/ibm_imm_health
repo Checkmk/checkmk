@@ -42,17 +42,15 @@ def check_ibm_imm_health(_no_item, _no_params, info):
 
     state = info[0][0]
     if state == '255':
-        return (0, "OK - no problem found")
+        return (0, "no problem found")
     elif state in ['0']:
-        return (2, "CRIT - " + infotext + " - manual log clearing needed to recover state" )
+        return (2, infotext + " - manual log clearing needed to recover state" )
     elif state in ['2']:
-        return (2, "CRIT - " + infotext)
+        return (2, infotext)
     elif state == ['4']:
-        return (1, "WARN - " + infotext)
+        return (1, infotext)
     else:
-        return (3, "UNKNOWN - " + infotext)
-
-
+        return (3, infotext)
 
 check_info["ibm_imm_health"] = {
     'check_function':          check_ibm_imm_health,

@@ -40,14 +40,14 @@ def inventory_hp_eml_sum(info):
 
 def check_hp_eml_sum(_no_item, _no_param, info):
     if not info or not info[0]:
-        return (3, "UNKNOWN - Summary status information missing")
+        return (3, "Summary status information missing")
 
     op_status, manufacturer, model, serial, version = info[0]
     status, status_txt = hp_eml_sum_map.get(op_status, (3, 'unhandled op_status (%s)' % op_status))
 
-    return (status, '%s - Summary State is "%s", Manufacturer: %s, '
+    return (status, 'Summary State is "%s", Manufacturer: %s, '
                     'Model: %s, Serial: %s, Version: %s' %
-             (nagios_state_names[status], status_txt, manufacturer, model, serial, version))
+             (status_txt, manufacturer, model, serial, version))
 
 check_info["hp_eml_sum"] = {
     'check_function':          check_hp_eml_sum,

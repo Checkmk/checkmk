@@ -37,21 +37,21 @@ def check_nfsmounts(item, _no_params, info):
             blocksize = int(line[5])
 
             if size_blocks < 0 or free_blocks < 0 or blocksize > 1024*1024:
-                return (2, "CRIT - Stale NFS handle")
+                return (2, "Stale NFS handle")
 
             if line[1] == 'ok':
                 gb = 1024 * 1024 * 1024.0
                 size_gb = (size_blocks * blocksize) / gb
                 if size_gb == 0:
-                    return (0, "OK - server is responding")
+                    return (0, "server is responding")
 
                 free_gb = (free_blocks * blocksize) / gb
                 used_gb = size_gb - free_gb
                 used_perc = 100.0 * used_gb / size_gb
-                return (0, "OK - %.1f%% used (%.1f of %.1f GB)" % (used_perc, used_gb, size_gb))
+                return (0, "%.1f%% used (%.1f of %.1f GB)" % (used_perc, used_gb, size_gb))
             else:
-                return (2, "CRIT - server not responding")
-    return (3, "UNKNOWN - not mounted")
+                return (2, "server not responding")
+    return (3, "not mounted")
 
 
 check_info["nfsmounts"] = {

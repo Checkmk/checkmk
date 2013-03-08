@@ -77,19 +77,19 @@ def check_hr_mem(item, params, info):
             perfdata.append(('memused', str(totalused_mb)+'MB', int(warn/100.0 * totalram_mb),
                         int(crit/100.0 * totalram_mb), 0, totalvirt_mb))
             if totalused_perc >= crit:
-                return (2, 'CRIT - %s, critical at %.1f%%' % (infotext, crit), perfdata)
+                return (2, '%s, critical at %.1f%%' % (infotext, crit), perfdata)
             elif totalused_perc >= warn:
-                return (1, 'WARN - %s, warning at %.1f%%' % (infotext, warn), perfdata)
+                return (1, '%s, warning at %.1f%%' % (infotext, warn), perfdata)
             else:
-                return (0, 'OK - %s' % infotext, perfdata)
+                return (0, '%s' % infotext, perfdata)
         else:
             perfdata.append(('memused', str(totalused_mb)+'MB', warn, crit, 0, totalram_mb))
             if totalused_mb >= crit:
-                return (2, 'CRIT - %s, critical at %.2f GB' % (infotext, crit / 1024.0), perfdata)
+                return (2, '%s, critical at %.2f GB' % (infotext, crit / 1024.0), perfdata)
             elif totalused_mb >= warn:
-                return (1, 'WARN - %s, warning at %.2f GB' % (infotext, warn / 1024.0), perfdata)
+                return (1, '%s, warning at %.2f GB' % (infotext, warn / 1024.0), perfdata)
             else:
-                return (0, 'OK - %s' % infotext, perfdata)
+                return (0, '%s' % infotext, perfdata)
 
     return (3, "Invalid information. Total memory is empty.")
 

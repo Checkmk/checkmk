@@ -57,7 +57,7 @@ def check_mk_normalize_network(n):
 
 def check_only_from(item, param, info):
     if param == None:
-        return (1, "WARN - IP access restriction not monitored for this host")
+        return (1, "IP access restriction not monitored for this host")
     for line in info:
         if line[0] == "OnlyFrom:":
             an = []
@@ -85,10 +85,10 @@ def check_only_from(item, param, info):
                 status = 1
                 infotexts.append("agent blocks: %s" % (" ".join(too_few)))
             if status == 1:
-                return (1, "WARN - invalid access configuration: %s" % (", ".join(infotexts)))
+                return (1, "invalid access configuration: %s" % (", ".join(infotexts)))
             else:
-                return (0, "OK - allowed IP ranges: %s" % (" ".join(allowed_nets)))
-    return (3, "UNKNOWN - Agent does not send OnlyFrom: header")
+                return (0, "allowed IP ranges: %s" % (" ".join(allowed_nets)))
+    return (3, "Agent does not send OnlyFrom: header")
 
 
 

@@ -76,8 +76,8 @@ def check_hp_proliant_da_cntlr(item, params, info):
             output.append('(Role: %s, Model: %s, Slot: %s, Serial: %s)' %
                        (hp_proliant_da_cntlr_role_map.get(role, 'unknown'), model, slot, serial))
 
-            return (sum_state, '%s - %s' % (nagios_state_names[sum_state], ', '.join(output)))
-    return (3, "UNKNOWN - Controller not found in snmp data")
+            return (sum_state, ', '.join(output))
+    return (3, "Controller not found in snmp data")
 
 check_info["hp_proliant_da_cntlr"] = {
     'check_function':          check_hp_proliant_da_cntlr,

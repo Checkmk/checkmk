@@ -37,7 +37,7 @@ def check_decru_cpu(item, _no_params, info):
           ( "system",    "%.3f" % system),
           ( "interrupt", "%.3f" % interrupt) ]
 
-    return (0, "OK - user %.0f%%, sys %.0f%%, interrupt %.0f%%, idle %.0f%%"
+    return (0, "user %.0f%%, sys %.0f%%, interrupt %.0f%%, idle %.0f%%"
          % (user, system, interrupt, idle), perfdata)
 
 

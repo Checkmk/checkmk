@@ -91,26 +91,25 @@ def check_printer_supply(item, params, info):
             # handle cases with partial data
             if maxlevel == -2 or current in [ -3, -2, -1 ]: # no percentage possible
                 if current == -1 or maxlevel == -1:
-                    return (0, "OK - there are no restrictions on this supply")
+                    return (0, "there are no restrictions on this supply")
                 elif current == -3:
-                    return (printer_supply_some_remaining_status, "%s - Some remaining" %
-                            (nagios_state_names[printer_supply_some_remaining_status]), perfdata)
+                    return (printer_supply_some_remaining_status, "Some remaining", perfdata)
                 elif current == -2:
-                    return (3, "UNKNOWN - current level is unknown")
+                    return (3, "current level is unknown")
                 elif maxlevel == -2:
                     # no percentage possible. We compare directly against levels
-                    return (0, "OK - current level is %d" % current, [("pages", current)])
+                    return (0, "current level is %d" % current, [("pages", current)])
 
             leftperc = 100.0 * current / maxlevel
             infotext = "%.0f%% (levels at %.0f%% / %.0f%%)" % (leftperc, warn, crit)
             if leftperc <= crit:
-                return (2, "CRIT - %s" % infotext, perfdata)
+                return (2, infotext, perfdata)
             elif leftperc <= warn:
-                return (1, "WARN - %s" % infotext, perfdata)
+                return (1, infotext, perfdata)
             else:
-                return (0, "OK - %s" % infotext, perfdata)
+                return (0, infotext, perfdata)
 
-    return (3, 'UNKNOWN - not found')
+    return (3, 'not found')
 
 check_config_variables.append("printer_supply_some_remaining_status")
 

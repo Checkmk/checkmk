@@ -24,17 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#!/usr/bin/python
-
-
 # This check verifies a given NFS export is registered with mountd.
 # Optionally we can add tracking of allowed clients and filesystem ID.
 
 # Agent info
 # [['/mirrored/data/recording', '172.0.0.0/255.0.0.0']]
-
-
-
 
 def inventory_nfsexports(checkname, info):
     # reminder to self: inventorize the exported fs, and maybe even the fs id.
@@ -54,20 +48,14 @@ def check_nfsexports(item, _no_params, info):
     # if the agent returned an empty list then it found entries in /etc/exports
     # but apparently no daemons were running.
     if len(info) == 0:
-        return (2, "CRITICAL - exports defined but no exports found in export list. Daemons might not be working")
+        return (2, "exports defined but no exports found in export list. Daemons might not be working")
 
     # otherwise lets see if our export exists.
     for line in info:
         exported_path = line[0]
         if exported_path == item:
-            return (0, "OK - export is active")
-    return (2, "CRITICAL - export not found in export list")
-
-#    return (3, "UNKNOWN - invalid data returned from Agent")
-
-
-
-
+            return (0, "export is active")
+    return (2, "export not found in export list")
 
 check_info["nfsexports"] = {
     'check_function':          check_nfsexports,

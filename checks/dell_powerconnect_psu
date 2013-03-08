@@ -74,15 +74,10 @@ def check_dell_powerconnect_psu(item, _not_used, info):
             dell_powerconnect_status = dell_powerconnect_psu_status_map[state]
             status = dell_powerconnect_psu_status2nagios_map[dell_powerconnect_status]
 
-            return (status, '%s - Condition of PSU "%s" is %s, with source %s' %
-                            (nagios_state_names[status], name, dell_powerconnect_status, dell_powerconnect_psu_supply_map[supply]))
+            return (status, 'Condition of PSU "%s" is %s, with source %s' %
+                            (name, dell_powerconnect_status, dell_powerconnect_psu_supply_map[supply]))
 
-# Retain code below in case future changes permit performance data for states via a global/check specific flag
-#            return (status, '%s - Condition of PSU "%s" is %s, with source %s' %
-#                            (nagios_state_names[status], name, dell_powerconnect_status, dell_powerconnect_psu_supply_map[supply]), [
-#                    ("state", dell_powerconnect_psu_state_performance_map[state], "", 0, 0, 1),
-#            ])
-    return (3, "UNKNOWN - item not found in snmp data")
+    return (3, "item not found in snmp data")
 
 
 # Auto-detection of what PSU's are connected and active.

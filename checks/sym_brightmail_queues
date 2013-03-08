@@ -92,7 +92,7 @@ def check_sym_brightmail_queues(item, params, info):
                 # Perfdata: maybe one graph per Queue with connections, messageRate, queuedMessages, deferredMessages
                 # and another for queuesize and datarate
 
-            return (state, nagios_state_names[state] + " - " + msg)
+            return (state, msg)
 
 
 

@@ -36,19 +36,19 @@ def check_blade_powerfan(item, params, info):
                    ('rpm', rpm ) ]
         speedperc_int = saveint(speedperc)
         if present != "1":
-            return (2, "CRIT - Fan not present", perfdata)
+            return (2, "Fan not present", perfdata)
         elif status != "1":
-            return (2, "CRIT - Status not OK", perfdata)
+            return (2, "Status not OK", perfdata)
         elif ctrlstate != "0":
-            return (2, "CRIT - Controller state not OK", perfdata)
+            return (2, "Controller state not OK", perfdata)
         elif speedperc_int <= crit_perc:
-            return (2, "CRIT - Speed at %d%% of max (crit at %d%%)" % (speedperc_int, crit_perc), perfdata)
+            return (2, "Speed at %d%% of max (crit at %d%%)" % (speedperc_int, crit_perc), perfdata)
         elif speedperc_int <= warn_perc:
-            return (1, "WARN - Speed at %d%% of max (warning at %d%%)" % (speedperc_int, warn_perc), perfdata)
+            return (1, "Speed at %d%% of max (warning at %d%%)" % (speedperc_int, warn_perc), perfdata)
         else:
-            return (0, "OK - Speed at %s RPM (%d%% of max)" % (rpm, speedperc_int), perfdata)
+            return (0, "Speed at %s RPM (%d%% of max)" % (rpm, speedperc_int), perfdata)
 
-    return (3, "UNKNOWN - Device %s not found in SNMP data" % item)
+    return (3, "Device %s not found in SNMP data" % item)
 
 
 

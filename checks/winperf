@@ -77,16 +77,16 @@ def check_win_cpuusage(item, params, info):
             else:
                 num_txt = " / %d CPUs" % num_cpus
 
-            infotext = " - %d%% used%s (in last %d secs)" % (int(used_perc), num_txt, timedif)
+            infotext = "%d%% used%s (in last %d secs)" % (int(used_perc), num_txt, timedif)
 
             if used_perc >= crit:
-                return (2, "CRIT" + infotext, perfdata)
+                return (2, infotext, perfdata)
             elif used_perc >= warn:
-                return (1, "WARN" + infotext, perfdata)
+                return (1, infotext, perfdata)
             else:
-                return (0, "OK" + infotext, perfdata)
+                return (0, infotext, perfdata)
 
-    return (3, "UNKNOWN - counter for cpu (238:6) not found")
+    return (3, "counter for cpu (238:6) not found")
 
 def inventory_win_diskstat(info):
     for line in info:
@@ -120,7 +120,7 @@ def check_win_diskstat(item, params, info):
 
     perfdata = [ ("read", "%dc" % read_bytes_ctr),
                  ("write", "%dc" % write_bytes_ctr) ]
-    return (0, "OK - reading %.1f MB/s, writing %.1f MB/s (in last %d secs)" %
+    return (0, "reading %.1f MB/s, writing %.1f MB/s (in last %d secs)" %
             (read_per_sec / 1048576, write_per_sec / 1048576, read_timedif), perfdata)
 
 

@@ -55,15 +55,15 @@ def check_blade_bays(item, _no_params, info):
             state = saveint(line[1])
             type = line[2].split('(')[0]
             if state == 1:
-                return (0, "OK - State %s (Type: %s, ID: %s)" %
+                return (0, "State %s (Type: %s, ID: %s)" %
                     (blade_bays_module_state.get(state, 'Unhandled'), type, line[3]))
             elif state == 2:
-                return (1, "WARN - Not present")
+                return (1, "Not present")
             elif state == 0:
-                return (1, "WARN - Device is in standby")
+                return (1, "Device is in standby")
             else:
-                return (2, "CRIT - invalid state %d" % state)
-    return (3, "UNKNOWN - no data for '%s' in SNMP info" % item)
+                return (2, "invalid state %d" % state)
+    return (3, "no data for '%s' in SNMP info" % item)
 
 check_info["blade_bays"] = {
     'check_function':          check_blade_bays,

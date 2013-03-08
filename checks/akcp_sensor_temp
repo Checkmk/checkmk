@@ -53,7 +53,7 @@ def check_akcp_sensor_temp(item, params, info):
             else:
                 temp = float(degree)
             if status == "7":
-                return (3, "UNKNOWN - Sensor Error")
+                return (3, "Sensor Error")
             else:
                 if online == "1":
                     # break temp down to celsius if it had been defined as Fahrenheit.
@@ -63,14 +63,14 @@ def check_akcp_sensor_temp(item, params, info):
                     infotext = "%.1f " % temp + type + " (warn/crit at %.1f/%.1f " % (warn, crit) + type + ")"
                     perfdata = [ ( "temperature", temp, warn, crit ) ]
                     if temp >= crit:
-                        return (2, "CRIT - Temperature is: " + infotext, perfdata)
+                        return (2, "Temperature is: " + infotext, perfdata)
                     elif temp >= warn:
-                        return (1, "WARN - Temperature is: " + infotext, perfdata)
+                        return (1, "Temperature is: " + infotext, perfdata)
                     else:
-                        return (0, "OK - Temperature is: " + infotext, perfdata )
+                        return (0, "Temperature is: " + infotext, perfdata )
                 else:
-                    return (3, "UNKNOWN - Sensor is offline")
-    return (3, "UNKNOWN - Sensor not found")
+                    return (3, "Sensor is offline")
+    return (3, "Sensor not found")
 
 # possible values for sensorProbeTempStatus:
 # noStatus(1), normal(2), highWarning(3), highCritical(4),

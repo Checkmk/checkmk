@@ -61,11 +61,11 @@ def check_windows_updates(_unused, params, info):
             if label == 'important' and cur > 0:
                 this_txt += ' (%s)' % updates
             if crit and cur >= crit:
-                this_txt += ' (CRIT: >=%d)' % crit
+                this_txt += ' (>=%d (!!))' % crit
                 if status < 2:
                     status = 2
             elif warn and cur >= warn:
-                this_txt += ' (WARN: >=%d)' % warn
+                this_txt += ' (>=%d (!))' % warn
                 if status < 1:
                     status = 1
             txt.append(this_txt)
@@ -74,11 +74,11 @@ def check_windows_updates(_unused, params, info):
         if reboot_required == 1:
             if status < 1:
                 status = 1
-            txt.append('WARN: A reboot is required to finish update installations')
+            txt.append('A reboot is required to finish update installations (!)')
 
-        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(txt)), perfdata)
+        return (status, ', '.join(txt), perfdata)
 
-    return (3, 'UNKNOWN - No windows update information provided')
+    return (3, 'No windows update information provided')
 
 
 check_info["windows_updates"] = {

@@ -92,7 +92,7 @@ def check_hpux_snmp_cpu(item, _no_params, info):
         perfdata.append((what, perc, None, None, 0, 100))
         infos.append("%s: %.0f%%" % (what, perc))
 
-    return (0, "OK - " + ", ".join(infos), perfdata)
+    return (0, ", ".join(infos), perfdata)
 
 
 check_info['hpux_snmp_cs.cpu'] = (check_hpux_snmp_cpu, "CPU utilization", 1, inventory_hpux_snmp_cpu)

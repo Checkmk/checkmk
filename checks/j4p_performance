@@ -114,7 +114,7 @@ def check_j4p_performance_mem(item, params, info):
     warn, crit = params
     parsed = j4p_performance_parse(info)
     if item not in parsed:
-        return (3, "UNKNOWN - data not found in agent output")
+        return (3, "data not found in agent output")
     d = parsed[item]
     mb = 1024 * 1024.0
     heap = saveint(d["HeapMemoryUsage"]) / mb
@@ -124,11 +124,11 @@ def check_j4p_performance_mem(item, params, info):
                  ("nonheap", non_heap, warn, crit) ]
     infotext = "%.0f MB total (%.0f MB heap, %.0f MB non-heap), levels at %.0f/%.0f" % (total, heap, non_heap, warn, crit)
     if total >= crit:
-        return (2, "CRIT - " + infotext, perfdata)
+        return (2, infotext, perfdata)
     elif total >= warn:
-        return (1, "WARN - " + infotext, perfdata)
+        return (1, infotext, perfdata)
     else:
-        return (0, "OK - " + infotext, perfdata)
+        return (0, infotext, perfdata)
 
 check_info["j4p_performance.mem"] = {'check_function': check_j4p_performance_mem,
  'default_levels_variable': None,
@@ -145,7 +145,7 @@ def check_j4p_performance_threads(item, params, info):
     warn, crit = params
     parsed = j4p_performance_parse(info)
     if item not in parsed:
-        return (3, "UNKNOWN - data not found in agent output")
+        return (3, "data not found in agent output")
     d = parsed[item]
 
     this_time = time.time()
@@ -174,9 +174,9 @@ def check_j4p_performance_threads(item, params, info):
         output.append('%s: %d' % (key, val))
     # Only process the perfdata when no wrap occured
     if wrapped:
-        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)))
+        return (status, ', '.join(output))
     else:
-        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
+        return (status, ', '.join(output), perfdata)
 
 check_info["j4p_performance.threads"] = {'check_function': check_j4p_performance_threads,
  'default_levels_variable': None,
@@ -192,7 +192,7 @@ check_info["j4p_performance.threads"] = {'check_function': check_j4p_performance
 def check_j4p_performance_uptime(item, _unused, info):
     parsed = j4p_performance_parse(info)
     if item not in parsed:
-        return (3, "UNKNOWN - data not found in agent output")
+        return (3, "data not found in agent output")
     uptime = saveint(parsed[item]['Uptime']) / 1000
 
     seconds = uptime % 60
@@ -202,7 +202,7 @@ def check_j4p_performance_uptime(item, _unused, info):
     days = rem / 1440
     now = int(time.time())
     since = time.strftime("%c", time.localtime(now - uptime))
-    return (0, "OK - up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
+    return (0, "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
 
 check_info["j4p_performance.uptime"] = {'check_function': check_j4p_performance_uptime,
  'default_levels_variable': None,
@@ -218,12 +218,12 @@ check_info["j4p_performance.uptime"] = {'check_function': check_j4p_performance_
 def check_j4p_performance_app_state(item, _unused, info):
     app = j4p_performance_app(info, item.split())
     if not app or not 'Running' in app:
-        return (3, "UNKNOWN - data not found in agent output")
+        return (3, "data not found in agent output")
 
     if app['Running'] == '1':
-        return (0, 'OK - application is running')
+        return (0, 'application is running')
     else:
-        return (2, 'CRIT - application is not running (Running: %s)')
+        return (2, 'application is not running (Running: %s)')
 
 
 check_info["j4p_performance.app_state"] = {'check_function': check_j4p_performance_app_state,
@@ -241,7 +241,7 @@ def check_j4p_performance_app_sess(item, params, info):
     lo_crit, lo_warn, hi_warn, hi_crit = params
     app = j4p_performance_app(info, item.split())
     if not app or not 'Sessions' in app:
-        return (3, "UNKNOWN - data not found in agent output")
+        return (3, "data not found in agent output")
     sess = saveint(app['Sessions'])
 
     status = 0
@@ -259,7 +259,7 @@ def check_j4p_performance_app_sess(item, params, info):
         status = 1
         status_txt = ' (Above or equal %d)' % lo_crit
 
-    return (status, '%s - %d Sessions%s' % (nagios_state_names[status], sess, status_txt),
+    return (status, '%d Sessions%s' % (sess, status_txt),
             [('sessions', sess, hi_warn, hi_crit)])
 
 check_info["j4p_performance.app_sess"] = {'check_function': check_j4p_performance_app_sess,
@@ -277,7 +277,7 @@ def check_j4p_performance_serv_req(item, params, info):
     lo_crit, lo_warn, hi_warn, hi_crit = params
     serv = j4p_performance_serv(info, item.split())
     if not serv or not 'Requests' in serv:
-        return (3, "UNKNOWN - data not found in agent output")
+        return (3, "data not found in agent output")
     req = saveint(serv['Requests'])
 
     status    = 0
@@ -307,9 +307,9 @@ def check_j4p_performance_serv_req(item, params, info):
         wrapped = True
 
     if wrapped:
-        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)))
+        return (status, ', '.join(output))
     else:
-        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
+        return (status, ', '.join(output), perfdata)
 
 check_info["j4p_performance.serv_req"] = {'check_function': check_j4p_performance_serv_req,
  'default_levels_variable': None,

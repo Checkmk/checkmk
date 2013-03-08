@@ -44,7 +44,7 @@ def check_vms_queuejobs(_no_item, params, info):
             max_cpu_secs = cpu_secs
             max_cpu_job = name
 
-    infotext = " - %d jobs" % len(info)
+    infotext = "%d jobs" % len(info)
     if max_cpu_job:
         minutes, seconds = divmod(max_cpu_secs, 60)
         hours, minutes = divmod(minutes, 60)
@@ -52,7 +52,7 @@ def check_vms_queuejobs(_no_item, params, info):
         infotext += ', most CPU used by %s (%d days, %02d:%02d:%02d.%02d)' % \
                 (max_cpu_job, days, hours, minutes, int(seconds), int(seconds * 100))
 
-    return 0, "OK" + infotext
+    return 0, infotext
 
 
 check_info['vms_queuejobs'] = {

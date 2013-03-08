@@ -49,23 +49,23 @@ def check_cisco_mem_sub(params, mem_used, mem_total):
     perfdata = [("mem_used", perc_used, warn, crit, 0, 100)]
 
     if type(warn) == float:
-        infotext = " - %2.1f%% (%s) of %s used" % \
+        infotext = "%2.1f%% (%s) of %s used" % \
         (perc_used, get_filesize_human_readable(mem_used), get_filesize_human_readable(mem_total))
         if perc_used >= crit:
-            return (2, "CRIT" + infotext + " (critical at %d%%)" % crit, perfdata)
+            return (2, infotext + " (critical at %d%%)" % crit, perfdata)
         elif perc_used >= warn:
-            return (1, "WARN" + infotext + " (warning at %d%%)" % warn, perfdata)
+            return (1, infotext + " (warning at %d%%)" % warn, perfdata)
         else:
-            return (0, "OK" + infotext, perfdata)
+            return (0, infotext, perfdata)
     else:
-        infotext = " - %s (%2.1f%%) of %s used" % \
+        infotext = "%s (%2.1f%%) of %s used" % \
         (get_filesize_human_readable(mem_used), perc_used, get_filesize_human_readable(mem_total))
         if mem_used >= crit:
-            return (2, "CRIT" + infotext + " (critical at %s MB)" % crit, perfdata)
+            return (2, infotext + " (critical at %s MB)" % crit, perfdata)
         elif mem_used >= warn:
-            return (1, "WARN" + infotext + " (warning at %s MB)" % warn, perfdata)
+            return (1, infotext + " (warning at %s MB)" % warn, perfdata)
         else:
-            return (0, "OK" + infotext, perfdata)
+            return (0, infotext, perfdata)
 
 
 check_info["cisco_mem"] = {

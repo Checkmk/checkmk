@@ -39,15 +39,15 @@ def check_nvidia_temp(item, params, info):
                 warn, crit = params[2:4]
             else:
                 warn, crit = params[0:2]
-            infotext = " - %dC - levels at %d/%d" % (temp, warn, crit)
+            infotext = "%dC - levels at %d/%d" % (temp, warn, crit)
             perfdata = [ ("temp", temp, warn, crit ) ]
             if temp >= crit:
-                return (2, "CRIT" + infotext, perfdata)
+                return (2, infotext, perfdata)
             elif temp >= warn:
-                return (1, "WARN" + infotext, perfdata)
+                return (1, infotext, perfdata)
             else:
-                return (0, "OK" + infotext, perfdata)
-    return (3, 'UNKNOWN - sensor not found in agent output')
+                return (0, infotext, perfdata)
+    return (3, 'sensor not found in agent output')
 
 check_info["nvidia.temp"] = {
     'check_function':          check_nvidia_temp,
@@ -67,10 +67,10 @@ def check_nvidia_errors(_no_item, _no_params, info):
         if line[0] == "GPUErrors:":
             errors = int(line[1])
             if errors == 0:
-                return (0, "OK - No GPU errors")
+                return (0, "No GPU errors")
             else:
-                return (2, "CRIT - %d GPU errors" % errors)
-    return (3, "UNKNOWN - incomplete output from agent")
+                return (2, "%d GPU errors" % errors)
+    return (3, "incomplete output from agent")
 
 check_info["nvidia.errors"] = {
     'check_function':          check_nvidia_errors,

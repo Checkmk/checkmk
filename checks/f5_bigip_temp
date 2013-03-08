@@ -68,20 +68,20 @@ def check_f5_bigip_temp(item, params, info):
     for sensor in f5_bigip_temp_genitem(info):
         if item == sensor[0]:
             tmpdiff = sensor[1] - sensor[2]
-            msgtxt = " - Temperature is %dC" % (sensor[1])
+            msgtxt = "Temperature is %dC" % (sensor[1])
             perfdata = [ ("temp", sensor[1]) ]
             if 5 >= tmpdiff:
-                return (0, "OK" + msgtxt, perfdata)
+                return (0, msgtxt, perfdata)
             elif tmpdiff > 15:
-                return (2, "CRIT" + msgtxt + "(!!)", perfdata)
+                return (2, msgtxt + "(!!)", perfdata)
             elif tmpdiff > 10:
-                return (1, "WARN" + msgtxt + "(!)", perfdata)
+                return (1, msgtxt + "(!)", perfdata)
             else:
-                return (3, "UNKNOWN - unable to read temperature")
+                return (3, "unable to read temperature")
 
 
 
-    return (3, "UNKNOWN - item not found in SNMP output")
+    return (3, "item not found in SNMP output")
 
 
 

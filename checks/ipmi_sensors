@@ -114,11 +114,11 @@ def check_freeipmi(item, _no_params, info):
                     or status.endswith("is_connected") \
                     or status.endswith("Presence_detected") \
                     or status.startswith("Fully_Redundant"):
-                return (0, "OK - " + infotext, perfdata)
+                return (0, infotext, perfdata)
             else:
-                return (2, "CRIT - " + infotext, perfdata)
+                return (2, infotext, perfdata)
 
-    return (3, "UNKNOWN - item %s not found" % item)
+    return (3, "item %s not found" % item)
 
 
 

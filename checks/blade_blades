@@ -54,14 +54,17 @@ def check_blade_blades(item, params, info):
                     ('Power',  power_state,  blade_blades_power_states[power_state],    blade_blades_power_labels[power_state]),
                     ('Health', health_state, blade_blades_health_states[health_state],  blade_blades_health_labels[health_state])):
                 output += '%s: %s' % (label, state_label)
-                if nag_state != 0:
-                    output += ' (%s)' % nagios_state_names[nag_state]
-                    if nag_state > state:
-                        state = nag_state
+                if nag_state == 1:
+                    output += ' (!)'
+                elif nag_state == 2:
+                    output += ' (!!)'
+                else:
+                    output += ' (UNKNOWN)'
+                state = max(state, nag_state)
                 output += ', '
 
-            return (state, "%s - %s" % (nagios_state_names[state], output.rstrip(', ')))
-    return (3, "UNKNOWN - no data for '%s' in SNMP info" % item)
+            return (state, output.rstrip(', '))
+    return (3, "no data for '%s' in SNMP info" % item)
 
 check_info["blade_blades"] = {
     'check_function':          check_blade_blades,

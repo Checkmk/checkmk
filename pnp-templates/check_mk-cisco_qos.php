@@ -47,7 +47,7 @@ if($bandwidth > $base * $base * $base) {
 }
 
 $ds_name[1] = 'QoS Class Traffic';
-$opt[1] = "--vertical-label \"MBit/sec\" -X0 -b 1024 --title \"$hostname / $servicedesc\" ";
+$opt[1] = "--vertical-label \"MBit/sec\" -X0 -b 1000 --title \"$hostname / $servicedesc\" ";
 $def[1] = 
   "HRULE:0#c0c0c0 ".
   "HRULE:$bandwidth#808080:\"Interface speed\:  " . sprintf("%.1f", $bandwidth) . " ".$bwuom."Bit/s\\n\" ".
@@ -76,11 +76,11 @@ $def[1] .= "DEF:postbytes_avg=$RRDFILE[3]:$DS[1]:MAX ".
            "CDEF:drop_traffic_avg=dropbytes_avg,8,* ".
            "CDEF:postmbit_avg=post_traffic_avg,1000000,/ ".
            "CDEF:dropmbit_avg=drop_traffic_avg,1000000,/ ".
-           "LINE:postmbit_avg#a3f090:\"post avg    \" ".
+           "LINE:postmbit_avg#3b762e:\"post avg    \" ".
            "GPRINT:post_traffic_avg:LAST:\"%5.1lf %sBit/s last\" ".
            "GPRINT:post_traffic_avg:AVERAGE:\"%5.1lf %sBit/s avg\" ".
            "GPRINT:post_traffic_avg:MAX:\"%5.1lf %sBit/s max\\n\" ".
-           "LINE:dropmbit_avg#6030f0:\"drop avg    \" ".
+           "LINE:dropmbit_avg#1255a9:\"drop avg    \" ".
            "GPRINT:drop_traffic_avg:LAST:\"%5.1lf %sBit/s last\" ".
            "GPRINT:drop_traffic_avg:AVERAGE:\"%5.1lf %sBit/s avg\" ".
            "GPRINT:drop_traffic_avg:MAX:\"%5.1lf %sBit/s max\\n\" ";

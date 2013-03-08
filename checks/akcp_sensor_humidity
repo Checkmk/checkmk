@@ -44,7 +44,7 @@ def check_akcp_sensor_humidity(item, params, info):
         if desc == item:
             critlow, warnlow, warnhigh, crithigh = params
             if status == "7":
-                return (3, "CRIT - Sensor Error")
+                return (3, "Sensor Error")
             else:
                 if online == "1":
                     inthumidity = saveint(humidity)
@@ -52,14 +52,14 @@ def check_akcp_sensor_humidity(item, params, info):
                                 (critlow, warnlow, warnhigh, crithigh) + ")"
                     perfdata = [ ( "humidity", humidity, critlow, warnlow, warnhigh, crithigh ) ]
                     if inthumidity <= critlow or inthumidity >= crithigh:
-                        return (2, "CRIT - Humidity is: " + infotext, perfdata )
+                        return (2, "Humidity is: " + infotext, perfdata )
                     elif inthumidity <= warnlow or inthumidity >= warnhigh:
-                        return (1, "WARN - Humidity is: " + infotext, perfdata )
+                        return (1, "Humidity is: " + infotext, perfdata )
                     else:
-                        return (0, "OK - Humidity is: " + infotext, perfdata )
+                        return (0, "Humidity is: " + infotext, perfdata )
                 else:
-                    return (3, "UNKNOWN - Sensor is offline")
-    return (3, "UNKNOWN - Sensor not found")
+                    return (3, "Sensor is offline")
+    return (3, "Sensor not found")
 
 
 

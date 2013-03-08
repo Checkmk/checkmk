@@ -111,7 +111,7 @@ def check_sylo(item, params, info):
             ('used', '%f' % used_mb, warn_mb, crit_mb, 0, size_mb)
         ]
 
-        return (status, "%s - %s" % (['OK','WARN', 'CRIT'][status], msg) , perfdata)
+        return (status, msg, perfdata)
 
     return (3, "Invalid hint file contents: " % info)
 

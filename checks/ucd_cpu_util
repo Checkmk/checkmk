@@ -68,19 +68,21 @@ def check_ucd_cpu_util(item, params, info):
           ( "system", "%.3f" % system ),
           ( "wait",   "%.3f" % wait ) ]
 
-    result = (0, "OK")
+    status = 0
+    status_txt = ''
     try:
         warn, crit = params
         if wait >= crit:
-            result = (2, "(wait too large)")
+            status = 2
+            status_txt = ' wait too large (!!)'
         elif wait >= warn:
-            result = (1, "(wait too large)")
+            status = 1
+            status_txt = ' wait too large (!)'
     except:
         pass
 
-    return (result[0], result[1] + " - user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" %
-            (user, system, wait), perfdata)
-
+    return (status, "user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%%s" %
+            (user, system, wait, status_txt), perfdata)
 
 
 # We are not sure how to safely detect the UCD SNMP Daemon. We know that

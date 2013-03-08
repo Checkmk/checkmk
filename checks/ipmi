@@ -180,7 +180,6 @@ def check_ipmi_summarized(info):
     else:
         perfdata = []
 
-    statname = { 0: "OK", 1:"WARN", 2:"CRIT" }[worst_status]
     if worst_status == 0:
         infotext = [ "%d sensors OK" % count ]
     else:
@@ -189,7 +188,7 @@ def check_ipmi_summarized(info):
             infotext.append("CRIT are: %s" % ", ".join(crit_texts))
         if len(warn_texts) > 0:
             infotext.append("WARN are: %s" % ", ".join(warn_texts))
-    return (worst_status, "%s - %s" % (statname, ' - '.join(infotext)), perfdata)
+    return (worst_status, ' - '.join(infotext), perfdata)
 
 
 

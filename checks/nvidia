@@ -39,14 +39,14 @@ def check_nvidia_temp(item, params, info):
                 warn, crit = params[2:4]
             else:
                 warn, crit = params[0:2]
-            infotext = " - %dC - levels at %d/%d" % (temp, warn, crit)
+            infotext = "%dC - levels at %d/%d" % (temp, warn, crit)
             perfdata = [ ("temp", temp, warn, crit ) ]
             if temp >= crit:
-                return (2, "CRIT" + infotext, perfdata)
+                return (2, infotext, perfdata)
             elif temp >= warn:
-                return (1, "WARN" + infotext, perfdata)
+                return (1, infotext, perfdata)
             else:
-                return (0, "OK" + infotext, perfdata)
+                return (0, infotext, perfdata)
     return (3, 'sensor not found in agent output')
 
 check_info["nvidia.temp"] = {

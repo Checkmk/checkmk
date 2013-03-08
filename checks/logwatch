@@ -373,8 +373,6 @@ def check_logwatch(item, params, info):
     # Render output
     #
 
-    state = logwatch_state(worst)
-
     if len(reclassified_lines) == 0:
         return (0, "no error messages")
     else:
@@ -382,10 +380,10 @@ def check_logwatch(item, params, info):
         for level, num in state_counts.iteritems():
             count_txt.append('%d %s' % (num, logwatch_level_name(level)))
         if logwatch_service_output == 'default':
-            return (worst, state + " - %s messages (Last worst: \"%s\")" %
+            return (worst, "%s messages (Last worst: \"%s\")" %
                                            (', '.join(count_txt), last_worst_line))
         else:
-            return (worst, state + " - %s messages" % ', '.join(count_txt))
+            return (worst, "%s messages" % ', '.join(count_txt))
 
 
 check_info['logwatch'] = {
@@ -514,7 +512,7 @@ def check_logwatch_ec(item, params, info):
 
         return (0, 'Forwarded %d messages to event console' % num_messages, [('messages', num_messages)])
     except Exception, e:
-        return (2, 'CRITICAL - Unable to forward messages to event console (%s). Lost %d messages.' %
+        return (2, 'Unable to forward messages to event console (%s). Lost %d messages.' %
                 (e, num_messages))
 
 check_info['logwatch.ec'] = {

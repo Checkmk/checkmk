@@ -112,11 +112,11 @@ def check_netctr_combined(nic, params, info):
             error_percentage = (problems_per_sec / packets_per_sec) * 100.0
             infotxt += ", error rate %.4f%%" % error_percentage
         if error_percentage >= crit:
-            return (2, "CRIT" + infotxt, perfdata)
+            return (2, infotxt, perfdata)
         elif error_percentage >= warn:
-            return (1, "WARNING" + infotxt, perfdata)
+            return (1, infotxt, perfdata)
         else:
-            return (0, "OK" + infotxt, perfdata)
+            return (0, infotxt, perfdata)
 
     return (3, "NIC is not present")
 

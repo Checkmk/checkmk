@@ -57,12 +57,12 @@ def check_cmctc_psm_m(item, no_params, info):
      sensor_type = saveint(line[1])
      unit = cmctc_pcm_m_sensor_types[sensor_type]
      current_val = saveint(line[3]) / 10
-     output =  " - %s at %d%s " % (line[7], current_val, unit)
+     output =  "%s at %d%s " % (line[7], current_val, unit)
      perf = [(unit, current_val,"","","","")]
      if int(line[2]) == 4:
-       return (0, "OK"+output,perf)
+       return (0, output, perf)
      else:
-        return (2, "CRIT"+output,perf)
+        return (2, output, perf)
 
    return (3, "Item no found in SNMP tree")
 

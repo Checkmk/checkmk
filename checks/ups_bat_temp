@@ -37,15 +37,15 @@ def check_ups_bat_temp(item, params, info):
 	if line[0] == item:
 	    power = int(line[1])
 	    perfdata = [ ( "temp", power, warn, crit, 80 ) ]
-	    infotext = " - current: %d°C , (warn/crit at %d°C/%d°C) " % \
+	    infotext = "current: %d°C , (warn/crit at %d°C/%d°C) " % \
 	 	(power, warn, crit)
 
 	    if power >= crit:
-		return (2, "CRIT" + infotext, perfdata)
+		return (2, infotext, perfdata)
 	    elif power >= warn:
-		return (1, "WARN" + infotext, perfdata)
+		return (1, infotext, perfdata)
 	    else:
-		return (0, "OK" + infotext, perfdata)
+		return (0, infotext, perfdata)
 
     return (3, "Temperatur %s not found in SNMP output" % item)
 

@@ -62,7 +62,7 @@ def check_f5_bigip_vserver(item, _no_params, info):
                 elif status == 4:
                     return (1, "Virtual Server status is unknown")
                 else:
-                    return (3, "UNKNOWN")
+                    return (3, "Unhandled status (%d)" % status)
     return (3, "Virtual Server %s not found in SNMP output" % item)
 
 check_info["f5_bigip_vserver"] = {

@@ -61,7 +61,7 @@ def check_f5_bigip_pool(item, params, info):
             elif pool_act_members <= warn_num_members:
                 return (1, "only %i of %i pool members are up" % (pool_act_members, pool_def_members))
             else:
-                return (3, "UNKNOWN output for pool %s" % item)
+                return (3, "Unhandled output for pool %s" % item)
     return (3, "unexpected Output from SNMP Agent")
 
 check_info["f5_bigip_pool"] = {

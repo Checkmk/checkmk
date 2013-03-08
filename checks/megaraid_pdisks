@@ -109,11 +109,11 @@ def check_megaraid_pdisks(item, target_state, info):
     info = megaraid_pdisks_parse(info)
     for adapter, enclosure, enc_dev_id, slot, state, name in info:
         if "%s%s/%s" % (adapter, enclosure, slot) == item:
-           infotext = " - %s (%s)" % (state, name)
+           infotext = "%s (%s)" % (state, name)
            if state == target_state:
-               return (0, "OK" + infotext)
+               return (0, infotext)
            else:
-               return (2, "CRIT" + infotext)
+               return (2, infotext)
     return (3, "No disk in encl/slot %s found" % item)
 
 

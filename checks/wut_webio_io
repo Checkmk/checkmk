@@ -84,7 +84,7 @@ def check_wut_webio_io_inputs(item, params, info):
 
             # Compare to the state of the IO port at inventory.
             if state != params:
-                return (2, "CRITICAL - state should be %s but is %s (!!)" % (
+                return (2, "state should be %s but is %s (!!)" % (
                            webio_state_names[params],
                            webio_state_names[state]))
             else:

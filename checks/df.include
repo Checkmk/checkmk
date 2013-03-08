@@ -178,7 +178,7 @@ def df_check_filesystem_list(item, params, fslist):
         # If no filesystem has been found we cannot do the
         # actual check since the size is zero.
         if count == 0:
-            return (3, "UKNOWN - No filesystem matching the patterns")
+            return (3, "No filesystem matching the patterns")
         else:
             status, infotext, perfdata = df_check_filesystem_single(g_hostname, item, total_size, total_avail, params)
             infotext += " (%d filesystems)" % count
@@ -332,4 +332,6 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
     elif used_mb >= warn_mb:
         status = max(1, status)
 
-    return (status, ", ".join(problems), perfdata)
+    if problems:
+        infotext += " - %s" % ", ".join(problems)
+    return (status, infotext, perfdata)

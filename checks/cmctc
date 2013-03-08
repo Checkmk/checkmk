@@ -55,7 +55,7 @@ def check_cmctc_temp(item, params, info):
            }
         status, current, crit, low, warn = map(int, line[2:7])
         descr = line[7]
-        info_text = " - %s at %d°C" % (descr, current)
+        info_text = "%s at %d°C" % (descr, current)
         if params:
             warn, crit = params
             if current >= crit:
@@ -66,13 +66,13 @@ def check_cmctc_temp(item, params, info):
         status_is = ", status is %s" % status_text.get(status, "UNKNOWN")
         perfdata = [ ("temp", current, warn, crit, 0 ) ]
         if status == 7:
-            return (1, "WARNING" + info_text + levels_text, perfdata)
+            return (1, info_text + levels_text, perfdata)
         elif status == 8:
-            return (1, "WARNING" + info_text + ": too low (below %sC)" % low, perfdata)
+            return (1, info_text + ": too low (below %sC)" % low, perfdata)
         elif status == 4:
-            return (0, "OK" + info_text, perfdata)
+            return (0, info_text, perfdata)
         else:
-            return (2, "CRIT" + info_text + levels_text + status_is, perfdata)
+            return (2, info_text + levels_text + status_is, perfdata)
 
     return (3, "Sensor %s not found in SNMP data" % item)
 

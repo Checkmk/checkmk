@@ -70,9 +70,7 @@ def check_vms_md(item, params, info):
     if errorlevel == 0:
         return (0, "%d shadowsets in normal state" % len(shadowsets))
     else:
-        return (errorlevel, "%s - %s" % (
-          { 1: "WARNING", 2: "CRITICAL" }[errorlevel],
-          ", ".join(errors)))
+        return (errorlevel, ", ".join(errors))
 
 
 

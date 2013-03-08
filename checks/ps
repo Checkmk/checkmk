@@ -246,16 +246,16 @@ def check_procs(item, params, info, with_perfdata):
     else:
         perfdata = []
 
-    infotext = " - %d processes" % count
+    infotext = "%d processes" % count
     if running_on:
         infotext += " [running on %s]" % ", ".join(running_on)
 
     if count > warnmax or count < warnmin:
-        return (2, "CRIT" + infotext + " (ok from %d to %d)" % (okmin, okmax), perfdata)
+        return (2, infotext + " (ok from %d to %d)" % (okmin, okmax), perfdata)
     elif count > okmax or count < okmin:
-        return (1, "WARN" + infotext + " (ok from %d to %d)" % (okmin, okmax), perfdata)
+        return (1, infotext + " (ok from %d to %d)" % (okmin, okmax), perfdata)
     else:
-        return (0, "OK" + infotext, perfdata)
+        return (0, infotext, perfdata)
 
 check_info['ps'] = {
     "check_function"          : lambda i,p,n: check_procs(i,p,n,False),

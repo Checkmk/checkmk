@@ -53,7 +53,7 @@ def check_blade_bx_temp(item, params, info):
         elif temp >= level_crit:
             return (2, "Temperature at %s%s " % (temp, unit), perfdata)
         elif temp >= level_warn:
-            return (1, "WARNING - Temperature at %s%s " % (temp,unit), perfdata)
+            return (1, "Temperature at %s%s " % (temp,unit), perfdata)
         else:
             return (0, "Temperature at %s%s " % (temp,unit), perfdata)
         return (3, "Device %s not found in SNMP data %s " % (item, perfdata ) )

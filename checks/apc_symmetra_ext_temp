@@ -36,13 +36,13 @@ def check_temp(item, params, info):
         if item == index:
             temp = int(temp)
             perfdata = [( "temp", temp, warn, crit )]
-            infotxt = " - %sC (levels at %d/%d)" % (temp, warn, crit)
+            infotxt = "%sC (levels at %d/%d)" % (temp, warn, crit)
             if temp >= crit:
-                return (2, "CRITICAL" + infotxt, perfdata)
+                return (2, infotxt, perfdata)
             elif temp >= warn:
-                return (1, "WARNING" + infotxt, perfdata)
+                return (1, infotxt, perfdata)
             else:
-                return (0, "OK" + infotxt, perfdata)
+                return (0, infotxt, perfdata)
     return (3, "Sensor not found in SNMP data")
 
 

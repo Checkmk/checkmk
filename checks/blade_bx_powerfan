@@ -54,7 +54,7 @@ def check_blade_bx_powerfan(item, params, info):
         elif speedperc_int <= crit_perc:
             return (2, "Speed at %d%% of max (crit at %d%%)" % (speedperc_int, crit_perc), perfdata)
         elif speedperc_int <= warn_perc:
-            return (1, "WARNING - Speed at %d%% of max (warning at %d%%)" % (speedperc_int, warn_perc), perfdata)
+            return (1, "Speed at %d%% of max (warning at %d%%)" % (speedperc_int, warn_perc), perfdata)
         else:
             return (0, "Speed at %s RPM (%d%% of max)" % (rpm, speedperc_int), perfdata)
         return (3, "Device %s not found in SNMP data %s " % (item, perfdata ) )

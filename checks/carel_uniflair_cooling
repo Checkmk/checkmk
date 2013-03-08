@@ -58,9 +58,9 @@ def check_carel_uniflair_cooling(item, _no_params, info):
 
     perfdata = [ ("humidity", humidity) ]
     if err_waterloss or err_global_status or err_emergency_op:
-        return (2, "CRITICAL - %s" % output, perfdata)
+        return (2, output, perfdata)
     else:
-        return (0, "%s" % output, perfdata)
+        return (0, output, perfdata)
 
     return (3, "Unknown data from agent", perfdata)
 

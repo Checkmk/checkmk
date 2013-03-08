@@ -37,15 +37,15 @@ def check_ups_in_freq(item, params, info):
 	if line[0] == item:
 	    power = int(line[1]) / 10
 	    perfdata = [ ( "in_freq", power, warn, crit, 30, 70 ) ]
-	    infotext = " - current in freq: %dHz (warn/crit at %d/%d Hz)" % \
+	    infotext = "current in freq: %dHz (warn/crit at %d/%d Hz)" % \
 	 	(power, warn, crit)
 
 	    if power <= crit:
-		return (2, "CRIT" + infotext, perfdata)
+		return (2, infotext, perfdata)
 	    elif power <= warn:
-		return (1, "WARN" + infotext, perfdata)
+		return (1, infotext, perfdata)
 	    else:
-		return (0, "OK" + infotext, perfdata)
+		return (0, infotext, perfdata)
 
     return (3, "Phase %s not found in SNMP output" % item)
 

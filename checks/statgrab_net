@@ -155,7 +155,7 @@ def check_statgrab_net_ctr(nic, _no_params, info):
         else:
             perfdata.append((countername, 0.0))
 
-    return (0, "OK" + infotxt, perfdata)
+    return (0, infotxt, perfdata)
 
 
 

@@ -89,7 +89,7 @@ def check_netapp_cluster(item, _no_params, info):
         return (0, "Cluster Status is OK")
 
     # if we reach here, we hit an unknown case.
-    return (3, "UNKNOWN")
+    return (3, "Got unhandled information")
 
 check_info["netapp_cluster"] = {
     'check_function':          check_netapp_cluster,

@@ -40,15 +40,15 @@ def check_ups_power(item, params, info):
             if power < 0:
                 power *= -1
             perfdata = [ ( "power", power, warn, crit, 0 ) ]
-            infotext = " - current power: %dW (warn/crit at %dW/%dW)" % \
+            infotext = "current power: %dW (warn/crit at %dW/%dW)" % \
                 (power, warn, crit)
 
             if power <= crit:
-                return (2, "CRIT" + infotext, perfdata)
+                return (2, infotext, perfdata)
             elif power <= warn:
-                return (1, "WARN" + infotext, perfdata)
+                return (1, infotext, perfdata)
             else:
-                return (0, "OK" + infotext, perfdata)
+                return (0, infotext, perfdata)
 
     return (3, "Phase %s not found in SNMP output" % item)
 

@@ -79,7 +79,7 @@ def check_raritan_emx(item, params, info):
 
             message = "%s%s State: %s" % (str(value), units[unit],sensor_states[sensor_state])
 
-    return (state, nagios_state_names[state] + " - " + message, perfdata)
+    return (state, message, perfdata)
 
 check_info['raritan_emx'] = {
   "inventory_function"  : inventory_raritan_emx,

@@ -108,7 +108,7 @@ def check_esx_vsphere_virtualmachine_hb_status(item, params, info):
         state = 2 
     elif vm_status == 'yellow':
         state = 1
-    return(state, nagios_state_names[state] + " - Hearbeat status is %s" % vm_status)
+    return(state, "Hearbeat status is %s" % vm_status)
 
 
 check_info['esx_vsphere_virtualmachine.heartbeatStatus'] = {

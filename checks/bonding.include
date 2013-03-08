@@ -76,6 +76,6 @@ def check_bonding(item, params, parsed):
                 infos.append("expected is %s" % expected_active)
                 state = 1
 
-    return state, nagios_state_names[state] + " - " + ", ".join(infos)
+    return state, ", ".join(infos)
 
 

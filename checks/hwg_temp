@@ -61,7 +61,7 @@ def check_hwg_temp(item, params, info):
             perfdata = [ ("temp", current, warn, crit, 0 ) ]
             unit = unit_text.get(unit)
             status = status_text.get(status, "UNKOWN")
-            return(state, nagios_state_names[state] + " - %s at %s%s (warn/crit at %s%s/%s%s), Status is %s" % \
+            return(state, "%s at %s%s (warn/crit at %s%s/%s%s), Status is %s" % \
             (descr, current, unit, warn, unit, crit, unit, status), perfdata)
 
     return (3, "UNKNOWN - Sensor %s not found in SNMP data %s" % (item) )

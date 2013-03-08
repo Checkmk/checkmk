@@ -135,7 +135,7 @@ def check_ntp(item, params, info):
             else:
                 state, text = state
                 perfdata = []
-            return (state, nagios_state_names[state] + " - " + text, perfdata)
+            return (state, text, perfdata)
 
     return (3, "UNKNOWN - peer not found")
 

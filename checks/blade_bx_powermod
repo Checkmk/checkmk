@@ -45,7 +45,7 @@ def check_blade_bx_powermod(item, _no_param, info):
         if status != 2:
             state = 2
 
-        return (state, nagios_state_names[state] + " - %s Status is %s" % (product_name, power_status[status]) )
+        return (state, "%s Status is %s" % (product_name, power_status[status]) )
 
     return (3, "Module %s not found in SNMP info" % index)
 

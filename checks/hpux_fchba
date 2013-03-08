@@ -86,10 +86,7 @@ def check_hpux_fchba(item, _no_params, info):
         infos.append("Driver-Firmware Dump Available(!!)")
         state = 2
 
-
-
-    infotext = ", ".join(infos)
-    return state, nagios_state_names[state] + " - " + infotext
+    return (state, ", ".join(infos))
 
 
 check_info['hpux_fchba'] = {

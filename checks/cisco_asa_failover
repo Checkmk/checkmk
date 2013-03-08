@@ -73,7 +73,7 @@ def check_cisco_asa_failover(item, params, info):
                 state  = 1
                 errtxt = " expecting to be %s" % asa_state_names[def_role]
 
-            msgtxt = nagios_state_names[state] + " - Device is the %s" % deviceentry[2] + errtxt + state * "!"
+            msgtxt = "Device is the %s" % deviceentry[2] + errtxt + state * "!"
             return (state, msgtxt)
 
 

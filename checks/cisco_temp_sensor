@@ -155,7 +155,7 @@ def check_cisco_temp_sensor(item, _no_params, info):
 	       state = 1
 	    else:
 	       state = 0
-	    return (state, nagios_state_names[state] + " - %dC (levels at %d/%d)" % (value, warn, crit), [
+	    return (state, "%dC (levels at %d/%d)" % (value, warn, crit), [
 	           ( "temperature", value, warn, crit ) ])
     return (3, "UNKNOWN - sensor not found in SNMP data")
 

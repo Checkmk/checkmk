@@ -52,7 +52,7 @@ def check_windows_multipath(item, params, info):
         state = 1
 
 
-    return (state, nagios_state_names[state] + " - paths reported %d, expected paths %d" % (num_paths, all_paths) + state * "!")
+    return (state, "paths reported %d, expected paths %d" % (num_paths, all_paths) + state * "!")
 
 
 

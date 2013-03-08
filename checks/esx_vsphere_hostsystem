@@ -141,7 +141,7 @@ def check_esx_vsphere_hostsystem_state(item, params, info):
     if str(data['runtime.inMaintenanceMode'][0]) == 'True':
         messages.append("System is in maintenance(!!)")
 
-    return(state, nagios_state_names[state] + " - " + ", ".join(messages))
+    return(state, ", ".join(messages))
 
 check_info['esx_vsphere_hostsystem.state'] = {
   "inventory_function"  : inventory_esx_vsphere_hostsystem_state,
@@ -207,7 +207,7 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
 
             message = "Type %s, %d active, %d dead%s, %d disabled%s, %d standby%s, %s unknown%s" % \
     (path_type, active, dead, dead_label, disabled, disabled_label, standby, standby_label, unknown, unknow_label )
-    return (state, nagios_state_names[state] + " - " + message)
+    return (state, message)
 
 check_info['esx_vsphere_hostsystem.multipath'] = {
   "inventory_function"  : inventory_esx_vsphere_hostsystem_multipath,

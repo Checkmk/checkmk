@@ -149,7 +149,7 @@ def fileinfo_check_function(check_definition, params):
                     state = max(state, 1)
                     infos[-1] += " (%s %s)(!)" % (comp, verbfunc(warn))
         perfdata.append((what, val, warn, crit))
-    infotext = nagios_state_names[state] + " - " + ", ".join(infos)
+    infotext = ", ".join(infos)
     return (state, infotext, perfdata)
 
 

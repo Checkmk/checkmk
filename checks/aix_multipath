@@ -69,7 +69,7 @@ def check_aix_multipath(item, params, info):
     else:
         message.append(path_message)
 
-    return (state, nagios_state_names[state] + " - " + ", ".join(message))
+    return (state, ", ".join(message))
 
 
 check_info["aix_multipath"] = {

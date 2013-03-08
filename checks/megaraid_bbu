@@ -100,7 +100,7 @@ def check_megaraid_bbu(item, _no_params, info):
         return (0, "OK - no states to check (controller is in learn cycle)" + charge)
     # return assembled info
     elif broken:
-	return (state, nagios_state_names[state] + " - " + ", ".join(broken) + charge)
+	return (state, ", ".join(broken) + charge)
     else:
 	return (0, "OK - all states as expected" + charge)
 

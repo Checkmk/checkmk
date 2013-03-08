@@ -53,7 +53,7 @@ def check_ups_eaton_enviroment(item, params, info):
             text += "(!)"
         i += 1
         messages.append(text)
-    return (state, nagios_state_names[state] + " - " + ", ".join(messages), perfdata)
+    return (state, ", ".join(messages), perfdata)
 
 check_info['ups_eaton_enviroment'] = {
   "inventory_function"  : inventory_ups_eaton_enviroment,

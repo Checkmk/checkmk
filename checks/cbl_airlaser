@@ -166,7 +166,7 @@ def check_cbl_airlaser_hw(item, params, info):
     if state == 0:
         msgtxt = "All sensors OK"
 
-    return (state, nagios_state_names[state] + " - " + msgtxt, perfdata)
+    return (state, msgtxt, perfdata)
 
 
 def inventory_cbl_airlaser(info):

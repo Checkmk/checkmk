@@ -55,10 +55,10 @@ def check_esx_vsphere_hostsystem_cpu(item, params, info):
         state = 1
         label = "(!) (Levels at %d%%/%d%%)" % (warn, crit)
 
-    message = " - CPU usage: %d%%%s %s/%s" % \
+    message = "CPU usage: %d%%%s %s/%s" % \
     (level, label, get_bytes_human_readable(cpu_usage,1000,True,"Hz"), get_bytes_human_readable(cpu_size,1000,True,"Hz"))
     perf = [("usage", cpu_usage, warn, crit, 0, cpu_size)]
-    return(state, nagios_state_names[state] + message, perf)
+    return (state, message, perf)
 
 
 check_info['esx_vsphere_hostsystem.cpu_usage'] = {
@@ -93,10 +93,10 @@ def check_esx_vsphere_hostsystem_mem(item, params, info):
         state = 1
         label = "(!) (Levels at %d%%/%d%%)" % (warn, crit)
 
-    message = " - Memory usage: %d%%%s %s/%s" % \
+    message = "Memory usage: %d%%%s %s/%s" % \
     (level, label, get_bytes_human_readable(memory_usage), get_bytes_human_readable(memory_size))
     perf = [("usage", memory_usage, warn, crit, 0, memory_size)]
-    return(state, nagios_state_names[state] + message, perf)
+    return(state, message, perf)
 
 
 check_info['esx_vsphere_hostsystem.mem_usage'] = {

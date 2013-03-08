@@ -40,7 +40,7 @@ def check_vms_cpu(item, params, info):
     idle, user, wait_interrupt, wait_npsync = map(lambda x: float(x) / num_cpus, info[0][1:])
     wait = wait_interrupt + wait_npsync
     system = 100.0 - idle - user - wait
-    infotext = " - user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user, system, wait)
+    infotext = "user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user, system, wait)
     state = 0
     perfdata = [
           ( "user",   user ),
@@ -59,7 +59,7 @@ def check_vms_cpu(item, params, info):
             state = 1
             infotext += '(!)'
 
-    return (state, nagios_state_names[state] + infotext, perfdata)
+    return (state, infotext, perfdata)
 
 check_info['vms_cpu'] = {
     "check_function" :      check_vms_cpu,

@@ -123,8 +123,7 @@ def check_mem_windows(item, params, info):
                 (title, perc, used_kb / MB, total_kb / MB, state_code))
         perfdata.append((paramname, used_kb / 1024.0, warn, crit, 0, total_kb / 1024.0))
 
-    return (worststate, "%s - %s" %
-            (nagios_state_names[worststate], ", ".join(infotxts)), perfdata)
+    return (worststate, ", ".join(infotxts), perfdata)
 
 check_info["mem.win"] = {
     'check_function':          check_mem_windows,
@@ -198,7 +197,7 @@ def check_mem_vmalloc(item, params, info):
         state = max(state, s)
         infotxts.append(infotxt)
         perfdata.append( (var, v, w_mb, c_mb, 0, total_mb) )
-    return (state, nagios_state_names[state] + (" - total %.1f MB, " % total_mb) + ", ".join(infotxts), perfdata)
+    return (state, ("total %.1f MB, " % total_mb) + ", ".join(infotxts), perfdata)
 
 check_info["mem.vmalloc"] = {
     'check_function':          check_mem_vmalloc,

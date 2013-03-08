@@ -43,7 +43,7 @@ def check_mysql_size(item, params, info):
     for dbname, size, avail in info:
         if item == dbname:
             size = int(size)
-            infotext = " - Size is %s" % get_bytes_human_readable(size)
+            infotext = "Size is %s" % get_bytes_human_readable(size)
             if params:
                 state = 0
                 warn, crit = params # in MB
@@ -59,7 +59,7 @@ def check_mysql_size(item, params, info):
             else:
                 state = 0
                 perfdata = [("size", size)]
-            return (state, nagios_state_names[state] + infotext, perfdata)
+            return (state, infotext, perfdata)
     return (3, "UNKNOWN - Database not found in Agent output")
 
 

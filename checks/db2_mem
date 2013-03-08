@@ -35,7 +35,7 @@ def check_db2_mem(item, params, info):
     values = []
     perf = []
     state = 3
-    message = " - Instance not found"
+    message = "Instance not found"
     for line in info:
         if hit > 0 and hit <= 2:
             hit += 1
@@ -53,7 +53,7 @@ def check_db2_mem(item, params, info):
                     label = ""
                     state = 0
 
-                message = " - Max: %s, Used: %s (%.2d%% Free%s) " % \
+                message = "Max: %s, Used: %s (%.2d%% Free%s) " % \
                 (get_bytes_human_readable(limit), get_bytes_human_readable(usage), perc_level, label)
                 perf = [("mem", usage, 0, 0, 0, limit )]
 
@@ -61,7 +61,7 @@ def check_db2_mem(item, params, info):
             hit = 1
 
 
-    return state, nagios_state_names[state] + message, perf
+    return state, message, perf
 
 
 check_info['db2_mem'] = {

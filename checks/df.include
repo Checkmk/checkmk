@@ -332,6 +332,4 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
     elif used_mb >= warn_mb:
         status = max(1, status)
 
-    if len(problems) > 0:
-        infotext += " - " + ", ".join(problems)
-    return (status, nagios_state_names[status] + " - " + infotext, perfdata)
+    return (status, ", ".join(problems), perfdata)

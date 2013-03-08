@@ -68,7 +68,7 @@ def check_vxvm_objstatus(item, params, info):
             if error == False:
                 text = ["%s: OK" % volume]
             messages.append(", ".join(text))
-        return(state, nagios_state_names[state] + ' - ' + ', '.join(messages))
+        return(state, ', '.join(messages))
 
     return(2, "CRIT - Group not found")
 

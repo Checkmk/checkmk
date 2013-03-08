@@ -26,12 +26,12 @@
 
 
 def check_snia_sml(item, params, info):
-    return (3, "UNKNOWN - Sorry. Check not implemented in this version.")
+    return (3, "Sorry. Check not implemented in this version.")
 
-check_info['snia_sml'] = (
-    check_snia_sml,
-    "%s",
-    0,
-    no_inventory_possible)
 
-checkgroup_of["snia_sml"] = "obsolete"
+
+check_info["snia_sml"] = {
+    'check_function':          check_snia_sml,
+    'service_description':     '%s',
+    'group':                   'obsolete',
+}

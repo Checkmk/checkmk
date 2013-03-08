@@ -24,10 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_info['fjdarye60_devencs'] = (check_fjdarye_item, "Device Enclosure %s", 0,  inventory_fjdarye_item)
 check_includes['fjdarye60_devencs'] = ["fjdarye.include"]
 # 1: fjdaryDeIndex, 3: fjdaryDeStatus
-snmp_info['fjdarye60_devencs'] = (".1.3.6.1.4.1.211.1.21.1.60.2.7.2.1", [ 1, 3 ])
 
-snmp_scan_functions['fjdarye60_devencs'] \
-        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60"
+
+check_info["fjdarye60_devencs"] = {
+    'check_function':          check_fjdarye_item,
+    'inventory_function':      inventory_fjdarye_item,
+    'service_description':     'Device Enclosure %s',
+    # 1: fjdaryDeIndex, 3: fjdaryDeStatus
+    'snmp_info':               ('.1.3.6.1.4.1.211.1.21.1.60.2.7.2.1', [1, 3]),
+    'snmp_scan_function':      \
+          lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60",
+}

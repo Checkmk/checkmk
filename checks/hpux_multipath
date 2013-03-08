@@ -95,19 +95,24 @@ def hpux_multipath_format_pathstatus(pathcounts):
 def check_hpux_multipath(item, params, info):
     disks = parse_hpux_multipath(info)
     if item not in disks:
-        return (3, "UNKNOWN - no LUN with this WWID found")
+        return (3, "no LUN with this WWID found")
     disk, pathcounts = disks[item]
 
     if pathcounts[2] > 0:
-        return (2, "CRIT - %s: %d failed paths! (%s)" % (disk, pathcounts[2], hpux_multipath_format_pathstatus(pathcounts)))
+        return (2, "%s: %d failed paths! (%s)" % (disk, pathcounts[2], hpux_multipath_format_pathstatus(pathcounts)))
 
     elif list(pathcounts) != list(params):
-        return (1, "WARN - %s: Invalid path status %s (should be %s)" %
+        return (1, "%s: Invalid path status %s (should be %s)" %
                 (disk, hpux_multipath_format_pathstatus(pathcounts),
                        hpux_multipath_format_pathstatus(params)))
     else:
-        return (0, "OK - %s: %s" % (disk, hpux_multipath_format_pathstatus(pathcounts)))
+        return (0, "%s: %s" % (disk, hpux_multipath_format_pathstatus(pathcounts)))
 
 
-check_info['hpux_multipath'] = (check_hpux_multipath, "Multipath %s", 0, inventory_hpux_multipath )
-checkgroup_of['hpux_multipath'] = "hpux_multipath"
+
+check_info["hpux_multipath"] = {
+    'check_function':          check_hpux_multipath,
+    'inventory_function':      inventory_hpux_multipath,
+    'service_description':     'Multipath %s',
+    'group':                   'hpux_multipath',
+}

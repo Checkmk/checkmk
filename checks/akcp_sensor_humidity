@@ -44,7 +44,7 @@ def check_akcp_sensor_humidity(item, params, info):
         if desc == item:
             critlow, warnlow, warnhigh, crithigh = params
             if status == "7":
-                return (3, "CRIT - Sensor Error")
+                return (3, "Sensor Error")
             else:
                 if online == "1":
                     inthumidity = saveint(humidity)
@@ -52,33 +52,39 @@ def check_akcp_sensor_humidity(item, params, info):
                                 (critlow, warnlow, warnhigh, crithigh) + ")"
                     perfdata = [ ( "humidity", humidity, critlow, warnlow, warnhigh, crithigh ) ]
                     if inthumidity <= critlow or inthumidity >= crithigh:
-                        return (2, "CRIT - Humidity is: " + infotext, perfdata )
+                        return (2, "Humidity is: " + infotext, perfdata )
                     elif inthumidity <= warnlow or inthumidity >= warnhigh:
-                        return (1, "WARN - Humidity is: " + infotext, perfdata )
+                        return (1, "Humidity is: " + infotext, perfdata )
                     else:
-                        return (0, "OK - Humidity is: " + infotext, perfdata )
+                        return (0, "Humidity is: " + infotext, perfdata )
                 else:
-                    return (3, "UNKNOWN - Sensor is offline")
-    return (3, "UNKNOWN - Sensor not found")
+                    return (3, "Sensor is offline")
+    return (3, "Sensor not found")
 
 
-check_info['akcp_sensor_humidity'] = ( check_akcp_sensor_humidity, "Humidity Sensor - %s", 1, inventory_akcp_sensor_humidity)
 
-snmp_info['akcp_sensor_humidity'] = (
-    ".1.3.6.1.4.1.3854.1.2.2.1.17.1", [
-        1, #sensorProbeHumidityDescription
-        3, #sensorProbeHumidityPercent
-        4, #sensorProbeHumidityStatus - The current status of this Sensor
-        5, #sensorProbeHumidityOnline - online(1), offline(2)
-    ],
-)
 
 # possible values for sensorProbeHumidityStatus:
 # noStatus(1), normal(2), highWarning(3), highCritical(4),
 # lowWarning(5), lowCritical(6), sensorError(7)
 
 
-snmp_scan_functions['akcp_sensor_humidity'] = \
-        lambda oid: "AKCP" in oid(".1.3.6.1.4.1.3854.1.1.6.0") and "sensorProbe" in oid(".1.3.6.1.4.1.3854.1.1.8.0")
 
-checkgroup_of['akcp_sensor_humidity'] = "akcp_humidity"
+
+check_info["akcp_sensor_humidity"] = {
+    'check_function':          check_akcp_sensor_humidity,
+    'inventory_function':      inventory_akcp_sensor_humidity,
+    'service_description':     'Humidity Sensor - %s',
+    'has_perfdata':            True,
+    'snmp_info':               (
+        ".1.3.6.1.4.1.3854.1.2.2.1.17.1", [
+            1, #sensorProbeHumidityDescription
+            3, #sensorProbeHumidityPercent
+            4, #sensorProbeHumidityStatus - The current status of this Sensor
+            5, #sensorProbeHumidityOnline - online(1), offline(2)
+        ],
+    ),
+    'snmp_scan_function':      \
+         lambda oid: "AKCP" in oid(".1.3.6.1.4.1.3854.1.1.6.0") and "sensorProbe" in oid(".1.3.6.1.4.1.3854.1.1.8.0"),
+    'group':                   'akcp_humidity',
+}

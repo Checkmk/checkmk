@@ -29,7 +29,7 @@ def inventory_cisco_locif(info):
     pass
 
 def check_cisco_locif(item, params, info):
-    return (3, 'UNKNOWN - The cisco_locif check has been removed. Please switch to either if or if64 checks')
+    return (3, 'The cisco_locif check has been removed. Please switch to either if or if64 checks')
 
 check_info['cisco_locif'] = (check_cisco_locif, "Port %s", 1,  inventory_cisco_locif)
 snmp_info['cisco_locif'] = ( ".1.3.6.1.4.1.9",

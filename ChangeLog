@@ -2,8 +2,6 @@
     Core:
     * Agents can send data for other hosts "piggyback". This is being
       used by the vSphere and SAP plugins
-    * Checks can now omit the typical "OK - " or "WARN -". This text
-      will be added automatically if missing.
 
     Multisite:
     * New availability view for arbitrary host/service collections
@@ -63,6 +61,10 @@
       for each logfile on a host
 
 1.2.2b5:
+    Core:
+    * Checks can now omit the typical "OK - " or "WARN -". This text
+      will be added automatically if missing.
+
     livestatus:
     * FIX: possible crash with VERY long downtime comments
 
@@ -96,6 +98,8 @@
     * Linux agent: limit netstat to 10 seconds
     * ps: Allow %1, %2, .. instead of %s in process_inventory. That allows
       reordering of matched groups
+    * FIX: f5_bigip_psu - fixed inventory function
+    * FIX: printer_supply - fixed inventory function for some kind of OKI printers
 
     Multisite:
     * FIX: Fixed problem with error during localization scanning
@@ -129,6 +133,7 @@
            within the group
     * FIX: Fixed exception when editing contactgroups without alias
     * FIX: Fix localization of rule options
+    * FIX: ValueSpec OptionalDropDown: fix visibility if default is "other"
     * Suggest use default value for filesystem levels that make sense
     * Valuespec: CascadingDropdown now able to process choice values from functions
     * Freshness checking for classical passive Nagios checks (custom_checks)

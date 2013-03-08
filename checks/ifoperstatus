@@ -48,16 +48,21 @@ def check_ifoperstatus(item, targetstate, info):
             if not isinstance(targetstate, list):
                 targetstate = ifoperstatus_statename(targetstate)
             if operstatus == targetstate or (isinstance(targetstate, list) and operstatus in targetstate):
-                return (0, "OK - status is %s" % operstatus)
+                return (0, "status is %s" % operstatus)
             elif operstatus == "up":
-                return (1, "WARN - port used, but should not be")
+                return (1, "port used, but should not be")
             else:
-                return (2, "CRIT - status is %s" % operstatus)
+                return (2, "status is %s" % operstatus)
 
-    return (3, "UNKNOWN - interface %s missing" % item)
+    return (3, "interface %s missing" % item)
 
-check_info['ifoperstatus'] = (check_ifoperstatus, "Interface %s", 0,  inventory_ifoperstatus)
-snmp_info['ifoperstatus'] = ( ".1.3.6.1.2.1.2.2.1", [ 2, 3, 8 ] )
 
 # Never inventorize automatically. let if/if64 be the default
-snmp_scan_functions['ifoperstatus'] = lambda oid: False
+
+check_info["ifoperstatus"] = {
+    'check_function':          check_ifoperstatus,
+    'inventory_function':      inventory_ifoperstatus,
+    'service_description':     'Interface %s',
+    'snmp_info':               ('.1.3.6.1.2.1.2.2.1', [2, 3, 8]),
+    'snmp_scan_function':      lambda oid: False,
+}

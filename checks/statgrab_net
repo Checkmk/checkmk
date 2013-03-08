@@ -53,15 +53,15 @@ def check_statgrab_net_link(item, targetstate, info):
             link = value == 'true'
             if link == targetstate:
                 if link:
-                    return (0, "OK - Link is up")
+                    return (0, "Link is up")
                 else:
-                    return (0, "OK - no link / NIC unused")
+                    return (0, "no link / NIC unused")
             else:
                 if link:
-                    return (1, "WARN - Link is up, NIC should be unused")
+                    return (1, "Link is up, NIC should be unused")
                 else:
-                    return (2, "CRIT - no link")
-    return (2, "CRIT - unknown network device")
+                    return (2, "no link")
+    return (2, "unknown network device")
 
 
 def inventory_statgrab_net_params(info):
@@ -87,11 +87,11 @@ def check_statgrab_net_params(item, params, info):
                 speed = value
                 act_params = (speed + "Mb/s", duplex.capitalize())
                 if act_params == params:
-                    return (0, "OK - %s" % (",".join(act_params),) )
+                    return (0, "%s" % (",".join(act_params),) )
                 else:
-                    return (2, "CRIT - %s (should be %s)" %
+                    return (2, "%s (should be %s)" %
                            (",".join(act_params), ",".join(params)))
-    return (3, "UNKNOWN - network device not found")
+    return (3, "network device not found")
 
 
 
@@ -144,7 +144,7 @@ def check_statgrab_net_ctr(nic, _no_params, info):
         if ctr == 'tx':
             break # last counter
     if infotxt == "":
-        return (3, "UNKNOWN - unknown network interface")
+        return (3, "unknown network interface")
 
 
     perfdata = []
@@ -155,10 +155,26 @@ def check_statgrab_net_ctr(nic, _no_params, info):
         else:
             perfdata.append((countername, 0.0))
 
-    return (0, "OK" + infotxt, perfdata)
+    return (0, infotxt, perfdata)
 
 
 
-check_info['statgrab_net.link'] = (check_statgrab_net_link,   "NIC %s link",        0,  inventory_statgrab_net_link)
-check_info['statgrab_net.ctr'] = (check_statgrab_net_ctr,    "NIC %s counters",    1,  inventory_statgrab_net_ctr)
-check_info['statgrab_net.params'] =  (check_statgrab_net_params, "NIC %s parameter",   0,  inventory_statgrab_net_params)
+
+check_info["statgrab_net.ctr"] = {
+    'check_function':          check_statgrab_net_ctr,
+    'inventory_function':      inventory_statgrab_net_ctr,
+    'service_description':     'NIC %s counters',
+    'has_perfdata':            True,
+}
+
+check_info["statgrab_net.link"] = {
+    'check_function':          check_statgrab_net_link,
+    'inventory_function':      inventory_statgrab_net_link,
+    'service_description':     'NIC %s link',
+}
+
+check_info["statgrab_net.params"] = {
+    'check_function':          check_statgrab_net_params,
+    'inventory_function':      inventory_statgrab_net_params,
+    'service_description':     'NIC %s parameter',
+}

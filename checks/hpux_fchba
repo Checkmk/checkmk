@@ -62,7 +62,7 @@ def inventory_hpux_fchba(info):
 def check_hpux_fchba(item, _no_params, info):
     parsed = parse_hpux_fchba(info)
     if item not in parsed:
-        return (3, "UNKNOWN - HBA noch found")
+        return (3, "HBA noch found")
 
     hba = parsed[item]
 
@@ -86,10 +86,7 @@ def check_hpux_fchba(item, _no_params, info):
         infos.append("Driver-Firmware Dump Available(!!)")
         state = 2
 
-
-
-    infotext = ", ".join(infos)
-    return state, nagios_state_names[state] + " - " + infotext
+    return (state, ", ".join(infos))
 
 
 check_info['hpux_fchba'] = {

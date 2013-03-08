@@ -38,7 +38,7 @@ def check_pdu_gude(item, params, info):
         try:
             values = info[item - 1]
         except ValueError:
-            return (3, "UKN - Item not found")
+            return (3, "Item not found")
 
         units = {
             0 : ("kWh", 1000),
@@ -75,5 +75,5 @@ def check_pdu_gude(item, params, info):
                     label = "(!)"
             message.append("%.2f%s%s" % (value, unit, label))
 
-        return(state, nagios_state_names[0] + " - " + ", ".join(message), perf)
+        return(state, ", ".join(message), perf)
 

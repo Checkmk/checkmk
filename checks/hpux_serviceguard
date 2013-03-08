@@ -62,8 +62,13 @@ def check_hpux_serviceguard(item, _no_params, info):
                 code = 1
             else:
                 code = 2
-            return (code, nagios_state_names[code] + " - state is %s" % status)
+            return (code, "state is %s" % status)
 
-    return (3, "UNKNOWN - No such item found")
+    return (3, "No such item found")
 
-check_info['hpux_serviceguard'] = (check_hpux_serviceguard, "Serviceguard", 0,  inventory_hpux_serviceguard )
+
+check_info["hpux_serviceguard"] = {
+    'check_function':          check_hpux_serviceguard,
+    'inventory_function':      inventory_hpux_serviceguard,
+    'service_description':     'Serviceguard',
+}

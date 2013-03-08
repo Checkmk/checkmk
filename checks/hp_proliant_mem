@@ -98,8 +98,12 @@ def check_hp_proliant_mem(item, params, info):
 
             detail_output = ', Status: %s ' % snmp_status
             status = hp_proliant_mem_status2nagios_map[snmp_status]
-            if status > 0:
-                detail_output += '(%s) ' % nagios_state_names[status]
+            if status == 1:
+                detail_output += '(!) '
+            elif status == 2:
+                detail_output += '(!!) '
+            else:
+                detail_output += '(UNKNOWN) '
 
             condition = 'n/a'
             if int(module_condition) in hp_proliant_mem_condition_map:
@@ -107,25 +111,34 @@ def check_hp_proliant_mem(item, params, info):
             condition_status = hp_proliant_mem_condition_status2nagios_map[condition]
 
             detail_output += ', Condition: %s ' % condition
-            if condition_status > 0:
-                detail_output += '(%s) ' % nagios_state_names[condition_status]
+            if condition_status == 1:
+                detail_output += '(!) '
+            elif condition_status == 2:
+                detail_output += '(!!) '
+            else:
+                detail_output += '(UNKNOWN) '
             if condition_status > status:
                 status = condition_status
 
-            return (status, '%s - Board: %s, Num: %s, Type: %s, Size: %s MB%s' %
-                            (nagios_state_names[status], board_index, module_index,
+            return (status, 'Board: %s, Num: %s, Type: %s, Size: %s MB%s' %
+                            (board_index, module_index,
                              type, module_size_mb, detail_output))
-    return (3, "UNKNOWN - item not found in snmp data")
+    return (3, "item not found in snmp data")
 
-
-check_info['hp_proliant_mem'] = (check_hp_proliant_mem, "HW Mem %s", 0,  inventory_hp_proliant_mem)
-snmp_info['hp_proliant_mem']  = ( ".1.3.6.1.4.1.232.6.2.14.13.1", [  "2", # cpqHeResMem2BoardNum
-                                                                     "1", # cpqHeResMem2Module
-                                                                     "6", # cpqHeResMem2ModuleSize
-                                                                     "7", # cpqHeResMem2ModuleType
-                                                                     "19", # cpqHeResMem2ModuleStatus
-                                                                     "20", # cpqHeResMem2ModuleCondition
-                                                                ] )
-
-snmp_scan_functions['hp_proliant_mem'] = \
-    lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower()
+check_info["hp_proliant_mem"] = {
+    'check_function':          check_hp_proliant_mem,
+    'inventory_function':      inventory_hp_proliant_mem,
+    'service_description':     'HW Mem %s',
+    'snmp_info':               (
+        ".1.3.6.1.4.1.232.6.2.14.13.1", [
+            "2", # cpqHeResMem2BoardNum
+            "1", # cpqHeResMem2Module
+            "6", # cpqHeResMem2ModuleSize
+            "7", # cpqHeResMem2ModuleType
+           "19", # cpqHeResMem2ModuleStatus
+           "20", # cpqHeResMem2ModuleCondition
+        ]
+    ),
+    'snmp_scan_function':      \
+         lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower(),
+}

@@ -99,7 +99,7 @@ def check_heartbeat_crm(item, params, info):
         now = time.time()
         delta = now - dt
         if delta > param_max_age:
-            return (2, 'CRIT - Status output too old: %d secs' % delta)
+            return (2, 'Status output too old: %d secs' % delta)
 
         output = ''
         status = 0
@@ -128,9 +128,9 @@ def check_heartbeat_crm(item, params, info):
                 output += 'Resources: %d (Expected %d), ' % (numResources, param_ressources)
                 status = 2
 
-        return (status, '%s - %s' % (nagios_state_names[status], output.rstrip(', ')))
+        return (status, output.rstrip(', '))
 
-    return (3, "UNKNOWN - Empty output from agent")
+    return (3, "Empty output from agent")
 
 def heartbeat_crm_parse_resources(info):
     blockStart = False
@@ -201,16 +201,26 @@ def check_heartbeat_crm_resources(item, target_node, info):
         output += ' '.join(resource)
         if len(resource) == 3 or resource[2] != 'Started':
             status = 2
-            output += ' (CRITICAL: Resource is in state "%s")' % resource[2]
+            output += ' (Resource is in state "%s" (!!))' % resource[2]
         elif target_node and target_node != resource[3] and resource[1] != 'Slave' and resource[1] != 'Clone':
             status = 2
-            output += ' (CRITICAL: Expected node: %s)' % target_node
+            output += ' (Expected node: %s (!!))' % target_node
         output += ', '
 
-    return (status, '%s - %s' % (nagios_state_names[status], output.rstrip(', ')))
+    return (status, output.rstrip(', '))
 
-check_info['heartbeat_crm'] = (check_heartbeat_crm, "Heartbeat CRM General",  0, inventory_heartbeat_crm)
-check_info['heartbeat_crm.resources'] = (check_heartbeat_crm_resources, "Heartbeat CRM %s",  0, inventory_heartbeat_crm_resources)
 
 check_config_variables.append("heartbeat_crm_naildown")
 check_config_variables.append("heartbeat_crm_resources_naildown")
+
+check_info["heartbeat_crm.resources"] = {
+    'check_function':          check_heartbeat_crm_resources,
+    'inventory_function':      inventory_heartbeat_crm_resources,
+    'service_description':     'Heartbeat CRM %s',
+}
+
+check_info["heartbeat_crm"] = {
+    'check_function':          check_heartbeat_crm,
+    'inventory_function':      inventory_heartbeat_crm,
+    'service_description':     'Heartbeat CRM General',
+}

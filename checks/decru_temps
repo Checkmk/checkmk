@@ -34,19 +34,25 @@ def check_decru_temps(item, params, info):
             temp = to_celsius(int(temp[1]))
             warn, crit = params
             perfdata = [("temp", temp, "", "", warn, crit)]
-            infotxt = " - %d C (levels at %d/%d)" % (temp, warn, crit)
+            infotxt = "%d C (levels at %d/%d)" % (temp, warn, crit)
             if temp >= crit:
-                return (2, "CRIT" + infotxt, perfdata)
+                return (2, infotxt, perfdata)
             elif temp >= warn:
-                return (1, "WARN" + infotxt, perfdata)
+                return (1, infotxt, perfdata)
             else:
-                return (0, "OK" + infotxt, perfdata)
+                return (0, infotxt, perfdata)
 
-    return (3, "UNKNOWN - sensor not found")
+    return (3, "sensor not found")
 
-check_info['decru_temps'] = (check_decru_temps, "Temperature %s", 1, inventory_decru_temps)
 
-snmp_info['decru_temps'] = ( ".1.3.6.1.4.1.12962.1.2.4.1", [ 2, 3 ] )
-snmp_scan_functions['decru_temps'] = \
-    lambda oid: "datafort" in oid('.1.3.6.1.2.1.1.1.0').lower()
-checkgroup_of["decru_temps"] = "hw_temperature"
+
+check_info["decru_temps"] = {
+    'check_function':          check_decru_temps,
+    'inventory_function':      inventory_decru_temps,
+    'service_description':     'Temperature %s',
+    'has_perfdata':            True,
+    'snmp_info':               ('.1.3.6.1.4.1.12962.1.2.4.1', [2, 3]),
+    'snmp_scan_function':      \
+     lambda oid: "datafort" in oid('.1.3.6.1.2.1.1.1.0').lower(),
+    'group':                   'hw_temperature',
+}

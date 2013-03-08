@@ -64,23 +64,29 @@ def inventory_winperf_msx_queues(info):
 def check_winperf_msx_queues(item, params, info):
     num_instances = int(info[1][0])
     if num_instances < 1:
-        return (3, "UNKNOWN - no counters available, transport service running?")
+        return (3, "no counters available, transport service running?")
 
     for line in info[2:]:
         if line[0] == winperf_msx_queues.get(item):
             length = int(line[1])
             warn, crit = params
             perfdata = [("length", length, warn, crit)]
-            infotext = " - %d entries" % length
+            infotext = "%d entries" % length
             if length >= crit:
-                return (2, "CRIT" + infotext, perfdata)
+                return (2, infotext, perfdata)
             elif length >= warn:
-                return (1, "WARN" + infotext, perfdata)
-            return (0, "OK" + infotext, perfdata)
+                return (1, infotext, perfdata)
+            return (0, infotext, perfdata)
 
-    return (3, "UNKNOWN - counter not found")
+    return (3, "counter not found")
 
-check_info['winperf_msx_queues'] = (check_winperf_msx_queues, "Queue %s", 1, inventory_winperf_msx_queues)
 
 check_config_variables.append("winperf_msx_queues")
-checkgroup_of["winperf_msx_queues"] = "msx_queues"
+
+check_info["winperf_msx_queues"] = {
+    'check_function':          check_winperf_msx_queues,
+    'inventory_function':      inventory_winperf_msx_queues,
+    'service_description':     'Queue %s',
+    'has_perfdata':            True,
+    'group':                   'msx_queues',
+}

@@ -48,10 +48,10 @@ def check_octopus_status(_no_item, _no_params_info, info):
    state = octopus_states_map[octopus_state][0]
    desc  = octopus_states_map[octopus_state][1]
 
-   msg = " - PBX system state is %s" % desc
+   msg = "PBX system state is %s" % desc
    if octopus_state >= 3:
-       msg = msg + " error"
-   return (state, nagios_state_names[state]  + msg)
+       msg += " error"
+   return (state, msg)
 
 
 check_info['sni_octopuse_status'] = {

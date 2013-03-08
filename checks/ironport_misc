@@ -26,12 +26,12 @@
 
 
 def check_ironport_misc(item, params, info):
-    return (3, "UNKNOWN - Sorry. Check not implemented in this version.")
+    return (3, "Sorry. Check not implemented in this version.")
 
-check_info['ironport_misc'] = (
-    check_ironport_misc,
-    "%s",
-    0,
-    no_inventory_possible)
 
-checkgroup_of['ironport_misc'] = "obsolete"
+
+check_info["ironport_misc"] = {
+    'check_function':          check_ironport_misc,
+    'service_description':     '%s',
+    'group':                   'obsolete',
+}

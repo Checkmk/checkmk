@@ -41,7 +41,7 @@ def check_octopus_cpu(_no_item, _no_params_info, info):
         # need to un-triple pack here.
         cpu_perc = int(info[0][0][0])
         perfdata = [ ("util", "%.3f" % cpu_perc) ]
-        return (0, "OK - CPU utilization is %d%%. (OK from 0-100)" % cpu_perc, perfdata)
+        return (0, "CPU utilization is %d%%. (OK from 0-100)" % cpu_perc, perfdata)
     except:
         return (3, "UKNW - invalid data received")
 

@@ -65,25 +65,30 @@ def check_hp_proliant_da_phydrv(item, params, info):
             condition = hp_proliant_da_phydrv_condition[int(condition)]
             status = hp_proliant_da_phydrv_condition_status2nagios[condition]
 
-            return (status, '%s - Bay: %s, BusNumber: %s, Status: %s, '
+            return (status, 'Bay: %s, BusNumber: %s, Status: %s, '
                             'SmartStatus: %s, RefHours: %s, Size: %sMB, Condition: %s' %
-                            (nagios_state_names[status], bay, bus_number, snmp_status,
+                            (bay, bus_number, snmp_status,
                              hp_proliant_da_phydrv_smart_status[int(smart_status)],
                              ref_hours, size, condition))
-    return (3, "UNKNOWN - item not found in snmp data")
+    return (3, "item not found in snmp data")
 
-
-check_info['hp_proliant_da_phydrv'] = (check_hp_proliant_da_phydrv, "HW Phydrv %s", 0,  inventory_hp_proliant_da_phydrv)
-snmp_info['hp_proliant_da_phydrv']  = ( ".1.3.6.1.4.1.232.3.2.5.1.1", [  "1", # cpqDaPhyDrvCntlrIndex
-                                                                         "2", # cpqDaPhyDrvIndex
-                                                                         "5", # cpqDaPhyDrvBay
-                                                                         "6", # cpqDaPhyDrvStatus
-                                                                         "9", # cpqDaPhyDrvRefHours
-                                                                         "45", # cpqDaPhyDrvSize
-                                                                         "37", # cpqDaPhyDrvCondition
-                                                                         "50", # cpqDaPhyDrvBusNumber
-                                                                         "57", # cpqDaPhyDrvSmartStatus
-                                                                ] )
-
-snmp_scan_functions['hp_proliant_da_phydrv'] = \
-    lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower()
+check_info["hp_proliant_da_phydrv"] = {
+    'check_function':          check_hp_proliant_da_phydrv,
+    'inventory_function':      inventory_hp_proliant_da_phydrv,
+    'service_description':     'HW Phydrv %s',
+    'snmp_info':                (
+        ".1.3.6.1.4.1.232.3.2.5.1.1", [
+            "1", # cpqDaPhyDrvCntlrIndex
+            "2", # cpqDaPhyDrvIndex
+            "5", # cpqDaPhyDrvBay
+            "6", # cpqDaPhyDrvStatus
+            "9", # cpqDaPhyDrvRefHours
+           "45", # cpqDaPhyDrvSize
+           "37", # cpqDaPhyDrvCondition
+           "50", # cpqDaPhyDrvBusNumber
+           "57", # cpqDaPhyDrvSmartStatus
+        ]
+    ),
+    'snmp_scan_function':      \
+         lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower(),
+}

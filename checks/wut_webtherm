@@ -38,14 +38,14 @@ def check_webtherm(item, params, info):
             temp = float(line[1].replace(",", "."))
             warn, crit = params
             perfdata = [ ("temp", temp, warn, crit) ]
-            infotext = " - %.1f C (warn/crit at %.1f/%.1f C)" % (temp, warn, crit)
+            infotext = "%.1f C (warn/crit at %.1f/%.1f C)" % (temp, warn, crit)
             if temp >= crit:
-                return (2, "CRIT" + infotext, perfdata)
+                return (2, infotext, perfdata)
             elif temp >= warn:
-                return (1, "WARN" + infotext, perfdata)
+                return (1, infotext, perfdata)
             else:
-                return (0, "OK" + infotext, perfdata)
-    return (3, "UNKNOWN - No sensor found")
+                return (0, infotext, perfdata)
+    return (3, "No sensor found")
 
 def detect_webtherm(oid):
     return oid(".1.3.6.1.2.1.1.2.0") in \
@@ -56,11 +56,15 @@ def detect_webtherm(oid):
           ".1.3.6.1.4.1.5040.1.2.8",
           ".1.3.6.1.4.1.5040.1.2.16"  ]
 
-
-check_info['wut_webtherm'] = ( check_webtherm, "Thermograph Sensor %s", 1, inventory_webtherm)
-
-snmp_info['wut_webtherm'] = (
-   ".1.3.6.1.4.1.5040.1.2", ["1", "2", "3", "6", "8", "16"],  [ "1.2.1.1", "1.3.1.1" ])
-
-snmp_scan_functions['wut_webtherm'] = detect_webtherm
-checkgroup_of["wut_webtherm"] = "room_temperature"
+check_info["wut_webtherm"] = {
+    'check_function':          check_webtherm,
+    'inventory_function':      inventory_webtherm,
+    'service_description':     'Thermograph Sensor %s',
+    'has_perfdata':            True,
+    'snmp_info':               ('.1.3.6.1.4.1.5040.1.2',
+        ['1', '2', '3', '6', '8', '16'],
+        ['1.2.1.1', '1.3.1.1']
+    ),
+    'snmp_scan_function':      detect_webtherm,
+    'group':                   'room_temperature',
+}

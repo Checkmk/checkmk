@@ -91,5 +91,11 @@ def check_winperf_phydisk(item, params, info):
     this_time = int(float(info[0][0]))
     return check_diskstat_generic(item, params, this_time, winperf_phydisk_convert(info))
 
-check_info['winperf_phydisk'] = (check_winperf_phydisk, "Disk IO %s", 1,  inventory_winperf_phydisk)
-checkgroup_of["winperf_phydisk"] = "disk_io"
+
+check_info["winperf_phydisk"] = {
+    'check_function':          check_winperf_phydisk,
+    'inventory_function':      inventory_winperf_phydisk,
+    'service_description':     'Disk IO %s',
+    'has_perfdata':            True,
+    'group':                   'disk_io',
+}

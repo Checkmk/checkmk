@@ -65,23 +65,29 @@ def checkfunc(item, _no_params, info):
         if item == line[0]:
             rawdata = line[1]
             if rawdata[3] != '\xa0':
-                return (2, "CRIT - RLUN is not present" )
+                return (2, "RLUN is not present" )
             elif rawdata[2] == '\x08':
-                return (1, "WARN - RLUN is rebuilding")
+                return (1, "RLUN is rebuilding")
             elif rawdata[2] == '\x07':
-                return (1, "WARN - RLUN copyback in progress")
+                return (1, "RLUN copyback in progress")
             elif rawdata[2] == '\x41':
-                return (1, "WARN - RLUN spare is in use")
+                return (1, "RLUN spare is in use")
             elif rawdata[2] == '\x00':
-                return (0, "OK - RLUN is in normal state") # assumption
+                return (0, "RLUN is in normal state") # assumption
             else:
-                return (2, "CRIT - RLUN in unknown state %02x" % ord(rawdata[2]) )
+                return (2, "RLUN in unknown state %02x" % ord(rawdata[2]) )
 
-    return (3, "UNKNOWN - No RLUN %s in SNMP output" % item)
+    return (3, "No RLUN %s in SNMP output" % item)
 
-check_info['fjdarye100_rluns'] = (checkfunc, "RLUN %s", 0,  inventoryfunc)
 # 2: fjdaryRluInfoTable0
-snmp_info['fjdarye100_rluns'] = (".1.3.6.1.4.1.211.1.21.1.100.3.4.2.1", [ 0, "2" ])
 
-snmp_scan_functions['fjdarye100_rluns'] \
-        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.100"
+
+check_info["fjdarye100_rluns"] = {
+    'check_function':          checkfunc,
+    'inventory_function':      inventoryfunc,
+    'service_description':     'RLUN %s',
+    # 2: fjdaryRluInfoTable0
+    'snmp_info':               ('.1.3.6.1.4.1.211.1.21.1.100.3.4.2.1', [0, '2']),
+    'snmp_scan_function':      \
+          lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.100",
+}

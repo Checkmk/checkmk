@@ -30,18 +30,22 @@ def inventory_bintec_info(info):
 
 def check_bintec_info(checktype, params, info):
     if len(info[0]) < 2:
-        return (3, "UNKNOWN - No data retrieved")
+        return (3, "No data retrieved")
     sw_version, serial = info[0]
     return (0, "Serial: %s, Software: %s" % (serial, sw_version))
 
-check_info['bintec_info'] = (check_bintec_info, "Bintec Info", 0, inventory_bintec_info)
 # 1.3.6.1.4.1.272.4.1.26.0 SW Version
 # 1.3.6.1.4.1.272.4.1.31.0 S/N
-snmp_info['bintec_info']  = ( ".1.3.6.1.4.1.272.4.1", [
-                                     '26.0', # SW Version
-                                     '31.0', # S/N
-                              ] )
 
 # This check works on all SNMP hosts
-snmp_scan_functions['bintec_info'] = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == \
-                                       ".1.3.6.1.4.1.272.4.200.83.88.67.66.0.0"
+
+check_info["bintec_info"] = {
+    'check_function':          check_bintec_info,
+    'inventory_function':      inventory_bintec_info,
+    'service_description':     'Bintec Info',
+    # 1.3.6.1.4.1.272.4.1.31.0 S/N
+    # 1.3.6.1.4.1.272.4.1.26.0 SW Version
+    'snmp_info':               ('.1.3.6.1.4.1.272.4.1', ['26.0', '31.0']),
+    'snmp_scan_function':      lambda oid: oid(".1.3.6.1.2.1.1.2.0") == \
+                                        ".1.3.6.1.4.1.272.4.200.83.88.67.66.0.0",
+}

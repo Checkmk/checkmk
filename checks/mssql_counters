@@ -86,11 +86,11 @@ def check_mssql_counters_perc(item, params, info, perc_w_base = True):
             base = float(line[-1])
 
     if value is None or (perc_w_base and base is None):
-        return (3, 'UNKNOWN - Counter %s could not be found in agent output' % (item))
+        return (3, 'Counter %s could not be found in agent output' % (item))
 
     if perc_w_base:
         if base == 0:
-            return (3, 'UNKNOWN - Base is 0 (Value: %.2f)' % value)
+            return (3, 'Base is 0 (Value: %.2f)' % value)
         perc = value / base * 100.0
     else:
         perc = value
@@ -102,7 +102,7 @@ def check_mssql_counters_perc(item, params, info, perc_w_base = True):
         elif perc <= params[0]:
             state = 1
 
-    return (state, '%s - %d%%' % (nagios_state_names[state], perc), [(counter_name, perc)])
+    return (state, '%d%%' % (perc), [(counter_name, perc)])
 
 check_info['mssql_counters.cache_hits'] = {
     'check_function':      check_mssql_counters_perc,
@@ -134,9 +134,9 @@ def check_mssql_counters_transactions(item, params, info):
                 perfdata.append((counter, value))
 
     if output:
-        return (0, 'OK - %s' % ', '.join(output), perfdata)
+        return (0, '%s' % ', '.join(output), perfdata)
     else:
-        return (3, 'UNKNOWN - Counters %s could not be found in agent output' % (item))
+        return (3, 'Counters %s could not be found in agent output' % (item))
 
 check_info['mssql_counters.transactions'] = {
     'check_function':      check_mssql_counters_transactions,
@@ -180,9 +180,9 @@ def check_mssql_counters_locks(item, params, info):
                 perfdata.append((counter, value, warn, crit))
 
     if output:
-        return (state, '%s - %s' % (nagios_state_names[state], ', '.join(output)), perfdata)
+        return (state, ', '.join(output), perfdata)
     else:
-        return (3, 'UNKNOWN - Counters %s could not be found in agent output' % (item))
+        return (3, 'Counters %s could not be found in agent output' % (item))
 
 check_info['mssql_counters.locks'] = {
     'check_function':      check_mssql_counters_locks,
@@ -210,7 +210,7 @@ def check_mssql_file_sizes(item, params, info):
                 log_file_used_bytes = int(line[-1]) * 1024
 
     if data_file_bytes is None and log_file_bytes is None and log_file_used_bytes is None:
-        return (3, 'UNKNOWN - Counters %s could not be found in agent output' % (item))
+        return (3, 'Counters %s could not be found in agent output' % (item))
 
     output   = []
     perfdata = []
@@ -224,7 +224,7 @@ def check_mssql_file_sizes(item, params, info):
     perfdata.append(('log_files', log_file_bytes))
     perfdata.append(('log_files_used', log_file_used_bytes))
 
-    return (0, 'OK - %s' % ', '.join(output), perfdata)
+    return (0, '%s' % ', '.join(output), perfdata)
 
 
 check_info['mssql_counters.file_sizes'] = {

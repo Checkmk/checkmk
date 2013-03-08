@@ -63,11 +63,11 @@ def check_ups_capacity(item, params, info):
 
     info_text = "remaining capacity %d minutes (%d%%)" % (minutes_left, percent_fuel)
     if time_on_bat > crit:
-        return(2, "CRIT - On battery since %ds(!!) " % time_on_bat + info_text, perf)
+        return(2, "On battery since %ds(!!) " % time_on_bat + info_text, perf)
     elif time_on_bat > warn:
-        return(1, "WARN - On battery since %ds(!) " % time_on_bat + info_text, perf)
+        return(1, "On battery since %ds(!) " % time_on_bat + info_text, perf)
     else:
-        return(0, "OK - " + info_text, perf)
+        return(0, info_text, perf)
 
 check_info["ups_capacity"] = {
     "check_function"        : check_ups_capacity,

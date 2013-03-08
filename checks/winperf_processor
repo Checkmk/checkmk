@@ -77,16 +77,22 @@ def check_winperf_util(item, params, info):
             else:
                 num_txt = " / %d CPUs" % num_cpus
 
-            infotext = " - %0.2f%% used%s (in last %d secs)" % (used_perc, num_txt, timedif)
+            infotext = "%0.2f%% used%s (in last %d secs)" % (used_perc, num_txt, timedif)
 
             if crit != None and used_perc >= crit:
-                return (2, "CRIT" + infotext, perfdata)
+                return (2, infotext, perfdata)
             elif warn != None and used_perc >= warn:
-                return (1, "WARN" + infotext, perfdata)
+                return (1, infotext, perfdata)
             else:
-                return (0, "OK" + infotext, perfdata)
+                return (0, infotext, perfdata)
 
-    return (3, "UNKNOWN - counter for CPU (6) not found")
+    return (3, "counter for CPU (6) not found")
 
-check_info['winperf_processor.util'] = (check_winperf_util, "CPU utilization", 1, inventory_winperf_util)
-checkgroup_of['winperf_processor.util'] = "cpu_utilization"
+
+check_info["winperf_processor.util"] = {
+    'check_function':          check_winperf_util,
+    'inventory_function':      inventory_winperf_util,
+    'service_description':     'CPU utilization',
+    'has_perfdata':            True,
+    'group':                   'cpu_utilization',
+}

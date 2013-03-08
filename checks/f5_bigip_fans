@@ -61,27 +61,26 @@ def check_f5_bigip_fans(item, _no_params, info):
             if f5_bigip_fans_genitem(fanentry[0]) == item:
                 speed = int(fanentry[1])
                 warn, crit = f5_bigip_fans_default_levels
-                msgtxt = " - speed is %d rpm" % speed
+                msgtxt = "speed is %d rpm" % speed
                 if speed > warn:
-                    return (0, "OK" + msgtxt)
+                    return (0, msgtxt)
                 elif speed < crit:
-                    return (2, "CRITCAL" + msgtxt)
+                    return (2, msgtxt)
                 elif speed < warn:
-                    return (1, "WARNING" + msgtxt)
+                    return (1, msgtxt)
                 else:
-                    return (3, "UNKNOWN - could not detect speed")
+                    return (3, "could not detect speed")
 
-    return (3, "UNKNOWN - item not found in SNMP output")
-
-
-snmp_info["f5_bigip_fans"] = \
-    [ (".1.3.6.1.4.1.3375.2.1.3.2.1.2.1", [ 1, 3 ]),
-      (  ".1.3.6.1.4.1.3375.2.1.3.1.2.1", [ 1, 3 ]), ]
-
-
-check_info["f5_bigip_fans"] = (check_f5_bigip_fans, "FAN %s", 0, inventory_f5_bigip_fans )
+    return (3, "item not found in SNMP output")
 
 
 # Get ID and Speed from the CPU and chassis fan tables
-snmp_scan_functions["f5_bigip_fans"] = \
-    lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower()
+
+check_info["f5_bigip_fans"] = {
+    'check_function':          check_f5_bigip_fans,
+    'inventory_function':      inventory_f5_bigip_fans,
+    'service_description':     'FAN %s',
+    'snmp_info':               [('.1.3.6.1.4.1.3375.2.1.3.2.1.2.1', [1, 3]), ('.1.3.6.1.4.1.3375.2.1.3.1.2.1', [1, 3])],
+    'snmp_scan_function':      \
+     lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
+}

@@ -45,8 +45,10 @@ def check_local(item, params, info):
     return (3, "Check output not found in local checks")
 
 
-check_info['local'] = (
-        check_local,
-        "%s",
-        1,
-        inventory_local)
+
+check_info["local"] = {
+    'check_function':          check_local,
+    'inventory_function':      inventory_local,
+    'service_description':     '%s',
+    'has_perfdata':            True,
+}

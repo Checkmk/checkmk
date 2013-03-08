@@ -31,10 +31,10 @@ def check_jolokia_info(item, _no_params, info):
     for line in info:
         if line[0] == item:
             product, version, jolokia_version = line[1:]
-            return (0, "OK - %s %s (Jolokia version %s)" % (
+            return (0, "%s %s (Jolokia version %s)" % (
                 product.title(), version, jolokia_version))
 
-    return (3, "UNKNOWN - No data from agent, server might be down")
+    return (3, "No data from agent, server might be down")
 
 check_info["jolokia_info"] = {
     "service_description" : "JVM %s",

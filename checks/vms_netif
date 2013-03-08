@@ -42,10 +42,16 @@ def check_vms_netif(item, params, info):
                     timedif, items_per_sec = get_counter(countername, this_time, value)
                     perfdata.append( (dir, "%dc" % value) )
                     rates.append(items_per_sec)
-                return (0, "OK - packets/s: %.2f in / %.2f out " % (rates[0], rates[1]), perfdata)
+                return (0, "packets/s: %.2f in / %.2f out " % (rates[0], rates[1]), perfdata)
             except:
-                return (3, "UNKNOWN - invalid output from plugin")
+                return (3, "invalid output from plugin")
 
-    return (3, "UNKNOWN - network inteface not present")
+    return (3, "network inteface not present")
 
-check_info['vms_netif'] = (check_vms_netif, "NIC %s", 1, inventory_vms_netif)
+
+check_info["vms_netif"] = {
+    'check_function':          check_vms_netif,
+    'inventory_function':      inventory_vms_netif,
+    'service_description':     'NIC %s',
+    'has_perfdata':            True,
+}

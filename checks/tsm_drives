@@ -88,8 +88,8 @@ def check_tsm_drives(item, params, info):
                     monstate = 2
                     infotext += "(!!)"
 
-                return (monstate, nagios_state_names[monstate] + " - " + infotext)
-    return (3, "UNKNOWN - drive not found")
+                return (monstate, infotext)
+    return (3, "drive not found")
 
 
 

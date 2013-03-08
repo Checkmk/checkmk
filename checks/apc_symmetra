@@ -121,9 +121,8 @@ def check_apc(item, params, info):
     # create summary state
     worst_state = max([x[0] for x in single_states])
     info_text = ", ".join([x[1] for x in single_states])
-    state_text = { 0:"OK", 1:"WARN", 2:"CRIT" }.get(worst_state)
 
-    return (worst_state, "%s - %s" % (state_text, info_text), [x[2] for x in single_states if x[2] != None])
+    return (worst_state, info_text, [x[2] for x in single_states if x[2] != None])
 
 def inventory_apc(info):
     if len(info) > 0:

@@ -1266,9 +1266,11 @@ register_check_parameters(
                      ( 1000000000,  "1 GBit/s" ),
                      ( 10000000000, "10 GBit/s" ) ],
                   otherlabel = _("specify manually ->"),
+                  default_value = 16000000,
                   explicit = \
                       Integer(title = _("Other speed in bits per second"),
-                              label = _("Bits per second")))
+                              label = _("Bits per second"),
+                              size = 10))
              ),
              ( "assumed_speed_out",
                OptionalDropdownChoice(
@@ -1283,9 +1285,11 @@ register_check_parameters(
                      ( 1000000000,  "1 GBit/s" ),
                      ( 10000000000, "10 GBit/s" ) ],
                   otherlabel = _("specify manually ->"),
+                  default_value = 1500000,
                   explicit = \
                       Integer(title = _("Other speed in bits per second"),
-                              label = _("Bits per second")))
+                              label = _("Bits per second"),
+                              size = 12))
              ),
              ( "unit",
                RadioChoice(

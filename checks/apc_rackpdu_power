@@ -41,17 +41,22 @@ def check_apc_rackpdu_power(item, _no_params, info):
       if host == item:
          perfdata = [ ( "amperage", amperage, max ) ]
          if amperage >= max:
-            return (2, "CRIT - Amperage: %f - Overload possible" % amperage, perfdata)
+            return (2, "Amperage: %f - Overload possible" % amperage, perfdata)
          else:
-            return (0, "OK - Amperage: %f" % amperage, perfdata)
-   return (3, "UNKNOWN - Something went wrong")
+            return (0, "Amperage: %f" % amperage, perfdata)
+   return (3, "Something went wrong")
 
-check_info["apc_rackpdu_power"] = \
-      (check_apc_rackpdu_power, "PDU %s", 1, inventory_apc_rackpdu_power)
 
-snmp_info["apc_rackpdu_power"] = ( ".1.3.6.1.4.1.318.1.1.12", [ "1.1.0", "2.3.1.1.2.1", "2.2.1.1.3.1", "2.2.1.1.4.1" ] )
 
 # Look for the APC management module and then dive into it's rackpdu tree
-snmp_scan_functions["apc_rackpdu_power"] = lambda oid: \
-    oid(".1.3.6.1.2.1.1.1.0").lower().startswith("apc web/snmp") \
-    and oid(".1.3.6.1.4.1.318.1.1.12.1.1.0")
+
+check_info["apc_rackpdu_power"] = {
+    'check_function':          check_apc_rackpdu_power,
+    'inventory_function':      inventory_apc_rackpdu_power,
+    'service_description':     'PDU %s',
+    'has_perfdata':            True,
+    'snmp_info':               ('.1.3.6.1.4.1.318.1.1.12', ['1.1.0', '2.3.1.1.2.1', '2.2.1.1.3.1', '2.2.1.1.4.1']),
+    'snmp_scan_function':      lambda oid: \
+     oid(".1.3.6.1.2.1.1.1.0").lower().startswith("apc web/snmp") \
+     and oid(".1.3.6.1.4.1.318.1.1.12.1.1.0"),
+}

@@ -41,13 +41,13 @@ def check_ups_out_load(item, params, info):
 	 	(power, warn, crit)
 
 	    if power >= crit:
-		return (2, "CRIT" + infotext, perfdata)
+		return (2, infotext, perfdata)
 	    elif power >= warn:
-		return (1, "WARN" + infotext, perfdata)
+		return (1, infotext, perfdata)
 	    else:
-		return (0, "OK" + infotext, perfdata)
+		return (0, infotext, perfdata)
 
-    return (3, "UNKNOWN - Phase %s not found in SNMP output" % item)
+    return (3, "Phase %s not found in SNMP output" % item)
 
 check_info['ups_out_load'] = {
   "inventory_function"  : inventory_ups_out_load,

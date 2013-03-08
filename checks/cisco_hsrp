@@ -118,9 +118,9 @@ def check_cisco_hsrp(item, params, info):
                 state = 2
                 msgtxt = "Redundancy Group %s has status %s" % ( hsrp_grp, hsrp_states[hsrp_state])
 
-            return (state, nagios_state_names[state] + " - " + msgtxt)
+            return (state, msgtxt)
 
-    return (3, "UNKNOWN - HSRP Group %s not found in Agent output" % hsrp_grp_wanted )
+    return (3, "HSRP Group %s not found in Agent output" % hsrp_grp_wanted )
 
 
 

@@ -42,18 +42,23 @@ def check_hp_proliant_psu(item, params, info):
             snmp_status = hp_proliant_psu_status_map[int(status)]
             status      = hp_proliant_status2nagios_map[snmp_status]
 
-            return (status, '%s - PSU in chassis %s, bay %s is in state "%s"' %
-                         (nagios_state_names[status], chassis, bay, snmp_status))
-    return (3, "UNKNOWN - item not found in snmp data")
+            return (status, 'PSU in chassis %s, bay %s is in state "%s"' %
+                         (chassis, bay, snmp_status))
+    return (3, "item not found in snmp data")
 
-
-check_info['hp_proliant_psu'] = (check_hp_proliant_psu, "HW PSU %s", 0,  inventory_hp_proliant_psu)
-snmp_info['hp_proliant_psu']  = ( ".1.3.6.1.4.1.232.6.2.9.3.1", [ "1", # cpqHeFltTolPowerSupplyChassis
-                                                                  "2", # cpqHeFltTolPowerSupplyBay
-                                                                  "3", # cpqHeFltTolPowerSupplyPresent
-                                                                  "4", # cpqHeFltTolPowerSupplyCondition
-                                                                  "9", # cpqHeFltTolPowerSupplyRedundant
-                                                                ] )
-
-snmp_scan_functions['hp_proliant_psu'] = \
-    lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower()
+check_info["hp_proliant_psu"] = {
+    'check_function':          check_hp_proliant_psu,
+    'inventory_function':      inventory_hp_proliant_psu,
+    'service_description':     'HW PSU %s',
+    'snmp_info':               (
+        ".1.3.6.1.4.1.232.6.2.9.3.1", [
+            "1", # cpqHeFltTolPowerSupplyChassis
+            "2", # cpqHeFltTolPowerSupplyBay
+            "3", # cpqHeFltTolPowerSupplyPresent
+            "4", # cpqHeFltTolPowerSupplyCondition
+            "9", # cpqHeFltTolPowerSupplyRedundant
+        ]
+    ),
+    'snmp_scan_function':      \
+         lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower(),
+}

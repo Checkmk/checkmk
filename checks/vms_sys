@@ -62,16 +62,21 @@ def check_vms_mem(item, params, info):
 
                 used_txt = "%.1f%% of RAM (%.2f of %.2f GB) used by processes" % (memory_used_perc, mem_used_mb/1024, mem_total_mb/1024)
                 if memory_used_perc >= crit:
-                    return (2, 'CRIT - %s (critical at %.1f%%)' % (used_txt, crit), perfdata)
+                    return (2, '%s (critical at %.1f%%)' % (used_txt, crit), perfdata)
                 elif memory_used_perc >= warn:
-                    return (1, 'WARN - %s (warning at %.1f%%)' % (used_txt, warn), perfdata)
+                    return (1, '%s (warning at %.1f%%)' % (used_txt, warn), perfdata)
                 else:
-                    return (0, 'OK - %s' % used_txt, perfdata)
+                    return (0, '%s' % used_txt, perfdata)
 
     except 1:
-        return (3, "UNKNOWN - invalid output from plugin")
+        return (3, "invalid output from plugin")
 
-check_info['vms_sys.mem'] =  (check_vms_mem, "Memory used", 1,  inventory_vms_mem)
+check_info["vms_sys.mem"] = {
+    'check_function':          check_vms_mem,
+    'inventory_function':      inventory_vms_mem,
+    'service_description':     'Memory used',
+    'has_perfdata':            True,
+}
 
 # <<<vms_sys>>>
 #      sum  us   sy   wa   sy   sy   sy
@@ -110,7 +115,7 @@ def check_vms_cpu_utilization(item, param, info):
             wa += float(line[4])
             count += 1
     if count == 0:
-        return (3, "UNKNOWN - incomplete data from host")
+        return (3, "incomplete data from host")
 
     if count == 1:
         cputext = "1 CPU"
@@ -125,7 +130,12 @@ def check_vms_cpu_utilization(item, param, info):
           ( "user",   "%.3f" % user_perc ),
           ( "system", "%.3f" % system_perc ),
           ( "wait",   "%.3f" % wait_perc ) ]
-    return (0, "OK - user: %2.0f%%, system: %2.0f%%, wait: %2.0f%% (%s)"
+    return (0, "user: %2.0f%%, system: %2.0f%%, wait: %2.0f%% (%s)"
         % (user_perc, system_perc, wait_perc, cputext), perfdata)
 
-check_info['vms_sys.util'] =  (check_vms_cpu_utilization, "CPU utilization", 1,  inventory_vms_cpu_utilization)
+check_info["vms_sys.util"] = {
+    'check_function':          check_vms_cpu_utilization,
+    'inventory_function':      inventory_vms_cpu_utilization,
+    'service_description':     'CPU utilization',
+    'has_perfdata':            True,
+}

@@ -53,28 +53,27 @@ def check_f5_bigip_pool(item, params, info):
             pool_def_members = int(line[2])
 
             if pool_act_members == pool_def_members or pool_act_members > warn_num_members:
-                return (0, "OK - all members online")
+                return (0, "all members online")
             elif pool_act_members <= crit_num_members:
-                return (2, "CRIT - only %s pool member(s) left" % pool_act_members)
+                return (2, "only %s pool member(s) left" % pool_act_members)
             elif pool_act_members == 0:
-                return (2, "CRIT - no pool members left")
+                return (2, "no pool members left")
             elif pool_act_members <= warn_num_members:
-                return (1, "WARN - only %i of %i pool members are up" % (pool_act_members, pool_def_members))
+                return (1, "only %i of %i pool members are up" % (pool_act_members, pool_def_members))
             else:
-                return (3, "UNKNOWN output for pool %s" % item)
-    return (3, "UNKNOWN - unexpected Output from SNMP Agent")
+                return (3, "Unhandled output for pool %s" % item)
+    return (3, "unexpected Output from SNMP Agent")
 
-
-snmp_info["f5_bigip_pool"] = \
-    ( ".1.3.6.1.4.1.3375.2.2.5.1.2.1", [
-        1,   # ltmPoolEntry
-        8,   # ltmPoolActiveMemberCnt
-        23,  # ltmPoolMemberCnt
-      ])
-
-
-check_info["f5_bigip_pool"] = (check_f5_bigip_pool, "Load Balancing Pool %s", 0, inventory_f5_bigip_pool )
-
-
-snmp_scan_functions["f5_bigip_pool"] = \
-    lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower()
+check_info["f5_bigip_pool"] = {
+    'check_function':          check_f5_bigip_pool,
+    'inventory_function':      inventory_f5_bigip_pool,
+    'service_description':     'Load Balancing Pool %s',
+    'snmp_info':               ('.1.3.6.1.4.1.3375.2.2.5.1.2.1', [
+         1, # ltmPoolEntry
+         8, # ltmPoolActiveMemberCnt
+        23, # ltmPoolMemberCnt
+    ]),
+    'snmp_scan_function':      \
+     lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") \
+        and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
+}

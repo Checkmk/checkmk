@@ -131,6 +131,12 @@ def check_hpux_if(item, params, info):
     return check_if_common(item, params, hpux_convert_to_if64(info))
 
 check_includes['hpux_if'] = [ "if.include" ]
-check_info['hpux_if'] = (check_hpux_if, "NIC %s", 1,  inventory_hpux_if )
-checkgroup_of['hpux_if'] = "if"
-check_default_levels['hpux_if'] = "if_default_levels"
+
+check_info["hpux_if"] = {
+    'check_function':          check_hpux_if,
+    'inventory_function':      inventory_hpux_if,
+    'service_description':     'NIC %s',
+    'has_perfdata':            True,
+    'group':                   'if',
+    'default_levels_variable': 'if_default_levels',
+}

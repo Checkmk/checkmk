@@ -36,10 +36,16 @@
 # FJDARY-E100::fjdaryScuStatus.0 = INTEGER: normal(1)
 # FJDARY-E100::fjdaryScuStatus.1 = INTEGER: normal(1)
 
-check_info['fjdarye100_syscaps'] = (check_fjdarye_item, "System Capacitor Unit %s", 0,  inventory_fjdarye_item)
 check_includes['fjdarye100_syscaps'] = ["fjdarye.include"]
 # 1: fjdaryScuIndex, 3: fjdaryScuStatus
-snmp_info['fjdarye100_syscaps'] = (".1.3.6.1.4.1.211.1.21.1.100.2.9.2.1", [ 1, 3 ])
 
-snmp_scan_functions['fjdarye100_syscaps'] \
-        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.100"
+
+check_info["fjdarye100_syscaps"] = {
+    'check_function':          check_fjdarye_item,
+    'inventory_function':      inventory_fjdarye_item,
+    'service_description':     'System Capacitor Unit %s',
+    # 1: fjdaryScuIndex, 3: fjdaryScuStatus
+    'snmp_info':               ('.1.3.6.1.4.1.211.1.21.1.100.2.9.2.1', [1, 3]),
+    'snmp_scan_function':      \
+          lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.100",
+}

@@ -40,10 +40,10 @@ def inventory_bonding(parsed):
 
 def check_bonding(item, params, parsed):
     if item not in parsed:
-        return (3, "UNKNOWN - no such bonding interface")
+        return (3, "no such bonding interface")
     status = parsed[item]
     if status["status"] != "up":
-        return 2, "CRIT - interface is " + status["status"]
+        return 2, "interface is " + status["status"]
 
     infos = [ "mode: " + status["mode"] ]
     state = 0
@@ -76,6 +76,6 @@ def check_bonding(item, params, parsed):
                 infos.append("expected is %s" % expected_active)
                 state = 1
 
-    return state, nagios_state_names[state] + " - " + ", ".join(infos)
+    return state, ", ".join(infos)
 
 

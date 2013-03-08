@@ -109,12 +109,18 @@ def check_megaraid_pdisks(item, target_state, info):
     info = megaraid_pdisks_parse(info)
     for adapter, enclosure, enc_dev_id, slot, state, name in info:
         if "%s%s/%s" % (adapter, enclosure, slot) == item:
-           infotext = " - %s (%s)" % (state, name)
+           infotext = "%s (%s)" % (state, name)
            if state == target_state:
-               return (0, "OK" + infotext)
+               return (0, infotext)
            else:
-               return (2, "CRIT" + infotext)
-    return (3, "UNKNOWN - No disk in encl/slot %s found" % item)
+               return (2, infotext)
+    return (3, "No disk in encl/slot %s found" % item)
 
-check_info['megaraid_pdisks'] = (check_megaraid_pdisks, "RAID PDisk Adapt/Enc/Sl %s", 1, inventory_megaraid_pdisks)
-checkgroup_of['megaraid_pdisks'] = "raid_disk"
+
+check_info["megaraid_pdisks"] = {
+    'check_function':          check_megaraid_pdisks,
+    'inventory_function':      inventory_megaraid_pdisks,
+    'service_description':     'RAID PDisk Adapt/Enc/Sl %s',
+    'has_perfdata':            True,
+    'group':                   'raid_disk',
+}

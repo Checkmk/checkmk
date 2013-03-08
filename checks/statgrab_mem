@@ -55,26 +55,32 @@ def check_statgrab_mem(item, params, info):
         perfdata.append(('memused', str(totalused_mb)+'MB', int(warn/100.0 * totalmem_mb),
                     int(crit/100.0 * totalmem_mb), 0, totalvirt_mb))
         if totalused_perc >= crit:
-            return (2, 'CRIT - %.1f%% of RAM (%d MB) used by processes (critical at %.1f%%)' %
+            return (2, '%.1f%% of RAM (%d MB) used by processes (critical at %.1f%%)' %
                     (totalused_perc, totalused_mb, crit), perfdata)
         elif totalused_perc >= warn:
-            return (1, 'WARN - %.1f%% of RAM (%d MB) used by processes (warning at %.1f%%)' %
+            return (1, '%.1f%% of RAM (%d MB) used by processes (warning at %.1f%%)' %
                     (totalused_perc, totalused_mb, warn), perfdata)
         else:
-            return (0, 'OK - %.1f%% of RAM (%d MB) used by processes' %
+            return (0, '%.1f%% of RAM (%d MB) used by processes' %
                     (totalused_perc, totalused_mb), perfdata)
 
     else:
         perfdata.append(('memused', str(totalused_mb)+'MB', warn, crit, 0, totalvirt_mb))
         if totalused_mb >= crit:
-            return (2, 'CRIT - %d MB of RAM (%.1f%%) used by processes (critical at %d MB)' %
+            return (2, '%d MB of RAM (%.1f%%) used by processes (critical at %d MB)' %
                     (totalused_mb, totalused_perc, crit), perfdata)
         elif totalused_mb >= warn:
-            return (1, 'WARN - %d MB of RAM (%.1f%%) used by processes (warning at %d MB)' %
+            return (1, '%d MB of RAM (%.1f%%) used by processes (warning at %d MB)' %
                     (totalused_mb, totalused_perc, warn), perfdata)
         else:
-            return (0, 'OK - %d MB of RAM (%.1f%%) used by processes' %
+            return (0, '%d MB of RAM (%.1f%%) used by processes' %
                     (totalused_mb, totalused_perc), perfdata)
 
 
-check_info['statgrab_mem'] = (check_statgrab_mem, "Memory used", 1, inventory_statgrab_mem)
+
+check_info["statgrab_mem"] = {
+    'check_function':          check_statgrab_mem,
+    'inventory_function':      inventory_statgrab_mem,
+    'service_description':     'Memory used',
+    'has_perfdata':            True,
+}

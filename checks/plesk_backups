@@ -37,18 +37,18 @@ def check_plesk_backups(item, params, info):
 
         if len(line) != 5 or line[1] != '0':
             if line[1] == '2':
-                return (3, 'UNKNOWN - Error in agent (%s)' % ' '.join(line[1:]))
+                return (3, 'Error in agent (%s)' % ' '.join(line[1:]))
 
             elif line[1] == '4':
                 state = params.get('no_backup_configured_state', 1)
-                return (state, '%s - No backup configured' % nagios_state_names[state])
+                return (state, 'No backup configured')
 
             elif line[1] == '5':
                 state = params.get('no_backup_found_state', 1)
-                return (state, '%s - No backup found' % nagios_state_names[state])
+                return (state, 'No backup found')
 
             else:
-                return (3, 'UNKNOWN - Unexpected line %r' % line)
+                return (3, 'Unexpected line %r' % line)
 
         domain, rc, timestamp, size, total_size = line
         size       = saveint(size)
@@ -105,9 +105,9 @@ def check_plesk_backups(item, params, info):
         output.append('Total Size: %s%s' % (get_bytes_human_readable(total_size), status_txt))
         perfdata.append(('total_size', total_size))
 
-        return (status, 'OK - %s' % ', '.join(output), perfdata)
+        return (status, ', '.join(output), perfdata)
 
-    return (3, 'UNKNOWN - Domain not found')
+    return (3, 'Domain not found')
 
 
 check_info['plesk_backups'] = {

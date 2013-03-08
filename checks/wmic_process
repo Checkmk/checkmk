@@ -29,7 +29,7 @@ def check_wmic_process(item, params, info):
     name, memwarn, memcrit, pagewarn, pagecrit, cpuwarn, cpucrit = params
     count, mem, page, userc, kernelc = 0, 0, 0, 0, 0
     if len(info) == 0:
-        return (3, "UNKNOWN - No output from agent in section wmic_process")
+        return (3, "No output from agent in section wmic_process")
     legend = info[0]
     for line in info[1:]:
         psinfo = dict(zip(legend, line))
@@ -54,7 +54,7 @@ def check_wmic_process(item, params, info):
             ("kernel", kernel_perc, cpuwarn,  cpucrit,  0, 100) ]
 
     infos = [
-       " - %d processes" % count,
+       "%d processes" % count,
        "", # 1
        ", %.1fMB RAM" % mem_mb,
        "", # 3
@@ -91,7 +91,10 @@ def check_wmic_process(item, params, info):
     else:
         state = 0
 
-    infotext = "".join(infos)
-    return (state, nagios_state_names[state] + infotext, perfdata)
+    return (state, "".join(infos), perfdata)
 
-check_info['wmic_process'] = (check_wmic_process, "proc_%s", 1, no_inventory_possible)
+check_info["wmic_process"] = {
+    'check_function':          check_wmic_process,
+    'service_description':     'proc_%s',
+    'has_perfdata':            True,
+}

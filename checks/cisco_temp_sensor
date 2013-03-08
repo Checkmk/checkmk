@@ -146,18 +146,18 @@ def check_cisco_temp_sensor(item, _no_params, info):
         if item == descr:
             warn, crit = levels
 	    if sensorstate == "2":
-	       return (3, "UNKNOWN - data from sensor currently not available")
+	       return (3, "data from sensor currently not available")
             elif sensorstate == "3":
-	       return (3, "UNKNOWN - sensor is broken")
+	       return (3, "sensor is broken")
             if value >= crit:
 	       state = 2
             elif value >= warn:
 	       state = 1
 	    else:
 	       state = 0
-	    return (state, nagios_state_names[state] + " - %dC (levels at %d/%d)" % (value, warn, crit), [
+	    return (state, "%dC (levels at %d/%d)" % (value, warn, crit), [
 	           ( "temperature", value, warn, crit ) ])
-    return (3, "UNKNOWN - sensor not found in SNMP data")
+    return (3, "sensor not found in SNMP data")
 
 check_info['cisco_temp_sensor'] = (check_cisco_temp_sensor, "Temperature %s", 1,  inventory_cisco_temp_sensor)
 

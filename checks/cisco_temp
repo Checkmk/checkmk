@@ -58,29 +58,29 @@ def check_cisco_temp(item, _no_params, info):
     for name, state in info:
         if name == item:
             if state == '1':
-                return (0, "OK - status is OK")
+                return (0, "status is OK")
             elif state == '2':
-                return (1, "WARN - status is WARNING")
+                return (1, "status is WARNING")
             elif state == '3':
-                return (2, "CRIT - status is CRITICAL")
+                return (2, "status is CRITICAL")
             elif state == '4':
-                return (2, "CRIT - status is SHUTDOWN")
+                return (2, "status is SHUTDOWN")
             elif state == '5':
-                return (3, "UNKNOWN - sensor not present")
+                return (3, "sensor not present")
             elif state == '6':
-                return (3, "UNKNOWN - sensor value out of range")
+                return (3, "sensor value out of range")
             else:
-                return (3, "UNKNOWN - invalid state '%s'" % state)
+                return (3, "invalid state '%s'" % state)
 
-    return (3, "UNKNOWN - sensor not found in SNMP output")
+    return (3, "sensor not found in SNMP output")
 
-check_info["cisco_temp"] = ( check_cisco_temp, "Temperature %s", 0, inventory_cisco_temp )
-
-snmp_info["cisco_temp"] = \
-   ( ".1.3.6.1.4.1.9.9.13.1.3.1", [ "2", "6" ] )
-
-snmp_scan_functions["cisco_temp"] = \
-    lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
-           not oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*")
-
-checkgroup_of["cisco_temp"] = "temperature_auto"
+check_info["cisco_temp"] = {
+    'check_function':          check_cisco_temp,
+    'inventory_function':      inventory_cisco_temp,
+    'service_description':     'Temperature %s',
+    'snmp_info':               ('.1.3.6.1.4.1.9.9.13.1.3.1', ['2', '6']),
+    'snmp_scan_function':      \
+     lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
+            not oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*"),
+    'group':                   'temperature_auto',
+}

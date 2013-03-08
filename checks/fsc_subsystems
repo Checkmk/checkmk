@@ -36,15 +36,20 @@ def check_fsc_subsystems(item, params, info):
         status = int(line[1])
         statusname = { 1:'ok', 2:'degraded', 3:'error', 4:'failed', 5:'unknown-init'}.get(status, 'invalid')
         if status == 1 or status == 5:
-            return (0, "OK - %s - no problems" % statusname)
+            return (0, "%s - no problems" % statusname)
         elif status >= 2 and status <= 4:
-            return (2, "CRIT - %s" % statusname)
+            return (2, "%s" % statusname)
         else:
-            return (3, "UNKNOWN - unknown status %d" % status)
+            return (3, "unknown status %d" % status)
 
-    return (3, "UNKNOWN - Subsystem %s not found in SNMP data" % item)
+    return (3, "Subsystem %s not found in SNMP data" % item)
 
-check_info['fsc_subsystems'] = (check_fsc_subsystems, "FSC %s", 0,  inventory_fsc_subsystems)
-snmp_info['fsc_subsystems'] = ( ".1.3.6.1.4.1.231.2.10.2.11.3.1.1", [ 2, 3 ])
-snmp_scan_functions['fsc_subsystems'] = lambda oid: \
-    oid(".1.3.6.1.4.1.231.2.10.2.1.1.0")
+
+check_info["fsc_subsystems"] = {
+    'check_function':          check_fsc_subsystems,
+    'inventory_function':      inventory_fsc_subsystems,
+    'service_description':     'FSC %s',
+    'snmp_info':               ('.1.3.6.1.4.1.231.2.10.2.11.3.1.1', [2, 3]),
+    'snmp_scan_function':      lambda oid: \
+     oid(".1.3.6.1.4.1.231.2.10.2.1.1.0"),
+}

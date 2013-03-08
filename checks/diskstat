@@ -128,6 +128,12 @@ def inventory_diskstat(info):
 def check_diskstat(item, params, info):
     return check_diskstat_generic(item, params, int(info[0][0]), linux_diskstat_convert(info))
 
-check_info['diskstat'] = (check_diskstat, "Disk IO %s", 1,  inventory_diskstat)
-checkgroup_of["diskstat"] = "disk_io"
 
+
+check_info["diskstat"] = {
+    'check_function':          check_diskstat,
+    'inventory_function':      inventory_diskstat,
+    'service_description':     'Disk IO %s',
+    'has_perfdata':            True,
+    'group':                   'disk_io',
+}

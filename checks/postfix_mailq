@@ -81,7 +81,7 @@ def postfix_mailq_to_bytes(value, uom):
 def check_postfix_mailq(item, params, info):
     for line in info:
         if " ".join(line[-2:]) == 'is empty':
-            return (0, 'OK - The mailqueue is empty ', [ ('length', 0, params[0], params[1]),
+            return (0, 'The mailqueue is empty ', [ ('length', 0, params[0], params[1]),
                                                          ('size', '0') ])
         elif line[0] == '--' or line[0:2] == [ 'Total', 'requests:']:
             if line[0] == '--':
@@ -95,15 +95,21 @@ def check_postfix_mailq(item, params, info):
                          ('size', '%d' % size) ]
 
             if len > params[1]:
-                return (2, 'CRIT - Mailqueue length is %d '
+                return (2, 'Mailqueue length is %d '
                            '(More than threshold: %d)' % (len, params[0]), perfdata)
             elif len > params[0]:
-                return (1, 'WARN - Mailqueue length is %d '
+                return (1, 'Mailqueue length is %d '
                            '(More than threshold: %d)' % (len, params[0]), perfdata)
             else:
-                return (0, 'OK - Mailqueue length is %d ' % len, perfdata)
+                return (0, 'Mailqueue length is %d ' % len, perfdata)
 
-    return (3, 'UNKNOWN - Could not find summarizing line in output')
+    return (3, 'Could not find summarizing line in output')
 
-check_info['postfix_mailq'] = (check_postfix_mailq, "Postfix Queue", 1, inventory_postfix_mailq)
-checkgroup_of["postfix_mailq"] = "mailqueue_length"
+
+check_info["postfix_mailq"] = {
+    'check_function':          check_postfix_mailq,
+    'inventory_function':      inventory_postfix_mailq,
+    'service_description':     'Postfix Queue',
+    'has_perfdata':            True,
+    'group':                   'mailqueue_length',
+}

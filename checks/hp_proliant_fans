@@ -73,22 +73,28 @@ def check_hp_proliant_fans(item, params, info):
                 detailOutput = ', RPM: %s' % currentSpeed
                 perfdata = [('temp', int(currentSpeed))]
 
-            return (status, '%s - FAN Sensor %s "%s", Speed is %s, State is %s%s' %
-                         (nagios_state_names[status], index, label, hp_proliant_speed_map[int(speed)],
+            return (status, 'FAN Sensor %s "%s", Speed is %s, State is %s%s' %
+                         (index, label, hp_proliant_speed_map[int(speed)],
                           snmp_status, detailOutput),
                     perfdata)
-    return (3, "UNKNOWN - item not found in snmp data")
+    return (3, "item not found in snmp data")
 
-
-check_info['hp_proliant_fans'] = (check_hp_proliant_fans, "HW FAN%s", 1,  inventory_hp_proliant_fans)
-snmp_info['hp_proliant_fans']  = ( ".1.3.6.1.4.1.232.6.2.6.7.1", [ "1",  # cpqHeFltTolFanChassis
-                                                                   "2",  # cpqHeFltTolFanIndex
-                                                                   "3",  # cpqHeFltTolFanLocale
-                                                                   "4",  # cpqHeFltTolFanPresent
-                                                                   "6",  # cpqHeFltTolFanSpeed
-                                                                   "9",  # cpqHeFltTolFanCondition
-                                                                   "12", # cpqHeFltTolFanCurrentSpeed
-                                                                ] )
-
-snmp_scan_functions['hp_proliant_fans'] = \
-    lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower()
+check_info["hp_proliant_fans"] = {
+    'check_function':          check_hp_proliant_fans,
+    'inventory_function':      inventory_hp_proliant_fans,
+    'service_description':     'HW FAN%s',
+    'has_perfdata':            True,
+    'snmp_info':               (
+        ".1.3.6.1.4.1.232.6.2.6.7.1", [
+            "1", # cpqHeFltTolFanChassis
+            "2", # cpqHeFltTolFanIndex
+            "3", # cpqHeFltTolFanLocale
+            "4", # cpqHeFltTolFanPresent
+            "6", # cpqHeFltTolFanSpeed
+            "9", # cpqHeFltTolFanCondition
+           "12", # cpqHeFltTolFanCurrentSpeed
+        ]
+    ),
+    'snmp_scan_function': \
+         lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower(),
+}

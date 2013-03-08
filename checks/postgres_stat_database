@@ -62,7 +62,7 @@ def parse_postgres_stat(info):
 def check_postgres_stat_database(item, params, info):
     parsed = parse_postgres_stat(info)
     if item not in parsed:
-        return (3, "UNKNOWN - Database not found")
+        return (3, "Database not found")
     stats = parsed[item]
 
     status = 0
@@ -101,7 +101,7 @@ def check_postgres_stat_database(item, params, info):
     if one_wrapped:
         raise one_wrapped
 
-    return (status, nagios_state_names[status] + " - " + ", ".join(infos), perfdata)
+    return (status, ", ".join(infos), perfdata)
 
 check_info['postgres_stat_database'] = {
     "check_function"          : check_postgres_stat_database,
@@ -115,11 +115,11 @@ check_info['postgres_stat_database'] = {
 def check_postgres_stat_database_size(item, _no_params, info):
     parsed = parse_postgres_stat(info)
     if item not in parsed:
-        return (3, "UNKNOWN - Database not found")
+        return (3, "Database not found")
     stats = parsed[item]
     size = stats["datsize"]
 
-    return (0, "OK - Size is %s" % get_bytes_human_readable(size), [("size", size)])
+    return (0, "Size is %s" % get_bytes_human_readable(size), [("size", size)])
 
 
 check_info['postgres_stat_database.size'] = {

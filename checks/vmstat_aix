@@ -42,11 +42,16 @@ def check_vmstat_aix(item, params, info):
                          ( 'sy', "%d%%" % sy, '', '', '0', '100' ),
                          ( 'id', "%d%%" % id, '', '', '0', '100' ),
                          ( 'wa', "%d%%" % wa, '', '', '0', '100' ) ]
-            return (0, "OK - %d%%(us) %d%%(sy) %d%%(id) %d%%(wa)" % (us, sy, id, wa), perfdata)
+            return (0, "%d%%(us) %d%%(sy) %d%%(id) %d%%(wa)" % (us, sy, id, wa), perfdata)
         else:
-            return (3, "UNKNOWN - item %s not defined" % item)
+            return (3, "item %s not defined" % item)
     except:
-        return (3, "UNKNOWN - invalid output from plugin")
+        return (3, "invalid output from plugin")
 
 
-check_info['vmstat_aix'] = (check_vmstat_aix, "vmstat %s", 1,  no_inventory_possible)
+
+check_info["vmstat_aix"] = {
+    'check_function':          check_vmstat_aix,
+    'service_description':     'vmstat %s',
+    'has_perfdata':            True,
+}

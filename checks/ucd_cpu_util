@@ -52,11 +52,11 @@ def check_ucd_cpu_util(item, params, info):
             some_counter_wrapped = True
 
     if some_counter_wrapped:
-        return (0, "OK - first check, no counter data yet")
+        return (0, "first check, no counter data yet")
 
     total = sum(rates)
     if total == 0:
-        return (3, "UNKNOWN - counters have not moved since last check, looks like state fake data")
+        return (3, "counters have not moved since last check, looks like state fake data")
 
     parts = [ r/total for r in rates ]
     user = 100 * (parts[0] + parts[1])
@@ -68,28 +68,36 @@ def check_ucd_cpu_util(item, params, info):
           ( "system", "%.3f" % system ),
           ( "wait",   "%.3f" % wait ) ]
 
-    result = (0, "OK")
+    status = 0
+    status_txt = ''
     try:
         warn, crit = params
         if wait >= crit:
-            result = (2, "CRIT - (wait too large)")
+            status = 2
+            status_txt = ' wait too large (!!)'
         elif wait >= warn:
-            result = (1, "WARN - (wait too large)")
+            status = 1
+            status_txt = ' wait too large (!)'
     except:
         pass
 
-    return (result[0], result[1] + " - user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" %
-            (user, system, wait), perfdata)
+    return (status, "user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%%s" %
+            (user, system, wait, status_txt), perfdata)
 
-
-check_info['ucd_cpu_util'] = (check_ucd_cpu_util, "CPU utilization", 1,  inventory_ucd_cpu_util)
-snmp_info['ucd_cpu_util'] = ( ".1.3.6.1.4.1.2021.11", [ 50, 51, 52, 53, 54, 55, 56 ])
 
 # We are not sure how to safely detect the UCD SNMP Daemon. We know that
 # it is mainly used on Linux, but not only. But fetching and OID outside
 # of the info area for scanning is not a good idea. It will slow down
 # scans for *all* hosts.
-snmp_scan_functions['ucd_cpu_util'] = \
-    lambda oid: "linux" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
-                "CMC-TC" in oid(".1.3.6.1.2.1.1.1.0")
-checkgroup_of['ucd_cpu_util'] = "cpu_iowait"
+
+check_info["ucd_cpu_util"] = {
+    'check_function':          check_ucd_cpu_util,
+    'inventory_function':      inventory_ucd_cpu_util,
+    'service_description':     'CPU utilization',
+    'has_perfdata':            True,
+    'snmp_info':               ('.1.3.6.1.4.1.2021.11', [50, 51, 52, 53, 54, 55, 56]),
+    'snmp_scan_function':      \
+     lambda oid: "linux" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
+                 "CMC-TC" in oid(".1.3.6.1.2.1.1.1.0"),
+    'group':                   'cpu_iowait',
+}

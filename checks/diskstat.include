@@ -217,7 +217,7 @@ def check_diskstat_generic(item, params, this_time, info):
         if line[0] == item:
             return check_diskstat_line(this_time, item, params, line)
 
-    return (3, "UNKNOWN - device missing")
+    return (3, "device missing")
 
 
 # This is the legacy version of diskstat as used in <= 1.1.10.
@@ -230,11 +230,11 @@ def check_diskstat_old(item, params, this_time, info):
     elif item == 'write':
         index = 2 # sectors written
     else:
-        return (3, "UNKNOWN - invalid item %s" % (item,))
+        return (3, "invalid item %s" % (item,))
 
     this_val  = sum([int(x[index]) for x in info if ' ' not in x[0]])
 
     timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
     mb_per_s = per_sec / 2048.0    # Diskstat output is in sectors a 512 Byte
     perfdata = [ (item, "%dc" % this_val ) ]
-    return (0, "OK - %.1fMB/s (in last %d secs)" % (mb_per_s, timedif), perfdata)
+    return (0, "%.1fMB/s (in last %d secs)" % (mb_per_s, timedif), perfdata)

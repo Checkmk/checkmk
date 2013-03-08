@@ -55,25 +55,24 @@ def check_f5_bigip_cluster(item, _no_params, info):
     # 3     both systems outdated,  crit   (config split brain)
 
     if statusid == "0":
-        return (0, "OK - "        + statustxt)
+        return (0, statustxt)
     elif statusid == "-1":
-        return (2, "CRIT - "      + statustxt)
+        return (2, statustxt)
     elif statusid == "1" or statusid == "2":
-        return (1, "WARN - "   + statustxt)
+        return (1, statustxt)
     elif statusid == "3":
-        return (2, "CRIT - "      + statustxt)
+        return (2, statustxt)
     else:
-        return (3, "UNKNOWN - unexpected Output from SNMP Agent")
+        return (3, "unexpected output from SNMP Agent")
 
-
-snmp_info["f5_bigip_cluster"] = \
-    ( ".1.3.6.1.4.1.3375.2.1.1.1.1", [
-        6,     # sysAttrConfigsyncState
-      ])
-
-
-check_info["f5_bigip_cluster"] = (check_f5_bigip_cluster, "Config Sync status", 0, inventory_f5_bigip_cluster )
-
-
-snmp_scan_functions["f5_bigip_cluster"] = \
-    lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower()
+check_info["f5_bigip_cluster"] = {
+    'check_function':          check_f5_bigip_cluster,
+    'inventory_function':      inventory_f5_bigip_cluster,
+    'service_description':     'Config Sync status',
+    'snmp_info':               ('.1.3.6.1.4.1.3375.2.1.1.1.1', [
+        6 # sysAttrConfigsyncState
+    ]),
+    'snmp_scan_function':      \
+     lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") \
+        and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
+}

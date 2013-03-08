@@ -67,15 +67,15 @@ def check_cpu_threads(item, params, info):
     try:
         nthreads = int(info[0][3].split('/')[1])
     except:
-        return (3, "UNKNOWN - invalid output from plugin")
+        return (3, "invalid output from plugin")
     warn, crit = params
     perfdata = [('threads', nthreads, warn, crit, 0 )]
     if nthreads >= crit:
-        return (2, "CRIT - %d threads (critical at %d)" % (nthreads, crit), perfdata)
+        return (2, "%d threads (critical at %d)" % (nthreads, crit), perfdata)
     elif nthreads >= warn:
-        return (1, "WARN - %d threads (warning at %d)" % (nthreads, warn), perfdata)
+        return (1, "%d threads (warning at %d)" % (nthreads, warn), perfdata)
     else:
-        return (0, "OK - %d threads" % (nthreads,), perfdata)
+        return (0, "%d threads" % (nthreads,), perfdata)
 
 check_info["cpu.loads"] = {
     "check_function"          : check_cpu_load,

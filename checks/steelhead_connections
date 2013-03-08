@@ -53,7 +53,7 @@ def check_steelhead_connections(item, params, info):
     for v in [ "active", "established", "halfOpened", "halfClosed", "passthrough" ]:
         infos.append("%s: %d" % (v, values[v]))
         perfdata.append((v, values[v]))
-    return (0, "OK - %d connections: %s" % (values["total"], ", ".join(infos)), perfdata)
+    return (0, "%d connections: %s" % (values["total"], ", ".join(infos)), perfdata)
 
 
 check_info['steelhead_connections'] = (check_steelhead_connections, "Connections", 1, inventory_steelhead_connections)

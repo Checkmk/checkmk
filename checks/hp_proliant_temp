@@ -59,21 +59,26 @@ def check_hp_proliant_temp(item, _no_params, info):
             if int(value) > int(threshold):
                 detail_output += ' (Above %s)' % threshold
 
-            return (status, '%s - Temperature Sensor %s "%s"%s' %
-                         (nagios_state_names[status], index, hp_proliant_temp_locale[int(name)],
+            return (status, 'Temperature Sensor %s "%s"%s' %
+                         (index, hp_proliant_temp_locale[int(name)],
                           detail_output),
                     [('temp', value, threshold, threshold)])
-    return (3, "UNKNOWN - item not found in snmp data")
+    return (3, "item not found in snmp data")
 
-
-check_info['hp_proliant_temp'] = (check_hp_proliant_temp, "Temperature %s", 1,  inventory_hp_proliant_temp)
-snmp_info['hp_proliant_temp']  = ( ".1.3.6.1.4.1.232.6.2.6.8.1", [ "1", # cpqHeTemperatureChassis
-                                                                   "2", # cpqHeTemperatureIndex
-                                                                   "3", # cpqHeTemperatureLocale
-                                                                   "4", # cpqHeTemperatureCelsius
-                                                                   "5", # cpqHeTemperatureThresholdCelsius
-                                                                   "6", # cpqHeTemperatureCondition
-                                                                ] )
-snmp_scan_functions['hp_proliant_temp'] = \
-    lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower()
-checkgroup_of["hp_proliant_temp"] = "temperature_auto"
+check_info["hp_proliant_temp"] = {
+    'check_function':          check_hp_proliant_temp,
+    'inventory_function':      inventory_hp_proliant_temp,
+    'service_description':     'Temperature %s',
+    'has_perfdata':            True,
+    'snmp_info':               ( ".1.3.6.1.4.1.232.6.2.6.8.1", [
+                                    "1", # cpqHeTemperatureChassis
+                                    "2", # cpqHeTemperatureIndex
+                                    "3", # cpqHeTemperatureLocale
+                                    "4", # cpqHeTemperatureCelsius
+                                    "5", # cpqHeTemperatureThresholdCelsius
+                                    "6", # cpqHeTemperatureCondition
+                               ] ),
+    'snmp_scan_function':      \
+     lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower(),
+    'group':                   'temperature_auto',
+}

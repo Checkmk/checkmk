@@ -45,15 +45,20 @@ def check_cisco_power(item, params, info):
             state, source = map(saveint, line[1:3])
             output = 'State: %s, Source: %s' % (cisco_power_states[state], cisco_power_source[source])
             if state == 1:
-                return (0, "OK - %s" % output)
+                return (0, "%s" % output)
             elif state == 2:
-                return (1, "WARN - %s" % output)
+                return (1, "%s" % output)
             else:
-                return (2, "CRIT - %s" % output)
-    return (3, "UNKNOWN - item not found in snmp data")
+                return (2, "%s" % output)
+    return (3, "item not found in snmp data")
 
-check_info['cisco_power'] = (check_cisco_power, "%s", 0,  inventory_cisco_power)
-snmp_info['cisco_power'] = ( ".1.3.6.1.4.1.9.9.13.1.5.1", [ 2, 3, 4 ] ) # CISCO-SMI
 
-snmp_scan_functions['cisco_power'] = \
-    lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower()
+
+check_info["cisco_power"] = {
+    'check_function':          check_cisco_power,
+    'inventory_function':      inventory_cisco_power,
+    'service_description':     '%s',
+    'snmp_info':               ('.1.3.6.1.4.1.9.9.13.1.5.1', [2, 3, 4]),
+    'snmp_scan_function':      \
+     lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+}

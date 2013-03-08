@@ -57,45 +57,43 @@ def check_cmctc_psm_m(item, no_params, info):
      sensor_type = saveint(line[1])
      unit = cmctc_pcm_m_sensor_types[sensor_type]
      current_val = saveint(line[3]) / 10
-     output =  " - %s at %d%s " % (line[7], current_val, unit)
+     output =  "%s at %d%s " % (line[7], current_val, unit)
      perf = [(unit, current_val,"","","","")]
      if int(line[2]) == 4:
-       return (0, "OK"+output,perf)
+       return (0, output, perf)
      else:
-        return (2, "CRIT"+output,perf)
+        return (2, output, perf)
 
    return (3, "Item no found in SNMP tree")
 
-check_info['cmctc_psm_m'] = (check_cmctc_psm_m, "CMC %s", 1,  inventory_cmctc_psm_m)
-
-
-
-
-snmp_info['cmctc_psm_m'] = (
-   # Base to all IO units
-   ".1.3.6.1.4.1.2606.4.2",
-   # Each of the up to 4 units has its own subtree
-   ["3", "4", "5", "6"],
-   [
-     # sensors index (1-4)
-     "5.2.1.1",
-     # sensor type (10 = temperature)
-     "5.2.1.2",
-     # unit status: notAvail(1), lost(2), changed(3), ok(4), off(5), on(6), warning(7), tooLow(8), tooHigh(9)
-     "5.2.1.4",
-     # current value
-     "5.2.1.5",
-     # high value (used for critical state)
-     "5.2.1.6",
-     # low value (used for warning, if temp falls below this value)
-     "5.2.1.7",
-     # warn value (used for warning state)
-     "5.2.1.8",
-     #Port Desct
-     "5.2.1.3",
-   ]
-   )
-
-snmp_scan_functions["cmctc_psm_m"] = \
-        lambda oid: "CMC-TC" in oid(".1.3.6.1.2.1.1.1.0")
-
+check_info["cmctc_psm_m"] = {
+    'check_function':          check_cmctc_psm_m,
+    'inventory_function':      inventory_cmctc_psm_m,
+    'service_description':     'CMC %s',
+    'has_perfdata':            True,
+    'snmp_info':               (
+       # Base to all IO units
+       ".1.3.6.1.4.1.2606.4.2",
+       # Each of the up to 4 units has its own subtree
+       ["3", "4", "5", "6"],
+       [
+         # sensors index (1-4)
+         "5.2.1.1",
+         # sensor type (10 = temperature)
+         "5.2.1.2",
+         # unit status: notAvail(1), lost(2), changed(3), ok(4), off(5), on(6), warning(7), tooLow(8), tooHigh(9)
+         "5.2.1.4",
+         # current value
+         "5.2.1.5",
+         # high value (used for critical state)
+         "5.2.1.6",
+         # low value (used for warning, if temp falls below this value)
+         "5.2.1.7",
+         # warn value (used for warning state)
+         "5.2.1.8",
+         #Port Desct
+         "5.2.1.3",
+    ]),
+    'snmp_scan_function':      \
+         lambda oid: "CMC-TC" in oid(".1.3.6.1.2.1.1.1.0"),
+}

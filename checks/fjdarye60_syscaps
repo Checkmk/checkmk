@@ -24,10 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_info['fjdarye60_syscaps'] = (check_fjdarye_item, "System Capacitor Unit %s", 0,  inventory_fjdarye_item)
 check_includes['fjdarye60_syscaps'] = ["fjdarye.include"]
 # 1: fjdaryScuIndex, 3: fjdaryScuStatus
-snmp_info['fjdarye60_syscaps'] = (".1.3.6.1.4.1.211.1.21.1.60.2.5.2.1", [ 1, 3 ])
 
-snmp_scan_functions['fjdarye60_syscaps'] \
-        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60"
+
+check_info["fjdarye60_syscaps"] = {
+    'check_function':          check_fjdarye_item,
+    'inventory_function':      inventory_fjdarye_item,
+    'service_description':     'System Capacitor Unit %s',
+    # 1: fjdaryScuIndex, 3: fjdaryScuStatus
+    'snmp_info':               ('.1.3.6.1.4.1.211.1.21.1.60.2.5.2.1', [1, 3]),
+    'snmp_scan_function':      \
+          lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60",
+}

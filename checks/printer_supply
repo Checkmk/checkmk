@@ -58,7 +58,7 @@ printer_supply_some_remaining_status = 1
 def printer_supply_fix_infos(info):
     colors = []
     new_info = []
-    for line in info:
+    for index, line in enumerate(info):
         line_0 = snmp_decode_string(line[0]) # give chance for latin1->utf8 decoding
         if line_0.startswith('Toner Cartridge') \
            or line_0.startswith('Image Drum Unit'):
@@ -91,39 +91,43 @@ def check_printer_supply(item, params, info):
             # handle cases with partial data
             if maxlevel == -2 or current in [ -3, -2, -1 ]: # no percentage possible
                 if current == -1 or maxlevel == -1:
-                    return (0, "OK - there are no restrictions on this supply")
+                    return (0, "there are no restrictions on this supply")
                 elif current == -3:
-                    return (printer_supply_some_remaining_status, "%s - Some remaining" %
-                            (nagios_state_names[printer_supply_some_remaining_status]), perfdata)
+                    return (printer_supply_some_remaining_status, "Some remaining", perfdata)
                 elif current == -2:
-                    return (3, "UNKNOWN - current level is unknown")
+                    return (3, "current level is unknown")
                 elif maxlevel == -2:
                     # no percentage possible. We compare directly against levels
-                    return (0, "OK - current level is %d" % current, [("pages", current)])
+                    return (0, "current level is %d" % current, [("pages", current)])
 
             leftperc = 100.0 * current / maxlevel
             infotext = "%.0f%% (levels at %.0f%% / %.0f%%)" % (leftperc, warn, crit)
             if leftperc <= crit:
-                return (2, "CRIT - %s" % infotext, perfdata)
+                return (2, infotext, perfdata)
             elif leftperc <= warn:
-                return (1, "WARN - %s" % infotext, perfdata)
+                return (1, infotext, perfdata)
             else:
-                return (0, "OK - %s" % infotext, perfdata)
+                return (0, infotext, perfdata)
 
-    return (3, 'UNKNOWN - not found')
-
-check_info['printer_supply'] = (check_printer_supply, "Supply %s", 1, inventory_printer_supply)
-
-snmp_info['printer_supply'] = ( ".1.3.6.1.2.1.43", [ '11.1.1.6', # Printer-MIB::prtMarkerSuppliesDescription
-                                                     '11.1.1.8', # Printer-MIB::prtMarkerSuppliesMaxCapacity
-                                                     '11.1.1.9', # Printer-MIB::prtMarkerSuppliesLevel
-                                                     '12.1.1.4' ] )
-
-
+    return (3, 'not found')
 
 check_config_variables.append("printer_supply_some_remaining_status")
 
-snmp_scan_functions['printer_supply'] = \
-    lambda oid: oid(".1.3.6.1.2.1.43.11.1.1.6.1.1") != None and "RICOH" not in oid(".1.3.6.1.2.1.1.1.0")
-
-checkgroup_of['printer_supply'] = "printer_supply"
+check_info["printer_supply"] = {
+    'check_function':          check_printer_supply,
+    'inventory_function':      inventory_printer_supply,
+    'service_description':     'Supply %s',
+    'has_perfdata':            True,
+    'snmp_info':               (
+        '.1.3.6.1.2.1.43', [
+            '11.1.1.6', # Printer-MIB::prtMarkerSuppliesDescription
+            '11.1.1.8', # Printer-MIB::prtMarkerSuppliesMaxCapacity
+            '11.1.1.9', # Printer-MIB::prtMarkerSuppliesLevel
+            '12.1.1.4',
+        ]
+    ),
+    'snmp_scan_function':      \
+     lambda oid: oid(".1.3.6.1.2.1.43.11.1.1.6.1.1") != None \
+                 and "RICOH" not in oid(".1.3.6.1.2.1.1.1.0"),
+    'group':                   'printer_supply',
+}

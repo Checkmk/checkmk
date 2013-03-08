@@ -16,6 +16,7 @@
     * Added plugins to config module to make registration of default values
       possible for addons like mkeventd - reset to default values works now
       correctly even for multisite related settings
+    * ADD: check_disk_smb pnp-template
 
     Event Console:
     * New rule feature: automatically delete event after actions

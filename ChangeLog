@@ -69,6 +69,7 @@
            within the group
     * FIX: Fixed exception when editing contactgroups without alias
     * FIX: Fix localization of rule options
+    * FIX: ValueSpec OptionalDropDown: fix visibility if default is "other"
     * Suggest use default value for filesystem levels that make sense
     * Valuespec: CascadingDropdown now able to process choice values from functions
     * Freshness checking for classical passive Nagios checks (custom_checks)

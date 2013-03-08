@@ -873,13 +873,13 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
         if info or info == []:
             num_success += 1
             try:
-                check_funktion = check_info[checkname]["check_function"]
+                check_function = check_info[checkname]["check_function"]
             except:
-                check_funktion = check_unimplemented
+                check_function = check_unimplemented
 
             try:
                 dont_submit = False
-                result = check_funktion(item, params, info)
+                result = check_function(item, params, info)
             # handle check implementations that do not yet support the
             # handling of wrapped counters via exception. Do not submit
             # any check result in that case:
@@ -888,7 +888,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
                     print "Counter wrapped, not handled by check, ignoring this check result: %s" % e
                 dont_submit = True
             except Exception, e:
-                result = (3, "UNKNOWN - invalid output from agent, invalid check parameters or error in implementation of check %s. Please set <tt>debug_log</tt> to a filename in <tt>main.mk</tt> for enabling exception logging." % checkname)
+                result = (3, "invalid output from agent, invalid check parameters or error in implementation of check %s. Please set <tt>debug_log</tt> to a filename in <tt>main.mk</tt> for enabling exception logging." % checkname)
                 if debug_log:
                     try:
                         import traceback, pprint
@@ -996,19 +996,31 @@ def convert_perf_data(p):
 
 
 def submit_check_result(host, servicedesc, result, sa):
+    if len(result) >= 3:
+        state, infotext, perfdata = result[:3]
+    else:
+        state, infotext = result
+        perfdata = None
+
+    if not (
+        infotext.startswith("OK -") or
+        infotext.startswith("WARN -") or
+        infotext.startswith("CRIT -") or
+        infotext.startswith("UNKNOWN -")):
+        infotext = nagios_state_names[state] + " - " + infotext
+
     global nagios_command_pipe
     # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
 
     # Aggregated service -> store for later
     if sa != "":
-        store_aggregated_service_result(host, servicedesc, sa, result[0], result[1])
+        store_aggregated_service_result(host, servicedesc, sa, state, infotext)
 
     # performance data - if any - is stored in the third part of the result
     perftexts = [];
     perftext = ""
 
-    if len(result) > 2:
-        perfdata = result[2]
+    if perfdata:
         # Check may append the name of the check command to the
         # list of perfdata. It is of type string. And it might be
         # needed by the graphing tool in order to choose the correct
@@ -1028,15 +1040,15 @@ def submit_check_result(host, servicedesc, result, sa):
             perftext = "|" + (" ".join(perftexts))
 
     if not opt_dont_submit:
-        submit_to_nagios(host, servicedesc, result[0], result[1] + perftext)
+        submit_to_nagios(host, servicedesc, state, infotext + perftext)
 
     if opt_verbose:
         if opt_showperfdata:
             p = ' (%s)' % (" ".join(perftexts))
         else:
             p = ''
-        color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[result[0]]
-        print "%-20s %s%s%-56s%s%s" % (servicedesc, tty_bold, color, result[1], tty_normal, p)
+        color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[state]
+        print "%-20s %s%s%-56s%s%s" % (servicedesc, tty_bold, color, infotext, tty_normal, p)
 
 
 def submit_to_nagios(host, service, state, output):

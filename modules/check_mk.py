@@ -320,7 +320,9 @@ donation_command                     = 'mail -r checkmk@yoursite.de  -s "Host do
 scanparent_hosts                     = [ ( ALL_HOSTS ) ]
 host_attributes                      = {} # needed by WATO, ignored by Check_MK
 ping_levels                          = [] # special parameters for host/PING check_command
+host_check_commands                  = [] # alternative host check instead of check_icmp
 check_periods                        = []
+
 
 
 # global variables used to cache temporary values (not needed in check_mk_base)
@@ -1268,6 +1270,43 @@ def extra_conf_of(confdict, hostname, service):
             result += format % (key, values[0])
     return result
 
+def host_check_command(hostname, ip, is_clust):
+    # Check dedicated host check command
+    values = host_extra_conf(hostname, host_check_commands)
+    if values:
+        value = values[0]
+    else:
+        value = "ping"
+
+    if value == "ping":
+        ping_args = check_icmp_arguments(hostname)
+        if is_clust and ip: # Do check cluster IP address if one is there
+            return "check-mk-host-ping!%s" % ping_args
+        elif ping_args and is_clust: # use check_icmp in cluster mode
+            return "check-mk-host-ping-cluster!%s" % ping_args
+        elif ping_args: # use special arguments
+            return "check-mk-host-ping!%s" % ping_args
+        else:
+            return None
+
+    elif value == "ok":
+        return "check-mk-host-ok"
+
+    elif value == "agent" or value[0] == "service":
+        service = value == "agent" and "Check_MK" or value[1]
+        command = "check-mk-host-custom-%d" % (len(hostcheck_commands_to_define) + 1)
+        hostcheck_commands_to_define.append((command, 
+           'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' % (hostname, service, hostname, service)))
+        return command
+
+    elif value[0] == "tcp":
+        return "check-mk-host-tcp!" + str(value[1])
+
+    raise MKGeneralException("Invalid value %r for host_check_command of host %s." % (
+            value, hostname))
+
+
+
 def check_icmp_arguments(hostname):
     values = host_extra_conf(hostname, ping_levels)
     levels = {}
@@ -1499,6 +1538,8 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     active_checks_to_define = set([])
     global custom_commands_to_define
     custom_commands_to_define = set([])
+    global hostcheck_commands_to_define
+    hostcheck_commands_to_define = []
 
     if host_notification_periods != []:
         raise MKGeneralException("host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead.")
@@ -1571,15 +1612,10 @@ def create_nagios_hostdefs(outfile, hostname):
     outfile.write("  address\t\t\t%s\n" % (ip and make_utf8(ip) or "0.0.0.0"))
     outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
 
-    # Levels for host check
-    ping_args = check_icmp_arguments(hostname)
-    if is_clust and ip: # Do check cluster IP address if one is there
-        outfile.write("  check_command\t\t\tcheck-mk-ping!%s\n" % ping_args)
-    elif ping_args and is_clust: # use check_icmp in cluster mode
-        outfile.write("  check_command\t\t\tcheck-mk-ping-cluster!%s\n" % ping_args)
-    elif ping_args: # use special arguments
-        outfile.write("  check_command\t\t\tcheck-mk-ping!%s\n" % ping_args)
-
+    # Host check command might differ from default
+    command = host_check_command(hostname, ip, is_clust)
+    if command:
+        outfile.write("  check_command\t\t\t%s\n" % command)
 
     # WATO folder path
     path = host_paths.get(hostname)
@@ -2092,6 +2128,15 @@ def create_nagios_config_commands(outfile):
 }
 
 """ % command_name)
+
+    # custom host checks
+    for command_name, command_line in hostcheck_commands_to_define:
+        outfile.write("""define command {
+  command_name\t\t\t%s
+  command_line\t\t\t%s
+}
+
+""" % (command_name, command_line))
 
 
 def create_nagios_config_timeperiods(outfile):

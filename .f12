@@ -1,3 +1,14 @@
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+sed -e "s#@BINDIR@#/omd/sites/$SITE/bin#g" \
+    -e "s#@VARDIR@#/omd/sites/$SITE/var/check_mk#g" \
+    -e "s#@CHECK_ICMP@#/omd/sites/$SITE/lib/nagios/plugins/check_icmp#g" \
+    -e "s#@PNPURL@#/$SITE/pnp4nagios/#g" \
+    -e "s#@CGIURL@#/$SITE/nagios/cgi-bin#g" \
+    < check_mk_templates.cfg > /tmp/check_mk_templates.cfg
+
+sudo mv /tmp/check_mk_templates.cfg /omd/sites/$SITE/etc/nagios/conf.d
+
+(cd doc ; bash .f12)
 (cd web ; bash .f12)
 (cd modules ; bash .f12)
 (cd checks ; bash .f12)

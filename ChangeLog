@@ -2,6 +2,8 @@
     Core:
     * Agents can send data for other hosts "piggyback". This is being
       used by the vSphere and SAP plugins
+    * New variable host_check_commands, that allows the definition of
+      an alternative host check command (without manually defining one)
 
     Multisite:
     * New availability view for arbitrary host/service collections
@@ -58,6 +60,7 @@
     * Removed global option logwatch_forward_to_ec, moved this to the
       logwatch_ec ruleset. With this option the forwarding can now be enabled
       for each logfile on a host
+    * Configuration of an alternativ host check command
 
 1.2.2b5:
     Core:

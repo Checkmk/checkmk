@@ -1153,15 +1153,38 @@ register_rule(group,
                  "the state of the host will stay at its last status.")),
     )
 
+register_rule(
+    group,
+    "host_check_commands",
+    CascadingDropdown(
+        title = _("Host Check Command"),
+        help = _("Usually Check_MK uses a series of PING (ICMP echo request) in order to determine "
+                 "whether a host is up. In some cases this is not possible, however. With this rule "
+                 "you can specify an alternative way of determining the host's state."),
+        choices = [
+          ( "ping",    _("PING (ICMP echo request)") ),
+          ( "tcp" ,    _("TCP Connect"), Integer(label = _("to port:"), minvalue=1, maxvalue=65535, default_value=80 )), 
+          ( "ok",      _("Always assume host to be up") ),
+          ( "agent",   _("Use the status of the Check_MK Agent") ),
+          ( "service", _("Use the status of the service..."), TextUnicode(label = ":", size=32, allow_empty=False )),
+        ],
+        default_value = "ping",
+        html_separator = " ",
+    ),
+    match = 'first'
+)
+
+
 register_rule(group,
     "extra_host_conf:check_command",
     TextAscii(
+        title = _("Internal Command for Hosts Check"),
         label = _("Command:"),
-        title = _("Check Command for Hosts Check"),
-        help = _("This parameter changes the default check_command for "
-                 "a host check"),
-        ),
-    )
+        help = _("This ruleset is deprecated and will be removed soon: "
+                 "it changes the default check_command for a host check. You need to "
+                 "define that command manually in your monitoring configuration."),
+    ),
+)
 
 group = "monconf/" + _("Notifications")
 register_rule(group,

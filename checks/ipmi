@@ -127,14 +127,14 @@ def check_ipmi_detailed(item, info):
             if name == item:
                 perfdata = [ (name, val + unit) ] # TODO: add warn and crit levels
                 if status == 'ok':
-                    return (0, "OK - %s is %s %s" % (name, val, unit), perfdata)
+                    return (0, "%s is %s %s" % (name, val, unit), perfdata)
                 elif status == 'nc':
-                    return (1, "WARN - %s is %s %s" % (name, val, unit), perfdata)
+                    return (1, "%s is %s %s" % (name, val, unit), perfdata)
                 else:
-                    return (2, "CRIT - %s is %s %s" % (name, val, unit), perfdata)
-        return (3, 'UNKNOWN - item %s not found' % item)
+                    return (2, "%s is %s %s" % (name, val, unit), perfdata)
+        return (3, 'item %s not found' % item)
     except:
-        return (3, "UNKNOWN - invalid or incomplete  output from agent")
+        return (3, "invalid or incomplete  output from agent")
 
 def check_ipmi_summarized(info):
     worst_status = 0
@@ -172,7 +172,7 @@ def check_ipmi_summarized(info):
                 except:
                     pass
     except:
-        return (3, "UNKNOWN - invalid or incomplete  output from agent")
+        return (3, "invalid or incomplete  output from agent")
 
 
     if ambient_count > 0:

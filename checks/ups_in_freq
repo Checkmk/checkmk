@@ -47,7 +47,7 @@ def check_ups_in_freq(item, params, info):
 	    else:
 		return (0, "OK" + infotext, perfdata)
 
-    return (3, "UNKNOWN - Phase %s not found in SNMP output" % item)
+    return (3, "Phase %s not found in SNMP output" % item)
 
 
 check_info['ups_in_freq'] = {

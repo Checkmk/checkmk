@@ -57,7 +57,7 @@ def inventory_cups_queues(info):
 def check_cups_queues(item, params, info):
     warnNum, critNum, warnAge, critAge = params
     state   = 3
-    output  = "UNKNOWN - Queue not found"
+    output  = "Queue not found"
     numJobs = 0
     now     = datetime.datetime.now()
     oldest  = now

@@ -60,7 +60,7 @@ def check_mysql_size(item, params, info):
                 state = 0
                 perfdata = [("size", size)]
             return (state, infotext, perfdata)
-    return (3, "UNKNOWN - Database not found in Agent output")
+    return (3, "Database not found in Agent output")
 
 
 check_info['mysql_capacity'] = {

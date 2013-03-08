@@ -54,7 +54,7 @@ def check_mounts(item, targetopts, info):
                     missing.append(o)
 
             if not missing and not exceeding:
-                return (0, "OK - mount options exactly as expected")
+                return (0, "mount options exactly as expected")
 
             infos = []
             if missing:
@@ -64,13 +64,13 @@ def check_mounts(item, targetopts, info):
             infotext = ", ".join(infos)
 
             if "ro" in exceeding:
-                return (2, "CRIT - filesystem has switched to read-only "
+                return (2, "filesystem has switched to read-only "
                            "and is probably corrupted(!!), " + infotext)
 
             # Just warn in other cases
-            return (1, "OK - " + infotext)
+            return (1, infotext)
 
-    return (3, "UNKNOWN - filesystem not mounted")
+    return (3, "filesystem not mounted")
 
 
 

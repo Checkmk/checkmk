@@ -26,7 +26,7 @@
 
 
 def check_blade_misc(item, params, info):
-    return (3, "UNKNOWN - Sorry. Check not implemented in this version.")
+    return (3, "Sorry. Check not implemented in this version.")
 
 
 check_info["blade_misc"] = {

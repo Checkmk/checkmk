@@ -56,16 +56,16 @@ def check_f5_bigip_psu(item, _no_params, info):
         state = int(line[0][1])
         if psu == item:
             if   state == 1:
-                return (0, "OK - PSU state: good")
+                return (0, "PSU state: good")
             elif state == 0:
-                return (2, "CRIT - PSU state: bad!!")
+                return (2, "PSU state: bad!!")
             elif state == 2:
-                return (1, "WARN - PSU state: notpresent!")
+                return (1, "PSU state: notpresent!")
             else:
-                return (3, "UNKNOWN - PSU state is unknown")
+                return (3, "PSU state is unknown")
 
 
-    return (3, "UNKNOWN - item not found in SNMP output")
+    return (3, "item not found in SNMP output")
 
 
 # Get ID and status from the SysChassisPowerSupplyTable

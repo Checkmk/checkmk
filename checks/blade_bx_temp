@@ -47,18 +47,18 @@ def check_blade_bx_temp(item, params, info):
         perfdata=[ ('temp', temp, level_warn, level_crit, "0", max_temp ) ]
 
         if crit_react != "2":
-            return (2, "CRIT - Temperature not present or poweroff", perfdata)
+            return (2, "Temperature not present or poweroff", perfdata)
         elif status != 3:
-            return (2, "CRIT - Status is %s" % blade_bx_status.get(status,1) , perfdata)
+            return (2, "Status is %s" % blade_bx_status.get(status,1) , perfdata)
         elif temp >= level_crit:
-            return (2, "CRIT - Temperature at %s%s " % (temp, unit), perfdata)
+            return (2, "Temperature at %s%s " % (temp, unit), perfdata)
         elif temp >= level_warn:
             return (1, "WARNING - Temperature at %s%s " % (temp,unit), perfdata)
         else:
-            return (0, "OK - Temperature at %s%s " % (temp,unit), perfdata)
-        return (3, "UNKNOWN - Device %s not found in SNMP data %s " % (item, perfdata ) )
+            return (0, "Temperature at %s%s " % (temp,unit), perfdata)
+        return (3, "Device %s not found in SNMP data %s " % (item, perfdata ) )
 
-    return (3, "UNKNOWN - Device %s not found in SNMP data" % item)
+    return (3, "Device %s not found in SNMP data" % item)
 
 check_info['blade_bx_temp'] = {
     "check_function" : check_blade_bx_temp,

@@ -57,7 +57,7 @@ def check_statgrab_cpu(item, params, info):
 
     diff_total = diff_values[3]
     if diff_total == 0:
-        return (0, "OK - too short interval")
+        return (0, "too short interval")
     user_perc   = 100.0 * float(diff_values[0]) / float(diff_total)
     system_perc = 100.0 * float(diff_values[1]) / float(diff_total)
     wait_perc   = 100.0 * float(diff_values[2]) / float(diff_total)
@@ -65,7 +65,7 @@ def check_statgrab_cpu(item, params, info):
           ( "user",   "%.3f" % user_perc ),
           ( "system", "%.3f" % system_perc ),
           ( "wait",   "%.3f" % wait_perc ) ]
-    return (0, "OK - user: %2.0f%%, system: %2.0f%%, wait: %2.0f%%" % (user_perc, system_perc, wait_perc), perfdata)
+    return (0, "user: %2.0f%%, system: %2.0f%%, wait: %2.0f%%" % (user_perc, system_perc, wait_perc), perfdata)
 
 
 check_info["statgrab_cpu"] = {

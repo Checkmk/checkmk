@@ -52,11 +52,11 @@ def check_ucd_cpu_util(item, params, info):
             some_counter_wrapped = True
 
     if some_counter_wrapped:
-        return (0, "OK - first check, no counter data yet")
+        return (0, "first check, no counter data yet")
 
     total = sum(rates)
     if total == 0:
-        return (3, "UNKNOWN - counters have not moved since last check, looks like state fake data")
+        return (3, "counters have not moved since last check, looks like state fake data")
 
     parts = [ r/total for r in rates ]
     user = 100 * (parts[0] + parts[1])
@@ -72,9 +72,9 @@ def check_ucd_cpu_util(item, params, info):
     try:
         warn, crit = params
         if wait >= crit:
-            result = (2, "CRIT - (wait too large)")
+            result = (2, "(wait too large)")
         elif wait >= warn:
-            result = (1, "WARN - (wait too large)")
+            result = (1, "(wait too large)")
     except:
         pass
 

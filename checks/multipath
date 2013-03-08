@@ -256,7 +256,7 @@ def check_multipath(item, target_numpaths, info):
 
     parsed = parse_multipath_output(info, item) # we look for one specific uuid/alias
     if len(parsed) == 0:
-        return (3, "UNKNOWN - no map with uuid/alias %s" % item)
+        return (3, "no map with uuid/alias %s" % item)
     mmap = parsed.values()[0]
 
     alias = mmap.get('alias')
@@ -269,19 +269,16 @@ def check_multipath(item, target_numpaths, info):
     broken = mmap['broken_paths']
     numbroken = len(broken)
     if numbroken > 0:
-        return (2, "CRIT - %sbroken paths: %s" % (aliasinfo, ",".join(broken)))
+        return (2, "%sbroken paths: %s" % (aliasinfo, ",".join(broken)))
 
     info = "%spaths expected: %d, paths active: %d" % (aliasinfo, target_numpaths, numpaths)
 
     if numpaths < target_numpaths:
-        return (2, "CRIT - " + info)
+        return (2, info)
     elif numpaths > target_numpaths:
-        return (1, "WARN - " + info)
+        return (1, info)
     else:
-        return (0, "OK - " + info)
-
-
-
+        return (0, info)
 
 check_info["multipath"] = {
     'check_function':          check_multipath,

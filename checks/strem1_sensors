@@ -74,12 +74,12 @@ def check_strem1_sensors(item, params, info):
                 infotext += ' (%s)' % ', '.join(thrtext)
 
             if crit and val >= crit:
-                return (2, "CRIT - %s is: " % typ + infotext, perfdata)
+                return (2, "%s is: " % typ + infotext, perfdata)
             elif warn and val >= warn:
-                return (1, "WARN - %s is: " % typ + infotext, perfdata)
+                return (1, "%s is: " % typ + infotext, perfdata)
             else:
-                return (0, "OK - %s is: " % typ + infotext, perfdata )
-    return (3, "UNKNOWN - Sensor not found")
+                return (0, "%s is: " % typ + infotext, perfdata )
+    return (3, "Sensor not found")
 
 check_info["strem1_sensors"] = {
     'check_function':          check_strem1_sensors,

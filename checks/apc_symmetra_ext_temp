@@ -43,7 +43,7 @@ def check_temp(item, params, info):
                 return (1, "WARNING" + infotxt, perfdata)
             else:
                 return (0, "OK" + infotxt, perfdata)
-    return (3, "UNKNOWN - Sensor not found in SNMP data")
+    return (3, "Sensor not found in SNMP data")
 
 
 

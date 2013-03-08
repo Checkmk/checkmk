@@ -31,9 +31,9 @@ def inventory_steelhead_status(info):
 def check_steelhead_status(item, params, info):
     health, status = info[0]
     if health == "Healthy" and status == "running":
-        return (0, "OK - Healthy and running")
+        return (0, "Healthy and running")
     else:
-        return (2, "CRIT - Status is %s and %s" % (health, status))
+        return (2, "Status is %s and %s" % (health, status))
 
 
 

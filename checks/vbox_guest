@@ -29,19 +29,19 @@ def vbox_guest_make_dict(info):
 
 def check_vbox_guest(_no_item, _no_params, info):
     if len(info) == 1 and info[0][0] == "ERROR":
-        return (3, "UNKNOWN - Error running VBoxControl guestproperty enumerate")
+        return (3, "Error running VBoxControl guestproperty enumerate")
     try:
         d = vbox_guest_make_dict(info)
     except:
         d = {}
 
     if len(d) == 0:
-        return (2, "CRIT - No guest additions installed")
+        return (2, "No guest additions installed")
 
     version = d.get('GuestAdd/Version')
     revision = d.get('GuestAdd/Revision')
     if not version or not version[0].isdigit():
-        return (3, "UNKNOWN - No guest addition version available")
+        return (3, "No guest addition version available")
     infotext = " - version: %s, revision: %s" % (version, revision)
 
     host_version = d['HostInfo/VBoxVer']

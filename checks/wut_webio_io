@@ -88,10 +88,10 @@ def check_wut_webio_io_inputs(item, params, info):
                            webio_state_names[params],
                            webio_state_names[state]))
             else:
-                return (0, "OK - state is %s" % webio_state_names[state])
+                return (0, "state is %s" % webio_state_names[state])
 
 
-    return (3, "UNKNOWN - Item not found in agent output")
+    return (3, "Item not found in agent output")
 
 
 check_info['wut_webio_io.inputs'] = {

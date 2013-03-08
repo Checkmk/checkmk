@@ -114,7 +114,7 @@ def check_megaraid_pdisks(item, target_state, info):
                return (0, "OK" + infotext)
            else:
                return (2, "CRIT" + infotext)
-    return (3, "UNKNOWN - No disk in encl/slot %s found" % item)
+    return (3, "No disk in encl/slot %s found" % item)
 
 
 check_info["megaraid_pdisks"] = {

@@ -43,7 +43,7 @@ def check_decru_fans(item, params, info):
             else:
                 return (0, "OK" + infotxt, perfdata)
 
-    return (3, "UNKNOWN - fan not found")
+    return (3, "fan not found")
 
 
 

@@ -56,9 +56,9 @@ def check_octopus_trunks(item, _no_params, info):
             # There are two relevant card states, we use the one from
             # octoPortTable
             if   portstate == "1":
-                return (2, "CRIT - Port [%s] is inactive" % porttype)
+                return (2, "Port [%s] is inactive" % porttype)
             else:
-                return (0, "OK - Port [%s] is active" % porttype)
+                return (0, "Port [%s] is active" % porttype)
 
     return (3, "UNKW - unknown data received from agent")
 

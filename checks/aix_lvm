@@ -137,7 +137,7 @@ def check_aix_lvm(item, _no_params, info):
         return (state, msgtxt)
 
 
-    return (3, "UNKNOWN - no such volume found")
+    return (3, "no such volume found")
 
 
 check_info['aix_lvm'] = {

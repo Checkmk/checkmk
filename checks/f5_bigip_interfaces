@@ -40,7 +40,7 @@ def check_f5_bigip_interfaces(item, params, info):
                  5 : "loopback (in loopback mode)",
                  6 : "unpopulated (interface not physically populated)",
                 }
-                return(2, "CRIT - State of %s is %s" % (states[ifstate], port))
+                return(2, "State of %s is %s" % (states[ifstate], port))
         this_time = int(time.time())
         in_timedif,  in_per_sec  = get_counter("f5.interface.in.%s" % item,  this_time, int(inbytes))
         out_timedif,  out_per_sec  = get_counter("f5_interface.out.%s" % item,  this_time, int(outbytes))
@@ -52,7 +52,7 @@ def check_f5_bigip_interfaces(item, params, info):
             ("bytes_in", in_per_sec),
             ("bytes_out", out_per_sec),
         ]
-        return (0, "OK - in bytes: %s/s, out bytes: %s/s" % (inbytes_h, outbytes_h), perf)
+        return (0, "in bytes: %s/s, out bytes: %s/s" % (inbytes_h, outbytes_h), perf)
 
 
 check_info["f5_bigip_interfaces"] = {

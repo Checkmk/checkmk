@@ -248,11 +248,11 @@ def check_logwatch(item, params, info):
     # Logfile (=item) section not found and no local file found. This usually
     # means, that the corresponding logfile also vanished on the target host.
     if found == False and not os.path.exists(logfile):
-        return (3, "UNKNOWN - log not present anymore")
+        return (3, "log not present anymore")
 
     # if logfile has reached maximum size, abort with critical state
     if os.path.exists(logfile) and os.path.getsize(logfile) > logwatch_max_filesize:
-        return (2, "CRIT - unacknowledged messages have exceeded max size (%d Bytes)" % logwatch_max_filesize)
+        return (2, "unacknowledged messages have exceeded max size (%d Bytes)" % logwatch_max_filesize)
 
     #
     # Write out new log lines (no reclassify here. It is done later in general for all logs)
@@ -376,7 +376,7 @@ def check_logwatch(item, params, info):
     state = logwatch_state(worst)
 
     if len(reclassified_lines) == 0:
-        return (0, "OK - no error messages")
+        return (0, "no error messages")
     else:
         count_txt = []
         for level, num in state_counts.iteritems():
@@ -512,7 +512,7 @@ def check_logwatch_ec(item, params, info):
                 file('%s/%s' % (spool_path, file_name), 'w').write('\n'.join(messages) + '\n')
                 os.rename('%s/%s' % (spool_path, file_name), '%s/%s' % (spool_path, file_name[1:]))
 
-        return (0, 'OK - Forwarded %d messages to event console' % num_messages, [('messages', num_messages)])
+        return (0, 'Forwarded %d messages to event console' % num_messages, [('messages', num_messages)])
     except Exception, e:
         return (2, 'CRITICAL - Unable to forward messages to event console (%s). Lost %d messages.' %
                 (e, num_messages))

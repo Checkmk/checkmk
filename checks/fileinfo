@@ -77,14 +77,14 @@ def fileinfo_patterns_of_group(group):
 
 def check_fileinfo(item, params, info):
     if len(info) == 0:
-        return (3, "UNKNOWN - no information sent by agent")
+        return (3, "no information sent by agent")
 
     reftime = int(info[0][0])
     check_definition = False
     for line in info[1:]:
         if item == line[0]:
             if line[1] == "missing":
-                return (3, "UNKNOWN - File is missing")
+                return (3, "File is missing")
             state = 0
             size = int(line[1])
             age = reftime - int(line[2])
@@ -93,12 +93,12 @@ def check_fileinfo(item, params, info):
                 ("size", size, get_filesize_human_readable),
                 ("age",  age,  get_age_human_readable) ]
     if check_definition == False:
-        return (3, "UNKNOWN - File not found")
+        return (3, "File not found")
     return fileinfo_check_function(check_definition, params)
 
 def check_fileinfogroups(item, params, info):
     if len(info) == 0:
-        return (3, "UNKNOWN - no information sent by agent")
+        return (3, "no information sent by agent")
     import fnmatch
     reftime = int(info[0][0])
 

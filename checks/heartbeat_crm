@@ -99,7 +99,7 @@ def check_heartbeat_crm(item, params, info):
         now = time.time()
         delta = now - dt
         if delta > param_max_age:
-            return (2, 'CRIT - Status output too old: %d secs' % delta)
+            return (2, 'Status output too old: %d secs' % delta)
 
         output = ''
         status = 0

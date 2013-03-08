@@ -45,7 +45,7 @@ def check_apc_power(item, params, info):
             else:
                 return (0, "OK" + infotext, perfdata)
 
-    return (3, "UNKNOWN - Phase %s not found in SNMP output" % item)
+    return (3, "Phase %s not found in SNMP output" % item)
 
 
 check_info["apc_symmetra_power"] = {

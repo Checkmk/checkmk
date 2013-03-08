@@ -50,7 +50,7 @@ def check_ups_power(item, params, info):
             else:
                 return (0, "OK" + infotext, perfdata)
 
-    return (3, "UNKNOWN - Phase %s not found in SNMP output" % item)
+    return (3, "Phase %s not found in SNMP output" % item)
 
 check_info['ups_power'] = {
   "inventory_function"  : inventory_ups_power,

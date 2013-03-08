@@ -56,7 +56,7 @@ def check_windows_multipath(item, params, info):
 
 
 
-    return (3, "UNKNOWN - Data not in agent output")
+    return (3, "Data not in agent output")
 
 
 check_info["windows_multipath"]  = {

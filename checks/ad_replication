@@ -103,12 +103,12 @@ def check_ad_replication(item, params, info):
                          (sourceSite, sourceDC, namingContext, timeLastFailure,
                           timeLastSuccess, numFailures, statusLastFailure)
     if not foundLine:
-        return (3, 'UNKNOWN - Replication information for %s not found' % item)
+        return (3, 'Replication information for %s not found' % item)
 
     if status != 0:
         return (status, output.rstrip(', '))
     else:
-        return (status, 'OK - All replications are OK.')
+        return (status, 'All replications are OK.')
 
 
 check_info["ad_replication"] = {

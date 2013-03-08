@@ -62,13 +62,13 @@ livestatus_status_counters = [
 def check_livestatus_status(item, _no_params, info):
     parsed = livestatus_status_parse(info)
     if item not in parsed:
-        return (3, "UNKNOWN - Site does not exist")
+        return (3, "Site does not exist")
     status = parsed[item]
 
     # Ignore down sites. This happens on a regular basis due to restarts
     # of the core. The availability of a site is monitored with 'omd_status'.
     if status == None:
-        return (0, "OK - Site is currently not running")
+        return (0, "Site is currently not running")
 
     this_time = time.time()
     perfdata = []
@@ -86,7 +86,7 @@ def check_livestatus_status(item, _no_params, info):
 
     infos += [ "Core version: %s" % status["program_version"],
               "Livestatus version: %s" % status["livestatus_version"]]
-    return (0, "OK - " + ", ".join(infos), perfdata)
+    return (0, ", ".join(infos), perfdata)
 
 
 check_info['livestatus_status'] = {

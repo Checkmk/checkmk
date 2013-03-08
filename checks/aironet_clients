@@ -47,10 +47,10 @@ def check_aironet_clients(item, params, info):
     info = [ line for line in info if line[0] != '' ]
 
     if len(info) == 0:
-        return (0, "OK - No clients currently logged in")
+        return (0, "No clients currently logged in")
 
     if item == "clients":
-        return (0, "OK - %d clients currently logged in" % len(info),
+        return (0, "%d clients currently logged in" % len(info),
                 [("clients", len(info), None, None, 0, None)])
 
     # item = "quality" or "strength"

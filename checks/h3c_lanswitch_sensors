@@ -34,12 +34,12 @@ def check_h3c_lanswitch_sensors(item, params, info):
     for (endoid, status) in info:
         if h3c_lanswitch_genitem(endoid) == item:
             if status == "2":
-                return (2, "CRIT - Sensor %s status is %s" % (item, status))
+                return (2, "Sensor %s status is %s" % (item, status))
             elif status == "1":
-                return (0, "OK - Sensor %s status is %s" % (item, status))
+                return (0, "Sensor %s status is %s" % (item, status))
             else:
-                return (1, "WARN - Sensor % status is %s" % (item, status))
-    return (3, "UNKNOWN - Sensor %s not found" % item )
+                return (1, "Sensor % status is %s" % (item, status))
+    return (3, "Sensor %s not found" % item )
 
 
 check_info["h3c_lanswitch_sensors"] = (check_h3c_lanswitch_sensors, "%s", 0, inventory_h3c_lanswitch_sensors )

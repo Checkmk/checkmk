@@ -50,9 +50,9 @@ def check_decru_perf(item, _no_params, info):
     for perf in info:
         if perf[0] == index:
             rate = int(perf[1])
-            return (0, "OK - current rate is %d/s" % rate, [("rate", rate)])
+            return (0, "current rate is %d/s" % rate, [("rate", rate)])
 
-    return (3, "UNKNOWN - item not found")
+    return (3, "item not found")
 
 
 

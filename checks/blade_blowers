@@ -92,9 +92,9 @@ def check_blade_blowers(item, _no_params, info):
         pass
 
     if state == "1":
-        return (0, "OK - " + output, perfdata)
+        return (0, output, perfdata)
     else:
-        return (2, "CRIT - " + output, perfdata)
+        return (2, output, perfdata)
 
 
 

@@ -37,11 +37,11 @@ def check_ucd_cpu_load(item, params, info):
     perfdata = [ ('load' + str(z), l, warn, crit, 0 ) for (z,l) in [ (1,load[0]), (5,load[1]), (15, load[2]) ] ]
 
     if load[2] >= crit:
-        return (2, "CRIT - 15min Load %.2f (critical at %.2f)" % (load[2], crit), perfdata)
+        return (2, "15min Load %.2f (critical at %.2f)" % (load[2], crit), perfdata)
     elif load[2] >= warn:
-        return (1, "WARN - 15min Load %.2f (warning at %.2f)" % (load[2], warn), perfdata)
+        return (1, "15min Load %.2f (warning at %.2f)" % (load[2], warn), perfdata)
     else:
-        return (0, "OK - 15min Load %.2f" % load[2], perfdata)
+        return (0, "15min Load %.2f" % load[2], perfdata)
 
 
 

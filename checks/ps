@@ -203,7 +203,7 @@ def check_procs(item, params, info, with_perfdata):
     elif len(params) == 6:
         procname, user, warnmin, okmin, okmax, warnmax = params
     else:
-        return (3, "UNKNOWN - invalid check parameters: %s" % (params,))
+        return (3, "invalid check parameters: %s" % (params,))
 
     count = 0
     virtual_size   = 0

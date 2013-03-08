@@ -30,7 +30,7 @@ def inventory_bintec_info(info):
 
 def check_bintec_info(checktype, params, info):
     if len(info[0]) < 2:
-        return (3, "UNKNOWN - No data retrieved")
+        return (3, "No data retrieved")
     sw_version, serial = info[0]
     return (0, "Serial: %s, Software: %s" % (serial, sw_version))
 

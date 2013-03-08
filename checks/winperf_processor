@@ -86,7 +86,7 @@ def check_winperf_util(item, params, info):
             else:
                 return (0, "OK" + infotext, perfdata)
 
-    return (3, "UNKNOWN - counter for CPU (6) not found")
+    return (3, "counter for CPU (6) not found")
 
 
 check_info["winperf_processor.util"] = {

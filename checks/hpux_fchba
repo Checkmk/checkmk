@@ -62,7 +62,7 @@ def inventory_hpux_fchba(info):
 def check_hpux_fchba(item, _no_params, info):
     parsed = parse_hpux_fchba(info)
     if item not in parsed:
-        return (3, "UNKNOWN - HBA noch found")
+        return (3, "HBA noch found")
 
     hba = parsed[item]
 

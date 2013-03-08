@@ -35,7 +35,7 @@ def check_blade_bx_blades(item, no_params, info):
 
             return (state, "Blade %s %s %s Status %s " % (blade_id, blade_name, blade_serial, blade_status_codes.get(blade_status, 1)))
 
-    return (3, "UNKNOWN - no data for '%s' in SNMP info" % item)
+    return (3, "no data for '%s' in SNMP info" % item)
 
 check_info['blade_bx_blades'] = {
     "check_function" : check_blade_bx_blades,

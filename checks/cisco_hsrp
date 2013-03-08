@@ -120,7 +120,7 @@ def check_cisco_hsrp(item, params, info):
 
             return (state, msgtxt)
 
-    return (3, "UNKNOWN - HSRP Group %s not found in Agent output" % hsrp_grp_wanted )
+    return (3, "HSRP Group %s not found in Agent output" % hsrp_grp_wanted )
 
 
 

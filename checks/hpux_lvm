@@ -63,7 +63,7 @@ def check_hpux_lvm(item, params, info):
                 else:
                     return (2, "CRIT" + infotext)
 
-    return (3, "UNKNOWN - no such volume found")
+    return (3, "no such volume found")
 
 
 check_info["hpux_lvm"] = {

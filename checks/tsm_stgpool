@@ -39,11 +39,11 @@ def check_tsm_stgpool(item, params, info):
             infotext = "%.1f%% used" % current
             perfdata = [ ("percused", "%.1f%%" % current, warn, crit, 0, 100.0) ]
             if current >= crit:
-                return (2, "CRIT - %s (critical at %.1f%%)" % (infotext, crit), perfdata)
+                return (2, "%s (critical at %.1f%%)" % (infotext, crit), perfdata)
             elif current >= warn:
-                return (1, "WARN - %s (warning  at %.1f%%)" % (infotext, warn), perfdata)
+                return (1, "%s (warning  at %.1f%%)" % (infotext, warn), perfdata)
             else:
-                return (0, "OK - %s" % (infotext,), perfdata)
+                return (0, "%s" % (infotext,), perfdata)
     return (3, "No such storage pool found")
 
 

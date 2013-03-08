@@ -55,13 +55,13 @@ def check_ibm_xraid_pdisks(item, _no_params, info):
         if disk_path == item:
             slot_label, disk_id, disk_type, disk_state, slot_desc = disk_entry
             if   disk_state == "3":
-                return (0, "OK - Disk is active" + " [%s]" % slot_desc)
+                return (0, "Disk is active" + " [%s]" % slot_desc)
             elif disk_state == "4":
-                return (1, "WARN - Disk is rebuilding" + " [%s]" % slot_desc)
+                return (1, "Disk is rebuilding" + " [%s]" % slot_desc)
             elif disk_state == "5":
-                return (2, "WARN - Disk is dead" + " [%s]" % slot_desc)
+                return (2, "Disk is dead" + " [%s]" % slot_desc)
 
-    return (2, "CRIT - disk is missing") #  + " [%s]" % data[item][4])
+    return (2, "disk is missing") #  + " [%s]" % data[item][4])
 
 
 check_info["ibm_xraid_pdisks"] = {

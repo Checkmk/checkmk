@@ -44,10 +44,10 @@ def check_snmp_uptime(checktype, _no_params, info):
         minutes, seconds = divmod(rest,      60)
         now = int(time.time())
         since = time.strftime("%c", time.localtime(now - uptime))
-        return (0, "OK - up since %s (%dd %02d:%02d:%02d)" %
+        return (0, "up since %s (%dd %02d:%02d:%02d)" %
                  (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
     else:
-        return (3, "UNKNOWN - No data retrieved")
+        return (3, "No data retrieved")
 
 
 check_info["snmp_uptime"] = {

@@ -118,7 +118,7 @@ def check_netctr_combined(nic, params, info):
         else:
             return (0, "OK" + infotxt, perfdata)
 
-    return (3, "UNKNOWN - NIC is not present")
+    return (3, "NIC is not present")
 
 
 check_config_variables.append("netctr_counters")

@@ -47,7 +47,7 @@ def check_ups_bat_temp(item, params, info):
 	    else:
 		return (0, "OK" + infotext, perfdata)
 
-    return (3, "UNKNOWN - Temperatur %s not found in SNMP output" % item)
+    return (3, "Temperatur %s not found in SNMP output" % item)
 
 check_info['ups_bat_temp'] = {
   "inventory_function"  : inventory_ups_bat_temp,

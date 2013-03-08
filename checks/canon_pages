@@ -46,12 +46,12 @@ def inventory_canon_pages(info):
 
 def check_canon_pages(item, _no_params, info):
     if item not in canon_pages_map:
-        return (3, "UNKNOWN - unknown counter type %s" % item)
+        return (3, "unknown counter type %s" % item)
     for endoid, value in info:
         if endoid == canon_pages_map[item]:
-            return (0, 'OK - Current count: %s' % value, [('count', int(value))])
+            return (0, 'Current count: %s' % value, [('count', int(value))])
 
-    return (3, 'UNKNOWN - Item not found in SNMP data')
+    return (3, 'Item not found in SNMP data')
 
 
 check_info['canon_pages'] = (check_canon_pages, "Pages %s", 1, inventory_canon_pages)

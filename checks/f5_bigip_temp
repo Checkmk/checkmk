@@ -77,11 +77,11 @@ def check_f5_bigip_temp(item, params, info):
             elif tmpdiff > 10:
                 return (1, "WARN" + msgtxt + "(!)", perfdata)
             else:
-                return (3, "UNKNOWN - unable to read temperature")
+                return (3, "unable to read temperature")
 
 
 
-    return (3, "UNKNOWN - item not found in SNMP output")
+    return (3, "item not found in SNMP output")
 
 
 

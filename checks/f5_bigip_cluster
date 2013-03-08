@@ -55,15 +55,15 @@ def check_f5_bigip_cluster(item, _no_params, info):
     # 3     both systems outdated,  crit   (config split brain)
 
     if statusid == "0":
-        return (0, "OK - "        + statustxt)
+        return (0, statustxt)
     elif statusid == "-1":
-        return (2, "CRIT - "      + statustxt)
+        return (2, statustxt)
     elif statusid == "1" or statusid == "2":
-        return (1, "WARN - "   + statustxt)
+        return (1, statustxt)
     elif statusid == "3":
-        return (2, "CRIT - "      + statustxt)
+        return (2, statustxt)
     else:
-        return (3, "UNKNOWN - unexpected Output from SNMP Agent")
+        return (3, "unexpected output from SNMP Agent")
 
 check_info["f5_bigip_cluster"] = {
     'check_function':          check_f5_bigip_cluster,

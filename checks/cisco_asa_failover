@@ -77,7 +77,7 @@ def check_cisco_asa_failover(item, params, info):
             return (state, msgtxt)
 
 
-    return (3, "UNKNOWN - Data not in SNMP output")
+    return (3, "Data not in SNMP output")
 
 
 check_info["cisco_asa_failover"]  = {

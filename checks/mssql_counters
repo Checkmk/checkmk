@@ -224,7 +224,7 @@ def check_mssql_file_sizes(item, params, info):
     perfdata.append(('log_files', log_file_bytes))
     perfdata.append(('log_files_used', log_file_used_bytes))
 
-    return (0, 'OK - %s' % ', '.join(output), perfdata)
+    return (0, '%s' % ', '.join(output), perfdata)
 
 
 check_info['mssql_counters.file_sizes'] = {

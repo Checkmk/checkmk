@@ -42,7 +42,7 @@ def check_decru_temps(item, params, info):
             else:
                 return (0, "OK" + infotxt, perfdata)
 
-    return (3, "UNKNOWN - sensor not found")
+    return (3, "sensor not found")
 
 
 

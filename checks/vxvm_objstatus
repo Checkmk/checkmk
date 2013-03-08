@@ -70,7 +70,7 @@ def check_vxvm_objstatus(item, params, info):
             messages.append(", ".join(text))
         return(state, ', '.join(messages))
 
-    return(2, "CRIT - Group not found")
+    return(2, "Group not found")
 
 
 check_info["vxvm_objstatus"] = {

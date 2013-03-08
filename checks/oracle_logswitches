@@ -53,7 +53,7 @@ def check_oracle_logswitches(item, params, info):
                 return (1, "WARN" + infotext, perfdata)
             else:
                 return (0, "OK" + infotext, perfdata)
-    return (3, "UNKNOWN - Database not existing or not running")
+    return (3, "Database not existing or not running")
 
 check_includes['oracle_logswitches'] = [ "oracle.include" ]
 

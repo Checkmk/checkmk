@@ -74,7 +74,7 @@ def check_cmctc_temp(item, params, info):
         else:
             return (2, "CRIT" + info_text + levels_text + status_is, perfdata)
 
-    return (3, "UNKNOWN - Sensor %s not found in SNMP data" % item)
+    return (3, "Sensor %s not found in SNMP data" % item)
 
 check_info['cmctc.temp'] = {
     "check_function"      : check_cmctc_temp,

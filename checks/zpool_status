@@ -69,7 +69,7 @@ def inventory_zpool_status(info):
 
 def check_zpool_status(_no_item, _no_params, info):
     if " ".join(info[0]) == "all pools are healthy":
-        return(0, "OK - All pools are healthy")
+        return(0, "All pools are healthy")
 
     start_pool = False
     last_pool = None

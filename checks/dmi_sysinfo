@@ -31,7 +31,7 @@ def inventory_dmi_sysinfo(checkname, info):
 
 def check_dmi_sysinfo(item, param, info):
     if len(info) == 0 or info[0] != ['System', 'Information']:
-        return (3, "UNKNOWN - Invalid information")
+        return (3, "Invalid information")
     data = {}
     for line in info:
         line = " ".join(line)

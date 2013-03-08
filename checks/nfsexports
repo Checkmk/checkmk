@@ -60,10 +60,10 @@ def check_nfsexports(item, _no_params, info):
     for line in info:
         exported_path = line[0]
         if exported_path == item:
-            return (0, "OK - export is active")
+            return (0, "export is active")
     return (2, "CRITICAL - export not found in export list")
 
-#    return (3, "UNKNOWN - invalid data returned from Agent")
+#    return (3, "invalid data returned from Agent")
 
 
 

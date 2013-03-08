@@ -30,15 +30,15 @@ def inventory_blade_mediatray(info):
 
 def check_blade_mediatray(_no_item, _no_params, info):
     if len(info) < 1:
-        return (3, "UNKNOWN - no information about media tray in SNMP output")
+        return (3, "no information about media tray in SNMP output")
     present = info[0][0]
     communicating = info[0][1]
     if present != "1":
-        return (2, "CRIT - media tray not present")
+        return (2, "media tray not present")
     elif communicating != "1":
-        return (2, "CRIT - media tray not communicating")
+        return (2, "media tray not communicating")
     else:
-        return (0, "OK - media tray present and communicating")
+        return (0, "media tray present and communicating")
 
 
 

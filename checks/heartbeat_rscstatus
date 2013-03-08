@@ -38,11 +38,11 @@ def inventory_heartbeat_rscstatus(info):
 def check_heartbeat_rscstatus(item, expected_state, info):
     if len(info) > 0 and len(info[0]) > 0:
         if (type(expected_state) == list and info[0][0] in expected_state) or info[0][0] == expected_state:
-            return (0, "OK - Current state: %s" % (info[0][0]))
+            return (0, "Current state: %s" % (info[0][0]))
         else:
-            return (2, "CRIT - Current state: %s (Expected: %s)" % (info[0][0], expected_state))
+            return (2, "Current state: %s (Expected: %s)" % (info[0][0], expected_state))
     else:
-        return (3, "UNKNOWN - Got no information from agent")
+        return (3, "Got no information from agent")
 
 
 check_info["heartbeat_rscstatus"] = {

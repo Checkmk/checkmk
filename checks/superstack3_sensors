@@ -31,11 +31,11 @@ def check_superstack3_sensors(item, params, info):
     for name, state in info:
         if name == item:
             if state == "failure":
-                return (2, "CRIT - status is %s" % state )
+                return (2, "status is %s" % state )
             elif state == "operational":
-                return (0, "OK - status is %s" % state )
+                return (0, "status is %s" % state )
             else:
-                return (1, "WARN - status is %s" % state )
+                return (1, "status is %s" % state )
     return (3, "UNKOWN - sensor not found")
 
 

@@ -45,12 +45,12 @@ def check_cisco_power(item, params, info):
             state, source = map(saveint, line[1:3])
             output = 'State: %s, Source: %s' % (cisco_power_states[state], cisco_power_source[source])
             if state == 1:
-                return (0, "OK - %s" % output)
+                return (0, "%s" % output)
             elif state == 2:
-                return (1, "WARN - %s" % output)
+                return (1, "%s" % output)
             else:
-                return (2, "CRIT - %s" % output)
-    return (3, "UNKNOWN - item not found in snmp data")
+                return (2, "%s" % output)
+    return (3, "item not found in snmp data")
 
 
 

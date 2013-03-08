@@ -107,7 +107,7 @@ def check_cmctc_lcp(item, params, info, sensortype):
                 else:
                     status = 2
             return (status, infotext, perfdata)
-    return 3, "UNKNOWN - Sensor not found in SNMP output"
+    return 3, "Sensor not found in SNMP output"
 
 snmp_scan_functions["cmctc_lcp"] = \
     lambda oid: "CMC-TC" in oid(".1.3.6.1.2.1.1.1.0")

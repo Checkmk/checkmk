@@ -43,7 +43,7 @@ def check_oracle_asm_diskgroup(item, params, info):
         if name.rstrip('/') == item:
             return df_check_filesystem(g_hostname, item, int(total_mb),
                                        int(free_mb), params)
-    return (3, "UNKNOWN - Disk group not found")
+    return (3, "Disk group not found")
 
 
 check_info["oracle_asm_diskgroup"] = {

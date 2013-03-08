@@ -57,9 +57,9 @@ def check_openvpn_clients(item, _no_params, info):
                 timedif, bytes_per_sec = get_counter(countername, this_time, val)
                 infos.append("%s: %s/sec" % (what, get_bytes_human_readable(bytes_per_sec)))
                 perfdata.append((what, bytes_per_sec))
-            return 0, "OK - " + ", ".join(infos), perfdata
+            return 0, ", ".join(infos), perfdata
 
-    return 3, "UNKNOWN - Client connection not found"
+    return 3, "Client connection not found"
 
 check_info["openvpn_clients"] = {
     "check_function"        : check_openvpn_clients,

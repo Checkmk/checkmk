@@ -52,18 +52,18 @@ def check_f5_bigip_vserver(item, _no_params, info):
             if line[0] == item:
                 status = int(line[1])
                 if status == 0:
-                    return (1, "WARN - Virtual Server is disabled")
+                    return (1, "Virtual Server is disabled")
                 elif status == 1:
-                    return (0, "OK - Virtual Server is up and available")
+                    return (0, "Virtual Server is up and available")
                 elif status == 2:
-                    return (2, "CRIT - Virtual Server is currently not available")
+                    return (2, "Virtual Server is currently not available")
                 elif status == 3:
-                    return (2, "CRIT - Virtual Server is not available")
+                    return (2, "Virtual Server is not available")
                 elif status == 4:
-                    return (1, "WARN - Virtual Server status is unknown")
+                    return (1, "Virtual Server status is unknown")
                 else:
                     return (3, "UNKNOWN")
-    return (3, "UNKNOWN - Virtual Server %s not found in SNMP output" % item)
+    return (3, "Virtual Server %s not found in SNMP output" % item)
 
 check_info["f5_bigip_vserver"] = {
     'check_function':          check_f5_bigip_vserver,

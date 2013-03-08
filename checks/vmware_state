@@ -72,13 +72,13 @@ def inventory_vmware_state(info):
 #
 #   ip_addr = vm_ipaddr.get(item)
 #   if ip_addr == "":
-#      return(2, "CRIT - The Machine is DOWN")
+#      return(2, "The Machine is DOWN")
 #
 #   elif ip_addr == None:
-#      return (3, "UNKNOWN - no such machine")
+#      return (3, "no such machine")
 #
 #   else:
-#      return(0, "OK - The Machine is UP (%s)" % ip_addr)
+#      return(0, "The Machine is UP (%s)" % ip_addr)
 
 # 2. Variant: loop over all machines. If
 # we reach the machine we are looking for
@@ -94,10 +94,10 @@ def check_vmware_state(item, _no_params, info):
             if vm_name == item:
                 ip_addr = line[0][7:]
                 if ip_addr == "":
-                    return (2, "CRIT - the machine is down")
+                    return (2, "the machine is down")
                 else:
-                    return (0, "OK - machine is up (%s)" % ip_addr)
-    return (3, "UNKNOWN - no such machine")
+                    return (0, "machine is up (%s)" % ip_addr)
+    return (3, "no such machine")
 
 
 check_info["vmware_state"] = {

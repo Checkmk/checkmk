@@ -48,7 +48,7 @@ def check_heartbeat_nodes(item, params, info):
                 state_txt = ''
                 if state != 'up':
                     status = 2
-                    state_txt = ' (CRIT)'
+                    state_txt = ' (!!)'
                 linkOutput += '%s: %s%s, ' % (link, state, state_txt)
             linkOutput = linkOutput.rstrip(', ')
 
@@ -58,11 +58,11 @@ def check_heartbeat_nodes(item, params, info):
                 status = 2
 
             if not nodeStatus in [ 'active', 'up', 'ping', 'dead' ]:
-                return (3, "UNKNOWN - Node %s has an unhandled state: %s" % (line[0], nodeStatus))
+                return (3, "Node %s has an unhandled state: %s" % (line[0], nodeStatus))
 
-            return (status, '%s - Node %s is in state "%s". Links: %s' % (nagios_state_names[status], line[0], nodeStatus, linkOutput))
+            return (status, 'Node %s is in state "%s". Links: %s' % (line[0], nodeStatus, linkOutput))
 
-    return (3, "UNKNOWN - Node is not present anymore")
+    return (3, "Node is not present anymore")
 
 
 check_info["heartbeat_nodes"] = {

@@ -489,7 +489,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
 
                     if speed:
                         perc_used = 100.0 * traffic / speed
-                        
+
                         assumed_info = ""
                         if assumed_speed_in or assumed_speed_out:
                             assumed_info = "/" + format_value(speed / 8)
@@ -524,9 +524,9 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
                             state = max(state, 1)
                             infotext += "(!) >= " + str(err_warn)
 
-            return (state, "%s - %s" % (nagios_state_names[state], infotext), perfdata)
+            return (state, infotext, perfdata)
 
-    return (3, "UNKNOWN - no such interface")
+    return (3, "no such interface")
 
 
 

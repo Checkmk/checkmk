@@ -57,8 +57,8 @@ def check_hp_blade_blades(item, params, info):
         if line[0] == item:
             present_state = hp_blade_present_map[int(line[1])]
             if present_state != 'present':
-                return (2, 'CRIT - Blade was present but is not available anymore.'
-                           ' (Present state: %s' % present_state)
+                return (2, 'Blade was present but is not available anymore'
+                           ' (Present state: %s)' % present_state)
 
             # Status field can be an empty string.
             # Seems not to be implemented. The MIB file tells me that this value
@@ -69,11 +69,9 @@ def check_hp_blade_blades(item, params, info):
 
             snmp_state = hp_blade_status_map[state]
             status     = hp_blade_status2nagios_map[snmp_state]
-            return (status, '%s - Blade status is %s (Product: %s Name: %s S/N: %s)' %
-                                        (nagios_state_names[status], snmp_state, line[3], line[4], line[5]))
-    return (3, "UNKNOWN - item not found in snmp data")
-
-
+            return (status, 'Blade status is %s (Product: %s Name: %s S/N: %s)' %
+                                        (snmp_state, line[3], line[4], line[5]))
+    return (3, "item not found in snmp data")
 
 check_info["hp_blade_blades"] = {
     'check_function':          check_hp_blade_blades,

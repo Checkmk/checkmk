@@ -64,14 +64,13 @@ def check_dell_powerconnect_cpu(item, params, info):
                 status = 1
                 output = ' (Above %d%%)' % params[0]
 
-            return (status, '%s - CPU utilization is %d%% %s' %
-                        (nagios_state_names[status], cpu_load, output),
+            return (status, 'CPU utilization is %d%% %s' % (cpu_load, output),
                    [('load', '%d%%' % cpu_load, params[0], params[1], 0, 100),
                     ('loadavg 60s', '%d%%' % saveint(oneminuteperc), params[0], params[1], 0, 100),
                     ('loadavg 5m', '%d%%' % saveint(fiveminutesperc), params[0], params[1], 0, 100),
                    ])
 
-    return (3, "UNKNOWN - Invalid  information in SNMP data")
+    return (3, "Invalid  information in SNMP data")
 
 # Auto-detection of CPU elements.
 

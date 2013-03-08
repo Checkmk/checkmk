@@ -54,7 +54,7 @@ def check_hp_blade_manager(item, params, info):
         if line[0] == item:
             expected_role = params[0]
             if line[3] != expected_role:
-                return (2, 'CRIT - Unexpected role: %s (Expected: %s)' %
+                return (2, 'Unexpected role: %s (Expected: %s)' %
                       (hp_blade_role_map[int(line[3])], hp_blade_role_map[int(expected_role)]))
 
             # The SNMP answer is not fully compatible to the MIB file. The value of 0 will
@@ -63,11 +63,9 @@ def check_hp_blade_manager(item, params, info):
 
             snmp_state = hp_blade_status_map[state]
             status     = hp_blade_status2nagios_map[snmp_state]
-            return (status, '%s - Enclosure Manager condition is %s (Role: %s, S/N: %s)' %
-                      (nagios_state_names[status], snmp_state, hp_blade_role_map[int(line[3])], line[4]))
-    return (3, "UNKNOWN - item not found in snmp data")
-
-
+            return (status, 'Enclosure Manager condition is %s (Role: %s, S/N: %s)' %
+                      (snmp_state, hp_blade_role_map[int(line[3])], line[4]))
+    return (3, "item not found in snmp data")
 
 check_info["hp_blade_manager"] = {
     'check_function':          check_hp_blade_manager,

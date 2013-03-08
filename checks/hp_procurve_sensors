@@ -93,9 +93,9 @@ def check_hp_procurve_sensors(item, _not_used, info):
             procurve_status = hp_procurve_status_map[line[2]]
             status = hp_procurve_status2nagios_map[procurve_status]
 
-            return (status, '%s - Condition of %s "%s" is %s' %
-                      (nagios_state_names[status], get_hp_procurve_sensor_type(line[1]), line[3], procurve_status))
-    return (3, "UNKNOWN - item not found in snmp data")
+            return (status, 'Condition of %s "%s" is %s' %
+                      (get_hp_procurve_sensor_type(line[1]), line[3], procurve_status))
+    return (3, "item not found in snmp data")
 
 
 

@@ -128,7 +128,7 @@ def check_apache_status(item, _no_params, info):
         output.append('%s: %s' % (key, display_value))
         perfdata.append((key.replace(' ', '_'), value))
 
-    return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
+    return (status, ', '.join(output), perfdata)
 
 check_info['apache_status'] = {
     "check_function" :      check_apache_status,

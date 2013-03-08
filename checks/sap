@@ -51,7 +51,7 @@ def check_sap_dialog(item, params, info):
             dialog[key] = perfval, uom
 
     if not dialog:
-        return (3, 'UNKNOWN - Unable to find dialog monitoring data in agent output')
+        return (3, 'Unable to find dialog monitoring data in agent output')
 
     def perf_clean_key(s):
         return s.replace('(', '_').replace(')', '_').replace(' ', '_').replace('.', '_').rstrip('_')
@@ -59,7 +59,7 @@ def check_sap_dialog(item, params, info):
     # {'UsersLoggedIn': (2, '-'), 'ResponseTime(StandardTran.)': (6, 'msec'), 'FrontEndNetTime': (0, 'msec'), 'ResponseTime': (77, 'msec')}
     perfdata = [ (perf_clean_key(k), v[0]) for k, v in dialog.items() ]
     output = ', '.join([ '%s: %d%s' % (k, v[0], (v[1] != '-' and v[1] or '')) for k, v in dialog.items() ])
-    return (0, 'OK - %s' % output, perfdata)
+    return (0, output, perfdata)
 
 check_info['sap.dialog'] = {
     "check_function"      : check_sap_dialog,
@@ -136,9 +136,9 @@ def check_sap_value(item, params, info):
             break
 
     if status is None:
-        return (3, 'UNKNOWN - Unable to find the required value in agent output')
+        return (3, 'Unable to find the required value in agent output')
 
-    return (status, '%s - %s' % (nagios_state_names[status], output), perfdata)
+    return (status, output, perfdata)
 
 check_info['sap.value'] = {
     "check_function"      : check_sap_value,

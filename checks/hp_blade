@@ -45,10 +45,8 @@ def inventory_hp_blade_general(info):
 def check_hp_blade_general(item, params, info):
     snmp_state = hp_blade_status_map[int(info[0][1])]
     status     = hp_blade_status2nagios_map[snmp_state]
-    return (status, "%s - General Status is %s (Firmware: %s, S/N: %s)" %
-                        (nagios_state_names[status], snmp_state, info[0][0], info[0][2]))
-
-
+    return (status, "General Status is %s (Firmware: %s, S/N: %s)" %
+                        (snmp_state, info[0][0], info[0][2]))
 
 check_info["hp_blade"] = {
     'check_function':          check_hp_blade_general,

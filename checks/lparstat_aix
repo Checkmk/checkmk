@@ -88,7 +88,7 @@ def check_lparstat_aix_cpu(_no_item, params, info):
           ( "system", "%.3f" % system ),
           ( "wait",   "%.3f" % wait ) ]
 
-    infotext = " - user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user, system, wait)
+    infotext = "user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user, system, wait)
 
     # You may set a warning/critical level on the io wait
     # percentage. This can be done by setting params to
@@ -105,7 +105,7 @@ def check_lparstat_aix_cpu(_no_item, params, info):
     except:
         pass
 
-    return (result, nagios_state_names[result] + infotext, perfdata)
+    return (result, infotext, perfdata)
 
 check_info['lparstat_aix.cpu_util'] = {
     "check_function"         : check_lparstat_aix_cpu,

@@ -84,7 +84,7 @@ def check_cmctc_lcp(item, params, info, sensortype):
         if itemindex == index:
             unit = cmctc_lcp_sensortypes[sensortype][0]
             value = int(value)
-            infotext = " - "
+            infotext = ""
             if description:
                 infotext += description + ", "
             infotext += "%d%s" % (value, unit)
@@ -106,7 +106,7 @@ def check_cmctc_lcp(item, params, info, sensortype):
                     status = 1
                 else:
                     status = 2
-            return (status, nagios_state_names[status] + infotext, perfdata)
+            return (status, infotext, perfdata)
     return 3, "UNKNOWN - Sensor not found in SNMP output"
 
 snmp_scan_functions["cmctc_lcp"] = \

@@ -113,9 +113,9 @@ def check_smart_stats(item, params, info):
                 status = max(status, cur_status)
 
     if not output:
-        return (3, 'UNKNOWN - Found no info in agent outout')
+        return (3, 'Found no info in agent outout')
 
-    return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
+    return (status, ', '.join(output), perfdata)
 
 check_info["smart.stats"] = {'check_function': check_smart_stats,
  'default_levels_variable': None,
@@ -138,12 +138,12 @@ def check_smart_temp(item, params, info):
             celsius = int(line[12])
             perfdata = [ ( "temp", celsius, warn, crit ) ]
             if celsius >= crit:
-                return (2, "CRIT - Temperature is %dC" % celsius, perfdata)
+                return (2, "Temperature is %dC" % celsius, perfdata)
             elif celsius >= warn:
-                return (1, "WARN - Temperature is %dC" % celsius, perfdata)
+                return (1, "Temperature is %dC" % celsius, perfdata)
             else:
-                return (0, "OK - Temperature is %dC" % celsius, perfdata)
-    return (3, "UNKNOWN - Temperature_Celsius not found in agent output for disk %s" % item)
+                return (0, "Temperature is %dC" % celsius, perfdata)
+    return (3, "Temperature_Celsius not found in agent output for disk %s" % item)
 
 check_info["smart.temp"] = {'check_function': check_smart_temp,
  'default_levels_variable': None,

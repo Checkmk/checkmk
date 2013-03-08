@@ -56,11 +56,10 @@ def check_mssql_backup(item, params, info):
             else:
                 perfdata = [('seconds', sec_ago)]
 
-            return (state, '%s - Last backup was at %s (%ds ago)' %
-                (nagios_state_names[state], dt.strftime('%Y-%m-%d %H:%M:%S'), sec_ago),
-                perfdata)
+            return (state, 'Last backup was at %s (%ds ago)' %
+                (dt.strftime('%Y-%m-%d %H:%M:%S'), sec_ago), perfdata)
 
-    return (3, 'UNKNOWN - Tablespace %s could not be found' % item)
+    return (3, 'Tablespace %s could not be found' % item)
 
 check_info['mssql_backup'] = {
     'check_function':      check_mssql_backup,

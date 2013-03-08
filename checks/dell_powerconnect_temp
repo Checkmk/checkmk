@@ -78,18 +78,12 @@ def check_dell_powerconnect_temp(item, params, info):
         else:
             status = dell_powerconnect_temp_status2nagios_map[dell_powerconnect_status]
 
-        return (status, '%s - The temperature sensor is currently (%s)%s, and the current temperature is %sC%s' %
-                        (nagios_state_names[status], dell_powerconnect_temp_status_map[state], sensor_info, temp, temp_info), [
+        return (status, 'The temperature sensor is currently (%s)%s, and the current temperature is %sC%s' %
+                        (dell_powerconnect_temp_status_map[state], sensor_info, temp, temp_info), [
                ("temperature", int(temp), warn, crit, 0, 200),
                ])
 
-# Retain code below in case future changes permit performance data for states via a global/check specific flag
-#        return (status, '%s - The temperature sensor is currently (%s), and the current temperature is %sC' %
-#                        (nagios_state_names[status], dell_powerconnect_temp_status_map[state], temp), [
-#               ("state", dell_powerconnect_temp_sensor_state_performance_map[state], "", 0, 0, 1),
-#               ("temperature", int(temp), warn, crit, 0, 200),
-#               ])
-    return (3, "UNKNOWN - item not found in snmp data")
+    return (3, "item not found in snmp data")
 
 
 # Auto-detection of what temperature sensors are active.

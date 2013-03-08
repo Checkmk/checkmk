@@ -109,8 +109,8 @@ def check_hp_sts_drvbox(item, _no_params, info):
             output.append('(Type: %s, Model: %s, Serial: %s, Location: %s)' %
                        (hp_sts_drvbox_type_map.get(ty, 'unknown'), model, serial, loc))
 
-            return (sum_state, '%s - %s' % (nagios_state_names[sum_state], ', '.join(output)))
-    return (3, "UNKNOWN - Controller not found in snmp data")
+            return (sum_state, ', '.join(output))
+    return (3, "Controller not found in snmp data")
 
 check_info["hp_sts_drvbox"] = {
     'check_function':          check_hp_sts_drvbox,

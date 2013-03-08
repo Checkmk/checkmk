@@ -188,7 +188,7 @@ def check_cisco_qos(item, params, info):
             break
 
     if not if_id or not class_id:
-        return (3, "UNKNOWN - QoS class not found for that interface")
+        return (3, "QoS class not found for that interface")
 
     # Gather information for this object
     policy_if_id, policy_if_id2 = cisco_qos_get_ifs_by_class_id(config, class_id)[0]
@@ -291,7 +291,7 @@ def check_cisco_qos(item, params, info):
                 infotext += '(!)'
 
     infotext += ', Policy-Name: %s, Int-Bandwidth: %s' % (policy_name, format_value(bw))
-    return (state, "%s - %s" % (nagios_state_names[state], infotext.lstrip(', ')), perfdata)
+    return (state, infotext.lstrip(', '), perfdata)
 
 # General JVM checks
 check_info["cisco_qos"] = {

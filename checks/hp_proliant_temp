@@ -59,11 +59,11 @@ def check_hp_proliant_temp(item, _no_params, info):
             if int(value) > int(threshold):
                 detail_output += ' (Above %s)' % threshold
 
-            return (status, '%s - Temperature Sensor %s "%s"%s' %
-                         (nagios_state_names[status], index, hp_proliant_temp_locale[int(name)],
+            return (status, 'Temperature Sensor %s "%s"%s' %
+                         (index, hp_proliant_temp_locale[int(name)],
                           detail_output),
                     [('temp', value, threshold, threshold)])
-    return (3, "UNKNOWN - item not found in snmp data")
+    return (3, "item not found in snmp data")
 
 check_info["hp_proliant_temp"] = {
     'check_function':          check_hp_proliant_temp,

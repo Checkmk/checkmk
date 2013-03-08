@@ -244,9 +244,9 @@ def check_drbd_general(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd')
     if not parsed is None:
         if parsed['cs'] == 'Unconfigured':
-            return (2, 'CRIT - The device is "Unconfigured"')
+            return (2, 'The device is "Unconfigured"')
         elif not parsed['cs'] in drbd_cs_map:
-            return (3, 'UNKNOWN - Undefined "connection state" in drbd output')
+            return (3, 'Undefined "connection state" in drbd output')
 
         # Weight of connection state is calculated by the drbd_cs_map.
         # The roles and disk states are calculated using the expected values
@@ -263,9 +263,9 @@ def check_drbd_general(item, params, info):
             state = state < 2 and 2 or state
             output += ' (Expected: %s/%s)' % (params[1][0], params[1][1])
 
-        return (state, "%s - %s" % (nagios_state_names[state], output))
+        return (state, output)
 
-    return (3, "UNKNOWN - Undefined state")
+    return (3, "Undefined state")
 
 check_info["drbd"] = {'check_function': check_drbd_general,
  'default_levels_variable': None,
@@ -295,13 +295,13 @@ def check_drbd_net(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd.net')
     if not parsed is None:
         if parsed['cs'] == 'Unconfigured':
-            return (2, 'CRIT - The device is "Unconfigured"')
+            return (2, 'The device is "Unconfigured"')
         output, perfdata = drbd_get_counters([ ('drbd.net', 'in',  item, int(parsed['nr']), 'kb'),
                                                ('drbd.net', 'out', item, int(parsed['ns']), 'kb') ])
         # FIXME: Maybe handle thresholds in the future
-        return (0, "OK -%s" % output, perfdata)
+        return (0, output, perfdata)
 
-    return (3, "UNKNOWN - Undefined state")
+    return (3, "Undefined state")
 
 check_info["drbd.net"] = {'check_function': check_drbd_net,
  'default_levels_variable': None,
@@ -317,13 +317,13 @@ def check_drbd_disk(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd.disk')
     if not parsed is None:
         if parsed['cs'] == 'Unconfigured':
-            return (2, 'CRIT - The device is "Unconfigured"')
+            return (2, 'The device is "Unconfigured"')
         output, perfdata = drbd_get_counters([ ('drbd.disk', 'write',  item, int(parsed['dw']), 'kb'),
                                                ('drbd.disk', 'read',   item, int(parsed['dr']), 'kb') ])
         # FIXME: Maybe handle thresholds in the future
-        return (0, "OK -%s" % output, perfdata)
+        return (0, output, perfdata)
 
-    return (3, "UNKNOWN - Undefined state")
+    return (3, "Undefined state")
 
 check_info["drbd.disk"] = {'check_function': check_drbd_disk,
  'default_levels_variable': None,
@@ -339,7 +339,7 @@ def check_drbd_stats(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd.stats')
     if not parsed is None:
         if parsed['cs'] == 'Unconfigured':
-            return (2, 'CRIT - The device is "Unconfigured"')
+            return (2, 'The device is "Unconfigured"')
         output = ''
         perfdata = []
         for key, label in [ ('al',  'activity log updates'),    ('bm', 'bit map updates'),
@@ -352,9 +352,9 @@ def check_drbd_stats(item, params, info):
             else:
                 parsed[key] = 0 # perfdata must always have same number of entries
             perfdata.append(('%s' % label.replace(" ", "_"), parsed[key]))
-        return (0, 'OK - ' + output.rstrip(', '), perfdata)
+        return (0, output.rstrip(', '), perfdata)
 
-    return (3, "UNKNOWN - Undefined state")
+    return (3, "Undefined state")
 
 check_info["drbd.stats"] = {'check_function': check_drbd_stats,
  'default_levels_variable': None,

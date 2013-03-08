@@ -121,7 +121,7 @@ def check_win_dhcp_pools(item, params, info):
 
         # Catch unused pools
         if size == 0:
-            return (3, "UNKNOWN - DHCP Pool contains no IP addresses / is deactivated")
+            return (3, "DHCP Pool contains no IP addresses / is deactivated")
 
         if free > 0:
             perc_free = 100 * size / free
@@ -137,10 +137,10 @@ def check_win_dhcp_pools(item, params, info):
                      ('used', used, None, None, 0, size),
                      ('pending', pending, None, None, 0, size) ]
 
-        return (status, '%s - Addresses Free: %d, Used: %d, Pending: %d' %
-                              (nagios_state_names[status], free, used, pending), perfdata)
+        return (status, 'Addresses Free: %d, Used: %d, Pending: %d' %
+                              (free, used, pending), perfdata)
     else:
-        return (3, 'UNKNOWN - Pool information not found')
+        return (3, 'Pool information not found')
 
 def inventory_win_dhcp_pools_stats(info):
     return [ (None, None) for line in info if line[0] != '' ]
@@ -166,11 +166,11 @@ def check_win_dhcp_pools_stats(item, params, info):
                 perfdata.append((key, per_sec))
 
     if output == '':
-        return (3, "UNKNOWN - Information not available")
+        return (3, "Information not available")
     else:
         if timedif != 0:
             output = 'In last %d secs: %s' % (timedif, output)
-        return (0, "OK - %s" % (output.rstrip(', ')), perfdata)
+        return (0, "%s" % (output.rstrip(', ')), perfdata)
 
 
 check_info["win_dhcp_pools"] = {

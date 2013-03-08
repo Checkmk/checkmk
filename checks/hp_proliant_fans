@@ -73,11 +73,11 @@ def check_hp_proliant_fans(item, params, info):
                 detailOutput = ', RPM: %s' % currentSpeed
                 perfdata = [('temp', int(currentSpeed))]
 
-            return (status, '%s - FAN Sensor %s "%s", Speed is %s, State is %s%s' %
-                         (nagios_state_names[status], index, label, hp_proliant_speed_map[int(speed)],
+            return (status, 'FAN Sensor %s "%s", Speed is %s, State is %s%s' %
+                         (index, label, hp_proliant_speed_map[int(speed)],
                           snmp_status, detailOutput),
                     perfdata)
-    return (3, "UNKNOWN - item not found in snmp data")
+    return (3, "item not found in snmp data")
 
 check_info["hp_proliant_fans"] = {
     'check_function':          check_hp_proliant_fans,

@@ -76,9 +76,9 @@ def check_windows_updates(_unused, params, info):
                 status = 1
             txt.append('WARN: A reboot is required to finish update installations')
 
-        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(txt)), perfdata)
+        return (status, ', '.join(txt), perfdata)
 
-    return (3, 'UNKNOWN - No windows update information provided')
+    return (3, 'No windows update information provided')
 
 
 check_info["windows_updates"] = {

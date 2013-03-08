@@ -14,6 +14,7 @@
     * Added plugins to config module to make registration of default values
       possible for addons like mkeventd - reset to default values works now
       correctly even for multisite related settings
+    * perfometer: Bit values now using base of 1000
     * ADD: check_disk_smb pnp-template
 
     Event Console:

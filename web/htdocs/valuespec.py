@@ -1244,7 +1244,7 @@ class OptionalDropdownChoice(ValueSpec):
         options.append(("other", self._otherlabel))
         html.select(varprefix, options, defval, # attrs={"style":"float:left;"},
                     onchange="valuespec_toggle_dropdown(this, '%s_ex');" % varprefix )
-        if html.form_submitted():
+        if html.has_var(varprefix):
             div_is_open = html.var(varprefix) == "other"
         else:
             div_is_open = self.value_is_explicit(value)

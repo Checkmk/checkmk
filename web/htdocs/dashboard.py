@@ -213,16 +213,27 @@ def render_dashlet(nr, dashlet, wato_folder):
     if "view" in dashlet:
         dashlet["iframe"] = "view.py?view_name=%s&_display_options=HRSIXL&_body_class=dashlet" % dashlet["view"]
 
+    if dashlet.get("reload_on_resize"):
+        dashlet["onload"] = "dashlet_add_dimensions('dashlet_%d', this)" % nr
+
     # The content is rendered only if it is fixed. In the
     # other cases the initial (re)-size will paint the content.
     if "content" in dashlet: # fixed content
         html.write(dashlet["content"])
     elif "iframe" in dashlet: # fixed content containing iframe
+        if not dashlet.get("reload_on_resize"):
+            url = add_wato_folder_to_url(dashlet["iframe"], wato_folder)
+        else:
+            url = 'about:blank'
+
         # Fix of iPad >:-P
         html.write('<div style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch; overflow: auto;">')
-        html.write('<iframe allowTransparency="true" frameborder="0" width="100%%" height="100%%" src="%s"></iframe>' %
-           add_wato_folder_to_url(dashlet["iframe"], wato_folder))
+        html.write('<iframe id="dashlet_iframe_%d" allowTransparency="true" frameborder="0" width="100%%" '
+                   'height="100%%" src="%s"> </iframe>' % (nr, url))
         html.write('</div>')
+        if dashlet.get("reload_on_resize"):
+            html.javascript('reload_on_resize["%d"] = "%s"' %
+                            (nr, add_wato_folder_to_url(dashlet["iframe"], wato_folder)))
     html.write("</div></div>\n")
 
 # Here comes the brain stuff: An intelligent liquid layout algorithm.

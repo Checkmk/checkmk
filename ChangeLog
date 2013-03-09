@@ -18,6 +18,8 @@
       correctly even for multisite related settings
     * perfometer: Bit values now using base of 1000
     * ADD: check_disk_smb pnp-template
+    * Dashboards can now be configured to be reloaded on resizing
+      (automatically adds width/height url parameters)
 
     Event Console:
     * New rule feature: automatically delete event after actions

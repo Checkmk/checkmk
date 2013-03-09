@@ -22,6 +22,9 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// snapin ids and urls
+var reload_on_resize = {};
+
 function resize_dashlets(id, code)
 {
     var resize_info = eval(code);
@@ -102,6 +105,14 @@ function resize_dashlets(id, code)
             if (netto_height > 0)
                 oDash.style.height = netto_height + "px";
         }
+
+        if (typeof reload_on_resize[d_number] != 'undefined') {
+            var base_url = reload_on_resize[d_number];
+            var iframe = document.getElementById("dashlet_iframe_" + d_number);
+            iframe.src = base_url + '&width=' + oDash.clientWidth
+                         + '&height=' + oDash.clientHeight;
+            iframe = null;
+        }
     }
     oDash = null;
 }
@@ -158,3 +169,9 @@ function update_dashlet(id, code) {
     obj = null;
   }
 }
+
+//function dashlet_open_with_dimensions(id, url) {
+//    var dashlet = document.getElementById('dashlet_' + id);
+//    alert(dashlet.clientWidth);
+//    //iframe.src = url + '&width=' + iframe.clientWidth + '&height=' + iframe.clientHeight;
+//}

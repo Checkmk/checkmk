@@ -69,18 +69,20 @@ builtin_dashboards["main"] = {
     ]
 }
 
-builtin_dashboards["topology"] = {
-    "title" : _("Network Topology"),
-    "dashlets" : [
-        {
-            "title"            : "Topology of Site " + defaults.omd_site,
-            "iframe"           : defaults.url_prefix + 'nagvis/frontend/nagvis-js/index.php?' + \
-                                 'mod=Map&header_template=default&header_menu=0&label_show=1' + \
-                                 '&sources=automap&act=view&backend_id=' + defaults.omd_site + \
-                                 '&render_mode=undirected&url_target=main',
-            "reload_on_resize" : True,
-            "position"         : (1, 0),
-            "size"             : (GROW, GROW),
-        },
-    ]
-}
+# New topology dashboard: Will be activated as soon as we have a NagVis 
+# version that supports this...
+# builtin_dashboards["topology"] = {
+#     "title" : _("Network Topology"),
+#     "dashlets" : [
+#         {
+#             "title"            : "Topology of Site " + defaults.omd_site,
+#             "iframe"           : defaults.url_prefix + 'nagvis/frontend/nagvis-js/index.php?' + \
+#                                  'mod=Map&header_template=default&header_menu=0&label_show=1' + \
+#                                  '&sources=automap&act=view&backend_id=' + defaults.omd_site + \
+#                                  '&render_mode=undirected&url_target=main',
+#             "reload_on_resize" : True,
+#             "position"         : (1, 0),
+#             "size"             : (GROW, GROW),
+#         },
+#     ]
+# }

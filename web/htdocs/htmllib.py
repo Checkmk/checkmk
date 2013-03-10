@@ -1041,6 +1041,10 @@ class html:
         if varname in self.req.listvars:
             del self.req.listvars[varname]
 
+    def del_all_vars(self):
+        self.req.vars = {}
+        self.req.listvars = {}
+
     def javascript(self, code):
         self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)
 

@@ -5,6 +5,7 @@
 
     livestatus:
     * FIX: possible crash with VERY long downtime comments
+    * FIX: now able to handle equal comment id of host and service
 
 1.2.2b4:
     Core:

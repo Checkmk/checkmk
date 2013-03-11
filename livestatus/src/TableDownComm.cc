@@ -109,10 +109,9 @@ void TableDownComm::addComment(nebstruct_comment_data *data) {
         add(new Comment(data));
     }
     else if (data->type == NEBTYPE_COMMENT_DELETE) {
-        remove(id);
+        remove(new Comment(data));
     }
 }
-
 
 void TableDownComm::addDowntime(nebstruct_downtime_data *data)
 {
@@ -121,27 +120,29 @@ void TableDownComm::addDowntime(nebstruct_downtime_data *data)
         add(new Downtime(data));
     }
     else if (data->type == NEBTYPE_DOWNTIME_DELETE) {
-        remove(id);
+        remove(new Downtime(data));
     }
 }
 
-
 void TableDownComm::add(DowntimeOrComment *data)
 {
-    _entries_t::iterator it = _entries.find(data->_id);
+    dc_key tmp_key = make_pair(data->_id, data->_service != 0);
+    _entries_t::iterator it = _entries.find(tmp_key);
+
     // might be update -> delete previous data set
     if (it != _entries.end()) {
         delete it->second;
         _entries.erase(it);
     }
-    _entries.insert(make_pair(data->_id, data));
+    _entries.insert(make_pair(tmp_key, data));
 }
 
-void TableDownComm::remove(unsigned id)
+void TableDownComm::remove(DowntimeOrComment *data)
 {
-    _entries_t::iterator it = _entries.find(id);
+    dc_key tmp_key = make_pair(data->_id, data->_service != 0);
+    _entries_t::iterator it = _entries.find(tmp_key);
     if (it == _entries.end())
-        logger(LG_INFO, "Cannot delete non-existing downtime/comment %u", id);
+        logger(LG_INFO, "Cannot delete non-existing downtime/comment %u", data->_id);
     else {
         delete it->second;
         _entries.erase(it);
@@ -165,11 +166,13 @@ bool TableDownComm::isAuthorized(contact *ctc, void *data)
     return is_authorized_for(ctc, dtc->_host, dtc->_service);
 }
 
-DowntimeOrComment *TableDownComm::findEntry(unsigned long id)
+DowntimeOrComment *TableDownComm::findEntry(unsigned long id, bool is_service)
 {
-    _entries_t::iterator it = _entries.find(id);
-    if (it != _entries.end())
+    dc_key tmp_key = make_pair(id, is_service);
+    _entries_t::iterator it = _entries.find(tmp_key);
+    if (it != _entries.end()) {
         return it->second;
+    }
     else
         return 0;
 }

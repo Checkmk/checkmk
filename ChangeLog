@@ -52,6 +52,7 @@
     Livestatus:
     * Table statehist: Improved detection of vanished hosts and services.
                        Now able to detect and remove nonsense check plugin output 
+    * FIX: able to handle equal comment_id between host and service
 
     BI:
     * Integrated availability computing, including nifty time warp feature

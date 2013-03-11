@@ -109,9 +109,10 @@ void TableDownComm::addComment(nebstruct_comment_data *data) {
         add(new Comment(data));
     }
     else if (data->type == NEBTYPE_COMMENT_DELETE) {
-        remove(new Comment(data));
+        remove(id);
     }
 }
+
 
 void TableDownComm::addDowntime(nebstruct_downtime_data *data)
 {
@@ -120,29 +121,27 @@ void TableDownComm::addDowntime(nebstruct_downtime_data *data)
         add(new Downtime(data));
     }
     else if (data->type == NEBTYPE_DOWNTIME_DELETE) {
-        remove(new Downtime(data));
+        remove(id);
     }
 }
 
+
 void TableDownComm::add(DowntimeOrComment *data)
 {
-    dc_key tmp_key = make_pair(data->_id, data->_service != 0);
-    _entries_t::iterator it = _entries.find(tmp_key);
-
+    _entries_t::iterator it = _entries.find(data->_id);
     // might be update -> delete previous data set
     if (it != _entries.end()) {
         delete it->second;
         _entries.erase(it);
     }
-    _entries.insert(make_pair(tmp_key, data));
+    _entries.insert(make_pair(data->_id, data));
 }
 
-void TableDownComm::remove(DowntimeOrComment *data)
+void TableDownComm::remove(unsigned id)
 {
-    dc_key tmp_key = make_pair(data->_id, data->_service != 0);
-    _entries_t::iterator it = _entries.find(tmp_key);
+    _entries_t::iterator it = _entries.find(id);
     if (it == _entries.end())
-        logger(LG_INFO, "Cannot delete non-existing downtime/comment %u", data->_id);
+        logger(LG_INFO, "Cannot delete non-existing downtime/comment %u", id);
     else {
         delete it->second;
         _entries.erase(it);
@@ -166,13 +165,11 @@ bool TableDownComm::isAuthorized(contact *ctc, void *data)
     return is_authorized_for(ctc, dtc->_host, dtc->_service);
 }
 
-DowntimeOrComment *TableDownComm::findEntry(unsigned long id, bool is_service)
+DowntimeOrComment *TableDownComm::findEntry(unsigned long id)
 {
-    dc_key tmp_key = make_pair(id, is_service);
-    _entries_t::iterator it = _entries.find(tmp_key);
-    if (it != _entries.end()) {
+    _entries_t::iterator it = _entries.find(id);
+    if (it != _entries.end())
         return it->second;
-    }
     else
         return 0;
 }

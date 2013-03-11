@@ -5,9 +5,6 @@
     BI:
     * FIX: fixed bug in aggregation count (thanks Neil) 
 
-    Livestatus:
-    * FIX: now able to handle equal comment_id for host and service
-
 1.2.0p4:
     WATO:
     * FIX: fixed detection of existing groups when creating new groups

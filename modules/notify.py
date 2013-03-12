@@ -415,18 +415,18 @@ def notify_via_email(context, write_into_spoolfile):
 # 0  : everything fine   -> proceed
 # 1  : currently not OK  -> try to process later on
 # >=2: invalid           -> discard
-def check_prerequisite(context, entry):
+def should_notify(context, entry):
     # Check disabling
     if entry.get("disabled"):
         notify_log("- Skipping: it is disabled for this user")
-        return 2
+        return False
 
     # Check host, if configured
     if entry.get("only_hosts"):
         hostname = context.get("HOSTNAME")
         if hostname not in entry["only_hosts"]:
             notify_log(" - Skipping: host '%s' matches non of %s" % (hostname, ", ".join(entry["only_hosts"])))
-            return 2
+            return False
 
     # Check service, if configured
     if entry.get("only_services"):
@@ -439,14 +439,14 @@ def check_prerequisite(context, entry):
         else:
             notify_log(" - Skipping: service '%s' matches non of %s" % (
                 servicedesc, ", ".join(entry["only_services"])))
-            return 2
+            return False
 
     # Check notification type
     event, allowed_events = check_notification_type(context, entry["host_events"], entry["service_events"])
     if event not in allowed_events:
         notify_log(" - Skipping: wrong notification type %s (%s), only %s are allowed" %
             (event, context["NOTIFICATIONTYPE"], ",".join(allowed_events)) )
-        return 2
+        return False
 
     # Check notification number (in case of repeated notifications/escalations)
     if "escalation" in entry:
@@ -458,34 +458,38 @@ def check_prerequisite(context, entry):
         if notification_number < from_number or notification_number > to_number:
             notify_log(" - Skipping: notification number %d does not lie in range %d ... %d" %
                 (notification_number, from_number, to_number))
-            return 2
+            return False
 
     if "timeperiod" in entry:
         timeperiod = entry["timeperiod"]
         if timeperiod and timeperiod != "24X7":
             if not check_timeperiod(timeperiod):
                 notify_log(" - Skipping: time period %s is currently not active" % timeperiod)
-                return 1
-    return 0
+                return False
+    return True
 
 
 def notify_flexible(context, notification_table, write_into_spoolfile):
-    result = 2
+    should_retry = False
     for entry in notification_table:
         plugin = entry["plugin"]
         notify_log("Plugin: %s" % plugin)
 
-        result = check_prerequisite(context, notification_table[0])
-        if result > 0:
+        if not should_notify(context, entry):
             continue
 
         if plugin is None:
             result = notify_via_email(context, write_into_spoolfile)
         else:
             result = call_notification_script(plugin, entry.get("parameters", []), context, write_into_spoolfile)
+        if result == 1:
+            should_retry = True
 
     # The exit_code is only relevant when processing spoolfiles
-    return result
+    if should_retry:
+        return 1
+    else:
+        return 0
 
 
 

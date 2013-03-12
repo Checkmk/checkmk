@@ -178,11 +178,18 @@ def check_jolokia_metrics_mem(item, params, info):
     d = parsed[item]
     mb = 1024 * 1024.0
     heap = saveint(d["HeapMemoryUsage"]) / mb
-    heapmax = saveint(d["HeapMemoryMax"]) / mb
+    heapmax = saveint(d.get("HeapMemoryMax",-1)) / mb
     nonheap = saveint(d["NonHeapMemoryUsage"]) / mb
-    nonheapmax = saveint(d["NonHeapMemoryMax"]) / mb
+    nonheapmax = saveint(d.get("NonHeapMemoryMax",-1)) / mb
     total = heap + nonheap
-    totalmax = heapmax + nonheapmax
+    if heapmax > 0 and nonheapmax > 0:
+        totalmax = heapmax + nonheapmax
+    else:
+        totalmax   = ""
+        if heapmax < 0:
+            heapmax = ""
+        if nonheapmax < 0:
+            nonheapmax = ""
 
     state_sign = { 0: "", 1: "(!)", 2: "(!!)" }
     worst_state = 0
@@ -199,8 +206,12 @@ def check_jolokia_metrics_mem(item, params, info):
         if params.get(what):
             if type(params[what][0]) == int:
                 if what != "total":
-                    perfdata.append((what, value, value_max - params[what][0], value_max - params[what][1], "", value_max))
-                if value_max - value <= params[what][1]:
+                    warn_level = value_max - params[what][0] if value_max != "" else ""
+                    crit_level = value_max - params[what][1] if value_max != "" else ""
+                    perfdata.append((what, value, warn_level, crit_level, "", value_max))
+                if not value_max:
+                    param_state = 0
+                elif value_max - value <= params[what][1]:
                     param_state = 2
                     level_info = "%s(crit at %sMB free)" % (state_sign[2], params[what][1])
                 elif value_max - value <= params[what][0]:
@@ -208,18 +219,24 @@ def check_jolokia_metrics_mem(item, params, info):
                     level_info = "%s(warn at %sMB free)" % (state_sign[1], params[what][0])
             else:
                 if what != "total":
-                    perfdata.append((what, value, value_max * params[what][0] / 100.0, value_max * params[what][1] / 100.0, "", value_max))
-                if value >= value_max * params[what][1] / 100.0:
+                    warn_level = value_max * params[what][0] / 100.0 if value_max != "" else ""
+                    crit_level = value_max * params[what][1] / 100.0 if value_max != "" else ""
+                    perfdata.append((what, value, warn_level, crit_level, "", value_max))
+                if not value_max:
+                    param_state = 0
+                elif value >= value_max * params[what][1] / 100.0:
                     param_state = 2
                     level_info = "%s(crit at %s%%)" % (state_sign[2], params[what][1])
                 elif value >= value_max * params[what][0] / 100.0:
                     param_state = 1
                     level_info = "%s(warn at %s%%)" % (state_sign[1], params[what][0])
         else:
-            perfdata.append((what, value, "", "", "", value_max))
+            if what != "total":
+                perfdata.append((what, value, "", "", "", value_max))
 
 
-        info_list.append("%s: %0.fMB/%.1f%% used%s" % (what.title(), value, value/value_max*100, level_info))
+        used_info = "/%.1f%% used" % (value / value_max * 100) if value_max != "" else ""
+        info_list.append("%s: %0.fMB%s%s" % (what.title(), value, used_info, level_info))
         worst_state = max(param_state, worst_state)
 
     return (worst_state, ', '.join(info_list), perfdata)

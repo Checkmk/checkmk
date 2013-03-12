@@ -3,9 +3,12 @@
     * Checks can now omit the typical "OK - " or "WARN -". This text
       will be added automatically if missing.
 
-    livestatus:
+    Livestatus:
     * FIX: possible crash with VERY long downtime comments
     * FIX: now able to handle equal comment id of host and service
+
+    WATO:
+    * FIX: Fix hiliting of errors in Nagios output
 
 1.2.2b4:
     Core:

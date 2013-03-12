@@ -4116,7 +4116,7 @@ def check_mk_local_automation(command, args=[], indata=""):
 
 
 def hilite_errors(outdata):
-    return re.sub("\nError: *([^\n]*)", "\n<div class=err>Error: \\1</div>", outdata)
+    return re.sub("\nError: *([^\n]*)", "\n<div class=err><b>Error:</b> \\1</div>", outdata)
 
 
 #.

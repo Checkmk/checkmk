@@ -3,7 +3,7 @@
     * Checks can now omit the typical "OK - " or "WARN -". This text
       will be added automatically if missing.
     
-    * Checks & Agents:
+    Checks & Agents:
     * FIX: jolokia_metrics.mem - now able to handle negative/missing max values
 
     Livestatus:

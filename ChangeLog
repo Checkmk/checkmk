@@ -75,7 +75,8 @@
     * FIX: livecheck: fixed compilation bug
     
     Checks & Agents:
-    * FIX: jolokia_metrics.mem - now able to handle negative/missing heap values
+    * FIX: jolokia_metrics.mem - now able to handle negative/missing max values
+    * ADD: tcp_conn_stats: now additionally uses /proc/net/tcp6
 
     Livestatus:
     * FIX: possible crash with VERY long downtime comments

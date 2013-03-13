@@ -21,6 +21,8 @@
     * Dashboards can now be configured to be reloaded on resizing
       (automatically adds width/height url parameters)
     * New filter for IP address of a host 
+    * Quicksearch: allow searching for complete IP addresses and IP
+      address prefixes
 
     Event Console:
     * New rule feature: automatically delete event after actions

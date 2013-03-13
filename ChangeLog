@@ -10,6 +10,9 @@
     WATO:
     * FIX: Fix hiliting of errors in Nagios output
 
+    Multisite:
+    * FIX: Avoid duplicate "Services" button in host detail views
+
 1.2.2b4:
     Core:
     * FIX: Fix output of cmk -D: datasource programs were missing

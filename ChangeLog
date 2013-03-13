@@ -17,9 +17,10 @@
       possible for addons like mkeventd - reset to default values works now
       correctly even for multisite related settings
     * perfometer: Bit values now using base of 1000
-    * ADD: check_disk_smb pnp-template
+    * Added PNP tempate for check_disk_smb
     * Dashboards can now be configured to be reloaded on resizing
       (automatically adds width/height url parameters)
+    * New filter for IP address of a host 
 
     Event Console:
     * New rule feature: automatically delete event after actions

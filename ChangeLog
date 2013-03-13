@@ -77,6 +77,8 @@
     Checks & Agents:
     * FIX: jolokia_metrics.mem - now able to handle negative/missing max values
     * ADD: tcp_conn_stats: now additionally uses /proc/net/tcp6
+    * ADD: wmic_processs: cpucores now being considered when calculating 
+           user/kernel percentages. (thanks to William Baum)
 
     Livestatus:
     * FIX: possible crash with VERY long downtime comments

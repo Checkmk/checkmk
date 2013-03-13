@@ -274,6 +274,13 @@ function mkSearchGetSearchObjects(objType) {
         return [];
 }
 
+function is_ipaddress(add, prefix) {
+    if (prefix)
+        return add.match(/^[0-9]{1,3}(\.[0-9]{1,3}){0,2}\.?$/);
+    else
+        return add.match(/^([1-9][0-9]{0,2}\.){3}[1-9][0-9]{0,2}$/);
+}
+
 function mkSearchGetUrl(objType, objName, objSite, numMatches) {
     objName = objName.replace(/\*/g,"\.\*");
     if (numMatches == null)
@@ -284,6 +291,10 @@ function mkSearchGetUrl(objType, objName, objSite, numMatches) {
             return 'view.py?view_name=host&host=' + objName + '&site=' + objSite;
         else if(numMatches > 1)
             return 'view.py?view_name=hosts&host=' + objName;
+        else if (is_ipaddress(objName, true))
+            return 'view.py?view_name=searchsvc&search=Search&filled_in=filter&host_address_prefix=yes&host_address=' + objName;
+        else if (is_ipaddress(objName, false))
+            return 'view.py?view_name=searchsvc&search=Search&filled_in=filter&host_address_prefix=no&host_address=' + objName;
         else
             return 'view.py?view_name=searchsvc&search=Search&filled_in=filter&service=' + objName;
     else if(objType == 'hg')

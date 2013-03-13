@@ -20,6 +20,8 @@
     Multisite:
     * FIX: Avoid duplicate "Services" button in host detail views
     * New filter for IP address of a host 
+    * Quicksearch: allow searching for complete IP addresses and IP
+      address prefixes
 
 1.2.2b4:
     Core:

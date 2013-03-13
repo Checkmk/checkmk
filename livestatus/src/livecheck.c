@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/timeb.h>
+#include <sys/resource.h>
 #include <netinet/ip.h>
 #include <stdlib.h>
 #include <fcntl.h>

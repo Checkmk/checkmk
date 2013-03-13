@@ -20,9 +20,6 @@
     * Added PNP tempate for check_disk_smb
     * Dashboards can now be configured to be reloaded on resizing
       (automatically adds width/height url parameters)
-    * New filter for IP address of a host 
-    * Quicksearch: allow searching for complete IP addresses and IP
-      address prefixes
 
     Event Console:
     * New rule feature: automatically delete event after actions
@@ -91,6 +88,9 @@
 
     Multisite:
     * FIX: Avoid duplicate "Services" button in host detail views
+    * New filter for IP address of a host 
+    * Quicksearch: allow searching for complete IP addresses and IP
+      address prefixes
 
 1.2.2b4:
     Core:

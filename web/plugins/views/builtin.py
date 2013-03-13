@@ -373,6 +373,7 @@ multisite_builtin_views.update({
                               ('st3', 'on'),
                               ('stp', 'on')],
           'hidden': True,
+          'hidebutton' : True,
           'hide_filters': ['site', 'host'],
           'icon': 'services',
           'layout': 'boxed',

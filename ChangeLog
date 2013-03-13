@@ -19,6 +19,7 @@
 
     Multisite:
     * FIX: Avoid duplicate "Services" button in host detail views
+    * New filter for IP address of a host 
 
 1.2.2b4:
     Core:

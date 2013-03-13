@@ -48,7 +48,6 @@
       when processing of current lines needs more time than max execution time
     * mounts: ignore multiple occurrances of the same device
     * Linux agent: allow cached local/plugins checks (see docu)
-    * jolokia_metrics.mem: now able to handle negative/missing max heap values
     
     Livestatus:
     * Table statehist: Improved detection of vanished hosts and services.
@@ -73,6 +72,9 @@
     Core:
     * Checks can now omit the typical "OK - " or "WARN -". This text
       will be added automatically if missing.
+
+    Checks & Agents:
+    * FIX: jolokia_metrics.mem - now able to handle negative/missing heap values
 
     Livestatus:
     * FIX: possible crash with VERY long downtime comments

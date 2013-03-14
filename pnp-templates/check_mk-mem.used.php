@@ -38,14 +38,20 @@ foreach ($NAME as $i => $n) {
     $MAX[$n]  = $MAX[$i];
 }
 
-$def[1] = "DEF:virt=$RRDFILE[3]:$DS[3]:MAX "
-        . "DEF:ramx=$RRD[ramused] "
+$def[1] = "";
+
+if (isset($RRD['pagetables'])) {
+    $def[1] .= "DEF:pagetables=$RRD[pagetables] "
+            .  "DEF:ram=$RRD[ramused] ";
+}
+else {
+    $def[1] .= "CDEF:pagetables=0 "
+            .  "DEF:ram=$RRD[ramused] ";
+}
+   
+$def[1] .= "DEF:virt=$RRDFILE[3]:$DS[3]:MAX "
         . "DEF:swap=$RRDFILE[2]:$DS[2]:MAX " 
-        . "CDEF:ram=virt,swap,- "
-        ;
 
-
-$def[1] .=  ""
         . "HRULE:$MAX[3]#000080:\"RAM+SWAP installed\" "
         . "HRULE:$MAX[1]#2040d0:\"$maxgb GB RAM installed\" "
         . "HRULE:$WARN[3]#FFFF00:\"Warning\" "
@@ -65,7 +71,7 @@ $def[1] .=  ""
        
 
 if (isset($RRD['pagetables'])) {
-   $def[1] .= "DEF:pagetables=$RRD[pagetables] "
+   $def[1] .= ""
            . "AREA:pagetables#ff8800:\"Page tables     \":STACK " 
            . "GPRINT:pagetables:LAST:\"%6.0lf MB last\" " 
            . "GPRINT:pagetables:AVERAGE:\"%6.0lf MB avg\" "

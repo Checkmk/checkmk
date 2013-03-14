@@ -432,14 +432,15 @@ def should_notify(context, entry):
     if entry.get("only_services"):
         servicedesc = context.get("SERVICEDESC")
         if not servicedesc:
-            notify_log(" - Skipping: limited to certain services, but this is a host notification")
-        for s in entry["only_services"]:
-            if re.match(s, servicedesc):
-                break
+            notify_log(" - Proceed: limited to certain services, but this is a host notification")
         else:
-            notify_log(" - Skipping: service '%s' matches non of %s" % (
-                servicedesc, ", ".join(entry["only_services"])))
-            return False
+            for s in entry["only_services"]:
+                if re.match(s, servicedesc):
+                    break
+            else:
+                notify_log(" - Skipping: service '%s' matches non of %s" % (
+                    servicedesc, ", ".join(entry["only_services"])))
+                return False
 
     # Check notification type
     event, allowed_events = check_notification_type(context, entry["host_events"], entry["service_events"])

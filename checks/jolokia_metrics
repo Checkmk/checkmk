@@ -206,8 +206,8 @@ def check_jolokia_metrics_mem(item, params, info):
         if params.get(what):
             if type(params[what][0]) == int:
                 if what != "total":
-                    warn_level = value_max - params[what][0] if value_max != "" else ""
-                    crit_level = value_max - params[what][1] if value_max != "" else ""
+                    warn_level = ("", value_max - params[what][0])[value_max != ""]
+                    crit_level = ("", value_max - params[what][1])[value_max != ""]
                     perfdata.append((what, value, warn_level, crit_level, "", value_max))
                 if not value_max:
                     param_state = 0
@@ -219,8 +219,8 @@ def check_jolokia_metrics_mem(item, params, info):
                     level_info = "%s(warn at %sMB free)" % (state_sign[1], params[what][0])
             else:
                 if what != "total":
-                    warn_level = value_max * params[what][0] / 100.0 if value_max != "" else ""
-                    crit_level = value_max * params[what][1] / 100.0 if value_max != "" else ""
+                    warn_level = ("", value_max * params[what][0] / 100.0)[value_max != ""]
+                    crit_level = ("", value_max * params[what][1] / 100.0)[value_max != ""]
                     perfdata.append((what, value, warn_level, crit_level, "", value_max))
                 if not value_max:
                     param_state = 0
@@ -235,7 +235,7 @@ def check_jolokia_metrics_mem(item, params, info):
                 perfdata.append((what, value, "", "", "", value_max))
 
 
-        used_info = "/%.1f%% used" % (value / value_max * 100) if value_max != "" else ""
+        used_info = ("", "/%.1f%% used" % (value / value_max * 100))[value_max != ""]
         info_list.append("%s: %0.fMB%s%s" % (what.title(), value, used_info, level_info))
         worst_state = max(param_state, worst_state)
 

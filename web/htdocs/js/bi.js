@@ -53,6 +53,10 @@ function bi_toggle_subtree(oImg, lazy)
 
 function bi_update_tree(oImg, code)
 {
+    // Deactivate clicking - the update can last a couple
+    // of seconds. In that time we must inhibit further clicking.
+    oImg.onclick = null;
+
     // First find enclosding <div class=bi_tree_container>
     var oDiv = oImg;
     while (oDiv.className != "bi_tree_container") {
@@ -73,6 +77,8 @@ function bi_toggle_box(oDiv, lazy)
     var do_open;
 
     if (oDiv.className.indexOf("open") >= 0) {
+        if (lazy) 
+            return; // do not close in lazy mode
         oDiv.className = oDiv.className.replace(/open/, "closed");
         url += "&state=closed";
         do_open = false;

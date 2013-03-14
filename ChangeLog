@@ -2,9 +2,29 @@
     Core:
     * Checks can now omit the typical "OK - " or "WARN -". This text
       will be added automatically if missing.
+    * FIX: livecheck: fixed compilation bug
+    
+    Checks & Agents:
+    * FIX: jolokia_metrics.mem - now able to handle negative/missing max values
+    * ADD: tcp_conn_stats: now additionally uses /proc/net/tcp6
+    * ADD: wmic_processs: cpucores now being considered when calculating 
+           user/kernel percentages. (thanks to William Baum)
+    
+    Notifications:
+    * FIX: fixed crash on host notification when contact had explicit services set
 
     Livestatus:
     * FIX: possible crash with VERY long downtime comments
+    * FIX: now able to handle equal comment id of host and service
+
+    WATO:
+    * FIX: Fix hiliting of errors in Nagios output
+
+    Multisite:
+    * FIX: Avoid duplicate "Services" button in host detail views
+    * New filter for IP address of a host 
+    * Quicksearch: allow searching for complete IP addresses and IP
+      address prefixes
 
     BI: 
     * FIX: fix exception with expansion level being 'None'

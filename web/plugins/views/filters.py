@@ -76,6 +76,40 @@ declare_filter(202, FilterText("output",  _("Status detail"), "service", "servic
 
 
 
+class FilterIPAddress(Filter):
+    def __init__(self):
+        Filter.__init__(self, "host_address", _("Host IP Address"), "host", ["host_address", "host_address_prefix"], ["host_address"])
+
+    def display(self):
+        html.text_input("host_address")
+        html.write("<br><br>")
+        html.begin_radio_group()
+        html.radiobutton("host_address_prefix", "yes", True, _("Prefix match"))
+        html.radiobutton("host_address_prefix", "no", False, _("Exact match"))
+        html.end_radio_group()
+    
+    def double_height(self):
+        return True
+
+    def filter(self, infoname):
+        address = html.var("host_address")
+        if address:
+            if html.var("host_address_prefix") == "yes":
+                return "Filter: host_address ~ ^%s\n" % address
+            else:
+                return "Filter: host_address = %s\n" % address
+        else:
+            return ""
+
+    def variable_settings(self, row):
+        return [ ("host_address", row["host_address"]) ]
+
+    def heading_info(self, infoname):
+        return html.var("host_address")
+
+declare_filter(102, FilterIPAddress())
+
+
 # Helper that retrieves the list of host/service/contactgroups via Livestatus
 def all_groups(what):
     groups = dict(html.live.query("GET %sgroups\nColumns: name alias\n" % what))

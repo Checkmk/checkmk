@@ -161,7 +161,7 @@ def inventory_jolokia_metrics_serv(info, what):
 def check_jolokia_metrics_mem(item, params, info):
     parsed = jolokia_metrics_parse(info)
     if item not in parsed:
-        return (3, "UNKNOWN - data not found in agent output")
+        return (3, "data not found in agent output")
 
 
     # convert old parameter version ( warn, crit )
@@ -178,11 +178,18 @@ def check_jolokia_metrics_mem(item, params, info):
     d = parsed[item]
     mb = 1024 * 1024.0
     heap = saveint(d["HeapMemoryUsage"]) / mb
-    heapmax = saveint(d["HeapMemoryMax"]) / mb
+    heapmax = saveint(d.get("HeapMemoryMax",-1)) / mb
     nonheap = saveint(d["NonHeapMemoryUsage"]) / mb
-    nonheapmax = saveint(d["NonHeapMemoryMax"]) / mb
+    nonheapmax = saveint(d.get("NonHeapMemoryMax",-1)) / mb
     total = heap + nonheap
-    totalmax = heapmax + nonheapmax
+    if heapmax > 0 and nonheapmax > 0:
+        totalmax = heapmax + nonheapmax
+    else:
+        totalmax   = ""
+        if heapmax < 0:
+            heapmax = ""
+        if nonheapmax < 0:
+            nonheapmax = ""
 
     state_sign = { 0: "", 1: "(!)", 2: "(!!)" }
     worst_state = 0
@@ -199,8 +206,12 @@ def check_jolokia_metrics_mem(item, params, info):
         if params.get(what):
             if type(params[what][0]) == int:
                 if what != "total":
-                    perfdata.append((what, value, value_max - params[what][0], value_max - params[what][1], "", value_max))
-                if value_max - value <= params[what][1]:
+                    warn_level = ("", value_max - params[what][0])[value_max != ""]
+                    crit_level = ("", value_max - params[what][1])[value_max != ""]
+                    perfdata.append((what, value, warn_level, crit_level, "", value_max))
+                if not value_max:
+                    param_state = 0
+                elif value_max - value <= params[what][1]:
                     param_state = 2
                     level_info = "%s(crit at %sMB free)" % (state_sign[2], params[what][1])
                 elif value_max - value <= params[what][0]:
@@ -208,28 +219,33 @@ def check_jolokia_metrics_mem(item, params, info):
                     level_info = "%s(warn at %sMB free)" % (state_sign[1], params[what][0])
             else:
                 if what != "total":
-                    perfdata.append((what, value, value_max * params[what][0] / 100.0, value_max * params[what][1] / 100.0, "", value_max))
-                if value >= value_max * params[what][1] / 100.0:
+                    warn_level = ("", value_max * params[what][0] / 100.0)[value_max != ""]
+                    crit_level = ("", value_max * params[what][1] / 100.0)[value_max != ""]
+                    perfdata.append((what, value, warn_level, crit_level, "", value_max))
+                if not value_max:
+                    param_state = 0
+                elif value >= value_max * params[what][1] / 100.0:
                     param_state = 2
                     level_info = "%s(crit at %s%%)" % (state_sign[2], params[what][1])
                 elif value >= value_max * params[what][0] / 100.0:
                     param_state = 1
                     level_info = "%s(warn at %s%%)" % (state_sign[1], params[what][0])
         else:
-            perfdata.append((what, value, "", "", "", value_max))
+            if what != "total":
+                perfdata.append((what, value, "", "", "", value_max))
 
 
-        info_list.append("%s: %0.fMB/%.1f%% used%s" % (what.title(), value, value/value_max*100, level_info))
+        used_info = ("", "/%.1f%% used" % (value / value_max * 100))[value_max != ""]
+        info_list.append("%s: %0.fMB%s%s" % (what.title(), value, used_info, level_info))
         worst_state = max(param_state, worst_state)
 
-    infotext = nagios_state_names[worst_state] + " - " + ', '.join(info_list)
-    return (worst_state, infotext, perfdata)
+    return (worst_state, ', '.join(info_list), perfdata)
 
 def check_jolokia_metrics_threads(item, params, info):
     warn, crit = params
     parsed = jolokia_metrics_parse(info)
     if item not in parsed:
-        return (3, "UNKNOWN - data not found in agent output")
+        return (3, "data not found in agent output")
     d = parsed[item]
 
     this_time = time.time()
@@ -258,14 +274,14 @@ def check_jolokia_metrics_threads(item, params, info):
         output.append('%s: %d' % (key, val))
     # Only process the perfdata when no wrap occured
     if wrapped:
-        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)))
+        return (status, ', '.join(output))
     else:
-        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
+        return (status, ', '.join(output), perfdata)
 
 def check_jolokia_metrics_uptime(item, _unused, info):
     parsed = jolokia_metrics_parse(info)
     if item not in parsed:
-        return (3, "UNKNOWN - data not found in agent output")
+        return (3, "data not found in agent output")
     uptime = saveint(parsed[item]['Uptime']) / 1000
 
     seconds = uptime % 60
@@ -275,7 +291,7 @@ def check_jolokia_metrics_uptime(item, _unused, info):
     days = rem / 1440
     now = int(time.time())
     since = time.strftime("%c", time.localtime(now - uptime))
-    return (0, "OK - up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
+    return (0, "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
 
 
 def check_jolokia_metrics_app_state(item, _unused, info):
@@ -296,14 +312,14 @@ def check_jolokia_metrics_app_state(item, _unused, info):
         else:
             app_state = 2
     if   app_state == 3:
-        return (3, "UNKNOWN - data not found in agent output")
+        return (3, "data not found in agent output")
     elif app_state == 0:
-        return (0, 'OK - application is running')
+        return (0, 'application is running')
     elif app_state == 2:
-        return (2, 'CRIT - application is not running (Running: %s)')
+        return (2, 'application is not running (Running: %s)')
 
 
-    return (3, 'UNKNOWN - error in agent output')
+    return (3, 'error in agent output')
 
 
 
@@ -314,10 +330,10 @@ def check_jolokia_metrics_app_sess(item, params, info):
     elif len (item.split()) == 2:
         app = jolokia_metrics_app(info, item.split())
     if not app:
-        return (3, "UNKNOWN - application not found")
+        return (3, "application not found")
     sessions = app.get('Sessions', app.get('activeSessions', app.get('OpenSessionsCurrentCount')))
     if sessions == None:
-        return (3, "UNKNOWN - data not found in agent output")
+        return (3, "data not found in agent output")
     sess = saveint(sessions)
     maxActive = saveint(app.get('Sessions', app.get('maxActiveSessions', app.get('OpenSessionsCurrentCount'))))
 
@@ -339,7 +355,7 @@ def check_jolokia_metrics_app_sess(item, params, info):
     if maxActive and maxActive > 0:
         status_txt += " (max active sessions: %d)" % maxActive
 
-    return (status, '%s - %d Sessions%s' % (nagios_state_names[status], sess, status_txt),
+    return (status, '%d Sessions%s' % (sess, status_txt),
             [('sessions', sess, hi_warn, hi_crit)])
 
 
@@ -347,7 +363,7 @@ def check_jolokia_metrics_serv_req(item, params, info):
     lo_crit, lo_warn, hi_warn, hi_crit = params
     serv = jolokia_metrics_serv(info, item.split())
     if not serv or not 'Requests' in serv:
-        return (3, "UNKNOWN - data not found in agent output")
+        return (3, "data not found in agent output")
     req = saveint(serv['Requests'])
 
     status    = 0
@@ -377,17 +393,17 @@ def check_jolokia_metrics_serv_req(item, params, info):
         wrapped = True
 
     if wrapped:
-        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)))
+        return (status, ', '.join(output))
     else:
-        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
+        return (status, ', '.join(output), perfdata)
 
 
 def check_jolokia_metrics_bea_queue(item, params, info):
     app = jolokia_metrics_app(info, item.split())
     if not app:
-        return (3, "UNKNOWN - application not found")
+        return (3, "application not found")
     if "QueueLength" not in app:
-        return (3, "UNKNOWN - data not found in agent output")
+        return (3, "data not found in agent output")
     queuelength = int(app['QueueLength'])
 
     status = 0
@@ -396,7 +412,7 @@ def check_jolokia_metrics_bea_queue(item, params, info):
         status = 2
     elif queuelength >= warn:
         status = 1
-    return (status, nagios_state_names[status] + ' - queue length is %d' % queuelength,
+    return (status, 'queue length is %d' % queuelength,
              [("length", queuelength, warn, crit)])
 
 
@@ -406,21 +422,21 @@ def check_jolokia_metrics_bea_queue(item, params, info):
 def check_jolokia_metrics_bea_requests(item, _no_params, info):
     app = jolokia_metrics_app(info, item.split())
     if not app:
-        return (3, "UNKNOWN - application not found")
+        return (3, "application not found")
 
     for nk in [ "CompletedRequestCount", "requestCount" ]:
        if nk in app:
            requests = int(app[nk])
            timedif, rate = get_counter("j4p.bea.requests.%s" % item, time.time(), requests)
-           return (0, "OK - %.2f requests/sec" % rate, [("rate", rate)])
+           return (0, "%.2f requests/sec" % rate, [("rate", rate)])
 
-    return (3, "UNKNOWN - data not found in agent output")
+    return (3, "data not found in agent output")
 
 
 def check_jolokia_metrics_bea_threads(item, _no_params, info):
     app = jolokia_metrics_app(info, item.split())
     if not app:
-        return (3, "UNKNOWN - application not found")
+        return (3, "application not found")
 
     perfdata = []
     infos = []
@@ -433,7 +449,7 @@ def check_jolokia_metrics_bea_threads(item, _no_params, info):
         perfdata.append((varname, value))
         infos.append("%s: %d" % (title, value))
 
-    return (0, "OK - " + ", ".join(infos), perfdata)
+    return (0, ", ".join(infos), perfdata)
 
 
 

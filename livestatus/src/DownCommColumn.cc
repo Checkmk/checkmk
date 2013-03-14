@@ -39,20 +39,22 @@ void DownCommColumn::output(void *data, Query *query)
         bool first = true;
         bool found_match = false;
 
-        for (map<unsigned long, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
+        for (map<pair<unsigned long, bool>, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
                 it != table->entriesIteratorEnd();
                 ++it)
         {
-            unsigned long id = it->first;
-            DowntimeOrComment *dt = it->second;
+            unsigned long id     = it->first.first;
+            bool is_service       =  it->first.second;
+            DowntimeOrComment *dt =  it->second;
 
             found_match = false;
-            if ( dt->_service == 0){
-            	if (dt->_host->name == ((host_struct*)data)->name)
+
+            if (!is_service){
+                if (dt->_host->name == ((host_struct*)data)->name)
                     found_match = true;
             }
             else
-            	if ( dt->_service->description == ((service_struct*)data)->description && dt->_service->host_name == ((service_struct*)data)->host_name )
+               if ( dt->_service->description == ((service_struct*)data)->description && dt->_service->host_name == ((service_struct*)data)->host_name )
                     found_match = true;
 
             if (found_match)
@@ -97,10 +99,9 @@ bool DownCommColumn::isNagiosMember(void *data, void *member)
     // data points to a host or service
     // member is not a pointer, but an unsigned int (hack)
     int64_t id = (int64_t)member; // Hack. Convert it back.
-    DowntimeOrComment *dt = table->findEntry(id);
+    DowntimeOrComment *dt = table->findEntry(id, _is_service);
     return dt != 0 &&
-        ( dt->_service == (service *)data
-          || (dt->_service == 0 && dt->_host == (host *)data));
+        ( dt->_service == (service *)data || (dt->_service == 0 && dt->_host == (host *)data));
 }
 
 bool DownCommColumn::isEmpty(void *data)
@@ -108,7 +109,7 @@ bool DownCommColumn::isEmpty(void *data)
     if (!data) return true;
 
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
-    for (map<unsigned long, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
+    for (map<pair<unsigned long, bool>, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
             it != table->entriesIteratorEnd();
             ++it)
     {

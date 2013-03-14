@@ -28,24 +28,27 @@
 def check_wmic_process(item, params, info):
     name, memwarn, memcrit, pagewarn, pagecrit, cpuwarn, cpucrit = params
     count, mem, page, userc, kernelc = 0, 0, 0, 0, 0
+    cpucores = 1
     if len(info) == 0:
         return (3, "UNKNOWN - No output from agent in section wmic_process")
     legend = info[0]
     for line in info[1:]:
         psinfo = dict(zip(legend, line))
-        if psinfo["Name"].lower() == name.lower():
-            count += 1
-            mem  += int(psinfo["WorkingSetSize"])
-            page += int(psinfo["PageFileUsage"])
-            userc += int(psinfo["UserModeTime"])
+        if "ThreadCount" in legend and psinfo["Name"].lower() == "system idle process":
+            cpucores = int(psinfo["ThreadCount"])
+        elif psinfo["Name"].lower() == name.lower():
+            count   += 1
+            mem     += int(psinfo["WorkingSetSize"])
+            page    += int(psinfo["PageFileUsage"])
+            userc   += int(psinfo["UserModeTime"])
             kernelc += int(psinfo["KernelModeTime"])
 
     mem_mb = mem / 1048576.0
     page_mb = page / 1048576.0
     timedif, user_per_sec = get_counter("wmic_process.user.%s.%d" % (name, count), time.time(), userc)
     timedif, kernel_per_sec = get_counter("wmic_process.kernel.%s.%d" % (name, count), time.time(), kernelc)
-    user_perc = user_per_sec / 100000.0
-    kernel_perc = kernel_per_sec / 100000.0
+    user_perc = user_per_sec / 100000.0 / cpucores
+    kernel_perc = kernel_per_sec / 100000.0 / cpucores
     cpu_perc = user_perc + kernel_perc
     perfdata = [
             ("mem",    mem_mb,      memwarn,  memcrit),

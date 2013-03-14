@@ -1003,14 +1003,18 @@ div.varname {
     vertical-align: bottom;
 }
 
-.wato div.error pre div.err {
+.wato div.error div.err {
     background-color: yellow;
     color: #000;
     font-weight: bold;
     width: 100%;
-    margin: 0;
-    padding: 0;
+    margin: 2px;
+    padding: 2px 5px;
     float: left;
+    border-radius: 3px;
+    position: relative;
+    left: -8px;
+    opacity: 0.90;
 }
 
 /* Logwatch pattern editor */

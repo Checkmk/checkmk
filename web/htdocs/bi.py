@@ -1408,7 +1408,7 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
             omit = omit_root and len(path) == 1
             if not omit:
                 h += '<span id="%d:%s" %s class="bibox_box %s %s state state%s%s">' % (
-                        expansion_level, path_id, mc, leaf, is_open and "open" or "closed", effective_state["state"], addclass)
+                        expansion_level or 0, path_id, mc, leaf, is_open and "open" or "closed", effective_state["state"], addclass)
                 if is_leaf:
                     h += aggr_render_leaf(tree, show_host, bare = True) # .replace(" ", "&nbsp;")
                 else:
@@ -1676,7 +1676,10 @@ def host_table(columns, add_headers, only_sites, limit, filters):
     return singlehost_table(columns, add_headers, only_sites, limit, filters, False)
 
 def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbyname):
+    log("--------------------------------------------------------------------\n")
+    log("* Starting to compute singlehost_table (joinbyname = %s)\n" % joinbyname)
     load_assumptions() # user specific, always loaded
+    log("* Assumptions are loaded.\n")
 
     # Create livestatus filter for filtering out hosts. We can
     # simply use all those filters since we have a 1:n mapping between
@@ -1687,8 +1690,10 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
         if not header.startswith("Sites:"):
             filter_code += header
 
+    log("* Getting status information about hosts...\n")
     host_columns = filter(lambda c: c.startswith("host_"), columns)
     hostrows = get_status_info_filtered(filter_code, only_sites, limit, host_columns, config.bi_precompile_on_demand)
+    log("* Got %d host rows\n" % len(hostrows))
 
     # if limit:
     #     views.check_limit(hostrows, limit)
@@ -1704,9 +1709,11 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                 only_groups = [ filt.selected_group() ]
 
     if config.bi_precompile_on_demand:
+        log("* Compiling forest on demand...\n")
         compile_forest(config.user_id, only_groups = only_groups,
                        only_hosts = [ (h['site'], h['name']) for h in hostrows ])
     else:
+        log("* Compiling forest...\n")
         compile_forest(config.user_id)
 
     # rows by site/host - needed for later cluster state gathering
@@ -1715,12 +1722,44 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
 
     rows = []
     # Now compute aggregations of these hosts
+    log("* Assembling host rows...\n")
+
+    # Special optimization for joinbyname
+    if joinbyname:
+        rows_by_host = {}
+        for hostrow in hostrows:
+            site = hostrow["site"]
+            host = hostrow["name"]
+            rows_by_host[(site, host)] = hostrow
+        
     for hostrow in hostrows:
         site = hostrow["site"]
         host = hostrow["name"]
+        # In case of joinbyname we deal with aggregations that bare the
+        # name of one host, but might contain states of multiple hosts.
+        # status_info cannot be filled from one row in that case. We          
+        # try to optimize by assuming that all data that we need is being
+        # displayed in the same view and the information thus being present
+        # in some of the other hostrows.
         if joinbyname:
+            status_info = {}
             aggrs = g_user_cache["aggregations_by_hostname"].get(host, [])
-            status_info = None
+            # collect all the required host of all matching aggregations
+            for a in aggrs:
+                reqhosts = a[1]["reqhosts"]
+                for sitehost in reqhosts:
+                    if sitehost not in rows_by_host:
+                        # This one is missing. Darn. Cancel it.
+                        status_info = None
+                        break
+                    else:
+                        row = rows_by_host[sitehost]
+                        status_info[sitehost] = [
+                             row["state"],
+                             row["plugin_output"],
+                             row["services_with_info"] ]
+                if status_info == None:
+                    break
         else:
             aggrs = g_user_cache["host_aggregations"].get((site, host), [])
             status_info = { (site, host) : [
@@ -1752,6 +1791,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                 return rows
 
 
+    log("* Assembled %d rows.\n" % len(rows))
     return rows
 
 

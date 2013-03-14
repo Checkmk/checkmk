@@ -3,8 +3,12 @@
     * Checks can now omit the typical "OK - " or "WARN -". This text
       will be added automatically if missing.
 
-    livestatus:
+    Livestatus:
     * FIX: possible crash with VERY long downtime comments
+
+    BI: 
+    * FIX: fix exception with expansion level being 'None'
+    * FIX: speedup for single host tables joined by hostname (BI-Boxes)
 
 1.2.2b4:
     Core:

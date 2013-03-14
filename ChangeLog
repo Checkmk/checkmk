@@ -94,6 +94,11 @@
     * Quicksearch: allow searching for complete IP addresses and IP
       address prefixes
 
+    BI: 
+    * FIX: fix exception with expansion level being 'None'
+    * FIX: speedup for single host tables joined by hostname (BI-Boxes)
+
+
 1.2.2b4:
     Core:
     * FIX: Fix output of cmk -D: datasource programs were missing

@@ -411,6 +411,8 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age):
 
 def get_piggyback_info(hostname):
     output = ""
+    if not hostname:
+        return output
     dir = tmp_dir + "/piggyback/" + hostname
     if os.path.exists(dir):
         for sourcehost in os.listdir(dir):

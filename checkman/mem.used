@@ -92,5 +92,6 @@ mem_extended_perfdata (boolean): If this variable is set
  to {True}, then the checks outputs additional performance
  data, if the agent provides that information. On Linux
  the amount of mapped and committed memory is output
- (see {Mapped} and {Committed_AS} in {/proc/meminfo}).
+ (see {Mapped} and {Committed_AS} in {/proc/meminfo}) and
+ also the size used for page tables {Pagetables}.
 

@@ -48,6 +48,8 @@
       when processing of current lines needs more time than max execution time
     * mounts: ignore multiple occurrances of the same device
     * Linux agent: allow cached local/plugins checks (see docu)
+    * mem.include: Linux memory check now includes size of page tables. This
+      can be important e.g. on ORACLE systems with a lot of memory
     
     Livestatus:
     * Table statehist: Improved detection of vanished hosts and services.

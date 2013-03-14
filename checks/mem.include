@@ -28,13 +28,15 @@ memused_default_levels = (150.0, 200.0)
 mem_extended_perfdata = False
 
 def check_memory(params, meminfo):
-    try:
-        swapused = meminfo['SwapTotal'] - meminfo['SwapFree']
-        memused  = meminfo['MemTotal']  - meminfo['MemFree']
-        # Buffers and Cached are optional (not supported on Windows yet)
-        caches   = meminfo.get('Buffers', 0) + meminfo.get('Cached', 0)
-    except:
-        return (3, "invalid output from plugin")
+    swapused = meminfo['SwapTotal'] - meminfo['SwapFree']
+    memused  = meminfo['MemTotal']  - meminfo['MemFree']
+    # Buffers and Cached are optional (not supported on Windows yet)
+    caches   = meminfo.get('Buffers', 0) + meminfo.get('Cached', 0)
+    # Size of Pagetable on Linux can be relevant e.g. on ORACLE
+    # servers with much memory, that do not use HugeTables. We account
+    # that for used
+    pagetables = meminfo.get('PageTables', 0)
+    pagetables_mb = pagetables / 1024.0
 
     # Add extended memory performance data, if this is
     # enabled and the agent provides that information.
@@ -50,18 +52,19 @@ def check_memory(params, meminfo):
             else:
                 committed_as = 0
             extended_perf = [
-                ('mapped',       str(mapped_mb)       + 'MB', '', '', 0, ''),
-                ('committed_as', str(committed_as_mb) + 'MB', '', '', 0, ''),
+                ('mapped',       str(mapped_mb)       + 'MB'),
+                ('committed_as', str(committed_as_mb) + 'MB'),
+                ('pagetables',   str(pagetables_mb)   + 'MB'),
             ]
             extrainfo = ", %.1f GB mapped, %.1f GB committed" % \
                         (mapped_mb / 1024.0, committed_as_mb / 1024.0)
 
-    totalused_kb = (swapused + memused - caches)
-    totalused_mb = totalused_kb / 1024
+    totalused_kb = (swapused + memused - caches + pagetables)
+    totalused_mb = totalused_kb / 1024.0
     totalmem_kb = meminfo['MemTotal']
-    totalmem_mb = totalmem_kb / 1024
+    totalmem_mb = totalmem_kb / 1024.0
     totalused_perc = 100 * (float(totalused_kb) / float(totalmem_kb))
-    totalvirt_mb = (meminfo['SwapTotal'] + meminfo['MemTotal']) / 1024
+    totalvirt_mb = (meminfo['SwapTotal'] + meminfo['MemTotal']) / 1024.0
     warn, crit = params
 
     perfdata = [
@@ -70,9 +73,13 @@ def check_memory(params, meminfo):
 
     # levels may be given either in int -> MB or in float -> percentages
 
-    infotext = ("%.2f GB used (%.2f GB RAM + %.2f GB SWAP, this is %.1f%% of %.2f GB RAM)" % \
+    if pagetables > 0:
+        pgtext = " + %.2f GB Pagetables" % (pagetables_mb / 1024.0)
+    else:
+        pgtext = ""
+    infotext = ("%.2f GB used (%.2f GB RAM + %.2f GB SWAP%s, this is %.1f%% of %.2f GB RAM)" % \
                (totalused_mb / 1024.0, (memused-caches) / 1024.0 / 1024, swapused / 1024.0 / 1024,
-               totalused_perc, totalmem_mb / 1024.0)) \
+               pgtext, totalused_perc, totalmem_mb / 1024.0)) \
                + extrainfo
 
     if type(warn) == float:

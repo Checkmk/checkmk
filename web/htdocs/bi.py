@@ -1330,6 +1330,7 @@ def ajax_save_treestate():
 
 def ajax_render_tree():
     aggr_group = html.var("group")
+    reqhosts = [ tuple(sitehost.split('#')) for sitehost in html.var("reqhosts").split(',') ]
     aggr_title = html.var("title")
     omit_root = not not html.var("omit_root")
     boxes = not not html.var("boxes")
@@ -1337,7 +1338,7 @@ def ajax_render_tree():
 
     # Make sure that BI aggregates are available
     if config.bi_precompile_on_demand:
-        compile_forest(config.user_id, only_groups = [ aggr_group ])
+        compile_forest(config.user_id, only_hosts = reqhosts, only_groups = [ aggr_group ])
     else:
         compile_forest(config.user_id)
 
@@ -1467,6 +1468,7 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
         ( "omit_root", omit_root and "yes" or ""),
         ( "boxes", boxes and "yes" or ""),
         ( "only_problems", only_problems and "yes" or ""),
+        ( "reqhosts", ",".join('%s#%s' % sitehost for sitehost in affected_hosts) ),
     ])
 
     htmlcode = '<div id="%s" class=bi_tree_container>' % htmllib.attrencode(url_id) + \

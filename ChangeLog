@@ -9,6 +9,7 @@
     BI: 
     * FIX: fix exception with expansion level being 'None'
     * FIX: speedup for single host tables joined by hostname (BI-Boxes)
+    * FIX: avoid closing BI subtree while tree is being loaded
 
 1.2.2b4:
     Core:

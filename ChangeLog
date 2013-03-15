@@ -105,6 +105,9 @@
     * FIX: speedup for single host tables joined by hostname (BI-Boxes)
     * FIX: avoid closing BI subtree while tree is being loaded
 
+    Event Console:
+    * FIX: make hostname matching field optional. Otherwise a .* was
+           neccessary for the rule in order to match
 
 1.2.2b4:
     Core:

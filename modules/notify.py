@@ -34,7 +34,7 @@
 # hostname, servicedesc, hoststate, servicestate, output in
 # the form %(variable)s
 
-import pprint, uuid
+import pprint
 
 # Default settings
 notification_logdir   = var_dir + "/notify"
@@ -201,7 +201,7 @@ def create_spoolfile(data):
     target_dir = "%s/%s" % (notification_spooldir, contactname)
     if not os.path.exists(target_dir):
         os.makedirs(target_dir)
-    file_path = "%s/%0.2f_%s" % (target_dir, time.time(), uuid.uuid1())
+    file_path = "%s/%0.8f" % (target_dir, time.time())
     notify_log("Creating spoolfile: %s" % file_path)
     file(file_path,"w").write(pprint.pformat(data))
 

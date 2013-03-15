@@ -51,6 +51,9 @@
     * mem.include: Linux memory check now includes size of page tables. This
       can be important e.g. on ORACLE systems with a lot of memory
     
+    Notifications:
+    * notify.py: unique spoolfiles name no longer created with uuid
+
     Livestatus:
     * Table statehist: Improved detection of vanished hosts and services.
                        Now able to detect and remove nonsense check plugin output 

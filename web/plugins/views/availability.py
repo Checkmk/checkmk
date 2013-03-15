@@ -211,7 +211,7 @@ avoption_entries = [
          choices = [
             ( "honor", _("Honor notification period") ),
             ( "ignore", _("Ignore notification period") ),
-            ( "exclude", _("Exclude notification period" ) ),
+            ( "exclude", _("Exclude times out of notif. period" ) ),
          ]
      )
   ),

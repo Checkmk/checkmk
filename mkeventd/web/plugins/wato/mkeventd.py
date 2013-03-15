@@ -607,7 +607,8 @@ vs_mkeventd_rule = Dictionary(
         ),
     ],
     optional_keys = [ "delay", "livetime", "count", "expect", "match_priority", "match_priority", 
-                      "match_facility", "match_sl", "set_text", "set_host", "set_application", "set_comment",
+                      "match_facility", "match_sl", "match_host", "match_application", 
+                      "set_text", "set_host", "set_application", "set_comment",
                       "set_contact", "cancel_priority", "match_ok" ],
     headers = [
         ( _("General Properties"), [ "id", "description", "disabled" ] ),

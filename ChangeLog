@@ -51,6 +51,9 @@
     * mem.include: Linux memory check now includes size of page tables. This
       can be important e.g. on ORACLE systems with a lot of memory
     
+    Notifications:
+    * notify.py: unique spoolfiles name no longer created with uuid
+
     Livestatus:
     * Table statehist: Improved detection of vanished hosts and services.
                        Now able to detect and remove nonsense check plugin output 
@@ -102,6 +105,9 @@
     * FIX: speedup for single host tables joined by hostname (BI-Boxes)
     * FIX: avoid closing BI subtree while tree is being loaded
 
+    Event Console:
+    * FIX: make hostname matching field optional. Otherwise a .* was
+           neccessary for the rule in order to match
 
 1.2.2b4:
     Core:

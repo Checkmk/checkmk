@@ -1466,14 +1466,26 @@ register_check_parameters(
             Tuple(
                 title = _("Specify levels in percentage of total RAM"),
                 elements = [
-                  Percentage(title = _("Warning at a usage of"), label = _("% of RAM"), max_value = None),
-                  Percentage(title = _("Critical at a usage of"), label = _("% of RAM"), max_value = None)]),
+                  Percentage(title = _("Warning at a memory usage of"), default_value = 80.0),
+                  Percentage(title = _("Critical at a memory usage of"), default_value = 90.0)]),
             Tuple(
                 title = _("Specify levels in absolute usage values"),
                 elements = [
                   Integer(title = _("Warning at"), unit = _("MB")),
                   Integer(title = _("Critical at"), unit = _("MB"))]),
             ]),
+    None, None
+)
+
+register_check_parameters(
+    subgroup_os,
+    "esx_host_memory",
+    _("Main memory usage of ESX host system"),
+    Tuple(
+        title = _("Specify levels in percentage of total RAM"),
+        elements = [
+          Percentage(title = _("Warning at a RAM usage of"), default_value = 80.0),
+          Percentage(title = _("Critical at a RAM usage of"), default_value = 90.0)]),
     None, None
 )
 

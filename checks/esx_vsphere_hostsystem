@@ -93,39 +93,40 @@ check_info['esx_vsphere_hostsystem.cpu_usage'] = {
 
 
 
-esx_host_mem_default = ( 80.0, 90.0 )
+esx_host_mem_default_levels = ( 80.0, 90.0 )
 
 def inventory_esx_vsphere_hostsystem_mem(info):
     data = esx_vsphere_hostsystem_convert(info).keys()
     if 'summary.quickStats.overallMemoryUsage' in data and 'hardware.memorySize' in data:
-        return [(None, esx_host_mem_default)]
+        return [(None, 'esx_host_mem_default_levels')]
 
 def check_esx_vsphere_hostsystem_mem(item, params, info):
     data = esx_vsphere_hostsystem_convert(info)
     memory_usage = savefloat(data['summary.quickStats.overallMemoryUsage'][0]) * 1024 * 1024
     memory_size  = savefloat(data['hardware.memorySize'][0])
     level = memory_usage / memory_size * 100
+
     warn, crit = params
     state = 0
     label = ''
     if level > crit:
         state = 2
-        label = "(!!) (Levels at %d%%/%d%%)" % (warn, crit)
+        label = " (Levels at %d%%/%d%%)" % (warn, crit)
     elif level > warn:
         state = 1
-        label = "(!) (Levels at %d%%/%d%%)" % (warn, crit)
+        label = " (Levels at %d%%/%d%%)" % (warn, crit)
 
-    message = "Memory usage: %d%%%s %s/%s" % \
+    message = "%d%%%s used - %s/%s" % \
     (level, label, get_bytes_human_readable(memory_usage), get_bytes_human_readable(memory_size))
-    perf = [("usage", memory_usage, warn, crit, 0, memory_size)]
+    perf = [("usage", memory_usage, warn * memory_size / 100, crit * memory_size / 100, 0, memory_size)]
     return(state, message, perf)
 
 
 check_info['esx_vsphere_hostsystem.mem_usage'] = {
   "inventory_function"  : inventory_esx_vsphere_hostsystem_mem,
   "check_function"      : check_esx_vsphere_hostsystem_mem,
-  "service_description" : "ESX Memory usage",
-  "group"               : "memory",
+  "service_description" : "Memory used",
+  "group"               : "esx_host_memory",
   "has_perfdata"        : True
 }
 

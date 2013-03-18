@@ -637,7 +637,7 @@ def perfometer_simple_mem_usage(row, command, perf):
     maxw = float(perf[0][6])
     used_level = float(perf[0][1])
     used_perc = (100.0 / maxw) * used_level
-    return "%d%% used" % used_perc  , perfometer_linear(used_perc, "#0000FF")
+    return "%d%%" % used_perc  , perfometer_linear(used_perc, "#20cf80")
 
 perfometers['check_mk-db2_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-esx_vsphere_hostsystem.mem_usage'] = perfometer_simple_mem_usage

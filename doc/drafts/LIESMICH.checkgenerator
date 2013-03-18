@@ -1,0 +1,36 @@
+Idee: Ein WATO-gesteuerter Generator für Checks, der Templates
+von Checks erzeugt.
+
+Eine Art Wizard oder ValueSpec, in dem man ausfüllt:
+
+Name des Checks (intern): [______________]
+Service-Description:      [____________]
+Check hat Items:          [X]
+Features des Checks:
+    Check hat Parameter:         [X]
+    Check verarbeitet Counter:   [X]
+    Schwellwerte mit Prediction: [X]
+    Mittelung:                   [X]
+    Parse-Funktion:              [X]
+
+Titel für Manpage:        [__________________________________________]
+Type:                     [v SNMP]
+OID-Bäume:
+    Basis-OID:                1.3.6.1._________________
+    Subbäume:                 1.3  1.5  OIDEND
+Perfdaten:                [X]
+Checkgruppe für WATO:     [_________]
+Include-Dateien:          [_______________]
+
+Beispielausgabe von Agent: TEXTAREA
+
+--> Als Ergebnis kommt heraus:
+  - Ein Check
+  - Eine Check-Manpage
+  - Ein PNP-Template
+  - Ein Perf-O-Meter-Template
+  - Evtl. ein WATO-Template
+
+Die Einstellungen von oben werden persistiert, damit man weitere
+Checks einfach generieren kann.
+

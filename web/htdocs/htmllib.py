@@ -374,11 +374,13 @@ class html:
     def makeactionuri(self, addvars):
         return self.makeuri(addvars + [("_transid", self.fresh_transid())])
 
-    def makeuri_contextless(self, vars):
+    def makeuri_contextless(self, vars, filename=None):
+        if not filename:
+	    filename = self.req.myfile + ".py"
         if vars:
-            return self.req.myfile + ".py?" + urlencode_vars(vars)
+            return filename + "?" + urlencode_vars(vars)
         else:
-            return self.req.myfile + ".py"
+            return filename
 
     def image_button(self, varname, title, cssclass = ''):
         if not self.mobile:

@@ -37,7 +37,7 @@ function mkSearchAddField(field, targetFrame) {
         }
 
         oField.onkeydown = function(e) { if (!e) e = window.event; return mkSearchKeyDown(e, oField); }
-        oField.onkeyup   = function(e) { if (!e) e = window.event; return mkSearchKeyUp(e, oField);}
+        oField.onkeyup   = function(e) { if (!e) e = window.event; return mkSearchKeyUp(e, oField); }
         oField.onclick   = function(e) { mkSearchClose(); return true; }
 
         // On doubleclick toggle the list

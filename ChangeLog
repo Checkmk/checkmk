@@ -19,6 +19,7 @@
 
     WATO:
     * FIX: Fix hiliting of errors in Nagios output
+    * FIX: localisation error
 
     Multisite:
     * FIX: Avoid duplicate "Services" button in host detail views

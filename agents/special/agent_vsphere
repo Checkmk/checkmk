@@ -77,13 +77,39 @@ print "<<<check_mk>>>"
 print "Version: %s" % host.get_api_version()
 print "AgentOs: %s " % host.get_server_type()
 
+# import inspect, pprint
+# for x in host._retrieve_properties_traversal(property_names=[], obj_type = MORTypes.ManagedEntity):
+#     print x.Obj
+#     print inspect.getmembers(x)
+# sys.exit(17)
+
+# hosts = host.get_hosts()
+# pprint.pprint(inspect.getmembers(VIProperty(host, hosts.keys()[0]).hardware))
+# sys.exit(1)
+
+#for p in VIProperty(host, hosts.keys()[0]).network:
+    # print host.get_resource_pools(p)
+    # for n in p:
+ #       pprint.pprint(inspect.getmembers(p))
+
+# print p
+# print hosts
+
+
+# sys.exit(1)
+
+
+
 def output_mors(what, properties, direct=False): 
     if what == "hostsystem":
         obj_type = MORTypes.HostSystem
+    elif what == "networking":
+        obj_type = MORTypes.HostNetworkSystem
     else:
         obj_type = MORTypes.VirtualMachine
 
     count = 0
+    sections = []
     for mor in host._retrieve_properties_traversal(property_names=properties.keys(), obj_type=obj_type):
         count += 1
         # Parse result into a dictionary. Key is the property name,
@@ -95,9 +121,11 @@ def output_mors(what, properties, direct=False):
 
         # Get the name of this Host/VirtualMachine
         # May there a comments in the field, so split at whitespace
-        name = data["name"].split()[0]
-
-        object_collection[name] = (what, data['name'])
+        try:
+            name = data["name"].split()[0]
+            object_collection[name] = (what, data['name'])
+        except:
+            pass
         
         # Output multiplexed Check_MK Agent output (new in version 1.2.3i1)
         if direct:
@@ -110,11 +138,40 @@ def output_mors(what, properties, direct=False):
         items = data.items()
         items.sort()
         for name, value in items:
-            print '%s %s' % (name, value)
+            if type(value) == tuple:
+                sections.append(value)
+            else:
+                print '%s %s' % (name, value)
+
+    # pprint.pprint(sections)
+    for section_name, section_lines in sections:
+        print '<<<%s>>>' % section_name
+        for line in section_lines:
+            print line
 
 
 def conv_multipath(value):
     return " ".join(["%s %s" % (p.Name, p.PathState) for p in value.HostMultipathStateInfoPath])
+
+def conv_numeric_sensor_info(value):
+    # import inspect, pprint
+    lines = []
+    for sensor in value.HostNumericSensorInfo:
+        if not hasattr(sensor, "HealthState"):
+            continue # should never happen. If happens, sensor not interesting for monitoring
+        if sensor.HealthState.Key == "green":
+            continue # just output sensors with issuse - saves lots of data
+
+        line = '%s;%s;%s;%s;%s;' % ( sensor.Name, sensor.BaseUnits, sensor.CurrentReading, sensor.SensorType, sensor.UnitModifier)
+        if hasattr(sensor, "RateUnits"):
+            line += sensor.RateUnits
+        line += ";%s;%s;%s" % (sensor.HealthState.Key, sensor.HealthState.Label, sensor.HealthState.Summary)
+        lines.append(line)
+
+        # print inspect.getmembers(sensor)
+    return ('esx_vsphere_sensors:sep(59)', lines)
+
+    # return pprint.pformat(inspect.getmembers(value))
 
 if params['i'] == None:
     mortypes = [ 'hostsystem', 'virtualmachine', 'storage' ]
@@ -143,6 +200,8 @@ if "hostsystem" in mortypes:
       "hardware.cpuInfo.numCpuCores": str,
       "hardware.cpuInfo.numCpuThreads": str,
       "hardware.cpuInfo.hz": str,
+
+      "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo" : conv_numeric_sensor_info,
 
       #"summary.quickStats.uptime": str,
     }, params['direct'])
@@ -183,6 +242,7 @@ if "virtualmachine" in mortypes:
 
       "summary.runtime.powerState": str,
     })
+
 
 print "<<<<>>>>"
 

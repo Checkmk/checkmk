@@ -30,41 +30,63 @@ def esx_vsphere_hostsystem_convert(info):
         data[line[0]] = line[1:]
     return data
 
+esx_host_cpu_default_levels = None
 
-esx_host_cpu_default = ( 80.0, 90.0 )
+# hardware.cpuInfo.numCpuCores 12
+# hardware.cpuInfo.numCpuPackages 2
+# hardware.cpuInfo.numCpuThreads 24
+# hardware.cpuInfo.hz 2933436846               --> In Hz per CPU Core
+# summary.quickStats.overallCpuUsage 7539      --> In MHz
+
 
 def inventory_esx_vsphere_hostsystem_cpu(info):
     data = esx_vsphere_hostsystem_convert(info).keys()
     if 'summary.quickStats.overallCpuUsage' in data \
         and 'hardware.cpuInfo.hz' in data\
         and 'hardware.cpuInfo.numCpuCores' in data:
-        return [(None, esx_host_cpu_default)]
+        return [(None, 'esx_host_cpu_default_levels')]
 
 def check_esx_vsphere_hostsystem_cpu(item, params, info):
     data = esx_vsphere_hostsystem_convert(info)
-    cpu_usage = savefloat(data['summary.quickStats.overallCpuUsage'][0]) * 1024 * 1024
-    cpu_size  = savefloat(data['hardware.cpuInfo.hz'][0]) * savefloat(data['hardware.cpuInfo.numCpuCores'][0])
-    level = cpu_usage / cpu_size * 100
-    warn, crit = params
-    state = 0
-    label = ''
-    if level > crit:
-        state = 2
-        label = "(!!) (Levels at %d%%/%d%%)" % (warn, crit)
-    elif level > warn:
-        state = 1
-        label = "(!) (Levels at %d%%/%d%%)" % (warn, crit)
+    num_cores = int(data['hardware.cpuInfo.numCpuCores'][0])
+    num_sockets = int(data['hardware.cpuInfo.numCpuPackages'][0])
+    num_threads = int(data['hardware.cpuInfo.numCpuThreads'][0])
+    used_mhz = float(data['summary.quickStats.overallCpuUsage'][0])
+    mhz_per_core = float(data['hardware.cpuInfo.hz'][0]) / 1024.0 / 1024.0
+    total_mhz = mhz_per_core * num_cores
 
-    message = "CPU usage: %d%%%s %s/%s" % \
-    (level, label, get_bytes_human_readable(cpu_usage,1000,True,"Hz"), get_bytes_human_readable(cpu_size,1000,True,"Hz"))
-    perf = [("usage", cpu_usage, warn, crit, 0, cpu_size)]
-    return (state, message, perf)
+    usage = used_mhz / total_mhz * 100
+    per_core = num_cores / 100.0
+
+    infotext = "%.1f%%" % usage
+    
+    state = 0
+    if params:
+        warn, crit = params
+        if usage >= crit:
+            state = 2
+            infotext += " (levels at %d%%/%d%%)" % (warn, crit)
+        elif usage >= warn:
+            state = 1
+            infotext += " (levels at %d%%/%d%%)" % (warn, crit)
+        warn_perf = warn * per_core
+        crit_perf = crit * per_core
+    else:
+        warn_perf, crit_perf = None, None
+
+    infotext += ", %.2fGHz/%.2fGHz" % (used_mhz / 1024.0, total_mhz / 1024.0)
+
+    infotext += ", %d sockets, %d cores/socket, %d threads" % (
+            num_sockets, num_cores / num_sockets, num_threads)
+
+    perf = [("usage", usage * per_core, warn_perf, crit_perf, 0, 100 * per_core)]
+    return (state, infotext, perf)
 
 
 check_info['esx_vsphere_hostsystem.cpu_usage'] = {
    "inventory_function"  : inventory_esx_vsphere_hostsystem_cpu,
    "check_function"      : check_esx_vsphere_hostsystem_cpu,
-   "service_description" : "ESX CPU usage",
+   "service_description" : "CPU utilization",
    "group"               : "cpu_utilization",
    "has_perfdata"        : True
 }
@@ -213,5 +235,6 @@ check_info['esx_vsphere_hostsystem.multipath'] = {
   "inventory_function"  : inventory_esx_vsphere_hostsystem_multipath,
   "check_function"      : check_esx_vsphere_hostsystem_multipath,
   "service_description" : "ESX Multipath %s",
+  "group"               : "cpu_utilization",
 }
 

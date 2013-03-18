@@ -169,7 +169,7 @@ def check_esx_vsphere_hostsystem_state(item, params, info):
 check_info['esx_vsphere_hostsystem.state'] = {
   "inventory_function"  : inventory_esx_vsphere_hostsystem_state,
   "check_function"      : check_esx_vsphere_hostsystem_state,
-  "service_description" : "ESX State",
+  "service_description" : "Overall state",
 }
 
 
@@ -235,7 +235,6 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
 check_info['esx_vsphere_hostsystem.multipath'] = {
   "inventory_function"  : inventory_esx_vsphere_hostsystem_multipath,
   "check_function"      : check_esx_vsphere_hostsystem_multipath,
-  "service_description" : "ESX Multipath %s",
-  "group"               : "cpu_utilization",
+  "service_description" : "Multipath %s",
 }
 

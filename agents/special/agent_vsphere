@@ -70,7 +70,7 @@ try:
 except:
     if params['debug']:
         raise
-    sys.stderr.write("Cannot connect to vSphere Server. May the wrong credentials. Please correct and make a reinventory.")
+    sys.stderr.write("Cannot connect to vSphere Server. May the wrong credentials. Please correct and make a reinventory.\n")
     sys.exit(1)
 
 print "<<<check_mk>>>"

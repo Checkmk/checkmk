@@ -41,7 +41,9 @@ def get_input(valuespec, varprefix):
     return value
 
 
-def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None, buttontext = None, title = None):
+def edit_dictionary(entries, value, focus=None, hover_help=True, 
+                    validate=None, buttontext=None, title=None,
+                    buttons = None):
     new_value = value.copy()
     if html.var("filled_in") == "form" and html.check_transaction():
         messages = []
@@ -82,9 +84,13 @@ def edit_dictionary(entries, value, focus=None, hover_help=True, validate=None, 
             first = False
 
     end()
-    if buttontext == None:
-        buttontext = _("Save")
-    html.button("save", buttontext)
+    if buttons:
+        for name, title, icon in buttons:
+            html.button(name, title)
+    else:
+        if buttontext == None:
+            buttontext = _("Save")
+        html.button("save", buttontext)
     html.hidden_fields()
     html.end_form()
 

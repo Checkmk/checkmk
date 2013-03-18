@@ -502,12 +502,19 @@ class HTTPUrl(TextAscii):
             (self._target and 'target="%s" ' % self._target or ""),
             url, text)
 
+RETURN = 13
+SHIFT = 16
+CTRL = 17
+ALT = 18
+BACKSPACE = 8
 
 class TextAreaUnicode(TextUnicode):
     def __init__(self, **kwargs):
         TextUnicode.__init__(self, **kwargs)
         self._cols = kwargs.get("cols", 60)
         self._rows = kwargs.get("rows", 20)  # Allowed: "auto" -> Auto resizing
+        self._minrows = kwargs.get("minrows", 0) # Minimum number of initial rows when "auto"
+        self._submit_keys = kwargs.get("submit_keys", [])
 
     def value_to_text(self, value):
         return "<pre class=ve_textarea>%s</pre>" % value
@@ -521,10 +528,51 @@ class TextAreaUnicode(TextUnicode):
                 rows = len(html.var(varprefix).splitlines())
             else:
                 rows = len(value.splitlines())
+            rows = max(rows, self._minrows)
         else:
             attrs = {}
             rows = self._rows
+        if self._submit_keys:
+            attrs['id'] = "textarea_%s" % varprefix
+            commit_code = ""
+            for keylist, code in self._submit_keys:
+                commit_code += "    textarea_%s_trysubmit(e, %r, %s);\n" % (
+                        varprefix, keylist, repr(code))
+
+            html.final_javascript("""
+textarea_text_keys = [];
+function textarea_%s_keydown(e) {
+    if (!e) e = window.event;
+    var keyCode = e.which || e.keyCode;
+    textarea_%s_keys.push(keyCode);
+%s}
+function textarea_%s_keyup(e) {
+    if (!e) e = window.event;
+    var keyCode = e.which || e.keyCode;
+    for (var i in textarea_%s_keys) {
+        if (textarea_%s_keys[i] == keyCode) {
+            textarea_%s_keys.splice(i, 1);
+            break;
+        }
+    }
+}
+function textarea_%s_trysubmit(e, keylist, code) {
+    for (var i in keylist) {
+        if (textarea_%s_keys.indexOf(keylist[i]) < 0) {
+            return;
+        }
+    }
+    if (e.stopPropagation)
+        e.stopPropagation();
+    e.cancelBubble = true;
+    eval(code);
+}
+var t = document.getElementById("textarea_%s");
+t.onkeydown = function(e) { return textarea_%s_keydown(e); }
+t.onkeyup   = function(e) { return textarea_%s_keyup(e); }
+""" % ((varprefix, varprefix, commit_code) + (varprefix,)*9))
         html.text_area(varprefix, value, rows=rows, cols=self._cols, attrs = attrs)
+
 
     # Overridded because we do not want to strip() here and remove '\r'
     def from_html_vars(self, varprefix):

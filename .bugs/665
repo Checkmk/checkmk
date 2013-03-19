@@ -1,0 +1,12 @@
+Title: Makefiles von REDHAT/CENTOS 6.4 - Missing packages
+Component: core
+State: open
+Date: 2013-03-19 11:28:02
+Targetversion: 1.2.3
+Class: nastiness
+
+The following packages need to be installed manually after ./configure has been called
+xorg-x11-server-Xvfb
+pythin-ldap
+They are only set in OS_PACKAGES, but probably needed in BUILD_PACKAGES
+

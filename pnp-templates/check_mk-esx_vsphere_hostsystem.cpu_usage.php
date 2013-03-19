@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,27 +23,30 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# {
-#     'tcp_port': 4711,
-#     'secret': 'wef',
-#     'infos': ['hostsystem', 'virtualmachine'],
-#     'user': 'wefwef'
-# }
+$num_cores = $MAX[1];
+$warnperc = $WARN[1] / $num_cores * 100.0;
+$critperc = $CRIT[1] / $num_cores * 100.0;
 
-def agent_vsphere_arguments(params, hostname, ipaddress):
-    args = ''
-    if "tcp_port" in params:
-        args += " -p %d" % params["tcp_port"]
-    if "lower" in params:
-        args += " -lower"
+$opt[1] = "--vertical-label 'Used cores' -l0  -ru $num_cores --title \"CPU Utilization for $hostname\" ";
 
-    args += " -u " + quote_shell_string(params["user"])
-    args += " -s " + quote_shell_string(params["secret"])
-    args += " -i " + ",".join(params["infos"])
-    if params.get("direct"):
-        args += ' --direct'
+$def[1] =  "DEF:util=$RRDFILE[1]:$DS[1]:MAX "
+         . "CDEF:perc=util,$num_cores,/,100,* "
+         . "AREA:util#60f020:\"Utilization\:\" "
+         . "LINE:util#308010 "
+         . "GPRINT:perc:LAST:\"%0.1lf%%   \" ";
 
-    args += " " + quote_shell_string(ipaddress)
-    return args
+if ($WARN[1]) {
+    $def[1] .= "HRULE:$WARN[1]#fff000:\"Warn at $warnperc%    \" "
+            . "HRULE:$CRIT[1]#ff0000:\"Critical at $critperc%\\n\" ";
+}
+else {
+    $def[1] .= "COMMENT:\"\\n\" ";
+}
 
-special_agent_info['vsphere'] = agent_vsphere_arguments
+$def[1] .= "HRULE:$MAX[1]#0040d0:\"$num_cores Cores installed   \" "
+         . "GPRINT:util:MIN:\"Min\: %5.2lf Cores \" "
+         . "GPRINT:util:MAX:\"Max\: %5.2lf Cores\" "
+         . "GPRINT:util:LAST:\"Last\: %4.1lf Cores\\n\" "
+         ;
+
+?>

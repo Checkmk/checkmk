@@ -68,6 +68,16 @@ register_rule(group,
                  allow_empty = False,
                )
              ),
+             ( "direct",
+               DropdownChoice(
+                   title = _("Type of query"),
+                   choices = [
+                       ( True, _("Queried host is a host system" ) ),
+                       ( False, _("Queried host is the vCenter") ),
+                   ],
+                   default = True,
+               )
+            )
         ],
         optional_keys = [ "tcp_port", ],
     ),

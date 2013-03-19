@@ -72,12 +72,14 @@
       logwatch_ec ruleset. With this option the forwarding can now be enabled
       for each logfile on a host
     * Configuration of an alternativ host check command
+    * Inventory: Display link symbol for ps ruleset
 
 1.2.2b5:
     Core:
     * Checks can now omit the typical "OK - " or "WARN -". This text
       will be added automatically if missing.
     * FIX: livecheck: fixed compilation bug
+    * FIX: check_mk: convert service description unicode into utf-8
     
     Checks & Agents:
     * FIX: jolokia_metrics.mem - now able to handle negative/missing max values
@@ -93,6 +95,7 @@
 
     WATO:
     * FIX: Fix hiliting of errors in Nagios output
+    * FIX: localisation error
 
     Multisite:
     * FIX: Avoid duplicate "Services" button in host detail views

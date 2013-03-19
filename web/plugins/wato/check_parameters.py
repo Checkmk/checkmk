@@ -1466,14 +1466,26 @@ register_check_parameters(
             Tuple(
                 title = _("Specify levels in percentage of total RAM"),
                 elements = [
-                  Percentage(title = _("Warning at a usage of"), label = _("% of RAM"), max_value = None),
-                  Percentage(title = _("Critical at a usage of"), label = _("% of RAM"), max_value = None)]),
+                  Percentage(title = _("Warning at a memory usage of"), default_value = 80.0),
+                  Percentage(title = _("Critical at a memory usage of"), default_value = 90.0)]),
             Tuple(
                 title = _("Specify levels in absolute usage values"),
                 elements = [
                   Integer(title = _("Warning at"), unit = _("MB")),
                   Integer(title = _("Critical at"), unit = _("MB"))]),
             ]),
+    None, None
+)
+
+register_check_parameters(
+    subgroup_os,
+    "esx_host_memory",
+    _("Main memory usage of ESX host system"),
+    Tuple(
+        title = _("Specify levels in percentage of total RAM"),
+        elements = [
+          Percentage(title = _("Warning at a RAM usage of"), default_value = 80.0),
+          Percentage(title = _("Critical at a RAM usage of"), default_value = 90.0)]),
     None, None
 )
 
@@ -1521,12 +1533,13 @@ register_check_parameters(
     Optional(
         Tuple(
               elements = [
-                  Percentage(title = _("Warning at a utilization of"), label = "%"),
-                  Percentage(title = _("Critical at a utilization of"), label = "%")]),
+                  Percentage(title = _("Warning at a utilization of")),
+                  Percentage(title = _("Critical at a utilization of"))]),
         label = _("Alert on too high CPU utilization"),
         help = _("The CPU utilization sums up the percentages of CPU time that is used "
                  "for user processes and kernel routines over all available cores within "
-                 "the last check interval. The possible range is from 0% to 100%")),
+                 "the last check interval. The possible range is from 0% to 100%"),
+        default_value = (90.0, 95.0)),
     None, None
 )
 
@@ -2859,5 +2872,5 @@ register_check_parameters(
         regex_error = _("Please use only a-z, A-Z, 0-9, space, underscore, "
                         "dot and hyphon for your service description"),
     ),
-    "first", False
+    "first", True
 )

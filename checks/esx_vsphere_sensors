@@ -24,27 +24,36 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# {
-#     'tcp_port': 4711,
-#     'secret': 'wef',
-#     'infos': ['hostsystem', 'virtualmachine'],
-#     'user': 'wefwef'
-# }
+# <<<esx_vsphere_sensors:sep(59)>>>
+# VMware Rollup Health State;;0;system;0;;red;Red;Sensor is operating under critical conditions
+# Power Domain 1 Power Unit 0 - Redundancy lost;;0;power;0;;yellow;Yellow;Sensor is operating under conditions that are non-critical
+# Power Supply 2 Power Supply 2 0: Power Supply AC lost - Assert;;0;power;0;;red;Red;Sensor is operating under critical conditions
 
-def agent_vsphere_arguments(params, hostname, ipaddress):
-    args = ''
-    if "tcp_port" in params:
-        args += " -p %d" % params["tcp_port"]
-    if "lower" in params:
-        args += " -lower"
+def inventory_esx_vsphere_sensors(info):
+    return [(None, None)]
 
-    args += " -u " + quote_shell_string(params["user"])
-    args += " -s " + quote_shell_string(params["secret"])
-    args += " -i " + ",".join(params["infos"])
-    if params.get("direct"):
-        args += ' --direct'
+def check_esx_vsphere_sensors(_no_item, _no_params, info):
+    state = 0
 
-    args += " " + quote_shell_string(ipaddress)
-    return args
+    infos = []
+    for name, base_units, current_reading, sensor_type, unit_modifier, rate_units, health_key, health_label, health_summary in info:
+        if health_key == "green":
+            continue # usually not output by agent anyway
+        infos.append("%s: %s (%s)" % (name, health_label, health_summary))
+        if health_key == "yellow":
+            state = max(state, 1)
+            infos[-1] += "(!)"
+        else:
+            state = 2
+            infos[-1] += "(!!)"
 
-special_agent_info['vsphere'] = agent_vsphere_arguments
+    if state > 0:
+        return state, ", ".join(infos)
+    else:
+        return 0, "All sensors are in normal state"
+
+check_info['esx_vsphere_sensors'] = {
+  "inventory_function"  : inventory_esx_vsphere_sensors,
+  "check_function"      : check_esx_vsphere_sensors,
+  "service_description" : "Hardware Sensors",
+}

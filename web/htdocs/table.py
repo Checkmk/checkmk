@@ -53,6 +53,8 @@ def begin(title=None, **kwargs):
     if kwargs.get("css"):
         table["css"] = kwargs["css"]
 
+    table["omit_if_empty"] = kwargs.get("omit_if_empty", False)
+
     html.plug()
     mode = 'row'
     next_func = None
@@ -91,6 +93,11 @@ def end():
     global table
     finish_previous()
     html.unplug()
+
+    if not table["rows"] and table["omit_if_empty"]:
+        table = None
+        return
+
     if table["title"]:
         html.write("<h3>%s</h3>" % table["title"])
 

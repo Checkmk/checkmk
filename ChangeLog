@@ -72,6 +72,7 @@
       logwatch_ec ruleset. With this option the forwarding can now be enabled
       for each logfile on a host
     * Configuration of an alternativ host check command
+    * Inventory: Display link symbol for ps ruleset
 
 1.2.2b5:
     Core:

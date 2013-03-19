@@ -2872,5 +2872,5 @@ register_check_parameters(
         regex_error = _("Please use only a-z, A-Z, 0-9, space, underscore, "
                         "dot and hyphon for your service description"),
     ),
-    "first", False
+    "first", True
 )

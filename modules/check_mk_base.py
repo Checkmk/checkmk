@@ -495,7 +495,7 @@ def translate_piggyback_host(sourcehost, backedhost):
         if mo:
             backedhost = subst
             for nr, text in enumerate(mo.groups()):
-                backedhost = translated.replace("\\%d" % (nr+1), text)
+                backedhost = backedhost.replace("\\%d" % (nr+1), text)
 
     # 3. Explicity mapping
     for from_host, to_host in translation.get("mapping", []):

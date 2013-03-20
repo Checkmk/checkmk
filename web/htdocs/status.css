@@ -281,6 +281,7 @@ td.goodflag {
 
 table.data td.buttons {
     white-space: nowrap;
+    width: 1%;
 }
 
 table.data td.count {
@@ -298,6 +299,10 @@ table.data td.number {
 
 table.data td.nobr {
     white-space: nowrap;
+}
+
+table.data td.center {
+    text-align: center;
 }
 
 td.narrow {

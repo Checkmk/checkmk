@@ -872,12 +872,13 @@ class Checkbox(ValueSpec):
         self._label = kwargs.get("label")
         self._true_label = kwargs.get("true_label", _("on"))
         self._false_label = kwargs.get("false_label", _("off"))
+        self._onclick = kwargs.get("onclick")
 
     def canonical_value(self):
         return False
 
     def render_input(self, varprefix, value):
-        html.checkbox(varprefix, value, label = self._label)
+        html.checkbox(varprefix, value, label = self._label, onclick=self._onclick)
 
     def value_to_text(self, value):
         return value and self._true_label or self._false_label

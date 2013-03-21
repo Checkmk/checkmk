@@ -1939,7 +1939,7 @@ function keybindings_keydown(e) {
     if (!e) e = window.event;
     var keyCode = e.which || e.keyCode;
     keybindings_pressedkeys.push(keyCode);
-    keybindings_check(e);
+    return keybindings_check(e);
 }
 
 function keybindings_keyup(e) {
@@ -1956,15 +1956,16 @@ function keybindings_keyup(e) {
 function keybindings_check(e) {
     for (var i in keybindings) {
         var keylist = keybindings[i][0];
-        var jscode = keybindings[i][1];
         if (keybindings_check_keylist(keylist)) {
             if (e.stopPropagation)
                 e.stopPropagation();
             e.cancelBubble = true;
+            var jscode = keybindings[i][1];
             eval(jscode);
-            return;
+            return false;
         }
     }
+    return true;
 }
 
 function keybindings_check_keylist(keylist)

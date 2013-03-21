@@ -840,3 +840,45 @@ div.help table.help td {
 div.help table.help td.tt {
     font-family: courier, monospace;
 }
+
+/*--Various----------------------------------------------------------------.
+|                __     __         _                                       |
+|                \ \   / /_ _ _ __(_) ___  _   _ ___                       |
+|                 \ \ / / _` | '__| |/ _ \| | | / __|                      |
+|                  \ V / (_| | |  | | (_) | |_| \__ \                      |
+|                   \_/ \__,_|_|  |_|\___/ \__,_|___/                      |
+|                                                                          |
+'-------------------------------------------------------------------------*/
+
+div.keysym {
+    text-align: center;
+    color: white;
+    /* font-style: italic; */
+    border-width: 2px;
+    border-style: solid;
+    border-color: #888 #444 #000 #666;
+    border-radius: 4px;
+    box-shadow: 0.5px 0.5px 1px #000;
+    background-color: #333;
+    padding: 2px 5px;
+    margin: 0px 1px;
+    display: inline-block;
+}
+
+
+/* Contextlinks with embedded keyboard button */
+div.contextlink div.keysym {
+    background-color: #467;
+    border-color: #8ab #245 #134 #79a;
+    border-width: 2px;
+    padding: 1px 5px;
+    font-size: 6pt;
+    position: absolute;
+    top: 4px;
+    right: 5px;
+}
+
+div.contextlink.button a {
+    width: 135px;
+}
+    

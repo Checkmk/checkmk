@@ -191,6 +191,13 @@ class html:
         self.plugged = False
         self.keybindings = []
 
+    RETURN = 13
+    SHIFT = 16
+    CTRL = 17
+    ALT = 18
+    BACKSPACE = 8
+    F1 = 112
+    
     def set_buffering(self, b):
         self.buffering = b
 
@@ -479,7 +486,7 @@ class html:
             self.write("</td></tr></table>\n")
         self.context_buttons_open = False
 
-    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=''):
+    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title='', fkey=None):
         display = "block"
         if bestof:
             counts = config.load_user_file("buttoncounts", {})
@@ -499,7 +506,7 @@ class html:
             idtext = " id='%s'" % id
         else:
             idtext = ""
-        self.write('<div%s style="display:%s" class="contextlink%s" ' % (idtext, display, hot and " hot" or ""))
+        self.write('<div%s style="display:%s" class="contextlink%s%s" ' % (idtext, display, hot and " hot" or "", fkey and " button" or ""))
         self.context_button_hover_code(hot and "_hot" or "")
         self.write('>')
         self.write('<a href="%s"' % url)
@@ -507,6 +514,9 @@ class html:
             self.write(' title="%s"' % hover_title)
         if bestof:
             self.write(' onmousedown="count_context_button(this); document.location=this.href; " ')
+        if fkey:
+            title += '<div class=keysym>F%d</div>' % fkey
+            self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % url)
         self.write('>%s</a></div>\n' % title)
 
     def context_button_hover_code(self, what):
@@ -1279,13 +1289,6 @@ document.body.onkeyup = keybindings_keyup;
         self.set_cookie(varname, '', time.time() - 60)
 
     # Keyboard control
-
-    RETURN = 13
-    SHIFT = 16
-    CTRL = 17
-    ALT = 18
-    BACKSPACE = 8
-    
     def add_keybinding(self, keylist, jscode):
         self.keybindings.append([keylist, jscode])
 

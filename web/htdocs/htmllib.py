@@ -189,6 +189,7 @@ class html:
         self.auto_id = 0
         self.have_help = False
         self.plugged = False
+        self.keybindings = []
 
     def set_buffering(self, b):
         self.buffering = b
@@ -911,6 +912,11 @@ class html:
     def body_end(self):
         if self.have_help:
             self.javascript("help_enable();")
+        if self.keybindings:
+            self.javascript("""var keybindings = %r;\n
+document.body.onkeydown = keybindings_keydown;
+document.body.onkeyup = keybindings_keyup;
+""" % self.keybindings)
         if self.final_javascript_code:
             self.javascript(self.final_javascript_code);
         self.write("</body></html>\n")
@@ -1268,4 +1274,20 @@ class html:
 
     def del_cookie(self, varname):
         self.set_cookie(varname, '', time.time() - 60)
+
+    # Keyboard control
+
+    RETURN = 13
+    SHIFT = 16
+    CTRL = 17
+    ALT = 18
+    BACKSPACE = 8
+    
+    def add_keybinding(self, keylist, jscode):
+        self.keybindings.append([keylist, jscode])
+
+    def add_keybindings(self, bindings):
+        self.keybindings += bindings
+
+
 

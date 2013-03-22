@@ -295,6 +295,7 @@ table.data .state0 *, table.data .state2 *, table.data .state3 * {
 
 table.data td.number {
     text-align: right;
+    white-space: nowrap;
 }
 
 table.data td.nobr {
@@ -307,6 +308,9 @@ table.data td.center {
 
 td.narrow {
     width: 10px;
+}
+td.wide {
+    width: 100%;
 }
 
 td.icons {

@@ -45,8 +45,7 @@ if (isset($RRD['pagetables'])) {
             .  "DEF:ram=$RRD[ramused] ";
 }
 else {
-    $def[1] .= "CDEF:pagetables=0 "
-            .  "DEF:ram=$RRD[ramused] ";
+    $def[1] .= "DEF:ram=$RRD[ramused] ";
 }
    
 $def[1] .= "DEF:virt=$RRDFILE[3]:$DS[3]:MAX "

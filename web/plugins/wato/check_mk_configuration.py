@@ -1668,7 +1668,7 @@ register_rule(group,
                       ),
                       TextUnicode(
                           title = _("Replacement"),
-                          help = _("Use <tt>\1</tt>, <tt>\2</tt> etc. to replace matched subgroups"),
+                          help = _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"),
                           size = 30,
                           allow_empty = False,
                       )

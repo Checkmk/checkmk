@@ -1591,7 +1591,7 @@ function valuespec_cascading_change(oSelect, varprefix, count) {
 }
 
 function valuespec_textarea_resize(oArea) {
-    oArea.style.height = oArea.scrollHeight + "px";
+    oArea.style.height = (oArea.scrollHeight - (/Chrome/i.test(navigator.userAgent) ? 6 : 0)) + "px";
 }
 
 function valuespec_listof_add(varprefix, magic) {

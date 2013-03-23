@@ -423,7 +423,7 @@ img.iconbutton.trans {
 | Input forms (e.g. Filters, Commands, WATO)                               |
 '-------------------------------------------------------------------------*/
 
-input[type=text] {
+input[type=text], textarea {
     box-shadow: 0.1px 1.2px 1.8px 0 #888 inset;
     position: relative;
 }

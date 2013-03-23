@@ -1,0 +1,14 @@
+Title: mkeventd combined event messages
+Component: ec
+State: open
+Date: 2013-03-22 17:50:23
+Targetversion: 1.2.2
+Class: bug
+
+b) Wir bekommen zwei Meldungen als ein Event. Ist das ein Bug?
+
+Bsp.:
+Mount Failed testkai<30>Mar 20 14:25:01 2013-03-20 14 snmptrapd[20133]: 2013-03-20 14:25:01 10.10.1.105(via UDP: [10.10.1.105]:54215->[10.10.4.27]) TRAP, SNMP v1, community V1_UC_1733_R#012#011SNMPv2-SMI::enterprises.311.1.1.3.1.2 Authentication Failure Trap (0) Uptime: 14 days, 5:37:05.20#012
+
+Der erste Teil ("Mount Failed testkai") kam via cmk-Logwatcher und
+der zweite Teil ("<30>Mar 20 14:25:01 2013-03-20 14 snmptra....") scheinbar via Trapdaemon.

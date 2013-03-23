@@ -929,6 +929,7 @@ class html:
             self.javascript("""var keybindings = %r;\n
 document.body.onkeydown = keybindings_keydown;
 document.body.onkeyup = keybindings_keyup;
+document.body.onfocus = keybindings_focus;
 """ % self.keybindings)
         if self.final_javascript_code:
             self.javascript(self.final_javascript_code);

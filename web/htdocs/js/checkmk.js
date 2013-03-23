@@ -1953,6 +1953,11 @@ function keybindings_keyup(e) {
     }
 }
 
+function keybindings_focus(e) {
+    keybindings_pressedkeys = [];
+}
+
+
 function keybindings_check(e) {
     for (var i in keybindings) {
         var keylist = keybindings[i][0];

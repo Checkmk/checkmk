@@ -63,7 +63,7 @@ body {
     color: white;
 }
 
-body a {
+body a, body a:link, body a:visited {
     color: white;
 }
 

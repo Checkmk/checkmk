@@ -273,6 +273,10 @@ class BaseConnection:
         query += "\n"
 
         try:
+            # socket.send() will implicitely cast to str(), we need ot
+            # convert to UTF-8 in order to avoid exceptions
+            if type(query) == unicode:
+                query = query.encode("utf-8")
             self.socket.send(query)
         except IOError, e:
             if self.persist:

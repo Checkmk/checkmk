@@ -599,8 +599,8 @@ function performAction(oLink, action, site, host, service, wait_svc) {
     get_url('nagios_action.py?action=' + action +
             '&site='     + escape(site) +
             '&host='     + escape(host) +
-            '&service='  + escape(service) +
-            '&wait_svc=' + escape(wait_svc),
+            '&service='  + service + // Already URL-encoded!
+            '&wait_svc=' + wait_svc,
             actionResponseHandler, oImg);
     oImg = null;
 }

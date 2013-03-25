@@ -80,6 +80,7 @@
       will be added automatically if missing.
     * FIX: livecheck: fixed compilation bug
     * FIX: check_mk: convert service description unicode into utf-8
+    * FIX: avoid simultanous activation of changes by means of a lock
     
     Checks & Agents:
     * FIX: jolokia_metrics.mem - now able to handle negative/missing max values

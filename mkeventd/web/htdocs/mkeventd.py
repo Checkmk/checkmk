@@ -239,9 +239,9 @@ def match(pattern, text, complete = True):
         if complete:
             if not pattern.endswith("$"):
                 pattern += '$'
-            m = re.compile(pattern).match(text)
+            m = re.compile(pattern, re.IGNORECASE).match(text)
         else:
-            m = re.compile(pattern).search(text)
+            m = re.compile(pattern, re.IGNORECASE).search(text)
         if m:
             return m.groups()
         else:

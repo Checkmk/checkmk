@@ -47,16 +47,16 @@ def action_reschedule():
     if not host:
         raise MKGeneralException("Action reschedule: missing host name")
 
-    service  = html.var("service",  "")
-    wait_svc = html.var("wait_svc", "")
+    service  = html.var_utf8("service",  "")
+    wait_svc = html.var_utf8("wait_svc", "")
 
     if service:
         cmd = "SVC"
         what = "service"
-        spec = "%s;%s" % (host, service)
+        spec = "%s;%s" % (host, service.encode("utf-8"))
 
         if wait_svc:
-            wait_spec = '%s;%s' % (host, wait_svc)
+            wait_spec = u'%s;%s' % (host, wait_svc)
             add_filter = "Filter: service_description = %s\n" % wait_svc
         else:
             wait_spec = spec
@@ -72,15 +72,15 @@ def action_reschedule():
         now = int(time.time())
         html.live.command("[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, spec, now), site)
         html.live.set_only_sites([site])
-        row = html.live.query_row(
-                "GET %ss\n"
-                "WaitObject: %s\n"
-                "WaitCondition: last_check >= %d\n"
-                "WaitTimeout: %d\n"
-                "WaitTrigger: check\n"
-                "Columns: last_check state plugin_output\n"
-                "Filter: host_name = %s\n%s"
-                % (what, wait_spec, now, config.reschedule_timeout * 1000, host, add_filter))
+        query = u"GET %ss\n" \
+                "WaitObject: %s\n" \
+                "WaitCondition: last_check >= %d\n" \
+                "WaitTimeout: %d\n" \
+                "WaitTrigger: check\n" \
+                "Columns: last_check state plugin_output\n" \
+                "Filter: host_name = %s\n%s" \
+                % (what, wait_spec, now, config.reschedule_timeout * 1000, host, add_filter)
+        row = html.live.query_row(query)
         html.live.set_only_sites()
         last_check = row[0]
         if last_check < now:

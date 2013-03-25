@@ -1834,7 +1834,7 @@ define service {
   check_command\t\t\t%s
   active_checks_enabled\t\t1
 %s}
-""" % (template, hostname, description, simulate_command(command), extraconf))
+""" % (template, hostname, make_utf8(description), simulate_command(command), extraconf))
 
     # legacy checks via active_checks
     actchecks = []
@@ -1876,7 +1876,7 @@ define service {
   check_command\t\t\t%s
   active_checks_enabled\t\t1
 %s}
-""" % (template, hostname, description, simulate_command(command), extraconf))
+""" % (template, hostname, make_utf8(description), simulate_command(command), extraconf))
 
 
     # Legacy checks via custom_checks
@@ -1940,7 +1940,7 @@ define service {
   check_command\t\t\t%s
   active_checks_enabled\t\t%d
 %s%s}
-""" % (template, hostname, description, simulate_command(command),
+""" % (template, hostname, make_utf8(description), simulate_command(command),
        (command_line and not freshness) and 1 or 0, extraconf, freshness))
 
     # Levels for host check

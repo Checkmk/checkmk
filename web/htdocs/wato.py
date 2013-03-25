@@ -1752,7 +1752,7 @@ def mode_editfolder(phase, new):
 
             if cgs_changed:
                 check_user_contactgroups(attributes.get("contactgroups"))
-            log_pending(AFFECTED, g_folder, "edit-folder", "Edited properties of folder %s" % title)
+            log_pending(AFFECTED, g_folder, "edit-folder", _("Edited properties of folder %s") % title)
 
             g_folder["title"]      = title
 

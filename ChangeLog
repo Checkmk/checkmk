@@ -4,12 +4,14 @@
       will be added automatically if missing.
     * FIX: livecheck: fixed compilation bug
     * FIX: avoid simultanous activation of changes by means of a lock
+    * FIX: check_mk: convert service description unicode into utf-8
     
     Checks & Agents:
     * FIX: jolokia_metrics.mem - now able to handle negative/missing max values
     * ADD: tcp_conn_stats: now additionally uses /proc/net/tcp6
     * ADD: wmic_processs: cpucores now being considered when calculating 
            user/kernel percentages. (thanks to William Baum)
+    * FIX: UPS checks support Eaton Evolution
     
     Notifications:
     * FIX: fixed crash on host notification when contact had explicit services set
@@ -20,9 +22,11 @@
 
     WATO:
     * FIX: Fix hiliting of errors in Nagios output
+    * FIX: localisation error
 
     Multisite:
     * FIX: Avoid duplicate "Services" button in host detail views
+    * FIX: fix rescheduling icon for services with non-ASCII characters
     * New filter for IP address of a host 
     * Quicksearch: allow searching for complete IP addresses and IP
       address prefixes
@@ -31,6 +35,11 @@
     * FIX: fix exception with expansion level being 'None'
     * FIX: speedup for single host tables joined by hostname (BI-Boxes)
     * FIX: avoid closing BI subtree while tree is being loaded
+
+    Event Console:
+    * FIX: make hostname matching field optional. Otherwise a .* was
+           neccessary for the rule in order to match
+    * FIX: event_simulator now also uses case insensitive matches
 
 1.2.2b4:
     Core:

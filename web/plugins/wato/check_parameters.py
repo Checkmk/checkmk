@@ -1368,8 +1368,8 @@ register_check_parameters(
                        Tuple(
                            title = _("Percentual levels (in relation to policy speed)"),
                            elements = [
-                               Percentage(title = _("Warning at"), max_value=1000, label = _("% of port speed")),
-                               Percentage(title = _("Critical at"), max_value=1000, label = _("% of port speed")),
+                               Percentage(title = _("Warning at"), maxvalue=1000, label = _("% of port speed")),
+                               Percentage(title = _("Critical at"), maxvalue=1000, label = _("% of port speed")),
                            ]
                        ),
                        Tuple(
@@ -1402,8 +1402,8 @@ register_check_parameters(
                          Tuple(
                              title = _("Percentual levels (in relation to policy speed)"),
                              elements = [
-                                 Percentage(title = _("Warning at"), max_value=1000, label = _("% of port speed")),
-                                 Percentage(title = _("Critical at"), max_value=1000, label = _("% of port speed")),
+                                 Percentage(title = _("Warning at"), maxvalue=1000, label = _("% of port speed")),
+                                 Percentage(title = _("Critical at"), maxvalue=1000, label = _("% of port speed")),
                              ]
                          ),
                          Tuple(
@@ -1430,8 +1430,8 @@ register_check_parameters(
             Tuple(
                 title = _("Specify levels in percentage of total RAM"),
                 elements = [
-                  Percentage(title = _("Warning at a usage of"), label = _("% of RAM"), max_value = None),
-                  Percentage(title = _("Critical at a usage of"), label = _("% of RAM"), max_value = None)
+                  Percentage(title = _("Warning at a usage of"), label = _("% of RAM"), maxvalue = None),
+                  Percentage(title = _("Critical at a usage of"), label = _("% of RAM"), maxvalue = None)
                 ]
             ),
             Tuple(
@@ -1466,8 +1466,10 @@ register_check_parameters(
             Tuple(
                 title = _("Specify levels in percentage of total RAM"),
                 elements = [
-                  Percentage(title = _("Warning at a memory usage of"), default_value = 80.0),
-                  Percentage(title = _("Critical at a memory usage of"), default_value = 90.0)]),
+                    # Disable limit of value to 101%, because levels > 100% make sense here
+                    # (swap+ram is > ram)
+                    Percentage(title = _("Warning at a memory usage of"), default_value = 80.0, maxvalue = None),
+                    Percentage(title = _("Critical at a memory usage of"), default_value = 90.0, maxvalue = None)]),
             Tuple(
                 title = _("Specify levels in absolute usage values"),
                 elements = [

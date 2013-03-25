@@ -26,7 +26,7 @@
 
 # Inventory creates three checks per default:
 inventory_kernel_counters = [ "pgmajfault", "ctxt", "processes" ]
-kernel_default_levels = (None, None)
+kernel_default_levels = None
 
 kernel_counter_names = {
   "ctxt"       : "Context Switches",

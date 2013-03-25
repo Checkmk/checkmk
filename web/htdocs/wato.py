@@ -10861,9 +10861,6 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, 
         match = "all")
 
 
-
-
-
 #
 # User profile edit page
 # The user can edit the own profile

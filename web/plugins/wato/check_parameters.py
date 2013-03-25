@@ -1282,8 +1282,8 @@ checkgroups.append((
             Tuple(
                 title = _("Specify levels in percentage of total RAM"),
                 elements = [
-                  Percentage(title = _("Warning at a usage of"), label = _("% of RAM"), max_value = None),
-                  Percentage(title = _("Critical at a usage of"), label = _("% of RAM"), max_value = None)
+                  Percentage(title = _("Warning at a usage of"), label = _("% of RAM"), maxvalue = None),
+                  Percentage(title = _("Critical at a usage of"), label = _("% of RAM"), maxvalue = None)
                 ]
             ),
             Tuple(
@@ -1318,8 +1318,8 @@ checkgroups.append((
             Tuple(
                 title = _("Specify levels in percentage of total RAM"),
                 elements = [
-                  Percentage(title = _("Warning at a usage of"), label = _("% of RAM"), max_value = None),
-                  Percentage(title = _("Critical at a usage of"), label = _("% of RAM"), max_value = None)]),
+                  Percentage(title = _("Warning at a usage of"), label = _("% of RAM"), maxvalue = None),
+                  Percentage(title = _("Critical at a usage of"), label = _("% of RAM"), maxvalue = None)]),
             Tuple(
                 title = _("Specify levels in absolute usage values"),
                 elements = [

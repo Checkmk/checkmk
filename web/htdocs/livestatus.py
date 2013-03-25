@@ -292,7 +292,7 @@ class BaseConnection:
     # Reads a response from the livestatus socket. If the socket is closed
     # by the livestatus server, we automatically make a reconnect and send
     # the query again (once). This is due to timeouts during keepalive.
-    def recv_response(self, query = None, add_headers = ""):
+    def recv_response(self, query = None, add_headers = "", timeout_at = None):
         try:
             resp = self.receive_data(16)
             code = resp[0:3]
@@ -314,11 +314,14 @@ class BaseConnection:
         # only once
         except (MKLivestatusSocketClosed, IOError), e:
             self.disconnect()
-            if query:
+            now = time.time()
+            if query and (not timeout_at or timeout_at > now):
+                if timeout_at == None:
+                    timeout_at = now + self.timeout
                 time.sleep(0.1)
                 self.connect()
                 self.send_query(query, add_headers)
-                return self.recv_response() # do not send query again -> danger of infinite loop
+                return self.recv_response(query, add_headers, timeout_at) # do not send query again -> danger of infinite loop
             else:
                 raise MKLivestatusSocketError(str(e))
 

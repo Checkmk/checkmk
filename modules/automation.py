@@ -477,6 +477,10 @@ def automation_restart(job="restart"):
     sys.stdout = null_file()
 
     try:
+        backup_path = None
+        if not lock_nagios_objects_file():
+            raise MKAutomationError("Cannot activate changes. "
+                  "Another activation process is currently in progresss")
         if os.path.exists(nagios_objects_file):
             backup_path = nagios_objects_file + ".save"
             os.rename(nagios_objects_file, backup_path)

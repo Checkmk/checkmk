@@ -1080,8 +1080,8 @@ checkgroups.append((
               Tuple(
                   title = _("Levels for the used space"),
                   elements = [
-                      Percentage(title = _("Warning at"),  label = _("% usage"), allow_int = True, default_value=80),
-                      Percentage(title = _("Critical at"), label = _("% usage"), allow_int = True, default_value=90)])),
+                      Percentage(title = _("Warning at"),  unit = _("% usage"), allow_int = True, default_value=80),
+                      Percentage(title = _("Critical at"), unit = _("% usage"), allow_int = True, default_value=90)])),
             (  "magic",
                Float(
                   title = _("Magic factor (automatic level adaptation for large filesystems)"),

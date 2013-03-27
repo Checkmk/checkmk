@@ -90,7 +90,8 @@
     * ADD: wmic_processs: cpucores now being considered when calculating 
            user/kernel percentages. (thanks to William Baum)
     * FIX: UPS checks support Eaton Evolution
-
+    * FIX: windows agent plugin: mssql now exits after 10 seconds
+    
     Notifications:
     * FIX: fixed crash on host notification when contact had explicit services set
 

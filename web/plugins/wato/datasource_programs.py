@@ -75,8 +75,9 @@ register_rule(group,
                DropdownChoice(
                    title = _("Type of query"),
                    choices = [
-                       ( True, _("Queried host is a host system" ) ),
-                       ( False, _("Queried host is the vCenter") ),
+                       ( True,    _("Queried host is a host system" ) ),
+                       ( False,   _("Queried host is the vCenter") ),
+                       ( "agent", _("Queried host is the vCenter with Check_MK Agent installed") ),
                    ],
                    default = True,
                )

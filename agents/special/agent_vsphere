@@ -26,6 +26,7 @@
 
 import sys
 import argparse
+import socket
 
 import inspect, pprint # FOR DEBUGGING
 
@@ -47,6 +48,11 @@ parser.add_argument('-D', '--direct', action="store_true",
                          "we expect data about only one HostSystem to be found and do "
                          "not create piggy host data for that host.")
                     
+parser.add_argument('-a', '--agent', action="store_true",
+                    help="Also retrieve data from the normal Check_MK Agent. This makes "
+                         "sense if you query a vCenter that is installed on a Windows "
+                         "host that you also want to monitor with Check_MK.")
+
 parser.add_argument('--debug', action="store_true", 
                     help="Debug mode: let Python exceptions come through")
 
@@ -55,13 +61,49 @@ parser.add_argument('HOST',
 
 params = vars(parser.parse_args())
 
+def get_agent_info_tcp(hostname):
+    output = ""
+    try:
+        if hostname[0] in "123456789":
+            ipaddress = hostname
+        else:
+            ipaddress = socket.gethostbyname(hostname)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.settimeout(3.0)
+        except:
+            pass # some old Python versions lack settimeout(). Better ignore than fail
+        s.connect((ipaddress, 6556))
+        try:
+            s.setblocking(1)
+        except:
+            pass
+        output = ""
+        while True:
+            out = s.recv(4096, socket.MSG_WAITALL)
+            if out and len(out) > 0:
+                output += out
+            else:
+                break
+        s.close()
+        return output
+    except Exception, e:
+        if params["debug"]:
+            raise
+    return output
+
+error_exit = 1
+if params['agent']:
+    sys.stdout.write(get_agent_info_tcp(params["HOST"]))
+    error_exit = 0 # do not fail if vSphere fails
+
 
 try:
     from pysphere import VIServer, VIProperty, MORTypes
     from pysphere.resources import VimService_services as VI
 except: 
     sys.stderr.write("pysphere API not found. Please install and try again.\n")
-    sys.exit(1)
+    sys.exit(error_exit)
 
 host = VIServer()
 
@@ -72,33 +114,11 @@ except:
     if params['debug']:
         raise
     sys.stderr.write("Cannot connect to vSphere Server. May the wrong credentials. Please correct and make a reinventory.\n")
-    sys.exit(1)
+    sys.exit(error_exit)
 
 print "<<<check_mk>>>"
 print "Version: %s" % host.get_api_version()
 print "AgentOs: %s " % host.get_server_type()
-
-# import inspect, pprint
-# for x in host._retrieve_properties_traversal(property_names=[], obj_type = MORTypes.ManagedEntity):
-#     print x.Obj
-#     print inspect.getmembers(x)
-# sys.exit(17)
-
-# hosts = host.get_hosts()
-# pprint.pprint(inspect.getmembers(VIProperty(host, hosts.keys()[0]).hardware))
-# sys.exit(1)
-
-#for p in VIProperty(host, hosts.keys()[0]).network:
-    # print host.get_resource_pools(p)
-    # for n in p:
- #       pprint.pprint(inspect.getmembers(p))
-
-# print p
-# print hosts
-
-
-# sys.exit(1)
-
 
 
 def output_mors(what, properties, direct=False): 

@@ -561,9 +561,9 @@ def get_agent_info(hostname, ipaddress, max_cache_age):
         if hostname in g_broken_agent_hosts:
             raise MKAgentError("")
 
-        # If the host ist listed in datasource_programs the data from
+        # If the host is listed in datasource_programs the data from
         # that host is retrieved by calling an external program (such
-        # as ssh or rsy) instead of a TCP connect.
+        # as ssh or rsh or agent_vsphere) instead of a TCP connect.
         commandline = get_datasource_program(hostname, ipaddress)
         if commandline:
             output = get_agent_info_program(commandline)

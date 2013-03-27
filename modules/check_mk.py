@@ -214,6 +214,7 @@ agent_ports                        = []
 snmp_ports                         = [] # UDP ports used for SNMP
 tcp_connect_timeout                = 5.0
 delay_precompile                   = False  # delay Python compilation to Nagios execution
+restart_locking                    = "abort" # also possible: "wait", None
 check_submission                   = "file" # alternative: "pipe"
 aggr_summary_hostname              = "%s-s"
 agent_min_version                  = 0 # warn, if plugin has not at least version
@@ -3981,6 +3982,12 @@ def do_reload():
 
 def do_restart(only_reload = False):
     try:
+        backup_path = None
+
+        if not lock_nagios_objects_file():
+            sys.stderr.write("Other restart currently in progress. Aborting.\n")
+            sys.exit(1)
+
         # Save current configuration
         if os.path.exists(nagios_objects_file):
             backup_path = nagios_objects_file + ".save"
@@ -4022,6 +4029,27 @@ def do_restart(only_reload = False):
             raise
         sys.stderr.write("An error occurred: %s\n" % e)
         sys.exit(1)
+
+restart_lock_fd = None
+def lock_nagios_objects_file():
+    global restart_lock_fd
+    # In some bizarr cases (as cmk -RR) we need to avoid duplicate locking!
+    if restart_locking and restart_lock_fd == None:
+        lock_file = default_config_dir + "/main.mk"
+        import fcntl
+        restart_lock_fd = os.open(lock_file, os.O_RDONLY)
+        # Make sure that open file is not inherited to monitoring core!
+        fcntl.fcntl(restart_lock_fd, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
+        try:
+            if opt_debug:
+                sys.stderr.write("Waiting for exclusive lock on %s.\n" % 
+                    lock_file)
+            fcntl.flock(restart_lock_fd, fcntl.LOCK_EX | 
+                ( restart_locking == "abort" and fcntl.LOCK_NB or 0))
+        except:
+            return False
+    return True
+
 
 def do_donation():
     donate = []

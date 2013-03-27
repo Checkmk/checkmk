@@ -57,16 +57,19 @@ register_rule(group,
               )
             ),
             ( "infos",
-              ListChoice(
-                 title = _("Retrieve information about..."),
-                 choices = [
-                     ( "hostsystem",     _("Host Systems") ),
-                     ( "virtualmachine", _("Virtual Machines") ),
-                     ( "storage",        _("Storage") ),
-                 ],
-                 default_value = [ "hostsystem", "virtualmachine" ],
-                 allow_empty = False,
-               )
+              Transform(
+                  ListChoice(
+                     choices = [
+                         ( "hostsystem",     _("Host Systems") ),
+                         ( "virtualmachine", _("Virtual Machines") ),
+                         ( "datastore",      _("Datastores") ),
+                     ],
+                     default_value = [ "hostsystem", "virtualmachine" ],
+                     allow_empty = False,
+                   ),
+                   forth = lambda v: [ x.replace("storage", "datastore") for x in v ],
+                   title = _("Retrieve information about..."),
+                )
              ),
              ( "direct",
                DropdownChoice(

@@ -52,7 +52,10 @@
     * Linux agent: allow cached local/plugins checks (see docu)
     * mem.include: Linux memory check now includes size of page tables. This
       can be important e.g. on ORACLE systems with a lot of memory
-    
+    * agent_vsphere: New VMWare ESX monitoring that uses pySphere and the VMWare
+      API in order to get data very efficiently. Read (upcoming) documentation
+      for details.
+
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid
 

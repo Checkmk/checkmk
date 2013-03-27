@@ -1,0 +1,92 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# [zmucvm99-lds]
+# accessible  True
+# capacity    578478407680
+# freeSpace   388398841856
+# type    VMFS
+# uncommitted 51973812224
+# url /vmfs/volumes/513df1e9-12fd7366-ac5a-e41f13e69eaa
+
+
+def esx_vsphere_datastores_parse(info):
+    stores = {}
+    for line in info:
+        if line[0].startswith('['):
+            name = line[0][1:-1]
+            store = {}
+            stores[name] = store
+        else:
+            key, value = line
+            if key == "accessible":
+                value = value == "True"
+            elif key in [ "capacity", "freeSpace", "uncommitted" ]:
+                value = int(value)
+            store[key] = value
+    return stores
+
+
+def inventory_esx_vsphere_datastores(info):
+    stores = esx_vsphere_datastores_parse(info)
+    return [ (name, {}) for name in stores ]
+
+
+def check_esx_vsphere_datastores(item, params, info):
+    stores = esx_vsphere_datastores_parse(info)
+    if item not in stores:
+        return 3, "Datastore not existing"
+    store = stores[item]
+    size_mb = store["capacity"] / 1024.0 / 1024.0
+    avail_mb = store["freeSpace"] / 1024.0 / 1024.0
+
+    state, infotext, perfdata = df_check_filesystem_single(
+        g_hostname, item, size_mb, avail_mb, params)
+
+    uncommitted_mb = store["uncommitted"] / 1024.0 / 1024.0
+    used_mb = size_mb - avail_mb
+    overprov_mb = used_mb + uncommitted_mb
+    overprov_percent = (overprov_mb / size_mb) * 100
+
+    infotext += ", uncommitted: %.2f GB, provisioning: %.1f%%" % (
+                  uncommitted_mb / 1024, overprov_percent)
+    if not store["accessible"]:
+        state = 2
+        infotext += "unaccessible(!!), " + infotext
+
+    return state, infotext, perfdata
+
+check_info['esx_vsphere_datastores'] = {
+  "inventory_function"  : inventory_esx_vsphere_datastores,
+  "check_function"      : check_esx_vsphere_datastores,
+  "service_description" : "fs_%s",
+  "includes"            : [ 'df.include' ],
+  "has_perfdata"        : True,
+  "group"               : "filesystem", 
+}
+
+#.

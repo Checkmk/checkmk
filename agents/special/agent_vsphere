@@ -27,10 +27,12 @@
 import sys
 import argparse
 
+import inspect, pprint # FOR DEBUGGING
+
 parser = argparse.ArgumentParser(description='Check_MK vSphere Agent')
 group = parser.add_argument_group()
 # group.add_argument('-p', '--port', type=int, help="Port Number of vSphere Server")
-group.add_argument('-i', 
+group.add_argument('-i', '--modules',
                     help="Modules to query. This is a comma separated list of hostsystem, "
                          "virtualmachine and storage. Default is to query all modules.")
 
@@ -149,6 +151,31 @@ def output_mors(what, properties, direct=False):
         for line in section_lines:
             print line
 
+def debug(x):
+    pprint.pprint(inspect.getmembers(x))
+
+def output_datastores():
+    property_names = [ 
+        "name", 
+        "summary.freeSpace", 
+        "summary.capacity", 
+        "summary.uncommitted", 
+        "summary.url", 
+        "summary.accessible",
+        "summary.type", 
+        "summary.maintenanceMode", 
+        ]
+    # print inspect.getmembers(MORTypes)
+    print "<<<esx_vsphere_datastores:sep(%d)>>>" % ord('\t')
+    for mor in host._retrieve_properties_traversal(property_names=property_names, obj_type=MORTypes.Datastore):
+        for entry in mor.PropSet:
+            if entry.Name == "name":
+                print '[%s]' % entry.Val
+            else:
+                print '%s\t%s' % (entry.Name.split(".")[1], entry.Val)
+        
+
+
 
 def conv_multipath(value):
     return " ".join(["%s %s" % (p.Name, p.PathState) for p in value.HostMultipathStateInfoPath])
@@ -173,10 +200,14 @@ def conv_numeric_sensor_info(value):
 
     # return pprint.pformat(inspect.getmembers(value))
 
-if params['i'] == None:
-    mortypes = [ 'hostsystem', 'virtualmachine', 'storage' ]
+if params['modules'] == None:
+    mortypes = [ 'hostsystem', 'virtualmachine', 'datastore' ]
 else:
-    mortypes = params['i'].split(',')
+    mortypes = params['modules'].split(',')
+
+if "datastore" in mortypes:
+    output_datastores()
+
 
 if "hostsystem" in mortypes:
     output_mors("hostsystem", {

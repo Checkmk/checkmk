@@ -71,6 +71,7 @@ perfometers["check_mk-zfsget"] = perfometer_check_mk_df
 perfometers["check_mk-hr_fs"] = perfometer_check_mk_df
 perfometers["check_mk-oracle_asm_diskgroup"] = perfometer_check_mk_df
 perfometers["check_mk-mysql_capacity"] = perfometer_check_mk_df
+perfometers["check_mk-esx_vsphere_datastores"] = perfometer_check_mk_df
 
 
 def perfometer_check_mk_kernel_util(row, check_command, perf_data):

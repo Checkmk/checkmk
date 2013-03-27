@@ -2218,16 +2218,16 @@ class Transform(ValueSpec):
             return value
 
     def render_input(self, varprefix, value):
-        self._valuespec.render_input( varprefix, self.forth(value))
+        self._valuespec.render_input(varprefix, self.forth(value))
 
     def set_focus(self, *args):
         self._valuespec.set_focus(*args)
 
     def canonical_value(self):
-        return self._back(self._valuespec.canonical_value())
+        return self.back(self._valuespec.canonical_value())
 
     def default_value(self):
-        return self._back(self._valuespec.default_value())
+        return self.back(self._valuespec.default_value())
 
     def value_to_text(self, value):
         return self._valuespec.value_to_text(self.forth(value))

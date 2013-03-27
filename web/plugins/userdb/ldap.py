@@ -102,7 +102,7 @@ def ldap_uri():
 def ldap_connect():
     global ldap_connection, ldap_connection_options
 
-    if ldap_connection and config.ldap_connection == ldap_connection_options:
+    if not "no_persistent" in config.ldap_connection and ldap_connection and config.ldap_connection == ldap_connection_options:
         return # Use existing connections (if connection settings have not changed)
 
     try:

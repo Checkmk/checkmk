@@ -1,0 +1,20 @@
+title: Check completeness of output of ESX special agent
+agents: vsphere
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check makes sure that items sent by the ESX special agent (hostsystems
+ and VMs) are stil present later on. The information about this data can also
+ be used for determining the architecture of a VMWare farm out of the monitoring
+ data.
+
+ The check will get critical if a host system or virtual machine, that was once
+ present, is now missing.
+
+inventory:
+ One service per hostsystem and per VM will be created.
+
+item:
+ The text {HostSystem} or {VM} followed by a space followed by the name of the host system
+ or VM.

@@ -107,6 +107,7 @@
     * New filter for IP address of a host 
     * Quicksearch: allow searching for complete IP addresses and IP
       address prefixes
+    * Add logentry class filter to view 'Host- and Service events'
 
     BI: 
     * FIX: fix exception with expansion level being 'None'

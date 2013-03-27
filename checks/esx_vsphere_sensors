@@ -43,6 +43,9 @@ def check_esx_vsphere_sensors(_no_item, _no_params, info):
         if health_key == "yellow":
             state = max(state, 1)
             infos[-1] += "(!)"
+        elif health_key == "unknown":
+            state = max(state, 1)
+            infos[-1] += "(!)"
         else:
             state = 2
             infos[-1] += "(!!)"

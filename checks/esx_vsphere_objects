@@ -1,0 +1,67 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<esx_vsphere_objects:sep(9)>>>
+# hostsystem  esx.wacker.corp
+# virtualmachine  LinuxI
+# virtualmachine  OpenSUSE_II
+# virtualmachine  OpenSUSE_III
+# virtualmachine  OpenSUSE_IV
+# virtualmachine  OpenSUSE_V
+# virtualmachine  WindowsXP I
+# virtualmachine  LinuxII
+# virtualmachine  LinuxIII
+# virtualmachine  LinuxIV
+# virtualmachine  LinuxV
+# virtualmachine  OpenSUSE_I
+
+vsphere_object_names = {
+    "hostsystem" : "HostSystem",
+    "virtualmachine" : "VM",
+}
+
+def inventory_esx_vsphere_objects(info):
+    return [ (vsphere_object_names[line[0]] + " " + line[1], None) for line in info ]
+
+def check_esx_vsphere_objects(item, _no_params, info):
+    for line in info:
+        if vsphere_object_names[line[0]] + " " + line[1] == item:
+            return 0, "information about this object present"
+
+    what = item.split()[0]
+    name = item.split()[1]
+    if what == "VM":
+        return 3, "Virtual machine %s is missing" % name
+    else:
+        return 3, "No data about host system %s" % name
+
+
+check_info['esx_vsphere_objects'] = {
+  "inventory_function"  : inventory_esx_vsphere_objects,
+  "check_function"      : check_esx_vsphere_objects,
+  "service_description" : "%s",
+}

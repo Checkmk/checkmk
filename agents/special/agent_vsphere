@@ -65,8 +65,7 @@ except:
 
 host = VIServer()
 
-object_collection = {} 
-
+object_collection = []
 try:
     host.connect(params['HOST'], params['user'], params['secret'])
 except:
@@ -112,7 +111,11 @@ def output_mors(what, properties, direct=False):
 
     count = 0
     sections = []
-    for mor in host._retrieve_properties_traversal(property_names=properties.keys(), obj_type=obj_type):
+    mors = host._retrieve_properties_traversal(property_names=properties.keys(), obj_type=obj_type)
+    if not mors:
+        return
+
+    for mor in mors:
         count += 1
         # Parse result into a dictionary. Key is the property name,
         # value is the value (some custom Python classes)
@@ -121,13 +124,10 @@ def output_mors(what, properties, direct=False):
             # Convert property value using specified conversion function
             data[p.Name] = properties[p.Name](p.Val)
 
-        # Get the name of this Host/VirtualMachine
-        # May there a comments in the field, so split at whitespace
-        try:
-            name = data["name"].split()[0]
-            object_collection[name] = (what, data['name'])
-        except:
-            pass
+        # Remember the total list of output objects. We will put this into
+        # a special section
+        object_collection.append((what, data["name"]))
+        name = data["name"].split()[0] # get rid of comment
         
         # Output multiplexed Check_MK Agent output (new in version 1.2.3i1)
         if direct:
@@ -277,7 +277,7 @@ if "virtualmachine" in mortypes:
 
 print "<<<<>>>>"
 
-print "<<<local>>>"
-for name, data in object_collection.items():
-    print "0 %s-%s - OK: collecting piggyback data for %s" % (data[0], name, data[1])
+print "<<<esx_vsphere_objects:sep(9)>>>"
+for what, name in object_collection:
+    print "%s\t%s" % (what, name)
 host.disconnect()

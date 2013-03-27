@@ -717,6 +717,10 @@ div.really, div.success, div.error, div.message, div.warning {
     border-style: solid;*/
 }
 
+div.message {
+    color: black;
+}
+
 div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 {
      font-size: 12pt;
      font-weight: bold;

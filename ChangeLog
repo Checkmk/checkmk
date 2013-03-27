@@ -20,6 +20,8 @@
     * Added PNP tempate for check_disk_smb
     * Dashboards can now be configured to be reloaded on resizing
       (automatically adds width/height url parameters)
+    * LDAP authentification: New config option "Do not use persistent
+                             connections to ldap server"
 
     Event Console:
     * New rule feature: automatically delete event after actions

@@ -21,10 +21,23 @@
 
 Option Explicit
 
-Dim WMI, prop, instId, instVersion, instIds, instName
+Dim WMI, prop, instId, instVersion, instIds, instName, output
+
+WScript.Timeout = 10
 
 ' Directory of all database instance names
 Set instIds = CreateObject("Scripting.Dictionary")
+
+
+output = ""
+Sub addOutput(text)
+    output = output & text & vbLf
+End Sub
+
+
+' Dummy empty output. 
+' Contains timeout error if this scripts runtime exceeds the timeout
+WScript.echo "<<<mssql_versions>>>"
 
 ' Loop all found local MSSQL server instances
 ' Try different trees to handle different versions of MSSQL
@@ -43,7 +56,7 @@ If Err.Number <> 0 Then
         ' try MSSQL < 10
         Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement")
         If Err.Number <> 0 Then
-            wscript.echo "Error: " & Err.Number & " " & Err.Description
+            addOutput( "Error: " & Err.Number & " " & Err.Description )
             Err.Clear()
             wscript.quit()
         End If
@@ -57,8 +70,8 @@ For Each prop In WMI.ExecQuery("SELECT * FROM SqlServiceAdvancedProperty WHERE "
     instId      = Replace(prop.ServiceName, "$", "_")
     instVersion = prop.PropertyStrValue
     
-    WScript.echo "<<<mssql_versions>>>"
-    WScript.echo instId & "  " & instVersion
+    addOutput( "<<<mssql_versions>>>" )
+    addOutput( instId & "  " & instVersion )
     
     ' Now query the server instance for the databases
     ' Use name as key and always empty value for the moment
@@ -103,7 +116,7 @@ For Each instId In instIds.Keys
     RS.Open "SELECT counter_name, object_name, instance_name, cntr_value " & _
             "FROM sys.dm_os_performance_counters " & _
             "WHERE object_name NOT LIKE '%Deprecated%'", CONN
-    wscript.echo "<<<mssql_counters>>>"
+    addOutput( "<<<mssql_counters>>>" )
     Dim objectName, counterName, instanceName, value
     Do While NOT RS.Eof
         objectName   = Replace(Replace(Trim(RS("object_name")), " ", "_"), "$", "_")
@@ -113,7 +126,7 @@ For Each instId In instIds.Keys
             instanceName = "None"
         End If
         value        = Trim(RS("cntr_value"))
-        wscript.echo objectName & " " & counterName & " " & instanceName & " " & value
+        addOutput( objectName & " " & counterName & " " & instanceName & " " & value ) 
         RS.MoveNext
     Loop
     RS.Close
@@ -130,7 +143,7 @@ For Each instId In instIds.Keys
     RS.Close
     
     ' Now gather the db size and unallocated space
-    wscript.echo "<<<mssql_tablespaces>>>"
+    addOutput( "<<<mssql_tablespaces>>>" )
     Dim i, dbSize, unallocated, reserved, data, indexSize, unused
     For Each dbName in dbNames.Keys
         ' Switch to other database and then ask for stats
@@ -164,15 +177,15 @@ For Each instId In instIds.Keys
             Set RS = RS.NextRecordset
             i = i + 1
         Loop
-        wscript.echo instId & " " & Replace(dbName, " ", "_") & " " & dbSize & " " & unallocated & " " & reserved & " " & _
-                     data & " " & indexSize & " " & unused
+        addOutput( instId & " " & Replace(dbName, " ", "_") & " " & dbSize & " " & unallocated & " " & reserved & " " & _
+                     data & " " & indexSize & " " & unused )
         Set RS = CreateObject("ADODB.Recordset")
     Next
     
     ' Loop all databases to get the date of the last backup. Only show databases
     ' which have at least one backup 
     Dim lastBackupDate
-    wscript.echo "<<<mssql_backup>>>"
+    addOutput( "<<<mssql_backup>>>" )
     For Each dbName in dbNames.Keys
         RS.open "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(backup_finish_date)), '19700101'), 120) AS last_backup_date " & _
                 "FROM msdb.dbo.backupset " & _
@@ -180,7 +193,7 @@ For Each instId In instIds.Keys
         Do While Not RS.Eof
             lastBackupDate = Trim(RS("last_backup_date"))
             If lastBackupDate <> "" Then
-                wscript.echo instId & " " & Replace(dbName, " ", "_") & " " & lastBackupDate
+                addOutput( instId & " " & Replace(dbName, " ", "_") & " " & lastBackupDate )
             End If
             RS.MoveNext
         Loop
@@ -192,3 +205,7 @@ Next
 
 Set RS = nothing
 Set CONN = nothing
+
+' finally output collected data
+WScript.echo output
+

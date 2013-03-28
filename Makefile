@@ -59,7 +59,7 @@ check-spaces:
           && echo "Aborting due to trailing spaces. Please use 'make healspaces' to repair." \
           && echo "Affected files: " \
           && grep -l '[ 	]$$' $(SOURCE_FILES) \
-          && false ; } || true
+          && false ; }
 	@echo OK
 
 check-permissions:

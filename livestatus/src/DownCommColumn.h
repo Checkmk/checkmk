@@ -36,7 +36,7 @@ class DownCommColumn : public ListColumn
 {
     bool _is_downtime;
     bool _with_info;
-    bool _is_service; // and not host 
+    bool _is_service; // and not host
     bool _with_extra_info; // provides date and type
 public:
     DownCommColumn(string name, string description, int indirect_offset, bool is_downtime, bool is_service, bool with_info, bool with_extra_info)

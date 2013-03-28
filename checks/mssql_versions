@@ -31,7 +31,7 @@ def inventory_mssql_versions(info):
     inventory = []
     for line in info:
         if len(line) == 2 and line[0] != "Error:":
-            inventory.append((line[0], None)) 
+            inventory.append((line[0], None))
     return inventory
 
 def check_mssql_versions(item, _unused, info):

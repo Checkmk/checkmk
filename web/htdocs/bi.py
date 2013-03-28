@@ -1733,13 +1733,13 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
             site = hostrow["site"]
             host = hostrow["name"]
             rows_by_host[(site, host)] = hostrow
-        
+
     for hostrow in hostrows:
         site = hostrow["site"]
         host = hostrow["name"]
         # In case of joinbyname we deal with aggregations that bare the
         # name of one host, but might contain states of multiple hosts.
-        # status_info cannot be filled from one row in that case. We          
+        # status_info cannot be filled from one row in that case. We
         # try to optimize by assuming that all data that we need is being
         # displayed in the same view and the information thus being present
         # in some of the other hostrows.

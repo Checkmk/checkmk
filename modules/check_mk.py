@@ -4042,9 +4042,9 @@ def lock_nagios_objects_file():
         fcntl.fcntl(restart_lock_fd, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
         try:
             if opt_debug:
-                sys.stderr.write("Waiting for exclusive lock on %s.\n" % 
+                sys.stderr.write("Waiting for exclusive lock on %s.\n" %
                     lock_file)
-            fcntl.flock(restart_lock_fd, fcntl.LOCK_EX | 
+            fcntl.flock(restart_lock_fd, fcntl.LOCK_EX |
                 ( restart_locking == "abort" and fcntl.LOCK_NB or 0))
         except:
             return False

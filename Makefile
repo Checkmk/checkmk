@@ -55,11 +55,11 @@ help:
 
 check-spaces:
 	@echo -n "Checking for trailing spaces..."
-	@grep -q '[[:space:]]$$' $(SOURCE_FILES) && { echo $$? ; figlet "Space error" \
-          && echo "Aborting due to trailing spaces. Please use 'make healspaces' to repair." \
-          && echo "Affected files: " \
-          && grep -l '[ 	]$$' $(SOURCE_FILES) \
-          && false ; }
+	@if grep -q '[[:space:]]$$' $(SOURCE_FILES) ; then echo $$? ; figlet "Space error" \
+          ; echo "Aborting due to trailing spaces. Please use 'make healspaces' to repair." \
+          ; echo "Affected files: " \
+          ; grep -l '[ 	]$$' $(SOURCE_FILES) \
+          ; exit 1 ; fi
 	@echo OK
 
 check-permissions:

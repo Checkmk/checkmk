@@ -57,4 +57,5 @@ check_info['vms_diskstat.df'] = {
     "has_perfdata" :        True,
     "group" :               "filesystem",
     "includes" :            [ "df.include" ],
+    "default_levels_variable" : "filesystem_default_levels",
 }

@@ -81,12 +81,13 @@ def check_esx_vsphere_datastores(item, params, info):
     return state, infotext, perfdata
 
 check_info['esx_vsphere_datastores'] = {
-  "inventory_function"  : inventory_esx_vsphere_datastores,
-  "check_function"      : check_esx_vsphere_datastores,
-  "service_description" : "fs_%s",
-  "includes"            : [ 'df.include' ],
-  "has_perfdata"        : True,
-  "group"               : "filesystem", 
+    "inventory_function"      : inventory_esx_vsphere_datastores,
+    "check_function"          : check_esx_vsphere_datastores,
+    "service_description"     : "fs_%s",
+    "includes"                : [ 'df.include' ],
+    "has_perfdata"            : True,
+    "group"                   : "filesystem", 
+    "default_levels_variable" : "filesystem_default_levels",
 }
 
 #.

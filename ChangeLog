@@ -84,6 +84,7 @@
     * FIX: apc_symmetra_power: resurrect garble PNP template for 
     * FIX: check_mk_agent.freebsd: remove garble from output
            (Thanks to Mathias Decker)
+    * check_http: now support the option -L (urlizing the result)
     
 1.2.2b5:
     Core:

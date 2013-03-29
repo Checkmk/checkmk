@@ -115,6 +115,9 @@ def check_http_arguments(params):
     if "max_age" in settings:
         args += ' -M %d' % settings["max_age"]
 
+    if settings.get("urlize"):
+        args += ' -L'
+
     if not omit_ip:
         args = " -I $HOSTADDRESS$" + args
     return args

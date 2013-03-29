@@ -450,6 +450,15 @@ register_rule(group,
                                   default_value = 3600 * 24,
                               )
                             ),
+                            ( "urlize",
+                              FixedValue(
+                                  value = True,
+                                  title = _("Clickable URLs"),
+                                  totext = _("Format check output as hyperlink"),
+                                  help = _("With this option the check produces an output that is a valid hyperlink "
+                                           "to the checked URL and this clickable."),
+                              )
+                            ),
                         ]
                     ),
 

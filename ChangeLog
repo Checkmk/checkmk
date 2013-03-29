@@ -82,6 +82,8 @@
 1.2.2:
     Checks & Agents:
     * FIX: apc_symmetra_power: resurrect garble PNP template for 
+    * FIX: check_mk_agent.freebsd: remove garble from output
+           (Thanks to Mathias Decker)
     
 1.2.2b5:
     Core:

@@ -291,7 +291,7 @@ fi
 # check zpool status
 if [ -x /sbin/zpool ]; then
    echo "<<<zpool_status>>>"
-   /sbin/zpool status -x
+   /sbin/zpool status -x | grep -v "errors: No known data errors"
 fi
 
 

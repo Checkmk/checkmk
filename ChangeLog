@@ -79,6 +79,10 @@
     * Configuration of an alternativ host check command
     * Inventory: Display link symbol for ps ruleset
 
+1.2.2:
+    Checks & Agents:
+    * FIX: apc_symmetra_power: resurrect garble PNP template for 
+    
 1.2.2b5:
     Core:
     * Checks can now omit the typical "OK - " or "WARN -". This text

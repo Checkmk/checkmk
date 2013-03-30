@@ -85,6 +85,10 @@
     * FIX: check_mk_agent.freebsd: remove garble from output
            (Thanks to Mathias Decker)
     * check_http: now support the option -L (urlizing the result)
+
+    Notifications:
+    * FIX: fix event type for recoveries
+    * FIX: fix custom notifications on older nagios versions
     
     Livestatus:
     * FIX: memory leak when removing downtime / comment 

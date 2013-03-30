@@ -109,7 +109,8 @@ void TableDownComm::addComment(nebstruct_comment_data *data) {
         add(new Comment(data));
     }
     else if (data->type == NEBTYPE_COMMENT_DELETE) {
-        remove(new Comment(data));
+        Comment comment(data);
+        remove(&comment);
     }
 }
 
@@ -120,7 +121,8 @@ void TableDownComm::addDowntime(nebstruct_downtime_data *data)
         add(new Downtime(data));
     }
     else if (data->type == NEBTYPE_DOWNTIME_DELETE) {
-        remove(new Downtime(data));
+        Downtime downtime(data);
+        remove(&downtime);
     }
 }
 

@@ -9,6 +9,10 @@
            (Thanks to Mathias Decker)
     * check_http: now support the option -L (urlizing the result)
 
+    Multisite:
+    * FIX: fix localization in non-OMD environment
+           (thanks to あきら)
+
     Notifications:
     * FIX: fix event type for recoveries
     * FIX: fix custom notifications on older nagios versions

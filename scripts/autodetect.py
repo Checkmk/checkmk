@@ -563,6 +563,7 @@ try:
 
         for dir in plugin_paths + \
             [ '/usr/lib/nagios/plugins',
+              '/usr/lib64/nagios/plugins',
               '/usr/local/nagios/libexec',
               '/usr/local/nagios/plugins' ]:
             try:

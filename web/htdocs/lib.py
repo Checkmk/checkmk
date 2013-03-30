@@ -191,11 +191,14 @@ def load_language(lang):
 
     if lang:
         locale_base = defaults.locale_dir
-        local_locale_path = defaults.omd_root + "/local/share/check_mk/locale"
-        po_path = '/%s/LC_MESSAGES/multisite.mo' % lang
-        # Use file in OMD local strucuture when existing
-        if os.path.exists(local_locale_path + po_path):
-            locale_base = local_locale_path
+
+        # OMD users can put their localization into a local path into the site
+        if defaults.omd_root:
+            local_locale_path = defaults.omd_root + "/local/share/check_mk/locale"
+            po_path = '/%s/LC_MESSAGES/multisite.mo' % lang
+            # Use file in OMD local strucuture when existing
+            if os.path.exists(local_locale_path + po_path):
+                locale_base = local_locale_path
 
         try:
             i18n = gettext.translation('multisite', locale_base, languages = [ lang ], codeset = 'UTF-8')

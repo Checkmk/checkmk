@@ -447,15 +447,13 @@ def check_notification_type(context, host_events, service_events):
     if context["WHAT"] == "HOST":
         allowed_events = host_events
         state = context["HOSTSTATE"]
-        events = { "UP" : 'u', "DOWN" : 'd' }
+        events = { "UP" : 'r', "DOWN" : 'd', "UNREACHABLE" : 'u' }
     else:
         allowed_events = service_events
         state = context["SERVICESTATE"]
-        events = { "WARNING" : 'w', "CRITICAL" : 'c', "UNKNOWN" : 'u' }
+        events = { "OK" : 'r', "WARNING" : 'w', "CRITICAL" : 'c', "UNKNOWN" : 'u' }
 
-    if notification_type == "PROBLEM":
-        event = events[state]
-    elif notification_type == "RECOVERY":
+    if notification_type == "RECOVERY":
         event = 'r'
     elif notification_type in [ "FLAPPINGSTART", "FLAPPINGSTOP", "FLAPPINGDISABLED" ]:
         event = 'f'
@@ -464,7 +462,7 @@ def check_notification_type(context, host_events, service_events):
     elif notification_type == "ACKNOWLEDGEMENT":
         event = 'x'
     else:
-        event = '?'
+        event = events.get(state, '?')
 
     return event, allowed_events
 

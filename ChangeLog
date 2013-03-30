@@ -12,6 +12,8 @@
     Multisite:
     * FIX: fix localization in non-OMD environment
            (thanks to あきら)
+    * Add $SERVICEOUTPUT$ and $HOSTOUTPUT$ to allowed macros for
+      custom notes
 
     Notifications:
     * FIX: fix event type for recoveries

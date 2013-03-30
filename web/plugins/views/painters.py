@@ -744,7 +744,10 @@ def paint_custom_notes(row):
             .replace('$HOSTNAME_UPPER$', host.upper())\
             .replace('$HOSTNAME_TITLE$', host[0].upper() + host[1:].lower())\
             .replace('$HOSTADDRESS$',    row["host_address"])\
+            .replace('$SERVICEOUTPUT$',  row.get("service_plugin_output", ""))\
+            .replace('$HOSTOUTPUT$',     row.get("host_plugin_output", ""))\
             .replace('$SERVICEDESC$',    row.get("service_description", ""))
+
     for f in files:
         contents.append(replace_tags(unicode(file(f).read(), "utf-8").strip()))
     return "", "<hr>".join(contents)
@@ -752,7 +755,7 @@ def paint_custom_notes(row):
 multisite_painters["svc_custom_notes"] = {
     "title"   : _("Custom services notes"),
     "short"   : _("Notes"),
-    "columns" : [ "host_name", "host_address", "service_description" ],
+    "columns" : [ "host_name", "host_address", "service_description", "service_plugin_output" ],
     "paint"   : paint_custom_notes,
 }
 
@@ -1152,7 +1155,7 @@ multisite_painters["host_contact_groups"] = {
 multisite_painters["host_custom_notes"] = {
     "title"   : _("Custom host notes"),
     "short"   : _("Notes"),
-    "columns" : [ "host_name", "host_address" ],
+    "columns" : [ "host_name", "host_address", "host_plugin_output" ],
     "paint"   : paint_custom_notes,
 }
 

@@ -1,10 +1,13 @@
-1.2.2:
+1.2.2b6:
     Checks & Agents:
     * FIX: apc_symmetra_power: resurrect garble PNP template for 
     * FIX: check_mk_agent.freebsd: remove garble from output
            (Thanks to Mathias Decker)
     * check_http: now support the option -L (urlizing the result)
     
+    Livestatus:
+    * FIX: memory leak when removing downtime / comment 
+
 1.2.2b5:
     Core:
     * Checks can now omit the typical "OK - " or "WARN -". This text

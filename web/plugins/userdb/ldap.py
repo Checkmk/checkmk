@@ -108,7 +108,7 @@ def ldap_connect():
     try:
         ldap
     except:
-        raise MKLDAPException(_("The python module python-ldap seem to be missing. You need to "
+        raise MKLDAPException(_("The python module python-ldap seems to be missing. You need to "
                                 "install this extension to make the LDAP user connector work."))
 
     # Some major config var validations

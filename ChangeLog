@@ -12,6 +12,7 @@
     Multisite:
     * FIX: fix localization in non-OMD environment
            (thanks to あきら)
+    * FIX: hopefully fix computation of Speed-O-Meter
     * Add $SERVICEOUTPUT$ and $HOSTOUTPUT$ to allowed macros for
       custom notes
 

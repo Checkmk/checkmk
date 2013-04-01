@@ -223,7 +223,7 @@ mrproper:
 
 SOURCE_FILES = checkman/* modules/* checks/* notifications/* $$(find -name Makefile) \
           livestatus/src/*{cc,c,h} web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
-          doc/helpers/* $(find -type f pnp-templates/*.php)
+          doc/helpers/* scripts/setup.sh scripts/autodetect.py $(find -type f pnp-templates/*.php)
 
 healspaces:
 	@echo "Removing trailing spaces from code lines..."

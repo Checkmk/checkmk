@@ -150,6 +150,8 @@ def check_mssql_counters_locks(item, params, info):
     state    = 0
     output   = []
     perfdata = []
+    now = time.time()
+    wrapped = False
     for line in info:
         if mssql_counters_item(line, False) != item:
             continue
@@ -163,21 +165,31 @@ def check_mssql_counters_locks(item, params, info):
             if line[1] == counter:
                 prob_txt = ''
                 value = float(line[-1])
+                # compute rate from counter value
+                countername = "mssql_counters.%s.%s" % (item, counter)
+                try:
+                    timedif, persec = get_counter(countername, now, value)
+                except MKCounterWrapped:
+                    wrapped = True
+                    continue
 
                 p = params.get(counter)
                 if p:
                     warn, crit = p
-                    if value > crit:
+                    if persec > crit:
                         state = max(state, 1)
-                        prob_txt = ' (!)'
-                    elif value > warn:
+                        prob_txt = '(!)'
+                    elif persec > warn:
                         state = max(state, 2)
-                        prob_txt = ' (!!)'
+                        prob_txt = '(!!)'
                 else:
                     warn, crit = None, None
 
-                output.append('%s: %d/s%s' % (label, value, prob_txt))
-                perfdata.append((counter, value, warn, crit))
+                output.append('%s: %.1f/s%s' % (label, persec, prob_txt))
+                perfdata.append((counter, persec, warn, crit))
+
+    if wrapped:
+        raise MKCounterWrapped("", "Some counter wrapped, no data this time")
 
     if output:
         return (state, '%s - %s' % (nagios_state_names[state], ', '.join(output)), perfdata)

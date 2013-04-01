@@ -106,13 +106,6 @@ echo '<<<df>>>'
 excludefs="-x smbfs -x tmpfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs"
 df -PTlk $excludefs | sed 1d
 
-# VMWare shows its own filesystems with 'vdf'. Just one
-# problem: it outputs not 7 but only 6 columns
-if type vdf > /dev/null
-then
-   vdf -P | grep ^/vmfs/volumes | sed 's/ / vmfs /'
-fi
-
 # Filesystem usage for ZFS
 if type zfs > /dev/null 2>&1 ; then
     echo '<<<zfsget>>>'
@@ -334,11 +327,6 @@ if type tw_cli > /dev/null ; then
         echo '<<<3ware_units>>>'
         tw_cli /$C show unitstatus | egrep 'u[0-9]' | sed "s/^/$C\//"
     done
-fi
-
-if type vcbVmName > /dev/null 2>&1 ; then
-   echo '<<<vmware_state>>>'
-   vcbVmName -s any
 fi
 
 # VirtualBox Guests. Section must always been output. Otherwise the

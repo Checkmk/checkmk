@@ -88,6 +88,7 @@
     * FIX: apc_symmetra_power: resurrect garble PNP template for 
     * FIX: check_mk_agent.freebsd: remove garble from output
            (Thanks to Mathias Decker)
+    * FIX: check_mk-mssql_counters.locks: fix computation, was altogether wrong
     * check_http: now support the option -L (urlizing the result)
 
     Multisite:

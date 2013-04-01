@@ -618,14 +618,14 @@ case "\$1" in
                 echo 'Already running.'
                 exit 0
             fi
-            su - \$RUNUSER -c "\${DAEMON}_open514 --syslog --syslog-fd 3 \$OPTS"
+            su -s /bin/sh - \$RUNUSER -c "\${DAEMON}_open514 --syslog --syslog-fd 3 \$OPTS"
         else
             echo -n 'Starting mkeventd...'
             if kill -0 \$THE_PID >/dev/null 2>&1; then
               echo 'Already running.'
               exit 0
             fi
-            su - \$RUNUSER -c "\$DAEMON \$OPTS"
+            su -s /bin/sh - \$RUNUSER -c "\$DAEMON \$OPTS"
         fi
         echo OK
     ;;
@@ -774,40 +774,6 @@ do
 	       fi
 	       if [ -z "$YES" ] ; then echo ")" ; fi
 	   fi &&
-           if [ "$enable_mkeventd" = yes ]
-           then
-	       if [ -z "$YES" ] ; then echo -n "(Compiling Event Console binaries..." ; fi
-	       compile_mkeventd 2>&1 | propeller > $SRCDIR/mkeventd.log
-	       if [ "${PIPESTATUS[0]}" = 0 ]
-	       then
-                   pushd $SRCDIR/mkeventd.src > /dev/null &&
-                   install -m 755 src/mkevent $DESTDIR$bindir &&
-                   install -m 4754 src/mkeventd_open514 -o $nagiosuser $DESTDIR$bindir &&
-                   install -m 644 checks/* $DESTDIR$checksdir &&
-                   install -m 755 bin/* $DESTDIR$bindir &&
-                   install -m 755 lib/* $DESTDIR${check_icmp_path%/*} &&
-                   cp -r web/* $DESTDIR$web_dir &&
-                   mkdir -p $DESTDIR$confdir/mkeventd.d/wato &&
-                   chown $wwwuser.$wwwgroup $DESTDIR$confdir/mkeventd.d/wato &&
-                   if [ ! -e "$DESTDIR$confdir/multisite.d/mkeventd.mk" ] ; then
-                       mkdir -p $DESTDIR$confdir/multisite.d &&
-                       echo 'mkeventd_enabled = True' > $DESTDIR$confdir/multisite.d/mkeventd.mk
-                   fi &&
-                   touch $DESTDIR$confdir/mkeventd.mk &&
-                   mkeventdsocketdir=${livesock%/*}/mkeventd &&
-                   mkdir -p $DESTDIR$mkeventdsocketdir &&
-                   chown $nagiosuser.$wwwgroup $DESTDIR$mkeventdsocketdir &&
-                   chmod 2755 $DESTDIR$mkeventdsocketdir &&
-                   mkdir -p $DESTDIR$mkeventdstatedir &&
-                   chown $nagiosuser $DESTDIR$mkeventdstatedir &&
-                   create_mkeventd_startscript &&
-                   popd > /dev/null
-	       else
-		   echo -e "\E[1;31;40m ERROR compiling Event Console binaries! \E[0m.\nLogfile is in $SRCDIR/mkeventd.log"
-		   exit 1
-	       fi
-	       if [ -z "$YES" ] ; then echo ")" ; fi
-           fi &&
            mkdir -p $DESTDIR$sharedir &&
            tar xzf $SRCDIR/share.tar.gz -C $DESTDIR$sharedir &&
 	   mkdir -p $DESTDIR$modulesdir &&
@@ -1032,6 +998,40 @@ EOF
            chown $wwwuser "$serials_file" &&
            chown $wwwuser "$htpasswd_file" &&
 	   create_sudo_configuration &&
+           if [ "$enable_mkeventd" = yes ]
+           then
+	       if [ -z "$YES" ] ; then echo -n "(Compiling Event Console binaries..." ; fi
+	       compile_mkeventd 2>&1 | propeller > $SRCDIR/mkeventd.log
+	       if [ "${PIPESTATUS[0]}" = 0 ]
+	       then
+                   pushd $SRCDIR/mkeventd.src > /dev/null &&
+                   install -m 755 src/mkevent $DESTDIR$bindir &&
+                   install -m 4754 src/mkeventd_open514 -o $nagiosuser $DESTDIR$bindir &&
+                   install -m 644 checks/* $DESTDIR$checksdir &&
+                   install -m 755 bin/* $DESTDIR$bindir &&
+                   install -m 755 lib/* $DESTDIR${check_icmp_path%/*} &&
+                   cp -r web/* $DESTDIR$web_dir &&
+                   mkdir -p $DESTDIR$confdir/mkeventd.d/wato &&
+                   chown $wwwuser.$wwwgroup $DESTDIR$confdir/mkeventd.d/wato &&
+                   if [ ! -e "$DESTDIR$confdir/multisite.d/mkeventd.mk" ] ; then
+                       mkdir -p $DESTDIR$confdir/multisite.d &&
+                       echo 'mkeventd_enabled = True' > $DESTDIR$confdir/multisite.d/mkeventd.mk
+                   fi &&
+                   touch $DESTDIR$confdir/mkeventd.mk &&
+                   mkeventdsocketdir=${livesock%/*}/mkeventd &&
+                   mkdir -p $DESTDIR$mkeventdsocketdir &&
+                   chown $nagiosuser.$wwwgroup $DESTDIR$mkeventdsocketdir &&
+                   chmod 2755 $DESTDIR$mkeventdsocketdir &&
+                   mkdir -p $DESTDIR$mkeventdstatedir &&
+                   chown $nagiosuser $DESTDIR$mkeventdstatedir &&
+                   create_mkeventd_startscript &&
+                   popd > /dev/null
+	       else
+		   echo -e "\E[1;31;40m ERROR compiling Event Console binaries! \E[0m.\nLogfile is in $SRCDIR/mkeventd.log"
+		   exit 1
+	       fi
+	       if [ -z "$YES" ] ; then echo ")" ; fi
+           fi &&
 	   if [ -z "$YES" ] ; then
 	       echo -e "Installation completed successfully.\nPlease restart Nagios and Apache in order to update/active check_mk's web pages."
 	       echo

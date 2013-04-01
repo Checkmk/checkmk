@@ -173,7 +173,7 @@ def query(query):
         raise MKGeneralException("Invalid response from event daemon: <pre>%s</pre>" % response_text)
 
     except Exception, e:
-        raise MKGeneralException("Cannot connect to event daemon: %s" % e)
+        raise MKGeneralException("Cannot connect to event daemon via %s: %s" % (socket_path, e))
 
 def replication_mode():
     try:

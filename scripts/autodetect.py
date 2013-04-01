@@ -410,16 +410,16 @@ def detect_omd():
       'pnptemplates'            : root + "/local/share/check_mk/pnp-templates",
       'rrddir'                  : root + "/var/pnp4nagios/perfdata",
       'wwwgroup'                : site,
-      'wwwuser'                 : site, 
+      'wwwuser'                 : site,
     }
 
 
-#                    _       
-#    _ __ ___   __ _(_)_ __  
-#   | '_ ` _ \ / _` | | '_ \ 
+#                    _
+#    _ __ ___   __ _(_)_ __
+#   | '_ ` _ \ / _` | | '_ \
 #   | | | | | | (_| | | | | |
 #   |_| |_| |_|\__,_|_|_| |_|
-#   
+#
 
 try:
     result = detect_omd()

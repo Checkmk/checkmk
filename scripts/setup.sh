@@ -821,6 +821,12 @@ EOF
 		   sed -i "s@$web_dir@$web_dir/htdocs@g" $d
 	       fi
 	   done &&
+           # make htpasswd writable by apache, since we need this for
+           # WATO. Also create an empty and Apache-writable auth.serials
+           serials_file=${htpasswd_file%/*}/auth.serials &&
+           touch "$serials_file" &&
+           chown $wwwuser "$serials_file" &&
+           chown $wwwuser "$htpasswd_file" &&
 	   create_sudo_configuration &&
 	   if [ -z "$YES" ] ; then
 	       echo -e "Installation completed successfully.\nPlease restart Nagios and Apache in order to update/active check_mk's web pages."

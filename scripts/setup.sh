@@ -1006,7 +1006,7 @@ EOF
 	       then
                    pushd $SRCDIR/mkeventd.src > /dev/null &&
                    install -m 755 src/mkevent $DESTDIR$bindir &&
-                   install -m 4754 src/mkeventd_open514 -o $nagiosuser $DESTDIR$bindir &&
+                   install -m 4754 src/mkeventd_open514 -g $wwwgroup $DESTDIR$bindir &&
                    install -m 644 checks/* $DESTDIR$checksdir &&
                    install -m 755 bin/* $DESTDIR$bindir &&
                    install -m 755 lib/* $DESTDIR${check_icmp_path%/*} &&

@@ -19,6 +19,7 @@
     Notifications:
     * FIX: fix event type for recoveries
     * FIX: fix custom notifications on older nagios versions
+    * FIX: handle case where type HOST/SERVICE not correctly detected
     
     Livestatus:
     * FIX: memory leak when removing downtime / comment 

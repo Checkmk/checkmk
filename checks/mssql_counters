@@ -119,6 +119,8 @@ check_info['mssql_counters.cache_hits'] = {
 def check_mssql_counters_transactions(item, params, info):
     output   = []
     perfdata = []
+    now = time.time()
+    wrapped = False
     for line in info:
         if mssql_counters_item(line, False) != item:
             continue
@@ -130,8 +132,14 @@ def check_mssql_counters_transactions(item, params, info):
             ]:
             if line[1] == counter:
                 value = int(line[-1])
-                output.append('%s: %d/s' % (label, value))
-                perfdata.append((counter, value))
+                countername = "mssql_counters.%s.%s" % (item, counter)
+                try:
+                    timedif, persec = get_counter(countername, now, value)
+                except MKCounterWrapped:
+                    wrapped = True
+                    continue
+                output.append('%s: %.1f/s' % (label, persec))
+                perfdata.append((counter, persec))
 
     if output:
         return (0, '%s' % ', '.join(output), perfdata)

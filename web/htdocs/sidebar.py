@@ -419,9 +419,9 @@ def ajax_speedometer():
             scheduled_rate = html.live.query_summed_stats(
                         "GET hosts\n"
                         "Stats: suminv check_interval\n")[0] / 60.0
-            
-            # 2. Now get data of all active services and of passive/non-check_mk-services. 
-            # For passive services we assume that they are scheduled with the rate the 
+
+            # 2. Now get data of all active services and of passive/non-check_mk-services.
+            # For passive services we assume that they are scheduled with the rate the
             # is configured via "check_interval". Nagios does not use this setting for i
             # passive checks, but we have no other option.
             scheduled_rate += html.live.query_summed_stats(

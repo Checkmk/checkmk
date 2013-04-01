@@ -433,7 +433,7 @@ then
 directory."
 fi
 
-if [ "$enable_mkeventd" = yes and "$enable_livestatus" != yes ]
+if [ "$enable_mkeventd" = yes -a "$enable_livestatus" != yes ]
 then
   ask_dir livesock ${nagpipe%/*}/live ${nagpipe%/*}/live $OMD_ROOT/tmp/run/live "Unix socket for Livestatus" \
    "The Livestatus Module provides Nagios status data via a unix

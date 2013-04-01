@@ -334,7 +334,7 @@ def do_notify(args):
             context["OMD_ROOT"] = omd_root
             context["OMD_SITE"] = os.getenv("OMD_SITE", "")
 
-        context["WHAT"] = "SERVICEDESC" in context and "SERVICE" or "HOST"
+        context["WHAT"] = context.get("SERVICEDESC") and "SERVICE" or "HOST"
         context["MAIL_COMMAND"] = notification_mail_command
 
         # Handle interactive calls

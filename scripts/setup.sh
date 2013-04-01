@@ -77,7 +77,7 @@ dir_already_configured ()
 }
 
 
-ask_dir () 
+ask_dir ()
 {
     if [ $1 != -d ] ; then
 	prefix="$(pwd)/"
@@ -157,7 +157,7 @@ ask_title ()
     if [ "$YES" ] ; then return ; fi
     TITLENO=$((TITLENO + 1))
     f="[44;37;1m  %-69s  [0m\n"
-    echo 
+    echo
     printf "$f" ""
     printf "$f" "$TITLENO) $*"
     printf "$f" ""
@@ -189,9 +189,9 @@ Welcome to Check_MK. This setup will install Check_MK into user defined
 directories. If you run this script as root, installation paths below
 /usr will be suggested. If you run this script as non-root user paths
 in your home directory will be suggested. You may override the default
-values or just hit enter to accept them. 
+values or just hit enter to accept them.
 
-Your answers will be saved to $SETUPCONF and will be 
+Your answers will be saved to $SETUPCONF and will be
 reused when you run the setup of this or a later version again. Please
 delete that file if you want to delete your previous answers.
 
@@ -200,14 +200,14 @@ fi
 
 if [ -z "$DESTDIR" ]
 then
-    if [ -n "$YES" ] ; then 
+    if [ -n "$YES" ] ; then
 	if OUTPUT=$(python $SRCDIR/autodetect.py 2>/dev/null) ; then
 	    eval "$OUTPUT"
 	fi
     elif OUTPUT=$(python $SRCDIR/autodetect.py)
     then
         eval "$OUTPUT"
-	if [ -z "$YES" ] ; then 
+	if [ -z "$YES" ] ; then
 	    printf "[1;37;42m %-71s [0m\n" "* Found running Nagios process, autodetected $(echo "$OUTPUT" | grep -v '^\(#\|$\)' | wc -l) settings."
 	fi
     fi
@@ -231,12 +231,12 @@ This directory should be in your search path (\$PATH). Otherwise you
 always have to specify the installation path when calling check_mk"
 
 ask_dir confdir /etc/$NAME $HOMEBASEDIR $OMD_ROOT/etc/check_mk "Check_MK configuration" \
-  "Directory where check_mk looks for its main configuration file main.mk. 
-An example configuration file will be installed there if no main.mk is 
+  "Directory where check_mk looks for its main configuration file main.mk.
+An example configuration file will be installed there if no main.mk is
 present from a previous version"
 
 ask_dir sharedir /usr/share/$NAME $HOMEBASEDIR $OMD_ROOT/local/share/check_mk "Check_MK software" \
-  "The base directory for the software installation of Check_MK. This 
+  "The base directory for the software installation of Check_MK. This
 directory will get the subdirectories checks, modules, web, locale and
 agents. Note: in previous versions it was possible to specify each of
 those directories separately. This is no longer possible"
@@ -247,7 +247,7 @@ however, that most of check_mk's documentation is available only online at
 http://mathias-kettner.de/check_mk.html"
 
 ask_dir checkmandir /usr/share/doc/$NAME/checks $HOMEBASEDIR/doc/checks $OMD_ROOT/local/share/check_mk/checkman "check manuals" \
-  "Directory for manuals for the various checks. The manuals can be viewed 
+  "Directory for manuals for the various checks. The manuals can be viewed
 with check_mk -M <CHECKNAME>"
 
 ask_dir vardir /var/lib/$NAME $HOMEBASEDIR/var $OMD_ROOT/var/check_mk "working directory of check_mk" \
@@ -259,8 +259,8 @@ ask_title "Configuration of Linux/UNIX Agents"
 
 
 ask_dir agentslibdir /usr/lib/check_mk_agent $HOMEBASEDIR/check_mk_agent /usr/lib/check_mk_agent "extensions for agents" \
-  "This directory will not be created on the server. It will be hardcoded 
-into the Linux and UNIX agents. The agent will look for extensions in the 
+  "This directory will not be created on the server. It will be hardcoded
+into the Linux and UNIX agents. The agent will look for extensions in the
 subdirectories plugins/ and local/ of that directory"
 
 ask_dir agentsconfdir /etc/check_mk $HOMEBASEDIR /etc/check_mk "configuration dir for agents" \
@@ -272,8 +272,8 @@ ask_title "Integration with Nagios"
 
 ask_dir -d nagiosuser nagios $(id -un) "$OMD_SITE" "Name of Nagios user" \
   "The working directory for check_mk contains several subdirectories
-that need to be writable by the Nagios user (which is running check_mk 
-in check mode). Please specify the user that should own those 
+that need to be writable by the Nagios user (which is running check_mk
+in check mode). Please specify the user that should own those
 directories"
 
 ask_dir -d wwwuser www-data www-data "$OMD_SITE" "User of Apache process" \
@@ -283,7 +283,7 @@ the correct user of the apache process here, then we can create a valid
 sudo configuration for you later:"
 
 ask_dir -d wwwgroup nagios $(id -un) "$OMD_SITE" "Common group of Nagios+Apache" \
-  "Check_mk creates files and directories while running as $nagiosuser. 
+  "Check_mk creates files and directories while running as $nagiosuser.
 Some of those need to be writable by the user that is running the webserver.
 Therefore a group is needed in which both Nagios and the webserver are
 members (every valid Nagios installation uses such a group to allow
@@ -294,7 +294,7 @@ ask_dir nagios_binary /usr/sbin/nagios $HOMEBASEDIR/nagios/bin/nagios $OMD_ROOT/
 option -R/--restart in order to do a configuration check."
 
 ask_dir nagios_config_file /etc/nagios/nagios.cfg $HOMEBASEDIR/nagios/etc/nagios.cfg $OMD_ROOT/tmp/nagios/nagios.cfg "Nagios main configuration file" \
-  "Path to the main configuration file of Nagios. That file is always 
+  "Path to the main configuration file of Nagios. That file is always
 named 'nagios.cfg'. The default path when compiling Nagios yourself
 is /usr/local/nagios/etc/nagios.cfg. The path to this file is needed
 for the check_mk option -R/--restart"
@@ -303,7 +303,7 @@ ask_dir nagconfdir /etc/nagios/objects $HOMEBASEDIR/nagios/etc $OMD_ROOT/etc/nag
   "Nagios' object definitions for hosts, services and contacts are
 usually stored in various files with the extension .cfg. These files
 are located in a directory that is configured in nagios.cfg with the
-directive 'cfg_dir'. Please specify the path to that directory 
+directive 'cfg_dir'. Please specify the path to that directory
 (If the autodetection can find your configuration
 file but does not find at least one cfg_dir directive, then it will
 add one to your configuration file for your conveniance)"
@@ -362,7 +362,7 @@ for Nagios. Please enter your htpasswd file to use here"
 ask_dir -d nagios_auth_name "Nagios Access" "Nagios Access" "OMD Monitoring Site $OMD_SITE" "HTTP AuthName" \
  "Check_mk's Apache configuration file will need an AuthName. That
 string will be displayed to the user when asking for the password.
-You should use the same AuthName as for Nagios. Otherwise the user will 
+You should use the same AuthName as for Nagios. Otherwise the user will
 have to log in twice"
 
 # -------------------------------------------------------------------
@@ -380,16 +380,17 @@ ask_title "Check_MK Livestatus Module"
 # -------------------------------------------------------------------
 
 ask_dir -d enable_livestatus yes yes yes "compile livestatus module" \
-  "This version of Check_mk ships a completely new and experimental
-Nagios event broker module that provides direct access to Nagios
-internal data structures. This module is called the Check_MK Livestatus
-Module. It aims to supersede status.dat and also NDO. Currenty it
-is completely experimental and might even crash your Nagios process.
-Nevertheless - The Livestatus Module does not only allow extremely
-fast access to the status of your services and hosts, it does also
-provide live data (which status.dat does not). Also - unlike NDO - 
-Livestatus does not cost you even measurable CPU performance, does
-not need any disk space and also needs no configuration. 
+  "The well known MK Livestatus broker module is part of Check_MK.
+
+It provides direct access to Nagios internal data structures. It aims to
+supersede status.dat and also NDO. The Livestatus Module does not only
+allow extremely fast access to the status of your services and hosts, it
+does also provide live data (which status.dat does not). Also - unlike NDO -
+Livestatus does not cost you even measurable CPU performance, does not need
+any disk space and also needs no configuration.
+
+Livestatus is neccessary when you want to use Multisite. It is also
+the preferred backend for NagVis.
 
 Please answer 'yes', if you want to compile and integrate the
 Livestatus module into your Nagios. You need 'make' and the GNU
@@ -414,6 +415,34 @@ other systems. Currently this is only Nagvis, but other might follow
 later."
 fi
 
+# -------------------------------------------------------------------
+ask_title "Check_MK Event Console"
+# -------------------------------------------------------------------
+
+ask_dir -d enable_mkeventd no no no "Install Event Console" \
+  "The Check_MK Event Console is a full featured event processing
+module that integrates with Multisite. It has an own daemon and
+several methods for retrieving events. It even has an integrated
+syslog daemon.  Please answer 'yes', if you want to enable the
+Event Console."
+
+if [ "$enable_mkeventd" = yes ]
+then
+  ask_dir mkeventdstatedir /var/lib/mkeventd $vardir/mkeventd $OMD_ROOT/var/mkeventd "working directory of mkeventd" \
+  "The Event Console Daemon will store status and historic data in this
+directory."
+fi
+
+if [ "$enable_mkeventd" = yes and "$enable_livestatus" != yes ]
+then
+  ask_dir livesock ${nagpipe%/*}/live ${nagpipe%/*}/live $OMD_ROOT/tmp/run/live "Unix socket for Livestatus" \
+   "The Livestatus Module provides Nagios status data via a unix
+socket. This is similar to the Nagios command pipe, but allows
+bidirectional communication. Please enter the path to that pipe.
+It is recommended to put it into the same directory as Nagios'
+command pipe"
+fi
+
 checksdir=$sharedir/checks
 notificationsdir=$sharedir/notifications
 modulesdir=$sharedir/modules
@@ -428,7 +457,7 @@ cat <<EOF
 # This file has been created during setup of check_mk at $(date).
 # Do not edit this file. Also do not try to override these settings
 # in main.mk since some of them are hardcoded into several files
-# during setup. 
+# during setup.
 #
 # If you need to change these settings, you have to re-run setup.sh
 # and enter new values when asked, or edit ~/.check_mk_setup.conf and
@@ -477,7 +506,7 @@ doc_dir                     = '$docdir'
 EOF
 
     if [ -n "$OMD_ROOT" ] ; then
-cat <<EOF  
+cat <<EOF
 
 # Special for OMD
 check_mk_automation         = None
@@ -494,7 +523,7 @@ EOF
 }
 
 
-if [ -z "$YES" ] 
+if [ -z "$YES" ]
 then
     echo
     echo "----------------------------------------------------------------------"
@@ -535,7 +564,148 @@ EOF
    install -m 755 src/livecheck src/livestatus.o $DESTDIR$libdir &&
    mkdir -p $DESTDIR$bindir &&
    install -m 755 src/unixcat $DESTDIR$bindir &&
-   popd 
+   popd
+}
+
+compile_mkeventd ()
+{
+   local D=$SRCDIR/mkeventd.src
+   rm -rf $D
+   mkdir -p $D
+   tar xvzf $SRCDIR/mkeventd.tar.gz -C $D
+   pushd $D/src &&
+   make &&
+   popd
+}
+
+create_mkeventd_startscript ()
+{
+    if [ -e $DESTDIR/etc/init.d/mkeventd ] ; then return ; fi
+    cat <<EOF > $DESTDIR/etc/init.d/mkeventd
+#!/bin/sh
+
+# chkconfig: 345 98 02
+# description: Check_MK Event Console Daemon
+
+### BEGIN INIT INFO
+# Provides:       mkeventd
+# Required-Start:
+# Required-Stop:
+# Default-Start:  2 3 5
+# Default-Stop:
+# Description:    Start Check_MK Event Console Daemon
+### END INIT INFO
+
+SOCKETDIR=$mkeventdsocketdir
+DAEMON=$bindir/mkeventd
+VARDIR=$mkeventdstatedir
+CONFDIR=$confdir
+MKEVENTD_SYSLOG=off
+RUNUSER=$nagiosuser
+# DEBUG="--debug --foreground"
+
+PIDFILE=\$SOCKETDIR/pid
+STATUS_SOCKET=\$SOCKETDIR/status
+STATEFILE=\$VARDIR/status
+OPTS="-C \$CONFDIR --statedir \$VARDIR --logdir \$VARDIR -P \$SOCKETDIR/events -E \$SOCKETDIR/eventsocket -S \$STATUS_SOCKET --pidfile \$PIDFILE \$DEBUG"
+THE_PID=\$(cat \$PIDFILE 2>/dev/null)
+
+case "\$1" in
+    start)
+        if [ "\$MKEVENTD_SYSLOG" = on ] ; then
+            echo -n 'Starting mkeventd with integrated syslog...'
+            if kill -0 \$THE_PID >/dev/null 2>&1; then
+                echo 'Already running.'
+                exit 0
+            fi
+            su - \$RUNUSER -c "\${DAEMON}_open514 --syslog --syslog-fd 3 \$OPTS"
+        else
+            echo -n 'Starting mkeventd...'
+            if kill -0 \$THE_PID >/dev/null 2>&1; then
+              echo 'Already running.'
+              exit 0
+            fi
+            su - \$RUNUSER -c "\$DAEMON \$OPTS"
+        fi
+        echo OK
+    ;;
+    stop)
+	echo -n 'Stopping mkeventd...'
+        if [ -z "\$THE_PID" ] ; then
+            echo 'Not running.'
+        else
+            echo -n "killing \$THE_PID..."
+            kill \$THE_PID 2>/dev/null
+            if [ \$? -eq 0 ]; then
+                # Only wait for pidfile removal when the signal could be sent
+                N=0
+                while [ -e "\$PIDFILE" ] ; do
+                    sleep 0.5
+                    echo -n .
+                    N=\$((N + 1))
+                    if [ \$N -gt 20 ] ; then
+                        echo "PID file did not vanish."
+                        exit 1
+                    fi
+                done
+            else
+                # Remove the stale pidfile to have a clean state after this
+                rm \$PIDFILE
+            fi
+            echo 'OK'
+        fi
+    ;;
+    restart)
+	\$0 stop && \$0 start
+    ;;
+    reload)
+	echo -n 'Reloading mkeventd...'
+        if [ -z "\$THE_PID" ] ; then
+            echo 'Not running.'
+            exit 1
+        else
+            echo "killing \$THE_PID with SIGHUP..."
+            kill -1 \$THE_PID
+        fi
+    ;;
+
+    status)
+	echo -n 'Checking status of mkeventd...'
+        if [ -z "\$THE_PID" ] ; then
+            echo "not running (PID file missing)"
+            exit 1
+        elif ! kill -0 \$THE_PID ; then
+            echo "not running (PID file orphaned)"
+            exit 1
+        else
+            echo "running"
+            exit 0
+        fi
+    ;;
+    flush)
+        if [ -n "\$THE_PID" ] && kill -0 \$THE_PID ; then
+            echo -n "Flushing current state and history..."
+            result=\$(echo "COMMAND FLUSH" | unixcat \$STATUS_SOCKET)
+            if [ "\$result" = "None" ] ; then
+                echo OK
+                exit 0
+            else
+                echo "ERROR: \$result"
+                exit 1
+            fi
+        else
+            echo -n "Deleting status and history files..."
+            rm -f \$VARDIR/{status,master_config,slave_status,history/*}
+            echo OK
+            exit 0
+        fi
+    ;;
+    *)
+	echo "Usage: \$0 {start|stop|restart|reload|status|flush}"
+    ;;
+esac
+EOF
+    chmod 755 $DESTDIR/etc/init.d/mkeventd
 }
 
 
@@ -545,7 +715,7 @@ create_sudo_configuration ()
     if [ $UID != 0 ] ; then
 	return
     fi
- 
+
     sudolines="Defaults:$wwwuser !requiretty\n$wwwuser ALL = (root) NOPASSWD: $bindir/check_mk --automation *"
 
     if [ ! -e /etc/sudoers ] ; then
@@ -554,7 +724,7 @@ create_sudo_configuration ()
         echo "to use WATO - the Check_MK Web Administration Tool"
         echo
         echo -e "$sudolines"
-        echo 
+        echo
         echo
         return
     fi
@@ -604,6 +774,40 @@ do
 	       fi
 	       if [ -z "$YES" ] ; then echo ")" ; fi
 	   fi &&
+           if [ "$enable_mkeventd" = yes ]
+           then
+	       if [ -z "$YES" ] ; then echo -n "(Compiling Event Console binaries..." ; fi
+	       compile_mkeventd 2>&1 | propeller > $SRCDIR/mkeventd.log
+	       if [ "${PIPESTATUS[0]}" = 0 ]
+	       then
+                   pushd $SRCDIR/mkeventd.src > /dev/null &&
+                   install -m 755 src/mkevent $DESTDIR$bindir &&
+                   install -m 4754 src/mkeventd_open514 -o $nagiosuser $DESTDIR$bindir &&
+                   install -m 644 checks/* $DESTDIR$checksdir &&
+                   install -m 755 bin/* $DESTDIR$bindir &&
+                   install -m 755 lib/* $DESTDIR${check_icmp_path%/*} &&
+                   cp -r web/* $DESTDIR$web_dir &&
+                   mkdir -p $DESTDIR$confdir/mkeventd.d/wato &&
+                   chown $wwwuser.$wwwgroup $DESTDIR$confdir/mkeventd.d/wato &&
+                   if [ ! -e "$DESTDIR$confdir/multisite.d/mkeventd.mk" ] ; then
+                       mkdir -p $DESTDIR$confdir/multisite.d &&
+                       echo 'mkeventd_enabled = True' > $DESTDIR$confdir/multisite.d/mkeventd.mk
+                   fi &&
+                   touch $DESTDIR$confdir/mkeventd.mk &&
+                   mkeventdsocketdir=${livesock%/*}/mkeventd &&
+                   mkdir -p $DESTDIR$mkeventdsocketdir &&
+                   chown $nagiosuser.$wwwgroup $DESTDIR$mkeventdsocketdir &&
+                   chmod 2755 $DESTDIR$mkeventdsocketdir &&
+                   mkdir -p $DESTDIR$mkeventdstatedir &&
+                   chown $nagiosuser $DESTDIR$mkeventdstatedir &&
+                   create_mkeventd_startscript &&
+                   popd > /dev/null
+	       else
+		   echo -e "\E[1;31;40m ERROR compiling Event Console binaries! \E[0m.\nLogfile is in $SRCDIR/mkeventd.log"
+		   exit 1
+	       fi
+	       if [ -z "$YES" ] ; then echo ")" ; fi
+           fi &&
            mkdir -p $DESTDIR$sharedir &&
            tar xzf $SRCDIR/share.tar.gz -C $DESTDIR$sharedir &&
 	   mkdir -p $DESTDIR$modulesdir &&
@@ -627,16 +831,16 @@ do
 	   tar xzf $SRCDIR/checkman.tar.gz -C $DESTDIR$checkmandir &&
 	   mkdir -p $DESTDIR$agentsdir &&
 	   tar xzf $SRCDIR/agents.tar.gz -C $DESTDIR$agentsdir &&
-	   for agent in $DESTDIR/$agentsdir/check_mk_*agent.* ; do 
-	       sed -ri 's@^export MK_LIBDIR="(.*)"@export MK_LIBDIR="'"$agentslibdir"'"@' $agent 
-	       sed -ri 's@^export MK_CONFDIR="(.*)"@export MK_CONFDIR="'"$agentsconfdir"'"@' $agent 
+	   for agent in $DESTDIR/$agentsdir/check_mk_*agent.* ; do
+	       sed -ri 's@^export MK_LIBDIR="(.*)"@export MK_LIBDIR="'"$agentslibdir"'"@' $agent
+	       sed -ri 's@^export MK_CONFDIR="(.*)"@export MK_CONFDIR="'"$agentsconfdir"'"@' $agent
 	   done &&
 	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch,web,wato} &&
 	   if [ -z "$DESTDIR" ] && id "$nagiosuser" > /dev/null 2>&1 && [ $UID = 0 ] ; then
 	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch}
 	     chown $nagiosuser $DESTDIR$vardir/web
            fi &&
-	   mkdir -p $DESTDIR$confdir/conf.d && 
+	   mkdir -p $DESTDIR$confdir/conf.d &&
 	   if [ -z "$DESTDIR" ] ; then
 	     chgrp -R $wwwgroup $DESTDIR$vardir/web &&
 	     chmod -R g+w $DESTDIR$vardir/web &&
@@ -661,11 +865,11 @@ do
 	   tar xzf $SRCDIR/conf.tar.gz -C $DESTDIR$confdir &&
 	   if [ -e $DESTDIR$confdir/check_mk.cfg -a ! -e $DESTDIR$confdir/main.mk ] ; then
 	       mv -v $DESTDIR$confdir/check_mk.cfg $DESTDIR$confdir/main.mk
-               echo "Renamed check_mk.cfg into main.mk." 
+               echo "Renamed check_mk.cfg into main.mk."
            fi &&
-	   for f in $DESTDIR$vardir/autochecks/*.cfg $DESTDIR$confdir/conf.d/*.cfg ; do 
+	   for f in $DESTDIR$vardir/autochecks/*.cfg $DESTDIR$confdir/conf.d/*.cfg ; do
 	       if [ -e "$f" ] ; then
-		   mv -v $f ${f%.cfg}.mk 
+		   mv -v $f ${f%.cfg}.mk
                fi
            done &&
 	   if [ ! -e $DESTDIR$confdir/main.mk ] ; then

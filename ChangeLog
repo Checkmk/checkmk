@@ -108,6 +108,9 @@
     Livestatus:
     * FIX: memory leak when removing downtime / comment 
 
+    Event Console:
+    * setup.py now tries to setup Event Console even in non-OMD world
+
 1.2.2b5:
     Core:
     * Checks can now omit the typical "OK - " or "WARN -". This text

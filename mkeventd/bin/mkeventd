@@ -719,6 +719,7 @@ class EventServer:
                 os.remove(g_eventsocket_path)
             self._eventsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self._eventsocket.bind(g_eventsocket_path)
+            os.chmod(g_eventsocket_path, 0664)
             self._eventsocket.listen(g_config['eventsocket_queue_len'])
             log("Opened UNIX socket '%s' for receiving events" % g_eventsocket_path)
         else:
@@ -1575,6 +1576,8 @@ class StatusServer:
             os.remove(g_socket_path)
         self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self._socket.bind(g_socket_path)
+        # Make sure that socket is group writable
+        os.chmod(g_socket_path, 0664)
         self._socket.listen(g_config['socket_queue_len'])
 
         if g_config["remote_status"]:
@@ -2660,7 +2663,8 @@ def usage():
    -P, --pipe P         Path to pipe for receiving events
    --syslog             Enable builtin syslog server
    --syslog-fd FD       Do not open UDP port 514, but inherit it via this FD
-   --statedir           Path to directory for saving status
+   --statedir D         Path to directory for saving status
+   --logdir D           Path to directory where mkeventd.log is created
    -p, --pidfile        Path to PID file
    --profile-status     Create Python profile for status thread
 
@@ -2727,7 +2731,7 @@ else:
 
 short_options = "hvVgS:P:p:C:E:"
 long_options = [ "help", "version", "verbose", "debug", "foreground", "socket=", "eventsocket=", "pipe=",
-                 "pidfile=", "statedir=", "configdir", "profile-status", "profile-event", "debug-locking",
+                 "pidfile=", "statedir=", "configdir=", "logdir=", "profile-status", "profile-event", "debug-locking",
                  "syslog", "syslog-fd=" ]
 
 try:
@@ -2745,7 +2749,7 @@ try:
             opt_foreground = True
         elif o in [ '-S', '--socket' ]:
             g_socket_path = a
-        elif o in [ '-R', '--eventsocket' ]:
+        elif o in [ '-E', '--eventsocket' ]:
             g_eventsocket_path = a
         elif o in [ '-P', '--pipe' ]:
             g_pipe_path = a
@@ -2757,6 +2761,8 @@ try:
             g_pid_file = a
         elif o in [ '-C', '--configdir' ]:
             g_config_dir = a
+        elif o == '--logdir':
+            g_logfile_path = a + "/mkeventd.log"
         elif o in [ '--statedir' ]:
             g_state_dir = a
         elif o.startswith('--profile-'):

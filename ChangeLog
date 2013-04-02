@@ -35,6 +35,7 @@
            in user management dialog
 
     Event Console:
+    * FIX: check_mkevents: fix usage help if called with illegal options
     * setup.py now tries to setup Event Console even in non-OMD world
 
 1.2.2b5:

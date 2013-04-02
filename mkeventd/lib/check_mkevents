@@ -60,7 +60,7 @@ try:
         application = sys.argv[2]
     else:
         application = None
-except 1:
+except:
     sys.stdout.write("Usage: check_mkevents [-H REMOTE:PORT] [-a] HOST [APPLICATION]\n")
     sys.stdout.write("\n -a    do not take into account acknowledged events.\n")
     sys.stdout.write("\n")

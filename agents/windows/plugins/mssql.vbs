@@ -88,15 +88,16 @@ hostname = WScript.CreateObject("WScript.Shell").ExpandEnvironmentStrings("%COMP
 Set CONN = CreateObject("ADODB.Connection")
 Set RS = CreateObject("ADODB.Recordset")
 CONN.Provider = "sqloledb"
+
 ' Select a special DB
 'CONN.Properties("Initial Catalog").Value = "test123"
-' At this place one could implement to user other authentication mechanism
-CONN.Properties("Integrated Security").Value = "SSPI"
-
 
 ' Loop all found server instances and connect to them
 ' In my tests only the connect using the "named instance" string worked
 For Each instId In instIds.Keys
+    ' At this place one could implement to use other authentication mechanism
+    CONN.Properties("Integrated Security").Value = "SSPI"
+
     If InStr(instId, "_") <> 0 Then
         instName = Split(instId, "_")(1)
     Else

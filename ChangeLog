@@ -20,6 +20,7 @@
     * FIX: hopefully fix computation of Speed-O-Meter
     * Add $SERVICEOUTPUT$ and $HOSTOUTPUT$ to allowed macros for
       custom notes
+    * FIX: Writing one clean message to webserver error_log when write fails
 
     Notifications:
     * FIX: fix event type for recoveries

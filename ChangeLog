@@ -55,6 +55,8 @@
     * agent_vsphere: New VMWare ESX monitoring that uses pySphere and the VMWare
       API in order to get data very efficiently. Read (upcoming) documentation
       for details.
+    * windows_agent: Now buffers output before writing it to the socket
+                     Results in less tcp packages per call
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

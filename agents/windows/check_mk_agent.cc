@@ -156,6 +156,7 @@ bool verbose_mode = false;
 bool g_crash_debug = false;
 bool do_tcp = false;
 bool should_terminate = false;
+bool force_tcp_output = false; // if true, send socket data immediately
 char g_hostname[256];
 
 // sections enabled (configurable in check_mk.ini)
@@ -3076,13 +3077,21 @@ void listen_tcp_loop()
 
 void output(SOCKET &out, const char *format, ...)
 {
-    static char outbuffer[4096];
-
+    static char outbuffer[16384];
+    static int  len = 0;
     va_list ap;
     va_start(ap, format);
-    int len = vsnprintf(outbuffer, sizeof(outbuffer), format, ap);
+    int written_len = vsnprintf(outbuffer + len, sizeof(outbuffer) - len, format, ap);
+    len += written_len;
+
+    // We do not send out the data immediately
+    // This would lead to many small tcp packages
+    bool write_to_socket = false;
+    if (force_tcp_output || len > 1300)
+        write_to_socket = true;
+
     if (do_tcp) {
-	while (!should_terminate) {
+	while (write_to_socket && !should_terminate) {
 	    int result = send(out, outbuffer, len, 0);
 	    if (result == SOCKET_ERROR) {
 		debug("send() failed");
@@ -3105,9 +3114,14 @@ void output(SOCKET &out, const char *format, ...)
 		}
 	    }
 	    else if (result == 0)
-		debug("send() returned 0");
-	    else if (result != len)
-		debug("send() sent too few bytes");
+    		debug("send() returned 0");
+	    else if (result != len) {
+            debug("send() sent too few bytes");
+            len -= result;
+        }
+        else
+            len = 0;
+
 	    break;
 	}
     }
@@ -3202,6 +3216,13 @@ void output_data(SOCKET &out)
         section_mrpe(out);
     if (enabled_sections & SECTION_SYSTEMTIME)
         section_systemtime(out);
+    
+    // Send remaining data in out buffer
+    if (do_tcp) {
+        force_tcp_output = true;
+        output(out, "");
+        force_tcp_output = false;
+    }
 }
 
 

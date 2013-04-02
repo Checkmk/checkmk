@@ -278,7 +278,7 @@ function is_ipaddress(add, prefix) {
     if (prefix)
         return add.match(/^[0-9]{1,3}(\.[0-9]{1,3}){0,2}\.?$/);
     else
-        return add.match(/^([1-9][0-9]{0,2}\.){3}[1-9][0-9]{0,2}$/);
+        return add.match(/^([0-9]{1,3}\.){3}[0-9]{1,3}$/);
 }
 
 function mkSearchGetUrl(objType, objName, objSite, numMatches) {

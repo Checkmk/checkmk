@@ -1,11 +1,85 @@
-Title: References like \1 \2 to regex groups do not work in "expect regular messages" mode
+Title: Support event processing (eg cancelling) after rewriting
 Component: ec
-Class: bug
-State: wontfix
-Date: 2013-01-31 11:17:10
-Targetversion: 1.2.2
+State: open
+Date: 2013-04-02 11:48:32
+Targetversion: future
+Class: feature
 
-In this case, e.g. when rewriting the message text, it only shows \1 \2.
+From old ticketing system #371246:
 
-2013-02-11 10:41:13: changed state open -> wontfix
-Obsolete through #905
+We've located the issue. It seems like canceling events doesn't work with
+rewriting. We're sending SNMP traps from a backup server with status for
+each host, the received hostname in EC is the backup server and we're
+rewriting to the correct hostname for each backup job.
+
+When we receive the expected regular message, as a canceling event, the
+rewrite is not performed, and the previous critical event is not
+canceled.
+
+[1362647115.920606] Do not cancel event 3613: host is not the same (vmtxm01qa != vmnag01qa)
+
+Bug / Feature request?
+
+--
+Trond Viggo Håpnes
+Driftskonsulent, Buypass AS
+Direkte: +47 61 13 58 36, Mobil: +47 402 22 662
+
+> -----Original Message-----
+> From: checkmk-en-bounces@lists.mathias-kettner.de [mailto:checkmk-en-
+> bounces@lists.mathias-kettner.de] On Behalf Of Trond Viggo Håpnes
+> Sent: 6. mars 2013 12:05
+> To: checkmk-en@lists.mathias-kettner.de
+> Subject: [Check_mk (english)] Eventconsole - Expect regular messages
+>
+> Anyone managed to implemt "Expect regular messages" in eventconsole?
+>
+> We're trying to monitor backup jobs, but can't get "canceling event"
+> working. From the documentation I can't figure out how the rule
+> should be configured.
+>
+> In the criteria section I've configured, "Text to match",
+> "Match host", "Match syslog ..." and "Text to cancel event. In the
+> Counting & timing section I've checked the "Expect regular messages"
+> and
+> tested with several intervals and merging settings. And set the state
+> to CRIT.
+>
+> With the tryout function I do get a green light with canceling status
+> on
+> the correct rule.
+>
+> When I send a message which should cancel the event with "Generate
+> Event",
+> nothing happens. The critical event on the host is not canceled.
+>
+> Is this the correct way to implement this kind of monitoring?
+>
+> Running Check_MK 1.2.2b3, not OMD.
+>
+> --
+> Trond Viggo Håpnes
+> Driftskonsulent, Buypass AS
+>
+>
+> _______________________________________________
+> checkmk-en mailing list
+> checkmk-en@lists.mathias-kettner.de
+> http://lists.mathias-kettner.de/mailman/listinfo/checkmk-en
+------------------------------------------------
+
+
+Hello,
+
+this is a missing informationen in our documentation.
+
+The processing of events is befor the rewriting. This behavior isnt easy to change.
+
+----------------------------------
+
+Ok. An easier approach could be to make it possible to disable the host
+check in the "Matching criteria" for "cancel event"?
+
+We've commented out the check in the code. And we now have functional
+backup monitoring. I guess there will be others with similar
+requirements.

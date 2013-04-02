@@ -30,6 +30,10 @@
     Livestatus:
     * FIX: memory leak when removing downtime / comment 
 
+    WATO:
+    * FIX: Removed "No roles assigned" text in case of unlocked role attribute
+           in user management dialog
+
     Event Console:
     * setup.py now tries to setup Event Console even in non-OMD world
 

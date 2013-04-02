@@ -60,6 +60,7 @@
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid
+    * Warn user if only_services does never match 
 
     Livestatus:
     * Table statehist: Improved detection of vanished hosts and services.

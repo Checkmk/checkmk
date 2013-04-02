@@ -6043,6 +6043,7 @@ class ExceptionName(TextAscii):
         if value in [ "name", "alias", "timeperiod_name", "register", "use", "exclude" ]:
             raise MKUserError(varprefix, _("<tt>%s</tt> is a reserved keyword."))
         TextAscii.validate_value(self, value, varprefix)
+        ValueSpec.custom_validate(self, value, varprefix)
 
 class MultipleTimeRanges(ValueSpec):
     def __init__(self, **kwargs):
@@ -6080,6 +6081,7 @@ class MultipleTimeRanges(ValueSpec):
     def validate_value(self, value, varprefix):
         for c, v in enumerate(value):
             self._rangevs.validate_value(v, varprefix + "_%d" % c)
+        ValueSpec.custom_validate(self, value, varprefix)
 
 # Check, if timeperiod tpa excludes or is tpb
 def timeperiod_excludes(timeperiods, tpa_name, tpb_name):
@@ -7647,6 +7649,13 @@ def notification_script_title(name):
 
 
 def load_notification_table():
+    # Make sure, that list is not trivially false
+    def validate_only_services(value, varprefix):
+        for s in value:
+            if s and s[0] != '!':
+                return
+        raise MKUserError(varprefix + "_0", _("The list of services will never match"))
+
     global vs_notification_method
     vs_notification_method = \
         CascadingDropdown(
@@ -7747,6 +7756,7 @@ def load_notification_table():
                                                  "entry with <tt>!</tt> in order to <i>exclude</i> that service."),
                                         orientation = "horizontal",
                                         valuespec = RegExp(size = 20),
+                                        validate = validate_only_services,
                                     ),
                                   ),
                                   ( "parameters",

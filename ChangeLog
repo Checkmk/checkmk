@@ -26,7 +26,6 @@
     * FIX: fix event type for recoveries
     * FIX: fix custom notifications on older nagios versions
     * FIX: handle case where type HOST/SERVICE not correctly detected
-    * Warn user if only_services does never match 
     
     Livestatus:
     * FIX: memory leak when removing downtime / comment 

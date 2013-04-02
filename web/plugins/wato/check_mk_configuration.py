@@ -1419,7 +1419,6 @@ class MonitoringIcon(ValueSpec):
     def validate_value(self, value, varprefix):
         if value and value not in self.available_icons():
             raise MKUserError(varprefix, _("The selected icon image does not exist."))
-        ValueSpec.custom_validate(value, varprefix)
 
 
 

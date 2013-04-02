@@ -190,6 +190,7 @@ class html:
         self.have_help = False
         self.plugged = False
         self.keybindings = []
+        self.io_error = False
 
     RETURN = 13
     SHIFT = 16
@@ -197,7 +198,7 @@ class html:
     ALT = 18
     BACKSPACE = 8
     F1 = 112
-    
+
     def set_buffering(self, b):
         self.buffering = b
 
@@ -246,10 +247,18 @@ class html:
             self.lowlevel_write(text)
 
     def lowlevel_write(self, text):
-        if self.buffering:
-            self.req.write(text, 0)
-        else:
-            self.req.write(text)
+        if self.io_error:
+            return
+
+        try:
+            if self.buffering:
+                self.req.write(text, 0)
+            else:
+                self.req.write(text)
+        except IOError, e:
+            # Catch writing problems to client, prevent additional writes
+            self.io_error = True
+            self.log('%s' % e)
 
     def plug(self):
         self.plugged = True

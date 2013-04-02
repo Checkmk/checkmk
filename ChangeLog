@@ -11,6 +11,7 @@
     * FIX: check_mk-mssql_counters.locks: fix computation, was altogether wrong
     * FIX: check_mk-mssql_counters.transactions: fix computation also
     * check_http: now support the option -L (urlizing the result)
+    * Added mem section to Mac OSX agent (Thanks to Brad Davis)
 
     Multisite:
     * FIX: fix localization in non-OMD environment

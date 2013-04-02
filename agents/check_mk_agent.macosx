@@ -55,6 +55,12 @@ echo '<<<cpu>>>';
 echo `sysctl -n vm.loadavg | tr -d '{}'` `top -l 1 -n 1 | egrep ^Processes: | 
 awk '{print $4"/"$2;}'` `echo 'echo $$' | bash` `sysctl -n hw.ncpu`
 
+echo '<<<mem>>>'
+echo "MemTotal: $(echo $(sysctl -n hw.memsize)/1024 | bc) kB"
+echo "MemFree: $(echo "( $(vm_stat | grep speculative: | awk '{print $3}') + $(vm_stat | grep inactive: | awk '{print $3}') + $(vm_stat | grep free: | awk '{print $3}') ) * $(vm_stat | grep Mach | awk '{print $8}') / 1024" | bc) kB"
+echo "SwapTotal: 0 kB"
+echo "SwapFree: 0 kB"
+
 echo '<<<uptime>>>';
 echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | 
 tr -d ' '` | bc

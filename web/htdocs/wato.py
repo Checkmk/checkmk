@@ -8199,7 +8199,7 @@ def mode_edit_user(phase):
                 html.write("<a href='%s'>%s</a><br>" % (url, role["alias"]))
 
             html.hidden_field("role_" + role_id, is_member and '1' or '')
-    if not is_member_of_at_least_one:
+    if is_locked('roles') and not is_member_of_at_least_one:
         html.write('<i>%s</i>' % _('No roles assigned.'))
 
     # Contact groups

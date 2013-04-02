@@ -351,10 +351,20 @@ def notify_flexible(contact, context, notification_table):
             if not servicedesc:
                 notify_log(" - Proceed: limited to certain services, but this is a host notification")
             else:
+                # Example
+                # only_services = [ "!LOG foo", "LOG", BAR" ]
+                # -> notify all services beginning with LOG or BAR, but not "LOG foo..."
+                skip = True
                 for s in entry["only_services"]:
+                    if s.startswith("!"): # negate
+                        negate = True
+                        s = s[1:]
+                    else:
+                        negate = False
                     if re.match(s, servicedesc):
+                        skip = negate
                         break
-                else:
+                if skip:
                     notify_log(" - Skipping: service '%s' matches non of %s" % (
                         servicedesc, ", ".join(entry["only_services"])))
                     continue

@@ -1732,24 +1732,38 @@ register_rule(
                  ) 
             ),
             ( "remote",
-              Tuple(
+              Alternative(
+                  title = _("Access to the Event Console"),
                   elements = [
+                      Tuple(
+                          elements = [
+                              TextAscii(
+                                  title = _("Hostname/IP address of Event Console:"),
+                                  allow_empty = False,
+                              ),
+                              Integer(
+                                  title = _("TCP Port number:"), 
+                                  minvalue = 1,
+                                  maxvalue = 65535,
+                                  default_value = 6558,
+                              ),
+                          ],
+                          title = _("Access via TCP"),
+                          help = _("In a distributed setup where the Event Console is not running in the same "
+                                   "site as the host is monitored you need to access the remote Event Console "
+                                   "via TCP. Please make sure that this is activated in the global settings of "
+                                   "the event console. The default port number is 6558."),
+                      ), 
                       TextAscii(
-                          title = _("Hostname/IP address of Event Console:"),
+                          title = _("Access via UNIX socket"),
                           allow_empty = False,
+                          size = 64,
                       ),
-                      Integer(
-                          title = _("TCP Port number:"), 
-                          minvalue = 1,
-                          maxvalue = 65535,
-                          default_value = 6558,
-                      ),
-                    ],
-                  title = _("Access Event Console via TCP"),
-                  help = _("In a distributed setup where the Event Console is not running in the same "
-                           "site as the host is monitored you need to access the remote Event Console "
-                           "via TCP. Please make sure that this is activated in the global settings of "
-                           "the event console. The default port number is 6558."),
+
+                 ],
+                 default_value = defaults.omd_root 
+                      and defaults.omd_root + "/tmp/run/mkeventd/status" 
+                      or defaults.livestatus_unix_socket.split("/",1)[0] + "/mkeventd/status"
             )
           ),
         ],

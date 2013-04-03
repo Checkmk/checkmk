@@ -2,11 +2,15 @@
 
 import os, socket, sys
 
-socket_path = os.getenv("OMD_ROOT") + "/tmp/run/mkeventd/status"
+if os.getenv("OMD_ROOT"):
+    socket_path = os.getenv("OMD_ROOT") + "/tmp/run/mkeventd/status"
+else:
+    socket_path = None
 
 def query(query, remote_host):
+    global socket_path
     try:
-        if remote_host:
+        if remote_host and ':' in remote_host:
             parts = remote_host.split(":")
             host = parts[0]
             if len(parts) == 2:
@@ -19,6 +23,14 @@ def query(query, remote_host):
         else:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             sock.settimeout(3)
+            if remote_host and remote_host[0] == '/': 
+                socket_path = remote_host
+            elif remote_host:
+                sys.stderr.write("Invalid socket specification '%s'\n" % remote_host)
+                sys.exit(3)
+            if not socket_path:
+                sys.stderr.write("You running out of OMD. Please specify a socket with -H.\n")
+                sys.exit(3)
             sock.connect(socket_path)
 
         sock.send(query)
@@ -37,8 +49,8 @@ def query(query, remote_host):
         sys.exit(3)
 
     except Exception, e:
-        if remote_host:
-            via = "TCP %s:%d" % (host, port)
+        if remote_host and ':' in remote_host:
+            via = "TCP %s" % (remote_host)
         else:
             via = "UNIX socket %s" % socket_path
         sys.stdout.write("UNKNOWN - Cannot connect to event daemon via %s: %s\n" % (via, e))
@@ -61,9 +73,14 @@ try:
     else:
         application = None
 except:
-    sys.stdout.write("Usage: check_mkevents [-H REMOTE:PORT] [-a] HOST [APPLICATION]\n")
-    sys.stdout.write("\n -a    do not take into account acknowledged events.\n")
-    sys.stdout.write("\n")
+    sys.stdout.write("""Usage: check_mkevents [-H SOCKET] [-a] HOST [APPLICATION]
+
+ -a         do not take into account acknowledged events.
+ -H SOCKET  how to connect to the status socket of the Event Console.
+            Use either HOST:PORT for TCP (e.g. 10.10.0.139:4478) or
+            a path to a file for a local UNIX socket (e.g. 
+            /var/run/nagios/rw/mkeventd/status).
+""")
     sys.exit(3)
 
 q = "GET events\n" \

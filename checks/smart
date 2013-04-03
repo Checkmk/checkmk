@@ -136,6 +136,13 @@ def check_smart_temp(item, params, info):
     return (3, "UNKNOWN - Temperature_Celsius not found in agent output for disk %s" % item)
 
 
+check_info["smart.stats"] = {
+    'check_function':            check_smart_stats,
+    'inventory_function':        lambda info: inventory_smart("smart.stats", info),
+    'service_description':       'SMART %s Stats',
+    'has_perfdata':               True,
+}
+
 check_info["smart.temp"] = {
     'check_function':            check_smart_temp,
     'inventory_function':        lambda info: inventory_smart("smart.temp", info),

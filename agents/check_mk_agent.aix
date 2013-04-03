@@ -49,7 +49,7 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.2b6
+echo Version: 1.2.2b7
 echo AgentOS: aix
 
 echo '<<<df>>>'

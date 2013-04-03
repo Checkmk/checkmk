@@ -556,7 +556,7 @@ def general_page_hook():
 
     # Create initial auth.serials file, same issue as auth.php above
     serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
-    if not os.path.exists(serials_file):
+    if not os.path.exists(serials_file) or os.path.getsize(serials_file) == 0:
         save_users(load_users())
 
 # Hook function can be registered here to execute actions on a "regular" base without

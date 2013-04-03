@@ -87,6 +87,7 @@
     * FIX: setup: detect check_icmp also on 64-Bit CentOS
            (thanks to あきら) 
     * FIX: setup.sh: create auth.serials, fix permissions of htpasswd
+    * FIX: livecheck: now able to handle check output up to 16kB
 
     Checks & Agents:
     * FIX: apc_symmetra_power: resurrect garble PNP template for 

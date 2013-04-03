@@ -105,6 +105,7 @@
     * Add $SERVICEOUTPUT$ and $HOSTOUTPUT$ to allowed macros for
       custom notes
     * FIX: Writing one clean message to webserver error_log when write fails
+    * FIX: Escaping html entities when displaying comment fields
 
     Notifications:
     * FIX: fix event type for recoveries
@@ -117,8 +118,10 @@
     WATO:
     * FIX: Removed "No roles assigned" text in case of unlocked role attribute
            in user management dialog
+    * FIX: Fix output of rule search: chapters appeared twice sometimes
 
     Event Console:
+    * FIX: check_mkevents: fix usage help if called with illegal options
     * setup.py now tries to setup Event Console even in non-OMD world
 
 1.2.2b5:

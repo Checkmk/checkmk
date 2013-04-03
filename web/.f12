@@ -1,6 +1,6 @@
 #!/bin/bash
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-C=$(sudo cp --preserve=mode -rv * /omd/sites/$SITE/share/check_mk/web/ | wc -l)
+sudo rsync --exclude=defaults.py --delete -varx htdocs plugins /omd/sites/$SITE/share/check_mk/web/
 echo "$C files copied"
 if [ "$SITE" != - ] ; then
     sudo omd restart $SITE apache

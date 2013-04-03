@@ -9767,6 +9767,10 @@ def mode_rulesets(phase):
     groupnames = [ gn for gn, rulesets in g_rulespec_groups
                    if only_used or search != None or gn == group or gn.startswith(group + "/") ]
 
+    # In case of search we need to sort the groups since main chapters would
+    # appear more than once otherwise.
+    if search != None:
+        groupnames.sort()
 
     html.write('<div class=rulesets>')
 

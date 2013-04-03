@@ -2249,7 +2249,7 @@ checkgroups.append((
         title = _("Hard disk device"),
         help = _("The identificator of the hard disk device, e.g. <tt>sda</tt>.")),
     "first"
-)
+))
 
 register_check_parameters(
     subgroup_environment,
@@ -2280,7 +2280,7 @@ register_check_parameters(
                   ])),
             ]),
             None,
-    "first"))
+    "first")
 
 
 checkgroups.append((

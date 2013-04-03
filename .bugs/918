@@ -1,0 +1,9 @@
+Title: Make services without host permission visible in BI
+Component: bi
+State: open
+Date: 2013-04-03 11:31:23
+Targetversion: 1.2.3
+Class: nastiness
+
+At the moment the wrong livestatus table is fetched, maybe we can change it without
+performance problems.

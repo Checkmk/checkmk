@@ -202,40 +202,45 @@ def check_jolokia_metrics_mem(item, params, info):
             ("total",  total, totalmax),
         ]:
         param_state = 0
-        level_info = ""
+        level_info  = ""
+        used_info   = ""
         if params.get(what):
+            warn_level = ""
+            crit_level = ""
             if type(params[what][0]) == int:
                 if what != "total":
-                    warn_level = ("", value_max - params[what][0])[value_max != ""]
-                    crit_level = ("", value_max - params[what][1])[value_max != ""]
+                    if value_max:
+                        warn_level = value_max - params[what][0] 
+                        crit_level = value_max - params[what][1] 
                     perfdata.append((what, value, warn_level, crit_level, "", value_max))
                 if not value_max:
                     param_state = 0
-                elif value_max - value <= params[what][1]:
+                elif value >= crit_level:
                     param_state = 2
                     level_info = "%s(crit at %sMB free)" % (state_sign[2], params[what][1])
-                elif value_max - value <= params[what][0]:
+                elif value >= warn_level:
                     param_state = 1
                     level_info = "%s(warn at %sMB free)" % (state_sign[1], params[what][0])
             else:
                 if what != "total":
-                    warn_level = ("", value_max * params[what][0] / 100.0)[value_max != ""]
-                    crit_level = ("", value_max * params[what][1] / 100.0)[value_max != ""]
+                    if value_max:
+                        warn_level = value_max * params[what][0] / 100.0
+                        crit_level = value_max * params[what][1] / 100.0
                     perfdata.append((what, value, warn_level, crit_level, "", value_max))
                 if not value_max:
                     param_state = 0
-                elif value >= value_max * params[what][1] / 100.0:
+                elif value >= crit_level:
                     param_state = 2
                     level_info = "%s(crit at %s%%)" % (state_sign[2], params[what][1])
-                elif value >= value_max * params[what][0] / 100.0:
+                elif value >= warn_level:
                     param_state = 1
                     level_info = "%s(warn at %s%%)" % (state_sign[1], params[what][0])
         else:
             if what != "total":
                 perfdata.append((what, value, "", "", "", value_max))
 
-
-        used_info = ("", "/%.1f%% used" % (value / value_max * 100))[value_max != ""]
+        if value_max: 
+            used_info = "/%.1f%% used" % (value / value_max * 100)
         info_list.append("%s: %0.fMB%s%s" % (what.title(), value, used_info, level_info))
         worst_state = max(param_state, worst_state)
 

@@ -686,7 +686,7 @@ multisite_painters["check_manpage"] = {
 
 def paint_comments(prefix, row):
     comments = row[ prefix + "comments_with_info"]
-    text = ", ".join(["<i>%s</i>: %s" % (a,c) for (id,a,c) in comments ])
+    text = ", ".join(["<i>%s</i>: %s" % (a, htmllib.attrencode(c)) for (id, a, c) in comments ])
     return "", text
 
 multisite_painters["svc_comments"] = {
@@ -1402,7 +1402,7 @@ multisite_painters["comment_author"] = {
 multisite_painters["comment_comment"] = {
     "title"   : _("Comment text"),
     "columns" : ["comment_comment"],
-    "paint"   : lambda row: (None, row["comment_comment"]),
+    "paint"   : lambda row: (None, htmllib.attrencode(row["comment_comment"])),
 }
 
 multisite_painters["comment_what"] = {
@@ -1481,7 +1481,7 @@ multisite_painters["downtime_comment"] = {
     "title"   : _("Downtime comment"),
     "short"   : _("Comment"),
     "columns" : ["downtime_comment"],
-    "paint"   : lambda row: (None, row["downtime_comment"]),
+    "paint"   : lambda row: (None, htmllib.attrencode(row["downtime_comment"])),
 }
 
 multisite_painters["downtime_fixed"] = {

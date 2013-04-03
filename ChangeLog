@@ -104,6 +104,7 @@
     * Add $SERVICEOUTPUT$ and $HOSTOUTPUT$ to allowed macros for
       custom notes
     * FIX: Writing one clean message to webserver error_log when write fails
+    * FIX: Escaping html entities when displaying comment fields
 
     Notifications:
     * FIX: fix event type for recoveries

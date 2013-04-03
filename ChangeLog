@@ -37,6 +37,8 @@
 
     Event Console:
     * FIX: check_mkevents: fix usage help if called with illegal options
+    * check_mkevents now allows specification of a UNIX socket
+      This is needed in non-OMD environments
     * setup.py now tries to setup Event Console even in non-OMD world
 
 1.2.2b5:

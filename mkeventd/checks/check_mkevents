@@ -4,7 +4,11 @@
 def check_mkevents_arguments(params):
     args = ""
     if "remote" in params:
-        args += "-H %s:%d " % (params["remote"])
+        remote = params["remote"]
+        if type(remote) == tuple:
+            args += "-H %s:%d " % (quote_shell_string(remote[0]), remote[1])
+        else:
+            args += "-H %s " % quote_shell_string(remote)
     if params.get("ignore_acknowledged"):
         args += "-a "
     args += params.get("hostspec", "$HOSTADDRESS$")

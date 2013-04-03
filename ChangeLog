@@ -108,6 +108,7 @@
       custom notes
     * FIX: Writing one clean message to webserver error_log when write fails
     * FIX: Escaping html entities when displaying comment fields
+    * FIX: Monitored on site attribute always has valid default value
 
     Notifications:
     * FIX: fix event type for recoveries

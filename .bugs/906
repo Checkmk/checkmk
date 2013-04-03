@@ -1,15 +1,14 @@
-Title: logwatch.ec: Need some fallback mechanism if processing takes too long
-Component: checks
+Title: Make ssl cert check possible on custom port
+Component: wato
 State: open
-Date: 2013-01-31 11:23:38
-Targetversion: 1.2.2
-Class: bug
+Date: 2013-04-03 10:43:07
+Targetversion: future
+Class: feature
 
-Nagios kills Check_MK when it takes too long. When e.g. logwatch.ec is taking
-more than 60 seconds, the script is terminated and all unprocessed messages
-are lost. This results in data-loss and must be prevented!
+wir haben viele HTTPS-Sites auf Ports ab vom Standard (443).
 
-This is not only based on the amount of messages to be processed at once,
-when the event console is hanging or taking too long for any reason,
-the pending messages are lost. Just limiting the number of messages is
-no real solution.
+Es waere echt klasse, wenn wir das in den WATO-Rules der aktiven HTTP-Checks so konfigurieren koennten, dass das Zertifikat auf diesem Port geprueft wird - und noch besser waere es, wenn wir das in der kommenden 1.2.2 tun koennten ;-)
+
+Aktuell machen wir das ueber manuelle .mk-Rules, die zwar funktionieren, im WATO allerdings als "invalid" angezeigt werden und dort nicht nutzbar sind.
+
+Wenn mehr Infos benoetigt werden koennte ich die natuerlich auch liefern.

@@ -57,6 +57,9 @@
       for details.
     * windows_agent: Now buffers output before writing it to the socket
                      Results in less tcp packages per call
+    * smart.stats: rewrote check. Please reinventorize. Error counters are now
+      snapshotted during inventory.
+    * smart.temp: add WATO configuration
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

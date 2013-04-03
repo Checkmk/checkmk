@@ -2427,7 +2427,7 @@ register_check_parameters(
         ]),
     TextAscii(
         title = _("Hard disk device"),
-        help = _("The identificator of the hard disk device, e.g. <tt>sda</tt>.")),
+        help = _("The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>.")),
     "first"
 )
 

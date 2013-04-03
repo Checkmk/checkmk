@@ -2047,9 +2047,13 @@ checkgroups.append((
           help = _("These levels are applied to the number of Email that are "
                    "currently in the outgoing mail queue."),
           elements = [
-              Integer(title = _("Warning at"), label = _("mails")),
-              Integer(title = _("Critical at"), label = _("mails"))]),
-    None, None))
+              Integer(title = _("Warning at"), unit = _("mails"), default_value = 10),
+              Integer(title = _("Critical at"), unit = _("mails"), default_value = 20),
+          ]
+    ),
+    None, 
+    None
+))
 
 checkgroups.append((
     subgroup_os,

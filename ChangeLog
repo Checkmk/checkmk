@@ -1,3 +1,7 @@
+1.2.2:
+    Checks & Agents:
+    * FIX: postfix_mailq: fix labels in WATO rule, set correct default levels
+    
 1.2.2b6:
     Core:
     * FIX: setup: detect check_icmp also on 64-Bit CentOS

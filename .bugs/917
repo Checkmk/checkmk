@@ -1,0 +1,14 @@
+Title: Make ssl cert check possible on custom port
+Component: wato
+State: open
+Date: 2013-04-03 10:43:07
+Targetversion: future
+Class: feature
+
+wir haben viele HTTPS-Sites auf Ports ab vom Standard (443).
+
+Es waere echt klasse, wenn wir das in den WATO-Rules der aktiven HTTP-Checks so konfigurieren koennten, dass das Zertifikat auf diesem Port geprueft wird - und noch besser waere es, wenn wir das in der kommenden 1.2.2 tun koennten ;-)
+
+Aktuell machen wir das ueber manuelle .mk-Rules, die zwar funktionieren, im WATO allerdings als "invalid" angezeigt werden und dort nicht nutzbar sind.
+
+Wenn mehr Infos benoetigt werden koennte ich die natuerlich auch liefern.

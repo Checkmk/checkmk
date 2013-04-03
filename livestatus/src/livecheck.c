@@ -82,7 +82,7 @@ int main(int argc, char **argv)
         int is_host_check = service[0] == '\n';
         struct timeb start;
         ftime(&start);
-        char output[8192];
+        char output[16384];
         int return_code;
         // Optimization(1):
         // If it's check_icmp, we use our inline version

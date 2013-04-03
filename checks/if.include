@@ -126,6 +126,11 @@ def inventory_if_common(info):
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
+        # Fix bug in TP Link switches
+        ifSpeed = saveint(ifSpeed)
+        if ifSpeed > 9000000 * 100 * 1000:
+            ifSpeed /= 1000000
+
         # compute item now - also for unmonitored ports - in order to see if it is unique.
         if uses_description and ifDescr:
             item = ifDescr
@@ -364,6 +369,8 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
             # prepare reference speed for computing relative bandwidth usage
             speed = saveint(ifSpeed)
             if speed:
+                if speed > 9 * 1000 * 1000 * 1000 * 1000:
+                    speed /= (1000 * 1000)
                 ref_speed = speed / 8.0
             elif targetspeed:
                 ref_speed = targetspeed / 8.0

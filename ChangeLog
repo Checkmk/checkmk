@@ -60,6 +60,7 @@
     * smart.stats: rewrote check. Please reinventorize. Error counters are now
       snapshotted during inventory.
     * smart.temp: add WATO configuration
+    * if64_tplink: special new check for TP Link switches with broken SNMP output
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

@@ -117,6 +117,7 @@
     WATO:
     * FIX: Removed "No roles assigned" text in case of unlocked role attribute
            in user management dialog
+    * FIX: Fix output of rule search: chapters appeared twice sometimes
 
     Event Console:
     * FIX: check_mkevents: fix usage help if called with illegal options

@@ -2051,7 +2051,7 @@ checkgroups.append((
               Integer(title = _("Critical at"), unit = _("mails"), default_value = 20),
           ]
     ),
-    None, 
+    None,
     None
 ))
 

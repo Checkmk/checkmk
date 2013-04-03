@@ -210,8 +210,8 @@ def check_jolokia_metrics_mem(item, params, info):
             if type(params[what][0]) == int:
                 if what != "total":
                     if value_max:
-                        warn_level = value_max - params[what][0] 
-                        crit_level = value_max - params[what][1] 
+                        warn_level = value_max - params[what][0]
+                        crit_level = value_max - params[what][1]
                     perfdata.append((what, value, warn_level, crit_level, "", value_max))
                 if not value_max:
                     param_state = 0
@@ -239,7 +239,7 @@ def check_jolokia_metrics_mem(item, params, info):
             if what != "total":
                 perfdata.append((what, value, "", "", "", value_max))
 
-        if value_max: 
+        if value_max:
             used_info = "/%.1f%% used" % (value / value_max * 100)
         info_list.append("%s: %0.fMB%s%s" % (what.title(), value, used_info, level_info))
         worst_state = max(param_state, worst_state)

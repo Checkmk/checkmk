@@ -450,7 +450,7 @@ def should_notify(context, entry):
             if skip:
                 notify_log(" - Skipping: service '%s' matches non of %s" % (
                     servicedesc, ", ".join(entry["only_services"])))
-                continue
+                return False
 
     # Check notification type
     event, allowed_events = check_notification_type(context, entry["host_events"], entry["service_events"])

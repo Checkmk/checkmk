@@ -3125,8 +3125,10 @@ void output(SOCKET &out, const char *format, ...)
 	    break;
 	}
     }
-    else
-	fwrite(outbuffer, len, 1, stdout);
+    else {
+	    fwrite(outbuffer, len, 1, stdout);
+        len = 0;
+    }
 }
 
 

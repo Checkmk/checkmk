@@ -1,9 +1,9 @@
 Title: mkeventd combined event messages
 Component: ec
-State: open
+Class: bug
+State: done
 Date: 2013-03-22 17:50:23
 Targetversion: 1.2.2
-Class: bug
 
 b) Wir bekommen zwei Meldungen als ein Event. Ist das ein Bug?
 
@@ -12,3 +12,6 @@ Mount Failed testkai<30>Mar 20 14:25:01 2013-03-20 14 snmptrapd[20133]: 2013-03-
 
 Der erste Teil ("Mount Failed testkai") kam via cmk-Logwatcher und
 der zweite Teil ("<30>Mar 20 14:25:01 2013-03-20 14 snmptra....") scheinbar via Trapdaemon.
+
+2013-04-03 10:51:09: changed state open -> done
+Fixed in current version

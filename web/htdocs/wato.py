@@ -7072,12 +7072,11 @@ def declare_site_attribute():
         declare_host_attribute(SiteAttribute(), show_in_table = True, show_in_folder = True)
 
 def default_site():
-    deflt = None
     for id, site in config.sites.items():
         if not "socket" in site \
             or site["socket"] == "unix:" + defaults.livestatus_unix_socket:
             return id
-    return None
+    return config.sites.keys()[0]
 
 class SiteAttribute(Attribute):
     def __init__(self):

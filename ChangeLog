@@ -15,6 +15,7 @@
     * Added mem section to Mac OSX agent (Thanks to Brad Davis)
     * FIX: mssql.vbs (agent plugin) now sets auth options for each instance
     * FIX: jolokia_metrics.mem: error when missing max values
+    * Make levels for SMART temperature editable via WATO
 
     Multisite:
     * FIX: fix localization in non-OMD environment

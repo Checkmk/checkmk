@@ -132,6 +132,7 @@ def check_smart_temp(item, params, info):
             elif celsius >= warn:
                 return (1, "WARN - Temperature is %dC" % celsius, perfdata)
             else:
+<<<<<<< Updated upstream
                 return (0, "OK - Temperature is %dC" % celsius, perfdata)
     return (3, "UNKNOWN - Temperature_Celsius not found in agent output for disk %s" % item)
 
@@ -139,3 +140,15 @@ def check_smart_temp(item, params, info):
 check_info['smart.stats'] = (check_smart_stats, "SMART %s Stats",       1, lambda info: inventory_smart("smart.stats", info))
 check_info['smart.temp']  = (check_smart_temp,  "Temperature SMART %s", 1, lambda info: inventory_smart("smart.temp", info))
 checkgroup_of['smart.temp'] = "hw_temperature"
+=======
+                return (0, "Temperature is %dC" % celsius, perfdata)
+    return (3, "Temperature_Celsius not found in agent output for disk %s" % item)
+
+check_info["smart.temp"] = {
+    'check_function':            check_smart_temp,
+    'inventory_function':        lambda info: inventory_smart("smart.temp", info),
+    'service_description':       'Temperature SMART %s',
+    'group':                     'disk_temperature',
+    'has_perfdata':               True,
+}
+>>>>>>> Stashed changes

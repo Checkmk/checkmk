@@ -2233,6 +2233,22 @@ checkgroups.append((
 
 checkgroups.append((
     subgroup_environment,
+    "disk_temperature",
+    _("Harddisk temperature (e.g. via SMART)"),
+    Tuple(
+        help = _("Temperature levels for hard disks, that is determined e.g. via SMART"),
+        elements = [
+            Integer(title = _("warning at"), unit = u"°C", default_value = 35),
+            Integer(title = _("critical at"), unit = u"°C", default_value = 40),
+        ]),
+    TextAscii(
+        title = _("Hard disk device"),
+        help = _("The identificator of the hard disk device, e.g. <tt>sda</tt>.")),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
     "eaton_enviroment",
     _("Temperature and Humidity for Eaton UPS"),
     Dictionary(

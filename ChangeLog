@@ -91,6 +91,9 @@
     * Added $HOSTURL$ and $SERVICEURL$ to notification macros which contain an
       URL to the host/service details views with /check_mk/... as base.
 
+    Multisite:
+    * FIX: Fixed umlaut handling in reloaded snapins
+
 1.2.2b7:
     Checks & Agents:
     * FIX: postfix_mailq: fix labels in WATO rule, set correct default levels

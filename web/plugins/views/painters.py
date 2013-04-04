@@ -1553,7 +1553,7 @@ multisite_painters["log_message"] = {
     "title"   : _("Log: complete message"),
     "short"   : _("Message"),
     "columns" : ["log_message"],
-    "paint"   : lambda row: ("", row["log_message"]),
+    "paint"   : lambda row: ("", htmllib.attrencode(row["log_message"])),
 }
 
 def paint_log_plugin_output(row):
@@ -1648,14 +1648,14 @@ multisite_painters["log_options"] = {
     "title"   : _("Log: informational part of message"),
     "short"   : _("Info"),
     "columns" : ["log_options"],
-    "paint"   : lambda row: ("", row["log_options"]),
+    "paint"   : lambda row: ("", htmllib.attrencode(row["log_options"])),
 }
 
 def paint_log_comment(msg):
     if ';' in msg:
         parts = msg.split(';')
         if len(parts) > 6:
-          return ("", parts[-1])
+          return ("", htmllib.attrencode(parts[-1]))
     return ("", "")
 
 multisite_painters["log_comment"] = {

@@ -58,96 +58,114 @@ smart_stats_default_levels = {
    'udma_crcs':       (1,  1),
 }
 
+def parse_smart(info):
+    disks = {}
+    disk_name = None
 
-def inventory_smart(check_type, info):
-    inventory = []
     for line in info:
-        if len(line) < 13:
-            continue
+        if len(line) >= 13: 
+            if line[0] != disk_name:
+                disk_name = line[0]
+                disk = {}
+                disks[disk_name] = disk
 
-        if check_type == 'smart.stats' \
-           and line[4] in [ 'Power_On_Hours',          'Power_Cycle_Count',
-                            'Reallocated_Sector_Ct',   'Spin_Retry_Count',
-                            'Reallocated_Event_Count', 'Current_Pending_Sector',
-                            'Command_Timeout',         'End-to-End_Error',
-                            'Reported_Uncorrect',      'UDMA_CRC_Error_Count', ] \
-           and not (line[0], None) in inventory:
-            inventory.append((line[0], None, 'smart_stats_default_levels'))
-        elif check_type == 'smart.temp' and line[4] == 'Temperature_Celsius':
-            inventory.append((line[0], None, 'smart_temp_default_levels'))
+            field = line[4]
+            if field != "Unknown_Attribute":
+                value = saveint(line[12])
+                disk[field] = value
+    return disks
+
+
+smart_stats_fields = [ 
+    'Reallocated_Sector_Ct',   
+    'Spin_Retry_Count',
+    'Reallocated_Event_Count', 
+    'Current_Pending_Sector',
+    'Command_Timeout',         
+    'End-to-End_Error',
+    'Reported_Uncorrect',      
+    'UDMA_CRC_Error_Count', ]
+
+def inventory_smart_stats(info):
+    disks = parse_smart(info)
+    inventory = []
+    for disk_name, disk in disks.items():
+        for field in disk.keys():
+            if field in smart_stats_fields: # found at least one interesting field
+                cleaned = dict([(f, disk[f]) for f in smart_stats_fields if f in disk])
+                inventory.append((disk_name, cleaned))
+                break
     return inventory
 
 
 def check_smart_stats(item, params, info):
-    status   = 0
-    output   = []
+    # params is a snapshot of all counters at the point of time of inventory
+    disks = parse_smart(info)
+    if item not in disks:
+        return 3, "Disk not found"
+    disk = disks[item]
+
+    state = 0
+    infos   = []
     perfdata = []
-    for line in info:
-        if len(line) != 13 or line[0] != item:
-            continue
 
-        for uom, lab, txt, thresh in [
-                      (' hours', 'Power_On_Hours',          'Powered on',           None),
-                      ('',       'Power_Cycle_Count',       'Power cycles',         None),
-                      ('',       'Reallocated_Sector_Ct',   'Reallocated sectors',  'realloc_sectors'),
-                      ('',       'Reallocated_Event_Count', 'Reallocated events',   'realloc_events'),
-                      ('',       'Spin_Retry_Count',        'Spin retries',         'spin_retries'),
-                      ('',       'Current_Pending_Sector',  'Pending sectors',      'pending_sectors'),
-                      ('',       'Command_Timeout',         'Command timeouts',     'cmd_timeouts'),
-                      ('',       'End-to-End_Error',        'End-to-End errors',    'e2e_errs'),
-                      ('',       'Reported_Uncorrect',      'Uncorrectable errors', 'uncorr_errs'),
-                      ('',       'UDMA_CRC_Error_Count',    'UDMA CRC errors',      'udma_crcs'),
-                   ]:
-            if line[4] == lab:
-                value = int(line[12].split("/", 1)[0])
-                warn, crit, cur_status, thresh_out = None, None, 0, ''
-                if thresh in params and value >= params[thresh][1]:
-                    cur_status = 2
-                    thresh_out = '(!!)'
-                elif thresh in params and value >= params[thresh][0]:
-                    cur_status = 1
-                    thresh_out = '(!)'
+    for unit, field, descr in [
+                  (' hours', 'Power_On_Hours',          'Powered on',           ),
+                  ('',       'Power_Cycle_Count',       'Power cycles',         ),
+                  ('',       'Reallocated_Sector_Ct',   'Reallocated sectors',  ),
+                  ('',       'Reallocated_Event_Count', 'Reallocated events',   ),
+                  ('',       'Spin_Retry_Count',        'Spin retries',         ),
+                  ('',       'Current_Pending_Sector',  'Pending sectors',      ),
+                  ('',       'Command_Timeout',         'Command timeouts',     ),
+                  ('',       'End-to-End_Error',        'End-to-End errors',    ),
+                  ('',       'Reported_Uncorrect',      'Uncorrectable errors', ),
+                  ('',       'UDMA_CRC_Error_Count',    'UDMA CRC errors',      )]:
+        if field in disk:
+            value = disk[field]
+            infos.append("%s: %d%s" % (descr, value, unit))
+            perfdata.append((field, value))
+            if field in params:
+                ref_value = params[field]
+                if value > ref_value:
+                    state = 2
+                    infos[-1] += " - was %d during inventory(!!)" % ref_value
 
-                perfdata.append((lab, value, thresh and params[thresh][0] or None, thresh and params[thresh][1] or None))
-                output.append('%s: %d%s%s' % (txt, value, uom, thresh_out))
-                status = max(status, cur_status)
+    return state, ", ".join(infos), perfdata
 
-    if not output:
-        return (3, 'Found no info in agent outout')
-
-    return (status, ', '.join(output), perfdata)
-
-check_info["smart.stats"] = {'check_function': check_smart_stats,
- 'default_levels_variable': None,
- 'group': 'smart.stats',
- 'has_perfdata': True,
- 'inventory_function': lambda info: inventory_smart("smart.stats", info),
- 'node_info': False,
- 'service_description': 'SMART %s Stats',
- 'snmp_info': None,
- 'snmp_scan_function': None}
+check_info["smart.stats"] = {
+    'check_function':            check_smart_stats,
+    'inventory_function':        inventory_smart_stats,
+    'has_perfdata':              True,
+    'service_description':       'SMART %s Stats',
+}
 
 
-# Written by Benjamin Odenthal
-# http://exchange.check-mk.org/index.php?option=com_remository&Itemid=53&func=fileinfo&id=1
+def inventory_smart_temp(info):
+    disks = parse_smart(info)
+    return [(disk_name, 'smart_temp_default_levels')
+            for disk_name, disk in disks.items()
+            if "Temperature_Celsius" in disk]
+
 def check_smart_temp(item, params, info):
-    warn, crit = params
+    disks = parse_smart(info)
+    if item not in disks:
+        return 3, "Disk not found"
+    disk = disks[item]
 
-    for line in info:
-        if len(line) >= 13 and line[0] == item and line[4] == "Temperature_Celsius":
-            celsius = int(line[12])
-            perfdata = [ ( "temp", celsius, warn, crit ) ]
-            if celsius >= crit:
-                return (2, "Temperature is %dC" % celsius, perfdata)
-            elif celsius >= warn:
-                return (1, "Temperature is %dC" % celsius, perfdata)
-            else:
-                return (0, "Temperature is %dC" % celsius, perfdata)
-    return (3, "Temperature_Celsius not found in agent output for disk %s" % item)
+    celsius = disk["Temperature_Celsius"]
+    warn, crit = params
+    perfdata = [ ( "temp", celsius, warn, crit ) ]
+    if celsius >= crit:
+        state = 2
+    elif celsius >= warn:
+        state = 1
+    else:
+        state = 0
+    return state, "Temperature is %dC" % celsius, perfdata
 
 check_info["smart.temp"] = {
     'check_function':            check_smart_temp,
-    'inventory_function':        lambda info: inventory_smart("smart.temp", info),
+    'inventory_function':        inventory_smart_temp,
     'service_description':       'Temperature SMART %s',
     'group':                     'disk_temperature',
     'has_perfdata':               True,

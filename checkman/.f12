@@ -1,1 +1,2 @@
-sudo cp * /omd/versions/default/share/check_mk/checkman/
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+sudo cp * /omd/sites/$SITE/share/check_mk/checkman/

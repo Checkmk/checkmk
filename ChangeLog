@@ -57,6 +57,10 @@
       for details.
     * windows_agent: Now buffers output before writing it to the socket
                      Results in less tcp packages per call
+    * smart.stats: rewrote check. Please reinventorize. Error counters are now
+      snapshotted during inventory.
+    * smart.temp: add WATO configuration
+    * if64_tplink: special new check for TP Link switches with broken SNMP output
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid
@@ -81,6 +85,19 @@
       for each logfile on a host
     * Configuration of an alternativ host check command
     * Inventory: Display link symbol for ps ruleset
+
+1.2.2:
+    Core:
+    * Added $HOSTURL$ and $SERVICEURL$ to notification macros which contain an
+      URL to the host/service details views with /check_mk/... as base.
+
+    Multisite:
+    * FIX: Fixed umlaut handling in reloaded snapins
+
+1.2.2b7:
+    Checks & Agents:
+    * FIX: postfix_mailq: fix labels in WATO rule, set correct default levels
+    
 
 1.2.2b6:
     Core:

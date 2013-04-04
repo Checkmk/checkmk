@@ -35,6 +35,7 @@
 # the form %(variable)s
 
 import pprint
+import urllib
 
 # Default settings
 notification_logdir   = var_dir + "/notify"
@@ -271,6 +272,9 @@ def process_context(context, write_into_spoolfile, use_method = None):
             sys.stderr.write("Details have been logged to %s.\n" % notification_log)
         sys.exit(2)
 
+def urlencode(s):
+    return urllib.quote(s)
+
 def do_notify(args):
     try:
         mode = 'notify'
@@ -336,6 +340,11 @@ def do_notify(args):
 
         context["WHAT"] = context.get("SERVICEDESC") and "SERVICE" or "HOST"
         context["MAIL_COMMAND"] = notification_mail_command
+
+        context['HOSTURL'] = '/check_mk/view.py?view_name=hoststatus&host=%s' % urlencode(context['HOSTNAME'])
+        if context['WHAT'] == 'SERVICE':
+            context['SERVICEURL'] = '/check_mk/view.py?view_name=service&host=%s&service=%s' % \
+                                     (urlencode(context['HOSTNAME']), urlencode(context['SERVICEDESC']))
 
         # Handle interactive calls
         if mode == 'fake-service':

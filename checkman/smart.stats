@@ -1,7 +1,7 @@
 title: Monitor HDD health statistics using S.M.A.R.T
 agents: linux
-author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
+author: Mathias Kettner
 distribution: check_mk
 description:
  This check monitors health statistics like error counters of HDDs using the
@@ -11,32 +11,20 @@ description:
  The check uses information provided by the Check_MK linux agent which are
  available when the agent has been extended with the {smart} agent plugin.
 
+ During inventory the current value of all counters is being
+ snapshotted into the check's parameters. If later one of the value increases
+ the check gets critical. If will become green again if the check is 
+ being reinventorized.
+
 perfdata:
  One variable for each of the known state counters.
 
 inventory:
  If there is at least one supported value available for a HDD one service is
- inventorized.
-
-examples:
- # These are the default thresholds of the check.
- smart_stats_default_levels = {
-   'realloc_events':  (1,  1),
-   'realloc_sectors': (1,  1),
-   'spin_retries':    (1,  1),
-   'pending_retries': (1,  1),
-   'cmd_timeouts':    (5, 10),
-   'end_to_end':      (1,  1),
-   'uncorr_errs':     (1,  1),
-   'udma_crcs':       (1,  1),
- }
-
+ inventorized. 
 
 [parameters]
-params(dict from string to (int, int)): A python dictionary which contains
- tuples of two integers which represent the WARNING and the CRITICAL
- threshold threshold for each supported value.
+params(dict from string to int): A python dictionary which contains
+ the current values of all counters during the inventory. This paramer is 
+ usually not set manually.
 
-[configuration]
-smart_stats_default_levels (dict from string to (int, int)): default levels
- used for all inventorized checks.

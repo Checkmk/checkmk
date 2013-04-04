@@ -25,41 +25,82 @@
 # Boston, MA 02110-1301 USA.
 
 import sys
-import argparse
+import getopt
 import socket
 
 import inspect, pprint # FOR DEBUGGING
 
-parser = argparse.ArgumentParser(description='Check_MK vSphere Agent')
-group = parser.add_argument_group()
-# group.add_argument('-p', '--port', type=int, help="Port Number of vSphere Server")
-group.add_argument('-i', '--modules',
-                    help="Modules to query. This is a comma separated list of hostsystem, "
-                         "virtualmachine and storage. Default is to query all modules.")
+def usage():
+    sys.stderr.write("""Check_MK vSphere Agent
 
-parser.add_argument('-u','--user', 
-                    help="Username for vSphere login")
+USAGE: agent_vsphere [-i MODULES] [-u USER] [-s SECRET] [-D] [-a] [--debug] HOST
+       agent_vsphere -h
 
-parser.add_argument('-s','--secret', 
-                    help="Secret/Password for vSphere login")
+ARGUMENTS:
+  HOST                          Host name or IP address of vCenter or VMWare HostSystem
 
-parser.add_argument('-D', '--direct', action="store_true",
-                    help="Assume a directly queried host system (no vCenter). In this "
-                         "we expect data about only one HostSystem to be found and do "
-                         "not create piggy host data for that host.")
-                    
-parser.add_argument('-a', '--agent', action="store_true",
-                    help="Also retrieve data from the normal Check_MK Agent. This makes "
-                         "sense if you query a vCenter that is installed on a Windows "
-                         "host that you also want to monitor with Check_MK.")
+OPTIONS:
+  -h, --help                    Show this help message and exit
+  -u USER, --user USER          Username for vSphere login
+  -s SECRET, --secret SECRET    Secret/Password for vSphere login
+  -D, --direct                  Assume a directly queried host system (no vCenter). In
+                                This we expect data about only one HostSystem to be
+                                Found and do not create piggy host data for that host.
+  -a, --agent                   Also retrieve data from the normal Check_MK Agent.
+                                This makes sense if you query a vCenter that is
+                                Installed on a Windows host that you also want to
+                                Monitor with Check_MK.
+  --debug                       Debug mode: let Python exceptions come through
 
-parser.add_argument('--debug', action="store_true", 
-                    help="Debug mode: let Python exceptions come through")
+  -i MODULES, --modules MODULES Modules to query. This is a comma separated list of
+                                hostsystem, virtualmachine and storage. Default is to
+                                query all modules.
 
-parser.add_argument('HOST', 
-                    help="Host name or IP address of vCenter or VMWare HostSystem")
 
-params = vars(parser.parse_args())
+""")
+
+short_options = 'hi:u:s:Da'
+long_options  = [
+    'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=',
+]
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    print str(err)
+    sys.exit(1)
+
+opt_debug    = False
+opt_direct   = False
+opt_agent    = False
+host_address = None
+user         = None
+secret       = None
+mortypes     = [ 'hostsystem', 'virtualmachine', 'datastore' ]
+
+for o,a in opts:
+    if o in [ '--debug' ]:
+        opt_debug = True
+    elif o in [ '-D', '--direct' ]:
+        opt_direct = True
+    elif o in [ '-a', '--agent' ]:
+        opt_agent = True
+    elif o in [ '-u', '--user' ]:
+        user = a
+    elif o in [ '-s', '--secret' ]:
+        secret = a
+    elif o in [ '-i', '--modules' ]:
+        mortypes = a.split(',')
+    elif o in [ '-h', '--help' ]:
+        usage()
+        sys.exit(0)
+
+if len(args) == 1:
+    host_address = args[0]
+else:
+    sys.stderr.write("ERROR: No HOST given.\n")
+    usage()
+    sys.exit(1)
 
 def get_agent_info_tcp(hostname):
     output = ""
@@ -88,13 +129,13 @@ def get_agent_info_tcp(hostname):
         s.close()
         return output
     except Exception, e:
-        if params["debug"]:
+        if opt_debug:
             raise
     return output
 
 error_exit = 1
-if params['agent']:
-    sys.stdout.write(get_agent_info_tcp(params["HOST"]))
+if opt_agent:
+    sys.stdout.write(get_agent_info_tcp(host_address))
     error_exit = 0 # do not fail if vSphere fails
 
 
@@ -109,9 +150,9 @@ host = VIServer()
 
 object_collection = []
 try:
-    host.connect(params['HOST'], params['user'], params['secret'])
+    host.connect(host_address, user, secret)
 except:
-    if params['debug']:
+    if opt_debug:
         raise
     sys.stderr.write("Cannot connect to vSphere Server. May the wrong credentials. Please correct and make a reinventory.\n")
     sys.exit(error_exit)
@@ -220,11 +261,6 @@ def conv_numeric_sensor_info(value):
 
     # return pprint.pformat(inspect.getmembers(value))
 
-if params['modules'] == None:
-    mortypes = [ 'hostsystem', 'virtualmachine', 'datastore' ]
-else:
-    mortypes = params['modules'].split(',')
-
 if "datastore" in mortypes:
     output_datastores()
 
@@ -255,7 +291,7 @@ if "hostsystem" in mortypes:
       "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo" : conv_numeric_sensor_info,
 
       #"summary.quickStats.uptime": str,
-    }, params['direct'])
+    }, opt_direct)
 
 # Warning: we have no guarantee that all properties are always
 # output. For example if a VM is powered off, the only property

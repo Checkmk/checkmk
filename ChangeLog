@@ -1,4 +1,4 @@
-1.2.2
+1.2.2:
     Core:
     * Added $HOSTURL$ and $SERVICEURL$ to notification macros which contain an
       URL to the host/service details views with /check_mk/... as base.

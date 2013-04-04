@@ -309,7 +309,7 @@ def ajax_snapin():
                 snapin["render"]()
             except Exception, e:
                 snapin_exception(e)
-            snapin_code.append(html.drain())
+            snapin_code.append(html.drain().encode('utf-8'))
 
         html.unplug()
         html.write(repr(snapin_code))

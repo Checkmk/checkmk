@@ -263,7 +263,7 @@ function executeJSbyObject(obj) {
     } else {
       try {
     	  eval(aScripts[i].text);
-      } catch(e) {alert(aScripts[i].text + "\nError:" + e.message);}
+      } catch(e) {} // Silently skip those errors
     }
   }
   aScripts = null;

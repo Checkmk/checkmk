@@ -34,6 +34,8 @@
 # hostname, servicedesc, hoststate, servicestate, output in
 # the form %(variable)s
 
+import urllib
+
 # Default settings
 notification_logdir = var_dir + "/notify"
 notification_log = notification_logdir + "/notify.log"
@@ -196,6 +198,9 @@ def get_readable_rel_date(timestamp):
     days = rem / 1440
     return '%dd %02d:%02d:%02d' % (days, hours, minutes, seconds)
 
+def urlencode(s):
+    return urllib.quote(s)
+
 def do_notify(args):
     try:
         mode = 'notify'
@@ -245,6 +250,11 @@ def do_notify(args):
 
         context["WHAT"] = context.get("SERVICEDESC") and "SERVICE" or "HOST"
         context["MAIL_COMMAND"] = notification_mail_command
+
+        context['HOSTURL'] = '/check_mk/view.py?view_name=hoststatus&host=%s' % urlencode(context['HOSTNAME'])
+        if context['WHAT'] == 'SERVICE':
+            context['SERVICEURL'] = '/check_mk/view.py?view_name=service&host=%s&service=%s' % \
+                                     (urlencode(context['HOSTNAME']), urlencode(context['SERVICEDESC']))
 
         # Handle interactive calls
         if mode == 'fake-service':

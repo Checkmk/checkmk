@@ -1,9 +1,9 @@
 Title: auth.serials are not created in manual installations
 Component: core
-State: open
+Class: todo
+State: done
 Date: 2013-01-24 17:36:24
 Targetversion: 1.2.2
-Class: todo
 
 Hello,
 
@@ -23,3 +23,6 @@ Wolfgang
 
 Resolution: We do not try to create this file but assume a serial
 number of 0 for all users in case that file is missing.
+
+2013-04-04 17:30:01: changed state open -> done
+Sollte jetzt klappen.

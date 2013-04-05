@@ -94,6 +94,9 @@
     Multisite:
     * FIX: Fixed umlaut handling in reloaded snapins
 
+    WATO:
+    * Added tcp port parameter to SSL certificate check (Thanks to Marcel Schulte)
+
 1.2.2b7:
     Checks & Agents:
     * FIX: postfix_mailq: fix labels in WATO rule, set correct default levels

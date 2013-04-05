@@ -465,23 +465,31 @@ register_rule(group,
                     Dictionary(
                         title = _("Check SSL Certificate Age"),
                         elements = [
-                           ( "cert_days",
-                             Integer(
-                                 title = _("Age"),
-                                 help = _("Minimum number of days a certificate has to be valid. "
-                                          "Port defaults to 443. When this option is used the URL "
-                                          "is not checked."),
-                                 unit = _("days"),
-                             )
-                          ),
-                           ( "cert_host",
-                             TextAscii(
-                               title = _("Check Cerficate on diffrent IP/ DNS Name"),
-                               help = _("For each SSL cerficate on a host, a diffrent IP address is needed. "
-                                        "Here you can specify there address if it differs from the  "
-                                        "address from the host primary address."),
-                            )
-                           ),
+                            ( "cert_days",
+                               Integer(
+                                   title = _("Age"),
+                                   help = _("Minimum number of days a certificate has to be valid. "
+                                            "Port defaults to 443. When this option is used the URL "
+                                            "is not checked."),
+                                   unit = _("days"),
+                               )
+                            ),
+                            ( "cert_host",
+                                TextAscii(
+                                    title = _("Check Cerficate on diffrent IP/ DNS Name"),
+                                    help = _("For each SSL cerficate on a host, a diffrent IP address is needed. "
+                                             "Here you can specify there address if it differs from the  "
+                                             "address from the host primary address."),
+                                )
+                            ),
+                            ("port",
+                                Integer(
+                                    title = _("TCP Port"),
+                                    minvalue = 1,
+                                    maxvalue = 65535,
+                                    default_value = 443,
+                                )
+                            ),
                         ],
                         required_keys = [ "cert_days" ],
                     ),

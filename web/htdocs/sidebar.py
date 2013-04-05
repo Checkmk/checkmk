@@ -312,7 +312,7 @@ def ajax_snapin():
             snapin_code.append(html.drain())
 
         html.unplug()
-        html.write('[%s]' % ','.join([ "'%s'" % s for s in snapin_code]))
+        html.write('[%s]' % ','.join([ '"%s"' % s.replace('"', '\\"').replace('\n', '') for s in snapin_code]))
     except Exception, e:
         html.flush()
         html.unplug()

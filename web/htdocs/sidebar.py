@@ -309,13 +309,14 @@ def ajax_snapin():
                 snapin["render"]()
             except Exception, e:
                 snapin_exception(e)
-            snapin_code.append(html.drain().encode('utf-8'))
+            snapin_code.append(html.drain())
 
         html.unplug()
-        html.write(repr(snapin_code))
-    except:
+        html.write('[%s]' % ','.join([ "'%s'" % s for s in snapin_code]))
+    except Exception, e:
         html.flush()
         html.unplug()
+        html.log('Exception during snapin refresh: %s' % e)
         raise
 
 def move_snapin():

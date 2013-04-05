@@ -34,9 +34,6 @@ row_css = None
 def begin(title=None, **kwargs):
     global table, mode, next_func
 
-    if table:
-        end()
-
     table = {
         "title": title,
         "headers" : [],

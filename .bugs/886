@@ -1,9 +1,9 @@
 Title: Manual installion of EC without OMD
 Component: docu
-State: open
+Class: todo
+State: done
 Date: 2013-01-24 16:46:23
 Targetversion: 1.2.3
-Class: todo
 
 ch versuche mich gerade an der Event Console (mkeventd).
 Ich habe jedoch massive Probleme in einer nicht OMD Umgebung.
@@ -96,3 +96,6 @@ Wäre toll wenn man die Umgehungslösungen in mkevent einpflegen könnte.
 Versionsinfos:
 CentOS 6.2
 check_MK 1.2.1i4
+
+2013-04-04 17:29:40: changed state open -> done
+Ist inzwischen in setup.py integriert.

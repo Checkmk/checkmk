@@ -251,18 +251,19 @@ def do_notify(args):
         context["WHAT"] = context.get("SERVICEDESC") and "SERVICE" or "HOST"
         context["MAIL_COMMAND"] = notification_mail_command
 
+        # Handle interactive calls
+        if mode == 'fake-service':
+            set_fake_env('service', context)
+
+        elif mode == 'fake-host':
+            set_fake_env('host', context)
+
         context['HOSTURL'] = '/check_mk/view.py?view_name=hoststatus&host=%s' % urlencode(context['HOSTNAME'])
         if context['WHAT'] == 'SERVICE':
             context['SERVICEURL'] = '/check_mk/view.py?view_name=service&host=%s&service=%s' % \
                                      (urlencode(context['HOSTNAME']), urlencode(context['SERVICEDESC']))
 
-        # Handle interactive calls
-        if mode == 'fake-service':
-            set_fake_env('service', context)
-            sys.exit(call_notification_script(plugin, [], context))
-
-        elif mode == 'fake-host':
-            set_fake_env('host', context)
+        if mode in [ 'fake-service', 'fake_host' ]:
             sys.exit(call_notification_script(plugin, [], context))
 
         if 'LASTHOSTSTATECHANGE' in context:

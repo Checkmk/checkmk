@@ -4733,7 +4733,7 @@ if __name__ == "__main__":
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=" ]
 
-    non_config_options = ['-L', '--list-checks', '-P', '--package', '-M',
+    non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
                           '--man', '-V', '--version' ,'-h', '--help', '--automation', ]
 
     try:
@@ -4885,6 +4885,7 @@ if __name__ == "__main__":
                 do_automation(a, args)
                 done = True
             elif o == '--notify':
+                read_config_files(False, True)
                 do_notify(args)
                 done = True
 

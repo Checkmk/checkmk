@@ -134,7 +134,7 @@ register_rule(group + '/' + subgroup_applications,
     itemname = 'logfile',
     itemhelp = _("Put the item names of the logfiles here. For example \"System$\" "
                  "to select the service \"LOG System\"."),
-    match = 'list',
+    match = 'all',
 )
 
 register_rule(group + '/' + subgroup_inventory,
@@ -168,7 +168,7 @@ register_rule(group + '/' + subgroup_inventory,
                  'You can configure specific window services to be monitored by the windows check by '
                  'selecting them by name, current state during the inventory or start mode.'),
     ),
-    match = 'list',
+    match = 'all',
 )
 
 #dublicate: check_mk_configuration.py
@@ -386,7 +386,7 @@ register_rule(group + '/' + subgroup_inventory,
         ],
         optional_keys = [],
     ),
-    match = 'list',
+    match = 'all',
 )
 
 checkgroups = []
@@ -708,7 +708,7 @@ register_rule(group + '/' + subgroup_storage,
       ),
       add_label = _("Add pattern"),
     ),
-    match = 'list',
+    match = 'all',
 )
 register_rule(group + '/' + subgroup_storage,
     varname   = "fileinfo_groups",
@@ -740,7 +740,7 @@ register_rule(group + '/' + subgroup_storage,
       ),
       add_label = _("Add pattern"),
     ),
-    match = 'list',
+    match = 'all',
 )
 
 
@@ -2034,7 +2034,7 @@ register_rule(group + '/' + subgroup_networking,
                         ],
                         required_keys = ["name", "iftype", "single"]),
                     add_label = _("Add pattern")),
-    match = 'list',
+    match = 'all',
 )
 
 

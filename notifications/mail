@@ -315,11 +315,16 @@ def send_mail(m, target):
 
 def fetch_pnp_data(context, params):
     try:
-        prefix_url = "%s/share" % context['OMD_ROOT']
+        # Autodetect the path in OMD environments
+        path = "%s/share/pnp4nagios/htdocs/index.php" % context['OMD_ROOT']
     except:
-        # Non-omd environment
-        prefix_url = ""
-    return os.popen('REMOTE_USER="%s" php %s/pnp4nagios/htdocs/index.php "%s"' %  (context['CONTACTNAME'], prefix_url, params)).read()
+        # Non-omd environment - use plugin argument 1
+        path = context['PARAMETER_1']
+
+    if not os.path.exists(path):
+        raise GraphException('Unable to locate pnp4nagios index.php (%s)' % path)
+
+    return os.popen('REMOTE_USER="%s" php %s "%s"' %  (context['CONTACTNAME'], path, params)).read()
 
 def fetch_num_sources(context):
     svc_desc = context['WHAT'] == 'HOST' and '_HOST_' or context['SERVICEDESC']
@@ -383,6 +388,8 @@ def main():
             '<tr><th colspan=2>Graphs</th></tr>'
             '<tr class="data even0"><td colspan=2 class=graphs>%s</td></tr>' % graph_code
         )
+    else:
+        context['GRAPH_CODE'] = ''
 
     # Compute the subject of the mail
     if context['WHAT'] == 'HOST':

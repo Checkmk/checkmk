@@ -40,7 +40,7 @@ def inventory_winperf_util(info):
 
 
 # params: levels for warn / crit in percentage
-def check_winperf_util(item, params, info):
+def check_winperf_util(_no_item, params, info):
     this_time = int(float(info[0][0]))
 
     for line in info[1:]:
@@ -63,28 +63,16 @@ def check_winperf_util(item, params, info):
                 cpusecs_per_sec = ticks_per_sec / 10000000.0
                 used_perc = 100 * (1 - cpusecs_per_sec)
 
+            # Due to timeing invariancies the measured level can become > 100%.
+            # This makes users unhappy, so cut it off.
             if used_perc < 0:
                 used_perc = 0
             elif used_perc > 100:
                 used_perc = 100
-            if params != None:
-                warn, crit = params
-            else:
-                warn, crit = None, None
-            perfdata = [ ("util", "%.2f" % used_perc, warn, crit, 0, num_cpus) ]
-            if num_cpus == 1:
-                num_txt = ""
-            else:
-                num_txt = " / %d CPUs" % num_cpus
 
-            infotext = "%0.2f%% used%s (in last %d secs)" % (used_perc, num_txt, timedif)
-
-            if crit != None and used_perc >= crit:
-                return (2, infotext, perfdata)
-            elif warn != None and used_perc >= warn:
-                return (1, infotext, perfdata)
-            else:
-                return (0, infotext, perfdata)
+            state, infotext, perfdata = check_cpu_util(used_perc, params, this_time)
+            infotext += ", %d CPUs" % num_cpus
+            return state, infotext, perfdata
 
     return (3, "counter for CPU (6) not found")
 
@@ -94,5 +82,6 @@ check_info["winperf_processor.util"] = {
     'inventory_function':      inventory_winperf_util,
     'service_description':     'CPU utilization',
     'has_perfdata':            True,
-    'group':                   'cpu_utilization',
+    'group':                   'cpu_utilization_os',
+    'includes':                [ "cpu_util.include" ],
 }

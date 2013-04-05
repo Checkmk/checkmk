@@ -100,6 +100,7 @@
     * FIX: Fixed umlaut handling in reloaded snapins
 
     WATO:
+    * FIX: Fix several cases where WATO rule analyser did not hilite all matching rules
     * Added tcp port parameter to SSL certificate check (Thanks to Marcel Schulte)
 
 1.2.2b7:

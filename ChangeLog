@@ -5,7 +5,7 @@
 
     Checks & Agents:
     * FIX: blade_bx_load: remove invalid WATO group
-
+    * FIX: lnx_bonding: handle also 802.3ad type bonds
 
     Notifications:
     * FIX: Removing GRAPH_CODE in html mails when not available

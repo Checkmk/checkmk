@@ -64,6 +64,8 @@
     * windows_agent: check_mk.ini: new option "port" - specifies agent port
     * winperf_processor: introduce averaging, support predictive levels
     * cpu_util.include: fixed bug when params are set to None
+    * predictive levels: fixed bug when new options existing predictive levels
+                         are introduced
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

@@ -253,7 +253,7 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
     try:
         last_info = eval(file(info_file).read())
         for k, v in params.items():
-            if last_info[k] != v:
+            if last_info.get(k) != v:
                 if opt_debug:
                     sys.stderr.write("Prediction parameters have changed.\n")
                 last_info = None

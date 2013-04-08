@@ -49,7 +49,7 @@ def check_cpu_load(item, params, info):
         warn, crit = [ p*num_cpus for p in params ]
     else:
         warn, crit = None, None
-    perfdata = [ ('load' + str(z), l, warn, crit, 0, num_cpus ) 
+    perfdata = [ ('load' + str(z), l, warn, crit, 0, num_cpus )
                  for (z,l) in [ (1,load[0]), (5,load[1]), (15, load[2]) ] ]
 
     state, text, perf = check_levels(load[2], 'load15', params, factor = num_cpus)

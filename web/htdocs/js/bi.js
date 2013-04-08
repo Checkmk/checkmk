@@ -77,7 +77,7 @@ function bi_toggle_box(oDiv, lazy)
     var do_open;
 
     if (oDiv.className.indexOf("open") >= 0) {
-        if (lazy) 
+        if (lazy)
             return; // do not close in lazy mode
         oDiv.className = oDiv.className.replace(/open/, "closed");
         url += "&state=closed";

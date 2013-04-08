@@ -1296,7 +1296,7 @@ def host_check_command(hostname, ip, is_clust):
     elif value == "agent" or value[0] == "service":
         service = value == "agent" and "Check_MK" or value[1]
         command = "check-mk-host-custom-%d" % (len(hostcheck_commands_to_define) + 1)
-        hostcheck_commands_to_define.append((command, 
+        hostcheck_commands_to_define.append((command,
            'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' % (hostname, service, hostname, service)))
         return command
 
@@ -1968,12 +1968,12 @@ define service {
                                 break
                     except:
                         pass
-            
+
             if "freshness" in entry:
                 freshness = "  check_freshness\t\t1\n" + \
                             "  freshness_threshold\t\t%d\n" % (60 * entry["freshness"]["interval"])
                 command_line = "echo %s && exit %d" % (
-                       quote_shell_string(entry["freshness"]["output"]), entry["freshness"]["state"]) 
+                       quote_shell_string(entry["freshness"]["output"]), entry["freshness"]["state"])
             else:
                 freshness = ""
 
@@ -4127,9 +4127,9 @@ def lock_nagios_objects_file():
         fcntl.fcntl(restart_lock_fd, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
         try:
             if opt_debug:
-                sys.stderr.write("Waiting for exclusive lock on %s.\n" % 
+                sys.stderr.write("Waiting for exclusive lock on %s.\n" %
                     lock_file)
-            fcntl.flock(restart_lock_fd, fcntl.LOCK_EX | 
+            fcntl.flock(restart_lock_fd, fcntl.LOCK_EX |
                 ( restart_locking == "abort" and fcntl.LOCK_NB or 0))
         except:
             return False

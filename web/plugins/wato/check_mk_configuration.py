@@ -1186,7 +1186,7 @@ register_rule(
                  "you can specify an alternative way of determining the host's state."),
         choices = [
           ( "ping",    _("PING (ICMP echo request)") ),
-          ( "tcp" ,    _("TCP Connect"), Integer(label = _("to port:"), minvalue=1, maxvalue=65535, default_value=80 )), 
+          ( "tcp" ,    _("TCP Connect"), Integer(label = _("to port:"), minvalue=1, maxvalue=65535, default_value=80 )),
           ( "ok",      _("Always assume host to be up") ),
           ( "agent",   _("Use the status of the Check_MK Agent") ),
           ( "service", _("Use the status of the service..."), TextUnicode(label = ":", size=32, allow_empty=False )),
@@ -1679,7 +1679,7 @@ register_rule(group,
                   title = _("Regular expression substitution"),
                   help = _("Please specify a regular expression in the first field. This expression should at "
                            "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
-                           "In the second field you specify the translated host name and can refer to the first matched " 
+                           "In the second field you specify the translated host name and can refer to the first matched "
                            "group with <tt>\1</tt>, the second with <tt>\2</tt> and so on, for example <tt>\1.example.org</tt>"),
                   elements = [
                       RegExpUnicode(
@@ -1704,11 +1704,11 @@ register_rule(group,
                       orientation = "horizontal",
                       elements =  [
                           TextUnicode(
-                               title = _("Original hostname"),  
+                               title = _("Original hostname"),
                                size = 30,
                                allow_empty = False),
                           TextUnicode(
-                               title = _("Translated hostname"), 
+                               title = _("Translated hostname"),
                                size = 30,
                                allow_empty = False),
                       ],

@@ -378,8 +378,8 @@ class html:
     # [('varname1', value1), ('varname2', value2) ]
     def makeuri(self, addvars, remove_prefix = None, filename=None):
         new_vars = [ nv[0] for nv in addvars ]
-        vars = [ (v, self.var(v)) 
-                 for v in self.req.vars 
+        vars = [ (v, self.var(v))
+                 for v in self.req.vars
                  if v[0] != "_" and v not in new_vars ]
         if remove_prefix != None:
             vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]

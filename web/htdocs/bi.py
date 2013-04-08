@@ -239,7 +239,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
     # Try to get data from per-user cache:
     # make sure, BI permissions have not changed since last time.
-    # g_user_cache is a global variable for all succeeding functions, so 
+    # g_user_cache is a global variable for all succeeding functions, so
     # that they do not need to check the user again
     cache = g_cache.get(user)
     if cache:
@@ -1502,7 +1502,7 @@ def aggr_render_node(tree, title, mousecode, show_host):
          % (effective_state["state"], addclass, render_bi_state(effective_state["state"]))
     if mousecode:
         h += '<img class=opentree %s>' % mousecode
-        h += '<span class="content name" %s>%s</span>' % (mousecode, title) 
+        h += '<span class="content name" %s>%s</span>' % (mousecode, title)
     else:
         h += title
 
@@ -1762,13 +1762,13 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
             site = hostrow["site"]
             host = hostrow["name"]
             rows_by_host[(site, host)] = hostrow
-        
+
     for hostrow in hostrows:
         site = hostrow["site"]
         host = hostrow["name"]
         # In case of joinbyname we deal with aggregations that bare the
         # name of one host, but might contain states of multiple hosts.
-        # status_info cannot be filled from one row in that case. We          
+        # status_info cannot be filled from one row in that case. We
         # try to optimize by assuming that all data that we need is being
         # displayed in the same view and the information thus being present
         # in some of the other hostrows.

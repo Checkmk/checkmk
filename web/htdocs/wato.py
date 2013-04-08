@@ -8346,7 +8346,7 @@ def generate_wato_users_elements_function(none_value):
             elements = [ (None, none_value) ] + elements
         return elements
     return lambda: get_wato_users(none_value)
-        
+
 # Dropdown for choosing a multisite user
 class UserSelection(DropdownChoice):
     def __init__(self, **kwargs):
@@ -9594,7 +9594,7 @@ def mode_ineffective_rules(phase):
     all_hosts = load_all_hosts()
     html.write("<div class=info>" + _("The following rules do match match to any of the existing hosts.") + "</div>")
     have_ineffective = False
-    
+
     for groupname in groupnames:
         # Show information about a ruleset
         # Sort rulesets according to their title
@@ -9609,7 +9609,7 @@ def mode_ineffective_rules(phase):
             if num_rules == 0:
                 continue
 
-            ineffective_rules = [] 
+            ineffective_rules = []
             current_rule_folder = None
             for f, rule in rules:
                 if current_rule_folder == None or current_rule_folder != f:
@@ -9630,7 +9630,7 @@ def mode_ineffective_rules(phase):
             for rel_rulenr, (f, rule) in ineffective_rules:
                 value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
                 table.row()
-                
+
                 # Actions
                 table.cell("Actions", css="ruleset")
                 edit_url = make_link([
@@ -9639,7 +9639,7 @@ def mode_ineffective_rules(phase):
                     ("rulenr", rel_rulenr),
                     ("rule_folder", f[".path"])])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
-                
+
                 delete_url = make_action_link([
                     ("mode", "edit_ruleset"),
                     ("varname", varname),
@@ -9655,7 +9655,7 @@ def mode_ineffective_rules(phase):
                 # Conditions
                 table.cell(_("Conditions"), css="condition")
                 render_conditions(rulespec, tag_specs, host_list, item_list, varname, f)
-    
+
                 # Value
                 table.cell(_("Value"))
                 if rulespec["valuespec"]:
@@ -9678,7 +9678,7 @@ def mode_ineffective_rules(phase):
                     value_html = '<img align=absmiddle class=icon title="%s" src="images/rule_%s.png">' \
                                     % (title, img)
                 html.write(value_html)
-                
+
                 # Comment
                 table.cell(_("Comment"))
                 url = rule_options.get("docu_url")
@@ -9689,7 +9689,7 @@ def mode_ineffective_rules(phase):
 
             table.end()
             html.write("</div>")
-        
+
     if not have_ineffective:
             html.write("<div class=info>" + _("There are no ineffective rules.") + "</div>")
     html.write('</div>')
@@ -11028,7 +11028,7 @@ def PredictiveLevels(**args):
         columns = 1,
         headers = "sup",
         elements = [
-             ( "period", 
+             ( "period",
                 DropdownChoice(
                     title = _("Base prediction on"),
                     choices = [
@@ -11054,7 +11054,7 @@ def PredictiveLevels(**args):
                CascadingDropdown(
                    title = _("Dynamic levels (upper bound)"),
                    choices = [
-                       ( "absolute", 
+                       ( "absolute",
                          _("Absolute difference from prediction"),
                          Tuple(
                              elements = [
@@ -11062,7 +11062,7 @@ def PredictiveLevels(**args):
                                  Float(title = _("Critical at"), unit = _("above predicted value"), default_value = dif[1]),
                              ]
                       )),
-                      ( "relative", 
+                      ( "relative",
                         _("Relative difference from prediction"),
                          Tuple(
                              elements = [
@@ -11070,7 +11070,7 @@ def PredictiveLevels(**args):
                                  Percentage(title = _("Critical at"), unit = _("% above predicted value"), default_value = 20),
                              ]
                       )),
-                      ( "stdev", 
+                      ( "stdev",
                         _("In relation to standard deviation"),
                          Tuple(
                              elements = [
@@ -11084,7 +11084,7 @@ def PredictiveLevels(**args):
                CascadingDropdown(
                    title = _("Dynamic levels (lower bound)"),
                    choices = [
-                       ( "absolute", 
+                       ( "absolute",
                          _("Absolute difference from prediction"),
                          Tuple(
                              elements = [
@@ -11092,7 +11092,7 @@ def PredictiveLevels(**args):
                                  Float(title = _("Critical at"), unit = _("below predicted value"), default_value = 4.0),
                              ]
                       )),
-                      ( "relative", 
+                      ( "relative",
                         _("Relative difference from prediction"),
                          Tuple(
                              elements = [
@@ -11100,7 +11100,7 @@ def PredictiveLevels(**args):
                                  Percentage(title = _("Critical at"), unit = _("% below predicted value"), default_value = 20),
                              ]
                       )),
-                      ( "stdev", 
+                      ( "stdev",
                         _("In relation to standard deviation"),
                          Tuple(
                              elements = [

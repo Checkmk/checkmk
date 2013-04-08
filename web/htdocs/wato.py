@@ -10739,9 +10739,15 @@ def mode_edit_rule(phase, new = False):
         try:
             valuespec.validate_datatype(value, "ve")
             valuespec.render_input("ve", value)
-        except:
+        except Exception, e:
             if config.debug:
                 raise
+            else:
+                html.show_warning(_('Unable to read current options of this rule. Falling back to '
+                                    'default values. When saving this rule now, your previous settings '
+                                    'will be overwritten. Problem was: %s.') % e)
+
+            # In case of validation problems render the input with default values
             valuespec.render_input("ve", valuespec.default_value())
 
         valuespec.set_focus("ve")

@@ -143,10 +143,10 @@ def inventory_cisco_qos(info):
 
 def check_cisco_qos(item, params, info):
     # Convert old params definitions
-    # Note: the float values of the post levels are converted to int 
+    # Note: the float values of the post levels are converted to int
     had_legacy_params = False
     if type(params) == tuple:
-        params = { 
+        params = {
             "post": tuple(map(lambda x: x and int(x) or None, params[0:2])),
             "drop": params[2:4]
         }
@@ -157,7 +157,7 @@ def check_cisco_qos(item, params, info):
     post_warn, post_crit = params.get("post",(None, None))
     drop_warn, drop_crit = params.get("drop",(None, None))
 
- 
+
     # Load values and format them
     ifs = dict(info[0])
     policies= dict(info[1])
@@ -170,7 +170,7 @@ def check_cisco_qos(item, params, info):
     parents = dict(info[8])
     if_qos_bandwidth = dict(info[9])
     parents_type = dict(info[10])
-    
+
     if_name, class_name = item.split(': ')
 
     # Gather the class id by class_name
@@ -201,7 +201,7 @@ def check_cisco_qos(item, params, info):
     speed_found = False
     for a_key, a_value in config.items():
         if speed_found:
-            break 
+            break
         if a_value == class_id:
             parent_value = a_key.split(".")[1]
             for b_key, b_value in parents.items():
@@ -209,10 +209,10 @@ def check_cisco_qos(item, params, info):
                     if parents_type[b_key] == "4":
                         speed = saveint(if_qos_bandwidth[config[b_key]]) * 1000
                         speed_found = True
-       
+
     # Bandwidth needs to be in bytes for later calculations
     bw = speed / 8.0
-    
+
     # Determine post warn/crit levels
     if type(post_warn) == float:
         post_warn = bw / 100.0 * post_warn
@@ -229,12 +229,12 @@ def check_cisco_qos(item, params, info):
     # Convert the drop levels to byte
     elif unit == "bit":
         # But only if our params where already provided in the new format
-        if not had_legacy_params: 
+        if not had_legacy_params:
             if type(drop_warn) == int:
-                drop_warn = drop_warn / 8.0 
+                drop_warn = drop_warn / 8.0
             if type(drop_crit) == int:
-                drop_crit = drop_crit / 8.0 
-    
+                drop_crit = drop_crit / 8.0
+
 
     # Handle counter values
     state = 0
@@ -252,15 +252,15 @@ def check_cisco_qos(item, params, info):
             timedif, rate = get_counter("cisco_qos.%s.%s" % (name, item), this_time, saveint(counter))
             rates.append(rate)
             perfdata.append( (name, rate, warn, crit, min_val, max_val) )
-           
-            if average: 
+
+            if average:
                 timedif, avg_value = get_average("cisco_qos.%s.%s.avg" % (name, item), this_time, rate, average)
                 rates.append(avg_value)
                 perfdata_avg.append( ("%s_avg_%d" % (name, average), avg_value, warn, crit, min_val, max_val) )
         except MKCounterWrapped, e:
             wrapped = True
-    
-    perfdata.extend(perfdata_avg) 
+
+    perfdata.extend(perfdata_avg)
     def format_value(value):
         if unit == "bit":
             value = value * 8
@@ -279,10 +279,10 @@ def check_cisco_qos(item, params, info):
         else:
             post_rate = rates[0]
             drop_rate = rates[1]
-    
+
         for what, rate, warn, crit in [ ("post",  post_rate, post_warn, post_crit),
                                         ("drop",  drop_rate, drop_warn, drop_crit) ]:
-            infotext += ', %s: %s' % (what, format_value(rate)) 
+            infotext += ', %s: %s' % (what, format_value(rate))
             if crit is not None and rate >= crit:
                 state = max(2, state)
                 infotext += '(!!)'

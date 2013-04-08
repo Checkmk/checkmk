@@ -86,7 +86,7 @@ check_info['esx_vsphere_datastores'] = {
     "service_description"     : "fs_%s",
     "includes"                : [ 'df.include' ],
     "has_perfdata"            : True,
-    "group"                   : "filesystem", 
+    "group"                   : "filesystem",
     "default_levels_variable" : "filesystem_default_levels",
 }
 

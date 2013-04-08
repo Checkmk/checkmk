@@ -128,7 +128,7 @@ avoption_entries = [
                  ]
               )
             ),
-            ( "exclude_ok", 
+            ( "exclude_ok",
               Checkbox(label = _("Treat phases of UP/OK as non-downtime"))
             ),
         ],
@@ -725,7 +725,7 @@ def render_availability_table(availability, from_time, until_time, range_title, 
             return False
         else:
             return True
-    
+
     # Render the stuff
     availability.sort()
     show_summary = what != "bi" and avoptions.get("summary")

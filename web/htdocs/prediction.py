@@ -55,8 +55,8 @@ def page_graph():
     host = html.var("host")
     service = html.var("service")
     dsname = html.var("dsname")
-    html.header(_("Prediction for %s - %s - %s") % 
-            (host, service, dsname), 
+    html.header(_("Prediction for %s - %s - %s") %
+            (host, service, dsname),
             javascripts=["prediction"],
             stylesheets=["pages", "prediction"])
 
@@ -119,7 +119,7 @@ def page_graph():
     vscala_low = vertical_range[0]
     vscala_high = vertical_range[1]
     vert_scala = compute_vertical_scala(vscala_low, vscala_high)
-    time_scala = [ [timegroup["range"][0] + i*3600, "%02d:00" % i] for i in range(0, 25, 2) ] 
+    time_scala = [ [timegroup["range"][0] + i*3600, "%02d:00" % i] for i in range(0, 25, 2) ]
     render_coordinates(vert_scala, time_scala);
 
     if "levels_lower" in timegroup:
@@ -141,7 +141,7 @@ def page_graph():
     render_curve(rrd_data, "#0000ff", 2)
 
     if current_value != None:
-        rel_time = (time.time() - time.timezone) % timegroup["slice"] 
+        rel_time = (time.time() - time.timezone) % timegroup["slice"]
         render_point(timegroup["range"][0] + rel_time, current_value, "#0000ff")
 
     html.footer()
@@ -230,7 +230,7 @@ def compute_levels(params, ref_value, stdev):
                 levels.append((ref_value + (sig * warn), ref_value + (sig * crit)))
 
             elif how == "relative":
-                levels.append((ref_value + sig * (ref_value * warn / 100), 
+                levels.append((ref_value + sig * (ref_value * warn / 100),
                                ref_value + sig * (ref_value * crit / 100)))
 
             else: #  how == "stdev":

@@ -41,7 +41,7 @@ def get_input(valuespec, varprefix):
     return value
 
 
-def edit_dictionary(entries, value, focus=None, hover_help=True, 
+def edit_dictionary(entries, value, focus=None, hover_help=True,
                     validate=None, buttontext=None, title=None,
                     buttons = None):
     new_value = value.copy()

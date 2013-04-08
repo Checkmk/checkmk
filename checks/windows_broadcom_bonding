@@ -29,7 +29,7 @@
 # Caption            RedundancyStatus
 # BOND_10.3          2
 # BOND_HeartbeatMS   2
-# 
+#
 
 def inventory_windows_broadcom_bonding(info):
    inventory = []

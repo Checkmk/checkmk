@@ -29,7 +29,7 @@
 # Example for check parameters:
 # 1. Variant: Tuple (warn, crit). This is legaacy style
 # 2. Variant: dictionary:
-# 
+#
 #  param = {
 #     "levels" : .... --> compatible with check_levels(), optional
 #     "average" : 15 # -> compute average for 15 minutes, optional
@@ -57,12 +57,12 @@ def check_cpu_util(util, params, this_time = None):
         check_against = util
         counter = "util"
 
-    
+
     levels = params.get("levels")
     if type(levels) == tuple:
         warn, crit = levels # only for perfdata
     else:
-        warn, crit = None, None 
+        warn, crit = None, None
     state, extrainfo, extraperf = check_levels(check_against, counter, levels)
     if extrainfo:
         infotext += ", " + extrainfo

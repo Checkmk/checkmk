@@ -41,7 +41,7 @@ var None = null; // make us compatible with Python repr()
 
 function create_graph(cid, ft, ut, vmi, vma)
 {
-    // Keep important data as global variables, needed by 
+    // Keep important data as global variables, needed by
     // render_curve()
     canvas_id = cid;
     var canvas = document.getElementById(canvas_id);
@@ -54,7 +54,7 @@ function create_graph(cid, ft, ut, vmi, vma)
     height = canvas.height;
     netto_width = width - left_border - right_border;
     netto_height = height - top_border - bottom_border;
-    
+
     // Point background and coordinates
     // var c = canvas.getContext('2d');
     // c.fillStyle="#eeeeee";
@@ -127,7 +127,7 @@ function render_coordinates(v_scala, t_scala)
     for (t = from_time; t <= until_time ; t += 7200) {
         line(c, t, v_min, t, v_max);
     }
-    
+
     var i;
     c.fillStyle="#000000";
 
@@ -138,7 +138,7 @@ function render_coordinates(v_scala, t_scala)
         var p = point(0, val);
         var w = c.measureText(txt).width;
         c.fillText(txt, left_border - w - 16, p[1] + 6);
-        if (i%2) 
+        if (i%2)
             c.strokeStyle = lineb;
         else
             c.strokeStyle = linea;
@@ -152,12 +152,12 @@ function render_coordinates(v_scala, t_scala)
         var p = point(t, 0);
         var w = c.measureText(txt).width;
         c.fillText(txt, p[0] - (w/2), height - bottom_border + 28);
-        if (i%2) 
+        if (i%2)
             c.strokeStyle = lineb;
         else
             c.strokeStyle = linea;
     }
-    
+
     // Paint outlines and arrows
     c.strokeStyle = "#000000";
     line(c, from_time, 0, until_time, 0);
@@ -266,7 +266,7 @@ function render_dual_area(lower_points, upper_points, color, alpha)
         else
             var yl = height - bottom_border;
 
-        if (upper_points) 
+        if (upper_points)
             var yu = point(0, upper_points[i])[1];
         else
             var yu = top_border;

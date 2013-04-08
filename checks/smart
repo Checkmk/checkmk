@@ -63,7 +63,7 @@ def parse_smart(info):
     disk_name = None
 
     for line in info:
-        if len(line) >= 13: 
+        if len(line) >= 13:
             if line[0] != disk_name:
                 disk_name = line[0]
                 disk = {}
@@ -76,14 +76,14 @@ def parse_smart(info):
     return disks
 
 
-smart_stats_fields = [ 
-    'Reallocated_Sector_Ct',   
+smart_stats_fields = [
+    'Reallocated_Sector_Ct',
     'Spin_Retry_Count',
-    'Reallocated_Event_Count', 
+    'Reallocated_Event_Count',
     'Current_Pending_Sector',
-    'Command_Timeout',         
+    'Command_Timeout',
     'End-to-End_Error',
-    'Reported_Uncorrect',      
+    'Reported_Uncorrect',
     'UDMA_CRC_Error_Count', ]
 
 def inventory_smart_stats(info):

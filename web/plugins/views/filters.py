@@ -87,7 +87,7 @@ class FilterIPAddress(Filter):
         html.radiobutton("host_address_prefix", "yes", True, _("Prefix match"))
         html.radiobutton("host_address_prefix", "no", False, _("Exact match"))
         html.end_radio_group()
-    
+
     def double_height(self):
         return True
 

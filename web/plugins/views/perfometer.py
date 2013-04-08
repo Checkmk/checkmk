@@ -94,7 +94,7 @@ def number_human_readable(n, precision=1, unit="B"):
     base = 1024.0
     if unit == "Bit":
         base = 1000.0
-    
+
     n = float(n)
     f = "%." + str(precision) + "f"
     if abs(n) > base * base * base:

@@ -31,16 +31,16 @@ perfdata:
 [configuration]
 cisco_qos_default_values (dict): Dictionary with the values specified in parameters
 
-[parameters] 
-parameters (dict): This check requires a dictionary with the following keys. 
-                    
- {"post"} - A pair of two values to be used as WARN/CRIT levels 
+[parameters]
+parameters (dict): This check requires a dictionary with the following keys.
+
+ {"post"} - A pair of two values to be used as WARN/CRIT levels
             Integer numbers are interpreted as absolute levels
             Float numbers are interpreted as percentage of used qos policy bandwidth
- 
- {"drop"} - A pair of two values to be used as WARN/CRIT levels 
+
+ {"drop"} - A pair of two values to be used as WARN/CRIT levels
             Integer/Float numbers are interpreted as dropped bytes per second
- 
+
  {"average"} - if you set this key to a number, then it is interpreted as
  a time in minutes. The check will then compute the averaged used post and drop bytes
  over approximately that range of time. Note: The algorithm used here is
@@ -54,5 +54,5 @@ parameters (dict): This check requires a dictionary with the following keys.
  as bits or bytes, too. When this parameter is set to "bit" any traffic related plugin output
  is reported in bits instead of bytes(default).
 
- 
+
 

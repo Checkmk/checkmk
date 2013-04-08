@@ -6,7 +6,6 @@
     Checks & Agents:
     * FIX: blade_bx_load: remove invalid WATO group
 
-
     Notifications:
     * FIX: Removing GRAPH_CODE in html mails when not available
     * Using plugin argument 1 for path to pnp4nagios index php to render graphs
@@ -18,6 +17,9 @@
     WATO:
     * FIX: Fix several cases where WATO rule analyser did not hilite all matching rules
     * Added tcp port parameter to SSL certificate check (Thanks to Marcel Schulte)
+
+    Event Console:
+    * FIX: Syslog server is now able to parse RFC 5424 syslog messages
 
 1.2.2b7:
     Checks & Agents:

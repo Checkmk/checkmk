@@ -76,6 +76,11 @@ def parse_lnx_bonding(info):
                 if line[0].strip() == "Down Delay (ms)":
                     break
 
+            # Here could come an additional part:
+            # "802.3ad info". We detect the end of 
+            # this part by finding th efirst "Slave Interface"
+            eth = None
+
             # Parse interfaces
             interfaces = {}
             bonds[bond]["interfaces"] = interfaces
@@ -88,7 +93,7 @@ def parse_lnx_bonding(info):
                 elif line[0].strip() == "Slave Interface":
                     eth = line[1].strip()
                     interfaces[eth] = {}
-                elif line:
+                elif line and eth:
                     interfaces[eth][line[0].strip()] = ":".join(line[1:]).strip()
 
     except StopIteration:
@@ -106,11 +111,13 @@ def parse_lnx_bonding(info):
             }
         converted[bond] = {
             "status"      : status["main"]["MII Status"],
-            "primary"     : status["main"].get("Primary Slave").split()[0],
-            "active"      : status["main"].get("Currently Active Slave"),
             "mode"        : status["main"]["Bonding Mode"].split('(')[0].strip(),
             "interfaces"  : interfaces,
         }
+        if "Currently Active Slave" in status["main"]:
+            converted[bond]["active"] = status["main"]["Currently Active Slave"]
+        if "Primary Slave" in status["main"]:
+            converted[bond]["primary"] = status["main"]["Primary Slave"].split()[0]
     return converted
 
 

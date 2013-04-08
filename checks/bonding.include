@@ -59,8 +59,8 @@ def check_bonding(item, params, parsed):
     primary = status.get("primary", params.get("primary"))
     if primary:
         infos.append("primary: " + primary)
-    active = status["active"]
-    if active:
+    if "active" in status:
+        active = status["active"]
         infos.append("active: " + active)
 
         expect = params.get("expect_active", "ignore")

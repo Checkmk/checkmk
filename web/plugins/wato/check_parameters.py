@@ -1531,7 +1531,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_os,
     "cpu_utilization",
-    _("CPU utilization (percentual)"),
+    _("CPU utilization for Appliances"),
     Optional(
         Tuple(
               elements = [
@@ -1542,6 +1542,38 @@ register_check_parameters(
                  "for user processes and kernel routines over all available cores within "
                  "the last check interval. The possible range is from 0% to 100%"),
         default_value = (90.0, 95.0)),
+    None, None
+)
+
+register_check_parameters(
+    subgroup_os,
+    "cpu_utilization_os",
+    _("CPU utilization for Windows and ESX Hosts"),
+    Dictionary(
+        help = _("This rule configures levels for the CPU utilization (not load) for "
+                 "the operating systems Windows and VMWare ESX host systems. The utilization "
+                 "ranges from 0 to 100 - regardless of the number of CPUs."),
+        elements = [
+            ( "levels",
+                Levels(
+                    title = _("Levels"),
+                    unit = "%",
+                    default_levels = (85, 90),
+                    default_difference = (5, 8),
+                    default_value = None,
+                ),
+            ),
+            ( "average",
+              Integer(
+                  title = _("Averaging"),
+                  help = _("When this option is activated then the CPU utilization is being "
+                           "averaged <b>before</b> the levels are being applied."),
+                  unit = "min",
+                  default_value = 15,
+                  label = _("Compute average over last "),
+            )),
+        ]
+    ),
     None, None
 )
 

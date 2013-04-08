@@ -37,7 +37,7 @@ install_agent.exe: check_mk_agent.exe crash.exe nowin.exe
 	chmod +x install_agent.exe
 
 check_mk_agent.exe: check_mk_agent.cc Makefile
-	$(CXX) -s -O2 -Wall -Werror -o $@ $< -lwsock32
+	$(CXX) -s -O2 -Wall -Werror -o $@ $< -static -lwsock32
 
 crash.exe: crash.cc Makefile
 	$(CXX) -o $@ $<

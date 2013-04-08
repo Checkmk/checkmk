@@ -61,6 +61,8 @@
       snapshotted during inventory.
     * smart.temp: add WATO configuration
     * if64_tplink: special new check for TP Link switches with broken SNMP output
+    * windows_agent: check_mk.ini: new option "port" - specifies agent port
+    * winperf_processor: introduce averaging, support predictive levels
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid
@@ -93,6 +95,7 @@
 
     Checks & Agents:
     * FIX: blade_bx_load: remove invalid WATO group
+    * FIX: lnx_bonding: handle also 802.3ad type bonds
 
     Notifications:
     * FIX: Removing GRAPH_CODE in html mails when not available

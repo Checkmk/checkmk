@@ -143,36 +143,34 @@ def check_ipmi_summarized(info):
     count = 0
     ambient_count = 0
     ambient_sum = 0.0
-    try:
-        for name, val, unit, status, unrec_low, crit_low, \
-            warn_low, warn_high, crit_high, unrec_high in info:
-            # Skip datasets which have no valid data (zero value, no unit and state nc)
-            if val == '0.000' and unit == 'unspecified' and status == 'nc':
-                continue
 
-            if ipmi_ignore_entry(name, status):
-                continue
+    for name, val, unit, status, unrec_low, crit_low, \
+        warn_low, warn_high, crit_high, unrec_high in info:
+        # Skip datasets which have no valid data (zero value, no unit and state nc)
+        if val == '0.000' and unit == 'unspecified' and status == 'nc':
+            continue
 
-            text = "%s is %s" % (name, val)
-            if unit != 'unspecified':
-                text += ' %s' % unit
-            count += 1
-            if status == 'nc':
-                worst_status = max(worst_status, 1)
-                warn_texts.append(text)
-            elif status == 'nr' and ipmi_ignore_nr:
+        if ipmi_ignore_entry(name, status):
+            continue
+
+        text = "%s is %s" % (name, val)
+        if unit != 'unspecified':
+            text += ' %s' % unit
+        count += 1
+        if status == 'nc':
+            worst_status = max(worst_status, 1)
+            warn_texts.append(text)
+        elif status == 'nr' and ipmi_ignore_nr:
+            pass
+        elif status != 'ok':
+            worst_status = 2
+            crit_texts.append(text)
+        if "amb" in name or "Ambient" in name:
+            try:
+                ambient_count += 1
+                ambient_sum += float(val)
+            except:
                 pass
-            elif status != 'ok':
-                worst_status = 2
-                crit_texts.append(text)
-            if "amb" in name or "Ambient" in name:
-                try:
-                    ambient_count += 1
-                    ambient_sum += float(val)
-                except:
-                    pass
-    except:
-        return (3, "invalid or incomplete  output from agent")
 
 
     if ambient_count > 0:

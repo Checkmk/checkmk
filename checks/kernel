@@ -89,7 +89,7 @@ def inventory_cpu_utilization(info):
 # - irq: servicing interrupts
 # - softirq: servicing softirqs
 # - steal: involuntary wait
-def check_cpu_utilization(item, params, info):
+def kernel_check_cpu_utilization(item, params, info):
     global g_counters
     # Look for entry beginning with "cpu"
     f = [ l for l in info if l[0] == "cpu" ]
@@ -149,7 +149,7 @@ def check_cpu_utilization(item, params, info):
 
 
 check_info["kernel.util"] = {
-    'check_function':          check_cpu_utilization,
+    'check_function':          kernel_check_cpu_utilization,
     'inventory_function':      inventory_cpu_utilization,
     'service_description':     'CPU utilization',
     'has_perfdata':            True,

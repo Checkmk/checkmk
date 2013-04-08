@@ -1,0 +1,76 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Common file for all (modern) checks that check CPU utilization (not load!)
+
+# Example for check parameters:
+# 1. Variant: Tuple (warn, crit). This is legaacy style
+# 2. Variant: dictionary:
+# 
+#  param = {
+#     "levels" : .... --> compatible with check_levels(), optional
+#     "average" : 15 # -> compute average for 15 minutes, optional
+#   }
+
+def check_cpu_util(util, params, this_time = None):
+    # Convert legacy param style to new dict style
+    if this_time == None:
+        this_time = time.time()
+
+    if type(params) == tuple:
+        params = {
+            "levels" : params,
+        }
+
+    infotext = "%.1f%% used" % util
+
+    # Averaging
+    if "average" in params:
+        timedif, util_avg = get_average("cpu_utilization.avg", this_time, util, params["average"])
+        check_against = util_avg
+        counter = "avg"
+        infotext += ", %dmin average: %.1f%%" % (params["average"], util_avg)
+    else:
+        check_against = util
+        counter = "util"
+
+    
+    levels = params.get("levels")
+    if type(levels) == tuple:
+        warn, crit = levels # only for perfdata
+    else:
+        warn, crit = None, None 
+    state, extrainfo, extraperf = check_levels(check_against, counter, levels)
+    if extrainfo:
+        infotext += ", " + extrainfo
+
+    perfdata = [ ("util", util, warn, crit, 0, 100) ]
+    if "average" in params:
+        perfdata.append( ("avg", util_avg, warn, crit, 0, 100) )
+
+    perfdata += extraperf # reference curve for predictive levels
+    return state, infotext, perfdata
+

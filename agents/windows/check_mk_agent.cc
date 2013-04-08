@@ -158,6 +158,7 @@ bool do_tcp = false;
 bool should_terminate = false;
 bool force_tcp_output = false; // if true, send socket data immediately
 char g_hostname[256];
+int g_port = CHECK_MK_AGENT_PORT;
 
 // sections enabled (configurable in check_mk.ini)
 unsigned long enabled_sections = 0xffffffff;
@@ -2636,6 +2637,10 @@ if (!strcmp(var, "only_from")) {
         parse_only_from(value);
         return true;
     }
+    else if (!strcmp(var, "port")) {
+        g_port = atoi(value);
+        return true;
+    }
     else if (!strcmp(var, "execute")) {
         parse_execute(value);
         return true;
@@ -3013,14 +3018,14 @@ void listen_tcp_loop()
     SOCKADDR_IN addr;
     memset(&addr, 0, sizeof(SOCKADDR_IN));
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(CHECK_MK_AGENT_PORT);
+    addr.sin_port = htons(g_port);
     addr.sin_addr.s_addr = ADDR_ANY;
 
     int optval = 1;
     setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval));
 
     if (SOCKET_ERROR == bind(s, (SOCKADDR *)&addr, sizeof(SOCKADDR_IN))) {
-	fprintf(stderr, "Cannot bind socket to port %d\n", CHECK_MK_AGENT_PORT);
+	fprintf(stderr, "Cannot bind socket to port %d\n", g_port);
 	exit(1);
     }
 
@@ -3149,7 +3154,7 @@ void usage()
 	    "check_mk_agent remove  -- remove Windows NT service\n"
 	    "check_mk_agent adhoc   -- open TCP port %d and answer request until killed\n"
 	    "check_mk_agent test    -- test output of plugin, do not open TCP port\n"
-	    "check_mk_agent debug   -- similar to test, but with lots of debug output\n", CHECK_MK_AGENT_PORT);
+	    "check_mk_agent debug   -- similar to test, but with lots of debug output\n", g_port);
     exit(1);
 }
 
@@ -3174,7 +3179,7 @@ void do_test()
 void do_adhoc()
 {
     do_tcp = true;
-    printf("Listening for TCP connections on port %d\n", CHECK_MK_AGENT_PORT);
+    printf("Listening for TCP connections on port %d\n", g_port);
     printf("Close window or press Ctrl-C to exit\n");
     fflush(stdout);
 

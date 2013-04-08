@@ -1,3 +1,8 @@
+1.2.2p1:
+    WATO:
+    * Improved handling of valuespec validations in WATO rule editor. Displaying a
+      warning message when going to throw away the current settings.
+
 1.2.2:
     Core:
     * Added $HOSTURL$ and $SERVICEURL$ to notification macros which contain an

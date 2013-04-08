@@ -9,4 +9,4 @@ description:
  work with other models. It uses information provided by the SEMI-MIB.
 
 inventory:
- The check supports automatic inventory. Each system gets one summary checks.
+ The check supports automatic inventory. Each system gets one summary check.

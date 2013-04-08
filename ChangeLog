@@ -95,7 +95,7 @@
 
     Checks & Agents:
     * FIX: blade_bx_load: remove invalid WATO group
-
+    * FIX: lnx_bonding: handle also 802.3ad type bonds
 
     Notifications:
     * FIX: Removing GRAPH_CODE in html mails when not available
@@ -108,6 +108,9 @@
     WATO:
     * FIX: Fix several cases where WATO rule analyser did not hilite all matching rules
     * Added tcp port parameter to SSL certificate check (Thanks to Marcel Schulte)
+
+    Event Console:
+    * FIX: Syslog server is now able to parse RFC 5424 syslog messages
 
 1.2.2b7:
     Checks & Agents:

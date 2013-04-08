@@ -67,7 +67,7 @@ long_options  = [
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 except getopt.GetoptError, err:
-    print str(err)
+    sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
 opt_debug    = False
@@ -97,9 +97,11 @@ for o,a in opts:
 
 if len(args) == 1:
     host_address = args[0]
+elif not args:
+    sys.stderr.write("ERROR: No host given.\n")
+    sys.exit(1)
 else:
-    sys.stderr.write("ERROR: No HOST given.\n")
-    usage()
+    sys.stderr.write("ERROR: Please specify exactly one host.\n")
     sys.exit(1)
 
 def get_agent_info_tcp(hostname):

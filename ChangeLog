@@ -63,6 +63,7 @@
     * if64_tplink: special new check for TP Link switches with broken SNMP output
     * windows_agent: check_mk.ini: new option "port" - specifies agent port
     * winperf_processor: introduce averaging, support predictive levels
+    * cpu_util.include: fixed bug when params are set to None
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

@@ -40,7 +40,9 @@ def check_cpu_util(util, params, this_time = None):
     if this_time == None:
         this_time = time.time()
 
-    if type(params) == tuple:
+    if params == None:
+        params = {}
+    elif type(params) == tuple:
         params = {
             "levels" : params,
         }
@@ -63,6 +65,7 @@ def check_cpu_util(util, params, this_time = None):
         warn, crit = levels # only for perfdata
     else:
         warn, crit = None, None
+
     state, extrainfo, extraperf = check_levels(check_against, counter, levels)
     if extrainfo:
         infotext += ", " + extrainfo

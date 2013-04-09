@@ -66,14 +66,17 @@ def check_esx_vsphere_datastores(item, params, info):
 
     state, infotext, perfdata = df_check_filesystem_single(
         g_hostname, item, size_mb, avail_mb, params)
+    
+    #VMFS Stores has no field uncommitted
+    if store['type'] == 'NFS':
+        uncommitted_mb = store["uncommitted"] / 1024.0 / 1024.0
+        used_mb = size_mb - avail_mb
+        overprov_mb = used_mb + uncommitted_mb
+        overprov_percent = (overprov_mb / size_mb) * 100
 
-    uncommitted_mb = store["uncommitted"] / 1024.0 / 1024.0
-    used_mb = size_mb - avail_mb
-    overprov_mb = used_mb + uncommitted_mb
-    overprov_percent = (overprov_mb / size_mb) * 100
+        infotext += ", uncommitted: %.2f GB, provisioning: %.1f%%" % (
+                      uncommitted_mb / 1024, overprov_percent)
 
-    infotext += ", uncommitted: %.2f GB, provisioning: %.1f%%" % (
-                  uncommitted_mb / 1024, overprov_percent)
     if not store["accessible"]:
         state = 2
         infotext += "unaccessible(!!), " + infotext

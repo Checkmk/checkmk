@@ -584,6 +584,10 @@ table.validationerror img {
     width: 90px;
 }
 
+.wato form.rule_editor table.hosttags td.title {
+    min-width: 200px;
+}
+
 .wato form.rule_editor td.tag_sel {
     vertical-align: middle;
     display: table-cell;

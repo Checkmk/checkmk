@@ -4659,27 +4659,31 @@ def declare_host_tag_attributes():
             if attr.name().startswith("tag_"):
                 del host_attribute[attr.name()]
 
-        for entry in config.wato_host_tags:
-            # if the entry has o fourth component, then its
-            # the tag dependency defintion.
-            depends_on_tags = []
-            depends_on_roles = []
-            attr_editable = True
-            if len(entry) >= 6:
-                attr_editable = entry[5]
-            if len(entry) >= 5:
-                depends_on_roles = entry[4]
-            if len(entry) >= 4:
-                depends_on_tags = entry[3]
+        for topic, grouped_tags in group_hosttags_by_topic(config.wato_host_tags):
+            for entry in grouped_tags:
+                # if the entry has o fourth component, then its
+                # the tag dependency defintion.
+                depends_on_tags = []
+                depends_on_roles = []
+                attr_editable = True
+                if len(entry) >= 6:
+                    attr_editable = entry[5]
+                if len(entry) >= 5:
+                    depends_on_roles = entry[4]
+                if len(entry) >= 4:
+                    depends_on_tags = entry[3]
 
-            declare_host_attribute(
-                HostTagAttribute(entry[:3]),
-                    show_in_table = False,
-                    show_in_folder = True,
-                    editable = attr_editable,
-                    depends_on_tags = depends_on_tags,
-                    depends_on_roles = depends_on_roles,
-                    topic = _("Host tags"))
+                if topic is None:
+                    topic = _('Host tags')
+
+                declare_host_attribute(
+                    HostTagAttribute(entry[:3]),
+                        show_in_table = False,
+                        show_in_folder = True,
+                        editable = attr_editable,
+                        depends_on_tags = depends_on_tags,
+                        depends_on_roles = depends_on_roles,
+                        topic = topic)
 
         configured_host_tags = config.wato_host_tags
 
@@ -8708,6 +8712,28 @@ def mode_role_matrix(phase):
 #   | assigned to hosts and that is the basis of the rules.                |
 #   '----------------------------------------------------------------------'
 
+def parse_hosttag_title(title):
+    if '/' in title:
+        return title.split('/', 1)
+    else:
+        return None, title
+
+def hosttag_topics(hosttags):
+    names = set([])
+    for entry in hosttags:
+        topic, title = parse_hosttag_title(entry[1])
+        if topic:
+            names.add((topic, topic))
+    return list(names)
+
+def group_hosttags_by_topic(hosttags):
+    tags = {}
+    for entry in hosttags:
+        topic, title = parse_hosttag_title(entry[1])
+        tags.setdefault(topic, [])
+        tags[topic].append((entry[0], title) + entry[2:])
+    return sorted(tags.items(), key = lambda x: x[0])
+
 def mode_hosttags(phase):
     if phase == "title":
         return _("Host tag groups")
@@ -8827,7 +8853,8 @@ def mode_hosttags(phase):
 
         if hosttags:
             for nr, entry in enumerate(hosttags):
-                tag_id, title, choices = entry[:3] # forth: dependency information
+                tag_id, title, choices = entry[:3] # fourth: tag dependency information
+                topic, title = parse_hosttag_title(title)
                 table.row()
                 edit_url     = make_link([("mode", "edit_hosttag"), ("edit", tag_id)])
                 delete_url   = html.makeactionuri([("_delete", tag_id)])
@@ -8847,6 +8874,7 @@ def mode_hosttags(phase):
 
                 table.cell(_("ID"), tag_id)
                 table.cell(_("Title"), title)
+                table.cell(_("Topic"), topic or '')
                 table.cell(_("Type"), (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
                 table.cell(_("Choices"), str(len(choices)))
                 table.cell(_("Demonstration"))
@@ -8865,6 +8893,7 @@ def mode_hosttags(phase):
         if auxtags:
             table.row()
             for nr, (tag_id, title) in enumerate(auxtags):
+                topic, title = parse_hosttag_title(title)
                 edit_url     = make_link([("mode", "edit_auxtag"), ("edit", nr)])
                 delete_url   = html.makeactionuri([("_delaux", nr)])
                 table.cell(_("Actions"), css="buttons")
@@ -8872,6 +8901,7 @@ def mode_hosttags(phase):
                 html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
                 table.cell(_("ID"), tag_id)
                 table.cell(_("Title"), title)
+                table.cell(_("Topic"), topic or '')
         table.end()
 
 
@@ -8893,6 +8923,14 @@ def mode_edit_auxtag(phase):
 
     hosttags, auxtags = load_hosttags()
 
+    vs_topic = OptionalDropdownChoice(
+        title = _("Topic"),
+        choices = hosttag_topics(hosttags),
+        explicit = TextAscii(),
+        otherlabel = _("Create New Topic"),
+        default_value = None,
+    )
+
     if phase == "action":
         if html.transaction_valid():
             html.check_transaction() # use up transaction id
@@ -8908,6 +8946,10 @@ def mode_edit_auxtag(phase):
             if not title:
                 raise MKUserError("title", _("Please supply a title "
                 "for you auxiliary tag."))
+
+            topic = forms.get_input(vs_topic, "topic")
+            if topic != '':
+                title = '%s/%s' % (topic, title)
 
             # Make sure that this ID is not used elsewhere
             for entry in config.wato_host_tags:
@@ -8939,6 +8981,7 @@ def mode_edit_auxtag(phase):
         tag_id = ""
     else:
         tag_id, title = auxtags[tag_nr]
+        topic, title = parse_hosttag_title(title)
 
     html.begin_form("auxtag")
     forms.header(_("Auxiliary Tag"))
@@ -8958,6 +9001,12 @@ def mode_edit_auxtag(phase):
     forms.section(_("Title"))
     html.text_input("title", title, size = 30)
     html.help(_("An alias or description of this auxiliary tag"))
+
+    # The (optional) topic
+    forms.section(_("Topic"))
+    html.help(_("Different taggroups can be grouped in topics to make the visualization and "
+                "selections in the GUI more comfortable."))
+    forms.input(vs_topic, "topic", topic)
 
     # Button and end
     forms.end()
@@ -8989,13 +9038,22 @@ def mode_edit_hosttag(phase):
     hosttags, auxtags = load_hosttags()
     title = ""
     choices = []
+    topic = None
     if not new:
         for entry in hosttags:
             id, tit, ch = entry[:3]
             if id == tag_id:
-                title = tit
+                topic, title = parse_hosttag_title(tit)
                 choices = ch
                 break
+
+    vs_topic = OptionalDropdownChoice(
+        title = _("Topic"),
+        choices = hosttag_topics(hosttags),
+        explicit = TextAscii(),
+        otherlabel = _("Create New Topic"),
+        default_value = None,
+    )
 
     vs_choices = ListOf(
         Tuple(
@@ -9046,6 +9104,10 @@ def mode_edit_hosttag(phase):
             title = html.var_utf8("title").strip()
             if not title:
                 raise MKUserError("title", _("Please specify a title for your host tag group."))
+
+            topic = forms.get_input(vs_topic, "topic")
+            if topic != '':
+                title = '%s/%s' % (topic, title)
 
             new_choices = forms.get_input(vs_choices, "choices")
             have_none_tag = False
@@ -9167,6 +9229,12 @@ def mode_edit_hosttag(phase):
     html.help(_("An alias or description of this tag group"))
     html.text_input("title", title, size = 30)
 
+    # The (optional) topic
+    forms.section(_("Topic"))
+    html.help(_("Different taggroups can be grouped in topics to make the visualization and "
+                "selections in the GUI more comfortable."))
+    forms.input(vs_topic, "topic", topic)
+
     # Choices
     forms.section(_("Choices"))
     html.help(_("The first choice of a tag group will be its default value. "
@@ -9189,7 +9257,9 @@ def mode_edit_hosttag(phase):
     html.hidden_fields()
     html.end_form()
 
-
+# Current specification for hosttag entries: One tag definition is stored
+# as tuple of at least three elements. The elements are used as follows:
+# taggroup_id, group_title, list_of_choices, depends_on_tags, depends_on_roles, editable
 def load_hosttags():
     filename = multisite_dir + "hosttags.mk"
     if not os.path.exists(filename):
@@ -10740,31 +10810,41 @@ def render_condition_editor(tag_specs, varprefix=""):
         html.write('<div id="%stag_sel_%s" style="%s">' % (
             varprefix, id, not div_is_open and "display: none;" or ""))
 
-    # Show main tags
-    html.write("<table>")
-    if len(config.wato_host_tags):
-        for entry in config.wato_host_tags:
+
+    auxtags = dict(group_hosttags_by_topic(config.wato_aux_tags))
+    hosttags = group_hosttags_by_topic(config.wato_host_tags)
+    make_foldable = bool(hosttags)
+    for topic, grouped_tags in hosttags:
+        if make_foldable:
+            html.begin_foldable_container("topic", topic, True, "<b>%s</b>" % (topic or _('Host tags')))
+        html.write("<table class=\"hosttags\">")
+
+        # Show main tags
+        for entry in grouped_tags:
             id, title, choices = entry[:3]
-            html.write("<tr><td>%s: &nbsp;</td>" % title)
+            html.write("<tr><td class=title>%s: &nbsp;</td>" % title)
             default_tag, deflt = current_tag_setting(choices)
             tag_condition_dropdown("tag", deflt, id)
-            html.select(varprefix + "tagvalue_" + id,
-                [t[0:2] for t in choices if t[0] != None], deflt=default_tag)
+            if len(choices) == 1:
+                html.write(" " + _("set"))
+            else:
+                html.select(varprefix + "tagvalue_" + id,
+                    [t[0:2] for t in choices if t[0] != None], deflt=default_tag)
             html.write("</div>")
             html.write("</td></tr>")
 
-    # And auxiliary tags
-    if len(config.wato_aux_tags):
-        for id, title in config.wato_aux_tags:
-            html.write("<tr><td>%s: &nbsp;</td>" % title)
+        # And auxiliary tags
+        for id, title in sorted(auxtags.get(topic, []), key = lambda x: x[0]):
+            html.write("<tr><td class=title>%s: &nbsp;</td>" % title)
             default_tag, deflt = current_tag_setting([(id, title)])
             tag_condition_dropdown("auxtag", deflt, id)
             html.write(" " + _("set"))
             html.write("</div>")
             html.write("</td></tr>")
 
-
-    html.write("</table>")
+        html.write("</table>")
+        if make_foldable:
+            html.end_foldable_container()
 
 
 # Retrieve current tag condition settings from HTML variables
@@ -10776,7 +10856,11 @@ def get_tag_conditions(varprefix=""):
     for entry in config.wato_host_tags:
         id, title, tags = entry[:3]
         mode = html.var(varprefix + "tag_" + id)
-        tagvalue = html.var(varprefix + "tagvalue_" + id)
+        if len(tags) == 1:
+            tagvalue = tags[0][0]
+        else:
+            tagvalue = html.var(varprefix + "tagvalue_" + id)
+
         if mode == "is":
             tag_list.append(tagvalue)
         elif mode == "isnot":

@@ -22,6 +22,7 @@
       (automatically adds width/height url parameters)
     * LDAP authentification: New config option "Do not use persistent
                              connections to ldap server"
+    * Hosttags and auxiliary tags can now be grouped in topics
 
     Event Console:
     * New rule feature: automatically delete event after actions

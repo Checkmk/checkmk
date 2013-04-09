@@ -93,6 +93,10 @@
     * Configuration of an alternativ host check command
     * Inventory: Display link symbol for ps ruleset
 
+1.2.2p1:
+    Core:
+    * FIX: correctly quote ! and \ in active checks for Nagios
+    
 1.2.2:
     Core:
     * Added $HOSTURL$ and $SERVICEURL$ to notification macros which contain an

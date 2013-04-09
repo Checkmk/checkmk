@@ -1463,9 +1463,10 @@ def get_age_human_readable(secs):
     return "%d days" % days
 
 # Quote string for use as arguments on the shell (for usage
-# in command definitions as $ARG1$)
+# in command definitions as $ARG1$). Please note that also
+# quoting for ! and \ vor Nagios itself takes place here.
 def quote_shell_string(s):
-    return "'" + s.replace("'", "'\"'\"'") + "'"
+    return "'" + s.replace('\\', '\\\\').replace("'", "'\"'\"'").replace('!', '\\!') + "'"
 
 
 # Check if a timeperiod is currently active. We have no other way than

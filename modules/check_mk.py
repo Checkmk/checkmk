@@ -323,7 +323,7 @@ host_attributes                      = {} # needed by WATO, ignored by Check_MK
 ping_levels                          = [] # special parameters for host/PING check_command
 host_check_commands                  = [] # alternative host check instead of check_icmp
 check_periods                        = []
-
+snmp_check_interval                  = []
 
 
 # global variables used to cache temporary values (not needed in check_mk_base)
@@ -696,6 +696,13 @@ def check_period_of(hostname, service):
             return period
     else:
         return None
+
+def check_interval_of(hostname, checkname):
+    if not check_uses_snmp(checkname):
+        return # no values at all for non snmp checks
+    for match, minutes in host_extra_conf(hostname, snmp_check_interval):
+        if match is None or match == checkname:
+            return minutes * 60 # use first match
 
 def get_single_oid(hostname, ipaddress, oid):
     # New in Check_MK 1.1.11: oid can end with ".*". In that case
@@ -1524,7 +1531,6 @@ def in_extraconf_servicelist(list, item):
     # no match in list -> negative answer
     return False
 
-
 # NEW IMPLEMENTATION
 def create_nagios_config(outfile = sys.stdout, hostnames = None):
     global hostgroups_to_define
@@ -1774,14 +1780,26 @@ def create_nagios_servicedefs(outfile, hostname):
             if asn != "":
                 aggregated_services_conf.add(asn)
 
+        # Add the check interval of either the Check_MK service or
+        # (if configured) the snmp_check_interval for snmp based checks
+        check_interval = 60 # default hardcoded interval
+        # Customized interval of Check_MK service
+        values = service_extra_conf(hostname, "Check_MK", extra_service_conf.get('check_interval'))
+        if values:
+            check_interval = values[0] * 60
+        value = check_interval_of(hostname, checkname)
+        if value is not None:
+            check_interval = value
+
         outfile.write("""define service {
   use\t\t\t\t%s
   host_name\t\t\t%s
   service_description\t\t%s
+  check_interval\t\t%d
 %s%s  check_command\t\t\tcheck_mk-%s
 }
 
-""" % ( template, hostname, description, logwatch,
+""" % ( template, hostname, description, check_interval, logwatch,
         extra_service_conf_of(hostname, description), checkname ))
 
         checknames_to_define.add(checkname)
@@ -2742,6 +2760,7 @@ no_inventory_possible = None
     needed_check_types = set([])
     needed_sections = set([])
     service_timeperiods = {}
+    check_intervals = {}
     for check_type, item, param, descr, aggr in check_table:
         if check_type not in check_info:
             sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_type)
@@ -2749,12 +2768,17 @@ no_inventory_possible = None
         period = check_period_of(hostname, descr)
         if period:
             service_timeperiods[descr] = period
+        interval = check_interval_of(hostname, check_type)
+        if interval is not None:
+            check_intervals[check_type] = interval
 
         needed_sections.add(check_type.split(".")[0])
         needed_check_types.add(check_type)
         if check_uses_snmp(check_type):
             need_snmp_module = True
 
+    output.write("precompiled_check_intervals = %r\n" % check_intervals)
+    output.write("def check_interval_of(hostname, checktype):\n    return precompiled_check_intervals.get(checktype)\n\n")
     output.write("precompiled_service_timeperiods = %r\n" % service_timeperiods)
     output.write("def check_period_of(hostname, service):\n    return precompiled_service_timeperiods.get(service)\n\n")
 

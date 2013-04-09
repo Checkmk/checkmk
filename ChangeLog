@@ -4,6 +4,8 @@
       used by the vSphere and SAP plugins
     * New variable host_check_commands, that allows the definition of
       an alternative host check command (without manually defining one)
+    * New variable snmp_check_interval which can be used to customize
+      the check intervals of SNMP based checks
 
     Multisite:
     * New availability view for arbitrary host/service collections

@@ -70,7 +70,7 @@ def check_esx_vsphere_hostsystem_cpu(item, params, info):
     per_core = num_cores / 100.0
 
     infotext = "%.1f%%" % usage
-    
+
     state = 0
     if params:
         warn, crit = params
@@ -229,7 +229,7 @@ def esx_vsphere_multipath_convert(info):
     return paths
 
 def inventory_esx_vsphere_hostsystem_multipath(info):
-    data = esx_vsphere_multipath_convert(info).items() 
+    data = esx_vsphere_multipath_convert(info).items()
     return [ (x, y ) for x, y  in data]
 
 def check_esx_vsphere_hostsystem_multipath(item, params, info):

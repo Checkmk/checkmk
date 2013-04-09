@@ -669,7 +669,7 @@ def parse_info(lines, hostname):
     for line in lines:
         if line[:4] == '<<<<' and line[-4:] == '>>>>':
             host = line[4:-4]
-            if not host: 
+            if not host:
                 host = None
             else:
                 host = translate_piggyback_host(hostname, host)
@@ -987,7 +987,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
         if only_check_types != None and checkname not in only_check_types:
             continue
 
-        # Make service description globally available 
+        # Make service description globally available
         global g_service_description
         g_service_description = description
 

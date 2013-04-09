@@ -30,7 +30,7 @@
 #Bond_10.4  {714F579F-D17A-40DC-B684-083C561EE352}  2
 #
 ####
-#AdapterFunction  AdapterStatus  GroupComponent                                                                                               PartComponent                          
+#AdapterFunction  AdapterStatus  GroupComponent                                                                                               PartComponent
 #1                1              IANet_TeamOfAdapters.CreationClassName="IANet_TeamOfAdapters",Name="{714F579F-D17A-40DC-B684-083C561EE352}"  IANet_PhysicalEthernetAdapter.CreationClassName="IANet_PhysicalEthernetAdapter",DeviceID="{18EC3002-F03B-4B69-AD88-BFEB700460DC}",SystemCreationClassName="Win32_ComputerSystem",SystemName="Z3061021"
 #2                2              IANet_TeamOfAdapters.CreationClassName="IANet_TeamOfAdapters",Name="{714F579F-D17A-40DC-B684-083C561EE352}"  IANet_PhysicalEthernetAdapter.CreationClassName="IANet_PhysicalEthernetAdapter",DeviceID="{1EDEBE50-005F-4533-BAFC-E863617F1030}",SystemCreationClassName="Win32_ComputerSystem",SystemName="Z3061021"
 #
@@ -54,7 +54,7 @@ def parse_windows_intel_bonding(info):
     adapter_names = {}
 
     try:
-        # Get bond info 
+        # Get bond info
         lines.next() # Skip header
         while True:
             line = lines.next()
@@ -63,7 +63,7 @@ def parse_windows_intel_bonding(info):
             bond_caption = " ".join(line[:-2])
             bond_name, bond_mode = line[-2], line[-1]
             bonds[bond_name] = { "caption": bond_caption, "mode": bond_mode}
-            
+
         # Get adapter info
         lines.next() # Skip header
         while True:
@@ -83,7 +83,7 @@ def parse_windows_intel_bonding(info):
 
     except StopIteration:
         pass
-    
+
 
     # Now convert to generic dict, also used by other bonding checks
     converted = {}
@@ -93,8 +93,8 @@ def parse_windows_intel_bonding(info):
         bond_status = "down"
         converted[status["caption"]] = {}
         for adapter, adapter_info in adapters.items():
-            if bond == adapter_info["bond"]: 
-                real_adapter_name = get_real_adapter_name(status["caption"], adapter_names[adapter]) 
+            if bond == adapter_info["bond"]:
+                real_adapter_name = get_real_adapter_name(status["caption"], adapter_names[adapter])
                 if adapter_info["function"] == "1":
                     converted[status["caption"]]["primary"] = real_adapter_name
                 if adapter_info["status"] == "1":
@@ -106,7 +106,7 @@ def parse_windows_intel_bonding(info):
 
         converted[status["caption"]].update({
             "status"      : bond_status,
-            "mode"        : status["mode"], 
+            "mode"        : status["mode"],
             "interfaces"  : interfaces,
         })
 

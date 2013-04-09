@@ -376,7 +376,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
                 ref_speed = targetspeed / 8.0
             else:
                 ref_speed = None
-            
+
 
 	    if ifPhysAddress:
                 mac = ":".join(["%02s" % hex(ord(m))[2:] for m in ifPhysAddress]).replace(' ', '0')
@@ -393,8 +393,8 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
                 infotext += "assuming %s" % get_nic_speed_human_readable(targetspeed)
             else:
                 infotext += "speed unknown"
-            
-        
+
+
             bw_warn, bw_crit = bw_warn_param, bw_crit_param
             # If the measurement unit is set to bit and the bw levels
             # are of type int convert these 'bit' entries to byte
@@ -419,7 +419,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
                 if type(bw_crit_param) == float:
                     bw_crit = None
 
-            
+
             bw_warn_in, bw_crit_in, bw_warn_out, bw_crit_out = [bw_warn, bw_crit] * 2
             for speed_in in [ assumed_speed_in, assumed_speed_out ]:
                 if not speed_in:

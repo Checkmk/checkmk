@@ -118,7 +118,7 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
         rrdcached_socket = omd_root + "/tmp/run/rrdcached.sock"
     return rrd_export(rrd_file, ds, cf, fromtime, untiltime, rrdcached_socket)
 
-daynames = [ "monday", "tuesday", "wednesday", "thursday", 
+daynames = [ "monday", "tuesday", "wednesday", "thursday",
              "friday", "saturday", "sunday"]
 
 def group_by_wday(t):
@@ -174,22 +174,22 @@ def compute_prediction(pred_file, timegroup, params, period_info, from_time, dsn
     while begin >= absolute_begin:
         tg, fr, un, rel = get_prediction_timegroup(begin, period_info)
         if tg == timegroup:
-            step, data = get_rrd_data(g_hostname, g_service_description, 
+            step, data = get_rrd_data(g_hostname, g_service_description,
                                       dsname, cf, fr, un-1)
             if smallest_step == None:
                 smallest_step = step
             slices.append((fr, step / smallest_step, data))
-        begin -= period_info["slice"] 
+        begin -= period_info["slice"]
 
     # Now we have all the RRD data we need. The next step is to consolidate
-    # all that data into one new array. 
+    # all that data into one new array.
     num_points = len(slices[0][2])
     consolidated = []
     for i in xrange(num_points):
         # print "PUNKT %d --------------------------------------" % i
         point_line = []
         for from_time, scale, data in slices:
-            d = data[int(i / float(scale))] 
+            d = data[int(i / float(scale))]
             if d != None:
                 point_line.append(d)
             # else:
@@ -237,7 +237,7 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
        get_prediction_timegroup(now, period_info)
 
     # Compute directory for prediction data
-    dir = "%s/prediction/%s/%s/%s" % (var_dir, g_hostname, 
+    dir = "%s/prediction/%s/%s/%s" % (var_dir, g_hostname,
              pnp_cleanup(g_service_description), pnp_cleanup(dsname))
     if not os.path.exists(dir):
         os.makedirs(dir)
@@ -253,7 +253,7 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
     try:
         last_info = eval(file(info_file).read())
         for k, v in params.items():
-            if last_info[k] != v:
+            if last_info.get(k) != v:
                 if opt_debug:
                     sys.stderr.write("Prediction parameters have changed.\n")
                 last_info = None
@@ -291,7 +291,7 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
         if opt_debug:
             sys.stderr.write("Computing prediction for time group %s.\n" % timegroup)
         prediction = compute_prediction(pred_file, timegroup, params, period_info, from_time, dsname, cf)
-        info = { 
+        info = {
             "time"         : now,
             "range"        : (from_time, until_time),
             "cf"           : cf,
@@ -321,7 +321,7 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
                 if how == "absolute":
                     levels.append((ref_value + (sig * warn * levels_factor), ref_value + (sig * crit * levels_factor)))
                 elif how == "relative":
-                    levels.append((ref_value + sig * (ref_value * warn / 100), 
+                    levels.append((ref_value + sig * (ref_value * warn / 100),
                                    ref_value + sig * (ref_value * crit / 100)))
                 else: #  how == "stdev":
                     levels.append((ref_value + sig * (stdev * warn),

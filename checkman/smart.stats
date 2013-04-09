@@ -13,7 +13,7 @@ description:
 
  During inventory the current value of all counters is being
  snapshotted into the check's parameters. If later one of the value increases
- the check gets critical. If will become green again if the check is 
+ the check gets critical. If will become green again if the check is
  being reinventorized.
 
 perfdata:
@@ -21,10 +21,10 @@ perfdata:
 
 inventory:
  If there is at least one supported value available for a HDD one service is
- inventorized. 
+ inventorized.
 
 [parameters]
 params(dict from string to int): A python dictionary which contains
- the current values of all counters during the inventory. This paramer is 
+ the current values of all counters during the inventory. This paramer is
  usually not set manually.
 

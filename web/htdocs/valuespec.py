@@ -1960,7 +1960,7 @@ class Dictionary(ValueSpec):
                     html.write("<br>")
 
             html.write('<div class="dictelement%s" id="%s" style="display: %s">' % (
-                ((self._indent and self._columns == 1) and " indent" or ""), 
+                ((self._indent and self._columns == 1) and " indent" or ""),
                 div_id, not visible and "none" or (oneline and "inline-block" or "")))
             if self._columns == 1:
                 html.help(vs.help())

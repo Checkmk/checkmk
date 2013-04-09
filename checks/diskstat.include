@@ -120,7 +120,7 @@ def check_diskstat_line(this_time, item, params, line):
             bytes_per_sec = avg
 
         # check levels
-        state, text, extraperf = check_levels(bytes_per_sec, dsname, levels, 
+        state, text, extraperf = check_levels(bytes_per_sec, dsname, levels,
                                               unit = "MB/s", factor = 1.0 / 1048576, statemarkers=True)
         if text:
             infos.append(text)

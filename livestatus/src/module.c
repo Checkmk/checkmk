@@ -505,7 +505,7 @@ int broker_event(int event_type __attribute__ ((__unused__)), void *data)
     g_counters[COUNTER_NEB_CALLBACKS]++;
     struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
     if (ts->event_type == EVENT_LOG_ROTATION)
-    { 
+    {
         if (g_thread_running == 1 )
             livestatus_log_initial_states();
         else if (log_initial_states == 1) // initi

@@ -42,8 +42,8 @@ def check_f5_bigip_interfaces(item, params, info):
                 }
                 return(2, "State of %s is %s" % (states[ifstate], port))
         this_time = int(time.time())
-        in_timedif,  in_per_sec  = get_counter("f5.interface.in.%s" % item,  this_time, int(inbytes))
-        out_timedif,  out_per_sec  = get_counter("f5_interface.out.%s" % item,  this_time, int(outbytes))
+        in_timedif,  in_per_sec  = get_counter("f5.interface.in.%s" % item,  this_time, saveint(inbytes))
+        out_timedif,  out_per_sec  = get_counter("f5_interface.out.%s" % item,  this_time, saveint(outbytes))
 
 
         inbytes_h = get_bytes_human_readable(in_per_sec)

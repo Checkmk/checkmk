@@ -69,7 +69,7 @@ def check_esx_vsphere_datastores(item, params, info):
     
     #VMFS Stores has no field uncommitted
     if store['type'] == 'NFS':
-        uncommitted_mb = store["uncommitted"] / 1024.0 / 1024.0
+        uncommitted_mb = store.get("uncommitted", 0.0) / 1024.0 / 1024.0
         used_mb = size_mb - avail_mb
         overprov_mb = used_mb + uncommitted_mb
         overprov_percent = (overprov_mb / size_mb) * 100

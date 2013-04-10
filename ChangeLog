@@ -68,6 +68,7 @@
     * winperf_processor: introduce averaging, support predictive levels
     * cpu_util.include: fixed bug when params are set to None
     * predictive levels: fixed bug when existing predictive levels get new options
+    * windows_plugin mssql.vbs: No longer queries stopped mssql instances
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

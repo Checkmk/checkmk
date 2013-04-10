@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Beware: this is a draft and not yet tested. Use this as datasource_program
+# for a host that is an DELL iDrac remote management interface.
+
+HOST=$1
+USERNAME=$2
+PASSWORD=$3
+
+echo '<<<check_mk>>>'
+Version: ipmi 1.0 
+AgentOS: iDrac
+
+echo '<<<ipmi>>>'
+ipmitool -i lan -H "$HOST" -U "$USERNAME" -f "$PASSWORD" sensor show 2>/dev/null \
+   | grep -v 'command failed' \
+   | sed -e 's/ *| */|/g' -e 's/ /_/g' -e 's/_*"'$'"//' -e 's/|/ /g' \
+   | egrep -v '^[^ ]+ na ' \
+   | grep -v ' discrete '"

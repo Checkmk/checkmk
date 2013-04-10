@@ -96,7 +96,7 @@ def check_sym_brightmail_queues(item, params, info):
 
 
 
-    return (3, "UNKW - Queue not found in agent output")
+    return (3, "Queue not found in agent output")
 
 
 check_info["sym_brightmail_queues"] = {

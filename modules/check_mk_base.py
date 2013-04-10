@@ -135,6 +135,9 @@ class MKSNMPError(Exception):
     def __str__(self):
         return self.reason
 
+class MKSkipCheck(Exception):
+    pass
+
 #   +----------------------------------------------------------------------+
 #   |         _                                    _   _                   |
 #   |        / \   __ _  __ _ _ __ ___  __ _  __ _| |_(_) ___  _ __        |
@@ -278,6 +281,8 @@ def get_host_info(hostname, ipaddress, checkname):
                     new_info = [ [node] + line for line in new_info ]
                 info += new_info
                 at_least_one_without_exception = True
+            except MKSkipCheck:
+                at_least_one_without_exception = True
             except MKAgentError, e:
 		if str(e) != "": # only first error contains text
                     exception_texts.append(str(e))
@@ -328,6 +333,13 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age):
     # snmp info for "foo", not for "foo.bar".
     oid_info = snmp_info.get(check_type.split(".")[0])
     if oid_info:
+        cache_path = tcp_cache_dir + "/" + cache_relpath
+        check_interval = check_interval_of(hostname, check_type)
+        if check_interval is not None and os.path.exists(cache_path) \
+           and cachefile_age(cache_path) < check_interval:
+            # cache file is newer than check_interval, skip this check
+            raise MKSkipCheck()
+
         content = read_cache_file(cache_relpath, max_cache_age)
         if content:
             return eval(content)
@@ -1012,6 +1024,8 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
         infotype = checkname.split('.')[0]
         try:
 	    info = get_host_info(hostname, ipaddress, infotype)
+        except MKSkipCheck, e:
+            continue
         except MKSNMPError, e:
 	    if str(e):
 	        problems.append(str(e))

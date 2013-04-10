@@ -37,8 +37,6 @@
 
 group = _("Configuration of Checks")
 
-# ignored_checktypes --> Hier brauchen wir noch einen neuen Value-Typ
-
 group = _("Multisite & WATO")
 
 register_configvar(group,
@@ -1207,6 +1205,34 @@ register_rule(group,
                  "it changes the default check_command for a host check. You need to "
                  "define that command manually in your monitoring configuration."),
     ),
+)
+
+def get_snmp_checktypes():
+   checks = check_mk_local_automation("get-check-information")
+   types = [ (cn, (c['title'] != cn and '%s: ' % cn or '') + c['title'])
+             for (cn, c) in checks.items() if c['snmp'] ]
+   types.sort()
+   return types
+
+register_rule(group,
+    "snmp_check_interval",
+    Tuple(
+        title = _('Check intervals for SNMP checks'),
+        help = _('This rule can be used to customize the check interval of each SNMP based check. '
+                 'With this option it is possible to configure a longer check interval for specific '
+                 'checks, than then normal check interval.'),
+        elements = [
+            DropdownChoice(
+                title = _("Checktype"),
+                choices = [ (None, _('All SNMP Checks')) ] + get_snmp_checktypes(),
+            ),
+            Integer(
+                title = _("Do check every"),
+                unit = _("minutes"),
+                min_value = 1,
+            ),
+        ]
+    )
 )
 
 group = "monconf/" + _("Notifications")

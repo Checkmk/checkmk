@@ -21,7 +21,7 @@
 
 Option Explicit
 
-Dim WMI, prop, instId, instVersion, instIds, instName, output
+Dim WMI, prop, instId, instVersion, instIds, instName, output, WMIservice, colRunningServices, objService
 
 WScript.Timeout = 10
 
@@ -64,9 +64,13 @@ If Err.Number <> 0 Then
 End If
 On Error Goto 0
 
+Set WMIservice = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
+
 For Each prop In WMI.ExecQuery("SELECT * FROM SqlServiceAdvancedProperty WHERE " & _
                                "SQLServiceType = 1 AND PropertyName = 'VERSION'")
     
+
+    Set colRunningServices = WMIservice.ExecQuery("SELECT State FROM Win32_Service WHERE Name = '" & prop.ServiceName & "'")
     instId      = Replace(prop.ServiceName, "$", "_")
     instVersion = prop.PropertyStrValue
     
@@ -75,7 +79,11 @@ For Each prop In WMI.ExecQuery("SELECT * FROM SqlServiceAdvancedProperty WHERE "
     
     ' Now query the server instance for the databases
     ' Use name as key and always empty value for the moment
-    instIds.add instId, ""
+    For Each objService In colRunningServices
+        If objService.State = "Running" Then
+            instIds.add instId, ""
+        End If
+    Next
 Next
 
 Set WMI = nothing

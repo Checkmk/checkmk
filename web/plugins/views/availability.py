@@ -529,9 +529,9 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
                     s = "flapping"
                 else:
                     if what in [ "service", "bi" ]:
-                        s = { 0: "ok", 1:"warn", 2:"crit", 3:"unknown" }[state]
+                        s = { 0: "ok", 1:"warn", 2:"crit", 3:"unknown", -1: "unmonitored", -2: "unmonitored" }[state]
                     else:
-                        s = { 0: "up", 1:"down", 2:"unreach"}[state]
+                        s = { 0: "up", 1:"down", 2:"unreach", -1: "unmonitored", -2: "unmonitored" }[state]
                     if s == "warn":
                         s = avoptions["state_grouping"]["warn"]
                     elif s == "unknown":

@@ -99,6 +99,11 @@
 1.2.2p1:
     Core:
     * FIX: correctly quote ! and \ in active checks for Nagios
+
+    Checks & Agents:
+    * FIX: vsphere_agent: fix problems whith ! and \ in username or password
+    * FIX: check_mk_agent.aix: fix shebang: was python, must be ksh
+
     
 1.2.2:
     Core:

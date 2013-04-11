@@ -6,7 +6,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -25,7 +25,6 @@
 
 $opt[1] = "--vertical-label \"Watt\"  -l 0 -u 60 --title \"Current Power\" ";
 
-
 $def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ";
 $def[1] .= "AREA:var1#800040:\"Power\:\" ";
 $def[1] .= "GPRINT:var1:LAST:\"%2.0lfW\" ";
@@ -33,7 +32,5 @@ $def[1] .= "LINE1:var1#800040:\"\" ";
 $def[1] .= "GPRINT:var1:MAX:\"(Max\: %2.0lfW,\" ";
 $def[1] .= "GPRINT:var1:AVERAGE:\"Avg\: %2.0lfW)\" ";
 $def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical\: $CRIT[1]W\" ";
-
-
 
 ?>

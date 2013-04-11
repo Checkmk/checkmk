@@ -10814,7 +10814,7 @@ def render_condition_editor(tag_specs, varprefix=""):
 
     auxtags = dict(group_hosttags_by_topic(config.wato_aux_tags))
     hosttags = group_hosttags_by_topic(config.wato_host_tags)
-    make_foldable = bool(hosttags)
+    make_foldable = len(hosttags) > 1
     for topic, grouped_tags in hosttags:
         if make_foldable:
             html.begin_foldable_container("topic", topic, True, "<b>%s</b>" % (topic or _('Host tags')))

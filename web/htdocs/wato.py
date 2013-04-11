@@ -9702,7 +9702,7 @@ def mode_ineffective_rules(phase):
                 table.row()
 
                 # Actions
-                table.cell("Actions", css="ruleset")
+                table.cell("Actions", css="buttons")
                 edit_url = make_link([
                     ("mode", "edit_rule"),
                     ("varname", varname),

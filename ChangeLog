@@ -4,6 +4,7 @@
 
     Checks & Agents:
     * FIX: vsphere_agent: fix problems whith ! and \ in username or password
+    * FIX: check_mk_agent.aix: fix shebang: was python, must be ksh
 
     
     WATO:

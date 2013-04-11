@@ -48,7 +48,7 @@ headrify ()
   if [ "${headline:0:9}" = "#!/bin/sh" ] ; then
       comment="# "
       bangpath="#!/bin/sh"
-  if [ "${headline:0:9}" = "#!/usr/bin/ksh93" ] ; then
+  elif [ "${headline:0:16}" = "#!/usr/bin/ksh93" ] ; then
       comment="# "
       bangpath="#!/usr/bin/ksh93"
   elif [ "${headline:0:11}" = "#!/bin/bash" ] ; then

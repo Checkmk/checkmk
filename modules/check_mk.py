@@ -1784,7 +1784,7 @@ def create_nagios_servicedefs(outfile, hostname):
         # (if configured) the snmp_check_interval for snmp based checks
         check_interval = 60 # default hardcoded interval
         # Customized interval of Check_MK service
-        values = service_extra_conf(hostname, "Check_MK", extra_service_conf.get('check_interval'))
+        values = service_extra_conf(hostname, "Check_MK", extra_service_conf.get('check_interval', []))
         if values:
             check_interval = values[0] * 60
         value = check_interval_of(hostname, checkname)

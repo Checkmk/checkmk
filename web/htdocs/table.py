@@ -90,6 +90,8 @@ def end():
     global table
     finish_previous()
     html.unplug()
+    if not table:
+        return
 
     if not table["rows"] and table["omit_if_empty"]:
         table = None

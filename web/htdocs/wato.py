@@ -10067,7 +10067,6 @@ def mode_edit_ruleset(phase):
                     table.end()
                 first_in_group = True
                 alias_path = get_folder_aliaspath(folder, show_main = False)
-                table.end()
                 table.begin(title = "%s %s" % (_("Rules in folder"), alias_path), css="ruleset")
                 rel_rulenr = 0
                 last_folder = folder

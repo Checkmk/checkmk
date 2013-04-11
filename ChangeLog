@@ -6,6 +6,10 @@
     * FIX: vsphere_agent: fix problems whith ! and \ in username or password
 
     
+    WATO:
+    * Improved handling of valuespec validations in WATO rule editor. Displaying a
+      warning message when going to throw away the current settings.
+
 1.2.2:
     Core:
     * Added $HOSTURL$ and $SERVICEURL$ to notification macros which contain an

@@ -1,4 +1,7 @@
 1.2.2p1:
+    Core:
+    * FIX: correctly quote ! and \ in active checks for Nagios
+    
     WATO:
     * Improved handling of valuespec validations in WATO rule editor. Displaying a
       warning message when going to throw away the current settings.

@@ -77,7 +77,7 @@ def parse_lnx_bonding(info):
                     break
 
             # Here could come an additional part:
-            # "802.3ad info". We detect the end of 
+            # "802.3ad info". We detect the end of
             # this part by finding th efirst "Slave Interface"
             eth = None
 

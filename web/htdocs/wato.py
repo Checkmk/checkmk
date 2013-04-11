@@ -10203,8 +10203,7 @@ def mode_edit_ruleset(phase):
                 html.write("&nbsp;")
             html.write(htmllib.attrencode(rule_options.get("comment", "")))
 
-            table.end()
-
+        table.end()
 
     create_new_rule_form(rulespec, hostname, item)
 

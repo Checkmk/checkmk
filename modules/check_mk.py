@@ -1512,8 +1512,6 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
         outfile.write("\n# extra_nagios_conf\n\n")
         outfile.write(extra_nagios_conf)
 
-
-
 def create_nagios_config_host(outfile, hostname):
     outfile.write("\n# ----------------------------------------------------\n")
     outfile.write("# %s\n" % hostname)
@@ -1852,7 +1850,8 @@ define service {
         for acttype, act_info, params in actchecks:
             has_perfdata = act_info.get('has_perfdata', False)
             description = act_info["service_description"](params)
-            args = act_info["argument_function"](params)
+            # compute argument, and quote ! and \ for Nagios
+            args = act_info["argument_function"](params).replace("\\", "\\\\").replace("!", "\\!")
 
             if description in used_descriptions:
                 cn, it = used_descriptions[description]
@@ -1912,7 +1911,7 @@ define service {
                 freshness = "  check_freshness\t\t1\n" + \
                             "  freshness_threshold\t\t%d\n" % (60 * entry["freshness"]["interval"])
                 command_line = "echo %s && exit %d" % (
-                       quote_shell_string(entry["freshness"]["output"]), entry["freshness"]["state"])
+                       quote_nagios_string(entry["freshness"]["output"]), entry["freshness"]["state"])
             else:
                 freshness = ""
 
@@ -2128,6 +2127,12 @@ def create_nagios_config_contacts(outfile):
             outfile.write("  contactgroups\t\t\t%s\n" % ", ".join(cgrs))
             outfile.write("}\n\n")
 
+
+# Quote string for use in a nagios command execution.
+# Please note that also quoting for ! and \ vor Nagios
+# itself takes place here.
+def quote_nagios_string(s):
+    return "'" + s.replace('\\', '\\\\').replace("'", "'\"'\"'").replace('!', '\\!') + "'"
 
 
 

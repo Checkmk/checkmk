@@ -1669,10 +1669,6 @@ def create_nagios_hostdefs(outfile, hostname):
         if not extra_conf_parents:
             outfile.write("  parents\t\t\t%s\n" % ",".join(nodes))
 
-        # Host check uses (service-) IP address if available
-        if ip:
-            outfile.write("  check_command\t\t\tcheck-mk-ping\n")
-
     # Output alias, but only if it's not define in extra_host_conf
     aliases = host_extra_conf(hostname, extra_host_conf.get("alias", []))
     if len(aliases) == 0:

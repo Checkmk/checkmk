@@ -9702,7 +9702,7 @@ def mode_ineffective_rules(phase):
                 table.row()
 
                 # Actions
-                table.cell("Actions", css="ruleset")
+                table.cell("Actions", css="buttons")
                 edit_url = make_link([
                     ("mode", "edit_rule"),
                     ("varname", varname),
@@ -10063,6 +10063,8 @@ def mode_edit_ruleset(phase):
         for rulenr in range(0, len(ruleset)):
             folder, rule = ruleset[rulenr]
             if folder != last_folder:
+                if last_folder != None:
+                    table.end()
                 first_in_group = True
                 alias_path = get_folder_aliaspath(folder, show_main = False)
                 table.begin(title = "%s %s" % (_("Rules in folder"), alias_path), css="ruleset")
@@ -10200,9 +10202,8 @@ def mode_edit_ruleset(phase):
                 html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
                 html.write("&nbsp;")
             html.write(htmllib.attrencode(rule_options.get("comment", "")))
-
-            table.end()
-
+        
+        table.end()
 
     create_new_rule_form(rulespec, hostname, item)
 

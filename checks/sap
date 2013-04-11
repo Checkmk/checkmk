@@ -91,12 +91,19 @@ def inventory_sap_value(info):
             continue
 
         v = rule[0]
-        patterns.append(v['match'])
+        patterns.append((v['match'], v.get('limit_item_levels')))
 
     for line in info:
-        for pattern in patterns:
+        for pattern, limit_item_levels in patterns:
+            print pattern, limit_item_levels
             if sap_value_path_matches(line[3], pattern):
-                inv.append((line[0] + ' ' + line[3], {}))
+                params = {}
+                if limit_item_levels:
+                    path = '/'.join(line[3].split('/')[-limit_item_levels:])
+                    params['limit_item_levels'] = limit_item_levels
+                else:
+                    path = line[3]
+                inv.append((line[0] + ' ' + path, params))
 
     return inv
 
@@ -122,7 +129,12 @@ def check_sap_value(item, params, info):
     status = None
     perfdata = []
     for line in info:
-        if line[0] + ' ' + line[3] == item:
+        if params.get('limit_item_levels'):
+            this_path = '/'.join(line[3].split('/')[-params.get('limit_item_levels'):])
+        else:
+            this_path = line[3]
+
+        if line[0] + ' ' + this_path == item:
             status  = sap_nagios_state_map[int(line[1])]
             if line[4] != '-':
                 # This is a performance value, has no output

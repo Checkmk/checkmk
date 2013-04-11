@@ -418,8 +418,16 @@ register_rule(group + '/' + subgroup_inventory,
                 match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0),
                 default_value = 'SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime',
             )),
+            ('limit_item_levels', Integer(
+                title = _("Limit Levels for Service Names"),
+                unit = _('levels'),
+                minvalue = 1,
+                help = _("The service descriptions of the inventorized services are named like the paths "
+                         "in SAP. You can use this option to let the inventory function only use the last "
+                         "x path levels for naming."),
+            )),
         ],
-        optional_keys = [],
+        optional_keys = ['limit_item_levels'],
     ),
     match = 'list',
 )

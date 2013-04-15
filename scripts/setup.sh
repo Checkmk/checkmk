@@ -375,6 +375,14 @@ Those templates make the history graphs look nice. PNP4Nagios
 expects such templates in the directory pnp/templates in your
 document root for static web pages"
 
+ask_dir rrd_path /var/lib/nagios/rrd $HOMEBASEDIR/var/nagios/rrd $OMD_ROOT/var/pnp4nagios/perfdata "RRD files" \
+    "Configure the directory PNP4Nagios stores the RRD database files in"
+
+ask_dir rrdcached_socket /tmp/rrdcached.sock $HOMEBASEDIR/var/rrdcached.sock $OMD_ROOT/tmp/run/rrdached.sock "rrdcached socket" \
+    "If you use the rrdcached to process performance data from Nagios, 
+you can configure the socket of the rrdcached here to make the prediction
+feature use it"
+
 # -------------------------------------------------------------------
 ask_title "Check_MK Livestatus Module"
 # -------------------------------------------------------------------
@@ -483,6 +491,8 @@ tcp_cache_dir		    = '$vardir/cache'
 tmp_dir		            = '$vardir/tmp'
 logwatch_dir                = '$vardir/logwatch'
 nagios_objects_file         = '$nagconfdir/check_mk_objects.cfg'
+rrd_path                    = '$rrd_path'
+rrddcached_socket           = '$rrdcached_socket'
 nagios_command_pipe_path    = '$nagpipe'
 check_result_path           = '$check_result_path'
 nagios_status_file          = '$nagios_status_file'

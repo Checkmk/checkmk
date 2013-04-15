@@ -8,19 +8,24 @@ description:
  It also shows you the number of sockets, cores and threads.
 
 perfdata:
-  One value: the current usage in terms of cores. The maximum value sent
-  is the number of core. If you have 12 cores installed and the usage is 50%,
-  then a value of 6 will be sent. That way the performance graph is able
-  to show the number of cores correctly. The warn/crit levels are also
-  converted in relation to the number of cores.
+  One or two values: the first value is current usage in percent - ranging from
+  0 to 100. The "maximum" value is not 100, but the number of CPU threads. This
+  case be used for scaling the graph in terms of the number of used CPU threads.
+
+  If averaging is enabled then a second value is sent: the averaged CPU utilization
+  ranging from 0 to 100.
 
 inventory:
   One check per ESX Host System will be created.
 
 [parameters]
-warning (float): A percentage for the warning level ranging from 0 to 100
-critical (float): A percentage for the critical level ranging from 0 to 100
+parameters(dict): A dictionary with the following keys: 
+
+  {"levels"}: Either {None} for no levels, a tuple of warn and crit (in percent) or
+  a dictionary with predictive levels settings.
+
+  {"average"}: A number of minutes for enabling averaging.
 
 [configuration]
-esx_host_cpu_default_levels(float, float): Default levels, preset to {None}, which means that no levels
+esx_host_cpu_default_levels(dict): Default levels, preset to an empty dictionary, which means that no levels
   will be applied.

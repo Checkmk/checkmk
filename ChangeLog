@@ -6,6 +6,7 @@
       an alternative host check command (without manually defining one)
     * New variable snmp_check_interval which can be used to customize
       the check intervals of SNMP based checks
+    * setup: Added missing vars rrd_path and rrdcached_sock
 
     Multisite:
     * New availability view for arbitrary host/service collections

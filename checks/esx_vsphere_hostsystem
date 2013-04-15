@@ -41,7 +41,7 @@ def esx_vsphere_hostsystem_convert(info):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-esx_host_cpu_default_levels = None
+esx_host_cpu_default_levels = {}
 
 # hardware.cpuInfo.numCpuCores 12
 # hardware.cpuInfo.numCpuPackages 2
@@ -55,12 +55,12 @@ def inventory_esx_vsphere_hostsystem_cpu(info):
     if 'summary.quickStats.overallCpuUsage' in data \
         and 'hardware.cpuInfo.hz' in data\
         and 'hardware.cpuInfo.numCpuCores' in data:
-        return [(None, 'esx_host_cpu_default_levels')]
+        return [(None, {})]
 
 def check_esx_vsphere_hostsystem_cpu(item, params, info):
     data = esx_vsphere_hostsystem_convert(info)
-    num_cores = int(data['hardware.cpuInfo.numCpuCores'][0])
     num_sockets = int(data['hardware.cpuInfo.numCpuPackages'][0])
+    num_cores = int(data['hardware.cpuInfo.numCpuCores'][0])
     num_threads = int(data['hardware.cpuInfo.numCpuThreads'][0])
     used_mhz = float(data['summary.quickStats.overallCpuUsage'][0])
     mhz_per_core = float(data['hardware.cpuInfo.hz'][0]) / 1024.0 / 1024.0
@@ -71,35 +71,30 @@ def check_esx_vsphere_hostsystem_cpu(item, params, info):
 
     infotext = "%.1f%%" % usage
 
-    state = 0
-    if params:
-        warn, crit = params
-        if usage >= crit:
-            state = 2
-            infotext += " (levels at %d%%/%d%%)" % (warn, crit)
-        elif usage >= warn:
-            state = 1
-            infotext += " (levels at %d%%/%d%%)" % (warn, crit)
-        warn_perf = warn * per_core
-        crit_perf = crit * per_core
-    else:
-        warn_perf, crit_perf = None, None
+    # Convert legacy parameters
+    this_time = time.time()
+    state, infotext, perfdata = check_cpu_util(usage, params)
 
     infotext += ", %.2fGHz/%.2fGHz" % (used_mhz / 1024.0, total_mhz / 1024.0)
-
     infotext += ", %d sockets, %d cores/socket, %d threads" % (
             num_sockets, num_cores / num_sockets, num_threads)
 
-    perf = [("usage", usage * per_core, warn_perf, crit_perf, 0, 100 * per_core)]
-    return (state, infotext, perf)
+    # put number of threads as MAX value for first perf-data. This
+    # is needed by the PNP template.
+    perfdata_cpu = list(perfdata[0])
+    perfdata_cpu[-1] = num_threads
+    perfdata = [ tuple(perfdata_cpu) ] + perfdata[1:]
+    return (state, infotext, perfdata)
 
 
 check_info['esx_vsphere_hostsystem.cpu_usage'] = {
-   "inventory_function"  : inventory_esx_vsphere_hostsystem_cpu,
-   "check_function"      : check_esx_vsphere_hostsystem_cpu,
-   "service_description" : "CPU utilization",
-   "group"               : "cpu_utilization",
-   "has_perfdata"        : True
+   "inventory_function"      : inventory_esx_vsphere_hostsystem_cpu,
+   "check_function"          : check_esx_vsphere_hostsystem_cpu,
+   "service_description"     : "CPU utilization",
+   "group"                   : "cpu_utilization_os",
+   "has_perfdata"            : True,
+   "default_levels_variable" : "esx_host_cpu_default_levels",
+   "includes"                : [ "cpu_util.include" ],
 }
 
 

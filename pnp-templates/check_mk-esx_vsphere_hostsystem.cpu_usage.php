@@ -23,30 +23,57 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-$num_cores = $MAX[1];
-$warnperc = $WARN[1] / $num_cores * 100.0;
-$critperc = $CRIT[1] / $num_cores * 100.0;
+# Do not depend on numbers, use names
+$RRD = array();
+foreach ($NAME as $i => $n) {
+    $RRD[$n] = "$RRDFILE[$i]:$DS[$i]:MAX";
+    $WARN[$n] = $WARN[$i];
+    $CRIT[$n] = $CRIT[$i];
+    $MIN[$n]  = $MIN[$i];
+    $MAX[$n]  = $MAX[$i];
+}
 
-$opt[1] = "--vertical-label 'Used cores' -l0  -ru $num_cores --title \"CPU Utilization for $hostname\" ";
+$num_threads = $MAX[1];
+$warnthreads = $WARN[1] * $num_threads / 100.0;
+$critthreads = $CRIT[1] * $num_threads / 100.0;
+$rightscale = 100.0 / $num_threads;
 
-$def[1] =  "DEF:util=$RRDFILE[1]:$DS[1]:MAX "
-         . "CDEF:perc=util,$num_cores,/,100,* "
-         . "AREA:util#60f020:\"Utilization\:\" "
-         . "LINE:util#308010 "
-         . "GPRINT:perc:LAST:\"%0.1lf%%   \" ";
+$opt[1] = "--vertical-label 'Used CPU threads' --right-axis $rightscale:0 --right-axis-format '%4.1lf%%' --right-axis-label 'Utilization %' -l0  -ru $num_threads --title \"CPU Utilization for $hostname ($num_threads CPU threads)\" ";
 
-if ($WARN[1]) {
-    $def[1] .= "HRULE:$WARN[1]#fff000:\"Warn at $warnperc%    \" "
-            . "HRULE:$CRIT[1]#ff0000:\"Critical at $critperc%\\n\" ";
+$def[1] =  "DEF:perc=$RRD[util] "
+         . "CDEF:util=perc,$num_threads,*,100,/ "
+         ;
+         
+$def[1] .= "HRULE:$MAX[util]#0040d0:\"$num_threads CPU Threads\\n\" "
+         ;
+
+$def[1] .= "AREA:util#60f020:\"Utilization\:\" "
+         . "LINE:util#50b01a "
+         . "GPRINT:perc:LAST:\"%.1lf%%\" "
+         . "GPRINT:util:LAST:\"(%.1lf Threads) \" "
+         . "GPRINT:perc:MIN:\"min\: %.1lf%%,\" "
+         . "GPRINT:util:MIN:\"(%.1lf), \" "
+         . "GPRINT:perc:MAX:\"max\: %.1lf%%\" "
+         . "GPRINT:util:MAX:\"(%.1lf)\\n\" "
+         ;
+
+
+if (isset($RRD["avg"])) {
+    $def[1] .= "DEF:aperc=$RRD[avg] ". 
+               "CDEF:avg=aperc,$num_threads,*,100,/ ".
+               "LINE:avg#004000:\"Averaged\:   \" ".
+               "GPRINT:aperc:LAST:\"%.1lf%%,\" ".
+               "GPRINT:aperc:MIN:\"min\: %.1lf%%,\" ".
+               "GPRINT:aperc:MAX:\"max\: %.1lf%%\\n\" ".
+               "";
+}
+
+if ($WARN['util']) {
+    $def[1] .= "HRULE:$warnthreads#fff000:\"Warn at $WARN[util]%    \" "
+            . "HRULE:$critthreads#ff0000:\"Critical at $CRIT[util]%\\n\" ";
 }
 else {
     $def[1] .= "COMMENT:\"\\n\" ";
 }
-
-$def[1] .= "HRULE:$MAX[1]#0040d0:\"$num_cores Cores installed   \" "
-         . "GPRINT:util:MIN:\"Min\: %5.2lf Cores \" "
-         . "GPRINT:util:MAX:\"Max\: %5.2lf Cores\" "
-         . "GPRINT:util:LAST:\"Last\: %4.1lf Cores\\n\" "
-         ;
 
 ?>

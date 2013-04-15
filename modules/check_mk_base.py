@@ -1293,6 +1293,13 @@ def nodes_of(hostname):
 
 # Generic function for checking a value against levels. This also support
 # predictive levels.
+# value:   currently measured value
+# dsname:  name of the datasource in the RRD that corresponds to this value
+# unit:    unit to be displayed in the plugin output, e.g. "MB/s"
+# factor:  the levels are multiplied with this factor before applying 
+#          them to the value. For example the disk-IO check uses B/s
+#          as the unit for the value. But the levels are in MB/s. In that
+#          case the factor is 1.0 / 1048576.
 def check_levels(value, dsname, params, unit = "", factor = 1.0, statemarkers=False):
 
     if params == None or params == (None, None):
@@ -1325,18 +1332,18 @@ def check_levels(value, dsname, params, unit = "", factor = 1.0, statemarkers=Fa
     # Critical cases
     if crit_upper != None and value >= crit_upper:
         state = 2
-        infotext += " (critical level at %.2f)" % crit_upper
+        infotext += " (critical level at %.2f%s)" % (crit_upper / factor, unit)
     elif crit_lower != None and value <= crit_lower:
         state = 2
-        infotext += " (too low: critical level at %.2f)" % crit_lower
+        infotext += " (too low: critical level at %.2f%s)" % (crit_lower / factor, unit)
 
     # Warning cases
     elif warn_upper != None and value >= warn_upper:
         state = 1
-        infotext += " (warning level at %.2f)" % warn_upper
+        infotext += " (warning level at %.2f%s)" % (warn_upper / factor, unit)
     elif warn_lower != None and value <= warn_lower:
         state = 1
-        infotext += " (too low: warning level at %.2f)" % warn_lower
+        infotext += " (too low: warning level at %.2f%s)" % (warn_lower / factor, unit)
 
     # OK
     else:

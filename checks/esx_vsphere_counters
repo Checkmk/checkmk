@@ -1,0 +1,178 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+# <<<esx_vsphere_counters:sep(124)>>>
+# net.broadcastRx|vmnic0|11|number
+# net.broadcastRx||11|number
+# net.broadcastTx|vmnic0|0|number
+# net.broadcastTx||0|number
+# net.bytesRx|vmnic0|3820|kiloBytesPerSecond
+# net.bytesRx|vmnic1|0|kiloBytesPerSecond
+# net.bytesRx|vmnic2|0|kiloBytesPerSecond
+# net.bytesRx|vmnic3|0|kiloBytesPerSecond
+# net.bytesRx||3820|kiloBytesPerSecond
+# net.bytesTx|vmnic0|97|kiloBytesPerSecond
+# net.bytesTx|vmnic1|0|kiloBytesPerSecond
+# net.bytesTx|vmnic2|0|kiloBytesPerSecond
+# net.bytesTx|vmnic3|0|kiloBytesPerSecond
+# net.bytesTx||97|kiloBytesPerSecond
+# net.droppedRx|vmnic0|0|number
+# net.droppedRx|vmnic1|0|number
+# net.droppedRx|vmnic2|0|number
+# net.droppedRx|vmnic3|0|number
+# net.droppedRx||0|number
+# net.droppedTx|vmnic0|0|number
+# net.droppedTx|vmnic1|0|number
+
+# The bad thing here: ESX does not send *counters* but *rates*. This might
+# seem user friendly on the first look, but is really bad at the second. The
+# sampling rate defaults to 20s and is not aligned with our check rate. Also
+# a reschedule of the check does not create new data. And: our if.include really
+# requires counters. In order to use if.include we therefore simulate counters.
+
+def convert_esx_counters_if(info):
+    this_time = time.time()
+    by_item = {}
+    for counter, item, value, unit in info:
+        if item and counter.startswith("net."):
+            name = counter[4:]
+            by_item.setdefault(item, {})
+            by_item[item][name] = int(value)
+
+    # Example of by_item:
+    # { 
+    #   'vmnic0': {
+    #         'broadcastRx': 31,
+    #         'broadcastTx': 0,
+    #         'bytesRx': 3905,  # is in Kilobytes!
+    #         'bytesTx': 134,
+    #         'droppedRx': 0,
+    #         'droppedTx': 0,
+    #         'errorsRx': 0,
+    #         'errorsTx': 0,
+    #         'multicastRx': 5,
+    #         'multicastTx': 1,
+    #         'packetsRx': 53040,
+    #         'packetsTx': 30822,
+    #         'received': 3905,
+    #         'transmitted': 134,
+    #         'unknownProtos': 0,
+    #         'usage': 4040,
+    #     },
+    # }
+    nics = by_item.keys()
+    nics.sort()
+    
+    converted = [
+        [], #  0 ifIndex                   0
+        [], #  1 ifDescr                   1
+        [], #  2 ifType                    2
+        [], #  3 ifHighSpeed               .. 1000 means 1GBit
+        [], #  4 ifOperStatus              4
+        [], #  5 ifHCInOctets              5
+        [], #  6 ifHCInUcastPkts           6
+        [], #  7 ifHCInMulticastPkts       7
+        [], #  8 ifHCInBroadcastPkts       8
+        [], #  9 ifInDiscards              9
+        [], # 10 ifInErrors               10
+        [], # 11 ifHCOutOctets            11
+        [], # 12 ifHCOutUcastPkts         12
+        [], # 13 ifHCOutMulticastPkts     13
+        [], # 14 ifHCOutBroadcastPkts     14
+        [], # 15 ifOutDiscards            15
+        [], # 16 ifOutErrors              16
+        [], # 17 ifOutQLen                17
+        [], # 18 ifAlias                  18
+        [], # 19 ifPhysAddress            19
+    ]
+
+    tableindex = {
+        'bytesRx':      5,  # is in Kilobytes!
+        'packetsRx':    6,
+        'multicastRx':  7,
+        'broadcastRx':  8,
+        'droppedRx':    9,
+        'errorsRx':    10,
+        'bytesTx':     11,
+        'packetsTx':   12,
+        'multicastTx': 13,
+        'broadcastTx': 14,
+        'droppedTx':   15,
+        'errorsTx':    16,
+        # 'received': 3905,
+        # 'transmitted': 134,
+        # 'unknownProtos': 0,
+        # 'usage': 4040,
+    }
+
+    converted = []
+    for index, name in enumerate(nics):
+        entry = ['0'] * 20
+        converted.append(entry)
+        if name: # Skip summary entry without interface name
+            entry[0] = (str(index))
+            entry[1] = (name)
+            entry[2] = ('6')   # Ethernet
+            entry[3] = ('')  # Speed not known
+            entry[4] = ('1') # Assume up
+            entry[18] = (name) # ifAlias
+            entry[19] = ('')   # MAC address not known here
+            for ctr_name, ti in tableindex.items():
+                ctr_value = by_item[name].get(ctr_name, 0)
+                if ctr_name.startswith("bytes"):
+                    ctr_value *= 1024
+                countername = "vmnic." + name + "." + ctr_name
+                if countername in g_counters:
+                    last_time, last_value = g_counters[countername]
+                    new_value = last_value + ((this_time - last_time) * ctr_value)
+                else:
+                    last_time = this_time - 60
+                    last_value = 0
+                    new_value = ctr_value * 60
+                g_counters[countername] = (this_time, new_value)
+                entry[ti] = str(int(new_value))
+
+    return converted
+
+
+def inventory_esx_vsphere_counters_if(info):
+    converted = convert_esx_counters_if(info)
+    return inventory_if_common(converted)
+
+def check_esx_vsphere_counters_if(item, params, info):
+    converted = convert_esx_counters_if(info)
+    return check_if_common(item, params, converted)
+
+check_info['esx_vsphere_counters.if'] = {
+   'inventory_function'      : inventory_esx_vsphere_counters_if,
+   'check_function'          : check_esx_vsphere_counters_if,
+   'service_description'     : 'Interface %s',
+   'has_perfdata'            : True,
+   'group'                   : 'if',
+   'default_levels_variable' : 'if_default_levels',
+   'includes'                : [ 'if.include' ],
+}

@@ -237,18 +237,23 @@ def output_hostsystem_counters():
         # Determine IDs of the counters: We have hard coded the IDs here in order to save
         # a couple of seconds...
         # counterids = pm.get_entity_counters(mor)
+        # print counterids
+        # print [ i for n,i in counterids.items() if n.startswith("mem.") ]
         # needed_ids = counterids.keys() # retrieve all ids....
         needed_ids = [ \
            # net.*
            196616, 196621, 196617, 196625, 196619, 196623, 196609, 196614, 196620, 196624, 196615, 196622, 196618, 196612, 196613, 196626,
-           # uptime
+           # sys.uptime
            262144,
+           # mem.*
+           # 65635, 65537, 65577, 65625, 65545, 65611, 65573, 65615, 65582, 65549, 65630, 65622, 65618, 65621, 65561, 65623, 65632, 65557, 
+           # 65628, 65633, 65541, 65643, 65586, 65553, 65569, 65589, 65639, 65620, 65599, 65580, 65619, 65603,
         ]
         counters = pm.get_entity_statistic(mor, needed_ids)
         lines = []
         for counter in counters:
             name = counter.group + "." + counter.counter
-            lines.append("%s|%s|%s|%s" % (name, counter.instance, counter.value, counter.unit))
+            lines.append("%s|%s|%s|%s" % (name, counter.instance, counter.value, counter.unit)) 
         lines.sort()
         for line in lines:
             print line

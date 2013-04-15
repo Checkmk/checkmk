@@ -386,7 +386,7 @@ perfometers["check_mk-hpux_snmp_cs.cpu"] = perfometer_hpux_snmp_cs_cpu
 
 
 def perfometer_check_mk_uptime(row, check_command, perf_data):
-    days,    rest    = divmod(int(perf_data[0][1]), 60*60*24)
+    days,    rest    = divmod(int(float(perf_data[0][1])), 60*60*24)
     hours,   rest    = divmod(rest,   60*60)
     minutes, seconds = divmod(rest,      60)
 
@@ -394,6 +394,7 @@ def perfometer_check_mk_uptime(row, check_command, perf_data):
 
 perfometers["check_mk-uptime"]      = perfometer_check_mk_uptime
 perfometers["check_mk-snmp_uptime"] = perfometer_check_mk_uptime
+perfometers["check_mk-esx_vsphere_counters.uptime"] = perfometer_check_mk_uptime
 
 
 def perfometer_check_mk_diskstat(row, check_command, perf_data):

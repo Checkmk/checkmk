@@ -408,9 +408,10 @@ img.iconbutton {
     height: 20px;
     padding: 0px 2px;
 }
-img.iconbutton.trans {
+/* Don't know why this style is/was here. Destroys ListOf()... */
+/* img.iconbutton.trans {
     width: 100px;
-}
+}*/
 
 /*-------------------------------------------------------------------------.
 |                    _____                                                 |

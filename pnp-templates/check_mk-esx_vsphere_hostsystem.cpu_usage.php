@@ -38,7 +38,7 @@ $warnthreads = $WARN[1] * $num_threads / 100.0;
 $critthreads = $CRIT[1] * $num_threads / 100.0;
 $rightscale = 100.0 / $num_threads;
 
-$opt[1] = "--vertical-label 'Used CPU threads' --right-axis $rightscale:0 --right-axis-format '%4.1lf%%' -l0  -ru $num_threads --title \"CPU Utilization for $hostname ($num_threads CPU threads)\" ";
+$opt[1] = "--vertical-label 'Used CPU threads' --right-axis $rightscale:0 --right-axis-format '%4.1lf%%' --right-axis-label 'Utilization %' -l0  -ru $num_threads --title \"CPU Utilization for $hostname ($num_threads CPU threads)\" ";
 
 $def[1] =  "DEF:perc=$RRD[util] "
          . "CDEF:util=perc,$num_threads,*,100,/ "

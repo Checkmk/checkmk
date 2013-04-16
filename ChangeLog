@@ -100,6 +100,8 @@
 1.2.2p1:
     Core:
     * FIX: correctly quote ! and \ in active checks for Nagios
+    * FIX: Performing regular inventory checks at configured interval even
+           when the service is in problem state
     * Check_MK core now supports umlauts in host-/service- and contactgroup names
 
     Checks & Agents:

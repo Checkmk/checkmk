@@ -321,7 +321,7 @@ def get_host_info(hostname, ipaddress, checkname):
 #
 # This function assumes, that each check type is queried
 # only once for each host.
-def get_realhost_info(hostname, ipaddress, check_type, max_cache_age):
+def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_check_interval = False):
     info = get_cached_hostinfo(hostname)
     if info and info.has_key(check_type):
         return info[check_type]
@@ -335,7 +335,8 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age):
     if oid_info:
         cache_path = tcp_cache_dir + "/" + cache_relpath
         check_interval = check_interval_of(hostname, check_type)
-        if check_interval is not None and os.path.exists(cache_path) \
+        if not ignore_check_interval \
+           and check_interval is not None and os.path.exists(cache_path) \
            and cachefile_age(cache_path) < check_interval:
             # cache file is newer than check_interval, skip this check
             raise MKSkipCheck()

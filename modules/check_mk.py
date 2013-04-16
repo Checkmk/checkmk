@@ -2346,7 +2346,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
 
             checkname_base = checkname.split('.')[0]    # make e.g. 'lsi' from 'lsi.arrays'
             try:
-                info = get_realhost_info(hostname, ipaddress, checkname_base, inventory_max_cachefile_age)
+                info = get_realhost_info(hostname, ipaddress, checkname_base, inventory_max_cachefile_age, True)
                 # Add information about nodes if check wants this
                 if check_info[checkname]["node_info"]:
                     if clusters_of(hostname):

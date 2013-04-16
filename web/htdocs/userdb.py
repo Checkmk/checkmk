@@ -347,13 +347,16 @@ def save_users(profiles):
         serial_file = user_dir + '/serial.mk'
         create_user_file(serial_file, 'w').write('%d\n' % user.get('serial', 0))
 
-    # Remove settings directories of non-existant users
-    dir = defaults.var_dir + "/web"
-    for e in os.listdir(dir):
-        if e not in ['.', '..'] and e not in profiles:
-            entry = dir + "/" + e
-            if os.path.isdir(entry):
-                shutil.rmtree(entry)
+    # Remove settings directories of non-existant users. 
+    # Beware: we removed this since it leads to violent destructions
+    # if the user database is out of the scope of Check_MK. This is
+    # e.g. the case, if mod_ldap is used for user authentication.
+    # dir = defaults.var_dir + "/web"
+    # for e in os.listdir(dir):
+    #     if e not in ['.', '..'] and e not in profiles:
+    #         entry = dir + "/" + e
+    #         if os.path.isdir(entry):
+    #             shutil.rmtree(entry)
 
     # Call the users_saved hook
     hooks.call("users-saved", users)

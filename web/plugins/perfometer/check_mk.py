@@ -293,6 +293,17 @@ def perfometer_check_mk_if(row, check_command, perf_data):
         unit      = unit
     )
 
+perfometers["check_mk-if"] = perfometer_check_mk_if
+perfometers["check_mk-if64"] = perfometer_check_mk_if
+perfometers["check_mk-if64_tplink"] = perfometer_check_mk_if
+perfometers["check_mk-vms_if"] = perfometer_check_mk_if
+perfometers["check_mk-if_lancom"] = perfometer_check_mk_if
+perfometers["check_mk-lnx_if"] = perfometer_check_mk_if
+perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
+perfometers["check_mk-mcdata_fcport"] = perfometer_check_mk_if
+perfometers["check_mk-esx_vsphere_counters.if"] = perfometer_check_mk_if
+
+
 def perfometer_check_mk_brocade_fcport(row, check_command, perf_data):
     return perfometer_bandwidth(
         in_traffic  = savefloat(perf_data[0][1]),
@@ -300,6 +311,8 @@ def perfometer_check_mk_brocade_fcport(row, check_command, perf_data):
         in_bw     = savefloat(perf_data[0][6]),
         out_bw    = savefloat(perf_data[1][6]),
     )
+
+perfometers["check_mk-brocade_fcport"] = perfometer_check_mk_brocade_fcport
 
 def perfometer_check_mk_cisco_qos(row, check_command, perf_data):
     unit =  "Bit/s" in row["service_plugin_output"] and "Bit" or "B"
@@ -311,16 +324,8 @@ def perfometer_check_mk_cisco_qos(row, check_command, perf_data):
         unit      = unit
     )
 
-perfometers["check_mk-if"] = perfometer_check_mk_if
-perfometers["check_mk-if64"] = perfometer_check_mk_if
-perfometers["check_mk-if64_tplink"] = perfometer_check_mk_if
-perfometers["check_mk-vms_if"] = perfometer_check_mk_if
-perfometers["check_mk-if_lancom"] = perfometer_check_mk_if
-perfometers["check_mk-lnx_if"] = perfometer_check_mk_if
-perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
-perfometers["check_mk-mcdata_fcport"] = perfometer_check_mk_if
-perfometers["check_mk-brocade_fcport"] = perfometer_check_mk_brocade_fcport
 perfometers["check_mk-cisco_qos"] = perfometer_check_mk_cisco_qos
+
 
 def perfometer_oracle_tablespaces(row, check_command, perf_data):
     current = float(perf_data[0][1])
@@ -381,7 +386,7 @@ perfometers["check_mk-hpux_snmp_cs.cpu"] = perfometer_hpux_snmp_cs_cpu
 
 
 def perfometer_check_mk_uptime(row, check_command, perf_data):
-    days,    rest    = divmod(int(perf_data[0][1]), 60*60*24)
+    days,    rest    = divmod(int(float(perf_data[0][1])), 60*60*24)
     hours,   rest    = divmod(rest,   60*60)
     minutes, seconds = divmod(rest,      60)
 
@@ -389,6 +394,7 @@ def perfometer_check_mk_uptime(row, check_command, perf_data):
 
 perfometers["check_mk-uptime"]      = perfometer_check_mk_uptime
 perfometers["check_mk-snmp_uptime"] = perfometer_check_mk_uptime
+perfometers["check_mk-esx_vsphere_counters.uptime"] = perfometer_check_mk_uptime
 
 
 def perfometer_check_mk_diskstat(row, check_command, perf_data):

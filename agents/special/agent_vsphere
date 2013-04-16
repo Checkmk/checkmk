@@ -163,6 +163,103 @@ print "<<<check_mk>>>"
 print "Version: %s" % host.get_api_version()
 print "AgentOs: %s " % host.get_server_type()
 
+def debug(x):
+    pprint.pprint(inspect.getmembers(x))
+
+def dump(x, indent=""):
+    for key, value in inspect.getmembers(x):
+        if key == "__dict__":
+            try:
+                value.items()
+                is_dict = True
+            except:
+                is_dict = False
+
+            if "_values" in value:
+                for k, v in value["_values"].items():
+                    print indent + k
+                    dump_object(v, indent + "    ")
+
+            elif type(value) == str:
+                print indent + value
+            elif is_dict:
+                dump_dict(value, indent)
+            elif type(value) == list:
+                dump_list(value, indent)
+            else:
+                debug(value)
+                sys.exit(0)
+
+def dump_dict(d, indent):
+    for key, value in d.items():
+        print indent + key
+        # dump(value, "    " + indent)
+
+def dump_object(v, indent):
+    for name, member in inspect.getmembers(v):
+        if not name.startswith("_"):
+            print indent + name
+            dump(member, indent + "    ")
+
+
+def dump_list(l, indent):
+    for nr, v in enumerate(l):
+        print indent + "%d:" % nr
+        dump(v, indent + "    ")
+
+
+pm = host.get_performance_manager()
+# h = host.get_hosts()
+# x = pm.get_entity_counters(h.keys()[0])
+# print x
+# sys.exit(0)
+
+# print h
+# for name, mor in h.items():
+#     debug(mor)
+#     x = pm.get_entity_counters(mor)
+#     debug(x)
+#     p = VIProperty(host, name)
+#     debug(p.network[0].summary)
+#     
+#     # debug(p.network[0].summary.network.value)
+#     # dump_list(p.network, "")
+#     # debug(p)
+
+#  sys.exit(0)
+
+def output_hostsystem_counters():
+    pm = host.get_performance_manager()
+    for mor, name in host.get_hosts().items():
+        if not opt_direct:
+            print '<<<<%s>>>>' % name
+        print '<<<esx_vsphere_counters:sep(124)>>>'
+        # Determine IDs of the counters: We have hard coded the IDs here in order to save
+        # a couple of seconds...
+        # counterids = pm.get_entity_counters(mor)
+        # print counterids
+        # print [ i for n,i in counterids.items() if n.startswith("mem.") ]
+        # needed_ids = counterids.keys() # retrieve all ids....
+        needed_ids = [ \
+           # net.*
+           196616, 196621, 196617, 196625, 196619, 196623, 196609, 196614, 196620, 196624, 196615, 196622, 196618, 196612, 196613, 196626,
+           # sys.uptime
+           262144,
+           # mem.*
+           # 65635, 65537, 65577, 65625, 65545, 65611, 65573, 65615, 65582, 65549, 65630, 65622, 65618, 65621, 65561, 65623, 65632, 65557, 
+           # 65628, 65633, 65541, 65643, 65586, 65553, 65569, 65589, 65639, 65620, 65599, 65580, 65619, 65603,
+        ]
+        counters = pm.get_entity_statistic(mor, needed_ids)
+        lines = []
+        for counter in counters:
+            name = counter.group + "." + counter.counter
+            lines.append("%s|%s|%s|%s" % (name, counter.instance, counter.value, counter.unit)) 
+        lines.sort()
+        for line in lines:
+            print line
+    if not opt_direct:
+        print '<<<<>>>>'
+
 
 def output_mors(what, properties, direct=False): 
     if what == "hostsystem":
@@ -213,9 +310,6 @@ def output_mors(what, properties, direct=False):
         print '<<<%s>>>' % section_name
         for line in section_lines:
             print line
-
-def debug(x):
-    pprint.pprint(inspect.getmembers(x))
 
 def output_datastores():
     property_names = [ 
@@ -268,6 +362,7 @@ if "datastore" in mortypes:
 
 
 if "hostsystem" in mortypes:
+    output_hostsystem_counters()
     output_mors("hostsystem", {
       "name": str,
 

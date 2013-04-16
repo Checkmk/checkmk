@@ -1,0 +1,33 @@
+title: Physical network interfaces on VMWare ESX host
+agents: vsphere
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check retrieves performance counters of network interfaces
+ via the vSphere API and simulates the data of an SNMP network
+ interface check.
+
+ This check is fully compatible with {if64} with the following restrictions:
+
+ 1) The interface speed (1GBit/s, etc.) is not detected
+
+ 2) The link status in not detected and assumed to be up
+
+ 3) The queue length is not reported 
+
+item:
+ The index or name of the network interface. See {if} for details.
+
+perfdata:
+ Compatible with {if64}. See that man page for details.
+
+inventory:
+ One service per interface is being created. See {if64} for details.
+
+[parameters]
+parameters(dict): Compatible with {if64}
+
+[configuration]
+various: compatible with {if64}.
+

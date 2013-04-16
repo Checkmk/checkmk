@@ -37,8 +37,6 @@ def check_if64(item, params, info):
     fix_if64_highspeed(info)
     return check_if_common(item, params, info)
 
-check_includes['if64'] = [ "if.include" ]
-
 
 # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
 
@@ -47,6 +45,7 @@ check_info["if64"] = {
     'inventory_function':      inventory_if64,
     'service_description':     'Interface %s',
     'has_perfdata':            True,
+    'includes':                [ 'if.include' ],
     'snmp_info':               ( ".1.3.6.1.2.1", [
         "2.2.1.1",     # ifIndex                   0
         "2.2.1.2",     # ifDescr                   1

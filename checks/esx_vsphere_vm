@@ -126,8 +126,7 @@ check_info['esx_vsphere_vm.name'] = {
 #
 def inventory_esx_vsphere_vm_hb_status(info):
     data = esx_vsphere_vm_convert(info)
-    status = data.get('guestHeartbeatStatus')
-    if status and status[0] != "gray":
+    if 'guestHeartbeatStatus' in data:
         return [(None, None)]
 
 def check_esx_vsphere_vm_hb_status(item, params, info):
@@ -135,15 +134,15 @@ def check_esx_vsphere_vm_hb_status(item, params, info):
 
     vm_status = data['guestHeartbeatStatus'][0]
     state = 3
-    if vm_status == 'gray':
-        state = 3
+    if vm_status == 'gray': 
+        return 1, "No VMWare Tools installed"
     elif vm_status == 'green':
         state = 0
     elif vm_status == 'red':
         state = 2
     elif vm_status == 'yellow':
         state = 1
-    return(state, "Heartbeat status is %s" % vm_status)
+    return state, "Heartbeat status is %s" % vm_status
 
 
 check_info['esx_vsphere_vm.heartbeat'] = {

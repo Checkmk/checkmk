@@ -107,6 +107,11 @@
     * FIX: check_mk_agent.aix: fix shebang: was python, must be ksh
     * FIX: cisco_qos: Be compatible to newer IOS-XE versions (Thanks to Ken Smith)
 
+    Multisite:
+    * FIX: do not remove directories of non-exisant users anymore. This lead to
+           a deletion of users' settings in case of an external authentication
+           (like mod_ldap).
+
 1.2.2:
     Core:
     * Added $HOSTURL$ and $SERVICEURL$ to notification macros which contain an

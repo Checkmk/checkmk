@@ -1864,6 +1864,7 @@ define service {
   use\t\t\t\t%s
   host_name\t\t\t%s
   normal_check_interval\t\t%d
+  retry_check_interval\t\t%d
 %s  service_description\t\tCheck_MK inventory
 }
 
@@ -1874,7 +1875,7 @@ define servicedependency {
   dependent_host_name\t\t%s
   dependent_service_description\tCheck_MK inventory
 }
-""" % (inventory_check_template, hostname, inventory_check_interval,
+""" % (inventory_check_template, hostname, inventory_check_interval, inventory_check_interval,
        extra_service_conf_of(hostname, "Check_MK inventory"),
        service_dependency_template, hostname, hostname))
 

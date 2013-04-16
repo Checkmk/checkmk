@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def esx_vsphere_virtualmachine_convert(info):
+def esx_vsphere_vm_convert(info):
     data = {}
     for line in info:
         data[line[0]] = line[1:]
@@ -40,13 +40,13 @@ def esx_vsphere_virtualmachine_convert(info):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_esx_vsphere_virtualmachine_mem(info):
-    data = esx_vsphere_virtualmachine_convert(info).keys()
+def inventory_esx_vsphere_vm_mem(info):
+    data = esx_vsphere_vm_convert(info).keys()
     if 'summary.quickStats.guestMemoryUsage' in data:
         return [(None, {})]
 
-def check_esx_vsphere_virtualmachine_mem(item, params, info):
-    data = esx_vsphere_virtualmachine_convert(info)
+def check_esx_vsphere_vm_mem(item, params, info):
+    data = esx_vsphere_vm_convert(info)
 
     #consumed host memory
     host_memory_usage   = savefloat(data["summary.quickStats.hostMemoryUsage"][0]) * 1024 * 1024
@@ -75,9 +75,9 @@ def check_esx_vsphere_virtualmachine_mem(item, params, info):
     return(0, message, perf)
 
 
-check_info['esx_vsphere_virtualmachine.mem_usage'] = {
-  "inventory_function"  : inventory_esx_vsphere_virtualmachine_mem,
-  "check_function"      : check_esx_vsphere_virtualmachine_mem,
+check_info['esx_vsphere_vm.mem_usage'] = {
+  "inventory_function"  : inventory_esx_vsphere_vm_mem,
+  "check_function"      : check_esx_vsphere_vm_mem,
   "service_description" : "ESX Memory",
   "has_perfdata"        : True
 }
@@ -92,19 +92,19 @@ check_info['esx_vsphere_virtualmachine.mem_usage'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def inventory_esx_vsphere_virtualmachine_name(info):
-    data = esx_vsphere_virtualmachine_convert(info).keys()
+def inventory_esx_vsphere_vm_name(info):
+    data = esx_vsphere_vm_convert(info).keys()
     if 'name' in data:
         return [(None, None)]
 
-def check_esx_vsphere_virtualmachine_name(item, params, info):
-    data = esx_vsphere_virtualmachine_convert(info)
+def check_esx_vsphere_vm_name(item, params, info):
+    data = esx_vsphere_vm_convert(info)
     return(0, " ".join(data['name']))
 
 
-check_info['esx_vsphere_virtualmachine.name'] = {
-  "inventory_function"  : inventory_esx_vsphere_virtualmachine_name,
-  "check_function"      : check_esx_vsphere_virtualmachine_name,
+check_info['esx_vsphere_vm.name'] = {
+  "inventory_function"  : inventory_esx_vsphere_vm_name,
+  "check_function"      : check_esx_vsphere_vm_name,
   "service_description" : "ESX Name",
 }
 
@@ -124,14 +124,14 @@ check_info['esx_vsphere_virtualmachine.name'] = {
 #    yellow - Intermittent heartbeat. May be due to guest load.
 #    green - Guest operating system is responding normally.
 #
-def inventory_esx_vsphere_virtualmachine_hb_status(info):
-    data = esx_vsphere_virtualmachine_convert(info)
+def inventory_esx_vsphere_vm_hb_status(info):
+    data = esx_vsphere_vm_convert(info)
     status = data.get('guestHeartbeatStatus')
     if status and status[0] != "gray":
         return [(None, None)]
 
-def check_esx_vsphere_virtualmachine_hb_status(item, params, info):
-    data = esx_vsphere_virtualmachine_convert(info)
+def check_esx_vsphere_vm_hb_status(item, params, info):
+    data = esx_vsphere_vm_convert(info)
 
     vm_status = data['guestHeartbeatStatus'][0]
     state = 3
@@ -146,9 +146,9 @@ def check_esx_vsphere_virtualmachine_hb_status(item, params, info):
     return(state, "Heartbeat status is %s" % vm_status)
 
 
-check_info['esx_vsphere_virtualmachine.heartbeat'] = {
-  "inventory_function"  : inventory_esx_vsphere_virtualmachine_hb_status,
-  "check_function"      : check_esx_vsphere_virtualmachine_hb_status,
+check_info['esx_vsphere_vm.heartbeat'] = {
+  "inventory_function"  : inventory_esx_vsphere_vm_hb_status,
+  "check_function"      : check_esx_vsphere_vm_hb_status,
   "service_description" : "ESX Heartbeat",
 }
 

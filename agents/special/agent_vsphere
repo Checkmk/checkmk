@@ -296,7 +296,7 @@ def output_mors(what, properties, direct=False):
         else:
             print '<<<<%s>>>>' % name
 
-        print '<<<esx_vsphere_%s>>>' % what
+        print '<<<esx_vsphere_%s>>>' % (what.replace('virtualmachine', 'vm'))
         items = data.items()
         items.sort()
         for name, value in items:

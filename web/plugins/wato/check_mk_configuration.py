@@ -1686,6 +1686,12 @@ register_rule(group,
                        ( "lower", _("Convert hostnames to lower case") ),
                   ]
             )),
+            ( "drop_domain",
+              FixedValue(
+                  True,
+                  title = _("Convert FQHN"),
+                  totext = _("Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"),
+            )),
             ( "regex",
               Tuple(
                   title = _("Regular expression substitution"),

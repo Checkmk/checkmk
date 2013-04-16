@@ -649,7 +649,12 @@ def perfometer_simple_mem_usage(row, command, perf):
 
 perfometers['check_mk-db2_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-esx_vsphere_hostsystem.mem_usage'] = perfometer_simple_mem_usage
-perfometers['check_mk-esx_vsphere_virtualmachine.mem_usage'] = perfometer_simple_mem_usage
+
+def perfometer_vmguest_mem_usage(row, command, perf):
+    used = float(perf[0][1])
+    return number_human_readable(used), perfometer_logarithmic(used, 1024*1024*2000, 2, "#20cf80")
+
+perfometers['check_mk-esx_vsphere_virtualmachine.mem_usage'] = perfometer_vmguest_mem_usage
 
 def perfometer_esx_vsphere_hostsystem_cpu(row, command, perf):
     used_perc = float(perf[0][1])

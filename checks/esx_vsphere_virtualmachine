@@ -111,7 +111,7 @@ def check_esx_vsphere_virtualmachine_hb_status(item, params, info):
     return(state, "Heartbeat status is %s" % vm_status)
 
 
-check_info['esx_vsphere_virtualmachine.heartbeatStatus'] = {
+check_info['esx_vsphere_virtualmachine.heartbeat'] = {
   "inventory_function"  : inventory_esx_vsphere_virtualmachine_hb_status,
   "check_function"      : check_esx_vsphere_virtualmachine_hb_status,
   "service_description" : "ESX Heartbeat Status",

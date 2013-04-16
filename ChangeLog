@@ -1,6 +1,7 @@
 1.2.2p1:
     Core:
     * FIX: correctly quote ! and \ in active checks for Nagios
+    * Check_MK core now supports umlauts in host-/service- and contactgroup names
 
     Checks & Agents:
     * FIX: vsphere_agent: fix problems whith ! and \ in username or password

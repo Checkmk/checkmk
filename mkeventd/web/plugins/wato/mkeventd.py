@@ -1534,6 +1534,20 @@ if mkeventd_enabled:
         allow_reset = False)
 
     register_configvar(group,
+        "hostname_translation",
+        HostnameTranslation(
+            title = _("Hostname translation for incoming messages"),
+            help = _("When the Event Console receives a message than the host name "
+                     "that is contained in that message will be translated using "
+                     "this configuration. This can be used for unifying host names "
+                     "from message with those of actively monitored hosts. Note: this translation "
+                     "is happening before any rule is being applied.")
+        ),
+        domain = "mkeventd",
+    )
+
+
+    register_configvar(group,
         "history_rotation",
         DropdownChoice(
             title = _("Event history logfile rotation"),

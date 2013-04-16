@@ -498,8 +498,8 @@ def translate_piggyback_host(sourcehost, backedhost):
     elif caseconf == "lower":
         backedhost = backedhost.lower()
 
-    # 2. Drop domain part
-    if translation.get("drop_domain"):
+    # 2. Drop domain part (not applied to IP addresses!)
+    if translation.get("drop_domain") and not backedhost[0].isdigit():
         backedhost = backedhost.split(".", 1)[0]
 
     # 3. Regular expression conversion

@@ -169,7 +169,12 @@ def check_cisco_qos(item, params, info):
 
     # Gather information for this object
     policy_if_id, policy_if_id2 = cisco_qos_get_ifs_by_class_id(config, class_id)[0]
-    policy_id   = config[policy_if_id+'.'+policy_if_id]
+    try:
+        policy_id = config[policy_if_id+'.'+policy_if_id]
+    except KeyError:
+        # Be compatible with newer IOS-XE releases where the last digit is pinned
+        # to "1" instead of the plicy_if_id
+        policy_id = config[policy_if_id+'.1']
     policy_name = policies[policy_id]
     post_b      = post_bytes[policy_if_id+'.'+policy_if_id2]
     drop_b      = drop_bytes[policy_if_id+'.'+policy_if_id2]

@@ -343,7 +343,7 @@ def conv_numeric_sensor_info(value):
     for sensor in value.HostNumericSensorInfo:
         if not hasattr(sensor, "HealthState"):
             continue # should never happen. If happens, sensor not interesting for monitoring
-        if sensor.HealthState.Key == "green":
+        if (sensor.HealthState.Key == "green") or (sensor.HealthState.Key == "unknown"):
             continue # just output sensors with issuse - saves lots of data
 
         line = '%s;%s;%s;%s;%s;' % ( sensor.Name, sensor.BaseUnits, sensor.CurrentReading, sensor.SensorType, sensor.UnitModifier)

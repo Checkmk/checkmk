@@ -1637,12 +1637,12 @@ def create_nagios_hostdefs(outfile, hostname):
         hostgroups_to_define.add(default_host_group)
     elif define_hostgroups:
         hostgroups_to_define.update(hgs)
-    outfile.write("  hostgroups\t\t\t%s\n" % hostgroups)
+    outfile.write("  hostgroups\t\t\t%s\n" % make_utf8(hostgroups))
 
     # Contact groups
     cgrs = host_contactgroups_of([hostname])
     if len(cgrs) > 0:
-        outfile.write("  contact_groups\t\t%s\n" % ",".join(cgrs))
+        outfile.write("  contact_groups\t\t%s\n" % make_utf8(",".join(cgrs)))
         contactgroups_to_define.update(cgrs)
 
     # Get parents manually defined via extra_host_conf["parents"]. Only honor
@@ -1710,7 +1710,7 @@ def create_nagios_hostdefs(outfile, hostname):
 
         # host gets same contactgroups as real host
         if len(cgrs) > 0:
-            outfile.write("  contact_groups\t\t+%s\n" % ",".join(cgrs))
+            outfile.write("  contact_groups\t\t+%s\n" % make_utf8(",".join(cgrs)))
 
         if is_clust:
             outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(node_ips))
@@ -1824,7 +1824,7 @@ define service {
     for description in aggr_descripts:
         sergr = service_extra_conf(hostname, description, summary_service_groups)
         if len(sergr) > 0:
-            sg = "  service_groups\t\t\t+" + ",".join(sergr) + "\n"
+            sg = "  service_groups\t\t\t+" + make_utf8(",".join(sergr)) + "\n"
             if define_servicegroups:
                 servicegroups_to_define.update(sergr)
         else:
@@ -2058,7 +2058,7 @@ define hostgroup {
   hostgroup_name\t\t%s
   alias\t\t\t\t%s
 }
-""" % (hg, make_utf8(alias)))
+""" % (make_utf8(hg), make_utf8(alias)))
 
     # No creation of host groups but we need to define
     # default host group
@@ -2088,7 +2088,7 @@ define servicegroup {
   servicegroup_name\t\t%s
   alias\t\t\t\t%s
 }
-""" % (sg, make_utf8(alias)))
+""" % (make_utf8(sg), make_utf8(alias)))
 
 def create_nagios_config_contactgroups(outfile):
     if define_contactgroups:
@@ -2104,7 +2104,7 @@ def create_nagios_config_contactgroups(outfile):
                 alias = name
             outfile.write("\ndefine contactgroup {\n"
                     "  contactgroup_name\t\t%s\n"
-                    "  alias\t\t\t\t%s\n" % (name, make_utf8(alias)))
+                    "  alias\t\t\t\t%s\n" % (make_utf8(name), make_utf8(alias)))
             members = contactgroup_members.get(name)
             if members:
                 outfile.write("  members\t\t\t%s\n" % ",".join(members))
@@ -3836,7 +3836,7 @@ def dump_host(hostname):
         item,
         params,
         description,
-        ",".join(service_extra_conf(hostname, description, service_groups)),
+        make_utf8(",".join(service_extra_conf(hostname, description, service_groups))),
         if_aggr(aggregated_service_name(hostname, description)),
         if_aggr(",".join(service_extra_conf(hostname, aggregated_service_name(hostname, description), summary_service_groups))),
         ",".join(deps)

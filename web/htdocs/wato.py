@@ -10739,9 +10739,15 @@ def mode_edit_rule(phase, new = False):
         try:
             valuespec.validate_datatype(value, "ve")
             valuespec.render_input("ve", value)
-        except:
+        except Exception, e:
             if config.debug:
                 raise
+            else:
+                html.show_warning(_('Unable to read current options of this rule. Falling back to '
+                                    'default values. When saving this rule now, your previous settings '
+                                    'will be overwritten. Problem was: %s.') % e)
+
+            # In case of validation problems render the input with default values
             valuespec.render_input("ve", valuespec.default_value())
 
         valuespec.set_focus("ve")
@@ -11246,6 +11252,79 @@ def Levels(**kwargs):
           match = match_levels_alternative,
           default_value = default_value,
     )
+
+def HostnameTranslation(**kwargs):
+    help = kwargs.get("help")
+    title = kwargs.get("title")
+    return Dictionary(
+        title = title,
+        help = help,
+        elements = [
+            ( "case",
+              DropdownChoice(
+                  title = _("Case translation"),
+                  choices = [
+                       ( None,    _("Do not convert case") ),
+                       ( "upper", _("Convert hostnames to upper case") ),
+                       ( "lower", _("Convert hostnames to lower case") ),
+                  ]
+            )),
+            ( "drop_domain",
+              FixedValue(
+                  True,
+                  title = _("Convert FQHN"),
+                  totext = _("Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"),
+            )),
+            ( "regex",
+              Tuple(
+                  title = _("Regular expression substitution"),
+                  help = _("Please specify a regular expression in the first field. This expression should at "
+                           "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
+                           "In the second field you specify the translated host name and can refer to the first matched "
+                           "group with <tt>\1</tt>, the second with <tt>\2</tt> and so on, for example <tt>\1.example.org</tt>"),
+                  elements = [
+                      RegExpUnicode(
+                          title = _("Regular expression"),
+                          help = _("Must contain at least one subgroup <tt>(...)</tt>"),
+                          mingroups = 0,
+                          maxgroups = 9,
+                          size = 30,
+                          allow_empty = False,
+                      ),
+                      TextUnicode(
+                          title = _("Replacement"),
+                          help = _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"),
+                          size = 30,
+                          allow_empty = False,
+                      )
+                 ]
+            )),
+            ( "mapping",
+              ListOf(
+                  Tuple(
+                      orientation = "horizontal",
+                      elements =  [
+                          TextUnicode(
+                               title = _("Original hostname"),
+                               size = 30,
+                               allow_empty = False),
+                          TextUnicode(
+                               title = _("Translated hostname"),
+                               size = 30,
+                               allow_empty = False),
+                      ],
+                  ),
+                  title = _("Explicit host name mapping"),
+                  help = _("If case conversion and regular expression do not work for all cases then you can "
+                           "specify explicity pairs of origin host name  and translated host name here. This "
+                           "mapping is being applied <b>after</b> the case conversion and <b>after</b> a regular "
+                           "expression conversion (if that matches)."),
+                  add_label = _("Add new mapping"),
+                  movable = False,
+            )),
+        ])
+
+
 
 
 #

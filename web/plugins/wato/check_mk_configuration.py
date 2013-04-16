@@ -1663,11 +1663,9 @@ register_rule(group,
     title = _("TCP port for connection to Check_MK agent")
 )
 
-
-
 register_rule(group,
     "piggyback_translation",
-    Dictionary(
+    HostnameTranslation(
         title = _("Hostname translation for piggybacked hosts"),
         help = _("Some agents or agent plugins send data not only for the queried host but also "
                  "for other hosts &quot;piggyback&quot; with their own data. This is the case "
@@ -1676,62 +1674,5 @@ register_rule(group,
                  "If that is not the case, then with this rule you can define a hostname translation. "
                  "Note: This rule must be configured for the &quot;pig&quot; - i.e. the host that the "
                  "agent is running on. It is not applied to the translated piggybacked hosts."),
-        elements = [
-            ( "case",
-              DropdownChoice(
-                  title = _("Case translation"),
-                  choices = [
-                       ( None,    _("Do not convert case") ),
-                       ( "upper", _("Convert hostnames to upper case") ),
-                       ( "lower", _("Convert hostnames to lower case") ),
-                  ]
-            )),
-            ( "regex",
-              Tuple(
-                  title = _("Regular expression substitution"),
-                  help = _("Please specify a regular expression in the first field. This expression should at "
-                           "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
-                           "In the second field you specify the translated host name and can refer to the first matched "
-                           "group with <tt>\1</tt>, the second with <tt>\2</tt> and so on, for example <tt>\1.example.org</tt>"),
-                  elements = [
-                      RegExpUnicode(
-                          title = _("Regular expression"),
-                          help = _("Must contain at least one subgroup <tt>(...)</tt>"),
-                          mingroups = 1,
-                          maxgroups = 9,
-                          size = 30,
-                          allow_empty = False,
-                      ),
-                      TextUnicode(
-                          title = _("Replacement"),
-                          help = _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"),
-                          size = 30,
-                          allow_empty = False,
-                      )
-                 ]
-            )),
-            ( "mapping",
-              ListOf(
-                  Tuple(
-                      orientation = "horizontal",
-                      elements =  [
-                          TextUnicode(
-                               title = _("Original hostname"),
-                               size = 30,
-                               allow_empty = False),
-                          TextUnicode(
-                               title = _("Translated hostname"),
-                               size = 30,
-                               allow_empty = False),
-                      ],
-                  ),
-                  title = _("Explicit host name mapping"),
-                  help = _("If case conversion and regular expression do not work for all cases then you can "
-                           "specify explicity pairs of origin host name  and translated host name here. This "
-                           "mapping is being applied <b>after</b> the case conversion and <b>after</b> a regular "
-                           "expression conversion (if that matches)."),
-                  add_label = _("Add new mapping"),
-                  movable = False,
-            )),
-        ]),
+    ),
     match = "dict")

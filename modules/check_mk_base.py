@@ -498,7 +498,11 @@ def translate_piggyback_host(sourcehost, backedhost):
     elif caseconf == "lower":
         backedhost = backedhost.lower()
 
-    # 2. Regular expression conversion
+    # 2. Drop domain part (not applied to IP addresses!)
+    if translation.get("drop_domain") and not backedhost[0].isdigit():
+        backedhost = backedhost.split(".", 1)[0]
+
+    # 3. Regular expression conversion
     if "regex" in translation:
         regex, subst = translation.get("regex")
         if not regex.endswith('$'):
@@ -510,7 +514,7 @@ def translate_piggyback_host(sourcehost, backedhost):
             for nr, text in enumerate(mo.groups()):
                 backedhost = backedhost.replace("\\%d" % (nr+1), text)
 
-    # 3. Explicity mapping
+    # 4. Explicity mapping
     for from_host, to_host in translation.get("mapping", []):
         if from_host == backedhost:
             backedhost = to_host

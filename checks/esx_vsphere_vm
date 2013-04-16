@@ -1,0 +1,153 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def esx_vsphere_vm_convert(info):
+    data = {}
+    for line in info:
+        data[line[0]] = line[1:]
+    return data
+
+#   .--Memory--------------------------------------------------------------.
+#   |               __  __                                                 |
+#   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
+#   |              | |\/| |/ _ \ '_ ` _ \ / _ \| '__| | | |                |
+#   |              | |  | |  __/ | | | | | (_) | |  | |_| |                |
+#   |              |_|  |_|\___|_| |_| |_|\___/|_|   \__, |                |
+#   |                                                |___/                 |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_esx_vsphere_vm_mem(info):
+    data = esx_vsphere_vm_convert(info).keys()
+    if 'summary.quickStats.guestMemoryUsage' in data:
+        return [(None, {})]
+
+def check_esx_vsphere_vm_mem(item, params, info):
+    data = esx_vsphere_vm_convert(info)
+
+    #consumed host memory
+    host_memory_usage   = savefloat(data["summary.quickStats.hostMemoryUsage"][0]) * 1024 * 1024
+    #active guest memory
+    guest_memory_usage  = savefloat(data["summary.quickStats.guestMemoryUsage"][0]) * 1024 * 1024
+    #size of the balloon driver in the VM
+    ballooned_memory    = savefloat(data["summary.quickStats.balloonedMemory"][0]) * 1024 * 1024
+    #The portion of memory, in MB, that is granted to this VM from non-shared host memor(musst not be set)
+    shared_memory       = savefloat(data["summary.quickStats.sharedMemory"][0]) * 1024 * 1024
+    #The portion of memory, in MB, that is granted to this VM from host memory that is shared between VMs.
+    private_memory      = savefloat(data.get("summary.quickStats.privateMemory",[0])[0]) * 1024 * 1024
+
+    perf = [
+        ("host",      host_memory_usage ),
+        ("guest",     guest_memory_usage ),
+        ("ballooned", ballooned_memory ),
+        ("shared",    shared_memory ),
+        ("private",   private_memory ),
+    ]
+
+    message = "Host: %s, Guest: %s, " \
+              "Ballooned: %s, Private: %s, Shared: %s" % \
+    (get_bytes_human_readable(host_memory_usage), \
+     get_bytes_human_readable(guest_memory_usage), get_bytes_human_readable(ballooned_memory), \
+     get_bytes_human_readable(private_memory), get_bytes_human_readable(shared_memory) )
+    return(0, message, perf)
+
+
+check_info['esx_vsphere_vm.mem_usage'] = {
+  "inventory_function"  : inventory_esx_vsphere_vm_mem,
+  "check_function"      : check_esx_vsphere_vm_mem,
+  "service_description" : "ESX Memory",
+  "has_perfdata"        : True
+}
+
+#.
+#   .--Name----------------------------------------------------------------.
+#   |                     _   _                                            |
+#   |                    | \ | | __ _ _ __ ___   ___                       |
+#   |                    |  \| |/ _` | '_ ` _ \ / _ \                      |
+#   |                    | |\  | (_| | | | | | |  __/                      |
+#   |                    |_| \_|\__,_|_| |_| |_|\___|                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_esx_vsphere_vm_name(info):
+    data = esx_vsphere_vm_convert(info).keys()
+    if 'name' in data:
+        return [(None, None)]
+
+def check_esx_vsphere_vm_name(item, params, info):
+    data = esx_vsphere_vm_convert(info)
+    return(0, " ".join(data['name']))
+
+
+check_info['esx_vsphere_vm.name'] = {
+  "inventory_function"  : inventory_esx_vsphere_vm_name,
+  "check_function"      : check_esx_vsphere_vm_name,
+  "service_description" : "ESX Name",
+}
+
+#.
+#   .--Heartbeat-----------------------------------------------------------.
+#   |           _   _                 _   _                _               |
+#   |          | | | | ___  __ _ _ __| |_| |__   ___  __ _| |_             |
+#   |          | |_| |/ _ \/ _` | '__| __| '_ \ / _ \/ _` | __|            |
+#   |          |  _  |  __/ (_| | |  | |_| |_) |  __/ (_| | |_             |
+#   |          |_| |_|\___|\__,_|_|   \__|_.__/ \___|\__,_|\__|            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# Possible values (this list is taken from the official documentation)
+#    gray - VMware Tools are not installed or not running.
+#    red - No heartbeat. Guest operating system may have stopped responding.
+#    yellow - Intermittent heartbeat. May be due to guest load.
+#    green - Guest operating system is responding normally.
+#
+def inventory_esx_vsphere_vm_hb_status(info):
+    data = esx_vsphere_vm_convert(info)
+    if 'guestHeartbeatStatus' in data:
+        return [(None, None)]
+
+def check_esx_vsphere_vm_hb_status(item, params, info):
+    data = esx_vsphere_vm_convert(info)
+
+    vm_status = data['guestHeartbeatStatus'][0]
+    state = 3
+    if vm_status == 'gray': 
+        return 1, "No VMWare Tools installed"
+    elif vm_status == 'green':
+        state = 0
+    elif vm_status == 'red':
+        state = 2
+    elif vm_status == 'yellow':
+        state = 1
+    return state, "Heartbeat status is %s" % vm_status
+
+
+check_info['esx_vsphere_vm.heartbeat'] = {
+  "inventory_function"  : inventory_esx_vsphere_vm_hb_status,
+  "check_function"      : check_esx_vsphere_vm_hb_status,
+  "service_description" : "ESX Heartbeat",
+}
+

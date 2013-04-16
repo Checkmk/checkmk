@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 1.2.3i1:
     Core:
     * Agents can send data for other hosts "piggyback". This is being
@@ -31,6 +32,7 @@
     Event Console:
     * New rule feature: automatically delete event after actions
     * New filter for maximum services level (minimum already existed)
+    * New global setting: hostname translation (allows e.g. to drop domain name)
 
     Checks & Agents:
     * solaris_mem: New check for memory and swap for Solaris agent
@@ -108,6 +110,14 @@
     * FIX: vsphere_agent: fix problems whith ! and \ in username or password
     * FIX: check_mk_agent.aix: fix shebang: was python, must be ksh
     * FIX: cisco_qos: Be compatible to newer IOS-XE versions (Thanks to Ken Smith)
+
+    Multisite:
+    * FIX: do not remove directories of non-exisant users anymore. This lead to
+           a deletion of users' settings in case of an external authentication
+           (like mod_ldap).
+    WATO:
+    * Improved handling of valuespec validations in WATO rule editor. Displaying a
+      warning message when going to throw away the current settings.
 
 1.2.2:
     Core:

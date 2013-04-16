@@ -167,6 +167,8 @@ def regex(reg):
     g_regex_cache[reg] = r
     return r
 
+get_regex = regex # make compatible with check_mk_base.py
+
 # Checks if a text contains characters that make it
 # neccessary to use regular expression logic in order
 # to match it.
@@ -1473,6 +1475,47 @@ class EventServer:
         return event
 
 
+    # Translate a hostname if this is configured. We are
+    # *really* sorry: this code snipped is copied from modules/check_mk_base.py.
+    # There is still no common library. Please keep this in sync with the
+    # original code
+    def translate_hostname(self, backedhost):
+        translation = g_config["hostname_translation"]
+
+        # Here comes the original code from modules/check_mk_base.py
+        if translation:
+            # 1. Case conversion
+            caseconf = translation.get("case")
+            if caseconf == "upper":
+                backedhost = backedhost.upper()
+            elif caseconf == "lower":
+                backedhost = backedhost.lower()
+
+            # 2. Drop domain part (not applied to IP addresses!)
+            if translation.get("drop_domain") and not backedhost[0].isdigit():
+                backedhost = backedhost.split(".", 1)[0]
+
+            # 3. Regular expression conversion
+            if "regex" in translation:
+                regex, subst = translation.get("regex")
+                if not regex.endswith('$'):
+                    regex += '$'
+                rcomp = get_regex(regex)
+                mo = rcomp.match(backedhost)
+                if mo:
+                    backedhost = subst
+                    for nr, text in enumerate(mo.groups()):
+                        backedhost = backedhost.replace("\\%d" % (nr+1), text)
+
+            # 4. Explicity mapping
+            for from_host, to_host in translation.get("mapping", []):
+                if from_host == backedhost:
+                    backedhost = to_host
+                    break
+
+        return backedhost
+
+
     def parse_event(self, line):
         event = {}
         try:
@@ -1565,9 +1608,13 @@ class EventServer:
                 "time"        : time.time(),
             }
 
+        event["host"] = self.translate_hostname(event["host"])
+
         if g_config["debug_rules"]:
-            log('Parsed message:\n' + 
-                ("".join([ "                      %-15s %s\n" % (k+":",v) for (k,v) in sorted(event.items())])).rstrip())
+            log('Parsed message:\n' +
+                ("".join([ " %-15s %s\n" % (k+":",v) for (k,v) in
+                sorted(event.items())])).rstrip())
+
         return event
 
             
@@ -2630,6 +2677,7 @@ def load_configuration():
         "remote_status"         : None,
         "socket_queue_len"      : 10,
         "eventsocket_queue_len" : 10,
+        "hostname_translation"  : {},
     }
     main_file = g_config_dir + "/mkeventd.mk"
     if not os.path.exists(main_file):

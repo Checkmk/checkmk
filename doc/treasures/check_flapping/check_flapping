@@ -1,0 +1,115 @@
+#!/usr/bin/python
+# This check monitors the number of state changes in the given
+# time interval and alerts if the given amount of changes occured.
+# This is slightly different to the Nagios flap detection as it
+# uses hard parameters.
+
+import sys, getopt, time, os, socket
+
+try:
+    import livestatus
+except ImportError:
+    sys.stderr.write('The python livestatus api module is missing. Please install from\n'
+                     'Check_MK livestatus sources to a python import path.\n')
+    sys.exit(1)
+
+def usage():
+    sys.stderr.write("""check_flapping
+
+USAGE: check_flapping [-r MINUTES] [-w NUM] [-c NUM] [-l PATH] HOST [PATTERNS...]
+       check_flapping -h
+
+ARGUMENTS:
+  HOST                          Host name or IP address of the host to check
+  PATTERNS                      One or several regex patterns to match service
+                                descriptions to be monitored by this check
+
+OPTIONS:
+  -h, --help                    Show this help message and exit
+  -l PATH                       Path to livestatus socket (Autodetected in OMD)
+  -r MINUTES                    Timerange in the past to observe, given in minutes
+  -w NUM                        Minumum number of state changes to raise a WARNING state
+  -c NUM                        Minumum number of state changes to raise a CRITICALstate
+
+""")
+
+short_options = 'hr:w:c:l:'
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n" % err)
+    sys.exit(1)
+
+hostname     = None
+socket_path  = ''
+svc_patterns = []
+timerange    = 60
+warn, crit   = 2, 3
+
+for o,a in opts:
+    if o == '-h':
+        usage()
+        sys.exit(0)
+    elif o == '-r':
+    	timerange = int(a)
+    elif o == '-w':
+        warn = int(a)
+    elif o == '-c':
+        crit = int(a)
+    elif o == '-l':
+        socket_path = a
+
+if len(args) == 0:
+    sys.stderr.write('ERROR: No host given.\n')
+    sys.exit(1)
+elif len(args) == 1:
+    sys.stderr.write('ERROR: No service pattern given.\n')
+    sys.exit(1)
+
+hostname = args[0]
+svc_patterns = args[1:]
+
+if not socket_path and 'OMD_ROOT' in os.environ:
+    socket_path = os.environ['OMD_ROOT'] + '/tmp/run/live'
+
+if not os.path.exists(socket_path):
+    sys.stderr.write('ERROR: Livestatus socket (%s) does not exist\n' % socket_path)
+    sys.exit(1)
+
+svc_filter = ''
+for pattern in svc_patterns:
+    svc_filter += 'Filter: service_description ~ %s\n' % pattern
+if len(svc_patterns) > 1:
+    svc_filter += 'Or: %d\n'  % len(svc_patterns)
+
+query = (
+    'GET log\n'
+    'Columns: service_description current_service_scheduled_downtime_depth\n'
+    'Filter: host_name = %s\n'
+    '%s'
+    'Filter: log_time >= %d\n'
+    'Filter: class = 1\n'
+    'Stats: state != 999\n'
+) % (hostname, svc_filter, int(time.time() - (timerange * 60)))
+
+c = livestatus.SingleSiteConnection('unix:' + socket_path)
+response = c.query_table(query)
+
+state  = 0
+output = []
+for svc_desc, downtime_depth, num in response:
+    if int(downtime_depth) != 0:
+        continue # skip services in downtime
+    if num >= crit:
+        output.append('%s: %d (!!)' % (svc_desc, num))
+        state = 2
+    elif num >= warn:
+        output.append('%s: %d (!!)' % (svc_desc, num))
+        state = max(state, 1)
+
+if not output:
+    output.append('Number of state changes not critical')
+
+sys.stdout.write('%s - %s\n' % (['OK', 'WARN', 'CRIT'][state], ','.join(output)))
+sys.exit(state)

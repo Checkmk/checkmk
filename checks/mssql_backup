@@ -38,9 +38,17 @@ def inventory_mssql_backup(info):
 
 def check_mssql_backup(item, params, info):
     for line in info:
-        inst, tablespace, last_backup_date, last_backup_time = line
+        last_backup_date = False
+        try:
+            inst, tablespace, last_backup_date, last_backup_time = line
+        except ValueError:
+            inst, tablespace, last_backup_timestamp = line
+
         if item == inst + ' ' + tablespace:
-            dt = datetime.datetime(*time.strptime(last_backup_date + ' ' + last_backup_time, '%Y-%m-%d %H:%M:%S')[:6])
+            if last_backup_date:
+                dt = datetime.datetime(*time.strptime(last_backup_date + ' ' + last_backup_time, '%Y-%m-%d %H:%M:%S')[:6])
+            else:
+                dt = datetime.datetime.fromtimestamp(saveint(last_backup_timestamp))
 
             state = 0
             # Would be so nice to use delta.total_seconds(). But we must care about python < 2.7

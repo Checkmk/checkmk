@@ -119,6 +119,10 @@
     WATO:
     * Improved handling of valuespec validations in WATO rule editor. Displaying a
       warning message when going to throw away the current settings.
+    * FIX: fix bug where certain settings where not saved on IE. This was mainly
+           on IE7, but also IE8,9,10 in IE7 mode (which is often active). Affected
+           was e.g. the nodes of a cluster or the list of services for service
+           inventory
 
 1.2.2:
     Core:

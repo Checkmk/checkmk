@@ -40,10 +40,11 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
     args += " -s " + quote_shell_string(params["secret"])
     args += " -i " + ",".join(params["infos"])
     direct = params.get("direct", False)
-    if direct:
+
+    if direct == "agent":
+        args += ' --agent'
+    elif direct:
         args += ' --direct'
-        if direct == "agent":
-            args += ' --agent'
 
     args += " " + quote_shell_string(ipaddress)
     return args

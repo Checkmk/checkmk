@@ -190,6 +190,7 @@ class html:
         self.have_help = False
         self.plugged = False
         self.keybindings = []
+        self.keybindings_enabled = True
         self.io_error = False
 
     RETURN = 13
@@ -515,7 +516,7 @@ class html:
             idtext = " id='%s'" % id
         else:
             idtext = ""
-        self.write('<div%s style="display:%s" class="contextlink%s%s" ' % (idtext, display, hot and " hot" or "", fkey and " button" or ""))
+        self.write('<div%s style="display:%s" class="contextlink%s%s" ' % (idtext, display, hot and " hot" or "", (fkey and self.keybindings_enabled) and " button" or ""))
         self.context_button_hover_code(hot and "_hot" or "")
         self.write('>')
         self.write('<a href="%s"' % url)
@@ -523,7 +524,7 @@ class html:
             self.write(' title="%s"' % hover_title)
         if bestof:
             self.write(' onmousedown="count_context_button(this); document.location=this.href; " ')
-        if fkey:
+        if fkey and self.keybindings_enabled:
             title += '<div class=keysym>F%d</div>' % fkey
             self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % url)
         self.write('>%s</a></div>\n' % title)
@@ -935,7 +936,7 @@ class html:
     def body_end(self):
         if self.have_help:
             self.javascript("help_enable();")
-        if self.keybindings:
+        if self.keybindings_enabled and self.keybindings:
             self.javascript("""var keybindings = %r;\n
 document.body.onkeydown = keybindings_keydown;
 document.body.onkeyup = keybindings_keyup;
@@ -1306,5 +1307,5 @@ document.body.onfocus = keybindings_focus;
     def add_keybindings(self, bindings):
         self.keybindings += bindings
 
-
-
+    def disable_keybindings(self):
+        self.keybindings_enabled = False

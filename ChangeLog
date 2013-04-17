@@ -14,6 +14,7 @@
     * FIX: do not remove directories of non-exisant users anymore. This lead to
            a deletion of users' settings in case of an external authentication
            (like mod_ldap).
+    * FIX: Fixed handling of dashboards without title in sidebar view snapin
 
     WATO:
     * Improved handling of valuespec validations in WATO rule editor. Displaying a

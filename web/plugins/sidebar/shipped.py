@@ -76,7 +76,7 @@ def views_by_topic():
           if not view["hidden"] and not view.get("mobile")]
 
     # Add all the dashboards to the views list
-    s += [ (_('Dashboards'), d['title'], d_name)
+    s += [ (_('Dashboards'), d['title'] and d['title'] or d_name, d_name)
            for d_name, d
            in dashboard.dashboards.items()
     ]

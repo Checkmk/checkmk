@@ -1924,6 +1924,10 @@ define service {
     if actchecks:
         outfile.write("\n\n# Active checks\n")
         for acttype, act_info, params in actchecks:
+            # Make hostname available as global variable in argument functions
+            global g_hostname
+            g_hostname = hostname
+
             has_perfdata = act_info.get('has_perfdata', False)
             description = act_info["service_description"](params)
             # compute argument, and quote ! and \ for Nagios

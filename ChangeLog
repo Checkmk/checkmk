@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 1.2.3i1:
     Core:
     * Agents can send data for other hosts "piggyback". This is being
@@ -115,6 +114,8 @@
     * FIX: do not remove directories of non-exisant users anymore. This lead to
            a deletion of users' settings in case of an external authentication
            (like mod_ldap).
+    * FIX: Fixed handling of dashboards without title in sidebar view snapin
+
     WATO:
     * Improved handling of valuespec validations in WATO rule editor. Displaying a
       warning message when going to throw away the current settings.

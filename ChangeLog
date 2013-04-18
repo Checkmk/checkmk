@@ -72,6 +72,7 @@
     * cpu_util.include: fixed bug when params are set to None
     * predictive levels: fixed bug when existing predictive levels get new options
     * windows_plugin mssql.vbs: No longer queries stopped mssql instances
+    * cisco_hsrp: fixed problem when HSRP groups had same ip address
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

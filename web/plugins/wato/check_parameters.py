@@ -1110,80 +1110,105 @@ register_check_parameters(
     "first"
 )
 
+filesystem_elements = [
+    ( "levels",
+      Tuple(
+          title = _("Levels for the used space"),
+          elements = [
+              Percentage(title = _("Warning at"),  unit = _("% usage"), allow_int = True, default_value=80),
+              Percentage(title = _("Critical at"), unit = _("% usage"), allow_int = True, default_value=90)])),
+    (  "magic",
+       Float(
+          title = _("Magic factor (automatic level adaptation for large filesystems)"),
+          default_value = 0.8,
+          minvalue = 0.1,
+          maxvalue = 1.0)),
+    (  "magic_normsize",
+       Integer(
+           title = _("Reference size for magic factor"),
+           default_value = 20,
+           minvalue = 1,
+           label = _("GB"))),
+    ( "levels_low",
+      Tuple(
+          title = _("Minimum levels if using magic factor"),
+          help = _("The filesystem levels will never fall below these values, when using "
+                   "the magic factor and the filesystem is very small."),
+          elements = [
+              Percentage(title = _("Warning at"),  label = _("usage"), allow_int = True, default_value=50),
+              Percentage(title = _("Critical at"), label = _("usage"), allow_int = True, default_value=60)])),
+    (  "trend_range",
+       Optional(
+           Integer(
+               title = _("Range for filesystem trend computation"),
+               default_value = 24,
+               minvalue = 1,
+               label= _("hours")),
+           title = _("Trend computation"),
+           label = _("Enable trend computation"))),
+    (  "trend_mb",
+       Tuple(
+           title = _("Levels on trends in MB per range"),
+           elements = [
+               Integer(title = _("Warning at"), label = _("MB / range"), default_value = 100),
+               Integer(title = _("Critical at"), label = _("MB / range"), default_value = 200)
+           ])),
+    (  "trend_perc",
+       Tuple(
+           title = _("Levels for the percentual growth"),
+           elements = [
+               Percentage(title = _("Warning at"), label = _("% / range"), default_value = 5,),
+               Percentage(title = _("Critical at"), label = _("% / range"), default_value = 10,),
+           ])),
+    (  "trend_timeleft",
+       Tuple(
+           title = _("Levels on the time left until the filesystem gets full"),
+           elements = [
+               Integer(title = _("Warning at"), label = _("hours left"), default_value = 12,),
+               Integer(title = _("Critical at"), label = _("hours left"), default_value = 6, ),
+           ])),
+    ( "trend_perfdata",
+      Checkbox(
+          title = _("Trend performance data"),
+          label = _("Enable performance data from trends"))),
+]
+
 register_check_parameters(
     subgroup_storage,
     "filesystem",
     _("Filesystems (used space and growth)"),
     Dictionary(
-        elements = [
-            ( "levels",
-              Tuple(
-                  title = _("Levels for the used space"),
-                  elements = [
-                      Percentage(title = _("Warning at"),  unit = _("% usage"), allow_int = True, default_value=80),
-                      Percentage(title = _("Critical at"), unit = _("% usage"), allow_int = True, default_value=90)])),
-            (  "magic",
-               Float(
-                  title = _("Magic factor (automatic level adaptation for large filesystems)"),
-                  default_value = 0.8,
-                  minvalue = 0.1,
-                  maxvalue = 1.0)),
-            (  "magic_normsize",
-               Integer(
-                   title = _("Reference size for magic factor"),
-                   default_value = 20,
-                   minvalue = 1,
-                   label = _("GB"))),
-            ( "levels_low",
-              Tuple(
-                  title = _("Minimum levels if using magic factor"),
-                  help = _("The filesystem levels will never fall below these values, when using "
-                           "the magic factor and the filesystem is very small."),
-                  elements = [
-                      Percentage(title = _("Warning at"),  label = _("usage"), allow_int = True, default_value=50),
-                      Percentage(title = _("Critical at"), label = _("usage"), allow_int = True, default_value=60)])),
-            (  "trend_range",
-               Optional(
-                   Integer(
-                       title = _("Range for filesystem trend computation"),
-                       default_value = 24,
-                       minvalue = 1,
-                       label= _("hours")),
-                   title = _("Trend computation"),
-                   label = _("Enable trend computation"))),
-            (  "trend_mb",
-               Tuple(
-                   title = _("Levels on trends in MB per range"),
-                   elements = [
-                       Integer(title = _("Warning at"), label = _("MB / range"), default_value = 100),
-                       Integer(title = _("Critical at"), label = _("MB / range"), default_value = 200)
-                   ])),
-            (  "trend_perc",
-               Tuple(
-                   title = _("Levels for the percentual growth"),
-                   elements = [
-                       Percentage(title = _("Warning at"), label = _("% / range"), default_value = 5,),
-                       Percentage(title = _("Critical at"), label = _("% / range"), default_value = 10,),
-                   ])),
-            (  "trend_timeleft",
-               Tuple(
-                   title = _("Levels on the time left until the filesystem gets full"),
-                   elements = [
-                       Integer(title = _("Warning at"), label = _("hours left"), default_value = 12,),
-                       Integer(title = _("Critical at"), label = _("hours left"), default_value = 6, ),
-                   ])),
-            ( "trend_perfdata",
-              Checkbox(
-                  title = _("Trend performance data"),
-                  label = _("Enable performance data from trends"))),
-
-
-        ]),
+        elements = filesystem_elements,
+    ),
     TextAscii(
         title = _("Mount point"),
         help = _("For Linux/UNIX systems, specify the mount point, for Windows systems "
                  "the drive letter uppercase followed by a colon, e.g. <tt>C:</tt>"),
         allow_empty = False),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "esx_vsphere_datastores",
+    _("ESX Datastores (used space and growth)"),
+    Dictionary(
+        elements = filesystem_elements + [
+            ("provisioning_levels", Tuple(
+                title = _("Provisioning Levels"),
+                help = _("Configure thresholds for overprovisioning of datastores."),
+                elements = [
+                  Percentage(title = _("Warning at overprovisioning of")),
+                  Percentage(title = _("Critical at overprovisioning of")),
+                ]
+            )),
+        ],
+    ),
+    TextAscii(
+        title = _("Datastore Name"),
+        help = _("The name of the Datastore"),
+        allow_empty = False
+    ),
     "dict"
 )
 

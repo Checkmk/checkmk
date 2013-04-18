@@ -22,5 +22,8 @@ inventory:
  One service per datastore will be created.
 
 [parameters]
-params(dict): See {df} for details
+params(dict): The check uses dictionary based parameters like specified for the
+ {df} check. It extends those parameters, for example it makes use of the parameter
+ {provisioning_levels} which are a tuple of percentage thresholds which are used
+ against the current provisioning percentage value.
 

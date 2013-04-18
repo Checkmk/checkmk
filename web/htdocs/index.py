@@ -350,7 +350,7 @@ def handler(req, profiling = True):
             html.write(_("User error") + ": %s\n" % e)
         elif not fail_silently:
             html.header("Invalid User Input")
-            html.show_error(str(e))
+            html.show_error(unicode(e))
             html.footer()
 
     except MKAuthException, e:
@@ -358,7 +358,7 @@ def handler(req, profiling = True):
             html.write(_("Authentication error") + ": %s\n" % e)
         elif not fail_silently:
             html.header(_("Permission denied"))
-            html.show_error(str(e))
+            html.show_error(unicode(e))
             html.footer()
 
     except MKUnauthenticatedException, e:
@@ -366,7 +366,7 @@ def handler(req, profiling = True):
             html.write(_("Missing authentication credentials") + ": %s\n" % e)
         elif not fail_silently:
             html.header(_("Not authenticated"))
-            html.show_error(str(e))
+            html.show_error(unicode(e))
             html.footer()
         response_code = apache.HTTP_UNAUTHORIZED
 
@@ -375,7 +375,7 @@ def handler(req, profiling = True):
             html.write(_("Configuration error") + ": %s\n" % e)
         elif not fail_silently:
             html.header(_("Configuration Error"))
-            html.show_error(str(e))
+            html.show_error(unicode(e))
             html.footer()
         apache.log_error(_("Configuration error: %s") % (e,), apache.APLOG_ERR)
 
@@ -384,7 +384,7 @@ def handler(req, profiling = True):
             html.write(_("General error") + ": %s\n" % e)
         elif not fail_silently:
             html.header(_("Error"))
-            html.show_error(str(e))
+            html.show_error(unicode(e))
             html.footer()
         # apache.log_error(_("Error: %s") % (e,), apache.APLOG_ERR)
 

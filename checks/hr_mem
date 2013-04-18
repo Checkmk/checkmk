@@ -62,7 +62,7 @@ def check_hr_mem(item, params, info):
     totalvirt_mb, virtused_mb  = usage.get(".1.3.6.1.2.1.25.2.1.3", (0,0))
     totalmem_mb,  totalused_mb = totalram_mb + totalvirt_mb, ramused_mb + virtused_mb
 
-    if totalmem_mb > 0:
+    if totalmem_mb > 0 and totalram_mb > 0:
         totalused_perc = 100 * totalused_mb / totalram_mb
 
         perfdata = [

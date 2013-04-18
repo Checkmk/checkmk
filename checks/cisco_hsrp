@@ -75,7 +75,6 @@ hsrp_states = { 1: "initial", 2: "learn", 3: "listen", 4: "speak", 5: "standby",
 
 
 def inventory_cisco_hsrp(info):
-
     inventory = []
     for line in info:
         hsrp_grp_entry, vip, actrouter, sbrouter, hsrp_state, vmac = line
@@ -84,7 +83,8 @@ def inventory_cisco_hsrp(info):
         # if the group is in a working state (both routers see and talk to each other),
         # inventorize HSRP group name+IP and the standby state as seen from "this" box.
         if hsrp_state in [ 5, 6 ]:
-            inventory.append( (vip, (hsrp_grp, hsrp_state)) )
+            vip_grp = "%s-%s" % ( vip, hsrp_grp )
+            inventory.append( (vip_grp, (hsrp_grp, hsrp_state)) )
 
     return inventory
 
@@ -98,17 +98,22 @@ def check_cisco_hsrp(item, params, info):
         interface_index, hsrp_grp = hsrp_grp_entry.split(".")
         hsrp_state = int(hsrp_state)
 
-        if vip == item:
+        if "-" in item:
+            vip_grp = "%s-%s" % ( vip, hsrp_grp )
+        else:
+            vip_grp = vip
+         
+        if vip_grp == item:
             # FIXME: This should be shorter.
             # Validate that we the inventorized state is a "good one"
             # if it's also the one we have now, then we're fine.
 
             if    hsrp_state_wanted == 5  and hsrp_state == hsrp_state_wanted:
                 state = 0
-                msgtxt = "Redundancy Group %s is OK" % hsrp_grp
+                msgtxt = "Redundancy Group %s is OK" %  vip_grp
             elif  hsrp_state_wanted == 6  and hsrp_state == hsrp_state_wanted:
                 state = 0
-                msgtxt = "Redundancy Group %s is OK" % hsrp_grp
+                msgtxt = "Redundancy Group %s is OK" % vip_grp
             # otherwise if it's a good one, but flipped, then we are in a failover
             elif hsrp_state == 5 or hsrp_state == 6:
                 state = 1
@@ -120,7 +125,7 @@ def check_cisco_hsrp(item, params, info):
 
             return (state, msgtxt)
 
-    return (3, "HSRP Group %s not found in Agent output" % hsrp_grp_wanted )
+    return (3, "HSRP Group not found in Agent output" )
 
 
 

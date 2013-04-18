@@ -24,6 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Useful resources:
+# http://www.vmware.com/support/developer/vc-sdk/visdk41pubs/ApiReference/
+
 import sys
 import getopt
 import socket

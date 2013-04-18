@@ -1296,7 +1296,12 @@ class OptionalDropdownChoice(ValueSpec):
         html.write('<span id="%s_ex" style="white-space: nowrap; %s">' % (
             varprefix, not div_is_open and "display: none;" or ""))
         html.write("&nbsp;")
-        self._explicit.render_input(varprefix + "_ex", value)
+
+        if defval == "other":
+            input_value = value
+        else:
+            input_value = self._explicit.default_value()
+        self._explicit.render_input(varprefix + "_ex", input_value)
         html.write("</span>")
 
     def value_to_text(self, value):

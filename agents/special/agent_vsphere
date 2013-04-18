@@ -25,7 +25,13 @@
 # Boston, MA 02110-1301 USA.
 
 # Useful resources:
-# http://www.vmware.com/support/developer/vc-sdk/visdk41pubs/ApiReference/
+# http://pubs.vmware.com/vsphere-51/topic/com.vmware.ICbase/PDF/wssdk_510_dsg.pdf
+# http://pubs.vmware.com/vsphere-51/topic/com.vmware.ICbase/PDF/wssdk_prog_guide_5_1.pdf
+# http://pubs.vmware.com/vsphere-51/index.jsp?topic=/com.vmware.wssdk.apiref.doc/index.html&single=true
+#   http://www.vmware.com/support/developer/vc-sdk/visdk41pubs/ApiReference/
+#   http://www.vmware.com/support/developer/vc-sdk/visdk400pubs/sdk40programmingguide.pdf
+# Maybe the MOB is helpful:
+#   http://<your-esx-host>/mob
 
 import sys
 import getopt
@@ -155,11 +161,16 @@ host = VIServer()
 
 object_collection = []
 try:
+    # During connect ServiceInstance is created and information are fetched from the
+    # server. Details can be found here:
+    # http://www.vmware.com/support/developer/vc-sdk/visdk41pubs/ApiReference/vim.ServiceInstance.html)
     host.connect(host_address, user, secret)
 except:
     if opt_debug:
         raise
-    sys.stderr.write("Cannot connect to vSphere Server. May the wrong credentials. Please correct and make a reinventory.\n")
+    sys.stderr.write("Cannot connect to vSphere Server. Maybe you provided wrong "
+                     "credentials. Please check your connection settings and try "
+                     "again.\n")
     sys.exit(error_exit)
 
 print "<<<check_mk>>>"
@@ -237,26 +248,36 @@ def output_hostsystem_counters():
         if not opt_direct:
             print '<<<<%s>>>>' % name
         print '<<<esx_vsphere_counters:sep(124)>>>'
+
         # Determine IDs of the counters: We have hard coded the IDs here in order to save
-        # a couple of seconds...
-        # counterids = pm.get_entity_counters(mor)
-        # print counterids
-        # print [ i for n,i in counterids.items() if n.startswith("mem.") ]
-        # needed_ids = counterids.keys() # retrieve all ids....
-        needed_ids = [ \
+        # a couple of seconds. To check out which counters are available just comment out
+        # the hardcoded needed_ids and uncomment the following three lines of code. This will
+        # give you a) A dict of name to id mappings and b) Current values of all counters.
+        #counterids = pm.get_entity_counters(mor)
+        #needed_ids = counterids.keys() # retrieve all ids....
+        #print counterids
+
+        needed_ids = [
            # net.*
-           196616, 196621, 196617, 196625, 196619, 196623, 196609, 196614, 196620, 196624, 196615, 196622, 196618, 196612, 196613, 196626,
+           196616, 196621, 196617, 196625, 196619, 196623, 196609, 196614,
+           196620, 196624, 196615, 196622, 196618, 196612, 196613, 196626,
            # sys.uptime
            262144,
            # mem.*
-           # 65635, 65537, 65577, 65625, 65545, 65611, 65573, 65615, 65582, 65549, 65630, 65622, 65618, 65621, 65561, 65623, 65632, 65557, 
-           # 65628, 65633, 65541, 65643, 65586, 65553, 65569, 65589, 65639, 65620, 65599, 65580, 65619, 65603,
+           # 65635, 65537, 65577, 65625, 65545, 65611, 65573, 65615, 65582,
+           # 65549, 65630, 65622, 65618, 65621, 65561, 65623, 65632, 65557,
+           # 65628, 65633, 65541, 65643, 65586, 65553, 65569, 65589, 65639,
+           # 65620, 65599, 65580, 65619, 65603,
         ]
+        #needed_ids = [
+        #    # sys.resourceMem*
+        #    262151, 262155, 262169, 262152, 262154, 262153, 262157, 262156, 262168,
+        #]
         counters = pm.get_entity_statistic(mor, needed_ids)
         lines = []
         for counter in counters:
             name = counter.group + "." + counter.counter
-            lines.append("%s|%s|%s|%s" % (name, counter.instance, counter.value, counter.unit)) 
+            lines.append("%s|%s|%s|%s" % (name, counter.instance, counter.value, counter.unit))
         lines.sort()
         for line in lines:
             print line
@@ -264,7 +285,7 @@ def output_hostsystem_counters():
         print '<<<<>>>>'
 
 
-def output_mors(what, properties, direct=False): 
+def output_mors(what, properties, direct=False):
     if what == "hostsystem":
         obj_type = MORTypes.HostSystem
     elif what == "networking":
@@ -291,7 +312,7 @@ def output_mors(what, properties, direct=False):
         # a special section
         object_collection.append((what, data["name"]))
         name = data["name"].split()[0] # get rid of comment
-        
+
         # Output multiplexed Check_MK Agent output (new in version 1.2.3i1)
         if direct:
             if count > 1:
@@ -333,8 +354,6 @@ def output_datastores():
                 print '[%s]' % entry.Val
             else:
                 print '%s\t%s' % (entry.Name.split(".")[1], entry.Val)
-        
-
 
 
 def conv_multipath(value):
@@ -349,10 +368,12 @@ def conv_numeric_sensor_info(value):
         if (sensor.HealthState.Key == "green") or (sensor.HealthState.Key == "unknown"):
             continue # just output sensors with issuse - saves lots of data
 
-        line = '%s;%s;%s;%s;%s;' % ( sensor.Name, sensor.BaseUnits, sensor.CurrentReading, sensor.SensorType, sensor.UnitModifier)
+        line = '%s;%s;%s;%s;%s;' % (sensor.Name, sensor.BaseUnits, sensor.CurrentReading,
+                                    sensor.SensorType, sensor.UnitModifier)
         if hasattr(sensor, "RateUnits"):
             line += sensor.RateUnits
-        line += ";%s;%s;%s" % (sensor.HealthState.Key, sensor.HealthState.Label, sensor.HealthState.Summary)
+        line += ";%s;%s;%s" % (sensor.HealthState.Key, sensor.HealthState.Label,
+                                                          sensor.HealthState.Summary)
         lines.append(line)
 
         # print inspect.getmembers(sensor)

@@ -28,7 +28,7 @@ ups_power_default_levels = (20, 1) # warning / critical
 
 def inventory_ups_power(info):
     if len(info) > 0:
-        return [ ( x[0], "ups_power_default_levels") for x in info ]
+        return [ ( x[0], "ups_power_default_levels") for x in info if int(x[1]) > 0 ]
 
 def check_ups_power(item, params, info):
     warn, crit = params

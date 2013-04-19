@@ -8979,6 +8979,7 @@ def mode_edit_auxtag(phase):
     if new:
         title = ""
         tag_id = ""
+        topic = ""
     else:
         tag_id, title = auxtags[tag_nr]
         topic, title = parse_hosttag_title(title)

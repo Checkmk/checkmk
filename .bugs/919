@@ -1,0 +1,13 @@
+Title: Detect and warn about outdated checks in local/ hierachy
+Component: core
+State: open
+Date: 2013-04-19 10:17:27
+Targetversion: 1.4.0
+Class: feature
+
+It often happens that there are placed checks with changes/fixes in the
+local/ hierarchy and left there. When an update applies those changes
+and maybe get further changes, and the user does not remind, he would
+use the local/ check for all the time.
+
+It would be a nice feature to detect this somehow.

@@ -1,0 +1,46 @@
+#!/usr/bin/python
+
+# Example check. Put this into local/share/check_mk/checks
+
+# Inventory function without any specialities. Return
+# None as a default parameter (meaning: no levels).
+def inventory_foo(info):
+    if len(info) > 0:
+        return [(None, None)]
+
+def check_foo(_no_item, params, info):
+    # Step 1: extract the measured value from the agent output. Here
+    # of course trivial
+    value = float(info[0][0]) 
+
+    # Step 2: Output the value (and maybe others) as performance data.
+    # This is mandatory when using predictive levels. The name of the
+    # value (here 'fooval') is needed later.
+    perfdata = [("fooval", value)]
+
+    # Step 3: Prepare some informative output text
+    text = "%d running processes" % value
+
+    # Step 4: let the helper function check_levesl() do the rest.
+    # The params can be None (lo levels), a pair of fixed levels for
+    # WARN/CRIT or a dictionary with the parameters for the prediction.
+    # In return we get the resulting Nagios state and in case of prediciton
+    # an extra text and extra perfdata (the predicted reference).
+    state, extratext, extraperf = check_levels(value, "fooval", params)
+
+    # Put that extratext together with our own text
+    if extratext:
+        text += ", " + extratext
+
+    # Also append the extra performance data and return the stuff
+    return state, text, perfdata + extraperf
+
+
+check_info['foo'] = {
+    "check_function"          : check_foo,
+    "inventory_function"      : inventory_foo,
+    "service_description"     : "FOO",
+    "has_perfdata"            : True,  # must be true
+    "group"                   : "foobar", # configuration group for WATO
+}
+

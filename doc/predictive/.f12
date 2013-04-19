@@ -1,0 +1,10 @@
+# compile helper file. Installs the files into a local
+# OMD site and into the local agent
+
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+
+sudo install -m 755 foo.agentplugin /usr/lib/check_mk_agent/plugins/foo
+sudo install -m 644 foo.check /omd/sites/$SITE/local/share/check_mk/checks/foo
+sudo install -m 644 foo.wato /omd/sites/$SITE/local/share/check_mk/web/plugins/wato/foo.py
+
+sudo omd restart $SITE apache

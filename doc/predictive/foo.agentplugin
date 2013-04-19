@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# This is an example for an agent section that is just outputting one simple
+# value. As an example we output the number of processes currently running. This
+# is better than a fixed number since it changes from time to time.
+
+# Put this file onto the target host to /usr/lib/check_mk_agent/plugins
+
+echo '<<<foo>>>'
+ps ax | wc -l

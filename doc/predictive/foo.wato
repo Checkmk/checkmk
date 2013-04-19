@@ -1,0 +1,17 @@
+#!/usr/bin/python
+
+# WATO declaration for the check parameters of foo
+register_check_parameters(
+    "My own checks",  # main topic for this rule in WATO
+    "foobar",         # name of WATO group, was declared in check (not always name of check)
+    "Levels for foo", # title of the WATO ruleset
+    Levels(
+        help = _("The foo check does check the foo of a bar. Here you can define parameters..."),
+        unit = "processes",
+        default_difference = (10.0, 20.0), # Default settings when using absolute differences
+        default_levels = (100., 200.0),    # Default levels when using non-predictive static levels
+    ),
+    None, # Check has no item
+    None, # Match type, always None here
+)
+

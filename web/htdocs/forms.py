@@ -43,7 +43,7 @@ def get_input(valuespec, varprefix):
 
 def edit_dictionary(entries, value, focus=None, hover_help=True,
                     validate=None, buttontext=None, title=None,
-                    buttons = None):
+                    buttons = None, method="GET"):
     new_value = value.copy()
     if html.var("filled_in") == "form" and html.check_transaction():
         messages = []
@@ -68,7 +68,7 @@ def edit_dictionary(entries, value, focus=None, hover_help=True,
         else:
             return new_value
 
-    html.begin_form("form")
+    html.begin_form("form", method=method)
     header(title and title or _("Properties"))
     first = True
     for name, vs in entries:

@@ -11233,6 +11233,7 @@ def Levels(**kwargs):
           title = title,
           help = help,
           show_titles = False,
+          style = "dropdown",
           elements = [
               FixedValue(
                   None,

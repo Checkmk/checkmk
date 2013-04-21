@@ -311,6 +311,7 @@ class TextAscii(ValueSpec):
         self._size          = kwargs.get("size", 25)
         self._strip         = kwargs.get("strip", True)
         self._allow_empty   = kwargs.get("allow_empty", True)
+        self._read_only     = kwargs.get("read_only")
         self._none_is_empty = kwargs.get("none_is_empty", False)
         self._regex         = kwargs.get("regex")
         self._regex_error   = kwargs.get("regex_error",
@@ -328,7 +329,8 @@ class TextAscii(ValueSpec):
         if self._label:
             html.write(self._label)
             html.write("&nbsp;")
-        html.text_input(varprefix, str(value), size = self._size)
+        html.text_input(varprefix, str(value), size = self._size,
+                        read_only = self._read_only)
 
     def value_to_text(self, value):
         if value == None:

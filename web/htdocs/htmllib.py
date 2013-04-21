@@ -562,6 +562,8 @@ class html:
             addprops += " style=\"%s%s\"" % (add_style, args["style"])
         elif add_style:
             addprops += " style=\"%s\"" % add_style
+        if args.get("read_only"):
+            addprops += " readonly"
 
         if submit != None:
             if not id:

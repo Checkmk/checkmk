@@ -1,0 +1,20 @@
+This directory contains a skeleton for own checks that use predicitve
+levels. These types of check just monitor one single value that varies
+over the time.
+
+Install the files:
+
+  foo.agentplugin -> /usr/lib/check_mk_agent/plugins/foo (on the target host)
+  foo.check       -> (OMD-SITE)/local/share/check_mk/checks/foo
+  foo.wato        -> (OMD-SITE)/local/share/check_mk/web/plugins/wato/foo.py 
+
+Do not forget to restart your site Apache after installing or modifiying the
+wato/foo.py.
+
+Now you can do inventory (cmk -I) on the target host and will get one new
+service named 'FOO'. In WATO you will have a new rule below "Parameters for Inventorized checks"
+in the box "My own checks". Here you can setup no, fixed or predictive levels.
+
+Please note that predictive levels need some backlog of RRD data in order
+to work.
+

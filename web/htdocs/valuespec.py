@@ -311,6 +311,7 @@ class TextAscii(ValueSpec):
         self._size          = kwargs.get("size", 25)
         self._strip         = kwargs.get("strip", True)
         self._allow_empty   = kwargs.get("allow_empty", True)
+        self._read_only     = kwargs.get("read_only")
         self._none_is_empty = kwargs.get("none_is_empty", False)
         self._regex         = kwargs.get("regex")
         self._regex_error   = kwargs.get("regex_error",
@@ -328,7 +329,8 @@ class TextAscii(ValueSpec):
         if self._label:
             html.write(self._label)
             html.write("&nbsp;")
-        html.text_input(varprefix, str(value), size = self._size)
+        html.text_input(varprefix, str(value), size = self._size,
+                        read_only = self._read_only)
 
     def value_to_text(self, value):
         if value == None:
@@ -1710,6 +1712,7 @@ class Alternative(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
         self._match = kwargs.get("match") # custom match function
+        self._style = kwargs.get("style", "radio") # alternative: "dropdown"
 
     # Return the alternative (i.e. valuespec)
     # that matches the datatype of a given value. We assume
@@ -1726,6 +1729,41 @@ class Alternative(ValueSpec):
                 pass
 
     def render_input(self, varprefix, value):
+        if self._style == "radio":
+            self.render_input_radio(varprefix, value)
+        else:
+            self.render_input_dropdown(varprefix, value)
+
+    def render_input_dropdown(self, varprefix, value):
+        mvs = self.matching_alternative(value)
+        options = []
+        sel_option = html.var(varprefix + "_use")
+        for nr, vs in enumerate(self._elements):
+            if not sel_option and vs == mvs:
+                sel_option = str(nr)
+            options.append((str(nr), vs.title()))
+        onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(options))
+        html.select(varprefix + "_use", options, sel_option, onchange)
+        html.write("&nbsp;")
+
+        for nr, vs in enumerate(self._elements):
+            if str(nr) == sel_option:
+                disp = ""
+                cur_val = value
+            else:
+                disp = "none"
+                cur_val = vs.default_value()
+
+            html.write('<span id="%s_%s_sub" style="display: %s">' % 
+                    (varprefix, nr, disp))
+            html.help(vs.help())
+            vs.render_input(varprefix + "_%d" % nr, cur_val)
+            html.write("</span>")
+
+
+
+
+    def render_input_radio(self, varprefix, value):
         mvs = self.matching_alternative(value)
         for nr, vs in enumerate(self._elements):
             if html.has_var(varprefix + "_use"):

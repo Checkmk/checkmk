@@ -3096,42 +3096,42 @@ void output(SOCKET &out, const char *format, ...)
         write_to_socket = true;
 
     if (do_tcp) {
-	while (write_to_socket && !should_terminate) {
-	    int result = send(out, outbuffer, len, 0);
-	    if (result == SOCKET_ERROR) {
-		debug("send() failed");
-		int error = WSAGetLastError();
-		if (error == WSAEINTR) {
-		    debug("INTR. Nochmal...");
-		    continue;
-		}
-		else if (error == WSAEINPROGRESS) {
-		    debug("INPROGRESS. Nochmal...");
-		    continue;
-		}
-		else if (error == WSAEWOULDBLOCK) {
-		    debug("WOULDBLOCK. Komisch. Breche ab...");
-		    break;
-		}
-		else {
-		    debug("Anderer Fehler. Gebe auf\n");
-		    break;
-		}
-	    }
-	    else if (result == 0)
-    		debug("send() returned 0");
-	    else if (result != len) {
-            debug("send() sent too few bytes");
-            len -= result;
-        }
-        else
-            len = 0;
+        while (write_to_socket && !should_terminate) {
+            int result = send(out, outbuffer, len, 0);
+            if (result == SOCKET_ERROR) {
+                debug("send() failed");
+                int error = WSAGetLastError();
+                if (error == WSAEINTR) {
+                    debug("INTR. Nochmal...");
+                    continue;
+                }
+                else if (error == WSAEINPROGRESS) {
+                    debug("INPROGRESS. Nochmal...");
+                    continue;
+                }
+                else if (error == WSAEWOULDBLOCK) {
+                    debug("WOULDBLOCK. Komisch. Breche ab...");
+                    break;
+                }
+                else {
+                    debug("Anderer Fehler. Gebe auf\n");
+                    break;
+                }
+            }
+            else if (result == 0)
+                debug("send() returned 0");
+            else if (result != len) {
+                debug("send() sent too few bytes");
+                len -= result;
+            }
+            else
+                len = 0;
 
-	    break;
-	}
+            break;
+        }
     }
     else {
-	    fwrite(outbuffer, len, 1, stdout);
+        fwrite(outbuffer, len, 1, stdout);
         len = 0;
     }
 }

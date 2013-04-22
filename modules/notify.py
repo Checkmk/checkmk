@@ -352,7 +352,7 @@ def do_notify(args):
             context['SERVICEURL'] = '/check_mk/view.py?view_name=service&host=%s&service=%s' % \
                                      (urlencode(context['HOSTNAME']), urlencode(context['SERVICEDESC']))
 
-        if mode in [ 'fake-service', 'fake_host' ]:
+        if mode in [ 'fake-service', 'fake-host' ]:
             sys.exit(call_notification_script(plugin, [], context, True))
 
         if 'LASTHOSTSTATECHANGE' in context:

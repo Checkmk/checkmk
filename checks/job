@@ -1,0 +1,136 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#<<<job>>>
+#==> asd ASD <==
+#exit_code 0
+#real_time 0:00.00
+#user_time 0.00
+#system_time 0.00
+#reads 0
+#writes 0
+#max_res_kbytes 1968
+#avg_mem_kbytes 0
+#
+#
+#==> test <==
+#exit_code 0
+#real_time 0:00.00
+#user_time 0.00
+#system_time 0.00
+#reads 0
+#writes 0
+#max_res_kbytes 1984
+#avg_mem_kbytes 0
+
+import datetime
+
+def inventory_job(info):
+    return [ (' '.join(l[1:-1]), None) for l in info if l[0] == '==>' ]
+
+def job_parse_real_time(s):
+    parts = s.split(':')
+    min_sec, hour_sec = 0, 0
+    if len(parts) == 3:
+        hour_sec = int(parts[0]) * 60 * 60
+    if len(parts) >= 2:
+        min_sec = int(parts[-2]) * 60
+    return float(parts[-1]) + min_sec + hour_sec
+
+def job_parse(item, info):
+    found = False
+    data = {}
+    for line in info:
+        if ' '.join(line[1:-1]) == item:
+            found = True
+
+        elif found and line[0] == '==>':
+            break # Stop at next section
+
+        elif found:
+            key, val = line
+            # Convert several keys/values
+            if key == 'real_time':
+                val = job_parse_real_time(val)
+            elif key in [ 'user_time', 'system_time' ]:
+                val = float(val)
+            elif key in [ 'exit_code', 'invol_context_switches', 'vol_context_switches' ]:
+                val = int(val)
+            elif key == 'start_time':
+                val = datetime.datetime.fromtimestamp(int(val))
+            elif key in [ 'max_res_kbytes', 'avg_mem_kbytes' ]:
+                key = key.replace('kbytes', 'bytes')
+                val = int(val) * 1000
+            data[key] = val
+
+    return data
+
+def check_job(item, _no_params, info):
+    job = job_parse(item, info)
+    if not job:
+        return 3, 'Got no information for this job'
+
+    state = 0
+    output = []
+    perfdata = []
+
+    txt = 'Exit-Code: %d' % job['exit_code']
+    if job['exit_code'] != 0:
+        state = max(state, 2)
+        txt += ' (!!)'
+    output.append(txt)
+
+    output.append('Started: %s' % job['start_time'].strftime('%Y-%m-%d %H:%M:%S'))
+
+    for key, title, value in [
+        ('real_time',              'Real-Time',               job['real_time']),
+        ('user_time',              'User-Time',               job['user_time']),
+        ('system_time',            'System-Time',             job['system_time']),
+        ('reads',                  'Filesystem Reads',        job['reads']),
+        ('writes',                 'Filesystem Writes',       job['writes']),
+        ('max_res_bytes',          'Max. Memory',             job['max_res_bytes']),
+        ('avg_mem_bytes',          'Avg. Memory',             job['avg_mem_bytes']),
+        ('vol_context_switches',   'Vol. Context Switches',   job['vol_context_switches']),
+        ('invol_context_switches', 'Invol. Context Switches', job['invol_context_switches']),
+      ]:
+        if key in [ 'max_res_bytes', 'avg_mem_bytes' ]:
+            display_value = get_bytes_human_readable(value, 1000)
+        elif key in [ 'real_time', 'user_time', 'system_time' ]:
+            display_value = get_age_human_readable(value)
+        else:
+            display_value = value
+
+        output.append('%s: %s' % (title, display_value))
+        perfdata.append((key, value))
+
+    return state, ', '.join(output), perfdata
+
+check_info["job"] = {
+    'check_function':          check_job,
+    'inventory_function':      inventory_job,
+    'service_description':     'Job %s',
+    'group':                   'job',
+}

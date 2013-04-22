@@ -35,17 +35,20 @@
 
     Checks & Agents:
     * solaris_mem: New check for memory and swap for Solaris agent
-    * New special agent agent_vsphere for monitoring ESX (VMware) Hosts
-      via vSphere interface
+    * agent_vsphere: New VMWare ESX monitoring that uses pySphere and the VMWare
+      API in order to get data very efficiently. Read (upcoming) documentation
+      for details.
     * new special agent agent_random for creating random monitoring data
     * New checks: windows_intel_bonding / windows_broadcom_bonding
-    * cisco_qos: adhere qos-bandwidth policies
     * Implemented SAP monitoring based on the agent plugin mk_sap. This
       must be run on a linux host. It connects via RFC calls to SAP R/3
       systems to retrieve monitoring information for this or other machines.
     * sap.dialog: Monitors SAP dialog statistics like the response time
     * sap.value: Simply processes information provided by SAP to Nagios
     * openvpn_clients: new check for OpenVPN connections
+    * if64_tplink: special new check for TP Link switches with broken SNMP output
+    * job: Monitoring states and performance indicators of any jobs on linux systems
+    * cisco_qos: adhere qos-bandwidth policies
     * check_disk_smb: WATO formalization for active check check_disk_smb
     * if.include: new configurable parameters for assumed input and output speed
     * cisco_qos: new param unit:    switches between bit/byte display
@@ -58,15 +61,11 @@
     * Linux agent: allow cached local/plugins checks (see docu)
     * mem.include: Linux memory check now includes size of page tables. This
       can be important e.g. on ORACLE systems with a lot of memory
-    * agent_vsphere: New VMWare ESX monitoring that uses pySphere and the VMWare
-      API in order to get data very efficiently. Read (upcoming) documentation
-      for details.
     * windows_agent: Now buffers output before writing it to the socket
                      Results in less tcp packages per call
     * smart.stats: rewrote check. Please reinventorize. Error counters are now
       snapshotted during inventory.
     * smart.temp: add WATO configuration
-    * if64_tplink: special new check for TP Link switches with broken SNMP output
     * windows_agent: check_mk.ini: new option "port" - specifies agent port
     * winperf_processor: introduce averaging, support predictive levels
     * cpu_util.include: fixed bug when params are set to None

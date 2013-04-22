@@ -1,0 +1,38 @@
+title: Job Monitoring
+agents: linux
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors state and performance information of any linux program
+ call like for example regular running cronjobs.
+
+ The check uses information provided by the wrapper program {mk-job}. This
+ program is shipped with the linux agent and installed to {/usr/bin}.
+ {mk-job} is a wrapper which is called instead of the normal program. For
+ example if you have a command line {nightly-backup >/dev/null} which gets
+ executed by cronjob every night, you can change the command line to
+ {mk-job backup nightly-backup >/dev/null} to let mk-job collect information
+ about the job during runtime while the string {backup} is the ident of the
+ job to be executed. This ident must be an unique identifier for this job
+ on each host. When the job finished, mk-job writes the collected data to
+ {/var/lib/check_mk_agent/job/<job-id>}. The agent outputs
+ all available data to the Check_MK server.
+
+ At the moment this check has no parameters. It reports a {CRITICAL}
+ state when the exit code of the job is not 0.
+
+item:
+ The ident of the job defined by the first argument to {mk-job}.
+
+inventory:
+ One check per job will be created.
+
+perfdata:
+ {real_time}: Elapsed real time in seconds.
+ {user_time}: Total number of CPU-seconds that the process spent in user mode. 
+ {system_time}: Total number of CPU-seconds that the process spent in kernel mode. 
+ {reads}: Number of file system inputs by the process. 
+ {writes}: Number of file system outputs by the process. 
+ {max_res_bytes}: Maximum resident set size of the process during its lifetime.
+ {avg_mem_bytes}: Average total (data+stack+text) memory use of the process.

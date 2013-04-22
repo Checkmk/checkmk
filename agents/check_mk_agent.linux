@@ -453,6 +453,12 @@ then
     done
 fi
 
+# Get statistics about monitored jobs
+if cd /var/lib/check_mk_agent/job; then
+    echo '<<<job>>>'
+    head -n -0 -v *
+fi
+
 # MK's Remote Plugin Executor
 if [ -e "$MK_CONFDIR/mrpe.cfg" ]
 then

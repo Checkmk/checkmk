@@ -134,8 +134,10 @@ mkdir -p $R/usr/bin
 install -m 755 $R/usr/share/check_mk/agents/check_mk_agent.linux $R/usr/bin/check_mk_agent
 install -m 755 $R/usr/share/check_mk/agents/check_mk_caching_agent.linux $R/usr/bin/check_mk_caching_agent
 install -m 755 $R/usr/share/check_mk/agents/waitmax $R/usr/bin
+install -m 755 $R/usr/share/check_mk/agents/mk-job $R/usr/bin
 mkdir -p $R/usr/lib/check_mk_agent/plugins
 mkdir -p $R/usr/lib/check_mk_agent/local
+mkdir -p $R/var/lib/check_mk_agent
 
 # logwatch and oracle extension
 install -m 755 $R/usr/share/check_mk/agents/plugins/mk_logwatch $R/usr/lib/check_mk_agent/plugins
@@ -181,27 +183,33 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) /etc/xinetd.d/check_mk
 /usr/bin/check_mk_agent
 /usr/bin/waitmax
+/usr/bin/mk-job
 /usr/share/doc/check_mk_agent
 %dir /usr/lib/check_mk_agent/local
 %dir /usr/lib/check_mk_agent/plugins
+%dir /var/lib/check_mk_agent
 
 %files agent-scriptless
 %config(noreplace) /etc/xinetd.d/check_mk
 /usr/bin/check_mk_agent
 /usr/bin/waitmax
+/usr/bin/mk-job
 /usr/share/doc/check_mk_agent
 %dir /usr/lib/check_mk_agent/local
 %dir /usr/lib/check_mk_agent/plugins
+%dir /var/lib/check_mk_agent
 
 %files caching-agent
 %config(noreplace) /etc/xinetd.d/check_mk_caching
 /usr/bin/check_mk_agent
 /usr/bin/check_mk_caching_agent
 /usr/bin/waitmax
+/usr/bin/mk-job
 /usr/share/doc/check_mk_agent
 %dir /usr/lib/check_mk_agent/local
 %dir /usr/lib/check_mk_agent/plugins
 %dir /etc/check_mk
+%dir /var/lib/check_mk_agent
 
 %files agent-logwatch
 /usr/lib/check_mk_agent/plugins/mk_logwatch

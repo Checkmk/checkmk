@@ -1,0 +1,61 @@
+#!/bin/bash
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+help() {
+    echo "Usage: mk-job IDENT PROGRAM [ARGS...]"
+    echo ""
+    echo "Execute PROGRAM as subprocess while measuring performance information"
+    echo "about the running process and writing it to an output file. This file"
+    echo "can be monitored using Check_MK. The Check_MK Agent will forward the"
+    echo "information of all job files to the monitoring server."
+    echo ""
+    echo "This file is being distributed with the Check_MK Agent."
+}
+
+if [ $# -lt 2 ]; then
+    help >&2
+    exit 1
+fi
+
+OUTPUT_PATH=/var/lib/check_mk_agent/job
+IDENT=$1
+shift
+
+if [ ! -d "$OUTPUT_PATH" ]; then
+    mkdir -p "$OUTPUT_PATH"
+fi
+
+if ! type $1 >/dev/null 2>&1; then
+    echo -e "ERROR: Cannot run $1. Command not found.\n" >&2
+    help >&2
+    exit 1
+fi
+
+date +"start_time %s" > "$OUTPUT_PATH/.$IDENT.running"
+/usr/bin/time -o "$OUTPUT_PATH/.$IDENT.running" --quiet --append \
+              -f "exit_code %x\nreal_time %E\nuser_time %U\nsystem_time %S\nreads %I\nwrites %O\nmax_res_kbytes %M\navg_mem_kbytes %K\ninvol_context_switches %c\nvol_context_switches %w" $@
+RC=$?
+mv "$OUTPUT_PATH/.$IDENT.running" "$OUTPUT_PATH/$IDENT"
+exit $RC

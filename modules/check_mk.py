@@ -322,6 +322,7 @@ scanparent_hosts                     = [ ( ALL_HOSTS ) ]
 host_attributes                      = {} # needed by WATO, ignored by Check_MK
 ping_levels                          = [] # special parameters for host/PING check_command
 host_check_commands                  = [] # alternative host check instead of check_icmp
+check_mk_exit_status                 = [] # Rule for specifying CMK's exit status in case of various errors
 check_periods                        = []
 snmp_check_interval                  = []
 

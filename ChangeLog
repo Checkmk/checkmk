@@ -74,6 +74,8 @@
     * predictive levels: fixed bug when existing predictive levels get new options
     * windows_plugin mssql.vbs: No longer queries stopped mssql instances
     * cisco_hsrp: fixed problem when HSRP groups had same ip address
+    * windows_agent: new section plugins, now able to set timeouts for specific plugins
+                     new global config option: timeout_plugins_dir             
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

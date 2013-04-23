@@ -83,6 +83,7 @@
     * Table statehist: Improved detection of vanished hosts and services.
                        Now able to detect and remove nonsense check plugin output 
     * FIX: able to handle equal comment_id between host and service
+    * livestatus.log: show utf-8 decoding problems only with debug logging >=2
 
     BI:
     * Integrated availability computing, including nifty time warp feature

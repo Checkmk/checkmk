@@ -1655,12 +1655,50 @@ group = "agent/" + _("Check_MK Agent")
 register_rule(group,
     "agent_ports",
     Integer(
-            help = _("This variable allows to specify the TCP port to "
-                     "be used to connect to the agent on a per-host-basis. "),
             minvalue = 1,
             maxvalue = 65535,
             default_value = 6556),
-    title = _("TCP port for connection to Check_MK agent")
+    title = _("TCP port for connection to Check_MK agent"),
+    help = _("This variable allows to specify the TCP port to "
+             "be used to connect to the agent on a per-host-basis. "),
+)
+
+register_rule(group,
+    "check_mk_exit_status",
+    Dictionary(
+        elements = [
+            ( "connection", 
+              MonitoringState(
+                default_value = 2,
+                title = _("State in case of connection problems")),
+            ),
+            ( "missing_sections",
+              MonitoringState(
+                default_value = 1,
+                title = _("State if just <i>some</i> agent sections are missing")),
+            ),
+            ( "empty_output",
+              MonitoringState(
+                default_value = 2,
+                title = _("State in case of empty agent output")),
+            ),
+            ( "wrong_version",
+              MonitoringState(
+                default_value = 1,
+                title = _("State in case of wrong agent version")),
+            ),
+            ( "exception",
+              MonitoringState(
+                default_value = 3,
+                title = _("State in case of unhandled exception")),
+            ),
+        ],
+    ),
+    title = _("Status of the Check_MK service"),
+    help = _("This ruleset specifies the total status of the Check_MK service in "
+             "case of various error situations. One use case is the monitoring "
+             "of hosts that are not always up. You can have Check_MK an OK status "
+             "here if the host is not reachable."),
 )
 
 register_rule(group,

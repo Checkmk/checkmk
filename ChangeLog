@@ -7,6 +7,8 @@
     * New variable snmp_check_interval which can be used to customize
       the check intervals of SNMP based checks
     * setup: Added missing vars rrd_path and rrdcached_sock
+    * new variable check_mk_exit_status: allows to make Check_MK service OK,
+      even if host in not reachable.
 
     Multisite:
     * New availability view for arbitrary host/service collections

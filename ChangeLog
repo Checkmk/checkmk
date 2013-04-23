@@ -86,6 +86,7 @@
                        Now able to detect and remove nonsense check plugin output 
     * FIX: able to handle equal comment_id between host and service
     * livestatus.log: show utf-8 decoding problems only with debug logging >=2
+    * livestatus: fixed incorrect output formatting of comments_with_info column
 
     BI:
     * Integrated availability computing, including nifty time warp feature

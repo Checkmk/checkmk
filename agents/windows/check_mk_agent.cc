@@ -867,6 +867,7 @@ void section_winperf(SOCKET &out)
 {
     dump_performance_counters(out, 234, "phydisk");
     dump_performance_counters(out, 238, "processor");
+    dump_performance_counters(out, 510, "if");
 
     // also output additionally configured counters
     for (unsigned i=0; i<g_num_winperf_counters; i++)

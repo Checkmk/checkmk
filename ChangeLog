@@ -72,6 +72,7 @@
     * predictive levels: fixed bug when existing predictive levels get new options
     * windows_plugin mssql.vbs: No longer queries stopped mssql instances
     * cisco_hsrp: fixed problem when HSRP groups had same ip address
+    * winperf_if: hell has frozen over: a new check for network adapters on Windows
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

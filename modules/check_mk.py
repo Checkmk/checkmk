@@ -1080,6 +1080,13 @@ def snmp_port_spec(hostname):
     else:
         return ":%d" % port
 
+def exit_code_spec(hostname):
+    spec = {}
+    specs = host_extra_conf(hostname, check_mk_exit_status)
+    for entry in specs[::-1]:
+        spec.update(entry)
+    return spec
+
 
 def service_description(check_type, item):
     if check_type not in check_info:
@@ -2893,6 +2900,9 @@ no_inventory_possible = None
     # TCP and SNMP port of agent
     output.write("def agent_port_of(hostname):\n    return %d\n\n" % agent_port_of(hostname))
     output.write("def snmp_port_spec(hostname):\n    return %r\n\n" % snmp_port_spec(hostname))
+
+    # Exit code of Check_MK in case of various errors
+    output.write("def exit_code_spec(hostname):\n    return %r\n\n" % exit_code_spec(hostname))
 
     # Piggyback translations
     output.write("def get_piggyback_translation(hostname):\n    return %r\n\n" % get_piggyback_translation(hostname))

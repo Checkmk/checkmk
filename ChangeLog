@@ -7,6 +7,8 @@
     * New variable snmp_check_interval which can be used to customize
       the check intervals of SNMP based checks
     * setup: Added missing vars rrd_path and rrdcached_sock
+    * new variable check_mk_exit_status: allows to make Check_MK service OK,
+      even if host in not reachable.
 
     Multisite:
     * New availability view for arbitrary host/service collections
@@ -73,6 +75,8 @@
     * windows_plugin mssql.vbs: No longer queries stopped mssql instances
     * cisco_hsrp: fixed problem when HSRP groups had same ip address
     * winperf_if: hell has frozen over: a new check for network adapters on Windows
+    * windows agent: new config section plugins, now able to set timeouts for specific plugins
+                     new global config option: timeout_plugins_total
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid
@@ -82,6 +86,8 @@
     * Table statehist: Improved detection of vanished hosts and services.
                        Now able to detect and remove nonsense check plugin output 
     * FIX: able to handle equal comment_id between host and service
+    * livestatus.log: show utf-8 decoding problems only with debug logging >=2
+    * livestatus: fixed incorrect output formatting of comments_with_info column
 
     BI:
     * Integrated availability computing, including nifty time warp feature

@@ -70,6 +70,17 @@ register_rule(group,
                    maxvalue = 65535,
               )
             ),
+            ( "timeout",
+              Integer(
+                  title = _("Connection timeout"),
+                  help = _("The network timeout in seconds when communicating with vSphere or "
+                           "to the Check_MK Agent. The default is 60 seconds. Please note that this "
+                           "is not a total timeout but is applied to each individual network transation."),
+                  default_value = 60,
+                  minvalue = 1,
+                  unit = _("seconds"),
+              )
+            ),
             ( "infos",
               Transform(
                   ListChoice(
@@ -77,6 +88,7 @@ register_rule(group,
                          ( "hostsystem",     _("Host Systems") ),
                          ( "virtualmachine", _("Virtual Machines") ),
                          ( "datastore",      _("Datastores") ),
+                         ( "counters",       _("Performance Counters") ),
                      ],
                      default_value = [ "hostsystem", "virtualmachine" ],
                      allow_empty = False,
@@ -97,7 +109,7 @@ register_rule(group,
                )
             )
         ],
-        optional_keys = [ "tcp_port", ],
+        optional_keys = [ "tcp_port", "timeout" ],
     ),
     match = 'first')
 

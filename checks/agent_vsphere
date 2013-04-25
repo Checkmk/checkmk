@@ -39,12 +39,17 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
     args += " -u " + quote_shell_string(params["user"])
     args += " -s " + quote_shell_string(params["secret"])
     args += " -i " + ",".join(params["infos"])
+
     direct = params.get("direct", False)
 
     if direct == "agent":
         args += ' --agent'
     elif direct:
-        args += ' --direct'
+        args += ' --direct --hostname ' + quote_shell_string(hostname)
+
+    if "timeout" in params:
+        args += ' --timeout %d' % params["timeout"]
+
 
     args += " " + quote_shell_string(ipaddress)
     return args

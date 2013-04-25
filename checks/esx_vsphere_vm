@@ -48,6 +48,11 @@ def inventory_esx_vsphere_vm_mem(info):
 def check_esx_vsphere_vm_mem(item, params, info):
     data = esx_vsphere_vm_convert(info)
 
+    # If the machine is powered of, we do not get data
+    powerstate = data["runtime.powerState"][0]
+    if powerstate != "poweredOn":
+        raise MKCounterWrapped("", "VM is %s, skipping this check" % powerstate)
+
     #consumed host memory
     host_memory_usage   = savefloat(data["summary.quickStats.hostMemoryUsage"][0]) * 1024 * 1024
     #active guest memory

@@ -42,7 +42,7 @@ import inspect, pprint # FOR DEBUGGING
 def usage():
     sys.stderr.write("""Check_MK vSphere Agent
 
-USAGE: agent_vsphere [-i MODULES] [-u USER] [-s SECRET] [-D] [-a] [--debug] HOST
+USAGE: agent_vsphere [OPTIONS] HOST
        agent_vsphere -h
 
 ARGUMENTS:
@@ -55,10 +55,19 @@ OPTIONS:
   -D, --direct                  Assume a directly queried host system (no vCenter). In
                                 This we expect data about only one HostSystem to be
                                 Found and do not create piggy host data for that host.
+  -H, --hostname                Specify a hostname. This is neccessary if this is
+                                different from HOST. It is being used in --direct
+                                mode as the name of the host system when outputting
+                                its power state.
   -a, --agent                   Also retrieve data from the normal Check_MK Agent.
                                 This makes sense if you query a vCenter that is
                                 Installed on a Windows host that you also want to
                                 Monitor with Check_MK.
+  -t, --timeout SECS            Set the network timeout to vSphere to SECS seconds.
+                                This is also used when connecting the agent (option -a).
+                                Default is 60 seconds. Note: the timeout is not only
+                                applied to the connection, but also to each individual
+                                subquery.
   --debug                       Debug mode: let Python exceptions come through
 
   -i MODULES, --modules MODULES Modules to query. This is a comma separated list of
@@ -68,9 +77,9 @@ OPTIONS:
 
 """)
 
-short_options = 'hi:u:s:Da'
+short_options = 'hi:u:s:Dat:H:'
 long_options  = [
-    'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=',
+    'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
 ]
 
 try:
@@ -82,10 +91,12 @@ except getopt.GetoptError, err:
 opt_debug    = False
 opt_direct   = False
 opt_agent    = False
+opt_timeout  = 60
+opt_hostname = None
 host_address = None
 user         = None
 secret       = None
-mortypes     = [ 'hostsystem', 'virtualmachine', 'datastore' ]
+mortypes     = [ 'hostsystem', 'virtualmachine', 'datastore', 'counters' ]
 
 for o,a in opts:
     if o in [ '--debug' ]:
@@ -100,6 +111,10 @@ for o,a in opts:
         secret = a
     elif o in [ '-i', '--modules' ]:
         mortypes = a.split(',')
+    elif o in [ '-t', '--timeout' ]:
+        opt_timeout = int(a)
+    elif o in [ '-H', '--hostname' ]:
+        opt_hostname = a
     elif o in [ '-h', '--help' ]:
         usage()
         sys.exit(0)
@@ -113,6 +128,8 @@ else:
     sys.stderr.write("ERROR: Please specify exactly one host.\n")
     sys.exit(1)
 
+socket.setdefaulttimeout(1)
+
 def get_agent_info_tcp(hostname):
     output = ""
     try:
@@ -122,7 +139,7 @@ def get_agent_info_tcp(hostname):
             ipaddress = socket.gethostbyname(hostname)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            s.settimeout(3.0)
+            s.settimeout(opt_timeout)
         except:
             pass # some old Python versions lack settimeout(). Better ignore than fail
         s.connect((ipaddress, 6556))
@@ -147,6 +164,7 @@ def get_agent_info_tcp(hostname):
 error_exit = 1
 if opt_agent:
     sys.stdout.write(get_agent_info_tcp(host_address))
+    sys.stdout.flush()
     error_exit = 0 # do not fail if vSphere fails
 
 
@@ -159,18 +177,30 @@ except:
 
 host = VIServer()
 
+
 object_collection = []
+error = None
 try:
     # During connect ServiceInstance is created and information are fetched from the
     # server. Details can be found here:
     # http://www.vmware.com/support/developer/vc-sdk/visdk41pubs/ApiReference/vim.ServiceInstance.html)
-    host.connect(host_address, user, secret)
+    if opt_debug:
+        sys.stderr.write("Connecting to %s..." % host_address)
+        sys.stderr.flush()
+    host.connect(host_address, user, secret, sock_timeout=opt_timeout)
+    if opt_debug:
+        sys.stderr.write("Connected.\n")
+except socket.timeout:
+    error = "Cannot connect to vSphere Server: connect timeout."
 except:
     if opt_debug:
-        raise
-    sys.stderr.write("Cannot connect to vSphere Server. Maybe you provided wrong "
-                     "credentials. Please check your connection settings and try "
-                     "again.\n")
+        RAIse
+    error = "Cannot connect to vSphere Server. Maybe you provided wrong " \
+            "credentials. Please check your connection settings and try " \
+            "again."
+
+if error:
+    sys.stderr.write(error + "\n")
     sys.exit(error_exit)
 
 print "<<<check_mk>>>"
@@ -482,14 +512,14 @@ def output_mors(what, properties, direct=False):
             # Convert property value using specified conversion function
             data[p.Name] = properties[p.Name](p.Val)
 
-        name = data["name"].split()[0] # get rid of comment
+        obj_name = data["name"].split()[0] # get rid of comment
 
         # Output multiplexed Check_MK Agent output (new in version 1.2.3i1)
         if direct:
             if count > 1:
                 raise Exception("You specified --direct, but there is more than one HostSystem!")
         else:
-            print '<<<<%s>>>>' % name
+            print '<<<<%s>>>>' % obj_name
 
         print '<<<esx_vsphere_%s>>>' % (what.replace('virtualmachine', 'vm'))
         items = data.items()
@@ -508,7 +538,9 @@ def output_mors(what, properties, direct=False):
 
         # Remember the total list of output objects. We will put this into
         # a special section
-        object_collection.append([what, data["name"], running_on, power_state])
+        if what == "hostsystem" and opt_direct and opt_hostname:
+            obj_name = opt_hostname
+        object_collection.append([what, obj_name, running_on, power_state])
 
 
     # pprint.pprint(sections)
@@ -569,9 +601,10 @@ def conv_host(value):
 if "datastore" in mortypes:
     output_datastores()
 
+if "counters" in mortypes:
+    output_hostsystem_counters()
 
 if "hostsystem" in mortypes:
-    output_hostsystem_counters()
     output_mors("hostsystem", {
       "name": str,
 
@@ -635,6 +668,9 @@ if "virtualmachine" in mortypes:
 
       "runtime.powerState": str,
       "runtime.host" : conv_host,
+      "guest.toolsVersion" : str,
+      "guest.toolsVersionStatus" : str,
+
     })
 
 

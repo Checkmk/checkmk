@@ -761,7 +761,7 @@ def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
     html.write('</td>')
 
     # Actual column editor
-    html.write('<td id="%slabel_%d" class=celeft>%s %d:</td><td>' % (var_prefix, n, _('Column'), n))
+    html.write('<td id="%slabel_%d" class=celeft>%s:</td><td>' % (var_prefix, n, _('Column')))
     html.select("%s%d" % (var_prefix, n), collist, "", "toggle_join_fields('%s', %d, this)" % (var_prefix, n))
     display = 'none'
     if joined and is_joined_value(collist, "%s%d" % (var_prefix, n)):

@@ -51,6 +51,58 @@
 # sys.uptime||630664|second
 
 
+#   .--Disk IO-------------------------------------------------------------.
+#   |                     ____  _     _      ___ ___                       |
+#   |                    |  _ \(_)___| | __ |_ _/ _ \                      |
+#   |                    | | | | / __| |/ /  | | | | |                     |
+#   |                    | |_| | \__ \   <   | | |_| |                     |
+#   |                    |____/|_|___/_|\_\ |___\___/                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+# Example output:
+# disk.deviceLatency|naa.600605b002db9f7018d0a40c2a1444b0|0|millisecond
+# disk.numberRead|naa.600605b002db9f7018d0a40c2a1444b0|8|number
+# disk.numberWrite|naa.600605b002db9f7018d0a40c2a1444b0|47|number
+# disk.read|naa.600605b002db9f7018d0a40c2a1444b0|12|kiloBytesPerSecond
+# disk.read||12|kiloBytesPerSecond
+# disk.write|naa.600605b002db9f7018d0a40c2a1444b0|51|kiloBytesPerSecond
+# disk.write||51|kiloBytesPerSecond
+
+
+def inventory_esx_vsphere_counters_diskio(info):
+    for counter, item, value, unit in info:
+        if counter == 'disk.read' and item == '':
+            return [(None, None)]
+
+def check_esx_vsphere_counters_diskio(_no_item, _no_params, info):
+    reads = 0
+    writes = 0
+    for counter, item, value, unit in info:
+        if item == '':
+            if counter == 'disk.read':
+                read_bytes = int(value) * 1024
+            elif counter == 'disk.write':
+                write_bytes = int(value) * 1024
+        elif counter == 'disk.numberRead':
+            reads += int(value)
+        elif counter == 'disk.numberWrite':
+            writes += int(value)
+
+    return 0, "%s/sec read, %s/sec write, IOs: %.2f/sec" % (
+        get_bytes_human_readable(read_bytes), get_bytes_human_readable(write_bytes), reads + writes,), \
+        [ ("read", read_bytes), ("write", write_bytes), ("ios", reads + writes) ]
+
+
+check_info['esx_vsphere_counters.diskio'] = {
+   'inventory_function'      : inventory_esx_vsphere_counters_diskio,
+   'check_function'          : check_esx_vsphere_counters_diskio,
+   'service_description':     'Disk IO SUMMARY',
+   'has_perfdata':            True,
+}
+
+
+
+#.
 #   .--Interfaces----------------------------------------------------------.
 #   |           ___       _             __                                 |
 #   |          |_ _|_ __ | |_ ___ _ __ / _| __ _  ___ ___  ___             |

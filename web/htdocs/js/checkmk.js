@@ -629,36 +629,6 @@ function toggle_button(oDiv, name, display) {
     o = null;
 }
 
-function column_swap_ids(o1, o2) {
-    var parts = o1.id.split('_');
-    var type  = parts[0];
-    var num1  = parts[2];
-    var num2  = o2.id.split('_')[2];
-
-    var o1 = null, o2 = null;
-    var objects = [ '', '_editor', '_up', '_down', '_label', '_link', '_tooltip' ];
-    for(var i = 0,len = objects.length; key = type+objects[i]+'_', i < len; i++) {
-        o1 = document.getElementById(key + num1);
-        o2 = document.getElementById(key + num2);
-        if(o1 && o2) {
-            if(o1.id && o2.id) {
-                o1.id = key + num2;
-                o2.id = key + num1;
-            }
-            if(o1.name && o2.name) {
-                o1.name = key + num2;
-                o2.name = key + num1;
-            }
-            if(objects[i] === '_label') {
-                o1.innerHTML = 'Column ' + num2 + ':'
-                o2.innerHTML = 'Column ' + num1 + ':'
-            }
-        }
-    }
-    objects = null;
-    o1 = null;
-    o2 = null;
-}
 
 function add_view_column_handler(oContainer, code) {
     // Can not simply add the new code to the innerHTML code of the target
@@ -731,7 +701,6 @@ function move_column_up(oImg) {
     fix_buttons(oContainer, oNode);
     fix_buttons(oContainer, oNode.nextSibling);
 
-    column_swap_ids(oNode, oNode.nextSibling);
 
     oContainer = null;
     oNode = null;
@@ -754,7 +723,6 @@ function move_column_down(oImg) {
     fix_buttons(oContainer, oNode);
     fix_buttons(oContainer, oNode.previousSibling);
 
-    column_swap_ids(oNode, oNode.previousSibling);
 
     oContainer = null;
     oNode = null;

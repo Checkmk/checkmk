@@ -639,17 +639,18 @@ if "virtualmachine" in mortypes:
     output_mors("virtualmachine", {
       "name": str,
       "guestHeartbeatStatus": str,
-      "summary.quickStats.overallCpuUsage": str,
-      "summary.quickStats.overallCpuDemand": str,
       "summary.quickStats.uptimeSeconds": str,
 
+      # CPU Statistics
       "summary.quickStats.overallCpuUsage": str,
       "summary.quickStats.overallCpuDemand": str,
+      "summary.quickStats.staticCpuEntitlement": str,
+      "summary.quickStats.distributedCpuEntitlement": str,
+      
+      # Memory
       "summary.quickStats.guestMemoryUsage": str,
       "summary.quickStats.hostMemoryUsage": str,
-      "summary.quickStats.distributedCpuEntitlement": str,
       "summary.quickStats.distributedMemoryEntitlement": str,
-      "summary.quickStats.staticCpuEntitlement": str,
       "summary.quickStats.staticMemoryEntitlement": str,
       "summary.quickStats.privateMemory": str,
       "summary.quickStats.sharedMemory": str,

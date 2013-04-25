@@ -636,7 +636,7 @@ function column_swap_ids(o1, o2) {
     var num2  = o2.id.split('_')[2];
 
     var o1 = null, o2 = null;
-    var objects = [ '', '_editor', '_up', '_down', '_label', '_link', '_tooltip' ];
+    var objects = [ '', '_editor', '_up', '_down', '_link', '_tooltip' ];
     for(var i = 0,len = objects.length; key = type+objects[i]+'_', i < len; i++) {
         o1 = document.getElementById(key + num1);
         o2 = document.getElementById(key + num2);
@@ -648,10 +648,6 @@ function column_swap_ids(o1, o2) {
             if(o1.name && o2.name) {
                 o1.name = key + num2;
                 o2.name = key + num1;
-            }
-            if(objects[i] === '_label') {
-                o1.innerHTML = 'Column ' + num2 + ':'
-                o2.innerHTML = 'Column ' + num1 + ':'
             }
         }
     }

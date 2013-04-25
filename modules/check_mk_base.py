@@ -568,7 +568,7 @@ def write_cache_file(relpath, output):
 
 
 # Get information about a real host (not a cluster node) via TCP
-# or by executing an external programm. ipaddress may be None.
+# or by executing an external program. ipaddress may be None.
 # In that case it will be looked up if needed. Also caching will
 # be handled here
 def get_agent_info(hostname, ipaddress, max_cache_age):
@@ -595,10 +595,10 @@ def get_agent_info(hostname, ipaddress, max_cache_age):
 
     return output
 
-# Get data in case of external programm
+# Get data in case of external program
 def get_agent_info_program(commandline):
     if opt_verbose:
-        sys.stderr.write("Calling external programm %s\n" % commandline)
+        sys.stderr.write("Calling external program %s\n" % commandline)
     try:
         sout = os.popen(commandline + " 2>/dev/null")
         output = sout.read()
@@ -608,9 +608,9 @@ def get_agent_info_program(commandline):
 
     if exitstatus:
         if exitstatus >> 8 == 127:
-            raise MKAgentError("Programm '%s' not found (exit code 127)" % (commandline,))
+            raise MKAgentError("Program '%s' not found (exit code 127)" % (commandline,))
         else:
-            raise MKAgentError("Programm '%s' exited with code %d" % (commandline, exitstatus >> 8))
+            raise MKAgentError("Program '%s' exited with code %d" % (commandline, exitstatus >> 8))
     return output
 
 # Get data in case of TCP

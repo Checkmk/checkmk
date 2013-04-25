@@ -50,10 +50,24 @@ def inventory_esx_vsphere_objects(info):
 def check_esx_vsphere_objects(item, _no_params, info):
     for line in info:
         if vsphere_object_names[line[0]] + " " + line[1] == item:
-            return 0, "information about this object present"
+            running_on = line[2]
+            power_state = line[3]
+            if power_state == "poweredOn":
+                state = 0
+            elif power_state == "poweredOff":
+                state = 1
+            elif power_state == "suspended":
+                state = 1
+            else:
+                state = 3
+            infotext = "power state: %s" % power_state
+            if running_on:
+                infotext += ', running on [%s]' % running_on
+            return state, infotext
 
     what = item.split()[0]
     name = item.split()[1]
+
     if what == "VM":
         return 3, "Virtual machine %s is missing" % name
     else:

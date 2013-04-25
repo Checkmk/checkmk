@@ -176,6 +176,9 @@ except:
 print "<<<check_mk>>>"
 print "Version: %s" % host.get_api_version()
 print "AgentOs: %s " % host.get_server_type()
+        
+# Prepare list of all hosts systems
+all_hosts = host.get_hosts()
 
 def debug(x):
     pprint.pprint(inspect.getmembers(x))
@@ -220,27 +223,6 @@ def dump_list(l, indent):
     for nr, v in enumerate(l):
         print indent + "%d:" % nr
         dump(v, indent + "    ")
-
-
-pm = host.get_performance_manager()
-# h = host.get_hosts()
-# x = pm.get_entity_counters(h.keys()[0])
-# print x
-# sys.exit(0)
-
-# print h
-# for name, mor in h.items():
-#     debug(mor)
-#     x = pm.get_entity_counters(mor)
-#     debug(x)
-#     p = VIProperty(host, name)
-#     debug(p.network[0].summary)
-#     
-#     # debug(p.network[0].summary.network.value)
-#     # dump_list(p.network, "")
-#     # debug(p)
-
-#  sys.exit(0)
 
 # List of counters:
 #  'cpu.coreUtilization': 20,
@@ -413,7 +395,7 @@ pm = host.get_performance_manager()
 
 def output_hostsystem_counters():
     pm = host.get_performance_manager()
-    for mor, name in host.get_hosts().items():
+    for mor, name in all_hosts.items():
         if not opt_direct:
             print '<<<<%s>>>>' % name
         print '<<<esx_vsphere_counters:sep(124)>>>'
@@ -500,9 +482,6 @@ def output_mors(what, properties, direct=False):
             # Convert property value using specified conversion function
             data[p.Name] = properties[p.Name](p.Val)
 
-        # Remember the total list of output objects. We will put this into
-        # a special section
-        object_collection.append((what, data["name"]))
         name = data["name"].split()[0] # get rid of comment
 
         # Output multiplexed Check_MK Agent output (new in version 1.2.3i1)
@@ -515,11 +494,22 @@ def output_mors(what, properties, direct=False):
         print '<<<esx_vsphere_%s>>>' % (what.replace('virtualmachine', 'vm'))
         items = data.items()
         items.sort()
+        running_on = ''
+        power_state = ''
         for name, value in items:
             if type(value) == tuple:
                 sections.append(value)
             else:
+                if name == 'runtime.host':
+                    running_on = value
+                elif name == 'runtime.powerState':
+                    power_state = value
                 print '%s %s' % (name, value)
+
+        # Remember the total list of output objects. We will put this into
+        # a special section
+        object_collection.append([what, data["name"], running_on, power_state])
+
 
     # pprint.pprint(sections)
     for section_name, section_lines in sections:
@@ -573,6 +563,9 @@ def conv_numeric_sensor_info(value):
 
     # return pprint.pformat(inspect.getmembers(value))
 
+def conv_host(value):
+    return all_hosts.get(value)
+
 if "datastore" in mortypes:
     output_datastores()
 
@@ -611,11 +604,11 @@ if "hostsystem" in mortypes:
 # we get is summary.runtime.powerState
 if "virtualmachine" in mortypes:
     output_mors("virtualmachine", {
-     "name": str,
-     "guestHeartbeatStatus": str,
-     "summary.quickStats.overallCpuUsage": str,
-     "summary.quickStats.overallCpuDemand": str,
-     "summary.quickStats.uptimeSeconds": str,
+      "name": str,
+      "guestHeartbeatStatus": str,
+      "summary.quickStats.overallCpuUsage": str,
+      "summary.quickStats.overallCpuDemand": str,
+      "summary.quickStats.uptimeSeconds": str,
 
       "summary.quickStats.overallCpuUsage": str,
       "summary.quickStats.overallCpuDemand": str,
@@ -640,13 +633,14 @@ if "virtualmachine" in mortypes:
       #"config.hardware.guestId": str,
       #"config.hardware.uuid": str,
 
-      "summary.runtime.powerState": str,
+      "runtime.powerState": str,
+      "runtime.host" : conv_host,
     })
 
 
 print "<<<<>>>>"
 
 print "<<<esx_vsphere_objects:sep(9)>>>"
-for what, name in object_collection:
-    print "%s\t%s" % (what, name)
+for entry in object_collection:
+    print "\t".join(entry)
 host.disconnect()

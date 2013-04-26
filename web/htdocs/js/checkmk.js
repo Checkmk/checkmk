@@ -634,9 +634,9 @@ function column_swap_ids(o1, o2) {
     var type  = parts[0];
     var num1  = parts[2];
     var num2  = o2.id.split('_')[2];
-
+            
     var o1 = null, o2 = null;
-    var objects = [ '', '_editor', '_up', '_down', '_link', '_tooltip' ];
+    var objects = [ '', '_editor', '_up', '_down', '_link', '_tooltip', '_label', '_title', '_join_index' ];
     for(var i = 0,len = objects.length; key = type+objects[i]+'_', i < len; i++) {
         o1 = document.getElementById(key + num1);
         o2 = document.getElementById(key + num2);

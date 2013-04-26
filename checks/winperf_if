@@ -130,7 +130,9 @@ def convert_winperf_if(info):
            nic_name,
            "loopback" in nic_name.lower() and '24' or '6',
            nic[10], # Aktuelle Bandbreite
-           nic.get('NetConnectionStatus', '7') == '2' and '1' or '2',
+           # NetConnectionStatus: 2 st up, 7 ist 'not connected'. If the plugin
+           # wmic_if is missing and we have link information we need to assume 'up':
+           nic.get('NetConnectionStatus', '2') == '2' and '1' or '2',
            nic[-246], # ifInOctets,
            nic[14], # inucast
            0,       # inmcast

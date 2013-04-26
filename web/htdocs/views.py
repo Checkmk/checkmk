@@ -766,14 +766,14 @@ def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
         display = ''
     html.write("</td></tr><tr id='%sjoin_index_row%d' style='display:%s'><td class=celeft>%s:</td><td>" %
                                                                     (var_prefix, n, display, _('of Service')))
-    html.text_input("%sjoin_index_%d" % (var_prefix, n))
+    html.text_input("%sjoin_index_%d" % (var_prefix, n), id = var_prefix + "join_index_%d" % n)
     html.write("</td></tr><tr><td class=celeft>%s:</td><td>" % _('Link'))
     select_view("%slink_%d" % (var_prefix, n))
     html.write("</td></tr><tr><td class=celeft>%s:</td><td>" % _('Tooltip'))
     html.select("%stooltip_%d" % (var_prefix, n), collist)
     html.write("</td></tr><tr id='%stitle_row%d' style='display:%s'><td class=celeft>%s:</td><td>" %
                                                                        (var_prefix, n, display, _('Title')))
-    html.text_input("%stitle_%d" % (var_prefix, n))
+    html.text_input("%stitle_%d" % (var_prefix, n), id = var_prefix + "title_%d" % n)
     html.write("</td></tr></table>")
     html.write("</div>")
 

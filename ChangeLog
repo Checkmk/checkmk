@@ -15,6 +15,7 @@
            a deletion of users' settings in case of an external authentication
            (like mod_ldap).
     * FIX: Fixed handling of dashboards without title in sidebar view snapin
+    * FIX: titles and services got lost when moving join-columns in views
 
     WATO:
     * Improved handling of valuespec validations in WATO rule editor. Displaying a

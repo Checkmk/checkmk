@@ -16,6 +16,8 @@
            (like mod_ldap).
     * FIX: Fixed handling of dashboards without title in sidebar view snapin
     * FIX: titles and services got lost when moving join-columns in views
+    * FIX: Fixed exception during initial page rendering in python 2.6 in special cases
+           (Internal error: putenv() argument 2 must be string, not list)
 
     WATO:
     * Improved handling of valuespec validations in WATO rule editor. Displaying a

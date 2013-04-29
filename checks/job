@@ -133,5 +133,5 @@ check_info["job"] = {
     'inventory_function':      inventory_job,
     'service_description':     'Job %s',
     'group':                   'job',
-    'perfdata':                True,
+    'has_perfdata':            True,
 }

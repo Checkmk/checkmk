@@ -174,7 +174,7 @@ echo '<<<lnx_if:sep(58)>>>'
 sed 1,2d /proc/net/dev
 if type ethtool > /dev/null
 then
-    for eth in $(sed -e 1,2d < /proc/net/dev | cut -d':' -f1)
+    for eth in $(sed -e 1,2d < /proc/net/dev | cut -d':' -f1 | sort)
     do
       echo "[$eth]"
       ethtool $eth | egrep '(Speed|Duplex|Link detected|Auto-negotiation):'

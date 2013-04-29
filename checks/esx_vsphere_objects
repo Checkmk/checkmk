@@ -59,7 +59,7 @@ def inventory_esx_vsphere_objects(info):
 
 def check_esx_vsphere_objects(item, _no_params, info):
     for line in info:
-        if vsphere_object_names[line[0]] + " " + line[1] == item:
+        if vsphere_object_names[line[0]] + " " + line[1] == item and len(line) > 3:
             running_on = line[2]
             power_state = line[3]
             if power_state == "poweredOn":

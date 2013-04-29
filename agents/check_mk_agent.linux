@@ -158,16 +158,6 @@ echo "$(cat /proc/loadavg) $(grep -E '^CPU|^processor' < /proc/cpuinfo | wc -l)"
 echo '<<<uptime>>>'
 cat /proc/uptime
 
-# Network interfaces (Link, Autoneg, Speed)
-# This requires ethtool
-if type ethtool > /dev/null
-then
-  echo '<<<netif>>>'
-  for eth in $(cat /proc/net/dev | sed -rn -e 's/[[:space:]]*//g' -e  '/ *([^:]):.*/s//\1/p' | egrep -vx '(lo|sit.*)')
-  do
-    echo $eth $(ethtool $eth | egrep '(Speed|Duplex|Link detected|Auto-negotiation):' | cut -d: -f2 | sed 's/ *//g')
-  done
-fi
 
 # New variant: Information about speed and state in one section
 echo '<<<lnx_if:sep(58)>>>'
@@ -238,13 +228,6 @@ fi
 echo '<<<kernel>>>'
 date +%s
 cat /proc/vmstat /proc/stat
-
-# Statistik der Netzwerkgeraete (Pakete, Kollisionen, etc)
-echo '<<<netctr>>>'
-# Genauen Zeitstempel einfuegen, da Counter von Zeit abhaengen
-date +%s
-sed -e 1,2d -e 's/:/ /g' < /proc/net/dev
-
 
 # Hardware sensors via IPMI (need ipmitool)
 if type ipmitool > /dev/null

@@ -78,6 +78,7 @@
     * windows agent: new config section plugins, now able to set timeouts for specific plugins
                      new global config option: timeout_plugins_total
     * lnx_if in Linux agent: force deterministical order of network devices
+    * Linux agent: remove obsolete old <<<netif>>> and <<<netctr>>> sections
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

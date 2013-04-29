@@ -272,3 +272,51 @@ check_info['esx_vsphere_counters.uptime'] = {
    'group':                   'uptime',
 }
 
+#   .--Ramdisk-------------------------------------------------------------.
+#   |                ____                     _ _     _                    |
+#   |               |  _ \ __ _ _ __ ___   __| (_)___| | __                |
+#   |               | |_) / _` | '_ ` _ \ / _` | / __| |/ /                |
+#   |               |  _ < (_| | | | | | | (_| | \__ \   <                 |
+#   |               |_| \_\__,_|_| |_| |_|\__,_|_|___/_|\_\                |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+# We assume that all ramdisks have the same size (in mb) on all hosts
+esx_vsphere_cunters_ramdisk_sizes = {
+    'root':       32,
+    'etc':        28,
+    'tmp':        192,
+    'hostdstats': 319,
+}
+
+def inventory_esx_vsphere_counters_ramdisk(info):
+    ramdisks = []
+    for name, instance, counter, unit in info:
+        if name == 'sys.resourceMemConsumed' \
+           and instance.startswith('host/system/kernel/kmanaged/visorfs/'):
+            ramdisks.append(instance.split('/')[-1])
+
+    return df_inventory(ramdisks)
+
+def check_esx_vsphere_counters_ramdisk(item, params, info):
+    ramdisks = []
+    for name, instance, counter, unit in info:
+        if name == 'sys.resourceMemConsumed' \
+           and instance.startswith('host/system/kernel/kmanaged/visorfs/'):
+            name     = instance.split('/')[-1]
+            size_mb  = esx_vsphere_cunters_ramdisk_sizes[name]
+            used_mb  = float(counter) / 1000
+            avail_mb = size_mb - used_mb
+            ramdisks.append((name, size_mb, avail_mb))
+
+    return df_check_filesystem_list(item, params, ramdisks)
+
+check_info['esx_vsphere_counters.ramdisk'] = {
+    'inventory_function':      inventory_esx_vsphere_counters_ramdisk,
+    'check_function':          check_esx_vsphere_counters_ramdisk,
+    'service_description':     'Ramdisk %s',
+    'has_perfdata':            True,
+    'includes':                [ 'df.include' ],
+    'group':                   'filesystem',
+    'default_levels_variable': 'filesystem_default_levels',
+}

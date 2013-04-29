@@ -203,10 +203,13 @@ if error:
     sys.stderr.write(error + "\n")
     sys.exit(error_exit)
 
+esx_version = host.get_api_version()
+esx_version_num = float(esx_version)
+
 print "<<<check_mk>>>"
-print "Version: %s" % host.get_api_version()
+print "Version: %s" % esx_version
 print "AgentOs: %s " % host.get_server_type()
-        
+
 # Prepare list of all hosts systems
 all_hosts = host.get_hosts()
 
@@ -434,45 +437,53 @@ def output_hostsystem_counters():
         # a couple of seconds. To check out which counters are available just comment out
         # the hardcoded needed_ids and uncomment the following three lines of code. This will
         # give you a) A dict of name to id mappings and b) Current values of all counters.
-        # counterids = pm.get_entity_counters(mor)
-        # needed_ids = counterids.keys() # retrieve all ids....
-        # print counterids
+        #counterids = pm.get_entity_counters(mor)
+        #needed_ids = counterids.keys() # retrieve all ids....
+        #print counterids
 
         needed_ids = [
-           # net.*
-           196616, 196621, 196617, 196625, 196619, 196623, 196609, 196614,
-           196620, 196624, 196615, 196622, 196618, 196612, 196613, 196626,
-           # sys.uptime
-           262144,
-           # mem.*
-           # 65635, 65537, 65577, 65625, 65545, 65611, 65573, 65615, 65582,
-           # 65549, 65630, 65622, 65618, 65621, 65561, 65623, 65632, 65557,
-           # 65628, 65633, 65541, 65643, 65586, 65553, 65569, 65589, 65639,
-           # 65620, 65599, 65580, 65619, 65603,
-           #  'disk.deviceLatency': 131091,
-           #  'disk.deviceReadLatency': 131083,
-           #  'disk.deviceWriteLatency': 131087,
-           #  'disk.kernelLatency': 131092,
-           #  'disk.kernelReadLatency': 131084,
-           #  'disk.kernelWriteLatency': 131088,
-           #  'disk.maxQueueDepth': 131096,
-           #  'disk.maxTotalLatency': 131095,
-           #  'disk.numberRead': 131076,
-           #  'disk.numberReadAveraged': 131097,
-           #  'disk.numberWrite': 131077,
-           #  'disk.numberWriteAveraged': 131098,
-           #  'disk.queueLatency': 131094,
-           #  'disk.queueReadLatency': 131086,
-           #  'disk.queueWriteLatency': 131090,
-           #  'disk.read': 131078,
-           #  'disk.totalLatency': 131093,
-           #  'disk.totalReadLatency': 131085,
-           #  'disk.totalWriteLatency': 131089,
-           #  'disk.usage': 131073,
+            # net.*
+            196616, 196621, 196617, 196625, 196619, 196623, 196609, 196614,
+            196620, 196624, 196615, 196622, 196618, 196612, 196613, 196626,
+            # sys.uptime
+            262144,
+            # mem.*
+            # 65635, 65537, 65577, 65625, 65545, 65611, 65573, 65615, 65582,
+            # 65549, 65630, 65622, 65618, 65621, 65561, 65623, 65632, 65557,
+            # 65628, 65633, 65541, 65643, 65586, 65553, 65569, 65589, 65639,
+            # 65620, 65599, 65580, 65619, 65603,
+            #  'disk.deviceLatency': 131091,
+            #  'disk.deviceReadLatency': 131083,
+            #  'disk.deviceWriteLatency': 131087,
+            #  'disk.kernelLatency': 131092,
+            #  'disk.kernelReadLatency': 131084,
+            #  'disk.kernelWriteLatency': 131088,
+            #  'disk.maxQueueDepth': 131096,
+            #  'disk.maxTotalLatency': 131095,
+            #  'disk.numberRead': 131076,
+            #  'disk.numberReadAveraged': 131097,
+            #  'disk.numberWrite': 131077,
+            #  'disk.numberWriteAveraged': 131098,
+            #  'disk.queueLatency': 131094,
+            #  'disk.queueReadLatency': 131086,
+            #  'disk.queueWriteLatency': 131090,
+            #  'disk.read': 131078,
+            #  'disk.totalLatency': 131093,
+            #  'disk.totalReadLatency': 131085,
+            #  'disk.totalWriteLatency': 131089,
+            #  'disk.usage': 131073,
 
-           # disk.read/write/deviceLatency/numberRead/numberWrite
-           131078, 131079, 131091, 131076, 131077,
+            # disk.read/write/deviceLatency/numberRead/numberWrite
+            131078, 131079, 131091, 131076, 131077,
         ]
+
+        # Seems as this is not available in ESX 5.0 but we saw it on 5.1
+        if esx_version_num > 5.0:
+            # sys.resourceMemConsumed
+            needed_ids += [
+                262171,
+            ]
+
         #needed_ids = [
         #    # sys.resourceMem*
         #    262151, 262155, 262169, 262152, 262154, 262153, 262157, 262156, 262168,

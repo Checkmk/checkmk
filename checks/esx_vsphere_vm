@@ -179,7 +179,11 @@ def inventory_esx_vsphere_vm_cpu(info):
         return [(None, None)]
 
 def check_esx_vsphere_vm_cpu(_no_item, _no_params, info):
-    data = esx_vsphere_vm_convert(info)
+    data = esx_vsphere_vm_convert(info) 
+    # VMs that are currently down do not have this entry
+    if 'summary.quickStats.overallCpuUsage' not in data:
+        raise MKCounterWrapped("", "No information about CPU usage. VM is probably powered off.")
+
     usage_mhz = int(data['summary.quickStats.overallCpuUsage'][0])
     cpus = int(data['config.hardware.numCPU'][0])
     return 0, "demand is %.3f Ghz, %d virtual CPUs" % (usage_mhz / 1000.0, cpus), [ ("demand", usage_mhz) ]

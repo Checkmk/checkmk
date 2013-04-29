@@ -121,7 +121,10 @@ class MKCounterWrapped(Exception):
         self.name = countername
         self.reason = reason
     def __str__(self):
-        return '%s: %s' % (self.name, self.reason)
+        if self.name:
+            return '%s: %s' % (self.name, self.reason)
+        else:
+            return self.reason
 
 class MKAgentError(Exception):
     def __init__(self, reason):
@@ -1063,7 +1066,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
             # any check result in that case:
             except MKCounterWrapped, e:
                 if opt_verbose:
-                    print "Counter wrapped, not handled by check, ignoring this check result: %s" % e
+                    print "Cannot compute check result: %s" % e
                 dont_submit = True
             except Exception, e:
                 result = (3, "invalid output from agent, invalid check parameters or error in implementation of check %s. Please set <tt>debug_log</tt> to a filename in <tt>main.mk</tt> for enabling exception logging." % checkname)

@@ -37,9 +37,6 @@
 #   good(1),
 #   notpresent(2)
 
-
-
-
 def inventory_f5_bigip_psu(info):
     inventory = []
     for line in info:
@@ -48,7 +45,6 @@ def inventory_f5_bigip_psu(info):
         if state != "2":
             inventory.append((psu, None))
     return inventory
-
 
 def check_f5_bigip_psu(item, _no_params, info):
     for line in info:
@@ -67,14 +63,6 @@ def check_f5_bigip_psu(item, _no_params, info):
 
     return (3, "item not found in SNMP output")
 
-
-# Get ID and status from the SysChassisPowerSupplyTable
-
-
-
-
-# Check using the vendor mib Id and verify it's a loadbalancer
-
 check_info["f5_bigip_psu"] = {
     'check_function':          check_f5_bigip_psu,
     'inventory_function':      inventory_f5_bigip_psu,
@@ -82,5 +70,7 @@ check_info["f5_bigip_psu"] = {
     # Get ID and status from the SysChassisPowerSupplyTable
     'snmp_info':               [('.1.3.6.1.4.1.3375.2.1.3.2.2.2.1', [1, 2])],
     'snmp_scan_function':      \
-     lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
+    # Check using the vendor mib Id and verify it's a loadbalancer
+     lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") \
+                 and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
 }

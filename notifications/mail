@@ -319,7 +319,7 @@ def fetch_pnp_data(context, params):
         path = "%s/share/pnp4nagios/htdocs/index.php" % context['OMD_ROOT']
     except:
         # Non-omd environment - use plugin argument 1
-        path = context['PARAMETER_1']
+        path = context.get('PARAMETER_1', '')
 
     if not os.path.exists(path):
         raise GraphException('Unable to locate pnp4nagios index.php (%s)' % path)

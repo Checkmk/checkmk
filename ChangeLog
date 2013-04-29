@@ -20,6 +20,9 @@
     * FIX: Fixed exception during initial page rendering in python 2.6 in special cases
            (Internal error: putenv() argument 2 must be string, not list)
 
+    Notifications:
+    * FIX: HTML mails: Handle the case where plugin argument is not set
+
     WATO:
     * Improved handling of valuespec validations in WATO rule editor. Displaying a
       warning message when going to throw away the current settings.

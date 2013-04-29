@@ -1194,7 +1194,8 @@ document.body.onfocus = keybindings_focus;
 
     def omd_mode(self):
         # Load mod_python env into regular environment
-        os.environ.update(self.req.subprocess_env)
+        for k, v in self.req.subprocess_env.items():
+            os.environ[k] = v
 
         omd_mode = None
         omd_site = None

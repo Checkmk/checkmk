@@ -92,7 +92,7 @@ def query_instance(inst):
     # Prepare user/password authentication via HTTP Auth
     if inst.get("password"):
         passwdmngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-        passwdmngr.add_password(None, "http://%s:%d/" % 
+        passwdmngr.add_password(None, "http://%s:%d/" %
                 (inst["server"], inst["port"]), inst["user"], inst["password"])
         if inst["mode"] == 'digest':
             authhandler = urllib2.HTTPDigestAuthHandler(passwdmngr)
@@ -117,7 +117,6 @@ def query_instance(inst):
     sys.stdout.write('<<<jolokia_metrics>>>\n')
     # Fetch the general information first
     for path, title, itemspec in global_vars + specific_vars.get(product, []):
-    
         try:
             values = fetch_var(inst["server"], inst["port"], "read/" + path, inst["suburi"], itemspec)
 
@@ -131,7 +130,7 @@ def query_instance(inst):
                 raise
             # Simply ignore exceptions. Need to be removed for debugging
             continue
-    
+
         for subinstance, value in values:
             if not subinstance and not title:
                 print "INTERNAL ERROR: %s" % value
@@ -149,7 +148,7 @@ def query_instance(inst):
             else:
                 tit = subinstance[-1]
 
-            sys.stdout.write("%s %s %s\n" % (item, tit, value))
+            sys.stdout.write("%s %s %s\n" % (item.replace(" ", "_"), tit, value))
 
 
 # Default configuration for all instances

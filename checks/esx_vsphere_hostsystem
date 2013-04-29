@@ -218,9 +218,10 @@ def esx_vsphere_multipath_convert(info):
     for path, state in data:
         path_type, path_id = path.split('-')[-1].split('.')
         if path_type in ['naa', 'eui']:
-            paths.setdefault(path_id, [])
-            path_type = "%s/%s" % (path_type, path.split('.')[0])
-            paths[path_id].append((state, path_type))
+            hw_type = path.split('.')[0]
+            if hw_type != 'unknown':
+                paths.setdefault(path_id, [])
+                paths[path_id].append((state, "%s/%s" % (path_type, hw_type)))
     return paths
 
 def inventory_esx_vsphere_hostsystem_multipath(info):
@@ -265,7 +266,12 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
                     unknown += 1
 
             message = "Type %s, %d active, %d dead%s, %d disabled%s, %d standby%s, %s unknown%s" % \
-    (path_type, active, dead, dead_label, disabled, disabled_label, standby, standby_label, unknown, unknow_label )
+                     (path_type, active, dead, dead_label, disabled, disabled_label, 
+                      standby, standby_label, unknown, unknow_label )
+            break
+    else:
+        return 3, "Path not found in agent output"
+
     return (state, message)
 
 check_info['esx_vsphere_hostsystem.multipath'] = {

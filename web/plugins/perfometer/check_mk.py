@@ -296,6 +296,7 @@ def perfometer_check_mk_if(row, check_command, perf_data):
 perfometers["check_mk-if"] = perfometer_check_mk_if
 perfometers["check_mk-if64"] = perfometer_check_mk_if
 perfometers["check_mk-if64_tplink"] = perfometer_check_mk_if
+perfometers["check_mk-winperf_if"] = perfometer_check_mk_if
 perfometers["check_mk-vms_if"] = perfometer_check_mk_if
 perfometers["check_mk-if_lancom"] = perfometer_check_mk_if
 perfometers["check_mk-lnx_if"] = perfometer_check_mk_if
@@ -415,6 +416,7 @@ perfometers["check_mk-diskstat"] = perfometer_check_mk_diskstat
 perfometers["check_mk-winperf_phydisk"] = perfometer_check_mk_diskstat
 perfometers["check_mk-hpux_lunstats"] = perfometer_check_mk_diskstat
 perfometers["check_mk-mysql.innodb_io"] = perfometer_check_mk_diskstat
+perfometers["check_mk-esx_vsphere_counters.diskio"] = perfometer_check_mk_diskstat
 
 def perfometer_in_out_mb_per_sec(row, check_command, perf_data):
     read_mbit = float(perf_data[0][1]) / 131072

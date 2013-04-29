@@ -568,7 +568,7 @@ def write_cache_file(relpath, output):
 
 
 # Get information about a real host (not a cluster node) via TCP
-# or by executing an external programm. ipaddress may be None.
+# or by executing an external program. ipaddress may be None.
 # In that case it will be looked up if needed. Also caching will
 # be handled here
 def get_agent_info(hostname, ipaddress, max_cache_age):
@@ -595,10 +595,10 @@ def get_agent_info(hostname, ipaddress, max_cache_age):
 
     return output
 
-# Get data in case of external programm
+# Get data in case of external program
 def get_agent_info_program(commandline):
     if opt_verbose:
-        sys.stderr.write("Calling external programm %s\n" % commandline)
+        sys.stderr.write("Calling external program %s\n" % commandline)
     try:
         sout = os.popen(commandline + " 2>/dev/null")
         output = sout.read()
@@ -608,9 +608,9 @@ def get_agent_info_program(commandline):
 
     if exitstatus:
         if exitstatus >> 8 == 127:
-            raise MKAgentError("Programm '%s' not found (exit code 127)" % (commandline,))
+            raise MKAgentError("Program '%s' not found (exit code 127)" % (commandline,))
         else:
-            raise MKAgentError("Programm '%s' exited with code %d" % (commandline, exitstatus >> 8))
+            raise MKAgentError("Program '%s' exited with code %d" % (commandline, exitstatus >> 8))
     return output
 
 # Get data in case of TCP
@@ -871,25 +871,28 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     start_time = time.time()
 
+    # Exit state in various situations is confiugrable since 1.2.3i1
+    exit_spec = exit_code_spec(hostname)
+
     try:
         load_counters(hostname)
         agent_version, num_success, error_sections, problems = do_all_checks_on_host(hostname, ipaddress, only_check_types)
         num_errors = len(error_sections)
         save_counters(hostname)
         if problems:
-	    output = "CRIT - %s, " % problems
-            status = 2
+	    output = "%s, " % problems
+            status = exit_spec.get("connection", 2)
         elif num_errors > 0 and num_success > 0:
-            output = "WARN - Missing agent sections: %s - " % ", ".join(error_sections)
-            status = 1
+            output = "Missing agent sections: %s - " % ", ".join(error_sections)
+            status = exit_spec.get("missing_sections", 1)
         elif num_errors > 0:
-            output = "CRIT - Got no information from host, "
-            status = 2
+            output = "Got no information from host, "
+            status = exit_spec.get("empty_output", 2)
         elif agent_min_version and agent_version < agent_min_version:
-            output = "WARN - old plugin version %s (should be at least %s), " % (agent_version, agent_min_version)
-            status = 1
+            output = "old plugin version %s (should be at least %s), " % (agent_version, agent_min_version)
+            status = exit_spec.get("wrong_version", 1)
         else:
-            output = "OK - "
+            output = ""
             if agent_version != None:
                 output += "Agent version %s, " % agent_version
             status = 0
@@ -897,8 +900,8 @@ def do_check(hostname, ipaddress, only_check_types = None):
     except MKGeneralException, e:
         if opt_debug:
             raise
-        output = "UNKNOWN - %s, " % e
-        status = 3
+        output = "%s, " % e
+        status = exit_spec.get("exception", 3)
 
     if aggregate_check_mk:
         try:
@@ -919,7 +922,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
     else:
         output += "execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
 
-    sys.stdout.write(output)
+    sys.stdout.write(nagios_state_names[status] + " - " + output)
     sys.exit(status)
 
 def check_unimplemented(checkname, params, info):

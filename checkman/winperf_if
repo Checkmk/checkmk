@@ -1,0 +1,39 @@
+title: State and performance of network interfaces of Windows hosts
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the operational status, link speed, traffic, packet
+ counts, discards and errors of network interfaces of a Windows host using
+ data sent by the Check_MK agent. 
+
+ In order to get information about the link status and MAC address you
+ need to deploy the agent plugin {wmic_if.bat} into the {plugins} directory
+ of your Check_MK agent for Windows. On servers with just one network
+ interface you probably won't need the information about the link status,
+ since the agent will be unreachable anyway if the status is not {up}.
+ We propose to not installing the plugin in that case and save a few
+ CPU ressources.
+
+ The interface index (in SNMP known as {ifIndex}) is simulated by
+ creating an artificial running index after sorting the names of
+ the interfaces alphabetically.
+
+ All other aspects of this check are completely compatible of {if}.
+ Please refer to that man page for further information.
+ 
+item:
+ See man page of {if} for details
+ 
+inventory:
+ See man page of {if} for details
+
+perfdata:
+ See man page of {if} for details
+
+[parameters]
+parameters (dict): See man page of {if} for details
+
+[configuration]
+various: See man page of {if} for details

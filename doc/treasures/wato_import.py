@@ -29,6 +29,7 @@
 import os
 import sys
 try:
+    path = os.environ.pop('OMD_ROOT')
     pathlokal = "~/etc/check_mk/conf.d/wato/"
     pathlokal = os.path.expanduser(pathlokal)
     datei = open(sys.argv[1],'r') 
@@ -39,7 +40,6 @@ except:
     wato_foldername;hostname;host_alias"""
     sys.exit()
 
-path = path + "/etc/check_mk/wato/"
 folders = {}
 for line in datei:
     ordner, name, alias = line.split(';')[:3]

@@ -44,16 +44,40 @@ vsphere_object_names = {
     "virtualmachine" : "VM",
 }
 
+
+#   .--Single--------------------------------------------------------------.
+#   |                     ____  _             _                            |
+#   |                    / ___|(_)_ __   __ _| | ___                       |
+#   |                    \___ \| | '_ \ / _` | |/ _ \                      |
+#   |                     ___) | | | | | (_| | |  __/                      |
+#   |                    |____/|_|_| |_|\__, |_|\___|                      |
+#   |                                   |___/                              |
+#   '----------------------------------------------------------------------'
+
 def inventory_esx_vsphere_objects(info):
     return [ (vsphere_object_names[line[0]] + " " + line[1], None) for line in info ]
 
 def check_esx_vsphere_objects(item, _no_params, info):
     for line in info:
         if vsphere_object_names[line[0]] + " " + line[1] == item:
-            return 0, "information about this object present"
+            running_on = line[2]
+            power_state = line[3]
+            if power_state == "poweredOn":
+                state = 0
+            elif power_state == "poweredOff":
+                state = 1
+            elif power_state == "suspended":
+                state = 1
+            else:
+                state = 3
+            infotext = "power state: %s" % power_state
+            if running_on:
+                infotext += ', running on [%s]' % running_on
+            return state, infotext
 
     what = item.split()[0]
     name = item.split()[1]
+
     if what == "VM":
         return 3, "Virtual machine %s is missing" % name
     else:
@@ -65,3 +89,21 @@ check_info['esx_vsphere_objects'] = {
   "check_function"      : check_esx_vsphere_objects,
   "service_description" : "%s",
 }
+
+#   .--Cluster-------------------------------------------------------------.
+#   |                    ____ _           _                                |
+#   |                   / ___| |_   _ ___| |_ ___ _ __                     |
+#   |                  | |   | | | | / __| __/ _ \ '__|                    |
+#   |                  | |___| | |_| \__ \ ||  __/ |                       |
+#   |                   \____|_|\__,_|___/\__\___|_|                       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# def check_esx_vsphere_objects_cluster(_no_item, params, info):
+#     print info
+#     return 3, "MIST"
+# 
+# check_info['esx_vsphere_objects.cluster'] = {
+#   "check_function"      : check_esx_vsphere_objects_cluster,
+#   "service_description" : "HostSystem SUMMARY",
+# }

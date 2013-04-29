@@ -88,7 +88,7 @@ def check_esx_vsphere_datastores(item, params, info):
 
     if not store["accessible"]:
         state = 2
-        infotext += "unaccessible(!!), " + infotext
+        infotext += " unaccessible(!!), " + infotext
 
     return state, infotext, perfdata
 

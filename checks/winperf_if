@@ -1,0 +1,170 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# Example output from agent
+# <<<winperf_if>>>
+# 1366721523.71 510
+# 3 instances: Ethernetadapter_der_AMD-PCNET-Familie__2_-_Paketplaner-Miniport Ethernetadapter_der_AMD-PCNET-Familie_-_Paketplaner-Miniport MS_TCP_Loopback_interface
+# -122 43364 1085829 41602 bulk_count
+# -110 293 4174 932 counter
+# -244 138 3560 466 counter
+# -58 155 614 466 counter
+# 10 100000000 100000000 10000000 rawcount
+# -246 21219 780491 20801 counter
+# 14 0 383 466 counter
+# 16 138 3176 0 counter
+# 18 0 0 0 rawcount
+# 20 0 0 0 rawcount
+# 22 0 1 0 rawcount
+# -4 22145 305338 20801 counter
+# 26 0 428 466 counter
+# 28 155 186 0 counter
+# 30 0 0 0 rawcount
+# 32 0 0 0 rawcount
+# 34 0 0 0 rawcount
+# <<<winperf_if:sep(44)>>>
+# Node,MACAddress,Name,NetConnectionID,NetConnectionStatus
+# WINDOWSXP,08:00:27:8D:47:A4,Ethernetadapter der AMD-PCNET-Familie,LAN-Verbindung,2
+# WINDOWSXP,,Asynchroner RAS-Adapter,,
+# WINDOWSXP,08:00:27:8D:47:A4,Paketplaner-Miniport,,
+# WINDOWSXP,,WAN-Miniport (L2TP),,
+# WINDOWSXP,50:50:54:50:30:30,WAN-Miniport (PPTP),,
+# WINDOWSXP,33:50:6F:45:30:30,WAN-Miniport (PPPOE),,
+# WINDOWSXP,,Parallelanschluss (direkt),,
+# WINDOWSXP,,WAN-Miniport (IP),,
+# WINDOWSXP,00:E5:20:52:41:53,Paketplaner-Miniport,,
+# WINDOWSXP,08:00:27:35:20:4D,Ethernetadapter der AMD-PCNET-Familie,LAN-Verbindung 2,2
+# WINDOWSXP,08:00:27:35:20:4D,Paketplaner-Miniport,,
+
+def convert_winperf_if(info): 
+    def canonize_nic_name(n):
+        return n.replace("_", " ").replace("  ", " ")
+
+    lines = iter(info)
+    lines.next() # skip line with timestamp and counter number
+    nic_names = map(canonize_nic_name, lines.next()[2:])
+    nics = dict([(n, {}) for n in nic_names])
+
+    # Scan lines with counters
+    try:
+        while True:
+            line = lines.next()
+            counter = saveint(line[0]) 
+            if counter:
+                for nr, value in enumerate(line[1:len(nic_names)+1]):
+                    nics[nic_names[nr]][counter] = int(value)
+
+            # Not and integer: then this must be the line with the additional
+            # information from wmic (which is optional!)
+            else:
+                headers = line
+                while True:
+                    line = lines.next()
+                    as_dict = dict(zip(headers, line))
+                    nic_name = canonize_nic_name(as_dict["Name"])
+                    try:
+                        conn_id = int(as_dict["NetConnectionID"].split()[-1])
+                        nic_name += " " + str(conn_id)
+                    except:
+                        pass
+                    # In the perf counters the nics have strange suffixes, e.g. 
+                    # Ethernetadapter der AMD-PCNET-Familie 2 - Paketplaner-Miniport, while
+                    # in wmic it's only named "Ethernetadapter der AMD-PCNET-Familie 2".
+                    longest_match = 0
+                    if nic_name not in nic_names: 
+                        for n in nic_names:
+                            if n.startswith(nic_name + " "):
+                                l = len(nic_name)
+                                if not (n[l:].strip()[0]).isdigit():
+                                    nic_name = n
+                                    break
+                        else:
+                            # Ignore interfaces that do not have counters
+                            continue
+
+                    nics[nic_name].update(as_dict)
+    except StopIteration:
+        pass
+
+    # Now convert the dicts into the format that is needed by if.include
+    converted = []
+    
+
+    # Sort NIC names are create artifical index
+    nic_names = nics.keys()
+    nic_names.sort()
+
+    for nr, nic_name in enumerate(nic_names):
+        nic = nics[nic_name]
+        mac_txt = nic.get('MACAddress')
+        if mac_txt:
+            mac = "".join(map(lambda x: chr(int(x, 16)), mac_txt.split(':')))
+        else:
+            mac = ''
+        converted.append((
+           str(nr + 1),
+           nic_name,
+           "loopback" in nic_name.lower() and '24' or '6',
+           nic[10], # Aktuelle Bandbreite
+           # NetConnectionStatus: 2 st up, 7 ist 'not connected'. If the plugin
+           # wmic_if is missing and we have link information we need to assume 'up':
+           nic.get('NetConnectionStatus', '2') == '2' and '1' or '2',
+           nic[-246], # ifInOctets,
+           nic[14], # inucast
+           0,       # inmcast
+           nic[16], # non-unicast empfangen
+           nic[18], # ifInDiscards
+           nic[20] + nic[22], # ifInErrors (Empfangene Pakete Fehler), + "Empfangene Paket unbekannt"
+           nic[-4], # ifOutOctets (Bytes gesendet)
+           nic[26], # outucast
+           0, 
+           nic[28], # outnonucast
+           nic[30], # ifOutDiscards
+           nic[32], # ifOutErrors
+           nic[34], # ifOutQLen
+           nic_name,
+           mac,
+        ))
+
+    return converted
+
+def inventory_winperf_if(info):
+    return inventory_if_common(convert_winperf_if(info))
+
+def check_winperf_if(item, params, info):
+    return check_if_common(item, params, convert_winperf_if(info))
+
+
+check_info["winperf_if"] = {
+    'check_function':          check_winperf_if,
+    'inventory_function':      inventory_winperf_if,
+    'service_description':     'Interface %s',
+    'has_perfdata':            True,
+    'includes':                [ 'if.include' ],
+    'group':                   'if',
+    'default_levels_variable': 'if_default_levels',
+}

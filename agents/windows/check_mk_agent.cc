@@ -52,8 +52,6 @@
 #include <winsock2.h>
 #include <stdarg.h>
 #include <time.h>
-#include <string.h>
-#include <strings.h>
 #include <locale.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -101,9 +99,14 @@
 #define MAX_MRPE_COMMANDS            64
 #define MAX_EXECUTE_SUFFIXES         64
 #define MAX_FILEINFO_ENTRIES        128
+#define MAX_PLUGIN_CONFIGS          128
 
 // Default buffer size for reading performance counters
 #define DEFAULT_BUFFER_SIZE      40960L
+
+// Other default values
+#define DEFAULT_PLUGIN_TIMEOUT         30
+#define DEFAULT_TOTAL_PLUGINS_TIMEOUT  60
 
 // Needed for only_from
 struct ipspec {
@@ -122,6 +125,12 @@ struct winperf_counter {
 struct eventlog_config_entry {
     char name[256];
     int level;
+};
+
+// Definitions for plugin timeout
+struct plugin_config_entry {
+    char name[128];
+    int  timeout;
 };
 
 // Command definitions for MRPE
@@ -158,7 +167,9 @@ bool do_tcp = false;
 bool should_terminate = false;
 bool force_tcp_output = false; // if true, send socket data immediately
 char g_hostname[256];
-int g_port = CHECK_MK_AGENT_PORT;
+int  g_port = CHECK_MK_AGENT_PORT;
+int  g_total_plugins_timeout = DEFAULT_TOTAL_PLUGINS_TIMEOUT;
+time_t g_plugins_execution_start = 0;
 
 // sections enabled (configurable in check_mk.ini)
 unsigned long enabled_sections = 0xffffffff;
@@ -219,6 +230,11 @@ char *g_fileinfo_path[MAX_FILEINFO_ENTRIES];
 FILE *g_connectionlog_file = 0;
 struct timeval g_crashlog_start;
 bool g_found_crash = false;
+
+// Configuration of plugins
+plugin_config_entry g_plugin_configs[MAX_PLUGIN_CONFIGS];
+unsigned int g_num_plugin_configs   = 0;
+
 
 //  .----------------------------------------------------------------------.
 //  |                  _   _      _                                        |
@@ -867,6 +883,7 @@ void section_winperf(SOCKET &out)
 {
     dump_performance_counters(out, 234, "phydisk");
     dump_performance_counters(out, 238, "processor");
+    dump_performance_counters(out, 510, "if");
 
     // also output additionally configured counters
     for (unsigned i=0; i<g_num_winperf_counters; i++)
@@ -1956,6 +1973,43 @@ bool handle_fileinfo_config_variable(char *var, char *value)
 }
 
 
+
+//   .--Plugins-------------------------------------------------------------.
+//   |                   ____  _             _                              |
+//   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
+//   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
+//   |                  |  __/| | |_| | (_| | | | | \__ \                   |
+//   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
+//   |                                 |___/                                |
+//   +----------------------------------------------------------------------+
+//   |                                                                      |
+//   '----------------------------------------------------------------------'
+
+bool handle_plugin_config_variable(char *var, char *value)
+{
+    if (g_num_plugin_configs >= MAX_PLUGIN_CONFIGS) {
+         fprintf(stderr, "Sorry, we are limited to %u plugin configs\r\n", MAX_PLUGIN_CONFIGS);
+         return false;
+    }
+
+    if (!strncmp(var, "timeout ", 8)) {
+        char* plugin_pattern = lstrip(var + 8);
+        strncpy(g_plugin_configs[g_num_plugin_configs].name, plugin_pattern, sizeof(g_plugin_configs[g_num_plugin_configs].name));
+        g_plugin_configs[g_num_plugin_configs].timeout = atoi(value);
+        g_num_plugin_configs++;
+    }
+    return true;
+}
+
+int get_plugin_timeout(char *name)
+{
+    for (unsigned int i = 0; i < g_num_plugin_configs; i++) {
+        if (globmatch(g_plugin_configs[i].name, name))
+            return g_plugin_configs[i].timeout;
+    }
+    return DEFAULT_PLUGIN_TIMEOUT;
+}
+
 //   .----------------------------------------------------------------------.
 //   |     ____                    _                                        |
 //   |    |  _ \ _   _ _ __  _ __ (_)_ __   __ _   _ __  _ __ __ _ ___      |
@@ -2013,33 +2067,151 @@ bool banned_exec_name(char *name)
     }
 }
 
-void run_plugin(SOCKET &out, char *path)
-{
-    crash_log("Running program %s", path);
-    char newpath[256];
-    char *execpath = add_interpreter(path, newpath);
 
-    FILE *f = popen(execpath, "r");
-    if (f) {
-        char line[4096];
-        while (0 != fgets(line, sizeof(line), f)) {
-            output(out, "%s", line);
-        }
-        pclose(f);
-    }
+bool IsWinNT()  // check if we're running NT
+{
+  OSVERSIONINFO osv;
+  osv.dwOSVersionInfoSize = sizeof(osv);
+  GetVersionEx(&osv);
+  return (osv.dwPlatformId == VER_PLATFORM_WIN32_NT);
 }
 
-void run_external_programs(SOCKET &out, char *dirname)
+void launch_program(SOCKET &out, char *dirname, char *name, bool is_plugin){
+    char path[512];
+    snprintf(path, sizeof(path), "%s\\%s", dirname, name);
+
+    crash_log("Running program %s", path);
+    char newpath[512];
+    char *command = add_interpreter(path, newpath);
+
+    char buf[1024];           // i/o buffer
+    STARTUPINFO si;
+    SECURITY_ATTRIBUTES sa;
+    SECURITY_DESCRIPTOR sd;   // security information for pipes
+    PROCESS_INFORMATION pi;
+    HANDLE newstdin,newstdout,read_stdout,write_stdin;  // pipe handles
+    
+    // initialize security descriptor (Windows NT)
+    if (IsWinNT())        
+    {
+        InitializeSecurityDescriptor(&sd,SECURITY_DESCRIPTOR_REVISION);
+        SetSecurityDescriptorDacl(&sd, true, NULL, false);
+        sa.lpSecurityDescriptor = &sd;
+    }
+    else 
+        sa.lpSecurityDescriptor = NULL;
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.bInheritHandle = true;                       // allow inheritable handles
+
+    // stdin is unused
+    if (!CreatePipe(&newstdin,&write_stdin,&sa,0))  // create stdin pipe
+    {
+      crash_log("Error creating stdin pipe");
+      return; 
+    }
+    if (!CreatePipe(&read_stdout,&newstdout,&sa,0)) // create stdout pipe
+    {
+      crash_log("Error creating stdout pipe");
+      CloseHandle(newstdin);
+      CloseHandle(write_stdin);
+      return;
+    }
+
+    GetStartupInfo(&si);      //set startupinfo for the spawned process
+    /*
+    The dwFlags member tells CreateProcess how to make the process.
+    STARTF_USESTDHANDLES validates the hStd* members. STARTF_USESHOWWINDOW
+    validates the wShowWindow member.
+    */
+    si.dwFlags = STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    si.hStdOutput = newstdout;
+    si.hStdError = newstdout;     // set the new handles for the child process
+    si.hStdInput = newstdin;
+
+    // spawn the child process
+    if (!CreateProcess(NULL,command,NULL,NULL,TRUE,CREATE_NEW_CONSOLE,
+                       NULL,NULL,&si,&pi))
+    {
+      crash_log("Error creating process");
+      CloseHandle(newstdin);
+      CloseHandle(newstdout);
+      CloseHandle(read_stdout);
+      CloseHandle(write_stdin);
+      return;
+    }
+
+    unsigned long exit=0;  // process exit code
+    unsigned long bread;   // bytes read
+    unsigned long avail;   // bytes available
+  
+    memset(buf, 0, sizeof(buf));
+
+    // default timeout for local checks
+    int program_timeout = 60;
+
+    if (is_plugin)
+        program_timeout = get_plugin_timeout(name);
+
+    time_t process_start = time(0);
+    for(;;)   
+    {
+        if (is_plugin && time(0) - g_plugins_execution_start > g_total_plugins_timeout) {
+            crash_log("Total plugins timeout %d reached", g_total_plugins_timeout);
+            break;
+        }
+
+        if ( time(0) - process_start >  program_timeout ){
+            crash_log("Plugin timeout %d reached", program_timeout);
+            break;
+        }
+
+        GetExitCodeProcess(pi.hProcess,&exit);      // while the process is running
+        PeekNamedPipe(read_stdout,buf,1023,&bread,&avail,NULL);
+        // check to see if there is any data to read from stdout
+        if (bread != 0) {
+            memset(buf, 0, sizeof(buf));
+            if (avail > 1023) {
+                while (bread >= 1023) {
+                    ReadFile(read_stdout,buf,1023,&bread,NULL); // read the stdout pipe
+                    output(out, buf);
+                    memset(buf, 0, sizeof(buf));
+                }
+            }
+            else {
+                ReadFile(read_stdout,buf,1023,&bread,NULL);
+                output(out, buf);
+            }
+        }
+        
+        if (exit != STILL_ACTIVE)
+           break;
+
+        Sleep(10);
+    }
+
+    PostThreadMessage(pi.dwThreadId, WM_CLOSE, 0, 0);
+    TerminateProcess(pi.hProcess,0);
+
+    // cleanup the mess
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    CloseHandle(newstdin);            
+    CloseHandle(newstdout);
+    CloseHandle(read_stdout);
+    CloseHandle(write_stdin);
+    return;
+}
+
+void run_external_programs(SOCKET &out, char *dirname, bool is_plugin)
 {
-    char path[256];
     DIR *dir = opendir(dirname);
     if (dir) {
         struct dirent *de;
         while (0 != (de = readdir(dir))) {
             char *name = de->d_name;
             if (name[0] != '.' && !banned_exec_name(name)) {
-                snprintf(path, sizeof(path), "%s\\%s", dirname, name);
-                run_plugin(out, path);
+                launch_program(out, dirname, name, is_plugin);
             }
         }
         closedir(dir);
@@ -2104,7 +2276,7 @@ void section_local(SOCKET &out)
 {
     crash_log("<<<local>>>");
     output(out, "<<<local>>>\n");
-    run_external_programs(out, g_local_dir);
+    run_external_programs(out, g_local_dir, false);
 }
 
 //  .----------------------------------------------------------------------.
@@ -2118,7 +2290,8 @@ void section_local(SOCKET &out)
 
 void section_plugins(SOCKET &out)
 {
-    run_external_programs(out, g_plugins_dir);
+    g_plugins_execution_start = time(0);
+    run_external_programs(out, g_plugins_dir, true);
 }
 
 
@@ -2645,6 +2818,10 @@ if (!strcmp(var, "only_from")) {
         parse_execute(value);
         return true;
     }
+    else if (!strcmp(var, "timeout_plugins_dir")) {
+        g_total_plugins_timeout = atoi(value);
+        return true;
+    }
     else if (!strcmp(var, "crash_debug")) {
         return parse_crash_debug(value);
     }
@@ -2902,6 +3079,8 @@ void read_config_file()
                 variable_handler = handle_mrpe_config_variable;
             else if (!strcmp(section, "fileinfo"))
                 variable_handler = handle_fileinfo_config_variable;
+            else if (!strcmp(section, "plugins"))
+                variable_handler = handle_plugin_config_variable;
             else {
                 fprintf(stderr, "Invalid section [%s] in %s in line %d.\r\n",
                         section, g_config_file, lineno);

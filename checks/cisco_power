@@ -57,7 +57,7 @@ def check_cisco_power(item, params, info):
 check_info["cisco_power"] = {
     'check_function':          check_cisco_power,
     'inventory_function':      inventory_cisco_power,
-    'service_description':     '%s',
+    'service_description':     'Power %s',
     'snmp_info':               ('.1.3.6.1.4.1.9.9.13.1.5.1', [2, 3, 4]),
     'snmp_scan_function':      \
      lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower(),

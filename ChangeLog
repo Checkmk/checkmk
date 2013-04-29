@@ -9,6 +9,7 @@
     * FIX: vsphere_agent: fix problems whith ! and \ in username or password
     * FIX: check_mk_agent.aix: fix shebang: was python, must be ksh
     * FIX: cisco_qos: Be compatible to newer IOS-XE versions (Thanks to Ken Smith)
+    * FIX: mk_jolokia: Handling spaces in application server instances correctly
 
     Multisite:
     * FIX: do not remove directories of non-exisant users anymore. This lead to

@@ -82,6 +82,7 @@
     * Linux agent: remove obsolete old <<<netif>>> and <<<netctr>>> sections
     * logwatch, logwatch.ec: detect error in agent configuration
     * Linux agent: cups_queues: do not monitor non-local queues (thanks to Olaf Morgenstern)
+    * AIX agent: call lparstat with argument 1 1, this give more accurate data
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

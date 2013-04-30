@@ -19,6 +19,9 @@
     * FIX: titles and services got lost when moving join-columns in views
     * FIX: Fixed exception during initial page rendering in python 2.6 in special cases
            (Internal error: putenv() argument 2 must be string, not list)
+    
+    Livestatus:
+    * livestatus.log: show utf-8 decoding problems only with debug logging >=2
 
     Notifications:
     * FIX: HTML mails: Handle the case where plugin argument is not set

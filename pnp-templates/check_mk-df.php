@@ -25,6 +25,16 @@
 
 setlocale(LC_ALL, "POSIX");
 
+// Make data sources available via names
+$RRD = array();
+foreach ($NAME as $i => $n) {
+    $RRD[$n] = "$RRDFILE[$i]:$DS[$i]:MAX";
+    $WARN[$n] = $WARN[$i];
+    $CRIT[$n] = $CRIT[$i];
+    $MIN[$n]  = $MIN[$i];
+    $MAX[$n]  = $MAX[$i];
+}
+
 # RRDtool Options
 #$servicedes=$NAGIOS_SERVICEDESC
 
@@ -49,14 +59,30 @@ $opt[1] = "--vertical-label GB -l 0 -u $maxgb --title '$hostname: Filesystem $fs
 # First graph show current filesystem usage
 $def[1] = "DEF:mb=$RRDFILE[1]:$DS[1]:MAX "; 
 $def[1] .= "CDEF:var1=mb,1024,/ ";
-$def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\\n\" "; 
-$def[1] .= "LINE1:var1#226600: "; 
+$def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\\n\" ";
+
+# Optional uncommitted usage e.g. for esx hosts
+if(isset($RRD['uncommitted'])) {
+    $def[1] .= "DEF:uncommitted_mb=".$RRD['uncommitted']." ";
+    $def[1] .= "CDEF:uncommitted_gb=uncommitted_mb,1024,/ ";
+    $def[1] .= "CDEF:total_gb=uncommitted_gb,var1,+ ";
+} else {
+    $def[1] .= "CDEF:total_gb=var1 ";
+}
+
 $def[1] .= "HRULE:$maxgb#003300:\"Size ($sizegb GB) \" ";
 $def[1] .= "HRULE:$warngb#ffff00:\"Warning at $warngbtxt GB \" ";
 $def[1] .= "HRULE:$critgb#ff0000:\"Critical at $critgbtxt GB \\n\" ";
 $def[1] .= "GPRINT:var1:LAST:\"current\: %6.2lf GB\" ";
 $def[1] .= "GPRINT:var1:MAX:\"max\: %6.2lf GB \" ";
-$def[1] .= "GPRINT:var1:AVERAGE:\"avg\: %6.2lf GB\" ";
+$def[1] .= "GPRINT:var1:AVERAGE:\"avg\: %6.2lf GB\\n\" ";
+
+if(isset($RRD['uncommitted'])) {
+    $def[1] .= "AREA:uncommitted_gb#eeccff:\"Uncommited\":STACK ";
+    $def[1] .= "GPRINT:uncommitted_gb:MAX:\"%6.2lf GB\l\" ";
+}
+
+$def[1] .= "LINE1:total_gb#226600 "; 
 
 # Second graph is optional and shows trend. The MAX field
 # of the third variable contains (size of the filesystem in MB

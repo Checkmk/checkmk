@@ -11201,7 +11201,7 @@ def mode_pattern_editor(phase):
 
     # Bail out if the given hostname does not exist
     if hostname and not host:
-        html.add_user_error('host', _('The given host does not exist.'))
+        html.add_user_error('host', _('The given host does not exist or is not managed by WATO.'))
         html.show_user_errors()
         return
 

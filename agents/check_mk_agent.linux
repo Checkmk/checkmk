@@ -158,23 +158,13 @@ echo "$(cat /proc/loadavg) $(grep -E '^CPU|^processor' < /proc/cpuinfo | wc -l)"
 echo '<<<uptime>>>'
 cat /proc/uptime
 
-# Network interfaces (Link, Autoneg, Speed)
-# This requires ethtool
-if type ethtool > /dev/null
-then
-  echo '<<<netif>>>'
-  for eth in $(cat /proc/net/dev | sed -rn -e 's/[[:space:]]*//g' -e  '/ *([^:]):.*/s//\1/p' | egrep -vx '(lo|sit.*)')
-  do
-    echo $eth $(ethtool $eth | egrep '(Speed|Duplex|Link detected|Auto-negotiation):' | cut -d: -f2 | sed 's/ *//g')
-  done
-fi
 
 # New variant: Information about speed and state in one section
 echo '<<<lnx_if:sep(58)>>>'
 sed 1,2d /proc/net/dev
 if type ethtool > /dev/null
 then
-    for eth in $(sed -e 1,2d < /proc/net/dev | cut -d':' -f1)
+    for eth in $(sed -e 1,2d < /proc/net/dev | cut -d':' -f1 | sort)
     do
       echo "[$eth]"
       ethtool $eth | egrep '(Speed|Duplex|Link detected|Auto-negotiation):'
@@ -238,13 +228,6 @@ fi
 echo '<<<kernel>>>'
 date +%s
 cat /proc/vmstat /proc/stat
-
-# Statistik der Netzwerkgeraete (Pakete, Kollisionen, etc)
-echo '<<<netctr>>>'
-# Genauen Zeitstempel einfuegen, da Counter von Zeit abhaengen
-date +%s
-sed -e 1,2d -e 's/:/ /g' < /proc/net/dev
-
 
 # Hardware sensors via IPMI (need ipmitool)
 if type ipmitool > /dev/null
@@ -368,9 +351,19 @@ fi
 if type lpstat > /dev/null 2>&1; then
    if pgrep cups > /dev/null 2>&1; then
        echo '<<<cups_queues>>>'
-       waitmax 3 lpstat -p
-       echo '---'
-       waitmax 3 lpstat -o|sort
+       WAITMAX="waitmax 3"
+       CPRINTCONF=/etc/cups/printers.conf
+       if [ -r "$CPRINTCONF" ] ; then
+          for PQ in $(lpstat -a | awk '{print $1}') ; do
+             grep -q -x -F "<Printer $PQ>" $CPRINTCONF && $WAITMAX lpstat -p $PQ
+          done
+          echo '---'
+          for PQ in $(lpstat -a | awk '{print $1}') ; do
+             grep -q -x -F "<Printer $PQ>" $CPRINTCONF && $WAITMAX lpstat -o $PQ
+          done
+       else
+          $WAITMAX lpstat -p ; echo '---' ; $WAITMAX lpstat -o | sort
+       fi
    fi
 fi
 

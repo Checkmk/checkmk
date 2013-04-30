@@ -240,7 +240,7 @@ snmp_character_encodings           = []
 inventory_check_interval           = None # Nagios intervals (4h = 240)
 inventory_check_severity           = 1    # warning
 inventory_max_cachefile_age        = 120  # secs.
-always_cleanup_autochecks          = False
+always_cleanup_autochecks          = True
 
 # Nagios templates and other settings concerning generation
 # of Nagios configuration files. No need to change these values.

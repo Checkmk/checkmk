@@ -9,6 +9,7 @@
     * setup: Added missing vars rrd_path and rrdcached_sock
     * new variable check_mk_exit_status: allows to make Check_MK service OK,
       even if host in not reachable.
+    * set always_cleanup_autochecks to True per default now
 
     Multisite:
     * New availability view for arbitrary host/service collections
@@ -77,6 +78,10 @@
     * winperf_if: hell has frozen over: a new check for network adapters on Windows
     * windows agent: new config section plugins, now able to set timeouts for specific plugins
                      new global config option: timeout_plugins_total
+    * lnx_if in Linux agent: force deterministical order of network devices
+    * Linux agent: remove obsolete old <<<netif>>> and <<<netctr>>> sections
+    * logwatch, logwatch.ec: detect error in agent configuration
+    * Linux agent: cups_queues: do not monitor non-local queues (thanks to Olaf Morgenstern)
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid
@@ -129,6 +134,7 @@
 
     Notifications:
     * FIX: HTML mails: Handle the case where plugin argument is not set
+    * FIX: HTML mails: remove undefinded placeholders like $GRAPH_CODE$
 
     WATO:
     * Improved handling of valuespec validations in WATO rule editor. Displaying a

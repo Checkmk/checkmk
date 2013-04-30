@@ -9,6 +9,7 @@
     * setup: Added missing vars rrd_path and rrdcached_sock
     * new variable check_mk_exit_status: allows to make Check_MK service OK,
       even if host in not reachable.
+    * set always_cleanup_autochecks to True per default now
 
     Multisite:
     * New availability view for arbitrary host/service collections

@@ -340,7 +340,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
         check_interval = check_interval_of(hostname, check_type)
         if not ignore_check_interval \
            and check_interval is not None and os.path.exists(cache_path) \
-           and cachefile_age(cache_path) < check_interval:
+           and cachefile_age(cache_path) < check_interval * 60:
             # cache file is newer than check_interval, skip this check
             raise MKSkipCheck()
 

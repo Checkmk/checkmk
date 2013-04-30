@@ -703,7 +703,7 @@ def check_interval_of(hostname, checkname):
         return # no values at all for non snmp checks
     for match, minutes in host_extra_conf(hostname, snmp_check_interval):
         if match is None or match == checkname:
-            return minutes * 60 # use first match
+            return minutes # use first match
 
 def get_single_oid(hostname, ipaddress, oid):
     # New in Check_MK 1.1.11: oid can end with ".*". In that case
@@ -1784,11 +1784,11 @@ def create_nagios_servicedefs(outfile, hostname):
 
         # Add the check interval of either the Check_MK service or
         # (if configured) the snmp_check_interval for snmp based checks
-        check_interval = 60 # default hardcoded interval
+        check_interval = 1 # default hardcoded interval
         # Customized interval of Check_MK service
         values = service_extra_conf(hostname, "Check_MK", extra_service_conf.get('check_interval', []))
         if values:
-            check_interval = int(values[0]) * 60
+            check_interval = int(values[0])
         value = check_interval_of(hostname, checkname)
         if value is not None:
             check_interval = value

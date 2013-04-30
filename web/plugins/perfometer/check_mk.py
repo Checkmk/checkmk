@@ -55,11 +55,10 @@ def perfometer_check_mk_df(row, check_command, perf_data):
     varname, value, unit, warn, crit, minn, maxx = perf_data[0]
     perc_used = 100 * (float(value) / float(maxx))
     perc_free = 100 - float(perc_used)
-    color = { 0: "#0f8", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]
-    h += perfometer_td(perc_used, color)
+    h += perfometer_td(perc_used, "#00ffc6")
     h += perfometer_td(perc_free, "white")
     h += "</tr></table>"
-    return "%d%%" % perc_used, h
+    return "%0.2f%%" % perc_used, h
 
 perfometers["check_mk-df"] = perfometer_check_mk_df
 perfometers["check_mk-vms_df"] = perfometer_check_mk_df
@@ -72,7 +71,39 @@ perfometers["check_mk-hr_fs"] = perfometer_check_mk_df
 perfometers["check_mk-oracle_asm_diskgroup"] = perfometer_check_mk_df
 perfometers["check_mk-mysql_capacity"] = perfometer_check_mk_df
 perfometers["check_mk-esx_vsphere_counters.ramdisk"] = perfometer_check_mk_df
-perfometers["check_mk-esx_vsphere_datastores"] = perfometer_check_mk_df
+
+def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
+    used_mb        = perf_data[0][1]
+    maxx           = perf_data[0][-1]
+    uncommitted_mb = perf_data[3][1]
+    perc_used = 100 * (float(used_mb) / float(maxx))
+    perc_uncommitted = 100 * (float(uncommitted_mb) / float(maxx))
+    perc_totally_free = 100 - perc_used - perc_uncommitted
+    perc_free = 100 - perc_used
+
+    h = '<table><tr>'
+    if perc_used + perc_uncommitted <= 100:
+        # Regular handling, no overcommitt
+        h += perfometer_td(perc_used, "#00ffc6")
+        h += perfometer_td(perc_uncommitted, "#eeccff")
+        h += perfometer_td(perc_totally_free, "white")
+    else:
+        # Visualize overcommitted space by scaling to total overcommittment value
+        # and drawing the capacity as red line in the perfometer
+        total = perc_used + perc_uncommitted
+        perc_used = perc_used * 100 / total
+        perc_uncommitted = perc_uncommitted * 100 / total
+        perc_free = perc_free * 100 / total
+
+        h += perfometer_td(perc_used, "#00ffc6")
+        h += perfometer_td(perc_free, "#eeccff")
+        h += perfometer_td(1, "red") # This line visualizes the capacity
+        h += perfometer_td(perc_uncommitted - perc_free, "#eeccff")
+    h += "</tr></table>"
+
+    return "%0.2f%% (+%0.2f%%)" % (perc_used, perc_uncommitted), h
+
+perfometers["check_mk-esx_vsphere_datastores"] = perfometer_esx_vsphere_datastores
 
 
 def perfometer_check_mk_kernel_util(row, check_command, perf_data):

@@ -74,8 +74,12 @@ def check_esx_vsphere_datastores(item, params, info):
         overprov_percent = (overprov_mb / size_mb) * 100
 
         overprov_txt = ''
+        overprov_warn_mb = None
+        overprov_crit_mb = None
         if 'provisioning_levels' in params:
             warn, crit = params['provisioning_levels']
+            overprov_warn_mb = avail_mb / 100 * warn
+            overprov_crit_mb = avail_mb / 100 * crit
             if overprov_percent >= crit:
                 state = max(state, 2)
                 overprov_txt = ' (!!)'
@@ -85,6 +89,10 @@ def check_esx_vsphere_datastores(item, params, info):
 
         infotext += ", uncommitted: %.2f GB, provisioning: %.1f%%%s" % (
                       uncommitted_mb / 1024, overprov_percent, overprov_txt)
+        perfdata += [
+            ('uncommited', str(uncommitted_mb) + 'MB'),
+            ('overprovisioned', str(overprov_mb) + 'MB', overprov_warn_mb, overprov_crit_mb),
+        ]
 
     if not store["accessible"]:
         state = 2

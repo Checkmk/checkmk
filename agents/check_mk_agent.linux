@@ -351,9 +351,19 @@ fi
 if type lpstat > /dev/null 2>&1; then
    if pgrep cups > /dev/null 2>&1; then
        echo '<<<cups_queues>>>'
-       waitmax 3 lpstat -p
-       echo '---'
-       waitmax 3 lpstat -o|sort
+       WAITMAX="waitmax 3"
+       CPRINTCONF=/etc/cups/printers.conf
+       if [ -r "$CPRINTCONF" ] ; then
+          for PQ in $(lpstat -a | awk '{print $1}') ; do
+             grep -q -x -F "<Printer $PQ>" $CPRINTCONF && $WAITMAX lpstat -p $PQ
+          done
+          echo '---'
+          for PQ in $(lpstat -a | awk '{print $1}') ; do
+             grep -q -x -F "<Printer $PQ>" $CPRINTCONF && $WAITMAX lpstat -o $PQ
+          done
+       else
+          $WAITMAX lpstat -p ; echo '---' ; $WAITMAX lpstat -o | sort
+       fi
    fi
 fi
 

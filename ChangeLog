@@ -9,6 +9,7 @@
     * setup: Added missing vars rrd_path and rrdcached_sock
     * new variable check_mk_exit_status: allows to make Check_MK service OK,
       even if host in not reachable.
+    * set always_cleanup_autochecks to True per default now
 
     Multisite:
     * New availability view for arbitrary host/service collections
@@ -80,6 +81,7 @@
     * lnx_if in Linux agent: force deterministical order of network devices
     * Linux agent: remove obsolete old <<<netif>>> and <<<netctr>>> sections
     * logwatch, logwatch.ec: detect error in agent configuration
+    * Linux agent: cups_queues: do not monitor non-local queues (thanks to Olaf Morgenstern)
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

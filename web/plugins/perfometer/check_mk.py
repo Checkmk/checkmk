@@ -71,7 +71,50 @@ perfometers["check_mk-zfsget"] = perfometer_check_mk_df
 perfometers["check_mk-hr_fs"] = perfometer_check_mk_df
 perfometers["check_mk-oracle_asm_diskgroup"] = perfometer_check_mk_df
 perfometers["check_mk-mysql_capacity"] = perfometer_check_mk_df
-perfometers["check_mk-esx_vsphere_datastores"] = perfometer_check_mk_df
+perfometers["check_mk-mysql_capacity"] = perfometer_check_mk_df
+perfometers["check_mk-esx_vsphere_counters.ramdisk"] = perfometer_check_mk_df
+
+def perfometer_check_mk_df_esx(row, check_command, perf_data):
+    h = '<table><tr>'
+    varname, value, unit, warn, crit, minn, maxx = perf_data[0]
+    uncommitted_mb= 0
+    if len(perf_data) > 3:
+        uncommitted_mb = perf_data[3][1]
+
+    perc_used = 100 * (float(value) / float(maxx))
+    perc_uncommitted = 100 * (float(uncommitted_mb) / float(maxx))
+    perc_free = 100 - float(perc_used) - float(perc_uncommitted)
+
+    state = row["service_state"]
+
+    # paint used and uncommitted
+    used_color, uncommitted_color = {
+        0:("#0c6", "#5fa"),
+        1:("#ff2", "#dd0"),
+        2:("#f22", "#f99"),
+        3:("#fa2", "#d80") }[state]
+
+    # used < size => show free space and uncommitted
+
+    if perc_free > 0:
+        h += perfometer_td(perc_used, used_color)
+        if perc_uncommitted > 0:
+            h += perfometer_td(perc_uncommitted, uncommitted_color)
+        h += perfometer_td(perc_free, "#fff")
+
+    # overcommitted => rescale values to show overcommitted percent
+    else:
+        perc_used2 =  perc_used * 100 / (100 - perc_free)
+        perc_uncommitted2 = perc_uncommitted * 100 / (100 - perc_free)
+        perc_free2 = perc_free * 100 / (100 - perc_free)
+        h += perfometer_td(perc_used2, used_color)
+        h += perfometer_td(perc_uncommitted2+perc_free2, uncommitted_color)
+        h += perfometer_td(0 - perc_free2, "#fd6")
+
+    h += "</tr></table>"
+    return "%0.2f%% (+%0.2f%%)" % (perc_used, perc_uncommitted), h
+
+perfometers["check_mk-esx_vsphere_datastores"] = perfometer_check_mk_df_esx
 
 
 def perfometer_check_mk_kernel_util(row, check_command, perf_data):

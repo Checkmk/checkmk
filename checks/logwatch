@@ -202,6 +202,11 @@ def logwatch_parse_line(line):
 # without precompiled checks, the params must be None an will be
 # ignored.
 def check_logwatch(item, params, info):
+    if len(info) == 1:
+        line = " ".join(info[0])
+        if line.startswith("CANNOT READ CONFIG FILE"):
+            return 3, "Error in agent configuration: %s" % " ".join(info[0][4:])
+
     found = False
     loglines = []
     for l in info:
@@ -430,6 +435,11 @@ def syslog_time():
     return value % day
 
 def check_logwatch_ec(item, params, info):
+    if len(info) == 1:
+        line = " ".join(info[0])
+        if line.startswith("CANNOT READ CONFIG FILE"):
+            return 3, "Error in agent configuration: %s" % " ".join(info[0][4:])
+
     # 1. Parse lines in info and separate by logfile
     logs = {}
     logfile = None

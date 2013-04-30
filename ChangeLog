@@ -79,6 +79,7 @@
                      new global config option: timeout_plugins_total
     * lnx_if in Linux agent: force deterministical order of network devices
     * Linux agent: remove obsolete old <<<netif>>> and <<<netctr>>> sections
+    * logwatch, logwatch.ec: detect error in agent configuration
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

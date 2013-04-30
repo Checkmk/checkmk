@@ -205,7 +205,9 @@ def automation_try_inventory_node(hostname):
             snmp_error = str(e)
 
     tcp_error = None
-    if is_tcp_host(hostname):
+    # Honor piggy_back data, even if host is not declared as TCP host
+    if is_tcp_host(hostname) or \
+           get_piggyback_info(hostname) or get_piggyback_info(ipaddress):
         try:
             for cn in inventorable_checktypes("tcp"):
                 found_services += make_inventory(cn, [hostname], True, True)

@@ -350,6 +350,7 @@ fi
 # Status of CUPS printer queues
 if type lpstat > /dev/null 2>&1; then
    if pgrep cups > /dev/null 2>&1; then
+       echo '<<<cups_queues>>>'
        WAITMAX="waitmax 3"
        CPRINTCONF=/etc/cups/printers.conf
        if [ -r "$CPRINTCONF" ] ; then

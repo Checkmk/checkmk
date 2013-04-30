@@ -59,6 +59,7 @@ if omd_root:
     local_notifications_dir  = local_share + "/notifications"
     local_check_manpages_dir = local_share + "/checkman"
     local_agents_dir         = local_share + "/agents"
+    local_mibs_dir           = local_share + "/mibs"
     local_web_dir            = local_share + "/web"
     local_pnp_templates_dir  = local_share + "/pnp-templates"
     local_doc_dir            = omd_root + "/local/share/doc/check_mk"
@@ -68,6 +69,7 @@ else:
     local_notifications_dir  = None
     local_check_manpages_dir = None
     local_agents_dir         = None
+    local_mibs_dir           = None
     local_web_dir            = None
     local_pnp_templates_dir  = None
     local_doc_dir            = None
@@ -3610,6 +3612,61 @@ def output_plain_hostinfo(hostname):
 
     sys.stdout.write(get_piggyback_info(hostname))
 
+def do_snmptranslate(walk):
+    walk = walk[0]
+    
+    path_walk = "%s/%s" % (snmpwalks_dir, walk)
+    if not os.path.exists(path_walk):
+        print "Walk does not exist"
+        return
+
+    def translate(lines):
+        result_lines = []
+        try:
+            oids_for_command = []
+            for line in lines:
+                oids_for_command.append(line.split(" ")[0])
+    
+            extra_mib_path = ""
+            if local_mibs_dir:
+                extra_mib_path = " -M+%s" % local_mibs_dir
+            command = "snmptranslate -m ALL%s %s 2>/dev/null" % (extra_mib_path, " ".join(oids_for_command))
+            process = os.popen(command, "r")
+            output  = process.read()
+            result  = output.split("\n")[0::2]
+            for idx, line in enumerate(result):
+                result_lines.append((line, lines[idx]))
+        
+            # Add missing fields one by one
+            for line in lines[len(result_lines):]:
+                result_lines.extend(translate([line]))
+        except Exception, e:
+            print e
+
+        return result_lines
+
+
+    # Translate n-oid's per cycle
+    entries_per_cycle = 50 
+    translated_lines = []
+    
+    walk_lines = file(path_walk).readlines()
+    print("Processing %d lines (%d per dot)" %  (len(walk_lines), entries_per_cycle))
+    for i in range(0, len(walk_lines), entries_per_cycle):
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        process_lines = walk_lines[i:i+entries_per_cycle]
+        translated_lines.extend(translate(process_lines))
+        
+    # Output formatted
+    longest_translation = 40
+    for translation, line in translated_lines:
+        longest_translation = max(longest_translation, len(translation)) 
+        
+    format_string = "%%-%ds %%s" % longest_translation
+    for translation, line in translated_lines:
+        sys.stdout.write(format_string % (translation, line))
+
 def do_snmpwalk(hostnames):
     if len(hostnames) == 0:
         sys.stderr.write("Please specify host names to walk on.\n")
@@ -3922,6 +3979,7 @@ def usage():
  check_mk --flush [HOST1 HOST2...]         flush all data of some or all hosts
  check_mk --donate                         Email data of configured hosts to MK
  check_mk --snmpwalk HOST1 HOST2 ...       Do snmpwalk on host
+ check_mk --snmptranslate HOST             Do snmptranslate on walk
  check_mk --snmpget OID HOST1 HOST2 ...    Fetch single OIDs and output them
  check_mk --scan-parents [HOST1 HOST2...]  autoscan parents, create conf.d/parents.mk
  check_mk -P, --package COMMAND            do package operations
@@ -4015,9 +4073,12 @@ NOTES:
   Check_MK and developing checks by donating hosts. This is completely
   voluntary and turned off by default.
 
-  --snmpwalk does a complete snmpwalk for the specifies hosts both
+  --snmpwalk does a complete snmpwalk for the specified hosts both
   on the standard MIB and the enterprises MIB and stores the
   result in the directory %s.
+
+  --snmptranslate does not contact the host again, but reuses the hosts
+  walk from the directory %s.%s
 
   --scan-parents uses traceroute in order to automatically detect
   hosts's parents. It creates the file conf.d/parents.mk which
@@ -4031,6 +4092,8 @@ NOTES:
 """ % (check_mk_configfile,
        precompiled_hostchecks_dir,
        snmpwalks_dir,
+       snmpwalks_dir,
+       local_mibs_dir and ("\n  You can add further mibs to %s" % local_mibs_dir) or "",
        )
 
 
@@ -4850,8 +4913,8 @@ if __name__ == "__main__":
     short_options = 'SHVLCURODMd:Ic:nhvpXPuN'
     long_options = [ "help", "version", "verbose", "compile", "debug",
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
-                     "flush", "package", "localize", "donate", "snmpwalk", "usewalk",
-                     "scan-parents", "procs=", "automation=", "notify",
+                     "flush", "package", "localize", "donate", "snmpwalk", "snmptranslate",
+                     "usewalk", "scan-parents", "procs=", "automation=", "notify",
                      "snmpget=", "profile",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
@@ -4970,6 +5033,9 @@ if __name__ == "__main__":
                 done = True
             elif o == '--snmpwalk':
                 do_snmpwalk(args)
+                done = True
+            elif o == '--snmptranslate':
+                do_snmptranslate(args)
                 done = True
             elif o == '--snmpget':
                 do_snmpget(a, args)

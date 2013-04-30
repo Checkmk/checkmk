@@ -1060,7 +1060,8 @@ void Query::outputString(const char *value)
                     }
                 }
                 else {
-                    logger(LG_INFO, "Ignoring invalid UTF-8 sequence in string '%s'", value);
+                    if (g_debug_level >= 2)
+                        logger(LG_INFO, "Ignoring invalid UTF-8 sequence in string '%s'", value);
                 }
             }
 

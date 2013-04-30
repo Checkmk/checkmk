@@ -1234,7 +1234,7 @@ def get_age_human_readable(secs):
         return "%d days, %d hours" % (days, hours)
     return "%d days" % days
 
-# Quote string for use as arguments on the shell 
+# Quote string for use as arguments on the shell
 def quote_shell_string(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
 

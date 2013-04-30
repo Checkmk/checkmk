@@ -10,6 +10,7 @@
     * new variable check_mk_exit_status: allows to make Check_MK service OK,
       even if host in not reachable.
     * set always_cleanup_autochecks to True per default now
+    * check_mk: new option --snmptranslate
 
     Multisite:
     * New availability view for arbitrary host/service collections

@@ -79,7 +79,6 @@ def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
     perc_used = 100 * (float(used_mb) / float(maxx))
     perc_uncommitted = 100 * (float(uncommitted_mb) / float(maxx))
     perc_totally_free = 100 - perc_used - perc_uncommitted
-    perc_free = 100 - perc_used
 
     h = '<table><tr>'
     if perc_used + perc_uncommitted <= 100:
@@ -91,11 +90,11 @@ def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
         # Visualize overcommitted space by scaling to total overcommittment value
         # and drawing the capacity as red line in the perfometer
         total = perc_used + perc_uncommitted
-        perc_used = perc_used * 100 / total
-        perc_uncommitted = perc_uncommitted * 100 / total
-        perc_free = perc_free * 100 / total
+        perc_used_bar = perc_used * 100 / total
+        perc_uncommitted_bar = perc_uncommitted * 100 / total
+        perc_free = (100 - perc_used) * 100 / total
 
-        h += perfometer_td(perc_used, "#00ffc6")
+        h += perfometer_td(perc_used_bar, "#00ffc6")
         h += perfometer_td(perc_free, "#eeccff")
         h += perfometer_td(1, "red") # This line visualizes the capacity
         h += perfometer_td(perc_uncommitted - perc_free, "#eeccff")

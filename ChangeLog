@@ -131,6 +131,7 @@
 
     Notifications:
     * FIX: HTML mails: Handle the case where plugin argument is not set
+    * FIX: HTML mails: remove undefinded placeholders like $GRAPH_CODE$
 
     WATO:
     * Improved handling of valuespec validations in WATO rule editor. Displaying a

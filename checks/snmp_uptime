@@ -28,36 +28,26 @@
 
 def inventory_snmp_uptime(info):
     if len(info) > 0 and len(info[0]) >= 1:
-        return [ (None, None) ]
+        return [ (None, {}) ]
 
-def check_snmp_uptime(checktype, _no_params, info):
-    if len(info) > 0 and len(info[0]) >= 1:
-        ticks            = info[0][0]
-        try:
-            uptime = int(ticks[:-2])
-        except:
-            days, h, m, s = ticks.split(":")
-            uptime = (int(days) * 86400 ) + (int(h) * 3600) + (int(m) * 60) + int(float(s))
+def check_snmp_uptime(checktype, params, info):
+    ticks            = info[0][0]
+    try:
+        uptime = int(ticks[:-2])
+    except:
+        days, h, m, s = ticks.split(":")
+        uptime = (int(days) * 86400 ) + (int(h) * 3600) + (int(m) * 60) + int(float(s))
 
-        days,    rest    = divmod(uptime, 60*60*24)
-        hours,   rest    = divmod(rest,   60*60)
-        minutes, seconds = divmod(rest,      60)
-        now = int(time.time())
-        since = time.strftime("%c", time.localtime(now - uptime))
-        return (0, "up since %s (%dd %02d:%02d:%02d)" %
-                 (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
-    else:
-        return (3, "No data retrieved")
+    return check_uptime_seconds(params, uptime)
 
 
 check_info["snmp_uptime"] = {
-    'check_function':          check_snmp_uptime,
-    'inventory_function':      inventory_snmp_uptime,
-    'service_description':     'Uptime',
-    'has_perfdata':            True,
-    # DISMAN-EVENT-MIB::sysUpTime
-    'snmp_info':               ('.1.3.6.1.2.1.1', ['3.0']),
-    # This check works on all SNMP hosts
-    'snmp_scan_function':      lambda oid: oid(".1.3.6.1.2.1.1.1.0") != None,
-    'group':                   'uptime',
+    'check_function'        :  check_snmp_uptime,
+    'inventory_function'    :  inventory_snmp_uptime,
+    'service_description'   :  'Uptime',
+    'has_perfdata'          :  True,
+    'snmp_info'             :  ('.1.3.6.1.2.1.1', ['3.0']), # DISMAN-EVENT-MIB::sysUpTime
+    'snmp_scan_function'    :  lambda oid: oid(".1.3.6.1.2.1.1.1.0") != None,
+    'group'                 :  'uptime',
+    'includes'              :  [ 'uptime.include' ],
 }

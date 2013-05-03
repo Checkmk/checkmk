@@ -254,7 +254,7 @@ check_info['esx_vsphere_counters.if'] = {
 def inventory_esx_vsphere_counters_uptime(info):
     for name, instance, counter, unit in info:
         if name == "sys.uptime":
-            return [ (None, None) ]
+            return [ (None, {}) ]
 
 def check_esx_vsphere_counters_uptime(_no_item, params, info):
     for name, instance, counter, unit in info:

@@ -26,7 +26,7 @@
 
 def inventory_uptime(info):
     if len(info) >= 1 and len(info[0]) >= 1:
-        return [ (None, None) ]
+        return [ (None, {}) ]
 
 def check_uptime(_no_item, params, info):
     return check_uptime_seconds(params, float(info[0][0]))

@@ -10203,7 +10203,7 @@ def mode_edit_ruleset(phase):
                 html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
                 html.write("&nbsp;")
             html.write(htmllib.attrencode(rule_options.get("comment", "")))
-        
+
         table.end()
 
     create_new_rule_form(rulespec, hostname, item)

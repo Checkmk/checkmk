@@ -60,7 +60,7 @@
 # WINDOWSXP,08:00:27:35:20:4D,Ethernetadapter der AMD-PCNET-Familie,LAN-Verbindung 2,2
 # WINDOWSXP,08:00:27:35:20:4D,Paketplaner-Miniport,,
 
-def convert_winperf_if(info): 
+def convert_winperf_if(info):
     def canonize_nic_name(n):
         return n.replace("_", " ").replace("  ", " ")
 
@@ -73,7 +73,7 @@ def convert_winperf_if(info):
     try:
         while True:
             line = lines.next()
-            counter = saveint(line[0]) 
+            counter = saveint(line[0])
             if counter:
                 for nr, value in enumerate(line[1:len(nic_names)+1]):
                     nics[nic_names[nr]][counter] = int(value)
@@ -91,11 +91,11 @@ def convert_winperf_if(info):
                         nic_name += " " + str(conn_id)
                     except:
                         pass
-                    # In the perf counters the nics have strange suffixes, e.g. 
+                    # In the perf counters the nics have strange suffixes, e.g.
                     # Ethernetadapter der AMD-PCNET-Familie 2 - Paketplaner-Miniport, while
                     # in wmic it's only named "Ethernetadapter der AMD-PCNET-Familie 2".
                     longest_match = 0
-                    if nic_name not in nic_names: 
+                    if nic_name not in nic_names:
                         for n in nic_names:
                             if n.startswith(nic_name + " "):
                                 l = len(nic_name)
@@ -112,7 +112,7 @@ def convert_winperf_if(info):
 
     # Now convert the dicts into the format that is needed by if.include
     converted = []
-    
+
 
     # Sort NIC names are create artifical index
     nic_names = nics.keys()
@@ -141,7 +141,7 @@ def convert_winperf_if(info):
            nic[20] + nic[22], # ifInErrors (Empfangene Pakete Fehler), + "Empfangene Paket unbekannt"
            nic[-4], # ifOutOctets (Bytes gesendet)
            nic[26], # outucast
-           0, 
+           0,
            nic[28], # outnonucast
            nic[30], # ifOutDiscards
            nic[32], # ifOutErrors

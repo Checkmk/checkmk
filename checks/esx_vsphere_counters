@@ -128,7 +128,7 @@ def convert_esx_counters_if(info):
             by_item[item][name] = int(value)
 
     # Example of by_item:
-    # { 
+    # {
     #   'vmnic0': {
     #         'broadcastRx': 31,
     #         'broadcastTx': 0,
@@ -150,7 +150,7 @@ def convert_esx_counters_if(info):
     # }
     nics = by_item.keys()
     nics.sort()
-    
+
     converted = [
         [], #  0 ifIndex                   0
         [], #  1 ifDescr                   1

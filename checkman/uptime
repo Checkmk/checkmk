@@ -16,7 +16,7 @@ inventory:
 
 [parameters]
 parameters (dict): A dictionary with the following optional keys:
-    
+
     {"min"}: Pair of integers of warn and crit: the minimum required uptime
     uptime in seconds.
 

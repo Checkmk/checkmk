@@ -663,7 +663,7 @@ register_check_parameters(
    _("Uptime (seconds since last reboot)"),
    Dictionary(
        elements = [
-           ( "min", 
+           ( "min",
              Tuple(
                  title = _("Minimum required uptime"),
                  elements = [
@@ -671,7 +671,7 @@ register_check_parameters(
                      Age(title = _("Critical if below")),
                  ]
            )),
-           ( "max", 
+           ( "max",
              Tuple(
                  title = _("Maximum allowed uptime"),
                  elements = [
@@ -2352,7 +2352,7 @@ register_check_parameters(
 #     "first",
 #     False,
 # )
-    
+
 
 register_check_parameters(
     subgroup_hardware,

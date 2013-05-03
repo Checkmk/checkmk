@@ -1754,7 +1754,7 @@ class Alternative(ValueSpec):
                 disp = "none"
                 cur_val = vs.default_value()
 
-            html.write('<span id="%s_%s_sub" style="display: %s">' % 
+            html.write('<span id="%s_%s_sub" style="display: %s">' %
                     (varprefix, nr, disp))
             html.help(vs.help())
             vs.render_input(varprefix + "_%d" % nr, cur_val)

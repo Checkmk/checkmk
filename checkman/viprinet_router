@@ -19,11 +19,11 @@ description:
 inventory:
  One check is created whereas the router mode during the inventory
  is remembered as a param
- 
-[parameters]
-parameters(dict): a dictionary with the optional key 
 
- {"mode"} - specifies the required router mode. The mode can be set to 
+[parameters]
+parameters(dict): a dictionary with the optional key
+
+ {"mode"} - specifies the required router mode. The mode can be set to
             {node} / {hub} / {hub_hotspare} / {hub_hotspare_replacing}
             and {inventory} (same mode as detected on inventory).
             If the actual mode differs from this mode a warning is raised

@@ -19,7 +19,7 @@ inventory:
   One check per ESX Host System will be created.
 
 [parameters]
-parameters(dict): A dictionary with the following keys: 
+parameters(dict): A dictionary with the following keys:
 
   {"levels"}: Either {None} for no levels, a tuple of warn and crit (in percent) or
   a dictionary with predictive levels settings.

@@ -12,7 +12,7 @@
 #
 # By default this plugin tries to detect all locally running apache processes
 # and to monitor them. If this is not good for your environment you might
-# create an apache_status.conf file in MK_CONFDIR and populate the servers
+# create an apache_status.cfg file in MK_CONFDIR and populate the servers
 # list to prevent executing the detection mechanism.
 #
 # It is also possible to override or extend the ssl_ports variable to make the
@@ -20,9 +20,14 @@
 
 import os, sys, urllib2
 
-config_file = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/apache_status.conf"
+config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")  
+config_file = config_dir + "/apache_status.conf"
+if not os.path.exists(config_file):
+    config_file = config_dir + "/apache_status.cfg"
 
-# None or list of (ipaddress, port) tuples
+
+# None or list of (proto, ipaddress, port) tuples.
+# proto is 'http' or 'https'
 servers = None
 ssl_ports = [ 443, ]
 

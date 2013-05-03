@@ -116,6 +116,12 @@
     * Inventory: Display link symbol for ps ruleset
     * FIX: Rulesets: correct display of rules within subfolders
 
+
+1.2.2p2:
+    Checks & Agents:
+    * FIX: apache_status: use (also) apache_status.cfg instead of apache_status.conf
+     
+
 1.2.2p1:
     Core:
     * FIX: correctly quote ! and \ in active checks for Nagios

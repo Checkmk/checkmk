@@ -1493,13 +1493,21 @@ def check_timeperiod(timeperiod):
     global g_inactive_timerperiods
     # Let exceptions happen, they will be handled upstream.
     if g_inactive_timerperiods == None:
-        import socket
-        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(livestatus_unix_socket)
-        # We just get the currently inactive timeperiods. All others
-        # (also non-existing) are considered to be active
-        s.send("GET timeperiods\nColumns:name\nFilter: in = 0\n")
-        s.shutdown(socket.SHUT_WR)
-        g_inactive_timerperiods = s.recv(10000000).splitlines()
+        try:
+            import socket
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            s.connect(livestatus_unix_socket)
+            # We just get the currently inactive timeperiods. All others
+            # (also non-existing) are considered to be active
+            s.send("GET timeperiods\nColumns:name\nFilter: in = 0\n")
+            s.shutdown(socket.SHUT_WR)
+            g_inactive_timerperiods = s.recv(10000000).splitlines()
+        except Exception, e:
+            if opt_debug:
+                raise
+            else:
+                # If the query is not successful better skip this check then fail
+                return False
+
     return timeperiod not in g_inactive_timerperiods
 

@@ -613,7 +613,7 @@ def get_agent_info_program(commandline):
         if exitstatus >> 8 == 127:
             raise MKAgentError("Program '%s' not found (exit code 127)" % (commandline,))
         else:
-            raise MKAgentError("Program '%s' exited with code %d" % (commandline, exitstatus >> 8))
+            raise MKAgentError("Agent exited with code %d" % (exitstatus >> 8,))
     return output
 
 # Get data in case of TCP

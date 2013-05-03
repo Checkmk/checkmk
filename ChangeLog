@@ -85,6 +85,8 @@
     * Linux agent: cups_queues: do not monitor non-local queues (thanks to Olaf Morgenstern)
     * AIX agent: call lparstat with argument 1 1, this give more accurate data
     * Check_MK check: enable extended performance data per default now
+    * viprinet checks: New checks for firmware version/update, memory usage, power supply status, 
+                       router mode, serialnumber and temperature sensors
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

@@ -1,0 +1,12 @@
+title: Viprinet power supply
+agents: snmp
+author: Andreas Boesl <ab@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ Information about the PSU. Possible Values are: 0 = no failure 1 = a single PSU is out of order
+ This check is always OK, but displays the current value {no failure} / {a single PSU is out of order}
+ in the plugin output
+
+inventory:
+ One check is created if the host provides that information

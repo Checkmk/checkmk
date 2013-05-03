@@ -1,0 +1,26 @@
+title: Usage of physical RAM on an ESX host system
+agents: vsphere
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check measures the current usage of physical RAM by
+ an ESX host system.
+
+inventory:
+ One check per ESX host system is being created.
+
+perfdata:
+ One value: the current usage in bytes.
+
+[parameters]
+warning (float): the percentage of virtual memory used
+ by processes at which WARNING state is triggered.
+critical (float): the percentage or absolute value
+ at which CRITICAL state is triggered
+
+[configuration]
+esx_host_mem_default_levels(float, float): Levels used by
+ all checks that are created by inventory. This defaults to {(80.0, 90.0)}.
+
+

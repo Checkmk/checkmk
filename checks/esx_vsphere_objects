@@ -102,7 +102,7 @@ check_info['esx_vsphere_objects'] = {
 # def check_esx_vsphere_objects_cluster(_no_item, params, info):
 #     print info
 #     return 3, "MIST"
-# 
+#
 # check_info['esx_vsphere_objects.cluster'] = {
 #   "check_function"      : check_esx_vsphere_objects_cluster,
 #   "service_description" : "HostSystem SUMMARY",

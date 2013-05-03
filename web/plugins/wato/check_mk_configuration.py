@@ -1667,7 +1667,7 @@ register_rule(group,
     "check_mk_exit_status",
     Dictionary(
         elements = [
-            ( "connection", 
+            ( "connection",
               MonitoringState(
                 default_value = 2,
                 title = _("State in case of connection problems")),

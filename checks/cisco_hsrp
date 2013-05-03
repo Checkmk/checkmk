@@ -102,7 +102,7 @@ def check_cisco_hsrp(item, params, info):
             vip_grp = "%s-%s" % ( vip, hsrp_grp )
         else:
             vip_grp = vip
-         
+
         if vip_grp == item:
             # FIXME: This should be shorter.
             # Validate that we the inventorized state is a "good one"

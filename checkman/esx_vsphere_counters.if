@@ -14,7 +14,7 @@ description:
 
  2) The link status in not detected and assumed to be up
 
- 3) The queue length is not reported 
+ 3) The queue length is not reported
 
 item:
  The index or name of the network interface. See {if} for details.

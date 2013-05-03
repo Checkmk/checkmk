@@ -1307,7 +1307,7 @@ def nodes_of(hostname):
 # value:   currently measured value
 # dsname:  name of the datasource in the RRD that corresponds to this value
 # unit:    unit to be displayed in the plugin output, e.g. "MB/s"
-# factor:  the levels are multiplied with this factor before applying 
+# factor:  the levels are multiplied with this factor before applying
 #          them to the value. For example the disk-IO check uses B/s
 #          as the unit for the value. But the levels are in MB/s. In that
 #          case the factor is 1.0 / 1048576.
@@ -1480,7 +1480,7 @@ def get_age_human_readable(secs):
         return "%d days, %d hours" % (days, hours)
     return "%d days" % days
 
-# Quote string for use as arguments on the shell 
+# Quote string for use as arguments on the shell
 def quote_shell_string(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
 

@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This check displays the current firmware version and
- if firmware updates are available 
+ if firmware updates are available
 
 inventory:
  One check is created if the host provides that information

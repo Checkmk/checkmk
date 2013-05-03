@@ -30,9 +30,9 @@ inventory:
 
 perfdata:
  {real_time}: Elapsed real time in seconds.
- {user_time}: Total number of CPU-seconds that the process spent in user mode. 
- {system_time}: Total number of CPU-seconds that the process spent in kernel mode. 
- {reads}: Number of file system inputs by the process. 
- {writes}: Number of file system outputs by the process. 
+ {user_time}: Total number of CPU-seconds that the process spent in user mode.
+ {system_time}: Total number of CPU-seconds that the process spent in kernel mode.
+ {reads}: Number of file system inputs by the process.
+ {writes}: Number of file system outputs by the process.
  {max_res_bytes}: Maximum resident set size of the process during its lifetime.
  {avg_mem_bytes}: Average total (data+stack+text) memory use of the process.

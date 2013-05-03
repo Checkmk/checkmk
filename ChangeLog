@@ -87,6 +87,7 @@
     * Check_MK check: enable extended performance data per default now
     * viprinet checks: New checks for firmware version/update, memory usage, power supply status, 
                        router mode, serialnumber and temperature sensors
+    * uptime, snmp_uptime, esx_vsphere_counters.uptime: allow to set lower and upper levels
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

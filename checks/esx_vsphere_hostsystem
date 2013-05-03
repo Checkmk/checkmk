@@ -266,7 +266,7 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
                     unknown += 1
 
             message = "Type %s, %d active, %d dead%s, %d disabled%s, %d standby%s, %s unknown%s" % \
-                     (path_type, active, dead, dead_label, disabled, disabled_label, 
+                     (path_type, active, dead, dead_label, disabled, disabled_label,
                       standby, standby_label, unknown, unknow_label )
             break
     else:

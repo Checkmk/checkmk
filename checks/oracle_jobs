@@ -1,0 +1,105 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<oracle_jobs>>>
+# IODBSZ1 SYS SM$CLEAN_AUTO_SPLIT_MERGE SCHEDULED 0 763 TRUE 24.04.13 00:00:00,600000 EUROPE/VIENNA - SUCCEEDED 0
+# IODBSZ1 SYS RSE$CLEAN_RECOVERABLE_SCRIPT SCHEDULED 0 763 TRUE 24.04.13 00:00:00,100000 EUROPE/VIENNA - SUCCEEDED 0
+# IODBSZ1 SYS BSLN_MAINTAIN_STATS_JOB SCHEDULED 0 110 TRUE 29.04.13 00:00:00,300000 +01:00 BSLN_MAINTAIN_STATS_SCHED SUCCEEDED 0
+# IODBSZ1 SYS DRA_REEVALUATE_OPEN_FAILURES SCHEDULED 0 97 TRUE 01.01.70 00:00:00,000000 +02:00 MAINTENANCE_WINDOW_GROUP SUCCEEDED 0
+# IODBSZ1 SYS ORA$AUTOTASK_CLEAN SCHEDULED 0 763 TRUE 24.04.13 03:00:00,900000 EUROPE/VIENNA DAILY_PURGE_SCHEDULE SUCCEEDED 0
+# IODBSZ1 SYS PURGE_LOG SCHEDULED 0 763 TRUE 24.04.13 03:00:00,800000 EUROPE/VIENNA DAILY_PURGE_SCHEDULE SUCCEEDED 0
+# IODBSZ1 ORACLE_OCM MGMT_CONFIG_JOB SCHEDULED 0 97 TRUE 01.01.70 00:00:00,000000 +02:00 MAINTENANCE_WINDOW_GROUP SUCCEEDED 1
+# IODBSZ1 ORACLE_OCM MGMT_STATS_CONFIG_JOB SCHEDULED 0 3 TRUE 01.05.13 01:01:01,000000 +01:00 - SUCCEEDED 1
+# IODBSZ1 EXFSYS RLM$SCHDNEGACTION SCHEDULED 0 18954 TRUE 23.04.13 14:51:57,000000 +02:00 - SUCCEEDED 0
+# IODBSZ1 EXFSYS RLM$EVTCLEANUP SCHEDULED 0 18202 TRUE 23.04.13 13:41:48,200000 +01:00 - SUCCEEDED 0
+
+def inventory_oracle_jobs(info):
+    inventory = []
+    for line in info:
+        if line[6] == "TRUE": # only add enabled jobs
+            inventory.append(("%s.%s" % (line[0], line[2]), {}))
+    return inventory
+
+def check_oracle_jobs(item, params, info):
+    try:
+        sid, jobname = item.split('.')
+    except ValueError:
+        return (3, 'Invalid check item given (must be <SID>.<job_name>)')
+
+    data = None
+    for line in info:
+        if line[0] == sid and line[2] == jobname:
+            data = line
+            break
+    if not data:
+        return (3, 'Unable to find the job')
+
+    state = 0
+    output = []
+    perfdata = []
+
+    job_state = line[3]
+
+    txt = "Job-State: %s" % job_state
+    if job_state == "BROKEN":
+        txt += " (!!)"
+        state = max(state, 2)
+    output.append(txt)
+
+    txt = "Enabled: %s" % (line[6] == "TRUE" and "Yes" or "No")
+    if line[6] != "TRUE":
+        txt += " (!)"
+        state = max(state, 1)
+    output.append(txt)
+
+    last_duration = int(line[4])
+    output.append("Last Duration: %s" % get_age_human_readable(last_duration))
+    perfdata.append(("duration", last_duration))
+
+    # 01.05.13 01:01:01,000000 +01:00
+    next_run = " ".join(line[7:9])
+    if next_run.startswith("01.01.70 00:00:00"):
+        if line[-1] == "-":
+            next_run = "not scheduled (!)"
+            state = max(state, 1)
+        else:
+            next_run = line[10]
+    output.append("Next Run: %s" % next_run)
+
+    txt = "Last Run Status: %s" % (line[11])
+    if line[11] != "SUCCEEDED":
+        txt += " (!!)"
+        state = max(state, 2)
+    output.append(txt)
+
+    return (state, ", ".join(output), perfdata)
+
+check_info['oracle_jobs'] = {
+    "service_description"     : "ORA %s Job",
+    "check_function"          : check_oracle_jobs,
+    "inventory_function"      : inventory_oracle_jobs,
+    "has_perfdata"            : True,
+}

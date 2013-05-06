@@ -1,0 +1,25 @@
+title: Oracle Database Jobs
+agents: linux
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors jobs configured in ORACLE databases. It
+ monitors all enabled jobs wether or not their last execution
+ was successfull and the next execution is scheduled. It also
+ records the execution time of the jobs.
+
+ This check needs the Check_MK {mk_oracle}-plugin installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+item:
+ The SID of the database (as appearing in the process
+ name of the pmon_... process) concatenated with the name
+ of the job separated by a single dot.
+
+perfdata:
+ One value: the duration of the last job execution in seconds.
+
+inventory:
+ One separate check for each enabled job will be created.

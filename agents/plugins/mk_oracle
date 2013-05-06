@@ -166,6 +166,33 @@ for SID in $SIDS; do
                 echo \"select count(1) from v\\\$loghist where first_time > sysdate - 1/24;\" | sqlplus \"$SID\"
             fi
 
+            if [ '$EXCLUDE' = '${EXCLUDE/jobs/}' ]; then
+                echo '<<<oracle_jobs>>>'
+                sqlplus "$SID" <<EOF
+                SELECT j.OWNER, j.JOB_NAME, j.STATE,
+                (TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400 AS LAST_RUN_DURATION,
+                j.RUN_COUNT, j.ENABLED, NVL(j.NEXT_RUN_DATE, to_date('1970-01-01', 'YYYY-mm-dd')),
+                NVL(j.SCHEDULE_NAME, '-'), d.STATUS
+                FROM dba_scheduler_jobs j, dba_scheduler_job_run_details d
+                WHERE d.owner=j.OWNER AND d.JOB_NAME=j.JOB_NAME
+                    AND d.LOG_ID=(SELECT max(LOG_ID) FROM dba_scheduler_job_run_details dd
+                                  WHERE dd.owner=j.OWNER and dd.JOB_NAME=j.JOB_NAME);
+EOF
+            fi
+
+            if [ '$EXCLUDE' = '${EXCLUDE/rman_backups/}' ]; then
+                echo '<<<oracle_rman_backups>>>'
+                sqlplus "$SID" <<EOF
+                SELECT b.COMMAND_ID, a.STATUS,
+                to_char(a.START_TIME, 'YYYY-mm-dd_HH24:MI:SS') AS START_TIME,
+                to_char(a.END_TIME, 'YYYY-mm-dd_HH24:MI:SS') AS END_TIME, b.INPUT_TYPE
+                FROM SYS.V_\\\$RMAN_BACKUP_JOB_DETAILS a,
+                (SELECT input_type, max(command_id) as command_id
+                 FROM SYS.V_\\\$RMAN_BACKUP_JOB_DETAILS WHERE STATUS<>'RUNNING' GROUP BY input_type) b
+                WHERE a.COMMAND_ID = b.COMMAND_ID;
+EOF
+            fi
+
             if [ '$EXCLUDE' = '${EXCLUDE/tablespaces/}' ]; then
                 echo '<<<oracle_tablespaces>>>'
                 sqlplus "$SID" <<EOF | sed 's/READ ONLY/READONLY/g'

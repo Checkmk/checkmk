@@ -55,6 +55,8 @@
     * oracle_asm_diskgroups: Added missing agent plugin + asmcmd wrapper script
     * oracle_jobs: New check to monitor oracle database job execution
     * oracle_rman_backups: New check to monitor state of ORACLE RMAN backups
+    * jar_signature: New check to monitor wether or not a jar is signed and
+      certificate is not expired
     * cisco_qos: adhere qos-bandwidth policies
     * check_disk_smb: WATO formalization for active check check_disk_smb
     * if.include: new configurable parameters for assumed input and output speed

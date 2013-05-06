@@ -227,7 +227,7 @@ piggyback_translation              = [] # Ruleset for translating piggyback host
 simulation_mode                    = False
 agent_simulator                    = False
 perfdata_format                    = "pnp" # also possible: "standard"
-check_mk_perfdata_with_times       = False
+check_mk_perfdata_with_times       = True
 debug_log                          = None
 monitoring_host                    = None # deprecated
 max_num_processes                  = 50
@@ -3614,7 +3614,7 @@ def output_plain_hostinfo(hostname):
 
 def do_snmptranslate(walk):
     walk = walk[0]
-    
+
     path_walk = "%s/%s" % (snmpwalks_dir, walk)
     if not os.path.exists(path_walk):
         print "Walk does not exist"
@@ -3626,7 +3626,7 @@ def do_snmptranslate(walk):
             oids_for_command = []
             for line in lines:
                 oids_for_command.append(line.split(" ")[0])
-    
+
             extra_mib_path = ""
             if local_mibs_dir:
                 extra_mib_path = " -M+%s" % local_mibs_dir
@@ -3636,7 +3636,7 @@ def do_snmptranslate(walk):
             result  = output.split("\n")[0::2]
             for idx, line in enumerate(result):
                 result_lines.append((line, lines[idx]))
-        
+
             # Add missing fields one by one
             for line in lines[len(result_lines):]:
                 result_lines.extend(translate([line]))
@@ -3647,9 +3647,9 @@ def do_snmptranslate(walk):
 
 
     # Translate n-oid's per cycle
-    entries_per_cycle = 50 
+    entries_per_cycle = 50
     translated_lines = []
-    
+
     walk_lines = file(path_walk).readlines()
     print("Processing %d lines (%d per dot)" %  (len(walk_lines), entries_per_cycle))
     for i in range(0, len(walk_lines), entries_per_cycle):
@@ -3657,12 +3657,12 @@ def do_snmptranslate(walk):
         sys.stdout.flush()
         process_lines = walk_lines[i:i+entries_per_cycle]
         translated_lines.extend(translate(process_lines))
-        
+
     # Output formatted
     longest_translation = 40
     for translation, line in translated_lines:
-        longest_translation = max(longest_translation, len(translation)) 
-        
+        longest_translation = max(longest_translation, len(translation))
+
     format_string = "%%-%ds %%s" % longest_translation
     for translation, line in translated_lines:
         sys.stdout.write(format_string % (translation, line))

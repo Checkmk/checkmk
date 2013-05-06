@@ -347,7 +347,7 @@ def save_users(profiles):
         serial_file = user_dir + '/serial.mk'
         create_user_file(serial_file, 'w').write('%d\n' % user.get('serial', 0))
 
-    # Remove settings directories of non-existant users. 
+    # Remove settings directories of non-existant users.
     # Beware: we removed this since it leads to violent destructions
     # if the user database is out of the scope of Check_MK. This is
     # e.g. the case, if mod_ldap is used for user authentication.

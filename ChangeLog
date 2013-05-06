@@ -86,6 +86,10 @@
     * logwatch, logwatch.ec: detect error in agent configuration
     * Linux agent: cups_queues: do not monitor non-local queues (thanks to Olaf Morgenstern)
     * AIX agent: call lparstat with argument 1 1, this give more accurate data
+    * Check_MK check: enable extended performance data per default now
+    * viprinet checks: New checks for firmware version/update, memory usage, power supply status, 
+                       router mode, serialnumber and temperature sensors
+    * uptime, snmp_uptime, esx_vsphere_counters.uptime: allow to set lower and upper levels
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid
@@ -113,6 +117,12 @@
     * Configuration of an alternativ host check command
     * Inventory: Display link symbol for ps ruleset
     * FIX: Rulesets: correct display of rules within subfolders
+
+
+1.2.2p2:
+    Checks & Agents:
+    * FIX: apache_status: use (also) apache_status.cfg instead of apache_status.conf
+     
 
 1.2.2p1:
     Core:

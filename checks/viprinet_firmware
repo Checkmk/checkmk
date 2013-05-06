@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -23,31 +24,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-MK_CONFDIR=/etc/check_mk
-CACHE_FILE=$MK_CONFDIR/db2-logs.cache
-if [ ! -d $MK_CONFDIR ]; then
-    mkdir -p $MK_CONFDIR
-fi
+def check_viprinet_firmware(_no_item, _no_params, info):
+    fw_status_map = {
+        "0": "No new firmware available",
+        "1": "Update Available",
+        "2": "Checking for Updates",
+        "3": "Downloading Update",
+        "4": "Installing Update"
+    }
+    fw_status = fw_status_map.get(info[0][1])
+    if fw_status:
+        return (0, "%s, %s" % (info[0][0], fw_status))
+    else:
+        return (3, "%s, no firmware status available")
 
-# Do not use cache file after 20 minutes
-MAXAGE=1200
 
-# Check if file exists and is recent enough
-if [ -s $CACHE_FILE ]
-then
-    MTIME=$(perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' $CACHE_FILE )
-    if [ $MTIME -le $MAXAGE ] ; then 
-        USE_CACHE_FILE=1
-    fi 
-fi
-
-if [ -s "$CACHE_FILE" ]
-then
-    cat $CACHE_FILE
-fi
-
-if [ -z "$USE_CACHE_FILE" -a ! -e "$CACHE_FILE.new" ]
-then
-    nohup bash -c "COMMAND | grep -v 'mail'" > $CACHE_FILE.new 2> /dev/null && mv $CACHE_FILE.new $CACHE_FILE  &
-fi
-
+check_info["viprinet_firmware"] = {
+    'check_function'        : check_viprinet_firmware,
+    'inventory_function'    : lambda info: len(info) > 0 and [(None, None)] or [],
+    'service_description'   : "Firmware Version",
+    'has_perfdata'          : False,
+    'snmp_info'             : (".1.3.6.1.4.1.35424.1.1", [4, 7]),
+    'snmp_scan'             : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.35424"],
+}

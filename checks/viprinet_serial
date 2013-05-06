@@ -24,30 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
-
-def inventory_snmp_uptime(info):
-    if len(info) > 0 and len(info[0]) >= 1:
-        return [ (None, {}) ]
-
-def check_snmp_uptime(checktype, params, info):
-    ticks            = info[0][0]
-    try:
-        uptime = int(ticks[:-2])
-    except:
-        days, h, m, s = ticks.split(":")
-        uptime = (int(days) * 86400 ) + (int(h) * 3600) + (int(m) * 60) + int(float(s))
-
-    return check_uptime_seconds(params, uptime)
-
-
-check_info["snmp_uptime"] = {
-    'check_function'        :  check_snmp_uptime,
-    'inventory_function'    :  inventory_snmp_uptime,
-    'service_description'   :  'Uptime',
-    'has_perfdata'          :  True,
-    'snmp_info'             :  ('.1.3.6.1.2.1.1', ['3.0']), # DISMAN-EVENT-MIB::sysUpTime
-    'snmp_scan_function'    :  lambda oid: oid(".1.3.6.1.2.1.1.1.0") != None,
-    'group'                 :  'uptime',
-    'includes'              :  [ 'uptime.include' ],
+check_info["viprinet_serial"] = {
+    'check_function'        : lambda _no_item, _no_params, info: (0, info[0][0]),
+    'inventory_function'    : lambda info: len(info) > 0 and [(None, None)] or [],
+    'service_description'   : "Serial Number",
+    'has_perfdata'          : False,
+    'snmp_info'             : (".1.3.6.1.4.1.35424.1.1", [2]),
+    'snmp_scan'             : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.35424"],
 }
+

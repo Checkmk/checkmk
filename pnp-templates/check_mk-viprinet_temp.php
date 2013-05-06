@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,30 +23,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
+$opt[1] = "--vertical-label \"Celsius\"  -l 0 -u 70 --title \"Temperature $servicedesc\" ";
 
-def inventory_snmp_uptime(info):
-    if len(info) > 0 and len(info[0]) >= 1:
-        return [ (None, {}) ]
-
-def check_snmp_uptime(checktype, params, info):
-    ticks            = info[0][0]
-    try:
-        uptime = int(ticks[:-2])
-    except:
-        days, h, m, s = ticks.split(":")
-        uptime = (int(days) * 86400 ) + (int(h) * 3600) + (int(m) * 60) + int(float(s))
-
-    return check_uptime_seconds(params, uptime)
-
-
-check_info["snmp_uptime"] = {
-    'check_function'        :  check_snmp_uptime,
-    'inventory_function'    :  inventory_snmp_uptime,
-    'service_description'   :  'Uptime',
-    'has_perfdata'          :  True,
-    'snmp_info'             :  ('.1.3.6.1.2.1.1', ['3.0']), # DISMAN-EVENT-MIB::sysUpTime
-    'snmp_scan_function'    :  lambda oid: oid(".1.3.6.1.2.1.1.1.0") != None,
-    'group'                 :  'uptime',
-    'includes'              :  [ 'uptime.include' ],
+$def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "AREA:var1#2080ff:\"Temperature\:\" ";
+$def[1] .= "GPRINT:var1:LAST:\"%2.0lfC\" ";
+$def[1] .= "LINE1:var1#000080:\"\" ";
+$def[1] .= "GPRINT:var1:MAX:\"(Max\: %2.0lfC,\" ";
+$def[1] .= "GPRINT:var1:AVERAGE:\"Avg\: %2.0lfC)\" ";
+if ($WARN[1] != "") {
+    $def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning\: $WARN[1]C\" ";
+    $def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical\: $CRIT[1]C\" ";
 }
+?>

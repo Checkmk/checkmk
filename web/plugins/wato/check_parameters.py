@@ -659,6 +659,34 @@ register_check_parameters(
 
 register_check_parameters(
    subgroup_os,
+   "uptime",
+   _("Uptime (seconds since last reboot)"),
+   Dictionary(
+       elements = [
+           ( "min",
+             Tuple(
+                 title = _("Minimum required uptime"),
+                 elements = [
+                     Age(title = _("Warning if below")),
+                     Age(title = _("Critical if below")),
+                 ]
+           )),
+           ( "max",
+             Tuple(
+                 title = _("Maximum allowed uptime"),
+                 elements = [
+                     Age(title = _("Warning if above")),
+                     Age(title = _("Critical if above")),
+                 ]
+           )),
+       ]
+   ),
+   None,
+   "first",
+)
+
+register_check_parameters(
+   subgroup_os,
     "systemtime",
     _("Windows system time offset"),
     Tuple(
@@ -2324,7 +2352,7 @@ register_check_parameters(
 #     "first",
 #     False,
 # )
-    
+
 
 register_check_parameters(
     subgroup_hardware,

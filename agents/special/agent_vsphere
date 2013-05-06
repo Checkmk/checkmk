@@ -128,7 +128,7 @@ else:
     sys.stderr.write("ERROR: Please specify exactly one host.\n")
     sys.exit(1)
 
-socket.setdefaulttimeout(1)
+socket.setdefaulttimeout(opt_timeout)
 
 def get_agent_info_tcp(hostname):
     output = ""

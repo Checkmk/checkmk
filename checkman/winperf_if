@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check monitors the operational status, link speed, traffic, packet
  counts, discards and errors of network interfaces of a Windows host using
- data sent by the Check_MK agent. 
+ data sent by the Check_MK agent.
 
  In order to get information about the link status and MAC address you
  need to deploy the agent plugin {wmic_if.bat} into the {plugins} directory
@@ -22,10 +22,10 @@ description:
 
  All other aspects of this check are completely compatible of {if}.
  Please refer to that man page for further information.
- 
+
 item:
  See man page of {if} for details
- 
+
 inventory:
  See man page of {if} for details
 

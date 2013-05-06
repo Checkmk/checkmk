@@ -25,6 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 
+# Example for params:
+# {
+#    "min" : ( 7200, 3600 ),            # Minimum required uptime (warn, crit)
+#    "max" : ( 86400 * 7, 86400 * 14),  # Maximum required uptime (warn, crit)
+# }
+
 def check_uptime_seconds(params, uptime):
     seconds = uptime % 60
     rem = uptime / 60
@@ -33,5 +39,26 @@ def check_uptime_seconds(params, uptime):
     days = rem / 1440
     now = int(time.time())
     since = time.strftime("%c", time.localtime(now - uptime))
-    return (0, "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
+    state = 0
+    infotext = "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds)
+
+    if "min" in params:
+        warn, crit = params["min"]
+        if uptime < crit:
+            state = 2
+        elif uptime < warn:
+            state = max(state, 1)
+        if state:
+            infotext += ", not up long enough!"
+
+    if "max" in params:
+        warn, crit = params["max"]
+        if uptime > crit:
+            state = 2
+        elif uptime > warn:
+            state = max(state, 1)
+        if uptime > warn:
+            infotext += ", up too long!"
+
+    return (state,  infotext, [ ("uptime", uptime) ])
 

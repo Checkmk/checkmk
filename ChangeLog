@@ -54,6 +54,7 @@
     * job: Monitoring states and performance indicators of any jobs on linux systems
     * oracle_asm_diskgroups: Added missing agent plugin + asmcmd wrapper script
     * oracle_jobs: New check to monitor oracle database job execution
+    * oracle_rman_backups: New check to monitor state of ORACLE RMAN backups
     * cisco_qos: adhere qos-bandwidth policies
     * check_disk_smb: WATO formalization for active check check_disk_smb
     * if.include: new configurable parameters for assumed input and output speed

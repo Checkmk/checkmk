@@ -1,0 +1,72 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<oracle_rman_backups>>>
+# IODBSZ1 2013-04-08T16:33:53 COMPLETED 2013-04-08_16:33:54 2013-04-08_17:56:42 DB FULL
+# IODBSZ1 2013-04-23T15:28:26 RUNNING 2013-04-23_15:28:28 2013-04-23_15:31:02 ARCHIVELOG
+
+def inventory_oracle_rman_backups(info):
+    inventory = []
+    for line in info:
+        inventory.append(("%s.%s" % (line[0], " ".join(line[5:])), {}))
+    return inventory
+
+def check_oracle_rman_backups(item, params, info):
+    try:
+        sid, jobname = item.split('.')
+    except ValueError:
+        return (3, 'Invalid check item given (must be <SID>.<job_name>)')
+
+    data = None
+    for line in info:
+        if line[0] == sid and " ".join(line[5:]) == jobname:
+            data = line
+            break
+    if not data:
+        return (3, 'Unable to find the job')
+
+    state = 0
+    output = []
+
+    job_state = line[2]
+
+    txt = "State: %s" % job_state
+    if job_state not in [ "COMPLETED", "RUNNING" ]:
+        txt += " (!!)"
+        state = max(state, 2)
+    output.append(txt)
+
+    output.append("Start-Time: %s" % line[3])
+    if job_state != "RUNNING":
+        output.append("End-Time: %s" % line[4])
+
+    return (state, ", ".join(output))
+
+check_info['oracle_rman_backups'] = {
+    "service_description"     : "ORA %s RMAN Backup",
+    "check_function"          : check_oracle_rman_backups,
+    "inventory_function"      : inventory_oracle_rman_backups,
+}

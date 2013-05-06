@@ -52,6 +52,7 @@
     * openvpn_clients: new check for OpenVPN connections
     * if64_tplink: special new check for TP Link switches with broken SNMP output
     * job: Monitoring states and performance indicators of any jobs on linux systems
+    * oracle_asm_diskgroups: Added missing agent plugin + asmcmd wrapper script
     * cisco_qos: adhere qos-bandwidth policies
     * check_disk_smb: WATO formalization for active check check_disk_smb
     * if.include: new configurable parameters for assumed input and output speed

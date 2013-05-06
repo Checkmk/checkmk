@@ -282,7 +282,7 @@ check_info['esx_vsphere_counters.uptime'] = {
 #   +----------------------------------------------------------------------+
 
 # We assume that all ramdisks have the same size (in mb) on all hosts
-esx_vsphere_cunters_ramdisk_sizes = {
+esx_vsphere_counters_ramdisk_sizes = {
     'root':       32,
     'etc':        28,
     'tmp':        192,
@@ -304,7 +304,7 @@ def check_esx_vsphere_counters_ramdisk(item, params, info):
         if name == 'sys.resourceMemConsumed' \
            and instance.startswith('host/system/kernel/kmanaged/visorfs/'):
             name     = instance.split('/')[-1]
-            size_mb  = esx_vsphere_cunters_ramdisk_sizes[name]
+            size_mb  = esx_vsphere_counters_ramdisk_sizes[name]
             used_mb  = float(counter) / 1000
             avail_mb = size_mb - used_mb
             ramdisks.append((name, size_mb, avail_mb))

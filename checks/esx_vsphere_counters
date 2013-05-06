@@ -287,6 +287,7 @@ esx_vsphere_counters_ramdisk_sizes = {
     'etc':        28,
     'tmp':        192,
     'hostdstats': 319,
+    'snmptraps':  1,
 }
 
 def inventory_esx_vsphere_counters_ramdisk(info):
@@ -304,7 +305,10 @@ def check_esx_vsphere_counters_ramdisk(item, params, info):
         if name == 'sys.resourceMemConsumed' \
            and instance.startswith('host/system/kernel/kmanaged/visorfs/'):
             name     = instance.split('/')[-1]
-            size_mb  = esx_vsphere_counters_ramdisk_sizes[name]
+            try:
+                size_mb  = esx_vsphere_counters_ramdisk_sizes[name]
+            except KeyError:
+                return 3, 'Unhandled ramdisk found (%s)' % name
             used_mb  = float(counter) / 1000
             avail_mb = size_mb - used_mb
             ramdisks.append((name, size_mb, avail_mb))

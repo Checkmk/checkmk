@@ -82,13 +82,23 @@ def try_detect_servers():
 if servers is None:
     servers = try_detect_servers()
 
+
 if not servers:
     sys.exit(0)
 
 print '<<<apache_status>>>'
-for proto, address, port in servers:
+for server in servers:
+    if isinstance(server, tuple):
+        proto, address, port = server
+        page = 'server-status'
+    else:
+        proto = server['protocol']
+        address = server['address']
+        port = server['port']
+        page = server.get('page', 'server-status')
+
     try:
-        url = '%s://%s:%s/server-status?auto' % (proto, address, port)
+        url = '%s://%s:%s/%s?auto' % (proto, address, port, page)
         # Try to fetch the status page for each server
         try:
             fd = urllib2.urlopen(url)

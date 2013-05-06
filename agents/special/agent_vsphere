@@ -77,9 +77,10 @@ OPTIONS:
 
 """)
 
-short_options = 'hi:u:s:Dat:H:'
+short_options = 'hi:u:s:Dat:H:c'
 long_options  = [
     'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
+    'dump-counters',
 ]
 
 try:
@@ -88,11 +89,13 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-opt_debug    = False
-opt_direct   = False
-opt_agent    = False
-opt_timeout  = 60
-opt_hostname = None
+opt_debug         = False
+opt_direct        = False
+opt_agent         = False
+opt_dump_counters = False
+opt_timeout       = 60
+opt_hostname      = None
+
 host_address = None
 user         = None
 secret       = None
@@ -115,6 +118,8 @@ for o,a in opts:
         opt_timeout = int(a)
     elif o in [ '-H', '--hostname' ]:
         opt_hostname = a
+    elif o in [ '-c', '--dump-counters' ]:
+        opt_dump_counters = True
     elif o in [ '-h', '--help' ]:
         usage()
         sys.exit(0)
@@ -426,7 +431,10 @@ def dump_list(l, indent):
 #  'sys.resourceMemZero': 262157,
 #  'sys.uptime': 262144}
 
-def output_hostsystem_counters():
+def dump_hostsystem_counters():
+    output_hostsystem_counters(all_counters = True)
+
+def output_hostsystem_counters(all_counters = False):
     pm = host.get_performance_manager()
     for mor, name in all_hosts.items():
         if not opt_direct:
@@ -437,57 +445,58 @@ def output_hostsystem_counters():
         # a couple of seconds. To check out which counters are available just comment out
         # the hardcoded needed_ids and uncomment the following three lines of code. This will
         # give you a) A dict of name to id mappings and b) Current values of all counters.
-        #counterids = pm.get_entity_counters(mor)
-        #needed_ids = counterids.keys() # retrieve all ids....
-        #print counterids
+        if all_counters:
+            counterids = pm.get_entity_counters(mor)
+            needed_ids = counterids.keys() # retrieve all ids....
+        else:
+            needed_ids = [
+                # net.*
+                196616, 196621, 196617, 196625, 196619, 196623, 196609, 196614,
+                196620, 196624, 196615, 196622, 196618, 196612, 196613, 196626,
+                # sys.uptime
+                262144,
+                # mem.*
+                # 65635, 65537, 65577, 65625, 65545, 65611, 65573, 65615, 65582,
+                # 65549, 65630, 65622, 65618, 65621, 65561, 65623, 65632, 65557,
+                # 65628, 65633, 65541, 65643, 65586, 65553, 65569, 65589, 65639,
+                # 65620, 65599, 65580, 65619, 65603,
+                #  'disk.deviceLatency': 131091,
+                #  'disk.deviceReadLatency': 131083,
+                #  'disk.deviceWriteLatency': 131087,
+                #  'disk.kernelLatency': 131092,
+                #  'disk.kernelReadLatency': 131084,
+                #  'disk.kernelWriteLatency': 131088,
+                #  'disk.maxQueueDepth': 131096,
+                #  'disk.maxTotalLatency': 131095,
+                #  'disk.numberRead': 131076,
+                #  'disk.numberReadAveraged': 131097,
+                #  'disk.numberWrite': 131077,
+                #  'disk.numberWriteAveraged': 131098,
+                #  'disk.queueLatency': 131094,
+                #  'disk.queueReadLatency': 131086,
+                #  'disk.queueWriteLatency': 131090,
+                #  'disk.read': 131078,
+                #  'disk.totalLatency': 131093,
+                #  'disk.totalReadLatency': 131085,
+                #  'disk.totalWriteLatency': 131089,
+                #  'disk.usage': 131073,
 
-        needed_ids = [
-            # net.*
-            196616, 196621, 196617, 196625, 196619, 196623, 196609, 196614,
-            196620, 196624, 196615, 196622, 196618, 196612, 196613, 196626,
-            # sys.uptime
-            262144,
-            # mem.*
-            # 65635, 65537, 65577, 65625, 65545, 65611, 65573, 65615, 65582,
-            # 65549, 65630, 65622, 65618, 65621, 65561, 65623, 65632, 65557,
-            # 65628, 65633, 65541, 65643, 65586, 65553, 65569, 65589, 65639,
-            # 65620, 65599, 65580, 65619, 65603,
-            #  'disk.deviceLatency': 131091,
-            #  'disk.deviceReadLatency': 131083,
-            #  'disk.deviceWriteLatency': 131087,
-            #  'disk.kernelLatency': 131092,
-            #  'disk.kernelReadLatency': 131084,
-            #  'disk.kernelWriteLatency': 131088,
-            #  'disk.maxQueueDepth': 131096,
-            #  'disk.maxTotalLatency': 131095,
-            #  'disk.numberRead': 131076,
-            #  'disk.numberReadAveraged': 131097,
-            #  'disk.numberWrite': 131077,
-            #  'disk.numberWriteAveraged': 131098,
-            #  'disk.queueLatency': 131094,
-            #  'disk.queueReadLatency': 131086,
-            #  'disk.queueWriteLatency': 131090,
-            #  'disk.read': 131078,
-            #  'disk.totalLatency': 131093,
-            #  'disk.totalReadLatency': 131085,
-            #  'disk.totalWriteLatency': 131089,
-            #  'disk.usage': 131073,
-
-            # disk.read/write/deviceLatency/numberRead/numberWrite
-            131078, 131079, 131091, 131076, 131077,
-        ]
-
-        # Seems as this is not available in ESX 5.0 but we saw it on 5.1
-        if esx_version_num > 5.0:
-            # sys.resourceMemConsumed
-            needed_ids += [
-                262171,
+                # disk.read/write/deviceLatency/numberRead/numberWrite
+                131078, 131079, 131091, 131076, 131077,
             ]
 
-        #needed_ids = [
-        #    # sys.resourceMem*
-        #    262151, 262155, 262169, 262152, 262154, 262153, 262157, 262156, 262168,
-        #]
+            # Seems as this is not available in ESX 5.0 but we saw it on 5.1
+            if esx_version_num > 5.0:
+                # sys.resourceMemConsumed
+                needed_ids += [
+                    262171,
+                ]
+
+            #needed_ids = [
+            #    # sys.resourceMem*
+            #    262151, 262155, 262169, 262152, 262154, 262153, 262157, 262156, 262168,
+            #]
+
         counters = pm.get_entity_statistic(mor, needed_ids)
         lines = []
         for counter in counters:
@@ -608,6 +617,11 @@ def conv_numeric_sensor_info(value):
 
 def conv_host(value):
     return all_hosts.get(value)
+
+# This is only for testing/debugging. Simply printing all counters.
+if opt_dump_counters:
+    dump_hostsystem_counters()
+    sys.exit(0)
 
 if "datastore" in mortypes:
     output_datastores()

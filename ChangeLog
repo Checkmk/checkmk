@@ -110,6 +110,12 @@
     * Inventory: Display link symbol for ps ruleset
     * FIX: Rulesets: correct display of rules within subfolders
 
+
+1.2.2p2:
+    Checks & Agents:
+    * FIX: jolokia_info: ignore ERROR instances
+
+
 1.2.2p1:
     Core:
     * FIX: correctly quote ! and \ in active checks for Nagios

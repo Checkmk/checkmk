@@ -93,7 +93,7 @@ def parse_zfsget(info):
 
     parsed = {}
     for entry in entries:
-        if entry["mountpoint"] != '-':
+        if entry["mountpoint"].startswith("/"):
             entry["is_pool"] = '/' not in name
             parsed[entry["mountpoint"]] = entry
 

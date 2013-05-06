@@ -10,6 +10,7 @@
     * new variable check_mk_exit_status: allows to make Check_MK service OK,
       even if host in not reachable.
     * set always_cleanup_autochecks to True per default now
+    * check_mk: new option --snmptranslate
 
     Multisite:
     * New availability view for arbitrary host/service collections
@@ -51,6 +52,11 @@
     * openvpn_clients: new check for OpenVPN connections
     * if64_tplink: special new check for TP Link switches with broken SNMP output
     * job: Monitoring states and performance indicators of any jobs on linux systems
+    * oracle_asm_diskgroups: Added missing agent plugin + asmcmd wrapper script
+    * oracle_jobs: New check to monitor oracle database job execution
+    * oracle_rman_backups: New check to monitor state of ORACLE RMAN backups
+    * jar_signature: New check to monitor wether or not a jar is signed and
+      certificate is not expired
     * cisco_qos: adhere qos-bandwidth policies
     * check_disk_smb: WATO formalization for active check check_disk_smb
     * if.include: new configurable parameters for assumed input and output speed
@@ -82,6 +88,11 @@
     * Linux agent: remove obsolete old <<<netif>>> and <<<netctr>>> sections
     * logwatch, logwatch.ec: detect error in agent configuration
     * Linux agent: cups_queues: do not monitor non-local queues (thanks to Olaf Morgenstern)
+    * AIX agent: call lparstat with argument 1 1, this give more accurate data
+    * Check_MK check: enable extended performance data per default now
+    * viprinet checks: New checks for firmware version/update, memory usage, power supply status, 
+                       router mode, serialnumber and temperature sensors
+    * uptime, snmp_uptime, esx_vsphere_counters.uptime: allow to set lower and upper levels
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid
@@ -114,7 +125,8 @@
 1.2.2p2:
     Checks & Agents:
     * FIX: jolokia_info: ignore ERROR instances
-
+    * FIX: apache_status: use (also) apache_status.cfg instead of apache_status.conf
+     
 
 1.2.2p1:
     Core:

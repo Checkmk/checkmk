@@ -60,7 +60,7 @@ ps -ef -F user,vszsize,rssize,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\)
 if type lparstat >/dev/null 2>&1
 then
   echo '<<<lparstat_aix>>>'
-  lparstat | tail -n1
+  lparstat 1 1 | tail -n1
 fi
 
 echo '<<<vmstat_aix>>>'

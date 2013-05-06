@@ -24,9 +24,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_includes['if64_tplink'] = [ "if64", "if.include" ]
-check_info["if64_tplink"] = dict(check_info["if64"])
-check_info["if64_tplink"]["snmp_info"] = ( ".1.3.6.1", [
+def fix_tplink_highspeed(info):
+    for line in info:
+        if type(line[3]) == str: # not yet converted
+            line[3] = saveint(line[3]) * 1000000
+
+def inventory_tplink(info):
+    fix_tplink_highspeed(info)
+    return inventory_if_common(info)
+
+def check_tplink(item, params, info):
+    fix_tplink_highspeed(info)
+    return check_if_common(item, params, info)
+
+
+# check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
+
+check_info["if64_tplink"] = {
+    'check_function':          check_tplink,
+    'inventory_function':      inventory_tplink,
+    'service_description':     'Interface %s',
+    'has_perfdata':            True,
+    'includes':                [ 'if.include' ],
+    'snmp_info':               ( ".1.3.6.1", [
         "2.1.2.2.1.1",     # ifIndex                   0
         "2.1.2.2.1.2",     # ifDescr                   1
         "2.1.2.2.1.3",     # ifType                    2
@@ -47,7 +67,10 @@ check_info["if64_tplink"]["snmp_info"] = ( ".1.3.6.1", [
         "2.1.2.2.1.21",    # ifOutQLen                17
         "4.1.11863.1.1.3.2.1.1.1.1.2", # special for TP Link
         "2.1.2.2.1.6",     # ifPhysAddress            19
-    ])
-check_info["if64_tplink"]["snmp_scan_function"] = \
+    ]),
+    'snmp_scan_function': \
          lambda oid: ".4.1.11863." in oid(".1.3.6.1.2.1.1.2.0") and \
-                     oid(".1.3.6.1.2.1.31.1.1.1.6.*") != None
+               oid(".1.3.6.1.2.1.31.1.1.1.6.*") != None,
+    'group':                   'if',
+    'default_levels_variable': 'if_default_levels',
+}

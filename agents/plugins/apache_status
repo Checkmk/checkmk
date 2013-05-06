@@ -12,7 +12,7 @@
 #
 # By default this plugin tries to detect all locally running apache processes
 # and to monitor them. If this is not good for your environment you might
-# create an apache_status.conf file in MK_CONFDIR and populate the servers
+# create an apache_status.cfg file in MK_CONFDIR and populate the servers
 # list to prevent executing the detection mechanism.
 #
 # It is also possible to override or extend the ssl_ports variable to make the
@@ -20,9 +20,14 @@
 
 import os, sys, urllib2
 
-config_file = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/apache_status.conf"
+config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")  
+config_file = config_dir + "/apache_status.conf"
+if not os.path.exists(config_file):
+    config_file = config_dir + "/apache_status.cfg"
 
-# None or list of (ipaddress, port) tuples
+
+# None or list of (proto, ipaddress, port) tuples.
+# proto is 'http' or 'https'
 servers = None
 ssl_ports = [ 443, ]
 
@@ -77,13 +82,23 @@ def try_detect_servers():
 if servers is None:
     servers = try_detect_servers()
 
+
 if not servers:
     sys.exit(0)
 
 print '<<<apache_status>>>'
-for proto, address, port in servers:
+for server in servers:
+    if isinstance(server, tuple):
+        proto, address, port = server
+        page = 'server-status'
+    else:
+        proto = server['protocol']
+        address = server['address']
+        port = server['port']
+        page = server.get('page', 'server-status')
+
     try:
-        url = '%s://%s:%s/server-status?auto' % (proto, address, port)
+        url = '%s://%s:%s/%s?auto' % (proto, address, port, page)
         # Try to fetch the status page for each server
         try:
             fd = urllib2.urlopen(url)

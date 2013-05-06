@@ -1,0 +1,29 @@
+title: Viprinet router mode
+agents: snmp
+author: Andreas Boesl <ab@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check displays the current router mode for this host
+ The available modes are
+
+ "0" : "Node",
+
+ "1" : "Hub",
+
+ "2" : "Hub running as HotSpare",
+
+ "3" : "Hotspare-Hub replacing another router"
+
+
+inventory:
+ One check is created whereas the router mode during the inventory
+ is remembered as a param
+
+[parameters]
+parameters(dict): a dictionary with the optional key
+
+ {"mode"} - specifies the required router mode. The mode can be set to
+            {node} / {hub} / {hub_hotspare} / {hub_hotspare_replacing}
+            and {inventory} (same mode as detected on inventory).
+            If the actual mode differs from this mode a warning is raised

@@ -340,7 +340,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
         check_interval = check_interval_of(hostname, check_type)
         if not ignore_check_interval \
            and check_interval is not None and os.path.exists(cache_path) \
-           and cachefile_age(cache_path) < check_interval:
+           and cachefile_age(cache_path) < check_interval * 60:
             # cache file is newer than check_interval, skip this check
             raise MKSkipCheck()
 
@@ -613,7 +613,7 @@ def get_agent_info_program(commandline):
         if exitstatus >> 8 == 127:
             raise MKAgentError("Program '%s' not found (exit code 127)" % (commandline,))
         else:
-            raise MKAgentError("Program '%s' exited with code %d" % (commandline, exitstatus >> 8))
+            raise MKAgentError("Agent exited with code %d" % (exitstatus >> 8,))
     return output
 
 # Get data in case of TCP
@@ -1307,7 +1307,7 @@ def nodes_of(hostname):
 # value:   currently measured value
 # dsname:  name of the datasource in the RRD that corresponds to this value
 # unit:    unit to be displayed in the plugin output, e.g. "MB/s"
-# factor:  the levels are multiplied with this factor before applying 
+# factor:  the levels are multiplied with this factor before applying
 #          them to the value. For example the disk-IO check uses B/s
 #          as the unit for the value. But the levels are in MB/s. In that
 #          case the factor is 1.0 / 1048576.
@@ -1480,7 +1480,7 @@ def get_age_human_readable(secs):
         return "%d days, %d hours" % (days, hours)
     return "%d days" % days
 
-# Quote string for use as arguments on the shell 
+# Quote string for use as arguments on the shell
 def quote_shell_string(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
@@ -1493,13 +1493,21 @@ def check_timeperiod(timeperiod):
     global g_inactive_timerperiods
     # Let exceptions happen, they will be handled upstream.
     if g_inactive_timerperiods == None:
-        import socket
-        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(livestatus_unix_socket)
-        # We just get the currently inactive timeperiods. All others
-        # (also non-existing) are considered to be active
-        s.send("GET timeperiods\nColumns:name\nFilter: in = 0\n")
-        s.shutdown(socket.SHUT_WR)
-        g_inactive_timerperiods = s.recv(10000000).splitlines()
+        try:
+            import socket
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            s.connect(livestatus_unix_socket)
+            # We just get the currently inactive timeperiods. All others
+            # (also non-existing) are considered to be active
+            s.send("GET timeperiods\nColumns:name\nFilter: in = 0\n")
+            s.shutdown(socket.SHUT_WR)
+            g_inactive_timerperiods = s.recv(10000000).splitlines()
+        except Exception, e:
+            if opt_debug:
+                raise
+            else:
+                # If the query is not successful better skip this check then fail
+                return False
+
     return timeperiod not in g_inactive_timerperiods
 

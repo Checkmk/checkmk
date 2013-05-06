@@ -128,7 +128,7 @@ def convert_esx_counters_if(info):
             by_item[item][name] = int(value)
 
     # Example of by_item:
-    # { 
+    # {
     #   'vmnic0': {
     #         'broadcastRx': 31,
     #         'broadcastTx': 0,
@@ -150,7 +150,7 @@ def convert_esx_counters_if(info):
     # }
     nics = by_item.keys()
     nics.sort()
-    
+
     converted = [
         [], #  0 ifIndex                   0
         [], #  1 ifDescr                   1
@@ -254,7 +254,7 @@ check_info['esx_vsphere_counters.if'] = {
 def inventory_esx_vsphere_counters_uptime(info):
     for name, instance, counter, unit in info:
         if name == "sys.uptime":
-            return [ (None, None) ]
+            return [ (None, {}) ]
 
 def check_esx_vsphere_counters_uptime(_no_item, params, info):
     for name, instance, counter, unit in info:
@@ -282,11 +282,12 @@ check_info['esx_vsphere_counters.uptime'] = {
 #   +----------------------------------------------------------------------+
 
 # We assume that all ramdisks have the same size (in mb) on all hosts
-esx_vsphere_cunters_ramdisk_sizes = {
+esx_vsphere_counters_ramdisk_sizes = {
     'root':       32,
     'etc':        28,
     'tmp':        192,
     'hostdstats': 319,
+    'snmptraps':  1,
 }
 
 def inventory_esx_vsphere_counters_ramdisk(info):
@@ -304,7 +305,10 @@ def check_esx_vsphere_counters_ramdisk(item, params, info):
         if name == 'sys.resourceMemConsumed' \
            and instance.startswith('host/system/kernel/kmanaged/visorfs/'):
             name     = instance.split('/')[-1]
-            size_mb  = esx_vsphere_cunters_ramdisk_sizes[name]
+            try:
+                size_mb  = esx_vsphere_counters_ramdisk_sizes[name]
+            except KeyError:
+                return 3, 'Unhandled ramdisk found (%s)' % name
             used_mb  = float(counter) / 1000
             avail_mb = size_mb - used_mb
             ramdisks.append((name, size_mb, avail_mb))

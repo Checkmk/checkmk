@@ -1,0 +1,41 @@
+Manche der globalen Einstellungen wären schön, wenn man sie pro Host
+einstellen könnte. Dazu gehört z.B. das if_inventory_uses_description. Aber
+auch Dinge wie agent_min_version, agent_simulator, simulation_mode,
+inventory_max_cachefile_age, inventory_check_interval, inventory_check_severity
+und andere könnte man gut pro Host gebrauchen.
+
+Folgende Idee könnte das elegant lösen: Wir führen eine neue
+generische Regelkette global_setting_per_host[] ein. Diese
+ist eigentlich ein dict von Ketten. Beispiel:
+
+global_setting_per_host["inventory_check_interval"] = [
+  ( 120, [ "linux", "prod" ], ALL_HOSTS ),
+  ( 1440, [ "linux", "test" ], ALL_HOSTS ),
+]
+
+Die Umsetzung ist denkbar einfach: Nach dem Laden der Konfig
+wird die Variable einmal ausgewertet und die entsprechenden
+globalen Varialen gesetzt. Beim precompile muss man garnix
+ändern, weil diese Variablen dann ja schon gesetzt sind
+und korrekt einkodiert werden.
+
+In Fällen, in denen es um mehrere Host geht (z.B. cmk -I),
+muss die Funktion, die die globalen Variablen setzt, immer
+dann aufgerufen werden, wenn auf einen neuen Host umgeschaltet
+wird. Hier kann man evtl. noch ein Caching einführen, wenn
+das zulange dauert.
+
+Im WATO können wir dann etliche Variablen aus den global
+settings umziehen. Frage ist, ob wir dann auch automatisch
+eine Migration machen. Die könnte so gehen: Bei jeder globalen
+Variable, die vom Default abweicht und bei der eine Regelkette
+in der neuen Form existiert, wird - wenn diese Kette leer ist -
+eine Regeln eingefügt mit ALL_HOSTS, die genau den geänderten
+Wert einsetzt. Gleichzeitig setzen wir den Wert dann wieder
+auf den Default zurück.
+
+Dumm noch: der Benutzer sieht jetzt den Defaultwert nicht
+mehr. Aber das Problem haben wir bei allen Regelketten.
+Hier müsste man sowieso mal den Defaultwert anzeigen, der
+dann gilt, wenn keine Regel greift.
+

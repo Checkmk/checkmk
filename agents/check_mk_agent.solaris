@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+export PATH=/usr/bin:/usr/sbin:/opt/csw/bin
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -53,18 +54,15 @@ echo Version: 1.2.3i1
 echo AgentOS: solaris
 
 
-# Find out what type of system we run.
-# A standard Zone that will not have hardware of any kind?
-# A Global Zone with hardware?
-if type zonename > /dev/null 2>&1 ; then
-  if [ `zonename` = "global" ]; then
-      platform="global_zone"
-  else
-      platform="zone"
-  fi
+# Find out what zone we are running in
+# Treat all pre-Solaris 10 systems as "global"
+if type zonename &>/dev/null
+then
+    zonename=$(zonename)
+    pszone="-z $zonename"
 else
-# Otherwise we have a normal or hard-partitioned system
-  platform="hardware"
+    zonename="global"
+    pszone="-A"
 fi
 
 echo '<<<df>>>'
@@ -73,13 +71,14 @@ do
    df -lk -F $fs 2>/dev/null | sed 1d | \
    while read Filesystem kbytes used avail capacity Mountedon
    do
-      kbytes=`expr $used + $avail`
-      echo "${Filesystem} $fs ${kbytes} ${used} ${avail} ${capacity} ${Mountedon}"
+      kbytes=$(($used + $avail))
+      echo "$Filesystem $fs $kbytes $used $avail $capacity $Mountedon"
    done
 done
 
 # Filesystem usage for ZFS
-if type zfs > /dev/null 2>&1 ; then
+if type zfs &>/dev/null
+then
     echo '<<<zfsget>>>'
     zfs get -Hp name,quota,used,avail,mountpoint,type
     echo '[df]'
@@ -88,39 +87,46 @@ fi
 
 # Processes
 echo '<<<ps>>>'
-ps -A -o user,vsz,rss,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
+ps -o user,vsz,rss,pcpu,args $pszone | \
+sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
-# You need statgrab to be installed. You'll find it 
-# here: http://www.i-scream.org/libstatgrab/ 
+# You need statgrab to be installed.
+# You'll find it here: http://www.i-scream.org/libstatgrab/ 
+# Or install pre-built packages from: http://www.opencsw.org/
+# and append /opt/csw/bin to this scripts PATH.
 
-statgrab_vars="const. cpu. disk. general. mem. page. proc. swap. user."
-statgrab_sections="proc cpu disk page"
-# Only collect net stats if we aren't in a unpriv. zone.
-if [ "$platform" != "zone" ]; then
-    statgrab_vars="$statgrab_vars net."
-    statgrab_sections="$statgrab_sections net"
-fi
+if type statgrab &>/dev/null
+then
 
-if statgrab $statgrab_vars > /tmp/statgrab.$$ 2>/dev/null
-    then
+    statgrab_vars="const. cpu. disk. general. mem. page. proc. swap. user."
+    statgrab_sections="proc cpu disk page"
+
+    # Only collect net stats if we are in the global zone.
+    if [ "$zonename" == "global" ]; then
+        statgrab_vars="$statgrab_vars net."
+        statgrab_sections="$statgrab_sections net"
+    fi
+
+    statgrab $statgrab_vars 1>/tmp/statgrab.$$ 2>/dev/null
     for s in $statgrab_sections
     do
         echo "<<<statgrab_$s>>>"
-        cat /tmp/statgrab.$$ | grep "^$s\." | cut -d. -f2-99 | sed 's/ *= */ /'
+        grep "^$s\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
     done
 
     echo '<<<statgrab_mem>>>'
-    cat /tmp/statgrab.$$ | egrep "^(swap|mem)\." | sed 's/ *= */ /'
+    egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
 
+    [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
 fi
-[ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
+
 
 # Output of cpu from Linux agent simulated
 # (Thanks to Cameron Pierce)
 echo '<<<cpu>>>'
-load=`uptime|sed -e 's;.*average: \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\).*;\1 \2 \3;'`
-ps=`ps -ef|wc -l|sed -e 's;[ ]\{1,\};;'`
-procs=`psrinfo|wc -l|sed -e 's;[ ]\{1,\};;'`
+load=$(uptime|sed -e 's;.*average: \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\).*;\1 \2 \3;')
+ps=$(($(ps -o comm $pszone | wc -l)))
+procs=$(($(psrinfo | wc -l)))
 echo $load 1/$ps $$ $procs
 
 # check zpool status
@@ -174,34 +180,42 @@ then
   done
 fi
 
+
 # Fileinfo-Check: put patterns for files into $MK_CONFDIR/fileinfo.cfg
 echo '<<<fileinfo:sep(124)>>>'
-if [ -f "$MK_CONFDIR/fileinfo.cfg" ] ; 
+if [ -f "$MK_CONFDIR/fileinfo.cfg" ]
 then
     echo ''
     nawk 'BEGIN{print srand()}'
-    echo `ls $(cat "$MK_CONFDIR/fileinfo.cfg")`"|"`ls -nl $(cat "$MK_CONFDIR/fileinfo.cfg") | awk '{print $5}'`"|"`truss -v lstat -t lstat ls -l $(cat "$MK_CONFDIR/fileinfo.cfg") 2>&1|grep mt |awk '{print $9}'|cut -d . -f 1` 
+    file=$(ls $(cat "$MK_CONFDIR/fileinfo.cfg"))
+    size=$(ls -nl $file | awk '{print $5}')
+    date=$(truss -v lstat -t lstat ls -l $file 2>&1 | grep mt | awk '{print $9}'| cut -d. -f1)
+    echo ${file}'|'${size}'|'${date}
 fi
 
-echo '<<<local>>>'
+
+# Local
 if cd $LOCALDIR 2>/dev/null
 then
-  for skript in `ls`
-  do
-    if [ -x "$skript" ] ; then
-        ./$skript
-    fi
-  done
+    echo '<<<local>>>'
+    for skript in $(ls)
+    do
+        if [ -x "$skript" ]
+        then
+            ./$skript
+        fi
+    done
 fi
 
+
 # MK's Remote Plugin Executor
-if [ -f "$MK_CONFDIR/mrpe.cfg" ]
+if test -f "$MK_CONFDIR/mrpe.cfg"
 then
     echo '<<<mrpe>>>'
     grep -v '^ *#' "$MK_CONFDIR/mrpe.cfg" | grep -v '^ *$' | \
     while read descr cmdline
     do
-        OUTPUT=`$cmdline`
+        OUTPUT=$($cmdline)
         echo "$descr $? $OUTPUT"
     done
 fi

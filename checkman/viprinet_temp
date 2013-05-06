@@ -1,0 +1,20 @@
+title: Viprinet temperature levels
+agents: snmp
+author: Andreas Boesl <ab@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check display the temperature of the CPU and System temperature sensors
+
+inventory:
+ Creates two checks "Temperature CPU" and "Temperature System"
+
+perfdata:
+ One variable: the current temperature in degrees celsius.
+
+[parameters]
+A tuple (int, int): With the follwowing values
+warning : The degrees celsius to trigger a WARNING state
+critical : The degrees celsius to trigger a CRITICAL state
+
+

@@ -42,6 +42,9 @@ def check_uptime_seconds(params, uptime):
     state = 0
     infotext = "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds)
 
+    if params == None: # legacy
+        params = {}
+
     if "min" in params:
         warn, crit = params["min"]
         if uptime < crit:

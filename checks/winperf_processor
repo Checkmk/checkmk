@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-winperf_cpu_default_levels = ( 101.0, 101.0 )
+winperf_cpu_default_levels = { "levels": ( 101.0, 101.0 ) }
 
 def inventory_winperf_util(info):
     if len(info) <= 1:
@@ -71,6 +71,7 @@ def check_winperf_util(_no_item, params, info):
                 used_perc = 100
 
             state, infotext, perfdata = check_cpu_util(used_perc, params, this_time)
+            perfdata[0] = perfdata[0][:5] + (num_cpus,)
             infotext += ", %d CPUs" % num_cpus
             return state, infotext, perfdata
 

@@ -72,7 +72,10 @@ def check_esx_vsphere_objects(item, _no_params, info):
                 state = 3
             infotext = "power state: %s" % power_state
             if running_on:
-                infotext += ', running on [%s]' % running_on
+                if state == 0:
+                    infotext += ', running on [%s]' % running_on
+                else:
+                    infotext += ', defined on [%s]' % running_on
             return state, infotext
 
     what = item.split()[0]

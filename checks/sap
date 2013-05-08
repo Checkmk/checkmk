@@ -95,7 +95,6 @@ def inventory_sap_value(info):
 
     for line in info:
         for pattern, limit_item_levels in patterns:
-            print pattern, limit_item_levels
             if sap_value_path_matches(line[3], pattern):
                 params = {}
                 if limit_item_levels:

@@ -1,0 +1,20 @@
+Title: Notification speedup
+Component: core
+State: open
+Date: 2013-05-08 09:51:56
+Targetversion: future
+Class: nastiness
+
+When using large monitoring environments ( thousands of hosts / hundreds of users )
+notifications from nagios take quite some time to process (~1 seconds)
+
+Problem:
+If there are multiple users within the contact group of a service, nagios will
+start a notification command for each single user, which adds up quite some time
+e.g. 10 users -> 10 seconds
+
+Even worse, nagios hangs while the notifications are processed!
+
+Solution:
+Each user gets a precompiled notification file.
+So its no longer neccessary to read the entire configuration from scratch when a notication is raised

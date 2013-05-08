@@ -93,6 +93,7 @@
     * viprinet checks: New checks for firmware version/update, memory usage, power supply status, 
                        router mode, serialnumber and temperature sensors
     * uptime, snmp_uptime, esx_vsphere_counters.uptime: allow to set lower and upper levels
+    * winperf_processor: Now displays (and scales) to number of cpus in pnpgraph
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid
@@ -124,6 +125,7 @@
 
 1.2.2p2:
     Checks & Agents:
+    * FIX: jolokia_info: ignore ERROR instances
     * FIX: apache_status: use (also) apache_status.cfg instead of apache_status.conf
      
 

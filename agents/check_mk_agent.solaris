@@ -1,5 +1,4 @@
 #!/usr/bin/bash
-export PATH=/usr/bin:/usr/sbin:/opt/csw/bin
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -91,7 +90,7 @@ ps -o user,vsz,rss,pcpu,args $pszone | \
 sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
 # You need statgrab to be installed.
-# You'll find it here: http://www.i-scream.org/libstatgrab/ 
+# You'll find it here: http://www.i-scream.org/libstatgrab/
 # Or install pre-built packages from: http://www.opencsw.org/
 # and append /opt/csw/bin to this scripts PATH.
 
@@ -131,48 +130,54 @@ echo $load 1/$ps $$ $procs
 
 # check zpool status
 if [ -x /sbin/zpool ]; then
-   echo "<<<zpool_status>>>"
-   /sbin/zpool status -x
+    echo "<<<zpool_status>>>"
+    /sbin/zpool status -x
 fi
 
-# Uptime compatible with Linux format (thanks to Daniel Roettgermann)
+# Uptime compatible with Linux format
 echo '<<<uptime>>>'
-echo `expr \`nawk 'BEGIN{print srand()}'\` - \`kstat -p unix:0:system_misc:boot_time |awk '{print $2}'\``
+ctime=$(nawk 'BEGIN{print srand()}')
+btime=$(truss -v lstat -t lstat ls -ld /proc/0 2>&1 | awk '/ct = /{print $9}' | cut -d. -f1)
+echo $(($ctime - $btime))
 
 
-# NTP 
-# This will only work on Sol10 and above
-if `svcs |grep ntp > /dev/null`; then 
+# NTP
+ps -o comm $pszone | grep -w xntpd &>/dev/null
+if [ $? -eq 0 ]
+then
     echo '<<<ntp>>>'
-    # use ntpq instead, xntpdc gives less info.
-    #xntpdc -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
     ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 fi
 
-#Memory 
-if [ -x /usr/bin/top ]; then
+# Memory
+if [ -x /usr/bin/top ]
+then
     echo "<<<solaris_mem>>>"
-    /usr/bin/top | grep Memory
+    /usr/bin/top | grep '^Memory:'
 fi
 
 # TCP Connection stats
 echo '<<<tcp_conn_stats>>>'
-netstat -nafinet -P tcp | tail  +5 | \
-awk '{ c[$7]++; } END { for (x in c) { print x, c[x];}}'
+netstat -n -a -f inet -P tcp | tail  +5 | \
+awk '{ c[$7]++; } END { for (x in c) { print x, c[x]; } }'
 
 
-# Multipathing on Solaris10+
-if [ "$platform" != "zone" ]; then
-    echo '<<<solaris_multipath>>>'
-    mpathadm list LU | awk '{if(NR%3==1){dev=$1}
-                             if(NR%3==2){tc=$NF}
-                             if(NR%3==0){printf "%s %s %s\n",dev,tc,$NF}}'
+# Multipathing
+if type mpathadm &>/dev/null
+then
+    if [ "$zonename" == "global" ]
+    then
+        echo '<<<solaris_multipath>>>'
+        mpathadm list LU | awk '{if(NR%3==1){dev=$1}
+                                 if(NR%3==2){tc=$NF}
+                                 if(NR%3==0){printf "%s %s %s\n",dev,tc,$NF}}'
+    fi
 fi
 
 
 if cd $PLUGINSDIR 2>/dev/null
 then
-    for skript in `ls`
+    for skript in $(ls)
     do
         if [ -x "$skript" ] ; then
             ./$skript

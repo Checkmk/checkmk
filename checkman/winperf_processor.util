@@ -10,22 +10,29 @@ description:
 
  Setting a level for warning or a critical state is possible, but might
  not be very usefull, since the computed value is an average over
- just one check cycle. A combination with a larger value of {max_check_attempts}
- or {notification_delay} might be useful here.
+ just one check cycle. Consider to set the {average} option for this purpose.
+ A combination with a larger value of {max_check_attempts}
+ or {notification_delay} might also be useful here.
 
 perfdata:
- The averaged percentage of CPU utilization during the last check cycle.
+  One or two values: the first value is current usage in percent - ranging from
+  0 to 100. The "maximum" value is not 100, but the number of CPU threads. This
+  case be used for scaling the graph in terms of the number of used CPU threads.
+
+  If averaging is enabled then a second value is sent: the averaged CPU utilization
+  ranging from 0 to 100.
 
 inventory:
  A check of this type is automatically created for all Windows
  hosts.
 
 [parameters]
-warning (int): The percentage of CPU usage that triggers
- a WARNING state
-critical (int): The percentage of CPU usage that triggers
- a CRITICAL state
+parameters(dict): A dictionary with the following keys:
+
+  {"levels"}: Either {None} for no levels, a tuple of warn and crit (in percent) or
+  a dictionary with predictive levels settings.
+
+  {"average"}: A number of minutes for enabling averaging.
 
 [configuration]
-winperf_cpu_default_levels (int, int): Default levels warning and critical
-
+winperf_cpu_default_levels(dict): Default levels, preset to { "levels": (101.0, 101.0) } 

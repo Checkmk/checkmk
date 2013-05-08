@@ -1,0 +1,17 @@
+Title: livestatus table statehist speedup
+Component: livestatus
+State: open
+Date: 2013-05-08 09:47:22
+Targetversion: future
+Class: feature
+
+Querying large timeframes within the statehist table can eat up
+lots of time. This is because for every host/service an object is
+generated which stores the data.
+On global changes (timeperiod change) each of these objects need to be updated
+
+Sometimes the query just want to get info about a single host - using Filters
+statehist disregards this wish when collecting data, thus resulting in the slow performance
+
+Possible solution:
+Take the queries filter into account when creating the objects for the host/services

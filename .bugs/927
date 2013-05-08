@@ -1,0 +1,12 @@
+Title: rising service check latency when using livecheck
+Component: livecheck
+State: open
+Date: 2013-05-08 09:40:42
+Targetversion: future
+Class: nastiness
+
+It seems that there are still some performance problems when using livecheck
+Scenario: 16000 services
+20 livecheck helpers, no livecheck overflows
+
+When running nagios the service check latency goes up (7 minutes and further)

@@ -412,7 +412,7 @@ def page_edit_views(msg=None):
             html.write("</td>")
 
             # Datasource
-            html.write("<td class=content>%s</td>\n" % view["datasource"])
+            html.write("<td class=content>%s</td>\n" % multisite_datasources[view["datasource"]]['title'])
 
             # Owner
             if owner == "":

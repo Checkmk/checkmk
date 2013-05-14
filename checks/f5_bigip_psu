@@ -40,7 +40,8 @@
 def inventory_f5_bigip_psu(info):
     inventory = []
     for line in info:
-        psu, state = line[0]
+        psu = line[0]
+        state = line[1]
         # inventorize the PSU unless it's in state 2 (notpresent)
         if state != "2":
             inventory.append((psu, None))
@@ -48,8 +49,8 @@ def inventory_f5_bigip_psu(info):
 
 def check_f5_bigip_psu(item, _no_params, info):
     for line in info:
-        psu   = line[0][0]
-        state = int(line[0][1])
+        psu   = line[0]
+        state = int(line[1])
         if psu == item:
             if   state == 1:
                 return (0, "PSU state: good")
@@ -68,7 +69,7 @@ check_info["f5_bigip_psu"] = {
     'inventory_function':      inventory_f5_bigip_psu,
     'service_description':     'PSU %s',
     # Get ID and status from the SysChassisPowerSupplyTable
-    'snmp_info':               [('.1.3.6.1.4.1.3375.2.1.3.2.2.2.1', [1, 2])],
+    'snmp_info':               ('.1.3.6.1.4.1.3375.2.1.3.2.2.2.1', [1, 2]),
     'snmp_scan_function':      \
     # Check using the vendor mib Id and verify it's a loadbalancer
      lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") \

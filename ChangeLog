@@ -94,6 +94,8 @@
                        router mode, serialnumber and temperature sensors
     * uptime, snmp_uptime, esx_vsphere_counters.uptime: allow to set lower and upper levels
     * winperf_processor: Now displays (and scales) to number of cpus in pnpgraph
+    * mk_postgres plugin: replace select * with list of explicit columns (fix for PG 9.1)
+    * lnx_if: show MAC address for interfaces (needs also agent update)
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid
@@ -127,7 +129,9 @@
     Checks & Agents:
     * FIX: jolokia_info: ignore ERROR instances
     * FIX: apache_status: use (also) apache_status.cfg instead of apache_status.conf
-     
+    * FIX: f5_bigip_vserver: fix wrong OID (13 instead of 1), thanks to Miro Ramza
+    * FIX: f5_bigip_psu: handle more than first power supply, thanks to Miro Ramza
+
 
 1.2.2p1:
     Core:

@@ -127,7 +127,8 @@
     Checks & Agents:
     * FIX: jolokia_info: ignore ERROR instances
     * FIX: apache_status: use (also) apache_status.cfg instead of apache_status.conf
-     
+    * FIX: f5_bigip_vserver: fix wrong OID (13 instead of 1), thanks to Miro Ramza
+
 
 1.2.2p1:
     Core:

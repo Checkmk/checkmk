@@ -94,6 +94,7 @@
                        router mode, serialnumber and temperature sensors
     * uptime, snmp_uptime, esx_vsphere_counters.uptime: allow to set lower and upper levels
     * winperf_processor: Now displays (and scales) to number of cpus in pnpgraph
+    * mk_postgres plugin: replace select * with list of explicit columns (fix for PG 9.1)
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

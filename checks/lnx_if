@@ -37,6 +37,7 @@
 #         Duplex: Unknown! (255)
 #         Auto-negotiation: on
 #         Link detected: no
+#         Address: de:ad:be:af:00:01
 # [eth1]
 #         Speed: 1000Mb/s
 #         Duplex: Full
@@ -60,7 +61,7 @@ def if_lnx_convert_to_if64(info):
             nic = line[0]
             nic_info[nic] = { "counters": map(int, line[1].split()) }
         else:
-            nic_info[current_nic][line[0].strip()] = line[1].strip()
+            nic_info[current_nic][line[0].strip()] = ":".join(line[1:]).strip()
 
     # if index is 0 we either have found no nics or no information
     # from ethtool is present. In the latter case we continue and
@@ -130,7 +131,9 @@ def if_lnx_convert_to_if64(info):
                 ifOperStatus = 4 # unknown (NIC has never been used)
 
         # There is no mac adress data available for the moment
-        ifPhysAddress = ''
+        def hextobin(x):
+            return chr(int(x, 16))
+        ifPhysAddress = "".join([chr(int(x, 16)) for x in attr.get("Address", "").split(":")])
 
         if_table.append(map(str, [
           ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus,

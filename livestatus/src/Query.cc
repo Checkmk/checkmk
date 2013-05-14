@@ -1029,7 +1029,8 @@ void Query::outputString(const char *value)
                 // three-byte sequences (avoid buffer overflow!)
                 if ((*r & 0xF0) == 0xE0) {
                     if (chars_left < 3) {
-                        logger(LG_INFO, "Ignoring invalid UTF-8 sequence in string '%s'", value);
+                        if (g_debug_level >= 2)
+                            logger(LG_INFO, "Ignoring invalid UTF-8 sequence in string '%s'", value);
                         break; // end of string. No use in continuing
                     }
                     else {
@@ -1044,7 +1045,8 @@ void Query::outputString(const char *value)
                 // four-byte sequences
                 else if ((*r & 0xF8) == 0xF0) {
                     if (chars_left < 4) {
-                        logger(LG_INFO, "Ignoring invalid UTF-8 sequence in string '%s'", value);
+                        if (g_debug_level >= 2)
+                            logger(LG_INFO, "Ignoring invalid UTF-8 sequence in string '%s'", value);
                         break; // end of string. No use in continuing
                     }
                     else {
@@ -1058,7 +1060,8 @@ void Query::outputString(const char *value)
                     }
                 }
                 else {
-                    logger(LG_INFO, "Ignoring invalid UTF-8 sequence in string '%s'", value);
+                    if (g_debug_level >= 2)
+                        logger(LG_INFO, "Ignoring invalid UTF-8 sequence in string '%s'", value);
                 }
             }
 

@@ -1,7 +1,8 @@
 1.2.2p2:
     Checks & Agents:
     * FIX: apache_status: use (also) apache_status.cfg instead of apache_status.conf
-     
+    * FIX: jolokia_info: ignore ERROR instances
+
 1.2.2p1:
     Core:
     * FIX: correctly quote ! and \ in active checks for Nagios
@@ -23,6 +24,9 @@
     * FIX: titles and services got lost when moving join-columns in views
     * FIX: Fixed exception during initial page rendering in python 2.6 in special cases
            (Internal error: putenv() argument 2 must be string, not list)
+    
+    Livestatus:
+    * livestatus.log: show utf-8 decoding problems only with debug logging >=2
 
     Notifications:
     * FIX: HTML mails: Handle the case where plugin argument is not set

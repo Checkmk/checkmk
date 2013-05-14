@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_jolokia_info(info):
-    return [ (line[0], None) for line in info ]
+    return [ (line[0], None) for line in info if line[1] != 'ERROR' ]
 
 def check_jolokia_info(item, _no_params, info):
     for line in info:

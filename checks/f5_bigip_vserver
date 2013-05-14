@@ -68,7 +68,7 @@ def check_f5_bigip_vserver(item, _no_params, info):
 
 
 snmp_info["f5_bigip_vserver"] = \
-    ( ".1.3.6.1.4.1.3375.2.2.10.1.2.1", [
+    ( ".1.3.6.1.4.1.3375.2.2.10.13.2.1", [
         1, # Name
         2, # Status
       ])

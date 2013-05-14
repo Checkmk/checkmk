@@ -60,7 +60,7 @@
 # 3680 Fan_FAN_PSU2 0.00_RPM_(2760.00/NA) [OK]
 
 def inventory_freeipmi(info):
-    return [ (line[1], "", None) for line in info if line[-1] != '[Unknown]' ]
+    return [ (line[1], "", None) for line in info if line[-1] not in ( '[Unknown]', '[NA]' ) ]
 
 def check_freeipmi(item, _no_params, info):
     for line in info:

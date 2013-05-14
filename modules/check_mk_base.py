@@ -338,13 +338,20 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age):
         # of that list is interpreted as one real oid_info, fetches
         # a separate snmp table. The overall result is then the list
         # of these results.
-        if type(oid_info) == list:
-            table = [ get_snmp_table(hostname, ipaddress, entry) for entry in oid_info ]
-            # if at least one query fails, we discard the hole table
-            if None in table:
-                table = None
-        else:
-            table = get_snmp_table(hostname, ipaddress, oid_info)
+        try:
+            if type(oid_info) == list:
+                table = [ get_snmp_table(hostname, ipaddress, entry) for entry in oid_info ]
+                # if at least one query fails, we discard the hole table
+                if None in table:
+                    table = None
+            else:
+                table = get_snmp_table(hostname, ipaddress, oid_info)
+        except:
+            if opt_debug:
+                raise
+            else:
+                raise MKGeneralException("Incomplete or invalid response from SNMP agent")
+
         store_cached_checkinfo(hostname, check_type, table)
         write_cache_file(cache_relpath, repr(table) + "\n")
         return table

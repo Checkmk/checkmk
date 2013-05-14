@@ -60,7 +60,7 @@
 # State                         = ACTIVE
 # State                         = STANDBY
 
-hpux_multipath_pathstates = { "ACTIVE": 0, "STANDBY": 1, "FAILED": 2, "UNOPEN": 3, "CLOSING" : 1}
+hpux_multipath_pathstates = { "ACTIVE": 0, "STANDBY": 1, "FAILED": 2, "UNOPEN": 3, "OPENING" : 0, "CLOSING" : 1}
 
 def parse_hpux_multipath(info):
     disks = {}

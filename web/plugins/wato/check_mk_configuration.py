@@ -1419,7 +1419,7 @@ register_rule(group,
     CheckTypeSelection(
         title = _("Ignored checks"),
         help = _("This ruleset is similar to 'Ignored services', but selects checks to be ignored "
-                 "by their <b>type</b>. This allows to disable certain techinal implementations "
+                 "by their <b>type</b>. This allows you to disable certain technical implementations "
                  "such as filesystem checks via SNMP on hosts that also have the Check_MK agent "
                  "installed."),
     ))

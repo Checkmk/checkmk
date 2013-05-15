@@ -96,6 +96,8 @@
     * winperf_processor: Now displays (and scales) to number of cpus in pnpgraph
     * mk_postgres plugin: replace select * with list of explicit columns (fix for PG 9.1)
     * lnx_if: show MAC address for interfaces (needs also agent update)
+    * winperf_tcp_conn: New check. Displays number of established tcpv4 connections in windows
+                        Uses WATO Rule "TCP connection stats (Windows)"
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

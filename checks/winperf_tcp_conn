@@ -1,0 +1,74 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<winperf_tcp_conn>>>
+# 1368619819.06 638
+# 2 53267 counter
+# 4 3 rawcount
+# 6 23 rawcount
+# 8 1 rawcount
+# 10 1 rawcount
+# 12 12 rawcount
+# 14 34830 counter
+# 16 18437 counter
+
+def inventory_winperf_tcp_conn(info):
+    return [ (None, {}) ]
+
+def check_winperf_tcp_conn(item, params, info):
+    fields = [
+                ( 2, "Established", "ESTABLISHED" ),
+             ]
+    infotext    = ""
+    worst_state = 0
+    perfdata    = []
+    for offset, name, param_key in fields:
+        value = saveint(info[offset][1])
+        infotext += "%s: %s" % (name, value)
+        warn, crit = "", ""
+        if params.get(param_key):
+            warn, crit = params.get(param_key)
+            if value >= crit:
+                worst_state = 2
+                infotext += "(!!) (critical at %d)" % crit
+            elif value >= warn:
+                worst_state = max(1, worst_state)
+                infotext += "(!) (warning at %d)" % warn
+            infotext += ", "
+        perfdata.append( (name, value, warn, crit) )
+             
+    infotext = infotext[:-2]
+    return worst_state, infotext, perfdata
+
+check_info["winperf_tcp_conn"] = {
+    'check_function':          check_winperf_tcp_conn,
+    'inventory_function':      inventory_winperf_tcp_conn,
+    'service_description':     'TCP connections',
+    'has_perfdata':            True,
+    'group':                   'tcp_conn_stats_win',
+}
+

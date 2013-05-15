@@ -983,8 +983,30 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
+    "tcp_conn_stats_win",
+    ("TCP connection stats (Windows)"),
+    Dictionary(
+        elements = [
+            ( "ESTABLISHED",
+              Tuple(
+                  title = _("ESTABLISHED"),
+                  help = _("connection up and passing data"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            )
+        ]
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_networking,
     "tcp_conn_stats",
-    ("TCP connection stats"),
+    ("TCP connection stats (LINUX / UNIX)"),
     Dictionary(
         elements = [
             ( "ESTABLISHED",

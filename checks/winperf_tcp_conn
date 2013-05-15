@@ -45,9 +45,11 @@ def check_winperf_tcp_conn(item, params, info):
              ]
     infotext    = ""
     worst_state = 0
+    perfdata    = []
     for offset, name, param_key in fields:
         value = saveint(info[offset][1])
         infotext += "%s: %s" % (name, value)
+        warn, crit = "", ""
         if params.get(param_key):
             warn, crit = params.get(param_key)
             if value >= crit:
@@ -57,9 +59,10 @@ def check_winperf_tcp_conn(item, params, info):
                 worst_state = max(1, worst_state)
                 infotext += "(!) (warning at %d)" % warn
             infotext += ", "
+        perfdata.append( (name, value, warn, crit) )
              
     infotext = infotext[:-2]
-    return (worst_state, infotext)
+    return worst_state, infotext, perfdata
 
 check_info["winperf_tcp_conn"] = {
     'check_function':          check_winperf_tcp_conn,

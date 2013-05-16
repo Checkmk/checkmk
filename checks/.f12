@@ -1,3 +1,2 @@
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-sudo install -m 644 * /omd/sites/$SITE/share/check_mk/checks
-
+sudo rsync -varx --delete-after ./ /omd/sites/$SITE/share/check_mk/checks/

@@ -88,7 +88,7 @@ def render_json(rows, view, group_painters, painters, num_columns, show_checkbox
             else:
                 html.write(",")
             tdclass, content = p[0]["paint"](row)
-            content = content.replace("<br>","\n")
+            content = str(content).replace("<br>","\n")
             stripped = htmllib.strip_tags(content)
             utf8 = stripped.encode("utf-8")
             html.write(encode_string_json(utf8))

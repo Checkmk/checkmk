@@ -27,6 +27,7 @@
 # Call with -d for debug mode: colored output, no saving of status
 
 import sys, os, re, time
+import glob
 
 if '-d' in sys.argv[1:]:
     tty_red     = '\033[1;31m'
@@ -58,6 +59,7 @@ print "<<<logwatch>>>"
 
 config_filename = logwatch_dir + "/logwatch.cfg"
 status_filename = logwatch_dir + "/logwatch.state"
+config_dir      = logwatch_dir + "/logwatch.d/*.cfg"
 
 def is_not_comment(line):
     if line.lstrip().startswith('#') or \
@@ -80,6 +82,9 @@ def parse_pattern(line):
 
 def read_config():
     config_lines = [ line.rstrip() for line in filter(is_not_comment, file(config_filename).readlines()) ]
+    #Add config from a logwatch.d folder
+    for config_file in glob.glob(config_dir):
+        config_lines += [ line.rstrip() for line in filter(is_not_comment, file(config_file).readlines()) ]
 
     have_filenames = False
     config = []

@@ -232,7 +232,7 @@ def process_logfile(logfile, patterns):
                 if replace:
                     matches = pattern.match(log_line)
                     replace_count = 1
-                    new_message = log_line
+                    new_message = replace 
                     for replacement in matches.groups():
                         new_message = new_message.replace('\%d' % replace_count, replacement)
                         replace_count += 1

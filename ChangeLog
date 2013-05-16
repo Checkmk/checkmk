@@ -139,6 +139,12 @@
     * FIX: f5_bigip_psu: handle more than first power supply, thanks to Miro Ramza
     * FIX: ipmi_sensors: ignore sensors in state [NA] (not available)
 
+    Multisite:
+    * List of views: Output the alias of a datasource instead of internal name
+
+    WATO:
+    * FIX: convert editing of global setting to POST. This avoid URL-too-long
+      when defining lots of Event Console actions
 
 1.2.2p1:
     Core:

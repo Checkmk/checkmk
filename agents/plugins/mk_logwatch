@@ -72,11 +72,10 @@ def parse_filenames(line):
 
 def parse_pattern(line):
     level, pattern = line.split(None, 1)
+    if level == 'R':
+        return False
     try:
-        if level == 'R':
-            compiled = pattern
-        else:
-            compiled = re.compile(pattern)
+        compiled = re.compile(pattern)
     except:
         raise(Exception("Invalid regular expression in line '%s'" % line))
     if level not in [ 'R','C', 'W', 'I', 'O' ]:
@@ -93,15 +92,28 @@ def read_config():
     config = []
     # Line starts with whitespace -> pattern line
     # otherwise -> file name line
+    count_lines = 1
+    max_lines = len(config_lines)
     for line in config_lines:
+        rewrite = False
         if line[0].isspace():
             if not have_filenames:
                 raise Exception("Missing logfile names")
-            patterns.append(parse_pattern(line))
+            if count_lines < max_lines:
+                try:
+                    level, tmp_rewrite = config_lines[count_lines].split(None,1)
+                except:
+                    level = "Nein"
+                if level == 'R':
+                    rewrite = tmp_rewrite
+            pattern = parse_pattern(line)
+            if pattern:
+                patterns.append((pattern[0], pattern[1], rewrite))
         else:
             patterns = []
             config.append((parse_filenames(line), patterns))
             have_filenames = True
+        count_lines += 1
     return config
 
 # structure of statusfile
@@ -211,23 +223,18 @@ def process_logfile(logfile, patterns):
             break
 
         level = "."
-        pattern_pos = 0
         log_line = line[:-1]
-        for lev, pattern in patterns:
-            pattern_pos += 1
-
+        for lev, pattern, replace in patterns:
             if pattern.search(line[:-1]):
                 level = lev
-                if level == 'R':
-                    pass
                 levelint = {'C': 2, 'W': 1, 'O': 0, 'I': -1, '.': -1}[lev]
                 worst = max(levelint, worst)
-                nxt_lev, new_message = patterns[pattern_pos]
-                if nxt_lev == "R":
-                    matche = pattern.match(log_line)
+                if replace:
+                    matches = pattern.match(log_line)
                     replace_count = 1
-                    for replace in matche.groups():
-                        new_message = new_message.replace('\%d' % replace_count, replace)
+                    new_message = log_line
+                    for replacement in matches.groups():
+                        new_message = new_message.replace('\%d' % replace_count, replacement)
                         replace_count += 1
                     log_line = new_message 
                 break

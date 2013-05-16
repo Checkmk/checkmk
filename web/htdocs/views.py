@@ -1999,7 +1999,7 @@ def allowed_for_joined_datasource(collection, datasourcename):
 
 def is_joined_value(collection, varname):
     selected_label = [ label for name, label in collection if name == html.var(varname, '') ]
-    return selected_label and selected_label[0][:8] == _('SERVICE:')
+    return selected_label and selected_label[0].startswith(_('SERVICE:'))
 
 def collist_of_collection(collection, join_target = []):
     def sort_list(l):

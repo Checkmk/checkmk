@@ -232,9 +232,9 @@ def process_logfile(logfile, patterns):
                 if replace:
                     matches = pattern.match(log_line)
                     replace_count = 1
-                    new_message = replace 
+                    new_message = replace.replace('\\0', log_line)
                     for replacement in matches.groups():
-                        new_message = new_message.replace('\%d' % replace_count, replacement)
+                        new_message = new_message.replace('\\%d' % replace_count, replacement)
                         replace_count += 1
                     log_line = new_message 
                 break

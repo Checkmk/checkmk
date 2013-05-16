@@ -126,6 +126,7 @@
       for each logfile on a host
     * Configuration of an alternativ host check command
     * Inventory: Display link symbol for ps ruleset
+    * New rule for notification_options of hosts and services
     * FIX: Rulesets: correct display of rules within subfolders
 
 

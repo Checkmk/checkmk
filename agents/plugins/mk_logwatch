@@ -73,10 +73,13 @@ def parse_filenames(line):
 def parse_pattern(line):
     level, pattern = line.split(None, 1)
     try:
-        compiled = re.compile(pattern)
+        if level == 'R':
+            compiled = pattern
+        else:
+            compiled = re.compile(pattern)
     except:
         raise(Exception("Invalid regular expression in line '%s'" % line))
-    if level not in [ 'C', 'W', 'I', 'O' ]:
+    if level not in [ 'R','C', 'W', 'I', 'O' ]:
         raise(Exception("Invalid pattern line '%s'" % line))
     return (level, compiled)
 
@@ -208,14 +211,29 @@ def process_logfile(logfile, patterns):
             break
 
         level = "."
+        pattern_pos = 0
+        log_line = line[:-1]
         for lev, pattern in patterns:
+            pattern_pos += 1
+
             if pattern.search(line[:-1]):
                 level = lev
+                if level == 'R':
+                    pass
                 levelint = {'C': 2, 'W': 1, 'O': 0, 'I': -1, '.': -1}[lev]
                 worst = max(levelint, worst)
+                nxt_lev, new_message = patterns[pattern_pos]
+                if nxt_lev == "R":
+                    matche = pattern.match(log_line)
+                    replace_count = 1
+                    for replace in matche.groups():
+                        new_message = new_message.replace('\%d' % replace_count, replace)
+                        replace_count += 1
+                    log_line = new_message 
                 break
+
         color = {'C': tty_red, 'W': tty_yellow, 'O': tty_green, 'I': tty_blue, '.': ''}[level]
-        outputtxt += "%s%s %s%s\n" % (color, level, line[:-1], tty_normal)
+        outputtxt += "%s%s %s%s\n" % (color, level, log_line, tty_normal)
 
     new_offset = os.lseek(fl, 0, 1) # os.SEEK_CUR not available in Python 2.4
     status[logfile] = new_offset, inode

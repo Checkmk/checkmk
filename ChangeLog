@@ -100,6 +100,7 @@
                         Uses WATO Rule "TCP connection stats (Windows)"
     * windows_agent: fixed timeouts for powershell scripts in local/plugins
     * logwatch: Agent can now use logwatch.d/ to split config to multipe files
+    * logwatch: Agent can now rewrite Messages
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

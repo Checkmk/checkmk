@@ -5527,7 +5527,7 @@ def mode_edit_configvar(phase):
         check_mk_vars = check_mk_local_automation("get-configuration", [], [varname])
         value = check_mk_vars.get(varname, valuespec.default_value())
 
-    html.begin_form("value_editor")
+    html.begin_form("value_editor", method="POST")
     forms.header(valuespec.title())
     if not config.wato_hide_varnames:
         forms.section(_("Variable for <tt>%s.mk</tt>" %

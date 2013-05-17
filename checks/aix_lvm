@@ -69,6 +69,9 @@ def parse_aix_lvm(info):
        if len(line) == 1:
            vgname = line[0][:-1]
            lvmconf.update({ vgname : {} })
+       # Some versions send a title line "LV NAME  ..."
+       elif line[0] == "LV" and line[1] == "NAME":
+           continue
        else:
            lv, lvtype, num_lp, num_pp, num_pv, act_state, mountpoint = line
            # split lv state into two relevant values

@@ -8,6 +8,7 @@
     * FIX: f5_bigip_vserver: fix wrong OID (13 instead of 1), thanks to Miro Ramza
     * FIX: f5_bigip_psu: handle more than first power supply, thanks to Miro Ramza
     * FIX: ipmi_sensors: ignore sensors in state [NA] (not available)
+    * FIX: aix_lvm: handle agents that output an extra header line
 
     Multisite:
     * List of views: Output the alias of a datasource instead of internal name

@@ -24,16 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+def apache_status_open_slots(value, params):
+    warn, crit = params
+    extra_perf = [ warn, crit ]
+    if value <= crit:
+        return 2, "(!!)", extra_perf
+    elif value <= warn:
+        return 1, "(!)", extra_perf
+    else:
+        return 0, "", extra_perf
+
 apache_status_fields = {
-    # key           sort  convert-func
+    # key           sort  convert-func param_function
     'Uptime':         (0,  int),
     'IdleWorkers':    (5,  int),
     'BusyWorkers':    (6,  int),
-    'OpenSlots':      (7,  int),
+    'OpenSlots':      (7,  int,        apache_status_open_slots),
     'TotalSlots':     (8,  int),
     'Total Accesses': (9,  int),
-    'CPULoad':        (10,  float),
-    'Total kBytes':   (11,  float),
+    'CPULoad':        (10, float),
+    'Total kBytes':   (11, float),
     'ReqPerSec':      (12, float),
     'BytesPerReq':    (13, float),
     'BytesPerSec':    (14, float),
@@ -85,19 +96,19 @@ def inventory_apache_status(info):
     data = apache_status_parse(info)
     inv = []
     for item in data.keys():
-        inv.append((item, None))
+        inv.append((item, {}))
     return inv
 
-def check_apache_status(item, _no_params, info):
+def check_apache_status(item, params, info):
     all_data = apache_status_parse(info)
     if item not in all_data:
         return (3, 'Unable to find instance in agent output')
     data_dict = all_data[item]
     data = data_dict.items()
 
-    status    = 0
-    output    = []
-    perfdata  = []
+    worst_state = 0
+    output      = []
+    perfdata    = []
 
     # Sort keys
     data.sort(cmp = lambda x, y: cmp(apache_status_fields.get(x[0], (0, None))[0],
@@ -124,15 +135,22 @@ def check_apache_status(item, _no_params, info):
             display_value = '%0.2f' % value
         else:
             display_value = '%d' % value
+        
+        extra_info = ""
+        extra_perf = []
+        if params.get(key) and len(apache_status_fields[key]) > 2:
+            key_state, extra_info, extra_perf = apache_status_fields[key][2](value, params.get(key))
+            worst_state = max(key_state, worst_state)
 
-        output.append('%s: %s' % (key, display_value))
-        perfdata.append((key.replace(' ', '_'), value))
+        output.append('%s: %s%s' % (key, display_value, extra_info))
+        perfdata.append(tuple([key.replace(' ', '_'), value] + extra_perf))
 
-    return (status, ', '.join(output), perfdata)
+    return (worst_state, ', '.join(output), perfdata)
 
 check_info['apache_status'] = {
     "check_function" :      check_apache_status,
     "inventory_function" :  inventory_apache_status,
     "service_description" : "Apache %s Status",
     "has_perfdata" :        True,
+    "group" :               "apache_status"
 }

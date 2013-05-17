@@ -612,6 +612,7 @@ VARDIR=$mkeventdstatedir
 CONFDIR=$confdir
 MKEVENTD_SYSLOG=off
 RUNUSER=$nagiosuser
+LIVESTATUS=$livesock
 # DEBUG="--debug --foreground"
 
 PIDFILE=\$SOCKETDIR/pid

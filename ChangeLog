@@ -36,6 +36,7 @@
     * New rule feature: automatically delete event after actions
     * New filter for maximum services level (minimum already existed)
     * New global setting: hostname translation (allows e.g. to drop domain name)
+    * New rule match: only apply rule within specified time period
 
     Checks & Agents:
     * solaris_mem: New check for memory and swap for Solaris agent
@@ -101,6 +102,7 @@
     * windows_agent: fixed timeouts for powershell scripts in local/plugins
     * logwatch: Agent can now use logwatch.d/ to split config to multipe files
     * logwatch: Agent can now rewrite Messages
+    * apache_status: New rule: set levels for number of remaining open slots
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid
@@ -138,9 +140,11 @@
     * FIX: f5_bigip_vserver: fix wrong OID (13 instead of 1), thanks to Miro Ramza
     * FIX: f5_bigip_psu: handle more than first power supply, thanks to Miro Ramza
     * FIX: ipmi_sensors: ignore sensors in state [NA] (not available)
+    * FIX: aix_lvm: handle agents that output an extra header line
 
     Multisite:
     * List of views: Output the alias of a datasource instead of internal name
+    * FIX: fix column editor for join columns if "SERVICE:" is l10n'ed
 
     WATO:
     * FIX: convert editing of global setting to POST. This avoid URL-too-long

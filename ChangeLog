@@ -101,6 +101,7 @@
     * windows_agent: fixed timeouts for powershell scripts in local/plugins
     * logwatch: Agent can now use logwatch.d/ to split config to multipe files
     * logwatch: Agent can now rewrite Messages
+    * apache_status: New rule: set levels for number of remaining open slots
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid

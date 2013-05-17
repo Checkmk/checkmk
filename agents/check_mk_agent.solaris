@@ -64,15 +64,17 @@ else
     pszone="-A"
 fi
 
+
+# Filesystem usage for UFS and VXFS
 echo '<<<df>>>'
 for fs in ufs vxfs
 do
-   df -lk -F $fs 2>/dev/null | sed 1d | \
-   while read Filesystem kbytes used avail capacity Mountedon
-   do
-      kbytes=$(($used + $avail))
-      echo "$Filesystem $fs $kbytes $used $avail $capacity $Mountedon"
-   done
+    df -l -k -F $fs 2>/dev/null | sed 1d | \
+    while read Filesystem kbytes used avail capacity Mountedon
+    do
+        kbytes=$(($used + $avail))
+        echo "$Filesystem $fs $kbytes $used $avail $capacity $Mountedon"
+    done
 done
 
 # Filesystem usage for ZFS
@@ -81,27 +83,27 @@ then
     echo '<<<zfsget>>>'
     zfs get -Hp name,quota,used,avail,mountpoint,type
     echo '[df]'
-    df -lk -F zfs | sed 1d
+    df -l -k -F zfs 2>/dev/null | sed 1d
 fi
+
 
 # Processes
 echo '<<<ps>>>'
 ps -o user,vsz,rss,pcpu,args $pszone | \
 sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
-# You need statgrab to be installed.
-# You'll find it here: http://www.i-scream.org/libstatgrab/
-# Or install pre-built packages from: http://www.opencsw.org/
-# and append /opt/csw/bin to this scripts PATH.
 
+# Statgrab
+# source: http://www.i-scream.org/libstatgrab/
+# binary: http://www.opencsw.org/
 if type statgrab &>/dev/null
 then
-
     statgrab_vars="const. cpu. disk. general. mem. page. proc. swap. user."
     statgrab_sections="proc cpu disk page"
 
-    # Only collect net stats if we are in the global zone.
-    if [ "$zonename" == "global" ]; then
+    # Only collect net stats in global zone.
+    if [ "$zonename" == "global" ]
+    then
         statgrab_vars="$statgrab_vars net."
         statgrab_sections="$statgrab_sections net"
     fi
@@ -120,24 +122,28 @@ then
 fi
 
 
-# Output of cpu from Linux agent simulated
-# (Thanks to Cameron Pierce)
+# /proc/cpu
+# Simulated Output of Linux /proc/cpu
 echo '<<<cpu>>>'
 load=$(uptime|sed -e 's;.*average: \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\).*;\1 \2 \3;')
 ps=$(($(ps -o comm $pszone | wc -l)))
 procs=$(($(psrinfo | wc -l)))
 echo $load 1/$ps $$ $procs
 
-# check zpool status
+
+# zpool status
 if [ -x /sbin/zpool ]; then
     echo "<<<zpool_status>>>"
     /sbin/zpool status -x
 fi
 
-# Uptime compatible with Linux format
+
+# /proc/uptime
+# Simulated output of Linux /proc/uptime
 echo '<<<uptime>>>'
+proc0=$(ls -td  /proc/* | tail -1)
 ctime=$(nawk 'BEGIN{print srand()}')
-btime=$(truss -v lstat -t lstat ls -ld /proc/0 2>&1 | awk '/ct = /{print $9}' | cut -d. -f1)
+btime=$(truss -v lstat -t lstat ls -d $proc0 2>&1 | nawk '/ct = /{printf "%d\n", $9}')
 echo $(($ctime - $btime))
 
 
@@ -149,6 +155,7 @@ then
     ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 fi
 
+
 # Memory
 if [ -x /usr/bin/top ]
 then
@@ -156,10 +163,11 @@ then
     /usr/bin/top | grep '^Memory:'
 fi
 
+
 # TCP Connection stats
 echo '<<<tcp_conn_stats>>>'
 netstat -n -a -f inet -P tcp | tail  +5 | \
-awk '{ c[$7]++; } END { for (x in c) { print x, c[x]; } }'
+nawk '{ c[$7]++; } END { for (x in c) { print x, c[x]; } }'
 
 
 # Multipathing
@@ -168,9 +176,9 @@ then
     if [ "$zonename" == "global" ]
     then
         echo '<<<solaris_multipath>>>'
-        mpathadm list LU | awk '{if(NR%3==1){dev=$1}
-                                 if(NR%3==2){tc=$NF}
-                                 if(NR%3==0){printf "%s %s %s\n",dev,tc,$NF}}'
+        mpathadm list LU | nawk '{if(NR%3==1){dev=$1}
+                                  if(NR%3==2){tc=$NF}
+                                  if(NR%3==0){printf "%s %s %s\n",dev,tc,$NF}}'
     fi
 fi
 
@@ -187,14 +195,14 @@ fi
 
 
 # Fileinfo-Check: put patterns for files into $MK_CONFDIR/fileinfo.cfg
-echo '<<<fileinfo:sep(124)>>>'
 if [ -f "$MK_CONFDIR/fileinfo.cfg" ]
 then
+    echo '<<<fileinfo:sep(124)>>>'
     echo ''
     nawk 'BEGIN{print srand()}'
     file=$(ls $(cat "$MK_CONFDIR/fileinfo.cfg"))
-    size=$(ls -nl $file | awk '{print $5}')
-    date=$(truss -v lstat -t lstat ls -l $file 2>&1 | grep mt | awk '{print $9}'| cut -d. -f1)
+    size=$(ls -nl $file | nawk '{print $5}')
+    date=$(truss -v lstat -t lstat ls -d $file 2>&1 | nawk '/mt = /{printf "%d\n", $9}')
     echo ${file}'|'${size}'|'${date}
 fi
 

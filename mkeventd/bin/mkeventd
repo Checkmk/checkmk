@@ -259,7 +259,7 @@ g_last_timeperiod_update = 0
 def update_timeperiods():
     global g_timeperiods, g_last_timeperiod_update
 
-    if g_timeperiods != None and time.time() < g_last_config_reload + 60:
+    if g_timeperiods != None and int(time.time()) / 60 == g_last_timeperiod_update:
         return # only update once a minute
     log("Updating timeperiod information")
 
@@ -274,7 +274,7 @@ def update_timeperiods():
         for tpname, alias, isin in table:
             new_timeperiods[tpname] = (alias, isin == '1' and True or False)
         g_timeperiods = new_timeperiods
-        g_last_timeperiod_update = time.time()
+        g_last_timeperiod_update = int(time.time()) / 60
     except Exception, e:
         log("Cannot update timeperiod information: %s" % e)
         if opt_debug:

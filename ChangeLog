@@ -36,6 +36,7 @@
     * New rule feature: automatically delete event after actions
     * New filter for maximum services level (minimum already existed)
     * New global setting: hostname translation (allows e.g. to drop domain name)
+    * New rule match: only apply rule within specified time period
 
     Checks & Agents:
     * solaris_mem: New check for memory and swap for Solaris agent

@@ -241,6 +241,60 @@ class VerboseLock:
 
 
 #.
+#   .--Timeperiods---------------------------------------------------------.
+#   |      _____ _                                _           _            |
+#   |     |_   _(_)_ __ ___   ___ _ __   ___ _ __(_) ___   __| |___        |
+#   |       | | | | '_ ` _ \ / _ \ '_ \ / _ \ '__| |/ _ \ / _` / __|       |
+#   |       | | | | | | | | |  __/ |_) |  __/ |  | | (_) | (_| \__ \       |
+#   |       |_| |_|_| |_| |_|\___| .__/ \___|_|  |_|\___/ \__,_|___/       |
+#   |                            |_|                                       |
+#   +----------------------------------------------------------------------+
+#   |  Timeperiods are used in rule conditions                             |
+#   '----------------------------------------------------------------------'
+
+# Dictionary from name to True/False (active / inactive)
+g_timeperiods = None
+g_last_timeperiod_update = 0
+
+def update_timeperiods():
+    global g_timeperiods, g_last_timeperiod_update
+
+    if g_timeperiods != None and time.time() < g_last_config_reload + 60:
+        return # only update once a minute
+    log("Updating timeperiod information")
+
+    try:
+        livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        livesock.connect(g_livestatus_socket)
+        livesock.send("GET timeperiods\nColumns: name alias in\n") 
+        livesock.shutdown(socket.SHUT_WR)
+        answer = livesock.recv(10000000)
+        table = [ line.split(';') for line in answer.split('\n')[:-1] ]
+        new_timeperiods = {}
+        for tpname, alias, isin in table:
+            new_timeperiods[tpname] = (alias, isin == '1' and True or False)
+        g_timeperiods = new_timeperiods
+        g_last_timeperiod_update = time.time()
+    except Exception, e:
+        log("Cannot update timeperiod information: %s" % e)
+        if opt_debug:
+            raise
+
+def check_timeperiod(tpname): 
+    update_timeperiods()
+    if not g_timeperiods:
+        log("Warning: no timeperiod information. Assuming %s active" % tpname)
+        return True
+
+    elif tpname not in g_timeperiods:
+        log("Warning: no such timeperiod %s. Assume to active" % tpname)
+        return True
+
+    else:
+        return g_timeperiods[tpname][1]
+
+
+#.
 #   .--Daemonize-----------------------------------------------------------.
 #   |          ____                                   _                    |
 #   |         |  _ \  __ _  ___ _ __ ___   ___  _ __ (_)_______            |
@@ -1354,6 +1408,11 @@ class EventServer:
             if "match_facility" in rule and event["facility"] != rule["match_facility"]:
                 if debug:
                     log("  did not match because of wrong syslog facility")
+                return False
+
+            if "match_timeperiod" in rule and not check_timeperiod(rule["match_timeperiod"]):
+                if debug:
+                    log("  did not match, because timeperiod %s is not active" % rule["match_timeperiod"])
                 return False
 
             if "match_ok" in rule or "cancel_priority" in rule:
@@ -2729,6 +2788,7 @@ def usage():
    -C, --configdir      Path to directory where mkevent.mk lives
    -S, --socket P       Path to unix socket for querying status
    -E, --eventsocket P  Path to unix socket for receiving events (optional)
+   -L, --livestatus P   Path to livestatus socket of monitoring core (optional)
    -P, --pipe P         Path to pipe for receiving events
    --syslog             Enable builtin syslog server
    --syslog-fd FD       Do not open UDP port 514, but inherit it via this FD
@@ -2742,13 +2802,14 @@ def usage():
         sys.stdout.write("""You are running OMD, which is generally a good idea. 
 The following defaults are set:
 
-  Config dir:   %(g_config_dir)s
-  Unix socket:  %(g_socket_path)s
-  Event socket: %(g_eventsocket_path)s
-  Event Pipe:   %(g_pipe_path)s
-  PID file:     %(g_pid_file)s
-  Log file:     %(g_logfile_path)s
-  Status dir:   %(g_state_dir)s
+  Config dir:       %(g_config_dir)s
+  Unix socket:      %(g_socket_path)s
+  Event socket:     %(g_eventsocket_path)s
+  Livestatus socket %(g_livestatus_socket)s
+  Event Pipe:       %(g_pipe_path)s
+  PID file:         %(g_pid_file)s
+  Log file:         %(g_logfile_path)s
+  Status dir:       %(g_state_dir)s
 
 """ % globals())
 
@@ -2781,27 +2842,29 @@ opt_syslog_fd     = None
 # Set default values for options
 omd_root = os.getenv("OMD_ROOT")
 if omd_root:
-    g_config_dir       = omd_root + "/etc/check_mk"
-    g_socket_path      = omd_root + "/tmp/run/mkeventd/status"
-    g_eventsocket_path = omd_root + "/tmp/run/mkeventd/eventsocket"
-    g_pipe_path        = omd_root + "/tmp/run/mkeventd/events"
-    g_pid_file         = omd_root + "/tmp/run/mkeventd/pid"
-    g_logfile_path     = omd_root + "/var/log/mkeventd.log"
-    g_state_dir        = omd_root + "/var/mkeventd"
+    g_config_dir        = omd_root + "/etc/check_mk"
+    g_socket_path       = omd_root + "/tmp/run/mkeventd/status"
+    g_eventsocket_path  = omd_root + "/tmp/run/mkeventd/eventsocket"
+    g_livestatus_socket = omd_root + "/tmp/run/live"
+    g_pipe_path         = omd_root + "/tmp/run/mkeventd/events"
+    g_pid_file          = omd_root + "/tmp/run/mkeventd/pid"
+    g_logfile_path      = omd_root + "/var/log/mkeventd.log"
+    g_state_dir         = omd_root + "/var/mkeventd"
 else:
-    g_config_dir       = "/etc/check_mk"
-    g_socket_path      = None
-    g_eventsocket_path = None
-    g_pipe_path        = None
-    g_pid_file         = "/var/run/mkeventd.pid"
-    g_logfile_path     = "/var/log/mkeventd.log"
-    g_state_dir        = "/var/lib/mkeventd"
+    g_config_dir        = "/etc/check_mk"
+    g_socket_path       = None
+    g_eventsocket_path  = None
+    g_livestatus_socket = None
+    g_pipe_path         = None
+    g_pid_file          = "/var/run/mkeventd.pid"
+    g_logfile_path      = "/var/log/mkeventd.log"
+    g_state_dir         = "/var/lib/mkeventd"
 
 
-short_options = "hvVgS:P:p:C:E:"
+short_options = "hvVgS:P:p:C:E:L:"
 long_options = [ "help", "version", "verbose", "debug", "foreground", "socket=", "eventsocket=", "pipe=",
                  "pidfile=", "statedir=", "configdir=", "logdir=", "profile-status", "profile-event", "debug-locking",
-                 "syslog", "syslog-fd=" ]
+                 "syslog", "syslog-fd=", "livestatus=" ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -2820,6 +2883,8 @@ try:
             g_socket_path = a
         elif o in [ '-E', '--eventsocket' ]:
             g_eventsocket_path = a
+        elif o in [ '-L', '--livestatus' ]:
+            g_livestatus_socket = a
         elif o in [ '-P', '--pipe' ]:
             g_pipe_path = a
         elif o == '--syslog':

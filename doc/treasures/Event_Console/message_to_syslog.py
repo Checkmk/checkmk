@@ -23,13 +23,31 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+#
+# This Script enables the sending of messages to a upd syslog server
+# like the integrated syslogserver of mkeventd.
+#
+# Bastian Kuhn, bk@mathias-kettner.de
+import time
+import socket
+import sys
 
-check_info["viprinet_serial"] = {
-    'check_function'        : lambda _no_item, _no_params, info: (0, info[0][0]),
-    'inventory_function'    : lambda info: len(info) > 0 and [(None, None)] or [],
-    'service_description'   : "Serial Number",
-    'has_perfdata'          : False,
-    'snmp_info'             : (".1.3.6.1.4.1.35424.1.1", [2]),
-    'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.35424"],
-}
+if len(sys.argv) < 6:
+    print 'This script sends a message via upd to a syslogserver'
+    print 'Usage: %s SYSLOGSERVER HOSTNAME PRIO APPLICATION "MESSAGE"' % sys.argv[0]
+    sys.exit()
+
+host        = sys.argv[1]
+event_host  = sys.argv[2]
+prio        = sys.argv[3]
+application = sys.argv[4]
+message     = sys.argv[5]
+
+port = 514
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+sock.connect((host, port))
+timestamp = time.strftime("%b %d %H:%M:%S", time.localtime(time.time()))
+sock.send("<%s>%s %s %s: %s\n" % (prio, timestamp, event_host, application,  message))
+sock.close()
 

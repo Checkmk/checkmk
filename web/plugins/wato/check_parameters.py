@@ -982,9 +982,56 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_applications,
+    "apache_status",
+    ("Apache Status"),
+    Dictionary(
+        elements = [
+            ( "OpenSlots",
+              Tuple(
+                  title = _("Remaining Open Slots"),
+                  help = _("Here you can set the number of remaining open slots"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("slots")),
+                      Integer(title = _("Critical at"), label = _("slots"))
+                  ]
+              )
+            )
+        ]
+    ),
+    TextAscii(
+        title = _("Apache Server"),
+        help  = _("A string-combination of servername and port, e.g. 127.0.0.1:5000.")
+    ),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_networking,
+    "tcp_conn_stats_win",
+    ("TCP connection stats (Windows)"),
+    Dictionary(
+        elements = [
+            ( "ESTABLISHED",
+              Tuple(
+                  title = _("ESTABLISHED"),
+                  help = _("connection up and passing data"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            )
+        ]
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
     subgroup_networking,
     "tcp_conn_stats",
-    ("TCP connection stats"),
+    ("TCP connection stats (LINUX / UNIX)"),
     Dictionary(
         elements = [
             ( "ESTABLISHED",

@@ -1,0 +1,170 @@
+#!/usr/bin/python
+import time
+import os
+import sys
+import smtplib
+import poplib
+import re
+import random
+
+
+omd_root = os.environ.get('OMD_ROOT')
+global statusfile
+statusfile = "%s/var/check_mk/mail.status" % omd_root
+pop_server = "" 
+pop_user   = ""
+pop_pass   = ""
+sender    = ""
+receiver  =  "echo@tu-berlin.de"
+
+
+now = time.time()
+state = 0
+msg = ""
+
+def load_stat():
+    global stat
+    try:
+        stat = eval(file(statusfile).read())
+    except:
+        stat = {}
+
+
+def save_stat():
+    file(statusfile, "w").write("%s" % str(stat))
+
+##### Abholen #####
+
+
+# POP Verbindung
+M = poplib.POP3_SSL(pop_server)
+#M = poplib.POP3(pop_server)
+M.user(pop_user)
+M.pass_(pop_pass)
+
+load_stat()
+
+server_ids = []
+
+numMessages = len(M.list()[1])
+
+pattern = re.compile(r"^Subject: Re: Check_MK-Loop (.*)")
+for i in range(numMessages):
+    for header_lines in M.top(i+1, 0)[1]:
+        #print header_lines
+        subject = pattern.findall(header_lines)
+        if len(subject) > 0:
+            id = subject[0].split(" ")[0]
+            if id.isdigit():
+                server_ids.append(int(id))
+
+# OK:
+#    Wenn die Mail da ist und juenger als 20 min
+#    Wenn die Mail nicht da ist und vor weniger als 20 Min geschickt wurde
+# CRIT:
+#     Wenn die Mail da ist und aelter als 60 min
+#     Wenn die Mail nicht da ist und vor mehr als einer Stunde geschickt wurde
+# WARN:
+#     Wenn die Mail da ist und aelter als 20 min
+
+num_expected = 0
+for local_id, local_time in stat.items():
+    num_expected += 1
+    age = now - local_time
+
+    # Ist diese Mail auf dem Server vorhanden?
+    if local_id in server_ids:
+        if   age < 1200:
+             state =  max(state, 0)
+        elif age > 3600:
+             state =  max(state, 2)
+             msg = msg + "A message took more than 1 hour to deliver!! "
+        elif age > 1200:
+             state =  max(state, 1)
+             msg = msg + "A message took more than 20 minutes to deliver! "
+
+
+        # Wir merken uns, dass wir diese Mail schon gesehen haben
+        del stat[local_id]
+        save_stat()
+        continue
+
+    elif age > 3600:
+        state = max(state, 2)
+        # There might be a small race here.
+        msg = msg + "A message did not arrive in more than one hour!! "
+        # Mail kam nicht. Wir vergessen sie und erwarten sie nicht mehr
+        del stat[local_id]
+        save_stat()
+
+    elif age < 1200:
+        # Mail noch nicht da. Macht aer nix, die hat noch Zeit
+        num_expected -= 1
+        pass
+
+    else:
+        msg =  msg + "Unknown error in mail statistics data "
+        if state != 2:
+            state = 3 # UNKNOWN should not override CRIT
+
+
+# Bestellte und nicht abgeholte Mails loeschen, damit das Postfach nicht
+# vollaeuft.
+try:
+    popstate, msglist, code = M.list()
+    for entry in msglist:
+        msgid, size = entry.split()
+        response = M.dele(msgid)
+        if response != "+OK":
+            raise Exception("Error response from POP server: [%s]" % response)
+            break
+
+except Exception, e:
+    msg = msg + "Error deleting message: %s" % e
+    state = 2
+
+
+# Trennen der Verbindung
+M.quit()
+
+##### Senden #####
+# Erfolgt ueber lokalen Server da mittels
+# SMTP-Postfach keine weiteren Teile geprueft wuerden.
+
+
+load_stat()
+new_id = random.randrange(1, 1000000000000000000)
+
+smtp_message = """From: CheckMK <%s>
+To: echo server <%s>
+Subject: Check_MK-Loop %d %s
+
+
+""" % (sender, receiver, new_id, now)
+
+stat[new_id] = now
+save_stat()
+
+try:
+    smtp = smtplib.SMTP('localhost')
+    smtp.sendmail(sender, receiver, smtp_message)
+    smtp.quit()
+
+except:
+    msg = "smtp error!!" + msg
+    state = max(state, 3)
+
+# Give result
+if state == 2:
+    print "CRITICAL - " + msg
+elif state == 1:
+    print "WARNING - " + msg
+elif state == 0:
+    if num_expected:
+        print "OK - all %d expected Mails returned on time" % num_expected
+    else:
+        print "OK - no mails expected yet"
+elif state == 3:
+    print "UNKNOWN - " + msg
+
+sys.exit(state)

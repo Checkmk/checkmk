@@ -24,12 +24,51 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_info["viprinet_serial"] = {
-    'check_function'        : lambda _no_item, _no_params, info: (0, info[0][0]),
-    'inventory_function'    : lambda info: len(info) > 0 and [(None, None)] or [],
-    'service_description'   : "Serial Number",
-    'has_perfdata'          : False,
-    'snmp_info'             : (".1.3.6.1.4.1.35424.1.1", [2]),
-    'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.35424"],
+# Example output from agent:
+# <<<winperf_tcp_conn>>>
+# 1368619819.06 638
+# 2 53267 counter
+# 4 3 rawcount
+# 6 23 rawcount
+# 8 1 rawcount
+# 10 1 rawcount
+# 12 12 rawcount
+# 14 34830 counter
+# 16 18437 counter
+
+def inventory_winperf_tcp_conn(info):
+    return [ (None, {}) ]
+
+def check_winperf_tcp_conn(item, params, info):
+    fields = [
+                ( 2, "Established", "ESTABLISHED" ),
+             ]
+    infotext    = ""
+    worst_state = 0
+    perfdata    = []
+    for offset, name, param_key in fields:
+        value = saveint(info[offset][1])
+        infotext += "%s: %s" % (name, value)
+        warn, crit = "", ""
+        if params.get(param_key):
+            warn, crit = params.get(param_key)
+            if value >= crit:
+                worst_state = 2
+                infotext += "(!!) (critical at %d)" % crit
+            elif value >= warn:
+                worst_state = max(1, worst_state)
+                infotext += "(!) (warning at %d)" % warn
+            infotext += ", "
+        perfdata.append( (name, value, warn, crit) )
+             
+    infotext = infotext[:-2]
+    return worst_state, infotext, perfdata
+
+check_info["winperf_tcp_conn"] = {
+    'check_function':          check_winperf_tcp_conn,
+    'inventory_function':      inventory_winperf_tcp_conn,
+    'service_description':     'TCP connections',
+    'has_perfdata':            True,
+    'group':                   'tcp_conn_stats_win',
 }
 

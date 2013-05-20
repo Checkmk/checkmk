@@ -36,6 +36,7 @@
     * New rule feature: automatically delete event after actions
     * New filter for maximum services level (minimum already existed)
     * New global setting: hostname translation (allows e.g. to drop domain name)
+    * New rule match: only apply rule within specified time period
 
     Checks & Agents:
     * solaris_mem: New check for memory and swap for Solaris agent
@@ -94,6 +95,14 @@
                        router mode, serialnumber and temperature sensors
     * uptime, snmp_uptime, esx_vsphere_counters.uptime: allow to set lower and upper levels
     * winperf_processor: Now displays (and scales) to number of cpus in pnpgraph
+    * mk_postgres plugin: replace select * with list of explicit columns (fix for PG 9.1)
+    * lnx_if: show MAC address for interfaces (needs also agent update)
+    * winperf_tcp_conn: New check. Displays number of established tcpv4 connections in windows
+                        Uses WATO Rule "TCP connection stats (Windows)"
+    * windows_agent: fixed timeouts for powershell scripts in local/plugins
+    * logwatch: Agent can now use logwatch.d/ to split config to multipe files
+    * logwatch: Agent can now rewrite Messages
+    * apache_status: New rule: set levels for number of remaining open slots
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid
@@ -120,6 +129,7 @@
       for each logfile on a host
     * Configuration of an alternativ host check command
     * Inventory: Display link symbol for ps ruleset
+    * New rule for notification_options of hosts and services
     * FIX: Rulesets: correct display of rules within subfolders
     * Remove Notification Command user settings, please use flexible notifications instead
 
@@ -128,7 +138,18 @@
     Checks & Agents:
     * FIX: jolokia_info: ignore ERROR instances
     * FIX: apache_status: use (also) apache_status.cfg instead of apache_status.conf
-     
+    * FIX: f5_bigip_vserver: fix wrong OID (13 instead of 1), thanks to Miro Ramza
+    * FIX: f5_bigip_psu: handle more than first power supply, thanks to Miro Ramza
+    * FIX: ipmi_sensors: ignore sensors in state [NA] (not available)
+    * FIX: aix_lvm: handle agents that output an extra header line
+
+    Multisite:
+    * List of views: Output the alias of a datasource instead of internal name
+    * FIX: fix column editor for join columns if "SERVICE:" is l10n'ed
+
+    WATO:
+    * FIX: convert editing of global setting to POST. This avoid URL-too-long
+      when defining lots of Event Console actions
 
 1.2.2p1:
     Core:

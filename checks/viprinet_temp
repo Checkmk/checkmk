@@ -51,6 +51,6 @@ check_info["viprinet_temp"] = {
     'group'                 : "room_temperature",
     'has_perfdata'          : True,
     'snmp_info'             : (".1.3.6.1.4.1.35424.1.2", [3, 4]),
-    'snmp_scan'             : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.35424"],
+    'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.35424"],
 }
 

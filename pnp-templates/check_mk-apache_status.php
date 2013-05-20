@@ -25,51 +25,50 @@
 
 # Copied most parts from the pnp template check_apachestatus_auto.php.
 
-#
-# Worker
-#
-$i=0;
-$def[$i] = "";
-$opt[$i]     = " --title 'Worker'";
-$ds_name[$i] = "Workers";
-$color = '#00ff00';
-foreach ($this->DS as $KEY=>$VAL) {
-    if($VAL['NAME'] == 'IdleWorkers') {
-        $def[$i]    .= rrd::def     ("var".$KEY, $VAL['RRDFILE'], $VAL['DS'], "AVERAGE");
-        $def[$i]    .= rrd::area    ("var".$KEY, $color ,rrd::cut($VAL['NAME'],12), 'STACK' );
-        $def[$i]    .= rrd::gprint  ("var".$KEY, array("LAST","MAX","AVERAGE"), "%6.0lf");
-    }
-}
-$color = '#ff0000';
-foreach ($this->DS as $KEY=>$VAL) {
-    if($VAL['NAME'] == 'BusyWorkers') {
-        $def[$i]    .= rrd::def     ("var".$KEY, $VAL['RRDFILE'], $VAL['DS'], "AVERAGE");
-        $def[$i]    .= rrd::area    ("var".$KEY, $color, rrd::cut($VAL['NAME'],12), 'STACK' );
-        $def[$i]    .= rrd::gprint  ("var".$KEY, array("LAST","MAX","AVERAGE"), "%6.0lf");
-    }
+// Make data sources available via names
+$RRD = array();
+foreach ($NAME as $i => $n) {
+    $RRD[$n] = "$RRDFILE[$i]:$DS[$i]:MAX";
+    $WARN[$n] = $WARN[$i];
+    $CRIT[$n] = $CRIT[$i];
+    $MIN[$n]  = $MIN[$i];
+    $MAX[$n]  = $MAX[$i];
+    $ACT[$n]  = $ACT[$i];
 }
 
-#
-# Slots
-#
-$i++;
-$def[$i] = "";
-$opt[$i]     = " --title 'Slots'";
-$ds_name[$i] = "Slots";
-$color = '#ff0000';
-foreach ($this->DS as $KEY=>$VAL) {
-    if($VAL['NAME'] == 'TotalSlots') {
-        $def[$i]    .= rrd::def     ("var".$KEY, $VAL['RRDFILE'], $VAL['DS'], "AVERAGE");
-        $def[$i]    .= rrd::area    ("var".$KEY, $color,rrd::cut($VAL['NAME'],12) );
-        $def[$i]    .= rrd::gprint  ("var".$KEY, array("LAST","MAX","AVERAGE"), "%6.0lf");
-   }
+$i=0;
+$def[$i]  = "";
+$opt[$i]  = " --title '$hostname: $servicedesc Connections' -l 0";
+
+$def[$i] .= "DEF:varTotal=${RRD['TotalSlots']} "; 
+$def[$i] .= "DEF:varOpen=${RRD['OpenSlots']} "; 
+$def[$i] .= "HRULE:${ACT['TotalSlots']}#000000:\"Total Slots ${ACT['TotalSlots']}\" ";
+
+if ($WARN['OpenSlots'] != 0) {
+    $warn_used= $ACT['TotalSlots'] - $WARN['OpenSlots'];
+    $def[$i] .= "HRULE:$warn_used#FF8B00:\"Warn Used Slots $warn_used\" ";
 }
-$color = '#00ff00';
+if ($CRIT['OpenSlots'] != 0) {
+    $crit_used= $ACT['TotalSlots'] - $CRIT['OpenSlots'];
+    $def[$i] .= "HRULE:$crit_used#DC3609:\"Crit Used Slots $crit_used\" ";
+}
+$def[$i] .= "COMMENT:\"\\n\" ";
+
+
+$def[$i] .= "CDEF:usedslots=varTotal,varOpen,- ";
+$def[$i] .= "GPRINT:usedslots:LAST:\"Used Slots          Last %5.1lf\" ";
+$def[$i] .= "GPRINT:usedslots:MAX:\"Max %5.1lf\" ";
+$def[$i] .= "GPRINT:usedslots:AVERAGE:\"Average %5.1lf\" ";
+$def[$i] .= "COMMENT:\"\\n\" ";
+
 foreach ($this->DS as $KEY=>$VAL) {
-    if($VAL['NAME'] == 'OpenSlots') {
-        $def[$i]    .= rrd::def     ("var".$KEY, $VAL['RRDFILE'], $VAL['DS'], "AVERAGE");
-        $def[$i]    .= rrd::area    ("var".$KEY, $color,rrd::cut($VAL['NAME'],12) );
-        $def[$i]    .= rrd::gprint  ("var".$KEY, array("LAST","MAX","AVERAGE"), "%6.0lf");
+    if(preg_match('/^State_/', $VAL['NAME'])) {
+        $def[$i] .= "DEF:var${KEY}=${VAL['RRDFILE']}:${DS[$VAL['DS']]}:AVERAGE "; 
+        $def[$i] .= "AREA:var${KEY}".rrd::color($KEY).":\"".rrd::cut(substr($VAL['NAME'],6),16) ."\":STACK ";
+        $def[$i] .= "GPRINT:var${KEY}:LAST:\"Last %5.1lf\" ";
+        $def[$i] .= "GPRINT:var${KEY}:MAX:\"Max %5.1lf\" ";
+        $def[$i] .= "GPRINT:var${KEY}:AVERAGE:\"Average %5.1lf\" ";
+        $def[$i] .= "COMMENT:\"\\n\" ";
    }
 }
 
@@ -78,8 +77,7 @@ foreach ($this->DS as $KEY=>$VAL) {
 #
 $i++;
 $def[$i]     = "";
-$opt[$i]     = " --title Requests/sec";
-$ds_name[$i] = "Requests/sec";
+$opt[$i]     = " --title '$hostname: $servicedesc Requests/sec' ";
 $color = '#000000';
 foreach ($this->DS as $KEY=>$VAL) {
     if($VAL['NAME'] == 'ReqPerSec') {
@@ -93,8 +91,7 @@ foreach ($this->DS as $KEY=>$VAL) {
 #
 $i++;
 $def[$i]     = "";
-$opt[$i]     = " --title 'Bytes per Second'";
-$ds_name[$i] = "Bytes/sec";
+$opt[$i]     = " --title '$hostname: $servicedesc Bytes per Second'";
 foreach ($this->DS as $KEY=>$VAL) {
     if($VAL['NAME'] == 'BytesPerSec') {
         $def[$i]    .= rrd::def     ("var".$KEY, $VAL['RRDFILE'], $VAL['DS'], "AVERAGE");
@@ -102,20 +99,4 @@ foreach ($this->DS as $KEY=>$VAL) {
         $def[$i]    .= rrd::gprint  ("var".$KEY, array("LAST","MAX","AVERAGE"), "%6.1lf %sb/s");
     }
 }
-
-#
-# Stats 
-#
-$i++;
-$def[$i]     = "";
-$opt[$i]     = " --title 'Worker States'";
-$ds_name[$i] = "Worker States";
-foreach ($this->DS as $KEY=>$VAL) {
-    if(preg_match('/^State_/', $VAL['NAME'])) {
-        $def[$i]    .= rrd::def     ("var".$KEY, $VAL['RRDFILE'], $VAL['DS'], "AVERAGE");
-        $def[$i]    .= rrd::line1   ("var".$KEY, rrd::color($KEY),rrd::cut($VAL['NAME'],16), 'STACK' );
-        $def[$i]    .= rrd::gprint  ("var".$KEY, array("LAST","MAX","AVERAGE"), "%6.0lf".$VAL['UNIT']);
-   }
-}
-
 ?>

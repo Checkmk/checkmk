@@ -2089,7 +2089,7 @@ void launch_program(SOCKET &out, char *dirname, char *name, bool is_plugin){
     SECURITY_ATTRIBUTES sa;
     SECURITY_DESCRIPTOR sd;   // security information for pipes
     PROCESS_INFORMATION pi;
-    HANDLE newstdin,newstdout,read_stdout,write_stdin;  // pipe handles
+    HANDLE newstdout,read_stdout;  // pipe handles
     
     // initialize security descriptor (Windows NT)
     if (IsWinNT())        
@@ -2103,17 +2103,9 @@ void launch_program(SOCKET &out, char *dirname, char *name, bool is_plugin){
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
     sa.bInheritHandle = true;                       // allow inheritable handles
 
-    // stdin is unused
-    if (!CreatePipe(&newstdin,&write_stdin,&sa,0))  // create stdin pipe
-    {
-      crash_log("Error creating stdin pipe");
-      return; 
-    }
     if (!CreatePipe(&read_stdout,&newstdout,&sa,0)) // create stdout pipe
     {
       crash_log("Error creating stdout pipe");
-      CloseHandle(newstdin);
-      CloseHandle(write_stdin);
       return;
     }
 
@@ -2127,17 +2119,14 @@ void launch_program(SOCKET &out, char *dirname, char *name, bool is_plugin){
     si.wShowWindow = SW_HIDE;
     si.hStdOutput = newstdout;
     si.hStdError = newstdout;     // set the new handles for the child process
-    si.hStdInput = newstdin;
 
     // spawn the child process
     if (!CreateProcess(NULL,command,NULL,NULL,TRUE,CREATE_NEW_CONSOLE,
                        NULL,NULL,&si,&pi))
     {
       crash_log("Error creating process");
-      CloseHandle(newstdin);
       CloseHandle(newstdout);
       CloseHandle(read_stdout);
-      CloseHandle(write_stdin);
       return;
     }
 
@@ -2196,10 +2185,8 @@ void launch_program(SOCKET &out, char *dirname, char *name, bool is_plugin){
     // cleanup the mess
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
-    CloseHandle(newstdin);            
     CloseHandle(newstdout);
     CloseHandle(read_stdout);
-    CloseHandle(write_stdin);
     return;
 }
 

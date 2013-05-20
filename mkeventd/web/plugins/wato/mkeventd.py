@@ -523,6 +523,15 @@ vs_mkeventd_rule = Dictionary(
             ],
           ),
         ),
+        ( "match_timeperiod",
+          TimeperiodSelection(
+              title = _("Match only during timeperiod"),
+              help = _("Match this rule only during times where the selected timeperiod from the monitoring "
+                       "system is active. The Timeperiod definitions are taken from the monitoring core that "
+                       "is running on the same host or OMD site as the event daemon. Please note, that this "
+                       "selection only offers timeperiods that are defined with WATO."),
+          ),
+        ),
         ( "match_ok",
           RegExpUnicode(
             title = _("Text to cancel event"),
@@ -610,13 +619,13 @@ vs_mkeventd_rule = Dictionary(
         ),
     ],
     optional_keys = [ "delay", "livetime", "count", "expect", "match_priority", "match_priority", 
-                      "match_facility", "match_sl", "match_host", "match_application", 
+                      "match_facility", "match_sl", "match_host", "match_application", "match_timeperiod",
                       "set_text", "set_host", "set_application", "set_comment",
                       "set_contact", "cancel_priority", "match_ok" ],
     headers = [
         ( _("General Properties"), [ "id", "description", "disabled" ] ),
         ( _("Matching Criteria"), [ "match", "match_host", "match_application", "match_priority", "match_facility", 
-                                    "match_sl", "match_ok", "cancel_priority" ]),
+                                    "match_sl", "match_ok", "cancel_priority", "match_timeperiod" ]),
         ( _("Outcome &amp; Action"), [ "state", "sl", "actions", "drop", "autodelete" ]),
         ( _("Counting &amp; Timing"), [ "count", "expect", "delay", "livetime", ]),
         ( _("Rewriting"), [ "set_text", "set_host", "set_application", "set_comment", "set_contact" ]),

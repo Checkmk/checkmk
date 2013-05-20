@@ -27,6 +27,7 @@
 # Call with -d for debug mode: colored output, no saving of status
 
 import sys, os, re, time
+import glob
 
 if '-d' in sys.argv[1:]:
     tty_red     = '\033[1;31m'
@@ -58,6 +59,7 @@ print "<<<logwatch>>>"
 
 config_filename = logwatch_dir + "/logwatch.cfg"
 status_filename = logwatch_dir + "/logwatch.state"
+config_dir      = logwatch_dir + "/logwatch.d/*.cfg"
 
 def is_not_comment(line):
     if line.lstrip().startswith('#') or \
@@ -70,30 +72,48 @@ def parse_filenames(line):
 
 def parse_pattern(line):
     level, pattern = line.split(None, 1)
+    if level == 'R':
+        return False
     try:
         compiled = re.compile(pattern)
     except:
         raise(Exception("Invalid regular expression in line '%s'" % line))
-    if level not in [ 'C', 'W', 'I', 'O' ]:
+    if level not in [ 'R','C', 'W', 'I', 'O' ]:
         raise(Exception("Invalid pattern line '%s'" % line))
     return (level, compiled)
 
 def read_config():
     config_lines = [ line.rstrip() for line in filter(is_not_comment, file(config_filename).readlines()) ]
+    #Add config from a logwatch.d folder
+    for config_file in glob.glob(config_dir):
+        config_lines += [ line.rstrip() for line in filter(is_not_comment, file(config_file).readlines()) ]
 
     have_filenames = False
     config = []
     # Line starts with whitespace -> pattern line
     # otherwise -> file name line
+    count_lines = 1
+    max_lines = len(config_lines)
     for line in config_lines:
+        rewrite = False
         if line[0].isspace():
             if not have_filenames:
                 raise Exception("Missing logfile names")
-            patterns.append(parse_pattern(line))
+            if count_lines < max_lines:
+                try:
+                    level, tmp_rewrite = config_lines[count_lines].split(None,1)
+                except:
+                    level = "Nein"
+                if level == 'R':
+                    rewrite = tmp_rewrite
+            pattern = parse_pattern(line)
+            if pattern:
+                patterns.append((pattern[0], pattern[1], rewrite))
         else:
             patterns = []
             config.append((parse_filenames(line), patterns))
             have_filenames = True
+        count_lines += 1
     return config
 
 # structure of statusfile
@@ -203,14 +223,24 @@ def process_logfile(logfile, patterns):
             break
 
         level = "."
-        for lev, pattern in patterns:
+        log_line = line[:-1]
+        for lev, pattern, replace in patterns:
             if pattern.search(line[:-1]):
                 level = lev
                 levelint = {'C': 2, 'W': 1, 'O': 0, 'I': -1, '.': -1}[lev]
                 worst = max(levelint, worst)
+                if replace:
+                    matches = pattern.match(log_line)
+                    replace_count = 1
+                    new_message = replace.replace('\\0', log_line)
+                    for replacement in matches.groups():
+                        new_message = new_message.replace('\\%d' % replace_count, replacement)
+                        replace_count += 1
+                    log_line = new_message 
                 break
+
         color = {'C': tty_red, 'W': tty_yellow, 'O': tty_green, 'I': tty_blue, '.': ''}[level]
-        outputtxt += "%s%s %s%s\n" % (color, level, line[:-1], tty_normal)
+        outputtxt += "%s%s %s%s\n" % (color, level, log_line, tty_normal)
 
     new_offset = os.lseek(fl, 0, 1) # os.SEEK_CUR not available in Python 2.4
     status[logfile] = new_offset, inode

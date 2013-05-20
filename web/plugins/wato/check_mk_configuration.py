@@ -1257,8 +1257,57 @@ register_rule(group,
                  "service completely. Per default all notifications are enabled."),
         choices = [ ("1", _("Enable service notifications")),
                     ("0", _("Disable service notifications")) ],
+    ),
+    itemtype = "service"
+)
+
+register_rule(group,
+    "extra_host_conf:notification_options",
+    Transform(
+        ListChoice(
+            choices = [
+               ( "d",  _("Host goes down")),
+               ( "u",  _("Host gets unreachble")),
+               ( "r",  _("Host goes up again")),
+               ( "f",  _("Start or end of flapping state")),
+               ( "s",  _("Start or end of a scheduled downtime")),
+            ],
+            default_value = [ "d", "u", "r", "f", "s" ],
         ),
-        itemtype = "service")
+        title = _("Notified events for hosts"),
+        help = _("This ruleset allows you to restrict notifications of host problems to certain "  
+               "states, e.g. only notify on DOWN, but not on UNREACHABLE. Please select the types "
+               "of events that should initiate notifications. Please note that several other "
+               "filters must also be passed in order for notifications to finally being sent out."),
+        forth = lambda x: x != 'n' and x.split(",") or [],
+        back = lambda x: ",".join(x) or "n",
+    ),
+)
+
+register_rule(group,
+    "extra_service_conf:notification_options",
+    Transform(
+        ListChoice(
+            choices = [
+                ("w", _("Service goes into warning state")),
+                ("u", _("Service goes into unknown state")),
+                ("c", _("Service goes into critical state")),
+                ("r", _("Service recovers to OK")),
+                ("f", _("Start or end of flapping state")),
+                ("s", _("Start or end of a scheduled downtime")),
+            ],
+            default_value = [ "w", "u", "c", "r", "f", "s" ],
+        ),
+        title = _("Notified events for services"),
+        help = _("This ruleset allows you to restrict notifications of service problems to certain "  
+               "states, e.g. only notify on CRIT, but not on WARN. Please select the types "
+               "of events that should initiate notifications. Please note that several other "
+               "filters must also be passed in order for notifications to finally being sent out."),
+        forth = lambda x: x != 'n' and x.split(",") or [],
+        back = lambda x: ",".join(x) or "n",
+    ),
+    itemtype = "service"
+)
 
 register_rule(group,
     "extra_host_conf:notification_period",
@@ -1419,7 +1468,7 @@ register_rule(group,
     CheckTypeSelection(
         title = _("Ignored checks"),
         help = _("This ruleset is similar to 'Ignored services', but selects checks to be ignored "
-                 "by their <b>type</b>. This allows to disable certain techinal implementations "
+                 "by their <b>type</b>. This allows you to disable certain technical implementations "
                  "such as filesystem checks via SNMP on hosts that also have the Check_MK agent "
                  "installed."),
     ))

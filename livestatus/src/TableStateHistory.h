@@ -105,9 +105,9 @@ class TableStateHistory : public Table
 
     // Helper functions to traverse through logfiles
     _logfiles_t::iterator         _it_logs;
-    logfile_entries_t*            _entries;
+    logfile_entries_t            *_entries;
     logfile_entries_t::iterator   _it_entries;
-    LogEntry*                     _current_entry;
+    LogEntry                     *_current_entry;
 
 public:
     TableStateHistory();

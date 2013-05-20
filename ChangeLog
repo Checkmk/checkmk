@@ -121,6 +121,7 @@
     * Configuration of an alternativ host check command
     * Inventory: Display link symbol for ps ruleset
     * FIX: Rulesets: correct display of rules within subfolders
+    * Remove Notification Command user settings, please use flexible notifications instead
 
 
 1.2.2p2:

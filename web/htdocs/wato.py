@@ -8084,9 +8084,6 @@ def mode_edit_user(phase):
         for what, opts in [ ( "host", "durfs"), ("service", "wucrfs") ]:
             new_user[what + "_notification_options"] = "".join(
               [ opt for opt in opts if html.get_checkbox(what + "_" + opt) ])
-            # FIXME: Validate notification commands. Do they really exist?
-            # FIXME(2): This is deprecated anyway. Remove in future.
-            new_user[what + "_notification_commands"] = html.var(what + "_notification_commands")
 
         value = vs_notification_method.from_html_vars("notification_method")
         vs_notification_method.validate_value(value, "notification_method")
@@ -8306,14 +8303,6 @@ def mode_edit_user(phase):
 
     forms.section(_("Notification Method"))
     vs_notification_method.render_input("notification_method", user.get("notification_method"))
-
-    # Notification commands (deprecated)
-    forms.section(_("Notification Command for Hosts"))
-    html.text_input("host_notification_commands", user.get("host_notification_commands", "check-mk-notify"))
-    html.help(_("Use this Nagios command for sending host notifications."))
-    forms.section(_("Notification Command for Services"))
-    html.text_input("service_notification_commands", user.get("service_notification_commands", "check-mk-notify"))
-    html.help(_("Use this Nagios command for sending service notifications."))
 
     forms.header(_("Personal Settings"), isopen = False)
     select_language(user.get('language', ''))

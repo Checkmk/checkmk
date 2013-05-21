@@ -1,0 +1,128 @@
+Daemon könnte heißen: liveproxyd "Livestatus Proxy Daemon" 
+
+Schritte der Implementierung:
+
+1. Grundgerüst Daemon mit --help und daemonize(). Dazu
+   die Option -g, damit er im Vordergrund läuft und
+   --debug, was die Exceptions durchkommen lässt. Dazu
+   getopt. Auch ein var/log/livepd.log. Bei -g wird
+   statt in log auf stdout geschrieben (siehe mkeventd)
+
+   Vorlage: mkeventd
+
+   Vorerst läuft as nur in OMD. Daher ist keine Konfiguration
+   von Pfaden, etc. notwendig.
+
+
+2. Laden der Konfiguration und Anlegen der globalen Datenstruktur
+   g_sites. Pro Site ein Eintrag mit dynamischen Daten (Zustand
+   und Channels) und Konfigurationsdaten. Dazu ein globales
+   Lock. Zugriff dann immer mit with lock_sites: Testkonfiguration
+   von Hand schreiben.
+
+
+3. Eine Klasse, die einen Thread implementiert für eine Site.
+   Diese sorgt dafür, dass die konfigurierte Anzahl von
+   Verbindungen vorhanden ist. Und macht einfach in einer Schleife
+   ein TCP connect auf das Ziel. Und trägt neue Connections in
+   den Pool ein (lock beachten). Wenn all Verbindungen da sind,
+   kann er warten.
+
+   --> Jetzt kann man schon testen, ob die Verbindungen aufgebaut
+   werden. 
+
+   --> Zum Testen z.B. eine Wartezeit von 5 Sekunden in die Schleife
+   bauen.
+
+
+4. Hauptprozess: Erzeugen der UNIX-Sockets pro Site in 
+   tmp/run/liveproxy/$SITE und auf listen() gehen.
+
+5. Hauptschleife: mit einem select() auf allen diesen Sockets
+   warten. Wenn eine Verbindung kommt, diese annehmen und
+   in einem Clientpool speichern. Clientpool:
+
+   [ {
+       "site" : "muc",
+       "wait" : "query"/"response"/"channel",
+       "since" : wartet seit.
+       "channel" -> Zeigt auf Kanaldict im Falle "response"
+       "socket" -> Socket-Objekt, dass von accept() geliefert wurde 
+       ...
+     }
+    ...
+   ]
+
+   --> Das kann man jetzt wieder testen.
+
+6. select() erweitern, so dass es jetzt auch auf die bestehenden
+  Client-Verbindungen wartet. In der Schleife, jetzt zusätzlich
+  auch Queries lesen und Testeweise ausgeben.
+
+  --> Testen.
+
+7. Hauptschleife so erweitern, dass das select() nicht länger
+   als z.B. 0.1 sec wartet. Danach immer alle Sites durchgehen
+   und Heartbeat abwickeln. z.B. in einer eigenen Funktion
+   
+   Heartbeat: Alle Sites durchgehen. Pro Site gucken: Ist
+   ein Heartbeat ausstehend? Ja? Wartezeit prüfen. Wenn zu
+   lange, dann Site als tot markieren. Alle Verbindungen
+   abrechen.
+
+   Wenn kein Heartbeat aussteht: Ist kein Kanal frei, dann
+   sollte die Site noch auf tot stehen. Dann einfach warten. 
+   Wenn ein Kanal frei ist, ein Heartbeat senden und dessen
+   Zeitstempel im Kanal vermerken.
+
+
+8. select() auf die Kanäle erweitern, die im Zustand "busy"
+   oder "heartbeat" stehen. Wenn so ein Kanal lesbar wird,
+   dann kann es aktuell nur "heartbeat" sein. Diesen
+   einsammeln und die Zeit des letzten Heartbeat vermerken.
+
+9. Jetzt von Punkt 6 das so erweitern, dass wenn Client-Anfrage
+   reinkommt. Wenn ein Kanal für die Zielsite frei ist, dann
+   Anfrage vom Client lesen und in den Kanal schreiben. Kanal
+   markiern. --> TESTEN. Jetzt muss eine Anfrage auf dem Zielsystem
+   eingehen.
+
+   Wenn die Site tot ist, dann Anfrage auch einlesen, und selbst
+   mit einem Fehler-Header beantworten.
+
+   Wenn Site lebt, aber kein Kanal frei ist:
+   Fall 1: erster Versuch: setzen Zeitstempel beim dict der 
+   Client-Verbindung ("since" etdc.)
+   Fall 2: "since" Feld bereits gesetzt. Timeout prüfen.
+   Der Wert steht in g_sites[site]["timeout"]. Wenn überschritten,
+   dann Query lesen und mit Fehler beantworten "All %d channels busy, timeout waiting for free channel." 
+
+10. 8 erweitern: Wenn kanal lesbar wird, der im Zustand "busy"
+   ist, dann die Anfrage auslesen. Nur ein read(), damit wir
+   nicht blockieren! Wenn die Anfrage nicht komplett ist, setzen
+   speichern wir das bereits gelesene im Kanal unter der Variable
+   "partial" ein. Und machen vorerst nix weiter.
+   Wenn bereits ein "partial" vorhanden war, hängen wir uns dran.
+   Wenn jetzt alle Daten da sind, senden wir das Ergebnis zum
+   Client. Zustände von Client und Kanal entsprechend setzen.
+
+11. Signal zum Beenden implemtieren und versuchen, sauber runterzufahren.
+
+12. Startskript schreiben.
+
+13. omd-Hook schreiben, mit dem man den Proxy aktivieren kann. Der proxy
+    muss dann auch in etc/check_mk/multisite.d/liveproxy.mk die Zeile
+    liveproxy = True schreiben.
+
+14. WATO-Site-Konfiguration: Wenn proxy aktiviert per omd config 
+    (config.liveproxy), dann zusätzliche Option:
+    [X] Use Livestatus Proxy
+        Number of channels:    [ 10]
+        Wait for free channel: [  5] sec
+        Heartbeat interval:    [  3] sec
+        Heartbeat timeout:     [ 50]% over typical response time
+        Maximum Response time: [120] sec
+
+    Beim Schreiben der sites.mk auch die liveproxy.mk ein etc/check_mk 
+    erzeugen. Dabei 'omd restart liveproxy' aufrufen.
+

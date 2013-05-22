@@ -109,7 +109,7 @@ def zfsget_parse_df_info(entries, info):
     for device, kbytes, used, avail, percent, mountpoint in info:
         # ignore entries already contained in zfsget and also
         # entries for virtual filesystems (like swap)
-        if device.startswith("/") and mountpoint not in entries:
+        if mountpoint.startswith("/") and mountpoint not in entries:
             entry = {}
             total = int(kbytes) / 1024.0
             entry["total"] = total

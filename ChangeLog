@@ -144,6 +144,7 @@
     * FIX: aix_lvm: handle agents that output an extra header line
     * FIX: zfsget: do not assume that devices begin with /, but mountpoints
     * FIX: ipmi_sensors: handle two cases for DELL correctly (thanks to Sebastian Talmon)
+    * FIX: check_dns: enable performance data
 
     Multisite:
     * List of views: Output the alias of a datasource instead of internal name

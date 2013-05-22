@@ -50,6 +50,6 @@ active_check_info['dns'] = {
     "command_line"        : '$USER1$/check_dns $ARG1$',
     "argument_function"   : check_dns_arguments,
     "service_description" : lambda params: "DNS %s" % params[0],
-    "has_perfdata"        : False,
+    "has_perfdata"        : True,
 }
 

@@ -12,6 +12,7 @@
     * FIX: zfsget: do not assume that devices begin with /, but mountpoints
     * FIX: ipmi_sensors: handle two cases for DELL correctly (thanks to Sebastian Talmon)
     * FIX: check_dns: enable performance data
+    * FIX: free_ipmi: fix name of sensor cache file if hostname contains domain part
 
     Multisite:
     * List of views: Output the alias of a datasource instead of internal name
@@ -45,7 +46,7 @@
     * FIX: titles and services got lost when moving join-columns in views
     * FIX: Fixed exception during initial page rendering in python 2.6 in special cases
            (Internal error: putenv() argument 2 must be string, not list)
-    
+
     Livestatus:
     * livestatus.log: show utf-8 decoding problems only with debug logging >=2
 

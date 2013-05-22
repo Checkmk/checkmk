@@ -21,6 +21,7 @@
     WATO:
     * FIX: convert editing of global setting to POST. This avoid URL-too-long
       when defining lots of Event Console actions
+    * FIX: LDAP configuration: allow DNs without DC=
 
     Event Console:
     * FIX: fix icon in events check if host specification is by IP address
@@ -156,7 +157,7 @@
            user/kernel percentages. (thanks to William Baum)
     * FIX: UPS checks support Eaton Evolution
     * FIX: windows agent plugin: mssql now exits after 10 seconds
-    
+
     Notifications:
     * FIX: fixed crash on host notification when contact had explicit services set
 
@@ -171,12 +172,12 @@
     Multisite:
     * FIX: Avoid duplicate "Services" button in host detail views
     * FIX: fix rescheduling icon for services with non-ASCII characters
-    * New filter for IP address of a host 
+    * New filter for IP address of a host
     * Quicksearch: allow searching for complete IP addresses and IP
       address prefixes
     * Add logentry class filter to view 'Host- and Service events'
 
-    BI: 
+    BI:
     * FIX: fix exception with expansion level being 'None'
     * FIX: speedup for single host tables joined by hostname (BI-Boxes)
     * FIX: avoid closing BI subtree while tree is being loaded

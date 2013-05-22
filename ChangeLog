@@ -143,6 +143,7 @@
     * FIX: ipmi_sensors: ignore sensors in state [NA] (not available)
     * FIX: aix_lvm: handle agents that output an extra header line
     * FIX: zfsget: do not assume that devices begin with /, but mountpoints
+    * FIX: ipmi_sensors: handle two cases for DELL correctly (thanks to Sebastian Talmon)
 
     Multisite:
     * List of views: Output the alias of a datasource instead of internal name

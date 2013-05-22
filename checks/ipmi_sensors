@@ -113,6 +113,8 @@ def check_freeipmi(item, _no_params, info):
                     or status == "Entity_Present" \
                     or status.endswith("is_connected") \
                     or status.endswith("Presence_detected") \
+                    or status == "battery_presence_detected" \ 
+                    or status == "Drive_Presence" \
                     or status.startswith("Fully_Redundant"):
                 return (0, infotext, perfdata)
             else:

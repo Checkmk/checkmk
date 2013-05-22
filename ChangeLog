@@ -18,6 +18,9 @@
     * FIX: convert editing of global setting to POST. This avoid URL-too-long
       when defining lots of Event Console actions
 
+    Event Console:
+    * FIX: fix icon in events check if host specification is by IP address
+
 1.2.2p1:
     Core:
     * FIX: correctly quote ! and \ in active checks for Nagios

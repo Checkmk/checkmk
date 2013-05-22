@@ -78,11 +78,11 @@ def paint_mkeventd(what, row, tags, custom_vars):
     if getattr(config, 'mkeventd_distributed', False):
         url_prefix = site['url_prefix'] + 'check_mk/'
 
-    title = _('Events of Host %s') % (host)
+    title = _('Events of Host %s') % (row["host_name"])
     url   = 'view.py?' + htmllib.urlencode_vars([ 
           ("view_name", "ec_events_of_monhost"),
           ("site", row["site"]),
-          ("host", host),
+          ("host", row["host_name"]),
         ])
 
     if len(args) >= 2:

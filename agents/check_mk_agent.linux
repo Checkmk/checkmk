@@ -243,7 +243,7 @@ fi
 # for the first run (where the cache is created). If ipmi-sensors runs into
 # that timeout, it leaves and empty cache file. We skip this check forever
 # if we find that empty cache file.
-sdrcache=/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1
+sdrcache=/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname | cut -d. -f1).127.0.0.1
 if type ipmi-sensors >/dev/null && [ ! -e "$sdrcache" -o -s "$sdrcache" ]
 then
     echo '<<<ipmi_sensors>>>'

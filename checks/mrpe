@@ -37,7 +37,14 @@ def inventory_mrpe(info):
     return items
 
 
+def mrpe_parse_perfdata(perfinfo):
+    varname, valuetxt = perfinfo.split("=", 1)
+    values = valuetxt.split(";")
+    return tuple( [varname] + values)
+
+
 def check_mrpe(item, params, info):
+
     # This check is cluster-aware. An item might be found
     # more than once. In that case we use the best of the
     # multiple statuses.
@@ -52,36 +59,46 @@ def check_mrpe(item, params, info):
             check_name = None
         if line[0] == item:
             state = int(line[1])
-            rest = " ".join(line[2:])
-            parts = rest.split("|", 1)
-            # replace first line break with "\\n" -> Nagios expects it like this
-            output = parts[0].replace("\1", "\\n", 1).replace("\1", "<br>")
+            # convert to original format by joining and replacing \1 back with \n
+            rest = " ".join(line[2:]).replace("\1", "\n")
+            # split into lines
+            lines = rest.split('\n')
+            # First line:  OUTPUT|PERFDATA
+            parts = lines[0].split("|", 1)
+            output = [parts[0].strip()]
+            if len(parts) > 1:
+                perfdata = parts[1].strip().split()
+            else:
+                perfdata = []
 
-            perfdata = []
-            if len(parts) > 1: # found pipe symbol
-                perftxt = parts[1].strip()
-                for perfinfo in perftxt.split(" "):
-                    try:
-                        varname, valuetxt = perfinfo.split("=", 1)
-                        values = valuetxt.split(";")
-                        perfdata.append(tuple( [varname] + values) )
-                    except:
-                        pass
+            # Further lines
+            now_comes_perfdata = False
+            for l in lines[1:]:
+                if now_comes_perfdata:
+                    perfdata += l.split()
+                else:
+                    parts = l.split("|", 1)
+                    output.append(parts[0].strip())
+                    if len(parts) > 1:
+                        perfdata += parts[1].strip().split()
+                        now_comes_perfdata = True
 
-            # name of check command needed for PNP to choose the correct template
-            if check_name:
-                perfdata.append(check_name)
 
             if best_state in [ None, 2 ] \
                or (state < best_state and state != 2):
-	    	best_result = state, output, perfdata
+                infotext = "\\n".join(output)
+                perf_parsed = map(mrpe_parse_perfdata, perfdata)
+                # name of check command needed for PNP to choose the correct template
+                if check_name:
+                    perf_parsed.append(check_name)
+	    	best_result = state, "\\n".join(output), perf_parsed
 		best_state = state
+
 
     if best_state == None:
 	return (3, "Check output not found in output of MRPE")
     else:
 	return best_result
-
 
 
 check_info["mrpe"] = {

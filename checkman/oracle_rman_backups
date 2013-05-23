@@ -4,7 +4,7 @@ author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check monitors backup jobs configured with RMAN 
+ This check monitors backup jobs configured with RMAN
  (Recovery Manager) in ORACLE databases. It checks the state
  of the last executed backup and outputs the execution times.
 

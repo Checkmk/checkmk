@@ -135,7 +135,7 @@ def check_apache_status(item, params, info):
             display_value = '%0.2f' % value
         else:
             display_value = '%d' % value
-        
+
         extra_info = ""
         extra_perf = []
         if params.get(key) and len(apache_status_fields[key]) > 2:

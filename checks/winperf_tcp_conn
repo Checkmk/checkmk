@@ -60,7 +60,7 @@ def check_winperf_tcp_conn(item, params, info):
                 infotext += "(!) (warning at %d)" % warn
             infotext += ", "
         perfdata.append( (name, value, warn, crit) )
-             
+
     infotext = infotext[:-2]
     return worst_state, infotext, perfdata
 

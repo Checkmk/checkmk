@@ -16,19 +16,19 @@ description:
  The plugin tries to autodetect all running apache servers. If that fails
  for some reason you need to create the configuration file
  {/etc/check_mk/apache_status.cfg} and list your servers here. Write
- a Python list of dicts for protocol, servername and port. 
- With the optional item 'page' its posible to change the status page from server-status to a 
+ a Python list of dicts for protocol, servername and port.
+ With the optional item 'page' its posible to change the status page from server-status to a
  name you want
 
 examples:
- servers = [ 
+ servers = [
  {
-  'protocol' : 'http', 
+  'protocol' : 'http',
   'address'  : 'localhost',
   'port'     : 80 ,
  },
  {
-  'protocol' : 'https', 
+  'protocol' : 'https',
   'address'  : 'localhost',
   'port'     : 443 ,
   'page'     : 'server-status-2',

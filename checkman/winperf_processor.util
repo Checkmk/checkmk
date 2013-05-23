@@ -35,4 +35,4 @@ parameters(dict): A dictionary with the following keys:
   {"average"}: A number of minutes for enabling averaging.
 
 [configuration]
-winperf_cpu_default_levels(dict): Default levels, preset to { "levels": (101.0, 101.0) } 
+winperf_cpu_default_levels(dict): Default levels, preset to { "levels": (101.0, 101.0) }

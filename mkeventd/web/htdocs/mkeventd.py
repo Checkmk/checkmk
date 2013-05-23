@@ -228,9 +228,30 @@ def event_rule_matches(rule, event):
         if p < prio_from or p > prio_to:
             return _("The syslog priority is not in the required range.")
 
+    if "match_timeperiod" in rule:
+        reason = check_timeperiod(rule["match_timeperiod"])
+        if reason:
+            return reason
+
     if match_groups == True:
         match_groups = () # no matching groups
     return False, match_groups
+
+def check_timeperiod(tpname):
+    try:
+        livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        livesock.connect(defaults.livestatus_unix_socket)
+        livesock.send("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname)
+        livesock.shutdown(socket.SHUT_WR)
+        answer = livesock.recv(100).strip()
+        if answer == "":
+            return _("The timeperiod %s is not known to the local monitoring core") % tpname
+        elif int(answer) == 0:
+            return _("The timeperiod %s is currently not active" % tpname)
+    except Exception, e:
+        return _("Cannot update timeperiod information for %s: %s" % (tpname, e))
+        if opt_debug:
+            raise
 
 def match(pattern, text, complete = True):
     if pattern == None:

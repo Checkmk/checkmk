@@ -108,8 +108,8 @@ def action_choices(omit_hidden = False):
     # not in multisite.mk (like the service levels). That
     # way we have not direct access to them but need
     # to load them from the configuration.
-    return [ (a["id"], a["title"]) 
-             for a in eventd_configuration().get("actions", []) 
+    return [ (a["id"], a["title"])
+             for a in eventd_configuration().get("actions", [])
              if not omit_hidden or not a.get("hidden") ]
 
 cached_config = None
@@ -132,7 +132,7 @@ def eventd_configuration():
         execfile(path, config, config)
     cached_config = (html, config)
     return config
-    
+
 
 def daemon_running():
     return os.path.exists(socket_path)
@@ -194,7 +194,7 @@ def event_rule_matches(rule, event):
 
     if False == match(rule.get("match_application"), event["application"], complete=False):
         return _("The application (syslog tag) does not match")
-    
+
     if "match_facility" in rule and event["facility"] != rule["match_facility"]:
         return _("The syslog facility does not match")
 
@@ -212,7 +212,7 @@ def event_rule_matches(rule, event):
             if match_groups == True:
                 match_groups = ()
             return True, match_groups
-            
+
     try:
         match_groups = match(rule.get("match"), event["text"], complete = False)
     except Exception, e:

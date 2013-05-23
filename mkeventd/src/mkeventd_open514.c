@@ -27,7 +27,7 @@
    This is a priviledged operation. Then it drops the priviledges,
    moves that port to file descriptor 3 and executes the mkeventd.
 
-   That can then simply use filedescriptor 3 and receive syslog 
+   That can then simply use filedescriptor 3 and receive syslog
    messages */
 
 #include <sys/types.h>

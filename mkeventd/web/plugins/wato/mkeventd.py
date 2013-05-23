@@ -73,14 +73,14 @@ The following placeholdes will be substituted by value from the actual event:
 <tr><td class=tt>$MATCH_GROUPS$</td><td>Text groups from regular expression match, separated by spaces/td></tr>
 <tr><td class=tt>$MATCH_GROUP_1$</td><td>Text of the first match group from expression match</td></tr>
 <tr><td class=tt>$MATCH_GROUP_2$</td><td>Text of the second match group from expression match</td></tr>
-<tr><td class=tt>$MATCH_GROUP_3$</td><td>Text of the third match group from expression match (and so on...)</td></tr> 
+<tr><td class=tt>$MATCH_GROUP_3$</td><td>Text of the third match group from expression match (and so on...)</td></tr>
 </table>
 """
 )
 
 class ActionList(ListOf):
-    def __init__(self, vs, **kwargs): 
-        ListOf.__init__(self, vs, **kwargs) 
+    def __init__(self, vs, **kwargs):
+        ListOf.__init__(self, vs, **kwargs)
 
     def validate_value(self, value, varprefix):
         ListOf.validate_value(self, value, varprefix)
@@ -92,7 +92,7 @@ class ActionList(ListOf):
                     raise MKUserError(varprefix, _("You are missing the action with the ID <b>%s</b>, "
                        "which is still used in some rules.") % action_id)
 
-    
+
 vs_mkeventd_actions = \
     ActionList(
         Foldable(
@@ -100,7 +100,7 @@ vs_mkeventd_actions = \
             title = _("Action"),
             optional_keys = False,
             elements = [
-              (   "id", 
+              (   "id",
                   ID(
                       title = _("Action ID"),
                       help = _("A unique ID of this action that is used as an internal "
@@ -188,7 +188,7 @@ vs_mkeventd_actions = \
               ),
             ],
           ),
-          title_function = lambda value: not value["id"] and _("New Action") or (value["id"] + " - " + value["title"]), 
+          title_function = lambda value: not value["id"] and _("New Action") or (value["id"] + " - " + value["title"]),
         ),
     title = _("Actions (Emails &amp Scripts)"),
     help = _("Configure that possible actions that can be performed when a "
@@ -247,7 +247,7 @@ vs_mkeventd_rule = Dictionary(
             prefix_values = True,
           ),
         ),
-        ( "actions", 
+        ( "actions",
           ListChoice(
             title = _("Actions"),
             help = _("Actions to automatically perform when this event occurs"),
@@ -412,8 +412,8 @@ vs_mkeventd_rule = Dictionary(
                         ( 3600, _("hour") ),
                         (  900, _("15 minutes") ),
                         (  300, _("5 minutes") ),
-                        (   60, _("minute") ), 
-                        (   10, _("10 seconds") ), 
+                        (   60, _("minute") ),
+                        (   10, _("10 seconds") ),
                     ],
                     default_value = 3600,
                  )
@@ -473,7 +473,7 @@ vs_mkeventd_rule = Dictionary(
             help = _("The rules does only apply when the given regular expression matches "
                      "the message text (infix search)."),
             size = 64,
-          ) 
+          )
         ),
         ( "match_host",
           RegExpUnicode(
@@ -481,7 +481,7 @@ vs_mkeventd_rule = Dictionary(
             help = _("The rules does only apply when the given regular expression matches "
                      "the host name the message originates from. Note: in some cases the "
                      "event might use the IP address instead of the host name."),
-          ) 
+          )
         ),
         ( "match_application",
           RegExpUnicode(
@@ -512,12 +512,12 @@ vs_mkeventd_rule = Dictionary(
         ( "match_sl",
           Tuple(
             title = _("Match service level"),
-            help = _("This setting is only useful for events that result from monitoring notifications "  
+            help = _("This setting is only useful for events that result from monitoring notifications "
                      "sent by Check_MK. Those can set a service level already in the event. In such a "
                      "case you can make this rule match only certain service levels. Events that do not "),
             orientation = "horizontal",
             show_titles = False,
-            elements = [ 
+            elements = [
               DropdownChoice(label = _("from:"),  choices = mkeventd.service_levels, prefix_values = True),
               DropdownChoice(label = _(" to:"),  choices = mkeventd.service_levels, prefix_values = True),
             ],
@@ -538,7 +538,7 @@ vs_mkeventd_rule = Dictionary(
             help = _("If a matching message appears with this text, then an event created "
                      "by this rule will automatically be cancelled (if host, application and match groups match). "),
             size = 64,
-          ) 
+          )
         ),
         ( "cancel_priority",
           Tuple(
@@ -560,9 +560,9 @@ vs_mkeventd_rule = Dictionary(
               help = _("Replace the message text with this text. If you have bracketed "
                        "groups in the text to match, then you can use the placeholders "
                        "<tt>\\1</tt>, <tt>\\2</tt>, etc. for inserting the first, second "
-                       "etc matching group.") + 
+                       "etc matching group.") +
                      _("The placeholder <tt>\\0</tt> will be replaced by the original text. "
-                       "This allows you to add new information in front or at the end."), 
+                       "This allows you to add new information in front or at the end."),
               size = 64,
               allow_empty = False,
           )
@@ -573,7 +573,7 @@ vs_mkeventd_rule = Dictionary(
               help = _("Replace the host name with this text. If you have bracketed "
                        "groups in the text to match, then you can use the placeholders "
                        "<tt>\\1</tt>, <tt>\\2</tt>, etc. for inserting the first, second "
-                       "etc matching group.") + 
+                       "etc matching group.") +
                      _("The placeholder <tt>\\0</tt> will be replaced by the original host name. "
                        "This allows you to add new information in front or at the end."),
               allow_empty = False,
@@ -585,7 +585,7 @@ vs_mkeventd_rule = Dictionary(
               help = _("Replace the application (syslog tag) with this text. If you have bracketed "
                        "groups in the text to match, then you can use the placeholders "
                        "<tt>\\1</tt>, <tt>\\2</tt>, etc. for inserting the first, second "
-                       "etc matching group.") + 
+                       "etc matching group.") +
                      _("The placeholder <tt>\\0</tt> will be replaced by the original text. "
                        "This allows you to add new information in front or at the end."),
               allow_empty = False,
@@ -597,7 +597,7 @@ vs_mkeventd_rule = Dictionary(
               help = _("Attach a comment to the event. If you have bracketed "
                        "groups in the text to match, then you can use the placeholders "
                        "<tt>\\1</tt>, <tt>\\2</tt>, etc. for inserting the first, second "
-                       "etc matching group.") + 
+                       "etc matching group.") +
                      _("The placeholder <tt>\\0</tt> will be replaced by the original text. "
                        "This allows you to add new information in front or at the end."),
               size = 64,
@@ -610,7 +610,7 @@ vs_mkeventd_rule = Dictionary(
               help = _("Attach information about a contact person. If you have bracketed "
                        "groups in the text to match, then you can use the placeholders "
                        "<tt>\\1</tt>, <tt>\\2</tt>, etc. for inserting the first, second "
-                       "etc matching group.") + 
+                       "etc matching group.") +
                      _("The placeholder <tt>\\0</tt> will be replaced by the original text. "
                        "This allows you to add new information in front or at the end."),
               size = 64,
@@ -618,13 +618,13 @@ vs_mkeventd_rule = Dictionary(
           )
         ),
     ],
-    optional_keys = [ "delay", "livetime", "count", "expect", "match_priority", "match_priority", 
+    optional_keys = [ "delay", "livetime", "count", "expect", "match_priority", "match_priority",
                       "match_facility", "match_sl", "match_host", "match_application", "match_timeperiod",
                       "set_text", "set_host", "set_application", "set_comment",
                       "set_contact", "cancel_priority", "match_ok" ],
     headers = [
         ( _("General Properties"), [ "id", "description", "disabled" ] ),
-        ( _("Matching Criteria"), [ "match", "match_host", "match_application", "match_priority", "match_facility", 
+        ( _("Matching Criteria"), [ "match", "match_host", "match_application", "match_priority", "match_facility",
                                     "match_sl", "match_ok", "cancel_priority", "match_timeperiod" ]),
         ( _("Outcome &amp; Action"), [ "state", "sl", "actions", "drop", "autodelete" ]),
         ( _("Counting &amp; Timing"), [ "count", "expect", "delay", "livetime", ]),
@@ -666,7 +666,7 @@ vs_mkeventd_event = Dictionary(
         ( "priority",
           DropdownChoice(
             title = _("Syslog Priority"),
-            choices = mkeventd.syslog_priorities, 
+            choices = mkeventd.syslog_priorities,
             default_value = 5,
           )
         ),
@@ -678,7 +678,7 @@ vs_mkeventd_event = Dictionary(
           )
         ),
     ])
-        
+
 
 #.
 #   .--Persistence---------------------------------------------------------.
@@ -760,7 +760,7 @@ def mode_mkeventd_rules(phase):
         mkeventd_changes_button()
         if config.may("mkeventd.edit"):
             html.context_button(_("New Rule"), make_link([("mode", "mkeventd_edit_rule")]), "new")
-            html.context_button(_("Reset Counters"), 
+            html.context_button(_("Reset Counters"),
               make_action_link([("mode", "mkeventd_rules"), ("_reset_counters", "1")]), "resetcounters")
         html.context_button(_("Server Status"), make_link([("mode", "mkeventd_status")]), "status")
         return
@@ -786,7 +786,7 @@ def mode_mkeventd_rules(phase):
             nr = int(html.var("_delete"))
             rule = rules[nr]
             c = wato_confirm(_("Confirm rule deletion"),
-                             _("Do you really want to delete the rule <b>%s</b> <i>%s</i>?" % 
+                             _("Do you really want to delete the rule <b>%s</b> <i>%s</i>?" %
                                (rule["id"], rule.get("description",""))))
             if c:
                 log_mkeventd("delete-rule", _("Deleted rule %s") % rules[nr]["id"])
@@ -822,7 +822,7 @@ def mode_mkeventd_rules(phase):
             else:
                 return
 
-            
+
         if html.check_transaction():
             if html.has_var("_move"):
                 from_pos = int(html.var("_move"))
@@ -842,7 +842,7 @@ def mode_mkeventd_rules(phase):
           "master are being used in the case of a takeover. The same holds for the event "
           "actions in the global settings.<br><br>If you want you can copy the ruleset of "
           "the master into your local slave configuration: ") + \
-          '<a class=button href="%s">' % copy_url + 
+          '<a class=button href="%s">' % copy_url +
           _("Copy Rules From Master") + '</a>')
 
     if len(rules) == 0:
@@ -903,14 +903,14 @@ def mode_mkeventd_rules(phase):
         else:
             html.empty_icon_button()
             html.empty_icon_button()
- 
+
         if not rule is rules[-1]:
             html.icon_button(down_url, _("Move this rule one position down"), "down")
             html.icon_button(bottom_url, _("Move this rule to the bottom"), "bottom")
         else:
             html.empty_icon_button()
             html.empty_icon_button()
- 
+
         html.write('</td>')
         html.write('<td>')
         if rule.get("disabled"):
@@ -1026,7 +1026,7 @@ def mode_mkeventd_edit_rule(phase):
         rule = vs_mkeventd_rule.from_html_vars("rule")
         vs_mkeventd_rule.validate_value(rule, "rule")
         if not new and old_id != rule["id"]:
-            raise MKUserError("rule_p_id", 
+            raise MKUserError("rule_p_id",
                  _("It is not allowed to change the ID of an existing rule."))
         elif new:
             for r in rules:
@@ -1039,7 +1039,7 @@ def mode_mkeventd_edit_rule(phase):
             raise MKUserError("rule_p_match",
                 _("Invalid regular expression"))
         if num_groups > 9:
-            raise MKUserError("rule_p_match", 
+            raise MKUserError("rule_p_match",
                     _("You matching text has too many regular expresssion subgroups. "
                       "Only nine are allowed."))
 
@@ -1163,7 +1163,7 @@ def mode_mkeventd_status(phase):
         home_button()
         mkeventd_rules_button()
         return
-    
+
     elif phase == "action":
         if config.may("mkeventd.switchmode"):
             if html.has_var("_switch_sync"):
@@ -1171,7 +1171,7 @@ def mode_mkeventd_status(phase):
             else:
                 new_mode = "takeover"
             c = wato_confirm(_("Confirm switching replication mode"),
-                    _("Do you really want to switch the event daemon to %s mode?" % 
+                    _("Do you really want to switch the event daemon to %s mode?" %
                         new_mode))
             if c:
                 mkeventd.query("COMMAND SWITCHMODE;%s" % new_mode)
@@ -1183,7 +1183,7 @@ def mode_mkeventd_status(phase):
                 return
 
         return
-                
+
     if not mkeventd.daemon_running():
         warning = _("The Event Console Daemon is currently not running. ")
         if defaults.omd_root:
@@ -1198,7 +1198,7 @@ def mode_mkeventd_status(phase):
     html.write("<h3>%s</h3>" % _("Current Server Status"))
     html.write("<ul>")
     html.write("<li>%s</li>" % _("Event Daemon is running."))
-    html.write("<li>%s: <b>%s</b></li>" % (_("Current replication mode"), 
+    html.write("<li>%s: <b>%s</b></li>" % (_("Current replication mode"),
         { "sync" : _("synchronize"),
           "takeover" : _("Takeover!"),
         }.get(repl_mode, _("master / standalone"))))
@@ -1212,7 +1212,7 @@ def mode_mkeventd_status(phase):
             html.write(_("<li>No successful synchronization so far.</li>"))
 
     html.write("</ul>")
-    
+
     if config.may("mkeventd.switchmode"):
         html.begin_form("switch")
         if repl_mode == "sync":
@@ -1221,7 +1221,7 @@ def mode_mkeventd_status(phase):
             html.button("_switch_sync", _("Switch back to sync mode!"))
         html.hidden_fields()
         html.end_form()
-    
+
 
 
 if mkeventd_enabled:
@@ -1229,7 +1229,7 @@ if mkeventd_enabled:
     modes["mkeventd_edit_rule"] = (["mkeventd.edit"], mode_mkeventd_edit_rule)
     modes["mkeventd_changes"]   = (["mkeventd.edit"], mode_mkeventd_changes)
     modes["mkeventd_status"]    = ([], mode_mkeventd_status)
-    
+
 
 
 #.
@@ -1296,7 +1296,7 @@ if mkeventd_enabled:
             Tuple(
                 elements = [
                   Integer(
-                      title = _("Port number:"), 
+                      title = _("Port number:"),
                       help = _("If you are running the mkeventd as a non-root (such as in an OMD site) "
                                "please choose port number greater than 1024."),
                       minvalue = 1,
@@ -1305,7 +1305,7 @@ if mkeventd_enabled:
                   ),
                   Checkbox(
                       title = _("Security"),
-                      label = _("allow execution of commands and actions via TCP"), 
+                      label = _("allow execution of commands and actions via TCP"),
                       help = _("Without this option the access is limited to querying the current "
                                "and historic event status."),
                       default_value = False,
@@ -1357,7 +1357,7 @@ if mkeventd_enabled:
             Dictionary(
                 optional_keys = [ "takeover", "fallback", "disabled", "logging" ],
                 elements = [
-                    ( "master", 
+                    ( "master",
                       Tuple(
                           title = _("Master Event Console"),
                           help = _("Specify the host name or IP address of the master Event Console that "
@@ -1369,7 +1369,7 @@ if mkeventd_enabled:
                                   allow_empty = False,
                               ),
                               Integer(
-                                  title = _("TCP Port number of status socket:"), 
+                                  title = _("TCP Port number of status socket:"),
                                   minvalue = 1,
                                   maxvalue = 65535,
                                   default_value = 6558,
@@ -1397,7 +1397,7 @@ if mkeventd_enabled:
                           default_value = 10,
                       ),
                     ),
-                    ( "takeover", 
+                    ( "takeover",
                       Integer(
                           title = _("Automatic takeover"),
                           help = _("If you enable this option then the slave will automatically "
@@ -1450,7 +1450,7 @@ if mkeventd_enabled:
     )
 
 
-    
+
     register_configvar(group,
         "retention_interval",
         Age(title = _("State Retention Interval"),
@@ -1460,7 +1460,7 @@ if mkeventd_enabled:
             default_value = 60,
         ),
         domain = "mkeventd")
-                
+
     register_configvar(group,
         "housekeeping_interval",
         Age(title = _("Housekeeping Interval"),
@@ -1521,7 +1521,7 @@ if mkeventd_enabled:
                           "will be displayed."),
                 default_value = False),
         domain = "multisite")
-    
+
     register_configvar(group,
         "mkeventd_pprint_rules",
         Checkbox(title = _("Pritty-Print rules in configuration file"),
@@ -1534,7 +1534,7 @@ if mkeventd_enabled:
                           "rulesets it makes debugging and manual editing simpler."),
                 default_value = False),
         domain = "multisite")
-    
+
 
     register_configvar(group,
         "actions",
@@ -1618,7 +1618,7 @@ if mkeventd_enabled:
 # Settings that should also be avaiable on distributed Sites that
 # do not run an own eventd but want to query one or send notifications
 # to one.
-group = _("Notification") 
+group = _("Notification")
 register_configvar(group,
     "mkeventd_notify_contactgroup",
     GroupSelection(
@@ -1659,7 +1659,7 @@ register_configvar(group,
         help = _("This will send the notification to a Check_MK Event Console on a remote host "
                  "by using syslog. <b>Note</b>: this setting will only be applied if no Event "
                  "Console is running locally in this site! That way you can use the same global "
-                 "settings on your central and decentralized system and makes distributed WATO " 
+                 "settings on your central and decentralized system and makes distributed WATO "
                  "easier. Please also make sure that <b>Send notifications to Event Console</b> "
                  "is enabled."),
         label = _("Send to remote Event Console via syslog"),
@@ -1709,7 +1709,7 @@ group = "eventconsole"
 
 
 register_rule(
-    group, 
+    group,
     "active_checks:mkevents",
     Dictionary(
         title = _("Check event state in Event Console"),
@@ -1752,7 +1752,7 @@ register_rule(
                            "determining the event state. Acknowledged events are displayed "
                            "(i.e. their count) but not taken into account."),
                   totext = _("acknowledged events will not be honored"),
-                 ) 
+                 )
             ),
             ( "remote",
               Alternative(
@@ -1765,7 +1765,7 @@ register_rule(
                                   allow_empty = False,
                               ),
                               Integer(
-                                  title = _("TCP Port number:"), 
+                                  title = _("TCP Port number:"),
                                   minvalue = 1,
                                   maxvalue = 65535,
                                   default_value = 6558,
@@ -1776,7 +1776,7 @@ register_rule(
                                    "site as the host is monitored you need to access the remote Event Console "
                                    "via TCP. Please make sure that this is activated in the global settings of "
                                    "the event console. The default port number is 6558."),
-                      ), 
+                      ),
                       TextAscii(
                           title = _("Access via UNIX socket"),
                           allow_empty = False,
@@ -1784,8 +1784,8 @@ register_rule(
                       ),
 
                  ],
-                 default_value = defaults.omd_root 
-                      and defaults.omd_root + "/tmp/run/mkeventd/status" 
+                 default_value = defaults.omd_root
+                      and defaults.omd_root + "/tmp/run/mkeventd/status"
                       or defaults.livestatus_unix_socket.split("/",1)[0] + "/mkeventd/status"
             )
           ),
@@ -1809,7 +1809,7 @@ register_rule(
     ),
     match = 'first',
 )
-    
+
 register_rule(
     group,
     "extra_service_conf:_ec_sl",
@@ -1897,12 +1897,12 @@ define contact {
 
 define command {
     command_name                   mkeventd-notify-host
-    command_line                   mkevent -n %(facility)s '%(remote)s' $HOSTSTATEID$ '$HOSTNAME$' '' '$HOSTOUTPUT$' '$_HOSTEC_SL$' '$_HOSTEC_CONTACT$' 
+    command_line                   mkevent -n %(facility)s '%(remote)s' $HOSTSTATEID$ '$HOSTNAME$' '' '$HOSTOUTPUT$' '$_HOSTEC_SL$' '$_HOSTEC_CONTACT$'
 }
 
 define command {
     command_name                   mkeventd-notify-service
-    command_line                   mkevent -n %(facility)s '%(remote)s' $SERVICESTATEID$ '$HOSTNAME$' '$SERVICEDESC$' '$SERVICEOUTPUT$' '$_SERVICEEC_SL$' '$_SERVICEEC_CONTACT$' '$_HOSTEC_SL$' '$_HOSTEC_CONTACT$' 
+    command_line                   mkevent -n %(facility)s '%(remote)s' $SERVICESTATEID$ '$HOSTNAME$' '$SERVICEDESC$' '$SERVICEOUTPUT$' '$_SERVICEEC_SL$' '$_SERVICEEC_CONTACT$' '$_HOSTEC_SL$' '$_HOSTEC_CONTACT$'
 }
 """ % { "group" : contactgroup, "facility" : config.mkeventd_notify_facility, "remote" : remote_console })
 

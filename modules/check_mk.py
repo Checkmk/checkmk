@@ -123,7 +123,7 @@ def verbose(t):
 # read in this file first. It tells us where to look for our
 # configuration file. In python argv[0] always contains the directory,
 # even if the binary lies in the PATH and is called without
-# '/'. This allows us to find our directory by taking everying up to
+# '/'. This allows us to find our directory by taking everything up to
 # the first '/'
 
 # Allow to specify defaults file on command line (needed for OMD)
@@ -514,7 +514,7 @@ def host_is_aggregated(hostname):
     if not service_aggregations:
         return False
 
-    # host might by explicitely configured as not aggregated
+    # host might by explicitly configured as not aggregated
     if in_binary_hostlist(hostname, non_aggregated_hosts):
         return False
 
@@ -523,7 +523,7 @@ def host_is_aggregated(hostname):
     is_aggr = len(host_extra_conf(hostname, host_conf_list)) > 0
     return is_aggr
 
-# Determines the aggretated service name for a given
+# Determines the aggregated service name for a given
 # host and service description. Returns "" if the service
 # is not aggregated
 def aggregated_service_name(hostname, servicedesc):
@@ -827,7 +827,7 @@ def is_cluster(hostname):
 def clusters_of(hostname):
     return [ strip_tags(c) for c,n in clusters.items() if hostname in n ]
 
-# Determine wether a service (found on a physical host) is a clustered
+# Determine weather a service (found on a physical host) is a clustered
 # service and - if yes - return the cluster host of the service. If
 # no, returns the hostname of the physical host.
 def host_of_clustered_service(hostname, servicedesc):
@@ -835,7 +835,7 @@ def host_of_clustered_service(hostname, servicedesc):
     if not the_clusters:
         return hostname
 
-    # 1. New style: explicitlely assigned services
+    # 1. New style: explicitly assigned services
     for cluster, conf in clustered_services_of.items():
         nodes = nodes_of(cluster)
         if not nodes:
@@ -867,7 +867,7 @@ def host_of_clustered_service(hostname, servicedesc):
 # Format: ( checkname, item ) -> (params, description )
 
 # Keep a global cache of per-host-checktables, since this
-# operation is quiet lengty.
+# operation is quite lengthy.
 g_check_table_cache = {}
 # A further cache splits up all checks into single-host-entries
 # and those possibly matching multiple hosts. The single host entries
@@ -1072,7 +1072,7 @@ def service_description(check_type, item):
         descr_format = check_info[check_type]["service_description"]
 
     # Note: we strip the service description (remove spaces).
-    # One check defines "Pages %s" as a desription, but the item
+    # One check defines "Pages %s" as a description, but the item
     # can by empty in some cases. Nagios silently drops leading
     # and trailing spaces in the configuration file.
 
@@ -2103,7 +2103,7 @@ def create_nagios_config_contacts(outfile):
             # If the contact is in no contact group or all of the contact groups
             # of the contact have neither hosts nor services assigned - in other
             # words if the contact is not assigned to any host or service, then
-            # we do not create this contact in Nagios. It's useless and wil produce
+            # we do not create this contact in Nagios. It's useless and will produce
             # warnings.
             cgrs = [ cgr for cgr in contact.get("contactgroups", []) if cgr in contactgroups_to_define ]
             if not cgrs:
@@ -2430,7 +2430,7 @@ def check_inventory(hostname):
             info = ", ".join([ "%s:%d" % (ct, count) for ct,count in newchecks ])
             statustext = { 0 : "OK", 1: "WARNING", 2:"CRITICAL" }.get(inventory_check_severity, "UNKNOWN")
             sys.stdout.write("%s - %d unchecked services (%s)\n" % (statustext, total_count, info))
-            # Put detailed list into long pluging output
+            # Put detailed list into long plugin output
             for hostname, checkname, item in newitems:
                 sys.stdout.write("%s: %s\n" % (checkname, service_description(checkname, item)))
             sys.exit(inventory_check_severity)
@@ -4248,7 +4248,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
             sys.stdout.flush()
 
     # Now all run and we begin to read the answers. For each host
-    # we add a triple to gateways: the gateway, a scan state  and a diagnostig output
+    # we add a triple to gateways: the gateway, a scan state  and a diagnostic output
     gateways = []
     for host, ip, proc in procs:
         lines = [l.strip() for l in proc.readlines()]

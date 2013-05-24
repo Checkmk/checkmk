@@ -23,7 +23,9 @@ if which smartctl > /dev/null 2>&1 ; then
     fi
 
     echo '<<<smart>>>'
-    for D in /dev/disk/by-id/scsi-*; do
+    for D in /dev/disk/by-id/{scsi,ata}-*; do
+        [ "$D" != "${D%scsi-\*}" ] && continue
+        [ "$D" != "${D%ata-\*}" ] && continue
         [ "$D" != "${D%-part*}" ] && continue
         N=$(readlink $D)
         N=${N##*/}
@@ -43,8 +45,9 @@ if which smartctl > /dev/null 2>&1 ; then
             continue
         fi
 
-	# strip device name for final output
-	DNAME=${D#/dev/disk/by-id/scsi-}
+        # strip device name for final output
+        DNAME=${D#/dev/disk/by-id/scsi-}
+        DNAME=${DNAME#/dev/disk/by-id/ata-}
         # 2012-01-25 Stefan Kaerst CDJ - special option in case vendor is AMCC
 	CMD=
         if [ "$VEND" == "AMCC" -a -n "$TWAC" ]; then

@@ -3961,10 +3961,11 @@ def usage():
  check_mk [-u] -II ...                     renew inventory, drop old services
  check_mk -u, --cleanup-autochecks         reorder autochecks files
  check_mk -N [HOSTS...]                    output Nagios configuration
+ check_mk -B                               create configuration for core
  check_mk -C, --compile                    precompile host checks
- check_mk -U, --update                     precompile + create Nagios config
- check_mk -O, --reload                     precompile + config + Nagios reload
- check_mk -R, --restart                    precompile + config + Nagios restart
+ check_mk -U, --update                     precompile + create config for core
+ check_mk -O, --reload                     precompile + config + core reload
+ check_mk -R, --restart                    precompile + config + core restart
  check_mk -D, --dump [H1 H2 ..]            dump all or some hosts
  check_mk -d HOSTNAME|IPADDRESS            show raw information from agent
  check_mk --check-inventory HOSTNAME       check for items not yet checked
@@ -3990,7 +3991,7 @@ def usage():
 OPTIONS:
   -v             show what's going on
   -p             also show performance data (use with -v)
-  -n             do not submit results to Nagios, do not save counters
+  -n             do not submit results to core, do not save counters
   -c FILE        read config file FILE instead of %s
   --cache        read info from cache file is present and fresh, use TCP
                  only, if cache file is absent or too old
@@ -4031,7 +4032,7 @@ NOTES:
   -d does not work on clusters (such defined in main.mk) but only on
   real hosts.
 
-  --check-inventory make check_mk behave as Nagios plugins that
+  --check-inventory make check_mk behave as monitoring plugins that
   checks if an inventory would find new services for the host.
 
   --list-hosts called without argument lists all hosts. You may
@@ -4084,7 +4085,7 @@ NOTES:
   hosts's parents. It creates the file conf.d/parents.mk which
   defines gateway hosts and parent declarations.
 
-  Nagios can call check_mk without options and the hostname and its IP
+  The core can call check_mk without options and the hostname and its IP
   address as arguments. Much faster is using precompiled host checks,
   though.
 
@@ -4116,14 +4117,11 @@ def do_precompile_hostchecks():
     sys.stdout.write(tty_ok + "\n")
 
 
-def do_update():
+def do_update(with_precompile):
     try:
         do_create_config()
-        do_precompile_hostchecks()
-        sys.stdout.write(("Successfully created Nagios configuration file %s%s%s.\n\n" +
-                         "Please make sure that file will be read by Nagios.\n" +
-                         "You need to restart Nagios in order to activate " +
-                         "the changes.\n") % (tty_green + tty_bold, nagios_objects_file, tty_normal))
+        if with_precompile:
+            do_precompile_hostchecks()
 
     except Exception, e:
         sys.stderr.write("Configuration Error: %s\n" % e)
@@ -4910,7 +4908,7 @@ def output_profile():
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
-    short_options = 'SHVLCURODMd:Ic:nhvpXPuN'
+    short_options = 'SHVLCURODMd:Ic:nhvpXPuNB'
     long_options = [ "help", "version", "verbose", "compile", "debug",
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "localize", "donate", "snmpwalk", "snmptranslate",
@@ -4993,11 +4991,14 @@ if __name__ == "__main__":
             elif o == '-N':
                 do_output_nagios_conf(args)
                 done = True
+            elif o == '-B':
+                do_update(False)
+                done = True
             elif o in [ '-C', '--compile' ]:
                 precompile_hostchecks()
                 done = True
             elif o in [ '-U', '--update' ] :
-                do_update()
+                do_update(True)
                 done = True
             elif o in [ '-R', '--restart' ] :
                 do_restart()

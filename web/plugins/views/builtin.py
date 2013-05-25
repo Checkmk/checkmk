@@ -933,7 +933,7 @@ multisite_builtin_views.update({
                                     ('stp', 'on')],
                 'hidden': False,
                 'hide_filters': [],
-                'layout': 'boxed',
+                'layout': 'table',
                 'linktitle': _('Pending Services'),
                 'mustsearch': False,
                 'name': 'pendingsvc',

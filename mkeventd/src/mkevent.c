@@ -32,7 +32,7 @@
 #include <netinet/in.h>
 
 /* Methods for specified the path to the pipe of
-   mkeventd: 
+   mkeventd:
 
    1. Run mkevent within the environment of a
       OMD site -> will find pipe itself
@@ -54,7 +54,7 @@ int file_exists(char *path)
 }
 
 
-char *append_str(char *str, char *dest) 
+char *append_str(char *str, char *dest)
 {
     int len = strlen(str);
     memcpy(dest, str, len);
@@ -64,7 +64,7 @@ char *append_str(char *str, char *dest)
 char *append_int(long n, char *dest)
 {
     static char digits[] = "0123456789";
-    char buf[32]; 
+    char buf[32];
     buf[31] = 0;
     char *b = buf + 31;
     do {
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
             contact = "";
 
         int priority;
-        if (state == 0) 
+        if (state == 0)
             priority = 5;
         else {
             if (!service[0])
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
                 priority = 4; // warn
             else if (state == 3)
                 priority = 3; // map UNKNOWN/UNREAD to err
-            else            
+            else
                 priority = 2; // CRIT/DOWN goes to crit
         }
 
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
     int fd;
     if (!file_exists(path_to_pipe) && remote[0]) {
         if (!isdigit(remote[0])) {
-            write(1, "ERROR: Please specify the remote host as IPv4 address, not '", 60); 
+            write(1, "ERROR: Please specify the remote host as IPv4 address, not '", 60);
             write(1, remote, strlen(remote));
             write(1, "'\n", 2);
             exit(1);

@@ -1275,7 +1275,7 @@ register_rule(group,
             default_value = [ "d", "u", "r", "f", "s" ],
         ),
         title = _("Notified events for hosts"),
-        help = _("This ruleset allows you to restrict notifications of host problems to certain "  
+        help = _("This ruleset allows you to restrict notifications of host problems to certain "
                "states, e.g. only notify on DOWN, but not on UNREACHABLE. Please select the types "
                "of events that should initiate notifications. Please note that several other "
                "filters must also be passed in order for notifications to finally being sent out."),
@@ -1299,7 +1299,7 @@ register_rule(group,
             default_value = [ "w", "u", "c", "r", "f", "s" ],
         ),
         title = _("Notified events for services"),
-        help = _("This ruleset allows you to restrict notifications of service problems to certain "  
+        help = _("This ruleset allows you to restrict notifications of service problems to certain "
                "states, e.g. only notify on CRIT, but not on WARN. Please select the types "
                "of events that should initiate notifications. Please note that several other "
                "filters must also be passed in order for notifications to finally being sent out."),

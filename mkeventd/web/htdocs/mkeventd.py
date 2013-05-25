@@ -108,8 +108,8 @@ def action_choices(omit_hidden = False):
     # not in multisite.mk (like the service levels). That
     # way we have not direct access to them but need
     # to load them from the configuration.
-    return [ (a["id"], a["title"]) 
-             for a in eventd_configuration().get("actions", []) 
+    return [ (a["id"], a["title"])
+             for a in eventd_configuration().get("actions", [])
              if not omit_hidden or not a.get("hidden") ]
 
 cached_config = None
@@ -132,7 +132,7 @@ def eventd_configuration():
         execfile(path, config, config)
     cached_config = (html, config)
     return config
-    
+
 
 def daemon_running():
     return os.path.exists(socket_path)
@@ -194,7 +194,7 @@ def event_rule_matches(rule, event):
 
     if False == match(rule.get("match_application"), event["application"], complete=False):
         return _("The application (syslog tag) does not match")
-    
+
     if "match_facility" in rule and event["facility"] != rule["match_facility"]:
         return _("The syslog facility does not match")
 
@@ -212,7 +212,7 @@ def event_rule_matches(rule, event):
             if match_groups == True:
                 match_groups = ()
             return True, match_groups
-            
+
     try:
         match_groups = match(rule.get("match"), event["text"], complete = False)
     except Exception, e:
@@ -228,9 +228,30 @@ def event_rule_matches(rule, event):
         if p < prio_from or p > prio_to:
             return _("The syslog priority is not in the required range.")
 
+    if "match_timeperiod" in rule:
+        reason = check_timeperiod(rule["match_timeperiod"])
+        if reason:
+            return reason
+
     if match_groups == True:
         match_groups = () # no matching groups
     return False, match_groups
+
+def check_timeperiod(tpname):
+    try:
+        livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        livesock.connect(defaults.livestatus_unix_socket)
+        livesock.send("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname)
+        livesock.shutdown(socket.SHUT_WR)
+        answer = livesock.recv(100).strip()
+        if answer == "":
+            return _("The timeperiod %s is not known to the local monitoring core") % tpname
+        elif int(answer) == 0:
+            return _("The timeperiod %s is currently not active" % tpname)
+    except Exception, e:
+        return _("Cannot update timeperiod information for %s: %s" % (tpname, e))
+        if opt_debug:
+            raise
 
 def match(pattern, text, complete = True):
     if pattern == None:

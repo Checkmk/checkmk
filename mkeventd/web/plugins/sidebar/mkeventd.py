@@ -53,7 +53,7 @@ def render_mkeventd_performance():
     # Hit rate
     try:
         write_line(_("Rule hit ratio"), "%.2f %%" % (
-           data["status_average_rule_hit_rate"] / 
+           data["status_average_rule_hit_rate"] /
            data["status_average_rule_trie_rate"] * 100))
     except: # division by zero
         write_line(_("Rule hit ratio"), _("-.-- %"))

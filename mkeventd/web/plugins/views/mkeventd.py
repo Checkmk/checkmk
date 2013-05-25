@@ -51,7 +51,7 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
     rows = get_all_events(what, filters, limit)
 
     # Now we join the stuff with the host information. Therefore we
-    # get the information about all hosts that are referred to in 
+    # get the information about all hosts that are referred to in
     # any of the events.
     required_hosts = set()
     for row in rows:
@@ -60,7 +60,7 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
             required_hosts.add(host.lower())
 
     # Get information about these hosts via Livestatus. We
-    # allow event_host to match either the host_name or 
+    # allow event_host to match either the host_name or
     # the host_address.
     host_filters = ""
     for host in required_hosts:
@@ -136,7 +136,7 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
 
 def event_hostrows(columns, only_sites, filters, host_filters):
     filter_code = ""
-    for filt in filters: 
+    for filt in filters:
         header = filt.filter("event")
         if not header.startswith("Sites:"):
             filter_code += header
@@ -183,14 +183,14 @@ def get_all_events(what, filters, limit):
                    '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
     response = mkeventd.query(query)
 
-    # First line of the response is the list of column names. 
+    # First line of the response is the list of column names.
     headers = response[0]
     rows = []
     for r in response[1:]:
         rows.append(dict(zip(headers, r)))
     return rows
-    
-    
+
+
 # Declare datasource only if the event console is activated. We do
 # not want to irritate users that do not know anything about the EC.
 if mkeventd_enabled:
@@ -201,7 +201,7 @@ if mkeventd_enabled:
         "keys"        : [],
         "idkeys"      : [ 'site', 'host_name', 'event_id' ],
     }
-    
+
     multisite_datasources["mkeventd_history"] = {
         "title"       : _("Event Console: Event History"),
         "table"       : lambda *args: table_events('history', *args),
@@ -209,7 +209,7 @@ if mkeventd_enabled:
         "keys"        : [],
         "idkeys"      : [ 'site', 'host_name', 'event_id', 'history_line' ],
     }
-    
+
     #.
     #   .--Filters-------------------------------------------------------------.
     #   |                     _____ _ _ _                                      |
@@ -219,7 +219,7 @@ if mkeventd_enabled:
     #   |                    |_|   |_|_|\__\___|_|  |___/                      |
     #   |                                                                      |
     #   '----------------------------------------------------------------------'
-    
+
     # All filters for events define a function event_headers, that
     # returns header lines for the event daemon, if the filter is in
     # use.
@@ -227,14 +227,14 @@ if mkeventd_enabled:
         def __init__(self, table, filter_name, column, title, op):
            FilterText.__init__(self, filter_name, title, table, column, filter_name, op)
            self._table = table
-    
+
         # Disable Livestatus filter
         def filter(self, infoname):
             return ""
-    
+
         def event_headers(self):
             return FilterText.filter(self, self._table)
-    
+
     declare_filter(200, EventFilterText("event",   "event_id",         "event_id",          _("Event ID"),                              "="))
     declare_filter(200, EventFilterText("event",   "event_rule_id",    "event_rule_id",     _("ID of rule"),                            "="))
     declare_filter(201, EventFilterText("event",   "event_text",       "event_text",        _("Message/Text of event"),                 "~~"))
@@ -246,22 +246,22 @@ if mkeventd_enabled:
     declare_filter(201, EventFilterText("event",   "event_owner",      "event_owner",       _("Owner of event"),                        "~~"))
     declare_filter(221, EventFilterText("history", "history_who",      "history_who",       _("User that performed action"),            "~~"))
     declare_filter(222, EventFilterText("history", "history_line",     "history_line",      _("Line number in history logfile"),        "="))
-    
-    
+
+
     class EventFilterCount(Filter):
         def __init__(self, name, title):
             Filter.__init__(self, name, title, "event", [name + "_from", name + "_to"], [name])
             self._name = name
-    
+
         def display(self):
             html.write("from: ")
             html.number_input(self._name + "_from", "")
             html.write(" to: ")
             html.number_input(self._name + "_to", "")
-    
+
         def filter(self, infoname):
             return ""
-    
+
         def event_headers(self):
             try:
                 f = ""
@@ -272,20 +272,20 @@ if mkeventd_enabled:
                 return f
             except:
                 return ""
-    
-    
+
+
     declare_filter(205, EventFilterCount("event_count", _("Message count")))
-    
+
     class EventFilterState(Filter):
         def __init__(self, table, name, title, choices):
             varnames = [ name + "_" + str(c[0]) for c in choices ]
             Filter.__init__(self, name, title, table, varnames, [name])
             self._name = name
             self._choices = choices
-    
+
         def double_height(self):
             return len(self._choices) >= 5
-    
+
         def display(self):
             html.begin_checkbox_group()
             c = 0
@@ -296,10 +296,10 @@ if mkeventd_enabled:
                     html.write("<br>")
                     c = 0
             html.end_checkbox_group()
-    
+
         def filter(self, infoname):
             return ""
-    
+
         def event_headers(self):
             sel = []
             for name, title in self._choices:
@@ -307,38 +307,38 @@ if mkeventd_enabled:
                     sel.append(str(name))
             if len(sel) > 0 and len(sel) < len(self._choices):
                 return "Filter: %s in %s\n" % (self._name, " ".join(sel))
-    
-    
-    
+
+
+
     declare_filter(206, EventFilterState("event", "event_state", _("State classification"), [ (0, _("OK")), (1, _("WARN")), (2, _("CRIT")), (3,_("UNKNOWN")) ]))
     declare_filter(207, EventFilterState("event", "event_phase", _("Phase"), mkeventd.phase_names.items()))
     declare_filter(209, EventFilterState("event", "event_priority", _("Syslog Priority"), mkeventd.syslog_priorities))
     declare_filter(225, EventFilterState("history", "history_what", _("History action type"), [(k,k) for k in mkeventd.action_whats.keys()]))
-    
-    
+
+
     class EventFilterTime(FilterTime):
         def __init__(self, table, name, title):
             FilterTime.__init__(self, table, name, title, name)
             self._table = table
-    
+
         def filter(self, infoname):
             return ""
-    
+
         def event_headers(self):
             return FilterTime.filter(self, self._table)
-    
+
     declare_filter(220, EventFilterTime("event", "event_first", _("First occurrance of event")))
     declare_filter(221, EventFilterTime("event", "event_last", _("Last occurrance of event")))
     declare_filter(222, EventFilterTime("history", "history_time", _("Time of entry in event history")))
-    
-    
+
+
     class EventFilterDropdown(Filter):
         def __init__(self, name, title, choices, operator = '=', column=None):
             if column == None:
                 column = name
-            self._varname = "event_" + name 
-            Filter.__init__(self, "event_" + name, title, "event", [ self._varname ], [ "event_" + column ]) 
-            self._choices = choices 
+            self._varname = "event_" + name
+            Filter.__init__(self, "event_" + name, title, "event", [ self._varname ], [ "event_" + column ])
+            self._choices = choices
             self._column = column
             self._operator = operator
 
@@ -353,16 +353,16 @@ if mkeventd_enabled:
             return ""
 
         def event_headers(self):
-            val = html.var(self._varname) 
+            val = html.var(self._varname)
             if val:
                 return "Filter: event_%s %s %s\n" % (self._column, self._operator, val)
 
-    
-    
+
+
     declare_filter(210, EventFilterDropdown("facility", _("Syslog Facility"), mkeventd.syslog_facilities))
     declare_filter(211, EventFilterDropdown("sl", _("Service Level at least"), mkeventd.service_levels, operator='>='))
     declare_filter(211, EventFilterDropdown("sl_max", _("Service Level at most"), mkeventd.service_levels, operator='<=', column="sl"))
-    
+
     #.
     #   .--Painters------------------------------------------------------------.
     #   |                 ____       _       _                                 |
@@ -372,34 +372,34 @@ if mkeventd_enabled:
     #   |                |_|   \__,_|_|_| |_|\__\___|_|  |___/                 |
     #   |                                                                      |
     #   '----------------------------------------------------------------------'
-    
+
     def paint_event_host(row):
         if row["host_name"]:
             return "", row["host_name"]
         else:
             return "", row["event_host"]
-    
+
     multisite_painters["event_id"] = {
         "title"   : _("ID of the event"),
         "short"   : _("ID"),
         "columns" : ["event_id"],
         "paint"   : lambda row: ("number", row["event_id"]),
     }
-    
+
     multisite_painters["event_count"] = {
         "title"   : _("Count (number of recent occurrances)"),
         "short"   : _("Cnt."),
         "columns" : ["event_count"],
         "paint"   : lambda row: ("number", row["event_count"]),
     }
-    
+
     multisite_painters["event_text"] = {
         "title"   : _("Text/Message of the event"),
         "short"   : _("Message"),
         "columns" : ["event_text"],
         "paint"   : lambda row: ("", row["event_text"]),
     }
-    
+
     multisite_painters["event_first"] = {
         "title"   : _("Time of first occurrance of this serial"),
         "short"   : _("First"),
@@ -407,7 +407,7 @@ if mkeventd_enabled:
         "options" : [ "ts_format", "ts_date" ],
         "paint"   : lambda row: paint_age(row["event_first"], True, True),
     }
-    
+
     multisite_painters["event_last"] = {
         "title"   : _("Time of last occurrance"),
         "short"   : _("Last"),
@@ -415,76 +415,76 @@ if mkeventd_enabled:
         "options" : [ "ts_format", "ts_date" ],
         "paint"   : lambda row: paint_age(row["event_last"], True, True),
     }
-    
+
     multisite_painters["event_comment"] = {
         "title"   : _("Comment to the event"),
         "short"   : _("Comment"),
         "columns" : ["event_comment"],
         "paint"   : lambda row: ("", row["event_comment"]),
     }
-    
+
     def mkeventd_paint_sl(row):
         try:
             return "", dict(config.mkeventd_service_levels)[row["event_sl"]]
         except:
             return "", row["event_sl"]
-    
+
     multisite_painters["event_sl"] = {
         "title"   : _("Service-Level"),
         "short"   : _("Level"),
         "columns" : ["event_sl"],
         "paint"   : mkeventd_paint_sl,
     }
-    
+
     multisite_painters["event_host"] = {
         "title"   : _("Hostname/IP-Address"),
         "short"   : _("Host"),
         "columns" : ["event_host", "host_name"],
         "paint"   : paint_event_host,
     }
-    
+
     multisite_painters["event_owner"] = {
         "title"   : _("Owner of event"),
         "short"   : _("owner"),
         "columns" : ["event_owner"],
         "paint"   : lambda row: ("", row["event_owner"]),
     }
-    
+
     multisite_painters["event_contact"] = {
         "title"   : _("Contact Person"),
         "short"   : _("Contact"),
         "columns" : ["event_contact" ],
         "paint"   : lambda row: ("", row["event_contact"]),
     }
-    
+
     multisite_painters["event_application"] = {
         "title"   : _("Application / Syslog-Tag"),
         "short"   : _("Application"),
         "columns" : ["event_application" ],
         "paint"   : lambda row: ("", row["event_application"]),
     }
-    
+
     multisite_painters["event_pid"] = {
         "title"   : _("Process ID"),
         "short"   : _("PID"),
         "columns" : ["event_pid" ],
         "paint"   : lambda row: ("", row["event_pid"]),
     }
-    
+
     multisite_painters["event_priority"] = {
         "title"   : _("Syslog-Priority"),
         "short"   : _("Prio"),
         "columns" : ["event_priority" ],
         "paint"   : lambda row: ("", dict(mkeventd.syslog_priorities)[row["event_priority"]]),
     }
-    
+
     multisite_painters["event_facility"] = {
         "title"   : _("Syslog-Facility"),
         "short"   : _("Facility"),
         "columns" : ["event_facility" ],
         "paint"   : lambda row: ("", dict(mkeventd.syslog_facilities)[row["event_facility"]]),
     }
-    
+
     def paint_rule_id(row):
         rule_id = row["event_rule_id"]
         if config.may("mkeventd.edit"):
@@ -492,33 +492,33 @@ if mkeventd_enabled:
             return "", '<a href="wato.py?%s">%s</a>' % (urlvars, rule_id)
         else:
             return "", rule_id
-    
+
     multisite_painters["event_rule_id"] = {
         "title"   : _("Rule-ID"),
         "short"   : _("Rule"),
         "columns" : ["event_rule_id" ],
         "paint"   : paint_rule_id,
     }
-    
+
     def paint_event_state(row):
         state = row["event_state"]
         name = nagios_short_state_names[row["event_state"]]
         return "state svcstate state%s" % state, name
-    
+
     multisite_painters["event_state"] = {
         "title"   : _("State (severity) of event"),
         "short"   : _("State"),
         "columns" : ["event_state"],
         "paint"   : paint_event_state,
     }
-    
+
     multisite_painters["event_phase"] = {
         "title"   : _("Phase of event (open, counting, etc.)"),
         "short"   : _("Phase"),
         "columns" : ["event_phase" ],
         "paint"   : lambda row: ("", mkeventd.phase_names.get(row["event_phase"], ''))
     }
-    
+
     def paint_event_icons(row):
         phase = row["event_phase"]
         if phase == "ack":
@@ -530,23 +530,23 @@ if mkeventd_enabled:
         else:
             return "", ""
         return 'icons', '<img class=icon title="%s" src="images/icon_%s.png">' % (title, phase)
-    
+
     multisite_painters["event_icons"] = {
         "title"   : _("Event Icons"),
         "short"   : _("Icons"),
         "columns" : [ "event_phase" ],
         "paint"   : paint_event_icons,
     }
-    
+
     # Event History
-    
+
     multisite_painters["history_line"] = {
         "title"   : _("Line number in log file"),
         "short"   : _("Line"),
         "columns" : ["history_line" ],
         "paint"   : lambda row: ("number", row["history_line"]),
     }
-    
+
     multisite_painters["history_time"] = {
         "title"   : _("Time of entry in logfile"),
         "short"   : _("Time"),
@@ -554,35 +554,35 @@ if mkeventd_enabled:
         "options" : [ "ts_format", "ts_date" ],
         "paint"   : lambda row: paint_age(row["history_time"], True, True),
     }
-    
+
     multisite_painters["history_what"] = {
         "title"   : _("Type of event action"),
         "short"   : _("Action"),
         "columns" : ["history_what" ],
         "paint"   : lambda row: ("", row["history_what"]),
     }
-    
+
     multisite_painters["history_what_explained"] = {
         "title"   : _("Explanation for event action"),
         "columns" : ["history_what" ],
         "paint"   : lambda row: ("", mkeventd.action_whats[row["history_what"]]),
     }
-    
-    
+
+
     multisite_painters["history_who"] = {
         "title"   : _("User who performed action"),
         "short"   : _("Who"),
         "columns" : ["history_who" ],
         "paint"   : lambda row: ("", row["history_who"]),
     }
-    
+
     multisite_painters["history_addinfo"] = {
         "title"   : _("Additional Information"),
         "short"   : _("Info"),
         "columns" : ["history_addinfo" ],
         "paint"   : lambda row: ("", row["history_addinfo"]),
     }
-    
+
     #.
     #   .--Commands------------------------------------------------------------.
     #   |         ____                                          _              |
@@ -592,11 +592,11 @@ if mkeventd_enabled:
     #   |        \____\___/|_| |_| |_|_| |_| |_|\__,_|_| |_|\__,_|___/         |
     #   |                                                                      |
     #   '----------------------------------------------------------------------'
-    
+
     def command_executor_mkeventd(command, site):
         response = mkeventd.query("COMMAND %s" % command)
-    
-    
+
+
     # Acknowledge and update comment and contact
     config.declare_permission("mkeventd.update",
             _("Update an event"),
@@ -612,7 +612,7 @@ if mkeventd_enabled:
             _("Update an event: change contact"),
             _("Needed for changing a contact when updating an event"),
             [ "user", "admin" ])
-    
+
     def render_mkeventd_update():
         html.write('<table border=0 cellspacing=3 cellpadding=0>')
         if config.may("mkeventd.update_comment"):
@@ -628,7 +628,7 @@ if mkeventd_enabled:
         html.write('</td></tr>')
         html.write('</table>')
         html.button('_mkeventd_update', _("Update"))
-    
+
     def command_mkeventd_update(cmdtag, spec, row):
         if html.var('_mkeventd_update'):
             if config.may("mkeventd.update_comment"):
@@ -643,7 +643,7 @@ if mkeventd_enabled:
             return "UPDATE;%s;%s;%s;%s;%s" % \
                 (row["event_id"], config.user_id, ack and 1 or 0, comment, contact), \
                 _("update")
-    
+
     multisite_commands.append({
         "tables"      : [ "event" ],
         "permission"  : "mkeventd.update",
@@ -680,26 +680,26 @@ if mkeventd_enabled:
         "action"      : command_mkeventd_changestate,
         "executor"    : command_executor_mkeventd,
     })
-    
-    
+
+
     # Perform custom actions
     config.declare_permission("mkeventd.actions",
             _("Perform custom action"),
             _("This permission is needed for performing the configured actions "
               "(execution of scripts and sending emails)."),
             [ "user", "admin" ])
-    
+
     def render_mkeventd_actions():
         for action_id, title in mkeventd.action_choices(omit_hidden = True):
             html.button("_action_" + action_id, title)
             html.write("<br>")
-    
+
     def command_mkeventd_action(cmdtag, spec, row):
         for action_id, title in mkeventd.action_choices(omit_hidden = True):
             if html.var("_action_" + action_id):
                 return "ACTION;%s;%s;%s" % (row["event_id"], config.user_id, action_id), \
                   (_("execute that action &quot;%s&quot") % title)
-    
+
     multisite_commands.append({
         "tables"      : [ "event" ],
         "permission"  : "mkeventd.actions",
@@ -708,22 +708,22 @@ if mkeventd_enabled:
         "action"      : command_mkeventd_action,
         "executor"    : command_executor_mkeventd,
     })
-    
-    
+
+
     # Delete events
     config.declare_permission("mkeventd.delete",
             _("Delete an event"),
             _("Finally delete an event without any further action"),
             [ "user", "admin" ])
-    
-    
+
+
     def command_mkeventd_delete(cmdtag, spec, row):
         if html.var("_delete_event"):
             command = "DELETE;%s;%s" % (row["event_id"], config.user_id)
             title = _("<b>delete</b>")
             return command, title
-    
-    
+
+
     multisite_commands.append({
         "tables"      : [ "event" ],
         "permission"  : "mkeventd.delete",
@@ -733,7 +733,7 @@ if mkeventd_enabled:
         "action"      : command_mkeventd_delete,
         "executor"    : command_executor_mkeventd,
     })
-    
+
     #.
     #   .--Sorters-------------------------------------------------------------.
     #   |                  ____             _                                  |
@@ -743,17 +743,17 @@ if mkeventd_enabled:
     #   |                 |____/ \___/|_|   \__\___|_|  |___/                  |
     #   |                                                                      |
     #   '----------------------------------------------------------------------'
-    
+
     def cmp_simple_state(column, ra, rb):
         a = ra.get(column, -1)
         b = rb.get(column, -1)
-        if a == 3: 
+        if a == 3:
             a = 1.5
-        if b == 3: 
+        if b == 3:
             b = 1.5
         return cmp(a, b)
-    
-    
+
+
     declare_1to1_sorter("event_id", cmp_simple_number)
     declare_1to1_sorter("event_count", cmp_simple_number)
     declare_1to1_sorter("event_text", cmp_simple_string)
@@ -771,13 +771,13 @@ if mkeventd_enabled:
     declare_1to1_sorter("event_state", cmp_simple_state)
     declare_1to1_sorter("event_phase", cmp_simple_string)
     declare_1to1_sorter("event_owner", cmp_simple_string)
-    
+
     declare_1to1_sorter("history_line", cmp_simple_number)
     declare_1to1_sorter("history_time", cmp_simple_number)
     declare_1to1_sorter("history_what", cmp_simple_string)
     declare_1to1_sorter("history_who", cmp_simple_string)
     declare_1to1_sorter("history_addinfo", cmp_simple_string)
-    
+
     #.
     #   .--Views---------------------------------------------------------------.
     #   |                    __     ___                                        |
@@ -787,7 +787,7 @@ if mkeventd_enabled:
     #   |                       \_/  |_|\___| \_/\_/ |___/                     |
     #   |                                                                      |
     #   '----------------------------------------------------------------------'
-    
+
     def mkeventd_view(d):
         x = {
             'topic':           u'Event Console',
@@ -811,7 +811,7 @@ if mkeventd_enabled:
         }
         x.update(d)
         return x
-    
+
     # Table of all open events
     multisite_builtin_views['ec_events'] = mkeventd_view({
         'title':       u'Events',
@@ -856,7 +856,7 @@ if mkeventd_enabled:
             ( 'event_phase_delayed',  ""   ),
         ],
     })
-    
+
     multisite_builtin_views['ec_events_of_monhost'] = mkeventd_view({
         'title':       u'Events of Monitored Host',
         'description': u'Currently open events of a host that is monitored',
@@ -935,14 +935,14 @@ if mkeventd_enabled:
             'event_host',
         ],
     })
-    
+
     multisite_builtin_views['ec_event'] = mkeventd_view({
         'title':        u'Event Details',
         'description':  u'Details about one event',
         'linktitle':    'Event Details',
         'datasource':   'mkeventd_events',
         'layout':       'dataset',
-    
+
         'hidden':       True,
         'browser_reload': 0,
         'hide_filters': [
@@ -973,14 +973,14 @@ if mkeventd_enabled:
             ('host_services', None, ''),
         ],
     })
-    
+
     multisite_builtin_views['ec_history_recent'] = mkeventd_view({
         'title':       u'Recent Event History',
         'description': u'Information about events and actions on events during the '
                        u'recent 24 hours.',
         'datasource':  'mkeventd_history',
         'layout':      'table',
-    
+
         'painters': [
             ('history_time', None, ''),
             ('event_id',     'ec_historyentry', ''),
@@ -1027,13 +1027,13 @@ if mkeventd_enabled:
             ('history_line', True),
         ],
     })
-    
+
     multisite_builtin_views['ec_historyentry'] = mkeventd_view({
         'title':        u'Event History Entry',
         'description':  u'Details about a historical event history entry',
         'datasource':   'mkeventd_history',
         'layout':       'dataset',
-    
+
         'hidden':       True,
         'browser_reload': 0,
         'hide_filters': [
@@ -1067,14 +1067,14 @@ if mkeventd_enabled:
             ('event_phase', None, ''),
         ],
     })
-    
+
     multisite_builtin_views['ec_history_of_event'] = mkeventd_view({
         'title':        u'History of Event',
         'description':  u'History entries of one specific event',
         'datasource':   'mkeventd_history',
         'layout':       'table',
         'columns':      1,
-    
+
         'hidden':       True,
         'browser_reload': 0,
         'hide_filters': [
@@ -1108,7 +1108,7 @@ if mkeventd_enabled:
         'datasource':   'mkeventd_history',
         'layout':       'table',
         'columns':      1,
-    
+
         'hidden':       True,
         'browser_reload': 0,
         'hide_filters': [

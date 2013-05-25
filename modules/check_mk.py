@@ -4188,7 +4188,8 @@ def do_restart(only_reload = False):
             do_create_config()
         except Exception, e:
             sys.stderr.write("Error creating configuration: %s\n" % e)
-            os.rename(backup_path, nagios_objects_file)
+            if backup_path:
+                os.rename(backup_path, nagios_objects_file)
             if opt_debug:
                 raise
             sys.exit(1)

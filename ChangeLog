@@ -4,6 +4,7 @@
     
     Checks & Agents:
     * lnx_if: Fixed crash on missing "Address" field
+    * viprinet_router: Now able to set required target state via rule
 
 1.2.3i1:
     Core:

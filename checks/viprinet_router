@@ -24,14 +24,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_viprinet_router(_no_item, _no_params, info):
+def check_viprinet_router(_no_item, params, info):
     router_mode_map = {
         "0" : "Node",
         "1" : "Hub",
         "2" : "Hub running as HotSpare",
         "3" : "Hotspare-Hub replacing another router"
     }
-    mode = router_mode_map.get(info[0][0][0])
+    current_mode = info[0][0][0]
+    mode = router_mode_map.get(current_mode)
+
+    expect_mode = params.get("expect_mode")
+    if expect_mode:
+        # Requires mode found on inventory
+        if expect_mode == "inv":
+            expect_mode = params.get("mode_inv")
+        if expect_mode in router_mode_map:
+            if expect_mode != current_mode:
+                return (2, "Mode '%s' differs from expected mode '%s'" % 
+                            ( mode, router_mode_map.get(expect_mode) ))
+
     if mode:
         return (0, mode)
     else:
@@ -39,9 +51,10 @@ def check_viprinet_router(_no_item, _no_params, info):
 
 check_info["viprinet_router"] = {
     'check_function'        : check_viprinet_router,
-    'inventory_function'    : lambda info: len(info) > 0 and [(None, None)] or [],
+    'inventory_function'    : lambda info: len(info) > 0 and [(None, {"mode_inv": info[0][0][0]})] or [],
     'service_description'   : "Router Mode",
     'has_perfdata'          : False,
+    'group'                 : "viprinet_router",
     'snmp_info'             : (".1.3.6.1.4.1.35424.1.1", [5]),
     'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.35424"],
 }

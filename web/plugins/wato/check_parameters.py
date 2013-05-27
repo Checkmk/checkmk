@@ -1008,6 +1008,30 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
+    "viprinet_router",
+    _("Viprinet router"),
+    Dictionary(
+        elements = [
+            ( "expect_mode",
+              DropdownChoice(
+                  title = _("Set expected router mode"),
+                  choices = [
+                        ( "inv", _("Mode found during inventory") ),
+                        ( "0"  , _("Node") ),
+                        ( "1"  , _("Hub") ),
+                        ( "2"  , _("Hub running as HotSpare") ),
+                        ( "3"  , _("Hotspare-Hub replacing another router") ),
+                  ]
+              )
+            ),
+        ]
+    ),
+    None,
+    None
+)
+
+register_check_parameters(
+    subgroup_networking,
     "tcp_conn_stats_win",
     ("TCP connection stats (Windows)"),
     Dictionary(

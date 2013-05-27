@@ -1,0 +1,8 @@
+Title: Fix typo in rules apc_symentra to apc_symmetra
+Component: checks
+State: open
+Date: 2013-05-27 16:16:05
+Targetversion: 1.2.3
+Class: nastiness
+
+The variable is named wrong. Change this and all texts in the WATO definitions.

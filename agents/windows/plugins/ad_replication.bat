@@ -15,5 +15,5 @@ REM *
 REM ***
 
 echo ^<^<^<ad_replication^>^>^>
-dsquery server | find /I "CN=%COMPTERNAME%," > nul
+dsquery server | find /I "CN=%COMPUTERNAME%," > nul
 if ERRORLEVEL 0 repadmin /showrepl /csv

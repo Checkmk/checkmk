@@ -13,6 +13,7 @@
     * FIX: ipmi_sensors: handle two cases for DELL correctly (thanks to Sebastian Talmon)
     * FIX: check_dns: enable performance data
     * FIX: free_ipmi: fix name of sensor cache file if hostname contains domain part
+    * FIX: ad_replication plugin: Fixed typo (Thanks to Dennis Honke)
 
     Multisite:
     * List of views: Output the alias of a datasource instead of internal name

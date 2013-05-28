@@ -17,7 +17,7 @@ do
     if bash .f12 ; then
         echo "OK."
     else
-        echo "FEHLER in doc. Abbruch"
+        echo "FEHLER in $dir. Abbruch"
         exit 1
     fi
     cd ..

@@ -23,10 +23,13 @@
 # Boston, MA 02110-1301 USA.
 
 ifeq ($(shell uname),Linux)
-  CXX = echo -e "\n\nWARNING: MinGW under Linux is broken! Use at your own risk!\n\n" ; i586-mingw32msvc-g++
+  CXX    = echo -e "\n\nWARNING: MinGW under Linux is broken! Use at your own risk!\n\n" ; i586-mingw32msvc-g++
+  CXX_64 = x86_64-w64-mingw32-g++
 else
   CXX = mingw32-g++
 endif
+
+all: install_agent.exe install_agent-64.exe
 
 install_agent.exe: check_mk_agent.exe crash.exe nowin.exe
 	if ! which makensis; then \
@@ -36,8 +39,19 @@ install_agent.exe: check_mk_agent.exe crash.exe nowin.exe
 	makensis installer.nsi
 	chmod +x install_agent.exe
 
+install_agent-64.exe: check_mk_agent-64.exe crash.exe nowin.exe
+	if ! which makensis; then \
+	    echo "ERROR: makensis missing. Please install the nsis package." ; \
+	    exit 1 ; \
+	fi
+	makensis installer-64.nsi
+	chmod +x install_agent-64.exe
+
 check_mk_agent.exe: check_mk_agent.cc Makefile
 	$(CXX) -s -O2 -Wall -Werror -o $@ $< -static -lwsock32
+
+check_mk_agent-64.exe: check_mk_agent.cc Makefile
+	$(CXX_64) -s -O2 -Wall -Werror -o $@ $< -static -lwsock32
 
 crash.exe: crash.cc Makefile
 	$(CXX) -o $@ $<

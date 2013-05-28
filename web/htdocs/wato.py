@@ -7599,6 +7599,12 @@ def delete_distributed_wato_file():
 #   | Mode for managing users and contacts.                                |
 #   '----------------------------------------------------------------------'
 
+def service_levels():
+    try:
+        return config.mkeventd_service_levels
+    except:
+        return [(0, "(no service level)")]
+
 def declare_user_attribute(name, vs, user_editable = True, permission = None):
     userdb.user_attributes[name] = {
         'valuespec':     vs,
@@ -7712,6 +7718,18 @@ def load_notification_table():
                                                   minvalue = 1,
                                                   maxvalue = 999999,
                                               ),
+                                        ],
+                                      ),
+                                    ),
+                                    ( "match_sl",
+                                      Tuple(
+                                        title = _("Match service level"),
+                                        help = _("Host or Service must be in the following service level to get notification"),
+                                        orientation = "horizontal",
+                                        show_titles = False,
+                                        elements = [
+                                          DropdownChoice(label = _("from:"),  choices = service_levels(), prefix_values = True),
+                                          DropdownChoice(label = _(" to:"),  choices = service_levels(), prefix_values = True),
                                         ],
                                       ),
                                     ),

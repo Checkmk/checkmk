@@ -5,6 +5,7 @@
     Multisite:
     * User accounts can now be locked after a specified amount of auth
       failures (lock_on_logon_failures can be set to a number of tries)
+    * FIX: better error message in case of exception in SNMP handling
 
     Checks & Agents:
     * lnx_if: Fixed crash on missing "Address" field
@@ -149,6 +150,10 @@
 
 
 1.2.2p2:
+    Core:
+    * FIX: livecheck: fixed handling of one-line plugin outputs and missing \n
+           (Thanks to Florent Peterschmitt)
+
     Checks & Agents:
     * FIX: jolokia_info: ignore ERROR instances
     * FIX: apache_status: use (also) apache_status.cfg instead of apache_status.conf

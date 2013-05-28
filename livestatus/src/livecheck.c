@@ -235,6 +235,9 @@ int main(int argc, char **argv)
             	break;
             ptr_walk++;
         }
+        if(*ptr_output) {
+            fputs(ptr_output, checkfile);
+        }
         fputs("\n", checkfile);
 
         fchown(fd, real_uid, real_gid);

@@ -23,7 +23,7 @@ inventory:
 [parameters]
 parameters(dict): a dictionary with the optional key
 
- {"mode"} - specifies the required router mode. The mode can be set to
-            {node} / {hub} / {hub_hotspare} / {hub_hotspare_replacing}
-            and {inventory} (same mode as detected on inventory).
-            If the actual mode differs from this mode a warning is raised
+ {"expect_mode"} - specifies the required router mode. The mode can be set to
+                   "0", "1", "2", "3" (mentioned above) or "inv" which means
+                   the same mode as detected during inventory. 
+                   If the actual mode differs from this mode an error is raised

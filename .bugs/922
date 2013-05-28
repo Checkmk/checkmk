@@ -1,0 +1,8 @@
+Title: switch "mkevent" from pipe to socket communication
+Component: ec
+State: open
+Date: 2013-05-28 09:21:05
+Targetversion: 1.2.3
+Class: cleanup
+
+The program uses the pipe for communication. It would be much better to use the socket.

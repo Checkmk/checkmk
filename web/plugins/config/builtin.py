@@ -191,3 +191,4 @@ ldap_debug_log       = None
 default_user_profile = {
     'roles': ['user'],
 }
+lock_on_logon_failures = False

@@ -118,7 +118,24 @@ def user_locked(username):
     users = load_users()
     return users[username].get('locked', False)
 
+def on_succeeded_login(username):
+    users = load_users()
+    if "num_failed" in users[username]:
+        users[username]["num_failed"] = 0
+        save_users(users)
 
+def on_failed_login(username):
+    users = load_users()
+    if "num_failed" in users[username]:
+        users[username]["num_failed"] += 1
+    else:
+        users[username]["num_failed"] = 1
+
+    if config.lock_on_logon_failures:
+        if users[username]["num_failed"] >= config.lock_on_logon_failures:
+            users[username]["locked"] = True
+
+    save_users(users)
 
 root_dir      = defaults.check_mk_configdir + "/wato/"
 multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
@@ -248,6 +265,11 @@ def load_users():
         if d[0] != '.':
             id = d
 
+            # read failed login counts
+            failed_file = dir + d + '/num_failed.mk'
+            if id in result and os.path.exists(failed_file):
+                result[id]['num_failed'] = int(file(failed_file).read().strip())
+
             # read automation secrets and add them to existing
             # users or create new users automatically
             secret_file = dir + d + "/automation.secret"
@@ -279,6 +301,7 @@ def save_users(profiles):
         "language",
         "serial",
         "connector",
+        "num_failed",
     ] + custom_values
 
     # Keys to put into multisite configuration
@@ -346,6 +369,10 @@ def save_users(profiles):
         # Write out the users serial
         serial_file = user_dir + '/serial.mk'
         create_user_file(serial_file, 'w').write('%d\n' % user.get('serial', 0))
+
+        # Write out the users number of failed login
+        failed_file = user_dir + '/num_failed.mk'
+        create_user_file(failed_file, 'w').write('%d\n' % user.get('num_failed', 0))
 
     # Remove settings directories of non-existant users.
     # Beware: we removed this since it leads to violent destructions

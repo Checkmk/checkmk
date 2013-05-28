@@ -183,6 +183,9 @@ def do_login():
             # False       -> failed
             result = userdb.hook_login(username, password)
             if result:
+                # reset failed login counts
+                userdb.on_succeeded_login(username)
+
                 username = result
                 # The login succeeded! Now:
                 # a) Set the auth cookie
@@ -207,6 +210,7 @@ def do_login():
 
                     return (username, origtarget)
             else:
+                userdb.on_failed_login(username)
                 raise MKUserError(None, _('Invalid credentials.'))
         except MKUserError, e:
             html.add_user_error(e.varname, e.message)

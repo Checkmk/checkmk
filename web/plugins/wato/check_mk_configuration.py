@@ -567,6 +567,23 @@ register_configvar(group,
                    "containing details about connecting to LDAP and the single transactions.")),
     domain = "multisite")
 
+register_configvar(group,
+    "lock_on_logon_failures",
+    Optional(
+        Integer(
+            label = _("Number of logon failures to lock the account"),
+            default_value = 3,
+            minvalue = 1,
+        ),
+        none_value = False,
+        title = _("Lock user accounts after N logon failures"),
+        label = _("Activate automatic locking of user accounts"),
+        help = _("This options enables automatic locking of user account after "
+                 "N logon failures. One successful login resets the failure counter.")
+    ),
+    domain = "multisite"
+)
+
 
 def list_roles():
     roles = userdb.load_roles()

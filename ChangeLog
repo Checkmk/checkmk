@@ -1,6 +1,8 @@
 1.2.2p2:
     Core:
     * FIX: better error message in case of exception in SNMP handling
+    * FIX: livecheck: fixed handling of one-line plugin outputs and missing \n
+           (Thanks to Florent Peterschmitt)
 
     Checks & Agents:
     * FIX: apache_status: use (also) apache_status.cfg instead of apache_status.conf

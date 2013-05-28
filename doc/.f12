@@ -1,1 +1,1 @@
-sudo cp -pr * /omd/versions/default/share/doc/check_mk
+sudo cp -vpr * /omd/versions/default/share/doc/check_mk

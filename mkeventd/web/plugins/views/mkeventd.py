@@ -707,8 +707,8 @@ if mkeventd_enabled:
     
     # Delete events
     config.declare_permission("mkeventd.delete",
-            _("Delete an event"),
-            _("Finally delete an event without any further action"),
+            _("Archive an event"),
+            _("Finally archive an event without any further action"),
             [ "user", "admin" ])
     
     
@@ -722,9 +722,9 @@ if mkeventd_enabled:
     multisite_commands.append({
         "tables"      : [ "event" ],
         "permission"  : "mkeventd.delete",
-        "title"       : _("Delete Event"),
+        "title"       : _("Archive Event"),
         "render"      : lambda: \
-            html.button("_delete_event", _("Delete Event")),
+            html.button("_delete_event", _("Archive Event")),
         "action"      : command_mkeventd_delete,
         "executor"    : command_executor_mkeventd,
     })

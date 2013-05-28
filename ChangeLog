@@ -10,6 +10,8 @@
     * lnx_if: Fixed crash on missing "Address" field
     * viprinet_router: Now able to set required target state via rule
     * windows_agent: Now available as 64 bit version
+    Notifications:
+    * Flexible Notification can now filter service levels
 
 1.2.3i1:
     Core:

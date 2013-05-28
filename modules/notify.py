@@ -436,6 +436,19 @@ def should_notify(context, entry):
         if hostname not in entry["only_hosts"]:
             notify_log(" - Skipping: host '%s' matches non of %s" % (hostname, ", ".join(entry["only_hosts"])))
             return False
+    # Check if the host has to be in a special service_level
+    if entry.get("match_sl"):
+        from_sl, to_sl = map(saveint, entry['match_sl'])
+        if to_sl > 0:
+            if context['WHAT'] == "SERVICE":
+                sl = saveint(context['SVC_SL'])
+            else:
+                sl = saveint(context['HOST_SL'])
+
+            if sl < from_sl or sl > to_sl: 
+                notify_log(" - Skipping: service level %d not between %d and %d" % (sl, from_sl, to_sl))
+                return False
+
 
     # Check service, if configured
     if entry.get("only_services"):

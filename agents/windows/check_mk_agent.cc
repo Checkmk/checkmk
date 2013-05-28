@@ -45,11 +45,11 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <winsock2.h>
 #include <windows.h>
 #include <winbase.h>
 #include <winreg.h>    // performance counters from registry
 #include <tlhelp32.h>  // list of processes
-#include <winsock2.h>
 #include <stdarg.h>
 #include <time.h>
 #include <locale.h>
@@ -107,6 +107,16 @@
 // Other default values
 #define DEFAULT_PLUGIN_TIMEOUT         30
 #define DEFAULT_TOTAL_PLUGINS_TIMEOUT  60
+
+// Check compilation environment 32/64 bit
+#if _WIN32 || _WIN64
+    #if _WIN64
+        #define ENVIRONMENT64
+    #else
+        #define ENVIRONMENT32
+    #endif
+#endif
+
 
 // Needed for only_from
 struct ipspec {
@@ -1438,33 +1448,30 @@ void load_logwatch_offsets()
     }
 }
 
-
-
-
 // debug output
-void print_logwatch_config()
-{
-    printf("\nLOGWATCH CONFIG\n=================\nFILES\n");
-    for (unsigned int i = 0; i < g_num_logwatch_textfiles ; i++) {
-        printf("  %s %u %x missing %d\n", g_logwatch_textfiles[i]->path, 
-               (unsigned int)g_logwatch_textfiles[i]->offset, 
-               (unsigned int) g_logwatch_textfiles[i]->patterns, 
-               g_logwatch_textfiles[i]->missing);  
-    }
-    printf("\n");
-
-    printf("GLOBS\n");
-    for (unsigned int i = 0; i < g_num_logwatch_globlines ; i++) {
-        printf("Globline Container %x\n", (unsigned int)g_logwatch_globlines[i]->patterns); 
-        for (int j = 0; j < g_logwatch_globlines[i]->num_tokens ; j++)
-            printf("  %s\n", g_logwatch_globlines[i]->token[j]->pattern);
-        printf("Pattern Container\n");
-        for (int j = 0; j < g_logwatch_globlines[i]->patterns->num_patterns; j++) 
-            printf("  %c %s\n", g_logwatch_globlines[i]->patterns->patterns[j]->state, 
-                                g_logwatch_globlines[i]->patterns->patterns[j]->glob_pattern);
-    }
-    printf("\n");
-}
+//void print_logwatch_config()
+//{
+//    printf("\nLOGWATCH CONFIG\n=================\nFILES\n");
+//    for (unsigned int i = 0; i < g_num_logwatch_textfiles ; i++) {
+//        printf("  %s %u %x missing %d\n", g_logwatch_textfiles[i]->path, 
+//               (unsigned int)g_logwatch_textfiles[i]->offset, 
+//               (unsigned int) g_logwatch_textfiles[i]->patterns, 
+//               g_logwatch_textfiles[i]->missing);  
+//    }
+//    printf("\n");
+//
+//    printf("GLOBS\n");
+//    for (unsigned int i = 0; i < g_num_logwatch_globlines ; i++) {
+//        printf("Globline Container %x\n", (unsigned int)g_logwatch_globlines[i]->patterns); 
+//        for (int j = 0; j < g_logwatch_globlines[i]->num_tokens ; j++)
+//            printf("  %s\n", g_logwatch_globlines[i]->token[j]->pattern);
+//        printf("Pattern Container\n");
+//        for (int j = 0; j < g_logwatch_globlines[i]->patterns->num_patterns; j++) 
+//            printf("  %c %s\n", g_logwatch_globlines[i]->patterns->patterns[j]->state, 
+//                                g_logwatch_globlines[i]->patterns->patterns[j]->glob_pattern);
+//    }
+//    printf("\n");
+//}
 
 // Add a new state pattern to the current pattern container
 void add_condition_pattern(char state, char *value)
@@ -2300,6 +2307,11 @@ void section_check_mk(SOCKET &out)
     crash_log("<<<check_mk>>>");
     output(out, "<<<check_mk>>>\n");
     output(out, "Version: %s\n", CHECK_MK_VERSION);
+    #ifdef ENVIRONMENT32
+    output(out, "Architecture: 32bit\n");
+    #else
+    output(out, "Architecture: 64bit\n");
+    #endif
     output(out, "AgentOS: windows\n");
     output(out, "Hostname: %s\n",         g_hostname);
     output(out, "WorkingDirectory: %s\n", g_current_directory);

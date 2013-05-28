@@ -7676,7 +7676,7 @@ def load_notification_table():
                     ListOf(
                         Foldable(
                             Dictionary(
-                                optional_keys = [ "only_hosts", "only_services", "escalation" ],
+                                optional_keys = [ "only_hosts", "only_services", "escalation" , "match_sl"],
                                 columns = 1,
                                 headers = True,
                                 elements = [

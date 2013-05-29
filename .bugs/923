@@ -1,0 +1,18 @@
+Title: BI-Aggregation Checks as WATO rules
+Component: wato
+State: open
+Date: 2013-05-29 12:38:01
+Targetversion: 1.2.3
+Class: feature
+
+At the moment bi aggregations are added as local checks to make nagios services
+out of them to be able to create notifications for them.
+
+It would be nice to make those aggregations configurable via WATO. This could
+be a ruleset which makes all or specific BI aggregations virtual hosts or services.
+
+This could maybe done using piggyback.
+
+As a result it would be nice to give users the option to which hosts these services
+shal be added. For example a single host aggregation should be added directly to the
+host and a multi host aggregation be added to a virtual host or a cluster host.

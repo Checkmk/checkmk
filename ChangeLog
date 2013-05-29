@@ -13,6 +13,7 @@
     * windows_agent: Now available as 64 bit version
     Notifications:
     * Flexible Notification can now filter service levels
+    * FIX: check_tcp corrected order of parameters in definition
 
 1.2.3i1:
     Core:

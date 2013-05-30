@@ -29,7 +29,10 @@ else
   CXX = mingw32-g++
 endif
 
-all: install_agent.exe install_agent-64.exe
+all: install_agent.exe
+
+test.exe: test.cc
+	$(CXX) -s -O2 -o $@ $< -static -lwsock32
 
 install_agent.exe: check_mk_agent.exe crash.exe nowin.exe
 	if ! which makensis; then \

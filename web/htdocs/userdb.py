@@ -126,16 +126,17 @@ def on_succeeded_login(username):
 
 def on_failed_login(username):
     users = load_users()
-    if "num_failed" in users[username]:
-        users[username]["num_failed"] += 1
-    else:
-        users[username]["num_failed"] = 1
+    if username in users:
+        if "num_failed" in users[username]:
+            users[username]["num_failed"] += 1
+        else:
+            users[username]["num_failed"] = 1
 
-    if config.lock_on_logon_failures:
-        if users[username]["num_failed"] >= config.lock_on_logon_failures:
-            users[username]["locked"] = True
+        if config.lock_on_logon_failures:
+            if users[username]["num_failed"] >= config.lock_on_logon_failures:
+                users[username]["locked"] = True
 
-    save_users(users)
+        save_users(users)
 
 root_dir      = defaults.check_mk_configdir + "/wato/"
 multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"

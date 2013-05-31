@@ -1485,15 +1485,15 @@ multisite_painters["downtime_comment"] = {
 }
 
 multisite_painters["downtime_fixed"] = {
-    "title"   : _("Downtime is fixed"),
-    "short"   : _("Fixed"),
+    "title"   : _("Type of Downtime"),
+    "short"   : _("Type"),
     "columns" : ["downtime_fixed"],
     "paint"   : lambda row: (None, row["downtime_fixed"] == 0 and _("flexible") or _("fixed")),
 }
 
 multisite_painters["downtime_what"] = {
-    "title"   : _("Downtime type (host/service)"),
-    "short"   : _("Type"),
+    "title"   : _("Downtime for host/service"),
+    "short"   : _("for"),
     "columns" : ["is_service"],
     "paint"   : lambda row: (None, row["is_service"] and _("Service") or _("Host")),
 }
@@ -1530,15 +1530,12 @@ multisite_painters["downtime_end_time"] = {
 }
 
 def paint_downtime_duration(row):
-    if row["downtime_fixed"] == 1:
-        return None, ""
-    else:
-        return None, "%02d:%02d" % divmod(row["downtime_duration"] / 60, 60)
+    return "number", "%02d:%02d:00" % divmod(row["downtime_duration"] / 60, 60)
 
 multisite_painters["downtime_duration"] = {
     "title"   : _("Downtime duration (if flexible)"),
     "short"   : _("Duration"),
-    "columns" : ["downtime_duration", "downtime_fixed"],
+    "columns" : ["downtime_duration", ], # "downtime_fixed"],
     "paint"   : paint_downtime_duration,
 }
 

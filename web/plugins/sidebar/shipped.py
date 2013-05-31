@@ -888,6 +888,7 @@ def render_master_control():
         ( "enable_notifications",     _("Notifications" )),
         ( "execute_service_checks",   _("Service checks" )),
         ( "execute_host_checks",      _("Host checks" )),
+        ( "enable_flap_detection",    _("Flap Detection" )),
         ( "enable_event_handlers",    _("Event handlers" )),
         ( "process_performance_data", _("Performance data" )),
         ]
@@ -900,8 +901,13 @@ def render_master_control():
         if siteid:
             sitealias = html.site_status[siteid]["site"]["alias"]
             html.begin_foldable_container("master_control", siteid, True, sitealias)
+        is_cmc = html.site_status[siteid]["program_version"].startswith("Check_MK ")
         html.write("<table class=master_control>\n")
         for i, (colname, title) in enumerate(items):
+            # Do not show event handlers on Check_MK Micro Core
+            if is_cmc and colname == 'enable_event_handlers':
+                continue
+
             colvalue = siteline[i + 1]
             url = defaults.url_prefix + ("check_mk/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
             onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url

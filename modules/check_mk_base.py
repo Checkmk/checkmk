@@ -103,6 +103,8 @@ opt_no_snmp_hosts            = False
 opt_use_snmp_walk            = False
 opt_cleanup_autochecks       = False
 fake_dns                     = False
+opt_keepalive                = False
+opt_cmc_relfilename          = "config"
 
 # register SIGINT handler for consistenct CTRL+C handling
 def interrupt_handler(signum, frame):
@@ -205,7 +207,7 @@ def submit_aggregated_results(hostname):
                 text = " *** ".join([ item + " " + output for itemstatus, item, output in outputlist ])
 
         if not opt_dont_submit:
-            submit_to_nagios(aggr_hostname, servicedesc, status, text)
+            submit_to_core(aggr_hostname, servicedesc, status, text)
 
         if opt_verbose:
             color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[status]
@@ -223,7 +225,7 @@ def submit_check_mk_aggregation(hostname, status, output):
         return
 
     if not opt_dont_submit:
-        submit_to_nagios(summary_hostname(hostname), "Check_MK", status, output)
+        submit_to_core(summary_hostname(hostname), "Check_MK", status, output)
 
     if opt_verbose:
         color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[status]
@@ -389,6 +391,9 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
     if is_tcp_host(hostname):
         try:
             output = get_agent_info(hostname, ipaddress, max_cache_age)
+        except MKCheckTimeout:
+            raise
+
         except Exception, e:
             agent_failed = True
             # Remove piggybacked information from the host (in the
@@ -648,6 +653,8 @@ def get_agent_info_tcp(hostname, ipaddress):
         return output
     except MKAgentError, e:
         raise
+    except MKCheckTimeout:
+        raise
     except Exception, e:
         raise MKAgentError("Cannot get data from TCP port %s:%d: %s" %
                            (ipaddress, agent_port_of(hostname), e))
@@ -868,7 +875,6 @@ def save_counters(hostname):
 # This is the main check function - the central entry point to all and
 # everything
 def do_check(hostname, ipaddress, only_check_types = None):
-
     if opt_verbose:
         sys.stderr.write("Check_mk version %s\n" % check_mk_version)
 
@@ -900,6 +906,9 @@ def do_check(hostname, ipaddress, only_check_types = None):
                 output += "Agent version %s, " % agent_version
             status = 0
 
+    except MKCheckTimeout:
+        raise
+
     except MKGeneralException, e:
         if opt_debug:
             raise
@@ -925,8 +934,121 @@ def do_check(hostname, ipaddress, only_check_types = None):
     else:
         output += "execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
 
-    sys.stdout.write(nagios_state_names[status] + " - " + output)
-    sys.exit(status)
+    if opt_keepalive:
+        global total_check_output
+        total_check_output += output
+        return status
+    else:
+        sys.stdout.write(nagios_state_names[status] + " - " + output)
+        sys.exit(status)
+
+
+# Reset some global variable to their original value. This
+# is needed in keepalive mode.
+# We could in fact do some positive caching in keepalive
+# mode - e.g. the counters of the hosts could be saved in memory.
+def cleanup_globals():
+    global g_agent_already_contacted
+    g_agent_already_contacted = {}
+    global g_hostname
+    g_hostname = "unknown"
+    global g_counters
+    g_counters = {}
+    global g_infocache
+    g_infocache = {}
+
+
+# Diagnostic function for detecting global variables that have
+# changed during checking. This is slow and canno be used
+# in production mode.
+def copy_globals():
+    import copy
+    global_saved = {}
+    for varname, value in globals().items():
+        # Some global caches are allowed to change. 
+        if varname not in [ "g_service_description", "g_multihost_checks", "g_check_table_cache", "g_singlehost_checks", "total_check_outout" ] \
+            and type(value).__name__ not in [ "function", "module", "SRE_Pattern" ]:
+            global_saved[varname] = copy.copy(value)
+    return global_saved
+
+
+# Keepalive-mode for running cmk as a check helper.
+class MKCheckTimeout(Exception):
+    pass
+
+def do_check_keepalive():
+    def check_timeout(signum, frame):
+        raise MKCheckTimeout()
+
+    signal.signal(signal.SIGALRM, check_timeout)
+
+    global total_check_output
+    total_check_output = ""
+    if opt_debug:
+        before = copy_globals()
+
+    ipaddress_cache = {}
+
+    # sys.stdout.write('*')
+    # sys.stdout.flush() # signal core that we are ready
+
+    while True:
+        cleanup_globals()
+        hostname = sys.stdin.readline()
+        if not hostname:
+            break
+        hostname = hostname.strip()
+        if hostname == "*":
+            if opt_debug:
+                sys.stdout.write("Restarting myself...\n")
+            sys.stdout.flush()
+            os.execvp("cmk", sys.argv)
+        timeout = int(sys.stdin.readline())
+        try:
+            signal.alarm(timeout)
+            if not hostname:
+                break
+            if hostname in ipaddress_cache:
+                ipaddress = ipaddress_cache[hostname]
+            else:
+                if is_cluster(hostname):
+                    ipaddress = None
+                else:
+                    try:
+                        ipaddress = lookup_ipaddress(hostname)
+                    except:
+                        raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
+                ipaddress_cache[hostname] = ipaddress
+
+            try:
+                status = do_check(hostname, ipaddress)
+                signal.alarm(0)
+            except MKCheckTimeout:
+                status = 3
+                total_check_output = "UNKNOWN - Check_MK timed out after %d seconds" % timeout
+
+            sys.stdout.write("%03d\n%08d\n%s" % 
+                 (status, len(total_check_output), total_check_output))
+            sys.stdout.flush()
+            total_check_output = ""
+            cleanup_globals()
+
+            # Check if all global variables are clean, but only in debug mode
+            if opt_debug:
+                after = copy_globals()
+                for varname, value in before.items():
+                    if value != after[varname]:
+                        sys.stderr.write("WARNING: global variable %s has changed: %r ==> %s\n" 
+                               % (varname, value, repr(after[varname])[:50]))
+                new_vars = set(after.keys()).difference(set(before.keys()))
+                if (new_vars):
+                    sys.stderr.write("WARNING: new variable appeared: %s" % ", ".join(new_vars))
+
+        except Exception, e:
+            if opt_debug:
+                raise
+            sys.stdout.write("UNKNOWN - %s\n3\n" % e)
+
 
 def check_unimplemented(checkname, params, info):
     return (3, 'UNKNOWN - Check not implemented')
@@ -1221,7 +1343,7 @@ def submit_check_result(host, servicedesc, result, sa):
             perftext = "|" + (" ".join(perftexts))
 
     if not opt_dont_submit:
-        submit_to_nagios(host, servicedesc, state, infotext + perftext)
+        submit_to_core(host, servicedesc, state, infotext + perftext)
 
     if opt_verbose:
         if opt_showperfdata:
@@ -1232,8 +1354,19 @@ def submit_check_result(host, servicedesc, result, sa):
         print "%-20s %s%s%-56s%s%s" % (servicedesc, tty_bold, color, infotext, tty_normal, p)
 
 
-def submit_to_nagios(host, service, state, output):
-    if check_submission == "pipe":
+def submit_to_core(host, service, state, output):
+    # Save data for sending it to the Check_MK Micro Core
+    if monitoring_core == "cmc":
+        result = "\t%d\t%s\t%s\n" % (state, service, output)
+        if opt_keepalive:
+            global total_check_output
+            total_check_output += result
+        else:
+            if not opt_verbose:
+                sys.stdout.write(result)
+
+    # Send to Nagios/Icinga command pipe
+    elif check_submission == "pipe":
         open_command_pipe()
         if nagios_command_pipe:
             nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
@@ -1241,6 +1374,8 @@ def submit_to_nagios(host, service, state, output):
             # Important: Nagios needs the complete command in one single write() block!
             # Python buffers and sends chunks of 4096 bytes, if we do not flush.
             nagios_command_pipe.flush()
+
+    # Create check result files for Nagios/Icinga
     elif check_submission == "file":
         open_checkresult_file()
         if checkresult_file_fd:
@@ -1289,6 +1424,13 @@ def nodes_of(hostname):
         if hostname == tagged_hostname.split("|")[0]:
             return nodes
     return None
+
+def pnp_cleanup(s):
+    return s \
+        .replace(' ',  '_') \
+        .replace(':',  '_') \
+        .replace('/',  '_') \
+        .replace('\\', '_')
 
 
 #   +----------------------------------------------------------------------+

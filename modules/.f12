@@ -1,2 +1,3 @@
-SITE=${SITE:-$(omd sites --bare | head -n 1)}
+SITE=${SITE:-cmc}
 sudo cp -v *.py /omd/sites/$SITE/share/check_mk/modules/
+sudo su - $SITE -c "cmk --debug -U"

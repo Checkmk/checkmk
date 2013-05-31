@@ -27,7 +27,7 @@
 
 #include "config.h"
 #include "Table.h"
-#include "objects.h"
+#include "nagios.h"
 
 class TableContacts : public Table
 {

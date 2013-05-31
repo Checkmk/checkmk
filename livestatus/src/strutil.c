@@ -91,6 +91,9 @@ char *next_token(char **c, char delim)
    no tokens has been found */
 char *save_next_token(char **c, char delim)
 {
+    if (!*c)
+        return (char *)"";
+
     char *result = next_token(c, delim);
     if (result == 0)
         return (char *)"";

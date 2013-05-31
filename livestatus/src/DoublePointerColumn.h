@@ -22,36 +22,19 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "waittriggers.h"
+#ifndef DoublePointerColumn_h
+#define DoublePointerColumn_h
 
-const char *wt_names[WT_NUM_TRIGGERS] =
+#include "DoubleColumn.h"
+
+class DoublePointerColumn : public DoubleColumn
 {
-    "all",
-    "check",
-    "state",
-    "log",
-    "downtime",
-    "comment",
-    "command",
-    "program",
+    double *_number;
+public:
+    DoublePointerColumn(string name, string description, double *number)
+        : DoubleColumn(name, description, -1), _number(number) {}
+    double getValue(void *) { return *_number; }
 };
 
-pthread_cond_t g_wait_cond[] = {
-    PTHREAD_COND_INITIALIZER,
-    PTHREAD_COND_INITIALIZER,
-    PTHREAD_COND_INITIALIZER,
-    PTHREAD_COND_INITIALIZER,
-    PTHREAD_COND_INITIALIZER,
-    PTHREAD_COND_INITIALIZER,
-    PTHREAD_COND_INITIALIZER,
-    PTHREAD_COND_INITIALIZER,
-};
 
-pthread_mutex_t g_wait_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-void trigger(int what)
-{
-    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
-    pthread_cond_broadcast(&g_wait_cond[what]); 
-}
-
+#endif // DoublePointerColumn_h

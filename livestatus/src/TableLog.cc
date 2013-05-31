@@ -105,7 +105,8 @@ void TableLog::addColumns(Table *table, string prefix, int indirect_offset, bool
 }
 
 TableLog::~TableLog()
-{}
+{
+}
 
 
 void TableLog::answerQuery(Query *query)

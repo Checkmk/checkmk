@@ -27,6 +27,15 @@
 
 #include "config.h"
 
+#ifdef CMC
+#include <syslog.h>
+#define LG_DEBUG LOG_INFO
+#define LG_INFO  LOG_NOTICE
+#define LG_WARN  LOG_WARNING
+#define LG_ERR   LOG_ERR
+#define LG_CRIT  LOG_CRIT
+#define LG_ALERT LOG_ALERT
+#else
 // TODO: Really use log levels
 #define LG_INFO 262144
 #define LG_WARN  LOG_INFO
@@ -34,9 +43,12 @@
 #define LG_CRIT  LOG_INFO
 #define LG_DEBUG LOG_INFO
 #define LG_ALERT LOG_INFO
+#endif
 
 #ifdef __cplusplus
+#ifndef CMC
 extern "C" {
+#endif
 #endif
 
 void logger(int priority, const char *loginfo, ...);
@@ -44,7 +56,9 @@ void open_logfile();
 void close_logfile();
 
 #ifdef __cplusplus
+#ifndef CMC
 }
+#endif
 #endif
 
 #endif // logger_h

@@ -47,6 +47,7 @@ class Column
     string _description;
 public:
     int _indirect_offset;
+    int _extra_offset;
 
 public:
     Column(string name, string description, int indirect_offset);
@@ -59,6 +60,8 @@ public:
     virtual void output(void *data, Query *) = 0;
     virtual Filter *createFilter(int opid __attribute__ ((__unused__)), char *value __attribute__ ((__unused__))) { return 0; }
     void *shiftPointer(void *data);
+    void setExtraOffset(int o) { _extra_offset = o; }
+
 };
 
 #endif // Column_h

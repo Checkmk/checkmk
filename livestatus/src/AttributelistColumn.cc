@@ -22,6 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include <string.h>
+
 #include "AttributelistColumn.h"
 #include "AttributelistFilter.h"
 #include "Query.h"

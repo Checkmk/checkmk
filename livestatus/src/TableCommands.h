@@ -29,7 +29,7 @@
 
 #include <set>
 #include "Table.h"
-#include "nagios/objects.h"
+#include "nagios.h"
 
 class TableCommands : public Table
 {

@@ -27,6 +27,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <stddef.h>
+#include <stdarg.h>
 
 #include "nagios.h"
 #include "logger.h"
@@ -40,6 +41,12 @@
 #include "Store.h"
 #include "LogEntry.h"
 #include "TableStateHistory.h"
+
+#ifdef CMC
+#include "Host.h"
+#include "Service.h"
+#include "Timeperiod.h"
+#endif
 
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
@@ -327,11 +334,19 @@ void TableStateHistory::answerQuery(Query *query)
                 // Get notification period of host/service
                 // If this host/service is no longer availabe in nagios -> set to ""
                 if (state->_service != 0)
+                    #ifdef CMC
+                    state->_notification_period = (char *)state->_service->notificationPeriod()->name();
+                    #else
                     state->_notification_period = state->_service->notification_period;
+                    #endif
                 else if (state->_host != 0)
+                    #ifdef CMC
+                    state->_notification_period = (char *)state->_host->notificationPeriod()->name();
+                    #else
                     state->_notification_period = state->_host->notification_period;
+                    #endif
                 else
-                    state->_notification_period = "";
+                    state->_notification_period = (char *)"";
 
                 // Determine initial in_notification_period status
                 _notification_periods_t::const_iterator tmp_period = _notification_periods.find(state->_notification_period);

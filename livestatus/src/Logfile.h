@@ -43,7 +43,7 @@ typedef map<uint64_t, LogEntry *> logfile_entries_t; // key is time_t . lineno
 class Logfile
 {
 public:
-	Logfile(const char *path, bool watch);
+    Logfile(const char *path, bool watch);
     ~Logfile();
 
     char *path() { return _path; }

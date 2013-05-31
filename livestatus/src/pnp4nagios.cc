@@ -38,7 +38,7 @@ void cleanup_pnpname(char *p)
     }
 }
 
-int pnpgraph_present(char *host, char *service)
+int pnpgraph_present(const char *host, const char *service)
 {
     if (!g_pnp_path[0])
         return -1;

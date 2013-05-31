@@ -520,12 +520,12 @@ def output_mors(what, properties, direct=False):
         obj_type = MORTypes.VirtualMachine
 
     count = 0
-    sections = []
     mors = host._retrieve_properties_traversal(property_names=properties.keys(), obj_type=obj_type)
     if not mors:
         return
 
     for mor in mors:
+        sections = []
         count += 1
         # Parse result into a dictionary. Key is the property name,
         # value is the value (some custom Python classes)
@@ -564,12 +564,12 @@ def output_mors(what, properties, direct=False):
             obj_name = opt_hostname
         object_collection.append([what, obj_name, running_on, power_state])
 
+        # pprint.pprint(sections)
+        for section_name, section_lines in sections:
+            print '<<<%s>>>' % section_name
+            for line in section_lines:
+                print line
 
-    # pprint.pprint(sections)
-    for section_name, section_lines in sections:
-        print '<<<%s>>>' % section_name
-        for line in section_lines:
-            print line
 
 def output_datastores():
     property_names = [ 

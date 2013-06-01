@@ -3492,6 +3492,7 @@ def mode_changelog(phase):
             sitestatus_do_async_replication = True
 
     else: # phase: regular page rendering
+        changes_activated = False
 
         if is_distributed():
             # Distributed WATO: Show replication state of each site
@@ -3671,6 +3672,7 @@ def mode_changelog(phase):
             # Single site setup
             if cmc_rush_ahead_activation():
                 html.message(_("All changes have been activated."))
+                changes_activated = True
             else:
                 # Is rendered on the page after hitting the "activate" button
                 # Renders the html to show the progress and starts the sync via javascript
@@ -3688,7 +3690,8 @@ def mode_changelog(phase):
 
         pending = parse_audit_log("pending")
         if len(pending) == 0:
-            html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
+            if not changes_activated:
+                html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
         else:
             html.write('<div id=pending_changes>')
             render_audit_log(pending, "pending", hilite_others=True)

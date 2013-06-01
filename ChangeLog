@@ -10,6 +10,9 @@
       performance value. This might not always be the one you like, but
       its far better than nothing.
 
+    WATO:
+    * Allow to configure check-/retry_interval in second precision
+
     Checks & Agents:
     * lnx_if: Fixed crash on missing "Address" field
     * viprinet_router: Now able to set required target state via rule

@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include "nagios.h"
 #include "logger.h"

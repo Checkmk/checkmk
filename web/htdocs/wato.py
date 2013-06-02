@@ -104,7 +104,7 @@
 #   `----------------------------------------------------------------------'
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
-       shutil, tarfile, StringIO, math, fcntl, pickle
+       shutil, tarfile, StringIO, math, fcntl, pickle, random
 import config, htmllib, table, multitar, userdb, hooks, weblib
 from lib import *
 from valuespec import *
@@ -3276,7 +3276,6 @@ def mode_random_hosts(phase):
     html.end_form()
 
 def create_random_hosts(folder, count, folders, levels):
-    import random
     if levels == 0:
         created = 0
         while created < count:
@@ -3782,7 +3781,10 @@ def cmc_rush_ahead():
     if defaults.omd_root:
         socket_path = defaults.omd_root + "/tmp/run/cmcrush"
         try:
-            socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM).sendto(str(time.time()), socket_path)
+            changeid = str(random.randint(1, 100000000000000000))
+            file(log_dir + "changeid", "w").write(changeid + "\n")
+            socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) \
+                      .sendto(changeid, socket_path)
         except:
             if config.debug:
                 raise
@@ -7348,18 +7350,17 @@ def cmc_rush_ahead_activation():
         rush_config = defaults.var_dir + "/core/config.rush"
         if os.path.exists(rush_config):
             try:
-                old_setting = os.stat_float_times(True)
-                s_rush = os.stat(rush_config)
-                s_pend = os.stat(log_dir + "pending.log")
-                os.stat_float_times(False)
-                mtime_rush = s_rush.st_mtime
-                mtime_pend = s_pend.st_mtime
-                if mtime_rush > mtime_pend: # Rush ahead file is up-to-date!
+                rush_id = file(rush_config + ".id").read().strip()
+                changeid = file(log_dir + "changeid").read().strip()
+                if rush_id == changeid: # Rush ahead file is up-to-date!
                     os.rename(rush_config, rush_config[:-5])
                     cmc_reload()
                     log_commit_pending()
                     html.final_javascript("wato_hide_changes_button();")
                     return True
+                else:
+                    html.write("MIST: mtime_rush ist %r, mtime_pend ist %r" % 
+                        (mtime_rush, mtime_pend))
             except Exception, e:
                 if opt_debug:
                     raise

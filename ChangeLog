@@ -19,6 +19,8 @@
     * windows_agent: Now available as 64 bit version
     * agent_vsphere: fix problem where sensors were missing when
       you queried multiple host systems via vCenter
+    * cached checks: no longer output cached data if the age of the
+                     cache file is twice the maximum cache age
 
     Notifications:
     * Flexible Notification can now filter service levels

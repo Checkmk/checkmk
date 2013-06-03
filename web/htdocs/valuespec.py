@@ -1517,7 +1517,7 @@ class Timeofday(ValueSpec):
 
     def from_html_vars(self, varprefix):
         # Fully specified
-        text = html.var(varprefix).strip()
+        text = html.var(varprefix, "").strip()
         if not text:
             return None
 

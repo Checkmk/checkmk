@@ -187,8 +187,6 @@ TableStatus::TableStatus()
     addColumn(new IntPointerColumn("livestatus_threads",
                 "The maximum number of connections to MK Livestatus that can be handled in parallel", &g_num_clientthreads));
 
-
-    // Livecheck
 }
 
 void TableStatus::answerQuery(Query *query)

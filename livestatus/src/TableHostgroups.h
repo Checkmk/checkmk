@@ -29,7 +29,7 @@
 
 #include <set>
 #include "Table.h"
-#include "nagios/objects.h"
+#include "nagios.h"
 
 class TableHostgroups : public Table
 {
@@ -39,7 +39,6 @@ public:
     void *findObject(char *objectspec);
     bool isAuthorized(contact *, void *);
     void addColumns(Table *, string prefix, int indirect_offset);
-    void add(hostgroup *ctc);
     void answerQuery(Query *query);
 };
 

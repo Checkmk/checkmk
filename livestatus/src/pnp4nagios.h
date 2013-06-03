@@ -25,7 +25,7 @@
 #ifndef pnp4nagios_h
 #define pnp4nagios_h
 
-int pnpgraph_present(char *host, char *service);
+int pnpgraph_present(const char *host, const char *service);
 
 #endif // pnp4nagios_h
 

@@ -104,7 +104,7 @@
 #   `----------------------------------------------------------------------'
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
-       shutil, tarfile, StringIO, math, fcntl, pickle
+       shutil, tarfile, StringIO, math, fcntl, pickle, random
 import config, htmllib, table, multitar, userdb, hooks, weblib
 from lib import *
 from valuespec import *
@@ -3276,7 +3276,6 @@ def mode_random_hosts(phase):
     html.end_form()
 
 def create_random_hosts(folder, count, folders, levels):
-    import random
     if levels == 0:
         created = 0
         while created < count:
@@ -3492,6 +3491,7 @@ def mode_changelog(phase):
             sitestatus_do_async_replication = True
 
     else: # phase: regular page rendering
+        changes_activated = False
 
         if is_distributed():
             # Distributed WATO: Show replication state of each site
@@ -3669,24 +3669,28 @@ def mode_changelog(phase):
 
         elif sitestatus_do_async_replication:
             # Single site setup
+            if cmc_rush_ahead_activation():
+                html.message(_("All changes have been activated."))
+                changes_activated = True
+            else:
+                # Is rendered on the page after hitting the "activate" button
+                # Renders the html to show the progress and starts the sync via javascript
+                html.write("<table class=data>")
+                html.write("<tr><th class=left>%s</th><th>%s</th></tr>" % (_('Progress'), _('Status')))
+                html.write('<tr class="data odd0"><td class=repprogress><div id="repstate_local"></div></td>')
+                html.write('<td id="repmsg_local"><i>%s</i></td></tr></table>' % _('activating...'))
 
-            # Is rendered on the page after hitting the "activate" button
-            # Renders the html to show the progress and starts the sync via javascript
-            html.write("<table class=data>")
-            html.write("<tr><th class=left>%s</th><th>%s</th></tr>" % (_('Progress'), _('Status')))
-            html.write('<tr class="data odd0"><td class=repprogress><div id="repstate_local"></div></td>')
-            html.write('<td id="repmsg_local"><i>%s</i></td></tr></table>' % _('activating...'))
-
-            srs = load_replication_status().get(None, {})
-            estimated_duration = srs.get("times", {}).get('act', 2.0)
-            html.javascript("wato_do_activation(%d);" %
-              (int(estimated_duration * 1000.0)))
+                srs = load_replication_status().get(None, {})
+                estimated_duration = srs.get("times", {}).get('act', 2.0)
+                html.javascript("wato_do_activation(%d);" %
+                  (int(estimated_duration * 1000.0)))
 
         sitestatus_do_async_replication = None # could survive in global context!
 
         pending = parse_audit_log("pending")
         if len(pending) == 0:
-            html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
+            if not changes_activated:
+                html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
         else:
             html.write('<div id=pending_changes>')
             render_audit_log(pending, "pending", hilite_others=True)
@@ -3720,9 +3724,7 @@ def log_entry(linkinfo, action, message, logfilename):
     log_file = log_dir + logfilename
     make_nagios_directory(log_dir)
     f = create_user_file(log_file, "ab")
-    f.write("%d %s %s %s " % (int(time.time()), link, config.user_id, action))
-    f.write(message)
-    f.write("\n")
+    f.write("%d %s %s %s %s\n" % (int(time.time()), link, config.user_id, action, message))
 
 
 def log_audit(linkinfo, what, message):
@@ -3746,6 +3748,7 @@ def log_pending(status, linkinfo, what, message):
     if not is_distributed():
         if status != SYNC:
             log_entry(linkinfo, what, message, "pending.log")
+        cmc_rush_ahead()
 
 
     # Currently we add the pending to each site, regardless if
@@ -3773,6 +3776,18 @@ def log_pending(status, linkinfo, what, message):
         # Make sure that a new snapshot for syncing will be created
         # when times comes to syncing
         remove_sync_snapshot()
+
+def cmc_rush_ahead():
+    if defaults.omd_root:
+        socket_path = defaults.omd_root + "/tmp/run/cmcrush"
+        try:
+            changeid = str(random.randint(1, 100000000000000000))
+            file(log_dir + "changeid", "w").write(changeid + "\n")
+            socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) \
+                      .sendto(changeid, socket_path)
+        except:
+            if config.debug:
+                raise
 
 
 def log_commit_pending():
@@ -4001,7 +4016,6 @@ def export_audit_log():
         html.write(','.join((fmt_date(int(t)), fmt_time(int(t)), linkinfo,
                              user, action, '"' + text + '"')) + '\n')
     return False
-
 
 #.
 #   .-Automation-----------------------------------------------------------.
@@ -7308,6 +7322,7 @@ def ajax_activation():
         # This is the single site activation mode
         try:
             start = time.time()
+            # if not cmc_rush_ahead_activation():
             check_mk_local_automation(config.wato_activation_method)
             duration = time.time() - start
             update_replication_status(None, {}, { 'act': duration })
@@ -7328,6 +7343,31 @@ def ajax_activation():
                   _("Configuration successfully activated."))
     except Exception, e:
         html.show_error(str(e))
+
+# Try to do a rush-ahead-activation
+def cmc_rush_ahead_activation():
+    if defaults.omd_root:
+        rush_config = defaults.var_dir + "/core/config.rush"
+        if os.path.exists(rush_config):
+            try:
+                rush_id = file(rush_config + ".id").read().strip()
+                changeid = file(log_dir + "changeid").read().strip()
+                if rush_id == changeid: # Rush ahead file is up-to-date!
+                    os.rename(rush_config, rush_config[:-5])
+                    cmc_reload()
+                    log_commit_pending()
+                    html.final_javascript("wato_hide_changes_button();")
+                    return True
+                else:
+                    html.write("MIST: mtime_rush ist %r, mtime_pend ist %r" % 
+                        (mtime_rush, mtime_pend))
+            except Exception, e:
+                if opt_debug:
+                    raise
+
+def cmc_reload():
+    log_audit(None, "activate-config", "Reloading Check_MK Micro Core on the fly")
+    html.live.command("[%d] RELOAD_CONFIG" % time.time())
 
 # AJAX handler for asynchronous site replication
 def ajax_replication():

@@ -254,6 +254,9 @@ def compile_forest(user, only_hosts = None, only_groups = None):
         used_cache = True
         return # In this case simply skip further compilations
 
+    if not config.aggregations and not config.host_aggregations:
+        return # nothing to do, BI not used
+
     # If we have previously only partly compiled and now there is no
     # filter, then throw away partly compiled data.
     if (cache["compiled_hosts"] or cache["compiled_groups"]) \

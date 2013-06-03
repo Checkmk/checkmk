@@ -40,6 +40,16 @@
 
 #define WT_ALLNAMES "all, check, state, log, downtime, comment, command and program"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+void trigger(int what);
+#ifdef __cplusplus
+}
+#endif
+
+
 extern const char *wt_names[];
 extern pthread_cond_t g_wait_cond[];
 extern pthread_mutex_t g_wait_mutex;

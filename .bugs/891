@@ -1,0 +1,10 @@
+Title: Optical representation of regex field
+Component: wato
+State: open
+Date: 2013-06-03 14:23:08
+Targetversion: 1.4.0
+Class: nastiness
+
+I think we should hilite regex inputs fields optically and
+maybe also validate them. This can prevent regex errors
+deeply in the Check_MK code generation.

@@ -515,21 +515,24 @@ function wato_activation_result(siteid, code) {
         oState.innerHTML = "<div class='repprogress ok' style='width: 160px;'>OK</div>";
         oMsg.innerHTML = code.substr(3);
 
-        // Reload page after 2 secs
+        // Reload page after 1 secs
         setTimeout(wato_replication_finish, 1000);
     } else {
         oState.innerHTML = '';
         oMsg.innerHTML = code;
-
-        // Show the activate changes button again
-        var button = document.getElementById('act_changes_button');
-        if(button) {
-            button.style.display = '';
-            button = null;
-        }
+        wato_hide_changes_button();
     }
     oState = null;
     oMsg = null;
+}
+
+function wato_hide_changes_button()
+{
+    var button = document.getElementById('act_changes_button');
+    if (button) {
+        button.style.display = 'none';
+        button = null;
+    }
 }
 
 //   +----------------------------------------------------------------------+

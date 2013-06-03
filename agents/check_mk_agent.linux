@@ -63,9 +63,18 @@ function run_cached () {
     if [ ! -d $MK_CONFDIR/cache ]; then mkdir -p $MK_CONFDIR/cache ; fi
     CACHEFILE="$MK_CONFDIR/cache/$NAME.cache"
 
+    # Check if the creation of the cache takes suspiciously long and return 
+    # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
+    local NOW=$(date +%s)
+    if [ -e "$CACHEFILE.new" ] ; then
+        local CF_ATIME=$(stat -c %X "$CACHEFILE.new")
+        if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ] ; then 
+            return
+        fi
+    fi
+
     # Check if cache file exists and is recent enough
     if [ -s "$CACHEFILE" ] ; then
-        local NOW=$(date +%s)
         local MTIME=$(stat -c %Y "$CACHEFILE")
         if [ $((NOW - MTIME)) -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
         # Output the file in any case, even if it is

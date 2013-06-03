@@ -1,0 +1,11 @@
+Title: Better error handling for invalid regex in rule
+Component: core
+State: open
+Date: 2013-06-03 14:18:36
+Targetversion: 1.2.3
+Class: nastiness
+
+If you enter e.g. H:\ into the "Mount Point" of the df-Rule then cmk -C
+crashes with an exception.
+
+Can we make a validator here?

@@ -193,8 +193,9 @@ void Query::addColumn(Column *column)
     _columns.push_back(column);
 }
 
-void Query::setError(int error_code, const char* msg){
-	_output->setError(error_code, msg);
+void Query::setError(int error_code, const char* msg)
+{
+    _output->setError(error_code, msg);
 }
 
 bool Query::hasNoColumns()

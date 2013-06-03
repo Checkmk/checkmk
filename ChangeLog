@@ -16,6 +16,7 @@
     * windows_agent: Now available as 64 bit version
     * agent_vsphere: fix problem where sensors were missing when
       you queried multiple host systems via vCenter
+    * apache_status: fix exception if parameter is None
 
     Notifications:
     * Flexible Notification can now filter service levels

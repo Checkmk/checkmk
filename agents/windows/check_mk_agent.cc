@@ -2087,6 +2087,12 @@ void launch_program(SOCKET &out, char *dirname, char *name, bool is_plugin){
     char path[512];
     snprintf(path, sizeof(path), "%s\\%s", dirname, name);
 
+    // If the path in question is a directory -> return
+    DWORD dwAttr = GetFileAttributes(path);
+    if(dwAttr != 0xffffffff && (dwAttr & FILE_ATTRIBUTE_DIRECTORY)) {
+        return;
+    }
+
     crash_log("Running program %s", path);
     char newpath[512];
     char *command = add_interpreter(path, newpath);

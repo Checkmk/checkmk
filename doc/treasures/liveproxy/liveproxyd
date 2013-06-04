@@ -6,6 +6,7 @@ import os, sys, getopt, signal, time, socket, select
 VERSION="1.2.3i1"
 
 sites = {}
+dump_interval = 1
 
 #   .--Proxy---------------------------------------------------------------.
 #   |                      ____                                            |
@@ -37,15 +38,16 @@ g_sites = {
 # The main loop of the daemon goes here
 
 g_need_restart = False
-g_need_statedump = False
 g_need_reload = False
 
 def liveproxyd_run():
-    global g_need_restart, g_need_statedump, g_need_reload
+    global g_need_restart, g_need_reload
 
     open_client_sockets()
+    last_dump = 0
 
     while True:
+
         try:
             if g_need_restart:
                 do_restart()
@@ -53,9 +55,6 @@ def liveproxyd_run():
             if g_need_reload:
                 do_reload()
                 g_need_reload = False
-            if g_need_statedump:
-                dump_state()
-                g_need_statedump = False
 
             initiate_connections()
             do_heartbeats()
@@ -67,13 +66,18 @@ def liveproxyd_run():
             get_new_requests(readable)
             distribute_requests()
             get_responses(readable) # also heartbeats
+            handle_client_timeouts()
             garbage_collect_sockets()
-            # handle client timeouts
+
+            now = time.time()
+            if now - last_dump > dump_interval:
+                dump_state()
+                last_dump = now
 
         except Exception, e:
             if opt_debug:
                 raise
-                
+
             log("Ingoring exception: %s" % e)
 
 def initiate_connections():
@@ -121,7 +125,7 @@ def do_heartbeats():
                 if now - since >= rate:
                     if not send_heartbeat(sitename, sitestate):
                         if now - since >= 2 * rate:
-                            log("Could send heartbeat for %d secs - no free channel" % 2 * rate)
+                            log("Could not send heartbeat for %d secs - no free channel" % (2 * rate))
                             disconnect_from_site(sitename)
 
 
@@ -132,7 +136,7 @@ def send_heartbeat(sitename, sitestate):
     while True:
         next_channel = None
         for channel in sitestate["channels"]:
-            if channel["state"] != "starting":
+            if channel["state"] == "ready":
                 if next_channel == None or channel["since"] < next_channel["since"]:
                     min_since = channel["since"]
                     next_channel = channel
@@ -151,7 +155,7 @@ def send_heartbeat(sitename, sitestate):
                 sitestate["heartbeat"]["channel"] = channel
                 return True
             except Exception, e:
-                log("Cannot send heartbeat: %s" % e)
+                log("Cannot send heartbeat to channel %s/%d: %s" % (sitename, channel["socket"].filelo(), e))
                 channel["state"] = "error"
 
 
@@ -235,7 +239,11 @@ def get_new_requests(readable):
                 (client["socket"] in readable or client.get("nextrequest")):
                 try:
                     request = receive_request(sitename, client)
-                    if request:
+                    if request and not request.startswith("GET") and not request.startswith("COMMAND"):
+                        log("Invalid request [%s] from client %s/%d" % (
+                            request.replace("\n", "\\n"), sitename, client["socket"].fileno()))
+                        client["state"] = "closed"
+                    elif request:
                         client["state"] = "wait_for_channel"
                         client["since"] = time.time()
                         client["request"] = request
@@ -274,7 +282,7 @@ def forward_request(sitename, client, channel):
     cls = client["socket"]
     chs = channel["socket"]
     log("Forwarding request [%s] from client %s/%d to channel %s/%d" % (
-        client["request"], sitename, cls.fileno(), sitename, chs.fileno()))
+        client["request"].replace("\n","\\n"), sitename, cls.fileno(), sitename, chs.fileno()))
     try:
         chs.send(client["request"])
         if not client["request"].startswith("COMMAND"):
@@ -294,7 +302,14 @@ def forward_request(sitename, client, channel):
 
 def respond_client_with_error(client, message):
     try:
-        client["socket"].send("400%12d\n%s\n" % (len(message) + 2, message))
+        while True:
+            try:
+                response = "400%12d\n%s\n" % (len(message) + 1, message)
+                client["socket"].send(response)
+                break
+            except socket.error, e:
+                if e.errno == 4:
+                    continue # Interrupted system call
     except Exception, e:
         if opt_debug: 
             raise
@@ -302,7 +317,7 @@ def respond_client_with_error(client, message):
             sitename, client["socket"].fileno(), e))
         client["state"] = "closed"
 
-    if "channel" in client:
+    if client.get("channel"):
         channel = client["channel"]
         del channel["client"]
         del client["channel"]
@@ -318,19 +333,30 @@ def receive_request(sitename, client):
     # Note: Multisite can send several requests at once. For example
     # a command and a wait query (reschedule button)
     request = client.get("nextrequest", "")
+    if request:
+        log("HIRN: client %s/%d noch ein Rest vom letzten mal: [%s]" % (
+              sitename, client["socket"].fileno(), request.replace("\n", "\\n")))
+    client["nextrequest"] = ""
     while "\n\n" not in request:
         try:
             chunk = client["socket"].recv(65536)
+            log("HIRN: CHUNK von client: [%s]" % chunk.replace("\n", "\\n"))
             request += chunk
         except socket.error, e:
-            if e.errno != 4: # Interrupted system cal
+            if e.errno == 104: # Connection reset by peer
+                return None
+            elif e.errno != 4: # Interrupted system cal
                 raise
+
         if not chunk:
             log("Client %s/%d closed connection." % (sitename, client["socket"].fileno()))
             return None
+    log("HIRN: VOR DEM SPLITTEN: [%s]" % request)
     end = request.index("\n\n")
     client["nextrequest"] = request[end+2:]
     request = request[:end+2]
+    log("HIRN: Diesesmal: [%s], naechstes Mal: [%s]" % (
+        request.replace("\n", "\\n"), client["nextrequest"].replace("\n", "\\n")))
     return request
 
 
@@ -346,7 +372,10 @@ def get_responses(readable):
 
 
 def receive_response(sitename, channel):
-    client = channel["client"]
+    client = channel.get("client") # None -> client timed out before response!
+    if not client:
+        log("Response from timed-out client arrived lately on channel %s/%d" % 
+            sitename, channel["socket"].fileno())
     # We always assume fixed16 as response header!
     old_response = channel.get("response", "")
     try:
@@ -360,8 +389,9 @@ def receive_response(sitename, channel):
     except Exception, e:
         log("Cannot read response from %s/%d: %s" % 
             (sitename, channel["socket"].fileno(), e))
-        client["channel"] = None
-        client["state"] = "wait_for_channel"
+        if client:
+            client["channel"] = None
+            client["state"] = "wait_for_channel"
         channel["state"] = "closed"
         return
 
@@ -371,20 +401,21 @@ def receive_response(sitename, channel):
     try:
         bodylength = int(response[3:15])
     except Exception, e:
-        if opt_debug:
-            raise
-        log("Malformed response header from cannel %s/%d" % sitename, channel["socket"].fileno())
-        respond_client_with_error(client, "Malformed response from site %s" % sitename)
-        client["channel"] = None
-        client["state"] = "wait_for_channel"
+        log("Malformed response header from cannel %s/%d" % (sitename, channel["socket"].fileno()))
+        if client:
+            client["channel"] = None
+            client["state"] = "wait_for_channel"
         channel["state"] = "error"
+        return
 
     if len(response) > bodylength + 16:
         log("Too large response on channel %s/%d (%d exceeding bytes: [%s])" % (
             sitename, channel["socket"].fileno(), len(response) - bodylength - 16, response[bodylength + 16:]))
-        client["channel"] = None
-        client["state"] = "wait_for_channel"
+        if client:
+            client["channel"] = None
+            client["state"] = "wait_for_channel"
         channel["state"] = "error"
+        return
 
 
     elif len(response) < bodylength + 16:
@@ -394,19 +425,22 @@ def receive_response(sitename, channel):
     channel["state"] = "ready"
     g_sites[sitename]["state"] = "ready" # at least one channel free
     channel["response"] = ""
-    del channel["client"]
-    del client["channel"]
 
-    try:
-        client["socket"].send(response)
-        client["state"] = "idle"
-        client["request"] = ""
-    except Exception, e:
-        if opt_debug:
-            raise
-        log("Cannot forward response from client %s/%d to client %s/%d: %s", 
-            (sitename, channel["socket"].fileno(), sitename, client["socket"].fileno(), e))
-        client["state"] = "error"
+    if client:
+        del channel["client"]
+        del client["channel"]
+
+        try:
+            client["socket"].send(response)
+            # log("HIRN: An client: [%s]" % response[16:80].replace("\n", ""))
+            client["state"] = "idle"
+            client["request"] = ""
+        except Exception, e:
+            if opt_debug:
+                raise
+            log("Cannot forward response from client %s/%d to client %s/%d: %s", 
+                (sitename, channel["socket"].fileno(), sitename, client["socket"].fileno(), e))
+            client["state"] = "error"
 
 def receive_heartbeat(sitename, channel):
     sitestate = g_sites[sitename]
@@ -432,6 +466,23 @@ def receive_heartbeat(sitename, channel):
             raise
         log("Exception while reading heartbeat from channel %s/%d: %s" % 
             (sitename, channel["socket"].fileno()), e)
+
+def handle_client_timeouts():
+    now = time.time()
+    for sitename, sitestatus in g_sites.items():
+        siteconf = sites[sitename]
+
+        for client in sitestatus["clients"]:
+            if client["state"] != "idle":
+                age = now - client["since"]
+                if client["state"] == "wait_for_channel" and \
+                    age >= siteconf["channel_timeout"]:
+                    respond_client_with_error(client, "Timeout while waiting for free Livestatus channel to site %s." % 
+                        sitename)
+                elif client["state"] == "wait_for_response" and \
+                    age > siteconf["query_timeout"]:
+                    respond_client_with_error(client, "Timeout while waiting for response from site %s." % sitename)
+
 
 
 
@@ -620,14 +671,14 @@ def daemonize(user=0, group=0):
     log("Successfully daemonized with PID %d." % os.getpid())
 
 def signal_handler(signum, stack_frame):
-    global g_need_restart, g_need_statedump, g_need_reload
+    global g_need_restart, g_need_reload
     if signum in [ 2, 3, 15 ]:
         log("Got signal %d. Good bye" % signum)
         sys.exit(0)
     elif signum == 10:
         g_need_restart = True
     elif signum == 12:
-        g_need_statedump = True
+        dump_state()
     elif signum == 1:
         g_need_reload = True
 

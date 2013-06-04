@@ -261,6 +261,7 @@ class BaseConnection:
         return self.recv_response(query, add_headers)
 
     def send_query(self, query, add_headers = "", do_reconnect=True):
+        orig_query = query
         if self.socket == None:
             self.connect()
         if not query.endswith("\n"):
@@ -288,7 +289,7 @@ class BaseConnection:
                 # Automatically try to reconnect in case of an error, but
                 # only once.
                 self.connect()
-                self.send_query(query, add_headers, False)
+                self.send_query(orig_query, add_headers, False)
                 return
 
             raise MKLivestatusSocketError("RC1:" + str(e))

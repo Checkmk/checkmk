@@ -185,6 +185,7 @@
     Multisite:
     * List of views: Output the alias of a datasource instead of internal name
     * FIX: fix column editor for join columns if "SERVICE:" is l10n'ed
+    * FIX: fix invalid request in livestatus query after reconnect
 
     WATO:
     * FIX: convert editing of global setting to POST. This avoid URL-too-long

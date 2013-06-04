@@ -41,6 +41,7 @@ def liveproxyd_run():
             get_new_requests(readable)
             distribute_requests()
             get_responses(readable)
+            # garbage_collect_sockets()
 
         except MKSignalException, e:
             log("Got signal %d." % e._signum)
@@ -118,7 +119,6 @@ def do_select():
 def accept_new_clients(readable):
     for sitename, sitestate in g_sites.items():
         if sitestate["socket"] in readable:
-            print readable
             try:
                 s, addrinfo = sitestate["socket"].accept()
                 log("Accepted new client %s/%d" % (sitename, s.fileno()))
@@ -134,12 +134,16 @@ def get_new_requests(readable):
             if client["state"] == "idle" and \
                 client["socket"] in readable:
                 try:
-                    request = receive_request(client["socket"])
-                    client["state"] = "wait_for_channel"
-                    client["since"] = time.time()
-                    client["request"] = request
-                    log("Get new request from %s/%d (%d bytes)" % 
-                        (sitename, client["socket"].fileno(), len(request)))
+                    request = receive_request(sitename, client["socket"])
+                    if request:
+                        client["state"] = "wait_for_channel"
+                        client["since"] = time.time()
+                        client["request"] = request
+                        log("Get new request from %s/%d (%d bytes)" % 
+                            (sitename, client["socket"].fileno(), len(request)))
+                    else:
+                        client["state"] = "closed"
+                        client["socket"] = None
                 except Exception, e:
                     if opt_debug:
                         raise
@@ -200,10 +204,14 @@ def respond_client_with_error(client, message):
 
 # TODO: one malicious client can hang the whole proxy. In order
 # to prevent this we'd need partial requests...
-def receive_request(sock):
+def receive_request(sitename, sock):
     textbody = ""
     while not textbody.endswith("\n\n"):
-        textbody += sock.recv(65536)
+        chunk = sock.recv(65536)
+        if not chunk:
+            log("Client %s/%d closed connection." % (sitename, sock.fileno()))
+            return None
+        textbody += chunk
     return textbody
 
 
@@ -304,11 +312,11 @@ def dump_state():
         log("  Channels:")
         for channel in sitestate["channels"]:
             log("    %s/%d - %s, client: %s" % 
-                (sitename, channel["socket"].fileno(), channel["state"], channel.get("client")))
+                (sitename, channel["socket"].fileno(), channel["state"], channel.get("client") and channel["client"]["socket"].fileno() or "none"))
         log("  Clients:")
         for client in sitestate["clients"]:
             log("    %s/%d - %s, channel: %s" % 
-                (sitename, client["socket"].fileno(), client["state"], client.get("channel")))
+                (sitename, client["socket"].fileno(), client["state"], client.get("channel") and client["channel"]["socket"].fileno() or "none"))
 
 
 

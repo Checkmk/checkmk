@@ -247,8 +247,8 @@ def get_new_requests(readable):
                         client["state"] = "wait_for_channel"
                         client["since"] = time.time()
                         client["request"] = request
-                        log("Get new request from %s/%d (%d bytes)" % 
-                            (sitename, client["socket"].fileno(), len(request)))
+                        # log("Get new request from %s/%d (%d bytes)" % 
+                        #     (sitename, client["socket"].fileno(), len(request)))
                     else:
                         client["state"] = "closed"
                 except Exception, e:
@@ -281,8 +281,8 @@ def distribute_requests():
 def forward_request(sitename, client, channel):
     cls = client["socket"]
     chs = channel["socket"]
-    log("Forwarding request [%s] from client %s/%d to channel %s/%d" % (
-        client["request"].replace("\n","\\n"), sitename, cls.fileno(), sitename, chs.fileno()))
+    # log("Forwarding request [%s] from client %s/%d to channel %s/%d" % (
+    #     client["request"].replace("\n","\\n"), sitename, cls.fileno(), sitename, chs.fileno()))
     try:
         chs.send(client["request"])
         if not client["request"].startswith("COMMAND"):
@@ -333,14 +333,14 @@ def receive_request(sitename, client):
     # Note: Multisite can send several requests at once. For example
     # a command and a wait query (reschedule button)
     request = client.get("nextrequest", "")
-    if request:
-        log("HIRN: client %s/%d noch ein Rest vom letzten mal: [%s]" % (
-              sitename, client["socket"].fileno(), request.replace("\n", "\\n")))
+    # if request:
+    #     log("HIRN: client %s/%d noch ein Rest vom letzten mal: [%s]" % (
+    #           sitename, client["socket"].fileno(), request.replace("\n", "\\n")))
     client["nextrequest"] = ""
     while "\n\n" not in request:
         try:
             chunk = client["socket"].recv(65536)
-            log("HIRN: CHUNK von client: [%s]" % chunk.replace("\n", "\\n"))
+            # log("HIRN: CHUNK von client: [%s]" % chunk.replace("\n", "\\n"))
             request += chunk
         except socket.error, e:
             if e.errno == 104: # Connection reset by peer
@@ -351,12 +351,12 @@ def receive_request(sitename, client):
         if not chunk:
             log("Client %s/%d closed connection." % (sitename, client["socket"].fileno()))
             return None
-    log("HIRN: VOR DEM SPLITTEN: [%s]" % request)
+    # log("HIRN: VOR DEM SPLITTEN: [%s]" % request)
     end = request.index("\n\n")
     client["nextrequest"] = request[end+2:]
     request = request[:end+2]
-    log("HIRN: Diesesmal: [%s], naechstes Mal: [%s]" % (
-        request.replace("\n", "\\n"), client["nextrequest"].replace("\n", "\\n")))
+    #log("HIRN: Diesesmal: [%s], naechstes Mal: [%s]" % (
+    #    request.replace("\n", "\\n"), client["nextrequest"].replace("\n", "\\n")))
     return request
 
 

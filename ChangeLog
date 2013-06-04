@@ -19,6 +19,7 @@
     * windows_agent: Now available as 64 bit version
     * agent_vsphere: fix problem where sensors were missing when
       you queried multiple host systems via vCenter
+    * apache_status: fix exception if parameter is None
     * cached checks: no longer output cached data if the age of the
                      cache file is twice the maximum cache age
     * windows agent: no longer tries to execute directories

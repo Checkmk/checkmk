@@ -1,0 +1,11 @@
+Konzept:
+
+[1] WATO generiert beim Schreiben der sites.mk eine Datei etc/check_mk/liveproxyd.mk. Dort
+    sind pro Site die Einstellungen für den proxy hinterlegt.
+
+[2] Der Daemon lädt diese Datei beim Starten
+
+[3] Beim Schreiben der Datei wird der Daemon mit HUP oder dergleichen angetriggert,
+    damit der die Datei neu liest und die Kanäle entsprechend anpasst.
+
+

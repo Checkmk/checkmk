@@ -1,0 +1,370 @@
+#!/usr/bin/python
+# encoding: utf-8
+
+import os, sys, getopt, signal, time, socket, select
+
+VERSION="1.2.3i1"
+
+sites = {}
+
+#   .--Proxy---------------------------------------------------------------.
+#   |                      ____                                            |
+#   |                     |  _ \ _ __ _____  ___   _                       |
+#   |                     | |_) | '__/ _ \ \/ / | | |                      |
+#   |                     |  __/| | | (_) >  <| |_| |                      |
+#   |                     |_|   |_|  \___/_/\_\\__, |                      |
+#   |                                          |___/                       |
+#   +----------------------------------------------------------------------+
+#   |  The actual proxy code                                               |
+#   '----------------------------------------------------------------------'
+
+# State of all sites
+g_sites = {
+#    "mysite" : {
+#        "socket" : -> UNIX server socket,
+#        "clients" : [ ... ],
+#        "channels" : [ ... ],
+#    }
+}
+
+
+# The main loop of the daemon goes here
+def liveproxyd_run():
+    open_client_sockets()
+
+    try:
+        while True:
+            initiate_connections()
+            readable, writable = do_select()
+            complete_connections(writable)
+            accept_new_clients(readable)
+
+
+    except MKSignalException, e:
+        log("Got signal %d." % e._signum)
+        if e._signum in [ 2, 3, 15 ]:
+            sys.exit(0)
+        elif e._signum == 10:
+            do_restart()
+        elif e._signum == 1:
+            do_reload()
+
+def initiate_connections():
+    # Create new channels to target sites. Nonblocking!
+    for sitename, siteconf in sites.items():
+        channels = g_sites[sitename]["channels"]
+        while len(channels) < siteconf["channels"]:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            log("Creating channel %s/%d..." % (sitename, s.fileno()))
+            s.setblocking(0)
+            try:
+                s.connect(siteconf["socket"])
+            except socket.error, e:
+                if e.errno != 115: # "Operation now in progress"
+                    if opt_debug:
+                        raise
+                    else:
+                        log("Error: cannot create TCP channel to %s:%d: %d" % siteconf["socket"] + (e,))
+                        break
+
+            except Exception, e:
+                if opt_debug:
+                    raise
+                log("Error: cannot create TCP channel to %s:%d: %d" % siteconf["socket"] + (e,))
+                break
+
+            channels.append({ "socket" : s, "state" : "connecting", "since": time.time()})
+
+
+def complete_connections(writable):
+    for sitename, sitestate in g_sites.items():
+        for channel in sitestate["channels"]:
+            if channel["state"] == "connecting" and channel["socket"] in writable:
+                log("Channel %s/%d successfully connected" % (sitename, channel["socket"].fileno()))
+                channel["state"] = "connected"
+
+# Master/Mega/Central select(). We are going to be the select() master. Harhar.
+def do_select():
+    read_fds = []
+    write_fds = []
+
+    for sitename, sitestate in g_sites.items():
+        # outgoing connections currently building up
+        for channel in sitestate["channels"]:
+            if channel["state"] == "connecting":
+                write_fds.append(channel["socket"])
+
+        # new client connections
+        read_fds.append(sitestate["socket"])
+
+    r_able, w_able, x_able = select.select(read_fds, write_fds, [], 1.0)
+    return r_able, w_able
+
+
+def open_client_sockets():
+    if not os.path.exists(opt_socketdir):
+        os.makedirs(opt_socketdir)
+
+    for sitename, siteconf in sites.items():
+        create_unix_socket(sitename)
+
+def create_unix_socket(sitename):
+    path = opt_socketdir + "/" + sitename
+    if os.path.exists(path):
+        log("Removing left-over unix socket %s" % path)
+        os.remove(path)
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.bind(path)
+        s.listen(10)
+    except Exception, e:
+        if opt_debug:
+            raise
+        bail_out("Cannot create unix socket %s: %s" % (path, e))
+
+    g_sites[sitename]["socket"] = s
+
+
+def accept_new_clients(readable):
+    for sitename, sitestate in g_sites.items():
+        if sitestate["socket"] in readable:
+            print readable
+            try:
+                s, addrinfo = sitestate["socket"].accept()
+                log("Accepted new client %s/%d" % (sitename, s.fileno()))
+                sitestate["clients"].append(s)
+            except Exception, e:
+                if opt_debug:
+                    raise
+                log("Failed to accept new client for %s: %s" % (sitename, e))
+
+
+#.
+#   .--Daemon/main---------------------------------------------------------.
+#   | ____                                      __               _         |
+#   ||  _ \  __ _  ___ _ __ ___   ___  _ __    / / __ ___   __ _(_)_ __    |
+#   || | | |/ _` |/ _ \ '_ ` _ \ / _ \| '_ \  / / '_ ` _ \ / _` | | '_ \   |
+#   || |_| | (_| |  __/ | | | | | (_) | | | |/ /| | | | | | (_| | | | | |  |
+#   ||____/ \__,_|\___|_| |_| |_|\___/|_| |_/_/ |_| |_| |_|\__,_|_|_| |_|  |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Global code, daemonize, getopt and usage                             |
+#   '----------------------------------------------------------------------'
+
+# Open logfile, fall back to stdout if this is not successfull
+def open_log():
+    global g_logfile
+    try:
+        g_logfile = file(opt_logfilepath, "a")
+        g_logfile.flush()
+    except Exception, e:
+        if opt_debug:
+            raise
+        g_logfile = sys.stderr
+        log("Cannot open logfile %s: %s" % (opt_logfilepath, e))
+
+# Send message to logfile. In foreground mode we omit the timestamp
+def log(text):
+    if type(text) == unicode:
+        text = text.encode("utf-8")
+    try:
+        if not opt_foreground:
+            t = time.time()
+            g_logfile.write('%s.%06d '  % (time.strftime("%F %T", time.localtime(t)), int(t * 1000000) % 1000000))
+        g_logfile.write("%s\n" % text)
+        g_logfile.flush()
+    except:
+        if opt_debug:
+            raise
+        sys.stderr.write("%s\n" % text)
+
+# Log a message, but only in verbose mode
+def verbose(text):
+    if opt_verbose:
+        log(text)
+
+
+def bail_out(reason):
+    log("FATAL ERROR: %s" % reason)
+    sys.exit(1)
+
+
+def usage():
+    sys.stdout.write("""Usage: liveproxyd [OPTIONS]
+
+   -v, --verbose        Enable verbose output
+   -g, --foreground     Do not daemonize, run in foreground
+   -c, --conifg CONFIG  Read configuration from file CONFIG
+   --debug              Enable debug mode (let exceptions through)
+   -h, --help           Show this help and exit
+   -V, --version        Print version and exit
+
+""")
+
+
+def daemonize(user=0, group=0):
+    # do the UNIX double-fork magic, see Stevens' "Advanced
+    # Programming in the UNIX Environment" for details (ISBN 0201563177)
+    try:
+        pid = os.fork()
+        if pid > 0:
+            # exit first parent
+            sys.exit(0)
+    except OSError, e:
+        sys.stderr.write("Fork failed (#1): %d (%s)\n" % (e.errno, e.strerror))
+        sys.exit(1)
+
+    # decouple from parent environment
+    # chdir -> don't prevent unmounting...
+    os.chdir("/")
+
+    # Create new process group with the process as leader
+    os.setsid()
+
+    # Set user/group depending on params
+    if group:
+        os.setregid(getgrnam(group)[2], getgrnam(group)[2])
+    if user:
+        os.setreuid(getpwnam(user)[2], getpwnam(user)[2])
+
+    # do second fork
+    try:
+        pid = os.fork()
+        if pid > 0:
+            sys.exit(0)
+    except OSError, e:
+        sys.stderr.write("Fork failed (#2): %d (%s)\n" % (e.errno, e.strerror))
+        sys.exit(1)
+
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+    si = os.open("/dev/null", os.O_RDONLY)
+    so = os.open("/dev/null", os.O_WRONLY)
+    os.dup2(si, 0)
+    os.dup2(so, 1)
+    os.dup2(so, 2)
+    os.close(si)
+    os.close(so)
+
+    open_log()
+    log("Successfully daemonized with PID %d." % os.getpid())
+
+class MKSignalException(Exception):
+    def __init__(self, signum):
+        Exception.__init__(self, "Got signal %d" % signum)
+        self._signum = signum
+
+def signal_handler(signum, stack_frame):
+    verbose("Got signal %d." % signum)
+    raise MKSignalException(signum)
+
+def read_configuration():
+    try:
+        execfile(opt_configfile, globals())
+    except Exception, e:
+        if opt_debug:
+            raise
+        bail_out("Cannot read configuration file %s: %s" % (
+            opt_configfile, e))
+
+    # Create state object for all sites
+    for sitename, siteconf in sites.items():
+        g_sites[sitename] = {
+            "channels" : [],
+            "clients" : [],
+        }
+
+def do_restart():
+    log("Restarting myself")
+    for fd in range(3, 256):
+        try:
+            os.close(fd)
+        except:
+            pass
+    os.execvp("liveproxyd", sys.argv)
+
+def do_reload():
+    log("Reload not implemented.")
+
+os.unsetenv("LANG")
+
+opt_verbose       = 0
+opt_debug         = False
+opt_foreground    = False
+g_logfile         = sys.stderr
+
+# Please adapt this piece of code
+omd_root = os.getenv("OMD_ROOT")
+if omd_root:
+    opt_logfilepath   = omd_root + "/var/log/liveproxyd.log"
+    opt_pid_file      = omd_root + "/tmp/run/liveproxyd.pid"
+    opt_configfile    = omd_root + "/etc/check_mk/liveproxyd.mk"
+    opt_socketdir     = omd_root + "/tmp/run/liveproxy"
+else:
+    curdir = os.path.abspath('.')
+    opt_logfilepath   = curdir + "/liveproxyd.log"
+    opt_pid_file      = curdir + "/liveproxyd.pid"
+    opt_configfile    = curdir + "/liveproxyd.mk"
+    opt_socketdir     = curdir + "/liveproxy"
+
+short_options = "hvVgc"
+long_options = [ "help", "version", "verbose", "debug", "foreground", "config=" ]
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+
+    # first parse modifers
+    for o, a in opts:
+        if o in [ '-v', '--verbose' ]:
+            opt_verbose += 1
+        elif o in [ '-d', '--debug' ]:
+            opt_debug = True
+        elif o in [ '-g', '--foreground' ]:
+            opt_foreground = True
+        elif o in [ '-c', '--conifg' ]:
+            opt_config = a
+
+    # now handle action options
+    for o, a in opts:
+        if o in [ '-h', '--help' ]:
+            usage()
+            sys.exit(0)
+        elif o in [ '-V', '--version' ]:
+            sys.stdout.write("liveproxyd version %s\n" % VERSION)
+            sys.exit(0)
+
+    if not opt_foreground:
+        daemonize()
+
+    log("----------------------------------------------------------")
+    log("Livestatus Proxy-Daemon starting...")
+
+    read_configuration()
+    log("Configured %d sites" % len(sites))
+
+    # Create PID file
+    file(opt_pid_file, "w").write("%d\n" % os.getpid())
+
+    # Install signal hander
+    signal.signal(1,  signal_handler)  # HUP (--> reload)
+    signal.signal(2,  signal_handler)  # INT
+    signal.signal(3,  signal_handler)  # QUIT
+    signal.signal(15, signal_handler)  # TERM
+    signal.signal(10, signal_handler)  # USR1
+
+    # Now let's go...
+    liveproxyd_run()
+
+    # We reach this point, if the server has been killed by
+    # a signal or hitting Ctrl-C (in foreground mode)
+
+    log("Successfully shut down.")
+    os.remove(opt_pid_file)
+    sys.exit(0)
+
+except Exception, e:
+    if opt_debug:
+        raise
+    bail_out(e)
+

@@ -86,7 +86,7 @@ def initiate_connections():
         sitestate = g_sites[sitename]
         channels = sitestate["channels"]
         if len(channels) < siteconf["channels"]:
-            if time.time() - sitestate["last_failed_connect"] >= siteconf["retry"]:
+            if time.time() - sitestate["last_failed_connect"] >= siteconf["connect_retry"]:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.setblocking(0)
                 try:
@@ -693,6 +693,11 @@ def read_configuration():
 
     # Create state object for all sites
     for sitename, siteconf in sites.items():
+        siteconf.setdefault("channels", 5)
+        siteconf.setdefault("heartbeat", (5, 2.0))
+        siteconf.setdefault("channel_timeout", 3.0)
+        siteconf.setdefault("query_timeout", 120.0)
+        siteconf.setdefault("connect_retry", 4.0)
         g_sites[sitename] = {
             "state": "starting",
             "channels" : [],

@@ -3780,14 +3780,15 @@ def log_pending(status, linkinfo, what, message):
 def cmc_rush_ahead():
     if defaults.omd_root:
         socket_path = defaults.omd_root + "/tmp/run/cmcrush"
-        try:
-            changeid = str(random.randint(1, 100000000000000000))
-            file(log_dir + "changeid", "w").write(changeid + "\n")
-            socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) \
-                      .sendto(changeid, socket_path)
-        except:
-            if config.debug:
-                raise
+        if os.path.exists(socket_path):
+            try:
+                changeid = str(random.randint(1, 100000000000000000))
+                file(log_dir + "changeid", "w").write(changeid + "\n")
+                socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) \
+                          .sendto(changeid, socket_path)
+            except:
+                if config.debug:
+                    raise
 
 
 def log_commit_pending():
@@ -6531,7 +6532,11 @@ def mode_sites(phase):
         socket = site.get("socket", _("local site"))
         if socket == "disabled:":
             socket = _("don't query status")
-        table.cell(_("Socket"), socket)
+        table.cell(_("Socket"))
+        if type(socket) == tuple and socket[0] == "proxy":
+            html.write(_("Use livestatus Proxy-Daemon"))
+        else:
+            html.write(socket)
 
         # Status host
         if "status_host" in site:
@@ -6602,23 +6607,77 @@ def mode_edit_site(phase):
     else:
         site = sites.get(siteid, {})
 
+    vs_tcp_port = Tuple(
+            title = _("TCP Port to connect to"),
+            orientation = "float",
+            elements = [
+                TextAscii(label = _("Host:"), allow_empty = False, size=15),
+                Integer(label = _("Port:"), minvalue=1, maxvalue=65535, default_value=6557),
+    ])
+    conn_choices = [
+        ( None, _("Connect to the local site") ),
+        ( "tcp",   _("Connect via TCP"), vs_tcp_port),
+        ( "unix",  _("Connect via UNIX socket"), TextAscii(
+            label = _("Path:"),
+            size = 40,
+            allow_empty = False)),
+        ( "disabled", _("Do not connect")),
+    ]
+    if config.liveproxyd_enabled:
+        conn_choices[2:2] = [
+        ( "proxy", _("Use Livestatus Proxy-Daemon"),
+          Dictionary(
+              optional_keys = False,
+              columns = 1,
+              elements = [
+                  ( "socket", vs_tcp_port ),
+                  ( "channels", 
+                    Integer(
+                        title = _("Number of channels to keep open"),
+                        minvalue = 2,
+                        maxvalue = 50,
+                        default_value = 5)),
+                  ( "heartbeat", 
+                    Tuple(
+                        title = _("Regular heartbeat"),
+                        orientation = "float",
+                        elements = [
+                            Integer(label = _("Rate:"), unit=_("/sec"), minvalue=1, default_value = 5),
+                            Float(label = _("Timeout:"), unit=_("sec"), minvalue=0.1, default_value = 2.0),
+                   ])),
+                   ( "channel_timeout",
+                     Float(
+                         title = _("Timeout waiting for a free channel"),
+                         minvalue = 0.1,
+                         default_value = 3,
+                         unit = _("sec"),
+                     )
+                   ),
+                   ( "query_timeout",
+                     Float(
+                         title = _("Total query timeout"),
+                         minvalue = 0.1,
+                         unit = _("sec"),
+                         default_value = 120,
+                     )
+                   ),
+                   ( "connect_retry",
+                     Float(
+                        title = _("Wait time after failed connect"),
+                        minvalue = 0.1,
+                        unit = _("sec"),
+                        default_value = 4.0,
+                    )),
+                ]
+             )
+          )
+        ]
+
     # ValueSpecs for the more complex input fields
     vs_conn_method = CascadingDropdown(
         html_separator = " ",
-        choices = [
-            ( None, _("Connect to the local site") ),
-            ( "tcp",   _("Connect via TCP"), Tuple(
-                orientation = "float",
-                elements = [
-                    TextAscii(label = _("Host:"), allow_empty = False, size=15),
-                    Integer(label = _("Port:"), minvalue=1, maxvalue=65535, default_value=6557),
-                ])),
-            ( "unix",  _("Connect via UNIX socket"), TextAscii(
-                label = _("Path:"),
-                size = 30,
-                allow_empty = False)),
-            ( "disabled", _("Do not connect")),
-        ])
+        choices = conn_choices,
+    )
 
 
     if phase == "action":
@@ -6657,7 +6716,7 @@ def mode_edit_site(phase):
         # Connection
         method = vs_conn_method.from_html_vars("method")
         vs_conn_method.validate_value(method, "method")
-        if type(method) == tuple:
+        if type(method) == tuple and method[0] in [ "unix", "tcp"]:
             if method[0] == "unix":
                 new_site["socket"] = "unix:" + method[1]
             else:
@@ -6776,9 +6835,9 @@ def mode_edit_site(phase):
     forms.header(_("Livestatus settings"))
     forms.section(_("Connection"))
     method = site.get("socket", None)
-    if method and method.startswith("unix:"):
+    if type(method) == str and method.startswith("unix:"):
         method = ('unix', method[5:])
-    elif method and method.startswith("tcp:"):
+    elif type(method) == str and method.startswith("tcp:"):
         method = ('tcp', tuple(method.split(":")[1:]))
     vs_conn_method.render_input("method", method)
 
@@ -6904,6 +6963,7 @@ def load_sites():
 
 def save_sites(sites):
     make_nagios_directory(multisite_dir)
+
     # Important: even write out sites if it's empty. The global 'sites'
     # variable will otherwise survive in the Python interpreter of the
     # Apache processes.
@@ -6916,8 +6976,31 @@ def save_sites(sites):
     rewrite_config_files_below(g_root_folder) # fix site attributes
     need_sidebar_reload()
 
+    if config.liveproxyd_enabled:
+        save_liveproxyd_config(sites)
+
     # Call the sites saved hook
     call_hook_sites_saved(sites)
+
+def save_liveproxyd_config(sites):
+    path = defaults.default_config_dir + "/liveproxyd.mk"
+    out = create_user_file(path, "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+
+    conf = {}
+    for siteid, siteconf in sites.items():
+        s = siteconf.get("socket")
+        if type(s) == tuple and s[0] == "proxy":
+            conf[siteid] = s[1]
+
+    out.write("sites = \\\n%s\n" % pprint.pformat(conf))
+    try:
+        pidfile = defaults.livestatus_unix_socket + "proxyd.pid"
+        pid = int(file(pidfile).read().strip())
+        os.kill(pid, 10)
+    except Exception, e:
+        html.show_error(_("Warning: cannot reload Livestatus Proxy-Daemon: %s" % e))
+
 
 # Makes sure, that in distributed mode we monitor only
 # the hosts that are directly assigned to our (the local)

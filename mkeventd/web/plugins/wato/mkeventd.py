@@ -654,6 +654,7 @@ vs_mkeventd_event = Dictionary(
             title = _("Application Name"),
             help = _("The syslog tag"),
             size = 40,
+            default_value = _("Foobar-Daemon"),
             allow_empty = True)
         ),
         ( "host",
@@ -661,6 +662,7 @@ vs_mkeventd_event = Dictionary(
             title = _("Host Name"),
             help = _("The host name of the event"),
             size = 40,
+            default_value = _("myhost089"),
             allow_empty = True)
         ),
         ( "priority",
@@ -845,9 +847,9 @@ def mode_mkeventd_rules(phase):
           '<a class=button href="%s">' % copy_url +
           _("Copy Rules From Master") + '</a>')
 
-    if len(rules) == 0:
-        html.write(_("You have not created any rules yet."))
-        return
+    if not rules:
+        html.message(_("You have not created any rules yet. The Event Console is useless unless "
+                     "you have activated <i>Force message archiving</i> in the global settings."))
 
     # Simulator
     event = config.load_user_file("simulated_event", {})
@@ -866,110 +868,111 @@ def mode_mkeventd_rules(phase):
     else:
         event = None
 
-    html.write('<table class=data>')
-    html.write("<tr>")
-    html.write("<th>%s</th>" % _("Actions"))
-    html.write("<th></th>")
-    html.write("<th>%s</th>" % _("ID"))
-    html.write("<th>%s</th>" % _("State"))
-    html.write("<th>%s</th>" % _("Priority"))
-    html.write("<th>%s</th>" % _("Facility"))
-    html.write("<th>%s</th>" % _("Service Level"))
-    if defaults.omd_root:
-        html.write("<th>%s</th>" % _("Hits"))
-    html.write("<th>%s</th>" % _("Description"))
-    html.write("<th>%s</th>" % _("Text to match"))
-    html.write("</tr>")
-
-    odd = "even"
-    have_match = False
-    for nr, rule in enumerate(rules):
-        odd = odd == "odd" and "even" or "odd"
-        html.write('<tr class="data %s0">' % odd)
-        delete_url = make_action_link([("mode", "mkeventd_rules"), ("_delete", nr)])
-        top_url    = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", 0)])
-        bottom_url = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", len(rules)-1)])
-        up_url     = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", nr-1)])
-        down_url   = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", nr+1)])
-        edit_url   = make_link([("mode", "mkeventd_edit_rule"), ("edit", nr)])
-        clone_url  = make_link([("mode", "mkeventd_edit_rule"), ("clone", nr)])
-        html.write('<td class=buttons>')
-        html.icon_button(edit_url, _("Edit this rule"), "edit")
-        html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
-        html.icon_button(delete_url, _("Delete this rule"), "delete")
-        if not rule is rules[0]:
-            html.icon_button(top_url, _("Move this rule to the top"), "top")
-            html.icon_button(up_url, _("Move this rule one position up"), "up")
-        else:
-            html.empty_icon_button()
-            html.empty_icon_button()
-
-        if not rule is rules[-1]:
-            html.icon_button(down_url, _("Move this rule one position down"), "down")
-            html.icon_button(bottom_url, _("Move this rule to the bottom"), "bottom")
-        else:
-            html.empty_icon_button()
-            html.empty_icon_button()
-
-        html.write('</td>')
-        html.write('<td>')
-        if rule.get("disabled"):
-            html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
-        elif event:
-            result = mkeventd.event_rule_matches(rule, event)
-            if type(result) != tuple:
-                html.icon(_("Rule does not match: %s") % result, "rulenmatch")
-            else:
-                cancelling, groups = result
-                if have_match:
-                    msg = _("This rule matches, but is overruled by a previous match.")
-                    icon = "rulepmatch"
-                else:
-                    if cancelling:
-                        msg = _("This rule does a cancelling match.")
-                    else:
-                        msg = _("This rule matches.")
-                    icon = "rulematch"
-                    have_match = True
-                if groups:
-                    msg += _(" Match groups: %s") % ",".join(groups)
-                html.icon(msg, icon)
-
-        html.write('</td>')
-        html.write('<td><a href="%s">%s</a></td>' % (edit_url, rule["id"]))
-        if rule.get("drop"):
-            html.write('<td class="state statep">%s</td>' % _("DROP"))
-        else:
-            html.write('<td class="state state%d">%s</td>' % (rule["state"],
-              {0:_("OK"), 1:_("WARN"), 2:_("CRIT"), 3:_("UNKNOWN"), -1:_("(syslog)")}[rule["state"]]))
-
-        # Syslog priority
-        if "match_priority" in rule:
-            prio_from, prio_to = rule["match_priority"]
-            if prio_from == prio_to:
-                prio_text = mkeventd.syslog_priorities[prio_from][1]
-            else:
-                prio_text = mkeventd.syslog_priorities[prio_from][1][:2] + ".." + \
-                            mkeventd.syslog_priorities[prio_to][1][:2]
-        else:
-            prio_text = ""
-        html.write("<td>%s</td>" % prio_text)
-
-        # Syslog Facility
-        if "match_facility" in rule:
-            facnr = rule["match_facility"]
-            html.write("<td>%s</td>" % mkeventd.syslog_facilities[facnr][1])
-        else:
-            html.write("<td></td>")
-
-        html.write('<td>%s</td>' % dict(mkeventd.service_levels()).get(rule["sl"], rule["sl"]))
+    if rules:
+        html.write('<table class=data>')
+        html.write("<tr>")
+        html.write("<th>%s</th>" % _("Actions"))
+        html.write("<th></th>")
+        html.write("<th>%s</th>" % _("ID"))
+        html.write("<th>%s</th>" % _("State"))
+        html.write("<th>%s</th>" % _("Priority"))
+        html.write("<th>%s</th>" % _("Facility"))
+        html.write("<th>%s</th>" % _("Service Level"))
         if defaults.omd_root:
-            hits = rule.get('hits')
-            html.write('<td class=number>%s</td>' % (hits != None and hits or ''))
-        html.write('<td>%s</td>' % rule.get("description"))
-        html.write('<td>%s</td>' % rule.get("match"))
-        html.write('</tr>\n')
-    html.write('</table>')
+            html.write("<th>%s</th>" % _("Hits"))
+        html.write("<th>%s</th>" % _("Description"))
+        html.write("<th>%s</th>" % _("Text to match"))
+        html.write("</tr>")
+
+        odd = "even"
+        have_match = False
+        for nr, rule in enumerate(rules):
+            odd = odd == "odd" and "even" or "odd"
+            html.write('<tr class="data %s0">' % odd)
+            delete_url = make_action_link([("mode", "mkeventd_rules"), ("_delete", nr)])
+            top_url    = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", 0)])
+            bottom_url = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", len(rules)-1)])
+            up_url     = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", nr-1)])
+            down_url   = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", nr+1)])
+            edit_url   = make_link([("mode", "mkeventd_edit_rule"), ("edit", nr)])
+            clone_url  = make_link([("mode", "mkeventd_edit_rule"), ("clone", nr)])
+            html.write('<td class=buttons>')
+            html.icon_button(edit_url, _("Edit this rule"), "edit")
+            html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
+            html.icon_button(delete_url, _("Delete this rule"), "delete")
+            if not rule is rules[0]:
+                html.icon_button(top_url, _("Move this rule to the top"), "top")
+                html.icon_button(up_url, _("Move this rule one position up"), "up")
+            else:
+                html.empty_icon_button()
+                html.empty_icon_button()
+
+            if not rule is rules[-1]:
+                html.icon_button(down_url, _("Move this rule one position down"), "down")
+                html.icon_button(bottom_url, _("Move this rule to the bottom"), "bottom")
+            else:
+                html.empty_icon_button()
+                html.empty_icon_button()
+
+            html.write('</td>')
+            html.write('<td>')
+            if rule.get("disabled"):
+                html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
+            elif event:
+                result = mkeventd.event_rule_matches(rule, event)
+                if type(result) != tuple:
+                    html.icon(_("Rule does not match: %s") % result, "rulenmatch")
+                else:
+                    cancelling, groups = result
+                    if have_match:
+                        msg = _("This rule matches, but is overruled by a previous match.")
+                        icon = "rulepmatch"
+                    else:
+                        if cancelling:
+                            msg = _("This rule does a cancelling match.")
+                        else:
+                            msg = _("This rule matches.")
+                        icon = "rulematch"
+                        have_match = True
+                    if groups:
+                        msg += _(" Match groups: %s") % ",".join(groups)
+                    html.icon(msg, icon)
+
+            html.write('</td>')
+            html.write('<td><a href="%s">%s</a></td>' % (edit_url, rule["id"]))
+            if rule.get("drop"):
+                html.write('<td class="state statep">%s</td>' % _("DROP"))
+            else:
+                html.write('<td class="state state%d">%s</td>' % (rule["state"],
+                  {0:_("OK"), 1:_("WARN"), 2:_("CRIT"), 3:_("UNKNOWN"), -1:_("(syslog)")}[rule["state"]]))
+
+            # Syslog priority
+            if "match_priority" in rule:
+                prio_from, prio_to = rule["match_priority"]
+                if prio_from == prio_to:
+                    prio_text = mkeventd.syslog_priorities[prio_from][1]
+                else:
+                    prio_text = mkeventd.syslog_priorities[prio_from][1][:2] + ".." + \
+                                mkeventd.syslog_priorities[prio_to][1][:2]
+            else:
+                prio_text = ""
+            html.write("<td>%s</td>" % prio_text)
+
+            # Syslog Facility
+            if "match_facility" in rule:
+                facnr = rule["match_facility"]
+                html.write("<td>%s</td>" % mkeventd.syslog_facilities[facnr][1])
+            else:
+                html.write("<td></td>")
+
+            html.write('<td>%s</td>' % dict(mkeventd.service_levels()).get(rule["sl"], rule["sl"]))
+            if defaults.omd_root:
+                hits = rule.get('hits')
+                html.write('<td class=number>%s</td>' % (hits != None and hits or ''))
+            html.write('<td>%s</td>' % rule.get("description"))
+            html.write('<td>%s</td>' % rule.get("match"))
+            html.write('</tr>\n')
+        html.write('</table>')
 
 
 def copy_rules_from_master():
@@ -1541,6 +1544,19 @@ if mkeventd_enabled:
         vs_mkeventd_actions,
         domain = "mkeventd",
         allow_reset = False)
+
+    register_configvar(group,
+        "archive_orphans",
+        Checkbox(title = _("Force message archiving"),
+                 label = _("Archive messages that do not match any rule"),
+                 help = _("When this option is enabled then messages that do not match "
+                          "a rule will be archived into the event history anyway (Messages "
+                          "that do match a rule will be archived always, as long as they are not "
+                          "explicitely dropped are being aggregated by counting.)"),
+                 default_value = False),
+        domain = "mkeventd",
+    )
+                 
 
     register_configvar(group,
         "hostname_translation",

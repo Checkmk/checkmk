@@ -95,6 +95,7 @@ action_whats = {
   "EMAIL"        : _("Email sent"),
   "SCRIPT"       : _("Script executed"),
   "CANCELLED"    : _("The event was cancelled because the corresponding OK message was received"),
+  "ARCHIVED"     : _("Event was archived because no rule matched and archiving is activated in global settings."),
 }
 
 def service_levels():

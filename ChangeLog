@@ -28,6 +28,10 @@
     * Flexible Notification can now filter service levels
     * FIX: check_tcp corrected order of parameters in definition
 
+    Event Console:
+    * New global setting "force message archiving", converts the EC into
+      a kind of syslog archive
+
 1.2.3i1:
     Core:
     * Agents can send data for other hosts "piggyback". This is being

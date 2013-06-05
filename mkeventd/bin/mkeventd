@@ -1298,7 +1298,7 @@ class EventServer:
             self._hash_stats[event["facility"]][event["priority"]] += 1
             rule_candidates = self._rule_hash.get(event["facility"], {}).get(event["priority"], [])
         else:
-           rule_candidates = self._rules
+            rule_candidates = self._rules
 
         for rule in rule_candidates:
             try:
@@ -1377,6 +1377,11 @@ class EventServer:
                                 with lock_eventstatus:
                                     g_event_status.remove_event(event)
                     return
+
+        # End of loop over rules.
+        if g_config["archive_orphans"]:
+            g_event_status.archive_event(event)
+
 
     # Checks if an event matches a rule. Returns either False (no match)
     # or a pair of matchtype, groups, where matchtype is False for a
@@ -2277,6 +2282,13 @@ class EventStatus():
         self._events.append(event)
         log_event_history(event, "NEW")
 
+    def archive_event(self, event):
+        g_perfcounters.count("events")
+        event["id"] = self._next_event_id
+        self._next_event_id += 1
+        log_event_history(event, "ARCHIVED")
+
+
     def remove_event(self, event):
         try:
             self._events.remove(event);
@@ -2737,6 +2749,7 @@ def load_configuration():
         "socket_queue_len"      : 10,
         "eventsocket_queue_len" : 10,
         "hostname_translation"  : {},
+        "archive_orphans"       : False,
     }
     main_file = g_config_dir + "/mkeventd.mk"
     if not os.path.exists(main_file):

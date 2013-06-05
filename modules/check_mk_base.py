@@ -956,6 +956,11 @@ def cleanup_globals():
     g_counters = {}
     global g_infocache
     g_infocache = {}
+    global g_broken_agent_hosts
+    g_broken_agent_hosts = set([])
+    global g_broken_snmp_hosts
+    g_broken_snmp_hosts = set([])
+
 
 
 # Diagnostic function for detecting global variables that have

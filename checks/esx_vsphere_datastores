@@ -89,10 +89,11 @@ def check_esx_vsphere_datastores(item, params, info):
 
         infotext += ", uncommitted: %.2f GB, provisioning: %.1f%%%s" % (
                       uncommitted_mb / 1024, overprov_percent, overprov_txt)
-        perfdata += [
-            ('uncommitted', str(uncommitted_mb) + 'MB'),
-            ('overprovisioned', str(overprov_mb) + 'MB', overprov_warn_mb, overprov_crit_mb),
-        ]
+        if perfdata:
+            perfdata += [
+                ('uncommitted', str(uncommitted_mb) + 'MB'),
+                ('overprovisioned', str(overprov_mb) + 'MB', overprov_warn_mb, overprov_crit_mb),
+            ]
 
     if not store["accessible"]:
         state = 2

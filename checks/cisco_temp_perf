@@ -87,10 +87,17 @@ def check_cisco_temp_perf(item, _no_params, info):
                 return (2, "state is %s%s" % (statename, temptext), perfdata)
     return (3, "Item %s not found in SNMP data" % item)
 
-check_info['cisco_temp_perf'] = (check_cisco_temp_perf, "Temperature %s", 1,  inventory_cisco_temp_perf)
-snmp_info['cisco_temp_perf'] = ( ".1.3.6.1.4.1.9.9.13.1.3.1", [ 2, 3, 4, 6, OID_END ] ) # CISCO-SMI
-snmp_scan_functions['cisco_temp_perf'] = \
-    lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
-           oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*") != None and \
-           oid(".1.3.6.1.4.1.9.9.91.1.1.1.1.*") == None,
-checkgroup_of["cisco_temp_perf"] = "temperature_auto"
+
+check_info['cisco_temp_perf'] = {
+    "check_function"        : check_cisco_temp_perf, 
+    "inventory_function"    : inventory_cisco_temp_perf,
+    "service_description"   : "Temperature %s", 
+    "has_perfdata"          : True,
+    "snmp_scan_function"    : 
+        lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
+               oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*") != None and \
+               oid(".1.3.6.1.4.1.9.9.91.1.1.1.1.*") == None,
+    "snmp_info"             : ( ".1.3.6.1.4.1.9.9.13.1.3.1", 
+                               [2, 3, 4, 6, OID_END ] ), # CISCO-SMI
+    "group"                 : "temperature_auto"
+}

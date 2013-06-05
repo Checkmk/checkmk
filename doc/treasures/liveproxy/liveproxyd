@@ -20,19 +20,34 @@ dump_interval = 1
 #   '----------------------------------------------------------------------'
 
 # State of all sites
-g_sites = {
-#    "mysite" : {
-#        "state" : "starting" / "up" / "busy"
-#        "socket" : -> UNIX server socket,
-#        "clients" : [ ... ],
-#        "channels" : [ ... ],
-#        "uptime" : ...
-#        "heartbeat" {
-#              "since" : wann,
-#              "channel" : kanal, falls gerade eins unterwegs
-#              "count" : 0,
-#    }
-}
+g_sites = {}
+
+# Example for this dictionary:
+# 'mysite': {'channels': [{'since': 1370420497.907061,
+#                        'socket': <socket._socketobject object at 0x7f5d0adc39f0>,
+#                        'state': 'ready'},
+#                       {'since': 1370420502.930155,
+#                        'socket': <socket._socketobject object at 0x7f5d0adc3c20>,
+#                        'state': 'busy'},
+#                       {'since': 1370420492.883395,
+#                        'socket': <socket._socketobject object at 0x7f5d0adc3ec0>,
+#                        'state': 'heartbeat'}],
+#          'clients': [{'since': 1370420648.132495,
+#                        'socket': <socket._socketobject object at 0x7f2cc9b68fa0>,
+#                        'state': 'idle'},
+#                      {'channel': {'client': <Recursion on dict with id=29691200>,
+#                        'since': 1370420695.609493,
+#                        'socket': <socket._socketobject object at 0x7f2cc9b68a60>,
+#                        'state': 'busy'}],
+#          'heartbeat': {'channel': None,
+#                        'count': 3,
+#                        'since': 1370420507.965436},
+#          'last_failed_connect': 0,
+#          'last_reset': 1370420492.879927,
+#          'socket': <socket._socketobject object at 0x7f5d0adc3910>,
+#          'state': 'ready'}}
+#
+
 
 
 # The main loop of the daemon goes here
@@ -78,7 +93,7 @@ def liveproxyd_run():
             if opt_debug:
                 raise
 
-            log("Ingoring exception: %s" % e)
+            log("Ignoring exception: %s" % e)
 
 def initiate_connections():
     # Create new channels to target sites. Nonblocking!
@@ -243,6 +258,8 @@ def get_new_requests(readable):
                         log("Invalid request [%s] from client %s/%d" % (
                             request.replace("\n", "\\n"), sitename, client["socket"].fileno()))
                         client["state"] = "closed"
+                    elif request and not request.startswith("COMMAND") and "ResponseHeader: fixed16\n" not in request:
+                        respond_client_with_error(client, "Invalid request, you must specify ResponseHeader: fixed16.")
                     elif request:
                         client["state"] = "wait_for_channel"
                         client["since"] = time.time()
@@ -262,6 +279,7 @@ def distribute_requests():
         if sitestate["state"] == "busy":
             continue
         waiting_clients = [ client for client in sitestate["clients"] if client["state"] == "wait_for_channel"]
+        
         # Sort after waiting time, we should be fair to all...
         waiting_clients.sort(cmp = lambda a, b: cmp(a["since"], b["since"]))
 
@@ -401,7 +419,8 @@ def receive_response(sitename, channel):
     try:
         bodylength = int(response[3:15])
     except Exception, e:
-        log("Malformed response header from cannel %s/%d" % (sitename, channel["socket"].fileno()))
+        log("Malformed response header from cannel %s/%d: [%s]" % 
+            (sitename, channel["socket"].fileno(), response[:16]))
         if client:
             client["channel"] = None
             client["state"] = "wait_for_channel"
@@ -467,6 +486,7 @@ def receive_heartbeat(sitename, channel):
         log("Exception while reading heartbeat from channel %s/%d: %s" % 
             (sitename, channel["socket"].fileno()), e)
 
+
 def handle_client_timeouts():
     now = time.time()
     for sitename, sitestatus in g_sites.items():
@@ -524,7 +544,7 @@ def garbage_collect_sockets():
 def format_time(t):
     return "%s (%d secs ago)" % (
         time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t)), time.time() - t)
-      
+
 
 def dump_state():
     sf = file(opt_statedumppath + ".new", "w")
@@ -555,9 +575,10 @@ def dump_state():
             sf.write("    out since %.1fs\n" % (now - hb["since"]))
         else:
             sf.write("    next in %.1fs\n" % (sites[sitename]["heartbeat"][0] - (now - hb["since"])))
-    os.rename(opt_statedumppath + ".new", opt_statedumppath)
-    # log("Dumped state to %s." % opt_statedumppath)
 
+    # import pprint
+    # sf.write("\n\n%s\n" % pprint.pformat(g_sites))
+    os.rename(opt_statedumppath + ".new", opt_statedumppath)
 
 
 

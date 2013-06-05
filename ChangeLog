@@ -31,6 +31,7 @@
     Event Console:
     * New global setting "force message archiving", converts the EC into
       a kind of syslog archive
+    * FIX: fix layout of filter for history action type
 
 1.2.3i1:
     Core:

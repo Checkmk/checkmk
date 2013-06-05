@@ -100,6 +100,9 @@ def inventory_apache_status(info):
     return inv
 
 def check_apache_status(item, params, info):
+    if params == None:
+        params = {}
+
     all_data = apache_status_parse(info)
     if item not in all_data:
         return (3, 'Unable to find instance in agent output')

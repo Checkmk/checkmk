@@ -22,10 +22,12 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include <ctype.h>
+#include <string.h>
+
 #include "CustomVarsFilter.h"
 #include "opids.h"
 #include "logger.h"
-#include <ctype.h>
 #include "OutputBuffer.h"
 
     CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column, int opid, char *value)

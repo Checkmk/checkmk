@@ -30,6 +30,7 @@ Column::Column(string name, string description, int indirect_offset)
   : _name(name)
   , _description(description)
   , _indirect_offset(indirect_offset)
+  , _extra_offset(-1)
 {
 }
 
@@ -38,13 +39,19 @@ void *Column::shiftPointer(void *data)
     if (!data)
         return 0;
 
-    else if (_indirect_offset >= 0) {
+    if (_indirect_offset >= 0) {
         // add one indirection level
         // indirect_offset is place in structure, where
         // pointer to real object is
-        return *((void **)((char *)data + _indirect_offset));
+        data = *((void **)((char *)data + _indirect_offset));
+        if (!data)
+            return 0;
     }
-    else // no indirection
-        return data;
+
+    // one optional extra level of indirection
+    if (_extra_offset >= 0)
+        data = *((void **)((char *)data + _extra_offset));
+
+    return data;
 }
 

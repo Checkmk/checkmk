@@ -195,6 +195,7 @@ int InputBuffer::readData()
         FD_ZERO(&fds);
         FD_SET(_fd, &fds);
 
+
         int retval = select(_fd + 1, &fds, NULL, NULL, &tv);
         if (retval > 0 && FD_ISSET(_fd, &fds)) {
             ssize_t r = read(_fd, _write_pointer, _end_pointer - _write_pointer);

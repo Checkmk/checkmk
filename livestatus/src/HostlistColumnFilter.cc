@@ -45,7 +45,7 @@ bool HostlistColumnFilter::accepts(void *data)
             host_name = mem->host_ptr->name;
 
         if (host_name == _ref_value) {
-            return true;
+            is_member = true;
             break;
         }
         mem = mem->next;

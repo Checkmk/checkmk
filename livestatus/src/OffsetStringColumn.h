@@ -36,6 +36,7 @@ public:
     OffsetStringColumn(string name, string description, int offset, int indirect_offset = -1)
         : StringColumn(name, description, indirect_offset), _offset(offset) {}
     char *getValue(void *data);
+    int offset() { return _offset; }
 };
 
 

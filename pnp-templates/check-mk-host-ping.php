@@ -1,0 +1,1 @@
+check-mk-ping.php

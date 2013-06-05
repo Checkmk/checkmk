@@ -479,6 +479,8 @@ def ajax_switch_masterstate():
         ( "execute_service_checks",   0) : "STOP_EXECUTING_SVC_CHECKS",
         ( "execute_host_checks",      1) : "START_EXECUTING_HOST_CHECKS",
         ( "execute_host_checks",      0) : "STOP_EXECUTING_HOST_CHECKS",
+        ( "enable_flap_detection",    1) : "ENABLE_FLAP_DETECTION",
+        ( "enable_flap_detection",    0) : "DISABLE_FLAP_DETECTION",
         ( "process_performance_data", 1) : "ENABLE_PERFORMANCE_DATA",
         ( "process_performance_data", 0) : "DISABLE_PERFORMANCE_DATA",
         ( "enable_event_handlers",    1) : "ENABLE_EVENT_HANDLERS",

@@ -104,7 +104,7 @@
 #   `----------------------------------------------------------------------'
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
-       shutil, tarfile, StringIO, math, fcntl, pickle
+       shutil, tarfile, StringIO, math, fcntl, pickle, random
 import config, htmllib, table, multitar, userdb, hooks, weblib
 from lib import *
 from valuespec import *
@@ -3276,7 +3276,6 @@ def mode_random_hosts(phase):
     html.end_form()
 
 def create_random_hosts(folder, count, folders, levels):
-    import random
     if levels == 0:
         created = 0
         while created < count:
@@ -3492,6 +3491,7 @@ def mode_changelog(phase):
             sitestatus_do_async_replication = True
 
     else: # phase: regular page rendering
+        changes_activated = False
 
         if is_distributed():
             # Distributed WATO: Show replication state of each site
@@ -3669,24 +3669,28 @@ def mode_changelog(phase):
 
         elif sitestatus_do_async_replication:
             # Single site setup
+            if cmc_rush_ahead_activation():
+                html.message(_("All changes have been activated."))
+                changes_activated = True
+            else:
+                # Is rendered on the page after hitting the "activate" button
+                # Renders the html to show the progress and starts the sync via javascript
+                html.write("<table class=data>")
+                html.write("<tr><th class=left>%s</th><th>%s</th></tr>" % (_('Progress'), _('Status')))
+                html.write('<tr class="data odd0"><td class=repprogress><div id="repstate_local"></div></td>')
+                html.write('<td id="repmsg_local"><i>%s</i></td></tr></table>' % _('activating...'))
 
-            # Is rendered on the page after hitting the "activate" button
-            # Renders the html to show the progress and starts the sync via javascript
-            html.write("<table class=data>")
-            html.write("<tr><th class=left>%s</th><th>%s</th></tr>" % (_('Progress'), _('Status')))
-            html.write('<tr class="data odd0"><td class=repprogress><div id="repstate_local"></div></td>')
-            html.write('<td id="repmsg_local"><i>%s</i></td></tr></table>' % _('activating...'))
-
-            srs = load_replication_status().get(None, {})
-            estimated_duration = srs.get("times", {}).get('act', 2.0)
-            html.javascript("wato_do_activation(%d);" %
-              (int(estimated_duration * 1000.0)))
+                srs = load_replication_status().get(None, {})
+                estimated_duration = srs.get("times", {}).get('act', 2.0)
+                html.javascript("wato_do_activation(%d);" %
+                  (int(estimated_duration * 1000.0)))
 
         sitestatus_do_async_replication = None # could survive in global context!
 
         pending = parse_audit_log("pending")
         if len(pending) == 0:
-            html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
+            if not changes_activated:
+                html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
         else:
             html.write('<div id=pending_changes>')
             render_audit_log(pending, "pending", hilite_others=True)
@@ -3720,9 +3724,7 @@ def log_entry(linkinfo, action, message, logfilename):
     log_file = log_dir + logfilename
     make_nagios_directory(log_dir)
     f = create_user_file(log_file, "ab")
-    f.write("%d %s %s %s " % (int(time.time()), link, config.user_id, action))
-    f.write(message)
-    f.write("\n")
+    f.write("%d %s %s %s %s\n" % (int(time.time()), link, config.user_id, action, message))
 
 
 def log_audit(linkinfo, what, message):
@@ -3746,6 +3748,7 @@ def log_pending(status, linkinfo, what, message):
     if not is_distributed():
         if status != SYNC:
             log_entry(linkinfo, what, message, "pending.log")
+        cmc_rush_ahead()
 
 
     # Currently we add the pending to each site, regardless if
@@ -3773,6 +3776,19 @@ def log_pending(status, linkinfo, what, message):
         # Make sure that a new snapshot for syncing will be created
         # when times comes to syncing
         remove_sync_snapshot()
+
+def cmc_rush_ahead():
+    if defaults.omd_root:
+        socket_path = defaults.omd_root + "/tmp/run/cmcrush"
+        if os.path.exists(socket_path):
+            try:
+                changeid = str(random.randint(1, 100000000000000000))
+                file(log_dir + "changeid", "w").write(changeid + "\n")
+                socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) \
+                          .sendto(changeid, socket_path)
+            except:
+                if config.debug:
+                    raise
 
 
 def log_commit_pending():
@@ -4001,7 +4017,6 @@ def export_audit_log():
         html.write(','.join((fmt_date(int(t)), fmt_time(int(t)), linkinfo,
                              user, action, '"' + text + '"')) + '\n')
     return False
-
 
 #.
 #   .-Automation-----------------------------------------------------------.
@@ -6517,7 +6532,11 @@ def mode_sites(phase):
         socket = site.get("socket", _("local site"))
         if socket == "disabled:":
             socket = _("don't query status")
-        table.cell(_("Socket"), socket)
+        table.cell(_("Socket"))
+        if type(socket) == tuple and socket[0] == "proxy":
+            html.write(_("Use livestatus Proxy-Daemon"))
+        else:
+            html.write(socket)
 
         # Status host
         if "status_host" in site:
@@ -6588,23 +6607,77 @@ def mode_edit_site(phase):
     else:
         site = sites.get(siteid, {})
 
+    vs_tcp_port = Tuple(
+            title = _("TCP Port to connect to"),
+            orientation = "float",
+            elements = [
+                TextAscii(label = _("Host:"), allow_empty = False, size=15),
+                Integer(label = _("Port:"), minvalue=1, maxvalue=65535, default_value=6557),
+    ])
+    conn_choices = [
+        ( None, _("Connect to the local site") ),
+        ( "tcp",   _("Connect via TCP"), vs_tcp_port),
+        ( "unix",  _("Connect via UNIX socket"), TextAscii(
+            label = _("Path:"),
+            size = 40,
+            allow_empty = False)),
+        ( "disabled", _("Do not connect")),
+    ]
+    if config.liveproxyd_enabled:
+        conn_choices[2:2] = [
+        ( "proxy", _("Use Livestatus Proxy-Daemon"),
+          Dictionary(
+              optional_keys = False,
+              columns = 1,
+              elements = [
+                  ( "socket", vs_tcp_port ),
+                  ( "channels", 
+                    Integer(
+                        title = _("Number of channels to keep open"),
+                        minvalue = 2,
+                        maxvalue = 50,
+                        default_value = 5)),
+                  ( "heartbeat", 
+                    Tuple(
+                        title = _("Regular heartbeat"),
+                        orientation = "float",
+                        elements = [
+                            Integer(label = _("Rate:"), unit=_("/sec"), minvalue=1, default_value = 5),
+                            Float(label = _("Timeout:"), unit=_("sec"), minvalue=0.1, default_value = 2.0),
+                   ])),
+                   ( "channel_timeout",
+                     Float(
+                         title = _("Timeout waiting for a free channel"),
+                         minvalue = 0.1,
+                         default_value = 3,
+                         unit = _("sec"),
+                     )
+                   ),
+                   ( "query_timeout",
+                     Float(
+                         title = _("Total query timeout"),
+                         minvalue = 0.1,
+                         unit = _("sec"),
+                         default_value = 120,
+                     )
+                   ),
+                   ( "connect_retry",
+                     Float(
+                        title = _("Wait time after failed connect"),
+                        minvalue = 0.1,
+                        unit = _("sec"),
+                        default_value = 4.0,
+                    )),
+                ]
+             )
+          )
+        ]
+
     # ValueSpecs for the more complex input fields
     vs_conn_method = CascadingDropdown(
         html_separator = " ",
-        choices = [
-            ( None, _("Connect to the local site") ),
-            ( "tcp",   _("Connect via TCP"), Tuple(
-                orientation = "float",
-                elements = [
-                    TextAscii(label = _("Host:"), allow_empty = False, size=15),
-                    Integer(label = _("Port:"), minvalue=1, maxvalue=65535, default_value=6557),
-                ])),
-            ( "unix",  _("Connect via UNIX socket"), TextAscii(
-                label = _("Path:"),
-                size = 30,
-                allow_empty = False)),
-            ( "disabled", _("Do not connect")),
-        ])
+        choices = conn_choices,
+    )
 
 
     if phase == "action":
@@ -6643,7 +6716,7 @@ def mode_edit_site(phase):
         # Connection
         method = vs_conn_method.from_html_vars("method")
         vs_conn_method.validate_value(method, "method")
-        if type(method) == tuple:
+        if type(method) == tuple and method[0] in [ "unix", "tcp"]:
             if method[0] == "unix":
                 new_site["socket"] = "unix:" + method[1]
             else:
@@ -6762,9 +6835,9 @@ def mode_edit_site(phase):
     forms.header(_("Livestatus settings"))
     forms.section(_("Connection"))
     method = site.get("socket", None)
-    if method and method.startswith("unix:"):
+    if type(method) == str and method.startswith("unix:"):
         method = ('unix', method[5:])
-    elif method and method.startswith("tcp:"):
+    elif type(method) == str and method.startswith("tcp:"):
         method = ('tcp', tuple(method.split(":")[1:]))
     vs_conn_method.render_input("method", method)
 
@@ -6890,6 +6963,7 @@ def load_sites():
 
 def save_sites(sites):
     make_nagios_directory(multisite_dir)
+
     # Important: even write out sites if it's empty. The global 'sites'
     # variable will otherwise survive in the Python interpreter of the
     # Apache processes.
@@ -6902,8 +6976,31 @@ def save_sites(sites):
     rewrite_config_files_below(g_root_folder) # fix site attributes
     need_sidebar_reload()
 
+    if config.liveproxyd_enabled:
+        save_liveproxyd_config(sites)
+
     # Call the sites saved hook
     call_hook_sites_saved(sites)
+
+def save_liveproxyd_config(sites):
+    path = defaults.default_config_dir + "/liveproxyd.mk"
+    out = create_user_file(path, "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+
+    conf = {}
+    for siteid, siteconf in sites.items():
+        s = siteconf.get("socket")
+        if type(s) == tuple and s[0] == "proxy":
+            conf[siteid] = s[1]
+
+    out.write("sites = \\\n%s\n" % pprint.pformat(conf))
+    try:
+        pidfile = defaults.livestatus_unix_socket + "proxyd.pid"
+        pid = int(file(pidfile).read().strip())
+        os.kill(pid, 10)
+    except Exception, e:
+        html.show_error(_("Warning: cannot reload Livestatus Proxy-Daemon: %s" % e))
+
 
 # Makes sure, that in distributed mode we monitor only
 # the hosts that are directly assigned to our (the local)
@@ -7308,6 +7405,7 @@ def ajax_activation():
         # This is the single site activation mode
         try:
             start = time.time()
+            # if not cmc_rush_ahead_activation():
             check_mk_local_automation(config.wato_activation_method)
             duration = time.time() - start
             update_replication_status(None, {}, { 'act': duration })
@@ -7328,6 +7426,31 @@ def ajax_activation():
                   _("Configuration successfully activated."))
     except Exception, e:
         html.show_error(str(e))
+
+# Try to do a rush-ahead-activation
+def cmc_rush_ahead_activation():
+    if defaults.omd_root:
+        rush_config = defaults.var_dir + "/core/config.rush"
+        if os.path.exists(rush_config):
+            try:
+                rush_id = file(rush_config + ".id").read().strip()
+                changeid = file(log_dir + "changeid").read().strip()
+                if rush_id == changeid: # Rush ahead file is up-to-date!
+                    os.rename(rush_config, rush_config[:-5])
+                    cmc_reload()
+                    log_commit_pending()
+                    html.final_javascript("wato_hide_changes_button();")
+                    return True
+                else:
+                    html.write("MIST: mtime_rush ist %r, mtime_pend ist %r" % 
+                        (mtime_rush, mtime_pend))
+            except Exception, e:
+                if opt_debug:
+                    raise
+
+def cmc_reload():
+    log_audit(None, "activate-config", "Reloading Check_MK Micro Core on the fly")
+    html.live.command("[%d] RELOAD_CONFIG" % time.time())
 
 # AJAX handler for asynchronous site replication
 def ajax_replication():
@@ -7599,6 +7722,12 @@ def delete_distributed_wato_file():
 #   | Mode for managing users and contacts.                                |
 #   '----------------------------------------------------------------------'
 
+def service_levels():
+    try:
+        return config.mkeventd_service_levels
+    except:
+        return [(0, "(no service level)")]
+
 def declare_user_attribute(name, vs, user_editable = True, permission = None):
     userdb.user_attributes[name] = {
         'valuespec':     vs,
@@ -7670,7 +7799,7 @@ def load_notification_table():
                     ListOf(
                         Foldable(
                             Dictionary(
-                                optional_keys = [ "only_hosts", "only_services", "escalation" ],
+                                optional_keys = [ "only_hosts", "only_services", "escalation" , "match_sl"],
                                 columns = 1,
                                 headers = True,
                                 elements = [
@@ -7712,6 +7841,18 @@ def load_notification_table():
                                                   minvalue = 1,
                                                   maxvalue = 999999,
                                               ),
+                                        ],
+                                      ),
+                                    ),
+                                    ( "match_sl",
+                                      Tuple(
+                                        title = _("Match service level"),
+                                        help = _("Host or Service must be in the following service level to get notification"),
+                                        orientation = "horizontal",
+                                        show_titles = False,
+                                        elements = [
+                                          DropdownChoice(label = _("from:"),  choices = service_levels(), prefix_values = True),
+                                          DropdownChoice(label = _(" to:"),  choices = service_levels(), prefix_values = True),
                                         ],
                                       ),
                                     ),

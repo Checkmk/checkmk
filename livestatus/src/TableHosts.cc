@@ -164,6 +164,7 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
                 "Whether a flex downtime is pending (0/1)", (char *)(&hst.pending_flex_downtime) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "total_services",
                 "The total number of services of the host", (char *)(&hst.total_services) - ref, indirect_offset));
+    // Note: this is redundant with "active_checks_enabled". Nobody noted this before...
     table->addColumn(new OffsetIntColumn(prefix + "checks_enabled",
                 "Whether checks of the host are enabled (0/1)", (char *)(&hst.checks_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "notifications_enabled",

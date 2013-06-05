@@ -23,6 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include <string.h>
+#include <math.h>
+#include <stdlib.h>
+
 #include "strutil.h"
 #include "logger.h"
 #include "Query.h"

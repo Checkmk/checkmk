@@ -123,6 +123,9 @@ debug_livestatus_queries = False
 # not reachable.
 show_livestatus_errors = True
 
+# Whether the livestatu proxy daemon is available
+liveproxyd_enabled = False
+
 # Set this to a list in order to globally control which views are
 # being displayed in the sidebar snapin "Views"
 visible_views = None

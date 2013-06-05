@@ -111,8 +111,9 @@ void OutputBuffer::flush(int fd, int *termination_flag)
         writeData(fd, termination_flag, header, 16);
         writeData(fd, termination_flag, buffer, s);
     }
-    else
+    else {
         writeData(fd, termination_flag, _buffer, size());
+    }
     reset();
 }
 

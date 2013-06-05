@@ -27,6 +27,9 @@
 
 #include "config.h"
 
+#ifdef CMC 
+#include "../cmc.h"
+#else
 #define NSCORE
 #include "nagios/objects.h"
 #include "nagios/nagios.h"
@@ -35,6 +38,7 @@
 #include "nagios/broker.h"
 #include "nagios/nebmodules.h"
 #include "nagios/nebcallbacks.h"
+#endif
 
 #endif // nagios_h
 

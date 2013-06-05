@@ -8,13 +8,17 @@ sed -e "s#@BINDIR@#/omd/sites/$SITE/bin#g" \
 
 sudo mv /tmp/check_mk_templates.cfg /omd/sites/$SITE/etc/nagios/conf.d
 
-(cd doc ; bash .f12)
-(cd web ; bash .f12)
-(cd modules ; bash .f12)
-(cd checks ; bash .f12)
-(cd checkman ; bash .f12)
-(cd mkeventd ; bash .f12)
-(cd notifications ; bash .f12)
-(cd agents ; bash .f12)
-(cd livestatus ; bash .f12)
-(cd pnp-templates ; bash .f12)
+for dir in doc web modules checks checkman mkeventd notifications agents livestatus pnp-templates
+do
+    echo "*******************************************************"
+    echo "VERZEICHNIS $dir **********************************"
+    echo "*******************************************************"
+    cd $dir
+    if bash .f12 ; then
+        echo "OK."
+    else
+        echo "FEHLER in $dir. Abbruch"
+        exit 1
+    fi
+    cd ..
+done

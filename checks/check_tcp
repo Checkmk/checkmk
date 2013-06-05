@@ -39,11 +39,11 @@ def check_tcp_arguments(params):
     if "refuse_state" in settings:
         args += ' -r %s' % settings["refuse_state"]
 
-    if "send_string" in settings:
-        args += ' -s %s' % quote_shell_string(settings["send_string"])
-
     if settings.get("escape_send_string"):
         args += ' --escape'
+
+    if "send_string" in settings:
+        args += ' -s %s' % quote_shell_string(settings["send_string"])
 
     if "expect" in settings:
         for s in settings["expect"]:

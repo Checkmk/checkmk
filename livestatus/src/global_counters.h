@@ -45,7 +45,8 @@ typedef uint64_t counter_t;
 #define COUNTER_COMMANDS             7
 #define COUNTER_LIVECHECKS           8
 #define COUNTER_LIVECHECK_OVERFLOWS  9
-#define NUM_COUNTERS                10
+#define COUNTER_OVERFLOWS           10
+#define NUM_COUNTERS                11
 
 EXTERN counter_t g_counters[NUM_COUNTERS];
 EXTERN counter_t g_last_counter[NUM_COUNTERS];

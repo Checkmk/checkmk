@@ -25,6 +25,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
+
 #include "Logfile.h"
 #include "logger.h"
 #include "LogEntry.h"
@@ -83,6 +85,8 @@ void Logfile::flush()
 
 void Logfile::load(LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
+    // HIER KOENNTE ICH FLUSHEN, WENN g_active_world nicht mehr stimmt
+
     unsigned missing_types = logclasses & ~_logclasses_read;
     FILE *file = 0;
     // The current logfile has the _watch flag set to true.

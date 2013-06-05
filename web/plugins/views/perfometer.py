@@ -191,7 +191,8 @@ multisite_painters["perfometer"] = {
     "short" : _("Perf-O-Meter"),
     "columns" : [ "service_perf_data", "service_state",
                   "service_check_command", "service_pnpgraph_present", "service_plugin_output" ],
-    "paint" : paint_perfometer
+    "paint" : paint_perfometer,
+    "sorter" : "svc_perf_val01",
 }
 
 load_web_plugins("perfometer", globals())

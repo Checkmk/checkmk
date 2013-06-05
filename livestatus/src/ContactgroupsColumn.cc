@@ -26,32 +26,27 @@
 #include "nagios.h"
 #include "Query.h"
 
-contactgroupsmember *ContactgroupsColumn::getData(void *data)
-{
-    if (data) {
-        data = shiftPointer(data);
-        if (data)
-            return *(contactgroupsmember **)((char *)data + _offset);
-    }
-    return 0;
-}
-
 void ContactgroupsColumn::output(void *data, Query *query)
 {
     query->outputBeginList();
-    contactgroupsmember *cgm = getData(data);
-    if (cgm) {
-        bool first = true;
-        while (cgm) {
-            contactgroup *cg = (contactgroup *)cgm->group_ptr;
-            if (!first)
-                query->outputListSeparator();
-            else
-                first = false;
-            query->outputString(cg->group_name);
-            cgm = cgm->next;
+
+    if (data) {
+        data = shiftPointer(data);
+        if (data) {
+            contactgroupsmember *cgm = *(contactgroupsmember **)((char *)data + _offset);
+            bool first = true;
+            while (cgm) {
+                contactgroup *cg = (contactgroup *)cgm->group_ptr;
+                if (!first)
+                    query->outputListSeparator();
+                else
+                    first = false;
+                query->outputString(cg->group_name);
+                cgm = cgm->next;
+            }
         }
     }
+
     query->outputEndList();
 }
 

@@ -112,6 +112,11 @@ def connect_to_livestatus(html):
 
         for sitename, site in config.allsites().items():
             siteconf = config.user_siteconf.get(sitename, {})
+            # Convert livestatus-proxy links into UNIX socket
+            s = site["socket"]
+            if type(s) == tuple and s[0] == "proxy":
+                site["socket"] = "unix:" + defaults.livestatus_unix_socket + "proxy/" + sitename
+
             if siteconf.get("disabled", False):
                 html.site_status[sitename] = { "state" : "disabled", "site" : site }
                 disabled_sites[sitename] = site

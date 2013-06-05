@@ -463,11 +463,16 @@ def automation_restart(job="restart"):
     # check_mk is called by WATO via Apache. Nagios inherits
     # the open file where Apache is listening for incoming
     # HTTP connections. Really.
-    for fd in range(3, 256):
-        try:
-            os.close(fd)
-        except:
-            pass
+    if monitoring_core == "nagios":
+        objects_file = nagios_objects_file
+        for fd in range(3, 256):
+            try:
+                os.close(fd)
+            except:
+                pass
+    else:
+        objects_file = var_dir + "/core/config"
+
     # os.closerange(3, 256) --> not available in older Python versions
 
     class null_file:
@@ -482,40 +487,50 @@ def automation_restart(job="restart"):
 
     try:
         backup_path = None
-        if not lock_nagios_objects_file():
+        if not lock_objects_file():
             raise MKAutomationError("Cannot activate changes. "
                   "Another activation process is currently in progresss")
-        if os.path.exists(nagios_objects_file):
-            backup_path = nagios_objects_file + ".save"
-            os.rename(nagios_objects_file, backup_path)
+
+        if os.path.exists(objects_file):
+            backup_path = objects_file + ".save"
+            os.rename(objects_file, backup_path)
         else:
             backup_path = None
 
         try:
-	    create_nagios_config(file(nagios_objects_file, "w"))
+            if monitoring_core == "nagios":
+                create_nagios_config(file(objects_file, "w"))
+            else:
+                do_create_cmc_config(opt_cmc_relfilename)
+
         except Exception, e:
 	    if backup_path:
-		os.rename(backup_path, nagios_objects_file)
+		os.rename(backup_path, objects_file)
+            if opt_debug:
+                raise
 	    raise MKAutomationError("Error creating configuration: %s" % e)
 
         if do_check_nagiosconfig():
             if backup_path:
                 os.remove(backup_path)
-            do_precompile_hostchecks()
+            if monitoring_core != "cmc":
+                do_precompile_hostchecks()
             if job == 'restart':
-                do_restart_nagios(False)
+                do_restart_core(False)
             elif job == 'reload':
-                do_restart_nagios(True)
+                do_restart_core(True)
         else:
             if backup_path:
-                os.rename(backup_path, nagios_objects_file)
+                os.rename(backup_path, objects_file)
             else:
-                os.remove(nagios_objects_file)
-            raise MKAutomationError("Nagios configuration is invalid. Rolling back.")
+                os.remove(objects_file)
+            raise MKAutomationError("Configuration for monitoring core is invalid. Rolling back.")
 
     except Exception, e:
         if backup_path and os.path.exists(backup_path):
             os.remove(backup_path)
+        if opt_debug:
+            raise
         raise MKAutomationError(str(e))
 
     sys.stdout = old_stdout

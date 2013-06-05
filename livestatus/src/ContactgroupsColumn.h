@@ -41,8 +41,6 @@ public:
     void *getNagiosObject(char *name); // return pointer to contact group
     bool isNagiosMember(void *data, void *nagobject);
     bool isEmpty(void *data);
-private:
-    contactgroupsmember *getData(void *);
 };
 
 

@@ -9,6 +9,7 @@
     * Column Perf-O-Meter is now sortable: it sorts after the *first*
       performance value. This might not always be the one you like, but
       its far better than nothing.
+    * logwatch: Logwatch link no longer uses notes_url
 
     WATO:
     * Allow to configure check-/retry_interval in second precision

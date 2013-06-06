@@ -109,7 +109,6 @@ www_group                          = None # unset
 nagios_startscript                 = '/etc/init.d/nagios'
 nagios_binary                      = '/usr/sbin/nagios'
 nagios_config_file                 = '/etc/nagios/nagios.cfg'
-logwatch_notes_url                 = "/nagios/logwatch.php?host=%s&file=%s"
 rrdcached_socket                   = None # used by prediction.py
 rrd_path                           = None # used by prediction.py
 
@@ -1774,12 +1773,6 @@ def create_nagios_servicedefs(outfile, hostname):
         else:
             template = passive_service_template
 
-        # Hardcoded for logwatch check: Link to logwatch.php
-        if checkname == "logwatch":
-            logwatch = "  notes_url\t\t\t" + (logwatch_notes_url % (urllib.quote(hostname), urllib.quote(item))) + "\n"
-        else:
-            logwatch = "";
-
         # Services Dependencies
         for dep in deps:
             outfile.write("define servicedependency {\n"
@@ -1819,10 +1812,10 @@ def create_nagios_servicedefs(outfile, hostname):
   host_name\t\t\t%s
   service_description\t\t%s
   check_interval\t\t%d
-%s%s  check_command\t\t\tcheck_mk-%s
+%s  check_command\t\t\tcheck_mk-%s
 }
 
-""" % ( template, hostname, description, check_interval, logwatch,
+""" % ( template, hostname, description, check_interval,
         extra_service_conf_of(hostname, description), checkname ))
 
         checknames_to_define.add(checkname)

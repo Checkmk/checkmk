@@ -274,32 +274,32 @@ multisite_icons.append({
 # Adds the url_prefix of the services site to the notes url configured in this site.
 # It also adds the master_url which will be used to link back to the source site
 # in multi site environments.
-def logwatch_url(sitename, notes_url):
-    i = notes_url.index("check_mk/logwatch.py")
+def logwatch_url(sitename, hostname, item):
+    host_item_url = "check_mk/logwatch.py?host=%s&file=%s" % (urllib.quote(hostname), urllib.quote(item))
     site = html.site_status[sitename]["site"]
-
     master_url = ''
     if config.is_multisite():
         master_url = '&master_url=' + defaults.url_prefix + 'check_mk/'
 
-    return site["url_prefix"] + notes_url[i:] + master_url
+    return site["url_prefix"] + host_item_url + master_url
+
+def paint_logwatch(what, row, tags, custom_vars):
+    if row[what + "_check_command"] == 'check_mk-logwatch':
+        return '<a href="%s"><img class=icon ' \
+               'src="images/icon_logwatch.png\"></a>' % \
+                   logwatch_url(row["site"], row['host_name'], row['service_description'][4:])
+
+multisite_icons.append({
+    'columns':         [ 'host_name', 'service_description', 'check_command' ],
+    'paint':           paint_logwatch,
+})
 
 def paint_notes(what, row, tags, custom_vars):
     if 'X' in html.display_options:
-        # notes_url (only, if not a Check_MK logwatch check pointing to
-        # logwatch.py. These is done by a special icon)
         notes_url = row[what + "_notes_url_expanded"]
         check_command = row[what + "_check_command"]
         if notes_url:
-            # unmodified original logwatch link
-            # -> translate into more intelligent icon
-            if check_command == 'check_mk-logwatch' \
-               and "/check_mk/logwatch.py" in notes_url:
-                return '<a href="%s"><img class=icon ' \
-                       'src="images/icon_logwatch.png\"></a>' % \
-                           logwatch_url(row["site"], notes_url)
-            else:
-                return '<a href="%s"><img class=icon ' \
+            return '<a href="%s"><img class=icon ' \
                        'src="images/icon_notes.gif"></a>' % notes_url
 
 multisite_icons.append({

@@ -3,6 +3,17 @@
 The livestatus.jar plugin provides the capability to start livestatus queries within 
 the iReport application. These are executed through the plugins JRQueryExecuter interface.
 
+Prerequesite for building
+=========================
+Download the following libraries and put them into the libs path
+
+jasperreports-4.7.0.jar
+http://sourceforge.net/projects/jasperreports/files/jasperreports/JasperReports 4.7.0/
+
+com-jaspersoft-ireport.jar from iReport-4.7.0.tar.gz
+http://sourceforge.net/projects/ireport/files/iReport/iReport-4.7.0/iReport-4.7.0.tar.gz/download
+
+
 Build livestatus.jar
 ======================
 To create the livestatus.jar file from scratch type:

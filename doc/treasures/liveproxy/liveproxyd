@@ -713,13 +713,14 @@ def signal_handler(signum, stack_frame):
         g_need_reload = True
 
 def read_configuration():
-    try:
-        execfile(opt_configfile, globals())
-    except Exception, e:
-        if opt_debug:
-            raise
-        bail_out("Cannot read configuration file %s: %s" % (
-            opt_configfile, e))
+    if os.path.exists(opt_configfile):
+        try:
+            execfile(opt_configfile, globals())
+        except Exception, e:
+            if opt_debug:
+                raise
+            bail_out("Cannot read configuration file %s: %s" % (
+                opt_configfile, e))
 
     # Create state object for all sites
     for sitename, siteconf in sites.items():

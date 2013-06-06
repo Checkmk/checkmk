@@ -1,0 +1,23 @@
+Title: Invalid JSON output for BI aggregates?
+Component: multisite
+State: open
+Date: 2013-06-05 17:50:48
+Targetversion: 1.2.3
+Class: bug
+
+Example:
+
+[
+    [
+        'aggr_name',
+        'aggr_state',
+        'aggr_output'
+    ],
+    [
+        "CPU Usage",
+        "OK",
+        ""
+    ]
+]
+
+Problem are the single quotes in the table headers.

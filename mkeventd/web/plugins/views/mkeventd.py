@@ -288,13 +288,14 @@ if mkeventd_enabled:
 
         def display(self):
             html.begin_checkbox_group()
-            c = 0
+            chars = 0
             for name, title in self._choices:
-                c += 1
+                chars += len(title) + 2
                 html.checkbox(self._name + "_" + str(name), True, label=title)
-                if c == 4:
+                if (title[0].isupper() and chars > 24) or \
+                    (title[0].islower() and chars > 36):
                     html.write("<br>")
-                    c = 0
+                    chars = 0
             html.end_checkbox_group()
 
         def filter(self, infoname):

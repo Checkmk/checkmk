@@ -25,6 +25,7 @@
                      cache file is twice the maximum cache age
     * windows agent: no longer tries to execute directories
     * esx_vsphere_datastores: Fix incomplete performance data
+    * fileinfo: no longer inventorize missing files(reported by windows agent)
 
     Notifications:
     * Flexible Notification can now filter service levels

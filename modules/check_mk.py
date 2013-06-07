@@ -2237,6 +2237,7 @@ def create_nagios_config_contacts(outfile):
             for what in [ "host", "service" ]:
                 no = contact.get(what + "_notification_options", "")
                 if not no or not not_enabled:
+                    outfile.write("  %s_notifications_enabled\t0\n" % what)
                     no = "n"
                 outfile.write("  %s_notification_options\t%s\n" % (what, ",".join(list(no))))
                 outfile.write("  %s_notification_period\t%s\n" % (what, contact.get("notification_period", "24X7")))

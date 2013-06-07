@@ -205,6 +205,10 @@
     * FIX: fix icon in events check if host specification is by IP address
     * Renamed "Delete Event" to "Archive Event" to clearify the meaning
 
+    Notifications:
+    * FIX: contacts with notifications disabled no longer receive 
+           custom notifications, unless forced
+
 1.2.2p1:
     Core:
     * FIX: correctly quote ! and \ in active checks for Nagios

@@ -11,6 +11,9 @@
       its far better than nothing.
     * logwatch: Logwatch icon no longer uses notes_url
 
+    Checks & Agents:
+    esx_hostystem multipath: criticize standby paths only if not equal to active paths
+
     WATO:
     * Allow to configure check-/retry_interval in second precision
 

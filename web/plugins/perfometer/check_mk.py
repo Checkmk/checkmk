@@ -75,7 +75,13 @@ perfometers["check_mk-esx_vsphere_counters.ramdisk"] = perfometer_check_mk_df
 def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
     used_mb        = perf_data[0][1]
     maxx           = perf_data[0][-1]
-    uncommitted_mb = perf_data[3][1]
+    # perf data might be incomplete, if trending perfdata is off...
+    uncommitted_mb = 0
+    for entry in perf_data:
+        if entry[0] == "uncommitted":
+            uncommitted_mb = entry[1]
+            break
+
     perc_used = 100 * (float(used_mb) / float(maxx))
     perc_uncommitted = 100 * (float(uncommitted_mb) / float(maxx))
     perc_totally_free = 100 - perc_used - perc_uncommitted
@@ -100,7 +106,10 @@ def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
         h += perfometer_td(perc_uncommitted - perc_free, "#eeccff")
     h += "</tr></table>"
 
-    return "%0.2f%% (+%0.2f%%)" % (perc_used, perc_uncommitted), h
+    legend = "%0.2f%%" % perc_used
+    if uncommitted_mb:
+        legend += " (+%0.2f%%)" % perc_uncommitted
+    return legend, h
 
 perfometers["check_mk-esx_vsphere_datastores"] = perfometer_esx_vsphere_datastores
 

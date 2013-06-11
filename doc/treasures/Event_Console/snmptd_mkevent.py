@@ -28,22 +28,40 @@
 # all traps to the mkeventd
 #
 # Bastian Kuhn, bk@mathias-kettner.de
-# Use this script only for testing.
-# It can lead to a poor performance: for 
-# every received trap the python interpreter is 
-# started and the script is called
+# If you use this script please keep in mind that this script is called 
+# for every trap the server receives.
+# To use this Script, you have to configure your snmptrad.conf like that:
+# authCommunity execute public
+# traphandle default /path/to/this/script
 
 import time
 import sys
+import re
 
 site_name = "SITE"
 deamon_path = "/omd/sites/%s/tmp/run/mkeventd/events" % site_name
 
+hostname_patterns = [
+   'SMI::enterprises.2349.2.2.2.5 = STRING: "(.*)"'
+]
+
 data = []
+match_host = False
 for line in sys.stdin:
-    data.append(line.strip())
+    line = line.strip()
+    if hostname_patterns:
+        for pattern in hostname_patterns:
+            e = re.search(pattern, line)
+            if e:
+                match_host = m.group(1)
+    data.append(line)
+
 msg = " ".join(data[2:])
 host, ip = data[:2] 
+if match_host:
+    host = match_host
+
+#Write to mkevent Socket    
 out = open(deamon_path, "w")
 timestamp = time.strftime("%b %d %H:%M:%S", time.localtime(time.time()))
 out.write("<5>%s %s trap: %s\n" % (timestamp, host, msg))

@@ -359,6 +359,7 @@ def notify_get_context():
             in os.environ.items()
             if var.startswith("NOTIFY_")
                 and not re.match('^\$[A-Z]+\$$', value)])
+        return context
 
 
 def notify_notify():

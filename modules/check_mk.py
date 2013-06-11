@@ -220,7 +220,7 @@ aggr_summary_hostname              = "%s-s"
 agent_min_version                  = 0 # warn, if plugin has not at least version
 check_max_cachefile_age            = 0 # per default do not use cache files when checking
 cluster_max_cachefile_age          = 90   # secs.
-piggyback_max_cachefile_age        = 900  # secs
+piggyback_max_cachefile_age        = 3600  # secs
 piggyback_translation              = [] # Ruleset for translating piggyback host names
 simulation_mode                    = False
 agent_simulator                    = False
@@ -2237,6 +2237,7 @@ def create_nagios_config_contacts(outfile):
             for what in [ "host", "service" ]:
                 no = contact.get(what + "_notification_options", "")
                 if not no or not not_enabled:
+                    outfile.write("  %s_notifications_enabled\t0\n" % what)
                     no = "n"
                 outfile.write("  %s_notification_options\t%s\n" % (what, ",".join(list(no))))
                 outfile.write("  %s_notification_period\t%s\n" % (what, contact.get("notification_period", "24X7")))

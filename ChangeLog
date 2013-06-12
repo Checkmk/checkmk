@@ -12,7 +12,8 @@
     * logwatch: Logwatch icon no longer uses notes_url
 
     Checks & Agents:
-    esx_hostystem multipath: criticize standby paths only if not equal to active paths
+    * esx_hostystem multipath: criticize standby paths only if not equal to active paths
+    * mk_logwatch: fixed bug when rewriting logwatch messages
 
     WATO:
     * Allow to configure check-/retry_interval in second precision

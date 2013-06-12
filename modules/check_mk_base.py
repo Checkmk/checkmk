@@ -960,6 +960,8 @@ def cleanup_globals():
     g_broken_agent_hosts = set([])
     global g_broken_snmp_hosts
     g_broken_snmp_hosts = set([])
+    global g_inactive_timerperiods
+    g_inactive_timerperiods = None
 
 
 

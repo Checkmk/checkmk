@@ -4136,10 +4136,6 @@ def do_create_config():
     else:
         out = file(nagios_objects_file, "w")
         create_nagios_config(out)
-        sys.stdout.write(("Successfully created Nagios configuration file %s%s%s.\n\n" +
-                         "Please make sure that file will be read by Nagios.\n" +
-                         "You need to restart Nagios in order to activate " +
-                         "the changes.\n") % (tty_green + tty_bold, nagios_objects_file, tty_normal))
     sys.stdout.write(tty_ok + "\n")
 
 def do_output_nagios_conf(args):

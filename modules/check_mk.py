@@ -945,6 +945,10 @@ def get_check_table(hostname):
         if hosttags_match_taglist(tags_of_host(hostname), tags) and \
                in_extraconf_hostlist(hostlist, hostname):
             descr = service_description(checkname, item)
+            if service_ignored(hostname, checkname, descr):
+                return
+            if hostname != host_of_clustered_service(hostname, descr):
+                return
             deps  = service_deps(hostname, descr)
             check_table[(checkname, item)] = (params, descr, deps)
 
@@ -955,6 +959,22 @@ def get_check_table(hostname):
 
     for entry in g_multihost_checks:
         handle_entry(entry)
+
+    # Now add checks a cluster might receive from its nodes
+    if is_cluster(hostname):
+        for node in nodes_of(hostname):
+            node_checks = g_singlehost_checks.get(node) or []
+            for entry in node_checks:
+                if len(entry) == 4:
+                    hostlist, checkname, item, params = entry
+                    tags = []
+                elif len(entry) == 5:
+                    tags, hostlist, checkname, item, params = entry
+                descr = service_description(checkname, item)
+                # TODO: single / multihost - crasht auf jeden fall
+                if hostname == host_of_clustered_service(node, descr):
+                    handle_entry(((hostname,) + entry[1:]))
+
 
     # Remove dependencies to non-existing services
     all_descr = set([ descr for ((checkname, item), (params, descr, deps)) in check_table.items() ])
@@ -2488,14 +2508,14 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                     else:
                         continue # user does not want this item to be checked
 
-                newcheck = '  ("%s", "%s", %r, %s),' % (hn, checkname, item, paramstring)
+                newcheck = '  ("%s", "%s", %r, %s),' % (hostname, checkname, item, paramstring)
                 newcheck += "\n"
                 if newcheck not in newchecks: # avoid duplicates if inventory outputs item twice
                     newchecks.append(newcheck)
                     if include_state:
-                        newitems.append( (hn, checkname, item, paramstring, state_type) )
+                        newitems.append( (hostname, checkname, item, paramstring, state_type) )
                     else:
-                        newitems.append( (hn, checkname, item) )
+                        newitems.append( (hostname, checkname, item) )
                     count_new += 1
 
 

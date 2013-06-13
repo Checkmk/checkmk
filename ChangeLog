@@ -10,6 +10,7 @@
       performance value. This might not always be the one you like, but
       its far better than nothing.
     * logwatch: Logwatch icon no longer uses notes_url
+    * check_mk-if.pnp: fixed bug with pnp template on esx hosts without perfdata
 
     Checks & Agents:
     * esx_hostystem multipath: criticize standby paths only if not equal to active paths

@@ -253,8 +253,16 @@ def automation_try_inventory_node(hostname):
     # Collect current status information about all existing checks
     table = []
     for (ct, item), (state_type, paramstring) in found.items():
-        params = None
         if state_type not in [ 'legacy', 'active' ]:
+            # apply check_parameters
+            try:
+                if type(paramstring) == str:
+                    params = eval(paramstring)
+                else:
+                    params = paramstring
+            except:
+                raise MKAutomationError("Invalid check parameter string '%s'" % paramstring)
+
             descr = service_description(ct, item)
             global g_service_description
             g_service_description = descr
@@ -292,14 +300,6 @@ def automation_try_inventory_node(hostname):
 
             if exitcode == None:
                 check_function = check_info[ct]["check_function"]
-                # apply check_parameters
-                try:
-                    if type(paramstring) == str:
-                        params = eval(paramstring)
-                    else:
-                        params = paramstring
-                except:
-                    raise MKAutomationError("Invalid check parameter string '%s'" % paramstring)
                 if state_type != 'manual':
                     params = compute_check_parameters(hostname, ct, item, params)
 

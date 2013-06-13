@@ -940,7 +940,7 @@ def get_check_table(hostname):
         elif type(hostlist[0]) == str:
             hostlist = strip_tags(hostlist)
         elif hostlist != []:
-            raise MKGeneralException("Invalid entry '%r' in check table. Must be single hostname or list of hostnames" % hostinfolist)
+            raise MKGeneralException("Invalid entry '%r' in check table. Must be single hostname or list of hostnames" % hostlist)
 
         if hosttags_match_taglist(tags_of_host(hostname), tags) and \
                in_extraconf_hostlist(hostlist, hostname):

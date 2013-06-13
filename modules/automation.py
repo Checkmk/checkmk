@@ -253,6 +253,7 @@ def automation_try_inventory_node(hostname):
     # Collect current status information about all existing checks
     table = []
     for (ct, item), (state_type, paramstring) in found.items():
+        params = None
         if state_type not in [ 'legacy', 'active' ]:
             # apply check_parameters
             try:

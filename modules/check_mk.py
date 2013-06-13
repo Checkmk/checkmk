@@ -963,15 +963,9 @@ def get_check_table(hostname):
     # Now add checks a cluster might receive from its nodes
     if is_cluster(hostname):
         for node in nodes_of(hostname):
-            node_checks = g_singlehost_checks.get(node) or []
-            for entry in node_checks:
-                if len(entry) == 4:
-                    hostlist, checkname, item, params = entry
-                    tags = []
-                elif len(entry) == 5:
-                    tags, hostlist, checkname, item, params = entry
+            node_checks = g_singlehost_checks.get(node, [])
+            for nodename, checkname, item, params in node_checks:
                 descr = service_description(checkname, item)
-                # TODO: single / multihost - crasht auf jeden fall
                 if hostname == host_of_clustered_service(node, descr):
                     handle_entry(((hostname,) + entry[1:]))
 

@@ -255,6 +255,15 @@ def automation_try_inventory_node(hostname):
     for (ct, item), (state_type, paramstring) in found.items():
         params = None
         if state_type not in [ 'legacy', 'active' ]:
+            # apply check_parameters
+            try:
+                if type(paramstring) == str:
+                    params = eval(paramstring)
+                else:
+                    params = paramstring
+            except:
+                raise MKAutomationError("Invalid check parameter string '%s'" % paramstring)
+
             descr = service_description(ct, item)
             global g_service_description
             g_service_description = descr
@@ -292,14 +301,6 @@ def automation_try_inventory_node(hostname):
 
             if exitcode == None:
                 check_function = check_info[ct]["check_function"]
-                # apply check_parameters
-                try:
-                    if type(paramstring) == str:
-                        params = eval(paramstring)
-                    else:
-                        params = paramstring
-                except:
-                    raise MKAutomationError("Invalid check parameter string '%s'" % paramstring)
                 if state_type != 'manual':
                     params = compute_check_parameters(hostname, ct, item, params)
 
@@ -347,23 +348,39 @@ def automation_try_inventory_node(hostname):
 def automation_set_autochecks(args):
     hostname = args[0]
     new_items = eval(sys.stdin.read())
-
     do_cleanup_autochecks()
-    existing = automation_parse_autochecks_file(hostname)
 
-    # write new autochecks file, but take paramstrings from existing ones
-    # for those checks which are kept
-    new_autochecks = []
-    for ct, item, params, paramstring in existing:
-        if (ct, item) in new_items:
+    # A Cluster does not have an autochecks file
+    # All of its services are located in the nodes instead
+    # So we cycle through all nodes remove all clustered service
+    # and add the ones we've got from stdin
+    if is_cluster(hostname):
+        for node in nodes_of(hostname):
+            new_autochecks = []
+            existing = automation_parse_autochecks_file(node)
+            for ct, item, params, paramstring in existing:
+                descr = service_description(ct, item)
+                if node == host_of_clustered_service(node, descr):
+                    new_autochecks.append((ct, item, paramstring))
+            for (ct, item), paramstring in new_items.items():
+                new_autochecks.append((ct, item, paramstring))
+            # write new autochecks file for that host
+            automation_write_autochecks_file(node, new_autochecks)
+    else:
+        existing = automation_parse_autochecks_file(hostname)
+        # write new autochecks file, but take paramstrings from existing ones
+        # for those checks which are kept
+        new_autochecks = []
+        for ct, item, params, paramstring in existing:
+            if (ct, item) in new_items:
+                new_autochecks.append((ct, item, paramstring))
+                del new_items[(ct, item)]
+
+        for (ct, item), paramstring in new_items.items():
             new_autochecks.append((ct, item, paramstring))
-            del new_items[(ct, item)]
 
-    for (ct, item), paramstring in new_items.items():
-        new_autochecks.append((ct, item, paramstring))
-
-    # write new autochecks file for that host
-    automation_write_autochecks_file(hostname, new_autochecks)
+        # write new autochecks file for that host
+        automation_write_autochecks_file(hostname, new_autochecks)
 
 
 def automation_get_autochecks(args):

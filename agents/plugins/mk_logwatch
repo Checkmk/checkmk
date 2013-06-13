@@ -225,12 +225,12 @@ def process_logfile(logfile, patterns):
         level = "."
         log_line = line[:-1]
         for lev, pattern, replace in patterns:
-            if pattern.search(line[:-1]):
+            matches = pattern.search(log_line)
+            if matches:
                 level = lev
                 levelint = {'C': 2, 'W': 1, 'O': 0, 'I': -1, '.': -1}[lev]
                 worst = max(levelint, worst)
                 if replace:
-                    matches = pattern.match(log_line)
                     replace_count = 1
                     new_message = replace.replace('\\0', log_line)
                     for replacement in matches.groups():

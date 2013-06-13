@@ -1,0 +1,15 @@
+Title: Disable view-reload in after-command-situation
+Component: multisite
+State: open
+Date: 2013-06-13 12:05:04
+Targetversion: 1.2.3
+Class: nastiness
+
+If you issue a command on an object you come to a page
+with a blue message and a link back to the view.
+
+Within that view the reload of the view is still active.
+If the reload happens the view data appears, but shouldn't
+The command button is still disabled.
+
+Disable view reload here.

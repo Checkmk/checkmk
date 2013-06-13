@@ -7445,7 +7445,7 @@ def cmc_rush_ahead_activation():
                     html.write("MIST: mtime_rush ist %r, mtime_pend ist %r" % 
                         (mtime_rush, mtime_pend))
             except Exception, e:
-                if opt_debug:
+                if config.debug:
                     raise
 
 def cmc_reload():

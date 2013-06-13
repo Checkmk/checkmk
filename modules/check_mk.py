@@ -940,11 +940,15 @@ def get_check_table(hostname):
         elif type(hostlist[0]) == str:
             hostlist = strip_tags(hostlist)
         elif hostlist != []:
-            raise MKGeneralException("Invalid entry '%r' in check table. Must be single hostname or list of hostnames" % hostinfolist)
+            raise MKGeneralException("Invalid entry '%r' in check table. Must be single hostname or list of hostnames" % hostlist)
 
         if hosttags_match_taglist(tags_of_host(hostname), tags) and \
                in_extraconf_hostlist(hostlist, hostname):
             descr = service_description(checkname, item)
+            if service_ignored(hostname, checkname, descr):
+                return
+            if hostname != host_of_clustered_service(hostname, descr):
+                return
             deps  = service_deps(hostname, descr)
             check_table[(checkname, item)] = (params, descr, deps)
 
@@ -955,6 +959,16 @@ def get_check_table(hostname):
 
     for entry in g_multihost_checks:
         handle_entry(entry)
+
+    # Now add checks a cluster might receive from its nodes
+    if is_cluster(hostname):
+        for node in nodes_of(hostname):
+            node_checks = g_singlehost_checks.get(node, [])
+            for nodename, checkname, item, params in node_checks:
+                descr = service_description(checkname, item)
+                if hostname == host_of_clustered_service(node, descr):
+                    handle_entry(((hostname,) + entry[1:]))
+
 
     # Remove dependencies to non-existing services
     all_descr = set([ descr for ((checkname, item), (params, descr, deps)) in check_table.items() ])
@@ -2488,14 +2502,14 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                     else:
                         continue # user does not want this item to be checked
 
-                newcheck = '  ("%s", "%s", %r, %s),' % (hn, checkname, item, paramstring)
+                newcheck = '  ("%s", "%s", %r, %s),' % (hostname, checkname, item, paramstring)
                 newcheck += "\n"
                 if newcheck not in newchecks: # avoid duplicates if inventory outputs item twice
                     newchecks.append(newcheck)
                     if include_state:
-                        newitems.append( (hn, checkname, item, paramstring, state_type) )
+                        newitems.append( (hostname, checkname, item, paramstring, state_type) )
                     else:
-                        newitems.append( (hn, checkname, item) )
+                        newitems.append( (hostname, checkname, item) )
                     count_new += 1
 
 
@@ -4136,10 +4150,6 @@ def do_create_config():
     else:
         out = file(nagios_objects_file, "w")
         create_nagios_config(out)
-        sys.stdout.write(("Successfully created Nagios configuration file %s%s%s.\n\n" +
-                         "Please make sure that file will be read by Nagios.\n" +
-                         "You need to restart Nagios in order to activate " +
-                         "the changes.\n") % (tty_green + tty_bold, nagios_objects_file, tty_normal))
     sys.stdout.write(tty_ok + "\n")
 
 def do_output_nagios_conf(args):

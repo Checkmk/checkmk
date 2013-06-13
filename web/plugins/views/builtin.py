@@ -1387,6 +1387,7 @@ multisite_builtin_views.update({
                                   'service_acknowledged',
                                   'svcstate',
                                   'svchardstate',
+                                  'serviceregex',
                                   'hoststate'],
                  'sorters': [('svcstate', True),
                              ('stateage', False),

@@ -10,9 +10,14 @@
       performance value. This might not always be the one you like, but
       its far better than nothing.
     * logwatch: Logwatch icon no longer uses notes_url
+    * check_mk-if.pnp: fixed bug with pnp template on esx hosts without perfdata
 
     Checks & Agents:
-    esx_hostystem multipath: criticize standby paths only if not equal to active paths
+    * esx_hostystem multipath: criticize standby paths only if not equal to active paths
+    * mk_logwatch: fixed bug when rewriting logwatch messages
+    * check_mk: Re-inventory is no longer required when a service is ignored via rule
+    * check_mk: Now possible to assign services to clusters without the need to
+                reinventorize
 
     WATO:
     * Allow to configure check-/retry_interval in second precision
@@ -27,7 +32,7 @@
     * cached checks: no longer output cached data if the age of the
                      cache file is twice the maximum cache age
     * windows agent: no longer tries to execute directories
-    * esx_vsphere_datastores: Fix incomplete performance data
+    * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
     * fileinfo: no longer inventorize missing files(reported by windows agent)
 
     Notifications:

@@ -34,16 +34,17 @@
 # authCommunity execute public
 # traphandle default /path/to/this/script
 
+# Define the Hostname patterns here:
+hostname_patterns = [
+   'SMI::enterprises.2349.2.2.2.5 = "(.*)"'
+]
+
 import time
 import sys
 import re
 
-site_name = "SITE"
+site_name = os.environ.pop('OMD_SITE')
 deamon_path = "/omd/sites/%s/tmp/run/mkeventd/events" % site_name
-
-hostname_patterns = [
-   'SMI::enterprises.2349.2.2.2.5 = STRING: "(.*)"'
-]
 
 data = []
 match_host = False
@@ -53,13 +54,13 @@ for line in sys.stdin:
         for pattern in hostname_patterns:
             e = re.search(pattern, line)
             if e:
-                match_host = m.group(1)
+                match_host = e.group(1)
     data.append(line)
 
 msg = " ".join(data[2:])
 host, ip = data[:2] 
 if match_host:
-    host = match_host
+    host = match_host.strip()
 
 #Write to mkevent Socket    
 out = open(deamon_path, "w")

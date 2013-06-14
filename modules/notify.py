@@ -34,8 +34,7 @@
 # hostname, servicedesc, hoststate, servicestate, output in
 # the form %(variable)s
 
-import pprint
-import urllib
+import pprint, urllib, select
 
 # Default settings
 notification_logdir   = var_dir + "/notify"
@@ -322,44 +321,92 @@ def do_notify(args):
             os.makedirs(crash_dir)
         file(crash_dir + "/crash.log", "a").write("CRASH:\n%s\n\n" % format_exception())
 
+
+def notify_data_available():
+    readable, writeable, exceptionable = select.select([0], [], [], None)
+    return not not readable
+
+def notify_config_timestamp():
+    mtime = 0
+    for dirpath, dirnames, filenames in os.walk(check_mk_configdir):
+        for f in filenames:
+            mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
+    mtime = max(mtime, os.stat(default_config_dir + "/main.mk").st_mtime)
+    try:
+        mtime = max(mtime, os.stat(default_config_dir + "/final.mk").st_mtime)
+    except:
+        pass
+    try:
+        mtime = max(mtime, os.stat(default_config_dir + "/local.mk").st_mtime)
+    except:
+        pass
+    return mtime
+
+
+
 def notify_keepalive():
+    global g_notify_readahead_buffer
+    g_notify_readahead_buffer = ""
+    config_timestamp = notify_config_timestamp()
+
     while True:
         try:
-            notify_notify()
+            # If the configuration has changed, we do a restart. But we do
+            # this check just before the next notification arrives. We must
+            # *not* read data from stdin, just peek! On the other hand we
+            # must *not* restart when there is danger that the buffered
+            # sys.stdin has already read data from the next notification. That
+            # would get lost! So we do restart if:
+            # - The last time we look *no* data was available on stdin.
+            # - Now there *is* data available
+            # - The buffer of stdin is empty
+            # - The timestamp of the youngest configuration file has changed.
+            if notify_data_available():
+                if not g_notify_readahead_buffer:
+                    current_config_timestamp = notify_config_timestamp()
+                    if current_config_timestamp > config_timestamp:
+                        notify_log("Configuration has changed. Restarting myself.")
+                        os.execvp("cmk", sys.argv)
+
+                new_data = os.read(0, 4096)
+                if not new_data:
+                    sys.exit(0) # closed stdin
+                g_notify_readahead_buffer += new_data
+                if g_notify_readahead_buffer.startswith('\n\n'):
+                    exit(0)
+                while '\n\n' in g_notify_readahead_buffer:
+                    notify_notify()
         except Exception, e:
             if opt_debug:
                 raise
             notify_log("ERROR %s\n%s" % (e, format_exception()))
 
 def notify_get_context():
+    global g_notify_readahead_buffer
     if opt_keepalive:
-        # Context read from stdin, variables with NOTIFY_ prefix. End of 
-        # block is by empty line
+        # Context is line-by-line in g_notify_readahead_buffer
+        this_part, rest = g_notify_readahead_buffer.split('\n\n', 1)
+        g_notify_readahead_buffer = rest
         context = {}
-        while True:
-            try:
-                line = sys.stdin.readline()
-                if not line:
-                    sys.exit(0) # End of transmission
-                line = line.strip()
-                if not line:
-                    return context # End of this notification
-                else:
-                    varname, value = line.split("=", 1)
-                    context[varname] = value
-            except Exception, e:
-                if opt_debug:
-                    raise
+        try:
+            for line in this_part.split('\n'):
+                varname, value = line.strip().split("=", 1)
+                context[varname] = value
+        except Exception, e: # line without '=' ignored or alerted
+            if opt_debug:
+                raise
+        return context
+
     else:
         # Information about notification is excpected in the
         # environment in variables with the prefix NOTIFY_
-        context = dict([
+        return dict([
             (var[7:], value.decode("utf-8"))
             for (var, value)
             in os.environ.items()
             if var.startswith("NOTIFY_")
                 and not re.match('^\$[A-Z]+\$$', value)])
-        return context
+
 
 
 def notify_notify():

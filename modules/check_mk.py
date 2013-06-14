@@ -967,7 +967,7 @@ def get_check_table(hostname):
             for nodename, checkname, item, params in node_checks:
                 descr = service_description(checkname, item)
                 if hostname == host_of_clustered_service(node, descr):
-                    handle_entry(((hostname,) + entry[1:]))
+                    handle_entry((hostname, checkname, item, params))
 
 
     # Remove dependencies to non-existing services

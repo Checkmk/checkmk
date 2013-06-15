@@ -7441,9 +7441,6 @@ def cmc_rush_ahead_activation():
                     log_commit_pending()
                     html.final_javascript("wato_hide_changes_button();")
                     return True
-                else:
-                    html.write("MIST: mtime_rush ist %r, mtime_pend ist %r" % 
-                        (mtime_rush, mtime_pend))
             except Exception, e:
                 if config.debug:
                     raise

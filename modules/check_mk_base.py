@@ -996,9 +996,6 @@ def do_check_keepalive():
 
     ipaddress_cache = {}
 
-    # sys.stdout.write('*')
-    # sys.stdout.flush() # signal core that we are ready
-
     while True:
         cleanup_globals()
         hostname = sys.stdin.readline()
@@ -1010,12 +1007,15 @@ def do_check_keepalive():
                 sys.stdout.write("Restarting myself...\n")
             sys.stdout.flush()
             os.execvp("cmk", sys.argv)
+        elif not hostname:
+            break
+
         timeout = int(sys.stdin.readline())
         try:
             signal.alarm(timeout)
-            if not hostname:
-                break
-            if hostname in ipaddress_cache:
+            if ';' in hostname:
+                hostname, ipaddress = hostname.split(";", 1)
+            elif hostname in ipaddress_cache:
                 ipaddress = ipaddress_cache[hostname]
             else:
                 if is_cluster(hostname):

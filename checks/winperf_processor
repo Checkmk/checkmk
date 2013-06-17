@@ -50,18 +50,15 @@ def check_winperf_util(item, params, info):
             ticks = int(line[-2])
             num_cpus = len(line) - 3
             timedif, ticks_per_sec = get_counter("winperf_util", this_time, ticks)
-            if ticks_per_sec == 0.0:
-                used_perc = 0.0
-            else:
-                # We get the value of the PERF_100NSEC_TIMER_INV here.
-                # This counter type shows the average percentage of active time observed
-                # during the sample interval. This is an inverse counter. Counters of this
-                # type calculate active time by measuring the time that the service was
-                # inactive and then subtracting the percentage of active time from 100 percent.
-                #
-                # 1 tick = 100ns, convert to seconds
-                cpusecs_per_sec = ticks_per_sec / 10000000.0
-                used_perc = 100 * (1 - cpusecs_per_sec)
+            # We get the value of the PERF_100NSEC_TIMER_INV here.
+            # This counter type shows the average percentage of active time observed
+            # during the sample interval. This is an inverse counter. Counters of this
+            # type calculate active time by measuring the time that the service was
+            # inactive and then subtracting the percentage of active time from 100 percent.
+            #
+            # 1 tick = 100ns, convert to seconds
+            cpusecs_per_sec = ticks_per_sec / 10000000.0
+            used_perc = 100.0 * (1 - cpusecs_per_sec)
 
             if used_perc < 0:
                 used_perc = 0

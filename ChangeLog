@@ -1,3 +1,8 @@
+1.2.2p3:
+    Checks & Agents:
+    * FIX: winperf_processor: fix case where CPU percent is exactly 100%
+
+   
 1.2.2p2:
     Core:
     * FIX: better error message in case of exception in SNMP handling

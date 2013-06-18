@@ -1706,7 +1706,7 @@ register_rule(group,
                   title = _("Number of retries"),
                   help = _("The default is 5."),
                   default_value = 5,
-                  minvalue = 1,
+                  minvalue = 0,
                   maxvalue = 50,
               )
             ),

@@ -902,7 +902,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
             status = exit_spec.get("wrong_version", 1)
         else:
             output = ""
-            if agent_version != None:
+            if not is_cluster(hostname) and agent_version != None:
                 output += "Agent version %s, " % agent_version
             status = 0
 

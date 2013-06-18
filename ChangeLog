@@ -188,6 +188,8 @@
     Checks & Agents:
     * FIX: winperf_processor: fix case where CPU percent is exactly 100%
 
+    Multisite:
+    * FIX: LDAP: Disabling use of referrals in active directory configuration
 
 1.2.2p2:
     Core:

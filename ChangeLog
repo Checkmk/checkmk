@@ -1,6 +1,8 @@
 1.2.3i2:
     Core:
     * New option -B for just generating the configuration
+    * Introduced persistent host address lookup cache to prevent issues
+      loading an unchanged configuration after a single address is not resolvable anymore
 
     Checks & Agents:
     * esx_hostystem multipath: criticize standby paths only if not equal to active paths

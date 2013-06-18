@@ -330,7 +330,7 @@ snmp_check_interval                  = []
 # global variables used to cache temporary values (not needed in check_mk_base)
 ip_to_hostname_cache = None
 # in memory cache, contains permanently cached ipaddresses from ipaddresses.cache during runtime
-g_ip_lookup_cache = {}
+g_ip_lookup_cache = None
 
 # The following data structures will be filled by the various checks
 # found in the checks/ directory.
@@ -1067,6 +1067,8 @@ def lookup_ipaddress(hostname):
     if hostname in g_dns_cache:
         return g_dns_cache[hostname]
 
+    init_ip_lookup_cache()
+
     # Now do the actual DNS lookup
     try:
         ipa = socket.gethostbyname(hostname)
@@ -1075,9 +1077,8 @@ def lookup_ipaddress(hostname):
         if ipa != g_ip_lookup_cache.get(hostname):
             g_ip_lookup_cache[hostname] = ipa
             write_ip_lookup_cache()
-    except Exception, e:
+    except:
         # Initialize the lookup cache when called for the first time
-        init_ip_lookup_cache()
         if hostname in g_ip_lookup_cache:
             ipa = g_ip_lookup_cache[hostname]
         else:
@@ -1088,7 +1089,11 @@ def lookup_ipaddress(hostname):
 
 def init_ip_lookup_cache():
     global g_ip_lookup_cache
-    g_ip_lookup_cache = eval(file(var_dir + '/ipaddresses.cache').read())
+    if g_ip_lookup_cache is None:
+        try:
+            g_ip_lookup_cache = eval(file(var_dir + '/ipaddresses.cache').read())
+        except:
+            g_ip_lookup_cache = {}
 
 def write_ip_lookup_cache():
     file(var_dir + '/ipaddresses.cache', 'w').write(repr(g_ip_lookup_cache))

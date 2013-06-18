@@ -6,7 +6,7 @@ import os, sys, getopt, signal, time, socket, select
 VERSION="1.2.3i1"
 
 sites = {}
-dump_interval = 1
+dump_interval = None
 
 #   .--Proxy---------------------------------------------------------------.
 #   |                      ____                                            |
@@ -85,7 +85,7 @@ def liveproxyd_run():
             garbage_collect_sockets()
 
             now = time.time()
-            if now - last_dump > dump_interval:
+            if dump_interval != None and now - last_dump > dump_interval:
                 dump_state()
                 last_dump = now
 

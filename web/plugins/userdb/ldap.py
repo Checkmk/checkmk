@@ -130,6 +130,11 @@ def ldap_connect():
         ldap_connection.protocol_version = config.ldap_connection['version']
         ldap_connection.network_timeout  = config.ldap_connection.get('connect_timeout', 2.0)
 
+        # When using the domain top level as base-dn, the subtree search stumbles with referral objects.
+        # whatever. We simply disable them here when using active directory. Hope this fixes all problems.
+        if config.ldap_connection['type'] == 'ad':
+            ldap_connection.set_option(ldap.OPT_REFERRALS, 0)
+
         ldap_default_bind()
 
         # on success, store the connection options the connection has been made with

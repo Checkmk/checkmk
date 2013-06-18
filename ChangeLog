@@ -182,6 +182,11 @@
     * Remove Notification Command user settings, please use flexible notifications instead
 
 
+1.2.2p3:
+    Checks & Agents:
+    * FIX: winperf_processor: fix case where CPU percent is exactly 100%
+
+
 1.2.2p2:
     Core:
     * FIX: livecheck: fixed handling of one-line plugin outputs and missing \n

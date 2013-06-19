@@ -962,7 +962,8 @@ def cleanup_globals():
     g_broken_snmp_hosts = set([])
     global g_inactive_timerperiods
     g_inactive_timerperiods = None
-
+    global g_walk_cache
+    g_walk_cache = {}
 
 
 # Diagnostic function for detecting global variables that have

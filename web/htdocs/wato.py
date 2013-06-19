@@ -2216,11 +2216,13 @@ def show_service_table(host, firsttime):
         ( _("Available (missing) services"), "new", firsttime ),
         ( _("Already configured services"), "old", True, ),
         ( _("Obsolete services (being checked, but should be ignored)"), "obsolete", True ),
-        ( _("Ignored services (configured away by admin)"), "ignored", False ),
+        ( _("Ignored services (configured away by admin)"), "ignored", None),
         ( _("Vanished services (checked, but no longer exist)"), "vanished", True ),
         ( _("Active checks"), "active", None ),
         ( _("Manual services (defined in main.mk)"), "manual", None ),
-        ( _("Legacy services (defined in main.mk)"), "legacy", None )
+        ( _("Legacy services (defined in main.mk)"), "legacy", None ),
+        ( _("Custom checks (defined via rule)"), "custom", None ),
+        ( _("Clustered services (located on cluster host)"), "clustered", None )
         ]:
         first = True
         trclass = "even"

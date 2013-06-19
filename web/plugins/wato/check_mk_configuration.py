@@ -1480,8 +1480,8 @@ register_rule(group,
 
 register_rule(group,
     "ignored_services",
-    title = _("Ignored services"),
-    help = _("Services that are declared as <u>ignored</u> by this rule set will not be added "
+    title = _("Disabled services"),
+    help = _("Services that are declared as <u>disabled</u> by this rule set will not be added "
              "to a host during inventory (automatic service detection). Services that already "
              "exist will continued to be monitored but be marked as obsolete in the service "
              "list of a host."),
@@ -1490,8 +1490,8 @@ register_rule(group,
 register_rule(group,
     "ignored_checks",
     CheckTypeSelection(
-        title = _("Ignored checks"),
-        help = _("This ruleset is similar to 'Ignored services', but selects checks to be ignored "
+        title = _("Disabled checks"),
+        help = _("This ruleset is similar to 'Disabled services', but selects checks to be disabled "
                  "by their <b>type</b>. This allows you to disable certain technical implementations "
                  "such as filesystem checks via SNMP on hosts that also have the Check_MK agent "
                  "installed."),

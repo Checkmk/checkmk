@@ -158,11 +158,21 @@ def automation_try_inventory(args):
                         services.append(entry)
                         already_added.add((entry[1], entry[6])) # make it unique
 
+        # Find manual checks for this cluster
+        cluster_checks = get_check_table(hostname)
+        for (ct, item), (params, descr, deps) in cluster_checks.items():
+            if (ct, descr) not in already_added:
+                services.append(("manual", ct, None, item, repr(params), params, descr, 0, "", None))
+                already_added.add( (ct, descr) ) # make it unique
+
     else:
         new_services = automation_try_inventory_node(hostname)
         for entry in new_services:
-            if host_of_clustered_service(hostname, entry[6]) == hostname:
+            host = host_of_clustered_service(hostname, entry[6])
+            if host == hostname:
                 services.append(entry)
+            else:
+                services.append(("clustered",) + entry[1:])
 
     return services
 
@@ -241,6 +251,11 @@ def automation_try_inventory_node(hostname):
     for cmd, descr, perf in legchecks:
         found[('legacy', descr)] = ( 'legacy', 'None' )
 
+    # Add custom checks and active checks with artificial type 'custom'
+    custchecks = host_extra_conf(hostname, custom_checks)
+    for entry in custchecks:
+        found[('custom', entry['service_description'])] = ( 'custom', 'None' )
+
     # Similar for 'active_checks', but here we have parameters
     for acttype, rules in active_checks.items():
         act_info = active_check_info[acttype]
@@ -249,12 +264,11 @@ def automation_try_inventory_node(hostname):
             descr = act_info["service_description"](params)
             found[(acttype, descr)] = ( 'active', repr(params) )
 
-
     # Collect current status information about all existing checks
     table = []
     for (ct, item), (state_type, paramstring) in found.items():
         params = None
-        if state_type not in [ 'legacy', 'active' ]:
+        if state_type not in [ 'legacy', 'active', 'custom' ]:
             # apply check_parameters
             try:
                 if type(paramstring) == str:
@@ -316,16 +330,19 @@ def automation_try_inventory_node(hostname):
         else:
             descr = item
             exitcode = None
-            output = "WAITING - Legacy check, cannot be done offline"
+            output = "WAITING - %s check, cannot be done offline" % state_type.title()
             perfdata = []
 
         if state_type == "active":
             params = eval(paramstring)
 
-        if state_type in [ "legacy", "active" ]:
+        if state_type in [ "legacy", "active", "custom" ]:
             checkgroup = None
+            if service_ignored(hostname, None, descr):
+                state_type = "ignored"
         else:
             checkgroup = check_info[ct]["group"]
+
         table.append((state_type, ct, checkgroup, item, paramstring, params, descr, exitcode, output, perfdata))
 
     if not table and (tcp_error or snmp_error):

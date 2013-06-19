@@ -1,0 +1,13 @@
+Title: Cluster requires same agent type as cluster node
+Component: core
+State: open
+Date: 2013-06-19 09:46:28
+Targetversion: future
+Class: bug
+
+If the agent type attribute of a cluster and its notes differs
+the check_mk agent will fail
+
+This is caused by the various is_tcp_host is_snmp_host precompiled functions
+which return fixed values. The nodes receive the value of the cluster -
+thus leading to the checks downfall.

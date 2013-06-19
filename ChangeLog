@@ -23,6 +23,7 @@
     * fileinfo: no longer inventorize missing files(reported by windows agent)
     * cluster hosts: removed agent version output from Check_MK service (this
       was misleading for different agent versions on multiple nodes)
+    * job check: better handling of unexpected agent output
 
     Multisite:
     * User accounts can now be locked after a specified amount of auth

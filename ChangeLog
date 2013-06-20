@@ -7,6 +7,9 @@
     * FIX: Fixed missing roles in auth.php (in some cases) which resulted in
            non visible pnp graphs and missing nagvis permissions
 
+    WATO:
+    * FIX: fix layout of Auxiliary tags table
+
    
 1.2.2p2:
     Core:

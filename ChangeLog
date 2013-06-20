@@ -1,6 +1,13 @@
 1.2.3i2:
     Core:
     * New option -B for just generating the configuration
+    * Introduced persistent host address lookup cache to prevent issues
+      loading an unchanged configuration after a single address is not resolvable anymore
+    * Assigning a service to a cluster host no longer requires a reinventory
+    * Setting a check_type or service to ignore no longer requires a reinventory
+      Note: If the ignore rule is removed the services will reappear
+    * Config creation: The ignore services rule now also applies to custom, active
+                       and legacy checks
 
     Checks & Agents:
     * esx_hostystem multipath: criticize standby paths only if not equal to active paths
@@ -21,6 +28,8 @@
     * fileinfo: no longer inventorize missing files(reported by windows agent)
     * cluster hosts: removed agent version output from Check_MK service (this
       was misleading for different agent versions on multiple nodes)
+    * job check: better handling of unexpected agent output
+    * lnx_thermal: Added check for linux thermal sensors (e.g. acpi)
 
     Multisite:
     * User accounts can now be locked after a specified amount of auth
@@ -31,6 +40,10 @@
       its far better than nothing.
     * logwatch: Logwatch icon no longer uses notes_url
     * check_mk-if.pnp: fixed bug with pnp template on esx hosts without perfdata
+    * Fix: Inventory screen: Now shows custom checks
+    * Inventory screen: Host inventory also displays its clustered services
+    * Rules: Renamed "Ignored services" to "Disabled services"
+             Renamed "Ignored checks" to "Disabled checks"
 
     WATO:
     * Allow to configure check-/retry_interval in second precision
@@ -186,6 +199,8 @@
     Checks & Agents:
     * FIX: winperf_processor: fix case where CPU percent is exactly 100%
 
+    Multisite:
+    * FIX: LDAP: Disabling use of referrals in active directory configuration
 
 1.2.2p2:
     Core:

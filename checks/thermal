@@ -1,0 +1,70 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<lnx_thermal>>>
+# thermal_zone0 enabled acpitz 57000 127000 critical 
+# thermal_zone1 enabled acpitz 65000 100000 critical 95500 passive
+
+# <<<lnx_thermal>>>
+# thermal_zone0 enabled acpitz 47000 90000 critical 79000 passive
+
+def inventory_lnx_thermal(info):
+    return [ (l[0].replace('thermal_zone', ''), None) for l in info ]
+
+def check_lnx_thermal(item, params, info):
+    for line in info:
+        if line[0].replace('thermal_zone', '') == item:
+            # ['thermal_zone0', 'enabled', 'acpitz', '51000', '90000', 'critical', '79000', 'passive']
+            state = 0
+            tp_reached = []
+
+            # convert values from millidegree
+            cur = saveint(line[3]) / 1000
+
+            # parse trip points
+            if len(line) > 4:
+                trip_points = dict(zip(line[5::2], map(lambda x: saveint(x) / 1000, line[4::2])))
+                for tp_num, (tp_name, level) in enumerate(trip_points.items()):
+                    if cur > level:
+                        if tp_name in [ 'hot', 'critical' ]:
+                            state = max(state, 2)
+                        else:
+                            state = max(state, 1)
+                        tp_reached.append("%s (%d)" % (tp_name, tp_num))
+
+            detail_txt = ''
+            if tp_reached:
+                detail_txt = ' (Trip Points reached: %s)' % ', '.join(tp_reached)
+
+            return (state, 'Temperature is %dC%s' % (cur, detail_txt), [ ( 'temperature', cur ) ])
+    return (3, 'No data found for sensor "thermal_zone%s"' % item)
+
+check_info['lnx_thermal'] = {
+    "inventory_function"      : inventory_thermal,
+    "check_function"          : check_thermal,
+    "service_description"     : "Temperature %s",
+    "has_perfdata"            : True,
+}

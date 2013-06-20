@@ -72,8 +72,6 @@ else:
     local_doc_dir            = None
     local_locale_dir         = None
 
-
-
 #   +----------------------------------------------------------------------+
 #   |        ____       _   _                                              |
 #   |       |  _ \ __ _| |_| |__  _ __   __ _ _ __ ___   ___  ___          |
@@ -331,6 +329,8 @@ snmp_check_interval                  = []
 
 # global variables used to cache temporary values (not needed in check_mk_base)
 ip_to_hostname_cache = None
+# in memory cache, contains permanently cached ipaddresses from ipaddresses.cache during runtime
+g_ip_lookup_cache = None
 
 # The following data structures will be filled by the various checks
 # found in the checks/ directory.
@@ -1067,14 +1067,36 @@ def lookup_ipaddress(hostname):
     if hostname in g_dns_cache:
         return g_dns_cache[hostname]
 
-    # No do the actual DNS lookup
+    init_ip_lookup_cache()
+
+    # Now do the actual DNS lookup
     try:
         ipa = socket.gethostbyname(hostname)
+
+        # Cache the result (persistant) when resolving succeeded
+        if ipa != g_ip_lookup_cache.get(hostname):
+            g_ip_lookup_cache[hostname] = ipa
+            write_ip_lookup_cache()
     except:
-        g_dns_cache[hostname] = None
-        raise
+        # Initialize the lookup cache when called for the first time
+        if hostname in g_ip_lookup_cache:
+            ipa = g_ip_lookup_cache[hostname]
+        else:
+            g_dns_cache[hostname] = None
+            raise
     g_dns_cache[hostname] = ipa
     return ipa
+
+def init_ip_lookup_cache():
+    global g_ip_lookup_cache
+    if g_ip_lookup_cache is None:
+        try:
+            g_ip_lookup_cache = eval(file(var_dir + '/ipaddresses.cache').read())
+        except:
+            g_ip_lookup_cache = {}
+
+def write_ip_lookup_cache():
+    file(var_dir + '/ipaddresses.cache', 'w').write(repr(g_ip_lookup_cache))
 
 def agent_port_of(hostname):
     ports = host_extra_conf(hostname, agent_ports)
@@ -1765,6 +1787,14 @@ def create_nagios_servicedefs(outfile, hostname):
     #   ___) |
     #  |____/   3. Services
 
+
+    def do_omit_service(hostname, description):
+        if service_ignored(hostname, None, description):
+            return True 
+        if hostname != host_of_clustered_service(hostname, description):
+            return True
+        return False
+
     host_checks = get_check_table(hostname).items()
     host_checks.sort() # Create deterministic order
     aggregated_services_conf = set([])
@@ -1927,6 +1957,9 @@ define servicedependency {
     if len(legchecks) > 0:
         outfile.write("\n\n# Legacy checks\n")
     for command, description, has_perfdata in legchecks:
+        if do_omit_service(hostname, description):
+            continue
+
         if description in used_descriptions:
             cn, it = used_descriptions[description]
             raise MKGeneralException(
@@ -1973,6 +2006,10 @@ define service {
 
             has_perfdata = act_info.get('has_perfdata', False)
             description = act_info["service_description"](params)
+
+            if do_omit_service(hostname, description):
+                continue 
+
             # compute argument, and quote ! and \ for Nagios
             args = act_info["argument_function"](params).replace("\\", "\\\\").replace("!", "\\!")
 
@@ -2017,6 +2054,9 @@ define service {
             has_perfdata = entry.get("has_perfdata", False)
             command_name = entry.get("command_name", "check-mk-custom")
             command_line = entry.get("command_line", "")
+
+            if do_omit_service(hostname, description):
+                continue 
 
             if command_line:
                 plugin_name = command_line.split()[0]
@@ -2576,11 +2616,11 @@ def check_inventory(hostname):
 
 
 def service_ignored(hostname, checktype, service_description):
-    if checktype in ignored_checktypes:
+    if checktype and checktype in ignored_checktypes:
         return True
     if in_boolean_serviceconf_list(hostname, service_description, ignored_services):
         return True
-    if checktype_ignored_for_host(hostname, checktype):
+    if checktype and checktype_ignored_for_host(hostname, checktype):
         return True
     return False
 

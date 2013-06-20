@@ -1649,7 +1649,7 @@ def check_timeperiod(timeperiod):
             s.connect(livestatus_unix_socket)
             # We just get the currently inactive timeperiods. All others
             # (also non-existing) are considered to be active
-            s.send("GET timeperiods\nColumns:name\nFilter: in = 0\n")
+            s.send("GET timeperiods\nColumns: name\nFilter: in = 0\n")
             s.shutdown(socket.SHUT_WR)
             g_inactive_timerperiods = s.recv(10000000).splitlines()
         except Exception, e:

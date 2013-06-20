@@ -462,6 +462,17 @@ if cd /var/lib/check_mk_agent/job; then
     head -n -0 -v *
 fi
 
+# Gather thermal information provided e.g. by acpi
+# At the moment only supporting thermal sensors
+if ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
+    echo '<<<thermal>>>'
+    for F in /sys/class/thermal/thermal_zone*; do
+        echo -n "${F##*/} "
+        cat $F/{mode,type,temp,trip_point_*} | tr \\n " "
+        echo
+    done
+fi
+
 # MK's Remote Plugin Executor
 if [ -e "$MK_CONFDIR/mrpe.cfg" ]
 then

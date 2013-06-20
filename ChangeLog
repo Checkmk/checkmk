@@ -29,6 +29,7 @@
     * cluster hosts: removed agent version output from Check_MK service (this
       was misleading for different agent versions on multiple nodes)
     * job check: better handling of unexpected agent output
+    * thermal: Added check for linux thermal sensors (e.g. acpi)
 
     Multisite:
     * User accounts can now be locked after a specified amount of auth

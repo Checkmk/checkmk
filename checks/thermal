@@ -24,17 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<thermal>>>
+# <<<lnx_thermal>>>
 # thermal_zone0 enabled acpitz 57000 127000 critical 
 # thermal_zone1 enabled acpitz 65000 100000 critical 95500 passive
 
-# <<<thermal>>>
+# <<<lnx_thermal>>>
 # thermal_zone0 enabled acpitz 47000 90000 critical 79000 passive
 
-def inventory_thermal(info):
+def inventory_lnx_thermal(info):
     return [ (l[0].replace('thermal_zone', ''), None) for l in info ]
 
-def check_thermal(item, params, info):
+def check_lnx_thermal(item, params, info):
     for line in info:
         if line[0].replace('thermal_zone', '') == item:
             # ['thermal_zone0', 'enabled', 'acpitz', '51000', '90000', 'critical', '79000', 'passive']
@@ -62,9 +62,9 @@ def check_thermal(item, params, info):
             return (state, 'Temperature is %dC%s' % (cur, detail_txt), [ ( 'temperature', cur ) ])
     return (3, 'No data found for sensor "thermal_zone%s"' % item)
 
-check_info['thermal'] = {
+check_info['lnx_thermal'] = {
     "inventory_function"      : inventory_thermal,
     "check_function"          : check_thermal,
-    "service_description"     : "Thermal Sensor %s",
+    "service_description"     : "Temperature %s",
     "has_perfdata"            : True,
 }

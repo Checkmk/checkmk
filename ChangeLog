@@ -201,6 +201,8 @@
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration
+    * FIX: Fixed missing roles in auth.php (in some cases) which resulted in
+           non visible pnp graphs and missing nagvis permissions
 
 1.2.2p2:
     Core:

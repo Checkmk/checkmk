@@ -327,6 +327,13 @@ def get_role_permissions():
     # Loop all permissions
     # and for each permission loop all roles
     # and check wether it has the permission or not
+
+    # Make sure, builtin roles are present, even if not modified
+    # and saved with WATO.
+    for br in builtin_role_ids:
+        if br not in roles:
+            roles[br] = {}
+
     roleids = roles.keys()
     for perm in permissions_by_order:
         for role_id in roleids:

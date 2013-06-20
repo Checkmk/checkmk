@@ -555,7 +555,7 @@ def general_page_hook():
     # This is a good place to replace old api based files in the future.
     auth_php = defaults.var_dir + '/wato/auth/auth.php'
     if not os.path.exists(auth_php) or os.path.getsize(auth_php) == 0:
-        create_auth_file(load_users())
+        create_auth_file("page_hook", load_users())
 
     # Create initial auth.serials file, same issue as auth.php above
     serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)

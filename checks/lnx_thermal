@@ -63,8 +63,8 @@ def check_lnx_thermal(item, params, info):
     return (3, 'No data found for sensor "thermal_zone%s"' % item)
 
 check_info['lnx_thermal'] = {
-    "inventory_function"      : inventory_thermal,
-    "check_function"          : check_thermal,
+    "inventory_function"      : inventory_lnx_thermal,
+    "check_function"          : check_lnx_thermal,
     "service_description"     : "Temperature %s",
     "has_perfdata"            : True,
 }

@@ -85,12 +85,13 @@ def format_php(data, lvl = 1):
     return s
 
 
-def create_php_file(users, role_permissions, folder_permissions):
+def create_php_file(callee, users, role_permissions, folder_permissions):
     # Set a language for all users
     for username in users:
         users[username].setdefault('language', config.default_language)
 
     file(g_auth_base_dir + '/auth.php', 'w').write('''<?php
+// Created by Multisite UserDB Hook (%s)
 global $mk_users, $mk_roles, $mk_folders;
 $mk_users   = %s;
 $mk_roles   = %s;
@@ -181,13 +182,13 @@ function may($username, $need_permission) {
 }
 
 ?>
-''' % (format_php(users), format_php(role_permissions), format_php(folder_permissions)))
+''' % (callee, format_php(users), format_php(role_permissions), format_php(folder_permissions)))
 
-def create_auth_file(users):
+def create_auth_file(callee, users):
     make_nagios_directory(g_auth_base_dir)
     import wato # HACK: cleanup!
-    create_php_file(users, config.get_role_permissions(), wato.get_folder_permissions_of_users(users))
+    create_php_file(callee, users, config.get_role_permissions(), wato.get_folder_permissions_of_users(users))
 
-hooks.register('users-saved',      create_auth_file)
-hooks.register('roles-saved',      lambda x: create_auth_file(load_users()))
-hooks.register('activate-changes', lambda x: create_auth_file(load_users()))
+hooks.register('users-saved',      lambda users: create_auth_file("users-saved", users))
+hooks.register('roles-saved',      lambda x: create_auth_file("roles-saved", load_users()))
+hooks.register('activate-changes', lambda x: create_auth_file("activate-changes", load_users()))

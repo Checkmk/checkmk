@@ -1,0 +1,10 @@
+Title: Inventory check should honor exit code settings
+Component: core
+State: open
+Date: 2013-06-21 11:58:34
+Targetversion: future
+Class: bug
+
+If you use the feature that the Check_MK exit code is also OK
+when the host is down, that should also apply for the inventory
+check.

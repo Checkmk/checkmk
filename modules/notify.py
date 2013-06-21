@@ -391,7 +391,7 @@ def notify_get_context():
         try:
             for line in this_part.split('\n'):
                 varname, value = line.strip().split("=", 1)
-                context[varname] = value
+                context[varname] = value.decode("utf-8")
         except Exception, e: # line without '=' ignored or alerted
             if opt_debug:
                 raise

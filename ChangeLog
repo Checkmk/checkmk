@@ -30,6 +30,8 @@
       was misleading for different agent versions on multiple nodes)
     * job check: better handling of unexpected agent output
     * lnx_thermal: Added check for linux thermal sensors (e.g. acpi)
+    * hwg_temp: Make WATO-Rule "Room Temperature" match, add man page, graph 
+                and Perf-O-Meter
 
     Multisite:
     * User accounts can now be locked after a specified amount of auth
@@ -203,6 +205,10 @@
     * FIX: LDAP: Disabling use of referrals in active directory configuration
     * FIX: Fixed missing roles in auth.php (in some cases) which resulted in
            non visible pnp graphs and missing nagvis permissions
+
+    WATO:
+    * FIX: fix layout of Auxiliary tags table
+
 
 1.2.2p2:
     Core:

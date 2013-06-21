@@ -1,0 +1,21 @@
+title: CPU utilization of the last 5 minutes on CISCO devices
+agents: snmp
+author: Bernd Stroessenreuther <bs@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ Check CPU utilization of the last 5 minutes in percent on CISCO devices.
+
+perfdata:
+ Just one value: The CPU utilization of the last 5 minutes in percent.
+
+inventory:
+ One service per CISCO device is created.
+
+[parameters]
+warning (int): The percentage of CPU utilization that triggers a warning level.
+critical (int): The percentage of CPU utilization that triggers a critical level.
+
+[configuration]
+cisco_cpu_default_levels (int, int): Default levels for waring and critical used 
+  by inventorized checks. This is preset to {(80.0, 90.0)}

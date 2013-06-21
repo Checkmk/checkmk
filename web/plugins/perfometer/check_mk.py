@@ -275,6 +275,7 @@ perfometers["check_mk-hp_proliant_temp"] = perfometer_temperature
 perfometers["check_mk-akcp_sensor_temp"] = perfometer_temperature
 perfometers["check_mk-fsc_temp"] = perfometer_temperature
 perfometers["check_mk-viprinet_temp"] = perfometer_temperature
+perfometers["check_mk-hwg_temp"] = perfometer_temperature
 
 def perfometer_blower(row, check_command, perf_data):
     rpm = saveint(perf_data[0][1])

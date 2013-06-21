@@ -368,12 +368,12 @@ def notify_keepalive():
                         notify_log("Configuration has changed. Restarting myself.")
                         os.execvp("cmk", sys.argv)
 
-                new_data = os.read(0, 4096)
+                new_data = os.read(0, 20000)
                 if not new_data:
                     sys.exit(0) # closed stdin
                 g_notify_readahead_buffer += new_data
                 if g_notify_readahead_buffer.startswith('\n\n'):
-                    exit(0)
+                    sys.exit(0)
                 while '\n\n' in g_notify_readahead_buffer:
                     notify_notify()
         except Exception, e:
@@ -381,6 +381,7 @@ def notify_keepalive():
                 raise
             notify_log("ERROR %s\n%s" % (e, format_exception()))
 
+# Note: The values of the context are *always* unicode!
 def notify_get_context():
     global g_notify_readahead_buffer
     if opt_keepalive:
@@ -391,7 +392,7 @@ def notify_get_context():
         try:
             for line in this_part.split('\n'):
                 varname, value = line.strip().split("=", 1)
-                context[varname] = value.decode("utf-8")
+                context[varname] = value
         except Exception, e: # line without '=' ignored or alerted
             if opt_debug:
                 raise
@@ -401,13 +402,25 @@ def notify_get_context():
         # Information about notification is excpected in the
         # environment in variables with the prefix NOTIFY_
         return dict([
-            (var[7:], value.decode("utf-8"))
+            (var[7:], value)
             for (var, value)
             in os.environ.items()
             if var.startswith("NOTIFY_")
                 and not re.match('^\$[A-Z]+\$$', value)])
 
 
+def convert_context_to_unicode(context):
+    # Convert all values to unicode
+    for key, value in context.iteritems():
+        if type(value) == str:
+            try:
+                value_unicode = value.decode("utf-8")
+            except:
+                try:
+                    value_unicode = value.decode("latin-1")
+                except:
+                    value_unicode = u"(Invalid byte sequence)"
+            context[key] = value_unicode
 
 def notify_notify():
     context = notify_get_context()
@@ -451,6 +464,8 @@ def notify_notify():
         context['LASTHOSTSTATECHANGE_REL'] = get_readable_rel_date(context['LASTHOSTSTATECHANGE'])
     if context['WHAT'] != 'HOST' and 'LASTSERVICESTATECHANGE' in context:
         context['LASTSERVICESTATECHANGE_REL'] = get_readable_rel_date(context['LASTSERVICESTATECHANGE'])
+
+    convert_context_to_unicode(context)
 
     if notification_logging >= 2:
         notify_log("Notification context:\n"
@@ -620,7 +635,7 @@ def call_notification_script(plugin, parameters, context, write_into_spoolfile):
     # Export complete context to have all vars in environment.
     # Existing vars are replaced, some already existing might remain
     for key in context:
-        os.putenv('NOTIFY_' + key, context[key].encode('utf-8'))
+        os.putenv('NOTIFY_' + key, context[key].encode('utf-8')) 
 
     # Remove service macros for host notifications
     if context['WHAT'] == 'HOST':

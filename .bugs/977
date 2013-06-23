@@ -1,0 +1,11 @@
+Title: Invalid reload after command execution
+Component: multisite
+State: open
+Date: 2013-06-23 11:21:05
+Targetversion: 1.2.3
+Class: bug
+
+When you issue a command on hosts/services and confirm then you see a blue
+message with a link back to the view. In that situation there must be no
+reload of the view container. But this happens. If you wait long enough then
+hosts/services get visible again.

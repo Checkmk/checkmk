@@ -1,5 +1,6 @@
 title: Siemens Octopus E global status
 agents: snmp
+catalog: 
 author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk

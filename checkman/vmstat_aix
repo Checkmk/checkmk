@@ -1,5 +1,6 @@
 title: CPU usage
 agents: aix
+catalog: 
 author: Bernd Stroessenreuther <bs@mathias-kettner.de>
 license: GPL
 distribution: check_mk

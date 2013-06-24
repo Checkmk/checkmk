@@ -1,5 +1,6 @@
 title: Dummy check man page - used as template for new check manuals
 agents: linux, windows, aix, solaris, hpux, vms, freebsd, snmp
+catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

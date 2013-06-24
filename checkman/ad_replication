@@ -1,5 +1,6 @@
-title: Check state of the Microsoft Active Directory Replication between DCs
+title: State of Microsoft Active Directory Replication between DCs
 agents: windows
+catalog: os/Active Directory
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

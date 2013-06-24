@@ -1,5 +1,6 @@
 title: Gude PDU units
 agents: snmp
+catalog: 
 author: Bastian Kuhn <bk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

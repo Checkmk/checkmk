@@ -1,5 +1,6 @@
 title: Monitor status of channel adapters on Fujitsu ETERNUS DX80 S2 storage systems
 agents: SNMP
+catalog: 
 author: Philipp Hoefflin <hoefflin+cmk@fuh-e.de>
 license: GPLv2
 distribution: none

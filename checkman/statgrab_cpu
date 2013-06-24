@@ -1,5 +1,6 @@
 title: Check CPU usage (utilisation)
 agents: freebsd hpux solaris
+catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

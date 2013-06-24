@@ -1,5 +1,6 @@
 title: Check the status Fibrechannel HBAs on HP-UX servers
 agents: hpux
+catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

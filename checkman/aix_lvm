@@ -1,6 +1,6 @@
-title: Check mirror state of LVM logical volumes on HP-UX
+title: Mirror state of LVM logical volumes on AIX
 agents: aix
-author: Florian Heigl <fh@mathias-kettner.de>
+catalog: os/storage
 license: GPL
 distribution: check_mk
 description:

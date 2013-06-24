@@ -1,5 +1,6 @@
-title: Check AKCP Sensor Humidity
+title: AKCP Sensor Humidity
 agents: snmp
+catalog: hw/environment 
 author: Michael Nieporte <michael.nieporte@uk-essen.de>
 license: GPL
 distribution: check_mk

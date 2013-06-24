@@ -1,5 +1,6 @@
-title: Check AKCP Sensor Temperature
+title: AKCP Sensor Temperature
 agents: snmp
+catalog: hw/environment
 author: Michael Nieporte <michael.nieporte@uk-essen.de>
 license: GPL
 distribution:

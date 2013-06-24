@@ -1,5 +1,6 @@
 title: Check disk of LSI RAID array
 agents: linux
+catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

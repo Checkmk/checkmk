@@ -1,5 +1,6 @@
 title: Monitor HDD health statistics using S.M.A.R.T
 agents: linux
+catalog: 
 license: GPL
 author: Mathias Kettner
 distribution: check_mk

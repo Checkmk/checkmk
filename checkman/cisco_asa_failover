@@ -1,5 +1,6 @@
 title: Cisco ASA Cluster failover Check
 agents: snmp
+catalog: hw/network/cisco 
 author: Florian Heigl <fh@mathias-kettner.de>
 license: GPLv3
 distribution: check_mk

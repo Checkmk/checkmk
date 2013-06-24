@@ -1,5 +1,6 @@
 title: Check options of mounted filesystems
 agents: linux
+catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

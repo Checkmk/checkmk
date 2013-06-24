@@ -1,5 +1,6 @@
 title: Checks the FAN sensors on Dell PowerConnect Switches
 agents: snmp
+catalog: 
 author: Chris Bowlby <cbowlby@tenthpowertech.com>
 license: GPL
 distribution: check_mk

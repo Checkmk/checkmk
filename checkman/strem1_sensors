@@ -1,5 +1,6 @@
 title: Checks temperature,humidity,wetness on sensatronic em1 devices
 agents: snmp
+catalog: 
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution:

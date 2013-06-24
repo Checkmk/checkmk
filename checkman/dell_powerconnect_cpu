@@ -1,5 +1,6 @@
 title: Checks the CPU load on Dell PowerConnect Switches
 agents: snmp
+catalog: 
 author: Chris Bowlby <cbowlby@tenthpowertech.com>
 license: GPL
 distribution: check_mk

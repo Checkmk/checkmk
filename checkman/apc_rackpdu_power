@@ -1,6 +1,6 @@
 title: APC PDU units
 agents: snmp
-author: Florian Heigl <fh@mathias-kettner.de>
+catalog: hw/power
 license: GPL
 distribution: check_mk
 description:

@@ -1,5 +1,6 @@
-title: Monitor CRC erros on CISCO Aironet access points
+title: CRC errors on CISCO Aironet access points
 agents: snmp
+catalog: hw/networking/cisco
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

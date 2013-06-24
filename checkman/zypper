@@ -1,5 +1,6 @@
 title: Check for (security) updates via Zypper
 agents: linux
+catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

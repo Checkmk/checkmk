@@ -1,5 +1,6 @@
 title: Check Carel Uniflair Cooling devices
 agents: snmp
+catalog: hw/misc 
 author: Andreas Boesl <ab@mathias-kettner.de>
 license: GPL
 distribution: check_mk

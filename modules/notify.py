@@ -541,9 +541,9 @@ def should_notify(context, entry):
     if "match_sl" in entry:
         from_sl, to_sl = entry['match_sl']
         if context['WHAT'] == "SERVICE" and context.get('SVC_SL','').isdigit():
-            sl = saveint(context['SVC_SL'])
+            sl = saveint(context.get('SVC_SL'))
         else:
-            sl = saveint(context['HOST_SL'])
+            sl = saveint(context.get('HOST_SL'))
 
         if sl < from_sl or sl > to_sl: 
             notify_log(" - Skipping: service level %d not between %d and %d" % (sl, from_sl, to_sl))

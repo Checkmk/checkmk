@@ -38,6 +38,10 @@
                is obsolete now.
     * Special Agent vSphere: support ESX 4.1 (thanks to Mirko Witt)
 
+    Notifications:
+    * notify.py: Matching service level: Use the hosts service level if a
+                 service has no service level set
+
     Multisite:
     * User accounts can now be locked after a specified amount of auth
       failures (lock_on_logon_failures can be set to a number of tries)

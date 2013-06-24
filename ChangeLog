@@ -1,3 +1,7 @@
+    Checks & Agents:
+    * Special Agent vSphere: now supports ESX 4.x too
+      Thanks to Mirko Witt for the patch
+
 1.2.3i2:
     Core:
     * New option -B for just generating the configuration

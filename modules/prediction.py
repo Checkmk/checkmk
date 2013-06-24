@@ -74,8 +74,8 @@ def find_ds_in_pnp_xmlfile(xml_file, varname):
             ds = line[4:].split('<')[0]
             if name == varname:
                 return int(ds)
-        elif line.startswith("<NAME>"):
-            name = line[6:].split('<')[0]
+        elif line.startswith("<LABEL>"):
+            name = line[7:].split('<')[0]
             if ds and name == varname:
                 return int(ds)
             else:

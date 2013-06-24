@@ -8,6 +8,8 @@
       Note: If the ignore rule is removed the services will reappear
     * Config creation: The ignore services rule now also applies to custom, active
                        and legacy checks
+    * Predictive monitoring: correctly handle spaces in variable names (thanks
+       to Karl Golland)
 
     Checks & Agents:
     * esx_hostystem multipath: criticize standby paths only if not equal to active paths

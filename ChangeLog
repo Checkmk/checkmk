@@ -1,7 +1,3 @@
-    Checks & Agents:
-    * Special Agent vSphere: now supports ESX 4.x too
-      Thanks to Mirko Witt for the patch
-
 1.2.3i2:
     Core:
     * New option -B for just generating the configuration
@@ -38,6 +34,7 @@
                 and Perf-O-Meter
     * ps.perf: Support Windows with new plugin "psperf.bat". wmicchecks.bat
                is obsolete now.
+    * Special Agent vSphere: support ESX 4.1 (thanks to Mirko Witt)
 
     Multisite:
     * User accounts can now be locked after a specified amount of auth

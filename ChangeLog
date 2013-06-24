@@ -30,8 +30,11 @@
       was misleading for different agent versions on multiple nodes)
     * job check: better handling of unexpected agent output
     * lnx_thermal: Added check for linux thermal sensors (e.g. acpi)
-    * hwg_temp: Make WATO-Rule "Room Temperature" match, add man page, graph 
+    * hwg_temp: Make WATO-Rule "Room Temperature" match, add man page, graph
                 and Perf-O-Meter
+    * ps.perf: Support Windows with new plugin "psperf.bat". wmicchecks.bat
+               is obsolete now.
+    * Special Agent vSphere: support ESX 4.1 (thanks to Mirko Witt)
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

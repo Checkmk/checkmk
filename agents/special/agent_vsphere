@@ -184,7 +184,6 @@ except:
 
 host = VIServer()
 
-
 object_collection = []
 error = None
 try:
@@ -452,10 +451,7 @@ def output_hostsystem_counters(all_counters = False):
             needed_ids = counterids.keys() # retrieve all ids....
         else:
             needed_ids = [
-                # net.*
-                196616, 196621, 196617, 196625, 196619, 196623, 196609, 196614,
-                196620, 196624, 196615, 196622, 196618, 196612, 196613, 196626,
-                # sys.uptime
+		# sys.uptime
                 262144,
                 # mem.*
                 # 65635, 65537, 65577, 65625, 65545, 65611, 65573, 65615, 65582,
@@ -487,17 +483,25 @@ def output_hostsystem_counters(all_counters = False):
                 131078, 131079, 131091, 131076, 131077,
             ]
 
-            # Seems as this is not available in ESX 5.0 but we saw it on 5.1
-            if esx_version_num > 5.0:
-                # sys.resourceMemConsumed
-                needed_ids += [
-                    262171,
-                ]
-
+            
             #needed_ids = [
             #    # sys.resourceMem*
             #    262151, 262155, 262169, 262152, 262154, 262153, 262157, 262156, 262168,
             #]
+            
+            # Seems as this is not available in ESX 5.0 but we saw it on 5.1
+        if esx_version_num > 5.0:
+            # sys.resourceMemConsumed
+            needed_ids += [
+                262171,
+            ]
+
+        if esx_version_num > 4.1:
+            needed_ids += [
+                # net.*
+                196616, 196621, 196617, 196625, 196619, 196623, 196609, 196614,
+                196620, 196624, 196615, 196622, 196618, 196612, 196613, 196626,
+            ]
 
         counters = pm.get_entity_statistic(mor, needed_ids)
         lines = []
@@ -509,7 +513,6 @@ def output_hostsystem_counters(all_counters = False):
             print line
     if not opt_direct:
         print '<<<<>>>>'
-
 
 def output_mors(what, properties, direct=False):
     if what == "hostsystem":
@@ -573,24 +576,28 @@ def output_mors(what, properties, direct=False):
 
 def output_datastores():
     property_names = [ 
-        "name", 
-        "summary.freeSpace", 
-        "summary.capacity", 
-        "summary.uncommitted", 
-        "summary.url", 
+        "name",
+        "summary.freeSpace",
+        "summary.capacity",
+        "summary.uncommitted",
+        "summary.url",
         "summary.accessible",
-        "summary.type", 
-        "summary.maintenanceMode", 
+        "summary.type",
         ]
+
+    if esx_version_num > 4.1:
+        property_names += [
+        "summary.maintenanceMode",
+        ]
+        
     # print inspect.getmembers(MORTypes)
     print "<<<esx_vsphere_datastores:sep(%d)>>>" % ord('\t')
     for mor in host._retrieve_properties_traversal(property_names=property_names, obj_type=MORTypes.Datastore):
-        for entry in mor.PropSet:
-            if entry.Name == "name":
+	for entry in mor.PropSet:
+	    if entry.Name == "name":
                 print '[%s]' % entry.Val
             else:
                 print '%s\t%s' % (entry.Name.split(".")[1], entry.Val)
-
 
 def conv_multipath(value):
     return " ".join(["%s %s" % (p.Name, p.PathState) for p in value.HostMultipathStateInfoPath])
@@ -662,8 +669,7 @@ if "hostsystem" in mortypes:
 # Warning: we have no guarantee that all properties are always
 # output. For example if a VM is powered off, the only property
 # we get is summary.runtime.powerState
-if "virtualmachine" in mortypes:
-    output_mors("virtualmachine", {
+vm_propertys = {
       "name": str,
       "guestHeartbeatStatus": str,
       "summary.quickStats.uptimeSeconds": str,
@@ -689,7 +695,6 @@ if "virtualmachine" in mortypes:
       # Virtual machine configuration
       "config.hardware.memoryMB": str,
       "config.hardware.numCPU": str,
-      "config.hardware.numCoresPerSocket": str,
       #"config.hardware.hwVersion": str,
       #"config.hardware.guestId": str,
       #"config.hardware.uuid": str,
@@ -698,12 +703,15 @@ if "virtualmachine" in mortypes:
       "runtime.host" : conv_host,
       "guest.toolsVersion" : str,
       "guest.toolsVersionStatus" : str,
+}
 
-    })
+if esx_version_num > 4.1:
+    vm_propertys["config.hardware.numCoresPerSocket"] = str
 
+if "virtualmachine" in mortypes:
+    output_mors("virtualmachine", vm_propertys)
 
 print "<<<<>>>>"
-
 print "<<<esx_vsphere_objects:sep(9)>>>"
 for entry in object_collection:
     print "\t".join(entry)

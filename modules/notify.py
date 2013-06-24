@@ -540,7 +540,7 @@ def should_notify(context, entry):
     # Check if the host has to be in a special service_level
     if "match_sl" in entry:
         from_sl, to_sl = entry['match_sl']
-        if context['WHAT'] == "SERVICE":
+        if context['WHAT'] == "SERVICE" and context.get('SVC_SL','').isdigit():
             sl = saveint(context['SVC_SL'])
         else:
             sl = saveint(context['HOST_SL'])

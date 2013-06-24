@@ -988,7 +988,7 @@ def do_check_keepalive():
     def check_timeout(signum, frame):
         raise MKCheckTimeout()
 
-    signal.signal(signal.SIGALRM, check_timeout)
+    signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
 
     global total_check_output
     total_check_output = ""
@@ -1012,28 +1012,31 @@ def do_check_keepalive():
             break
 
         timeout = int(sys.stdin.readline())
-        try:
-            signal.alarm(timeout)
-            if ';' in hostname:
-                hostname, ipaddress = hostname.split(";", 1)
-            elif hostname in ipaddress_cache:
-                ipaddress = ipaddress_cache[hostname]
-            else:
-                if is_cluster(hostname):
-                    ipaddress = None
+        try: # catch non-timeout exceptions
+            try: # catch timeouts
+                signal.signal(signal.SIGALRM, check_timeout)
+                signal.alarm(timeout)
+                if ';' in hostname:
+                    hostname, ipaddress = hostname.split(";", 1)
+                elif hostname in ipaddress_cache:
+                    ipaddress = ipaddress_cache[hostname]
                 else:
-                    try:
-                        ipaddress = lookup_ipaddress(hostname)
-                    except:
-                        raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
-                ipaddress_cache[hostname] = ipaddress
+                    if is_cluster(hostname):
+                        ipaddress = None
+                    else:
+                        try:
+                            ipaddress = lookup_ipaddress(hostname)
+                        except:
+                            raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
+                    ipaddress_cache[hostname] = ipaddress
 
-            try:
                 status = do_check(hostname, ipaddress)
+                signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
                 signal.alarm(0)
             except MKCheckTimeout:
+                signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
                 status = 3
-                total_check_output = "UNKNOWN - Check_MK timed out after %d seconds" % timeout
+                total_check_output = "UNKNOWN - Check_MK timed out after %d seconds\n" % timeout
 
             sys.stdout.write("%03d\n%08d\n%s" % 
                  (status, len(total_check_output), total_check_output))
@@ -1056,6 +1059,7 @@ def do_check_keepalive():
             if opt_debug:
                 raise
             sys.stdout.write("UNKNOWN - %s\n3\n" % e)
+
 
 
 def check_unimplemented(checkname, params, info):

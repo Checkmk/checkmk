@@ -533,7 +533,7 @@ void section_df(SOCKET &out)
 void section_ps(SOCKET &out)
 {
     crash_log("<<<ps>>>");
-    output(out, "<<<ps>>>\n");
+    output(out, "<<<ps:sep(0)>>>\n");
     HANDLE hProcessSnap;
     PROCESSENTRY32 pe32;
 

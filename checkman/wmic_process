@@ -4,6 +4,10 @@ author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
+ Note: This check is obsolete. Do not install {wmicchecks.bat} anymore. Use
+ {psperf.bat} in combination with the normal {ps.perf} check. The rest of
+ this man page is unchanged for legacy reasons:
+
  This check uses the output of {wmic process} in order to monitor the ressource
  consumption of processes on Windows servers. On the target host this check
  needs the command line utility {wmic} and the agent plugin {wmicchecks.bat}

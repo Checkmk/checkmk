@@ -33,6 +33,22 @@
 # Third generation (from 1.1.5) output also virtual memory, resident memory and %CPU:
 # (class,122376,88128,0.0) /usr/jre1.6.0_13/bin/java -Dn=Cart_16TH13 -Dmcs.node=zbgh1ca -Dmcs.mdt.redundan
 
+# Windows agent now ships a plugin "psperf.bat" that adds a section from wmic
+# to the output:
+# <<<ps:sep(44)>>>
+# [wmic process]
+# ^M
+# Node,KernelModeTime,Name,PageFileUsage,ThreadCount,UserModeTime,VirtualSize,WorkingSetSize^M
+# WINDOWSXP,43478281250,System Idle Process,0,2,0,0,28672^M
+# WINDOWSXP,155781250,System,0,59,0,1957888,253952^M
+# WINDOWSXP,468750,smss.exe,176128,3,156250,3928064,442368^M
+# WINDOWSXP,56406250,csrss.exe,1863680,12,11406250,25780224,3956736^M
+# WINDOWSXP,18593750,winlogon.exe,6832128,19,4843750,59314176,2686976^M
+# WINDOWSXP,167500000,services.exe,1765376,16,13750000,22601728,4444160^M
+# WINDOWSXP,16875000,lsass.exe,3964928,21,3906250,43462656,6647808^M
+# WINDOWSXP,8750000,VBoxService.exe,1056768,8,468750,26652672,3342336^M
+
+
 # New since 1.2.1i2: WATO compatible syntax
 #
 # Holds a list of rules which are matching hosts by names or tags and
@@ -52,6 +68,50 @@ inventory_processes_perf = []
 ANY_USER = None
 GRAB_USER = False
 
+def ps_parse_info(info):
+    result = []
+    lines = iter(info)
+    wmic_info = {}
+    cpu_cores = 1
+    try:
+        while True:
+            line = lines.next()
+            if line[-1] == '[wmic process]':
+                break
+            result.append(line)
+        # part of wmic data
+        headers = ["node"] + lines.next()[1:]
+        while True:
+            row = dict(zip(headers, lines.next()))
+            wmic_info[(row["node"], row["Name"])] = row
+
+    except StopIteration:
+        pass
+
+    # Add wmic_info to process table, but only if present:
+    if wmic_info:
+        info = []
+        seen_pids = set([]) # Remove duplicate entries
+        for line in result:
+            psinfo = wmic_info.get(tuple(line))
+            # Get number of CPU cores from system idle process
+            if psinfo:
+                if "ThreadCount" in headers and psinfo["Name"].lower() == "system idle process":
+                    cpucores = int(psinfo["ThreadCount"])
+                pid     = int(psinfo["ProcessId"])
+                if pid not in seen_pids:
+                    seen_pids.add(pid)
+                    mem     = int(psinfo["WorkingSetSize"]) / 1024 # Bytes -> KB
+                    page    = int(psinfo["PageFileUsage"]) / 1024 # Bytes -> KB
+                    userc   = int(psinfo["UserModeTime"])   # do not resolve counter here!
+                    kernelc = int(psinfo["KernelModeTime"]) # do not resolve counter here!
+                    line[1:1] = [ "(unknown,%d,%d,@%d/%d/%d)" % (mem, page, pid, userc, kernelc) ]
+            info.append(line)
+        return cpu_cores, info
+    else:
+        return cpu_cores, info
+
+
 def inventory_ps(info):
     return inventory_ps_common(inventory_processes, info)
 
@@ -59,6 +119,7 @@ def inventory_ps_perf(info):
     return inventory_ps_common(inventory_processes_perf, info, True)
 
 def inventory_ps_common(invdata, info, handle_perfdata = False):
+    cpu_cores, info = ps_parse_info(info) # parse windows wmic information
     inventory = []
 
     entries = []
@@ -197,6 +258,7 @@ def process_matches(ps, procname, l_user):
     return False
 
 def check_procs(item, params, info, with_perfdata):
+    cpu_cores, info = ps_parse_info(info) # parse windows wmic information
     if len(params) == 5:
         procname, warnmin, okmin, okmax, warnmax = params
         user = None
@@ -224,7 +286,15 @@ def check_procs(item, params, info, with_perfdata):
                 if len(addinfo) >= 4: # extended performance data
                     virtual_size += int(addinfo[1])  # kB
                     resident_size += int(addinfo[2]) # kB
-                    percent_cpu += savefloat(addinfo[3])
+                    if addinfo[3].startswith('@'): # wmic counters :-(
+                        pid, user_c, kernel_c = map(int, addinfo[3][1:].split('/'))
+                        timedif, user_per_sec   = get_counter("ps_wmic.user.%d" % pid, time.time(), user_c)
+                        timedif, kernel_per_sec = get_counter("ps_wmic.kernel.%d" % pid, time.time(), kernel_c)
+                        user_perc = user_per_sec / 100000.0 / cpu_cores
+                        kernel_perc = kernel_per_sec / 100000.0 / cpu_cores
+                        percent_cpu += user_perc + kernel_perc
+                    else:
+                        percent_cpu += savefloat(addinfo[3])
                     extended_perfdata = True
 
     if with_perfdata:
@@ -249,6 +319,10 @@ def check_procs(item, params, info, with_perfdata):
     infotext = "%d processes" % count
     if running_on:
         infotext += " [running on %s]" % ", ".join(running_on)
+
+    if virtual_size:
+        infotext += " %.1f MB virtual, %.1f MB resident, %.1f%% CPU" % (
+           virtual_size / 1024.0, resident_size / 1024.0, percent_cpu)
 
     if count > warnmax or count < warnmin:
         return (2, infotext + " (ok from %d to %d)" % (okmin, okmax), perfdata)

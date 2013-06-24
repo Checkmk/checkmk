@@ -33,6 +33,10 @@
     * hwg_temp: Make WATO-Rule "Room Temperature" match, add man page, graph 
                 and Perf-O-Meter
 
+    Notifications:
+    * notify.py: Matching service level: Use the hosts service level if a
+                 service has no service level set
+
     Multisite:
     * User accounts can now be locked after a specified amount of auth
       failures (lock_on_logon_failures can be set to a number of tries)

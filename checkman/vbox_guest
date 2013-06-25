@@ -1,4 +1,4 @@
-title: Check version of VirtualBox guest additions in Linux guests
+title: Version of VirtualBox guest additions in Linux guests
 agents: linux
 catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>

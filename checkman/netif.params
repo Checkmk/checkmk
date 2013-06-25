@@ -1,4 +1,4 @@
-title: Monitor speed settings of Linux network interfaces (deprecated)
+title: Speed settings of Linux network interfaces (deprecated)
 agents: linux
 catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>

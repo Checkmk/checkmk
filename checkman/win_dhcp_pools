@@ -1,4 +1,4 @@
-title: Check the number of free addresses of DHCP pools on Windows DHCP servers
+title: Number of free addresses in DHCP pools on Windows DHCP servers
 agents: linux
 catalog: 
 author: Lars Michelsen <lm@mathias-kettner.de>

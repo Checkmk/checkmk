@@ -1,4 +1,4 @@
-title: Monitor OpenVMS Queue Jobs
+title: OpenVMS Queue Jobs
 agents: openvms
 catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>

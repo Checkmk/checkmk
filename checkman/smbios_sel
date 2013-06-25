@@ -1,4 +1,4 @@
-title: Check the System Event Log from SMBIOS/DMI
+title: System Event Log from SMBIOS/DMI
 agents: linux
 catalog: 
 author: Lars Michelsen <lm@mathias-kettner.de>

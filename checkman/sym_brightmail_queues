@@ -1,4 +1,4 @@
-title: Check the status of queues on Symantec brightmail scanners
+title: Queues on Symantec brightmail scanners
 agents: snmp
 catalog: 
 author: Florian Heigl <fh@mathias-kettner.de>

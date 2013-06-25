@@ -1,4 +1,4 @@
-title: Check the status of Tivoli TSM staging pools
+title: Tivoli TSM staging pools
 agents: aix, linux
 catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>

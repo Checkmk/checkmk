@@ -1,4 +1,4 @@
-title: Check state of virtual machines of VMWare ESX
+title: State of virtual machines of VMWare ESX
 agents: linux
 catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>

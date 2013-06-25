@@ -18,6 +18,13 @@ app "Applications"
    apache "Apache"
    java "Java application server, etc."
    mailman
+   weblogic
+   mssql
+   mysql
+   postgresql
+   sap
+
+db "Databases" ??
 
 hw
    network "Networking"

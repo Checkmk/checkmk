@@ -1,4 +1,4 @@
-title: Check the status of backup drives in Tivoli TSM
+title: Backup drives in Tivoli TSM
 agents: aix, linux
 catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>

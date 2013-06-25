@@ -1,4 +1,4 @@
-title: Check state of Bonding network interface on Open vSwitch
+title: State of Bonding network interface on Open vSwitch
 agents: linux
 catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>

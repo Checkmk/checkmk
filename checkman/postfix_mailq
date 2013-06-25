@@ -1,4 +1,4 @@
-title: Checks the length of the postfix mailqueue
+title: Length of the postfix mailqueue
 agents: linux
 catalog: 
 author: Lars Michelsen <lm@mathias-kettner.de>

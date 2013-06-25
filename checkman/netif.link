@@ -1,4 +1,4 @@
-title: Monitor link status of Linux network interfaces (deprecated)
+title: Link status of Linux network interfaces (deprecated)
 agents: linux
 catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>

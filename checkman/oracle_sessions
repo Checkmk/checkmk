@@ -1,6 +1,6 @@
-title: Check number of active sessions in ORACLE database
+title: Number of active sessions in ORACLE database
 agents: linux, hpux
-catalog: 
+catalog: app/oracle
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

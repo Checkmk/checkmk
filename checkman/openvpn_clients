@@ -1,4 +1,4 @@
-title: Check status of OpenVPN client connection
+title: OpenVPN client connections
 agents: linux
 catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>

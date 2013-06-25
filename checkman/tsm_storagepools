@@ -1,4 +1,4 @@
-title: Report usage of storage pools in Tivoli TSM
+title: Usage of storage pools in Tivoli TSM
 agents: aix, linux
 catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>

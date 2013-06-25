@@ -1,2 +1,3 @@
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-sudo cp * /omd/sites/$SITE/share/check_mk/checkman/
+sudo rsync -var --delete ./ /omd/sites/$SITE/share/check_mk/checkman/
+sudo rm -f /omd/sites/$SITE/share/check_mk/checkman/.f12

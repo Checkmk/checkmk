@@ -1,6 +1,6 @@
 title: Forward Logwatch Messages to the Event Console
 agents: linux, windows, aix, solaris
-catalog: 
+catalog: os/files 
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

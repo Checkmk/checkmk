@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# THIS CHECK IS DEPRACATED! Use agent_vpshere instead.
+
 # Example output from agent:
 # <<<vmware_state>>>
 # [2009-11-12 10:40:30.086 'App' 3076453184 info] Current working directory: /usr/lib/check_mk_agent/plugins

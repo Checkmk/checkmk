@@ -15,6 +15,8 @@ manpage_catalog_titles = {
             "lancom"     : "LANCOM Systems GmbH",
             "netgear"    : "Netgear",
             "riverbed"   : "Riverbed Technology",
+            "symantec"   : "Symantec",
+            "viprinet"   : "Viprinet",
         "power"       : "Power supplies and PDUs",
         "printer"     : "Printers",
         "server"      : "Servers (management boards, blade enclosures)",
@@ -24,6 +26,7 @@ manpage_catalog_titles = {
             "fujitsu"    : "Fujitsu",
             "mcdata"     : "McDATA",
             "netapp"     : "NetApp",
+        "phone"       : "Telephony",
 
     "app"      : "Applications",
         "apache"        : "Apache Webserver",
@@ -38,6 +41,7 @@ manpage_catalog_titles = {
         "postfix"       : "Postfix",
         "postgresql"    : "PostgreSQL",
         "sap"           : "SAP R/3",
+        "tsm"           : "IBM Tivoli Storage Manager (TSM)",
 
     "os"       : "Operating Systems",
         "aix"           : "AIX",

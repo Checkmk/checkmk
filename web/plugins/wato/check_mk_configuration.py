@@ -219,6 +219,16 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "multisite_draw_ruleicon",
+    Checkbox(title = _("Draw WATO rule editor icon for services"),
+             label = _("Draw rule editor icon"),
+             help = _("When enabled a rule editor icon is displayed for each "
+                      "service in the multisite views. It is only displayed if the user "
+                      "does have the permission to edit rules"),
+            default_value = False),
+    domain = "multisite")
+
+register_configvar(group,
     "wato_max_snapshots",
     Integer(title = _("Number of configuration snapshots to keep"),
             help = _("Whenever you successfully activate changes a snapshot of the configuration "

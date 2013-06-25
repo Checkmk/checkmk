@@ -115,6 +115,27 @@ multisite_icons.append({
     'columns':         [ 'active_checks_enabled' ],
     'paint':           paint_reschedule,
 })
+
+
+def paint_rule_editor(what, row, tags, custom_vars):
+    if config.may("wato.rulesets") and config.multisite_draw_ruleicon:
+        if what == 'service':
+            check_command = row["service_check_command"]
+            if check_command.startswith("check_mk-") or \
+               check_command.startswith("check_mk_active-"):
+                url = html.makeuri_contextless( [("mode", "edit_ruleset"),
+                                                 ("check_command", row["service_check_command"]),
+                                                 ("service_description", row["service_description"]),
+                                                 ("host", row["host_name"])], "wato.py")
+                title = _("Edit rule for %s") % check_command
+                return '<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' % \
+                        (url, title)
+
+multisite_icons.append({
+    'service_columns': [ 'description', 'check_command', "host_name" ],
+    'paint':           paint_rule_editor,
+})
+
 #   +----------------------------------------------------------------------+
 #   |       _        _                        _          _                 |
 #   |      / \   ___| | ___ __   _____      _| | ___  __| | __ _  ___      |

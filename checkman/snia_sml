@@ -1,6 +1,6 @@
 title: Various sensors of IBM Tapelib 3584
 agents: snmp
-catalog: hw/storage
+catalog: hw/storagehw/ibm
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

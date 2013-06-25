@@ -1,6 +1,6 @@
 title: RLUNs in Fujitsu ETERNUS DX storage systems
 agents: snmp
-catalog: hw/storage/fujitsu 
+catalog: hw/storagehw/fujitsu 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

@@ -3148,7 +3148,6 @@ def manpage_num_entries(cat):
 
 def manpage_browser_folder(cat, subtrees):
     execfile(modules_dir + "/catalog.py", globals())
-    heading = "/".join(cat)
     titles = []
     for e in subtrees:
         title = manpage_catalog_titles.get(e,e) 
@@ -3160,7 +3159,7 @@ def manpage_browser_folder(cat, subtrees):
     choices = [ (str(n+1), t[0]) for n,t in enumerate(titles) ]
 
     while True:
-        x = dialog_menu("Man Page Browser", "", choices, "0", "Enter", cat and "Back" or "Quit")
+        x = dialog_menu("Man Page Browser", manpage_display_header(cat), choices, "0", "Enter", cat and "Back" or "Quit")
         if x[0] == True:
             index = int(x[1])
             subcat = titles[index-1][1]
@@ -3176,7 +3175,7 @@ def manpage_browse_entries(cat, entries):
     checks.sort()
     choices = [ (str(n+1), c[0]) for n,c in enumerate(checks) ]
     while True:
-        x = dialog_menu("Man Page Browser", "", choices, "0", "Show Manpage", "Back")
+        x = dialog_menu("Man Page Browser", manpage_display_header(cat), choices, "0", "Show Manpage", "Back")
         if x[0] == True:
             index = int(x[1])-1
             checkname = checks[index][1]
@@ -3184,6 +3183,8 @@ def manpage_browse_entries(cat, entries):
         else:
             break
 
+def manpage_display_header(cat):
+    return " -> ".join([manpage_catalog_titles.get(e,e) for e in cat ])
 
 def run_dialog(args):
     import subprocess

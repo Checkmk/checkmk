@@ -3103,7 +3103,150 @@ def list_all_manuals():
     table.sort()
     print_table(['Check type', 'Title'], [tty_bold, tty_normal], table)
 
+def read_manpage_catalog():
+    global g_manpage_catalog
+    g_manpage_catalog = {}
+    for checkname, path in all_manuals().items():
+        parsed = parse_man_header(checkname, path)
+        cat = parsed["catalog"]
+        if not cat:
+            cat = [ "unsorted" ]
+
+        if cat[0] == "os":
+            for agent in parsed["agents"]:
+                acat = [cat[0]] + [agent] + cat[1:]
+                g_manpage_catalog.setdefault(tuple(acat), []).append(parsed)
+        else:
+            g_manpage_catalog.setdefault(tuple(cat), []).append(parsed)
+
+def manpage_browser(cat = ()):
+    read_manpage_catalog()
+    entries = []
+    subtrees = set([])
+    for c, e in g_manpage_catalog.items():
+        if c[:len(cat)] == cat:
+            if len(c) > len(cat):
+                subtrees.add(c[len(cat)])
+            else: # leaf node
+                entries = e
+                break
+
+    if entries and subtrees:
+        sys.stderr.write("ERROR: Catalog path %s contains man pages and subfolders.\n" % ("/".join(cat)))
+    if entries:
+        manpage_browse_entries(cat, entries)
+    elif subtrees:
+        manpage_browser_folder(cat, subtrees)
+
+def manpage_num_entries(cat):
+    num = 0
+    for c, e in g_manpage_catalog.items():
+        if c[:len(cat)] == cat:
+            num += len(e)
+    return num
+
+
+def manpage_browser_folder(cat, subtrees):
+    execfile(modules_dir + "/catalog.py", globals())
+    heading = "/".join(cat)
+    titles = []
+    for e in subtrees:
+        title = manpage_catalog_titles.get(e,e) 
+        count = manpage_num_entries(cat + (e,))
+        if count:
+            title += " (%d)" % count
+        titles.append((title, e))
+    titles.sort()
+    choices = [ (str(n+1), t[0]) for n,t in enumerate(titles) ]
+
+    while True:
+        x = dialog_menu("Man Page Browser", "", choices, "0", "Enter", cat and "Back" or "Quit")
+        if x[0] == True:
+            index = int(x[1])
+            subcat = titles[index-1][1]
+            manpage_browser(cat + (subcat,))
+        else:
+            break
+
+
+def manpage_browse_entries(cat, entries):
+    checks = []
+    for e in entries:
+        checks.append((e["title"], e["name"]))
+    checks.sort()
+    choices = [ (str(n+1), c[0]) for n,c in enumerate(checks) ]
+    while True:
+        x = dialog_menu("Man Page Browser", "", choices, "0", "Show Manpage", "Back")
+        if x[0] == True:
+            index = int(x[1])-1
+            checkname = checks[index][1]
+            show_check_manual(checkname)
+        else:
+            break
+
+
+def run_dialog(args):
+    import subprocess
+    env = {
+        "TERM": os.getenv("TERM", "linux"),
+        "LANG": "de_DE.UTF-8"
+    }
+    p = subprocess.Popen(["dialog", "--shadow"] + args, env = env, stderr = subprocess.PIPE)
+    response = p.stderr.read()
+    return 0 == os.waitpid(p.pid, 0)[1], response
+
+
+def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
+    args = [ "--ok-label", oktext, "--cancel-label", canceltext ]
+    if defvalue != None:
+        args += [ "--default-item", defvalue ]
+    args += [ "--title", title, "--menu", text, "0", "0", "0" ] # "20", "60", "17" ]
+    for text, value in choices:
+        args += [ text, value ]
+    return run_dialog(args)
+
+
+def parse_man_header(checkname, path):
+    parsed = {}
+    parsed["name"] = checkname
+    parsed["path"] = path
+    key = None
+    lineno = 0
+    for line in file(path):
+        line = line.rstrip()
+        lineno += 1
+        try:
+            if not line:
+                parsed[key] += "\n\n"
+            elif line[0] == ' ':
+                parsed[key] += "\n" + line.lstrip()
+            elif line[0] == '[':
+                break # End of header
+            else:
+                key, rest = line.split(":", 1)
+                parsed[key] = rest.lstrip()
+        except Exception, e:
+            if opt_debug:
+                raise
+            sys.stderr.write("Invalid line %d in man page %s\n%s" % (
+                    lineno, path, line))
+            break
+
+    if "agents" not in parsed:
+        sys.stderr.write("Section agents missing in man page of %s\n" % (checkname))
+        sys.exit(1)
+    else:
+        parsed["agents"] = parsed["agents"].replace(" ","").split(",")
+
+    if parsed.get("catalog"):
+        parsed["catalog"] = parsed["catalog"].split("/")
+
+    return parsed
+
+
 def show_check_manual(checkname):
+    filename = all_manuals().get(checkname)
+
     bg_color = 4
     fg_color = 7
     bold_color = tty_white + tty_bold
@@ -3116,7 +3259,6 @@ def show_check_manual(checkname):
     parameters_color = tty(6,4,1)
     examples_color = tty(6,4,1)
 
-    filename = all_manuals().get(checkname)
     if not filename:
         sys.stdout.write("No manpage for %s. Sorry.\n" % checkname)
         return
@@ -4035,39 +4177,40 @@ Copyright (C) 2009 Mathias Kettner
 
 def usage():
     print """WAYS TO CALL:
- check_mk [-n] [-v] [-p] HOST [IPADDRESS]  check all services on HOST
- check_mk [-u] -I [HOST ..]                inventory - find new services
- check_mk [-u] -II ...                     renew inventory, drop old services
- check_mk -u, --cleanup-autochecks         reorder autochecks files
- check_mk -N [HOSTS...]                    output Nagios configuration
- check_mk -B                               create configuration for core
- check_mk -C, --compile                    precompile host checks
- check_mk -U, --update                     precompile + create config for core
- check_mk -O, --reload                     precompile + config + core reload
- check_mk -R, --restart                    precompile + config + core restart
- check_mk -D, --dump [H1 H2 ..]            dump all or some hosts
- check_mk -d HOSTNAME|IPADDRESS            show raw information from agent
- check_mk --check-inventory HOSTNAME       check for items not yet checked
- check_mk --list-hosts [G1 G2 ...]         print list of hosts
- check_mk --list-tag TAG1 TAG2 ...         list hosts having certain tags
- check_mk -L, --list-checks                list all available check types
- check_mk -M, --man [CHECKTYPE]            show manpage for check CHECKTYPE
- check_mk --paths                          list all pathnames and directories
- check_mk -X, --check-config               check configuration for invalid vars
- check_mk --backup BACKUPFILE.tar.gz       make backup of configuration and data
- check_mk --restore BACKUPFILE.tar.gz      restore configuration and data
- check_mk --flush [HOST1 HOST2...]         flush all data of some or all hosts
- check_mk --donate                         Email data of configured hosts to MK
- check_mk --snmpwalk HOST1 HOST2 ...       Do snmpwalk on host
- check_mk --snmptranslate HOST             Do snmptranslate on walk
- check_mk --snmpget OID HOST1 HOST2 ...    Fetch single OIDs and output them
- check_mk --scan-parents [HOST1 HOST2...]  autoscan parents, create conf.d/parents.mk
- check_mk -P, --package COMMAND            do package operations
- check_mk --localize COMMAND               do localization operations
- check_mk --notify                         used to send notifications from core
- check_mk --create-rrd [--keepalive|SPEC]  create round robin database
- check_mk -V, --version                    print version
- check_mk -h, --help                       print this help
+ cmk [-n] [-v] [-p] HOST [IPADDRESS]  check all services on HOST
+ cmk [-u] -I [HOST ..]                inventory - find new services
+ cmk [-u] -II ...                     renew inventory, drop old services
+ cmk -u, --cleanup-autochecks         reorder autochecks files
+ cmk -N [HOSTS...]                    output Nagios configuration
+ cmk -B                               create configuration for core
+ cmk -C, --compile                    precompile host checks
+ cmk -U, --update                     precompile + create config for core
+ cmk -O, --reload                     precompile + config + core reload
+ cmk -R, --restart                    precompile + config + core restart
+ cmk -D, --dump [H1 H2 ..]            dump all or some hosts
+ cmk -d HOSTNAME|IPADDRESS            show raw information from agent
+ cmk --check-inventory HOSTNAME       check for items not yet checked
+ cmk --list-hosts [G1 G2 ...]         print list of hosts
+ cmk --list-tag TAG1 TAG2 ...         list hosts having certain tags
+ cmk -L, --list-checks                list all available check types
+ cmk -M, --man [CHECKTYPE]            show manpage for check CHECKTYPE
+ cmk -m, --browse-man                 open interactive manpage browser
+ cmk --paths                          list all pathnames and directories
+ cmk -X, --check-config               check configuration for invalid vars
+ cmk --backup BACKUPFILE.tar.gz       make backup of configuration and data
+ cmk --restore BACKUPFILE.tar.gz      restore configuration and data
+ cmk --flush [HOST1 HOST2...]         flush all data of some or all hosts
+ cmk --donate                         Email data of configured hosts to MK
+ cmk --snmpwalk HOST1 HOST2 ...       Do snmpwalk on host
+ cmk --snmptranslate HOST             Do snmptranslate on walk
+ cmk --snmpget OID HOST1 HOST2 ...    Fetch single OIDs and output them
+ cmk --scan-parents [HOST1 HOST2...]  autoscan parents, create conf.d/parents.mk
+ cmk -P, --package COMMAND            do package operations
+ cmk --localize COMMAND               do localization operations
+ cmk --notify                         used to send notifications from core
+ cmk --create-rrd [--keepalive|SPEC]  create round robin database
+ cmk -V, --version                    print version
+ cmk -h, --help                       print this help
 
 OPTIONS:
   -v             show what's going on
@@ -5003,7 +5146,7 @@ def output_profile():
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
-    short_options = 'SHVLCURODMd:Ic:nhvpXPuNB'
+    short_options = 'SHVLCURODMmd:Ic:nhvpXPuNB'
     long_options = [ "help", "version", "verbose", "compile", "debug",
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "localize", "donate", "snmpwalk", "snmptranslate",
@@ -5012,7 +5155,7 @@ if __name__ == "__main__":
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=", 
-                     "cmc-file=" ]
+                     "cmc-file=", "browse-man" ]
 
     non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
                           '--man', '-V', '--version' ,'-h', '--help', '--automation', ]
@@ -5146,6 +5289,9 @@ if __name__ == "__main__":
                     show_check_manual(args[0])
                 else:
                     list_all_manuals()
+                done = True
+            elif o in [ '-m', '--browse-man' ]:
+                manpage_browser()
                 done = True
             elif o == '--list-hosts':
                 l = list_all_hosts(args)

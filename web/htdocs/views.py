@@ -2528,6 +2528,16 @@ def cmp_insensitive_string(v1, v2):
         return c
 
 # Sorting
+def cmp_ip_address(column, r1, r2):
+    def split_ip(ip):
+        try:
+            return tuple(int(part) for part in ip.split('.'))
+        except:
+            return ip
+    v1, v2 = split_ip(r1.get(column, '')), split_ip(r2.get(column, ''))
+    return cmp(v1, v2) 
+
+
 def cmp_simple_string(column, r1, r2):
     v1, v2 = r1.get(column, ''), r2.get(column, '')
     return cmp_insensitive_string(v1, v2)

@@ -55,6 +55,7 @@
     * Inventory screen: Host inventory also displays its clustered services
     * Rules: Renamed "Ignored services" to "Disabled services"
              Renamed "Ignored checks" to "Disabled checks"
+    * Sorter Host IP address: fixed sorting, no longer uses str compare on ip
 
     WATO:
     * Allow to configure check-/retry_interval in second precision

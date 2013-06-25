@@ -1,4 +1,4 @@
-title: Check WuT Web-IO
+title: WuT Web-IO
 agents: snmp
 catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>

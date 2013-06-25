@@ -13,18 +13,20 @@ os "Betriebsysstem"
 app "Applications"
    omd "OMD / Check_MK"
       "livestatu_status, omd"
-   ORACLE:
-      tablespace,e.tg... (pro Check die OS auflisten)
    apache "Apache"
    java "Java application server, etc."
    mailman
    weblogic
+   sap
+   exchange
+   postfix
+ggf. db "Databases"
+   db2
+   ORACLE:
+      tablespace,e.tg... (pro Check die OS auflisten)
    mssql
    mysql
    postgresql
-   sap
-
-db "Databases" ??
 
 hw
    network "Networking"

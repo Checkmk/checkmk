@@ -1,6 +1,6 @@
-title: Show the OUT load of ups devices
+title: OUT load of ups devices
 agents: snmp
-catalog: 
+catalog: hw/power
 author: Bastian Kuhn <bk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

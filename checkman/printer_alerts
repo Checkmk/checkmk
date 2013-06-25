@@ -1,6 +1,6 @@
-title: Lists alerts reported by printers
+title: Alerts reported by printers
 agents: snmp
-catalog: 
+catalog: hw/printer
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

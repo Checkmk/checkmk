@@ -1,6 +1,6 @@
-title: Check CPU load average on systems using UCD SNMP Daemon
+title: CPU load average on systems using UCD SNMP Daemon
 agents: snmp
-catalog: 
+catalog: os/kernel
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

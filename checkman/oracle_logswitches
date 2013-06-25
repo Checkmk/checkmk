@@ -1,6 +1,6 @@
-title: Check log switch activity of ORACLE database
+title: Log switch activity of ORACLE database
 agents: linux, hpux
-catalog: 
+catalog: app/oracle
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

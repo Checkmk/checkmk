@@ -1,6 +1,6 @@
-title: Check CPU utilization (usage) and IO-Wait
+title: CPU utilization and IO-Wait
 agents: openvms
-catalog: 
+catalog: os/kernel
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

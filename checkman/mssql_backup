@@ -1,6 +1,6 @@
-title: Check last successful backup of MSSQL tablespaces
+title: Last successful backup of MSSQL tablespaces
 agents: windows
-catalog: 
+catalog: app/mssql
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

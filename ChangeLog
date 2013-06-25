@@ -56,6 +56,8 @@
     * Rules: Renamed "Ignored services" to "Disabled services"
              Renamed "Ignored checks" to "Disabled checks"
     * Sorter Host IP address: fixed sorting, no longer uses str compare on ip
+    * Views: New: Draw rule editor icon in multisite views (default off)
+             Can be activated in global settings
 
     WATO:
     * Allow to configure check-/retry_interval in second precision

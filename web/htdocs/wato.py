@@ -10052,7 +10052,7 @@ def mode_rulesets(phase):
 
     html.write('</div>')
 
-def create_new_rule_form(rulespec, hostname = None, item = None):
+def create_new_rule_form(rulespec, hostname = None, item = None, varname = None):
     html.begin_form("new_rule", add_transid = False)
 
     html.write('<table>')
@@ -10077,13 +10077,24 @@ def create_new_rule_form(rulespec, hostname = None, item = None):
 
     html.select("rule_folder", folder_selection(g_root_folder))
     html.write('</td></tr></table>\n')
-    html.hidden_field("varname", html.var("varname"))
+    html.hidden_field("varname", varname)
     html.hidden_field("mode", "new_rule")
     html.end_form()
 
 def mode_edit_ruleset(phase):
     varname = html.var("varname")
-    rulespec = g_rulespecs[varname]
+    
+    if html.var("check_command"):
+        check_command = html.var("check_command")
+        checks = check_mk_local_automation("get-check-information")
+        if check_command.startswith("check_mk-"):
+            check_command = check_command[9:]
+            varname = "checkgroup_parameters:" + checks[check_command].get("group","")
+        elif check_command.startswith("check_mk_active-"):
+            check_command = check_command[16:].split(" ")[0][:-1]
+            varname = "active_checks:" + check_command
+
+    rulespec = g_rulespecs.get(varname)
     hostname = html.var("host", "")
     if html.has_var("item"):
         item = mk_eval(html.var("item"))
@@ -10097,6 +10108,9 @@ def mode_edit_ruleset(phase):
             hostname = None # host not found. Should not happen
 
     if phase == "title":
+        if not rulespec:
+            text = html.var("service_description") or varname
+            return _("No available rule for service %s at host %s") % (text, hostname)
         title = rulespec["title"]
         if hostname:
             title += _(" for host %s") % hostname
@@ -10106,18 +10120,23 @@ def mode_edit_ruleset(phase):
 
     elif phase == "buttons":
         global_buttons()
-        group = rulespec["group"].split("/")[0]
-        groupname = g_rulegroups[group][0]
-        html.context_button(groupname,
-              make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
-        html.context_button(_("Used Rulesets"),
-              make_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
+        if not rulespec:
+            html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
+        else:
+            group = rulespec["group"].split("/")[0]
+            groupname = g_rulegroups[group][0]
+            html.context_button(groupname,
+                  make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
+        html.context_button(_("Used Rulesets"), 
+             make_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
         if hostname:
             html.context_button(_("Services"),
                  make_link([("mode", "inventory"), ("host", hostname)]), "back")
         return
 
     elif phase == "action":
+        if not rulespec:
+            return
         # Folder for the rule actions is defined by _folder
         rule_folder = g_folders[html.var("_folder", html.var("folder"))]
         check_folder_permissions(rule_folder, "write", True)
@@ -10167,6 +10186,11 @@ def mode_edit_ruleset(phase):
             log_pending(AFFECTED, None, "edit-ruleset",
                      _("Changed order of rules in ruleset %s") % rulespec["title"])
             return
+
+    if not rulespec:
+        text = html.var("service_description") or varname
+        html.write("<div class=info>" + _("There are no rules availabe for %s.") % text + "</div>")
+        return
 
     if not hostname:
         render_folder_path(keepvarnames = ["mode", "varname"])
@@ -10335,7 +10359,7 @@ def mode_edit_ruleset(phase):
 
         table.end()
 
-    create_new_rule_form(rulespec, hostname, item)
+    create_new_rule_form(rulespec, hostname, item, varname)
 
 
 def folder_selection(folder, depth=0):

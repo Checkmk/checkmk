@@ -1,6 +1,6 @@
 title: Uptime of ESX host system
 agents: vsphere
-catalog: 
+catalog: os/misc 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

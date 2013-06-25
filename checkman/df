@@ -1,6 +1,6 @@
-title: Check used space in filesystems
-agents: linux, windows, aix, solaris, vms
-catalog: 
+title: Used space in filesystems
+agents: linux, windows, aix, solaris, openvms, hpux, freebsd, netbsd, openbsd, macosx
+catalog: os/storage 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

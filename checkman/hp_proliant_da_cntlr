@@ -1,6 +1,6 @@
-title: Check state of raid controllers in HP Proliant servers
+title: RAID controllers in HP Proliant servers
 agents: snmp
-catalog: 
+catalog: os/storage
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk
@@ -11,7 +11,7 @@ description:
  The systems SNMP agent is extended by the HP Management Agents which need
  to be installed on the monitored systems.
 
- The check monitors the reported state of the raid controllers in
+ The check monitors the reported state of the RAID controllers in
  HP Proliant Servers.
 
  This check has been developed with ProLiant DL360 G5 systems but should work

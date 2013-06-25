@@ -1,6 +1,6 @@
-title: Check disk read and writes of DRBD devices
+title: Disk read and writes of DR:BD devices
 agents: linux
-catalog: 
+catalog: os/storage 
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

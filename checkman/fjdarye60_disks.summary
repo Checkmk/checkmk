@@ -1,6 +1,6 @@
-title: Monitor summarized status of all disks in Fujitsu ETERNUS DX storage systems
-agents: SNMP
-catalog: 
+title: Summarized status of all disks in Fujitsu ETERNUS DX storage systems
+agents: snmp
+catalog: hw/storage/fujitsu 
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

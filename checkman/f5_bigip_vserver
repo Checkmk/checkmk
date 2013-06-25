@@ -1,15 +1,16 @@
-title: Check status of virtual servers on a F5 load balancer
+title: Virtual servers on a F5 load balancer
 agents: snmp
-catalog: 
+catalog: hw/network/f5 
 author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers) for the status of any virtual server defined on them. It supports devices running the 9.0 and above releases of the F5 OS. It's tested against 9.3 devices.
+ The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic
+ managers) for the status of any virtual server defined on them. It supports
+ devices running the 9.0 and above releases of the F5 OS. It's tested against
+ 9.3 devices.
 
 inventory:
- Any virtual server that is found online will be added during inventoryy and checked for it's status. Virtual servers in the various "Warning" states will not be inventorized.
-
-
-perfdata:
- the check does not (yet) generate performance data.
+ Any virtual server that is found online will be added during inventoryy
+ and checked for it's status. Virtual servers in the various "Warning"
+ states will not be inventorized.

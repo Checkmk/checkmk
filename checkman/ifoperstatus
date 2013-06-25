@@ -1,4 +1,4 @@
-title: Check operational status of network interfaces
+title: Operational status of network interfaces (obsolete)
 agents: snmp
 catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>

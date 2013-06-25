@@ -1,11 +1,12 @@
-title: F5 Bigip Interface check
+title: Special network interfaces of F5 Big-IP
 agents: snmp
-catalog: 
+catalog: hw/network/f5 
 author: Bastian Kuhn <bk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check will monitor the special network interfaces on a F5 Bigip Device.
- He shows the current bandwhidth of the connection an detects changes of portstate
+ This check will monitor the special network interfaces on a F5 Bigip device.
+ It shows the current bandwidth of the connection an detects changes of the port state.
+
 inventory:
  Eeach interface which is up will be added as a new check.

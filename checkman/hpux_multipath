@@ -1,6 +1,6 @@
-title: Check Multipathing on HP-UX
+title: Multipathing on HP-UX
 agents: hpux
-catalog: 
+catalog: os/storage 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

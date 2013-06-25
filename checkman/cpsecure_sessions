@@ -1,6 +1,6 @@
-title: Check number of sessions on Content Security Gateway of CPSECURE (NetGear)
+title: Number of sessions on Content Security Gateway of CPSECURE (NetGear)
 agents: snmp
-catalog: 
+catalog: hw/network/netgear 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

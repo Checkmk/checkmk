@@ -1,6 +1,6 @@
-title: Monitor status of RLUNs in Fujitsu ETERNUS DX80 S2 storage systems
-agents: SNMP
-catalog: 
+title: RLUNs in Fujitsu ETERNUS DX80 S2 storage systems
+agents: snmp
+catalog: hw/storage/fujitsu 
 author: Philipp Hoefflin <hoefflin+cmk@fuh-e.de>
 license: GPLv2
 distribution: none

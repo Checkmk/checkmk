@@ -1,6 +1,6 @@
-title: Check state of logical disks of DMRaid
+title: Logical disks of DMRaid
 agents: linux
-catalog: 
+catalog: os/storage 
 author: Markus Lengler <ml@lengler-it.de>
 license: GPL
 distribution: check_mk

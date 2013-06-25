@@ -1,6 +1,6 @@
-title: Checks the temperature in Dell PowerConnect Switches
+title: Temperature in Dell PowerConnect Switches
 agents: snmp
-catalog: 
+catalog: hw/network/dell 
 author: Chris Bowlby <cbowlby@tenthpowertech.com>
 license: GPL
 distribution: check_mk

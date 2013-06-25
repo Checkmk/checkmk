@@ -213,7 +213,7 @@ multisite_sorters['svc_perf_val10'] = {
 
 # Host
 declare_1to1_sorter("alias",                  cmp_simple_string)
-declare_1to1_sorter("host_address",           cmp_simple_string)
+declare_1to1_sorter("host_address",           cmp_ip_address)
 declare_1to1_sorter("host_plugin_output",     cmp_simple_string)
 declare_1to1_sorter("host_perf_data",         cmp_simple_string)
 declare_1to1_sorter("host_check_command",     cmp_simple_string)

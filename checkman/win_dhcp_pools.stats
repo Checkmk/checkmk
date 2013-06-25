@@ -1,4 +1,4 @@
-title: Monitors the number of transactions since startup of the Windows DHCP
+title: Number of transactions since startup of the Windows DHCP
 agents: linux
 catalog: 
 author: Lars Michelsen <lm@mathias-kettner.de>

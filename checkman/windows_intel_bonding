@@ -1,4 +1,4 @@
-title: Check state of intel Bonding network interface on windows
+title: Intel Bonding network interface on windows
 agents: linux
 catalog: 
 author: Andreas Boesl <ab@mathias-kettner.de>

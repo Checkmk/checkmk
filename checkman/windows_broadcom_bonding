@@ -1,4 +1,4 @@
-title: Check state of broadcom Bonding network interface on windows
+title: Broadcom Bonding network interface on windows
 agents: linux
 catalog: 
 author: Andreas Boesl <ab@mathias-kettner.de>

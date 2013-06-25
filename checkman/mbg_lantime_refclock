@@ -1,6 +1,6 @@
-title: Checks reflock state of Meinberg LANTIME devices
+title: Reflock state of Meinberg LANTIME devices
 agents: snmp
-catalog: 
+catalog: hw/misc
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

@@ -1,6 +1,6 @@
-title: Check usage of Vmalloc address space
+title: Usage of Vmalloc address space
 agents: linux
-catalog: 
+catalog: os/kernel
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

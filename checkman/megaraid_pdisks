@@ -1,6 +1,6 @@
-title: Check state of physical disks of LSI MegaRAID
+title: State of physical disks of LSI MegaRAID
 agents: linux
-catalog: 
+catalog: os/storage
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

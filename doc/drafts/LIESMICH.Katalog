@@ -17,6 +17,7 @@ app "Applications"
       tablespace,e.tg... (pro Check die OS auflisten)
    apache "Apache"
    java "Java application server, etc."
+   mailman
 
 hw
    network "Networking"
@@ -32,7 +33,7 @@ hw
    power "USV und PDUs"
    server (Blade-Center, IMM, RSA, FSC ServerView-Agent)
        ibm "IBM"
-   Sonstige Hardware
+   misc "Sonstige Hardware"
        Meinberg-Uhr (GPS-Uhr)
        Klimageräte
    storage Storage (FibreChannel, NetApp, FJDARY, Tape, iSCSI-Storage)

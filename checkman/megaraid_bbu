@@ -1,4 +1,4 @@
-title: Check state of battery backup unit (BBU) on LSI MegaRAID
+title: State of battery backup unit (BBU) on LSI MegaRAID
 agents: linux
 catalog: 
 author: Florian Heigl <fh@mathias-kettner.de>

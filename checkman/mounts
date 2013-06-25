@@ -1,4 +1,4 @@
-title: Check options of mounted filesystems
+title: Options of mounted filesystems
 agents: linux
 catalog: 
 author: Mathias Kettner <mk@mathias-kettner.de>

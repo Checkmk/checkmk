@@ -219,6 +219,25 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "display_date_in_dashboard",
+    Dictionary(
+        title = _("Display date in dashboard"),
+        help = _("When enabled, the dashboard headline also displays "\
+                 "the date in addition the time "),
+        label = _("Draw date"),
+        elements = [
+            ("format", DropdownChoice(
+                    title = _("Display date in dashboard"),
+                    label = _("Date format"),
+                    choices = [
+                        ('yyyy-mm-dd', _("YYYY-MM-DD")),
+                        ('dd.mm.yyyy', _("DD.MM.YYYY")),
+                    ],
+                    default_value = 'yyyy-mm-dd'))
+        ]),
+    domain = "multisite")
+
+register_configvar(group,
     "multisite_draw_ruleicon",
     Checkbox(title = _("Draw WATO rule editor icon for services"),
              label = _("Draw rule editor icon"),

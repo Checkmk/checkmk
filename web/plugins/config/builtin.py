@@ -183,6 +183,9 @@ multisite_draw_ruleicon = False
 # Default downtime configuration
 default_downtime = {}
 
+# Display dashboard date
+display_date_in_dashboard = {}
+
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )
 #    | | | / __|/ _ \ '__| | | |  _ \

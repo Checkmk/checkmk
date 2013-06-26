@@ -283,22 +283,22 @@ register_configvar(group,
     "default_downtime",
     Dictionary(
         title = _("Default downtime settings"),
-        help  = _("This setting allows to set a default downtime comment and duration. "\
+        help  = _("This setting allows to set a default downtime comment and the duration for the button <i>From now for...</i>. "\
                   "The schedule downtime formular uses these values as default. "),
+        optional_keys = False,
         elements = [
             ("duration", Integer(
                 title = _("Duration"),
                 help  = _("The duration in minutes of the default downtime"),
                 minvalue = 1,
                 unit  = _("minutes"),
-                default_value = 120,
+                default_value = 60,
                 )),
-            ("comment", TextAscii(
+            ("comment", TextUnicode(
                 title = _("Downtime comment"),
                 help    = _("The default comment for a downtime. "\
                             "You can use the placeholders %(user)s and %(duration)s "\
                             "which will replaced when the downtime command is sent"),
-                default_value = _("Downtime of %(duration)s minutes triggered by %(user)s"),
                 size = 80
                 )),
         ],

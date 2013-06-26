@@ -5510,7 +5510,7 @@ def mode_edit_configvar(phase):
     is_on_default = varname not in current_settings
 
     if phase == "action":
-        if html.var("reset"):
+        if html.var("_reset"):
             if not isinstance(valuespec, Checkbox):
                 c = wato_confirm(
                     _("Resetting configuration variable"),
@@ -5574,7 +5574,7 @@ def mode_edit_configvar(phase):
     html.button("save", _("Save"))
     if allow_reset and not is_on_default:
         curvalue = current_settings[varname]
-        html.button("reset", curvalue == defvalue and _("Remove explicit setting") or _("Reset to default"))
+        html.button("_reset", curvalue == defvalue and _("Remove explicit setting") or _("Reset to default"))
     html.hidden_fields()
     html.end_form()
 

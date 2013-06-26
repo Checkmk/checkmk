@@ -219,22 +219,18 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
-    "display_date_in_dashboard",
-    Dictionary(
-        title = _("Display date in dashboard"),
-        help = _("When enabled, the dashboard headline also displays "\
-                 "the date in addition the time "),
-        label = _("Draw date"),
-        elements = [
-            ("format", DropdownChoice(
-                    title = _("Display date in dashboard"),
-                    label = _("Date format"),
-                    choices = [
-                        ('yyyy-mm-dd', _("YYYY-MM-DD")),
-                        ('dd.mm.yyyy', _("DD.MM.YYYY")),
-                    ],
-                    default_value = 'yyyy-mm-dd'))
-        ]),
+    "pagetitle_date_format",
+    DropdownChoice(
+        title = _("Date format for page titles"),
+        help = _("When enabled, the headline of each page also displays "\
+                 "the date in addition the time."),
+        choices = [
+            (None,         _("Do not display a date")),
+            ('yyyy-mm-dd', _("YYYY-MM-DD")),
+            ('dd.mm.yyyy', _("DD.MM.YYYY")),
+        ],
+        default_value = None
+    ),
     domain = "multisite")
 
 register_configvar(group,

@@ -184,7 +184,7 @@ multisite_draw_ruleicon = False
 default_downtime = {}
 
 # Display dashboard date
-display_date_in_dashboard = {}
+pagetitle_date_format = None
 
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )

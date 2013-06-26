@@ -887,8 +887,8 @@ class html:
                    'onclick="this.innerHTML=\'%s\'; document.location.reload();">%s</a></td>' %
                    (_("Reloading..."), title))
         self.write('<td style="min-width:240px" class=right><span id=headinfo></span>%s &nbsp; ' % login_text)
-        if config.display_date_in_dashboard.get("format"):
-            self.write(' &nbsp; <b id=headerdate format="%s"></b>' % config.display_date_in_dashboard["format"])
+        if config.pagetitle_date_format:
+            self.write(' &nbsp; <b id=headerdate format="%s"></b>' % config.pagetitle_date_format)
         self.write(' <b id=headertime></b>') 
         self.write("<script language=\"javascript\" type=\"text/javascript\">updateHeaderTime()</script>")
         try:

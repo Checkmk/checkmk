@@ -591,6 +591,7 @@ def automation_get_check_information():
         checks[check_type] = { "title" : title }
         if check["group"]:
             checks[check_type]["group"] = check["group"]
+        checks[check_type]["service_description"] = check.get("service_description","%s")
         checks[check_type]["snmp"] = check_uses_snmp(check_type)
     return checks
 

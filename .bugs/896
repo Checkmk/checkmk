@@ -1,0 +1,10 @@
+Title: Perf-O-Meter of oracle_tablespaces broken
+Component: checks
+State: open
+Date: 2013-06-26 11:59:45
+Targetversion: 1.2.3
+Class: bug
+
+Perfdata is e.g. size=709911117824;652298158080;688536944640;; used=663243390976;;;; max_size=724775731200;;;;
+Checkouput look OK (size 661.16GB, used 617.69GB, max 675.00GB)
+Perfometer show 709911117824%

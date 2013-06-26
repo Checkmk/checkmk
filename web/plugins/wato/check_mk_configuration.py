@@ -265,6 +265,33 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "default_downtime",
+    Dictionary(
+        title = _("Default downtime settings"),
+        help  = _("This setting allows to set a default downtime comment and duration. "\
+                  "The schedule downtime formular uses these values as default. "),
+        elements = [
+            ("duration", Integer(
+                title = _("Duration"),
+                help  = _("The duration in minutes of the default downtime"),
+                minvalue = 1,
+                unit  = _("minutes"),
+                default_value = 120,
+                )),
+            ("comment", TextAscii(
+                title = _("Downtime comment"),
+                help    = _("The default comment for a downtime. "\
+                            "You can use the placeholders %(user)s and %(duration)s "\
+                            "which will replaced when the downtime command is sent"),
+                default_value = _("Downtime of %(duration)s minutes triggered by %(user)s"),
+                size = 80
+                )),
+        ],
+    ),
+    domain = "multisite",
+)
+
+register_configvar(group,
     "wato_activation_method",
     DropdownChoice(
         title = _("WATO restart mode for Nagios"),

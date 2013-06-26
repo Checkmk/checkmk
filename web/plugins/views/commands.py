@@ -377,6 +377,10 @@ def command_downtime(cmdtag, spec, row):
 
     if down_to:
         comment = html.var_utf8("_down_comment")
+        try: # Catch formatting errors
+            comment = comment % { "user": config.user_id, "duration": int(down_to - down_from) }
+        except:
+            pass
         if not comment:
             raise MKUserError("_down_comment", _("You need to supply a comment for your downtime."))
         if html.var("_down_flexible"):
@@ -414,8 +418,15 @@ def get_child_hosts(site, hosts, recurse):
     return list(new_childs)
 
 def paint_downtime_buttons(what):
+    downtime_duration = config.default_downtime.get("duration", 60)
+    downtime_comment  = config.default_downtime.get("comment", "")
+    html.button("_down_from_now", _("From now for"))
+    html.write("&nbsp;")
+    html.number_input("_down_minutes", downtime_duration, size=4, submit="_down_from_now")
+    html.write("&nbsp; " + _("minutes"))
+    html.write("<hr>")
     html.write(_('Downtime Comment')+": ")
-    html.text_input("_down_comment", size=40, submit="")
+    html.text_input("_down_comment", downtime_comment, size=60, submit="")
     html.write("<hr>")
     html.button("_down_2h", _("2 hours"))
     html.button("_down_today", _("Today"))
@@ -429,11 +440,6 @@ def paint_downtime_buttons(what):
     html.datetime_input("_down_from", time.time(), submit="_down_custom")
     html.write("&nbsp; "+_('to')+" &nbsp;")
     html.datetime_input("_down_to", time.time() + 7200, submit="_down_custom")
-    html.write("<hr>")
-    html.button("_down_from_now", _("From now for"))
-    html.write("&nbsp;")
-    html.number_input("_down_minutes", 60, size=4, submit="_down_from_now")
-    html.write("&nbsp; " + _("minutes"))
     html.write("<hr>")
     html.checkbox("_down_flexible", False, label=_('flexible with max. duration')+" ")
     html.time_input("_down_duration", 2, 0)

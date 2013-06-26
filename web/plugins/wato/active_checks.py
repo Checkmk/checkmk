@@ -786,8 +786,8 @@ register_rule(group,
               Tuple(
                   title = _("Levels for used disk space"),
                   elements = [
-                      Percentage(title = _("Warning at"), default_value = 85, unit=_("% used space")),
-                      Percentage(title = _("Critical at"), default_value = 95, unit=_("% used space")),
+                      Percentage(title = _("Warning at"), default_value = 85, unit=_("% used space"), allow_int = True),
+                      Percentage(title = _("Critical at"), default_value = 95, unit=_("% used space"), allow_int = True),
                   ]
             )),
             ( "auth",

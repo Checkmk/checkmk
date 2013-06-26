@@ -11407,8 +11407,8 @@ def Levels(**kwargs):
               Tuple(
                   title = _("Fixed Levels"),
                   elements = [
-                      Float(unit = unit, title = _("Warning at"), default_value = default_levels[0], accept_int = True),
-                      Float(unit = unit, title = _("Critical at"), default_value = default_levels[1], accept_int = True),
+                      Float(unit = unit, title = _("Warning at"), default_value = default_levels[0], allow_int = True),
+                      Float(unit = unit, title = _("Critical at"), default_value = default_levels[1], allow_int = True),
                   ],
               ),
               PredictiveLevels(

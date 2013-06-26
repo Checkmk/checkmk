@@ -177,6 +177,9 @@ selection_livetime  = 3600
 # Configure HTTP header to read usernames from
 auth_by_http_header = False
 
+# Add an icon pointing to the WATO rule to each service
+multisite_draw_ruleicon = False
+
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )
 #    | | | / __|/ _ \ '__| | | |  _ \

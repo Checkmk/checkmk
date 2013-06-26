@@ -38,6 +38,7 @@
     * ps.perf: Support Windows with new plugin "psperf.bat". wmicchecks.bat
                is obsolete now.
     * Special Agent vSphere: support ESX 4.1 (thanks to Mirko Witt)
+    * esx_vsphere_object: make check state configurable
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

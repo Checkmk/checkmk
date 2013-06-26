@@ -34,10 +34,8 @@ register_rulegroup("checkparams", _("Parameters for Inventorized Checks"),
 group = "checkparams"
 
 subgroup_networking =   _("Networking")
-# subgroup_windows =      _("Windows")
 subgroup_storage =      _("Storage, Filesystems and Files")
 subgroup_os =           _("Operating System Resources")
-# subgroup_time =         _("Time synchronization")
 subgroup_printing =     _("Printers")
 subgroup_environment =  _("Temperature, Humidity, etc.")
 subgroup_applications = _("Applications, Processes &amp; Services")
@@ -1621,6 +1619,57 @@ register_check_parameters(
           Percentage(title = _("Warning at a RAM usage of"), default_value = 80.0),
           Percentage(title = _("Critical at a RAM usage of"), default_value = 90.0)]),
     None, None
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "esx_vsphere_objects",
+    _("State of ESX hosts and virtual machines"),
+    Dictionary(
+        help = _("Usually the check goes to WARN if a VM or host is powered off and OK otherwise. "
+                 "You can change this behaviour on a per-state-base here."),
+        optional_keys = False,
+        elements = [
+           ( "states", 
+             Dictionary(
+                 title = _("Target states"),
+                 optional_keys = False,
+                 elements = [
+                     ( "poweredOn", 
+                       MonitoringState(
+                           title = _("Powered ON"),
+                           help = _("Check result if the host or VM is powered on"),
+                           default_value = 0,
+                       )
+                    ),
+                    ( "poweredOff", 
+                       MonitoringState(
+                           title = _("Powered OFF"),
+                           help = _("Check result if the host or VM is powered off"),
+                           default_value = 1,
+                       )
+                    ),
+                    ( "suspended", 
+                       MonitoringState(
+                           title = _("Suspended"),
+                           help = _("Check result if the host or VM is suspended"),
+                           default_value = 1,
+                       )
+                    ),
+                 ]
+              )
+           ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the VM/HostSystem"),
+        help = _("Please do not forget to specify either <tt>VM</tt> or <tt>HostSystem</tt>. Example: <tt>VM abcsrv123</tt>. Also note, "
+                 "that we match the <i>beginning</i> of the name."),
+        regex = "(^VM|HostSystem)( .*|$)",
+        regex_error = _("The name of the system must begin with <tt>VM</tt> or <tt>HostSystem</tt>."),
+        allow_empty = False,
+    ),
+    "dict",
 )
 
 register_check_parameters(

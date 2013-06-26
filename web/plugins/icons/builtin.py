@@ -127,7 +127,7 @@ def paint_rule_editor(what, row, tags, custom_vars):
                                                  ("check_command", row["service_check_command"]),
                                                  ("service_description", row["service_description"]),
                                                  ("host", row["host_name"])], "wato.py")
-                title = _("Edit rule for %s") % check_command
+                title = _("Edit check parameters for this service")
                 return '<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' % \
                         (url, title)
 

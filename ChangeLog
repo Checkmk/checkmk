@@ -39,6 +39,7 @@
                is obsolete now.
     * Special Agent vSphere: support ESX 4.1 (thanks to Mirko Witt)
     * esx_vsphere_object: make check state configurable
+    * mk_logwatch: support continuation lines with 'A'. Please refer to docu.
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

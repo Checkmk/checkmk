@@ -29,7 +29,7 @@
 import sys, os, re, time
 import glob
 
-if '-d' in sys.argv[1:]:
+if '-d' in sys.argv[1:] or '--debug' in sys.argv[1:]:
     tty_red     = '\033[1;31m'
     tty_green   = '\033[1;32m'
     tty_yellow  = '\033[1;33m'
@@ -42,7 +42,7 @@ else:
     tty_yellow  = ''
     tty_blue    = ''
     tty_normal  = ''
-    debug = False 
+    debug = False
 
 # The configuration file and status file are searched
 # in the directory named by the environment variable
@@ -54,7 +54,7 @@ if not logwatch_dir:
     logwatch_dir = os.getenv("MK_CONFDIR")
     if not logwatch_dir:
         logwatch_dir = "."
-    
+
 print "<<<logwatch>>>"
 
 config_filename = logwatch_dir + "/logwatch.cfg"
@@ -70,61 +70,68 @@ def is_not_comment(line):
 def parse_filenames(line):
     return line.split()
 
-def parse_pattern(line):
-    level, pattern = line.split(None, 1)
-    if level == 'R':
-        return False
+def parse_pattern(level, pattern):
+    if level not in [ 'C', 'W', 'I', 'O' ]:
+        raise(Exception("Invalid pattern line '%s'" % line))
     try:
         compiled = re.compile(pattern)
     except:
         raise(Exception("Invalid regular expression in line '%s'" % line))
-    if level not in [ 'R','C', 'W', 'I', 'O' ]:
-        raise(Exception("Invalid pattern line '%s'" % line))
     return (level, compiled)
 
 def read_config():
     config_lines = [ line.rstrip() for line in filter(is_not_comment, file(config_filename).readlines()) ]
-    #Add config from a logwatch.d folder
+    # Add config from a logwatch.d folder
     for config_file in glob.glob(config_dir):
         config_lines += [ line.rstrip() for line in filter(is_not_comment, file(config_file).readlines()) ]
 
     have_filenames = False
     config = []
-    # Line starts with whitespace -> pattern line
-    # otherwise -> file name line
-    count_lines = 1
-    max_lines = len(config_lines)
+
     for line in config_lines:
         rewrite = False
-        if line[0].isspace():
+        if line[0].isspace(): # pattern line
             if not have_filenames:
                 raise Exception("Missing logfile names")
-            if count_lines < max_lines:
-                try:
-                    level, tmp_rewrite = config_lines[count_lines].split(None,1)
-                except:
-                    level = "Nein"
-                if level == 'R':
-                    rewrite = tmp_rewrite
-            pattern = parse_pattern(line)
-            if pattern:
-                patterns.append((pattern[0], pattern[1], rewrite))
-        else:
+            level, pattern = line.split(None, 1)
+            if level == 'A':
+                cont_list.append(parse_cont_pattern(pattern))
+            elif level == 'R':
+                rewrite_list.append(pattern)
+            else:
+                level, compiled = parse_pattern(level, pattern)
+                cont_list = [] # List of continuation patterns
+                rewrite_list = [] # List of rewrite patterns
+                patterns.append((level, compiled, cont_list, rewrite_list))
+        else: # filename line
             patterns = []
             config.append((parse_filenames(line), patterns))
             have_filenames = True
-        count_lines += 1
     return config
+
+def parse_cont_pattern(pattern):
+    try:
+        return int(pattern)
+    except:
+        try:
+            return re.compile(pattern)
+        except:
+            if debug:
+                raise
+            raise Exception("Invalid regular expression in line '%s'" % pattern) 
 
 # structure of statusfile
 # # LOGFILE         OFFSET    INODE
 # /var/log/messages|7767698|32455445
 # /var/test/x12134.log|12345|32444355
 def read_status():
+    if debug:
+        return {}
+
     status = {}
     for line in file(status_filename):
         # TODO: Remove variants with spaces. rsplit is
-        # not portale. split fails if logfilename contains
+        # not portable. split fails if logfilename contains
         # spaces
         inode = -1
         try:
@@ -147,7 +154,24 @@ def save_status(status):
     for filename, (offset, inode) in status.items():
         f.write("%s|%d|%d\n" % (filename, offset, inode))
 
+pushed_back_line = None
+def next_line(f):
+    global pushed_back_line
+    if pushed_back_line != None:
+        line = pushed_back_line
+        pushed_back_line = None
+        return line
+    else:
+        try:
+            line = f.next()
+            return line
+        except:
+            return None
+
+
 def process_logfile(logfile, patterns):
+    global pushed_back_line
+
     # Look at which file offset we have finished scanning
     # the logfile last time. If we have never seen this file
     # before, we set the offset to -1
@@ -156,6 +180,8 @@ def process_logfile(logfile, patterns):
         fl = os.open(logfile, os.O_RDONLY)
         inode = os.fstat(fl)[1] # 1 = st_ino
     except:
+        if debug:
+            raise
         print "[[[%s:cannotopen]]]" % logfile
         return
 
@@ -202,7 +228,11 @@ def process_logfile(logfile, patterns):
     lines_parsed = 0
     start_time = time.time()
 
-    for line in f:
+    while True:
+        line = next_line(f)
+        if line == None:
+            break # End of file
+
         lines_parsed += 1
         # Check if maximum number of new log messages is exceeded
         if opt_maxlines != None and lines_parsed > opt_maxlines:
@@ -223,24 +253,45 @@ def process_logfile(logfile, patterns):
             break
 
         level = "."
-        log_line = line[:-1]
-        for lev, pattern, replace in patterns:
-            matches = pattern.search(log_line)
+        for lev, pattern, cont_patterns, replacements in patterns:
+            matches = pattern.search(line[:-1])
             if matches:
                 level = lev
                 levelint = {'C': 2, 'W': 1, 'O': 0, 'I': -1, '.': -1}[lev]
                 worst = max(levelint, worst)
-                if replace:
-                    replace_count = 1
-                    new_message = replace.replace('\\0', log_line)
-                    for replacement in matches.groups():
-                        new_message = new_message.replace('\\%d' % replace_count, replacement)
-                        replace_count += 1
-                    log_line = new_message 
-                break
+
+                # Check for continuation lines
+                for cont_pattern in cont_patterns:
+                    if type(cont_pattern) == int: # add that many lines
+                        for x in range(cont_pattern):
+                            cont_line = next_line(f)
+                            if cont_line == None: # end of file
+                                break
+                            line = line[:-1] + "\1" + cont_line 
+
+                    else: # pattern is regex
+                        while True:
+                            cont_line = next_line(f)
+                            if cont_line == None: # end of file
+                                break
+                            elif cont_pattern.search(cont_line[:-1]):
+                                line = line[:-1] + "\1" + cont_line 
+                            else:
+                                pushed_back_line = cont_line # sorry for stealing this line
+                                break
+
+                # Replacement
+                for replace in replacements:
+                    line = replace.replace('\\0', line) + "\n"
+                    for nr, group in enumerate(matches.groups()):
+                        line = line.replace('\\%d' % (nr+1), group)
+
+                break # matching rule found and executed
 
         color = {'C': tty_red, 'W': tty_yellow, 'O': tty_green, 'I': tty_blue, '.': ''}[level]
-        outputtxt += "%s%s %s%s\n" % (color, level, log_line, tty_normal)
+        if debug:
+            line = line.replace("\1", "\nCONT:")
+        outputtxt += "%s%s %s%s\n" % (color, level, line[:-1], tty_normal)
 
     new_offset = os.lseek(fl, 0, 1) # os.SEEK_CUR not available in Python 2.4
     status[logfile] = new_offset, inode
@@ -253,6 +304,8 @@ def process_logfile(logfile, patterns):
 try:
     config = read_config()
 except Exception, e:
+    if debug:
+        raise
     print "CANNOT READ CONFIG FILE: %s" % e
     sys.exit(1)
 
@@ -292,6 +345,8 @@ for filenames, patterns in config:
             else:
                 raise Exception("Invalid option %s" % key)
     except Exception, e:
+        if debug:
+            raise
         print "INVALID CONFIGURATION: %s" % e
         sys.exit(1)
 

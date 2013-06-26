@@ -220,7 +220,7 @@ def show_file(host, filename):
                 ('match', line['line']),
             ])
             html.icon_button(edit_url, _("Analyze this line"), "analyze")
-            html.write('%s</p>\n' % (htmllib.attrencode(line['line']) ))
+            html.write('%s</p>\n' % (htmllib.attrencode(line['line']).replace(" ", "&nbsp;").replace("\1", "<br>") ))
 
         html.write('</div>\n')
 

@@ -1,0 +1,10 @@
+Title: mechanize for webpage login / checks
+Component: checks
+State: open
+Date: 2013-06-26 10:51:54
+Targetversion: future
+Class: feature
+
+Python mechanize allows to simulate browser actions
+A check might search for a form, fill in values, post the form
+and evaluate the results (typical login)

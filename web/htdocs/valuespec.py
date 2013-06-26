@@ -815,7 +815,7 @@ class Float(Integer):
         Integer.__init__(self, **kwargs)
         self._decimal_separator = kwargs.get("decimal_separator", ".")
         self._display_format = kwargs.get("display_format", "%.2f")
-        self._accept_int = kwargs.get("accept_int", False)
+        self._allow_int = kwargs.get("allow_int", False)
 
     def canonical_value(self):
         return float(Integer.canonical_value(self))
@@ -832,9 +832,9 @@ class Float(Integer):
 
     def validate_datatype(self, value, varprefix):
         if type(value) != float and not \
-            (type(value) == int and self._accept_int):
+            (type(value) == int and self._allow_int):
             raise MKUserError(varprefix, _("The value %r has type %s, but must be of type float%s") %
-                 (value, type_name(value), self._accept_int and _(" or int") or ""))
+                 (value, type_name(value), self._allow_int and _(" or int") or ""))
 
 
 class Percentage(Float):

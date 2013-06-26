@@ -17,4 +17,5 @@ sudo install -m 755 src/livecheck /omd/versions/default/lib/mk-livestatus
 sudo rm -f /omd/versions/default/lib/livecheck
 sudo chmod 4755 /omd/versions/default/lib/mk-livestatus/livecheck
 echo "$C files copied"
+echo "Restarting site $SITE"
 sudo omd restart $SITE nagios

@@ -10083,23 +10083,29 @@ def create_new_rule_form(rulespec, hostname = None, item = None, varname = None)
 
 def mode_edit_ruleset(phase):
     varname = html.var("varname")
-    
+
+    item = None
     if html.var("check_command"):
         check_command = html.var("check_command")
         checks = check_mk_local_automation("get-check-information")
         if check_command.startswith("check_mk-"):
             check_command = check_command[9:]
             varname = "checkgroup_parameters:" + checks[check_command].get("group","")
+            descr_pattern  = checks[check_command]["service_description"].replace("%s", "(.*)")
+            matcher = re.search(descr_pattern, html.var("service_description"))
+            if matcher:
+                item = matcher.group(1)
         elif check_command.startswith("check_mk_active-"):
             check_command = check_command[16:].split(" ")[0][:-1]
             varname = "active_checks:" + check_command
 
     rulespec = g_rulespecs.get(varname)
     hostname = html.var("host", "")
-    if html.has_var("item"):
-        item = mk_eval(html.var("item"))
-    else:
-        item = NO_ITEM
+    if not item:
+        if html.has_var("item"):
+            item = mk_eval(html.var("item"))
+        else:
+            item = NO_ITEM
 
     if hostname:
         hosts = load_hosts(g_folder)
@@ -11401,8 +11407,8 @@ def Levels(**kwargs):
               Tuple(
                   title = _("Fixed Levels"),
                   elements = [
-                      Float(unit = unit, title = _("Warning at"), default_value = default_levels[0], accept_int = True),
-                      Float(unit = unit, title = _("Critical at"), default_value = default_levels[1], accept_int = True),
+                      Float(unit = unit, title = _("Warning at"), default_value = default_levels[0], allow_int = True),
+                      Float(unit = unit, title = _("Critical at"), default_value = default_levels[1], allow_int = True),
                   ],
               ),
               PredictiveLevels(

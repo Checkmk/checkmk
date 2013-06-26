@@ -61,6 +61,7 @@
     * Sorter Host IP address: fixed sorting, no longer uses str compare on ip
     * Views: New: Draw rule editor icon in multisite views (default off)
              Can be activated in global settings
+    * New global multisite option: Default downtime duration and comment
 
     WATO:
     * Allow to configure check-/retry_interval in second precision

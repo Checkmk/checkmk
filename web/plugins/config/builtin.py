@@ -180,6 +180,9 @@ auth_by_http_header = False
 # Add an icon pointing to the WATO rule to each service
 multisite_draw_ruleicon = False
 
+# Default downtime configuration
+default_downtime = {}
+
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )
 #    | | | / __|/ _ \ '__| | | |  _ \

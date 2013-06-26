@@ -62,6 +62,7 @@
 
     WATO:
     * Allow to configure check-/retry_interval in second precision
+    * FIX: do validation of check items in rule editor
 
     Notifications:
     * Flexible Notification can now filter service levels

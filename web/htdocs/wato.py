@@ -10654,7 +10654,9 @@ def get_rule_conditions(ruleset):
                 itemspec = ListChoice(choices = itemenum, columns = 3)
                 item_list = [ x+"$" for x in itemspec.from_html_vars("item") ]
             else:
-                item_list = ListOfStrings().from_html_vars("itemlist")
+                vs = ListOfStrings(valuespec = ruleset["itemspec"])
+                item_list = vs.from_html_vars("itemlist")
+                vs.validate_value(item_list, "itemlist")
 
             if len(item_list) == 0:
                 raise MKUserError("item_0", _("Please specify at least one %s or "
@@ -11173,13 +11175,14 @@ g_rulespecs = {}
 g_rulespec_group = {} # for conveniant lookup
 g_rulespec_groups = [] # for keeping original order
 def register_rule(group, varname, valuespec = None, title = None,
-                  help = None, itemtype = None, itemname = None,
+                  help = None, itemspec = None, itemtype = None, itemname = None,
                   itemhelp = None, itemenum = None,
                   match = "first", optional = False):
     ruleset = {
         "group"     : group,
         "varname"   : varname,
         "valuespec" : valuespec,
+        "itemspec"  : itemspec, # original item spec, e.g. if validation is needed
         "itemtype"  : itemtype, # None, "service", "checktype" or "checkitem"
         "itemname"  : itemname, # e.g. "mount point"
         "itemhelp"  : itemhelp, # a description of the item, only rarely used
@@ -11223,7 +11226,9 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, 
             varname = "checkgroup_parameters:%s" % checkgroup,
             title = title,
             valuespec = valuespec,
-            itemtype = itemtype, itemname = itemname,
+            itemspec = itemspec,
+            itemtype = itemtype, 
+            itemname = itemname,
             itemhelp = itemhelp,
             itemenum = itemenum,
             match = matchtype)

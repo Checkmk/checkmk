@@ -289,16 +289,14 @@ register_configvar(group,
         elements = [
             ("duration", Integer(
                 title = _("Duration"),
-                help  = _("The duration in minutes of the default downtime"),
+                help  = _("The duration in minutes of the default downtime."),
                 minvalue = 1,
                 unit  = _("minutes"),
                 default_value = 60,
                 )),
             ("comment", TextUnicode(
                 title = _("Downtime comment"),
-                help    = _("The default comment for a downtime. "\
-                            "You can use the placeholders %(user)s and %(duration)s "\
-                            "which will replaced when the downtime command is sent"),
+                help    = _("The default comment for a downtime."),
                 size = 80
                 )),
         ],

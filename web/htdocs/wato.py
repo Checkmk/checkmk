@@ -10986,7 +10986,7 @@ def page_user_profile():
     users = userdb.load_users()
     user = users.get(config.user_id)
     if user == None:
-        html.warning(_("Sorry, your user account does not exist."))
+        html.show_warning(_("Sorry, your user account does not exist."))
         html.footer()
         return
 

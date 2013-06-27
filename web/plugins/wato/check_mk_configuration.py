@@ -433,7 +433,7 @@ register_configvar(group,
                 totext = _("Don't use persistent LDAP connections."),
             )),
             ("connect_timeout", Float(
-                title = _("LDAP Connect Timeout (sec)"),
+                title = _("Connect Timeout (sec)"),
                 help = _("Timeout for the initial connection to the LDAP server in seconds."),
                 minvalue = 1.0,
                 default_value = 2.0,
@@ -456,7 +456,7 @@ register_configvar(group,
                 ],
             )),
             ("bind", Tuple(
-                title = _("LDAP Bind Credentials"),
+                title = _("Bind Credentials"),
                 help  = _("Set the credentials to be used to connect to the LDAP server. The "
                           "used account must not be allowed to do any changes in the directory "
                           "the whole connection is read only. "
@@ -479,14 +479,14 @@ register_configvar(group,
                 ],
             )),
             ("page_size", Integer(
-                title = _("LDAP Page Size"),
+                title = _("Page Size"),
                 help = _("LDAP searches can be performed in paginated mode, for example to improve "
                          "the performance. This enables pagination and configures the size of the pages."),
                 minvalue = 1,
                 default_value = 100,
             )),
             ("response_timeout", Integer(
-                title = _("LDAP Response Timeout (sec)"),
+                title = _("Response Timeout (sec)"),
                 help = _("Timeout for LDAP query responses."),
                 minvalue = 0,
                 default_value = 5,

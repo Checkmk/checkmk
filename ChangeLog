@@ -11,6 +11,7 @@
     * Predictive monitoring: correctly handle spaces in variable names (thanks
        to Karl Golland)
     * New man page browser for console (cmk -m)
+    * livestatus: new service column staleness: indicator outdated service checks
 
     Checks & Agents:
     * esx_hostystem multipath: criticize standby paths only if not equal to active paths

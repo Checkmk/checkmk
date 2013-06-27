@@ -478,8 +478,21 @@ register_configvar(group,
                     ),
                 ],
             )),
+            ("page_size", Integer(
+                title = _("LDAP Page Size"),
+                help = _("LDAP searches can be performed in paginated mode, for example to improve "
+                         "the performance. This enables pagination and configures the size of the pages."),
+                minvalue = 1,
+                default_value = 100,
+            )),
+            ("response_timeout", Integer(
+                title = _("LDAP Response Timeout (sec)"),
+                help = _("Timeout for LDAP query responses."),
+                minvalue = 0,
+                default_value = 5,
+            )),
         ],
-        optional_keys = ['no_persistent', 'use_ssl', 'bind', ],
+        optional_keys = ['no_persistent', 'use_ssl', 'bind', 'page_size', 'response_timeout'],
     ),
     domain = "multisite",
 )

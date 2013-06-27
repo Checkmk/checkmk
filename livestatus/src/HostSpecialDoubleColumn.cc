@@ -22,44 +22,22 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "ServiceSpecialDoubleColumn.h"
+#include "HostSpecialDoubleColumn.h"
 #include "nagios.h"
 #include "logger.h"
 #include "time.h"
 
-double ServiceSpecialDoubleColumn::getValue(void *data)
+double HostSpecialDoubleColumn::getValue(void *data)
 {
     data = shiftPointer(data);
     if (!data) return 0;
 
-    service *svc = (service *)data;
+    host *hst  = (host *)data;
+
     switch (_type) {
-        case SSDC_STALENESS:
+        case HSDC_STALENESS:
         {
-        	bool is_cmk_passive = !strncmp(svc->check_command_ptr->name, "check_mk-", 9);
-
-        	time_t check_result_age = time(0) - svc->last_check;
-        	service *tmp_svc;
-
-        	// check_mk PASSIVE CHECK: Find check-mk service and get its check interval
-        	if (is_cmk_passive) {
-        		host *host = svc->host_ptr;
-        		servicesmember *svc_member = host->services;
-        		double check_interval = 1;
-        		while (svc_member != 0) {
-        			tmp_svc = svc_member->service_ptr;
-        			if (!strncmp(tmp_svc->check_command_ptr->name, "check-mk", 9)) {
-        				check_interval = tmp_svc->check_interval * 60;
-                		return check_result_age / check_interval;
-        			}
-        			svc_member = svc_member->next;
-        		}
-        		return 1; // Shouldnt happen! We always except check-mk service
-        	}
-        	else // Other non-cmk passive and active checks
-        	{
-        		return check_result_age / ((svc->check_interval == 0 ? 1 : svc->check_interval) * 60);
-        	}
+        	return (time(0) - hst->last_check) / ((hst->check_interval == 0 ? 1 : hst->check_interval) * 60);
         }
     }
     return -1; // Never reached

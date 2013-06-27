@@ -68,6 +68,7 @@
 
     WATO:
     * Allow to configure check-/retry_interval in second precision
+    * vSphere secret is not shown to the user via WATO anymore
     * FIX: do validation of check items in rule editor
 
     Notifications:

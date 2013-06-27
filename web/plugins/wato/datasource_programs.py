@@ -56,7 +56,7 @@ register_rule(group,
               )
             ),
             ( "secret",
-              TextAscii(
+              Password(
                   title = _("vSphere secret"),
                   allow_empty = False,
               )

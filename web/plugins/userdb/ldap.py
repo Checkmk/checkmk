@@ -31,6 +31,15 @@ try:
     # docs: http://www.python-ldap.org/doc/html/index.html
     import ldap
     import ldap.filter
+    from ldap.controls import SimplePagedResultsControl
+
+    # be compatible to both python-ldap below 2.4 and above
+    try:
+        LDAP_CONTROL_PAGED_RESULTS = ldap.LDAP_CONTROL_PAGE_OID
+        ldap_compat = False
+    except:
+        LDAP_CONTROL_PAGED_RESULTS = ldap.CONTROL_PAGEDRESULTS
+        ldap_compat = True
 except:
     pass
 from lib import *
@@ -180,6 +189,68 @@ def ldap_bind(username, password, catch = True):
         else:
             raise
 
+def ldap_async_search(base, scope, filt, columns):
+    ldap_log('  ASYNC SEARCH')
+    # issue the ldap search command (async)
+    msgid = ldap_connection.search_ext(base, scope, filt, columns)
+
+    results = []
+    while True:
+        restype, resdata = ldap_connection.result(msgid = msgid,
+            timeout = config.ldap_connection.get('response_timeout', 5))
+
+        results.extend(resdata)
+        if restype == ldap.RES_SEARCH_RESULT or not resdata:
+            break
+
+        # no limit at the moment
+        #if sizelimit and len(users) >= sizelimit:
+        #    ldap_connection.abandon_ext(msgid)
+        #    break
+        time.sleep(0.1)
+
+    return results
+
+def ldap_paged_async_search(base, scope, filt, columns):
+    ldap_log('  PAGED ASYNC SEARCH')
+    page_size = config.ldap_connection.get('page_size', 100)
+
+    if ldap_compat:
+        lc = SimplePagedResultsControl(size = page_size, cookie = '')
+    else:
+        lc = SimplePagedResultsControl(
+            LDAP_CONTROL_PAGED_RESULTS, True, (page_size, '')
+        )
+
+    results = []
+    while True:
+        # issue the ldap search command (async)
+        msgid = ldap_connection.search_ext(base, scope, filt, columns, serverctrls = [lc])
+
+        unused_code, response, unused_msgid, serverctrls = ldap_connection.result3(
+            msgid = msgid, timeout = config.ldap_connection.get('response_timeout', 5)
+        )
+
+        for result in response:
+            results.append(result)
+
+        # Mark current position in pagination control for next loop
+        cookie = None
+        for serverctrl in serverctrls:
+            if serverctrl.controlType == LDAP_CONTROL_PAGED_RESULTS:
+                if ldap_compat:
+                    cookie = serverctrl.cookie
+                    if cookie:
+                        lc.cookie = cookie
+                else:
+                    cookie = serverctrl.controlValue[1]
+                    if cookie:
+                        lc.controlValue = (page_size, cookie)
+                break
+        if not cookie:
+            break
+    return results
+
 def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
     if scope:
         config_scope = scope
@@ -196,14 +267,17 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
     ldap_log('LDAP_SEARCH "%s" "%s" "%s" "%r"' % (base, scope, filt, columns))
     start_time = time.time()
 
-    # Convert all keys to lower case!
     result = []
     try:
-        for dn, obj in ldap_connection.search_s(base, scope, filt, columns):
+
+        search_func = config.ldap_connection.get('page_size') \
+                      and ldap_paged_async_search or ldap_async_search
+        for dn, obj in search_func(base, scope, filt, columns):
             if dn is None:
                 continue # skip unwanted answers
             new_obj = {}
             for key, val in obj.iteritems():
+                # Convert all keys to lower case!
                 new_obj[key.lower().decode('utf-8')] = [ i.decode('utf-8') for i in val ]
             result.append((dn, new_obj))
     except ldap.NO_SUCH_OBJECT, e:

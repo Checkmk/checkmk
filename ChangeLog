@@ -11,6 +11,8 @@
     * Predictive monitoring: correctly handle spaces in variable names (thanks
        to Karl Golland)
     * New man page browser for console (cmk -m)
+    * livestatus: new service column staleness: indicator for outdated service checks
+    * livestatus: new host    column staleness: indicator for outdated host checks
 
     Checks & Agents:
     * esx_hostystem multipath: criticize standby paths only if not equal to active paths
@@ -63,8 +65,12 @@
              Can be activated in global settings
     * New global multisite options: Default downtime duration and comment
                                     Display current date in dashboard
+    * LDAP: Using asynchronous searches / added optional support for paginated
+      searches (Can be enabled in connection settings)
+
     WATO:
     * Allow to configure check-/retry_interval in second precision
+    * vSphere secret is not shown to the user via WATO anymore
     * FIX: do validation of check items in rule editor
 
     Notifications:
@@ -217,6 +223,7 @@
 1.2.2p3:
     Checks & Agents:
     * FIX: winperf_processor: fix case where CPU percent is exactly 100%
+    * FIX: blade_powerfan: fix mixup of default levels 50/40 -> 40/50
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration

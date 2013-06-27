@@ -289,16 +289,14 @@ register_configvar(group,
         elements = [
             ("duration", Integer(
                 title = _("Duration"),
-                help  = _("The duration in minutes of the default downtime"),
+                help  = _("The duration in minutes of the default downtime."),
                 minvalue = 1,
                 unit  = _("minutes"),
                 default_value = 60,
                 )),
             ("comment", TextUnicode(
                 title = _("Downtime comment"),
-                help    = _("The default comment for a downtime. "\
-                            "You can use the placeholders %(user)s and %(duration)s "\
-                            "which will replaced when the downtime command is sent"),
+                help    = _("The default comment for a downtime."),
                 size = 80
                 )),
         ],
@@ -433,7 +431,7 @@ register_configvar(group,
                 totext = _("Don't use persistent LDAP connections."),
             )),
             ("connect_timeout", Float(
-                title = _("LDAP Connect Timeout (sec)"),
+                title = _("Connect Timeout (sec)"),
                 help = _("Timeout for the initial connection to the LDAP server in seconds."),
                 minvalue = 1.0,
                 default_value = 2.0,
@@ -456,7 +454,7 @@ register_configvar(group,
                 ],
             )),
             ("bind", Tuple(
-                title = _("LDAP Bind Credentials"),
+                title = _("Bind Credentials"),
                 help  = _("Set the credentials to be used to connect to the LDAP server. The "
                           "used account must not be allowed to do any changes in the directory "
                           "the whole connection is read only. "
@@ -478,8 +476,21 @@ register_configvar(group,
                     ),
                 ],
             )),
+            ("page_size", Integer(
+                title = _("Page Size"),
+                help = _("LDAP searches can be performed in paginated mode, for example to improve "
+                         "the performance. This enables pagination and configures the size of the pages."),
+                minvalue = 1,
+                default_value = 100,
+            )),
+            ("response_timeout", Integer(
+                title = _("Response Timeout (sec)"),
+                help = _("Timeout for LDAP query responses."),
+                minvalue = 0,
+                default_value = 5,
+            )),
         ],
-        optional_keys = ['no_persistent', 'use_ssl', 'bind', ],
+        optional_keys = ['no_persistent', 'use_ssl', 'bind', 'page_size', 'response_timeout'],
     ),
     domain = "multisite",
 )

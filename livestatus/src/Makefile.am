@@ -43,8 +43,8 @@ livestatus_so_SOURCES = \
 	Query.cc ServiceContactsColumn.cc ServicegroupsColumn.cc ServicelistColumn.cc \
 	ServicelistColumnFilter.cc ServicelistStateColumn.cc store.cc Store.cc \
 	StringColumn.cc StringColumnFilter.cc strutil.cc Table.cc TableColumns.cc \
-	TableCommands.cc TableContacts.cc TableDownComm.cc TableHostgroups.cc \
-	TableHosts.cc TableServicegroups.cc TableServices.cc TableStatus.cc  \
+	HostSpecialDoubleColumn.cc TableCommands.cc TableContacts.cc TableDownComm.cc TableHostgroups.cc \
+	ServiceSpecialDoubleColumn.cc TableHosts.cc TableServicegroups.cc TableServices.cc TableStatus.cc  \
 	LogEntry.cc LogCache.cc Logfile.cc TableStateHistory.cc TableLog.cc TableTimeperiods.cc TableContactgroups.cc \
 	ContactgroupsMemberColumn.cc OffsetStringMacroColumn.cc OffsetStringServiceMacroColumn.cc \
 	OffsetStringHostMacroColumn.cc StatsColumn.cc IntAggregator.cc CountAggregator.cc \

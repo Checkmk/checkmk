@@ -36,10 +36,12 @@ PATH=$JAVA_HOME/bin:$PATH
 
 echo "<<<jar_signature>>>"
 for JAR in $JAR_PATH; do
-    echo "[[[${JAR##*/}]]]"
-    OUTPUT=$(jarsigner -verify -verbose -certs "$JAR")
-    LINE=$(echo "$OUTPUT" | grep -n ^s | tail -n1 | cut -d: -f1)
-    echo "$(echo "$OUTPUT" | tail -n +$LINE)"
-    echo 
+    if [ -e "$JAR" ] ; then # avoid entry for '*.jar'
+        echo "[[[${JAR##*/}]]]"
+        OUTPUT=$(jarsigner -verify -verbose -certs "$JAR")
+        LINE=$(echo "$OUTPUT" | grep -n ^s | tail -n1 | cut -d: -f1)
+        echo "$(echo "$OUTPUT" | tail -n +$LINE)"
+        echo 
+    fi
 done
 

@@ -664,8 +664,9 @@ class ListOfStrings(ValueSpec):
     def validate_value(self, value, vp):
         if len(value) == 0 and not self._allow_empty:
             raise MKUserError(vp + "_0", _("Please specify at least one value"))
-        for nr, s in enumerate(value):
-            self._valuespec.validate_value(s, vp + "_%d" % nr)
+        if self._valuespec:
+            for nr, s in enumerate(value):
+                self._valuespec.validate_value(s, vp + "_%d" % nr)
         ValueSpec.custom_validate(self, value, vp)
 
 # Generic list-of-valuespec ValueSpec with Javascript-based

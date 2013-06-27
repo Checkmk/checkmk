@@ -15,7 +15,7 @@ item:
 
 inventory:
  All present fans are detected automatically and parameterized with
- levels at 50/40% of maximum speed.
+ levels at 50 (WARN) and 40 (CRIT) percent of maximum speed.
 
 perfdata:
   Two values: The current percentage of the maximum design speed and the

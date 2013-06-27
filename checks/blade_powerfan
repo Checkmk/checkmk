@@ -26,7 +26,7 @@
 
 
 def inventory_blade_powerfan(info):
-    return [ (line[0], '(40, 50)') for line in info if line[0] != '' and line[1] == '1' ]
+    return [ (line[0], '(50, 40)') for line in info if line[0] != '' and line[1] == '1' ]
 
 def check_blade_powerfan(item, params, info):
     warn_perc, crit_perc = params

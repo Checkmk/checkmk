@@ -377,10 +377,6 @@ def command_downtime(cmdtag, spec, row):
 
     if down_to:
         comment = html.var_utf8("_down_comment")
-        try: # Catch formatting errors
-            comment = comment % { "user": config.user_id, "duration": int(down_to - down_from) }
-        except:
-            pass
         if not comment:
             raise MKUserError("_down_comment", _("You need to supply a comment for your downtime."))
         if html.var("_down_flexible"):

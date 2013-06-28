@@ -1,0 +1,54 @@
+os "Betriebsysstem"
+   linux "Linux" (automatisch eingefügt aus agent:)
+      ps "Processes" (ps, services, job)
+      files "Files" (fileage, filecount, Logfiles und Eventlogs)
+
+      storage "Storage" (df, Multipath, ZFS, mounts, Disk IO, Raid?, Software-RAID (MegaCli, cfggen))
+      network "Networking" (lnx_if, Bonding, ..)
+      kernel "CPU, Memory and Kernel Performance" (Kontextwechsel, Memory, CPU, Swap, etc..., Prozesserzeugungen)
+      hardware "Hardware" (IPMI)
+      services (Operating System Services and Daemons)
+      misc ("Sonstiges")
+
+app "Applications"
+   omd "OMD / Check_MK"
+      "livestatu_status, omd"
+   apache "Apache"
+   java "Java application server, etc."
+   mailman
+   weblogic
+   sap
+   exchange
+   postfix
+ggf. db "Databases"
+   db2
+   ORACLE:
+      tablespace,e.tg... (pro Check die OS auflisten)
+   mssql
+   mysql
+   postgresql
+
+hw
+   network "Networking"
+      generic Generic
+         Interfaces
+         Uptime
+         SNMP Info
+      cisco "Cisco"
+      bintec "BINTEC"...
+      h3c "H3C and 3COM"
+
+   printer "Drucker"
+   power "USV und PDUs"
+   server (Blade-Center, IMM, RSA, FSC ServerView-Agent)
+       ibm "IBM"
+   misc "Sonstige Hardware"
+       Meinberg-Uhr (GPS-Uhr)
+       Klimageräte
+   storage Storage (FibreChannel, NetApp, FJDARY, Tape, iSCSI-Storage)
+      brocade
+   Telefonie
+   "environment" Umgebungssensoren
+   SNMP-Agent auf Betriebssystem für HW
+
+generic (mrpe, local, ...)

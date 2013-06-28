@@ -1,5 +1,6 @@
-title: Monitor client status on CISCO Aironet access points
+title: Client status on CISCO Aironet access points
 agents: snmp
+catalog: hw/network/cisco
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

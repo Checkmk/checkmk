@@ -1,5 +1,6 @@
-title: Check performance indicators of Apache web server
+title: Performance indicators of Apache web server
 agents: linux
+catalog: app/apache
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

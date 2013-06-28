@@ -1,5 +1,6 @@
-title: Show printed pages of printers using PRINTER-MIB
+title: Number of printed pages on printers using PRINTER-MIB
 agents: snmp
+catalog: hw/printer
 author: Peter Lauk <lauk@stuttgart-airport.com>
 license: GPL
 distribution: check_mk

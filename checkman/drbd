@@ -1,5 +1,6 @@
-title: Check general state of DRBD devices
+title: General state of DR:BD devices
 agents: linux
+catalog: os/storage 
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

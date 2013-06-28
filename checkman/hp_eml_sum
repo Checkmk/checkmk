@@ -1,5 +1,6 @@
-title: Monitor summary status of HP StorageWorks EML E-Series enterprise tape library
-agents: SNMP
+title: Summary status of HP StorageWorks EML E-Series enterprise tape library
+agents: snmp
+catalog: hw/storagehw/hp 
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

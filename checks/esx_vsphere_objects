@@ -40,7 +40,7 @@
 # virtualmachine  OpenSUSE_I
 
 vsphere_object_names = {
-    "hostsystem" : "HostSystem",
+    "hostsystem"     : "HostSystem",
     "virtualmachine" : "VM",
 }
 
@@ -55,21 +55,37 @@ vsphere_object_names = {
 #   '----------------------------------------------------------------------'
 
 def inventory_esx_vsphere_objects(info):
-    return [ (vsphere_object_names[line[0]] + " " + line[1], None) for line in info ]
+    return [ (vsphere_object_names[line[0]] + " " + line[1], {}) for line in info ]
 
-def check_esx_vsphere_objects(item, _no_params, info):
+# params is a dict with the allowed target states for the systems
+# Example:
+# params = {
+#   "states" : {
+#        "poweredOn" : 0,
+#        "poweredOff" : 0,
+#        "suspended" : 3,
+#   }
+# }
+
+
+def check_esx_vsphere_objects(item, params, info):
+    if params == None:
+        params = {}
+
     for line in info:
         if vsphere_object_names[line[0]] + " " + line[1] == item and len(line) > 3:
             running_on = line[2]
             power_state = line[3]
-            if power_state == "poweredOn":
-                state = 0
-            elif power_state == "poweredOff":
-                state = 1
-            elif power_state == "suspended":
-                state = 1
-            else:
-                state = 3
+            state = params.get("states",{}).get(power_state)
+            if state == None:
+                if power_state == "poweredOn":
+                    state = 0
+                elif power_state == "poweredOff":
+                    state = 1
+                elif power_state == "suspended":
+                    state = 1
+                else:
+                    state = 3
             infotext = "power state: %s" % power_state
             if running_on:
                 if state == 0:
@@ -91,6 +107,7 @@ check_info['esx_vsphere_objects'] = {
   "inventory_function"  : inventory_esx_vsphere_objects,
   "check_function"      : check_esx_vsphere_objects,
   "service_description" : "%s",
+  "group"               : "esx_vsphere_objects",
 }
 
 #   .--Cluster-------------------------------------------------------------.

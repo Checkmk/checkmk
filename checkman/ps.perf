@@ -1,11 +1,16 @@
 title: Check for running process and send additional performance data
 agents: linux
+catalog: os/ps
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
  This check does exactly the same as {ps}, but in addition
  outputs performance data. Please refer to the manpage of {ps} for more details.
+
+ Note: If you want to use {ps.perf} on Windows systems then you need to install
+ the plugin {psperf.bat} into the {plugins} directory of you Windows agent.
+ Do not use {wmicchecks.bat}. This is obsolete.
 
 perfdata:
  In all cases the number of matching running processes found on the target

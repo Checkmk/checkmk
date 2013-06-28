@@ -34,8 +34,7 @@
 # hostname, servicedesc, hoststate, servicestate, output in
 # the form %(variable)s
 
-import pprint
-import urllib
+import pprint, urllib, select
 
 # Default settings
 notification_logdir   = var_dir + "/notify"
@@ -322,45 +321,106 @@ def do_notify(args):
             os.makedirs(crash_dir)
         file(crash_dir + "/crash.log", "a").write("CRASH:\n%s\n\n" % format_exception())
 
+
+def notify_data_available():
+    readable, writeable, exceptionable = select.select([0], [], [], None)
+    return not not readable
+
+def notify_config_timestamp():
+    mtime = 0
+    for dirpath, dirnames, filenames in os.walk(check_mk_configdir):
+        for f in filenames:
+            mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
+    mtime = max(mtime, os.stat(default_config_dir + "/main.mk").st_mtime)
+    try:
+        mtime = max(mtime, os.stat(default_config_dir + "/final.mk").st_mtime)
+    except:
+        pass
+    try:
+        mtime = max(mtime, os.stat(default_config_dir + "/local.mk").st_mtime)
+    except:
+        pass
+    return mtime
+
+
+
 def notify_keepalive():
+    global g_notify_readahead_buffer
+    g_notify_readahead_buffer = ""
+    config_timestamp = notify_config_timestamp()
+
     while True:
         try:
-            notify_notify()
+            # If the configuration has changed, we do a restart. But we do
+            # this check just before the next notification arrives. We must
+            # *not* read data from stdin, just peek! On the other hand we
+            # must *not* restart when there is danger that the buffered
+            # sys.stdin has already read data from the next notification. That
+            # would get lost! So we do restart if:
+            # - The last time we look *no* data was available on stdin.
+            # - Now there *is* data available
+            # - The buffer of stdin is empty
+            # - The timestamp of the youngest configuration file has changed.
+            if notify_data_available():
+                if not g_notify_readahead_buffer:
+                    current_config_timestamp = notify_config_timestamp()
+                    if current_config_timestamp > config_timestamp:
+                        notify_log("Configuration has changed. Restarting myself.")
+                        os.execvp("cmk", sys.argv)
+
+                new_data = os.read(0, 20000)
+                if not new_data:
+                    sys.exit(0) # closed stdin
+                g_notify_readahead_buffer += new_data
+                if g_notify_readahead_buffer.startswith('\n\n'):
+                    sys.exit(0)
+                while '\n\n' in g_notify_readahead_buffer:
+                    notify_notify()
         except Exception, e:
             if opt_debug:
                 raise
             notify_log("ERROR %s\n%s" % (e, format_exception()))
 
+# Note: The values of the context are *always* unicode!
 def notify_get_context():
+    global g_notify_readahead_buffer
     if opt_keepalive:
-        # Context read from stdin, variables with NOTIFY_ prefix. End of 
-        # block is by empty line
+        # Context is line-by-line in g_notify_readahead_buffer
+        this_part, rest = g_notify_readahead_buffer.split('\n\n', 1)
+        g_notify_readahead_buffer = rest
         context = {}
-        while True:
-            try:
-                line = sys.stdin.readline()
-                if not line:
-                    sys.exit(0) # End of transmission
-                line = line.strip()
-                if not line:
-                    return context # End of this notification
-                else:
-                    varname, value = line.split("=", 1)
-                    context[varname] = value
-            except Exception, e:
-                if opt_debug:
-                    raise
+        try:
+            for line in this_part.split('\n'):
+                varname, value = line.strip().split("=", 1)
+                context[varname] = value
+        except Exception, e: # line without '=' ignored or alerted
+            if opt_debug:
+                raise
+        return context
+
     else:
         # Information about notification is excpected in the
         # environment in variables with the prefix NOTIFY_
-        context = dict([
-            (var[7:], value.decode("utf-8"))
+        return dict([
+            (var[7:], value)
             for (var, value)
             in os.environ.items()
             if var.startswith("NOTIFY_")
                 and not re.match('^\$[A-Z]+\$$', value)])
-        return context
 
+
+def convert_context_to_unicode(context):
+    # Convert all values to unicode
+    for key, value in context.iteritems():
+        if type(value) == str:
+            try:
+                value_unicode = value.decode("utf-8")
+            except:
+                try:
+                    value_unicode = value.decode("latin-1")
+                except:
+                    value_unicode = u"(Invalid byte sequence)"
+            context[key] = value_unicode
 
 def notify_notify():
     context = notify_get_context()
@@ -404,6 +464,8 @@ def notify_notify():
         context['LASTHOSTSTATECHANGE_REL'] = get_readable_rel_date(context['LASTHOSTSTATECHANGE'])
     if context['WHAT'] != 'HOST' and 'LASTSERVICESTATECHANGE' in context:
         context['LASTSERVICESTATECHANGE_REL'] = get_readable_rel_date(context['LASTSERVICESTATECHANGE'])
+
+    convert_context_to_unicode(context)
 
     if notification_logging >= 2:
         notify_log("Notification context:\n"
@@ -472,16 +534,16 @@ def should_notify(context, entry):
     if entry.get("only_hosts"):
         hostname = context.get("HOSTNAME")
         if hostname not in entry["only_hosts"]:
-            notify_log(" - Skipping: host '%s' matches non of %s" % (hostname, ", ".join(entry["only_hosts"])))
+            notify_log(" - Skipping: host '%s' matches none of %s" % (hostname, ", ".join(entry["only_hosts"])))
             return False
 
     # Check if the host has to be in a special service_level
     if "match_sl" in entry:
         from_sl, to_sl = entry['match_sl']
-        if context['WHAT'] == "SERVICE":
-            sl = saveint(context['SVC_SL'])
+        if context['WHAT'] == "SERVICE" and context.get('SVC_SL','').isdigit():
+            sl = saveint(context.get('SVC_SL'))
         else:
-            sl = saveint(context['HOST_SL'])
+            sl = saveint(context.get('HOST_SL'))
 
         if sl < from_sl or sl > to_sl: 
             notify_log(" - Skipping: service level %d not between %d and %d" % (sl, from_sl, to_sl))
@@ -507,7 +569,7 @@ def should_notify(context, entry):
                     skip = negate
                     break
             if skip:
-                notify_log(" - Skipping: service '%s' matches non of %s" % (
+                notify_log(" - Skipping: service '%s' matches none of %s" % (
                     servicedesc, ", ".join(entry["only_services"])))
                 return False
 
@@ -573,7 +635,7 @@ def call_notification_script(plugin, parameters, context, write_into_spoolfile):
     # Export complete context to have all vars in environment.
     # Existing vars are replaced, some already existing might remain
     for key in context:
-        os.putenv('NOTIFY_' + key, context[key].encode('utf-8'))
+        os.putenv('NOTIFY_' + key, context[key].encode('utf-8')) 
 
     # Remove service macros for host notifications
     if context['WHAT'] == 'HOST':

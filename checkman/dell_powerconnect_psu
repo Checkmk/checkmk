@@ -1,5 +1,6 @@
-title: Checks the PSU sensors on Dell PowerConnect Switches
+title: Power supply sensors on Dell PowerConnect Switches
 agents: snmp
+catalog: hw/network/dell
 author: Chris Bowlby <cbowlby@tenthpowertech.com>
 license: GPL
 distribution: check_mk

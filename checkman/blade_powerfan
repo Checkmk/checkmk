@@ -1,5 +1,6 @@
-title: Monitor power module cooling devices of an IBM blade center
+title: Power module cooling devices of an IBM blade center
 agents: snmp
+catalog: hw/server/ibm
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
@@ -15,7 +16,7 @@ item:
 
 inventory:
  All present fans are detected automatically and parameterized with
- levels at 50/40% of maximum speed.
+ levels at 50 (WARN) and 40 (CRIT) percent of maximum speed.
 
 perfdata:
   Two values: The current percentage of the maximum design speed and the

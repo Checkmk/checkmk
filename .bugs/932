@@ -1,0 +1,16 @@
+Title: Percentage valuespec not constistent
+Component: wato
+State: open
+Date: 2013-06-26 10:44:31
+Targetversion: future
+Class: bug
+
+The validate_datatype() is not always called on creating rules
+
+active_checks.py active_checks:disk_smb
+Remove allow_int from Levels for used disk space Percentages
+Create rule in WATO -> Warning
+
+check_parameters.py filesystem_elements
+Remove allow_int from trend_perc
+Create rule in WATO -> No Warning (int not allowed)

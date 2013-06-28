@@ -1,5 +1,6 @@
-title: Check memory module status using IPMI via freeipmi
+title: Memory module status using IPMI via freeipmi
 agents: linux
+catalog: os/hardware 
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

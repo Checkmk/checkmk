@@ -1,16 +1,18 @@
 1.2.3i2:
     Core:
     * New option -B for just generating the configuration
-
-    Multisite:
-    * User accounts can now be locked after a specified amount of auth
-      failures (lock_on_logon_failures can be set to a number of tries)
-    * FIX: better error message in case of exception in SNMP handling
-    * Column Perf-O-Meter is now sortable: it sorts after the *first*
-      performance value. This might not always be the one you like, but
-      its far better than nothing.
-    * logwatch: Logwatch icon no longer uses notes_url
-    * check_mk-if.pnp: fixed bug with pnp template on esx hosts without perfdata
+    * Introduced persistent host address lookup cache to prevent issues
+      loading an unchanged configuration after a single address is not resolvable anymore
+    * Assigning a service to a cluster host no longer requires a reinventory
+    * Setting a check_type or service to ignore no longer requires a reinventory
+      Note: If the ignore rule is removed the services will reappear
+    * Config creation: The ignore services rule now also applies to custom, active
+                       and legacy checks
+    * Predictive monitoring: correctly handle spaces in variable names (thanks
+       to Karl Golland)
+    * New man page browser for console (cmk -m)
+    * livestatus: new service column staleness: indicator for outdated service checks
+    * livestatus: new host    column staleness: indicator for outdated host checks
 
     Checks & Agents:
     * esx_hostystem multipath: criticize standby paths only if not equal to active paths
@@ -18,11 +20,6 @@
     * check_mk: Re-inventory is no longer required when a service is ignored via rule
     * check_mk: Now possible to assign services to clusters without the need to
                 reinventorize
-
-    WATO:
-    * Allow to configure check-/retry_interval in second precision
-
-    Checks & Agents:
     * lnx_if: Fixed crash on missing "Address" field
     * viprinet_router: Now able to set required target state via rule
     * windows_agent: Now available as 64 bit version
@@ -35,6 +32,47 @@
     * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
     * fileinfo: no longer inventorize missing files(reported by windows agent)
     * Add: Checks for Brocade FAN, Temperatur and Power
+    * cluster hosts: removed agent version output from Check_MK service (this
+      was misleading for different agent versions on multiple nodes)
+    * job check: better handling of unexpected agent output
+    * lnx_thermal: Added check for linux thermal sensors (e.g. acpi)
+    * hwg_temp: Make WATO-Rule "Room Temperature" match, add man page, graph
+                and Perf-O-Meter
+    * ps.perf: Support Windows with new plugin "psperf.bat". wmicchecks.bat
+               is obsolete now.
+    * Special Agent vSphere: support ESX 4.1 (thanks to Mirko Witt)
+    * esx_vsphere_object: make check state configurable
+    * mk_logwatch: support continuation lines with 'A'. Please refer to docu.
+
+    Notifications:
+    * notify.py: Matching service level: Use the hosts service level if a
+                 service has no service level set
+
+    Multisite:
+    * User accounts can now be locked after a specified amount of auth
+      failures (lock_on_logon_failures can be set to a number of tries)
+    * FIX: better error message in case of exception in SNMP handling
+    * Column Perf-O-Meter is now sortable: it sorts after the *first*
+      performance value. This might not always be the one you like, but
+      its far better than nothing.
+    * logwatch: Logwatch icon no longer uses notes_url
+    * check_mk-if.pnp: fixed bug with pnp template on esx hosts without perfdata
+    * Fix: Inventory screen: Now shows custom checks
+    * Inventory screen: Host inventory also displays its clustered services
+    * Rules: Renamed "Ignored services" to "Disabled services"
+             Renamed "Ignored checks" to "Disabled checks"
+    * Sorter Host IP address: fixed sorting, no longer uses str compare on ip
+    * Views: New: Draw rule editor icon in multisite views (default off)
+             Can be activated in global settings
+    * New global multisite options: Default downtime duration and comment
+                                    Display current date in dashboard
+    * LDAP: Using asynchronous searches / added optional support for paginated
+      searches (Can be enabled in connection settings)
+
+    WATO:
+    * Allow to configure check-/retry_interval in second precision
+    * vSphere secret is not shown to the user via WATO anymore
+    * FIX: do validation of check items in rule editor
 
     Notifications:
     * Flexible Notification can now filter service levels
@@ -44,6 +82,7 @@
     * New global setting "force message archiving", converts the EC into
       a kind of syslog archive
     * FIX: fix layout of filter for history action type
+    * FIX: better detect non-IP-number hosts in hostname translation
 
 1.2.3i1:
     Core:
@@ -180,6 +219,20 @@
     * New rule for notification_options of hosts and services
     * FIX: Rulesets: correct display of rules within subfolders
     * Remove Notification Command user settings, please use flexible notifications instead
+
+
+1.2.2p3:
+    Checks & Agents:
+    * FIX: winperf_processor: fix case where CPU percent is exactly 100%
+    * FIX: blade_powerfan: fix mixup of default levels 50/40 -> 40/50
+
+    Multisite:
+    * FIX: LDAP: Disabling use of referrals in active directory configuration
+    * FIX: Fixed missing roles in auth.php (in some cases) which resulted in
+           non visible pnp graphs and missing nagvis permissions
+
+    WATO:
+    * FIX: fix layout of Auxiliary tags table
 
 
 1.2.2p2:

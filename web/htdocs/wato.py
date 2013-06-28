@@ -2216,11 +2216,13 @@ def show_service_table(host, firsttime):
         ( _("Available (missing) services"), "new", firsttime ),
         ( _("Already configured services"), "old", True, ),
         ( _("Obsolete services (being checked, but should be ignored)"), "obsolete", True ),
-        ( _("Ignored services (configured away by admin)"), "ignored", False ),
+        ( _("Disabled services (configured away by admin)"), "ignored", None),
         ( _("Vanished services (checked, but no longer exist)"), "vanished", True ),
         ( _("Active checks"), "active", None ),
         ( _("Manual services (defined in main.mk)"), "manual", None ),
-        ( _("Legacy services (defined in main.mk)"), "legacy", None )
+        ( _("Legacy services (defined in main.mk)"), "legacy", None ),
+        ( _("Custom checks (defined via rule)"), "custom", None ),
+        ( _("Clustered services (located on cluster host)"), "clustered", None )
         ]:
         first = True
         trclass = "even"
@@ -5508,7 +5510,7 @@ def mode_edit_configvar(phase):
     is_on_default = varname not in current_settings
 
     if phase == "action":
-        if html.var("reset"):
+        if html.var("_reset"):
             if not isinstance(valuespec, Checkbox):
                 c = wato_confirm(
                     _("Resetting configuration variable"),
@@ -5572,7 +5574,7 @@ def mode_edit_configvar(phase):
     html.button("save", _("Save"))
     if allow_reset and not is_on_default:
         curvalue = current_settings[varname]
-        html.button("reset", curvalue == defvalue and _("Remove explicit setting") or _("Reset to default"))
+        html.button("_reset", curvalue == defvalue and _("Remove explicit setting") or _("Reset to default"))
     html.hidden_fields()
     html.end_form()
 
@@ -7441,9 +7443,6 @@ def cmc_rush_ahead_activation():
                     log_commit_pending()
                     html.final_javascript("wato_hide_changes_button();")
                     return True
-                else:
-                    html.write("MIST: mtime_rush ist %r, mtime_pend ist %r" % 
-                        (mtime_rush, mtime_pend))
             except Exception, e:
                 if config.debug:
                     raise
@@ -10053,7 +10052,7 @@ def mode_rulesets(phase):
 
     html.write('</div>')
 
-def create_new_rule_form(rulespec, hostname = None, item = None):
+def create_new_rule_form(rulespec, hostname = None, item = None, varname = None):
     html.begin_form("new_rule", add_transid = False)
 
     html.write('<table>')
@@ -10078,18 +10077,35 @@ def create_new_rule_form(rulespec, hostname = None, item = None):
 
     html.select("rule_folder", folder_selection(g_root_folder))
     html.write('</td></tr></table>\n')
-    html.hidden_field("varname", html.var("varname"))
+    html.hidden_field("varname", varname)
     html.hidden_field("mode", "new_rule")
     html.end_form()
 
 def mode_edit_ruleset(phase):
     varname = html.var("varname")
-    rulespec = g_rulespecs[varname]
+
+    item = None
+    if html.var("check_command"):
+        check_command = html.var("check_command")
+        checks = check_mk_local_automation("get-check-information")
+        if check_command.startswith("check_mk-"):
+            check_command = check_command[9:]
+            varname = "checkgroup_parameters:" + checks[check_command].get("group","")
+            descr_pattern  = checks[check_command]["service_description"].replace("%s", "(.*)")
+            matcher = re.search(descr_pattern, html.var("service_description"))
+            if matcher:
+                item = matcher.group(1)
+        elif check_command.startswith("check_mk_active-"):
+            check_command = check_command[16:].split(" ")[0][:-1]
+            varname = "active_checks:" + check_command
+
+    rulespec = g_rulespecs.get(varname)
     hostname = html.var("host", "")
-    if html.has_var("item"):
-        item = mk_eval(html.var("item"))
-    else:
-        item = NO_ITEM
+    if not item:
+        if html.has_var("item"):
+            item = mk_eval(html.var("item"))
+        else:
+            item = NO_ITEM
 
     if hostname:
         hosts = load_hosts(g_folder)
@@ -10098,6 +10114,9 @@ def mode_edit_ruleset(phase):
             hostname = None # host not found. Should not happen
 
     if phase == "title":
+        if not rulespec:
+            text = html.var("service_description") or varname
+            return _("No available rule for service %s at host %s") % (text, hostname)
         title = rulespec["title"]
         if hostname:
             title += _(" for host %s") % hostname
@@ -10107,18 +10126,23 @@ def mode_edit_ruleset(phase):
 
     elif phase == "buttons":
         global_buttons()
-        group = rulespec["group"].split("/")[0]
-        groupname = g_rulegroups[group][0]
-        html.context_button(groupname,
-              make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
-        html.context_button(_("Used Rulesets"),
-              make_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
+        if not rulespec:
+            html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
+        else:
+            group = rulespec["group"].split("/")[0]
+            groupname = g_rulegroups[group][0]
+            html.context_button(groupname,
+                  make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
+        html.context_button(_("Used Rulesets"), 
+             make_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
         if hostname:
             html.context_button(_("Services"),
                  make_link([("mode", "inventory"), ("host", hostname)]), "back")
         return
 
     elif phase == "action":
+        if not rulespec:
+            return
         # Folder for the rule actions is defined by _folder
         rule_folder = g_folders[html.var("_folder", html.var("folder"))]
         check_folder_permissions(rule_folder, "write", True)
@@ -10168,6 +10192,11 @@ def mode_edit_ruleset(phase):
             log_pending(AFFECTED, None, "edit-ruleset",
                      _("Changed order of rules in ruleset %s") % rulespec["title"])
             return
+
+    if not rulespec:
+        text = html.var("service_description") or varname
+        html.write("<div class=info>" + _("There are no rules availabe for %s.") % text + "</div>")
+        return
 
     if not hostname:
         render_folder_path(keepvarnames = ["mode", "varname"])
@@ -10336,7 +10365,7 @@ def mode_edit_ruleset(phase):
 
         table.end()
 
-    create_new_rule_form(rulespec, hostname, item)
+    create_new_rule_form(rulespec, hostname, item, varname)
 
 
 def folder_selection(folder, depth=0):
@@ -10631,7 +10660,9 @@ def get_rule_conditions(ruleset):
                 itemspec = ListChoice(choices = itemenum, columns = 3)
                 item_list = [ x+"$" for x in itemspec.from_html_vars("item") ]
             else:
-                item_list = ListOfStrings().from_html_vars("itemlist")
+                vs = ListOfStrings(valuespec = ruleset["itemspec"])
+                item_list = vs.from_html_vars("itemlist")
+                vs.validate_value(item_list, "itemlist")
 
             if len(item_list) == 0:
                 raise MKUserError("item_0", _("Please specify at least one %s or "
@@ -11150,13 +11181,14 @@ g_rulespecs = {}
 g_rulespec_group = {} # for conveniant lookup
 g_rulespec_groups = [] # for keeping original order
 def register_rule(group, varname, valuespec = None, title = None,
-                  help = None, itemtype = None, itemname = None,
+                  help = None, itemspec = None, itemtype = None, itemname = None,
                   itemhelp = None, itemenum = None,
                   match = "first", optional = False):
     ruleset = {
         "group"     : group,
         "varname"   : varname,
         "valuespec" : valuespec,
+        "itemspec"  : itemspec, # original item spec, e.g. if validation is needed
         "itemtype"  : itemtype, # None, "service", "checktype" or "checkitem"
         "itemname"  : itemname, # e.g. "mount point"
         "itemhelp"  : itemhelp, # a description of the item, only rarely used
@@ -11200,7 +11232,9 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, 
             varname = "checkgroup_parameters:%s" % checkgroup,
             title = title,
             valuespec = valuespec,
-            itemtype = itemtype, itemname = itemname,
+            itemspec = itemspec,
+            itemtype = itemtype, 
+            itemname = itemname,
             itemhelp = itemhelp,
             itemenum = itemenum,
             match = matchtype)
@@ -11373,8 +11407,8 @@ def Levels(**kwargs):
               Tuple(
                   title = _("Fixed Levels"),
                   elements = [
-                      Float(unit = unit, title = _("Warning at"), default_value = default_levels[0], accept_int = True),
-                      Float(unit = unit, title = _("Critical at"), default_value = default_levels[1], accept_int = True),
+                      Float(unit = unit, title = _("Warning at"), default_value = default_levels[0], allow_int = True),
+                      Float(unit = unit, title = _("Critical at"), default_value = default_levels[1], allow_int = True),
                   ],
               ),
               PredictiveLevels(
@@ -11579,7 +11613,7 @@ def page_user_profile():
     users = userdb.load_users()
     user = users.get(config.user_id)
     if user == None:
-        html.warning(_("Sorry, your user account does not exist."))
+        html.show_warning(_("Sorry, your user account does not exist."))
         html.footer()
         return
 

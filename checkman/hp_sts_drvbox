@@ -1,5 +1,6 @@
-title: Check state of Storage System Drive Box Groups
+title: Storage System Drive Box Groups on HP Proliant Servers
 agents: snmp
+catalog: hw/server/hp
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

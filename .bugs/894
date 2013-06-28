@@ -1,0 +1,9 @@
+Title: never read automation_secret.mk from Multisite
+Component: multisite
+State: open
+Date: 2013-06-20 16:12:17
+Targetversion: future
+Class: nastiness
+
+That file should be "write only" from the point of view of Multisite
+and only be read by external skripts.

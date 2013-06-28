@@ -1,5 +1,6 @@
-title: Monitor FibreChannel ports of Brocade FC switches
+title: FibreChannel ports of Brocade FC switches
 agents: snmp
+catalog: hw/storagehw/brocade 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

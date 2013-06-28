@@ -1,5 +1,6 @@
-title: Check state of disks of 3ware ATA RAID Controller
+title: State of disks of 3ware ATA RAID Controller
 agents: linux
+catalog: os/storage
 author: Radoslav Bak <radoslaw.bak@ipopema.pl>
 license: GPL
 distribution: check_mk

@@ -1,5 +1,6 @@
-title: Monitor throughput on HP-UX LUNs
+title: Throughput on HP-UX LUNs
 agents: hpux
+catalog: os/storage 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

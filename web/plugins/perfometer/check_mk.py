@@ -275,6 +275,7 @@ perfometers["check_mk-hp_proliant_temp"] = perfometer_temperature
 perfometers["check_mk-akcp_sensor_temp"] = perfometer_temperature
 perfometers["check_mk-fsc_temp"] = perfometer_temperature
 perfometers["check_mk-viprinet_temp"] = perfometer_temperature
+perfometers["check_mk-hwg_temp"] = perfometer_temperature
 
 def perfometer_blower(row, check_command, perf_data):
     rpm = saveint(perf_data[0][1])
@@ -413,6 +414,17 @@ def perfometer_cpu_utilization(row, check_command, perf_data):
 #perfometer_linear(perc, color)
 perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-winperf_processor.util"] = perfometer_cpu_utilization
+
+def perfometer_ps_perf(row, check_command, perf_data):
+    perf_dict = dict([(p[0], float(p[1])) for p in perf_data])
+    try:
+        perc = perf_dict["pcpu"]
+        return "%.1f%%" % perc, perfometer_linear(perc, "#30ff80")
+    except:
+        return "", ""
+
+perfometers["check_mk-ps.perf"] = perfometer_ps_perf
+
 
 def perfometer_hpux_snmp_cs_cpu(row, check_command, perf_data):
     h = '<table><tr>'

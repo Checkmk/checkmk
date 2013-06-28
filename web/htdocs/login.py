@@ -183,10 +183,14 @@ def do_login():
             # False       -> failed
             result = userdb.hook_login(username, password)
             if result:
+                # use the username provided by the successful login function, this function
+                # might have transformed the username provided by the user. e.g. switched
+                # from mixed case to lower case.
+                username = result
+
                 # reset failed login counts
                 userdb.on_succeeded_login(username)
 
-                username = result
                 # The login succeeded! Now:
                 # a) Set the auth cookie
                 # b) Unset the login vars in further processing

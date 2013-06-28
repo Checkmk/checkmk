@@ -219,6 +219,31 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "pagetitle_date_format",
+    DropdownChoice(
+        title = _("Date format for page titles"),
+        help = _("When enabled, the headline of each page also displays "\
+                 "the date in addition the time."),
+        choices = [
+            (None,         _("Do not display a date")),
+            ('yyyy-mm-dd', _("YYYY-MM-DD")),
+            ('dd.mm.yyyy', _("DD.MM.YYYY")),
+        ],
+        default_value = None
+    ),
+    domain = "multisite")
+
+register_configvar(group,
+    "multisite_draw_ruleicon",
+    Checkbox(title = _("Draw WATO rule editor icon for services"),
+             label = _("Draw rule editor icon"),
+             help = _("When enabled a rule editor icon is displayed for each "
+                      "service in the multisite views. It is only displayed if the user "
+                      "does have the permission to edit rules"),
+            default_value = False),
+    domain = "multisite")
+
+register_configvar(group,
     "wato_max_snapshots",
     Integer(title = _("Number of configuration snapshots to keep"),
             help = _("Whenever you successfully activate changes a snapshot of the configuration "
@@ -253,6 +278,31 @@ register_configvar(group,
           unit = "sec",
           display_format = "%.1f"),
     domain = "multisite")
+
+register_configvar(group,
+    "default_downtime",
+    Dictionary(
+        title = _("Default downtime settings"),
+        help  = _("This setting allows to set a default downtime comment and the duration for the button <i>From now for...</i>. "\
+                  "The schedule downtime formular uses these values as default. "),
+        optional_keys = False,
+        elements = [
+            ("duration", Integer(
+                title = _("Duration"),
+                help  = _("The duration in minutes of the default downtime."),
+                minvalue = 1,
+                unit  = _("minutes"),
+                default_value = 60,
+                )),
+            ("comment", TextUnicode(
+                title = _("Downtime comment"),
+                help    = _("The default comment for a downtime."),
+                size = 80
+                )),
+        ],
+    ),
+    domain = "multisite",
+)
 
 register_configvar(group,
     "wato_activation_method",
@@ -381,7 +431,7 @@ register_configvar(group,
                 totext = _("Don't use persistent LDAP connections."),
             )),
             ("connect_timeout", Float(
-                title = _("LDAP Connect Timeout (sec)"),
+                title = _("Connect Timeout (sec)"),
                 help = _("Timeout for the initial connection to the LDAP server in seconds."),
                 minvalue = 1.0,
                 default_value = 2.0,
@@ -404,7 +454,7 @@ register_configvar(group,
                 ],
             )),
             ("bind", Tuple(
-                title = _("LDAP Bind Credentials"),
+                title = _("Bind Credentials"),
                 help  = _("Set the credentials to be used to connect to the LDAP server. The "
                           "used account must not be allowed to do any changes in the directory "
                           "the whole connection is read only. "
@@ -426,8 +476,21 @@ register_configvar(group,
                     ),
                 ],
             )),
+            ("page_size", Integer(
+                title = _("Page Size"),
+                help = _("LDAP searches can be performed in paginated mode, for example to improve "
+                         "the performance. This enables pagination and configures the size of the pages."),
+                minvalue = 1,
+                default_value = 100,
+            )),
+            ("response_timeout", Integer(
+                title = _("Response Timeout (sec)"),
+                help = _("Timeout for LDAP query responses."),
+                minvalue = 0,
+                default_value = 5,
+            )),
         ],
-        optional_keys = ['no_persistent', 'use_ssl', 'bind', ],
+        optional_keys = ['no_persistent', 'use_ssl', 'bind', 'page_size', 'response_timeout'],
     ),
     domain = "multisite",
 )
@@ -1480,8 +1543,8 @@ register_rule(group,
 
 register_rule(group,
     "ignored_services",
-    title = _("Ignored services"),
-    help = _("Services that are declared as <u>ignored</u> by this rule set will not be added "
+    title = _("Disabled services"),
+    help = _("Services that are declared as <u>disabled</u> by this rule set will not be added "
              "to a host during inventory (automatic service detection). Services that already "
              "exist will continued to be monitored but be marked as obsolete in the service "
              "list of a host."),
@@ -1490,8 +1553,8 @@ register_rule(group,
 register_rule(group,
     "ignored_checks",
     CheckTypeSelection(
-        title = _("Ignored checks"),
-        help = _("This ruleset is similar to 'Ignored services', but selects checks to be ignored "
+        title = _("Disabled checks"),
+        help = _("This ruleset is similar to 'Disabled services', but selects checks to be disabled "
                  "by their <b>type</b>. This allows you to disable certain technical implementations "
                  "such as filesystem checks via SNMP on hosts that also have the Check_MK agent "
                  "installed."),
@@ -1706,7 +1769,7 @@ register_rule(group,
                   title = _("Number of retries"),
                   help = _("The default is 5."),
                   default_value = 5,
-                  minvalue = 1,
+                  minvalue = 0,
                   maxvalue = 50,
               )
             ),

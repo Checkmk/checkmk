@@ -1,5 +1,6 @@
-title: Check CPU utilization via SNMP HOST-RESOURCES-MIB
+title: CPU utilization via SNMP HOST-RESOURCES-MIB
 agents: snmp
+catalog: os/kernel 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

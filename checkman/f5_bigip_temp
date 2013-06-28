@@ -1,5 +1,6 @@
-title: Check status of temperature sensors on F5 Big-IP
+title: Temperature sensors on F5 Big-IP
 agents: snmp
+catalog: hw/network/f5 
 author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk
@@ -10,12 +11,9 @@ description:
  It supports devices running the 9.0 and above releases of the F5 OS. It's tested against 9.3
  devices.
 
-
-
 inventory:
  The check gathers a list of internal hardware sensors.
  It labels them as either chassis or CPU sensors.
 
-
 perfdata:
- It generates performance data for the current, warning and critical temperaturs and graphs those.
+ One value: the current temperature

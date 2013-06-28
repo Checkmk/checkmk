@@ -1,5 +1,6 @@
-title: Check uptime of Java application server via JMX and j4p.war
+title: Uptime of Java application server via JMX and j4p.war
 agents: linux
+catalog: app/java
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

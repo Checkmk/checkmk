@@ -1,5 +1,6 @@
-title: Check CPU usage (utilisation) via SNMP from UCD daemon
+title: CPU utilization via SNMP from UCD daemon
 agents: snmp
+catalog: os/kernel
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

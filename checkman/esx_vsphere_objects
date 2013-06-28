@@ -1,5 +1,6 @@
-title: Check completeness of output of ESX special agent
+title: Location and state of VMs and host systems and VMWare ESX
 agents: vsphere
+catalog: os/misc
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
@@ -9,12 +10,25 @@ description:
  be used for determining the architecture of a VMWare farm out of the monitoring
  data.
 
- The check will get critical if a host system or virtual machine, that was once
- present, is now missing.
+ The check will get warning if a host or VM is powered off or suspended. But
+ this can be configured via a check parameter.
 
 inventory:
- One service per hostsystem and per VM will be created.
+ One service per hostsystem and per VM will be created, regardless of its state.
 
 item:
  The text {HostSystem} or {VM} followed by a space followed by the name of the host system
  or VM.
+
+examples:
+ # Allow VMs beginning with "testvm" to be powered off.
+ check_parameters = [
+   ( { "states" : { "poweredOff" : 0 } }, [ "esx" ], [ "VM testvm" ]),
+ ]
+
+
+[parameters]
+params(dict): A dictionary will currently one optional key: {states}. This is again a dictionary
+ with the optional entries {"poweredOn"}, {"poweredOff"} and {"suspended"}. The value for each
+ entry is {0}, {1}, {2} or {3} and sets the check result in that case to OK, WARN, CRIT or UNKNOWN.
+

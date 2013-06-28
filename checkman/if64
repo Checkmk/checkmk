@@ -1,5 +1,6 @@
 title: Monitor network interfaces via standard MIB using 64 Bit counters
 agents: snmp
+catalog: hw/network/generic 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

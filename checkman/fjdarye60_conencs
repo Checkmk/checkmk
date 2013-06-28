@@ -1,5 +1,6 @@
-title: Monitor status of controller enclosures on Fujitsu ETERNUS DX storage systems
-agents: SNMP
+title: Controller enclosures on Fujitsu ETERNUS DX storage systems
+agents: snmp
+catalog: hw/storagehw/fujitsu 
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

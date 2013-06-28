@@ -1556,8 +1556,13 @@ class EventServer:
                 backedhost = backedhost.lower()
 
             # 2. Drop domain part (not applied to IP addresses!)
-            if translation.get("drop_domain") and backedhost and not backedhost[0].isdigit():
-                backedhost = backedhost.split(".", 1)[0]
+            if translation.get("drop_domain") and backedhost:
+                # only apply if first part does not convert successfully into an int
+                firstpart = backedhost.split(".", 1)[0]
+                try:
+                    int(firstpart)
+                except:
+                    backedhost = firstpart
 
             # 3. Regular expression conversion
             if "regex" in translation:

@@ -859,10 +859,23 @@ function updateHeaderTime() {
 
     oTime.innerHTML = hours + ':' + min
 
-    min   = null;
-    hours = null;
-    t     = null;
-    oTime = null;
+    var oDate = document.getElementById('headerdate');
+    if (oDate) {
+        var day   = ("0" + t.getDate()).slice(-2);
+        var month = ("0" + (t.getMonth() + 1)).slice(-2);
+        var year  = t.getFullYear();
+        var date_format = oDate.getAttribute("format"); 
+        oDate.innerHTML = date_format.replace(/yyyy/, year).replace(/mm/, month).replace(/dd/, day);
+    }
+    day    = null;
+    month  = null;
+    year   = null;
+    format = null;
+    oDate  = null;
+    min    = null;
+    hours  = null;
+    t      = null;
+    oTime  = null;
 }
 
 var g_reload_error = false;

@@ -1,5 +1,6 @@
 title: Multipath state on VMWare ESX host systems
 agents: vsphere
+catalog: os/storage 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

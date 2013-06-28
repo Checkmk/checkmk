@@ -1,5 +1,6 @@
-title: Monitor status of channel adapters on Fujitsu ETERNUS DX storage systems
-agents: SNMP
+title: Status of channel adapters on Fujitsu ETERNUS DX storage systems
+agents: snmp
+catalog: hw/storagehw/fujitsu 
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

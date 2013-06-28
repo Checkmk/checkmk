@@ -902,7 +902,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
             status = exit_spec.get("wrong_version", 1)
         else:
             output = ""
-            if agent_version != None:
+            if not is_cluster(hostname) and agent_version != None:
                 output += "Agent version %s, " % agent_version
             status = 0
 
@@ -962,7 +962,8 @@ def cleanup_globals():
     g_broken_snmp_hosts = set([])
     global g_inactive_timerperiods
     g_inactive_timerperiods = None
-
+    global g_walk_cache
+    g_walk_cache = {}
 
 
 # Diagnostic function for detecting global variables that have
@@ -987,7 +988,7 @@ def do_check_keepalive():
     def check_timeout(signum, frame):
         raise MKCheckTimeout()
 
-    signal.signal(signal.SIGALRM, check_timeout)
+    signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
 
     global total_check_output
     total_check_output = ""
@@ -995,9 +996,6 @@ def do_check_keepalive():
         before = copy_globals()
 
     ipaddress_cache = {}
-
-    # sys.stdout.write('*')
-    # sys.stdout.flush() # signal core that we are ready
 
     while True:
         cleanup_globals()
@@ -1010,29 +1008,35 @@ def do_check_keepalive():
                 sys.stdout.write("Restarting myself...\n")
             sys.stdout.flush()
             os.execvp("cmk", sys.argv)
-        timeout = int(sys.stdin.readline())
-        try:
-            signal.alarm(timeout)
-            if not hostname:
-                break
-            if hostname in ipaddress_cache:
-                ipaddress = ipaddress_cache[hostname]
-            else:
-                if is_cluster(hostname):
-                    ipaddress = None
-                else:
-                    try:
-                        ipaddress = lookup_ipaddress(hostname)
-                    except:
-                        raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
-                ipaddress_cache[hostname] = ipaddress
+        elif not hostname:
+            break
 
-            try:
+        timeout = int(sys.stdin.readline())
+        try: # catch non-timeout exceptions
+            try: # catch timeouts
+                signal.signal(signal.SIGALRM, check_timeout)
+                signal.alarm(timeout)
+                if ';' in hostname:
+                    hostname, ipaddress = hostname.split(";", 1)
+                elif hostname in ipaddress_cache:
+                    ipaddress = ipaddress_cache[hostname]
+                else:
+                    if is_cluster(hostname):
+                        ipaddress = None
+                    else:
+                        try:
+                            ipaddress = lookup_ipaddress(hostname)
+                        except:
+                            raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
+                    ipaddress_cache[hostname] = ipaddress
+
                 status = do_check(hostname, ipaddress)
+                signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
                 signal.alarm(0)
             except MKCheckTimeout:
+                signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
                 status = 3
-                total_check_output = "UNKNOWN - Check_MK timed out after %d seconds" % timeout
+                total_check_output = "UNKNOWN - Check_MK timed out after %d seconds\n" % timeout
 
             sys.stdout.write("%03d\n%08d\n%s" % 
                  (status, len(total_check_output), total_check_output))
@@ -1055,6 +1059,7 @@ def do_check_keepalive():
             if opt_debug:
                 raise
             sys.stdout.write("UNKNOWN - %s\n3\n" % e)
+
 
 
 def check_unimplemented(checkname, params, info):
@@ -1648,7 +1653,7 @@ def check_timeperiod(timeperiod):
             s.connect(livestatus_unix_socket)
             # We just get the currently inactive timeperiods. All others
             # (also non-existing) are considered to be active
-            s.send("GET timeperiods\nColumns:name\nFilter: in = 0\n")
+            s.send("GET timeperiods\nColumns: name\nFilter: in = 0\n")
             s.shutdown(socket.SHUT_WR)
             g_inactive_timerperiods = s.recv(10000000).splitlines()
         except Exception, e:

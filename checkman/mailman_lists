@@ -1,5 +1,6 @@
-title: Monitor mailinglist statistics of Mailman
+title: Mailinglist statistics of Mailman
 agents: linux
+catalog: app/mailman
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

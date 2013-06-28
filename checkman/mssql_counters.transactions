@@ -1,5 +1,6 @@
-title: Checks transactions per second in MSSQL tablespaces
+title: Transactions per second in MSSQL tablespaces
 agents: windows
+catalog: app/mssql
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk

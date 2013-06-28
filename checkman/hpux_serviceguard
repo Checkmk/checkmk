@@ -1,5 +1,6 @@
-title: Check status of HP-UX Serviveguard
+title: HP-UX Serviveguard
 agents: hpux
+catalog: os/services 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

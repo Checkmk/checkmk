@@ -886,8 +886,10 @@ class html:
         self.write('<a href="#" onfocus="if (this.blur) this.blur();" '
                    'onclick="this.innerHTML=\'%s\'; document.location.reload();">%s</a></td>' %
                    (_("Reloading..."), title))
-        self.write('<td style="min-width:240px" class=right><span id=headinfo></span>%s &nbsp; <b id=headertime></b>' %
-                   login_text)
+        self.write('<td style="min-width:240px" class=right><span id=headinfo></span>%s &nbsp; ' % login_text)
+        if config.pagetitle_date_format:
+            self.write(' &nbsp; <b id=headerdate format="%s"></b>' % config.pagetitle_date_format)
+        self.write(' <b id=headertime></b>') 
         self.write("<script language=\"javascript\" type=\"text/javascript\">updateHeaderTime()</script>")
         try:
             self.help_visible = config.load_user_file("help", False)  # cache for later usage

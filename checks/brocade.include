@@ -24,20 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from agent:
-# Put here the example output from your TCP-Based agent. If the
-# check is SNMP-Based, then remove this section
+# Includefile for the brocade Sensor Checks
 
-def inventory_foobar(info):
-    return []
-
-def check_foobar(item, _no_params, info):
-    return 3, "UNKNOWN - Check no implemented"
-
-check_info["foobar"] = {
-    "check_function"        : check_foobar,
-    "inventory_function"    : inventory_foobar,
-    "service_description"   : "FOOBAR",
-    "has_perfdata"          : False,
-}
+def brocade_sensor_convert(info, what):
+    return_list = []
+    for state, name in info: 
+        if name.startswith(what) and saveint(state) > 0:
+            sensor_id  = name.split('#')[-1]
+            return_list.append([sensor_id, name, state])
+    return return_list
 

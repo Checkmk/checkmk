@@ -227,8 +227,6 @@ check_mk_perfdata_with_times       = True
 debug_log                          = None
 monitoring_host                    = None # deprecated
 max_num_processes                  = 50
-timeperiod_horizon                 = 365 * 86400  # for CMC
-
 
 # SNMP communities and encoding
 snmp_default_community             = 'public'

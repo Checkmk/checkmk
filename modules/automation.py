@@ -506,6 +506,7 @@ def automation_restart(job="restart"):
                 pass
     else:
         objects_file = var_dir + "/core/config"
+        job = "reload" # force reload for CMC
 
     # os.closerange(3, 256) --> not available in older Python versions
 

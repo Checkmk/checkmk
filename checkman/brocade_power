@@ -1,4 +1,4 @@
-title: Power supplies of a Brocade FC switch
+title: Power supplies of Brocade FC switches
 catalog: hw/storagehw/brocade
 agents: snmp
 author: Bastian Kuhn <bk@mathias-kettner.de>

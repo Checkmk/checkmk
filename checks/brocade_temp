@@ -56,13 +56,13 @@ def check_brocade_temp(item, params, info):
                 state = 1
                 label = "(Levels at: %d/%d) %s" % (warn, crit, name)
               
-            return state, "Temperatur at %d°C%s " % (value, label), perf
-    return 3, "Temperatur Sensor not found"
+            return state, "Temperature at %d°C%s " % (value, label), perf
+    return 3, "Temperature sensor not found"
 
 check_info["brocade_temp"] = {
     "check_function"        : check_brocade_temp,
     "inventory_function"    : inventory_brocade_temp,
-    "service_description"   : "Temperatur %s",
+    "service_description"   : "Temperature %s",
     "has_perfdata"          : True,
     "group"                 : "hw_temperature",
     "includes"              : [ "brocade.include"], 

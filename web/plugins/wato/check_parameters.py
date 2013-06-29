@@ -2644,17 +2644,17 @@ register_check_parameters(
 register_check_parameters(
     subgroup_environment,
     "hw_temperature",
-    _("Harware temperature (e.g. switches)"),
+    _("Hardware temperature (e.g. switches)"),
     Tuple(
         help = _("Temperature levels for hardware devices like "
-                 "brocade switches."),
+                 "Brocade switches."),
         elements = [
-            Integer(title = _("warning at"), unit = u"°C", default_value = 26),
-            Integer(title = _("critical at"), unit = u"°C", default_value = 30),
+            Integer(title = _("warning at"), unit = u"°C", default_value = 35),
+            Integer(title = _("critical at"), unit = u"°C", default_value = 40),
         ]),
     TextAscii(
         title = _("Sensor ID"),
-        help = _("The identificator of the themal sensor.")),
+        help = _("The identifier of the thermal sensor.")),
     "first"
 )
 

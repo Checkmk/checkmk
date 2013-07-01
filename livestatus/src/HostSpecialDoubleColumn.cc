@@ -37,7 +37,7 @@ double HostSpecialDoubleColumn::getValue(void *data)
     switch (_type) {
         case HSDC_STALENESS:
         {
-        	return (time(0) - hst->last_check) / ((hst->check_interval == 0 ? 1 : hst->check_interval) * 60);
+            return (time(0) - hst->last_check) / ((hst->check_interval == 0 ? 1 : hst->check_interval) * 60);
         }
     }
     return -1; // Never reached

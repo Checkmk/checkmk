@@ -1,5 +1,5 @@
 title: Version of an ORACLE database checked by login
-agents: linux, hpux, windows
+agents: linux, hpux, windows, solaris
 catalog: app/oracle
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL

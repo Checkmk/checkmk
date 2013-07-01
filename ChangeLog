@@ -31,6 +31,7 @@
     * windows agent: no longer tries to execute directories
     * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
     * fileinfo: no longer inventorize missing files(reported by windows agent)
+    * New checks for Brocade fans, temperature and power supplies
     * cluster hosts: removed agent version output from Check_MK service (this
       was misleading for different agent versions on multiple nodes)
     * job check: better handling of unexpected agent output
@@ -42,6 +43,7 @@
     * Special Agent vSphere: support ESX 4.1 (thanks to Mirko Witt)
     * esx_vsphere_object: make check state configurable
     * mk_logwatch: support continuation lines with 'A'. Please refer to docu.
+    * mk_oracle: Added plugin for solaris
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

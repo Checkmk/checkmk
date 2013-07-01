@@ -1,4 +1,4 @@
-title: Temperature via Symmetra APC Web/SNMP Management Card
+title: APC Symmetra Web/SNMP Management Card: Temperature
 agents: snmp
 catalog: hw/environment
 author: Mathias Kettner <mk@mathias-kettner.de>

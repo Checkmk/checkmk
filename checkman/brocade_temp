@@ -1,0 +1,21 @@
+title: Hardware temperature of Brocade FC switches
+catalog: hw/storagehw/brocade
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors the hardware temperatures of a Brocade FC switch.
+
+item:
+ The Number of the sensor (1, 2, 3 ...) like descripted in the SNMP output.
+
+perfdata:
+ The current temperature value for each sensor
+
+inventory:
+ The inventory creates a service for each sensor.
+
+[parameters]
+warn(int): the temperature at which a WARN state is reached
+crit(int): the temperature at which a CRIT state is reached
+

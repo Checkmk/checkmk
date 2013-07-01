@@ -2643,6 +2643,23 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
+    "hw_temperature",
+    _("Hardware temperature (e.g. switches)"),
+    Tuple(
+        help = _("Temperature levels for hardware devices like "
+                 "Brocade switches."),
+        elements = [
+            Integer(title = _("warning at"), unit = u"°C", default_value = 35),
+            Integer(title = _("critical at"), unit = u"°C", default_value = 40),
+        ]),
+    TextAscii(
+        title = _("Sensor ID"),
+        help = _("The identifier of the thermal sensor.")),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
     "disk_temperature",
     _("Harddisk temperature (e.g. via SMART)"),
     Tuple(
@@ -2686,6 +2703,22 @@ register_check_parameters(
                   ])),
             ]),
             None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "hw_fans",
+    _("FAN speed of Hardware devices"),
+    Tuple(
+        help = _("Levels for the FAN speed of a hardware device like a switch"),
+        elements = [
+            Integer(title = _("warning bellow"), unit = u"rpm", default_value = 3000),
+            Integer(title = _("critical bellow"), unit = u"rpm", default_value = 2500),
+        ]),
+    TextAscii(
+        title = _("Fan Name"),
+        help = _("The identificator of the Fan.")),
     "first"
 )
 

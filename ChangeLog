@@ -11,6 +11,8 @@
     * Predictive monitoring: correctly handle spaces in variable names (thanks
        to Karl Golland)
     * New man page browser for console (cmk -m)
+    * livestatus: new service column staleness: indicator for outdated service checks
+    * livestatus: new host    column staleness: indicator for outdated host checks
 
     Checks & Agents:
     * esx_hostystem multipath: criticize standby paths only if not equal to active paths
@@ -29,6 +31,7 @@
     * windows agent: no longer tries to execute directories
     * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
     * fileinfo: no longer inventorize missing files(reported by windows agent)
+    * New checks for Brocade fans, temperature and power supplies
     * cluster hosts: removed agent version output from Check_MK service (this
       was misleading for different agent versions on multiple nodes)
     * job check: better handling of unexpected agent output

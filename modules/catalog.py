@@ -21,6 +21,7 @@ manpage_catalog_titles = {
         "printer"     : "Printers",
         "server"      : "Servers (management boards, blade enclosures)",
             "ibm"        : "IBM",
+            "fsc"        : "Fujitsu",
         "storagehw"   : "Storage (filers, SAN, tape libs)",
             "brocade"    : "Brocade",
             "fujitsu"    : "Fujitsu",

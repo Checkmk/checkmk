@@ -47,7 +47,9 @@ register_rule(group,
     "special_agents:vsphere",
      Dictionary(
         title = _("Check state of VMWare ESX via vSphere"),
-        help = _("Configure the options whicht needed to connect to  the vSphere api"),
+        help = _("This rule selects the vSphere agent instead of the normal Check_MK Agent "
+                 "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
+                 "your connection settings here."),
         elements = [
             ( "user",
               TextAscii(

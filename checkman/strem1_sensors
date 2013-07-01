@@ -1,4 +1,4 @@
-title: Temperature,humidity,wetness on sensatronic em1 devices
+title: Sensatronic EM1 Devices: Temperature, humidity, wetness
 agents: snmp
 catalog: hw/environment
 author: Lars Michelsen <lm@mathias-kettner.de>

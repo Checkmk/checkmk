@@ -1,4 +1,4 @@
-title: Monitors PDU AUX sensors from Liebert MPH/MPX devices
+title: Liebert MPH/MPX devices: PDU AUX sensors
 agents: snmp
 catalog: hw/environment
 author: Lars Michelsen <lm@mathias-kettner.de>

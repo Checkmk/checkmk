@@ -1,0 +1,200 @@
+#!/bin/bash
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Check_MK agent plugin for monitoring ORACLE databases
+
+# This plugin is a port of the linux agent plugin. It has been
+# tested with solaris 10.
+
+# Get list of all running databases
+SIDS=$(UNIX95=true ps -ef -o args | sed -n '/^ora_pmon_/p;/^xe_pmon_/p' | sed -n '/^[a-z]*_pmon_\([^ ]*\)/s//\1/p')
+if [ -z "$SIDS" ] ; then 
+    # If on this system we've already found a database
+    if [ -e "$MK_CONFDIR/mk_oracle.found" ] ; then
+        echo '<<<oracle_version>>>'
+        echo '<<<oracle_sessions>>>'
+        echo '<<<oracle_logswitches>>>'
+        echo '<<<oracle_tablespaces>>>'
+    fi
+    exit 0
+fi
+
+touch $MK_CONFDIR/mk_oracle.found
+
+# Recreate data if cachefile is older than 120 seconds.
+# If you set this to 0, then the cache file will be created
+# as often as possible. If the database queries last longer
+# then your check interval, caching will be active nevertheless.
+CACHE_MAXAGE=120
+
+# Source the optional configuration file for this agent plugin
+if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]
+then
+    . $MK_CONFDIR/mk_oracle.cfg
+fi
+
+# You can specify a list of SIDs to monitor. Those databases will
+# only be handled, if they are found running, though! 
+#
+#   ONLY_SIDS="XE HIRN SEPP"
+#
+# It is possible to filter SIDS negatively. Just add the following to
+# the mk_oracle.cfg file:
+#
+#   EXCLUDE_<sid>="ALL"
+#
+# Another option is to filter single checks for SIDS. Just add
+# lines as follows to the mk_oracle.cfg file. One service per
+# line:
+#
+#   EXCLUDE_<sid>="<service>"
+#
+# For example skip oracle_sessions and oracle_logswitches checks
+# for the instance "mysid".
+#
+#   EXCLUDE_mysid="sessions logswitches"
+#
+#
+# This check uses a cache file to prevent problems with long running
+# SQL queries. It starts building a cache when
+#   a) no cache is present or the cache is too old and
+#   b) the cache is not currently being built
+# The cache is used for $CACHE_MAXAGE seconds. The CACHE_MAXAGE
+# option is pre-set to 120 seconds but can be changed in mk_oracle.cfg.
+
+function sqlplus ()
+{
+    if OUTPUT=$({ echo 'set pages 0' ; echo 'whenever sqlerror exit 1'; echo 'set lines 8000' ; echo 'set feedback off'; cat ; } | $MK_CONFDIR/sqlplus.sh $1)
+    then
+        echo "${OUTPUT}" | sed -e 's/[[:space:]]\+/ /g' -e '/^[[:space:]]*$/d' -e "s/^/$1 /"
+    else
+        echo "${OUTPUT}" | sed "s/^/$1 FAILURE /"
+    fi
+}
+
+
+for SID in $SIDS; do
+    # Check if SID is listed in ONLY_SIDS if this is used
+    if [ "$ONLY_SIDS" ] ; then
+        SKIP=yes
+        for S in $ONLY_SIDS ; do
+	    if  [ "$S" = "$SID" ] ; then
+	        SKIP=
+		break
+            fi 
+        done
+	if [ "$SKIP" ] ; then continue ; fi
+    fi
+        
+    EXCLUDE=EXCLUDE_$SID
+    EXCLUDE=${!EXCLUDE}
+    # SID filtered totally?
+    if [ "$EXCLUDE" = "ALL" ]; then
+        continue
+    fi
+
+    # Do Version-Check (use as a general login check) without caching
+    if [ "$EXCLUDE" = "${EXCLUDE/version/}" ]; then
+        echo '<<<oracle_version>>>'
+        echo "select banner from v\$version where banner like 'Oracle%';" | sqlplus "$SID"
+    fi
+
+    CACHE_FILE=$MK_CONFDIR/oracle_$SID.cache
+
+    # Check if file exists and recent enough
+    CACHE_FILE_UPTODATE=
+    if [ -s $CACHE_FILE ]; then
+        NOW=$(perl -le "print time()")
+
+        MTIME=$(perl -MPOSIX -le 'print mktime(localtime((lstat($ARGV[0]))[9]))' $CACHE_FILE)
+        if [ $(($NOW - $MTIME)) -le $CACHE_MAXAGE ]; then
+            CACHE_FILE_UPTODATE=1
+        fi
+    fi
+
+    # If the cache file exists, output it, regardless of its age. If it's outdated
+    # then it will be recreated *asynchronously*. It's new contents will not 
+    # be available here anyway.
+    if [ -s "$CACHE_FILE" ] ; then cat "$CACHE_FILE" ; fi
+
+    # When the cache file is not valid, we recreated it, but only if there is not    
+    # yet a background process from a previous check still doing this! We see this
+    # because of the existance of the .new file
+    # When the cache is old and there is no *new file present, then start a query
+    # to update the information for this instance.
+    if [ -z "$CACHE_FILE_UPTODATE" -a ! -e "$CACHE_FILE.new" ]
+    then
+        nohup bash -c "
+            set -o noclobber
+            function sqlplus ()
+            {
+                if OUTPUT=\$({ echo 'set pages 0' ; echo 'whenever sqlerror exit 1'; echo 'set lines 8000' ; echo 'set feedback off'; cat ; } | $MK_CONFDIR/sqlplus.sh \$1)
+		then
+                    echo \"\${OUTPUT}\" | sed -e 's/[[:space:]]\+/ /g' -e '/^[[:space:]]*$/d' -e \"s/^/\$1 /\"
+		else
+		    echo \"\${OUTPUT}\" | sed \"s/^/\$1 FAILURE /\"
+                fi
+            }
+
+            {
+            # Only execute checks when not filtered
+            if [ '$EXCLUDE' = '${EXCLUDE/sessions/}' ]; then
+                echo '<<<oracle_sessions>>>'
+                echo \"select count(1) from v\\\$session where status = 'ACTIVE';\" | sqlplus \"$SID\"
+            fi
+
+            if [ '$EXCLUDE' = '${EXCLUDE/logswitches/}' ]; then
+                echo '<<<oracle_logswitches>>>'
+                echo \"select count(1) from v\\\$loghist where first_time > sysdate - 1/24;\" | sqlplus \"$SID\"
+            fi
+
+            if [ '$EXCLUDE' = '${EXCLUDE/tablespaces/}' ]; then
+                echo '<<<oracle_tablespaces>>>'
+                sqlplus "$SID" <<EOF | sed 's/READ ONLY/READONLY/g'
+                select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE,
+                f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
+                f.ONLINE_STATUS, t.BLOCK_SIZE, t.status, decode(sum(fs.blocks), NULL, 0,
+                sum(fs.blocks)) free_blocks
+                from dba_data_files f, dba_tablespaces t, dba_free_space fs
+                where f.tablespace_name = t.tablespace_name
+                and f.file_id = fs.file_id(+)
+                group by f.file_name, f.tablespace_name, f.status, f.autoextensible,
+                f.blocks, f.maxblocks, f.user_blocks, f.increment_by, f.online_status,
+                t.block_size, t.status
+                UNION
+                select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE,
+                f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, 'TEMP',
+                t.BLOCK_SIZE, t.status, sum(sh.blocks_free) free_blocks
+                from v\\\$thread th, dba_temp_files f, dba_tablespaces t, v\\\$temp_space_header sh
+                WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
+                GROUP BY th.instance, f.file_name, f.tablespace_name, f.status,
+                f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
+                'TEMP', t.block_size, t.status;
+EOF
+            fi 
+            } > $CACHE_FILE.new && mv $CACHE_FILE.new $CACHE_FILE || rm -f $CACHE_FILE*
+        "
+    fi
+done

@@ -578,7 +578,7 @@ def page_edit_view():
     html.checkbox("mustsearch", label=_('show data only on search') + "<br>")
     html.checkbox("hidebutton", label=_('do not show a context button to this view'))
 
-    forms.section(_("Browser reload"))
+    forms.section(_("Automatic page reload"))
     html.write(_("Reload page every "))
     html.number_input("browser_reload", 0)
     html.write(_(" seconds"))

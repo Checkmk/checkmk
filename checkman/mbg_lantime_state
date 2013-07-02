@@ -1,4 +1,4 @@
-title: General state of Meinberg LANTIME devices
+title: Meinberg LANTIME devices: General state
 agents: snmp
 catalog: hw/other
 author: Lars Michelsen <lm@mathias-kettner.de>

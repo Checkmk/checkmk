@@ -1233,7 +1233,7 @@ class ListChoice(ValueSpec):
 
     def validate_value(self, value, varprefix):
         if not self._allow_empty and not value:
-            raise MKUserError(varprefix, _('You have not selected any connector. You have to select at least one.'))
+            raise MKUserError(varprefix, _('You have to select at least one element.'))
         ValueSpec.custom_validate(self, value, varprefix)
 
 

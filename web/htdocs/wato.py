@@ -10797,8 +10797,10 @@ def mode_edit_rule(phase, new = False):
         else:
             return "edit_ruleset"
 
-        return ("edit_ruleset",  _("%s rule in ruleset '%s' in folder %s") %
-                                  (new and _("Created new") or _("Edited"), rulespec["title"], new_rule_folder["title"]))
+        return ("edit_ruleset",
+           (new and _("Created new rule in ruleset '%s' in folder %s") 
+                or _("Editor rule in ruleset '%s' in folder %s")) %
+                      (rulespec["title"], new_rule_folder["title"]))
 
     if rulespec.get("help"):
         html.write("<div class=info>" + rulespec["help"] + "</div>")

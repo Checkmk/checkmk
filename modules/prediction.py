@@ -182,9 +182,11 @@ def compute_prediction(pred_file, timegroup, params, period_info, from_time, dsn
         # print "PUNKT %d --------------------------------------" % i
         point_line = []
         for from_time, scale, data in slices:
-            d = data[int(i / float(scale))]
-            if d != None:
-                point_line.append(d)
+            idx = int(i / float(scale))
+            if idx < len(data):
+                d = data[idx]
+                if d != None:
+                    point_line.append(d)
             # else:
             #     date_str = time.strftime("%Y-%m-%d %H:%M", time.localtime(fr + ((un - fr) * i / float(num_points))))
             #     print "Keine Daten fur %s / %d/%s/ %.2f " % (date_str, i, float(scale),i/float(scale))

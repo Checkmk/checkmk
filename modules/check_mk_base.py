@@ -1369,7 +1369,7 @@ def submit_check_result(host, servicedesc, result, sa):
 def submit_to_core(host, service, state, output):
     # Save data for sending it to the Check_MK Micro Core
     if monitoring_core == "cmc":
-        result = "\t%d\t%s\t%s\n" % (state, service, output)
+        result = "\t%d\t%s\t%s\n" % (state, service, output.replace("\0", "")) # remove binary 0, CMC does not like it
         if opt_keepalive:
             global total_check_output
             total_check_output += result

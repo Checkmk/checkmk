@@ -1489,6 +1489,8 @@ def check_levels(value, dsname, params, unit = "", factor = 1.0, statemarkers=Fa
             else:
                 infotext += "no reference for prediction yet"
         except Exception, e:
+            if opt_debug:
+                raise
             return 3, "%s" % e, []
 
     if ref_value:

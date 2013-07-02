@@ -1,4 +1,4 @@
-title: Temperature, FAN  and Door States for Raritan EMX devices
+title: Raritan EMX devices: Temperature, FAN  and Door States
 agents: snmp
 catalog: hw/other 
 author: Bastian Kuhn <bk@mathias-kettner.de>

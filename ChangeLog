@@ -69,6 +69,8 @@
                                     Display current date in dashboard
     * LDAP: Using asynchronous searches / added optional support for paginated
       searches (Can be enabled in connection settings)
+    * Added option to enable browser scrollbar to the multisite sidebar (only
+      via "sidebar_show_scrollbar = True" in multisite.mk 
 
     WATO:
     * Allow to configure check-/retry_interval in second precision

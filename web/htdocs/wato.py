@@ -5134,8 +5134,6 @@ def mode_snapshot(phase):
             if html.check_transaction():
                 filename = create_snapshot()
                 return None, _("Created snapshot <tt>%s</tt>.") % filename
-            else:
-                return None
 
         # upload snapshot
         elif html.has_var("_upload_file"):
@@ -5147,8 +5145,6 @@ def mode_snapshot(phase):
                 log_pending(SYNCRESTART, None, "snapshot-restored",
                     _("Restored from uploaded file"))
                 return None, _("Successfully restored configuration.")
-            else:
-                return None
 
         # delete file
         elif html.has_var("_delete_file"):
@@ -5162,8 +5158,6 @@ def mode_snapshot(phase):
                 return None, _("Snapshot deleted.")
             elif c == False: # not yet confirmed
                 return ""
-            else:
-                return None  # browser reload
 
         # restore snapshot
         elif html.has_var("_restore_snapshot"):
@@ -5179,8 +5173,6 @@ def mode_snapshot(phase):
                 return None, _("Successfully restored snapshot.")
             elif c == False: # not yet confirmed
                 return ""
-            else:
-                return None  # browser reload
 
         elif html.has_var("_factory_reset"):
             c = wato_confirm(_("Confirm factory reset"),
@@ -5194,12 +5186,7 @@ def mode_snapshot(phase):
                 return None, _("Resetted WATO, wiped all configuration.")
             elif c == False: # not yet confirmed
                 return ""
-            else:
-                return None  # browser reload
-
-
-        else:
-            return False
+        return None
 
     else:
         snapshots = []
@@ -5755,36 +5742,36 @@ def mode_groups(phase, what):
     groups = all_groups.get(what, {})
 
     if phase == "action":
-        delname = html.var("_delete")
+        if html.var('_delete'):
+            delname = html.var("_delete")
 
-        if what == 'contact':
-            usages = find_usages_of_contact_group(delname)
-        elif what == 'host':
-            usages = find_usages_of_host_group(delname)
-        elif what == 'service':
-            usages = find_usages_of_service_group(delname)
+            if what == 'contact':
+                usages = find_usages_of_contact_group(delname)
+            elif what == 'host':
+                usages = find_usages_of_host_group(delname)
+            elif what == 'service':
+                usages = find_usages_of_service_group(delname)
 
-        if usages:
-            message = "<b>%s</b><br>%s:<ul>" % \
-                        (_("You cannot delete this %s group.") % what,
-                         _("It is still in use by"))
-            for title, link in usages:
-                message += '<li><a href="%s">%s</a></li>\n' % (link, title)
-            message += "</ul>"
-            raise MKUserError(None, message)
+            if usages:
+                message = "<b>%s</b><br>%s:<ul>" % \
+                            (_("You cannot delete this %s group.") % what,
+                             _("It is still in use by"))
+                for title, link in usages:
+                    message += '<li><a href="%s">%s</a></li>\n' % (link, title)
+                message += "</ul>"
+                raise MKUserError(None, message)
 
-        confirm_txt = _('Do you really want to delete the %s group "%s"?') % (what, delname)
+            confirm_txt = _('Do you really want to delete the %s group "%s"?') % (what, delname)
 
-        c = wato_confirm(_("Confirm deletion of group \"%s\"" % delname), confirm_txt)
-        if c:
-            del groups[delname]
-            save_group_information(all_groups)
-            log_pending(SYNCRESTART, None, "edit-%sgroups", _("Deleted %s group %s" % (what, delname)))
-            return None
-        elif c == False:
-            return ""
-        else:
-            return None
+            c = wato_confirm(_("Confirm deletion of group \"%s\"" % delname), confirm_txt)
+            if c:
+                del groups[delname]
+                save_group_information(all_groups)
+                log_pending(SYNCRESTART, None, "edit-%sgroups", _("Deleted %s group %s" % (what, delname)))
+            elif c == False:
+                return ""
+
+        return None
 
     sorted = groups.items()
     sorted.sort()
@@ -5983,7 +5970,7 @@ def mode_timeperiods(phase):
 
     if phase == "action":
         delname = html.var("_delete")
-        if html.transaction_valid():
+        if delname and html.transaction_valid():
             usages = find_usages_of_timeperiod(delname)
             if usages:
                 message = "<b>%s</b><br>%s:<ul>" % \
@@ -6001,11 +5988,9 @@ def mode_timeperiods(phase):
                 del timeperiods[delname]
                 save_timeperiods(timeperiods)
                 log_pending(SYNCRESTART, None, "edit-timeperiods", _("Deleted timeperiod %s") % delname)
-                return None
             elif c == False:
                 return ""
-            else:
-                return None
+        return None
 
 
     table.begin(_("Time Periods"), empty_text = _("There are no timeperiods defined yet."))
@@ -7928,13 +7913,15 @@ def mode_users(phase):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("New user"), make_link([("mode", "edit_user")]), "new")
+        html.context_button(_("New User"), make_link([("mode", "edit_user")]), "new")
+        if 'wato_users' not in config.userdb_automatic_sync:
+            html.context_button(_("Sync Users"), html.makeactionuri([("_sync", 1)]), "replicate")
         return
 
     # Execute all connectors synchronisations of users. This must be done before
     # loading the users, because it might modify the users list. But don't execute
     # it during actions, this should save some time.
-    if phase != "action":
+    if phase != "action" and 'wato_users' in config.userdb_automatic_sync:
         userdb.hook_sync(add_to_changelog = True)
 
     roles = userdb.load_roles()
@@ -7943,30 +7930,32 @@ def mode_users(phase):
     contact_groups = userdb.load_group_information().get("contact", {})
 
     if phase == "action":
-        delid = html.var("_delete")
-        if delid == config.user_id:
-            raise MKUserError(None, _("You cannot delete your own account!"))
+        if html.var('_delete'):
+            delid = html.var("_delete")
+            if delid == config.user_id:
+                raise MKUserError(None, _("You cannot delete your own account!"))
 
-        if delid not in users:
-            return None # The account does not exist (anymore), no deletion needed
+            if delid not in users:
+                return None # The account does not exist (anymore), no deletion needed
 
-        c = wato_confirm(_("Confirm deletion of user %s" % delid),
-                         _("Do you really want to delete the user %s?" % delid))
-        if c:
-            del users[delid]
-            userdb.save_users(users)
-            log_pending(SYNCRESTART, None, "edit-users", _("Deleted user %s" % (delid)))
-            return None
-        elif c == False:
-            return ""
-        else:
-            return None
+            c = wato_confirm(_("Confirm deletion of user %s" % delid),
+                             _("Do you really want to delete the user %s?" % delid))
+            if c:
+                del users[delid]
+                userdb.save_users(users)
+                log_pending(SYNCRESTART, None, "edit-users", _("Deleted user %s" % (delid)))
+            elif c == False:
+                return ""
+        elif html.var('_sync'):
+            if userdb.hook_sync(add_to_changelog = True):
+                return None, _('The user synchronization completed successfully.')
+
+        return None
 
     entries = users.items()
     entries.sort(cmp = lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
 
-    table.begin(_("Users & Contacts"),
-                empty_text = _("There are not defined any contacts/users yet."))
+    table.begin(None, empty_text = _("There are not defined any users yet."))
     for id, user in entries:
         table.row()
 
@@ -8543,11 +8532,8 @@ def mode_roles(phase):
                 del roles[delid]
                 save_roles(roles)
                 log_pending(False, None, "edit-roles", _("Deleted role '%s'" % delid))
-                return None
             elif c == False:
                 return ""
-            else:
-                return
         elif html.var("_clone"):
             if html.check_transaction():
                 cloneid = html.var("_clone")
@@ -8563,9 +8549,7 @@ def mode_roles(phase):
                 roles[newid] = new_role
                 save_roles(roles)
                 log_pending(False, None, "edit-roles", _("Created new role '%s'" % newid))
-                return None
-            else:
-                return None
+        return
 
     table.begin(_("Roles"))
 
@@ -8978,7 +8962,8 @@ def mode_hosttags(phase):
                              "later be used for defining parameters for hosts and services, "
                              "such as <i>disable notifications for all hosts with the tags "
                              "<b>Network device</b> and <b>Test</b></i>.")),
-                    empty_text = _("You haven't defined any tag groups yet."))
+                    empty_text = _("You haven't defined any tag groups yet."),
+                    searchable = False)
 
         if hosttags:
             for nr, entry in enumerate(hosttags):
@@ -9017,7 +9002,8 @@ def mode_hosttags(phase):
                              "you can for example have all hosts with the tag <tt>cmk-agent</tt> "
                              "get also the tag <tt>tcp</tt>. This makes the configuration of "
                              "your hosts easier."),
-                    empty_text = _("You haven't defined any auxiliary tags."))
+                    empty_text = _("You haven't defined any auxiliary tags."),
+                    searchable = False)
 
         if auxtags:
             table.row()
@@ -10797,8 +10783,10 @@ def mode_edit_rule(phase, new = False):
         else:
             return "edit_ruleset"
 
-        return ("edit_ruleset",  _("%s rule in ruleset '%s' in folder %s") %
-                                  (new and _("Created new") or _("Edited"), rulespec["title"], new_rule_folder["title"]))
+        return ("edit_ruleset",
+           (new and _("Created new rule in ruleset '%s' in folder %s") 
+                or _("Editor rule in ruleset '%s' in folder %s")) %
+                      (rulespec["title"], new_rule_folder["title"]))
 
     if rulespec.get("help"):
         html.write("<div class=info>" + rulespec["help"] + "</div>")
@@ -12025,7 +12013,7 @@ def mode_bi_rules(phase):
         return
 
 
-    table.begin(_("Aggregations"))
+    table.begin(_("Aggregations"), searchable = False)
     for nr, aggregation in enumerate(aggregations):
         table.row()
         table.cell(_("Actions"), css="buttons")
@@ -12053,7 +12041,7 @@ def mode_bi_rules(phase):
                    for (ruleid, rule) in rules ]
     rules_refs.sort(cmp = lambda a,b: cmp(a[2][2], b[2][2]) or cmp(a[1]["title"], b[1]["title"]))
 
-    table.begin(_("Rules"))
+    table.begin(_("Rules"), searchable = False)
     for ruleid, rule, (aggr_refs, rule_refs, level) in rules_refs:
         table.row()
         table.cell(_("Actions"), css="buttons")

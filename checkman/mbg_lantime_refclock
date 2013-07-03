@@ -1,4 +1,4 @@
-title: Reflock state of Meinberg LANTIME devices
+title: Meinberg LANTIME devices: Reflock state
 agents: snmp
 catalog: hw/other
 author: Lars Michelsen <lm@mathias-kettner.de>

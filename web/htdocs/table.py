@@ -34,10 +34,23 @@ row_css = None
 def begin(title=None, **kwargs):
     global table, mode, next_func
 
+    try:
+        import config
+        limit = config.table_row_limit
+    except:
+        pass
+
+    limit = kwargs.get('limit', limit)
+    if html.var('limit') == 'none':
+        limit = None
+
     table = {
-        "title": title,
-        "headers" : [],
-        "rows" : [],
+        "title"         : title,
+        "headers"       : [],
+        "rows"          : [],
+        "limit"         : limit,
+        "omit_if_empty" : kwargs.get("omit_if_empty", False),
+        "searchable"    : kwargs.get("searchable", True),
     }
     if kwargs.get("empty_text"):
         table["empty_text"] = kwargs["empty_text"]
@@ -49,8 +62,6 @@ def begin(title=None, **kwargs):
 
     if kwargs.get("css"):
         table["css"] = kwargs["css"]
-
-    table["omit_if_empty"] = kwargs.get("omit_if_empty", False)
 
     html.plug()
     mode = 'row'
@@ -106,10 +117,50 @@ def end():
         table = None
         return
 
+    show_table_actions = table["searchable"]
+
+    if show_table_actions:
+        html.begin_form("actions")
+
+        if table["searchable"]:
+            html.write("<div class=table_search>")
+            html.text_input("_search")
+            html.button("_submit", _("Search"))
+            html.set_focus("search")
+            html.write("</div>\n")
+
+        html.hidden_fields()
+        html.end_form()
+
+    rows = table["rows"]
+
+    if html.var('_search'):
+        search_term = html.var('_search')
+        filtered_rows = []
+        for row, css in rows:
+            for cell_content, css_classes in row:
+                if search_term in cell_content:
+                    filtered_rows.append((row, css))
+                    break # skip other cells when matched
+        rows = filtered_rows
+
+        if not rows:
+            html.message(_('Got no row matching your search term. Please try another one.'))
+            table = None
+            return
+
+    num_rows_unlimited = len(rows)
+
+    # Apply limit after search / sorting etc.
+    limit = table['limit']
+    if limit is not None:
+        rows = rows[:limit]
+
     html.write('<table class="data')
     if "css" in table:
         html.write(" %s" % table["css"])
     html.write('">\n')
+
     html.write("  <tr>")
     for header, help in table["headers"]:
         if help:
@@ -119,8 +170,7 @@ def end():
 
     odd = "even"
     # TODO: Sorting
-    for row, css in table["rows"]:
-        # TODO: Filtering
+    for row, css in rows:
         odd = odd == "odd" and "even" or "odd"
         html.write('  <tr class="data %s0' % odd)
         if css:
@@ -132,6 +182,12 @@ def end():
             html.write("</td>\n")
         html.write("</tr>\n")
     html.write("</table>\n")
+
+    if limit is not None and num_rows_unlimited > limit:
+        html.message(_('This table is limited to show only %d of %d rows. '
+                       'Click <a href="%s">here</a> to disable the limitation.') %
+                           (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))
+
     table = None
 
 

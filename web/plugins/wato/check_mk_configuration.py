@@ -374,6 +374,17 @@ register_configvar(group,
     ),
     domain = "multisite")
 
+register_configvar(group,
+    "table_row_limit",
+    Integer(title = _("Limit the number of rows shown in tables"),
+            help = _("Several pages which use tables to show data in rows, like the "
+                     "\"Users & Contacts\" configuration page, can be configured to show "
+                     "only a limited number of rows when accessing the pages."),
+            minvalue = 1,
+            default_value = 100,
+            unit = _('rows')),
+    domain = "multisite")
+
 #   .----------------------------------------------------------------------.
 #   |          _   _                 __  __                 _              |
 #   |         | | | |___  ___ _ __  |  \/  | __ _ _ __ ___ | |_            |
@@ -398,6 +409,25 @@ register_configvar(group,
         default_value = [ 'htpasswd' ],
         choices       = userdb.list_user_connectors,
         allow_empty   = False,
+    ),
+    domain = "multisite",
+)
+
+register_configvar(group,
+    "userdb_automatic_sync",
+    ListChoice(
+        title = _('Automatic User Synchronization'),
+        help  = _('By default the users are synchronized automatically in several situations. '
+                  'The sync is started when opening the "Users & Contacts" page in configuration and '
+                  'during each page rendering. Each connector can then specify if it wants to perform '
+                  'any actions. For example the LDAP connector will start the sync once the cached user '
+                  'information are too old.'),
+        default_value = [ 'wato_users', 'page' ],
+        choices       = [
+            ('wato_users', 'When opening WATO Users & Contacts'),
+            ('page',       'During regular page processing'),
+        ],
+        allow_empty   = True,
     ),
     domain = "multisite",
 )

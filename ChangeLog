@@ -44,6 +44,8 @@
     * esx_vsphere_object: make check state configurable
     * mk_logwatch: support continuation lines with 'A'. Please refer to docu.
     * mk_oracle: Added plugin for solaris
+    * win_netstat: New check for Windows for checking the existance of a UDP/TCP
+        connection or listener
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a
@@ -69,6 +71,10 @@
                                     Display current date in dashboard
     * LDAP: Using asynchronous searches / added optional support for paginated
       searches (Can be enabled in connection settings)
+    * Added option to enable browser scrollbar to the multisite sidebar (only
+      via "sidebar_show_scrollbar = True" in multisite.mk 
+    * Added option to disable automatic userdb synchronizations in multisite
+    * Implemented search forms for most data tables
 
     WATO:
     * Allow to configure check-/retry_interval in second precision

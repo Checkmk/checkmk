@@ -1,6 +1,6 @@
 title: Carel Uniflair cooling devices
 agents: snmp
-catalog: hw/other 
+catalog: hw/environment
 author: Andreas Boesl <ab@mathias-kettner.de>
 license: GPL
 distribution: check_mk

@@ -1,21 +1,13 @@
-title: CPU usage
+title: CPU utilization
 agents: aix
 catalog: os/kernel
 license: GPL
 distribution: check_mk
 description:
- Get CPU usage (user, system, idle, IO-Wait) on an AIX system.
+ Get CPU utilization (user, system, idle, IO-Wait) on an AIX system.
  Only performance data is written. Alerting is not implemented (returns always
  {OK} if input data is valid).
 
 perfdata:
  Four variables: The percentage of time spent in {user}, {system}, {idle} and {wait}
 
-inventory:
- Not implemented.
-
-[parameters]
-None.
-
-[configuration]
-None.

@@ -370,6 +370,9 @@ table.data td.singleicon {
     width: 16px;
     text-align: center;
 }
+div.table_search {
+    margin: 10px;
+}
 
 /* Group header used in table, box and tiled layout */
 table.groupheader {

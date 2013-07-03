@@ -38,6 +38,7 @@ import dashboard
 import login
 import help
 import bi
+import userdb
 
 # map URLs to page rendering functions
 
@@ -78,5 +79,6 @@ pagehandlers.update({
    "dashlet_pnpgraph"         : dashboard.dashlet_pnpgraph,
    "dashlet_nodata"           : dashboard.dashlet_nodata,
    "bi_availability"          : bi.page_availability,
+   "ajax_userdb_sync"         : userdb.ajax_sync,
 })
 

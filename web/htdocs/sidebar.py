@@ -163,7 +163,11 @@ def page_side():
     refresh_snapins = []
     restart_snapins = []
 
-    html.write('<div id="side_content">')
+    scrolling = ''
+    if config.sidebar_show_scrollbar:
+        scrolling = ' class=scroll'
+
+    html.write('<div id="side_content"%s>' % scrolling)
     for name, state in user_config:
         if not name in sidebar_snapins or not config.may("sidesnap." + name):
             continue

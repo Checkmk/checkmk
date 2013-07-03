@@ -69,6 +69,6 @@ check_info["winperf_tcp_conn"] = {
     'inventory_function':      inventory_winperf_tcp_conn,
     'service_description':     'TCP connections',
     'has_perfdata':            True,
-    'group':                   'tcp_conn_stats_win',
+    'group':                   'tcp_conn_stats',
 }
 

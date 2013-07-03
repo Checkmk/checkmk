@@ -37,7 +37,7 @@ def check_ups_out_load(item, params, info):
 	if line[0] == item:
 	    power = int(line[1])
 	    perfdata = [ ( "out_load", power, warn, crit, 100 ) ]
-	    infotext = " - current load: %d (warn/crit at %d/%d) " % \
+	    infotext = "current load: %d (warn/crit at %d/%d) " % \
 	 	(power, warn, crit)
 
 	    if power >= crit:

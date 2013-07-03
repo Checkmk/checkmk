@@ -1028,27 +1028,6 @@ register_check_parameters(
     None
 )
 
-register_check_parameters(
-    subgroup_networking,
-    "tcp_conn_stats_win",
-    ("TCP connection stats (Windows)"),
-    Dictionary(
-        elements = [
-            ( "ESTABLISHED",
-              Tuple(
-                  title = _("ESTABLISHED"),
-                  help = _("connection up and passing data"),
-                  elements = [
-                      Integer(title = _("Warning at"),  label = _("connections")),
-                      Integer(title = _("Critical at"), label = _("connections"))
-                  ]
-              )
-            )
-        ]
-    ),
-    None,
-    "first"
-)
 
 register_check_parameters(
     subgroup_networking,
@@ -1179,6 +1158,53 @@ register_check_parameters(
     None,
     "first"
 )
+
+
+register_check_parameters(
+    subgroup_networking,
+    "tcp_connections",
+    _("Monitor specific TCP/UDP connections and listeners"),
+    Dictionary(
+        help = _("This rule allows to monitor the existance of specify TCP connections or "
+                 "TCP/UDP listeners."),
+        elements = [
+            ( "proto",
+              DropdownChoice(
+                  title = _("Protocol"),
+                  choices = [ ("TCP", _("TCP")), ("UDP", _("UDP")) ],
+                  default_value = "TCP",
+              ),
+            ),
+            ( "state",
+              DropdownChoice(
+                  title = _("State"),
+                  choices = [
+                            ( "ESTABLISHED", "ESTABLISHED" ),
+                            ( "SYN_SENT", "SYN_SENT" ),
+                            ( "SYN_RECV", "SYN_RECV" ),
+                            ( "LAST_ACK", "LAST_ACK" ),
+                            ( "CLOSE_WAIT", "CLOSE_WAIT" ),
+                            ( "TIME_WAIT", "TIME_WAIT" ),
+                            ( "CLOSED", "CLOSED" ),
+                            ( "CLOSING", "CLOSING" ),
+                            ( "FIN_WAIT1", "FIN_WAIT1" ),
+                            ( "FIN_WAIT2", "FIN_WAIT2" ),
+                            ( "BOUND", "BOUND" ),
+                  ]
+              ),
+            ),
+            ( "local_ip", IPv4Address(title = _("Local IP address"))),
+            ( "local_port", Integer(title = _("Local port number"), minvalue = 1, maxvalue = 65535, )),
+            ( "remote_ip", IPv4Address(title = _("Remote IP address"))),
+            ( "remote_port", Integer(title = _("Local port number"), minvalue = 1, maxvalue = 65535, )),
+        ]
+    ),
+    TextAscii(title = _("Connection name"), help = _("Specify an arbitrary name of this connection here"), allow_empty = False),
+    "dict",
+    has_inventory = False,
+)
+
+
 
 register_check_parameters(
     subgroup_applications,

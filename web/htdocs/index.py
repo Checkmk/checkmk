@@ -294,21 +294,25 @@ def handler(req, profiling = True):
                     # While api call don't show the login dialog
                     raise MKUnauthenticatedException(_('You are not authenticated.'))
 
+                # Redirect to the login-dialog with the current url as original target
+                # Never render the login form directly when accessing urls like "index.py"
+                # or "dashboard.py". This results in strange problems.
+                if req.myfile != 'login':
+                    html.set_http_header('Location',
+                        defaults.url_prefix + 'check_mk/login.py?_origtarget=%s' %
+                                                htmllib.urlencode(html.makeuri([])))
+                    raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
+
                 # Initialize the i18n for the login dialog. This might be overridden
                 # later after user login
                 load_language(html.var("lang", config.get_language()))
 
-                # After auth check the regular page can be shown
-                result = login.page_login(plain_error)
-                if type(result) == tuple:
-                    # This is the redirect to the requested page directly after successful login
-                    req.user = result[0]
-                    req.uri  = result[1]
-                    req.myfile = req.uri.split("/")[-1][:-3]
-                    handler = pagehandlers.get(req.myfile, page_not_found)
-                else:
-                    release_all_locks()
-                    return result
+                # This either displays the login page or validates the information submitted
+                # to the login form. After successful login a http redirect to the originally
+                # requested page is performed.
+                login.page_login(plain_error)
+                release_all_locks()
+                return apache.OK
 
         # Call userdb page hooks which are executed on a regular base to e.g. syncronize
         # information withough explicit user triggered actions

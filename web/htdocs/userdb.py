@@ -575,7 +575,7 @@ def hook_save(users):
             if config.debug:
                 import traceback
                 html.show_error(
-                    "<h3>" + _("Error executing sync hook") + "</h3>"
+                    "<h3>" + _("Error executing save hook") + "</h3>"
                     "<pre>%s</pre>" % (traceback.format_exc())
                 )
             else:
@@ -603,6 +603,9 @@ def general_page_hook():
 # Catch all exceptions and log them to apache error log. Let exceptions raise trough
 # when debug mode is enabled.
 def hook_page():
+    if 'page' not in config.userdb_automatic_sync:
+        return
+
     for connector in enabled_connectors():
         handler = connector.get('page', None)
         if not handler:

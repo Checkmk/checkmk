@@ -411,7 +411,7 @@ register_configvar(group,
             ('wato_users', 'When opening WATO Users & Contacts'),
             ('page',       'During regular page processing'),
         ],
-        allow_empty   = False,
+        allow_empty   = True,
     ),
     domain = "multisite",
 )

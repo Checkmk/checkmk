@@ -119,6 +119,7 @@ def end():
         return
 
     table_id = table['id']
+    rows = table["rows"]
 
     # Controls wether or not actions are available for a table
     actions_enabled = table["searchable"]
@@ -134,24 +135,22 @@ def end():
 
             user_opts[table_id]['actions_visible'] = actions_visible
 
-    rows = table["rows"]
+        if html.var('_%s_reset' % table_id):
+            html.del_var('_%s_search' % table_id)
+            if 'search' in table_opts:
+                del table_opts['search'] # persist
 
-    if html.var('_%s_reset' % table_id):
-        html.del_var('_%s_search' % table_id)
-        if 'search' in table_opts:
-            del table_opts['search'] # persist
-
-    search_term = html.var('_%s_search' % table_id, table_opts.get('search'))
-    if search_term:
-        html.set_var('_%s_search' % table_id, search_term)
-        table_opts['search'] = search_term # persist
-        filtered_rows = []
-        for row, css in rows:
-            for cell_content, css_classes in row:
-                if search_term in cell_content:
-                    filtered_rows.append((row, css))
-                    break # skip other cells when matched
-        rows = filtered_rows
+        search_term = html.var('_%s_search' % table_id, table_opts.get('search'))
+        if search_term:
+            html.set_var('_%s_search' % table_id, search_term)
+            table_opts['search'] = search_term # persist
+            filtered_rows = []
+            for row, css in rows:
+                for cell_content, css_classes in row:
+                    if search_term in cell_content:
+                        filtered_rows.append((row, css))
+                        break # skip other cells when matched
+            rows = filtered_rows
 
     num_rows_unlimited = len(rows)
     num_cols = len(table["headers"])
@@ -221,7 +220,7 @@ def end():
             html.write("</td>\n")
         html.write("</tr>\n")
 
-    if search_term and not rows:
+    if actions_enabled and search_term and not rows:
         html.write('<tr class="data odd0 no_match"><td colspan=%d>%s</td></tr>' %
             (num_cols, _('Found no matching rows. Please try another search term.')))
 

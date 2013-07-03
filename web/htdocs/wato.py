@@ -5794,7 +5794,7 @@ def mode_groups(phase, what):
             for cg in cgs:
                 members.setdefault(cg, []).append((userid, user.get('alias', userid)))
 
-    table.begin(what + "groups", what_name.title())
+    table.begin(what + "groups")
     for name, alias in sorted:
         table.row()
 
@@ -5993,7 +5993,7 @@ def mode_timeperiods(phase):
         return None
 
 
-    table.begin("timeperiods", _("Time Periods"), empty_text = _("There are no timeperiods defined yet."))
+    table.begin("timeperiods", empty_text = _("There are no timeperiods defined yet."))
     names = timeperiods.keys()
     names.sort()
     for name in names:
@@ -7909,7 +7909,7 @@ def load_notification_table():
 
 def mode_users(phase):
     if phase == "title":
-        return _("Users & Contacts")
+        return _("Users")
 
     elif phase == "buttons":
         global_buttons()
@@ -8551,7 +8551,7 @@ def mode_roles(phase):
                 log_pending(False, None, "edit-roles", _("Created new role '%s'" % newid))
         return
 
-    table.begin("roles", _("Roles"))
+    table.begin("roles")
 
     # Show table of builtin and user defined roles
     entries = roles.items()
@@ -13572,7 +13572,7 @@ def load_plugins():
 
     config.declare_permission("wato.users",
          _("User management"),
-         _("This permission is needed for the modules <b>Users & Contacts</b>, <b>Roles</b> and <b>Contact Groups</b>"),
+         _("This permission is needed for the modules <b>Users</b>, <b>Roles</b> and <b>Contact Groups</b>"),
          [ "admin", ])
 
     config.declare_permission("wato.snapshots",

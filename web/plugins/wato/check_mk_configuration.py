@@ -280,26 +280,31 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
-    "default_downtime",
-    Dictionary(
-        title = _("Default downtime settings"),
-        help  = _("This setting allows to set a default downtime comment and the duration for the button <i>From now for...</i>. "\
-                  "The schedule downtime formular uses these values as default. "),
-        optional_keys = False,
-        elements = [
-            ("duration", Integer(
-                title = _("Duration"),
-                help  = _("The duration in minutes of the default downtime."),
-                minvalue = 1,
-                unit  = _("minutes"),
-                default_value = 60,
-                )),
-            ("comment", TextUnicode(
-                title = _("Downtime comment"),
-                help    = _("The default comment for a downtime."),
-                size = 80
-                )),
-        ],
+    "adhoc_downtime",
+    Optional(
+        Dictionary(
+            optional_keys = False,
+            elements = [
+                ("duration", Integer(
+                    title = _("Duration"),
+                    help  = _("The duration in minutes of the adhoc downtime."),
+                    minvalue = 1,
+                    unit  = _("minutes"),
+                    default_value = 60,
+                    )),
+                ("comment", TextUnicode(
+                    title = _("Adhoc comment"),
+                    help    = _("The comment which is automatically sent with an adhoc downtime"),
+                    size = 80,
+                    allow_empty = False
+                    )),
+            ],
+        ),
+        title = _("Adhoc downtime"),
+        label = _("Enable adhoc downtime"),
+        help  = _("This setting allows to set an adhoc downtime comment and its duration. "
+                  "When enabled a new button <tt>Adhoc downtime for xx minutes</tt> will "
+                  "be available in the command form"),
     ),
     domain = "multisite",
 )

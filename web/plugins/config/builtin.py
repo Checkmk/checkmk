@@ -188,7 +188,7 @@ table_row_limit = 100
 multisite_draw_ruleicon = False
 
 # Default downtime configuration
-default_downtime = {}
+adhoc_downtime = {}
 
 # Display dashboard date
 pagetitle_date_format = None

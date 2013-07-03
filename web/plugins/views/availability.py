@@ -642,7 +642,7 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
     html.write(timewarpcode)
 
     # Render Table
-    table.begin("", css="timelineevents")
+    table.begin("av_timeline", "", css="timelineevents")
     for row_nr, (row, state_id) in enumerate(timeline_rows):
         table.row()
         if what == "bi":
@@ -730,7 +730,8 @@ def render_availability_table(availability, from_time, until_time, range_title, 
     availability.sort()
     show_summary = what != "bi" and avoptions.get("summary")
     summary = {}
-    table.begin(_("Availability") + " " + range_title, css="availability")
+    table.begin("av_items", _("Availability") + " " + range_title, css="availability",
+        searchable = False, limit = None)
     for site, host, service, states, considered_duration in availability:
         table.row()
 

@@ -7928,13 +7928,15 @@ def mode_users(phase):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("New user"), make_link([("mode", "edit_user")]), "new")
+        html.context_button(_("New User"), make_link([("mode", "edit_user")]), "new")
+        if 'wato_users' not in config.userdb_automatic_sync:
+            html.context_button(_("Sync Users"), html.makeactionuri([("_sync", 1)]), "replicate")
         return
 
     # Execute all connectors synchronisations of users. This must be done before
     # loading the users, because it might modify the users list. But don't execute
     # it during actions, this should save some time.
-    if phase != "action":
+    if phase != "action" and 'wato_users' in config.userdb_automatic_sync:
         userdb.hook_sync(add_to_changelog = True)
 
     roles = userdb.load_roles()
@@ -7943,23 +7945,28 @@ def mode_users(phase):
     contact_groups = userdb.load_group_information().get("contact", {})
 
     if phase == "action":
-        delid = html.var("_delete")
-        if delid == config.user_id:
-            raise MKUserError(None, _("You cannot delete your own account!"))
+        if html.var('_delete'):
+            delid = html.var("_delete")
+            if delid == config.user_id:
+                raise MKUserError(None, _("You cannot delete your own account!"))
 
-        if delid not in users:
-            return None # The account does not exist (anymore), no deletion needed
+            if delid not in users:
+                return None # The account does not exist (anymore), no deletion needed
 
-        c = wato_confirm(_("Confirm deletion of user %s" % delid),
-                         _("Do you really want to delete the user %s?" % delid))
-        if c:
-            del users[delid]
-            userdb.save_users(users)
-            log_pending(SYNCRESTART, None, "edit-users", _("Deleted user %s" % (delid)))
-            return None
-        elif c == False:
-            return ""
-        else:
+            c = wato_confirm(_("Confirm deletion of user %s" % delid),
+                             _("Do you really want to delete the user %s?" % delid))
+            if c:
+                del users[delid]
+                userdb.save_users(users)
+                log_pending(SYNCRESTART, None, "edit-users", _("Deleted user %s" % (delid)))
+                return None
+            elif c == False:
+                return ""
+            else:
+                return None
+        elif html.var('_sync'):
+            if userdb.hook_sync(add_to_changelog = True):
+                html.message(_("The user synchronization completed successfully."))
             return None
 
     entries = users.items()

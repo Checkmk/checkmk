@@ -398,6 +398,25 @@ register_configvar(group,
 )
 
 register_configvar(group,
+    "userdb_automatic_sync",
+    ListChoice(
+        title = _('Automatic User Synchronization'),
+        help  = _('By default the users are synchronized automatically in several situations. '
+                  'The sync is started when opening the "Users & Contacts" page in configuration and '
+                  'during each page rendering. Each connector can then specify if it wants to perform '
+                  'any actions. For example the LDAP connector will start the sync once the cached user '
+                  'information are too old.'),
+        default_value = [ 'wato_users', 'page' ],
+        choices       = [
+            ('wato_users', 'When opening WATO Users & Contacts'),
+            ('page',       'During regular page processing'),
+        ],
+        allow_empty   = False,
+    ),
+    domain = "multisite",
+)
+
+register_configvar(group,
     "ldap_connection",
     Dictionary(
         title = _("LDAP Connection Settings"),

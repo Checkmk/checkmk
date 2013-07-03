@@ -196,14 +196,15 @@ pagetitle_date_format = None
 #     \___/|___/\___|_|  |____/|____/
 #
 
-user_connectors      = ['htpasswd']
-ldap_connection      = {}
-ldap_userspec        = {}
-ldap_groupspec       = {}
-ldap_active_plugins  = {'email': {}, 'alias': {}, 'auth_expire': {}}
-ldap_cache_livetime  = 300
-ldap_debug_log       = None
-default_user_profile = {
+user_connectors       = ['htpasswd']
+userdb_automatic_sync = [ 'wato_users', 'page' ]
+ldap_connection       = {}
+ldap_userspec         = {}
+ldap_groupspec        = {}
+ldap_active_plugins   = {'email': {}, 'alias': {}, 'auth_expire': {}}
+ldap_cache_livetime   = 300
+ldap_debug_log        = None
+default_user_profile  = {
     'roles': ['user'],
 }
 lock_on_logon_failures = False

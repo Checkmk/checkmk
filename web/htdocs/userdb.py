@@ -530,6 +530,7 @@ def hook_sync(connector_id = None, add_to_changelog = False, only_username = Non
     else:
         connectors = enabled_connectors()
 
+    no_errors = True
     for connector in connectors:
         handler = connector.get('sync', None)
         if handler:
@@ -547,12 +548,15 @@ def hook_sync(connector_id = None, add_to_changelog = False, only_username = Non
                         "<h3>" + _("Error executing sync hook") + "</h3>"
                         "<pre>%s</pre>" % (e)
                     )
+                no_errors = False
             except:
                 import traceback
                 html.show_error(
                     "<h3>" + _("Error executing sync hook") + "</h3>"
                     "<pre>%s</pre>" % (traceback.format_exc())
                 )
+                no_errors = False
+    return no_errors
 
 # Hook function can be registered here to be executed during saving of the
 # new user construct

@@ -524,7 +524,7 @@ def hook_login(username, password):
 # Is called on:
 #   a) before rendering the user management page in WATO
 #   b) a user is created during login (only for this user)
-def hook_sync(connector_id = None, add_to_changelog = False, only_username = None):
+def hook_sync(connector_id = None, add_to_changelog = False, only_username = None, raise_exc = False):
     if connector_id:
         connectors = [ get_connector(connector_id) ]
     else:
@@ -537,6 +537,8 @@ def hook_sync(connector_id = None, add_to_changelog = False, only_username = Non
             try:
                 handler(add_to_changelog, only_username)
             except MKLDAPException, e:
+                if raise_exc:
+                    raise
                 if config.debug:
                     import traceback
                     html.show_error(
@@ -550,6 +552,8 @@ def hook_sync(connector_id = None, add_to_changelog = False, only_username = Non
                     )
                 no_errors = False
             except:
+                if raise_exc:
+                    raise
                 import traceback
                 html.show_error(
                     "<h3>" + _("Error executing sync hook") + "</h3>"
@@ -614,3 +618,10 @@ def hook_page():
                             (connector['id'], traceback.format_exc()))
 
     general_page_hook()
+
+def ajax_sync():
+    try:
+        hook_sync(add_to_changelog = False, raise_exc = True)
+        html.write('OK')
+    except Exception, e:
+        html.write('ERROR %s' % e)

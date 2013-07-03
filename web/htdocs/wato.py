@@ -7966,7 +7966,7 @@ def mode_users(phase):
                 return None
         elif html.var('_sync'):
             if userdb.hook_sync(add_to_changelog = True):
-                html.message(_("The user synchronization completed successfully."))
+                return None, _('The user synchronization completed successfully.')
             return None
 
     entries = users.items()

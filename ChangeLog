@@ -74,6 +74,7 @@
     * Added option to enable browser scrollbar to the multisite sidebar (only
       via "sidebar_show_scrollbar = True" in multisite.mk 
     * Added option to disable automatic userdb synchronizations in multisite
+    * Implemented search forms for most data tables
 
     WATO:
     * Allow to configure check-/retry_interval in second precision

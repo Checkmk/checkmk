@@ -369,6 +369,17 @@ register_configvar(group,
     ),
     domain = "multisite")
 
+register_configvar(group,
+    "table_row_limit",
+    Integer(title = _("Limit the number of rows shown in tables"),
+            help = _("Several pages which use tables to show data in rows, like the "
+                     "\"Users & Contacts\" configuration page, can be configured to show "
+                     "only a limited number of rows when accessing the pages."),
+            minvalue = 1,
+            default_value = 100,
+            unit = _('rows')),
+    domain = "multisite")
+
 #   .----------------------------------------------------------------------.
 #   |          _   _                 __  __                 _              |
 #   |         | | | |___  ___ _ __  |  \/  | __ _ _ __ ___ | |_            |

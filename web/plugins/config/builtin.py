@@ -180,6 +180,10 @@ selection_livetime  = 3600
 # Configure HTTP header to read usernames from
 auth_by_http_header = False
 
+# Number of rows to display by default in tables rendered with
+# the table.py module
+table_row_limit = 100
+
 # Add an icon pointing to the WATO rule to each service
 multisite_draw_ruleicon = False
 

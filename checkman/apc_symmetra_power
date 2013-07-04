@@ -1,4 +1,4 @@
-title: Output power of APC Symmetra USV
+title: APC Symmetra UPS: Output power
 agents: snmp
 catalog: hw/power
 author: Mathias Kettner <mk@mathias-kettner.de>

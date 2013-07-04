@@ -1,4 +1,4 @@
-title: Output power of UPS using generic MIB
+title: Generic UPS Device: Output power
 agents: snmp
 catalog: hw/power
 author: Mathias Kettner <mk@mathias-kettner.de>

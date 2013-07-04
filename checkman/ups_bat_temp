@@ -1,4 +1,4 @@
-title: Temperature sensor on a UPS Device
+title: Generic UPS Device: Temperature sensor
 agents: snmp
 catalog: hw/power
 author: Bastian Kuhn <bk@mathias-kettner.de>

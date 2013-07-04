@@ -1,4 +1,4 @@
-title: In frequenz of ups devices
+title: Generic UPS Device: In frequency
 agents: snmp
 catalog: hw/power
 author: Bastian Kuhn <bk@mathias-kettner.de>
@@ -11,7 +11,7 @@ item:
  ID of the phase
 
 perfdata:
- The current frequenz
+ The current frequency
 
 inventory:
  One service per phase will be created

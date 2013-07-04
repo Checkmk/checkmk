@@ -1,4 +1,4 @@
-title: OUT load of ups devices
+title: Generic UPS Device: OUT load
 agents: snmp
 catalog: hw/power
 author: Bastian Kuhn <bk@mathias-kettner.de>

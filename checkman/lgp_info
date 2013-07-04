@@ -1,4 +1,4 @@
-title: Collect general information about Liebert MPH/MPX devices
+title: Liebert MPH/MPX devices: general information
 agents: snmp
 catalog: hw/power 
 author: Lars Michelsen <lm@mathias-kettner.de>

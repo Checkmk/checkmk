@@ -1,4 +1,4 @@
-title: Out voltage of ups devices
+title: Generic UPS Device: Out voltage
 agents: snmp
 catalog: hw/power
 author: Bastian Kuhn <bk@mathias-kettner.de>

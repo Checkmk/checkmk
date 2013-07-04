@@ -1,4 +1,4 @@
-title: Gude PDU units
+title: Gude PDU units (8310): Power and Voltage
 agents: snmp
 catalog: hw/power
 author: Bastian Kuhn <bk@mathias-kettner.de>
